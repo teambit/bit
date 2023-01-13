@@ -1,5 +1,4 @@
 import { Harmony } from '@teambit/harmony';
-import fs from 'fs-extra';
 import { Component, ComponentID } from '@teambit/component';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { EnvsAspect } from '@teambit/envs';
@@ -8,12 +7,15 @@ import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extensio
 import { partition, mergeWith, difference } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';
+import { MergeConflictFile } from './merge-conflict-file';
 
 export class AspectsMerger {
   private consumer: Consumer;
   private warnedAboutMisconfiguredEnvs: string[] = []; // cache env-ids that have been errored about not having "env" type
+  readonly mergeConflictFile: MergeConflictFile;
   constructor(private workspace: Workspace, private harmony: Harmony) {
     this.consumer = workspace.consumer;
+    this.mergeConflictFile = new MergeConflictFile(workspace.path);
   }
 
   /**
@@ -44,9 +46,9 @@ export class AspectsMerger {
     const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
     const bitMapExtensions = bitMapEntry?.config;
 
-    let configMergeFile: Record<string, any> | undefined;
+    let configMerge: Record<string, any> | undefined;
     try {
-      configMergeFile = await this.getConfigMergeFile(componentId);
+      configMerge = await this.mergeConflictFile.getConflictParsed(componentId.toStringWithoutVersion());
     } catch (err) {
       if (!(err instanceof MergeConfigConflict)) {
         throw err;
@@ -65,11 +67,11 @@ export class AspectsMerger {
     const unmergedData = this.getUnmergedData(componentId);
     const unmergedDataMergeConf = unmergedData?.mergedConfig;
     const getMergeConfigCombined = () => {
-      if (!configMergeFile && !unmergedDataMergeConf) return undefined;
-      if (!configMergeFile) return unmergedDataMergeConf;
-      if (!unmergedDataMergeConf) return configMergeFile;
+      if (!configMerge && !unmergedDataMergeConf) return undefined;
+      if (!configMerge) return unmergedDataMergeConf;
+      if (!unmergedDataMergeConf) return configMerge;
 
-      return mergeWith(configMergeFile, unmergedDataMergeConf, (objValue, srcValue) => {
+      return mergeWith(configMerge, unmergedDataMergeConf, (objValue, srcValue) => {
         if (Array.isArray(objValue)) {
           // critical for dependencyResolver.policy.*dependencies. otherwise, it will override the array
           return objValue.concat(srcValue);
@@ -243,24 +245,6 @@ export class AspectsMerger {
       }
     }
     return { extensionDataListFiltered: extensionDataList, envIsCurrentlySet: Boolean(envFromEnvsAspect) };
-  }
-
-  private async getConfigMergeFile(componentId: ComponentID): Promise<Record<string, any> | undefined> {
-    const configMergePath = this.workspace.getConfigMergeFilePath(componentId);
-    let fileContent: string;
-    try {
-      fileContent = await fs.readFile(configMergePath, 'utf-8');
-    } catch (err: any) {
-      if (err.code === 'ENOENT') {
-        return undefined;
-      }
-      throw err;
-    }
-    try {
-      return JSON.parse(fileContent);
-    } catch (err: any) {
-      throw new MergeConfigConflict(configMergePath);
-    }
   }
 
   /**

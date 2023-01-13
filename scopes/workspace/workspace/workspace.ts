@@ -99,6 +99,7 @@ import { BitMap } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
 import { GraphIdsFromFsBuilder } from './build-graph-ids-from-fs';
 import { AspectsMerger } from './aspects-merger';
+import { MergeConflictFile } from './merge-conflict-file';
 
 export type EjectConfResult = {
   configPath: string;
@@ -1094,9 +1095,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.aspectsMerger.merge(componentId, componentFromScope, excludeOrigins);
   }
 
-  getConfigMergeFilePath(componentId: ComponentID): string {
-    const compDir = this.componentDir(componentId, { ignoreVersion: true });
-    return path.join(compDir, MergeConfigFilename);
+  getConfigMergeFilePath(): string {
+    return path.join(this.path, MergeConfigFilename);
+  }
+
+  getConflictMergeFile(): MergeConflictFile {
+    return this.aspectsMerger.mergeConflictFile;
   }
 
   async listComponentsDuringMerge(): Promise<ComponentID[]> {
