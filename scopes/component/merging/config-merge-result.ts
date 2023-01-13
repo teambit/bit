@@ -13,8 +13,7 @@ export class ConfigMergeResult {
     const configMergeFormatted = configMergeAspects.map((c) => this.formatConflict(c));
     const conflictStr = `{
 ${this.concatenateConflicts(configMergeFormatted)}
-}
-`;
+}`;
     return conflictStr;
   }
   getSuccessfullyMergedConfig(): Record<string, any> {
