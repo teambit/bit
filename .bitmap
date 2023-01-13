@@ -597,6 +597,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/importer"
     },
+    "inputs/dropdown": {
+        "scope": "teambit.design",
+        "version": "1.2.15",
+        "mainFile": "index.ts",
+        "rootDir": "components/inputs/dropdown"
+    },
     "insights": {
         "scope": "teambit.explorer",
         "version": "0.0.958",
@@ -861,6 +867,12 @@
         "version": "0.0.127",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/multi-tester"
+    },
+    "navigation/responsive-navbar": {
+        "scope": "teambit.design",
+        "version": "0.0.3",
+        "mainFile": "index.ts",
+        "rootDir": "components/navigation/responsive-navbar"
     },
     "network/agent": {
         "scope": "teambit.toolbox",

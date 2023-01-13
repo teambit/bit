@@ -16,6 +16,7 @@ export type TreeNodeComponentProps<Payload = any> = {
   onClick?: (e: React.MouseEvent) => void;
   href?: string;
   className?: string;
+  activeClassName?: string;
 } & TreeNodeProps<Payload>;
 
 /**
@@ -23,7 +24,7 @@ export type TreeNodeComponentProps<Payload = any> = {
  * Renders a file node in the file tree
  */
 export function TreeNode<T>(props: TreeNodeComponentProps<T>) {
-  const { node, isActive, icon, onClick, widgets, href, className } = props;
+  const { node, isActive, icon, onClick, widgets, href, className, activeClassName } = props;
 
   return (
     <Link
@@ -32,7 +33,7 @@ export function TreeNode<T>(props: TreeNodeComponentProps<T>) {
       exact
       strict
       className={classNames(indentClass, styles.fileNode, className)}
-      activeClassName={styles.active}
+      activeClassName={classNames(activeClassName || styles.active)}
     >
       <div className={styles.left} onClick={onClick}>
         {icon && <img className={styles.icon} src={icon} />}

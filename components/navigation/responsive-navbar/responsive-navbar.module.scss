@@ -1,0 +1,78 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
+.tab {
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  position: relative;
+  padding: 8px 16px;
+  font-size: var(--bit-p-xs, 14px);
+  outline: none;
+  user-select: none;
+  cursor: pointer;
+  color: #878c9a; //TODO
+  transition: color 150ms ease-in-out;
+  white-space: nowrap;
+  &:hover {
+    color: var(--on-surface-color, #2b2b2b);
+  }
+  &.active {
+    color: var(--on-surface-color, #2b2b2b);
+    &[data-priority='folder'] {
+      color: var(--primary-color, #6c5ce7);
+      transition: transform 150ms ease-in-out, color 150ms ease-in-out;
+    }
+  }
+  &[data-priority='folder'] {
+    z-index: 1;
+  }
+  > * {
+    pointer-events: auto;
+  }
+}
+.navTabs {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  &.overflow {
+    overflow-x: auto;
+  }
+}
+
+// start responsive
+.more {
+  display: flex;
+  align-items: center;
+  .dots {
+    cursor: pointer;
+    color: var(--on-surface-medium-color, #707279);
+    border-radius: 8px;
+    transition: background-color 300ms ease-in-out;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    > img {
+      width: 16px;
+    }
+  }
+}
+.secondaryTabContainer {
+  z-index: $modal-z-index;
+
+  .item {
+    width: 100%;
+    pointer-events: none;
+    .menuItem {
+      pointer-events: auto;
+      padding: 0;
+      > * {
+        padding: 8px;
+        width: 100%;
+      }
+    }
+  }
+}
+.hidden {
+  display: none;
+}

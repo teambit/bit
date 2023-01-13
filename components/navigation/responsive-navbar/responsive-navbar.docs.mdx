@@ -1,0 +1,119 @@
+---
+description: A Responsive navbar to display links/tabs.
+labels: ['react', 'ui', 'navigation', 'tabs']
+---
+
+import { useState } from 'react';
+import { ResponsiveNavbar } from './responsive-navbar';
+
+This component is used to display a responsive navbar with tabs and shows a flashy transition when moving between tabs.
+
+If elements dont fit into the available space, the navbar displays the first elements that can fit, collects the rest into a dropdown.
+
+### Then Navbar can display tabs in a few ways:
+
+##### Default `line` priority:
+
+```js live
+() => {
+  const contentTabs = [
+    { component: () => <div>Tab 1</div> },
+    { component: () => <div>Tab 2</div> },
+    {
+      component: ({ isInMenu }) => <div style={{ color: isInMenu ? 'red' : 'unset' }}>Tab 3</div>,
+    },
+  ];
+  return <ResponsiveNavbar tabs={contentTabs} data-testid="responsive-menu" />;
+};
+```
+
+##### `folder` priority:
+
+```js live
+() => {
+  const contentTabs = [
+    { component: () => <div>Tab 1</div> },
+    { component: () => <div>Tab 2</div> },
+    {
+      component: ({ isInMenu }) => <div style={{ color: isInMenu ? 'blue' : 'unset' }}>Tab 3</div>,
+    },
+  ];
+  return <ResponsiveNavbar tabs={contentTabs} priority="folder" data-testid="responsive-menu" />;
+};
+```
+
+##### Unstyled `none` priority:
+
+:::tip
+This is useful when injecting tha navbar with links that have their own styles when they are active.
+:::
+
+```js live
+() => {
+  const contentTabs = [
+    { component: () => <Link href={location.pathname}>Tab 1</Link> },
+    { component: () => <Link href="http://some href">Tab 2</Link> },
+    {
+      component: ({ isInMenu }) => (
+        <Link isInMenu={isInMenu} href="http://some href">
+          Tab 3
+        </Link>
+      ),
+    },
+  ];
+
+  function Link({ isInMenu, href, children }) {
+    const isActive = href === location.pathname;
+    return (
+      <a
+        href={href}
+        style={{
+          color: isInMenu ? 'green' : 'unset',
+          textDecoration: 'none',
+          background: isActive ? '#f6f5fe' : 'unset',
+        }}
+      >
+        {children}
+      </a>
+    );
+  }
+  return <ResponsiveNavbar tabs={contentTabs} priority="none" data-testid="responsive-menu" />;
+};
+```
+
+:::note
+As you can see in the examples above, the `component` prop accepts the `isInMenu` arg that is `true` when its collapsed into the menu.
+Notice how this style doesnt effect the components when thay are not collapsed.
+
+`Tab` also accepts passing any native prop to the wrappiing `div` element.
+:::
+
+### Controlling the navbar from outside:
+
+Sometimes you need to control the active tab selecttion. use the `defaultActiveIndex` prop to set the navbar it's index.
+
+```ts live
+() => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const contentTabs = [
+    { component: () => <div>Tab 1</div> },
+    { component: () => <div>Tab 2</div> },
+    { component: () => <div>Tab 3</div> },
+  ];
+
+  return (
+    <>
+      <button onClick={() => setActiveIndex((prev) => (prev >= 2 ? 0 : (prev += 1)))}>
+        click to change active tab
+      </button>
+      <ResponsiveNavbar
+        onSelect={(index) => {
+          setActiveIndex(index);
+        }}
+        defaultActiveIndex={activeIndex}
+        tabs={contentTabs}
+      />
+    </>
+  );
+};
+```
