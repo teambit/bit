@@ -25,7 +25,6 @@
 .left {
   position: relative;
 
-  // @todo get token for this color
   background: var(--on-surface-neutral-low-color, #282828);
 
   overflow-y: auto;
@@ -63,13 +62,11 @@
 }
 
 .loader {
-  // @todo get token for this color
   background: var(--on-surface-neutral-low-color, #282828);
 }
 
 .codeCompareTreeCollapse {
   padding: 8px;
-  // @todo get token for this color
   background: var(--on-surface-neutral-low-color, #282828);
   cursor: pointer;
 

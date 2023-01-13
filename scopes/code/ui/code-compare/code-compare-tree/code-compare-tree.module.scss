@@ -39,6 +39,7 @@
 }
 
 .node {
+  // override default tree node selection and hover styles
   &:hover {
     background-color: var(--surface-primary-hover-color, #3a2980) !important;
   }

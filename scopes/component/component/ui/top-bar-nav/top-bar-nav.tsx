@@ -12,7 +12,7 @@ export function TopBarNav({
   activeClassName,
   children,
   displayName,
-  ignoreStickyQueryParams,
+  ignoreQueryParams,
   ...rest
 }: NavPluginProps) {
   const { search } = useLocation(); // sticky query params
@@ -23,7 +23,7 @@ export function TopBarNav({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const preventPassingDisplayNameToLink = displayName;
 
-  const target = (href && !ignoreStickyQueryParams && `${href}${search}`) || href;
+  const target = (href && !ignoreQueryParams && `${href}${search}`) || href;
 
   return (
     <Link

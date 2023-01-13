@@ -28,7 +28,7 @@
 }
 
 .ignoreWhitespaceControlContainer {
-  color: var(--bit-text-color, var(--on-surface-neutral-low-color, #282828));
+  color: var(--on-surface-neutral-low-color, #282828);
   width: fit-content;
   padding: 0px 8px;
   height: 24px;
@@ -81,13 +81,11 @@
 }
 
 .compareNav {
-  // @todo get token for this color
   background-color: var(--on-surface-neutral-low-color, #282828);
   gap: 0px !important;
 }
 
 .compareSecondaryNav {
-  // @todo get token for this color
   background: var(--on-surface-neutral-low-color, #282828) !important;
 }
 
