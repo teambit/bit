@@ -19,6 +19,7 @@ type ManifestOrAspect = ExtensionManifest | Aspect;
 
 export type ScopeLoadAspectsOptions = {
   useScopeAspectsCapsule?: boolean;
+  packageManagerConfigRootDir?: string;
 };
 
 export class ScopeAspectsLoader {
@@ -68,7 +69,13 @@ export class ScopeAspectsLoader {
 
   private localAspects: string[] = [];
 
-  async loadAspects(ids: string[], throwOnError = false, neededFor?: string, lane?: Lane): Promise<string[]> {
+  async loadAspects(
+    ids: string[],
+    throwOnError = false,
+    neededFor?: string,
+    lane?: Lane,
+    opts?: ScopeLoadAspectsOptions
+  ): Promise<string[]> {
     if (!ids.length) return [];
     // generate a random callId to be able to identify the call from the logs
     const callId = Math.floor(Math.random() * 1000);
@@ -78,11 +85,11 @@ ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}`);
     const grouped = await this.groupAspectIdsByEnvOfTheList(ids, lane);
     this.logger.info(`${loggerPrefix} getManifestsAndLoadAspects for grouped.envs, total ${grouped.envs?.length || 0}`);
-    const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError, lane);
+    const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError, lane, opts);
     this.logger.info(
       `${loggerPrefix} getManifestsAndLoadAspects for grouped.other, total ${grouped.other?.length || 0}`
     );
-    const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError, lane);
+    const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError, lane, opts);
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
     return envsManifestsIds.concat(otherManifestsIds);
   }
@@ -105,19 +112,26 @@ needed-for: ${neededFor || '<unknown>'}`);
     return grouped as { envs: string[]; other: string[] };
   }
 
-  private async getManifestsAndLoadAspects(ids: string[] = [], throwOnError = false, lane?: Lane): Promise<string[]> {
+  private async getManifestsAndLoadAspects(
+    ids: string[] = [],
+    throwOnError = false,
+    lane?: Lane,
+    opts?: ScopeLoadAspectsOptions
+  ): Promise<string[]> {
     const { manifests: scopeManifests, potentialPluginsIds } = await this.getManifestsGraphRecursively(
       ids,
       [],
       throwOnError,
-      lane
+      lane,
+      opts
     );
     await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
     const { manifests: scopePluginsManifests } = await this.getManifestsGraphRecursively(
       potentialPluginsIds,
       [],
       throwOnError,
-      lane
+      lane,
+      opts
     );
     await this.aspectLoader.loadExtensionsByManifests(scopePluginsManifests);
     const allManifests = scopeManifests.concat(scopePluginsManifests);

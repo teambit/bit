@@ -59,7 +59,7 @@ import { ScopeComponentLoader } from './scope-component-loader';
 import { ScopeCmd } from './scope-cmd';
 import { StagedConfig } from './staged-config';
 import { NoIdMatchPattern } from './exceptions/no-id-match-pattern';
-import { ScopeAspectsLoader } from './scope-aspects-loader';
+import { ScopeAspectsLoader, ScopeLoadAspectsOptions } from './scope-aspects-loader';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
@@ -209,10 +209,11 @@ export class ScopeMain implements ComponentFactory {
     ids: string[],
     throwOnError?: boolean | undefined,
     neededFor?: string | undefined,
-    lane?: Lane
+    lane?: Lane,
+    opts?: ScopeLoadAspectsOptions
   ): Promise<string[]> {
     const scopeAspectsLoader = this.getScopeAspectsLoader();
-    return scopeAspectsLoader.loadAspects(ids, throwOnError, neededFor, lane);
+    return scopeAspectsLoader.loadAspects(ids, throwOnError, neededFor, lane, opts);
   }
   resolveAspects(
     runtimeName?: string | undefined,

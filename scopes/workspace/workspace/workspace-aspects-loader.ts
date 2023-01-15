@@ -91,9 +91,19 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     if (mergedOpts.useScopeAspectsCapsule) {
       idsToLoadFromWs = workspaceIds;
+      const currentLane = await this.consumer.getCurrentLaneObject();
+
       const nonWorkspaceIdsString = nonWorkspaceIds.map((id) => id.toString());
-      scopeAspectIds = await this.scope.loadAspects(nonWorkspaceIdsString, throwOnError, neededFor);
-    } 
+      scopeAspectIds = await this.scope.loadAspects(
+        nonWorkspaceIdsString,
+        throwOnError,
+        neededFor,
+        currentLane || undefined,
+        {
+          packageManagerConfigRootDir: this.workspace.path,
+        }
+      );
+    }
 
     const aspectsDefs = await this.resolveAspects(undefined, idsToLoadFromWs, {
       excludeCore: true,
@@ -494,9 +504,9 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
    * this will resolve the extensions from the scope aspects capsules if they are not in the ws
    * Only use it for component extensions
    * for workspace/scope root aspect use the load aspects directly
-   * 
+   *
    * The reason we are loading component extensions with "scope aspects capsules" is becasuse for component extensions
-   * we might have the same extension in multiple versions 
+   * we might have the same extension in multiple versions
    * (for example I might have 2 components using different versions of the same env)
    * in such case, I can't install both version into the root of the node_modules so I need to place it somewhere else (capsules)
    * @param extensions list of extensions with config to load
@@ -520,7 +530,9 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-    await this.loadAspects(extensionsToLoad, throwOnError, originatedFrom?.toString(), {useScopeAspectsCapsule: true});
+    await this.loadAspects(extensionsToLoad, throwOnError, originatedFrom?.toString(), {
+      useScopeAspectsCapsule: true,
+    });
   }
 
   private async isAspect(id: ComponentID) {
