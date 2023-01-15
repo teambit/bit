@@ -16,9 +16,9 @@ import { RequireableComponent } from '@teambit/harmony.modules.requireable-compo
 import { link } from '@teambit/legacy/dist/api/consumer';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import pMapSeries from 'p-map-series';
-import { uniqBy, difference, compact } from 'lodash';
+import { difference, compact } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { Component, ComponentID, FilterAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
+import { Component, ComponentID, ResolveAspectsOptions } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
 import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
@@ -85,8 +85,17 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
 
     const componentIds = await this.workspace.resolveMultipleComponentIds(idsWithoutCore);
+    const { workspaceIds, nonWorkspaceIds } = await this.groupIdsByWorkspaceExistence(componentIds);
+    let idsToLoadFromWs = componentIds;
+    let scopeAspectIds: string[] = [];
 
-    const aspectsDefs = await this.resolveAspects(undefined, componentIds, {
+    if (mergedOpts.useScopeAspectsCapsule) {
+      idsToLoadFromWs = workspaceIds;
+      const nonWorkspaceIdsString = nonWorkspaceIds.map((id) => id.toString());
+      scopeAspectIds = await this.scope.loadAspects(nonWorkspaceIdsString, throwOnError, neededFor);
+    } 
+
+    const aspectsDefs = await this.resolveAspects(undefined, idsToLoadFromWs, {
       excludeCore: true,
       requestedOnly: false,
       throwOnError,
@@ -117,7 +126,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, throwOnError);
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
     const manifestIds = manifests.map((manifest) => manifest.id);
-    return compact(manifestIds);
+    return compact(manifestIds.concat(scopeAspectIds));
   }
 
   async resolveAspects(
@@ -205,7 +214,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     const allDefs = wsAspectDefs.concat(coreAspectDefs).concat(nonWorkspaceAspectsDefs);
     const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
-    const filteredDefs = this.filterAspectDefs(allDefs, idsToFilter, coreAspectsIds, runtimeName, mergedOpts);
+    const filteredDefs = this.aspectLoader.filterAspectDefs(allDefs, idsToFilter, runtimeName, mergedOpts);
     return filteredDefs;
   }
 
@@ -286,43 +295,6 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       return new RequireableComponent(component, requireFunc);
     });
     return compact(requireableComponents);
-  }
-
-  private filterAspectDefs(
-    allDefs: AspectDefinition[],
-    componentIds: ComponentID[],
-    coreIds: string[],
-    runtimeName: string | undefined,
-    filterOpts: FilterAspectsOptions = {}
-  ) {
-    const stringIds = componentIds.map((id) => id.toStringWithoutVersion());
-    const afterExclusion = filterOpts.excludeCore
-      ? allDefs.filter((def) => {
-          const isCore = coreIds.includes(def.getId || '');
-          const id = ComponentID.fromString(def.getId || '');
-          const isTarget = stringIds.includes(id.toStringWithoutVersion());
-          if (isTarget) return true;
-          return !isCore;
-        })
-      : allDefs;
-
-    const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
-    let defs = uniqDefs;
-    if (runtimeName && filterOpts.filterByRuntime) {
-      defs = defs.filter((def) => def.runtimePath);
-    }
-
-    if (componentIds && componentIds.length && filterOpts.requestedOnly) {
-      const componentIdsString = componentIds.map((id) => id.toString());
-      defs = defs.filter((def) => {
-        return (
-          (def.id && componentIdsString.includes(def.id)) ||
-          (def.component && componentIdsString.includes(def.component?.id.toString()))
-        );
-      });
-    }
-
-    return defs;
   }
 
   private async linkIfMissingWorkspaceAspects(aspects: AspectDefinition[], ids: ComponentID[]) {
@@ -596,5 +568,19 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       })
     );
     return { workspaceComps, nonWorkspaceComps };
+  }
+
+  private async groupIdsByWorkspaceExistence(
+    ids: ComponentID[]
+  ): Promise<{ workspaceIds: ComponentID[]; nonWorkspaceIds: ComponentID[] }> {
+    const workspaceIds: ComponentID[] = [];
+    const nonWorkspaceIds: ComponentID[] = [];
+    await Promise.all(
+      ids.map(async (id) => {
+        const existOnWorkspace = await this.workspace.hasId(id);
+        existOnWorkspace ? workspaceIds.push(id) : nonWorkspaceIds.push(id);
+      })
+    );
+    return { workspaceIds, nonWorkspaceIds };
   }
 }
