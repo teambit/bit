@@ -42,6 +42,7 @@ import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
+import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
 import { remove } from '@teambit/legacy/dist/api/scope';
 import { BitError } from '@teambit/bit-error';
@@ -60,7 +61,6 @@ import { ScopeCmd } from './scope-cmd';
 import { StagedConfig } from './staged-config';
 import { NoIdMatchPattern } from './exceptions/no-id-match-pattern';
 import { ScopeAspectsLoader, ScopeLoadAspectsOptions } from './scope-aspects-loader';
-import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
