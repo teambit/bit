@@ -6,7 +6,7 @@ import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { Compiler } from '@teambit/compiler';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
-import { compact, uniq, uniqBy, difference, groupBy } from 'lodash';
+import { compact, uniq, difference, groupBy } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { ExtensionManifest, Aspect } from '@teambit/harmony';
@@ -196,7 +196,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     return components;
   }
 
-  private async resolveLocalAspects(ids: string[], runtime?: string) {
+  private async resolveLocalAspects(ids: string[], runtime?: string): Promise<AspectDefinition[]> {
     const dirs = this.parseLocalAspect(ids);
 
     return dirs.map((dir) => {
@@ -431,11 +431,11 @@ needed-for: ${neededFor || '<unknown>'}`);
     const mergedOpts = { ...defaultOpts, ...opts };
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     let userAspectsIds;
-    let requestedCoreStringIds;
+    // let requestedCoreStringIds;
     if (componentIds && componentIds.length) {
       const groupedByIsCore = groupBy(componentIds, (id) => coreAspectsIds.includes(id.toString()));
       userAspectsIds = groupedByIsCore.false || [];
-      requestedCoreStringIds = groupedByIsCore.true?.map((id) => id.toStringWithoutVersion()) || [];
+      // requestedCoreStringIds = groupedByIsCore.true?.map((id) => id.toStringWithoutVersion()) || [];
     } else {
       userAspectsIds = await this.scope.resolveMultipleComponentIds(this.aspectLoader.getUserAspects());
     }
@@ -450,36 +450,14 @@ needed-for: ${neededFor || '<unknown>'}`);
     const coreAspectsDefs = await this.aspectLoader.getCoreAspectDefs(runtimeName);
 
     const allDefs = userAspectsDefs.concat(coreAspectsDefs).concat(localResolved);
-    let afterExclusion = allDefs;
-    if (mergedOpts.excludeCore) {
-      const userAspectsIdsWithoutVersion = userAspectsIds.map((aspectId) => aspectId.toStringWithoutVersion());
-      const userAspectsIdsWithoutVersionAndCoreRequested = userAspectsIdsWithoutVersion.concat(requestedCoreStringIds);
-      afterExclusion = allDefs.filter((def) => {
-        const id = ComponentID.fromString(def.getId || '');
-        const isTarget = userAspectsIdsWithoutVersionAndCoreRequested.includes(id.toStringWithoutVersion());
-        // If it's core, but requested explicitly, keep it
-        if (isTarget) return true;
-        const isCore = coreAspectsDefs.find((coreId) => def.getId === coreId.getId);
-        return !isCore;
-      });
-    }
-
-    const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
-    let defs = uniqDefs;
-    if (runtimeName && mergedOpts.filterByRuntime) {
-      defs = defs.filter((def) => def.runtimePath);
-    }
-
-    if (componentIds && componentIds.length && mergedOpts.requestedOnly) {
-      const componentIdsString = componentIds.map((id) => id.toString());
-      defs = defs.filter((def) => {
-        return (
-          (def.id && componentIdsString.includes(def.id)) ||
-          (def.component && componentIdsString.includes(def.component?.id.toString()))
-        );
-      });
-    }
-
-    return defs;
+    // const userAspectsIdsWithoutVersion = userAspectsIds.map((aspectId) => aspectId.toStringWithoutVersion());
+    // const userAspectsIdsWithoutVersionAndCoreRequested = userAspectsIdsWithoutVersion.concat(requestedCoreStringIds);
+    const filteredDefs = this.aspectLoader.filterAspectDefs(
+      allDefs,
+      componentIds || userAspectsIds,
+      runtimeName,
+      mergedOpts
+    );
+    return filteredDefs;
   }
 }

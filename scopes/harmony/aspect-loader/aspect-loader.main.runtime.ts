@@ -6,7 +6,7 @@ import { GLOBAL_SCOPE, DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constan
 import { MainRuntime } from '@teambit/cli';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
-import { ComponentID, Component } from '@teambit/component';
+import { ComponentID, Component, FilterAspectsOptions } from '@teambit/component';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { replaceFileExtToJs } from '@teambit/compilation.modules.babel-compiler';
@@ -510,6 +510,43 @@ export class AspectLoaderMain {
     }
 
     return { components, globalScopeHarmony };
+  }
+
+  filterAspectDefs(
+    allDefs: AspectDefinition[],
+    componentIds: ComponentID[],
+    runtimeName: string | undefined,
+    filterOpts: FilterAspectsOptions = {}
+  ) {
+    const coreIds = this.getCoreAspectIds();
+    const stringIds = componentIds.map((id) => id.toStringWithoutVersion());
+    const afterExclusion = filterOpts.excludeCore
+      ? allDefs.filter((def) => {
+          const isCore = coreIds.includes(def.getId || '');
+          const id = ComponentID.fromString(def.getId || '');
+          const isTarget = stringIds.includes(id.toStringWithoutVersion());
+          if (isTarget) return true;
+          return !isCore;
+        })
+      : allDefs;
+
+    const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
+    let defs = uniqDefs;
+    if (runtimeName && filterOpts.filterByRuntime) {
+      defs = defs.filter((def) => def.runtimePath);
+    }
+
+    if (componentIds && componentIds.length && filterOpts.requestedOnly) {
+      const componentIdsString = componentIds.map((id) => id.toString());
+      defs = defs.filter((def) => {
+        return (
+          (def.id && componentIdsString.includes(def.id)) ||
+          (def.component && componentIdsString.includes(def.component?.id.toString()))
+        );
+      });
+    }
+
+    return defs;
   }
 
   private prepareManifests(manifests: Array<ExtensionManifest | Aspect>): Aspect[] {
