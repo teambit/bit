@@ -33,7 +33,7 @@ export type EnvOptions = {};
 
 export type EnvTransformer = (env: Environment) => Environment;
 
-export type ServiceSlot = SlotRegistry<Array<EnvService<any>>>;
+export type ServicesRegistry = SlotRegistry<Array<EnvService<any>>>;
 
 export type Descriptor = {
   id: string;
@@ -75,10 +75,10 @@ export class EnvsMain {
 
     private logger: Logger,
 
-    private serviceSlot: ServiceSlot,
+    private servicesRegistry: ServicesRegistry,
 
     private componentMain: ComponentMain,
-    
+
     private loggerMain: LoggerMain,
 
     private workerMain: WorkerMain
@@ -203,7 +203,7 @@ export class EnvsMain {
     const withVersionMatchId = withVersionMatch?.[0];
     if (withVersionMatchId) return withVersionMatchId;
 
-    // Handle core envs 
+    // Handle core envs
     const exactMatch = this.envSlot.toArray().find(([envId]) => {
       return envIdFromEnvData === envId;
     });
@@ -383,7 +383,7 @@ export class EnvsMain {
   }
 
   getEnvPlugin() {
-    return new EnvPlugin(this.envSlot, this.loggerMain, this.workerMain, this.harmony);
+    return new EnvPlugin(this.envSlot, this.servicesRegistry, this.loggerMain, this.workerMain, this.harmony);
   }
 
   /**
@@ -580,7 +580,7 @@ export class EnvsMain {
    * register a new environment service.
    */
   registerService(...envServices: EnvService<any>[]) {
-    this.serviceSlot.register(envServices);
+    this.servicesRegistry.register(envServices);
     return this;
   }
 
@@ -588,7 +588,7 @@ export class EnvsMain {
    * get list of services enabled on an env.
    */
   getServices(env: EnvDefinition): EnvServiceList {
-    const allServices = this.serviceSlot.toArray();
+    const allServices = this.servicesRegistry.toArray();
     const services: [string, EnvService<any>][] = [];
     allServices.forEach(([id, currentServices]) => {
       currentServices.forEach((service) => {
@@ -646,7 +646,14 @@ export class EnvsMain {
   private async getEnvAspectDef(envId: string): Promise<AspectDefinition> {
     const host = this.componentMain.getHost();
     const id = await host.resolveComponentId(envId);
-    const def = (await host.resolveAspects(MainRuntime.name, [id], { requestedOnly: true }))[0];
+    // We don't want to filter by runtime here as we want to also get envs that configured as plugins. so they don't
+    // contain the runtime path.
+    const resolvedAspects = await host.resolveAspects(MainRuntime.name, [id], {
+      requestedOnly: true,
+      filterByRuntime: false,
+    });
+    const def = resolvedAspects[0];
+
     return def;
   }
 
@@ -665,11 +672,11 @@ export class EnvsMain {
   static async provider(
     [graphql, loggerAspect, component, cli, worker]: [GraphqlMain, LoggerMain, ComponentMain, CLIMain, WorkerMain],
     config: EnvsConfig,
-    [envSlot, serviceSlot]: [EnvsRegistry, ServiceSlot],
+    [envSlot, servicesRegistry]: [EnvsRegistry, ServicesRegistry],
     context: Harmony
   ) {
     const logger = loggerAspect.createLogger(EnvsAspect.id);
-    const envs = new EnvsMain(config, context, envSlot, logger, serviceSlot, component, loggerAspect, worker);
+    const envs = new EnvsMain(config, context, envSlot, logger, servicesRegistry, component, loggerAspect, worker);
     component.registerShowFragments([new EnvFragment(envs)]);
     const envsCmd = new EnvsCmd(envs, component);
     envsCmd.commands = [new ListEnvsCmd(envs, component), new GetEnvCmd(envs, component)];

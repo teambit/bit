@@ -2,12 +2,11 @@ import React from 'react';
 import { RouteProps } from 'react-router-dom';
 import flatten from 'lodash.flatten';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
 import { ComponentCompare } from '@teambit/component.ui.component-compare.component-compare';
 import { UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { ComponentCompareProps } from '@teambit/component.ui.component-compare.models.component-compare-props';
+import { ComponentCompareProps, TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { ComponentCompareChangelog } from '@teambit/component.ui.component-compare.changelog';
 import { ComponentCompareAspects } from '@teambit/component.ui.component-compare.compare-aspects.compare-aspects';
 import { AspectsCompareSection } from './component-compare-aspects.section';
@@ -15,12 +14,8 @@ import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
 import { CompareChangelogSection } from './component-compare-changelog.section';
 
-export type ComponentCompareNav = {
-  props: NavLinkProps;
-  order: number;
-};
-
-export type ComponentCompareNavSlot = SlotRegistry<Array<ComponentCompareNav>>;
+export type ComponentCompareNav = Array<TabItem>;
+export type ComponentCompareNavSlot = SlotRegistry<ComponentCompareNav>;
 export class ComponentCompareUI {
   constructor(private host: string, private navSlot: ComponentCompareNavSlot, private routeSlot: RouteSlot) {}
 
@@ -46,11 +41,11 @@ export class ComponentCompareUI {
     return <ComponentCompareChangelog />;
   };
 
-  registerNavigation(route: ComponentCompareNav | Array<ComponentCompareNav>) {
-    if (Array.isArray(route)) {
-      this.navSlot.register(route);
+  registerNavigation(nav: TabItem | Array<TabItem>) {
+    if (Array.isArray(nav)) {
+      this.navSlot.register(nav);
     } else {
-      this.navSlot.register([route]);
+      this.navSlot.register([nav]);
     }
     return this;
   }
@@ -82,16 +77,8 @@ export class ComponentCompareUI {
     componentUi.registerWidget(componentCompareSection.navigationLink, componentCompareSection.order);
     const aspectCompareSection = new AspectsCompareSection(componentCompareUI);
     const compareChangelog = new CompareChangelogSection(componentCompareUI);
-    componentCompareUI.registerNavigation([
-      {
-        props: aspectCompareSection.navigationLink,
-        order: aspectCompareSection.navigationLink.order,
-      },
-      {
-        props: compareChangelog.navigationLink,
-        order: compareChangelog.navigationLink.order,
-      },
-    ]);
+
+    componentCompareUI.registerNavigation([aspectCompareSection, compareChangelog]);
 
     componentCompareUI.registerRoutes([aspectCompareSection.route, compareChangelog.route]);
     return componentCompareUI;

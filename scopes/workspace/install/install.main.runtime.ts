@@ -38,7 +38,9 @@ import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
 import UpdateCmd from './update.cmd';
 
-export type WorkspaceLinkOptions = LinkingOptions;
+export type WorkspaceLinkOptions = LinkingOptions & {
+  rootPolicy?: WorkspacePolicy
+};
 
 export type WorkspaceInstallOptions = {
   addMissingPeers?: boolean;
@@ -188,7 +190,7 @@ export class InstallMain {
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
-    let installCycle = 0
+    let installCycle = 0;
     let hasMissingLocalComponents = true;
     /* eslint-disable no-await-in-loop */
     do {
@@ -212,6 +214,7 @@ export class InstallMain {
       await this.linkCoreAspectsAndLegacy({
         linkTeambitBit: false,
         linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
+        rootPolicy: mergedRootPolicy
       });
       if (options?.compile) {
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
@@ -284,6 +287,7 @@ export class InstallMain {
   async addDuplicateComponentAndPackageIssue(components: Component[]) {
     const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
     components.forEach((component) => {
+      if (component.state._consumer.removed) return;
       const pkgName = componentIdToPackageName(component.state._consumer);
       const found = workspacePolicy.find(pkgName);
       if (found) {
@@ -361,7 +365,7 @@ export class InstallMain {
       linkingOptions: options,
     });
     const compIds = await this.workspace.listIds();
-    const res = await linker.linkCoreAspectsAndLegacy(this.workspace.path, compIds, options);
+    const res = await linker.linkCoreAspectsAndLegacy(this.workspace.path, compIds, options.rootPolicy, options);
     return res;
   }
 
@@ -502,11 +506,12 @@ export class InstallMain {
 type ComponentsAndManifests = {
   componentDirectoryMap: ComponentMap<string>;
   manifests: Record<string, ProjectManifest>;
-}
+};
 
-function hasComponentsFromWorkspaceInMissingDeps(
-  { componentDirectoryMap, manifests }: ComponentsAndManifests
-): boolean {
+function hasComponentsFromWorkspaceInMissingDeps({
+  componentDirectoryMap,
+  manifests,
+}: ComponentsAndManifests): boolean {
   const missingDeps = new Set<string>(
     componentDirectoryMap
       .toArray()

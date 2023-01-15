@@ -40,6 +40,7 @@ describe('applyUpdates()', () => {
           lifecycleType: 'peer',
         },
       ],
+      // @ts-ignore
       { updateExisting: true }
     );
   });

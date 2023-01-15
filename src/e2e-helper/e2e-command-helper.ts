@@ -112,8 +112,8 @@ export default class CommandHelper {
     return JSON.parse(result);
   }
 
-  catObject(hash: string, parse = false) {
-    const result = this.runCmd(`bit cat-object ${hash}`);
+  catObject(hash: string, parse = false, cwd?: string) {
+    const result = this.runCmd(`bit cat-object ${hash}`, cwd);
     if (!parse) return result;
     return JSON.parse(result);
   }
@@ -492,8 +492,8 @@ export default class CommandHelper {
     return this.runCmd(`bit status ${flags}`);
   }
 
-  statusJson(cwd = this.scopes.localPath): Record<string, any> {
-    const status = this.runCmd('bit status --json', cwd);
+  statusJson(cwd = this.scopes.localPath, flags = ''): Record<string, any> {
+    const status = this.runCmd(`bit status --json ${flags}`, cwd);
     return JSON.parse(status);
   }
 

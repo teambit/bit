@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
-import { WILDCARD_HELP, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
+import { WILDCARD_HELP, AUTO_SNAPPED_MSG, MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import {
   ApplyVersionResults,
   conflictSummaryReport,
@@ -11,6 +11,7 @@ import {
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BitError } from '@teambit/bit-error';
 import { MergingMain } from './merging.main.runtime';
+import { ConfigMergeResult } from './config-merge-result';
 
 export class MergeCmd implements Command {
   name = 'merge [values...]';
@@ -116,7 +117,8 @@ export function mergeReport({
   mergeSnapError,
   leftUnresolvedConflicts,
   verbose,
-}: ApplyVersionResults): string {
+  configMergeResults,
+}: ApplyVersionResults & { configMergeResults?: ConfigMergeResult[] }): string {
   const getSuccessOutput = () => {
     if (!components || !components.length) return '';
     // @ts-ignore version is set in case of merge command
@@ -127,10 +129,20 @@ export function mergeReport({
 
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
-    const title = `\nfiles with conflicts summary\n`;
+    const title = `\n\nfiles with conflicts summary\n`;
     const suggestion = `\n\nthe merge process wasn't completed due to the conflicts above. fix them manually and then run "bit install".
 once ready, snap/tag the components to complete the merge.`;
     return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
+  };
+
+  const configMergeWithConflicts = configMergeResults?.filter((c) => c.hasConflicts()) || [];
+  const getConfigMergeConflictSummary = () => {
+    if (!configMergeWithConflicts.length) return '';
+    const comps = configMergeWithConflicts.map((c) => c.compIdStr).join('\n');
+    const title = `\n\ncomponents with config-merge conflicts\n`;
+    const suggestion = `\nconflicts were found while trying to merge the config. fix them manually by editing the ${MergeConfigFilename} file in the workspace root.
+once ready, snap/tag the components to complete the merge.`;
+    return chalk.underline(title) + comps + chalk.yellow(suggestion);
   };
 
   const getSnapsOutput = () => {
@@ -199,5 +211,12 @@ ${mergeSnapError.message}
     return newLines + title + mergedStr + unchangedLegitimatelyStr + failedToMergeStr + autoSnappedStr;
   };
 
-  return getSuccessOutput() + getFailureOutput() + getSnapsOutput() + getConflictSummary() + getSummary();
+  return (
+    getSuccessOutput() +
+    getFailureOutput() +
+    getSnapsOutput() +
+    getConfigMergeConflictSummary() +
+    getConflictSummary() +
+    getSummary()
+  );
 }

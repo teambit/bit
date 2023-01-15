@@ -1,5 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ComponentDependency, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { BitId } from '@teambit/legacy-bit-id';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
@@ -165,7 +165,7 @@ please specify the target-id arg`);
     }
     const targetCompId = this.newComponentHelper.getNewComponentId(targetId, undefined, options?.scope);
 
-    const config = await this.getConfig(existing);
+    const config = await this.getConfig(existing, options);
     await this.newComponentHelper.writeAndAddNewComp(existing, targetCompId, options, config);
     if (options?.refactor) {
       const allComponents = await this.workspace.list();
@@ -199,7 +199,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
         },
       ]
     );
-    const config = await this.getConfig(component);
+    const config = await this.getConfig(component, options);
     await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, options, config);
 
     return { targetCompId, component };
@@ -223,8 +223,17 @@ the reason is that the refactor changes the components using ${sourceId.toString
 
   private async extractDeps(component: Component) {
     const deps = await this.dependencyResolver.getDependencies(component);
+    const excludePackages = ['@teambit/legacy'];
+    const excludeCompIds = this.dependencyResolver.getCompIdsThatShouldNotBeInPolicy();
     return deps
       .filter((dep) => dep.source === 'auto')
+      .filter((dep) => {
+        if (dep instanceof ComponentDependency) {
+          const compIdStr = dep.componentId.toStringWithoutVersion();
+          return !excludeCompIds.includes(compIdStr);
+        }
+        return !excludePackages.includes(dep.id);
+      })
       .map((dep) => ({
         dependencyId: dep.getPackageName?.() || dep.id,
         lifecycleType: dep.lifecycle === 'dev' ? 'runtime' : dep.lifecycle,
@@ -234,8 +243,10 @@ the reason is that the refactor changes the components using ${sourceId.toString
       }));
   }
 
-  private async getConfig(comp: Component) {
-    const fromExisting = await this.newComponentHelper.getConfigFromExistingToNewComponent(comp);
+  private async getConfig(comp: Component, options?: ForkOptions) {
+    const fromExisting = options?.skipConfig
+      ? {}
+      : await this.newComponentHelper.getConfigFromExistingToNewComponent(comp);
     return {
       ...fromExisting,
       [ForkingAspect.id]: {

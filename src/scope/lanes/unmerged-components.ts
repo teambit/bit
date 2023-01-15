@@ -29,6 +29,10 @@ export type UnmergedComponent = {
    * the head is coming from a component with the same name and scope but has no snap in common
    */
   unrelated?: boolean;
+  /**
+   * aspects config that were merged successfully
+   */
+  mergedConfig?: Record<string, any>;
 };
 
 const UNMERGED_FILENAME = 'unmerged.json';

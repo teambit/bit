@@ -49,10 +49,7 @@ export class CompositionsUI {
     const compositionCompare = new CompositionCompareSection(compositions);
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);
-    componentCompare.registerNavigation({
-      props: compositionCompare.navigationLink,
-      order: compositionCompare.navigationLink.order,
-    });
+    componentCompare.registerNavigation(compositionCompare);
     componentCompare.registerRoutes([compositionCompare.route]);
     return compositions;
   }

@@ -8,6 +8,7 @@ export {
 export { Registries, Registry } from './registry';
 export {
   InstallationContext,
+  PackageImportMethod,
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,
@@ -63,6 +64,7 @@ export {
 } from './dependency-linker';
 export { InstallOptions, InstallArgs, DependencyInstaller } from './dependency-installer';
 export { DependencyDetector, FileContext } from './dependency-detector';
-export { DependencySource } from './policy/variant-policy/variant-policy';
+export { DependencySource, VariantPolicyEntry } from './policy/variant-policy/variant-policy';
 export { OutdatedPkg } from './get-all-policy-pkgs';
 export { extendWithComponentsFromDir } from './extend-with-components-from-dir';
+export { isRange } from './manifest/deduping/hoist-dependencies';

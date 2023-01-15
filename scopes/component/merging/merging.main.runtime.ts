@@ -31,6 +31,7 @@ import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { compact } from 'lodash';
 import { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
 import threeWayMerge, {
   MergeResultsThreeWay,
@@ -42,6 +43,8 @@ import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-di
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
+import { ConfigMerger } from './config-merger';
+import { ConfigMergeResult } from './config-merge-result';
 
 type ResolveUnrelatedData = { strategy: MergeStrategy; head: Ref };
 
@@ -54,6 +57,7 @@ export type ComponentMergeStatus = {
   mergeResults?: MergeResultsThreeWay | null;
   divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
+  configMergeResult?: ConfigMergeResult;
 };
 
 export type ComponentMergeStatusBeforeMergeAttempt = {
@@ -210,7 +214,7 @@ export class MergingMain {
     // which can be an issue when some components are also dependencies of others
     const componentsResults = await mapSeries(
       succeededComponents,
-      async ({ currentComponent, id, mergeResults, resolvedUnrelated }) => {
+      async ({ currentComponent, id, mergeResults, resolvedUnrelated, configMergeResult }) => {
         const modelComponent = await consumer.scope.getModelComponent(id);
         const updatedLaneId = laneId.isDefault() ? LaneId.from(laneId.name, id.scope as string) : laneId;
         return this.applyVersion({
@@ -222,9 +226,13 @@ export class MergingMain {
           laneId: updatedLaneId,
           localLane,
           resolvedUnrelated,
+          configMergeResult,
         });
       }
     );
+
+    const allConfigMerge = succeededComponents.map((c) => c.configMergeResult);
+    await this.generateConfigMergeConflictFileForAll(compact(allConfigMerge));
 
     if (localLane) consumer.scope.objects.add(localLane);
 
@@ -234,8 +242,9 @@ export class MergingMain {
 
     await consumer.writeBitMap();
 
+    const componentsHasConfigMergeConflicts = allComponentsStatus.some((c) => c.configMergeResult?.hasConflicts());
     const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
-    if (!skipDependencyInstallation && !leftUnresolvedConflicts) {
+    if (!skipDependencyInstallation && !leftUnresolvedConflicts && !componentsHasConfigMergeConflicts) {
       try {
         await this.install.install(undefined, {
           dedupe: true,
@@ -251,7 +260,7 @@ export class MergingMain {
     const getSnapOrTagResults = async () => {
       // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
       // and some not. besides the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
-      if (noSnap || leftUnresolvedConflicts) {
+      if (noSnap || leftUnresolvedConflicts || componentsHasConfigMergeConflicts) {
         return null;
       }
       if (tag) {
@@ -278,6 +287,18 @@ export class MergingMain {
       mergeSnapError,
       leftUnresolvedConflicts,
     };
+  }
+
+  private async generateConfigMergeConflictFileForAll(allConfigMerge: ConfigMergeResult[]) {
+    const configMergeFile = this.workspace.getConflictMergeFile();
+    allConfigMerge.forEach((configMerge) => {
+      const conflict = configMerge.generateMergeConflictFile();
+      if (!conflict) return;
+      configMergeFile.addConflict(configMerge.compIdStr, conflict);
+    });
+    if (configMergeFile.hasConflict()) {
+      await configMergeFile.write();
+    }
   }
 
   /**
@@ -313,12 +334,13 @@ export class MergingMain {
     ) as ComponentMergeStatus[];
     const compStatusNeedMerge = componentStatusBeforeMergeAttempt.filter((c) => c.mergeProps);
 
-    const otherLaneName = otherLane ? otherLane.toLaneId().toString() : DEFAULT_LANE;
     const getComponentsStatusNeedMerge = async (): Promise<ComponentMergeStatus[]> => {
       const tmp = new Tmp(this.consumer.scope);
       try {
         const componentsStatus = await Promise.all(
-          compStatusNeedMerge.map((compStatus) => this.getComponentMergeStatus(currentLane, otherLaneName, compStatus))
+          compStatusNeedMerge.map((compStatus) =>
+            this.getComponentMergeStatus(currentLane, otherLane || undefined, compStatus)
+          )
         );
         await tmp.clear();
         return componentsStatus;
@@ -328,6 +350,7 @@ export class MergingMain {
       }
     };
     const results = await getComponentsStatusNeedMerge();
+
     results.push(...compStatusNotNeedMerge);
     return results;
   }
@@ -497,7 +520,7 @@ export class MergingMain {
 
   private async getComponentMergeStatus(
     localLane: Lane | null, // currently checked out lane. if on main, then it's null.
-    otherLaneName: string, // the lane name we want to merged to our lane. (can be also "main").
+    otherLane: Lane | undefined, // the lane name we want to merged to our lane. (can be also "main").
     componentMergeStatusBeforeMergeAttempt: ComponentMergeStatusBeforeMergeAttempt
   ) {
     const { id, divergeData, currentComponent, mergeProps } = componentMergeStatusBeforeMergeAttempt;
@@ -509,18 +532,42 @@ export class MergingMain {
     if (!currentComponent) throw new Error(`getDivergedMergeStatus, currentComponent is missing for ${id.toString()}`);
 
     const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
+    this.logger.debug(`merging snaps details:
+id:      ${id.toStringWithoutVersion()}
+base:    ${baseSnap.toString()}
+current: ${currentId.version}
+other:   ${otherLaneHead.toString()}`);
     const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
     const otherComponent: Version = await modelComponent.loadVersion(otherLaneHead.toString(), repo);
+
     const currentLaneName = localLane?.toLaneId().toString() || 'main';
+    const otherLaneName = otherLane ? otherLane.toLaneId().toString() : DEFAULT_LANE;
+    const currentLabel = `${currentId.version} (${currentLaneName === otherLaneName ? 'current' : currentLaneName})`;
+    const otherLabel = `${otherLaneHead.toString()} (${
+      otherLaneName === currentLaneName ? 'incoming' : otherLaneName
+    })`;
+    const workspaceIds = await this.workspace.listIds();
+    const configMerger = new ConfigMerger(
+      id.toStringWithoutVersion(),
+      workspaceIds,
+      otherLane,
+      currentComponent.extensions,
+      baseComponent.extensions,
+      otherComponent.extensions,
+      currentLabel,
+      otherLabel
+    );
+    const configMergeResult = configMerger.merge();
+
     const mergeResults = await threeWayMerge({
       consumer,
       otherComponent,
-      otherLabel: `${otherLaneHead.toString()} (${otherLaneName === currentLaneName ? 'incoming' : otherLaneName})`,
+      otherLabel,
       currentComponent,
-      currentLabel: `${currentId.version} (${currentLaneName === otherLaneName ? 'current' : currentLaneName})`,
+      currentLabel,
       baseComponent,
     });
-    return { currentComponent, id, mergeResults, divergeData };
+    return { currentComponent, id, mergeResults, divergeData, configMergeResult };
   }
 
   private async applyVersion({
@@ -532,6 +579,7 @@ export class MergingMain {
     laneId,
     localLane,
     resolvedUnrelated,
+    configMergeResult,
   }: {
     currentComponent: ConsumerComponent | null | undefined;
     id: BitId;
@@ -541,6 +589,7 @@ export class MergingMain {
     laneId: LaneId;
     localLane: Lane | null;
     resolvedUnrelated?: ResolveUnrelatedData;
+    configMergeResult?: ConfigMergeResult;
   }): Promise<ApplyVersionResult> {
     const consumer = this.workspace.consumer;
     let filesStatus = {};
@@ -609,6 +658,18 @@ export class MergingMain {
       verbose: false, // @todo: do we need a flag here?
     });
     await manyComponentsWriter.writeAll();
+
+    if (configMergeResult) {
+      if (!componentWithDependencies.component.writtenPath) {
+        throw new Error(`componentWithDependencies.component.writtenPath is missing for ${id.toString()}`);
+      }
+      const successfullyMergedConfig = configMergeResult.getSuccessfullyMergedConfig();
+      if (successfullyMergedConfig) {
+        unmergedComponent.mergedConfig = successfullyMergedConfig;
+        // no need to `unmergedComponents.addEntry` here. it'll be added in the next lines inside `if (mergeResults)`.
+        // because if `configMergeResult` is set, `mergeResults` must be set as well. both happen on diverge.
+      }
+    }
 
     // if mergeResults, the head snap is going to be updated on a later phase when snapping with two parents
     // otherwise, update the head of the current lane or main

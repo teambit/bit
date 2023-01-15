@@ -171,6 +171,8 @@ export const DEFAULT_BIT_ENV = 'production';
 // https://github.com/mscdex/ssh2/issues/142
 export const DEFAULT_SSH_READY_TIMEOUT = 99999;
 
+export const MergeConfigFilename = 'merge-conflict';
+
 export const IGNORE_LIST = [
   '**/.bit.map.json',
   '**/.bitmap',

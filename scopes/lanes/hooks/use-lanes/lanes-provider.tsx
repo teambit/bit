@@ -31,7 +31,6 @@ export function LanesProvider({ children, viewedLaneId: viewedIdFromProps, targe
 
     const viewedLaneIdToSet =
       viewedLaneIdFromUrl ||
-      viewedLaneId ||
       (onHomeRoute && lanesModel?.currentLane?.id) ||
       lanesModel?.lanes.find((lane) => lane.id.isDefault())?.id;
 
@@ -39,11 +38,11 @@ export function LanesProvider({ children, viewedLaneId: viewedIdFromProps, targe
   }, [location?.pathname]);
 
   useEffect(() => {
-    lanesModel?.setViewedLane(viewedLaneId);
+    lanesModel?.setViewedOrDefaultLane(viewedLaneId);
     setLanesState(lanesModel);
   }, [loading, lanesModel?.lanes.length]);
 
-  lanesState?.setViewedLane(viewedLaneId);
+  lanesState?.setViewedOrDefaultLane(viewedLaneId);
 
   const lanesContextModel: LanesContextModel = {
     lanesModel: lanesState,
