@@ -1,7 +1,7 @@
 /**
   * Monaco container is not flex so providing it a fixed calculated height
   * so it can fill up the remaining space correctly instead of overflowing
-  *  diff editor headers: h4 (24px) + padding (16px * 2) = 56px
+  *  diff editor headers: h4 (24px) + padding (8px * 2) = 56px
   */
 $editor-padding: 56px;
 
@@ -26,7 +26,7 @@ $editor-padding: 56px;
 .componentCompareAspectCalculatedDiff {
   display: flex;
   flex: 1;
-  padding: 8px;
+  padding: 0px 8px;
   height: 100%;
   flex-direction: column;
 

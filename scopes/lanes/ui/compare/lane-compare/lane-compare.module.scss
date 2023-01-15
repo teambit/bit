@@ -40,6 +40,6 @@
   padding: 16px 0px;
   top: 0;
   position: sticky;
-  background: #fff;
+  background: var(--background-color, #121212);
   z-index: $nav-z-index;
 }
