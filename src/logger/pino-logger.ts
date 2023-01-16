@@ -1,12 +1,12 @@
 import prettifier from 'pino-pretty';
-import type {PrettyOptions} from 'pino-pretty';
+import type { PrettyOptions } from 'pino-pretty';
 import pino, { Logger as PinoLogger, LoggerOptions } from 'pino';
 import { DEBUG_LOG } from '../constants';
 
 export function getPinoLogger(
   logLevel: string,
   jsonFormat: string,
-  useWorkers = false
+  useWorkers = true
 ): { pinoLogger: PinoLogger; pinoLoggerConsole: PinoLogger } {
   // https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
   const PinoLevelToSeverityLookup = {
@@ -91,11 +91,11 @@ export function getPinoLoggerWithWorkers(
 
   const pinoConsoleOpts = {
     ...loggerOptions,
-    transport: transportConsole
+    transport: transportConsole,
     // transport: jsonFormat
-      // ? { targets: [{...transportFile, level: logLevel}, {...transportConsole, level: logLevel}] }
-      // ? { targets: [transportFile, transportConsole] }
-      // : transportConsole,
+    // ? { targets: [{...transportFile, level: logLevel}, {...transportConsole, level: logLevel}] }
+    // ? { targets: [transportFile, transportConsole] }
+    // : transportConsole,
   };
 
   const pinoLogger = pino(pinoFileOpts);
@@ -103,8 +103,6 @@ export function getPinoLoggerWithWorkers(
 
   return { pinoLogger, pinoLoggerConsole };
 }
-
-
 
 export function getPinoLoggerWithoutWorkers(
   jsonFormat: string,

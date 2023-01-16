@@ -3,6 +3,7 @@ import { compact, sortBy, uniqWith } from 'lodash';
 import { snapToSemver } from '@teambit/component-package-version';
 import { DependenciesOverridesData } from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { Policy, PolicyConfigKeys, PolicyConfigKeysNames, PolicyEntry, SemverVersion } from '../policy';
+import { EnvJsoncPolicyPeerEntry } from '../env-policy/env-policy';
 import { DependencyLifecycleType, KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME } from '../../dependencies';
 
 export type VariantPolicyConfigObject = Partial<Record<keyof PolicyConfigKeys, VariantPolicyLifecycleConfigObject>>;
@@ -291,6 +292,13 @@ function entriesFromObjectKey(
     return undefined;
   });
   return compact(entries);
+}
+
+export function uniqPeerEntries(entries: Array<Array<EnvJsoncPolicyPeerEntry>>): Array<EnvJsoncPolicyPeerEntry> {
+  const uniq = uniqWith(entries, (entry1: Array<EnvJsoncPolicyPeerEntry>, entry2: Array<EnvJsoncPolicyPeerEntry>) => {
+    return entry1.name === entry2.dependencyId && entry1.lifecycleType === entry2.lifecycleType;
+  });
+  return uniq;
 }
 
 function entriesFromArrayKey(
