@@ -868,12 +868,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/multi-tester"
     },
-    "navigation/responsive-navbar": {
-        "scope": "teambit.design",
-        "version": "0.0.4",
-        "mainFile": "index.ts",
-        "rootDir": "components/navigation/responsive-navbar"
-    },
     "network/agent": {
         "scope": "teambit.toolbox",
         "version": "0.0.550",
