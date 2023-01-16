@@ -94,15 +94,29 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       const currentLane = await this.consumer.getCurrentLaneObject();
 
       const nonWorkspaceIdsString = nonWorkspaceIds.map((id) => id.toString());
-      scopeAspectIds = await this.scope.loadAspects(
-        nonWorkspaceIdsString,
-        throwOnError,
-        neededFor,
-        currentLane || undefined,
-        {
-          packageManagerConfigRootDir: this.workspace.path,
+      try {
+        scopeAspectIds = await this.scope.loadAspects(
+          nonWorkspaceIdsString,
+          throwOnError,
+          neededFor,
+          currentLane || undefined,
+          {
+            packageManagerConfigRootDir: this.workspace.path,
+          }
+        );
+      } catch (err: any) {
+        if (err instanceof ComponentNotFound) {
+          const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
+          const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
+          if (configStr.includes(err.id)) {
+            throw new BitError(`error: a component "${err.id}" was not found
+  your workspace.jsonc has this component-id set. you might want to remove/change it.`);
+          }
         }
-      );
+  
+        throw err;
+      }
+      
     }
 
     const aspectsDefs = await this.resolveAspects(undefined, idsToLoadFromWs, {
