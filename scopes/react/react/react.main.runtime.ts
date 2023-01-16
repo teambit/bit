@@ -360,6 +360,7 @@ export class ReactMain {
         // Hack for backwards compatibility - if user is using new peers syntax, merge with peers version of env's peerDependencies
         const currentPeersToUse = peersFromUser ? defaultAutoDetectPeers : { peerDependencies: peerDepsFromEnv };
         const reactDeps = { dependencies, devDependencies, ...currentPeersToUse };
+        console.log('merged deps', mergeDeepLeft(dependencyPolicy, reactDeps));
         return mergeDeepLeft(dependencyPolicy, reactDeps);
       },
     });
