@@ -54,6 +54,23 @@ export class ComponentMap<T> {
   }
 
   /**
+   * map entries and return a new component map.
+   */
+  async asyncMap<NewType>(
+    predicate: (value: T, component: Component) => Promise<NewType>
+  ): Promise<ComponentMap<NewType>> {
+    const tuplesP = this.toArray().map(async ([component, value]) => {
+      const newValue = await predicate(value, component);
+      return [component.id.toString(), [component, newValue]];
+    });
+
+    const tuples = await Promise.all(tuplesP);
+
+    // @ts-ignore TODO: fix this type
+    return new ComponentMap(new Map(tuples));
+  }
+
+  /**
    * similar to Array.forEach, but here you get both, the value and the component.
    */
   forEach(predicate: (value: T, component: Component) => void): void {

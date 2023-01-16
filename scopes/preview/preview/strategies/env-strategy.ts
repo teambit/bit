@@ -127,7 +127,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
       const link = this.preview.writeLink(
         previewDef.prefix,
         paths,
-        previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined,
+        {default: template || 'undefined'},
         outputPath,
         false
       );
