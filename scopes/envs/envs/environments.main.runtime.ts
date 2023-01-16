@@ -651,6 +651,7 @@ export class EnvsMain {
     const resolvedAspects = await host.resolveAspects(MainRuntime.name, [id], {
       requestedOnly: true,
       filterByRuntime: false,
+      useScopeAspectsCapsule: true
     });
     const def = resolvedAspects[0];
 
