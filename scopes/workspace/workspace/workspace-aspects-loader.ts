@@ -173,7 +173,9 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const mergedOpts = { ...defaultOpts, ...opts };
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
+    const configuredAspects = this.aspectLoader.getConfiguredAspects();
     const userAspectsIds: string[] = difference(idsToResolve, coreAspectsIds);
+    const rootAspectsIds: string[] = difference(configuredAspects, coreAspectsIds);
     const componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(userAspectsIds);
     const components = await this.importAndGetAspects(componentIdsToResolve);
 
@@ -216,7 +218,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     } else {
       nonWorkspaceAspectsDefs = await this.aspectLoader.resolveAspects(
         nonWorkspaceComps,
-        this.getInstalledAspectResolver(graph, userAspectsIds, runtimeName, {
+        this.getInstalledAspectResolver(graph, rootAspectsIds, runtimeName, {
           throwOnError: opts?.throwOnError ?? false,
         })
       );
