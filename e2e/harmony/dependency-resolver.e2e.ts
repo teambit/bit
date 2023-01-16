@@ -283,6 +283,7 @@ describe('dependency-resolver extension', function () {
           ).version
         ).to.eq('1.4.0');
       });
+      
       it('should change the version of the package if the parent package matches the pattern', function () {
         expect(
           helper.fixtures.fs.readJsonFile(
