@@ -6,7 +6,8 @@ import { affix } from '@teambit/base-ui.utils.string.affix';
  */
 export function toPreviewUrl(component: ComponentModel, previewName?: string, additionalParams?: string | string[]) {
   const serverPath = toPreviewServer(component, previewName);
-  const hash = toPreviewHash(component, previewName, additionalParams);
+  const envId = component.environment?.id;
+  const hash = toPreviewHash(component, previewName, envId, additionalParams);
 
   return `${serverPath}#${hash}`;
 }
@@ -70,13 +71,18 @@ export function toPreviewHash(
    */
   previewName?: string,
   /**
+   * Environment ID of the component
+   */
+  envId?: string,
+  /**
    * extra data to append to query
    */
   queryParams: string | string[] = ''
 ) {
   const previewParam = affix(`preview=`, previewName);
+  const envIdParam = affix(`env=`, envId);
 
-  const hashQuery = [previewParam]
+  const hashQuery = [previewParam, envIdParam]
     .concat(queryParams)
     .filter((x) => !!x) // also removes empty strings
     .join('&');

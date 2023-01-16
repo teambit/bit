@@ -31,7 +31,7 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { BundlingStrategyNotFound } from './exceptions';
-import { generateLink } from './generate-link';
+import { generateLink, MainModulesMap } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
 import { PreviewDefinition } from './preview-definition';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
@@ -551,11 +551,11 @@ export class PreviewMain {
   writeLink(
     prefix: string,
     moduleMap: ComponentMap<string[]>,
-    defaultModule: string | undefined,
+    mainModulesMap: MainModulesMap,
     dirName: string,
     isSplitComponentBundle: boolean
   ) {
-    const contents = generateLink(prefix, moduleMap, defaultModule, isSplitComponentBundle);
+    const contents = generateLink(prefix, moduleMap, mainModulesMap, isSplitComponentBundle);
     return this.writeLinkContents(contents, dirName, prefix);
   }
 
@@ -593,12 +593,28 @@ export class PreviewMain {
   private updateLinkFiles(components: Component[] = [], context: ExecutionContext) {
     const previews = this.previewSlot.values();
     const paths = previews.map(async (previewDef) => {
-      const templatePath = await previewDef.renderTemplatePath?.(context);
+      const defaultTemplatePath = await previewDef.renderTemplatePathByEnv?.(context.env);
+      const visitedEnvs = new Set();
+      const mainModulesMap: MainModulesMap = {
+        // @ts-ignore
+        default: defaultTemplatePath,
+        [context.envDefinition.id]: defaultTemplatePath
+      };
 
       const map = await previewDef.getModuleMap(components);
       const isSplitComponentBundle = this.getEnvPreviewConfig().splitComponentBundle ?? false;
-      const withPaths = map.map<string[]>((files, component) => {
-        const environment = this.envs.getEnv(component).env;
+      const withPathsP = map.asyncMap(async (files, component) => {
+        const envDef = this.envs.getEnv(component);
+        const environment = envDef.env;
+        const envId = envDef.id;
+
+      if (!mainModulesMap[envId] && !visitedEnvs.has(envId)) {
+        const modulePath = await previewDef.renderTemplatePathByEnv?.(envDef.env);
+          if (modulePath) {
+            mainModulesMap[envId] = modulePath;
+          }
+          visitedEnvs.add(envId);
+        }
         const compilerInstance = environment.getCompiler?.();
         const modulePath =
           compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getRuntimeModulePath(component);
@@ -611,11 +627,13 @@ export class PreviewMain {
         });
         // return files.map((file) => file.path);
       });
+      const withPaths = await withPathsP;
 
       const dirPath = join(this.tempFolder, context.id);
       if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
 
-      const link = this.writeLink(previewDef.prefix, withPaths, templatePath, dirPath, isSplitComponentBundle);
+
+      const link = this.writeLink(previewDef.prefix, withPaths, mainModulesMap, dirPath, isSplitComponentBundle);
       return link;
     });
 
@@ -706,6 +724,7 @@ export class PreviewMain {
     updater(executionRef);
 
     await this.updateLinkFiles(executionRef.currentComponents, executionRef.executionCtx);
+    throw new Error('gilad')
 
     return noopResult;
   };
