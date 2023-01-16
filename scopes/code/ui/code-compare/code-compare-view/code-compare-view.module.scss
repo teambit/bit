@@ -1,19 +1,23 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
 .componentCompareCodeViewContainer {
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: var(--on-surface-neutral-low-color, #282828) !important;
+  &.loading {
+    padding: 0px 24px;
+  }
 }
 
 .componentCompareCodeDiffEditorContainer {
   display: flex;
   flex: 1;
   height: 100%;
-  padding: 8px 16px 0px 16px;
 
   > section {
     overflow: hidden;
-    border-radius: 8px;
   }
 }
 
@@ -24,7 +28,7 @@
 }
 
 .ignoreWhitespaceControlContainer {
-  color: var(--bit-text-color, #414141);
+  color: var(--on-surface-neutral-low-color, #282828);
   width: fit-content;
   padding: 0px 8px;
   height: 24px;
@@ -38,14 +42,160 @@
   margin-bottom: 8px;
 
   .toggle {
+    position: relative;
     margin-right: 8px;
   }
 }
 
 .loader {
+  width: calc(100% - 48px);
+  padding: 16px 24px;
+  color: var(--on-surface-neutral-low-color, #282828);
+  background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
+  > div {
+    background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
+  }
+}
+
+.compareNavItem {
+  color: #fff !important;
+  border-right: 0.5px solid var(--surface-neutral-color, #121212);
+
+  &.first {
+    border-left: 0.5px solid var(--surface-neutral-color, #121212);
+  }
+
+  &:hover:not(.activeNav) {
+    background-color: var(--surface-neutral-color, #121212) !important;
+    > div {
+      background-color: var(--surface-neutral-color, #121212) !important;
+    }
+  }
+}
+
+.activeNav {
+  background-color: var(--surface-neutral-color, #121212);
+  &::after {
+    background-color: var(--surface-neutral-color, #121212) !important;
+  }
+}
+
+.compareNav {
+  background-color: var(--on-surface-neutral-low-color, #282828);
+  gap: 0px !important;
+}
+
+.compareSecondaryNav {
+  background: var(--on-surface-neutral-low-color, #282828) !important;
+}
+
+.codeCompareTab {
   display: flex;
   align-items: center;
-  justify-items: center;
-  height: 100%;
-  width: 100%;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-left: 4px; // to align to sibling with icon
+    margin-right: 8px;
+  }
+
+  img {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+  }
+}
+
+.codeCompareToolbar {
+  background: var(--on-surface-neutral-low-color, #282828) !important;
+}
+
+.codeCompareWidgets {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 4px;
+
+  .settings {
+    cursor: pointer;
+
+    img {
+      display: flex;
+      width: 16px;
+    }
+  }
+}
+
+.codeCompareMenu {
+  z-index: $modal-z-index;
+  top: 100%;
+  right: 50%;
+  background: var(--on-surface-neutral-low-color, #282828) !important;
+  color: #fff;
+  min-width: 200px;
+}
+
+.settingsMenu {
+  padding: 8px;
+}
+
+.settingsTitle {
+  font-weight: 500;
+  font-size: var(--bit-p-md, 16px);
+  padding-bottom: 8px;
+}
+
+.splitSettings {
+  padding: 8px 0px;
+  display: flex;
+  align-items: center;
+}
+
+.splitOption {
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+  color: #fff;
+
+  > span {
+    padding-left: 8px;
+  }
+}
+
+.ignoreWhitespaceSettings,
+.wordWrapSettings,
+.splitSettings {
+  padding-bottom: 8px;
+  &:hover {
+    background: var(--on-surface-neutral-low-color, #282828);
+  }
+}
+
+.ignoreWhitespaceSettings,
+.wordWrapSettings {
+  > label {
+    padding: 8px 8px 8px 0px;
+    color: #fff;
+    &:hover {
+      background: var(--on-surface-neutral-low-color, #282828) !important;
+    }
+  }
+}
+
+.codeCompareTabRight {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+
+  > * {
+    margin-right: 4px;
+  }
+  > :last-child() {
+    margin-right: 0px;
+  }
 }

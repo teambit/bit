@@ -1,5 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
 import { Command, CommandOptions } from '@teambit/cli';
+import Table from 'cli-table';
 import chalk from 'chalk';
 import archy from 'archy';
 import {
@@ -154,6 +155,92 @@ export class DependenciesRemoveCmd implements Command {
       .join('\n\n');
 
     return `${chalk.green('successfully removed dependencies')}\n${output}`;
+  }
+}
+
+export class DependenciesResetCmd implements Command {
+  name = 'reset <component-pattern>';
+  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
+  group = 'info';
+  description = 'reset dependencies to the default values (revert any previously "bit deps set")';
+  alias = '';
+  options = [] as CommandOptions;
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([pattern]: [string]) {
+    const results = await this.deps.reset(pattern);
+    const comps = results.map((id) => id.toString());
+
+    return `${chalk.green('successfully reset dependencies for the following component(s)')}\n${comps}`;
+  }
+}
+
+export class DependenciesEjectCmd implements Command {
+  name = 'eject <component-pattern>';
+  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
+  group = 'info';
+  description = 'write dependencies that were previously set via "bit deps set" into .bitmap';
+  alias = '';
+  options = [] as CommandOptions;
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([pattern]: [string]) {
+    const results = await this.deps.eject(pattern);
+    const comps = results.map((id) => id.toString());
+
+    return `${chalk.green('successfully ejected dependencies for the following component(s)')}\n${comps}`;
+  }
+}
+
+export class DependenciesBlameCmd implements Command {
+  name = 'blame <component-name> <dependency-name>';
+  arguments = [
+    {
+      name: 'dependency-name',
+      description: 'package-name. for components, you can use either component-id or package-name',
+    },
+  ];
+  group = 'info';
+  description = 'EXPERIMENTAL. find out which snap/tag changed a dependency version';
+  alias = '';
+  options = [] as CommandOptions;
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([compName, depName]: [string, string]) {
+    const results = await this.deps.blame(compName, depName);
+    if (!results.length) {
+      return chalk.yellow(`the specified component ${compName} does not use the entered dependency ${depName}`);
+    }
+    // table with no style and no borders, just to align the columns.
+    const table = new Table({
+      chars: {
+        top: '',
+        'top-mid': '',
+        'top-left': '',
+        'top-right': '',
+        bottom: '',
+        'bottom-mid': '',
+        'bottom-left': '',
+        'bottom-right': '',
+        left: '',
+        'left-mid': '',
+        mid: '',
+        'mid-mid': '',
+        right: '',
+        'right-mid': '',
+        middle: ' ',
+      },
+      style: { 'padding-left': 0, 'padding-right': 0 },
+    });
+
+    results.map(({ snap, tag, author, date, message, version }) =>
+      table.push([snap, tag || '', author, date, message, version])
+    );
+
+    return table.toString();
   }
 }
 

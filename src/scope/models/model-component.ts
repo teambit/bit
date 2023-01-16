@@ -359,18 +359,24 @@ export default class Component extends BitObject {
     return empty(this.versions) && !this.hasHead();
   }
 
-  latest(): string {
-    if (this.isEmpty() && !this.laneHeadLocal) return VERSION_ZERO;
+  /**
+   * on main return main head, on lane, return lane head.
+   * if the head is also a tag, return the tag, otherwise, return the hash.
+   */
+  getHeadRegardlessOfLaneAsTagOrHash(returnVersionZeroForNoHead = false): string {
     const head = this.getHeadRegardlessOfLane();
-    if (head) {
-      return this.getTagOfRefIfExists(head) || head.toString();
+    if (!head) {
+      if (!empty(this.versions))
+        throw new Error(`error: ${this.id()} has tags but no head, it might be originated from legacy`);
+      if (returnVersionZeroForNoHead) return VERSION_ZERO;
+      throw new Error(`getHeadRegardlessOfLaneAsTagOrHash() failed finding a head for ${this.id()}`);
     }
-    // backward compatibility. components created before v15 have main without head
-    // @ts-ignore
-    return semver.maxSatisfying(this.listVersions(), '*', { includePrerelease: true });
+    return this.getTagOfRefIfExists(head) || head.toString();
   }
 
   /**
+   * get the recent head. if locally is ahead, return the local head. otherwise, return the remote head.
+   *
    * a user can be checked out to a lane, in which case, `this.laneHeadLocal` and `this.laneHeadRemote`
    * may be populated.
    * `this.head` may not be populated, e.g. when a component was created on
@@ -379,11 +385,11 @@ export default class Component extends BitObject {
    * on main, which goes to this.head OR on a lane, which goes to this.laneHeadLocal.
    */
   async headIncludeRemote(repo: Repository): Promise<string> {
-    const latestLocally = this.latest();
+    const latestLocally = this.getHeadRegardlessOfLaneAsTagOrHash(true);
     const remoteHead = this.laneHeadRemote || this.remoteHead;
     if (!remoteHead) return latestLocally;
     if (!this.getHeadRegardlessOfLane()) {
-      return remoteHead.toString(); // user never merged the remote version, so remote is the latest
+      return remoteHead.toString(); // in case a snap was created on another lane
     }
 
     // either a user is on main or a lane, check whether the remote is ahead of the local
@@ -405,7 +411,7 @@ export default class Component extends BitObject {
   // @todo: make it readable, it's a mess
   isLatestGreaterThan(version: string | null | undefined): boolean {
     if (!version) throw TypeError('isLatestGreaterThan expect to get a Version');
-    const latest = this.latest();
+    const latest = this.getHeadRegardlessOfLaneAsTagOrHash(true);
     if (this.isEmpty() && !this.laneHeadRemote) {
       return false; // in case a snap was created on another lane
     }
@@ -638,7 +644,7 @@ export default class Component extends BitObject {
   }
 
   toBitIdWithLatestVersion(): BitId {
-    return new BitId({ scope: this.scope, name: this.name, version: this.latest() });
+    return new BitId({ scope: this.scope, name: this.name, version: this.getHeadRegardlessOfLaneAsTagOrHash(true) });
   }
 
   toBitIdWithHead(): BitId {
@@ -788,7 +794,9 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
 
   toComponentVersion(versionStr?: string): ComponentVersion {
     const versionParsed = versionParser(versionStr);
-    const versionNum = versionParsed.latest ? this.latest() : (versionParsed.versionNum as string);
+    const versionNum = versionParsed.latest
+      ? this.getHeadRegardlessOfLaneAsTagOrHash(true)
+      : (versionParsed.versionNum as string);
     if (versionNum === VERSION_ZERO) {
       throw new NoHeadNoVersion(this.id());
     }

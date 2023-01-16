@@ -1,6 +1,4 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import path from 'path';
-import fs from 'fs-extra';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import R from 'ramda';
 import { Consumer } from '@teambit/legacy/dist/consumer';
@@ -33,6 +31,7 @@ import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { compact } from 'lodash';
 import { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
 import threeWayMerge, {
   MergeResultsThreeWay,
@@ -40,7 +39,6 @@ import threeWayMerge, {
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
-import { MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
@@ -233,6 +231,9 @@ export class MergingMain {
       }
     );
 
+    const allConfigMerge = succeededComponents.map((c) => c.configMergeResult);
+    await this.generateConfigMergeConflictFileForAll(compact(allConfigMerge));
+
     if (localLane) consumer.scope.objects.add(localLane);
 
     await consumer.scope.objects.persist(); // persist anyway, if localLane is null it should save all main heads
@@ -288,6 +289,18 @@ export class MergingMain {
     };
   }
 
+  private async generateConfigMergeConflictFileForAll(allConfigMerge: ConfigMergeResult[]) {
+    const configMergeFile = this.workspace.getConflictMergeFile();
+    allConfigMerge.forEach((configMerge) => {
+      const conflict = configMerge.generateMergeConflictFile();
+      if (!conflict) return;
+      configMergeFile.addConflict(configMerge.compIdStr, conflict);
+    });
+    if (configMergeFile.hasConflict()) {
+      await configMergeFile.write();
+    }
+  }
+
   /**
    * this function gets called from two different commands:
    * 1. "bit merge <ids...>", when merging a component from a remote to the local.
@@ -321,12 +334,13 @@ export class MergingMain {
     ) as ComponentMergeStatus[];
     const compStatusNeedMerge = componentStatusBeforeMergeAttempt.filter((c) => c.mergeProps);
 
-    const otherLaneName = otherLane ? otherLane.toLaneId().toString() : DEFAULT_LANE;
     const getComponentsStatusNeedMerge = async (): Promise<ComponentMergeStatus[]> => {
       const tmp = new Tmp(this.consumer.scope);
       try {
         const componentsStatus = await Promise.all(
-          compStatusNeedMerge.map((compStatus) => this.getComponentMergeStatus(currentLane, otherLaneName, compStatus))
+          compStatusNeedMerge.map((compStatus) =>
+            this.getComponentMergeStatus(currentLane, otherLane || undefined, compStatus)
+          )
         );
         await tmp.clear();
         return componentsStatus;
@@ -506,7 +520,7 @@ export class MergingMain {
 
   private async getComponentMergeStatus(
     localLane: Lane | null, // currently checked out lane. if on main, then it's null.
-    otherLaneName: string, // the lane name we want to merged to our lane. (can be also "main").
+    otherLane: Lane | undefined, // the lane name we want to merged to our lane. (can be also "main").
     componentMergeStatusBeforeMergeAttempt: ComponentMergeStatusBeforeMergeAttempt
   ) {
     const { id, divergeData, currentComponent, mergeProps } = componentMergeStatusBeforeMergeAttempt;
@@ -518,12 +532,16 @@ export class MergingMain {
     if (!currentComponent) throw new Error(`getDivergedMergeStatus, currentComponent is missing for ${id.toString()}`);
 
     const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
-    // uncomment for debugging
-    // console.log('id', id.toStringWithoutVersion(), 'baseSnap', baseSnap.toString(), 'current', currentId.version, 'other', otherLaneHead.toString());
+    this.logger.debug(`merging snaps details:
+id:      ${id.toStringWithoutVersion()}
+base:    ${baseSnap.toString()}
+current: ${currentId.version}
+other:   ${otherLaneHead.toString()}`);
     const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
     const otherComponent: Version = await modelComponent.loadVersion(otherLaneHead.toString(), repo);
 
     const currentLaneName = localLane?.toLaneId().toString() || 'main';
+    const otherLaneName = otherLane ? otherLane.toLaneId().toString() : DEFAULT_LANE;
     const currentLabel = `${currentId.version} (${currentLaneName === otherLaneName ? 'current' : currentLaneName})`;
     const otherLabel = `${otherLaneHead.toString()} (${
       otherLaneName === currentLaneName ? 'incoming' : otherLaneName
@@ -532,6 +550,7 @@ export class MergingMain {
     const configMerger = new ConfigMerger(
       id.toStringWithoutVersion(),
       workspaceIds,
+      otherLane,
       currentComponent.extensions,
       baseComponent.extensions,
       otherComponent.extensions,
@@ -643,15 +662,6 @@ export class MergingMain {
     if (configMergeResult) {
       if (!componentWithDependencies.component.writtenPath) {
         throw new Error(`componentWithDependencies.component.writtenPath is missing for ${id.toString()}`);
-      }
-      const configMergeConflictFile = configMergeResult.generateMergeConflictFile();
-      if (configMergeConflictFile) {
-        const configMergePath = path.join(
-          consumer.getPath(),
-          componentWithDependencies.component.writtenPath,
-          MergeConfigFilename
-        );
-        await fs.outputFile(configMergePath, configMergeConflictFile);
       }
       const successfullyMergedConfig = configMergeResult.getSuccessfullyMergedConfig();
       if (successfullyMergedConfig) {

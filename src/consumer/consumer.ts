@@ -617,7 +617,7 @@ export default class Consumer {
     }
     const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
-    const scope = await Scope.load(scopePath as string);
+    const scope = consumer?.scope || (await Scope.load(scopePath as string));
     consumer = new Consumer({
       projectPath: consumerInfo.path,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -57,28 +57,26 @@ describe('merge config scenarios', function () {
         helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp1/index.js`);
         helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp2/index.js`);
         helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp3/index.js`);
-        // fixing the dependencies conflicts
-        helper.general.fixMergeConfigConflict('ours', 'comp1', false);
-        helper.general.fixMergeConfigConflict('ours', 'comp2', false);
       });
       it('should keep the configuration from the lane', () => {
         const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
         expect(deprecationData.config.deprecate).to.be.true;
       });
-      describe('snapping the components', () => {
-        before(() => {
-          helper.command.install();
-          helper.command.compile();
-          helper.command.snapAllComponentsWithoutBuild();
-        });
-        it('should not save it with force: true in the model after snapping', () => {
-          const cmp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
-          const depResolver = cmp.extensions.find((e) => e.name === Extensions.dependencyResolver);
-          const policy = depResolver.data.policy;
-          const comp2 = policy.find((p) => p.dependencyId === `${helper.general.getPackageNameByCompName('comp2')}`);
-          expect(comp2.force).to.equal(false);
-        });
-      });
+      // not relevant anymore, we don't auto-merge when the dep is in the workspace or in the lane.
+      // describe('snapping the components', () => {
+      //   before(() => {
+      //     helper.command.install();
+      //     helper.command.compile();
+      //     helper.command.snapAllComponentsWithoutBuild();
+      //   });
+      //   it('should not save it with force: true in the model after snapping', () => {
+      //     const cmp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
+      //     const depResolver = cmp.extensions.find((e) => e.name === Extensions.dependencyResolver);
+      //     const policy = depResolver.data.policy;
+      //     const comp2 = policy.find((p) => p.dependencyId === `${helper.general.getPackageNameByCompName('comp2')}`);
+      //     expect(comp2.force).to.equal(false);
+      //   });
+      // });
     });
     describe('switching to the lane', () => {
       before(() => {
@@ -135,7 +133,7 @@ describe('merge config scenarios', function () {
       expect(deprecationData.config.deprecate).to.be.true;
     });
     it('should not generate merge-conflict file, instead, the merge data should be in unmerged file', () => {
-      const configPath = helper.general.getConfigMergePath('comp1');
+      const configPath = helper.general.getConfigMergePath();
       expect(configPath).to.not.be.a.path();
     });
   });
@@ -173,7 +171,7 @@ describe('merge config scenarios', function () {
     });
     describe('fixing the conflict with ours', () => {
       before(() => {
-        helper.general.fixMergeConfigConflict('ours', 'comp1');
+        helper.general.fixMergeConfigConflict('ours');
       });
       it('should show the component deprecated', () => {
         const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
@@ -183,7 +181,7 @@ describe('merge config scenarios', function () {
     describe('fixing the conflict with theirs', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeConfigResolved);
-        helper.general.fixMergeConfigConflict('theirs', 'comp1');
+        helper.general.fixMergeConfigConflict('theirs');
       });
       it('should show the component as undeprecated', () => {
         const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
@@ -193,11 +191,11 @@ describe('merge config scenarios', function () {
     describe('snapping the components', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeConfigResolved);
-        helper.general.fixMergeConfigConflict('theirs', 'comp1');
+        helper.general.fixMergeConfigConflict('theirs');
         helper.command.snapAllComponentsWithoutBuild();
       });
       it('should delete the config-merge file', () => {
-        const configMergePath = helper.general.getConfigMergePath('comp1');
+        const configMergePath = helper.general.getConfigMergePath();
         expect(configMergePath).to.not.be.a.path();
       });
     });
@@ -238,7 +236,7 @@ describe('merge config scenarios', function () {
     });
     describe('fixing the conflict with ours', () => {
       before(() => {
-        helper.general.fixMergeConfigConflict('ours', 'comp1');
+        helper.general.fixMergeConfigConflict('ours');
       });
       it('should show the dev-dependency as it was set on the lane', () => {
         const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
@@ -250,7 +248,7 @@ describe('merge config scenarios', function () {
     describe('fixing the conflict with theirs', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeConfigResolved);
-        helper.general.fixMergeConfigConflict('theirs', 'comp1');
+        helper.general.fixMergeConfigConflict('theirs');
       });
       it('should show the dev-dependency as it was set on main', () => {
         const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
@@ -283,7 +281,7 @@ describe('merge config scenarios', function () {
       helper.command.export();
 
       helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
-      helper.command.setEnv('comp1', `${envId}@0.0.3`);
+      // helper.command.setEnv('comp1', `${envId}@0.0.3`);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
@@ -297,14 +295,14 @@ describe('merge config scenarios', function () {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MergeConfigHasConflict.name);
     });
     it('the conflict file should only contain env data and not dependencyResolver data', () => {
-      const conflictFile = helper.general.getConfigMergePath('comp1');
+      const conflictFile = helper.general.getConfigMergePath();
       const conflictFileContent = fs.readFileSync(conflictFile).toString();
       expect(conflictFileContent).to.have.string(Extensions.envs);
       expect(conflictFileContent).to.not.have.string(Extensions.dependencyResolver);
     });
     describe('fixing the conflict with ours', () => {
       before(() => {
-        helper.general.fixMergeConfigConflict('ours', 'comp1');
+        helper.general.fixMergeConfigConflict('ours');
       });
       it('should set the env according to the lane', () => {
         const envConfig = helper.command.showAspectConfig('comp1', Extensions.envs);
@@ -329,7 +327,7 @@ describe('merge config scenarios', function () {
     describe('fixing the conflict with theirs', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeConfigResolved);
-        helper.general.fixMergeConfigConflict('theirs', 'comp1');
+        helper.general.fixMergeConfigConflict('theirs');
       });
       it('should set the env according to the lane', () => {
         // run the status, so then, the pkg manager will install everything and the next "show --json" will be a valid json

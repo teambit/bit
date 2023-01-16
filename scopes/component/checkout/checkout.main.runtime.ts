@@ -144,8 +144,7 @@ export class CheckoutMain {
         const compsNewFromLane = await Promise.all(
           newFromLane.map((id) => consumer.loadComponentWithDependenciesFromModel(id._legacy))
         );
-        const compsNewFromLaneNotDeleted = compsNewFromLane.filter((c) => !c.component.removed);
-        componentsWithDependencies.push(...compsNewFromLaneNotDeleted);
+        componentsWithDependencies.push(...compsNewFromLane);
         newFromLaneAdded = true;
       }
     }
@@ -234,7 +233,14 @@ export class CheckoutMain {
     if (checkoutProps.entireLane && !checkoutProps.head) {
       throw new BitError(`--entire-lane flag can only be used with "head" (bit checkout head --entire-lane)`);
     }
-    const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : await this.workspace.listIds();
+    const idsOnWorkspace = componentPattern
+      ? await this.workspace.idsByPattern(componentPattern)
+      : await this.workspace.listIds();
+    const currentLane = await this.workspace.consumer.getCurrentLaneObject();
+    const currentLaneIds = currentLane?.toBitIds();
+    const ids = currentLaneIds
+      ? idsOnWorkspace.filter((id) => currentLaneIds.hasWithoutVersion(id._legacy))
+      : idsOnWorkspace;
     checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
   }
 
@@ -246,7 +252,14 @@ export class CheckoutMain {
     const laneBitIds = lane.toBitIds();
     const newIds = laneBitIds.filter((bitId) => !ids.find((id) => id._legacy.isEqualWithoutVersion(bitId)));
     const newComponentIds = await this.workspace.resolveMultipleComponentIds(newIds);
-    return newComponentIds;
+    const nonRemovedNewIds: ComponentID[] = [];
+    await Promise.all(
+      newComponentIds.map(async (id) => {
+        const isRemoved = await this.workspace.scope.isComponentRemoved(id);
+        if (!isRemoved) nonRemovedNewIds.push(id);
+      })
+    );
+    return nonRemovedNewIds;
   }
 
   private async getComponentStatusBeforeMergeAttempt(

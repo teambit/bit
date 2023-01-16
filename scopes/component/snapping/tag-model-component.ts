@@ -1,5 +1,4 @@
 import mapSeries from 'p-map-series';
-import fs from 'fs-extra';
 import fetch from 'node-fetch';
 import R from 'ramda';
 import { isEmpty } from 'lodash';
@@ -34,7 +33,7 @@ import {
 } from '@teambit/legacy/dist/scope/component-ops/message-per-component';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ScopeMain } from '@teambit/scope';
+import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 
@@ -210,6 +209,7 @@ export async function tagModelComponent({
   taggedComponents: Component[];
   autoTaggedResults: AutoTagResult[];
   publishedPackages: string[];
+  stagedConfig?: StagedConfig;
 }> {
   const consumer = workspace?.consumer;
   const legacyScope = scope.legacyScope;
@@ -249,7 +249,7 @@ export async function tagModelComponent({
         const modelComponent = await legacyScope.getModelComponentIfExist(component.id);
         if (!modelComponent) throw new ShowDoctorError(`component ${component.id} was not found in the model`);
         if (!modelComponent.listVersions().length) return null; // no versions yet, no issues.
-        const latest = modelComponent.latest();
+        const latest = modelComponent.getHeadRegardlessOfLaneAsTagOrHash();
         if (latest !== component.version) {
           return {
             componentId: component.id.toStringWithoutVersion(),
@@ -292,16 +292,19 @@ export async function tagModelComponent({
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId);
   // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
   const unmergedComps = workspace ? await workspace.listComponentsDuringMerge() : [];
+  let stagedConfig;
   if (soft) {
     if (!consumer) throw new Error(`unable to soft-tag without consumer`);
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
-    await snapping._addFlattenedDependenciesToComponents(legacyScope, allComponentsToTag);
+    await snapping._addFlattenedDependenciesToComponents(allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer);
 
-    if (workspace) await updateComponentsVersions(workspace, allComponentsToTag);
+    if (workspace) {
+      stagedConfig = await updateComponentsVersions(workspace, allComponentsToTag);
+    }
   }
 
   const publishedPackages: string[] = [];
@@ -335,7 +338,7 @@ export async function tagModelComponent({
     await removeMergeConfigFromComponents(unmergedComps, allComponentsToTag, workspace);
   }
 
-  return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages };
+  return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages, stagedConfig };
 }
 
 async function removeDeletedComponentsFromBitmap(comps: Component[], workspace?: Workspace) {
@@ -360,15 +363,19 @@ async function removeMergeConfigFromComponents(
   if (!workspace || !unmergedComps.length) {
     return;
   }
-  await Promise.all(
-    unmergedComps.map(async (compId) => {
-      const isNowSnapped = components.find((c) => c.id.isEqualWithoutVersion(compId._legacy));
-      if (isNowSnapped) {
-        const mergeConfigPath = workspace.getConfigMergeFilePath(compId);
-        await fs.remove(mergeConfigPath);
-      }
-    })
-  );
+  const configMergeFile = workspace.getConflictMergeFile();
+
+  unmergedComps.forEach((compId) => {
+    const isNowSnapped = components.find((c) => c.id.isEqualWithoutVersion(compId._legacy));
+    if (isNowSnapped) {
+      configMergeFile.removeConflict(compId.toStringWithoutVersion());
+    }
+  });
+  if (configMergeFile.hasConflict()) {
+    await configMergeFile.write();
+  } else {
+    await configMergeFile.delete();
+  }
 }
 
 async function addComponentsToScope(
@@ -472,7 +479,7 @@ export async function updateComponentsVersions(
   workspace: Workspace,
   components: Array<ModelComponent | Component>,
   isTag = true
-): Promise<any> {
+): Promise<StagedConfig> {
   const consumer = workspace.consumer;
   const currentLane = consumer.getCurrentLaneId();
   const stagedConfig = await workspace.scope.getStagedConfig();
@@ -515,5 +522,6 @@ export async function updateComponentsVersions(
   // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
   // trying to get the dependencies of comp1 using its package.json.
   await mapSeries(components, updateVersions);
-  await stagedConfig.write();
+
+  return stagedConfig;
 }

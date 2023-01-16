@@ -127,6 +127,7 @@ the remote scope "${scopeName}" was not found`);
     // remote and errors happening inside the Writable.
     let readableError: Error | undefined;
     objectsStream.on('error', (err) => {
+      logger.error(`writeFromSingleRemote, got an error from the remote ${scopeName}`, err);
       readableError = err;
     });
     try {

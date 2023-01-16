@@ -116,6 +116,11 @@ export type PreviewAnyComponentData = {
    * Calculated by the component's env
    */
   splitComponentBundle?: boolean;
+
+  /**
+   * don't allow other aspects implementing a preview definition to be included in your preview.
+   */
+  skipIncludes?: boolean;
 };
 
 /**
@@ -292,6 +297,8 @@ export class PreviewMain {
     const data = {
       // default to true if the env doesn't have a preview config
       isScaling: previewAspectConfig?.isScaling ?? true,
+      // disalbe it for now, we will re-enable it later
+      // skipIncludes: true,
     };
     return data;
   }
@@ -402,6 +409,15 @@ export class PreviewMain {
   isEnvSupportScaling(envComponent: Component): boolean {
     const previewData = this.getPreviewData(envComponent);
     return !!previewData?.isScaling;
+  }
+
+  async isSupportSkipIncludes(component: Component) {
+    const isCore = this.envs.isUsingCoreEnv(component);
+    if (isCore) return false;
+
+    const envComponent = await this.envs.getEnvComponent(component);
+    const previewData = this.getPreviewData(envComponent);
+    return !!previewData?.skipIncludes;
   }
 
   /**

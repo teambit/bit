@@ -217,6 +217,10 @@ export class LanesModel {
     this.viewedLane = viewedLaneId ? this.lanes.find((lane) => lane.id.isEqual(viewedLaneId)) : undefined;
   };
 
+  setViewedOrDefaultLane = (viewedLaneId?: LaneId) => {
+    this.viewedLane = viewedLaneId ? this.lanes.find((lane) => lane.id.isEqual(viewedLaneId)) : this.getDefaultLane();
+  };
+
   resolveComponentFromUrl = (idFromUrl: string, laneId?: LaneId) => {
     const comps = ((laneId && this.lanes.find((lane) => lane.id.isEqual(laneId))) || this.viewedLane)?.components || [];
     const includesScope = idFromUrl.includes('.');

@@ -140,7 +140,7 @@ once ready, snap/tag the components to complete the merge.`;
     if (!configMergeWithConflicts.length) return '';
     const comps = configMergeWithConflicts.map((c) => c.compIdStr).join('\n');
     const title = `\n\ncomponents with config-merge conflicts\n`;
-    const suggestion = `\nconflicts were found while trying to merge the config. fix them manually by editing the ${MergeConfigFilename} file in the component's dir.
+    const suggestion = `\nconflicts were found while trying to merge the config. fix them manually by editing the ${MergeConfigFilename} file in the workspace root.
 once ready, snap/tag the components to complete the merge.`;
     return chalk.underline(title) + comps + chalk.yellow(suggestion);
   };

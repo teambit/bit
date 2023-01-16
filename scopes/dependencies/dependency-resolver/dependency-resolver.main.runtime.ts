@@ -1,6 +1,7 @@
 import mapSeries from 'p-map-series';
 import { parse } from 'comment-json';
 import { MainRuntime } from '@teambit/cli';
+import { getAllCoreAspectsIds } from '@teambit/bit';
 import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent, ComponentID } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
@@ -15,7 +16,6 @@ import { Logger, LoggerAspect } from '@teambit/logger';
 import { CFG_PACKAGE_MANAGER_CACHE, CFG_REGISTRY_URL_KEY, CFG_USER_TOKEN_KEY } from '@teambit/legacy/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
-import type { EnvPolicyForComponent as LegacyEnvPolicyForComponent } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
@@ -662,6 +662,16 @@ export class DependencyResolverMain {
     const { networkConcurrency } = await this.getNetworkConfig();
     // TODO: we should somehow pass the cache root dir to the package manager constructor
     return new DependencyVersionResolver(packageManager, cacheRootDir, networkConcurrency);
+  }
+
+  /**
+   * these ids should not be in the dependencyResolver policy normally.
+   * one exception is bit itself, which needs teambit.harmony/harmony in the dependencies.
+   *
+   * returns component-ids string without a version.
+   */
+  getCompIdsThatShouldNotBeInPolicy(): string[] {
+    return [...getAllCoreAspectsIds(), 'teambit.harmony/harmony'];
   }
 
   /**
@@ -1440,10 +1450,13 @@ export class DependencyResolverMain {
       const workspacePolicy = dependencyResolver.getWorkspacePolicy();
       return workspacePolicy.toManifest();
     });
-    DependencyResolver.registerHarmonyEnvPolicyForComponentGetter(async (configuredExtensions: ExtensionDataList) => {
-      const envPolicy = await dependencyResolver.getComponentEnvPolicyFromExtension(configuredExtensions);
-      return envPolicy.toLegacyAutoDetectOverrides() as LegacyEnvPolicyForComponent;
-    });
+    DependencyResolver.registerOnComponentAutoDetectOverridesGetter(
+      async (configuredExtensions: ExtensionDataList, id: BitId, legacyFiles: SourceFile[]) => {
+        const policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
+        return policy.toLegacyAutoDetectOverrides();
+      }
+    );
+
     DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId, files: SourceFile[]) => {
       const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id, files);
       if (!envPolicy) return undefined;
