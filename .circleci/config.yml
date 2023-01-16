@@ -88,14 +88,18 @@ commands: # reusable commands
       token:
         default: $BIT_CLOUD_PROD_TOKEN
         type: string
+      bin_name:
+        default: bit
+        type: string
     steps:
-      - run: 'bit config set analytics_reporting false'
-      - run: 'bit config set error_reporting false'
-      - run: 'bit config set user.name tester'
-      - run: 'bit config set user.email ci@bit.dev'
-      # - run: 'bit config set user.token <<parameters.token>>'
-      - run: 'bit config set hub_domain <<parameters.env>>.bit.dev'
-      - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+      - run: '<<parameters.bin_name>> config set analytics_reporting false'
+      - run: '<<parameters.bin_name>> config set error_reporting false'
+      - run: '<<parameters.bin_name>> config set user.name tester'
+      - run: '<<parameters.bin_name>> config set user.email ci@bit.dev'
+      - run: '<<parameters.bin_name>> config set registry https://node-registry.bit.cloud'
+      # - run: '<<parameters.bin_name>> config set user.token <<parameters.token>>'
+      - run: '<<parameters.bin_name>> config set hub_domain <<parameters.env>>.bit.dev'
+      - run: '<<parameters.bin_name>> config set package-manager.cache /home/circleci/package-manager-cache'
   docker_build_and_push:
     parameters:
       docker_build_arg_name:
@@ -223,7 +227,8 @@ jobs:
           at: ./
       - run:
           name: set bit.dev registry
-          command: npm config set @teambit:registry https://node.bit.dev
+          # command: npm config set @teambit:registry https://node.bit.dev
+          command: npm config set @teambit:registry https://node-registry.bit.cloud
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:`npm show @teambit/bit version` .
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:latest .
@@ -356,6 +361,7 @@ jobs:
       # prod registry
       - run: npm config set @bit:registry https://node.bit.dev
       - run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
+      - run: echo "//node-registry.bit.cloud/:_authToken=$registryProdToken" >> ~/.npmrc
       # - run: echo "always-auth=true" >> ~/.npmrc
       # stage registry
       # -
@@ -363,7 +369,7 @@ jobs:
       # -
       # run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
       - save_cache:
-          key: bitsrc-registry9
+          key: bitsrc-registry10
           # key: bitsrc-registry-stg-v2
           paths:
             - ~/.npmrc
@@ -643,7 +649,7 @@ jobs:
       - attach_workspace:
           at: ./
       - restore_cache:
-          key: bitsrc-registry9
+          key: bitsrc-registry10
       - run: node -v
       - run: npm -v
       - run:
@@ -659,6 +665,9 @@ jobs:
       # - run: bvm install 0.0.910
       - run: bvm upgrade
       - run: bvm link --verbose
+      - bit_config:
+          env: "hub"
+          bin_name: "bbit"
       - run: bbit
       - save_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -669,9 +678,9 @@ jobs:
       - run: cd bit && bbit compile
 
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
-      - run: cd bit && ls -l node_modules/@babel
-      - run: cd bit && ls -l node_modules/@babel/cli/bin
-      - run: cd bit && ls -l node_modules/.bin
+      # - run: cd bit && ls -l node_modules/@babel
+      # - run: cd bit && ls -l node_modules/@babel/cli/bin
+      # - run: cd bit && ls -l node_modules/.bin
 
       # temporary hack to fix the flattenedEdge issue with this component
       - run: cd bit && bbit import teambit.component/ui/component-compare/utils/sort-logs@0.0.1 --objects --all-history
@@ -704,7 +713,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry9
+          key: bitsrc-registry10
       # - update_ssh_agent
       # temporary, check if we can remove it
       - run: cd bit && bit cc
@@ -739,7 +748,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry9
+          key: bitsrc-registry10
       - update_ssh_agent
       - set_git_credentials
       - run:
@@ -833,7 +842,8 @@ jobs:
     steps:
       - run:
           name: set bit.dev registry
-          command: npm config set @teambit:registry https://node.bit.dev
+          # command: npm config set @teambit:registry https://node.bit.dev
+          command: npm config set @teambit:registry https://node-registry.bit.cloud
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -903,7 +913,8 @@ jobs:
       - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
       - run:
           name: set bit.dev registry
-          command: npm config set @teambit:registry https://node.bit.dev
+          # command: npm config set @teambit:registry https://node.bit.dev
+          command: npm config set @teambit:registry https://node-registry.bit.cloud
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -1069,7 +1080,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry9
+          key: bitsrc-registry10
       - update_ssh_agent
       - set_git_credentials
       - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
@@ -1114,7 +1125,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry9
+          key: bitsrc-registry10
       # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
       # - run: 'chmod 400 ~/.ssh/id_rsa'
       # - run: 'ssh-add ~/.ssh/id_rsa'
@@ -1186,7 +1197,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry9
+          key: bitsrc-registry10
           # key: bitsrc-registry-stg-v2
       - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -1268,6 +1279,9 @@ jobs:
       - run:
           name: setting bit registry
           command: Add-Content C:\Users\circleci\.npmrc ("//node.bit.dev/:_authToken=" + $Env:registryProdToken)
+      - run:
+          name: setting bit registry
+          command: Add-Content C:\Users\circleci\.npmrc ("//node-registry.bit.cloud /:_authToken=" + $Env:registryProdToken)
       # stage registry
       # -
       #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node-stg.bit.dev'
@@ -1278,7 +1292,7 @@ jobs:
       # -
       #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryStgToken'
       - save_cache:
-          key: windows_bitsrc-registry-v5
+          key: windows_bitsrc-registry-v6
           # key: windows_bitsrc-registry-stg-v2
           paths:
             - C:\Users\circleci\.npmrc
@@ -1293,7 +1307,7 @@ jobs:
       - attach_workspace:
           at: .
       - restore_cache:
-          key: windows_bitsrc-registry-v5
+          key: windows_bitsrc-registry-v6
           # key: windows_bitsrc-registry-stg-v2
       # -
       #   run: 'npm config list'

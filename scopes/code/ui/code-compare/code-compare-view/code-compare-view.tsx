@@ -274,7 +274,7 @@ function CodeCompareNav({
               </div>
             </div>
           ),
-          ignoreStickyQueryParams: true,
+          ignoreQueryParams: true,
         },
       },
     ];
