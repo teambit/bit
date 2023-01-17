@@ -202,7 +202,7 @@ export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_W
 
 export const CENTRAL_BIT_HUB_URL = `https://${getSymphonyUrl()}/exporter`;
 
-export const CENTRAL_BIT_HUB_NAME = 'bit.cloud';
+export const CENTRAL_BIT_HUB_NAME = getCloudDomain();
 
 // END URLS
 
