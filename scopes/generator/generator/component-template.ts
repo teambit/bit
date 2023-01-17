@@ -41,6 +41,20 @@ export interface ComponentContext {
    * the name is the name+namespace. the scope is the scope entered by --scope flag or the defaultScope
    */
   componentId: ComponentID;
+
+  /**
+   * aspect id of the aspect that register the template itself
+   */
+  aspectId: ComponentID,
+
+  /**
+   * env id of the env that register the template itself
+   * This will be usually identical to the aspectId
+   * but aspectId will be exist always, while envId will be undefined if the template is not registered by an env
+   * so in case you want to use the envId, you should check if it exists first
+   * You can use this in case you want to only do something if the template was registered by an env
+   */
+  envId?: ComponentID
 }
 
 export interface ConfigContext {
