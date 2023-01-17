@@ -186,7 +186,7 @@ commands: # reusable commands
       - run: bvm config set RELEASE_TYPE nightly
   yarn_set_bit_registry:
     steps:
-      - run: npm config set @teambit:registry https://node-registry.bit.cloud
+      - run: yarn config set @teambit:registry https://node-registry.bit.cloud
   yarn_add_bit:
     steps:
       - run: yarn add @teambit/bit
