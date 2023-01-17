@@ -12,7 +12,7 @@ import {
   CFG_USER_EMAIL_KEY,
   CFG_USER_NAME_KEY,
   CFG_USER_TOKEN_KEY,
-  BASE_CLOUD_DOMAIN,
+  getCloudDomain,
   Extensions,
 } from '@teambit/legacy/dist/constants';
 import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
@@ -36,6 +36,8 @@ import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
+
+console.log('im here')
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
 
@@ -448,7 +450,7 @@ async function getBitCloudUsername(): Promise<string | undefined> {
   const token = await globalConfig.get(CFG_USER_TOKEN_KEY);
   if (!token) return '';
   try {
-    const res = await fetch(`https://api.${BASE_CLOUD_DOMAIN}/user`, {
+    const res = await fetch(`https://api.${getCloudDomain()}/user`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
