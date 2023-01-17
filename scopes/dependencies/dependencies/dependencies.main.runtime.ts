@@ -13,8 +13,10 @@ import {
   DependenciesBlameCmd,
   DependenciesCmd,
   DependenciesDebugCmd,
+  DependenciesEjectCmd,
   DependenciesGetCmd,
   DependenciesRemoveCmd,
+  DependenciesResetCmd,
   DependenciesSetCmd,
   RemoveDependenciesFlags,
   SetDependenciesFlags,
@@ -124,6 +126,26 @@ export class DependenciesMain {
     return compact(results);
   }
 
+  async reset(componentPattern: string): Promise<ComponentID[]> {
+    const compIds = await this.workspace.idsByPattern(componentPattern);
+    await pMapSeries(compIds, async (compId) => {
+      await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, { policy: {} });
+    });
+    await this.workspace.bitMap.write();
+
+    return compIds;
+  }
+
+  async eject(componentPattern: string): Promise<ComponentID[]> {
+    const compIds = await this.workspace.idsByPattern(componentPattern);
+    await pMapSeries(compIds, async (compId) => {
+      await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, {}, true, true);
+    });
+    await this.workspace.bitMap.write();
+
+    return compIds;
+  }
+
   /**
    * helps determine what snap/tag changed a specific dependency.
    * the results are sorted from the oldest to newest.
@@ -197,6 +219,8 @@ export class DependenciesMain {
       new DependenciesRemoveCmd(depsMain),
       new DependenciesDebugCmd(),
       new DependenciesSetCmd(depsMain),
+      new DependenciesResetCmd(depsMain),
+      new DependenciesEjectCmd(depsMain),
       new DependenciesBlameCmd(depsMain),
     ];
     cli.register(depsCmd);

@@ -1,5 +1,4 @@
 import mapSeries from 'p-map-series';
-import fs from 'fs-extra';
 import fetch from 'node-fetch';
 import R from 'ramda';
 import { isEmpty } from 'lodash';
@@ -364,15 +363,19 @@ async function removeMergeConfigFromComponents(
   if (!workspace || !unmergedComps.length) {
     return;
   }
-  await Promise.all(
-    unmergedComps.map(async (compId) => {
-      const isNowSnapped = components.find((c) => c.id.isEqualWithoutVersion(compId._legacy));
-      if (isNowSnapped) {
-        const mergeConfigPath = workspace.getConfigMergeFilePath(compId);
-        await fs.remove(mergeConfigPath);
-      }
-    })
-  );
+  const configMergeFile = workspace.getConflictMergeFile();
+
+  unmergedComps.forEach((compId) => {
+    const isNowSnapped = components.find((c) => c.id.isEqualWithoutVersion(compId._legacy));
+    if (isNowSnapped) {
+      configMergeFile.removeConflict(compId.toStringWithoutVersion());
+    }
+  });
+  if (configMergeFile.hasConflict()) {
+    await configMergeFile.write();
+  } else {
+    await configMergeFile.delete();
+  }
 }
 
 async function addComponentsToScope(

@@ -1,20 +1,20 @@
 import groupArray from 'group-array';
 import partition from 'lodash.partition';
 import R from 'ramda';
-
-import { Consumer } from '..';
-import BitIds from '../../bit-id/bit-ids';
-import { LATEST_BIT_VERSION } from '../../constants';
-import GeneralError from '../../error/general-error';
-import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
-import logger from '../../logger/logger';
-import { Remotes } from '../../remotes';
-import RemovedLocalObjects from '../../scope/removed-local-objects';
-import { getScopeRemotes } from '../../scope/scope-remotes';
-import deleteComponentsFiles from '../component-ops/delete-component-files';
-import ComponentsList from '../component/components-list';
-import Component from '../component/consumer-component';
-import * as packageJsonUtils from '../component/package-json-utils';
+import { Consumer } from '@teambit/legacy/dist/consumer';
+import BitIds from '@teambit/legacy/dist/bit-id/bit-ids';
+import { LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
+import GeneralError from '@teambit/legacy/dist/error/general-error';
+import enrichContextFromGlobal from '@teambit/legacy/dist/hooks/utils/enrich-context-from-global';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { Remotes } from '@teambit/legacy/dist/remotes';
+import RemovedLocalObjects from '@teambit/legacy/dist/scope/removed-local-objects';
+import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
+import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import * as packageJsonUtils from '@teambit/legacy/dist/consumer/component/package-json-utils';
+import pMapSeries from 'p-map-series';
 
 /**
  * Remove components local and remote
@@ -25,7 +25,7 @@ import * as packageJsonUtils from '../component/package-json-utils';
  * @param {boolean} track - keep tracking local staged components in bitmap.
  * @param {boolean} deleteFiles - delete local added files from fs.
  */
-export default async function removeComponents({
+export async function removeComponents({
   consumer,
   ids,
   force,
@@ -103,22 +103,20 @@ async function removeLocal(
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (R.isEmpty(bitIds)) return new RemovedLocalObjects();
   if (!force) {
-    await Promise.all(
-      bitIds.map(async (id) => {
-        try {
-          const componentStatus = await consumer.getComponentStatusById(id);
-          if (componentStatus.modified) modifiedComponents.push(id);
-          else nonModifiedComponents.push(id);
-        } catch (err: any) {
-          // if a component has an error, such as, missing main file, we do want to allow removing that component
-          if (Component.isComponentInvalidByErrorType(err)) {
-            nonModifiedComponents.push(id);
-          } else {
-            throw err;
-          }
+    await pMapSeries(bitIds, async (id) => {
+      try {
+        const componentStatus = await consumer.getComponentStatusById(id);
+        if (componentStatus.modified) modifiedComponents.push(id);
+        else nonModifiedComponents.push(id);
+      } catch (err: any) {
+        // if a component has an error, such as, missing main file, we do want to allow removing that component
+        if (Component.isComponentInvalidByErrorType(err)) {
+          nonModifiedComponents.push(id);
+        } else {
+          throw err;
         }
-      })
-    );
+      }
+    });
   }
   const idsToRemove = force ? bitIds : nonModifiedComponents;
   const componentsList = new ComponentsList(consumer);

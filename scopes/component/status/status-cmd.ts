@@ -30,11 +30,7 @@ export class StatusCmd implements Command {
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],
-    [
-      '',
-      'verbose',
-      'show extra data: full snap hashes for staged, divergence point for lanes and updates-from-main for forked lanes',
-    ],
+    ['', 'verbose', 'show extra data: full snap hashes for staged and divergence point for lanes'],
     ['l', 'lanes', 'when on a lane, show updates from main and updates from forked lanes'],
     ['', 'strict', 'in case issues found, exit with code 1'],
   ] as CommandOptions;
@@ -260,16 +256,15 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
     };
 
     let updatesFromMainOutput = '';
-    if (!forkedLaneId || verbose) {
-      const updatesFromMainDesc = '\n(use "bit lane merge main" to merge the changes)\n';
-      const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
-        format(c.id, false, getUpdateFromMsg(c.divergeData))
-      );
-      updatesFromMainOutput = [
-        pendingUpdatesFromMain.length ? chalk.underline.white('pending updates from main') + updatesFromMainDesc : '',
-        ...pendingUpdatesFromMainIds,
-      ].join('\n');
-    }
+
+    const updatesFromMainDesc = '\n(use "bit lane merge main" to merge the changes)\n';
+    const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
+      format(c.id, false, getUpdateFromMsg(c.divergeData))
+    );
+    updatesFromMainOutput = [
+      pendingUpdatesFromMain.length ? chalk.underline.white('pending updates from main') + updatesFromMainDesc : '',
+      ...pendingUpdatesFromMainIds,
+    ].join('\n');
 
     let updatesFromForkedOutput = '';
     if (forkedLaneId) {
