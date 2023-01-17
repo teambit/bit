@@ -82,7 +82,16 @@ export class ComponentGenerator {
     const name = componentId.name;
     const namePascalCase = camelcase(name, { pascalCase: true });
     const nameCamelCase = camelcase(name);
-    const files = this.template.generateFiles({ name, namePascalCase, nameCamelCase, componentId });
+    const aspectId = ComponentID.fromString(this.aspectId);
+
+    const files = this.template.generateFiles({
+      name,
+      namePascalCase,
+      nameCamelCase,
+      componentId,
+      aspectId,
+      envId: this.envId,
+    });
     const mainFile = files.find((file) => file.isMain);
     await this.writeComponentFiles(componentPath, files);
     const addResults = await this.workspace.track({
