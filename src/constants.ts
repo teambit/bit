@@ -196,7 +196,7 @@ export const SEARCH_DOMAIN = `api.${getCloudDomain()}`;
 
 export const RELEASE_SERVER = `https://api.${getCloudDomain()}/release`;
 
-export const DEFAULT_REGISTRY_URL = `https://node.bit.cloud`;
+export const DEFAULT_REGISTRY_URL = `https://node.${getCloudDomain()}`;
 
 export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_WEB_DOMAIN}`;
 
