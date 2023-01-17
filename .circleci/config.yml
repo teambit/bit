@@ -184,9 +184,11 @@ commands: # reusable commands
       - run: npm i -g @teambit/bvm
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run: bvm config set RELEASE_TYPE nightly
-  yarn_set_bit_registry:
+  set_bit_cloud_registry:
     steps:
-      - run: yarn config set @teambit:registry https://node-registry.bit.cloud
+      - run: 
+          name: set bit cloud registry in npm config
+          command: npm config set @teambit:registry https://node.bit.cloud
   yarn_add_bit:
     steps:
       - run: yarn add @teambit/bit
@@ -846,10 +848,7 @@ jobs:
       # do not download chromium when installing puppeteer
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
     steps:
-      - run:
-          name: set bit.dev registry
-          # command: npm config set @teambit:registry https://node.bit.dev
-          command: npm config set @teambit:registry https://node-registry.bit.cloud
+      - set_bit_cloud_registry
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -918,11 +917,7 @@ jobs:
       # - restore_cache:
       #     key: esbuild-0.14.29-darwin-arm64-v1
       - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
-      - run:
-          name: set bit.dev registry
-          # command: npm config set @teambit:registry https://node.bit.dev
-          command: npm config set @teambit:registry https://node-registry.bit.cloud
-      - yarn_set_bit_registry
+      - set_bit_cloud_registry
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -987,9 +982,7 @@ jobs:
       - run: node -v
       - run: npm install --global yarn
       - run: 'yarn -v'
-      - run:
-          name: set bit.dev registry
-          command: npm config set `@teambit:registry https://node.bit.dev
+      - set_bit_cloud_registry
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -1009,7 +1002,6 @@ jobs:
       #     name: create folder
       #     command: $BIT_VERSION = Get-Content -Path .\version.txt;New-Item -ItemType "directory" -Path ".\bit-$BIT_VERSION" -Force
       - run: 'node -v'
-      - yarn_set_bit_registry
       - run:
           name: install bit
           command: cd bundle; npm init -y; yarn add @teambit/bit
