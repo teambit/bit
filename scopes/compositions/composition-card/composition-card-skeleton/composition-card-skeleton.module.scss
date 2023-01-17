@@ -1,0 +1,28 @@
+.compositionCardSkeleton {
+  color: var(--border-medium-color, #ededed);
+  border: 1px solid var(--border-medium-color, #ededed);
+  font-size: 16px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  min-width: 300px;
+  max-width: 300px;
+}
+.preview {
+  color: var(--border-medium-color, #ededed);
+  height: 170px;
+  padding: 5px;
+  border-radius: 8px 8px 0 0;
+  > * {
+    margin-bottom: 8px;
+  }
+  .block {
+    width: 140px;
+  }
+}
+.bottom {
+  border-top: 1px solid var(--border-medium-color, #ededed);
+  padding: 8px 12px;
+  > * {
+    margin-right: 8px;
+  }
+}

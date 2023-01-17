@@ -1,7 +1,7 @@
 import React, { HTMLAttributes, useMemo } from 'react';
 import classNames from 'classnames';
 import { H4 } from '@teambit/documenter.ui.heading';
-import { RoundLoader } from '@teambit/design.ui.round-loader';
+import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DiffEditor } from '@monaco-editor/react';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 import { ComponentAspectData } from '@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model';
@@ -15,7 +15,13 @@ export type CompareAspectViewProps = {
   name?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function CompareAspectView({ baseAspectData, compareAspectData, name, className }: CompareAspectViewProps) {
+export function CompareAspectView({
+  baseAspectData,
+  compareAspectData,
+  name,
+  loading,
+  className,
+}: CompareAspectViewProps) {
   const title = useMemo(() => name?.split('/').pop(), [name]);
 
   const configDiffEditor = (
@@ -29,11 +35,7 @@ export function CompareAspectView({ baseAspectData, compareAspectData, name, cla
       options={{
         readOnly: true,
       }}
-      loading={
-        <div className={styles.loader}>
-          <RoundLoader />
-        </div>
-      }
+      loading={<AspectsCompareViewLoader />}
     />
   );
 
@@ -48,11 +50,7 @@ export function CompareAspectView({ baseAspectData, compareAspectData, name, cla
       options={{
         readOnly: true,
       }}
-      loading={
-        <div className={styles.loader}>
-          <RoundLoader />
-        </div>
-      }
+      loading={<AspectsCompareViewLoader />}
     />
   );
 
@@ -71,15 +69,19 @@ export function CompareAspectView({ baseAspectData, compareAspectData, name, cla
           <H4 size="xxs" className={styles.name}>
             <span>Config</span>
           </H4>
-          {configDiffEditor}
+          {loading ? <AspectsCompareViewLoader /> : configDiffEditor}
         </div>
         <div className={styles.componentCompareAspectCalculatedDiff}>
           <H4 size="xxs" className={styles.name}>
             <span>Calculated Data</span>
           </H4>
-          {calculatedDataDiffEditor}
+          {loading ? <AspectsCompareViewLoader /> : calculatedDataDiffEditor}
         </div>
       </div>
     </div>
   );
+}
+
+function AspectsCompareViewLoader() {
+  return <BlockSkeleton className={styles.loader} lines={16} />;
 }

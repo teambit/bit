@@ -4,6 +4,7 @@ import { ServiceHandlerContext } from './service-handler-context';
  * definition of the service handler.
  */
 export type ServiceHandlerFactory<T> = (context: ServiceHandlerContext) => ServiceHandler & T;
+export type AsyncServiceHandlerFactory<T> = (context: ServiceHandlerContext) => Promise<ServiceHandler & T>;
 
 export interface ServiceHandler {
   /**

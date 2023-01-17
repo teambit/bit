@@ -11,6 +11,7 @@ export type DrawerProps = {
   Widgets?: ReactNode[];
   Context?: ComponentType<any>;
   contentClass?: string;
+  drawerNameClass?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function DrawerUI({
@@ -22,6 +23,7 @@ export function DrawerUI({
   Widgets,
   Context = Noop,
   contentClass,
+  drawerNameClass,
   ...rest
 }: DrawerProps) {
   // consider passing the entire drawer type instead of passing each parameter
@@ -30,7 +32,7 @@ export function DrawerUI({
   return (
     <div {...rest} className={classNames(styles.drawer, className)}>
       <Context>
-        <div className={classNames(styles.drawerName, isOpen && styles.open)}>
+        <div className={classNames(styles.drawerName, isOpen && styles.open, drawerNameClass)}>
           <div onClick={onToggle}>
             <Icon className={classNames(styles.arrow, !isOpen && styles.collapsed)} of="fat-arrow-down" />
             <span>{name}</span>

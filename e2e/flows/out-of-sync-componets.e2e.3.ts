@@ -302,7 +302,7 @@ describe('components that are not synced between the scope and the consumer', fu
         });
         it('should sync .bitmap according to the latest version of the scope', () => {
           helper.command.expectStatusToBeClean();
-          helper.bitMap.expectToHaveIdHarmony('bar/foo', '0.0.1', helper.scopes.remote);
+          helper.bitMap.expectToHaveId('bar/foo', '0.0.1', helper.scopes.remote);
         });
       });
       describe('bit tag', () => {

@@ -51,6 +51,7 @@ export function LaneSelector({ className, lanes, selectedLaneId, groupByScope = 
       {...rest}
       open={!multipleLanes ? false : undefined}
       dropClass={styles.menu}
+      elevation='none'
       onChange={multipleLanes ? onDropdownToggled : undefined}
       // @ts-ignore - mismatch between @types/react
       placeholder={

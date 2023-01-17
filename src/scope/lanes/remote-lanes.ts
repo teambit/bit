@@ -10,6 +10,7 @@ import { glob } from '../../utils';
 import { Lane, ModelComponent } from '../models';
 import { LaneComponent } from '../models/lane';
 import { Ref } from '../objects';
+import logger from '../../logger/logger';
 
 type Lanes = { [laneName: string]: LaneComponent[] };
 
@@ -133,9 +134,11 @@ export default class RemoteLanes {
   }
 
   async write() {
-    await this.writeMutex.runExclusive(() =>
-      Promise.all(Object.keys(this.remotes).map((remoteName) => this.writeRemoteLanes(remoteName)))
-    );
+    await this.writeMutex.runExclusive(async () => {
+      logger.debug(`remote-lanes.write, start, ${Object.keys(this.remotes).length} remotes`);
+      await Promise.all(Object.keys(this.remotes).map((remoteName) => this.writeRemoteLanes(remoteName)));
+      logger.debug(`remote-lanes.write, end, ${Object.keys(this.remotes).length} remotes`);
+    });
   }
 
   async renameRefByNewScopeName(laneName: string, oldScopeName: string, newScopeName: string) {

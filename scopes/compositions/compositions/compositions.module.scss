@@ -60,7 +60,6 @@ $panelBg: #fafafa;
 .tabContent {
   flex: 1 1;
   overflow: auto;
-
   &:empty {
     display: none;
   }

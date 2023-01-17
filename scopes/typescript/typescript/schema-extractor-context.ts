@@ -32,7 +32,7 @@ export class SchemaExtractorContext {
     readonly component: Component,
     readonly extractor: TypeScriptExtractor,
     readonly componentDeps: ComponentDependency[],
-    readonly formatter: Formatter
+    readonly formatter?: Formatter
   ) {}
 
   computeSchema(node: Node) {

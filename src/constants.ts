@@ -171,7 +171,7 @@ export const DEFAULT_BIT_ENV = 'production';
 // https://github.com/mscdex/ssh2/issues/142
 export const DEFAULT_SSH_READY_TIMEOUT = 99999;
 
-export const MergeConfigFilename = 'bit-merge-conflict.json';
+export const MergeConfigFilename = 'merge-conflict';
 
 export const IGNORE_LIST = [
   '**/.bit.map.json',
@@ -185,7 +185,6 @@ export const IGNORE_LIST = [
   '**/yarn.lock',
   '**/LICENSE',
   '*/tsconfig.json',
-  `**/${MergeConfigFilename}`,
 ];
 
 export const AUTO_GENERATED_STAMP = 'BIT-AUTO-GENERATED';

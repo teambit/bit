@@ -250,7 +250,7 @@ export default class ComponentLoader {
         // the scope has this component but not the version used in .bitmap, sync .bitmap with
         // latest version from the scope
         await this._throwPendingImportIfNeeded(currentId);
-        newId = currentId.changeVersion(modelComponent.latest());
+        newId = currentId.changeVersion(modelComponent.getHeadRegardlessOfLaneAsTagOrHash());
       } else if (!currentId.hasScope()) {
         // the scope doesn't have this component and .bitmap doesn't have scope, assume it's new
         newId = currentId.changeVersion(undefined);
@@ -275,7 +275,9 @@ export default class ComponentLoader {
         currentId.changeScope(component.defaultScope)
       );
       if (modelComponent) {
-        const newId = currentId.changeVersion(modelComponent.latest()).changeScope(modelComponent.scope);
+        const newId = currentId
+          .changeVersion(modelComponent.getHeadRegardlessOfLaneAsTagOrHash())
+          .changeScope(modelComponent.scope);
         component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
 
         component.version = newId.version;

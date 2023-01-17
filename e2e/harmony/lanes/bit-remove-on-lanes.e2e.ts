@@ -30,15 +30,6 @@ describe('bit lane command', function () {
       const lane = helper.command.showOneLaneParsed('dev');
       expect(lane.components).to.have.lengthOf(3);
     });
-    describe('removing a component that has dependents', () => {
-      let output;
-      before(() => {
-        output = helper.command.removeComponent('comp3');
-      });
-      it('should stop the process and indicate that a component has dependents', () => {
-        expect(output).to.have.string('error: unable to delete');
-      });
-    });
     describe('removing a component that has no dependents with --from-lane', () => {
       let output;
       before(() => {
@@ -55,7 +46,7 @@ describe('bit lane command', function () {
       });
       it('should not remove the component from .bitmap', () => {
         const head = helper.command.getHead('comp1');
-        helper.bitMap.expectToHaveIdHarmony('comp1', head, helper.scopes.remote);
+        helper.bitMap.expectToHaveId('comp1', head, helper.scopes.remote);
       });
       it('should not delete the files from the filesystem', () => {
         expect(path.join(helper.scopes.localPath, 'comp1/index.js')).to.be.a.file();

@@ -6,9 +6,9 @@ import React from 'react';
 
 export type PropertiesTableProps = {
   componentId: string;
-};
+} & React.HtmlHTMLAttributes<HTMLDivElement>;
 
-export function PropertiesTable({ componentId }: PropertiesTableProps) {
+export function PropertiesTable({ componentId, ...rest }: PropertiesTableProps) {
   const { loading, error, data } = useFetchDocs(componentId);
 
   if (!data || loading) return null;
@@ -19,7 +19,7 @@ export function PropertiesTable({ componentId }: PropertiesTableProps) {
   if (properties.length === 0) return <div></div>;
 
   return (
-    <Section>
+    <Section {...rest}>
       <LinkedHeading>Properties</LinkedHeading>
       <PropTable rows={properties} />
     </Section>

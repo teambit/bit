@@ -2,11 +2,11 @@ import { ComponentCompareHooksData } from '@teambit/component.ui.component-compa
 import { ComponentCompareStateData } from '@teambit/component.ui.component-compare.models.component-compare-state';
 
 export type ComponentAspectData = {
+  id: string;
   icon?: string;
   name?: string;
   config: any;
   data: any;
-  aspectId: string;
 };
 
 export type ComponentCompareAspectsModel = {

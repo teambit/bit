@@ -8,6 +8,7 @@ import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator
 import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { Formatter } from '@teambit/formatter';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import { SchemaExtractor } from './schema-extractor';
@@ -93,7 +94,7 @@ export class SchemaMain {
     if (this.workspace) {
       const env = this.envs.getEnv(component).env;
       // types need to be fixed
-      const formatter = env.getFormatter(null, [
+      const formatter: Formatter | undefined = env.getFormatter?.(null, [
         (config: PrettierConfigMutator) => {
           config.setKey('parser', 'typescript');
           return config;

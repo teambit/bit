@@ -1065,6 +1065,9 @@ needed-for: ${neededFor || '<unknown>'}`);
     return this.componentLoader.getSnap(id, ref.toString());
   }
 
+  /**
+   * get component log sorted by the timestamp in ascending order (from the earliest to the latest)
+   */
   async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
     return this.legacyScope.loadComponentLogs(id._legacy, shortHash, startsFrom);
   }
@@ -1072,6 +1075,18 @@ needed-for: ${neededFor || '<unknown>'}`);
   async getStagedConfig() {
     const currentLaneId = this.legacyScope.currentLaneId;
     return StagedConfig.load(this.path, this.logger, currentLaneId);
+  }
+
+  /**
+   * wether a component is soft-removed.
+   * the version is required as it can be removed on a lane. in which case, the version is the head in the lane.
+   */
+  async isComponentRemoved(id: ComponentID): Promise<Boolean> {
+    const version = id.version;
+    if (!version) throw new Error(`isComponentRemoved expect to get version, got ${id.toString()}`);
+    const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
+    const versionObj = await modelComponent.loadVersion(version, this.legacyScope.objects);
+    return versionObj.isRemoved();
   }
 
   /**

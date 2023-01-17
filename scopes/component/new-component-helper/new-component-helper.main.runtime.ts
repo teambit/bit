@@ -86,6 +86,8 @@ export class NewComponentHelperMain {
 
   async getConfigFromExistingToNewComponent(comp: Component) {
     const aspectIds = comp.state.aspects.entries.map((e) => e.id.toString());
+    // the reason to load aspects is to be able to check later for the `shouldPreserveConfigForClonedComponent` prop.
+    // it's not saved in the model, it's available only on the aspect instance.
     await this.workspace.loadAspects(aspectIds, undefined, 'new-component-helper.getConfigFromExistingToNewComponent');
     const fromExisting = {};
     comp.state.aspects.entries.forEach((entry) => {

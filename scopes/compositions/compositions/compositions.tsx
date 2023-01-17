@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState, useMemo, useRef, ReactNode } from 'react';
+import { useParams } from 'react-router-dom';
 import head from 'lodash.head';
 import queryString from 'query-string';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
@@ -18,7 +19,7 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { Separator } from '@teambit/design.ui.separator';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { AlertCard } from '@teambit/design.ui.alert-card';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link, useNavigate, useLocation } from '@teambit/base-react.navigation.link';
 import { OptionButton } from '@teambit/design.ui.input.option-button';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { EmptyStateSlot } from './compositions.ui.runtime';
@@ -36,20 +37,29 @@ export type CompositionsProp = { menuBarWidgets?: CompositionsMenuSlot; emptySta
 
 export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   const component = useContext(ComponentContext);
-  const [selected, selectComposition] = useState(head(component.compositions));
-  const selectedRef = useRef(selected);
-  selectedRef.current = selected;
+  // const [searchParams, setSearchParams] = useSearchParams();
+  const params = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentCompositionName = params['*'];
+  // console.log(routes);
+  const currentComposition =
+    component.compositions.find((composition) => composition.identifier.toLowerCase() === currentCompositionName) ||
+    head(component.compositions);
+  // const [selected, selectComposition] = useState(head(component.compositions));
+  const selectedRef = useRef(currentComposition);
+  selectedRef.current = currentComposition;
 
   const properties = useDocs(component.id);
 
   // reset selected composition when component changes.
   // this does trigger renderer, but perf seems to be ok
-  useEffect(() => {
-    const prevId = selectedRef.current?.identifier;
-    const next = component.compositions.find((c) => c.identifier === prevId) || component.compositions[0];
+  // useEffect(() => {
+  //   const prevId = selectedRef.current?.identifier;
+  //   const next = component.compositions.find((c) => c.identifier === prevId) || component.compositions[0];
 
-    selectComposition(next);
-  }, [component]);
+  //   navigate(next.displayName.toLowerCase().replaceAll(' ', '-'));
+  // }, [component]);
   const isMobile = useIsMobile();
   const showSidebar = !isMobile && component.compositions.length > 0;
   const [isSidebarOpen, setSidebarOpenness] = useState(showSidebar);
@@ -58,7 +68,9 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
 
   const compositionUrl = toPreviewUrl(component, 'compositions');
   const isScaling = component?.preview?.isScaling;
-  const compositionIdentifierParam = isScaling ? `name=${selected?.identifier}` : selected?.identifier;
+  const compositionIdentifierParam = isScaling
+    ? `name=${currentComposition?.identifier}`
+    : currentComposition?.identifier;
   const currentCompositionFullUrl = toPreviewUrl(component, 'compositions', compositionIdentifierParam);
 
   const [compositionParams, setCompositionParams] = useState<Record<string, any>>({});
@@ -78,7 +90,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
           <CompositionContent
             emptyState={emptyState}
             component={component}
-            selected={selected}
+            selected={currentComposition}
             queryParams={queryParams}
           />
         </Pane>
@@ -102,10 +114,29 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
               <TabPanel className={styles.tabContent}>
                 <CompositionsPanel
                   isScaling={isScaling}
-                  onSelectComposition={selectComposition}
+                  onSelectComposition={(composition) => {
+                    if (!currentComposition || !location) return;
+                    if (location.pathname.includes(currentComposition.identifier.toLowerCase())) {
+                      navigate(composition.identifier.toLowerCase());
+                      return;
+                    }
+
+                    const path = location.pathname.replace(
+                      currentComposition.identifier.toLowerCase(),
+                      composition.identifier.toLowerCase()
+                    );
+
+                    if (!path) return;
+                    if(!path.includes(composition.identifier.toLowerCase())) {
+                      const nextPath = location.pathname.concat(`/${composition.identifier.toLowerCase()}`)
+                      navigate(nextPath)
+                      return;
+                    }
+                    navigate(path);
+                  }}
                   url={compositionUrl}
                   compositions={component.compositions}
-                  active={selected}
+                  active={currentComposition}
                   className={styles.compost}
                 />
               </TabPanel>

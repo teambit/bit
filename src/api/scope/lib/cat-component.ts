@@ -15,7 +15,7 @@ export default (async function catComponent(id: string) {
     return version.toObject();
   }
   if (bitId.version === LATEST_BIT_VERSION && id.includes(VERSION_DELIMITER)) {
-    const version = await component.loadVersion(component.latest(), scope.objects);
+    const version = await component.loadVersion(component.getHeadRegardlessOfLaneAsTagOrHash(), scope.objects);
     return version.toObject();
   }
   return component.toObject();

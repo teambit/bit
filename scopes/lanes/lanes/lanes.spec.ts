@@ -3,8 +3,9 @@ import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
+import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { LanesAspect } from './lanes.aspect';
-import { ChangeType, LanesMain } from './lanes.main.runtime';
+import { LanesMain } from './lanes.main.runtime';
 
 describe('LanesAspect', function () {
   this.timeout(0);

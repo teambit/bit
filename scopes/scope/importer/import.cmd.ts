@@ -167,7 +167,7 @@ ${WILDCARD_HELP('import')}`;
       return chalk.yellow(importResults.cancellationMessage || 'nothing to import');
     }
 
-    const titlePrefix =
+    const summaryPrefix =
       importedIds.length === 1
         ? 'successfully imported one component'
         : `successfully imported ${importedIds.length} components`;
@@ -182,8 +182,8 @@ ${WILDCARD_HELP('import')}`;
       return formatPlainComponentItemWithVersions(bitId, details);
     });
     const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date`;
-    const title = `${titlePrefix}${upToDateStr}`;
-    const componentDependenciesOutput = [chalk.green(title), ...compact(importedComponents)].join('\n');
+    const summary = `${summaryPrefix}${upToDateStr}`;
+    const componentDependenciesOutput = [...compact(importedComponents), chalk.green(summary)].join('\n');
     const importedDepsOutput =
       displayDependencies && importedDeps.length
         ? immutableUnshift(
@@ -221,15 +221,17 @@ function formatPlainComponentItemWithVersions(bitId: BitId, importDetails: Impor
       .join(', ')}) `;
   };
   const conflictMessage = getConflictMessage();
-  const deprecated = importDetails.deprecated ? chalk.yellow('deprecated') : '';
+  const deprecated = importDetails.deprecated && !importDetails.removed ? chalk.yellow('deprecated') : '';
   const removed = importDetails.removed ? chalk.red('removed') : '';
   const missingDeps = importDetails.missingDeps.length
     ? chalk.red(`missing dependencies: ${importDetails.missingDeps.map((d) => d.toString()).join(', ')}`)
     : '';
-  if (status === 'up to date' && !missingDeps && !deprecated && !conflictMessage) {
+  if (status === 'up to date' && !missingDeps && !deprecated && !conflictMessage && !removed) {
     return undefined;
   }
-  return `- ${chalk.green(status)} ${chalk.cyan(
-    id
-  )} ${versions}${usedVersion} ${conflictMessage}${deprecated}${removed} ${missingDeps}`;
+  return chalk.dim(
+    `- ${chalk.green(status)} ${chalk.cyan(
+      id
+    )} ${versions}${usedVersion} ${conflictMessage}${deprecated}${removed} ${missingDeps}`
+  );
 }

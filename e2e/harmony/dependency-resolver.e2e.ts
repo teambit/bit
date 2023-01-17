@@ -265,28 +265,28 @@ describe('dependency-resolver extension', function () {
         // Without the override, is-odd would be 0.1.2
         expect(
           helper.fixtures.fs.readJsonFile(
-            'node_modules/.pnpm/registry.npmjs.org+is-odd@1.0.0/node_modules/is-odd/package.json'
+            'node_modules/.pnpm/is-odd@1.0.0/node_modules/is-odd/package.json'
           ).version
         ).to.eq('1.0.0');
       });
       it('should force a newer version of a subdependency using the dependency name and version', function () {
         expect(
           helper.fixtures.fs.readJsonFile(
-            'node_modules/.pnpm/registry.npmjs.org+glob@6.0.4/node_modules/glob/package.json'
+            'node_modules/.pnpm/glob@6.0.4/node_modules/glob/package.json'
           ).version
         ).to.eq('6.0.4');
       });
       it('should not change the version of the package if the parent package does not match the pattern', function () {
         expect(
           helper.fixtures.fs.readJsonFile(
-            'node_modules/.pnpm/registry.npmjs.org+glob@6.0.4/node_modules/once/package.json'
+            'node_modules/.pnpm/glob@6.0.4/node_modules/once/package.json'
           ).version
         ).to.eq('1.4.0');
       });
       it('should change the version of the package if the parent package matches the pattern', function () {
         expect(
           helper.fixtures.fs.readJsonFile(
-            'node_modules/.pnpm/registry.npmjs.org+inflight@1.0.6/node_modules/once/package.json'
+            'node_modules/.pnpm/inflight@1.0.6/node_modules/once/package.json'
           ).version
         ).to.eq('1.3.0');
       });

@@ -103,6 +103,7 @@ export default class DependencyResolver {
   processedFiles: string[];
   overridesDependencies: OverridesDependencies;
   debugDependenciesData: DebugDependencies;
+  autoDetectOverrides: Record<string, any>;
 
   static getWorkspacePolicy: WorkspacePolicyGetter;
   static registerWorkspacePolicyGetter(func: WorkspacePolicyGetter) {
@@ -226,6 +227,7 @@ export default class DependencyResolver {
    * and marked as ignored in the consumer or component config file.
    */
   async populateDependencies(files: string[], testsFiles: string[]) {
+    await this.loadAutoDetectOverrides();
     files.forEach((file) => {
       const fileType: FileType = {
         isTestFile: testsFiles.includes(file),
@@ -261,6 +263,15 @@ export default class DependencyResolver {
     await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
 
     this.coreAspects = R.uniq(this.coreAspects);
+  }
+
+  private async loadAutoDetectOverrides(){
+    const autoDetectOverrides = await DependencyResolver.getOnComponentAutoDetectOverrides(
+      this.component.extensions,
+      this.component.id,
+      this.component.files
+    );
+    this.autoDetectOverrides = autoDetectOverrides;
   }
 
   addCustomResolvedIssues() {
@@ -749,11 +760,21 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
   private isPkgInVariants(pkgName: string): boolean {
     const dependencies = this.overridesDependencies.getDependenciesToAddManually(undefined, this.allDependencies);
-    if (!dependencies) return false;
-    const { components } = dependencies;
-    return DEPENDENCIES_FIELDS.some(
-      (depField) => components[depField] && components[depField].some((depData) => depData.packageName === pkgName)
-    );
+    const isInRegularOverrides = (deps) => {
+      if (!deps) return false;
+      const { components } = deps;
+      return DEPENDENCIES_FIELDS.some(
+        (depField) => components[depField] && components[depField].some((depData) => depData.packageName === pkgName)
+      );
+    }
+
+    const autoDetectOverrides = this.autoDetectOverrides;
+    const isInAutoDetectOverrides = (autoDetectOverridesDeps) => {
+      return DEPENDENCIES_FIELDS.some(
+        (depField) => autoDetectOverridesDeps[depField] && autoDetectOverridesDeps[depField][pkgName]
+      );
+    }
+    return isInRegularOverrides(dependencies) || isInAutoDetectOverrides(autoDetectOverrides);
   }
 
   private addImportNonMainIssueIfNeeded(filePath: PathLinuxRelative, dependencyPkgData: ResolvedPackageData) {
@@ -1186,11 +1207,8 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   async applyAutoDetectOverridesOnComponent(): Promise<void> {
-    const autoDetectOverrides = await DependencyResolver.getOnComponentAutoDetectOverrides(
-      this.component.extensions,
-      this.component.id,
-      this.component.files
-    );
+    const autoDetectOverrides = this.autoDetectOverrides;
+
     if (!autoDetectOverrides || !Object.keys(autoDetectOverrides).length) {
       return;
     }

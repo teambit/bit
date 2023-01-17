@@ -1,25 +1,20 @@
 import React, { HTMLAttributes, useState } from 'react';
+import { uniq } from 'lodash';
 import classNames from 'classnames';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
-import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
-import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { FileIconSlot } from '@teambit/code';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import {
   useCompareQueryParam,
   useUpdatedUrlFromQuery,
 } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
-import { useComponentCompareQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare';
-import {
-  ComponentCompareQueryResponse,
-  FileCompareResult,
-} from '@teambit/component.ui.component-compare.models.component-compare-model';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
+import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
+import { DarkTheme } from '@teambit/design.themes.dark-theme';
 import { CodeCompareTree } from './code-compare-tree';
 import { CodeCompareView } from './code-compare-view';
 import { Widget } from './code-compare.widgets';
-import { CodeCompareContext, CodeCompareModel } from './code-compare-context';
 
 import styles from './code-compare.module.scss';
 
@@ -36,74 +31,60 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   const state = compareState?.code;
   const hook = compareHooks?.code;
 
-  const isMobile = useIsMobile();
-  const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
-  const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
+  const [isSidebarOpen, setSidebarOpenness] = useState(false);
 
   const { fileTree: baseFileTree = [], mainFile } = useCode(base?.model.id);
   const { fileTree: compareFileTree = [] } = useCode(compare?.model.id);
 
-  const compCompareQueryResult = useComponentCompareQuery(base?.model.id.toString(), compare?.model.id.toString());
-
-  const fileTree = baseFileTree.concat(compareFileTree);
+  const fileTree = uniq(baseFileTree.concat(compareFileTree));
 
   const selectedFileFromParams = useCompareQueryParam('file');
 
   const selectedFile = state?.id || selectedFileFromParams || mainFile || DEFAULT_FILE;
-  const codeCompareContextData = mapToCodeCompareData(compCompareQueryResult);
 
   const _useUpdatedUrlFromQuery =
     hook?.useUpdatedUrlFromQuery || (state?.controlled && (() => useUpdatedUrlFromQuery({}))) || useUpdatedUrlFromQuery;
 
   const getHref = (node) => _useUpdatedUrlFromQuery({ file: node.id });
+  const sidebarIconUrl = isSidebarOpen
+    ? 'https://static.bit.dev/design-system-assets/Icons/sidebar-close.svg'
+    : 'https://static.bit.dev/design-system-assets/Icons/sidebar-open.svg';
 
   return (
-    <CodeCompareContext.Provider value={codeCompareContextData}>
+    <ThemeSwitcher themes={[DarkTheme]} className={classNames(styles.themeContainer, className)}>
       <SplitPane
-        layout={sidebarOpenness}
-        size="85%"
+        layout={Layout.row}
+        size={isSidebarOpen ? 200 : 32}
         className={classNames(styles.componentCompareCodeContainer, className)}
       >
-        <Pane className={styles.left}>
-          <CodeCompareView fileName={selectedFile} />
+        <Pane className={classNames(styles.left, !isSidebarOpen && styles.collapsed)}>
+          <div className={styles.codeCompareTreeCollapse} onClick={() => setSidebarOpenness((value) => !value)}>
+            <img src={sidebarIconUrl} />
+          </div>
+          {isSidebarOpen && (
+            <CodeCompareTree
+              className={styles.codeCompareTree}
+              fileIconSlot={fileIconSlot}
+              fileTree={fileTree}
+              currentFile={selectedFile}
+              drawerName={'FILES'}
+              widgets={[Widget]}
+              getHref={getHref}
+              onTreeNodeSelected={hook?.onClick}
+            />
+          )}
         </Pane>
-        <HoverSplitter className={styles.splitter}>
-          <Collapser
-            placement="left"
-            isOpen={isSidebarOpen}
-            onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
-            onClick={() => setSidebarOpenness((x) => !x)}
-            tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} file tree`}
-            className={styles.collapser}
-          />
-        </HoverSplitter>
-        <Pane className={classNames(styles.right, styles.dark)}>
-          <CodeCompareTree
-            fileIconSlot={fileIconSlot}
-            fileTree={fileTree}
-            currentFile={selectedFile}
-            drawerName={'FILES'}
+        <HoverSplitter className={styles.splitter}></HoverSplitter>
+        <Pane className={classNames(styles.right, styles.dark, !isSidebarOpen && styles.collapsed)}>
+          <CodeCompareView
             widgets={[Widget]}
+            fileName={selectedFile}
+            files={fileTree}
             getHref={getHref}
-            onTreeNodeSelected={hook?.onClick}
+            onTabClicked={hook?.onClick}
           />
         </Pane>
       </SplitPane>
-    </CodeCompareContext.Provider>
+    </ThemeSwitcher>
   );
-}
-
-function mapToCodeCompareData({
-  loading,
-  componentCompareData,
-}: {
-  loading?: boolean;
-  componentCompareData?: ComponentCompareQueryResponse;
-}): CodeCompareModel {
-  const fileCompareDataByName = new Map<string, FileCompareResult>();
-  if (loading || !componentCompareData) return { loading, fileCompareDataByName };
-  componentCompareData.code.forEach((codeCompareData) => {
-    fileCompareDataByName.set(codeCompareData.fileName, codeCompareData);
-  });
-  return { loading, fileCompareDataByName };
 }

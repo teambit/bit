@@ -14,6 +14,7 @@ export function previewSchema(previewExtension: PreviewMain) {
         isScaling: Boolean
         includesEnvTemplate: Boolean
         legacyHeader: Boolean
+        skipIncludes: Boolean
       }
 
       extend type Component {
@@ -37,6 +38,10 @@ export function previewSchema(previewExtension: PreviewMain) {
         legacyHeader: ({ component }) => {
           return previewExtension.isLegacyHeader(component);
         },
+        skipIncludes: ({ component }) => {
+          // return true;
+          return previewExtension.isSupportSkipIncludes(component);
+        }
       },
     },
   };

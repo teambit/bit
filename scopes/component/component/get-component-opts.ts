@@ -6,4 +6,5 @@ export type GetComponentsOptions = {
   componentId?: string | (() => string | undefined);
   useComponentFilters?: () => Filters;
   path?: string;
+  skipRightSide?: boolean;
 };

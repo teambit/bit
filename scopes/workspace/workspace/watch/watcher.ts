@@ -216,21 +216,39 @@ export class Watcher {
     files: string[],
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
-    this.workspace.clearComponentCache(componentId);
-    const component = await this.workspace.get(componentId);
+    let updatedComponentId: ComponentID | undefined = componentId;
+    if (!(await this.workspace.hasId(componentId))) {
+      // bitmap has changed meanwhile, which triggered `handleBitmapChanges`, which re-loaded consumer and updated versions
+      // so the original componentId might not be in the workspace now, and we need to find the updated one
+      const ids = await this.workspace.listIds();
+      updatedComponentId = ids.find((id) => id.isEqual(componentId, { ignoreVersion: true }));
+      if (!updatedComponentId) {
+        logger.debug(`triggerCompChanges, the component ${componentId.toString()} was probably removed from .bitmap`);
+        return [];
+      }
+    }
+    this.workspace.clearComponentCache(updatedComponentId);
+    const component = await this.workspace.get(updatedComponentId);
     const componentMap: ComponentMap = component.state._consumer.componentMap;
+    if (!componentMap) {
+      throw new Error(
+        `unable to find componentMap for ${updatedComponentId.toString()}, make sure this component is in .bitmap`
+      );
+    }
     const compFiles = files.filter((filePath) => {
       const relativeFile = this.getRelativePathLinux(filePath);
       const isCompFile = Boolean(componentMap.getFilesRelativeToConsumer().find((p) => p === relativeFile));
-      if (!isCompFile) {
-        logger.debug(`file ${filePath} is inside the component ${componentId.toString()} but configured to be ignored`);
-      }
       return isCompFile;
     });
     if (!compFiles.length) {
+      logger.debug(
+        `the following files are part of the component ${componentId.toStringWithoutVersion()} but configured to be ignored:\n${files.join(
+          '\n'
+        )}'`
+      );
       return [];
     }
-    const buildResults = await this.executeWatchOperationsOnComponent(componentId, compFiles, true, initiator);
+    const buildResults = await this.executeWatchOperationsOnComponent(updatedComponentId, compFiles, true, initiator);
     return buildResults;
   }
 
@@ -286,18 +304,21 @@ export class Watcher {
       this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentAddEvent(idStr, 'OnComponentAdd'));
     }
 
-    let buildResults: OnComponentEventResult[];
-    try {
-      buildResults = isChange
-        ? await this.workspace.triggerOnComponentChange(componentId, files, initiator)
-        : await this.workspace.triggerOnComponentAdd(componentId);
-    } catch (err: any) {
-      // do not exit the watch process on errors, just print them
-      const msg = `found an issue during onComponentChange or onComponentAdd hooks`;
-      logger.error(msg, err);
-      logger.console(`\n${msg}: ${err.message || err}`);
-      return [];
-    }
+    // the try/catch is probably not needed here because this gets called by `handleChange()` which already has a try/catch
+    // I left it here commented out for now just in case, but it should be removed as soon as we're more confident
+
+    // let buildResults: OnComponentEventResult[];
+    // try {
+    const buildResults = isChange
+      ? await this.workspace.triggerOnComponentChange(componentId, files, initiator)
+      : await this.workspace.triggerOnComponentAdd(componentId);
+    // } catch (err: any) {
+    //   // do not exit the watch process on errors, just print them
+    //   const msg = `found an issue during onComponentChange or onComponentAdd hooks for ${idStr}`;
+    //   logger.error(msg, err);
+    //   logger.console(`\n${msg}: ${err.message || err}`);
+    //   return [];
+    // }
     return buildResults;
   }
 

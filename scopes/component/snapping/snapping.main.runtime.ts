@@ -696,6 +696,7 @@ there are matching among unmodified components thought. consider using --unmodif
         );
         version.unrelated = { head: unmergedComponent.head, laneId: unmergedComponent.laneId };
       } else {
+        // this is adding a second parent to the version. the order is important. the first parent is coming from the current-lane.
         version.addParent(unmergedComponent.head);
         this.logger.debug(
           `sources.addSource, unmerged component "${component.name}". adding a parent ${unmergedComponent.head.hash}`

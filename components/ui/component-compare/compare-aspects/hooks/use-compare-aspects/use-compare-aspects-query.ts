@@ -5,15 +5,10 @@ import { useComponentCompare } from '@teambit/component.ui.component-compare.con
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { inflateToTree } from '@teambit/base-ui.graph.tree.inflate-paths';
-import { ComponentCompareAspectsModel } from '@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model';
-
-export type ComponentAspectData = {
-  icon?: string;
-  name?: string;
-  config: any;
-  data: any;
-  aspectId: string;
-};
+import {
+  ComponentAspectData,
+  ComponentCompareAspectsModel,
+} from '@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model';
 
 export const GET_COMPONENT_ASPECT_DATA = gql`
   query GetComponentAspectData($id: String!, $extensionId: String!) {
@@ -26,7 +21,7 @@ export const GET_COMPONENT_ASPECT_DATA = gql`
           scope
         }
         aspects {
-          aspectId: id
+          id
           config
           data
           icon
@@ -49,11 +44,13 @@ export function useCompareAspectsQuery(host: string): ComponentCompareAspectsMod
   const { data: baseAspectData, loading: baseLoading } = useDataQuery(GET_COMPONENT_ASPECT_DATA, {
     variables: { id: baseId, extensionId: host },
     skip: !base?.id,
+    fetchPolicy: 'no-cache',
   });
 
   const { data: compareAspectData, loading: compareLoading } = useDataQuery(GET_COMPONENT_ASPECT_DATA, {
     variables: { id: compareId, extensionId: host },
     skip: !compare?.id,
+    fetchPolicy: 'no-cache',
   });
 
   const loading = baseLoading || compareLoading || componentCompareContext?.loading;
@@ -62,7 +59,7 @@ export function useCompareAspectsQuery(host: string): ComponentCompareAspectsMod
 
   const selectedAspect = useCompareQueryParam('aspect');
 
-  const aspectNames = baseAspectList.concat(compareAspectList).map((aspect) => aspect.aspectId);
+  const aspectNames = baseAspectList.concat(compareAspectList).map((aspect) => aspect.id);
   // make sure that Windows paths are converted to posix
   const sortedAspectNames = inflateToTree(
     aspectNames.map((aspectName) => aspectName.replace(/\\/g, '/')),
@@ -75,12 +72,12 @@ export function useCompareAspectsQuery(host: string): ComponentCompareAspectsMod
   const selected = state?.id || selectedAspect || firstChild(sortedAspectNames).id;
 
   const selectedBase = useMemo(
-    () => baseAspectList?.find((baseAspect) => baseAspect.aspectId === selected),
+    () => baseAspectList?.find((baseAspect) => baseAspect.id === selected),
     [baseAspectList, selected]
   );
 
   const selectedCompare = useMemo(
-    () => compareAspectList?.find((compareAspect) => compareAspect.aspectId === selected),
+    () => compareAspectList?.find((compareAspect) => compareAspect.id === selected),
     [compareAspectList, selected]
   );
 

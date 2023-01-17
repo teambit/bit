@@ -55,6 +55,8 @@ export type OverviewLineSlot = SlotRegistry<OverviewLine[]>;
 
 export type ScopeUIConfig = {
   showGallery: boolean;
+  useBoxAction?: string;
+  useBoxIcon?: string;
 };
 
 export class ScopeUI {
@@ -440,7 +442,7 @@ export class ScopeUI {
     ]);
     if (ui) ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
     scopeUi.registerMenuItem(scopeUi.menuItems);
-    scopeUi.registerMenuWidget(() => <ScopeUseBox />);
+    scopeUi.registerMenuWidget(() => <ScopeUseBox actionName={config.useBoxAction} actionIcon={config.useBoxIcon} />);
     if (config.showGallery)
       scopeUi.registerSidebarLink({
         component: function Gallery() {

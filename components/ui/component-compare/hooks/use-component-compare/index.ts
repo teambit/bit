@@ -1,1 +1,1 @@
-export { useComponentCompareQuery, QUERY_COMPONENT_COMPARE } from './use-component-compare';
+export { useComponentCompareQuery, QUERY_COMPONENT_COMPARE, UseComponentCompareQuery } from './use-component-compare';
