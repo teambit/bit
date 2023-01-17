@@ -4,6 +4,8 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ScopeMain } from '@teambit/scope';
 // import { BitIds } from '@teambit/legacy/dist/bit-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
+import { isHash } from '@teambit/component-version';
+import { Ref } from '@teambit/legacy/dist/scope/objects';
 
 export async function createLane(
   consumer: Consumer,
@@ -21,7 +23,17 @@ export async function createLane(
     // when branching from one lane to another, copy components from the origin lane
     // when branching from main, no need to copy anything
     const currentLaneObject = await consumer.getCurrentLaneObject();
-    return currentLaneObject ? currentLaneObject.components : [];
+    if (!currentLaneObject) return [];
+    const laneComponents = currentLaneObject.components;
+    const workspaceIds = consumer.bitMap.getAllBitIds();
+    const laneComponentWithBitmapHead = laneComponents.map(({ id, head }) => {
+      const bitmapHead = workspaceIds.searchWithoutVersion(id);
+      if (bitmapHead && isHash(bitmapHead.version)) {
+        return { id, head: Ref.from(bitmapHead.version as string) };
+      }
+      return { id, head };
+    });
+    return laneComponentWithBitmapHead;
   };
 
   const forkedFrom = await getLaneOrigin(consumer);

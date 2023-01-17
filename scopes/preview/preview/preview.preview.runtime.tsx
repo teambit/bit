@@ -85,7 +85,7 @@ export class PreviewPreview {
     // fit content always.
     window.document.body.style.width = 'fit-content';
 
-    const { previewName, componentId } = this.getLocation();
+    const { previewName, componentId, envId } = this.getLocation();
     const name = previewName || this.getDefault();
     if (rootExt) this.isDev = rootExt === 'teambit.workspace/workspace';
 
@@ -112,7 +112,13 @@ export class PreviewPreview {
     // during build / tag, the component is isolated, so all aspects are relevant, and do not require filtering
     const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
     const previewModule = await this.getPreviewModule(name, componentId);
-    const render = preview.render(componentId, previewModule, includes, this.getRenderingContext(componentAspects));
+    const render = preview.render(
+      componentId,
+      envId || '',
+      previewModule,
+      includes,
+      this.getRenderingContext(componentAspects)
+    );
 
     this.reportSize();
     this.setViewport();
@@ -178,7 +184,7 @@ export class PreviewPreview {
     const metadata = componentPreviews[`${previewName}_metadata`];
 
     return {
-      mainModule: relevantModel.mainModule,
+      modulesMap: relevantModel.modulesMap,
       componentMap: {
         [id.fullName]: component,
       },
@@ -334,6 +340,7 @@ export class PreviewPreview {
 
     return {
       previewName: this.getParam(after, 'preview'),
+      envId: this.getParam(after, 'env'),
       componentId: ComponentID.tryFromString(before),
     };
   }

@@ -14,6 +14,7 @@ describe('templates: react-hook, index-file', () => {
       namePascalCase: 'UseFooBar',
       nameCamelCase: 'useFooBar',
       componentId: ComponentID.fromString('baz.qux/use/foo/bar'),
+      aspectId: ComponentID.fromString('baz.qux/use/foo/my-aspect'),
     };
 
     const result = indexFile(ctx);

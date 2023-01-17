@@ -27,13 +27,15 @@ export const QUERY_COMPONENT_COMPARE = gql`
 export type UseComponentCompareQuery = (
   baseId?: string,
   compareId?: string,
-  options?: { fileName?: string; aspectName?: string }
+  options?: { fileName?: string; aspectName?: string },
+  skip?: boolean
 ) => { loading?: boolean; componentCompareData?: ComponentCompareQueryResponse };
 
 export const useComponentCompareQuery: UseComponentCompareQuery = (
   baseId?: string,
   compareId?: string,
-  options?: { fileName?: string; aspectName?: string }
+  options?: { fileName?: string; aspectName?: string },
+  skip?: boolean
 ) => {
   const { data, loading } = useDataQuery<{ getHost: { compareComponent: ComponentCompareQueryResponse } }>(
     QUERY_COMPONENT_COMPARE,
@@ -43,7 +45,7 @@ export const useComponentCompareQuery: UseComponentCompareQuery = (
         baseId,
         compareId,
       },
-      skip: !baseId || !compareId,
+      skip: skip || !baseId || !compareId,
     }
   );
 
