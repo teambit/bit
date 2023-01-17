@@ -189,12 +189,7 @@ commands: # reusable commands
       - run: 
           name: set bit cloud registry in npm config
           command: npm config set @teambit:registry=https://node.bit.cloud
-      - run: npm config list
       
-  yarn_add_bit:
-    steps:
-      - run: yarn add @teambit/bit
-
   set_git_credentials:
     steps:
       - run:
@@ -983,10 +978,6 @@ jobs:
       - run: node -v
       - run: npm install --global yarn
       - run: 'yarn -v'
-      # we are not using the shared command since we need the ` to make it work
-      # - run:
-      #     name: set bit.dev registry
-      #     command: npm config set `@teambit:registry https://node.bit.cloud
       - set_bit_cloud_registry
       - run:
           name: print bit version
@@ -1996,7 +1987,7 @@ workflows:
   #           branches:
   #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-    # bvm_bundle_debug:
+  # bvm_bundle_debug:
   #   jobs:
   #     - checkout_code:
   #         filters:
