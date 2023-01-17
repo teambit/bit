@@ -597,12 +597,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/importer"
     },
-    "inputs/dropdown": {
-        "scope": "teambit.design",
-        "version": "1.2.16",
-        "mainFile": "index.ts",
-        "rootDir": "components/inputs/dropdown"
-    },
     "insights": {
         "scope": "teambit.explorer",
         "version": "0.0.960",
