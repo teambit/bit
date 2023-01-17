@@ -14,6 +14,7 @@ const Walker = require('node-source-walk');
 const shouldBeIgnored = (node) => {
   const comments = node?.parent?.parent?.comments;
   if (!comments) return false;
+  if (comments.some((c) => c.value.includes('@bit-no-check'))) return true;
   const commentAboveNode = comments.find((c) => c.loc.start.line === node.loc.start.line - 1);
   if (!commentAboveNode) return false;
   return commentAboveNode.value.includes('@bit-ignore');
@@ -84,6 +85,7 @@ export default function (src, options: Record<string, any> = {}) {
       case 'ExportNamedDeclaration':
       case 'ExportAllDeclaration':
         if (node.source && node.source.value) {
+          if (shouldBeIgnored(node)) return;
           addDependency(node.source.value);
         } else if (node.specifiers && node.specifiers.length) {
           node.specifiers.forEach((exportSpecifier) => {
