@@ -37,8 +37,6 @@ import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 
-console.log('im here')
-
 export type onTagIdTransformer = (id: BitId) => BitId | null;
 
 export type BasicTagParams = {
