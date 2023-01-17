@@ -5,6 +5,7 @@ import { ScopeMain } from '@teambit/scope';
 // import { BitIds } from '@teambit/legacy/dist/bit-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { isHash } from '@teambit/component-version';
+import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 
 export async function createLane(
@@ -18,6 +19,7 @@ export async function createLane(
     throw new BitError(`lane "${laneName}" already exists, to switch to this lane, please use "bit switch" command`);
   }
   throwForInvalidLaneName(laneName);
+  await throwForStagedComponents(consumer);
   const getDataToPopulateLaneObjectIfNeeded = async (): Promise<LaneComponent[]> => {
     if (remoteLane) return remoteLane.components;
     // when branching from one lane to another, copy components from the origin lane
@@ -80,6 +82,18 @@ export function throwForInvalidLaneName(laneName: string) {
   if (!isValidLaneName(laneName)) {
     throw new BitError(
       `lane "${laneName}" has invalid characters. lane name can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
+    );
+  }
+}
+
+async function throwForStagedComponents(consumer: Consumer) {
+  const componentList = new ComponentsList(consumer);
+  const stagedComponents = await componentList.listExportPendingComponentsIds();
+  if (stagedComponents.length) {
+    throw new BitError(
+      `unable to create a new lane, please export or reset the following components first: ${stagedComponents.join(
+        ', '
+      )}`
     );
   }
 }

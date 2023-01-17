@@ -146,4 +146,21 @@ describe('bit lane command', function () {
       expect(headOnLaneB).to.not.equal(secondSnap);
     });
   });
+  describe('creating a lane from a lane when it has staged components', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.fixtures.populateComponents(1, false, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+    });
+    it('bit create should throw an error suggesting to export or reset first', () => {
+      const output = helper.general.runWithTryCatch('bit lane create lane-b');
+      expect(output).to.have.string(
+        'unable to create a new lane, please export or reset the following components first'
+      );
+    });
+  });
 });
