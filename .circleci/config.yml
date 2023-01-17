@@ -981,7 +981,10 @@ jobs:
       - run: node -v
       - run: npm install --global yarn
       - run: 'yarn -v'
-      - set_bit_cloud_registry
+      # we are not using the shared command since we need the ` to make it work
+      - run:
+          name: set bit.dev registry
+          command: npm config set `@teambit:registry https://node.bit.cloud
       - run:
           name: print bit version
           command: npm view @teambit/bit version
