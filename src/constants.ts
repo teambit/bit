@@ -182,7 +182,7 @@ export const getSymphonyUrl = (): string => {
   return resolvedSymphonyUrl;
 } 
 
-export const SYMPHONY_GRAPHQL = `http://${getSymphonyUrl()}/graphql`;
+export const SYMPHONY_GRAPHQL = `https://${getSymphonyUrl()}/graphql`;
 
 export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/docs`;
 
