@@ -188,7 +188,7 @@ commands: # reusable commands
     steps:
       - run: 
           name: set bit cloud registry in npm config
-          command: npm config set @teambit:registry https://node.bit.cloud
+          command: npm config set @teambit:registry=https://node.bit.cloud
   yarn_add_bit:
     steps:
       - run: yarn add @teambit/bit
@@ -982,9 +982,10 @@ jobs:
       - run: npm install --global yarn
       - run: 'yarn -v'
       # we are not using the shared command since we need the ` to make it work
-      - run:
-          name: set bit.dev registry
-          command: npm config set `@teambit:registry https://node.bit.cloud
+      # - run:
+      #     name: set bit.dev registry
+      #     command: npm config set `@teambit:registry https://node.bit.cloud
+      - set_bit_cloud_registry
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -2017,48 +2018,48 @@ workflows:
               only: circle-yarn-config
           requires:
             - get_arm64_packages
-      - harmony_publish_to_gcloud:
-          filters:
-            branches:
-              only: circle-yarn-config
-          requires:
-            - bundle_version_macos
-            - bundle_version_linux
-            - bundle_version_windows
-            - checkout_code # This is needed to generate index.json
-      - docker_build:
-          requires:
-            - checkout_code
-            - harmony_publish_to_gcloud
-      - docker_build_node_14:
-          requires:
-            - checkout_code
-            - harmony_publish_to_gcloud
-      - docker_build_node_16:
-          requires:
-            - checkout_code
-            - harmony_publish_to_gcloud
-      - docker_non_root_build:
-          requires:
-            - checkout_code
-            - harmony_publish_to_gcloud
-      - docker_non_root_build_node_14:
-          requires:
-            - checkout_code
-            - harmony_publish_to_gcloud
-      - docker_non_root_build_node_16:
-          requires:
-            - checkout_code
-            - harmony_publish_to_gcloud
-      - server_docker_build:
-          requires:
-            - docker_build
-      - server_docker_build_node_14:
-          requires:
-            - docker_build_node_14
-      - server_docker_build_node_16:
-          requires:
-            - docker_build_node_16
+      # - harmony_publish_to_gcloud:
+      #     filters:
+      #       branches:
+      #         only: circle-yarn-config
+      #     requires:
+      #       - bundle_version_macos
+      #       - bundle_version_linux
+      #       - bundle_version_windows
+      #       - checkout_code # This is needed to generate index.json
+      # - docker_build:
+      #     requires:
+      #       - checkout_code
+      #       - harmony_publish_to_gcloud
+      # - docker_build_node_14:
+      #     requires:
+      #       - checkout_code
+      #       - harmony_publish_to_gcloud
+      # - docker_build_node_16:
+      #     requires:
+      #       - checkout_code
+      #       - harmony_publish_to_gcloud
+      # - docker_non_root_build:
+      #     requires:
+      #       - checkout_code
+      #       - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_14:
+      #     requires:
+      #       - checkout_code
+      #       - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_16:
+      #     requires:
+      #       - checkout_code
+      #       - harmony_publish_to_gcloud
+      # - server_docker_build:
+      #     requires:
+      #       - docker_build
+      # - server_docker_build_node_14:
+      #     requires:
+      #       - docker_build_node_14
+      # - server_docker_build_node_16:
+      #     requires:
+      #       - docker_build_node_16
   # uncomment to print node version on windows default orb
   # windows_print_node_version_workflow:
   #   jobs:
