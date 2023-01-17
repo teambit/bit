@@ -20,6 +20,7 @@ describe('bit reset when on lane', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
       helper.command.createLane();
       helper.fixtures.populateComponents(1, false, 'v2');
       helper.command.snapAllComponentsWithoutBuild();
@@ -55,6 +56,7 @@ describe('bit reset when on lane', function () {
       helper.fixtures.populateComponents(1, false);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
       helper.command.createLane('dev2');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
     });

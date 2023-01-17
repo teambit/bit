@@ -22,6 +22,7 @@ describe('bit lane command', function () {
       helper.fs.outputFile('utils/is-type/is-type.js', fixtures.isType);
       helper.command.addComponent('utils/is-type', { i: 'utils/is-type' });
       helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
 
       // laneA
       helper.command.createLane('lane-a');
@@ -33,6 +34,7 @@ describe('bit lane command', function () {
       helper.command.linkAndRewire();
       helper.command.compile();
       helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
 
       // laneB
       helper.command.createLane('lane-b');
