@@ -189,6 +189,8 @@ commands: # reusable commands
       - run: 
           name: set bit cloud registry in npm config
           command: npm config set @teambit:registry=https://node.bit.cloud
+      - run: npm config list
+      
   yarn_add_bit:
     steps:
       - run: yarn add @teambit/bit
