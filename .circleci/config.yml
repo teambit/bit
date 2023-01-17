@@ -184,6 +184,12 @@ commands: # reusable commands
       - run: npm i -g @teambit/bvm
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run: bvm config set RELEASE_TYPE nightly
+  yarn_set_bit_registry:
+    steps:
+      - run: npm config set @teambit:registry https://node-registry.bit.cloud
+  yarn_add_bit:
+    steps:
+      - run: yarn add @teambit/bit
 
   set_git_credentials:
     steps:
@@ -856,6 +862,7 @@ jobs:
       - run:
           name: create empty folder
           command: mkdir bit-${BIT_VERSION}
+      - yarn_set_bit_registry
       - run:
           name: install bit
           command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
@@ -915,6 +922,7 @@ jobs:
           name: set bit.dev registry
           # command: npm config set @teambit:registry https://node.bit.dev
           command: npm config set @teambit:registry https://node-registry.bit.cloud
+      - yarn_set_bit_registry
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -1001,6 +1009,7 @@ jobs:
       #     name: create folder
       #     command: $BIT_VERSION = Get-Content -Path .\version.txt;New-Item -ItemType "directory" -Path ".\bit-$BIT_VERSION" -Force
       - run: 'node -v'
+      - yarn_set_bit_registry
       - run:
           name: install bit
           command: cd bundle; npm init -y; yarn add @teambit/bit
