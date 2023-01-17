@@ -145,25 +145,24 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
   }
 
   transform(env: Env, envContext: EnvContext): BuilderTransformationMap | undefined {
-    // Old env
     if (!env?.build) return undefined;
     return {
       getBuildPipe: () => {
         // TODO: refactor after defining for an env property
         const pipeline = env.build()(envContext);
         if (!pipeline || !pipeline.compute) return [];
-        return pipeline?.compute();
+        return pipeline?.compute(envContext);
       },
       getTagPipe: () => {
         // TODO: refactor after defining for an env property
         const pipeline = env.snap()(envContext);
         if (!pipeline || !pipeline.compute) return [];
-        return pipeline?.compute();
+        return pipeline?.compute(envContext);
       },
       getSnapPipe: () => {
         const pipeline = env.tag()(envContext);
         if (!pipeline || !pipeline.compute) return [];
-        return pipeline?.compute();
+        return pipeline?.compute(envContext);
       },
     }
   }
