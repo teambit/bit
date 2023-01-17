@@ -861,7 +861,6 @@ jobs:
       - run:
           name: create empty folder
           command: mkdir bit-${BIT_VERSION}
-      - yarn_set_bit_registry
       - run:
           name: install bit
           command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
