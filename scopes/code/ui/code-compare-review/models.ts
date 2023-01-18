@@ -1,38 +1,22 @@
-import { ReviewCommentEvent } from './events';
-
-export interface ReviewCommentStore {
-  comments: Record<string, ReviewCommentState>;
-  deletedCommentIds?: Set<string>;
-  dirtyCommentIds?: Set<string>;
-  events?: ReviewCommentEvent[];
+export enum ReviewManagerEventType {
+  AddEvent = 1,
+  UpdateEvent = 2,
 }
-
-export class ReviewCommentState {
-  comment: ReviewComment;
-  history: ReviewComment[];
-
-  constructor(comment: ReviewComment) {
-    this.comment = comment;
-    this.history = [comment];
-  }
-}
-
-export type ReviewComment = {
-  id: string;
-  parentId?: string;
-  author: string;
-  dt: number;
-  lineNumber: number;
-  text: string;
-  selection?: CodeSelection;
-  status: ReviewCommentStatus;
+export type ReviewEvent = {
+  type: ReviewManagerEventType;
+  comments: ReviewComment[];
 };
 
-export enum ReviewCommentRenderState {
-  dirty = 1,
-  hidden = 2,
-  normal = 3,
-}
+export type ReviewComment = {
+  id?: string;
+  author?: string;
+  date?: number;
+  lineNumber?: number;
+  selection?: CodeSelection;
+  // text: string;
+  // parentId?: string;
+  // status: ReviewCommentStatus;
+};
 
 export type CodeSelection = {
   startColumn: number;
@@ -41,20 +25,57 @@ export type CodeSelection = {
   endLineNumber: number;
 };
 
-export enum ReviewCommentStatus {
-  active = 1,
-  deleted = 2,
-  edit = 3,
+export const CONTROL_ATTR_NAME = 'ReviewManagerControl';
+export const POSITION_BELOW = 2; // above=1, below=2, exact=0
+// const POSITION_EXACT = 0;
+
+export type OnChange = (event: ReviewEvent) => void;
+
+export type BaseReviewSettings<T extends StyleSettings = StyleSettings> = {
+  addReviewStyles: T;
+  lineReviewStyles: T & {
+    overrides?: Record<number, T>;
+  };
+  codeSelectionReviewStyles: T & {
+    overrides?: Record<string, T>;
+    overridesKey?: (codeSelection: CodeSelection) => string;
+  };
+};
+
+export type ReviewManagerSettings = Partial<BaseReviewSettings>;
+
+export type InternalReviewManagerSettings = BaseReviewSettings<BaseStyleSettings>;
+
+export type StyleSettings = BaseStyleSettings | DefaultIconRenderer;
+
+export type BaseStyleSettings = {
+  className: string;
+  styles: Partial<CSSStyleDeclaration>;
+};
+
+export type DefaultIconRenderer = {
+  iconUrl: string;
+};
+
+export function hasDefaultIconRenderer(settings: StyleSettings): settings is DefaultIconRenderer {
+  return 'iconUrl' in settings;
 }
 
-export enum NavigationDirection {
-  next = 1,
-  prev = 2,
+export function styleDeclarationToString(styles: Partial<CSSStyleDeclaration>): string {
+  return Object.keys(styles)
+    .map((prop) => `${camelToKebabParser(prop)}: ${styles[prop]} !important;`)
+    .join('\n');
 }
 
-export enum EditorMode {
-  insertComment = 1,
-  replyComment = 2,
-  editComment = 3,
-  toolbar = 4,
+export function camelToKebabParser(str: string): string {
+  const matcher = /[A-Z]/;
+  const replacer = (match) => `-${match.toLowerCase()}`;
+  const regex = RegExp(matcher, 'g');
+  if (!str.match(regex)) {
+    return str;
+  }
+  return str.replace(regex, replacer);
 }
+
+// @todo
+export type TooltipRenderer = {};

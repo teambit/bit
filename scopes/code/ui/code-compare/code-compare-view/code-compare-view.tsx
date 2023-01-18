@@ -1,20 +1,20 @@
-import React, { HTMLAttributes, useMemo, useRef, useState, ComponentType } from 'react';
-import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
-import { FileIconSlot } from '@teambit/code';
-import flatten from 'lodash.flatten';
-import classNames from 'classnames';
+import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
+import { FileIconSlot } from '@teambit/code';
+import { ReviewComment, ReviewManager } from '@teambit/code.ui.code-compare-review';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
-import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
-import { createReviewManager } from '@teambit/code.ui.code-compare-review';
-
-import { CollapsibleMenuNav, NavPlugin } from '@teambit/component';
 import { FileIconMatch, getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
-import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
-import { Radio } from '@teambit/design.ui.input.radio';
+import { CollapsibleMenuNav, NavPlugin } from '@teambit/component';
+import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
+import { Radio } from '@teambit/design.ui.input.radio';
+import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
+import classNames from 'classnames';
+import flatten from 'lodash.flatten';
+import * as Monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import React, { ComponentType, HTMLAttributes, useEffect, useMemo, useRef, useState } from 'react';
 import styles from './code-compare-view.module.scss';
 
 export type CodeCompareViewProps = {
@@ -37,7 +37,42 @@ const languageOverrides = {
 };
 
 type CodeCompareView = 'split' | 'inline';
-
+const COMMENTS: ReviewComment[] = [
+  {
+    id: '1',
+    lineNumber: 2,
+  },
+  {
+    id: '11',
+    lineNumber: 3,
+  },
+  {
+    id: '11',
+    lineNumber: 13,
+  },
+  {
+    id: '11',
+    lineNumber: 8,
+  },
+  {
+    id: '11',
+    lineNumber: 9,
+  },
+  {
+    id: '11',
+    lineNumber: 23,
+  },
+  {
+    id: '111',
+    lineNumber: 1,
+    selection: {
+      startLineNumber: 1,
+      endLineNumber: 1,
+      startColumn: 2,
+      endColumn: 5,
+    },
+  },
+];
 export function CodeCompareView({
   className,
   fileName,
@@ -58,7 +93,14 @@ export function CodeCompareView({
   const [view, setView] = useState<CodeCompareView>('inline');
   const [wrap, setWrap] = useState<boolean>(false);
 
-  const monacoRef = useRef<any>();
+  const monacoRef = useRef<{
+    monaco: typeof Monaco;
+    editor: Monaco.editor.IStandaloneDiffEditor;
+    reviewManager?: {
+      original?: ReviewManager;
+      modified?: ReviewManager;
+    };
+  }>();
 
   const language = useMemo(() => {
     if (!fileName) return languageOverrides.ts;
@@ -99,18 +141,19 @@ export function CodeCompareView({
 
   const modifiedFileContent = codeCompareDataForFile?.compareContent || downloadedCompareFileContent;
 
-  const handleEditorDidMount: DiffOnMount = (_, monaco) => {
+  const handleEditorDidMount: DiffOnMount = (editor, monaco) => {
     /**
      * disable syntax check
      * ts cant validate all types because imported files aren't available to the editor
      */
-    monacoRef.current = monaco;
+    monacoRef.current = { monaco, editor };
     if (monacoRef.current) {
-      monacoRef.current.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+      monacoRef.current.monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
         noSemanticValidation: true,
         noSyntaxValidation: true,
       });
     }
+
     monaco.editor.defineTheme('bit', {
       base: 'vs-dark',
       inherit: true,
@@ -120,26 +163,56 @@ export function CodeCompareView({
       },
     });
     monaco.editor.setTheme('bit');
-    createReviewManager(
-      _.getOriginalEditor(),
+    if (view === 'split') {
+      const original = new ReviewManager(
+        editor.getOriginalEditor(),
+        'luv',
+        (event) => {
+          console.log('🚀 ~ file: code-compare-view.tsx:169 ~ OriginalEditor', event);
+
+          if (event.type === 1) {
+            const newComment = event.comments.find((c) => !c.id);
+
+            if (newComment) {
+              COMMENTS.push({ ...newComment, id: Math.random().toLocaleString() });
+              monacoRef.current?.reviewManager?.modified?.refresh(COMMENTS);
+            }
+          }
+        },
+        COMMENTS,
+        {},
+        true
+      );
+
+      monacoRef.current.reviewManager = {
+        ...(monacoRef.current.reviewManager || {}),
+        original,
+      };
+    }
+
+    const modified = new ReviewManager(
+      editor.getModifiedEditor(),
       'luv',
-      (actions) => {
-        console.log(actions);
+      (event) => {
+        console.log('🚀 ~ file: code-compare-view.tsx:196 ~ ModifiedEditor', event);
+        if (event.type === 1) {
+          const newComment = event.comments.find((c) => !c.id);
+
+          if (newComment) {
+            COMMENTS.push({ ...newComment, id: Math.random().toLocaleString() });
+            monacoRef.current?.reviewManager?.modified?.refresh(COMMENTS);
+          }
+        }
       },
-      [],
+      COMMENTS,
       {},
       true
     );
-    createReviewManager(
-      _.getModifiedEditor(),
-      'luv',
-      (actions) => {
-        console.log(actions);
-      },
-      [],
-      {},
-      true
-    );
+
+    monacoRef.current.reviewManager = {
+      ...(monacoRef.current.reviewManager || {}),
+      modified,
+    };
   };
 
   const originalPath = `${componentCompareContext?.base?.model.id.toString()}-${fileName}`;
@@ -157,7 +230,6 @@ export function CodeCompareView({
         onMount={handleEditorDidMount}
         className={darkMode}
         theme={'vs-dark'}
-        beforeMount={handleEditorWillMount}
         options={{
           ignoreTrimWhitespace: ignoreWhitespace,
           readOnly: true,
@@ -180,6 +252,47 @@ export function CodeCompareView({
     ),
     [modifiedFileContent, originalFileContent, ignoreWhitespace, view, wrap]
   );
+
+  // todo fix switching between split / inline
+  // do not render review manager on original when in inline mode
+  useEffect(() => {
+    if (!monacoRef.current) return;
+
+    const originalEditor = monacoRef.current?.editor.getOriginalEditor();
+    const originalReviewManager = monacoRef.current?.reviewManager?.original;
+
+    if (view === 'split' && !originalReviewManager) {
+      const original = new ReviewManager(
+        originalEditor,
+        'luv',
+        (actions) => {
+          console.log(actions);
+        },
+        COMMENTS,
+        {},
+        true
+      );
+      monacoRef.current.reviewManager = {
+        ...(monacoRef.current?.reviewManager || {}),
+        original,
+      };
+    } else if (view === 'split') {
+      originalReviewManager?.dispose();
+      monacoRef.current.reviewManager = {
+        ...(monacoRef.current?.reviewManager || {}),
+        original: undefined,
+      };
+    }
+
+    if (view === 'inline' && originalReviewManager) {
+      // dispose delta decorations from original editor
+      originalReviewManager.dispose();
+      monacoRef.current.reviewManager = {
+        ...(monacoRef.current?.reviewManager || {}),
+        original: undefined,
+      };
+    }
+  }, [view]);
 
   return (
     <div
@@ -297,7 +410,7 @@ function CodeCompareNav({
               </div>
             </div>
           ),
-          ignoreStickyQueryParams: true,
+          ignoreQueryParams: true,
         },
       },
     ];

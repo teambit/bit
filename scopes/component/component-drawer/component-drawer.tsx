@@ -32,6 +32,7 @@ export type TransformTreeFn = (host?: WorkspaceModel | ScopeModel) => (rootNode:
 
 export type ComponentsDrawerProps = Omit<DrawerType, 'render'> & {
   useComponents: () => { components: ComponentModel[]; loading?: boolean };
+  useLanes?: () => { lanesModel?: LanesModel; loading?: boolean };
   emptyMessage?: ReactNode;
   plugins?: ComponentsDrawerPlugins;
   transformTree?: TransformTreeFn;
@@ -54,6 +55,7 @@ export type ComponentsDrawerPlugins = {
 export class ComponentsDrawer implements DrawerType {
   readonly id: string;
   readonly useComponents: () => { components: ComponentModel[]; loading?: boolean };
+  readonly useLanes: () => { lanesModel?: LanesModel; loading?: boolean };
   name: ReactNode;
   tooltip?: string;
   order?: number;
@@ -68,6 +70,7 @@ export class ComponentsDrawer implements DrawerType {
   constructor(props: ComponentsDrawerProps) {
     Object.assign(this, props);
     this.useComponents = props.useComponents;
+    this.useLanes = props.useLanes || useLanes;
     this.emptyMessage = props.emptyMessage;
     this.plugins = props.plugins || {};
     this.setWidgets(props.plugins?.drawerWidgets);
@@ -144,7 +147,7 @@ export class ComponentsDrawer implements DrawerType {
 
   render = () => {
     const { loading, components } = this.useComponents();
-    const { lanesModel: lanes } = useLanes();
+    const { lanesModel: lanes } = this.useLanes();
     const componentFiltersContext = useContext(ComponentFilterContext);
 
     const filters = componentFiltersContext?.filters || [];
