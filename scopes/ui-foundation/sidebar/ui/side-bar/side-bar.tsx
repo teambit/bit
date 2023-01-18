@@ -15,15 +15,21 @@ export type SideBarProps = {
    * slot of registered items to the main section at the top.
    */
   items?: ComponentType[];
+  /**
+   * override register drawers from the slot
+   */
+  overrideDrawerSlot?: DrawerType[];
 } & React.HTMLAttributes<HTMLDivElement>;
 
 /**
  * side bar component.
  */
-export function SideBar({ drawerSlot, items = [], ...rest }: SideBarProps) {
-  const drawers = flatten(drawerSlot.values())
-    .filter((drawer) => !drawer?.isHidden?.())
-    .sort(sortFn);
+export function SideBar({ drawerSlot, items = [], overrideDrawerSlot, ...rest }: SideBarProps) {
+  const drawers =
+    overrideDrawerSlot ||
+    flatten(drawerSlot.values())
+      .filter((drawer) => !drawer?.isHidden?.())
+      .sort(sortFn);
 
   const [openDrawerList, onToggleDrawer] = useState<(string | undefined)[]>(drawers.map((drawer) => drawer.id));
 
