@@ -1,3 +1,4 @@
+export { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 export { BuildPipe, TaskResults } from './build-pipe';
 export { ComponentResult, TaskMetadata } from './types';
 export {
@@ -18,4 +19,3 @@ export { WholeArtifactStorageResolver, FileStorageResolver, ArtifactStorageResol
 export { Artifact, ArtifactList, ArtifactFactory, ArtifactDefinition, ArtifactModelDefinition } from './artifact';
 export { Task } from './task';
 export { TaskResultsList } from './task-results-list';
-export { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
