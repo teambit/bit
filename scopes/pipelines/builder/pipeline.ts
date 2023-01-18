@@ -3,7 +3,10 @@ import { EnvContext, EnvHandler } from "@teambit/envs";
 import { clone } from "lodash";
 import { Task } from './task';
 
-export type TaskHandler = EnvHandler<Task>;
+export type TaskHandler = {
+  handler: EnvHandler<Task>;
+  name: string;
+}
 
 /**
  * create and maintain build pipelines for component
@@ -23,7 +26,7 @@ export class Pipeline {
 
   private initiateTasks(tasks: TaskHandler[], context: EnvContext, envId: string) {
     const _tasks = tasks.map((task) => {
-      return task(context);
+      return task.handler(context);
     });
 
     const buildTasks: BuildTask[] = _tasks.map((task) => {
