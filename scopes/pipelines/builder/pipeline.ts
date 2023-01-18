@@ -1,5 +1,6 @@
 import { BuildTask } from "@teambit/builder";
-import { EnvContext, EnvHandler, reduceServiceHandlersFactories } from "@teambit/envs";
+import { EnvContext, EnvHandler } from "@teambit/envs";
+import { clone } from "lodash";
 import { Task } from './task';
 
 export type TaskHandler = EnvHandler<Task>;
@@ -25,14 +26,14 @@ export class Pipeline {
       return task(context);
     });
 
-    return _tasks.map((task) => {
-      const buildTask: BuildTask = {
-        aspectId: envId,
-        ...task
-      };
-      
+    const buildTasks: BuildTask[] = _tasks.map((task) => {
+      // @ts-ignore
+      const aspectId = task.aspectId || envId;
+      const buildTask: BuildTask = Object.assign(clone(task), {aspectId});
       return buildTask;
     });
+
+    return buildTasks;
   }
 
   /**
@@ -73,8 +74,8 @@ export class Pipeline {
   /**
    * compute the pipeline.
    */
-  compute(context: EnvContext, envId: string): BuildTask[] {
-    const buildTasks = this.initiateTasks(this._tasks, context, envId);
+  compute(context: EnvContext): BuildTask[] {
+    const buildTasks = this.initiateTasks(this._tasks, context, context.envId.toString());
     return buildTasks;
   }
 
@@ -82,9 +83,9 @@ export class Pipeline {
     return new Pipeline(tasks);
   }
 
-  static concat(...pipelines: EnvHandler<Pipeline>[]) {
-    return reduceServiceHandlersFactories(pipelines, (acc, pipeline) => {
-      return acc.concat(pipeline);
-    });
-  }
+  // static concat(...pipelines: EnvHandler<Pipeline>[]) {
+  //   return reduceServiceHandlersFactories(pipelines, (acc, pipeline) => {
+  //     return acc.concat(pipeline);
+  //   });
+  // }
 }
