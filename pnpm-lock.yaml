@@ -15183,7 +15183,7 @@ packages:
       globals: registry.npmjs.org/globals/13.19.0
       ignore: registry.npmjs.org/ignore/4.0.6
       import-fresh: registry.npmjs.org/import-fresh/3.3.0
-      js-yaml: registry.npmjs.org/js-yaml/3.14.1
+      js-yaml: 3.14.1
       minimatch: registry.npmjs.org/minimatch/3.0.5
       strip-json-comments: registry.npmjs.org/strip-json-comments/3.1.1
     transitivePeerDependencies:
@@ -20592,12 +20592,6 @@ packages:
     version: 1.0.10
     dependencies:
       sprintf-js: registry.npmjs.org/sprintf-js/1.0.3
-    dev: false
-
-  registry.npmjs.org/argparse/2.0.1:
-    resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/argparse/-/argparse-2.0.1.tgz}
-    name: argparse
-    version: 2.0.1
     dev: false
 
   registry.npmjs.org/argx/3.0.2:
@@ -30506,7 +30500,7 @@ packages:
     version: 4.1.0
     hasBin: true
     dependencies:
-      argparse: registry.npmjs.org/argparse/2.0.1
+      argparse: 2.0.1
     dev: false
 
   registry.npmjs.org/jsbn/0.1.1:
@@ -32701,7 +32695,7 @@ packages:
     version: 4.0.1
     engines: {node: '>=8'}
     dependencies:
-      path-key: registry.npmjs.org/path-key/3.1.1
+      path-key: 3.1.1
     dev: false
 
   registry.npmjs.org/npm/6.14.17:
