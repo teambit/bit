@@ -1,6 +1,6 @@
 import R from 'ramda';
 
-import { BASE_CLOUD_DOMAIN, CFG_GIT_EXECUTABLE_PATH } from '../constants';
+import { getCloudDomain, CFG_GIT_EXECUTABLE_PATH } from '../constants';
 import CommandHelper from './e2e-command-helper';
 
 export default class ConfigHelper {
@@ -9,7 +9,7 @@ export default class ConfigHelper {
     this.command = command;
   }
 
-  setHubDomain(domain = `hub.${BASE_CLOUD_DOMAIN}`) {
+  setHubDomain(domain = `hub.${getCloudDomain()}`) {
     this.command.setConfig('hub_domain', domain);
   }
 
