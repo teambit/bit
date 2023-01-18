@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Route, RouteProps } from 'react-router-dom';
 import { flatten } from 'lodash';
-import { Slot, Harmony } from '@teambit/harmony';
+import { Slot, Harmony, SlotRegistry } from '@teambit/harmony';
 import { LaneCompare, LaneCompareProps as DefaultLaneCompareProps } from '@teambit/lanes.ui.compare.lane-compare';
 import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
 import { LanesAspect } from '@teambit/lanes';
@@ -19,7 +19,7 @@ import {
 } from '@teambit/lanes.ui.menus.lanes-overview-menu';
 import { UseLaneMenu } from '@teambit/lanes.ui.menus.use-lanes-menu';
 import { LanesHost, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
-import { LanesProvider, useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LanesProvider, useLanes, IgnoreDerivingFromUrl } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSwitcher } from '@teambit/lanes.ui.navigation.lane-switcher';
 import { LaneId } from '@teambit/lane-id';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
@@ -28,6 +28,8 @@ import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-c
 import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
 
 export type LaneCompareProps = Partial<DefaultLaneCompareProps>;
+export type LaneProviderIgnoreSlot = SlotRegistry<IgnoreDerivingFromUrl>;
+
 export class LanesUI {
   static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, ComponentCompareAspect];
 
@@ -37,6 +39,7 @@ export class LanesUI {
     Slot.withType<LaneOverviewLineSlot>(),
     Slot.withType<NavigationSlot>(),
     Slot.withType<MenuWidgetSlot>(),
+    Slot.withType<LaneProviderIgnoreSlot>(),
   ];
 
   constructor(
@@ -49,6 +52,7 @@ export class LanesUI {
      * overview line slot to add new lines beneath the overview section
      */
     private overviewSlot: LaneOverviewLineSlot,
+    private laneProviderIgnoreSlot: LaneProviderIgnoreSlot,
     private workspace?: WorkspaceUI,
     private scope?: ScopeUI
   ) {
@@ -174,6 +178,12 @@ export class LanesUI {
 
   registerMenuWidget(...menuItems: MenuWidget[]) {
     this.menuWidgetSlot.register(menuItems);
+    return this;
+  }
+
+  registerLaneProviderIgnoreSlot(ignoreFn: IgnoreDerivingFromUrl) {
+    this.laneProviderIgnoreSlot.register(ignoreFn);
+    return this;
   }
 
   private registerLanesRoutes() {
@@ -239,7 +249,9 @@ export class LanesUI {
   }
 
   private renderContext = ({ children }: { children: ReactNode }) => {
-    return <LanesProvider>{children}</LanesProvider>;
+    const ignoreFns = this.laneProviderIgnoreSlot.values();
+
+    return <LanesProvider ignoreDerivingFromUrl={ignoreFns}>{children}</LanesProvider>;
   };
 
   registerRoute(route: RouteProps) {
@@ -305,11 +317,12 @@ export class LanesUI {
       ComponentCompareUI
     ],
     _,
-    [routeSlot, overviewSlot, navSlot, menuWidgetSlot]: [
+    [routeSlot, overviewSlot, navSlot, menuWidgetSlot, laneProviderIgnoreSlot]: [
       RouteSlot,
       LaneOverviewLineSlot,
       LanesOrderedNavigationSlot,
-      MenuWidgetSlot
+      MenuWidgetSlot,
+      LaneProviderIgnoreSlot
     ],
     harmony: Harmony
   ) {
@@ -330,6 +343,7 @@ export class LanesUI {
       navSlot,
       overviewSlot,
       menuWidgetSlot,
+      laneProviderIgnoreSlot,
       workspace,
       scope
     );
