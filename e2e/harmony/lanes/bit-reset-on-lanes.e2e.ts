@@ -50,7 +50,8 @@ describe('bit reset when on lane', function () {
       expect(() => helper.command.untagAll()).to.not.throw();
     });
   });
-  describe('reset on lane after fork from another non-exported lane', () => {
+  // this state is now impossible because we blocked the option to create a lane when there are
+  describe.skip('reset on lane after fork from another non-exported lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1, false);
