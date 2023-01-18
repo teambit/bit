@@ -27,6 +27,8 @@ const componentWithExplicitServer = ComponentModel.from({
   packageName: '',
 });
 
+const envId = 'my-env-id@1.0.0';
+
 describe('toPreviewHash()', () => {
   it('should make url from component only', () => {
     const result = toPreviewHash(component);
@@ -40,20 +42,26 @@ describe('toPreviewHash()', () => {
     expect(result).to.equal('teambit.base-ui/input/button@0.6.2?preview=overview');
   });
 
-  it('should include query params and preview name when available', () => {
-    const result = toPreviewHash(component, 'overview', 'who=ami');
+  it('should make url using preview name and env id', () => {
+    const result = toPreviewHash(component, 'overview', envId);
 
-    expect(result).to.equal('teambit.base-ui/input/button@0.6.2?preview=overview&who=ami');
+    expect(result).to.equal(`teambit.base-ui/input/button@0.6.2?preview=overview&env=${envId}`);
   });
 
-  it('should include query params even without preview name', () => {
-    const result = toPreviewHash(component, undefined, 'who=ami');
+  it('should include query params, preview name, envId when available', () => {
+    const result = toPreviewHash(component, 'overview', envId, 'who=ami');
+
+    expect(result).to.equal(`teambit.base-ui/input/button@0.6.2?preview=overview&env=${envId}&who=ami`);
+  });
+
+  it('should include query params even without preview name and without envId', () => {
+    const result = toPreviewHash(component, undefined, undefined, 'who=ami');
 
     expect(result).to.equal('teambit.base-ui/input/button@0.6.2?who=ami');
   });
 
   it('should make url from component without version (latest)', () => {
-    const result = toPreviewHash(componentWithoutVersion, undefined, 'who=ami');
+    const result = toPreviewHash(componentWithoutVersion, undefined, undefined, 'who=ami');
 
     expect(result).to.equal('teambit.base-ui/input/button?who=ami');
   });
