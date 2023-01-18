@@ -1,8 +1,8 @@
 import { MainRuntime } from '@teambit/cli';
 import {
-  BASE_CLOUD_DOMAIN,
+  getCloudDomain,
   DEFAULT_HUB_DOMAIN,
-  SYMPHONY_URL,
+  getSymphonyUrl,
   SYMPHONY_GRAPHQL,
   DEFAULT_HUB_LOGIN,
   DEFAULT_ANALYTICS_DOMAIN,
@@ -67,9 +67,9 @@ export class CloudMain {
   static dependencies = [];
   static runtime = MainRuntime;
   static defaultConfig: CloudWorkspaceConfig = {
-    cloudDomain: BASE_CLOUD_DOMAIN,
+    cloudDomain: getCloudDomain(),
     cloudHubDomain: DEFAULT_HUB_DOMAIN,
-    cloudApi: SYMPHONY_URL,
+    cloudApi: getSymphonyUrl(),
     cloudGraphQL: SYMPHONY_GRAPHQL,
     loginDomain: DEFAULT_HUB_LOGIN,
     analyticsDomain: DEFAULT_ANALYTICS_DOMAIN,

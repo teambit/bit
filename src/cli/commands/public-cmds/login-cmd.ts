@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 
 import { login } from '../../../api/consumer';
-import { BASE_CLOUD_DOMAIN } from '../../../constants';
+import { getCloudDomain } from '../../../constants';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
@@ -14,8 +14,8 @@ export default class Login implements LegacyCommand {
   opts = [
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
     ['', 'suppress-browser-launch', 'do not open a browser for authentication'],
-    ['', 'npmrc-path <path>', `path to npmrc file to configure ${BASE_CLOUD_DOMAIN} registry`],
-    ['', 'skip-registry-config', `don't configure ${BASE_CLOUD_DOMAIN} registry`],
+    ['', 'npmrc-path <path>', `path to npmrc file to configure ${getCloudDomain()} registry`],
+    ['', 'skip-registry-config', `don't configure ${getCloudDomain()} registry`],
     [
       '',
       'machine-name <name>',
