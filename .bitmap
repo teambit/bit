@@ -189,6 +189,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit-error"
     },
+    "api-server": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/api-server"
+    },
     "builder": {
         "scope": "teambit.pipelines",
         "version": "0.0.963",
