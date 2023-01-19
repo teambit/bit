@@ -1,5 +1,5 @@
 import didYouMean from 'didyoumean';
-import yargs from 'yargs';
+// import yargs from 'yargs';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { compact } from 'lodash';
@@ -11,6 +11,12 @@ import { getCommandId } from './get-command-id';
 import { formatHelp } from './help';
 import { GLOBAL_GROUP, STANDARD_GROUP, YargsAdapter } from './yargs-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
+
+// Using require instead of import because of this issue:
+// https://github.com/evanw/esbuild/issues/1492
+// couldn't make the other solutions to work but it worth another try in the future
+const yargs = require('yargs');
+
 
 export class CLIParser {
   constructor(
