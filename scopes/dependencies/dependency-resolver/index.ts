@@ -18,6 +18,7 @@ export type {
   DependencyResolverMain,
   DependencyResolverWorkspaceConfig,
   DependencyResolverVariantConfig,
+  BIT_CLOUD_REGISTRY,
 } from './dependency-resolver.main.runtime';
 export {
   BIT_DEV_REGISTRY,

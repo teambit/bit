@@ -21,10 +21,18 @@ export class DocsPreview {
     private preview: PreviewPreview
   ) {}
 
-  render = (componentId: ComponentID, modules: PreviewModule, [compositions]: [any], context: RenderingContext) => {
+  render = (
+    componentId: ComponentID,
+    envId: string,
+    modules: PreviewModule,
+    [compositions]: [any],
+    context: RenderingContext
+  ) => {
     const docsModule = this.selectPreviewModel(componentId.fullName, modules);
 
-    const isObject = !!modules.mainModule.default.apiObject;
+    const mainModule = modules.modulesMap[envId] || modules.modulesMap.default;
+    const defaultExports = mainModule.default;
+    const isObject = !!defaultExports.apiObject;
 
     /**
      * for backwards compatibility - can be removed end of 2022
@@ -37,7 +45,7 @@ export class DocsPreview {
         compositions,
         context,
       ];
-      modules.mainModule.default(...docsPropsArray);
+      defaultExports(...docsPropsArray);
       return;
     }
 
@@ -49,7 +57,7 @@ export class DocsPreview {
       context,
     };
 
-    modules.mainModule.default(docsProps);
+    defaultExports(docsProps);
   };
 
   selectPreviewModel(componentId: string, modules: PreviewModule) {

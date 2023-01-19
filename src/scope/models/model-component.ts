@@ -722,8 +722,10 @@ export default class Component extends BitObject {
     );
     const versionsRefs = versions.map((version) => this.getRef(version) as Ref);
     refsWithoutArtifacts.push(...versionsRefs);
-    // @ts-ignore
-    const versionsObjects: Version[] = await Promise.all(versionsRefs.map((versionRef) => versionRef.load(repo)));
+
+    const versionsObjects: Version[] = await Promise.all(
+      versionsRefs.map((versionRef) => this.loadVersion(versionRef.toString(), repo))
+    );
     versionsObjects.forEach((versionObject) => {
       const refs = versionObject.refsWithOptions(false, false);
       refsWithoutArtifacts.push(...refs);

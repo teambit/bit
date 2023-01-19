@@ -20,11 +20,11 @@ export class DocsPreviewDefinition implements PreviewDefinition {
   /**
    * application root
    */
-  async renderTemplatePath(context: ExecutionContext): Promise<string> {
+  async renderTemplatePath(context: ExecutionContext): Promise<string | undefined> {
     return this.renderTemplatePathByEnv(context.env);
   }
 
-  async renderTemplatePathByEnv(env: Environment) {
+  async renderTemplatePathByEnv(env: Environment): Promise<string | undefined>  {
     return this.docs.getTemplate(env);
   }
 
