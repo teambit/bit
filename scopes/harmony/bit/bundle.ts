@@ -112,6 +112,13 @@ function bundle() {
       'uglify-js',
       'uid-number',
       'webpack-dev-server',
+      '@svgr/webpack',
+      'new-url-loader',
+      'react-native-web',
+      '@teambit/react.eslint-config-bit-react',
+      '@teambit/react.ui.docs-app',
+      '@teambit/react.ui.compositions-app',
+      'babel-preset-react-app',
       // 'esbuild'
       // 'mime'
     ],
