@@ -223,11 +223,14 @@ export async function loadBit(path = process.cwd()) {
   const aspectsToLoad = [CLIAspect];
   const loadCLIOnly = shouldLoadInSafeMode();
   if (!loadCLIOnly) {
-    aspectsToLoad.push(BitAspect);
+    // aspectsToLoad.push(BitAspect);
+    aspectsToLoad.push(...(Object.values(manifestsMap)));
   }
+  // console.log('aspectsToLoad', aspectsToLoad)
   const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
 
-  await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+  // await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+  await harmony.run();
   if (loadCLIOnly) return harmony;
   loader.start('loading aspects...');
   const aspectLoader = harmony.get<AspectLoaderMain>('teambit.harmony/aspect-loader');
