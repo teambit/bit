@@ -120,14 +120,14 @@ export class SchemaExtractorContext {
 
   private findFileInComponent(filePath: string) {
     return this.component.filesystem.files.find((file) => {
+      const currentFilePath = file.path.replaceAll(/\\/g, '/');
       // TODO: fix this line to support further extensions.
-      if (file.path.includes(filePath)) {
+      if (currentFilePath.includes(filePath)) {
         const strings = ['ts', 'tsx', 'js', 'jsx'].map((format) => {
           if (filePath.endsWith(format)) return filePath;
           return `${filePath}.${format}`;
         });
-
-        return strings.find((string) => string === file.path);
+        return strings.find((string) => string === currentFilePath);
       }
 
       return false;
