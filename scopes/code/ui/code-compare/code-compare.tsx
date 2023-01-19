@@ -12,6 +12,7 @@ import {
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
 import { DarkTheme } from '@teambit/design.themes.dark-theme';
+import { useReviewManager } from '@teambit/code.ui.code-review.context.review-manager-context';
 import { CodeCompareTree } from './code-compare-tree';
 import { CodeCompareView } from './code-compare-view';
 import { Widget } from './code-compare.widgets';
@@ -26,8 +27,9 @@ export type CodeCompareProps = {
 
 export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   const componentCompareContext = useComponentCompare();
-  const { base, compare, state: compareState, hooks: compareHooks } = componentCompareContext || {};
+  const reviewManager = useReviewManager();
 
+  const { base, compare, state: compareState, hooks: compareHooks } = componentCompareContext || {};
   const state = compareState?.code;
   const hook = compareHooks?.code;
 
@@ -82,6 +84,7 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
             files={fileTree}
             getHref={getHref}
             onTabClicked={hook?.onClick}
+            reviewManager={reviewManager}
           />
         </Pane>
       </SplitPane>

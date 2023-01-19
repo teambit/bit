@@ -1,1 +1,8 @@
-export { CodeCompareView, CodeCompareViewProps } from './code-compare-view';
+export {
+  CodeCompareView,
+  CodeCompareViewProps,
+  CodeCompareReviewManagerProps,
+  CodeCompareViewState,
+  EditorType,
+  WithEditorType,
+} from './code-compare-view';

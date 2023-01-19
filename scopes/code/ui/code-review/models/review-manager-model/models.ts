@@ -1,3 +1,32 @@
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+
+export interface IReviewManager {
+  onChange: OnChange;
+  applySettingsAndLoadComments(
+    comments: ReviewComment[],
+    settings?: ReviewManagerSettings,
+    hardRefresh?: boolean
+  ): void;
+  load(comments: ReviewComment[]): void;
+  renderLineReviewDecoration(lineNumbers: number[]): void;
+  renderCodeSelectionReviewDecoration(codeSelections: CodeSelection[]): void;
+  refresh(comments?: ReviewComment[], settings?: ReviewManagerSettings): void;
+  dispose(): void;
+}
+
+export interface InitReviewManagerProps {
+  editor: monacoEditor.editor.IStandaloneCodeEditor;
+  currentUser?: string;
+  onChange: OnChange;
+  comments: ReviewComment[];
+  settings?: ReviewManagerSettings;
+  verbose?: boolean;
+}
+
+export interface InitReviewManager {
+  (props: InitReviewManagerProps): IReviewManager;
+}
+
 export enum ReviewManagerEventType {
   AddEvent = 1,
   UpdateEvent = 2,

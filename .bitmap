@@ -1326,24 +1326,38 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-compare"
     },
-    "ui/code-compare-review": {
+    "ui/code-compare-section": {
+        "scope": "teambit.code",
+        "version": "0.0.2",
+        "mainFile": "index.ts",
+        "rootDir": "components/code-compare-section"
+    },
+    "ui/code-review/context/review-manager-context": {
         "scope": "",
         "version": "",
         "defaultScope": "teambit.code",
         "mainFile": "index.ts",
-        "rootDir": "scopes/code/ui/code-compare-review",
+        "rootDir": "scopes/code/ui/code-review/context/review-manager-context"
+    },
+    "ui/code-review/models/review-manager-model": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/code/ui/code-review/models/review-manager-model"
+    },
+    "ui/code-review/review-manager": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/code/ui/code-review/review-manager",
         "config": {
             "teambit.react/react": {},
             "teambit.envs/envs": {
                 "env": "teambit.react/react"
             }
         }
-    },
-    "ui/code-compare-section": {
-        "scope": "teambit.code",
-        "version": "0.0.2",
-        "mainFile": "index.ts",
-        "rootDir": "components/code-compare-section"
     },
     "ui/code-tab-page": {
         "scope": "teambit.code",
