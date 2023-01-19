@@ -12,7 +12,6 @@ import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-l
 import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
-import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
@@ -110,8 +109,6 @@ function clearGlobalsIfNeeded() {
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
   // @ts-ignore
   DependencyResolver.getWorkspacePolicy = undefined;
-  // @ts-ignore
-  ManyComponentsWriter.externalInstaller = {};
   ExtensionDataList.coreExtensionsNames = new Map();
   // @ts-ignore
   WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;

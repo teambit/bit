@@ -1,26 +1,28 @@
 import { BitError } from '@teambit/bit-error';
+import { BitId } from '@teambit/legacy-bit-id';
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
-import { BitId } from '../../bit-id';
-import GeneralError from '../../error/general-error';
-import logger from '../../logger/logger';
-import { ComponentWithDependencies } from '../../scope';
-import { isDir, isDirEmptySync } from '../../utils';
-import { composeComponentPath } from '../../utils/bit/compose-component-path';
-import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
-import ComponentMap from '../bit-map/component-map';
-import Component from '../component/consumer-component';
-import DataToPersist from '../component/sources/data-to-persist';
-import Consumer from '../consumer';
-import ComponentWriter, { ComponentWriterProps } from './component-writer';
-import { moveExistingComponent } from './move-components';
+import GeneralError from '@teambit/legacy/dist/error/general-error';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
+import { isDir, isDirEmptySync } from '@teambit/legacy/dist/utils';
+import { composeComponentPath } from '@teambit/legacy/dist/utils/bit/compose-component-path';
+import ComponentWriter, { ComponentWriterProps } from '@teambit/legacy/dist/consumer/component-ops/component-writer';
+import {
+  PathLinuxRelative,
+  pathNormalizeToLinux,
+  PathOsBasedAbsolute,
+  PathOsBasedRelative,
+} from '@teambit/legacy/dist/utils/path';
+import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { moveExistingComponent } from '@teambit/legacy/dist/consumer/component-ops/move-components';
+import { InstallMain } from '@teambit/install';
 
-interface ExternalPackageInstaller {
-  install: () => Promise<any>;
-}
-
-interface ManyComponentsWriterParams {
+export interface ManyComponentsWriterParams {
   consumer: Consumer;
   componentsWithDependencies: ComponentWithDependencies[];
   writeToPath?: string;
@@ -41,7 +43,7 @@ interface ManyComponentsWriterParams {
  * In case there are some same dependencies shared between the components, it makes sure to
  * write them only once.
  */
-export default class ManyComponentsWriter {
+export class ManyComponentsWriter {
   consumer: Consumer;
   componentsWithDependencies: ComponentWithDependencies[];
   writeToPath?: string;
@@ -57,7 +59,7 @@ export default class ManyComponentsWriter {
   basePath?: string;
   resetConfig?: boolean;
 
-  constructor(params: ManyComponentsWriterParams) {
+  constructor(private installer: InstallMain, params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
     this.componentsWithDependencies = params.componentsWithDependencies;
     this.writeToPath = params.writeToPath;
@@ -68,12 +70,6 @@ export default class ManyComponentsWriter {
     this.dependenciesIdsCache = {};
     this.resetConfig = params.resetConfig;
     this.basePath = this.consumer.getPath();
-  }
-
-  static externalInstaller: ExternalPackageInstaller;
-  static externalCompiler: (ids?: BitId[]) => Promise<any>;
-  static registerExternalInstaller(installer: ExternalPackageInstaller) {
-    this.externalInstaller = installer;
   }
 
   _setBooleanDefault(field: boolean | null | undefined, defaultValue: boolean): boolean {
@@ -96,17 +92,18 @@ export default class ManyComponentsWriter {
       return;
     }
     try {
-      await ManyComponentsWriter.externalInstaller?.install();
+      const installOpts = {
+        dedupe: true,
+        updateExisting: false,
+        import: false,
+      };
+      await this.installer.install(undefined, installOpts);
     } catch (err: any) {
       logger.error('_installPackagesIfNeeded, external package-installer found an error', err);
       throw new BitError(`failed installing the packages, consider running the command with "--skip-dependency-installation" flag.
 error from the package-manager: ${err.message}.
 please use the '--log=error' flag for the full error.`);
     }
-    // this compiles all components on the workspace, not only the imported ones.
-    // reason being is that the installed above deletes all dists dir of components that are somehow part of the
-    // dependency graph. not only the imported components.
-    await ManyComponentsWriter.externalCompiler?.();
   }
   async _persistComponentsData() {
     const dataToPersist = new DataToPersist();

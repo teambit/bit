@@ -25,6 +25,7 @@ import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { compact } from 'lodash';
 import { ComponentCompareMain, ComponentCompareAspect } from '@teambit/component-compare';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
+import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
@@ -109,7 +110,8 @@ export class LanesMain {
     public logger: Logger,
     private importer: ImporterMain,
     private exporter: ExportMain,
-    private componentCompare: ComponentCompareMain
+    private componentCompare: ComponentCompareMain,
+    readonly componentWriter: ComponentWriterMain
   ) {}
 
   async getLanes({
@@ -767,6 +769,7 @@ export class LanesMain {
     ExportAspect,
     ExpressAspect,
     ComponentCompareAspect,
+    ComponentWriterAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -781,6 +784,7 @@ export class LanesMain {
     exporter,
     express,
     componentCompare,
+    componentWriter,
   ]: [
     CLIMain,
     ScopeMain,
@@ -792,10 +796,21 @@ export class LanesMain {
     ImporterMain,
     ExportMain,
     ExpressMain,
-    ComponentCompareMain
+    ComponentCompareMain,
+    ComponentWriterMain
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
-    const lanesMain = new LanesMain(workspace, scope, merging, component, logger, importer, exporter, componentCompare);
+    const lanesMain = new LanesMain(
+      workspace,
+      scope,
+      merging,
+      component,
+      logger,
+      importer,
+      exporter,
+      componentCompare,
+      componentWriter
+    );
     const switchCmd = new SwitchCmd(lanesMain);
     const laneCmd = new LaneCmd(lanesMain, workspace, scope);
     laneCmd.commands = [

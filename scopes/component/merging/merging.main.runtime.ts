@@ -28,7 +28,7 @@ import { Ref } from '@teambit/legacy/dist/scope/objects';
 import chalk from 'chalk';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
+import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { compact } from 'lodash';
@@ -82,7 +82,8 @@ export class MergingMain {
     private install: InstallMain,
     private snapping: SnappingMain,
     private checkout: CheckoutMain,
-    private logger: Logger
+    private logger: Logger,
+    private componentWriter: ComponentWriterMain
   ) {
     this.consumer = this.workspace?.consumer;
   }
@@ -649,15 +650,15 @@ other:   ${otherLaneHead.toString()}`);
       filesStatus = { ...filesStatus, ...modifiedStatus };
     }
 
-    const manyComponentsWriter = new ManyComponentsWriter({
+    const manyComponentsWriterOpts = {
       consumer,
       componentsWithDependencies: [componentWithDependencies],
       installNpmPackages: false,
       override: true,
       writeConfig: false, // @todo: should write if config exists before, needs to figure out how to do it.
       verbose: false, // @todo: do we need a flag here?
-    });
-    await manyComponentsWriter.writeAll();
+    };
+    await this.componentWriter.writeMany(manyComponentsWriterOpts);
 
     if (configMergeResult) {
       if (!componentWithDependencies.component.writtenPath) {
@@ -790,18 +791,27 @@ other:   ${otherLaneHead.toString()}`);
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, SnappingAspect, CheckoutAspect, InstallAspect, LoggerAspect];
+  static dependencies = [
+    CLIAspect,
+    WorkspaceAspect,
+    SnappingAspect,
+    CheckoutAspect,
+    InstallAspect,
+    LoggerAspect,
+    ComponentWriterAspect,
+  ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, snapping, checkout, install, loggerMain]: [
+  static async provider([cli, workspace, snapping, checkout, install, loggerMain, compWriter]: [
     CLIMain,
     Workspace,
     SnappingMain,
     CheckoutMain,
     InstallMain,
-    LoggerMain
+    LoggerMain,
+    ComponentWriterMain
   ]) {
     const logger = loggerMain.createLogger(MergingAspect.id);
-    const merging = new MergingMain(workspace, install, snapping, checkout, logger);
+    const merging = new MergingMain(workspace, install, snapping, checkout, logger, compWriter);
     cli.register(new MergeCmd(merging));
     return merging;
   }

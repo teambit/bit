@@ -13,7 +13,6 @@ import {
   deleteFilesIfNeeded,
   markFilesToBeRemovedIfNeeded,
 } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
-import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import {
   FailedComponents,
   getMergeStrategyInteractive,
@@ -88,15 +87,15 @@ export class LaneSwitcher {
       .map((c) => c.component)
       .filter((c) => c) as ComponentWithDependencies[];
 
-    const manyComponentsWriter = new ManyComponentsWriter({
+    const manyComponentsWriterOpts = {
       consumer: this.consumer,
       componentsWithDependencies,
       installNpmPackages: !this.checkoutProps.skipNpmInstall,
       override: true,
       verbose: this.checkoutProps.verbose,
       writeConfig: this.checkoutProps.writeConfig,
-    });
-    await manyComponentsWriter.writeAll();
+    };
+    await this.Lanes.componentWriter.writeMany(manyComponentsWriterOpts);
     await deleteFilesIfNeeded(componentsResults, this.consumer);
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
