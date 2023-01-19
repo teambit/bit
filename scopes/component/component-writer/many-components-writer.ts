@@ -33,16 +33,6 @@ export interface ManyComponentsWriterParams {
   resetConfig?: boolean;
 }
 
-/**
- * write the components into '/components' dir (or according to the bit.map) and its dependencies in the
- * '/components/.dependencies' dir. Both directories are configurable in bit.json
- * For example: global/a has a dependency my-scope/global/b@1. The directories will be:
- * project/root/components/global/a/impl.js
- * project/root/components/.dependencies/global/b/my-scope/1/impl.js
- *
- * In case there are some same dependencies shared between the components, it makes sure to
- * write them only once.
- */
 export class ManyComponentsWriter {
   consumer: Consumer;
   componentsWithDependencies: ComponentWithDependencies[];
