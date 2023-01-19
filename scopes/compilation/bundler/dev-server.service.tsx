@@ -32,12 +32,12 @@ type DevServiceTransformationMap = ServiceTransformationMap  & {
 
 export type DevServerDescriptor = {
   /**
-   * id of the dev server (e.g. jest/mocha)
+   * id of the dev server (e.g. webpack)
    */
   id: string;
 
   /**
-   * display name of the dev server (e.g. Jest / Mocha)
+   * display name of the dev server (e.g. Webpack dev server)
    */
   displayName: string;
 
