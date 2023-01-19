@@ -183,6 +183,7 @@ export class CheckoutMain {
     this.logger.setStatusLine(BEFORE_CHECKOUT);
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
+    if (to === 'head') await this.makeLaneComponentsAvailableOnMain();
     await this.parseValues(to, componentPattern, checkoutProps);
     const checkoutResults = await this.checkout(checkoutProps);
     await consumer.onDestroy();
@@ -202,6 +203,12 @@ export class CheckoutMain {
       // don't stop the process. it's possible that the scope doesn't exist yet because these are new components
       this.logger.error(`unable to sync new components due to an error`, err);
     }
+  }
+
+  private async makeLaneComponentsAvailableOnMain() {
+    const unavailableOnMain = await this.workspace.getUnavailableOnMainComponents();
+    if (!unavailableOnMain.length) return;
+    this.workspace.bitMap.makeComponentsAvailableOnMain(unavailableOnMain);
   }
 
   private async parseValues(to: CheckoutTo, componentPattern: string, checkoutProps: CheckoutProps) {
