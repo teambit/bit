@@ -421,8 +421,8 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
   }
 
   private getIdsToImportFromBitmap() {
-    const authoredExportedComponents = this.consumer.bitMap.getExportedComponents();
-    return BitIds.fromArray(authoredExportedComponents);
+    const allIds = this.consumer.bitMap.getAllBitIdsFromAllLanes();
+    return BitIds.fromArray(allIds.filter((id) => id.hasScope()));
   }
 
   async _getCurrentVersions(ids: BitIds): Promise<ImportedVersions> {

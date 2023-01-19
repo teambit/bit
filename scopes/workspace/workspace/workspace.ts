@@ -454,6 +454,24 @@ export class Workspace implements ComponentFactory {
     return graphIdsFromFsBuilder.buildGraph(ids);
   }
 
+  async getUnavailableOnMainComponents(): Promise<ComponentID[]> {
+    const currentLaneId = this.consumer.getCurrentLaneId();
+    if (!currentLaneId.isDefault()) return [];
+    const allIds = this.consumer.bitMap.getAllBitIdsFromAllLanes();
+    const availableIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
+    if (allIds.length === availableIds.length) return [];
+    const unavailableIds = allIds.filter((id) => !availableIds.hasWithoutScopeAndVersion(id));
+    if (!unavailableIds.length) return [];
+    const compsWithHead: BitId[] = [];
+    await Promise.all(
+      unavailableIds.map(async (id) => {
+        const modelComp = await this.scope.legacyScope.getModelComponentIfExist(id);
+        if (modelComp && modelComp.head) compsWithHead.push(id);
+      })
+    );
+    return this.resolveMultipleComponentIds(compsWithHead);
+  }
+
   async getSavedGraphOfComponentIfExist(component: Component) {
     let versionObj: Version;
     try {
