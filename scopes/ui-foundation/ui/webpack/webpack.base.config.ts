@@ -166,6 +166,10 @@ export default function createWebpackConfig(
                 },
               },
             },
+            {
+              test: /\.ttf$/,
+              type: 'asset/resource',
+            },
             // Process application JS with Babel.
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {
