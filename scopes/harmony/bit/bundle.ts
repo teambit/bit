@@ -2,7 +2,7 @@ import { build } from 'esbuild';
 import ignorePlugin from 'esbuild-plugin-ignore';
 import { join } from 'path';
 
-function bundle(){
+function bundle() {
   const appFile = `bit.app`;
   // const _outfile = join('/Users/giladshoham/dev/temp/bundle-bit/output', `${appFile}.js`);
   const _outfile = join('/Users/giladshoham/dev/bit/bit/bundle', `${appFile}.js`);
@@ -10,7 +10,7 @@ function bundle(){
   return build({
     define: {
       // 'process.env.JSON_LOGS': 'true',
-      'process.env.BIT_LOG': `"debug"`,
+      'process.env.BIT_LOG': `'debug'`,
       // 'import_meta_url': 'import_meta_url',
       'import_meta.url': 'import_meta_url',
     },
@@ -21,11 +21,11 @@ function bundle(){
     bundle: true,
     logLevel: 'error',
     platform: 'node',
-    mainFields: ['main', 'module' ],
+    mainFields: ['main', 'module'],
     format: 'cjs',
     keepNames: true,
     outfile: _outfile,
-    inject: [join(__dirname,'./import-meta-url.js')],
+    inject: [join(__dirname, './import-meta-url.js')],
 
     external: [
       '@babel/preset-react',
@@ -43,6 +43,75 @@ function bundle(){
       'react-refresh/babel',
       '@teambit/mdx.modules.mdx-loader',
       '@swc/core',
+      '@babel/plugin-proposal-class-properties',
+      '@babel/plugin-proposal-decorators',
+      '@babel/plugin-proposal-object-rest-spread',
+      '@babel/plugin-syntax-typescript',
+      '@babel/plugin-transform-modules-commonjs',
+      '@babel/plugin-transform-runtime',
+      '@babel/preset-typescript',
+      '@mdx-js/react',
+      '@teambit/mdx.ui.mdx-scope-context',
+      '@teambit/node/jest/jest.config',
+      '@typescript-eslint/parser',
+      'assert/',
+      'babel-jest',
+      'babel-plugin-istanbul',
+      'babel-plugin-transform-typescript-metadata',
+      'babel-preset-current-node-syntax',
+      'babel-preset-jest',
+      'babel-preset-react-app/webpack-overrides',
+      'browserify-zlib',
+      'buffer/',
+      'constants-browserify',
+      'crypto-browserify',
+      'css-loader',
+      'domain-browser',
+      'eslint-config-airbnb-typescript',
+      'eslint-config-prettier',
+      'espree',
+      'expose-loader',
+      'https-browserify',
+      'jest',
+      'jest-circus/runner',
+      'jest-jasmine2',
+      'less-loader',
+      'os-browserify/browser',
+      'path-browserify',
+      'postcss-flexbugs-fixes',
+      'postcss-loader',
+      'postcss-normalize',
+      'process/browser',
+      'punycode/',
+      'querystring-es3',
+      'react',
+      'react-dom',
+      'react-dom/server',
+      'react/jsx-dev-runtime.js',
+      'react/jsx-runtime.js',
+      'resolve-url-loader',
+      'sass-loader',
+      'stream-browserify',
+      'stream-http',
+      'string_decoder/',
+      'timers-browserify',
+      'tty-browserify',
+      'url/',
+      'util/',
+      'vm-browserify',
+      'watchpack',
+      'webpack/hot/dev-server',
+      'webpack/hot/only-dev-server',
+      'source-map-support',
+      'css-minimizer-webpack-plugin',
+      'html-webpack-plugin',
+      'jest-worker',
+      'mocha',
+      'rollup-plugin-terser',
+      'terser-webpack-plugin',
+      'uglify-js',
+      'uid-number',
+      'webpack-dev-server',
       // 'esbuild'
       // 'mime'
     ],
@@ -93,4 +162,4 @@ function bundle(){
   });
 }
 
-bundle().then((res) => console.log('done', res));
+bundle().then((res) => console.log(JSON.stringify(res, null, 2)));
