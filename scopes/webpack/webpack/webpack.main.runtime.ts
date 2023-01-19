@@ -96,7 +96,7 @@ export class WebpackMain {
       transformerContext
     );
     // @ts-ignore - fix this
-    return new WebpackDevServer(afterMutation.raw, webpack, WsDevServer);
+    return new WebpackDevServer(afterMutation.raw, webpack, require.resolve('webpack-dev-server'));
   }
 
   mergeConfig(target: any, source: any): any {
