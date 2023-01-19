@@ -126,8 +126,7 @@ export class SchemaExtractorContext {
           if (filePath.endsWith(format)) return filePath;
           return `${filePath}.${format}`;
         });
-
-        return strings.find((string) => string === filePath);
+        return strings.find((string) => string === file.path);
       }
 
       return false;
