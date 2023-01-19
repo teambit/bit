@@ -16,7 +16,7 @@ export class SchemaService implements EnvService<{}> {
     // Old env
     if (!env?.schemaExtractor) return undefined;
     return {
-      getSchemaExtractor: env.schemaExtractor()(context),
+      getSchemaExtractor: () => env.schemaExtractor()(context),
     }
   }
 }
