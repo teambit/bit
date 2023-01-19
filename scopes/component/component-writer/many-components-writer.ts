@@ -8,7 +8,6 @@ import logger from '@teambit/legacy/dist/logger/logger';
 import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
 import { isDir, isDirEmptySync } from '@teambit/legacy/dist/utils';
 import { composeComponentPath } from '@teambit/legacy/dist/utils/bit/compose-component-path';
-import ComponentWriter, { ComponentWriterProps } from '@teambit/legacy/dist/consumer/component-ops/component-writer';
 import {
   PathLinuxRelative,
   pathNormalizeToLinux,
@@ -21,6 +20,7 @@ import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { moveExistingComponent } from '@teambit/legacy/dist/consumer/component-ops/move-components';
 import { InstallMain } from '@teambit/install';
+import ComponentWriter, { ComponentWriterProps } from './component-writer';
 
 export interface ManyComponentsWriterParams {
   consumer: Consumer;
