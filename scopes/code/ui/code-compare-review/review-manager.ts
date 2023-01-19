@@ -1,5 +1,5 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-import { isEqual, uniq, uniqBy } from 'lodash';
+import { isEqual, uniqBy } from 'lodash';
 import compact from 'lodash.compact';
 import {
   BaseStyleSettings,
@@ -20,7 +20,7 @@ export class ReviewManager {
   editorConfig: monacoEditor.editor.IEditorOptions;
   activeComment?: ReviewComment;
   onChange: OnChange;
-  addReviewDecorations: string[];
+  addReviewDecoration?: string;
   lineReviewDecorations: string[];
   codeSelectionDecorations: string[];
   comments: ReviewComment[];
@@ -28,8 +28,9 @@ export class ReviewManager {
   verbose?: boolean;
   currentLine?: number;
   currentSelection?: CodeSelection;
-  lastEvent: ReviewManagerEventType;
+  lastEvent?: ReviewManagerEventType;
   // currentCommentDecorations: string[];
+  disposables: monacoEditor.IDisposable[];
 
   private CUSTOM_STYLE_ID = 'monaco_review_manager_styles';
   private ICONS = {
@@ -83,18 +84,20 @@ export class ReviewManager {
     this.editor = editor;
     this.activeComment = undefined;
     this.onChange = onChange;
-    this.addReviewDecorations = [];
     this.lineReviewDecorations = [];
     this.codeSelectionDecorations = [];
+    this.disposables = [];
     // this.currentCommentDecorations = [];
     // this.currentLineDecorationLineNumber = undefined;
     this.verbose = verbose;
     this.editorConfig = this.editor.getRawOptions?.() ?? {};
-    this.editor.onDidChangeConfiguration(() => (this.editorConfig = this.editor.getRawOptions()));
-    this.editor.onMouseDown(this.handleMouseDown.bind(this));
-    this.editor.onMouseUp(this.handleMouseUp.bind(this));
-    this.editor.onMouseMove(this.handleMouseMove.bind(this));
-    this.editor.onDidChangeCursorSelection(this.handleChangeCursorSelection.bind(this));
+    this.disposables.push(
+      this.editor.onDidChangeConfiguration(() => (this.editorConfig = this.editor.getRawOptions()))
+    );
+    this.disposables.push(this.editor.onMouseDown(this.handleMouseDown.bind(this)));
+    this.disposables.push(this.editor.onMouseUp(this.handleMouseUp.bind(this)));
+    this.disposables.push(this.editor.onMouseMove(this.handleMouseMove.bind(this)));
+    this.disposables.push(this.editor.onDidChangeCursorSelection(this.handleChangeCursorSelection.bind(this)));
     // apply settings first and create custom css classes
     this.applySettingsAndLoadComments(comments, settings);
   }
@@ -126,10 +129,10 @@ export class ReviewManager {
     }
 
     const hasSettingsUpdated = !isEqual(this.settings, updatedSettings);
-    const hasCommentsUpdated = !isEqual(this.comments, comments);
 
-    if (hardRefresh || hasSettingsUpdated || hasCommentsUpdated) {
-      this.comments = hasCommentsUpdated ? comments : this.comments;
+    this.comments = comments;
+
+    if (hardRefresh || hasSettingsUpdated) {
       this.settings = hasSettingsUpdated ? updatedSettings : this.settings;
       this.createCustomCssClasses(hasSettingsUpdated);
       this.load(this.comments);
@@ -151,11 +154,16 @@ export class ReviewManager {
     this.editor.render();
   }
 
-  // @todo fix this
   dispose() {
-    this.editor.onMouseDown(() => {});
-    this.editor.onMouseMove(() => {});
-    this.editor.render(true);
+    const decorations = ((this.addReviewDecoration && [this.addReviewDecoration]) || [])
+      .concat(this.lineReviewDecorations)
+      .concat(this.codeSelectionDecorations);
+
+    this.editor.deltaDecorations(decorations, []);
+    this.addReviewDecoration = undefined;
+    this.lineReviewDecorations = [];
+    this.codeSelectionDecorations = [];
+    this.disposables.forEach((disposable) => disposable.dispose());
   }
 
   createCustomCssClasses(hardRefresh = false) {
@@ -208,13 +216,13 @@ export class ReviewManager {
   load(comments: ReviewComment[]): void {
     this.comments = comments;
     const [, commentsWithSelection] = comments.reduce(
-      (accum, curr) => {
+      (acc, curr) => {
         if (curr.selection) {
-          accum[1].push(curr);
+          acc[1].push(curr);
         } else {
-          accum[0].push(curr);
+          acc[0].push(curr);
         }
-        return accum;
+        return acc;
       },
       [new Array<ReviewComment>(), new Array<ReviewComment>()]
     );
@@ -244,9 +252,10 @@ export class ReviewManager {
           },
         ]
       : [];
-    this.addReviewDecorations = uniq(
-      this.addReviewDecorations.concat(this.editor.deltaDecorations(this.addReviewDecorations, decorations))
-    );
+    this.addReviewDecoration = this.editor.deltaDecorations(
+      (this.addReviewDecoration && [this.addReviewDecoration]) || [],
+      decorations
+    )[0];
   }
 
   renderLineReviewDecoration(lineNumbers: number[]) {
@@ -311,6 +320,7 @@ export class ReviewManager {
     if (!isEqual(selection, this.currentSelection)) {
       this.editor.setSelection(selection);
       this.currentSelection = selection;
+      this.lastEvent = 3;
     }
   }
 
@@ -330,10 +340,12 @@ export class ReviewManager {
       lineNumber: this.currentLine,
       selection: this.currentSelection,
     });
-    this.onChange({ type: this.lastEvent, comments });
+    this.lastEvent && this.onChange({ type: this.lastEvent, comments });
   }
 
   handleMouseDown(ev: monacoEditor.editor.IEditorMouseEvent) {
+    this.lastEvent = undefined;
+
     if (this.verbose) {
       // eslint-disable-next-line no-console
       console.log('🚀 ~ file: review-manager.ts:486 ~ handleMouseDown ~ ev\n');

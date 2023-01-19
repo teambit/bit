@@ -163,13 +163,12 @@ export function CodeCompareView({
       },
     });
     monaco.editor.setTheme('bit');
+
     if (view === 'split') {
       const original = new ReviewManager(
         editor.getOriginalEditor(),
         'luv',
         (event) => {
-          console.log('🚀 ~ file: code-compare-view.tsx:169 ~ OriginalEditor', event);
-
           if (event.type === 1) {
             const newComment = event.comments.find((c) => !c.id);
 
@@ -194,7 +193,6 @@ export function CodeCompareView({
       editor.getModifiedEditor(),
       'luv',
       (event) => {
-        console.log('🚀 ~ file: code-compare-view.tsx:196 ~ ModifiedEditor', event);
         if (event.type === 1) {
           const newComment = event.comments.find((c) => !c.id);
 
@@ -262,35 +260,17 @@ export function CodeCompareView({
     const originalReviewManager = monacoRef.current?.reviewManager?.original;
 
     if (view === 'split' && !originalReviewManager) {
-      const original = new ReviewManager(
-        originalEditor,
-        'luv',
-        (actions) => {
-          console.log(actions);
-        },
-        COMMENTS,
-        {},
-        true
-      );
+      const original = new ReviewManager(originalEditor, 'luv', () => {}, COMMENTS, {}, true);
       monacoRef.current.reviewManager = {
         ...(monacoRef.current?.reviewManager || {}),
         original,
-      };
-    } else if (view === 'split') {
-      originalReviewManager?.dispose();
-      monacoRef.current.reviewManager = {
-        ...(monacoRef.current?.reviewManager || {}),
-        original: undefined,
       };
     }
 
     if (view === 'inline' && originalReviewManager) {
       // dispose delta decorations from original editor
       originalReviewManager.dispose();
-      monacoRef.current.reviewManager = {
-        ...(monacoRef.current?.reviewManager || {}),
-        original: undefined,
-      };
+      delete monacoRef.current?.reviewManager?.original;
     }
   }, [view]);
 

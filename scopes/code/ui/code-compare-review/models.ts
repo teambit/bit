@@ -1,6 +1,7 @@
 export enum ReviewManagerEventType {
   AddEvent = 1,
   UpdateEvent = 2,
+  SelectionEvent = 3,
 }
 export type ReviewEvent = {
   type: ReviewManagerEventType;
