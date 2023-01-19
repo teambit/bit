@@ -38,6 +38,7 @@ export type CodeCompareViewState = {
   language: string;
   baseId?: ComponentID;
   compareId?: ComponentID;
+  reviewManager?: IReviewManager;
 };
 
 export type CodeCompareViewProps = {
@@ -131,7 +132,7 @@ export function CodeCompareView({
 
   const modifiedFileContent = codeCompareDataForFile?.compareContent || downloadedCompareFileContent;
 
-  const getState: () => CodeCompareViewState = () => {
+  const getState: (_reviewManager?: IReviewManager) => CodeCompareViewState = (_reviewManager) => {
     return {
       ignoreWhitespace,
       view,
@@ -139,6 +140,7 @@ export function CodeCompareView({
       compareId,
       wrap,
       language,
+      reviewManager: _reviewManager,
     };
   };
 
@@ -173,7 +175,10 @@ export function CodeCompareView({
         ...props,
         editor: editor.getOriginalEditor(),
         onChange: (event) => {
-          return reviewManager.onChange({ ...getState(), editorType: 'base' })(event);
+          return reviewManager.onChange({
+            ...getState(monacoRef.current?.reviewManager?.original),
+            editorType: 'base',
+          })(event);
         },
         editorType: 'base',
       });
@@ -188,7 +193,10 @@ export function CodeCompareView({
       ...props,
       editor: editor.getModifiedEditor(),
       onChange: (event) => {
-        return reviewManager.onChange({ ...getState(), editorType: 'modified' })(event);
+        return reviewManager.onChange({
+          ...getState(monacoRef.current?.reviewManager?.modified),
+          editorType: 'modified',
+        })(event);
       },
       editorType: 'modified',
     });
@@ -249,7 +257,10 @@ export function CodeCompareView({
         ...props,
         editor: originalEditor,
         onChange: (event) => {
-          return reviewManager.onChange({ ...getState(), editorType: 'base' })(event);
+          return reviewManager.onChange({
+            ...getState(monacoRef.current?.reviewManager?.original),
+            editorType: 'base',
+          })(event);
         },
         editorType: 'base',
       });
