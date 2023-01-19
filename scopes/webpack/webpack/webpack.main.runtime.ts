@@ -13,6 +13,8 @@ import { MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { merge } from 'webpack-merge';
+// We want to import it to make sure bit recognizes it as a dependency
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import WsDevServer from 'webpack-dev-server';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 
