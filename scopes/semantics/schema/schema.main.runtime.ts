@@ -15,6 +15,7 @@ import { SchemaExtractor } from './schema-extractor';
 import { SchemaCommand } from './schema.cmd';
 import { schemaSchema } from './schema.graphql';
 import { SchemaTask, SCHEMA_TASK_NAME } from './schema.task';
+import { SchemaService } from './schema.service';
 
 export type ParserSlot = SlotRegistry<Parser>;
 
@@ -188,6 +189,7 @@ export class SchemaMain {
     builder.registerBuildTasks([schemaTask]);
     cli.register(new SchemaCommand(schema, component, logger));
     graphql.register(schemaSchema(schema));
+    envs.registerService(new SchemaService());
 
     // workspace.onComponentLoad(async (component) => {
     //   const apiSchema = await schema.getSchema(component);
