@@ -67,18 +67,20 @@ export class ManyComponentsWriter {
     return typeof field === 'undefined' ? defaultValue : Boolean(field);
   }
   async writeAll() {
-    await this._writeComponentsAndDependencies();
-    await this._installPackages();
-    await this.compile();
+    await this.writeComponentsAndDependencies();
+    if (this.installNpmPackages) {
+      await this.installPackages();
+      await this.compile(); // no point to compile if the installation is not running. the environment is not ready.
+    }
     logger.debug('ManyComponentsWriter, Done!');
   }
-  async _writeComponentsAndDependencies() {
+  private async writeComponentsAndDependencies() {
     logger.debug('ManyComponentsWriter, _writeComponentsAndDependencies');
     await this._populateComponentsFilesToWrite();
     this._moveComponentsIfNeeded();
     await this._persistComponentsData();
   }
-  private async _installPackages() {
+  private async installPackages() {
     logger.debug('ManyComponentsWriter, _installPackages');
     if (!this.installNpmPackages) {
       return;
