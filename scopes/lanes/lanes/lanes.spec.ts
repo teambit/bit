@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
+import { ExportAspect, ExportMain } from '@teambit/export';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
@@ -40,6 +41,8 @@ describe('LanesAspect', function () {
       await mockComponents(workspacePath);
       snapping = await loadAspect(SnappingAspect, workspacePath);
       await snapping.tag({ ids: ['comp1'], build: false, ignoreIssues: 'MissingManuallyConfiguredPackages' });
+      const exporter: ExportMain = await loadAspect(ExportAspect, workspacePath);
+      await exporter.export();
       lanes = await loadAspect(LanesAspect, workspacePath);
       await lanes.createLane('stage');
       await modifyMockedComponents(workspacePath, 'v2');
