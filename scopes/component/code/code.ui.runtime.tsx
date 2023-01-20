@@ -8,8 +8,8 @@ import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { CodePage } from '@teambit/code.ui.code-tab-page';
 import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-compare';
 import { CodeCompareSection } from '@teambit/code.ui.code-compare-section';
-// import { initReviewManager } from '@teambit/code.ui.code-review.review-manager';
-// import { ReviewManagerProvider } from '@teambit/code.ui.code-review.context.review-manager-context';
+import { initReviewManager } from '@teambit/code.ui.code-review.review-manager';
+import { ReviewManagerProvider } from '@teambit/code.ui.code-review.context.review-manager-context';
 import { CodeAspect } from './code.aspect';
 import { CodeSection } from './code.section';
 
@@ -33,34 +33,38 @@ export class CodeUI {
   getCodePage = () => {
     return <CodePage fileIconSlot={this.fileIconSlot} host={this.host} />;
   };
-
+  comments: any[] = [
+    { lineNumber: 1 },
+    { lineNumber: 6 },
+    { lineNumber: 3, selection: { startColumn: 6, startLineNumber: 3, endColumn: 6, endLineNumber: 5 } },
+  ];
   getCodeCompare = () => {
     return (
-      //   <ReviewManagerProvider
-      //     props={{
-      //       init: initReviewManager,
-      //       props: (props) => {
-      //         // console.log('🚀 ~ file: code.ui.runtime.tsx:43 ~ CodeUI ~ props', props);
-      //         return {
-      //           comments: [
-      //             { lineNumber: 1 },
-      //             { lineNumber: 6 },
-      //             { lineNumber: 3, selection: { startColumn: 6, startLineNumber: 3, endColumn: 6, endLineNumber: 5 } },
-      //           ],
-      //         };
-      //       },
-      //       onDestroy: (props) => {
-      //         // console.log('🚀 ~ file: code.ui.runtime.tsx:50 ~ CodeUI ~ props', props);
-      //       },
-      //       onChange: (props) => {
-      //         return (event) => {
-      //           // console.log(props, event);
-      //         };
-      //       },
-      //     }}
-      //   >
-      <CodeCompare fileIconSlot={this.fileIconSlot} />
-      // </ReviewManagerProvider>
+      <ReviewManagerProvider
+        props={{
+          init: initReviewManager,
+          props: (props) => {
+            console.log('🚀 ~ file: code.ui.runtime.tsx:43 ~ CodeUI ~ props', props);
+            return {
+              comments: this.comments,
+            };
+          },
+          onDestroy: (props) => {
+            console.log('🚀 ~ file: code.ui.runtime.tsx:50 ~ CodeUI ~ props', props);
+          },
+          onChange: (props) => {
+            return (event) => {
+              console.log(props, event);
+              if (event.type === 'Add' || event.type === 'Select') {
+                this.comments = this.comments.concat(event.comments);
+                props.reviewManager?.refresh(this.comments);
+              }
+            };
+          },
+        }}
+      >
+        <CodeCompare fileIconSlot={this.fileIconSlot} />
+      </ReviewManagerProvider>
     );
   };
 

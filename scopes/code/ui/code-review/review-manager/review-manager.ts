@@ -15,6 +15,7 @@ import {
   IReviewManager,
   InitReviewManager,
 } from '@teambit/code.ui.code-review.models.review-manager-model';
+import { defaultStyles } from '@teambit/code.ui.code-review.styles.review-manager-styles';
 
 class ReviewManager implements IReviewManager {
   static defaultCodeSelectionOverridesKey(codeSelection: CodeSelection) {
@@ -34,45 +35,7 @@ class ReviewManager implements IReviewManager {
   private currentSelection?: CodeSelection;
   private lastEvent?: ReviewManagerEventType;
   private disposables: monacoEditor.IDisposable[];
-  private CUSTOM_STYLE_ID = 'monaco_review_manager_styles';
-  private ICONS = {
-    ADD_REVIEW: 'https://static.bit.dev/bit-icons/plus.svg',
-    LINE_REVIEW: 'https://static.bit.dev/bit-icons/collection.svg',
-  };
-  private DEFAULT_SETTINGS: InternalReviewManagerSettings = {
-    addReviewStyles: {
-      className: 'default_add_review',
-      styles: {
-        backgroundImage: `url(${this.ICONS.ADD_REVIEW})`,
-        backgroundRepeat: 'no-repeat',
-        height: '16px',
-        width: '16px',
-        backgroundSize: '16px',
-        marginLeft: '4px',
-        cursor: 'pointer',
-      },
-    },
-    lineReviewStyles: {
-      className: 'default_line_review',
-      styles: {
-        backgroundImage: `url(${this.ICONS.LINE_REVIEW})`,
-        backgroundRepeat: 'no-repeat',
-        height: '16px',
-        width: '16px',
-        backgroundSize: '16px',
-        marginLeft: '4px',
-        cursor: 'pointer',
-      },
-    },
-    codeSelectionReviewStyles: {
-      className: 'default_code_selection',
-      styles: {
-        color: 'red',
-        textDecoration: 'underline',
-        fontWeight: '500',
-      },
-    },
-  };
+  private defaultStyles = defaultStyles;
 
   private mapToBaseStyles(defaultSettings: BaseStyleSettings, settings?: StyleSettings): BaseStyleSettings {
     let updatedSettings = defaultSettings;
@@ -87,9 +50,9 @@ class ReviewManager implements IReviewManager {
   }
 
   private createCustomCssClasses(hardRefresh = false) {
-    if (hardRefresh || !document.getElementById(this.CUSTOM_STYLE_ID)) {
+    if (hardRefresh || !document.getElementById(this.defaultStyles.id)) {
       const style = document.createElement('style');
-      style.id = this.CUSTOM_STYLE_ID;
+      style.id = this.defaultStyles.id;
       style.type = 'text/css';
 
       const defaultAddStyles = styleDeclarationToString(this.settings.addReviewStyles.styles);
@@ -179,7 +142,7 @@ class ReviewManager implements IReviewManager {
       this.currentLine &&
         this.editor.setSelection(new monacoEditor.Selection(this.currentLine, 0, this.currentLine, 0));
 
-      this.lastEvent = 2;
+      this.lastEvent = ReviewManagerEventType.UpdateEvent;
     }
     if (!this.currentLine && ev.target.position) {
       this.currentLine = ev.target.position.lineNumber;
@@ -192,7 +155,7 @@ class ReviewManager implements IReviewManager {
       this.currentLine &&
         this.editor.setSelection(new monacoEditor.Selection(this.currentLine, 0, this.currentLine, 0));
 
-      this.lastEvent = 1;
+      this.lastEvent = ReviewManagerEventType.AddEvent;
     }
   }
 
@@ -209,7 +172,7 @@ class ReviewManager implements IReviewManager {
     if (!isEqual(selection, this.currentSelection)) {
       this.editor.setSelection(selection);
       this.currentSelection = selection;
-      this.lastEvent = 3;
+      this.lastEvent = ReviewManagerEventType.SelectionEvent;
     }
   }
 
@@ -261,14 +224,14 @@ class ReviewManager implements IReviewManager {
   }
 
   applySettingsAndLoadComments(comments: ReviewComment[], settings?: ReviewManagerSettings, hardRefresh?: boolean) {
-    let updatedSettings: InternalReviewManagerSettings = this.DEFAULT_SETTINGS;
+    let updatedSettings: InternalReviewManagerSettings = this.defaultStyles.styles;
 
     if (settings) {
       updatedSettings = {
-        addReviewStyles: this.mapToBaseStyles(this.DEFAULT_SETTINGS.addReviewStyles, settings.addReviewStyles),
-        lineReviewStyles: this.mapToBaseStyles(this.DEFAULT_SETTINGS.lineReviewStyles, settings.lineReviewStyles),
+        addReviewStyles: this.mapToBaseStyles(this.defaultStyles.styles.addReviewStyles, settings.addReviewStyles),
+        lineReviewStyles: this.mapToBaseStyles(this.defaultStyles.styles.lineReviewStyles, settings.lineReviewStyles),
         codeSelectionReviewStyles: {
-          ...this.DEFAULT_SETTINGS.codeSelectionReviewStyles,
+          ...this.defaultStyles.styles.codeSelectionReviewStyles,
           ...(this.settings?.codeSelectionReviewStyles || {}),
         },
       };

@@ -1353,6 +1353,13 @@
             }
         }
     },
+    "ui/code-review/styles/review-manager-styles": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/code/ui/code-review/styles/review-manager-styles"
+    },
     "ui/code-tab-page": {
         "scope": "teambit.code",
         "version": "0.0.606",

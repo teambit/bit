@@ -28,9 +28,9 @@ export interface InitReviewManager {
 }
 
 export enum ReviewManagerEventType {
-  AddEvent = 1,
-  UpdateEvent = 2,
-  SelectionEvent = 3,
+  AddEvent = 'Add',
+  UpdateEvent = 'Update',
+  SelectionEvent = 'Select',
 }
 export type ReviewEvent = {
   type: ReviewManagerEventType;

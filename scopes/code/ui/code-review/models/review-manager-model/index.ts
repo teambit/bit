@@ -8,9 +8,9 @@ export type {
   BaseStyleSettings,
   DefaultIconRenderer,
   InternalReviewManagerSettings,
-  ReviewManagerEventType,
   InitReviewManager,
   InitReviewManagerProps,
   ReviewEvent,
 } from './models';
+export { ReviewManagerEventType } from './models';
 export { hasDefaultIconRenderer, styleDeclarationToString } from './models';
