@@ -72,6 +72,7 @@ export class ManyComponentsWriter {
       await this.installPackages();
       await this.compile(); // no point to compile if the installation is not running. the environment is not ready.
     }
+    await this.consumer.writeBitMap();
     logger.debug('ManyComponentsWriter, Done!');
   }
   private async writeComponentsAndDependencies() {
