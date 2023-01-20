@@ -14,6 +14,7 @@ import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import CommandBarAspect, { CommandBarUI, CommandHandler } from '@teambit/command-bar';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import {
   DrawerWidgetSlot,
   FilterWidget,
@@ -131,7 +132,7 @@ export class ScopeUI {
         TargetCorner={options.Corner}
         routeSlot={this.routeSlot}
         menuSlot={this.menuSlot}
-        sidebar={<this.sidebar.render items={this.listSidebarLinks()} />}
+        sidebar={<this.sidebar.render items={this.listSidebarLinks()} overrideDrawerSlot={options.overrideDrawers} />}
         scopeUi={this}
         userUseScopeQuery={options.useScope}
         badgeSlot={this.scopeBadgeSlot}
@@ -286,16 +287,27 @@ export class ScopeUI {
     this.drawerWidgetSlot.register(widgets);
   };
 
-  registerDefaultDrawers(assumeScopeInUrl = false, overrideUseComponents?: () => { components: ComponentModel[] }) {
-    this.sidebar.registerDrawer(
-      scopeDrawer({
-        treeWidgets: this.sidebarSlot,
-        filtersSlot: this.drawerComponentsFiltersSlot,
-        drawerWidgetSlot: this.drawerWidgetSlot,
-        assumeScopeInUrl,
-        overrideUseComponents,
-      })
-    );
+  registerDefaultDrawers(
+    assumeScopeInUrl = false,
+    overrideUseComponents?: () => { components: ComponentModel[] },
+    overrideUseLanes?: () => { lanesModel: LanesModel }
+  ) {
+    this.sidebar.registerDrawer(this.getDefaultDrawer(assumeScopeInUrl, overrideUseComponents, overrideUseLanes));
+  }
+
+  getDefaultDrawer(
+    assumeScopeInUrl = false,
+    overrideUseComponents?: () => { components: ComponentModel[] },
+    overrideUseLanes?: () => { lanesModel: LanesModel }
+  ) {
+    return scopeDrawer({
+      treeWidgets: this.sidebarSlot,
+      filtersSlot: this.drawerComponentsFiltersSlot,
+      drawerWidgetSlot: this.drawerWidgetSlot,
+      assumeScopeInUrl,
+      overrideUseComponents,
+      overrideUseLanes,
+    });
   }
 
   uiRoot(): UIRoot {

@@ -95,6 +95,7 @@ import { MergeLanesAspect } from '@teambit/merge-lanes';
 import { CheckoutAspect } from '@teambit/checkout';
 import { APIReferenceAspect } from '@teambit/api-reference';
 import { ApiServerAspect } from '@teambit/api-server';
+import { ComponentWriterAspect } from '@teambit/component-writer';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -192,6 +193,7 @@ export const manifestsMap = {
   [RemoveAspect.id]: RemoveAspect,
   [MergeLanesAspect.id]: MergeLanesAspect,
   [CheckoutAspect.id]: CheckoutAspect,
+  [ComponentWriterAspect.id]: ComponentWriterAspect,
   [APIReferenceAspect.id]: APIReferenceAspect,
   [ApiServerAspect.id]: ApiServerAspect,
 };
