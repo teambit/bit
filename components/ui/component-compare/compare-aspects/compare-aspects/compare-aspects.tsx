@@ -4,7 +4,6 @@ import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitt
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
-import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { CodeCompareTree } from '@teambit/code.ui.code-compare';
 import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { ComponentCompareAspectsContext } from '@teambit/component.ui.component-compare.compare-aspects.context';
@@ -19,12 +18,14 @@ export type ComponentCompareAspectsProps = { host: string } & HTMLAttributes<HTM
 
 export function ComponentCompareAspects({ host, className }: ComponentCompareAspectsProps) {
   const context = useCompareAspectsQuery(host);
-  const { loading, selectedBase, selectedCompare, selected, hook, aspectNames } = context;
+  const { loading, selectedBase, selectedCompare, selected, hook, aspectNames, state } = context;
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
-  const _useUpdatedUrlFromQuery = hook?.useUpdatedUrlFromQuery || useUpdatedUrlFromQuery;
+  const _useUpdatedUrlFromQuery =
+    hook?.useUpdatedUrlFromQuery || state?.controlled ? () => useUpdatedUrlFromQuery({}) : useUpdatedUrlFromQuery;
+
   const getHref = (node) => _useUpdatedUrlFromQuery({ aspect: node.id });
 
   return (
@@ -35,19 +36,12 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
         className={classNames(styles.componentCompareAspectContainer, className)}
       >
         <Pane className={styles.left}>
-          {loading && (
-            <div className={styles.loader}>
-              <RoundLoader />
-            </div>
-          )}
-          {loading || (
-            <CompareAspectView
-              name={selected}
-              baseAspectData={selectedBase}
-              compareAspectData={selectedCompare}
-              loading={loading}
-            />
-          )}
+          <CompareAspectView
+            name={selected}
+            baseAspectData={selectedBase}
+            compareAspectData={selectedCompare}
+            loading={loading}
+          />
         </Pane>
         <HoverSplitter className={styles.splitter}>
           <Collapser

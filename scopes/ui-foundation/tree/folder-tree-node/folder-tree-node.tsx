@@ -12,7 +12,9 @@ export type FolderPayload = {
   open?: boolean;
 };
 
-export type FolderTreeNodeProps = {} & TreeNodeProps<FolderPayload>;
+export type FolderTreeNodeProps = {
+  className?: string;
+} & TreeNodeProps<FolderPayload>;
 
 function getCustomIcon(icon: string | ReactNode) {
   if (!icon) return null;
@@ -30,7 +32,7 @@ function getCustomIcon(icon: string | ReactNode) {
 /**
  * Renders a folder node in the file tree
  */
-export function FolderTreeNode({ node, depth }: FolderTreeNodeProps) {
+export function FolderTreeNode({ node, depth, className }: FolderTreeNodeProps) {
   const [open, setOpen] = useState(node.payload?.open ?? true);
   useEffect(() => {
     // allow node model to override open state
@@ -40,7 +42,7 @@ export function FolderTreeNode({ node, depth }: FolderTreeNodeProps) {
   const displayName = node.id.replace(/\/$/, '').split('/').pop();
   const CustomIcon = getCustomIcon(node.payload?.icon);
   const Title = node.id && (
-    <div className={classNames(indentClass, styles.folder)} onClick={() => setOpen(!open)}>
+    <div className={classNames(indentClass, styles.folder, className)} onClick={() => setOpen(!open)}>
       <div className={styles.left}>
         <Icon className={classNames(styles.icon, !open && styles.collapsed)} of="fat-arrow-down" />
         {CustomIcon}

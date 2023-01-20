@@ -359,7 +359,9 @@ export class YarnPackageManager implements PackageManager {
       packageImportMethod?: PackageImportMethod;
     }
   ): Promise<Configuration> {
-    const packageImportMethod = options.packageImportMethod || 'hardlink';
+    // We use "copy" by default because "hardlink" causes issues on Windows.
+    // This must be a Yarn issue that may be fixed in the future by Yarn.
+    const packageImportMethod = options.packageImportMethod || 'copy';
     if (!['hardlink', 'copy'].includes(packageImportMethod)) {
       throw new BitError(`packageImportMethod ${packageImportMethod} is not supported with Yarn`);
     }

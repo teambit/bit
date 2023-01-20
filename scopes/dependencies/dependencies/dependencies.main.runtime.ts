@@ -1,4 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import moment from 'moment';
 import { ComponentID } from '@teambit/component-id';
 import {
   DependencyResolverAspect,
@@ -9,10 +10,13 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { cloneDeep, compact, set } from 'lodash';
 import pMapSeries from 'p-map-series';
 import {
+  DependenciesBlameCmd,
   DependenciesCmd,
   DependenciesDebugCmd,
+  DependenciesEjectCmd,
   DependenciesGetCmd,
   DependenciesRemoveCmd,
+  DependenciesResetCmd,
   DependenciesSetCmd,
   RemoveDependenciesFlags,
   SetDependenciesFlags,
@@ -20,6 +24,15 @@ import {
 import { DependenciesAspect } from './dependencies.aspect';
 
 export type RemoveDependencyResult = { id: ComponentID; removedPackages: string[] };
+
+export type BlameResult = {
+  snap: string;
+  tag?: string;
+  author: string;
+  date: string;
+  message: string;
+  version: string;
+};
 
 export class DependenciesMain {
   constructor(private workspace: Workspace, private dependencyResolver: DependencyResolverMain) {}
@@ -113,6 +126,63 @@ export class DependenciesMain {
     return compact(results);
   }
 
+  async reset(componentPattern: string): Promise<ComponentID[]> {
+    const compIds = await this.workspace.idsByPattern(componentPattern);
+    await pMapSeries(compIds, async (compId) => {
+      await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, { policy: {} });
+    });
+    await this.workspace.bitMap.write();
+
+    return compIds;
+  }
+
+  async eject(componentPattern: string): Promise<ComponentID[]> {
+    const compIds = await this.workspace.idsByPattern(componentPattern);
+    await pMapSeries(compIds, async (compId) => {
+      await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, {}, true, true);
+    });
+    await this.workspace.bitMap.write();
+
+    return compIds;
+  }
+
+  /**
+   * helps determine what snap/tag changed a specific dependency.
+   * the results are sorted from the oldest to newest.
+   */
+  async blame(compName: string, depName: string) {
+    const id = await this.workspace.resolveComponentId(compName);
+    const log = await this.workspace.scope.getLogs(id);
+    const blameResults: BlameResult[] = [];
+    let lastVersion = '';
+    await pMapSeries(log, async (logItem) => {
+      const component = await this.workspace.get(id.changeVersion(logItem.tag || logItem.hash));
+      const depList = await this.dependencyResolver.getDependencies(component);
+      const dependency = depList.findByPkgNameOrCompId(depName);
+      if (dependency && dependency.version === lastVersion) {
+        return;
+      }
+      let version: string;
+      if (!dependency) {
+        if (!lastVersion) return;
+        version = '<REMOVED>';
+      } else {
+        version = dependency.version;
+      }
+      if (!dependency || dependency.version === lastVersion) return;
+      lastVersion = dependency.version;
+      blameResults.push({
+        snap: logItem.hash,
+        tag: logItem.tag,
+        author: logItem.username || '<N/A>',
+        date: logItem.date ? moment(new Date(parseInt(logItem.date))).format('YYYY-MM-DD HH:mm:ss') : '<N/A>',
+        message: logItem.message,
+        version,
+      });
+    });
+    return blameResults;
+  }
+
   private async getPackageNameAndVerResolved(pkg: string): Promise<[string, string]> {
     const resolveLatest = async (pkgName: string) => {
       const versionResolver = await this.dependencyResolver.getVersionResolver({});
@@ -149,6 +219,9 @@ export class DependenciesMain {
       new DependenciesRemoveCmd(depsMain),
       new DependenciesDebugCmd(),
       new DependenciesSetCmd(depsMain),
+      new DependenciesResetCmd(depsMain),
+      new DependenciesEjectCmd(depsMain),
+      new DependenciesBlameCmd(depsMain),
     ];
     cli.register(depsCmd);
 

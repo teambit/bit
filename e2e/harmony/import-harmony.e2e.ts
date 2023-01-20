@@ -68,7 +68,7 @@ describe('import functionality on Harmony', function () {
           helper.command.importComponent('comp1');
         });
         it('should not save the dependencies as components', () => {
-          helper.bitMap.expectToHaveIdHarmony('comp1', '0.0.1', helper.scopes.remote);
+          helper.bitMap.expectToHaveId('comp1', '0.0.1', helper.scopes.remote);
           const bitMap = helper.bitMap.readComponentsMapOnly();
           expect(bitMap).not.to.have.property(`comp2`);
           expect(bitMap).not.to.have.property(`comp3`);
@@ -245,7 +245,7 @@ describe('import functionality on Harmony', function () {
           helper.command.importComponent('comp1');
         });
         it('should import the component with the pre-release correctly', () => {
-          helper.bitMap.expectToHaveIdHarmony('comp1', '0.0.1-beta.0', helper.scopes.remote);
+          helper.bitMap.expectToHaveId('comp1', '0.0.1-beta.0', helper.scopes.remote);
         });
         // previously, it threw an error: "error: version 0.0.1.0 is not a valid semantic version. learn more: https://semver.org"
         it('bit status should be clean with no errors', () => {

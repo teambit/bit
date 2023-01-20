@@ -14,7 +14,7 @@ import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.me
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentModel } from '../component-model';
 import { useComponent as useComponentQuery, UseComponentType } from '../use-component';
-import { CollapsableMenuNav } from './menu-nav';
+import { CollapsibleMenuNav } from './menu-nav';
 import styles from './menu.module.scss';
 import { OrderedNavigationSlot, ConsumeMethodSlot } from './nav-plugin';
 import { useIdFromLocation } from '../use-component-from-location';
@@ -93,7 +93,7 @@ export function ComponentMenu({
         element={
           <div className={classnames(styles.topBar, className)}>
             <div className={styles.leftSide}>
-              <CollapsableMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
+              <CollapsibleMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
             </div>
             {!skipRightSide && (
               <div className={styles.rightSide}>

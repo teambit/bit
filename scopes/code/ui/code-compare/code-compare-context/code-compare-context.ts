@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { FileCompareResult } from '@teambit/component.ui.compare';
+import { FileCompareResult } from '@teambit/component.ui.component-compare.models.component-compare-model';
 
 export type CodeCompareModel = {
   fileCompareDataByName: Map<string, FileCompareResult>;

@@ -1,20 +1,26 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useContext, useMemo, HTMLAttributes } from 'react';
 import classnames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { ComponentContext, TopBarNav, useComponent } from '@teambit/component';
+import { CollapsibleMenuNav, ComponentContext, ComponentID, NavPlugin, useComponent } from '@teambit/component';
 import { ComponentCompareContext } from '@teambit/component.ui.component-compare.context';
+import { useComponentCompareQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare';
+import {
+  FileCompareResult,
+  FieldCompareResult,
+} from '@teambit/component.ui.component-compare.models.component-compare-model';
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
 import { ComponentCompareBlankState } from '@teambit/component.ui.component-compare.blank-state';
 import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
-import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { ComponentCompareProps } from '@teambit/component.ui.component-compare.models.component-compare-props';
+import { ComponentCompareProps, TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { groupByVersion } from '@teambit/component.ui.component-compare.utils.group-by-version';
 import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tabs';
 import { sortByDateDsc } from '@teambit/component.ui.component-compare.utils.sort-logs';
 import { extractLazyLoadedData } from '@teambit/component.ui.component-compare.utils.lazy-loading';
+import { BlockSkeleton, WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
+import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
 
 import styles from './component-compare.module.scss';
 
@@ -28,6 +34,7 @@ const findPrevVersionFromCurrent = (compareVersion) => (_, index: number, logs: 
   return logs[prevIndex].tag === compareVersion || logs[prevIndex].hash === compareVersion;
 };
 
+// eslint-disable-next-line complexity
 export function ComponentCompare(props: ComponentCompareProps) {
   const {
     host,
@@ -40,18 +47,20 @@ export function ComponentCompare(props: ComponentCompareProps) {
     tabs,
     className,
     hooks,
+    changes: changesFromProps,
     customUseComponent,
+    Loader = CompareLoader,
     ...rest
   } = props;
   const baseVersion = useCompareQueryParam('baseVersion');
   const component = useContext(ComponentContext);
   const location = useLocation();
-
   const isWorkspace = host === 'teambit.workspace/workspace';
   const allVersionInfo = useMemo(() => component.logs?.slice().sort(sortByDateDsc) || [], [component.id.toString()]);
   const isNew = allVersionInfo.length === 0;
   const compareVersion =
     isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.id.version;
+
   const compareIsLocalChanges = compareVersion === 'workspace';
 
   const lastVersionInfo = useMemo(() => {
@@ -75,11 +84,44 @@ export function ComponentCompare(props: ComponentCompareProps) {
 
   const compare = _compareId ? compareComponent : component;
 
-  const isEmpty = !loading && !compareIsLocalChanges && !compare && !base;
+  const isEmpty =
+    !compareIsLocalChanges && ((!loading && !compare && !base) || compare?.id.toString() === base?.id.toString());
+
+  const compCompareId = `${base?.id.toString()}-${compare?.id.toString()}`;
 
   const logsByVersion = useMemo(() => {
     return (compare?.logs || []).slice().reduce(groupByVersion, new Map<string, LegacyComponentLog>());
   }, [compare?.id.toString()]);
+
+  const skipComponentCompareQuery = compareIsLocalChanges || !base?.id.version || !compare?.id.version;
+
+  const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
+    base?.id.toString(),
+    compare?.id.toString(),
+    undefined,
+    skipComponentCompareQuery
+  );
+
+  const fileCompareDataByName = useMemo(() => {
+    if (loading || compCompareLoading) return undefined;
+    if (!compCompareLoading && !componentCompareData) return null;
+
+    const _fileCompareDataByName = new Map<string, FileCompareResult>();
+    (componentCompareData?.code || []).forEach((codeCompareData) => {
+      _fileCompareDataByName.set(codeCompareData.fileName, codeCompareData);
+    });
+    return _fileCompareDataByName;
+  }, [compCompareLoading, loading, compCompareId]);
+
+  const fieldCompareDataByName = useMemo(() => {
+    if (loading || compCompareLoading) return undefined;
+    if (!compCompareLoading && !componentCompareData) return null;
+    const _fieldCompareDataByName = new Map<string, FieldCompareResult>();
+    (componentCompareData?.aspects || []).forEach((aspectCompareData) => {
+      _fieldCompareDataByName.set(aspectCompareData.fieldName, aspectCompareData);
+    });
+    return _fieldCompareDataByName;
+  }, [compCompareLoading, loading, compCompareId]);
 
   const componentCompareModel = {
     compare: compare && {
@@ -93,18 +135,19 @@ export function ComponentCompare(props: ComponentCompareProps) {
     logsByVersion,
     state,
     hooks,
+    fieldCompareDataByName,
+    fileCompareDataByName,
   };
+
+  const changes =
+    changesFromProps || deriveChangeType(baseId, compare?.id, fileCompareDataByName, fieldCompareDataByName);
 
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
       <div className={classnames(styles.componentCompareContainer, className)} {...rest}>
-        {loading && (
-          <div className={styles.loader}>
-            <RoundLoader />
-          </div>
-        )}
+        {loading && <Loader className={classnames(styles.loader)} />}
         {isEmpty && <ComponentCompareBlankState />}
-        {!isEmpty && <RenderCompareScreen {...props} />}
+        {!loading && !isEmpty && <RenderCompareScreen key={compCompareId} {...props} changes={changes} />}
       </div>
     </ComponentCompareContext.Provider>
   );
@@ -112,12 +155,13 @@ export function ComponentCompare(props: ComponentCompareProps) {
 
 function RenderCompareScreen(props: ComponentCompareProps) {
   const { routes, state } = props;
+  const showVersionPicker = state?.versionPicker?.element !== null;
 
   return (
     <>
-      <div className={styles.top}>
-        {(!state?.versionPicker && <ComponentCompareVersionPicker />) || state?.versionPicker?.element}
-      </div>
+      {showVersionPicker && (
+        <div className={styles.top}>{state?.versionPicker?.element || <ComponentCompareVersionPicker />}</div>
+      )}
       <div className={styles.bottom}>
         <CompareMenuNav {...props} />
         {(extractLazyLoadedData(routes) || []).length > 0 && (
@@ -129,29 +173,55 @@ function RenderCompareScreen(props: ComponentCompareProps) {
   );
 }
 
-function CompareMenuNav({ tabs, state, hooks }: ComponentCompareProps) {
-  const sortedTabs = (extractLazyLoadedData(tabs) || []).sort(sortTabs);
-
+function CompareMenuNav({ tabs, state, hooks, changes: changed }: ComponentCompareProps) {
   const activeTab = state?.tabs?.id;
   const isControlled = state?.tabs?.controlled;
+  const _tabs = extractLazyLoadedData(tabs) || [];
+
+  const extractedTabs: [string, NavPlugin & TabItem][] = useMemo(
+    () =>
+      _tabs.sort(sortTabs).map((tab, index) => {
+        const isActive = !state ? undefined : !!activeTab && !!tab?.id && activeTab === tab.id;
+        const changeTypeCss = deriveChangeTypeCssForNav(tab, changed);
+        const loading = changed === undefined;
+        const key = `${tab.id}-tab-${changeTypeCss}`;
+        return [
+          tab.id || `tab-${index}`,
+          {
+            ...tab,
+            props: {
+              ...(tab.props || {}),
+              key,
+              displayName: (!loading && tab.displayName) || undefined,
+              active: isActive,
+              onClick: onNavClicked({ id: tab.id, hooks }),
+              href: (!isControlled && tab.props?.href) || undefined,
+              activeClassName: (!loading && styles.activeNav) || styles.loadingNav,
+              className: styles.navItem,
+              children: (
+                <CompareMenuTab key={key} loading={loading} changeTypeCss={changeTypeCss} changed={changed}>
+                  {tab.props?.children}
+                </CompareMenuTab>
+              ),
+            },
+          },
+        ];
+      }),
+    [_tabs.length, activeTab, changed?.length]
+  );
+
+  const sortedTabs = useMemo(
+    () => extractedTabs.filter(([, tab]) => !tab.widget),
+    [extractedTabs.length, activeTab, changed?.length]
+  );
+  const sortedWidgets = useMemo(
+    () => extractedTabs.filter(([, tab]) => tab.widget),
+    [extractedTabs.length, activeTab, changed?.length]
+  );
 
   return (
     <div className={styles.navContainer}>
-      <nav className={styles.navigation}>
-        {sortedTabs.map((tabItem, index) => {
-          const isActive = !state ? undefined : !!activeTab && !!tabItem.id && activeTab === tabItem.id;
-
-          return (
-            <TopBarNav
-              {...(tabItem.props || {})}
-              key={`compare-menu-nav-${index}-${tabItem.id}`}
-              active={isActive}
-              onClick={onNavClicked({ id: tabItem.id, hooks })}
-              href={(!isControlled && tabItem.props?.href) || undefined}
-            />
-          );
-        })}
-      </nav>
+      <CollapsibleMenuNav navPlugins={sortedTabs} widgetPlugins={sortedWidgets} />
     </div>
   );
 }
@@ -159,4 +229,93 @@ function CompareMenuNav({ tabs, state, hooks }: ComponentCompareProps) {
 function onNavClicked({ hooks, id }: { hooks?: ComponentCompareHooks; id?: string }) {
   if (!hooks?.tabs?.onClick) return undefined;
   return (e) => hooks?.tabs?.onClick?.(id, e);
+}
+
+function CompareLoader({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={className} {...rest}>
+      <BlockSkeleton className={styles.navLoader} lines={3} />
+      <div className={styles.compareLoader}>
+        <div className={styles.compareViewLoader}>
+          <BlockSkeleton lines={30} />
+        </div>
+        <div className={styles.compareSidebarLoader}>
+          <BlockSkeleton lines={30} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TabLoader() {
+  return <WordSkeleton className={styles.tabLoader} length={5} />;
+}
+
+function deriveChangeType(
+  baseId?: ComponentID,
+  compareId?: ComponentID,
+  fileCompareDataByName?: Map<string, FileCompareResult> | null,
+  fieldCompareDataByName?: Map<string, FieldCompareResult> | null
+): ChangeType[] | undefined | null {
+  if (!baseId && !compareId) return null;
+  if (!baseId?.version) return [ChangeType.NEW];
+
+  if (fileCompareDataByName === null || fieldCompareDataByName === null) return null;
+  if (fileCompareDataByName === undefined || fieldCompareDataByName === undefined) return undefined;
+
+  if (
+    fieldCompareDataByName.size === 0 &&
+    (fileCompareDataByName.size === 0 || [...fileCompareDataByName.values()].every((f) => f.status === 'UNCHANGED'))
+  ) {
+    return [ChangeType.NONE];
+  }
+
+  const changed: ChangeType[] = [];
+  const DEPS_FIELD = ['dependencies', 'devDependencies', 'extensionDependencies'];
+
+  if (fileCompareDataByName.size > 0 && [...fileCompareDataByName.values()].some((f) => f.status !== 'UNCHANGED')) {
+    changed.push(ChangeType.SOURCE_CODE);
+  }
+
+  if (fieldCompareDataByName.size > 0) {
+    changed.push(ChangeType.ASPECTS);
+  }
+
+  if ([...fieldCompareDataByName.values()].some((field) => DEPS_FIELD.includes(field.fieldName))) {
+    changed.push(ChangeType.DEPENDENCY);
+  }
+
+  return changed;
+}
+function deriveChangeTypeCssForNav(tab: TabItem, changed: ChangeType[] | null | undefined): string | null {
+  if (!changed || !tab.changeType) return null;
+  const hasChanged = changed.some((change) => tab.changeType === change);
+  return hasChanged ? styles.hasChanged : null;
+}
+
+function CompareMenuTab({
+  children,
+  changed,
+  changeTypeCss,
+  loading,
+  className,
+  ...rest
+}: HTMLAttributes<HTMLDivElement> & {
+  changeTypeCss?: string | null;
+  loading?: boolean;
+  changed?: ChangeType[] | null;
+}) {
+  const hasChanged = useMemo(
+    () => changed?.some((change) => change !== ChangeType.NONE && change !== ChangeType.NEW),
+    [changeTypeCss]
+  );
+
+  if (loading) return <TabLoader />;
+
+  return (
+    <div {...rest} className={classnames(styles.compareMenuTab, className)}>
+      {changeTypeCss && hasChanged && <div className={classnames(styles.indicator, changeTypeCss)}></div>}
+      <div className={classnames(styles.menuTab)}>{children}</div>
+    </div>
+  );
 }

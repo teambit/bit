@@ -1,5 +1,4 @@
 import mapSeries from 'p-map-series';
-import fs from 'fs-extra';
 import fetch from 'node-fetch';
 import R from 'ramda';
 import { isEmpty } from 'lodash';
@@ -13,7 +12,7 @@ import {
   CFG_USER_EMAIL_KEY,
   CFG_USER_NAME_KEY,
   CFG_USER_TOKEN_KEY,
-  BASE_CLOUD_DOMAIN,
+  getCloudDomain,
   Extensions,
 } from '@teambit/legacy/dist/constants';
 import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
@@ -364,15 +363,19 @@ async function removeMergeConfigFromComponents(
   if (!workspace || !unmergedComps.length) {
     return;
   }
-  await Promise.all(
-    unmergedComps.map(async (compId) => {
-      const isNowSnapped = components.find((c) => c.id.isEqualWithoutVersion(compId._legacy));
-      if (isNowSnapped) {
-        const mergeConfigPath = workspace.getConfigMergeFilePath(compId);
-        await fs.remove(mergeConfigPath);
-      }
-    })
-  );
+  const configMergeFile = workspace.getConflictMergeFile();
+
+  unmergedComps.forEach((compId) => {
+    const isNowSnapped = components.find((c) => c.id.isEqualWithoutVersion(compId._legacy));
+    if (isNowSnapped) {
+      configMergeFile.removeConflict(compId.toStringWithoutVersion());
+    }
+  });
+  if (configMergeFile.hasConflict()) {
+    await configMergeFile.write();
+  } else {
+    await configMergeFile.delete();
+  }
 }
 
 async function addComponentsToScope(
@@ -445,7 +448,7 @@ async function getBitCloudUsername(): Promise<string | undefined> {
   const token = await globalConfig.get(CFG_USER_TOKEN_KEY);
   if (!token) return '';
   try {
-    const res = await fetch(`https://api.${BASE_CLOUD_DOMAIN}/user`, {
+    const res = await fetch(`https://api.${getCloudDomain()}/user`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',

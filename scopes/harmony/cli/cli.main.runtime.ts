@@ -118,7 +118,7 @@ export class CLIMain {
         command.loader = true;
       }
     }
-    if (command.helpUrl && !isFullUrl(command.helpUrl)) {
+    if (command.helpUrl && !isFullUrl(command.helpUrl) && this.community) {
       command.helpUrl = `https://${this.community.getBaseDomain()}/${command.helpUrl}`;
     }
   }
@@ -139,6 +139,10 @@ export class CLIMain {
     const legacyCommands = legacyRegistry.commands;
     const legacyCommandsAdapters = legacyCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
     const cliGenerateCmd = new CliGenerateCmd(cliMain);
+    if (!community) {
+      cliMain.register(...legacyCommandsAdapters, new CompletionCmd());
+      return cliMain
+    }
     const cliCmd = new CliCmd(cliMain, community.getDocsDomain());
     const helpCmd = new HelpCmd(cliMain, community.getDocsDomain());
     cliCmd.commands.push(cliGenerateCmd);

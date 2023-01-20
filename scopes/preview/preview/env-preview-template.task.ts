@@ -192,7 +192,13 @@ export class EnvPreviewTemplateTask implements BuildTask {
   }) {
     const previewModules = await this.getPreviewModules(envDef);
     const previewEntries = previewModules.map(({ name, path, ...rest }) => {
-      const linkFile = this.preview.writeLink(name, ComponentMap.create([]), path, workDir, splitComponentBundle);
+      const linkFile = this.preview.writeLink(
+        name,
+        ComponentMap.create([]),
+        { default: path },
+        workDir,
+        splitComponentBundle
+      );
 
       return { name, path, ...rest, entry: linkFile };
     });
@@ -239,7 +245,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
           if (!def.renderTemplatePathByEnv) return undefined;
           return {
             name: def.prefix,
-            path: await def.renderTemplatePathByEnv(envDef.env),
+            path: await def.renderTemplatePathByEnv(envDef.env) || '',
             include: def.include,
           };
         })

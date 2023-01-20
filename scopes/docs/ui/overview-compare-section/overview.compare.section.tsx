@@ -1,18 +1,22 @@
 import { Section } from '@teambit/component';
 import { DocsUI } from '@teambit/docs';
+import { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 
-export class OverviewCompareSection implements Section {
+export class OverviewCompareSection implements Section, TabItem {
   constructor(private docs: DocsUI) {}
 
   navigationLink = {
-    href: '.',
-    children: 'Overview',
-    exact: true,
-    order: 0,
+    href: 'docs',
+    children: 'Docs',
   };
 
+  props = this.navigationLink;
+
   route = {
-    path: '*',
+    path: 'docs/*',
     element: this.docs.getDocsCompare(),
   };
+
+  order = 40;
+  id = 'docs';
 }
