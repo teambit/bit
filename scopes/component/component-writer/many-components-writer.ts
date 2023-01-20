@@ -20,6 +20,7 @@ import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { moveExistingComponent } from '@teambit/legacy/dist/consumer/component-ops/move-components';
 import { InstallMain } from '@teambit/install';
+import { CompilerMain } from '@teambit/compiler';
 import ComponentWriter, { ComponentWriterProps } from './component-writer';
 
 export interface ManyComponentsWriterParams {
@@ -49,7 +50,7 @@ export class ManyComponentsWriter {
   basePath?: string;
   resetConfig?: boolean;
 
-  constructor(private installer: InstallMain, params: ManyComponentsWriterParams) {
+  constructor(private installer: InstallMain, private compiler: CompilerMain, params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
     this.componentsWithDependencies = params.componentsWithDependencies;
     this.writeToPath = params.writeToPath;
@@ -68,6 +69,7 @@ export class ManyComponentsWriter {
   async writeAll() {
     await this._writeComponentsAndDependencies();
     await this._installPackages();
+    await this.compile();
     logger.debug('ManyComponentsWriter, Done!');
   }
   async _writeComponentsAndDependencies() {
@@ -76,7 +78,7 @@ export class ManyComponentsWriter {
     this._moveComponentsIfNeeded();
     await this._persistComponentsData();
   }
-  async _installPackages() {
+  private async _installPackages() {
     logger.debug('ManyComponentsWriter, _installPackages');
     if (!this.installNpmPackages) {
       return;
@@ -89,9 +91,19 @@ export class ManyComponentsWriter {
       };
       await this.installer.install(undefined, installOpts);
     } catch (err: any) {
-      logger.error('_installPackagesIfNeeded, external package-installer found an error', err);
+      logger.error('_installPackagesIfNeeded, package-installer found an error', err);
       throw new BitError(`failed installing the packages, consider running the command with "--skip-dependency-installation" flag.
 error from the package-manager: ${err.message}.
+please use the '--log=error' flag for the full error.`);
+    }
+  }
+  private async compile() {
+    try {
+      await this.compiler.compileOnWorkspace();
+    } catch (err: any) {
+      logger.error('compile, compiler found an error', err);
+      throw new BitError(`failed compiling the components. please run "bit compile" once the issue is fixed
+error from the compiler: ${err.message}.
 please use the '--log=error' flag for the full error.`);
     }
   }

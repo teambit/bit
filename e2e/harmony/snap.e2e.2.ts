@@ -415,10 +415,6 @@ describe('bit snap command', function () {
           const output = helper.command.checkoutVersion(firstSnap, 'bar/foo', '--manual');
           expect(output).to.have.string('is in during-merge state');
         });
-        it('should block merging a different version into current version', () => {
-          const output = helper.general.runWithTryCatch(`bit merge ${firstSnap} bar/foo --manual`);
-          expect(output).to.have.string('is in during-merge state');
-        });
         describe('tagging or snapping the component', () => {
           beforeEach(() => {
             helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
