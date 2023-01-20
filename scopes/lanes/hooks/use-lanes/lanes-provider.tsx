@@ -12,6 +12,7 @@ export type LanesProviderProps = {
   children: ReactNode;
   viewedLaneId?: LaneId;
   targetLanes?: LanesModel;
+  skipNetworkCall?: boolean;
   ignoreDerivingFromUrl?: IgnoreDerivingFromUrl[];
 };
 
@@ -20,8 +21,10 @@ export function LanesProvider({
   viewedLaneId: viewedIdFromProps,
   targetLanes,
   ignoreDerivingFromUrl: ignoreDerivingFromUrlFromProps,
+  skipNetworkCall,
 }: LanesProviderProps) {
-  const { lanesModel, loading } = useLanes(targetLanes);
+  const { lanesModel, loading } = useLanes(targetLanes, skipNetworkCall);
+ 
   const [lanesState, setLanesState] = useState<LanesModel | undefined>(lanesModel);
   const [viewedLaneId, setViewedLaneId] = useState<LaneId | undefined>(viewedIdFromProps);
 
