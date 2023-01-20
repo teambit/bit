@@ -1,13 +1,13 @@
 import fetch from 'node-fetch';
 
-import { BASE_CLOUD_DOMAIN } from '../src/constants';
+import { getCloudDomain } from '../src/constants';
 
-// const apiBaseUrl = process.env.NODE_ENV === 'production' ? `https://api.${BASE_CLOUD_DOMAIN}` : `https://api-stg.${BASE_CLOUD_DOMAIN}`;
+// const apiBaseUrl = process.env.NODE_ENV === 'production' ? `https://api.${getCloudDomain()}` : `https://api-stg.${getCloudDomain()}`;
 const skipBitDevTests = process.env.SKIP_BIT_DEV_TESTS === 'True' || process.env.SKIP_BIT_DEV_TESTS === 'true';
 const supportTestingOnBitsrc = !skipBitDevTests;
 // const supportTestingOnBitsrc = true;
 const apiBaseUrl =
-  process.env.BITSRC_ENV === 'stg' ? `https://api-stg.${BASE_CLOUD_DOMAIN}` : `https://api.${BASE_CLOUD_DOMAIN}`;
+  process.env.BITSRC_ENV === 'stg' ? `https://api-stg.${getCloudDomain()}` : `https://api.${getCloudDomain()}`;
 const username = process.env.testerBitsrcUsername || 'tester';
 const password = process.env.testerBitsrcPassword;
 
