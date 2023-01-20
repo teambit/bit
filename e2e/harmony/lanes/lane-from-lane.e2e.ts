@@ -70,7 +70,7 @@ describe('bit lane command', function () {
       // doesn't belong to lane-a and should not appear as staged when on lane-a.
       it('bit status should not show neither lane-b nor main components as staged', () => {
         const staged = helper.command.getStagedIdsFromStatus();
-        expect(staged).to.deep.equal(['utils/is-string']);
+        expect(staged).to.have.lengthOf(0);
         const status = helper.command.status();
         expect(status).to.not.have.string('bar/foo');
       });
@@ -91,7 +91,7 @@ describe('bit lane command', function () {
       });
       it('bit status should show only main components as staged', () => {
         const staged = helper.command.getStagedIdsFromStatus();
-        expect(staged).to.deep.equal(['utils/is-type']);
+        expect(staged).to.have.lengthOf(0);
         const status = helper.command.status();
         expect(status).to.not.have.string('bar/foo');
         expect(status).to.not.have.string('utils/is-string');
@@ -109,7 +109,7 @@ describe('bit lane command', function () {
       });
       it('bit status should show only main components as staged', () => {
         const staged = helper.command.getStagedIdsFromStatus();
-        expect(staged).to.deep.equal(['utils/is-type']);
+        expect(staged).to.have.lengthOf(0);
         const status = helper.command.status();
         expect(status).to.not.have.string('bar/foo');
         expect(status).to.not.have.string('utils/is-string');

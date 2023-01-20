@@ -94,6 +94,8 @@ describe('LanesAspect', function () {
       await mockComponents(workspacePath);
       snapping = await loadAspect(SnappingAspect, workspacePath);
       await snapping.tag({ ids: ['comp1'], build: false });
+      const exporter: ExportMain = await loadAspect(ExportAspect, workspacePath);
+      await exporter.export();
       lanes = await loadAspect(LanesAspect, workspacePath);
       await lanes.createLane('stage');
       const result = await snapping.snap({ pattern: 'comp1', build: false, unmodified: true });

@@ -178,6 +178,7 @@ describe('merge lanes', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
+      helper.command.export();
       helper.command.createLane('dev');
       helper.fixtures.populateComponents(1, undefined, 'v2');
       helper.command.snapAllComponentsWithoutBuild();
@@ -227,6 +228,7 @@ describe('merge lanes', function () {
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       headOnMain = helper.command.getHead('comp1');
+      helper.command.export();
       helper.command.createLane('dev');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
