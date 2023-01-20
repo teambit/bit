@@ -363,6 +363,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-version"
     },
+    "component-writer": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-writer"
+    },
     "composition-card": {
         "scope": "teambit.compositions",
         "version": "0.0.9",

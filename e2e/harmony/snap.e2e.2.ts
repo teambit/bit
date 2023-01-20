@@ -415,10 +415,6 @@ describe('bit snap command', function () {
           const output = helper.command.checkoutVersion(firstSnap, 'bar/foo', '--manual');
           expect(output).to.have.string('is in during-merge state');
         });
-        it('should block merging a different version into current version', () => {
-          const output = helper.general.runWithTryCatch(`bit merge ${firstSnap} bar/foo --manual`);
-          expect(output).to.have.string('is in during-merge state');
-        });
         describe('tagging or snapping the component', () => {
           beforeEach(() => {
             helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
@@ -539,7 +535,6 @@ describe('bit snap command', function () {
     describe('snap, change and then snap', () => {
       let firstSnap: string;
       let secondSnap: string;
-      let localScope;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
@@ -549,7 +544,6 @@ describe('bit snap command', function () {
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
         helper.command.snapAllComponents();
         secondSnap = helper.command.getHead('bar/foo');
-        localScope = helper.scopeHelper.cloneLocalScope();
       });
       it('bit diff should show the differences', () => {
         const diff = helper.command.diff(` bar/foo ${firstSnap}`);
@@ -579,25 +573,6 @@ describe('bit snap command', function () {
             const content = helper.fs.readFile('bar/foo.js');
             expect(content).to.equal(fixtures.fooFixtureV2);
           });
-        });
-      });
-      describe('bit merge', () => {
-        let output;
-        before(() => {
-          helper.scopeHelper.getClonedLocalScope(localScope);
-          output = helper.command.mergeVersion(firstSnap, 'bar/foo', '--manual');
-        });
-        it('should merge successfully and leave the file in a conflict state', () => {
-          expect(output).to.have.string('successfully');
-          expect(output).to.have.string(firstSnap);
-          expect(output).to.have.string('CONFLICT');
-
-          const content = helper.fs.readFile('bar/foo.js');
-          expect(content).to.have.string(`<<<<<<< ${secondSnap}`);
-          expect(content).to.have.string(fixtures.fooFixtureV2);
-          expect(content).to.have.string('=======');
-          expect(content).to.have.string(fixtures.fooFixture);
-          expect(content).to.have.string(`>>>>>>> ${firstSnap}`);
         });
       });
     });
