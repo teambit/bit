@@ -14,14 +14,12 @@ import { MergingMain } from './merging.main.runtime';
 import { ConfigMergeResult } from './config-merge-result';
 
 export class MergeCmd implements Command {
-  name = 'merge [values...]';
-  description = 'merge changes of different component versions';
+  name = 'merge [ids...]';
+  description = 'merge changes of the remote head into local';
   helpUrl = 'docs/components/merging-changes';
   group = 'development';
-  extendedDescription = `merge changes of different component versions
-  \`bit merge <version> [ids...]\` => merge changes of the given version into the checked out version
-  \`bit merge [ids...]\` => EXPERIMENTAL. merge changes of the remote head into local, optionally use '--abort' or '--resolve'
-  ${WILDCARD_HELP('merge 0.0.1')}`;
+  extendedDescription = `merge changes of the remote head into local, optionally use '--abort' or '--resolve
+${WILDCARD_HELP('merge')}`;
   alias = '';
   options = [
     ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
@@ -40,7 +38,7 @@ export class MergeCmd implements Command {
   constructor(private merging: MergingMain) {}
 
   async report(
-    [values = []]: [string[]],
+    [ids = []]: [string[]],
     {
       ours = false,
       theirs = false,
@@ -78,7 +76,7 @@ export class MergeCmd implements Command {
       mergeSnapResults,
       mergeSnapError,
     }: ApplyVersionResults = await this.merging.merge(
-      values,
+      ids,
       mergeStrategy as any,
       abort,
       resolve,

@@ -1,17 +1,17 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-import { BitIds } from '../../bit-id';
-import ShowDoctorError from '../../error/show-doctor-error';
-import logger from '../../logger/logger';
-import { Scope } from '../../scope';
-import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
-import { PathLinuxRelative, pathNormalizeToLinux } from '../../utils/path';
-import BitMap from '../bit-map/bit-map';
-import ComponentMap from '../bit-map/component-map';
-import Component from '../component/consumer-component';
-import DataToPersist from '../component/sources/data-to-persist';
-import RemovePath from '../component/sources/remove-path';
-import Consumer from '../consumer';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
+import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { Scope } from '@teambit/legacy/dist/scope';
+import getNodeModulesPathOfComponent from '@teambit/legacy/dist/utils/bit/component-node-modules-path';
+import { PathLinuxRelative, pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
+import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
 
 export type ComponentWriterProps = {
   component: Component;
