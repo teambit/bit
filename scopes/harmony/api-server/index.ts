@@ -1,5 +1,5 @@
-import { BitServerAspect } from './bit-server.aspect';
+import { ApiServerAspect } from './api-server.aspect';
 
-export type { BitServerMain } from './bit-server.main.runtime';
-export default BitServerAspect;
-export { BitServerAspect };
+export type { ApiServerMain } from './api-server.main.runtime';
+export default ApiServerAspect;
+export { ApiServerAspect };

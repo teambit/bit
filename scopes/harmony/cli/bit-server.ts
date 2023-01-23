@@ -2,7 +2,7 @@ import { Logger } from '@teambit/logger';
 import express from 'express';
 import { CLIMain } from './cli.main.runtime';
 
-export async function runBitServer(cli: CLIMain, logger: Logger, options: { port: number }) {
+export async function runApiServer(cli: CLIMain, logger: Logger, options: { port: number }) {
   const app = express();
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   app.get('/cli/:cmd', async (req, res, next) => {
