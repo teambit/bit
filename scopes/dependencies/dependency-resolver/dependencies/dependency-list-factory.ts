@@ -48,7 +48,6 @@ export class DependencyListFactory {
    */
   private async getMissingDependenciesByComponentFromModel(legacyComponent: LegacyComponent): Promise<DependencyList> {
     const missingPackages: string[] = flatten(
-      // Object.values(legacyComponent.issues?.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data || {})
       // Use getIssueByName to prevent issues when getting different instances while using both bit from bvm and from the repo
       Object.values(legacyComponent.issues?.getIssueByName('MissingPackagesDependenciesOnFs')?.data || {})
     );
