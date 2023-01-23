@@ -29,14 +29,15 @@ export interface ManyComponentsWriterParams {
 }
 
 export class ComponentWriterMain {
-  consumer: Consumer;
   constructor(
     private installer: InstallMain,
     private compiler: CompilerMain,
     private workspace: Workspace,
     private logger: Logger
-  ) {
-    this.consumer = this.workspace.consumer;
+  ) {}
+
+  get consumer(): Consumer {
+    return this.workspace.consumer;
   }
 
   async writeMany(opts: ManyComponentsWriterParams) {
