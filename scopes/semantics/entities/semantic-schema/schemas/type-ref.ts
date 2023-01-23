@@ -45,7 +45,7 @@ export class TypeRefSchema extends SchemaNode {
      */
     readonly packageName?: string,
 
-    readonly internal?: boolean
+    readonly internalFilePath?: string
   ) {
     super();
     this.componentId = componentId;

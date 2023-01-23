@@ -15,6 +15,7 @@ import {
   Location,
   DocSchema,
 } from '@teambit/semantics.entities.semantic-schema';
+import isRelativeImport from '@teambit/legacy/dist/utils/is-relative-import';
 import { ComponentDependency } from '@teambit/dependency-resolver';
 import { Formatter } from '@teambit/formatter';
 import pMapSeries from 'p-map-series';
@@ -208,7 +209,7 @@ export class SchemaExtractorContext {
 
         const matchesWithExtension = !!strings.find((string) => string === file.path);
 
-        const matchesIndexFile = `${filePath}/index.ts` === file.path;
+        const matchesIndexFile = ['ts', 'js'].some((format) => `${filePath}/index.${format}` === file.path);
 
         return matchesWithExtension || matchesIndexFile;
       }
@@ -462,30 +463,71 @@ export class SchemaExtractorContext {
 
     if (!parsedNodeIdentifier) return undefined;
 
-    const sourceFilePath = parsedNodeIdentifier.sourceFilePath;
-
-    if (sourceFilePath) {
-      const pkgName = this.parsePackageNameFromPath(sourceFilePath);
-      const compIdByPkg = this.getCompIdByPkgName(pkgName);
-
-      const compIdByPath = await this.extractor.getComponentIDByPath(sourceFilePath);
-
-      if (compIdByPath) {
-        return new TypeRefSchema(location, typeStr, compIdByPath);
-      }
-
-      if (compIdByPkg) {
-        return new TypeRefSchema(location, typeStr, compIdByPkg);
-      }
-    }
-
     const internalRef = !isExportedFromMain;
 
     if (internalRef) {
       this.setInternalIdentifiers(filePath, new IdentifierList([parsedNodeIdentifier]));
     }
 
-    return new TypeRefSchema(location, typeStr, undefined, undefined, internalRef);
+    return this.resolveTypeRef(parsedNodeIdentifier, location, isExportedFromMain);
+  }
+
+  async resolveTypeRef(
+    identifier: Identifier,
+    location: Location,
+    isExportedFromMain?: boolean
+  ): Promise<TypeRefSchema> {
+    const sourceFilePath = identifier.sourceFilePath;
+
+    if (!sourceFilePath || isExportedFromMain) {
+      return new TypeRefSchema(
+        location,
+        identifier.id,
+        undefined,
+        undefined,
+        !isExportedFromMain ? this.getPathRelativeToComponent(identifier.filePath) : undefined
+      );
+    }
+
+    if (!isRelativeImport(sourceFilePath)) {
+      const pkgName = this.parsePackageNameFromPath(sourceFilePath);
+      const compIdByPkg = this.getCompIdByPkgName(pkgName);
+
+      const compIdByPath = await this.extractor.getComponentIDByPath(sourceFilePath);
+
+      if (compIdByPath) {
+        return new TypeRefSchema(location, identifier.id, compIdByPath);
+      }
+
+      if (compIdByPkg) {
+        return new TypeRefSchema(location, identifier.id, compIdByPkg);
+      }
+
+      // package without comp id
+      return new TypeRefSchema(location, identifier.id, undefined, pkgName);
+    }
+
+    const relativeDir = identifier.filePath.substring(0, identifier.filePath.lastIndexOf('/'));
+    const absFilePath = resolve(relativeDir, sourceFilePath);
+    const compFilePath = this.findFileInComponent(absFilePath);
+
+    if (!compFilePath) {
+      // @todo handle this better
+      throw new Error(
+        `cannot find file in component \n absolute path:  ${absFilePath}\n source file path ${sourceFilePath}\n identifier file path ${identifier.filePath} \n relative dir ${relativeDir}`
+      );
+    }
+
+    const idKey = this.getIdentifierKey(compFilePath?.path);
+
+    // if re exported from a file, recurse until definition
+    const exportedIdentifier = (this.identifiers.get(idKey)?.identifiers || []).find((i) => i.id === identifier.id);
+
+    if (exportedIdentifier) {
+      return this.resolveTypeRef(exportedIdentifier, location, isExportedFromMain);
+    }
+
+    return new TypeRefSchema(location, identifier.id);
   }
 
   async getTypeRefForExternalNode(node: Node): Promise<TypeRefSchema> {

@@ -223,13 +223,14 @@
                   "signature": "(property) children: ReactNode",
                   "isOptional": false,
                   "type": {
-                    "__schema": "InferenceTypeSchema",
+                    "__schema": "TypeRefSchema",
                     "location": {
                       "filePath": "button.tsx",
                       "line": 13,
-                      "character": 13
+                      "character": 3
                     },
-                    "name": "ReactNode"
+                    "name": "ReactNode",
+                    "packageName": "react"
                   },
                   "doc": {
                     "__schema": "DocSchema",
@@ -346,7 +347,7 @@
                 "character": 31
               },
               "name": "ButtonProps",
-              "internal": true
+              "internalFilePath": "button.tsx"
             }
           }
         ],
@@ -783,7 +784,7 @@
                 "character": 3
               },
               "name": "Foo",
-              "internal": true
+              "internalFilePath": "index.ts"
             }
           },
           {
@@ -989,7 +990,7 @@
               "character": 25
             },
             "name": "obj",
-            "internal": true
+            "internalFilePath": "index.ts"
           }
         }
       },
@@ -1026,7 +1027,7 @@
                 "character": 41
               },
               "name": "obj",
-              "internal": true
+              "internalFilePath": "index.ts"
             }
           }
         }
@@ -1059,7 +1060,7 @@
                 "character": 29
               },
               "name": "Bar",
-              "internal": true
+              "internalFilePath": "index.ts"
             }
           }
         ],
@@ -1071,7 +1072,7 @@
             "character": 14
           },
           "name": "Bar",
-          "internal": true
+          "internalFilePath": "index.ts"
         }
       },
       {
@@ -1118,8 +1119,7 @@
                     "line": 71,
                     "character": 43
                   },
-                  "name": "Function",
-                  "internal": false
+                  "name": "Function"
                 },
                 {
                   "__schema": "TypeRefSchema",
@@ -1260,7 +1260,7 @@
             "character": 31
           },
           "name": "T3",
-          "internal": true,
+          "internalFilePath": "index.ts",
           "typeArgs": [
             {
               "__schema": "TypeRefSchema",
@@ -1270,7 +1270,7 @@
                 "character": 34
               },
               "name": "T1",
-              "internal": true
+              "internalFilePath": "index.ts"
             },
             {
               "__schema": "TypeRefSchema",
@@ -1280,7 +1280,7 @@
                 "character": 38
               },
               "name": "T2",
-              "internal": true
+              "internalFilePath": "index.ts"
             }
           ]
         }
@@ -1324,7 +1324,7 @@
                     "character": 34
                   },
                   "name": "T1",
-                  "internal": true
+                  "internalFilePath": "index.ts"
                 },
                 {
                   "__schema": "TypeRefSchema",
@@ -1334,7 +1334,7 @@
                     "character": 39
                   },
                   "name": "T2",
-                  "internal": true
+                  "internalFilePath": "index.ts"
                 }
               ]
             }
@@ -1602,7 +1602,7 @@
               "character": 33
             },
             "name": "config",
-            "internal": true
+            "internalFilePath": "index.ts"
           },
           "indexType": {
             "__schema": "LiteralTypeSchema",
@@ -1715,7 +1715,7 @@
                   "character": 44
                 },
                 "name": "World1",
-                "internal": true
+                "internalFilePath": "index.ts"
               }
             },
             {
@@ -1734,7 +1734,7 @@
                   "character": 57
                 },
                 "name": "World2",
-                "internal": true
+                "internalFilePath": "index.ts"
               }
             }
           ]
@@ -2039,7 +2039,7 @@
                 "character": 3
               },
               "name": "Foo",
-              "internal": true
+              "internalFilePath": "index.ts"
             }
           },
           {
@@ -2448,13 +2448,14 @@
                     "signature": "(property) children: ReactNode",
                     "isOptional": false,
                     "type": {
-                      "__schema": "InferenceTypeSchema",
+                      "__schema": "TypeRefSchema",
                       "location": {
                         "filePath": "button.tsx",
                         "line": 13,
-                        "character": 13
+                        "character": 3
                       },
-                      "name": "ReactNode"
+                      "name": "ReactNode",
+                      "packageName": "react"
                     },
                     "doc": {
                       "__schema": "DocSchema",
@@ -2571,7 +2572,7 @@
                   "character": 31
                 },
                 "name": "ButtonProps",
-                "internal": true
+                "internalFilePath": "button.tsx"
               }
             }
           ],

@@ -1,6 +1,5 @@
 import { ImportDeclaration, Node, SyntaxKind } from 'typescript';
 import { UnImplementedSchema } from '@teambit/semantics.entities.semantic-schema';
-import isRelativeImport from '@teambit/legacy/dist/utils/is-relative-import';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { Identifier } from '../identifier';
@@ -16,10 +15,6 @@ export class ImportDeclarationTransformer implements SchemaTransformer {
     const sourceFile = importDec.getSourceFile().fileName;
     const rawSourceFilePath = importDec.moduleSpecifier.getText();
     const sourceFilePath = rawSourceFilePath.substring(1, rawSourceFilePath.length - 1);
-
-    if (isRelativeImport(sourceFilePath)) {
-      return [];
-    }
 
     // import A from 'a'
     if (!importDec.importClause.namedBindings) {
