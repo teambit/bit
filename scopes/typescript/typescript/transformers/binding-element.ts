@@ -2,8 +2,8 @@ import ts, { BindingElement, Node } from 'typescript';
 import { VariableLikeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
 import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
+import { Identifier } from '../identifier';
 
 /**
  * for example:
@@ -18,7 +18,7 @@ export class BindingElementTransformer implements SchemaTransformer {
   }
 
   async getIdentifiers(node: BindingElement) {
-    return [new ExportIdentifier(node.name.getText(), node.getSourceFile().fileName)];
+    return [new Identifier(node.name.getText(), node.getSourceFile().fileName)];
   }
 
   async transform(node: BindingElement, context: SchemaExtractorContext) {
