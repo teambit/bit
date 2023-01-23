@@ -1,13 +1,9 @@
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
 import { Command, CommandOptions } from '@teambit/cli';
+import { ApplyVersionResults, applyVersionReport, conflictSummaryReport } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
-import {
-  ApplyVersionResults,
-  getMergeStrategy,
-  applyVersionReport,
-  conflictSummaryReport,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
 
 export class CheckoutCmd implements Command {
