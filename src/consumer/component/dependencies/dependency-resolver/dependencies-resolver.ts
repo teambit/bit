@@ -1281,7 +1281,14 @@ either, use the ignore file syntax or change the require statement to have a mod
         // delete this.allPackagesDependencies.packageDependencies[pkgName];
         // delete this.allPackagesDependencies.devPackageDependencies[pkgName];
         // delete this.allPackagesDependencies.peerPackageDependencies[pkgName];
-        if (pkgVal !== MANUALLY_REMOVE_DEPENDENCY) {
+
+        // If it is exists in comps deps / comp dev deps, we don't want to add it to the allPackagesDependencies
+        // as it will make the same dep both a dev and runtime dep
+        // since we are here only for auto detected deps, it means we already resolved the version correctl
+        // so we don't need to really modify the version
+        // also the version here might have a range (^ or ~ for example) so we can't
+        // just put it as is, as it is not valid for component deps to have range
+        if (pkgVal !== MANUALLY_REMOVE_DEPENDENCY && !existsInCompsDeps && !existsInCompsDevDeps) {
           this.allPackagesDependencies[key][pkgName] = pkgVal;
         }
       }, autoDetectOverrides[field]);

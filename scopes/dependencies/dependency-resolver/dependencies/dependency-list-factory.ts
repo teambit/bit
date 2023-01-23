@@ -1,7 +1,6 @@
 import mapSeries from 'p-map-series';
 import { get, flatten } from 'lodash';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
-import { IssuesClasses } from '@teambit/component-issues';
 import { DependencyFactory } from './dependency-factory';
 import { SerializedDependency } from './dependency';
 import { DependencyList } from './dependency-list';
@@ -49,7 +48,9 @@ export class DependencyListFactory {
    */
   private async getMissingDependenciesByComponentFromModel(legacyComponent: LegacyComponent): Promise<DependencyList> {
     const missingPackages: string[] = flatten(
-      Object.values(legacyComponent.issues?.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data || {})
+      // Object.values(legacyComponent.issues?.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data || {})
+      // Use getIssueByName to prevent issues when getting different instances while using both bit from bvm and from the repo
+      Object.values(legacyComponent.issues?.getIssueByName('MissingPackagesDependenciesOnFs')?.data || {})
     );
     const componentFromModel = legacyComponent.componentFromModel;
     if (!missingPackages || !missingPackages.length || !componentFromModel) {
