@@ -101,7 +101,7 @@ class ReviewManager implements IReviewManager {
     }
   }
 
-  private handleMouseUp() {
+  private handleMouseUp(ev: monacoEditor.editor.IEditorMouseEvent) {
     if (this.verbose) {
       // eslint-disable-next-line no-console
       console.log('🚀 ~ file: review-manager.ts:324 ~ ReviewManager ~ handleMouseUp ~ handleMouseUp \n');
@@ -117,7 +117,7 @@ class ReviewManager implements IReviewManager {
       lineNumber: this.currentLine,
       selection: this.currentSelection,
     });
-    this.lastEvent && this.onChange({ type: this.lastEvent, comments });
+    this.lastEvent && this.onChange({ type: this.lastEvent, comments, event: ev.event });
   }
 
   private handleMouseDown(ev: monacoEditor.editor.IEditorMouseEvent) {

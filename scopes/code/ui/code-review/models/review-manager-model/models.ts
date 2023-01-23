@@ -33,6 +33,7 @@ export enum ReviewManagerEventType {
   SelectionEvent = 'Select',
 }
 export type ReviewEvent = {
+  event: monacoEditor.IMouseEvent;
   type: ReviewManagerEventType;
   comments: ReviewComment[];
 };
