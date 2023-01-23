@@ -11,21 +11,38 @@ import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
 
-export class ExportDeclaration implements SchemaTransformer {
+export class ExportDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === SyntaxKind.ExportDeclaration;
   }
 
   async getIdentifiers(exportDec: ExportDeclarationNode, context: SchemaExtractorContext) {
+    // e.g. `export { button1, button2 } as Composition from './button';
+    const rawSourceFilePath = exportDec.moduleSpecifier?.getText();
+
+    // strip off quotes ''
+    const sourceFilePath = rawSourceFilePath && rawSourceFilePath.substring(1, rawSourceFilePath?.length - 1);
+
     if (exportDec.exportClause?.kind === ts.SyntaxKind.NamedExports) {
-      exportDec.exportClause as NamedExports;
       return exportDec.exportClause.elements.map((elm) => {
-        return new ExportIdentifier(elm.name.getText(), elm.getSourceFile().fileName);
+        const alias = (elm.propertyName && elm.name.getText()) || undefined;
+        const id = elm.propertyName?.getText() || elm.name.getText();
+        const fileName = elm.getSourceFile().fileName;
+
+        return new ExportIdentifier(id, fileName, alias, sourceFilePath);
       });
     }
 
+    //  e.g. `export * as Composition from './button';
     if (exportDec.exportClause?.kind === ts.SyntaxKind.NamespaceExport) {
-      return [new ExportIdentifier(exportDec.exportClause.name.getText(), exportDec.getSourceFile().fileName)];
+      return [
+        new ExportIdentifier(
+          exportDec.exportClause.name.getText(),
+          exportDec.getSourceFile().fileName,
+          undefined,
+          sourceFilePath
+        ),
+      ];
     }
 
     if (exportDec.moduleSpecifier) {
@@ -54,7 +71,7 @@ export class ExportDeclaration implements SchemaTransformer {
     // e.g. `export { button1, button2 } as Composition from './button';
     if (exportClause.kind === SyntaxKind.NamedExports) {
       const schemas = await namedExport(exportClause, context);
-      return new ModuleSchema(context.getLocation(exportDec), schemas);
+      return new ModuleSchema(context.getLocation(exportDec), schemas, []);
     }
     // e.g. `export * as Composition from './button';
     if (exportClause.kind === SyntaxKind.NamespaceExport) {
@@ -92,7 +109,7 @@ async function exportSpecifierToSchemaNode(element: ExportSpecifier, context: Sc
   const definitionNode = await context.definition(definitionInfo);
 
   if (!definitionNode) {
-    return context.getTypeRefForExternalNode(element);
+    return context.resolveType(element, element.name.getText(), false);
   }
 
   // if it is reexported from another export
