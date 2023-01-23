@@ -221,7 +221,11 @@ export class SchemaExtractorContext {
 
   private parsePackageNameFromPath(path: string) {
     const parts = path.split('node_modules');
-    if (parts.length === 1) return '';
+
+    if (parts.length === 1) {
+      return path;
+    }
+
     const lastPart = parts[parts.length - 1].replace(sep, '');
     const pkgParts = lastPart.split('/');
     if (lastPart.startsWith('@')) {
@@ -389,7 +393,7 @@ export class SchemaExtractorContext {
     const location = this.getLocation(node);
 
     // check if internal ref with typeInfo
-    const internalRef = await this.getTypeRefForInternalPath(typeStr, this.getIdentifierKeyForNode(node), location);
+    const internalRef = await this.getTypeRef(typeStr, this.getIdentifierKeyForNode(node), location);
 
     if (internalRef) return internalRef;
 
@@ -400,7 +404,6 @@ export class SchemaExtractorContext {
     }
 
     const definition = await this.getDefinition(node);
-
     if (!definition) {
       return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
@@ -422,7 +425,7 @@ export class SchemaExtractorContext {
     const definitionNodeName = definitionNode?.getText();
 
     // check if internal ref with definition info
-    const definitionInternalRef = await this.getTypeRefForInternalPath(
+    const definitionInternalRef = await this.getTypeRef(
       definitionNodeName,
       this.getIdentifierKeyForNode(definitionNode),
       location
@@ -443,11 +446,7 @@ export class SchemaExtractorContext {
     return this.componentDeps.find((dep) => dep.packageName === pkgName)?.componentId;
   }
 
-  async getTypeRefForInternalPath(
-    typeStr: string,
-    filePath: string,
-    location: Location
-  ): Promise<TypeRefSchema | undefined> {
+  async getTypeRef(typeStr: string, filePath: string, location: Location): Promise<TypeRefSchema | undefined> {
     const nodeIdentifierKey = this.getIdentifierKey(filePath);
     const mainFileIdentifierKey = this.mainFileIdentifierKey;
 
@@ -463,11 +462,30 @@ export class SchemaExtractorContext {
 
     if (!parsedNodeIdentifier) return undefined;
 
-    if (!isExportedFromMain) {
+    const sourceFilePath = parsedNodeIdentifier.sourceFilePath;
+
+    if (sourceFilePath) {
+      const pkgName = this.parsePackageNameFromPath(sourceFilePath);
+      const compIdByPkg = this.getCompIdByPkgName(pkgName);
+
+      const compIdByPath = await this.extractor.getComponentIDByPath(sourceFilePath);
+
+      if (compIdByPath) {
+        return new TypeRefSchema(location, typeStr, compIdByPath);
+      }
+
+      if (compIdByPkg) {
+        return new TypeRefSchema(location, typeStr, compIdByPkg);
+      }
+    }
+
+    const internalRef = !isExportedFromMain;
+
+    if (internalRef) {
       this.setInternalIdentifiers(filePath, new IdentifierList([parsedNodeIdentifier]));
     }
 
-    return new TypeRefSchema(location, typeStr, undefined, undefined, !isExportedFromMain);
+    return new TypeRefSchema(location, typeStr, undefined, undefined, internalRef);
   }
 
   async getTypeRefForExternalNode(node: Node): Promise<TypeRefSchema> {

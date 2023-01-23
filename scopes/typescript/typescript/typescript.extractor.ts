@@ -10,6 +10,7 @@ import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { EnvContext } from '@teambit/envs';
 import { Formatter } from '@teambit/formatter';
 import { Logger } from '@teambit/logger';
+import AspectLoaderAspect, { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
 import pMapSeries from 'p-map-series';
 import { compact, flatten } from 'lodash';
 import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
@@ -28,6 +29,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     private rootPath: string,
     private depResolver: DependencyResolverMain,
     private workspace: Workspace | undefined,
+    private aspectLoader: AspectLoaderMain,
     private logger: Logger
   ) {}
 
@@ -142,13 +144,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
 
   async computeSchema(node: Node, context: SchemaExtractorContext): Promise<SchemaNode> {
     const transformer = this.getTransformer(node, context);
-    // console.log(
-    //   '\n\n\n🚀 ~ file: typescript.extractor.ts:148 ~ TypeScriptExtractor ~ computeSchema ~ node',
-    //   node.getText(),
-    //   transformer
-    // );
-    // leave the next line commented out, it is used for debugging
-    // console.log('transformer', transformer.constructor.name, node.getText());
+
     if (!transformer) {
       return new UnImplementedSchema(context.getLocation(node), node.getText(), SyntaxKind[node.kind]);
     }
@@ -159,6 +155,13 @@ export class TypeScriptExtractor implements SchemaExtractor {
     if (!this.workspace) {
       return null;
     }
+    const coreAspectIds = this.aspectLoader.getCoreAspectIds();
+    const matchingCoreAspect = coreAspectIds.find((c) => file === getCoreAspectPackageName(c));
+
+    if (matchingCoreAspect) {
+      return this.workspace.resolveComponentId(matchingCoreAspect);
+    }
+
     return this.workspace.getComponentIdByPath(file);
   }
 
@@ -182,6 +185,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
     return (context: EnvContext) => {
       const tsconfig = getTsconfig(options.tsconfig)?.config || { compilerOptions: options.compilerOptions };
       const tsMain = context.getAspect<TypescriptMain>(TypescriptAspect.id);
+      const aspectLoaderMain = context.getAspect<AspectLoaderMain>(AspectLoaderAspect.id);
+
       // When loading the env from a scope you don't have a workspace
       const wsPath = tsMain.workspace?.path || '';
       return new TypeScriptExtractor(
@@ -191,6 +196,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
         wsPath,
         tsMain.depResolver,
         tsMain.workspace,
+        aspectLoaderMain,
         context.createLogger(options.name)
       );
     };

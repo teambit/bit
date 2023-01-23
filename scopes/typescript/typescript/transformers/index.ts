@@ -33,3 +33,4 @@ export { InterfaceDeclarationTransformer } from './interface-declaration';
 export { EnumDeclarationTransformer } from './enum-declaration';
 export { BindingElementTransformer } from './binding-element';
 export { ExportAssignmentTransformer } from './export-assignment';
+export { ImportDeclarationTransformer } from './import-declaration';

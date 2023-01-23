@@ -1,5 +1,10 @@
 export class Identifier {
-  constructor(readonly id: string, readonly filePath: string, readonly aliasId?: string) {}
+  constructor(
+    readonly id: string,
+    readonly filePath: string,
+    readonly aliasId?: string,
+    readonly sourceFilePath?: string
+  ) {}
 
   isEqual(identifier: Identifier): boolean {
     if (this.filePath !== identifier.filePath) return false;

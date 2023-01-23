@@ -18,18 +18,31 @@ export class ExportDeclarationTransformer implements SchemaTransformer {
 
   async getIdentifiers(exportDec: ExportDeclarationNode, context: SchemaExtractorContext) {
     // e.g. `export { button1, button2 } as Composition from './button';
+    const rawSourceFilePath = exportDec.moduleSpecifier?.getText();
+
+    // strip off quotes ''
+    const sourceFilePath = rawSourceFilePath && rawSourceFilePath.substring(1, rawSourceFilePath?.length - 1);
+
     if (exportDec.exportClause?.kind === ts.SyntaxKind.NamedExports) {
       return exportDec.exportClause.elements.map((elm) => {
         const alias = (elm.propertyName && elm.name.getText()) || undefined;
         const id = elm.propertyName?.getText() || elm.name.getText();
         const fileName = elm.getSourceFile().fileName;
-        return new ExportIdentifier(id, fileName, alias);
+
+        return new ExportIdentifier(id, fileName, alias, sourceFilePath);
       });
     }
 
     //  e.g. `export * as Composition from './button';
     if (exportDec.exportClause?.kind === ts.SyntaxKind.NamespaceExport) {
-      return [new ExportIdentifier(exportDec.exportClause.name.getText(), exportDec.getSourceFile().fileName)];
+      return [
+        new ExportIdentifier(
+          exportDec.exportClause.name.getText(),
+          exportDec.getSourceFile().fileName,
+          undefined,
+          sourceFilePath
+        ),
+      ];
     }
 
     if (exportDec.moduleSpecifier) {

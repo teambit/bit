@@ -23,7 +23,7 @@ export class SourceFileTransformer implements SchemaTransformer {
       })
     ).reduce<ExportIdentifier[]>((acc, current) => {
       const item = acc.find((exportIdentifier) => exportIdentifier.isEqual(current));
-      if (!item) acc.push(new ExportIdentifier(current.id, current.filePath, current.aliasId));
+      if (!item) acc.push(new ExportIdentifier(current.id, current.filePath, current.aliasId, current.sourceFilePath));
       return acc;
     }, []);
 

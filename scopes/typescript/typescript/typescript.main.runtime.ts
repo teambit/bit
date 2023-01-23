@@ -38,6 +38,7 @@ import {
   EnumDeclarationTransformer,
   BindingElementTransformer,
   ExportAssignmentTransformer,
+  ImportDeclarationTransformer,
   IntersectionTypeTransformer,
   UnionTypeTransformer,
   TypeReferenceTransformer,
@@ -90,7 +91,8 @@ export class TypescriptMain {
     readonly workspace: Workspace,
     readonly depResolver: DependencyResolverMain,
     private envs: EnvsMain,
-    private tsConfigWriter: TsconfigWriter
+    private tsConfigWriter: TsconfigWriter,
+    private aspectLoader: AspectLoaderMain
   ) {}
 
   private tsServer: TsserverClient;
@@ -207,6 +209,7 @@ export class TypescriptMain {
       path || this.workspace.path,
       this.depResolver,
       this.workspace,
+      this.aspectLoader,
       this.logger
     );
   }
@@ -314,7 +317,8 @@ export class TypescriptMain {
       Workspace,
       CLIMain,
       DependencyResolverMain,
-      EnvsMain
+      EnvsMain,
+      AspectLoaderMain
     ],
     config,
     [schemaTransformerSlot]: [SchemaTransformerSlot]
@@ -323,7 +327,15 @@ export class TypescriptMain {
     const logger = loggerExt.createLogger(TypescriptAspect.id);
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
     const tsconfigWriter = new TsconfigWriter(workspace, logger);
-    const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace, depResolver, envs, tsconfigWriter);
+    const tsMain = new TypescriptMain(
+      logger,
+      schemaTransformerSlot,
+      workspace,
+      depResolver,
+      envs,
+      tsconfigWriter,
+      aspectLoader
+    );
     schemaTransformerSlot.register([
       new ExportDeclarationTransformer(),
       new ExportAssignmentTransformer(),
@@ -360,6 +372,7 @@ export class TypescriptMain {
       new ConditionalTypeTransformer(),
       new NamedTupleTransformer(),
       new ConstructorTransformer(),
+      new ImportDeclarationTransformer(),
     ]);
 
     if (workspace) {
