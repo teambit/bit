@@ -38,6 +38,7 @@ export type StatusResult = {
   snappedComponents: ComponentID[];
   pendingUpdatesFromMain: DivergeDataPerId[];
   updatesFromForked: DivergeDataPerId[];
+  unavailableOnMain: ComponentID[];
   currentLaneId: LaneId;
   forkedLaneId?: LaneId;
 };
@@ -75,6 +76,7 @@ export class StatusMain {
       };
     });
 
+    const unavailableOnMain = await this.workspace.getUnavailableOnMainComponents();
     const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
     const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.id);
     const allInvalidComponents = await componentsList.listInvalidComponents();
@@ -170,6 +172,7 @@ export class StatusMain {
       snappedComponents: await convertBitIdToComponentIdsAndSort(snappedComponents),
       pendingUpdatesFromMain: await convertObjToComponentIdsAndSort(pendingUpdatesFromMain),
       updatesFromForked: await convertObjToComponentIdsAndSort(updatesFromForked),
+      unavailableOnMain,
       currentLaneId,
       forkedLaneId,
     };

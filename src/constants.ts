@@ -4,6 +4,7 @@ import * as path from 'path';
 import format from 'string-format';
 
 import { PathOsBased } from './utils/path';
+import { getSync } from './api/consumer/lib/global-config';
 
 const userHome = require('user-home');
 const packageFile = require('../package.json');
@@ -31,6 +32,32 @@ function getCacheDirectory(): PathOsBased {
 
   return getDirectory();
 }
+
+/**
+ * cache root directory
+ */
+export const CACHE_ROOT = getCacheDirectory();
+
+/**
+ * global config directories
+ */
+export const GLOBAL_CONFIG: PathOsBased = path.join(CACHE_ROOT, 'config');
+
+export const GLOBAL_LOGS: PathOsBased = path.join(CACHE_ROOT, 'logs');
+
+export const GLOBAL_SCOPE: PathOsBased = path.join(CACHE_ROOT, 'scope');
+
+export const GLOBALS_DEFAULT_CAPSULES = path.join(CACHE_ROOT, 'capsules');
+
+export const GLOBAL_CONFIG_FILE = 'config.json';
+
+export const GLOBAL_REMOTES = 'global-remotes.json';
+
+export const BIT_HIDDEN_DIR = '.bit';
+
+export const BIT_GIT_DIR = 'bit';
+
+export const DOT_GIT_DIR = '.git';
 
 export const BIT_USAGE = '[--version] [--help] <command> [<args>]';
 
@@ -123,41 +150,56 @@ export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.dots : cliSpinners.dots12;
  */
 
 /**
- * @deprecated use 'BASE_CLOUD_DOMAIN' or 'BASE_COMMUNITY_DOMAIN'
+ * @deprecated use 'getCloudDomain()' or 'BASE_COMMUNITY_DOMAIN'
  */
 export const BASE_WEB_DOMAIN = 'bit.dev';
 
-export const BASE_CLOUD_DOMAIN = 'bit.cloud';
+export const CFG_CLOUD_DOMAIN_KEY = 'cloud_domain';
+
+export const DEFAULT_CLOUD_DOMAIN = 'bit.cloud';
+let resolvedCloudDomain;
+export const getCloudDomain = (): string => {
+  if (resolvedCloudDomain) return resolvedCloudDomain;
+  resolvedCloudDomain = getSync(CFG_CLOUD_DOMAIN_KEY) || DEFAULT_CLOUD_DOMAIN;
+  return resolvedCloudDomain;
+};
 
 export const BASE_COMMUNITY_DOMAIN = 'bit.dev';
 
 export const PREVIOUSLY_BASE_WEB_DOMAIN = 'bitsrc.io';
 
-export const DEFAULT_HUB_DOMAIN = `hub.${BASE_CLOUD_DOMAIN}`;
+export const DEFAULT_HUB_DOMAIN = `hub.${getCloudDomain()}`;
 
-export const SYMPHONY_URL = `symphony.${BASE_CLOUD_DOMAIN}`;
+export const CFG_SYMPHONY_URL_KEY = 'symphony_url';
 
-export const SYMPHONY_GRAPHQL = `http://${SYMPHONY_URL}/graphql`;
+let resolvedSymphonyUrl;
+export const getSymphonyUrl = (): string => {
+  if (resolvedSymphonyUrl) return resolvedSymphonyUrl;
+  resolvedSymphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || `symphony.${getCloudDomain()}`;
+  return resolvedSymphonyUrl;
+};
+
+export const SYMPHONY_GRAPHQL = `https://${getSymphonyUrl()}/graphql`;
 
 export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/docs`;
 
 export const BASE_LEGACY_DOCS_DOMAIN = `legacy-docs.${BASE_COMMUNITY_DOMAIN}/docs`;
 
-export const DEFAULT_HUB_LOGIN = `https://${BASE_CLOUD_DOMAIN}/bit-login`;
+export const DEFAULT_HUB_LOGIN = `https://${getCloudDomain()}/bit-login`;
 
-export const DEFAULT_ANALYTICS_DOMAIN = `https://analytics.${BASE_CLOUD_DOMAIN}/`;
+export const DEFAULT_ANALYTICS_DOMAIN = `https://analytics.${getCloudDomain()}/`;
 
-export const SEARCH_DOMAIN = `api.${BASE_CLOUD_DOMAIN}`;
+export const SEARCH_DOMAIN = `api.${getCloudDomain()}`;
 
-export const RELEASE_SERVER = `https://api.${BASE_CLOUD_DOMAIN}/release`;
+export const RELEASE_SERVER = `https://api.${getCloudDomain()}/release`;
 
-export const DEFAULT_REGISTRY_URL = `https://node.bit.cloud`;
+export const DEFAULT_REGISTRY_URL = `https://node.${getCloudDomain()}`;
 
 export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_WEB_DOMAIN}`;
 
-export const CENTRAL_BIT_HUB_URL = `https://${SYMPHONY_URL}/exporter`;
+export const CENTRAL_BIT_HUB_URL = `https://${getSymphonyUrl()}/exporter`;
 
-export const CENTRAL_BIT_HUB_NAME = 'bit.cloud';
+export const CENTRAL_BIT_HUB_NAME = getCloudDomain();
 
 // END URLS
 
@@ -171,7 +213,7 @@ export const DEFAULT_BIT_ENV = 'production';
 // https://github.com/mscdex/ssh2/issues/142
 export const DEFAULT_SSH_READY_TIMEOUT = 99999;
 
-export const MergeConfigFilename = 'bit-merge-conflict.json';
+export const MergeConfigFilename = 'merge-conflict';
 
 export const IGNORE_LIST = [
   '**/.bit.map.json',
@@ -185,7 +227,6 @@ export const IGNORE_LIST = [
   '**/yarn.lock',
   '**/LICENSE',
   '*/tsconfig.json',
-  `**/${MergeConfigFilename}`,
 ];
 
 export const AUTO_GENERATED_STAMP = 'BIT-AUTO-GENERATED';
@@ -221,8 +262,6 @@ export const CFG_REGISTRY_URL_KEY = 'registry';
 export const CFG_SSH_KEY_FILE_KEY = 'ssh_key_file';
 
 export const CFG_HUB_DOMAIN_KEY = 'hub_domain';
-
-export const CFG_SYMPHONY_URL_KEY = 'symphony_url';
 
 export const CFG_HUB_LOGIN_KEY = 'hub_domain_login';
 
@@ -377,32 +416,6 @@ export const HOOKS_NAMES = [
   PRE_REMOVE_REMOTE,
   POST_REMOVE_REMOTE,
 ];
-
-/**
- * cache root directory
- */
-export const CACHE_ROOT = getCacheDirectory();
-
-/**
- * global config directories
- */
-export const GLOBAL_CONFIG: PathOsBased = path.join(CACHE_ROOT, 'config');
-
-export const GLOBAL_LOGS: PathOsBased = path.join(CACHE_ROOT, 'logs');
-
-export const GLOBAL_SCOPE: PathOsBased = path.join(CACHE_ROOT, 'scope');
-
-export const GLOBALS_DEFAULT_CAPSULES = path.join(CACHE_ROOT, 'capsules');
-
-export const GLOBAL_CONFIG_FILE = 'config.json';
-
-export const GLOBAL_REMOTES = 'global-remotes.json';
-
-export const BIT_HIDDEN_DIR = '.bit';
-
-export const BIT_GIT_DIR = 'bit';
-
-export const DOT_GIT_DIR = '.git';
 
 /**
  * bit registry default URL.

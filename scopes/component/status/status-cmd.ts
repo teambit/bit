@@ -30,11 +30,7 @@ export class StatusCmd implements Command {
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],
-    [
-      '',
-      'verbose',
-      'show extra data: full snap hashes for staged, divergence point for lanes and updates-from-main for forked lanes',
-    ],
+    ['', 'verbose', 'show extra data: full snap hashes for staged and divergence point for lanes'],
     ['l', 'lanes', 'when on a lane, show updates from main and updates from forked lanes'],
     ['', 'strict', 'in case issues found, exit with code 1'],
   ] as CommandOptions;
@@ -59,6 +55,7 @@ export class StatusCmd implements Command {
       componentsDuringMergeState,
       softTaggedComponents,
       snappedComponents,
+      unavailableOnMain,
       pendingUpdatesFromMain,
       updatesFromForked,
       currentLaneId,
@@ -68,6 +65,7 @@ export class StatusCmd implements Command {
       newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
       modifiedComponents: modifiedComponents.map((c) => c.toString()),
       stagedComponents: stagedComponents.map((c) => ({ id: c.id.toStringWithoutVersion(), versions: c.versions })),
+      unavailableOnMain: unavailableOnMain.map((c) => c.toString()),
       componentsWithIssues: componentsWithIssues.map((c) => ({
         id: c.id.toString(),
         issues: c.issues?.toObject(),
@@ -111,6 +109,7 @@ export class StatusCmd implements Command {
       snappedComponents,
       pendingUpdatesFromMain,
       updatesFromForked,
+      unavailableOnMain,
       currentLaneId,
       forkedLaneId,
     }: StatusResult = await this.status.status({ lanes });
@@ -250,6 +249,12 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
     ).join('\n');
 
+    const unavailableOnMainDesc = '\n(use "bit checkout head" to make it available)\n';
+    const unavailableOnMainOutput = immutableUnshift(
+      unavailableOnMain.map((c) => format(c)),
+      unavailableOnMain.length ? chalk.underline.white('unavailable on main components') + unavailableOnMainDesc : ''
+    ).join('\n');
+
     const getUpdateFromMsg = (divergeData: SnapsDistance, from = 'main'): string => {
       if (divergeData.err) return divergeData.err.message;
       let msg = `${from} is ahead by ${divergeData.snapsOnTargetOnly.length || 0} snaps`;
@@ -260,16 +265,15 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
     };
 
     let updatesFromMainOutput = '';
-    if (!forkedLaneId || verbose) {
-      const updatesFromMainDesc = '\n(use "bit lane merge main" to merge the changes)\n';
-      const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
-        format(c.id, false, getUpdateFromMsg(c.divergeData))
-      );
-      updatesFromMainOutput = [
-        pendingUpdatesFromMain.length ? chalk.underline.white('pending updates from main') + updatesFromMainDesc : '',
-        ...pendingUpdatesFromMainIds,
-      ].join('\n');
-    }
+
+    const updatesFromMainDesc = '\n(use "bit lane merge main" to merge the changes)\n';
+    const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
+      format(c.id, false, getUpdateFromMsg(c.divergeData))
+    );
+    updatesFromMainOutput = [
+      pendingUpdatesFromMain.length ? chalk.underline.white('pending updates from main') + updatesFromMainDesc : '',
+      ...pendingUpdatesFromMainIds,
+    ].join('\n');
 
     let updatesFromForkedOutput = '';
     if (forkedLaneId) {
@@ -307,6 +311,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
         modifiedComponentOutput,
         snappedComponentsOutput,
         stagedComponentsOutput,
+        unavailableOnMainOutput,
         autoTagPendingOutput,
         invalidComponentOutput,
         locallySoftRemovedOutput,

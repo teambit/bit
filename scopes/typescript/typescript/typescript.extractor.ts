@@ -49,7 +49,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
   /**
    * extract a component schema.
    */
-  async extract(component: Component, formatter: Formatter): Promise<APISchema> {
+  async extract(component: Component, formatter?: Formatter): Promise<APISchema> {
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
     const compatibleExts = ['.tsx', '.jsx', '.ts', '.js'];
@@ -113,7 +113,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
   private async createContext(
     tsserver: TsserverClient,
     component: Component,
-    formatter: Formatter
+    formatter?: Formatter
   ): Promise<SchemaExtractorContext> {
     const componentDeps = await this.getComponentDeps(component);
     return new SchemaExtractorContext(tsserver, component, this, componentDeps, formatter);

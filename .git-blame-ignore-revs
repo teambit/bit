@@ -1,0 +1,14 @@
+# .git-blame-ignore-revs
+
+# this is supported by github by default.
+# to use it from the CLI, run `git blame --ignore-revs-file .git-blame-ignore-revs <your-file>`
+# alternatively, add it to the config of this project: `git config blame.ignoreRevsFile .git-blame-ignore-revs` then use `git blame` as usual
+
+# re-format all source code with prettier (#6544)
+52196a308de40d0bfbff140ed347ab5713743fac
+# upgrade prettier from 1.x to 2.x and re-format all files (#2852)
+7138e50e497dc837347193b70eddc9234883d1a8
+# use prettier-eslint to reformat the code and fix lint problems
+fe64d0521446da451c86af2036f586f44470b8ba
+# Refactor, convert all source files from javascript (Flow) to TypeScript (#2050)
+8b89ecadc8ff3a8ccc6fe0c0c33d71279afdfe3d

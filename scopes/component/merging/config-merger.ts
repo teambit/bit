@@ -105,9 +105,14 @@ export class ConfigMerger {
       if (this.handledExtIds.includes(id)) return null;
       this.handledExtIds.push(id);
       if (otherExt.extensionId && otherExt.extensionId.hasVersion()) {
+        // if (this.compIdStr === 'teambit.dot-cloud/community-cloud') console.log('current', this.currentAspects);
         // avoid using the id from the other lane if it exits in the workspace. prefer the id from the workspace.
         const idFromWorkspace = this.getIdFromWorkspace(otherExt.extensionId.toStringWithoutVersion());
-        if (idFromWorkspace) id = idFromWorkspace._legacy.toString();
+        if (idFromWorkspace) {
+          const existingExt = this.currentAspects.findExtension(otherExt.extensionId.toStringWithoutVersion(), true);
+          if (existingExt) return null; // the aspect is set currently, no need to add it again.
+          id = idFromWorkspace._legacy.toString();
+        }
       }
       const baseExt = this.baseAspects.findExtension(id, true);
       if (baseExt) {

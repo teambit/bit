@@ -1,3 +1,4 @@
+import { IssuesClasses } from '@teambit/component-issues';
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
@@ -70,6 +71,34 @@ describe('dependencies', function () {
     it('should convert the flattened edge of itself to an id with scope-name', () => {
       const comp = helper.command.catComponent('comp1@latest');
       expect(comp.flattenedEdges[0].source.scope).to.equal(helper.scopes.remote);
+    });
+  });
+  describe('ignoring a dependency using // @bit-ignore', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponentsTS(1);
+      helper.fs.outputFile('comp1/index.ts', `import lodash from 'lodash';`);
+      helper.command.addComponent('comp1');
+    });
+    it('without bit-ignore it should show an issue', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
+    });
+    it('with bit-ignore it should not show an issue', () => {
+      helper.fs.outputFile(
+        'comp1/index.ts',
+        `// @bit-ignore
+import lodash from 'lodash';`
+      );
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
+    });
+    it('with bit-no-check it should ignore the entire file', () => {
+      helper.fs.outputFile(
+        'comp1/index.ts',
+        `// @bit-no-check
+import lodash from 'lodash';
+import R from 'ramda';`
+      );
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
     });
   });
 });

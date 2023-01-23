@@ -105,6 +105,7 @@ async function generateResolverAndFetcher(
     noProxy: proxyConfig?.noProxy,
     strictSsl: networkConfig.strictSSL,
     timeout: networkConfig.fetchTimeout,
+    rawConfig: pnpmConfig.config.rawConfig,
     retry: {
       factor: networkConfig.fetchRetryFactor,
       maxTimeout: networkConfig.fetchRetryMaxtimeout,
@@ -177,7 +178,9 @@ export async function install(
   let externalDependencies: Set<string> | undefined;
   if (options?.rootComponents) {
     externalDependencies = new Set(
-      Object.values(manifestsByPaths).map(({ name }) => name).filter(Boolean) as string[]
+      Object.values(manifestsByPaths)
+        .map(({ name }) => name)
+        .filter(Boolean) as string[]
     );
   }
   if (!manifestsByPaths[rootDir].dependenciesMeta) {
@@ -230,12 +233,14 @@ export async function install(
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
     modulesCacheMaxAge: 0,
+    neverBuiltDependencies: ['core-js'],
     registries: registriesMap,
     rawConfig: authConfig,
     hooks: { readPackage },
     externalDependencies,
     strictPeerDependencies: false,
     resolveSymlinksInInjectedDirs: true,
+    resolvePeersFromWorkspaceRoot: true,
     dedupeDirectDeps: true,
     ...options,
     peerDependencyRules: {

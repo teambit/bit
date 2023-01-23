@@ -174,6 +174,15 @@ export class BitMap {
     return this.legacyBitMap.isLaneExported ? this.legacyBitMap.laneId : undefined;
   }
 
+  makeComponentsAvailableOnMain(ids: ComponentID[]) {
+    ids.forEach((id) => {
+      const componentMap = this.getBitmapEntry(id);
+      delete componentMap.onLanesOnly;
+      delete componentMap.isAvailableOnCurrentLane;
+    });
+    this.legacyBitMap.markAsChanged();
+  }
+
   /**
    * whether .bitmap file has changed in-memory
    */

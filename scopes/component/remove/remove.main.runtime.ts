@@ -3,7 +3,6 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
-import removeComponents from '@teambit/legacy/dist/consumer/component-ops/remove-components';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/lib/list-scope';
@@ -13,6 +12,7 @@ import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/d
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { removeComponentsFromNodeModules } from '@teambit/legacy/dist/consumer/component/package-json-utils';
 import { RemoveCmd } from './remove-cmd';
+import { removeComponents } from './remove-components';
 import { RemoveAspect } from './remove.aspect';
 import { RemoveFragment } from './remove.fragment';
 

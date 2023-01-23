@@ -30,11 +30,11 @@ export type BuilderServiceOptions = {
   dev?: boolean;
 };
 
-type BuilderTransformationMap = ServiceTransformationMap  & {
+type BuilderTransformationMap = ServiceTransformationMap & {
   getBuildPipe: () => BuildTask[];
   getTagPipe: () => BuildTask[];
   getSnapPipe: () => BuildTask[];
-}
+};
 
 export type EnvsBuildContext = { [envId: string]: BuildContext };
 
@@ -145,27 +145,26 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
   }
 
   transform(env: Env, envContext: EnvContext): BuilderTransformationMap | undefined {
-    // Old env
     if (!env?.build) return undefined;
     return {
       getBuildPipe: () => {
         // TODO: refactor after defining for an env property
-        const pipeline = env.build()(envContext);
+        const pipeline = env.build();
         if (!pipeline || !pipeline.compute) return [];
-        return pipeline?.compute();
+        return pipeline?.compute(envContext);
       },
       getTagPipe: () => {
         // TODO: refactor after defining for an env property
-        const pipeline = env.snap()(envContext);
+        const pipeline = env.snap();
         if (!pipeline || !pipeline.compute) return [];
-        return pipeline?.compute();
+        return pipeline?.compute(envContext);
       },
       getSnapPipe: () => {
-        const pipeline = env.tag()(envContext);
+        const pipeline = env.tag();
         if (!pipeline || !pipeline.compute) return [];
-        return pipeline?.compute();
+        return pipeline?.compute(envContext);
       },
-    }
+    };
   }
 
   private renderOnePipe(pipeName, tasks) {

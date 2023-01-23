@@ -40,10 +40,11 @@ const GET_LANES = gql`
 `;
 
 export function useLanes(
-  targetLanes?: LanesModel
+  targetLanes?: LanesModel,
+  skip?: boolean
 ): LanesContextModel & Omit<QueryResult<LanesQuery & { getHost: { id: string } }>, 'data'> {
   const lanesContext = useLanesContext();
-  const shouldSkip = !!targetLanes || !!lanesContext;
+  const shouldSkip = skip || !!targetLanes || !!lanesContext;
 
   const { data, loading, ...rest } = useDataQuery<LanesQuery & { getHost: { id: string } }>(GET_LANES, {
     skip: shouldSkip,

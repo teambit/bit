@@ -1,6 +1,7 @@
 import mapSeries from 'p-map-series';
 import { parse } from 'comment-json';
 import { MainRuntime } from '@teambit/cli';
+import { getAllCoreAspectsIds } from '@teambit/bit';
 import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent, ComponentID } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
@@ -12,7 +13,12 @@ import { RequireableComponent } from '@teambit/harmony.modules.requireable-compo
 import type { LoggerMain } from '@teambit/logger';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect } from '@teambit/logger';
-import { CFG_PACKAGE_MANAGER_CACHE, CFG_REGISTRY_URL_KEY, CFG_USER_TOKEN_KEY } from '@teambit/legacy/dist/constants';
+import {
+  CFG_PACKAGE_MANAGER_CACHE,
+  CFG_REGISTRY_URL_KEY,
+  CFG_USER_TOKEN_KEY,
+  getCloudDomain,
+} from '@teambit/legacy/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
@@ -81,7 +87,7 @@ import { EnvPolicy } from './policy/env-policy';
  * @deprecated use BIT_CLOUD_REGISTRY instead
  */
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
-export const BIT_CLOUD_REGISTRY = 'https://node.bit.cloud/';
+export const BIT_CLOUD_REGISTRY = `https://node.${getCloudDomain()}/`;
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
@@ -661,6 +667,16 @@ export class DependencyResolverMain {
     const { networkConcurrency } = await this.getNetworkConfig();
     // TODO: we should somehow pass the cache root dir to the package manager constructor
     return new DependencyVersionResolver(packageManager, cacheRootDir, networkConcurrency);
+  }
+
+  /**
+   * these ids should not be in the dependencyResolver policy normally.
+   * one exception is bit itself, which needs teambit.harmony/harmony in the dependencies.
+   *
+   * returns component-ids string without a version.
+   */
+  getCompIdsThatShouldNotBeInPolicy(): string[] {
+    return [...getAllCoreAspectsIds(), 'teambit.harmony/harmony'];
   }
 
   /**
@@ -1261,7 +1277,8 @@ export class DependencyResolverMain {
             .filter(
               (dep) =>
                 typeof dep.getPackageName === 'function' &&
-                dep.version !== 'latest' &&
+                // If the dependency is referenced not via a valid range it means that it wasn't yet published to the registry
+                semver.validRange(dep.version) != null &&
                 !dep['isExtension'] && // eslint-disable-line
                 dep.lifecycle !== 'peer'
             )

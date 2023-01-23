@@ -8,12 +8,14 @@ import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator
 import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { Formatter } from '@teambit/formatter';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import { SchemaExtractor } from './schema-extractor';
 import { SchemaCommand } from './schema.cmd';
 import { schemaSchema } from './schema.graphql';
 import { SchemaTask, SCHEMA_TASK_NAME } from './schema.task';
+import { SchemaService } from './schema.service';
 
 export type ParserSlot = SlotRegistry<Parser>;
 
@@ -93,7 +95,7 @@ export class SchemaMain {
     if (this.workspace) {
       const env = this.envs.getEnv(component).env;
       // types need to be fixed
-      const formatter = env.getFormatter(null, [
+      const formatter: Formatter | undefined = env.getFormatter?.(null, [
         (config: PrettierConfigMutator) => {
           config.setKey('parser', 'typescript');
           return config;
@@ -187,6 +189,7 @@ export class SchemaMain {
     builder.registerBuildTasks([schemaTask]);
     cli.register(new SchemaCommand(schema, component, logger));
     graphql.register(schemaSchema(schema));
+    envs.registerService(new SchemaService());
 
     // workspace.onComponentLoad(async (component) => {
     //   const apiSchema = await schema.getSchema(component);

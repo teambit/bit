@@ -9,8 +9,6 @@ import FileSourceNotFound from '../exceptions/file-source-not-found';
 import AbstractVinyl from './abstract-vinyl';
 
 export default class SourceFile extends AbstractVinyl {
-  // TODO: remove this distFilePath?
-  distFilePath: string | null | undefined;
   static load(
     filePath: PathOsBased,
     base: PathOsBased,

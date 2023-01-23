@@ -68,7 +68,7 @@ export class SchemaExtractorContext {
     readonly component: Component,
     readonly extractor: TypeScriptExtractor,
     readonly componentDeps: ComponentDependency[],
-    readonly formatter: Formatter
+    readonly formatter?: Formatter
   ) {}
 
   getComputedNodeKey({ filePath, line, character }: Location) {
@@ -199,17 +199,18 @@ export class SchemaExtractorContext {
 
   findFileInComponent(filePath: string) {
     const matchingFile = this.component.filesystem.files.find((file) => {
+      const currentFilePath = pathNormalizeToLinux(file.path);
       // TODO: fix this line to support further extensions.
-      if (file.path.includes(filePath)) {
+      if (currentFilePath.includes(filePath)) {
         const strings = ['ts', 'tsx', 'js', 'jsx'].map((format) => {
           if (filePath.endsWith(format)) return filePath;
           // check if it is an index file export
           return `${filePath}.${format}`;
         });
 
-        const matchesWithExtension = !!strings.find((string) => string === file.path);
+        const matchesWithExtension = !!strings.find((string) => string === currentFilePath);
 
-        const matchesIndexFile = ['ts', 'js'].some((format) => `${filePath}/index.${format}` === file.path);
+        const matchesIndexFile = ['ts', 'js'].some((format) => `${filePath}/index.${format}` === currentFilePath);
 
         return matchesWithExtension || matchesIndexFile;
       }

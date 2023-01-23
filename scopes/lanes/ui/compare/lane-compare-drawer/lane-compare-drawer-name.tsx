@@ -24,7 +24,7 @@ export function LaneCompareDrawerName({ baseId, compareId, open }: LaneCompareDr
       <div className={styles.versionContainer}>
         {baseId && (
           <Tooltip content={baseId.version} placement={'bottom'}>
-            <div className={styles.version}>{baseId?.version}</div>
+            <div className={styles.version}>{baseId?.version?.substring(0, 6)}</div>
           </Tooltip>
         )}
         {baseId && (
@@ -34,7 +34,7 @@ export function LaneCompareDrawerName({ baseId, compareId, open }: LaneCompareDr
         )}
         {compareId && (
           <Tooltip content={compareId.version} placement={'bottom'}>
-            <div className={styles.version}>{compareId.version}</div>
+            <div className={styles.version}>{compareId?.version?.substring(0, 6)}</div>
           </Tooltip>
         )}
       </div>

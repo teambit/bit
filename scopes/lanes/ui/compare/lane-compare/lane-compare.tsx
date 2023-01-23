@@ -197,10 +197,9 @@ export function LaneCompare({
     if (laneComponentDiffByCompId.size === 0) return null;
     return allComponents.reduce((accum, [baseId, compareId]) => {
       const compareIdStrWithoutVersion = compareId?.toStringWithoutVersion();
-      const laneCompDiff =
-        !compareIdStrWithoutVersion || loadingLaneDiff === undefined
-          ? undefined
-          : laneComponentDiffByCompId.get(compareIdStrWithoutVersion);
+      const laneCompDiff = !compareIdStrWithoutVersion
+        ? undefined
+        : laneComponentDiffByCompId.get(compareIdStrWithoutVersion);
 
       const changeType = laneCompDiff?.changeType;
 

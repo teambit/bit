@@ -24,6 +24,7 @@ describe('bit lane command', function () {
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.command.snapAllComponents();
+        helper.command.export();
         helper.command.createLane();
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
         helper.command.snapAllComponents();
@@ -126,6 +127,7 @@ describe('bit lane command', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
+      helper.command.export();
       helper.command.createLane('migration');
       helper.fs.outputFile('comp1/comp1.spec.js');
       helper.command.addComponent('comp1/');
@@ -214,6 +216,37 @@ describe('bit lane command', function () {
       const list = helper.command.listParsed();
       expect(list[0].localVersion).to.equal('0.0.1');
       expect(list[0].currentVersion).to.equal('0.0.1');
+    });
+  });
+  describe('switch to main after merging the lane somewhere else', () => {
+    let originalWorkspace: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      originalWorkspace = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('main');
+      helper.command.mergeLane('dev');
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(originalWorkspace);
+      helper.command.switchLocalLane('main');
+      helper.command.import();
+    });
+    it('should not make the component available on main', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(0);
+    });
+    it('bit status should show a section of unavailable components on main', () => {
+      const status = helper.command.statusJson();
+      expect(status.unavailableOnMain).to.have.lengthOf(1);
+    });
+    it('bit checkout should make it available', () => {
+      helper.command.checkoutHead();
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
     });
   });
 });

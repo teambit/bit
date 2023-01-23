@@ -3,7 +3,8 @@ import React from 'react';
 import { Text, Newline } from 'ink';
 import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
-import { Command } from '@teambit/cli';
+import { Command, CommandOptions } from '@teambit/cli';
+import { compact } from 'lodash';
 import { ComponentMain, ComponentFactory, Component } from '@teambit/component';
 import { EnvsMain } from './environments.main.runtime';
 import { EnvOverview } from './components/env-overview';
@@ -23,6 +24,10 @@ export class ListEnvsCmd implements Command {
   }
 }
 
+type GetEnvOpts = {
+  services: string;
+};
+
 export class GetEnvCmd implements Command {
   name = 'get <component-name>';
   description = "show information about a component's env";
@@ -33,12 +38,18 @@ export class GetEnvCmd implements Command {
     },
   ];
   examples: [{ cmd: 'get ui/button'; description: 'show information about the env configured for ui/button' }];
-  options = [];
+  options = [
+    [
+      '',
+      'services <string>',
+      'show information about the specific services only. for multiple services, separate by a comma and wrap with quotes',
+    ],
+  ] as CommandOptions;
   group = 'development';
 
   constructor(private envs: EnvsMain, private componentAspect: ComponentMain) {}
 
-  async showEnv(id: string, host: ComponentFactory) {
+  async showEnv(id: string, host: ComponentFactory, servicesArr: string[] | undefined) {
     const component = await host.get(await host.resolveComponentId(id));
     if (!component) throw new Error(`component for env ${id} was not found`);
     const env = this.envs.getEnv(component);
@@ -46,6 +57,7 @@ export class GetEnvCmd implements Command {
     const envExecutionContext = envRuntime.getEnvExecutionContext();
     const services = this.envs.getServices(env);
     const allP = services.services.map(async ([serviceId, service]) => {
+      if (servicesArr && !servicesArr.includes(serviceId)) return null;
       if (service.render)
         return (
           <Text>
@@ -66,7 +78,7 @@ export class GetEnvCmd implements Command {
       );
     });
 
-    const all = await Promise.all(allP);
+    const all = compact(await Promise.all(allP));
 
     return (
       <Text>
@@ -76,11 +88,13 @@ export class GetEnvCmd implements Command {
     );
   }
 
-  async render([name]: [string]): Promise<JSX.Element> {
+  async render([name]: [string], { services }: GetEnvOpts): Promise<JSX.Element> {
     const host = this.componentAspect.getHost();
+    const servicesArr = services ? services.split(',') : undefined;
+
     // TODO: think what to do re this line with gilad.
     if (!host) throw new Error('error: workspace not found');
-    return this.showEnv(name, host);
+    return this.showEnv(name, host, servicesArr);
   }
 }
 

@@ -21,7 +21,7 @@ export async function addOne(addProps: AddProps): Promise<AddActionResults> {
     bitmapFileName: BIT_MAP,
   };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  await HooksManagerInstance.triggerHook(POST_ADD_HOOK, addResults, null, hookContext);
+  await HooksManagerInstance?.triggerHook(POST_ADD_HOOK, addResults, null, hookContext);
   return addResults;
 }
 
@@ -55,6 +55,6 @@ export async function addMany(components: AddProps[], alternateCwd?: string): Pr
     bitmapFileName: BIT_MAP,
   };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  await HooksManagerInstance.triggerHook(POST_ADD_HOOK, addResults, null, hookContext);
+  await HooksManagerInstance?.triggerHook(POST_ADD_HOOK, addResults, null, hookContext);
   return addResults;
 }

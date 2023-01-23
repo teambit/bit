@@ -1,13 +1,7 @@
 import { GraphQLClient, gql } from 'graphql-request';
 import { InvalidScopeName, isValidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import { getSync } from '../../api/consumer/lib/global-config';
-import {
-  CFG_HUB_DOMAIN_KEY,
-  DEFAULT_HUB_DOMAIN,
-  CFG_USER_TOKEN_KEY,
-  SYMPHONY_URL,
-  CFG_SYMPHONY_URL_KEY,
-} from '../../constants';
+import { CFG_HUB_DOMAIN_KEY, DEFAULT_HUB_DOMAIN, CFG_USER_TOKEN_KEY, getSymphonyUrl } from '../../constants';
 
 import Scope from '../../scope/scope';
 import { getAuthHeader, getFetcherWithAgent } from '../../scope/network/http/http';
@@ -15,7 +9,7 @@ import logger from '../../logger/logger';
 import { ScopeNotFoundOrDenied } from '../exceptions/scope-not-found-or-denied';
 
 const hubDomain = getSync(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
-const symphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || SYMPHONY_URL;
+const symphonyUrl = getSymphonyUrl();
 
 type ResolverFunction = (scopeName: string, thisScopeName?: string, token?: string) => Promise<string>;
 
