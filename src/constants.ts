@@ -9,6 +9,7 @@ import { getSync } from './api/consumer/lib/global-config';
 const userHome = require('user-home');
 const packageFile = require('../package.json');
 
+
 export const IS_WINDOWS = os.platform() === 'win32';
 
 function getDirectory(): PathOsBased {
@@ -58,6 +59,8 @@ export const BIT_HIDDEN_DIR = '.bit';
 export const BIT_GIT_DIR = 'bit';
 
 export const DOT_GIT_DIR = '.git';
+
+
 
 export const BIT_USAGE = '[--version] [--help] <command> [<args>]';
 
@@ -162,7 +165,7 @@ export const getCloudDomain = (): string => {
   if (resolvedCloudDomain) return resolvedCloudDomain;
   resolvedCloudDomain = getSync(CFG_CLOUD_DOMAIN_KEY) || DEFAULT_CLOUD_DOMAIN;
   return resolvedCloudDomain;
-};
+} 
 
 export const BASE_COMMUNITY_DOMAIN = 'bit.dev';
 
@@ -177,7 +180,7 @@ export const getSymphonyUrl = (): string => {
   if (resolvedSymphonyUrl) return resolvedSymphonyUrl;
   resolvedSymphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || `symphony.${getCloudDomain()}`;
   return resolvedSymphonyUrl;
-};
+} 
 
 export const SYMPHONY_GRAPHQL = `https://${getSymphonyUrl()}/graphql`;
 

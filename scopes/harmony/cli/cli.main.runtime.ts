@@ -141,7 +141,7 @@ export class CLIMain {
     const cliGenerateCmd = new CliGenerateCmd(cliMain);
     if (!community) {
       cliMain.register(...legacyCommandsAdapters, new CompletionCmd());
-      return cliMain;
+      return cliMain
     }
     const cliCmd = new CliCmd(cliMain, community.getDocsDomain());
     const helpCmd = new HelpCmd(cliMain, community.getDocsDomain());

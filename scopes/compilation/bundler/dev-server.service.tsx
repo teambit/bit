@@ -15,7 +15,7 @@ import { getEntry } from './get-entry';
 
 export type DevServerServiceOptions = { dedicatedEnvDevServers?: string[] };
 
-type DevServiceTransformationMap = ServiceTransformationMap & {
+type DevServiceTransformationMap = ServiceTransformationMap  & {
   /**
    * Required for `bit start`
    */
@@ -25,8 +25,10 @@ type DevServiceTransformationMap = ServiceTransformationMap & {
    * Returns and configures the dev server
    * Required for `bit start`
    */
-  getDevServer?: (context: DevServerContext) => DevServer | Promise<DevServer>;
-};
+  getDevServer?: (
+    context: DevServerContext,
+  ) => DevServer | Promise<DevServer>;
+}
 
 export type DevServerDescriptor = {
   /**
@@ -120,7 +122,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       getDevServer: (context) => {
         return preview.getDevServer(context)(envContext);
       },
-    };
+    }
   }
 
   // async run(context: ExecutionContext): Promise<ComponentServer[]> {

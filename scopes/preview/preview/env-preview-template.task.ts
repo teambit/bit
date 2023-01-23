@@ -245,7 +245,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
           if (!def.renderTemplatePathByEnv) return undefined;
           return {
             name: def.prefix,
-            path: (await def.renderTemplatePathByEnv(envDef.env)) || '',
+            path: await def.renderTemplatePathByEnv(envDef.env) || '',
             include: def.include,
           };
         })

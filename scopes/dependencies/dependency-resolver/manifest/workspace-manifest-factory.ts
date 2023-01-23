@@ -232,8 +232,8 @@ function filterComponents(dependencyList: DependencyList, componentsToFilterOut:
       // If the package is already in the workspace as a local component,
       // then we don't want to install that package as a dependency to node_modules.
       // Otherwise, it would rewrite the local component inside the root node_modules that is created by bit link.
-      return !componentsToFilterOut.some(
-        (component) => depPkgName === componentIdToPackageName(component.state._consumer)
+      return !componentsToFilterOut.some((component) =>
+        depPkgName === componentIdToPackageName(component.state._consumer)
       );
     }
     // Remove dependencies which has no version (they are new in the workspace)

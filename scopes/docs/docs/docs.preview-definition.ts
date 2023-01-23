@@ -24,7 +24,7 @@ export class DocsPreviewDefinition implements PreviewDefinition {
     return this.renderTemplatePathByEnv(context.env);
   }
 
-  async renderTemplatePathByEnv(env: Environment): Promise<string | undefined> {
+  async renderTemplatePathByEnv(env: Environment): Promise<string | undefined>  {
     return this.docs.getTemplate(env);
   }
 

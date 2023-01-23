@@ -264,19 +264,14 @@ export class PreviewMain {
    * @param component
    * @returns
    */
-  async calcPreviewDataFromEnv(
-    component: Component
-  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling'> | undefined> {
+  async calcPreviewDataFromEnv(component: Component): Promise<Omit<PreviewAnyComponentData, 'doesScaling'> | undefined> {
     // Prevent infinite loop that caused by the fact that the env of the aspect env or the env env is the same as the component
     // so we can't load it since during load we are trying to get env component and load it again
-    if (
-      component.id.toStringWithoutVersion() === 'teambit.harmony/aspect' ||
-      component.id.toStringWithoutVersion() === 'teambit.envs/env'
-    ) {
+    if (component.id.toStringWithoutVersion() === 'teambit.harmony/aspect' || component.id.toStringWithoutVersion() === 'teambit.envs/env'){
       return {
         strategyName: COMPONENT_PREVIEW_STRATEGY_NAME,
         splitComponentBundle: false,
-      };
+      }
     }
 
     const env = this.envs.getEnv(component).env;
@@ -320,6 +315,7 @@ export class PreviewMain {
     const envPreviewData = await this.calcPreviewDataFromEnv(component);
     return envPreviewData?.strategyName !== 'component';
   }
+
 
   /**
    * Check if the component preview bundle contain the env as part of the bundle or only the component code
@@ -602,7 +598,7 @@ export class PreviewMain {
       const mainModulesMap: MainModulesMap = {
         // @ts-ignore
         default: defaultTemplatePath,
-        [context.envDefinition.id]: defaultTemplatePath,
+        [context.envDefinition.id]: defaultTemplatePath
       };
 
       const map = await previewDef.getModuleMap(components);
@@ -612,8 +608,8 @@ export class PreviewMain {
         const environment = envDef.env;
         const envId = envDef.id;
 
-        if (!mainModulesMap[envId] && !visitedEnvs.has(envId)) {
-          const modulePath = await previewDef.renderTemplatePathByEnv?.(envDef.env);
+      if (!mainModulesMap[envId] && !visitedEnvs.has(envId)) {
+        const modulePath = await previewDef.renderTemplatePathByEnv?.(envDef.env);
           if (modulePath) {
             mainModulesMap[envId] = modulePath;
           }
@@ -635,6 +631,7 @@ export class PreviewMain {
 
       const dirPath = join(this.tempFolder, context.id);
       if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
+
 
       const link = this.writeLink(previewDef.prefix, withPaths, mainModulesMap, dirPath, isSplitComponentBundle);
       return link;
@@ -727,7 +724,7 @@ export class PreviewMain {
     updater(executionRef);
 
     await this.updateLinkFiles(executionRef.currentComponents, executionRef.executionCtx);
-    throw new Error('gilad');
+    throw new Error('gilad')
 
     return noopResult;
   };

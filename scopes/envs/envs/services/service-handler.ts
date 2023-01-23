@@ -36,6 +36,6 @@ export function reduceServiceHandlersFactories<T>(
       return callback(acc, curr);
     }, initialVal);
     return reduced;
-  };
+  }
   return result;
 }

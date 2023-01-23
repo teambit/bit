@@ -1,19 +1,21 @@
-import { BuildTask } from '@teambit/builder';
-import { EnvContext, EnvHandler } from '@teambit/envs';
-import { clone } from 'lodash';
+import { BuildTask } from "@teambit/builder";
+import { EnvContext, EnvHandler } from "@teambit/envs";
+import { clone } from "lodash";
 import { Task } from './task';
 
 export type TaskHandler = {
   handler: EnvHandler<Task>;
   name: string;
-};
+}
 
 /**
  * create and maintain build pipelines for component
  * dev environments.
  */
 export class Pipeline {
-  constructor(private _tasks: TaskHandler[]) {}
+  constructor(
+    private _tasks: TaskHandler[],
+  ) {}
 
   /**
    * list all tasks in the build pipeline.
@@ -30,7 +32,7 @@ export class Pipeline {
     const buildTasks: BuildTask[] = _tasks.map((task) => {
       // @ts-ignore
       const aspectId = task.aspectId || envId;
-      const buildTask: BuildTask = Object.assign(clone(task), { aspectId });
+      const buildTask: BuildTask = Object.assign(clone(task), {aspectId});
       return buildTask;
     });
 

@@ -45,7 +45,7 @@ export interface ComponentContext {
   /**
    * aspect id of the aspect that register the template itself
    */
-  aspectId: ComponentID;
+  aspectId: ComponentID,
 
   /**
    * env id of the env that register the template itself
@@ -54,7 +54,7 @@ export interface ComponentContext {
    * so in case you want to use the envId, you should check if it exists first
    * You can use this in case you want to only do something if the template was registered by an env
    */
-  envId?: ComponentID;
+  envId?: ComponentID
 }
 
 export interface ConfigContext {

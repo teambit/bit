@@ -96,7 +96,7 @@ export class DocsMain {
   }
 
   async getTemplate(env: Environment): Promise<string | undefined> {
-    if (env.getDocsTemplate && isFunction(env.getDocsTemplate)) {
+    if (env.getDocsTemplate && isFunction(env.getDocsTemplate)){
       return env.getDocsTemplate();
     }
     return undefined;
@@ -144,7 +144,7 @@ export class DocsMain {
     const env = this.envs.calculateEnv(component).env;
     const componentEnvDocsDevPatterns: string[] = env.getDocsDevPatterns ? env.getDocsDevPatterns(component) : [];
     const componentPatterns = componentEnvDocsDevPatterns.concat(this.getPatterns());
-    return { name: 'docs', pattern: componentPatterns };
+    return {name: 'docs', pattern: componentPatterns};
   }
 
   getDevPatternToRegister() {

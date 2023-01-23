@@ -17,8 +17,8 @@ export class CompositionPreviewDefinition implements PreviewDefinition {
     return this.renderTemplatePathByEnv(context.env);
   }
 
-  async renderTemplatePathByEnv(env: Environment): Promise<string | undefined> {
-    if (env.getMounter && isFunction(env.getMounter)) {
+  async renderTemplatePathByEnv(env: Environment): Promise<string | undefined>  {
+    if (env.getMounter && isFunction(env.getMounter)){
       return env.getMounter();
     }
     return undefined;
