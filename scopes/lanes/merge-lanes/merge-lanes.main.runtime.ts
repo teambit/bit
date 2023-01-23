@@ -39,7 +39,7 @@ export type MergeLaneOptions = {
   skipDependencyInstallation?: boolean;
   resolveUnrelated?: MergeStrategy;
   ignoreConfigChanges?: boolean;
-  remote?: boolean;
+  skipFetch?: boolean;
 };
 
 export class MergeLanesMain {
@@ -76,7 +76,7 @@ export class MergeLanesMain {
       skipDependencyInstallation,
       resolveUnrelated,
       ignoreConfigChanges,
-      remote,
+      skipFetch,
     } = options;
 
     const currentLaneId = consumer.getCurrentLaneId();
@@ -96,7 +96,7 @@ export class MergeLanesMain {
         return undefined;
       }
       const lane = await consumer.scope.loadLane(otherLaneId);
-      if (remote || !lane) {
+      if (!skipFetch || !lane) {
         return this.lanes.fetchLaneWithItsComponents(otherLaneId);
       }
       return lane;
