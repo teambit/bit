@@ -91,8 +91,7 @@ please use the '--log=error' flag for the full error.`);
         dataToPersist.addManyFiles(jsonFiles);
       }
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    dataToPersist.addBasePath(this.basePath);
+    dataToPersist.addBasePath(this.consumer.getPath());
     await dataToPersist.persistAllToFS();
   }
   private async populateComponentsFilesToWrite(opts: ManyComponentsWriterParams) {
