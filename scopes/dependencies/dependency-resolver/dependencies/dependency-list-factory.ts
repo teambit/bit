@@ -52,7 +52,6 @@ export class DependencyListFactory {
       // Object.values(legacyComponent.issues?.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data || {})
       // Use getIssueByName to prevent issues when getting different instances while using both bit from bvm and from the repo
       Object.values(legacyComponent.issues?.getIssueByName('MissingPackagesDependenciesOnFs')?.data || {})
-
     );
     const componentFromModel = legacyComponent.componentFromModel;
     if (!missingPackages || !missingPackages.length || !componentFromModel) {
