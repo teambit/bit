@@ -195,10 +195,9 @@ to move all component files to a different directory, run bit remove and then bi
         // @ts-ignore relativeWrittenPath is set at this point
         const absoluteWrittenPath = this.consumer.toAbsolutePath(relativeWrittenPath);
         // @ts-ignore this.writeToPath is set at this point
-        const absoluteWriteToPath = path.resolve(this.writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
+        const absoluteWriteToPath = path.resolve(opts.writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
         if (relativeWrittenPath && absoluteWrittenPath !== absoluteWriteToPath) {
           const component = componentWithDeps.component;
-          // @ts-ignore consumer is set here
           moveExistingComponent(this.consumer, component, absoluteWrittenPath, absoluteWriteToPath);
         }
       });
