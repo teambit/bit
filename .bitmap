@@ -555,6 +555,19 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app"
     },
+    "hooks/use-api": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.api-reference",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/hooks/use-api",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "hooks/use-api-ref-url": {
         "scope": "teambit.api-reference",
         "version": "0.0.4",
@@ -583,7 +596,16 @@
         "scope": "teambit.api-reference",
         "version": "0.0.5",
         "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/hooks/use-schema"
+        "rootDir": "scopes/api-reference/hooks/use-schema",
+        "config": {
+            "teambit.component/deprecation": {
+                "deprecate": true,
+                "newId": {
+                    "name": "hooks/use-api",
+                    "scope": "teambit.api-reference"
+                }
+            }
+        }
     },
     "hooks/use-viewed-lane-from-url": {
         "scope": "teambit.lanes",

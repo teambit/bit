@@ -1,11 +1,10 @@
 import { TsserverClient } from '@teambit/ts-server';
 import { getTokenAtPosition, canHaveJsDoc, getJsDoc } from 'tsutils';
 import ts, { ExportAssignment, getTextOfJSDocComment, ExportDeclaration, Node, SyntaxKind, TypeNode } from 'typescript';
-import { head } from 'lodash';
+import { head, uniqBy } from 'lodash';
+// @ts-ignore david we should figure fix this.
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
-// @ts-ignore david we should figure fix this.
-import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { resolve, sep, relative } from 'path';
 import { Component, ComponentID } from '@teambit/component';
@@ -16,17 +15,54 @@ import {
   Location,
   DocSchema,
 } from '@teambit/semantics.entities.semantic-schema';
+import isRelativeImport from '@teambit/legacy/dist/utils/is-relative-import';
 import { ComponentDependency } from '@teambit/dependency-resolver';
 import { Formatter } from '@teambit/formatter';
 import pMapSeries from 'p-map-series';
 import { TypeScriptExtractor } from './typescript.extractor';
-import { ExportList } from './export-list';
-import { typeNodeToSchema } from './transformers/utils/type-node-to-schema';
-import { TransformerNotFound } from './exceptions';
+import { IdentifierList } from './identifier-list';
 import { parseTypeFromQuickInfo } from './transformers/utils/parse-type-from-quick-info';
 import { tagParser } from './transformers/utils/jsdoc-to-doc-schema';
+import { Identifier } from './identifier';
+import { ExportIdentifier } from './export-identifier';
 
 export class SchemaExtractorContext {
+  /**
+   * list of all declared identifiers (exported and internal) by filename
+   */
+  private _identifiers = new Map<string, IdentifierList>();
+  private _internalIdentifiers = new Map<string, IdentifierList>();
+
+  /**
+   * computed nodes by filename and (position (line:character))
+   */
+  private _computed = new Map<string, SchemaNode>();
+
+  get mainFile() {
+    return pathNormalizeToLinux(this.getPathRelativeToComponent(this.component.mainFile.path));
+  }
+
+  get identifiers() {
+    return this._identifiers;
+  }
+
+  get internalIdentifiers() {
+    return this._internalIdentifiers;
+  }
+
+  get computed() {
+    return this._computed;
+  }
+
+  get mainFileIdentifierKey() {
+    const mainFile = this.component.mainFile;
+    return this.getIdentifierKey(mainFile.path);
+  }
+
+  get mainModuleIdentifiers() {
+    return this.identifiers.get(this.mainFileIdentifierKey);
+  }
+
   constructor(
     readonly tsserver: TsserverClient,
     readonly component: Component,
@@ -35,8 +71,51 @@ export class SchemaExtractorContext {
     readonly formatter?: Formatter
   ) {}
 
-  computeSchema(node: Node) {
-    return this.extractor.computeSchema(node, this);
+  getComputedNodeKey({ filePath, line, character }: Location) {
+    return `${filePath}:${line}:${character}`;
+  }
+
+  getIdentifierKeyForNode(node: Node) {
+    const filePath = node.getSourceFile().fileName;
+    return this.getIdentifierKey(filePath);
+  }
+
+  getIdentifierKey(filePath: string) {
+    return pathNormalizeToLinux(filePath);
+  }
+
+  setComputed(node: SchemaNode) {
+    const { location } = node;
+    const key = this.getComputedNodeKey(location);
+    this.computed.set(key, node);
+  }
+
+  setIdentifiers(filePath: string, identifiers: IdentifierList) {
+    this._identifiers.set(this.getIdentifierKey(filePath), identifiers);
+  }
+
+  setInternalIdentifiers(filePath: string, identifiers: IdentifierList) {
+    const existing = this._internalIdentifiers.get(filePath);
+    if (!existing) {
+      this._internalIdentifiers.set(filePath, identifiers);
+    } else {
+      const uniqueIdentifiers = uniqBy(existing.identifiers.concat(identifiers.identifiers), (k) => k.aliasId || k.id);
+      this._internalIdentifiers.set(filePath, new IdentifierList(uniqueIdentifiers));
+    }
+  }
+
+  async computeSchema(node: Node) {
+    const location = this.getLocation(node);
+    const key = this.getComputedNodeKey(location);
+    const existingComputedSchema = this.computed.get(key);
+
+    if (existingComputedSchema) {
+      return existingComputedSchema;
+    }
+
+    const computedSchema = await this.extractor.computeSchema(node, this);
+    this.setComputed(computedSchema);
+    return computedSchema;
   }
 
   /**
@@ -118,25 +197,37 @@ export class SchemaExtractorContext {
 
   visitTypeDefinition() {}
 
-  private findFileInComponent(filePath: string) {
-    return this.component.filesystem.files.find((file) => {
-      const currentFilePath = file.path.replaceAll(/\\/g, '/');
+  findFileInComponent(filePath: string) {
+    const matchingFile = this.component.filesystem.files.find((file) => {
+      const currentFilePath = pathNormalizeToLinux(file.path);
       // TODO: fix this line to support further extensions.
       if (currentFilePath.includes(filePath)) {
         const strings = ['ts', 'tsx', 'js', 'jsx'].map((format) => {
           if (filePath.endsWith(format)) return filePath;
+          // check if it is an index file export
           return `${filePath}.${format}`;
         });
-        return strings.find((string) => string === currentFilePath);
+
+        const matchesWithExtension = !!strings.find((string) => string === currentFilePath);
+
+        const matchesIndexFile = ['ts', 'js'].some((format) => `${filePath}/index.${format}` === currentFilePath);
+
+        return matchesWithExtension || matchesIndexFile;
       }
 
       return false;
     });
+
+    return matchingFile;
   }
 
   private parsePackageNameFromPath(path: string) {
     const parts = path.split('node_modules');
-    if (parts.length === 1) return '';
+
+    if (parts.length === 1) {
+      return path;
+    }
+
     const lastPart = parts[parts.length - 1].replace(sep, '');
     const pkgParts = lastPart.split('/');
     if (lastPart.startsWith('@')) {
@@ -157,8 +248,7 @@ export class SchemaExtractorContext {
    */
   getSourceFileInsideComponent(filePath: string) {
     const file = this.findFileInComponent(filePath);
-    if (!file) return undefined;
-    return this.extractor.parseSourceFile(file);
+    return file && this.extractor.parseSourceFile(file);
   }
 
   async getSourceFileFromNode(node: Node) {
@@ -220,6 +310,9 @@ export class SchemaExtractorContext {
   }
 
   async visit(node: Node): Promise<SchemaNode> {
+    if (node.kind === SyntaxKind.Identifier && node.parent.parent.kind !== SyntaxKind.SourceFile) {
+      return this.visit(node.parent);
+    }
     return this.extractor.computeSchema(node, this);
   }
 
@@ -229,7 +322,7 @@ export class SchemaExtractorContext {
 
   isFromComponent() {}
 
-  async getFileExports(exportDec: ExportDeclaration | ExportAssignment) {
+  async getFileIdentifiers(exportDec: ExportDeclaration | ExportAssignment) {
     const file = exportDec.getSourceFile().fileName;
     const specifierPathStr =
       (exportDec.kind === SyntaxKind.ExportDeclaration && exportDec.moduleSpecifier?.getText()) || '';
@@ -237,44 +330,58 @@ export class SchemaExtractorContext {
     const absPath = resolve(file, '..', specifierPath);
     const sourceFile = this.getSourceFileInsideComponent(absPath);
     if (!sourceFile) return [];
-    return this.extractor.computeExportedIdentifiers(sourceFile, this);
+    return this.getIdentifiers(sourceFile);
   }
 
-  _exports: ExportList | undefined = undefined;
-
-  setExports(exports: ExportList) {
-    this._exports = exports;
-    return this;
+  async getFileExports(exportDec: ExportDeclaration | ExportAssignment) {
+    const identifiers = await this.getFileIdentifiers(exportDec);
+    return identifiers.filter((identifier) => ExportIdentifier.isExportIdentifier(identifier));
   }
 
-  getExportedIdentifiers(node: Node) {
-    return this.extractor.computeExportedIdentifiers(node, this);
+  async getFileInternals(exportDec: ExportDeclaration | ExportAssignment) {
+    const identifiers = await this.getFileIdentifiers(exportDec);
+    return identifiers.filter((identifier) => !ExportIdentifier.isExportIdentifier(identifier));
   }
 
-  async jump(file: AbstractVinyl, start: any): Promise<SchemaNode | undefined> {
-    const sourceFile = this.extractor.parseSourceFile(file);
-    const pos = this.getPosition(sourceFile, start.line, start.offset);
-    const nodeAtPos = getTokenAtPosition(sourceFile, pos);
-    if (!nodeAtPos) return undefined;
+  getIdentifiers(node: Node) {
+    return this.extractor.computeIdentifiers(node, this);
+  }
 
-    // this causes some infinite loops. it's helpful for getting more data from types that are not exported.
-    // e.g.
-    // ```ts
-    // class Bar {}
-    // export const getBar = () => new Bar();
-    // ```
-    // if (nodeAtPos.kind === ts.SyntaxKind.Identifier) {
-    //   // @todo: make sure with Ran that it's fine. Maybe it's better to do: `this.visit(nodeAtPos.parent);`
-    //   return this.visitDefinition(nodeAtPos);
-    // }
-    try {
-      return await this.visit(nodeAtPos);
-    } catch (err) {
-      if (err instanceof TransformerNotFound) {
-        return undefined;
-      }
-      throw err;
+  /**
+   * tsserver has two different calls: "definition" and "typeDefinition".
+   * normally, we need the "typeDefinition" to get the type data of a node.
+   * sometimes, it has no data, for example when the node is of type TypeReference, and then using "definition" is
+   * helpful. (couldn't find a rule when to use each one. e.g. "VariableDeclaration" sometimes has data only in
+   * "definition" but it's not clear when/why).
+   */
+  async getDefinition(node: Node) {
+    const typeDefinition = await this.typeDefinition(node);
+    const headTypeDefinition = head(typeDefinition?.body);
+    if (headTypeDefinition) {
+      return headTypeDefinition;
     }
+    const definition = await this.tsserver.getDefinition(node.getSourceFile().fileName, this.getLocation(node));
+    return head(definition?.body);
+  }
+
+  // when we can't figure out the component/package/type of this node, we'll use the typeStr as the type.
+  private async unknownExactType(node: Node, location: Location, typeStr = 'any', isTypeStrFromQuickInfo = true) {
+    if (isTypeStrFromQuickInfo) {
+      return new InferenceTypeSchema(location, typeStr || 'any');
+    }
+    const info = await this.getQuickInfo(node);
+    const type = parseTypeFromQuickInfo(info);
+    return new InferenceTypeSchema(location, type, typeStr);
+  }
+
+  // the reason for this check is to avoid infinite loop when calling `this.jump` with the same file+location
+  private isDefInSameLocation(node: Node, definition: protocol.FileSpanWithContext) {
+    if (definition.file !== node.getSourceFile().fileName) {
+      return false;
+    }
+    const loc = this.getLocation(node);
+
+    return loc.line === definition.start.line && loc.character === definition.start.offset;
   }
 
   /**
@@ -286,67 +393,142 @@ export class SchemaExtractorContext {
     isTypeStrFromQuickInfo = true
   ): Promise<SchemaNode> {
     const location = this.getLocation(node);
-    if (this._exports?.includes(typeStr)) {
-      return new TypeRefSchema(location, typeStr);
-    }
+
+    // check if internal ref with typeInfo
+    const internalRef = await this.getTypeRef(typeStr, this.getIdentifierKeyForNode(node), location);
+
+    if (internalRef) return internalRef;
+
+    // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
+    // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
     if (node.type && ts.isTypeNode(node.type)) {
-      // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
-      // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
-      return typeNodeToSchema(node.type, this);
+      return this.computeSchema(node.type);
     }
-    /**
-     * tsserver has two different calls: "definition" and "typeDefinition".
-     * normally, we need the "typeDefinition" to get the type data of a node.
-     * sometimes, it has no data, for example when the node is of type TypeReference, and then using "definition" is
-     * helpful. (couldn't find a rule when to use each one. e.g. "VariableDeclaration" sometimes has data only in
-     * "definition" but it's not clear when/why).
-     */
-    const getDef = async () => {
-      const typeDefinition = await this.typeDefinition(node);
-      const headTypeDefinition = head(typeDefinition?.body);
-      if (headTypeDefinition) {
-        return headTypeDefinition;
-      }
-      const definition = await this.tsserver.getDefinition(node.getSourceFile().fileName, this.getLocation(node));
-      return head(definition?.body);
-    };
-    const definition = await getDef();
 
-    // when we can't figure out the component/package/type of this node, we'll use the typeStr as the type.
-    const unknownExactType = async () => {
-      if (isTypeStrFromQuickInfo) {
-        return new InferenceTypeSchema(location, typeStr || 'any');
-      }
-      const info = await this.getQuickInfo(node);
-      const type = parseTypeFromQuickInfo(info);
-      return new InferenceTypeSchema(location, type, typeStr);
-    };
+    const definition = await this.getDefinition(node);
     if (!definition) {
-      return unknownExactType();
+      return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
-
-    // the reason for this check is to avoid infinite loop when calling `this.jump` with the same file+location
-    const isDefInSameLocation = () => {
-      if (definition.file !== node.getSourceFile().fileName) {
-        return false;
-      }
-      const loc = this.getLocation(node);
-      return loc.line === definition.start.line && loc.character === definition.start.offset;
-    };
 
     const file = this.findFileInComponent(definition.file);
-    if (file) {
-      if (isDefInSameLocation()) {
-        return unknownExactType();
-      }
-      const schemaNode = await this.jump(file, definition.start);
-      return schemaNode || unknownExactType();
+
+    if (!file) return this.getTypeRefForExternalPath(typeStr, definition.file, location);
+
+    if (this.isDefInSameLocation(node, definition)) {
+      return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
-    return this.getTypeRefForExternalPath(typeStr, definition.file, location);
+
+    const definitionNode = await this.definition(definition);
+
+    if (!definitionNode) {
+      return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
+    }
+
+    const definitionNodeName = definitionNode?.getText();
+
+    // check if internal ref with definition info
+    const definitionInternalRef = await this.getTypeRef(
+      definitionNodeName,
+      this.getIdentifierKeyForNode(definitionNode),
+      location
+    );
+
+    if (definitionInternalRef) return definitionInternalRef;
+
+    const transformer = this.extractor.getTransformer(definitionNode, this);
+
+    if (transformer === undefined) {
+      return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
+    }
+    const schemaNode = await this.visit(definitionNode);
+    return schemaNode || this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
   }
 
   private getCompIdByPkgName(pkgName: string): ComponentID | undefined {
     return this.componentDeps.find((dep) => dep.packageName === pkgName)?.componentId;
+  }
+
+  async getTypeRef(typeStr: string, filePath: string, location: Location): Promise<TypeRefSchema | undefined> {
+    const nodeIdentifierKey = this.getIdentifierKey(filePath);
+    const mainFileIdentifierKey = this.mainFileIdentifierKey;
+
+    const nodeIdentifierList = this.identifiers.get(nodeIdentifierKey);
+    const mainIdentifierList = this.identifiers.get(mainFileIdentifierKey);
+
+    const nodeIdentifier = new Identifier(typeStr, nodeIdentifierKey);
+    const mainIdentifier = new Identifier(typeStr, mainFileIdentifierKey);
+
+    const parsedNodeIdentifier = nodeIdentifierList?.find(nodeIdentifier);
+    const parsedMainIdentifier = mainIdentifierList?.find(mainIdentifier);
+    const isExportedFromMain = parsedMainIdentifier && ExportIdentifier.isExportIdentifier(parsedMainIdentifier);
+
+    if (!parsedNodeIdentifier) return undefined;
+
+    const internalRef = !isExportedFromMain;
+
+    if (internalRef) {
+      this.setInternalIdentifiers(filePath, new IdentifierList([parsedNodeIdentifier]));
+    }
+
+    return this.resolveTypeRef(parsedNodeIdentifier, location, isExportedFromMain);
+  }
+
+  async resolveTypeRef(
+    identifier: Identifier,
+    location: Location,
+    isExportedFromMain?: boolean
+  ): Promise<TypeRefSchema> {
+    const sourceFilePath = identifier.sourceFilePath;
+
+    if (!sourceFilePath || isExportedFromMain) {
+      return new TypeRefSchema(
+        location,
+        identifier.id,
+        undefined,
+        undefined,
+        !isExportedFromMain ? this.getPathRelativeToComponent(identifier.filePath) : undefined
+      );
+    }
+
+    if (!isRelativeImport(sourceFilePath)) {
+      const pkgName = this.parsePackageNameFromPath(sourceFilePath);
+      const compIdByPkg = this.getCompIdByPkgName(pkgName);
+
+      const compIdByPath = await this.extractor.getComponentIDByPath(sourceFilePath);
+
+      if (compIdByPath) {
+        return new TypeRefSchema(location, identifier.id, compIdByPath);
+      }
+
+      if (compIdByPkg) {
+        return new TypeRefSchema(location, identifier.id, compIdByPkg);
+      }
+
+      // package without comp id
+      return new TypeRefSchema(location, identifier.id, undefined, pkgName);
+    }
+
+    const relativeDir = identifier.filePath.substring(0, identifier.filePath.lastIndexOf('/'));
+    const absFilePath = resolve(relativeDir, sourceFilePath);
+    const compFilePath = this.findFileInComponent(absFilePath);
+
+    if (!compFilePath) {
+      // @todo handle this better
+      throw new Error(
+        `cannot find file in component \n absolute path:  ${absFilePath}\n source file path ${sourceFilePath}\n identifier file path ${identifier.filePath} \n relative dir ${relativeDir}`
+      );
+    }
+
+    const idKey = this.getIdentifierKey(compFilePath?.path);
+
+    // if re exported from a file, recurse until definition
+    const exportedIdentifier = (this.identifiers.get(idKey)?.identifiers || []).find((i) => i.id === identifier.id);
+
+    if (exportedIdentifier) {
+      return this.resolveTypeRef(exportedIdentifier, location, isExportedFromMain);
+    }
+
+    return new TypeRefSchema(location, identifier.id);
   }
 
   async getTypeRefForExternalNode(node: Node): Promise<TypeRefSchema> {
