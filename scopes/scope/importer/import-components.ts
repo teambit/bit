@@ -680,9 +680,9 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       componentsWithDependencies: componentsToWrite,
       writeToPath: this.options.writeToPath,
       writeConfig: this.options.writeConfig,
-      installNpmPackages: this.options.installNpmPackages,
+      skipDependencyInstallation: !this.options.installNpmPackages,
       verbose: this.options.verbose,
-      override: this.options.override,
+      throwForExistingDir: !this.options.override,
     };
     await this.componentWriter.writeMany(manyComponentsWriterOpts);
   }
