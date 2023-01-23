@@ -59,8 +59,7 @@ export default class HooksManager {
    * @return {HooksManager} instance of the HooksManager
    *
    */
-  static getInstance(): HooksManager {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  static getInstance(): HooksManager | null {
     return instance;
   }
 

@@ -1,2 +1,2 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --experimental-vm-modules
 require('../dist/app');

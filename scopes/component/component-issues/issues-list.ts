@@ -74,6 +74,11 @@ export class IssuesList {
     this.issues = this.issues.filter((issue) => issue.constructor.name !== IssueClass.name);
   }
 
+  /**
+   * Use getIssueByName to prevent issues when getting different instances while using both bit from bvm and from the repo
+   * @param IssueClass
+   * @returns
+   */
   getIssue<T extends ComponentIssue>(IssueClass: { new (): T }): T | undefined {
     return this.issues.find((issue) => issue instanceof IssueClass) as T | undefined;
   }

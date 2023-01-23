@@ -7,6 +7,7 @@ import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
+import pMapSeries from 'p-map-series';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
@@ -84,11 +85,16 @@ export class ImporterMain {
     }
   }
 
-  /**
-   * @todo: combine with this.import()
-   */
-  async importWithOptions(importOptions: ImportOptions) {
-    if (!this.workspace) throw new OutsideWorkspaceError();
+  async fetchLaneWithComponents(lane: Lane): Promise<ImportResult> {
+    const importOptions: ImportOptions = {
+      ids: [],
+      objectsOnly: true,
+      verbose: false,
+      writeConfig: false,
+      override: false,
+      installNpmPackages: false,
+      lanes: { laneIds: [lane.toLaneId()], lanes: [lane] },
+    };
     const importComponents = new ImportComponents(this.workspace, this.graph, this.componentWriter, importOptions);
     return importComponents.importComponents();
   }
@@ -114,7 +120,11 @@ export class ImporterMain {
     if (lanes) {
       importOptions.lanes = await getLanes(this.logger);
       importOptions.ids = [];
+      if (importOptions.lanes.lanes.length > 1) {
+        return this.fetchMultipleLanes(importOptions.lanes.lanes);
+      }
     }
+
     const importComponents = new ImportComponents(this.workspace, this.graph, this.componentWriter, importOptions);
     const { importedIds, importDetails } = await importComponents.importComponents();
     Analytics.setExtraData('num_components', importedIds.length);
@@ -155,6 +165,26 @@ export class ImporterMain {
 
       return result;
     }
+  }
+
+  async fetchMultipleLanes(lanes: Lane[]) {
+    // workaround for an issue where we have the current-lane object at hand but not its components, the sources.get
+    // throws an error about missing the Version object in the filesystem. to reproduce, comment the following line and
+    // run the e2e-test "import objects for multiple lanes".
+    await this.importObjects();
+
+    const resultsPerLane = await pMapSeries(lanes, async (lane) => {
+      this.logger.setStatusLine(`fetching lane ${lane.name}`);
+      const results = await this.fetchLaneWithComponents(lane);
+      this.logger.consoleSuccess();
+      return results;
+    });
+    const results = resultsPerLane.reduce((acc, curr) => {
+      acc.importedIds.push(...curr.importedIds);
+      acc.importDetails.push(...curr.importDetails);
+      return acc;
+    });
+    return results;
   }
 
   /**

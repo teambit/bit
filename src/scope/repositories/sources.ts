@@ -1,4 +1,3 @@
-import pMap from 'p-map';
 import { BitError } from '@teambit/bit-error';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
@@ -22,6 +21,7 @@ import { InMemoryCache } from '../../cache/in-memory-cache';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { pathNormalizeToLinux } from '../../utils';
 import { getDivergeData } from '../component-ops/get-diverge-data';
+import { pMapPool } from '../../utils/promise-with-concurrent';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -68,7 +68,7 @@ export default class SourceRepository {
     const concurrency = concurrentComponentsLimit();
     logger.trace(`sources.getMany, Ids: ${ids.join(', ')}`);
     logger.debug(`sources.getMany, ${ids.length} Ids`);
-    return pMap(
+    return pMapPool(
       ids,
       async (id) => {
         const component = await this.get(id, versionShouldBeBuilt);
