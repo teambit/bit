@@ -96,7 +96,8 @@ export class MergeLanesMain {
         return undefined;
       }
       const lane = await consumer.scope.loadLane(otherLaneId);
-      if (!skipFetch || !lane) {
+      const shouldFetch = !lane || (!skipFetch && !lane.isNew);
+      if (shouldFetch) {
         return this.lanes.fetchLaneWithItsComponents(otherLaneId);
       }
       return lane;
