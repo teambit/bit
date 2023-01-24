@@ -1203,6 +1203,9 @@ importers:
   scopes/api-reference/explorer/api-reference-explorer:
     specifiers: {}
 
+  scopes/api-reference/hooks/use-api:
+    specifiers: {}
+
   scopes/api-reference/hooks/use-api-ref-url:
     specifiers: {}
 
@@ -36913,8 +36916,8 @@ packages:
     version: 3.1.0
     engines: {node: '>=8'}
     dependencies:
-      onetime: registry.npmjs.org/onetime/5.1.2
-      signal-exit: registry.npmjs.org/signal-exit/3.0.7
+      onetime: 5.1.2
+      signal-exit: 3.0.7
     dev: false
 
   registry.npmjs.org/ret/0.1.15:
