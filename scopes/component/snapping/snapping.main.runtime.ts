@@ -408,6 +408,7 @@ export class SnappingMain {
     pattern,
     legacyBitIds, // @todo: change to ComponentID[]. pass only if have the ids already parsed.
     unmerged,
+    editor,
     message = '',
     ignoreIssues,
     skipTests = false,
@@ -420,6 +421,7 @@ export class SnappingMain {
     pattern?: string;
     legacyBitIds?: BitIds;
     unmerged?: boolean;
+    editor?: string;
     message?: string;
     ignoreIssues?: string;
     build: boolean;
@@ -448,6 +450,7 @@ export class SnappingMain {
       scope: this.scope,
       snapping: this,
       builder: this.builder,
+      editor,
       consumerComponents: components,
       ids,
       ignoreNewestVersion: false,
