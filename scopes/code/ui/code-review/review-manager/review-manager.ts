@@ -18,7 +18,7 @@ import {
 import { defaultStyles } from '@teambit/code.ui.code-review.styles.review-manager-styles';
 
 class ReviewManager implements IReviewManager {
-  static defaultCodeSelectionOverridesKey(codeSelection: CodeSelection) {
+  static defaultCodeSelectionOverrideKey(codeSelection: CodeSelection) {
     return `${codeSelection.startLineNumber}_${codeSelection.endLineNumber}-${codeSelection.startColumn}_${codeSelection.endColumn}`;
   }
 
@@ -314,7 +314,7 @@ class ReviewManager implements IReviewManager {
   renderCodeSelectionReviewDecoration(codeSelections: CodeSelection[]) {
     const decorations: monacoEditor.editor.IModelDeltaDecoration[] = codeSelections.map((codeSelection) => {
       const getKey =
-        this.settings.codeSelectionReviewStyles.overridesKey || ReviewManager.defaultCodeSelectionOverridesKey;
+        this.settings.codeSelectionReviewStyles.overridesKey || ReviewManager.defaultCodeSelectionOverrideKey;
 
       const className =
         this.settings.codeSelectionReviewStyles.overrides?.[getKey(codeSelection)].className ||
