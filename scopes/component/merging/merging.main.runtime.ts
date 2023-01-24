@@ -3,11 +3,10 @@ import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/work
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import {
-  ApplyVersionResults,
   MergeStrategy,
-  ApplyVersionResult,
   FailedComponents,
   FileStatus,
+  ApplyVersionResult,
   getMergeStrategyInteractive,
   MergeOptions,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
@@ -71,6 +70,20 @@ export type ComponentMergeStatusBeforeMergeAttempt = {
     currentId: BitId;
     modelComponent: ModelComponent;
   };
+};
+
+export type ApplyVersionResults = {
+  components?: ApplyVersionResult[];
+  version?: string;
+  failedComponents?: FailedComponents[];
+  resolvedComponents?: ConsumerComponent[]; // relevant for bit merge --resolve
+  abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
+  mergeSnapResults?: { snappedComponents: ConsumerComponent[]; autoSnappedResults: AutoTagResult[] } | null;
+  mergeSnapError?: Error;
+  leftUnresolvedConflicts?: boolean;
+  verbose?: boolean;
+  newFromLane?: string[];
+  newFromLaneAdded?: boolean;
 };
 
 export class MergingMain {
@@ -640,10 +653,8 @@ other:   ${otherLaneHead.toString()}`);
     const manyComponentsWriterOpts = {
       consumer,
       componentsWithDependencies: [componentWithDependencies],
-      installNpmPackages: false,
-      override: true,
+      skipDependencyInstallation: true,
       writeConfig: false, // @todo: should write if config exists before, needs to figure out how to do it.
-      verbose: false, // @todo: do we need a flag here?
     };
     await this.componentWriter.writeMany(manyComponentsWriterOpts);
 

@@ -1,13 +1,18 @@
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { LanesAspect, LanesMain } from '@teambit/lanes';
-import MergingAspect, { MergingMain, ComponentMergeStatus, ConfigMergeResult } from '@teambit/merging';
+import MergingAspect, {
+  MergingMain,
+  ComponentMergeStatus,
+  ConfigMergeResult,
+  ApplyVersionResults,
+} from '@teambit/merging';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
 import { BitId } from '@teambit/legacy-bit-id';
 import pMapSeries from 'p-map-series';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
