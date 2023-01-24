@@ -1,4 +1,4 @@
-import { InternalReviewManagerSettings } from '@teambit/code.ui.code-review.models.review-manager-model';
+import { InternalReviewManagerSettings } from './models';
 
 const defaultIcons = {
   ADD_REVIEW: 'https://static.bit.dev/bit-icons/plus.svg',

@@ -12,19 +12,20 @@ import {
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
 import { DarkTheme } from '@teambit/design.themes.dark-theme';
-import { CodeCompareTree } from './code-compare-tree';
-import { CodeCompareView } from './code-compare-view';
-import { Widget } from './code-compare.widgets';
+import { CodeCompareTree, CodeCompareWidget } from '@teambit/code.ui.code-compare';
+import { CodeReviewAnnotatorProps } from './models';
+import { CodeReviewView } from './code-review-view';
 
-import styles from './code-compare.module.scss';
+import styles from './code-review.module.scss';
 
 const DEFAULT_FILE = 'index.ts';
 
-export type CodeCompareProps = {
+export type CodeReviewProps = {
   fileIconSlot?: FileIconSlot;
+  codeAnnotator?: CodeReviewAnnotatorProps;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
+export function CodeReview({ fileIconSlot, className, codeAnnotator }: CodeReviewProps) {
   const componentCompareContext = useComponentCompare();
 
   const { base, compare, state: compareState, hooks: compareHooks } = componentCompareContext || {};
@@ -68,7 +69,7 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
               fileTree={fileTree}
               currentFile={selectedFile}
               drawerName={'FILES'}
-              widgets={[Widget]}
+              widgets={[CodeCompareWidget]}
               getHref={getHref}
               onTreeNodeSelected={hook?.onClick}
             />
@@ -76,12 +77,13 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
         </Pane>
         <HoverSplitter className={styles.splitter}></HoverSplitter>
         <Pane className={classNames(styles.right, styles.dark, !isSidebarOpen && styles.collapsed)}>
-          <CodeCompareView
-            widgets={[Widget]}
+          <CodeReviewView
+            widgets={[CodeCompareWidget]}
             fileName={selectedFile}
             files={fileTree}
             getHref={getHref}
             onTabClicked={hook?.onClick}
+            codeAnnotator={codeAnnotator}
           />
         </Pane>
       </SplitPane>

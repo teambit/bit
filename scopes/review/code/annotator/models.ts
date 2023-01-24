@@ -1,52 +1,49 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
-export interface IReviewManager {
+export interface ICodeAnnotator {
   onChange: OnChange;
-  applySettingsAndLoadComments(
-    comments: ReviewComment[],
+  applySettingsAndLoadAnnotations(
+    annotations: AnnotateItem[],
     settings?: ReviewManagerSettings,
     hardRefresh?: boolean
   ): void;
-  load(comments: ReviewComment[]): void;
+  load(annotations: AnnotateItem[]): void;
   renderLineReviewDecoration(lineNumbers: number[]): void;
   renderCodeSelectionReviewDecoration(codeSelections: CodeSelection[]): void;
-  refresh(comments?: ReviewComment[], settings?: ReviewManagerSettings): void;
+  refresh(annotations?: AnnotateItem[], settings?: ReviewManagerSettings): void;
   dispose(): void;
 }
 
-export interface InitReviewManagerProps {
+export interface InitCodeAnnotatorProps {
   editor: monacoEditor.editor.IStandaloneCodeEditor;
   currentUser?: string;
   onChange: OnChange;
-  comments: ReviewComment[];
+  annotations: AnnotateItem[];
   settings?: ReviewManagerSettings;
   verbose?: boolean;
 }
 
-export interface InitReviewManager {
-  (props: InitReviewManagerProps): IReviewManager;
+export interface InitCodeAnnotator {
+  (props: InitCodeAnnotatorProps): ICodeAnnotator;
 }
 
-export enum ReviewManagerEventType {
+export enum AnnotateEventType {
   AddEvent = 'Add',
   UpdateEvent = 'Update',
   SelectionEvent = 'Select',
 }
-export type ReviewEvent = {
+export type IAnnotateEvent = {
   event: monacoEditor.IMouseEvent;
-  type: ReviewManagerEventType;
-  comments: ReviewComment[];
+  type: AnnotateEventType;
+  annotations: AnnotateItem[];
 };
 
-export type ReviewComment = {
+export type AnnotateItem = {
   id?: string;
   author?: string;
   date?: number;
   lineNumber?: number;
   selection?: CodeSelection;
-  // text: string;
-  // parentId?: string;
-  // status: ReviewCommentStatus;
 };
 
 export type CodeSelection = {
@@ -58,9 +55,8 @@ export type CodeSelection = {
 
 export const CONTROL_ATTR_NAME = 'ReviewManagerControl';
 export const POSITION_BELOW = 2; // above=1, below=2, exact=0
-// const POSITION_EXACT = 0;
 
-export type OnChange = (event: ReviewEvent) => void;
+export type OnChange = (event: IAnnotateEvent) => void;
 
 export type BaseReviewSettings<T extends StyleSettings = StyleSettings> = {
   addReviewStyles: T;

@@ -285,6 +285,32 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/code"
     },
+    "code/annotator": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.review",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/review/code/annotator",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
+    "code/code-review": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.review",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/review/code/code-review",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "command-bar": {
         "scope": "teambit.explorer",
         "version": "0.0.966",
@@ -1337,40 +1363,6 @@
         "version": "0.0.2",
         "mainFile": "index.ts",
         "rootDir": "components/code-compare-section"
-    },
-    "ui/code-review/context/review-manager-context": {
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.code",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/code/ui/code-review/context/review-manager-context"
-    },
-    "ui/code-review/models/review-manager-model": {
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.code",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/code/ui/code-review/models/review-manager-model"
-    },
-    "ui/code-review/review-manager": {
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.code",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/code/ui/code-review/review-manager",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
-    },
-    "ui/code-review/styles/review-manager-styles": {
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.code",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/code/ui/code-review/styles/review-manager-styles"
     },
     "ui/code-tab-page": {
         "scope": "teambit.code",

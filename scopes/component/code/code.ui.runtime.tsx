@@ -1,12 +1,15 @@
 import React from 'react';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
-import { CodeCompare } from '@teambit/code.ui.code-compare';
+// import { CodeCompare } from '@teambit/code.ui.code-compare';
 import { Harmony, SlotRegistry, Slot } from '@teambit/harmony';
 import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { CodePage } from '@teambit/code.ui.code-tab-page';
+import { uniqBy } from 'lodash';
+import { initCodeAnnotator } from '@teambit/review.code.annotator';
 import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-compare';
+import { CodeReview } from '@teambit/review.code.code-review';
 import { CodeCompareSection } from '@teambit/code.ui.code-compare-section';
 import { CodeAspect } from './code.aspect';
 import { CodeSection } from './code.section';
@@ -31,9 +34,38 @@ export class CodeUI {
   getCodePage = () => {
     return <CodePage fileIconSlot={this.fileIconSlot} host={this.host} />;
   };
-
+  annotations: any[] = [
+    { lineNumber: 1 },
+    { lineNumber: 6 },
+    { lineNumber: 3, selection: { startColumn: 6, startLineNumber: 3, endColumn: 6, endLineNumber: 5 } },
+  ];
   getCodeCompare = () => {
-    return <CodeCompare fileIconSlot={this.fileIconSlot} />;
+    return (
+      <CodeReview
+        fileIconSlot={this.fileIconSlot}
+        codeAnnotator={{
+          init: initCodeAnnotator,
+          props: (props) => {
+            console.log('🚀 ~ file: code.ui.runtime.tsx:43 ~ CodeUI ~ props', props);
+            return {
+              annotations: this.annotations,
+            };
+          },
+          onDestroy: (props) => {
+            console.log('🚀 ~ file: code.ui.runtime.tsx:50 ~ CodeUI ~ props', props);
+          },
+          onChange: (props) => {
+            return (event) => {
+              console.log(props, event);
+              if (event.type === 'Add' || event.type === 'Select') {
+                this.annotations = uniqBy(this.annotations.concat(event.annotations), (prop) => prop.lineNumber);
+                props.codeAnnotator?.refresh(this.annotations);
+              }
+            };
+          },
+        }}
+      />
+    );
   };
 
   registerEnvFileIcon(icons: FileIconMatch[]) {

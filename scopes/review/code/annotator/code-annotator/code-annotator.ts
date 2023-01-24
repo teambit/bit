@@ -6,18 +6,18 @@ import {
   CodeSelection,
   hasDefaultIconRenderer,
   InternalReviewManagerSettings,
-  ReviewManagerEventType,
+  AnnotateEventType,
   styleDeclarationToString,
   OnChange,
-  ReviewComment,
+  AnnotateItem,
   ReviewManagerSettings,
   StyleSettings,
-  IReviewManager,
-  InitReviewManager,
-} from '@teambit/code.ui.code-review.models.review-manager-model';
-import { defaultStyles } from '@teambit/code.ui.code-review.styles.review-manager-styles';
+  ICodeAnnotator,
+  InitCodeAnnotator,
+} from '../models';
+import { defaultStyles } from '../styles';
 
-class ReviewManager implements IReviewManager {
+class CodeAnnotator implements ICodeAnnotator {
   static defaultCodeSelectionOverrideKey(codeSelection: CodeSelection) {
     return `${codeSelection.startLineNumber}_${codeSelection.endLineNumber}-${codeSelection.startColumn}_${codeSelection.endColumn}`;
   }
@@ -28,12 +28,12 @@ class ReviewManager implements IReviewManager {
   private addReviewDecoration?: string;
   private lineReviewDecorations: string[];
   private codeSelectionDecorations: string[];
-  private comments: ReviewComment[];
+  private annotations: AnnotateItem[];
   private settings: InternalReviewManagerSettings;
   private verbose?: boolean;
   private currentLine?: number;
   private currentSelection?: CodeSelection;
-  private lastEvent?: ReviewManagerEventType;
+  private lastEvent?: AnnotateEventType;
   private disposables: monacoEditor.IDisposable[];
   private defaultStyles = defaultStyles;
 
@@ -111,11 +111,11 @@ class ReviewManager implements IReviewManager {
       this.currentLine = this.currentSelection?.startLineNumber;
       this.renderAddReviewDecoration(this.currentLine);
     }
-    const comments = new Array<ReviewComment>(...this.comments.filter((c) => c.lineNumber === this.currentLine), {
+    const annotations = new Array<AnnotateItem>(...this.annotations.filter((c) => c.lineNumber === this.currentLine), {
       lineNumber: this.currentLine,
       selection: this.currentSelection,
     });
-    this.lastEvent && this.onChange({ type: this.lastEvent, comments, event: event.event });
+    this.lastEvent && this.onChange({ type: this.lastEvent, annotations, event: event.event });
   }
 
   private handleMouseDown(event: monacoEditor.editor.IEditorMouseEvent) {
@@ -140,7 +140,7 @@ class ReviewManager implements IReviewManager {
       this.currentLine &&
         this.editor.setSelection(new monacoEditor.Selection(this.currentLine, 0, this.currentLine, 0));
 
-      this.lastEvent = ReviewManagerEventType.UpdateEvent;
+      this.lastEvent = AnnotateEventType.UpdateEvent;
     }
     if (!this.currentLine && event.target.position) {
       this.currentLine = event.target.position.lineNumber;
@@ -153,7 +153,7 @@ class ReviewManager implements IReviewManager {
       this.currentLine &&
         this.editor.setSelection(new monacoEditor.Selection(this.currentLine, 0, this.currentLine, 0));
 
-      this.lastEvent = ReviewManagerEventType.AddEvent;
+      this.lastEvent = AnnotateEventType.AddEvent;
     }
   }
 
@@ -170,7 +170,7 @@ class ReviewManager implements IReviewManager {
     if (!isEqual(selection, this.currentSelection)) {
       this.editor.setSelection(selection);
       this.currentSelection = selection;
-      this.lastEvent = ReviewManagerEventType.SelectionEvent;
+      this.lastEvent = AnnotateEventType.SelectionEvent;
     }
   }
 
@@ -198,7 +198,7 @@ class ReviewManager implements IReviewManager {
     editor: monacoEditor.editor.IStandaloneCodeEditor,
     currentUser: string,
     onChange: OnChange,
-    comments: ReviewComment[],
+    annotations: AnnotateItem[],
     settings?: ReviewManagerSettings,
     verbose?: boolean
   ) {
@@ -218,10 +218,14 @@ class ReviewManager implements IReviewManager {
     this.disposables.push(this.editor.onMouseMove(this.handleMouseMove.bind(this)));
     this.disposables.push(this.editor.onDidChangeCursorSelection(this.handleChangeCursorSelection.bind(this)));
     // apply settings first and create custom css classes
-    this.applySettingsAndLoadComments(comments, settings);
+    this.applySettingsAndLoadAnnotations(annotations, settings);
   }
 
-  applySettingsAndLoadComments(comments: ReviewComment[], settings?: ReviewManagerSettings, hardRefresh?: boolean) {
+  applySettingsAndLoadAnnotations(
+    annotations: AnnotateItem[],
+    settings?: ReviewManagerSettings,
+    hardRefresh?: boolean
+  ) {
     let updatedSettings: InternalReviewManagerSettings = this.defaultStyles.styles;
 
     if (settings) {
@@ -237,27 +241,27 @@ class ReviewManager implements IReviewManager {
 
     const hasSettingsUpdated = !isEqual(this.settings, updatedSettings);
 
-    this.comments = comments;
+    this.annotations = annotations;
 
     if (hardRefresh || hasSettingsUpdated) {
       this.settings = hasSettingsUpdated ? updatedSettings : this.settings;
       this.createCustomCssClasses(hasSettingsUpdated);
-      this.load(this.comments);
+      this.load(this.annotations);
     }
   }
 
-  refresh(comments?: ReviewComment[], settings?: ReviewManagerSettings) {
+  refresh(annotations?: AnnotateItem[], settings?: ReviewManagerSettings) {
     if (this.verbose) {
       // eslint-disable-next-line no-console
       console.log('🚀 ~ file: review-manager.ts:140 ~ ReviewManager ~ refresh ~ refresh');
       // eslint-disable-next-line no-console
       console.dir(this);
       // eslint-disable-next-line no-console
-      console.dir(comments);
+      console.dir(annotations);
       // eslint-disable-next-line no-console
       console.dir(settings);
     }
-    this.applySettingsAndLoadComments(comments || this.comments, settings, true);
+    this.applySettingsAndLoadAnnotations(annotations || this.annotations, settings, true);
     this.editor.render();
   }
 
@@ -273,9 +277,9 @@ class ReviewManager implements IReviewManager {
     this.disposables.forEach((disposable) => disposable.dispose());
   }
 
-  load(comments: ReviewComment[]): void {
-    this.comments = comments;
-    const [, commentsWithSelection] = comments.reduce(
+  load(annotations: AnnotateItem[]): void {
+    this.annotations = annotations;
+    const [, commentsWithSelection] = annotations.reduce(
       (acc, curr) => {
         if (curr.selection) {
           acc[1].push(curr);
@@ -284,9 +288,9 @@ class ReviewManager implements IReviewManager {
         }
         return acc;
       },
-      [new Array<ReviewComment>(), new Array<ReviewComment>()]
+      [new Array<AnnotateItem>(), new Array<AnnotateItem>()]
     );
-    const uniqueLinesToAnnotate = compact(uniqBy(comments, (obj) => obj.lineNumber).map((c) => c.lineNumber));
+    const uniqueLinesToAnnotate = compact(uniqBy(annotations, (obj) => obj.lineNumber).map((c) => c.lineNumber));
     this.renderLineReviewDecoration(uniqueLinesToAnnotate);
     this.renderCodeSelectionReviewDecoration(commentsWithSelection.map((c) => c.selection as CodeSelection));
   }
@@ -312,7 +316,7 @@ class ReviewManager implements IReviewManager {
   renderCodeSelectionReviewDecoration(codeSelections: CodeSelection[]) {
     const decorations: monacoEditor.editor.IModelDeltaDecoration[] = codeSelections.map((codeSelection) => {
       const getKey =
-        this.settings.codeSelectionReviewStyles.overridesKey || ReviewManager.defaultCodeSelectionOverrideKey;
+        this.settings.codeSelectionReviewStyles.overridesKey || CodeAnnotator.defaultCodeSelectionOverrideKey;
 
       const className =
         this.settings.codeSelectionReviewStyles.overrides?.[getKey(codeSelection)].className ||
@@ -337,13 +341,13 @@ class ReviewManager implements IReviewManager {
   }
 }
 
-export const initReviewManager: InitReviewManager = ({
+export const initCodeAnnotator: InitCodeAnnotator = ({
   editor,
   currentUser,
   onChange,
-  comments,
+  annotations,
   settings,
   verbose,
 }) => {
-  return new ReviewManager(editor, currentUser || 'default', onChange, comments, settings, verbose);
+  return new CodeAnnotator(editor, currentUser || 'default', onChange, annotations, settings, verbose);
 };

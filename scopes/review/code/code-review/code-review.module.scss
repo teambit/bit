@@ -1,0 +1,293 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
+.componentCompareCodeViewContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--on-surface-neutral-low-color, #282828) !important;
+  &.loading {
+    padding: 0px 24px;
+  }
+}
+
+.componentCompareCodeDiffEditorContainer {
+  display: flex;
+  flex: 1;
+  height: 100%;
+
+  > section {
+    overflow: hidden;
+  }
+}
+
+.fileName {
+  display: flex;
+  align-items: baseline;
+  padding: 8px;
+}
+
+.ignoreWhitespaceControlContainer {
+  color: var(--on-surface-neutral-low-color, #282828);
+  width: fit-content;
+  padding: 0px 8px;
+  height: 24px;
+  display: flex;
+}
+
+.toggleContainer {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+  margin-bottom: 8px;
+
+  .toggle {
+    position: relative;
+    margin-right: 8px;
+  }
+}
+
+.loader {
+  width: calc(100% - 48px);
+  padding: 16px 24px;
+  color: var(--on-surface-neutral-low-color, #282828);
+  background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
+  > div {
+    background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
+  }
+}
+
+.compareNavItem {
+  color: #fff !important;
+  border-right: 0.5px solid var(--surface-neutral-color, #121212);
+
+  &.first {
+    border-left: 0.5px solid var(--surface-neutral-color, #121212);
+  }
+
+  &:hover:not(.activeNav) {
+    background-color: var(--surface-neutral-color, #121212) !important;
+    > div {
+      background-color: var(--surface-neutral-color, #121212) !important;
+    }
+  }
+}
+
+.activeNav {
+  background-color: var(--surface-neutral-color, #121212);
+  &::after {
+    background-color: var(--surface-neutral-color, #121212) !important;
+  }
+}
+
+.compareNav {
+  background-color: var(--on-surface-neutral-low-color, #282828);
+  gap: 0px !important;
+}
+
+.compareSecondaryNav {
+  background: var(--on-surface-neutral-low-color, #282828) !important;
+}
+
+.codeCompareTab {
+  display: flex;
+  align-items: center;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-left: 4px; // to align to sibling with icon
+    margin-right: 8px;
+  }
+
+  img {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+  }
+}
+
+.codeCompareToolbar {
+  background: var(--on-surface-neutral-low-color, #282828) !important;
+}
+
+.codeCompareWidgets {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 4px;
+
+  .settings {
+    cursor: pointer;
+
+    img {
+      display: flex;
+      width: 16px;
+    }
+  }
+}
+
+.codeCompareMenu {
+  z-index: $modal-z-index;
+  top: 100%;
+  right: 50%;
+  background: var(--on-surface-neutral-low-color, #282828) !important;
+  color: #fff;
+  min-width: 200px;
+}
+
+.settingsMenu {
+  padding: 8px;
+}
+
+.settingsTitle {
+  font-weight: 500;
+  font-size: var(--bit-p-md, 16px);
+  padding-bottom: 8px;
+}
+
+.splitSettings {
+  padding: 8px 0px;
+  display: flex;
+  align-items: center;
+}
+
+.splitOption {
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+  color: #fff;
+
+  > span {
+    padding-left: 8px;
+  }
+}
+
+.ignoreWhitespaceSettings,
+.wordWrapSettings,
+.splitSettings {
+  padding-bottom: 8px;
+  &:hover {
+    background: var(--on-surface-neutral-low-color, #282828);
+  }
+}
+
+.ignoreWhitespaceSettings,
+.wordWrapSettings {
+  > label {
+    padding: 8px 8px 8px 0px;
+    color: #fff;
+    &:hover {
+      background: var(--on-surface-neutral-low-color, #282828) !important;
+    }
+  }
+}
+
+.codeCompareTabRight {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+
+  > * {
+    margin-right: 4px;
+  }
+  > :last-child() {
+    margin-right: 0px;
+  }
+}
+
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
+.componentCompareCodeContainer {
+  /**
+  * TODO: Review this
+  * adjust for nav
+  */
+  min-height: 100%;
+  display: flex;
+  width: 100%;
+}
+
+.right {
+  min-width: 200px;
+  //cannot assign max-width directly to right side
+  max-width: calc(100% - 200px);
+  display: flex;
+  &.collapsed {
+    min-width: 32px;
+    //cannot assign max-width directly to right side
+    max-width: calc(100% - 32px);
+  }
+}
+
+.left {
+  position: relative;
+
+  background: var(--on-surface-neutral-low-color, #282828);
+
+  overflow-y: auto;
+  // this is to fix the right panel when it gets too big or too small
+  min-width: 200px;
+  max-width: calc(100% - 200px);
+  &.collapsed {
+    min-width: 32px;
+    //cannot assign max-width directly to right side
+    max-width: calc(100% - 32px);
+  }
+}
+
+.splitter {
+  position: relative;
+  // @todo get token for this color
+  background: var(--on-surface-neutral-low-color, #282828);
+  display: none;
+
+  > :first-child {
+    z-index: $pane-splitter-zIndex;
+    position: absolute;
+  }
+}
+
+.collapser {
+  right: 1px;
+}
+
+.depNode {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 8px;
+}
+
+.loader {
+  color: var(--on-surface-neutral-low-color, #282828);
+}
+
+.codeCompareTreeCollapse {
+  padding: 8px;
+  background: var(--on-surface-neutral-low-color, #282828);
+  cursor: pointer;
+
+  img {
+    width: 16px;
+    filter: brightness(0) invert(1);
+  }
+}
+
+.codeCompareTree {
+  height: calc(100% - 32px);
+}
+
+.themeContainer {
+  min-height: calc(100% - 56px);
+  display: flex;
+  width: 100%;
+  > div {
+    width: 100%;
+    min-height: calc(100% - 56px);
+  }
+}
