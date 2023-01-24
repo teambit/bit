@@ -246,6 +246,41 @@ export function CodeCompareView({
     }
   }, [view]);
 
+  const diffEditor = useMemo(
+    () => (
+      <DiffEditor
+        modified={modifiedFileContent}
+        original={originalFileContent}
+        language={language}
+        originalModelPath={originalPath}
+        modifiedModelPath={modifiedPath}
+        height={'100%'}
+        onMount={handleEditorDidMount}
+        className={darkMode}
+        theme={'vs-dark'}
+        options={{
+          ignoreTrimWhitespace: ignoreWhitespace,
+          readOnly: true,
+          renderSideBySide: view === 'split',
+          minimap: { enabled: false },
+          scrollbar: { alwaysConsumeMouseWheel: false },
+          scrollBeyondLastLine: false,
+          folding: false,
+          overviewRulerLanes: 0,
+          overviewRulerBorder: false,
+          wordWrap: (wrap && 'on') || 'off',
+          wrappingStrategy: (wrap && 'advanced') || undefined,
+          fixedOverflowWidgets: true,
+          renderLineHighlight: 'none',
+          lineHeight: 18,
+          padding: { top: 8 },
+        }}
+        loading={<CodeCompareViewLoader />}
+      />
+    ),
+    [modifiedFileContent, originalFileContent, ignoreWhitespace, view, wrap]
+  );
+
   return (
     <div className={classNames(styles.componentCompareCodeViewContainer, className, loading && styles.loading)}>
       <CodeCompareNav
@@ -304,37 +339,11 @@ export function CodeCompareView({
           </div>
         </Dropdown>
       </CodeCompareNav>
-      <div className={classNames(styles.componentCompareCodeDiffEditorContainer, loading && styles.loading)}>
-        <DiffEditor
-          modified={modifiedFileContent}
-          original={originalFileContent}
-          language={language}
-          originalModelPath={originalPath}
-          modifiedModelPath={modifiedPath}
-          height={'100%'}
-          onMount={handleEditorDidMount}
-          className={darkMode}
-          theme={'vs-dark'}
-          options={{
-            ignoreTrimWhitespace: ignoreWhitespace,
-            readOnly: true,
-            automaticLayout: true,
-            renderSideBySide: view === 'split',
-            minimap: { enabled: false },
-            scrollbar: { alwaysConsumeMouseWheel: false },
-            scrollBeyondLastLine: false,
-            folding: false,
-            overviewRulerLanes: 0,
-            overviewRulerBorder: false,
-            wordWrap: (wrap && 'on') || 'off',
-            wrappingStrategy: (wrap && 'advanced') || undefined,
-            fixedOverflowWidgets: true,
-            renderLineHighlight: 'none',
-            lineHeight: 18,
-            padding: { top: 8 },
-          }}
-          loading={<CodeCompareViewLoader />}
-        />
+      <div
+        key={`component-compare-code-view-${fileName}`}
+        className={classNames(styles.componentCompareCodeDiffEditorContainer, loading && styles.loading)}
+      >
+        {!loading ? diffEditor : <CodeCompareViewLoader />}
       </div>
     </div>
   );
