@@ -178,6 +178,7 @@ describe('merge lanes', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
+      helper.command.export();
       helper.command.createLane('dev');
       helper.fixtures.populateComponents(1, undefined, 'v2');
       helper.command.snapAllComponentsWithoutBuild();
@@ -227,6 +228,7 @@ describe('merge lanes', function () {
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       headOnMain = helper.command.getHead('comp1');
+      helper.command.export();
       helper.command.createLane('dev');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
@@ -713,6 +715,7 @@ describe('merge lanes', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
+      helper.command.export();
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.switchLocalLane('main');
@@ -741,6 +744,7 @@ describe('merge lanes', function () {
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild('comp2');
       comp2HeadOnMain = helper.command.getHead('comp2');
+      helper.command.export();
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       comp2PreviousHeadOnLane = helper.command.getHeadOfLane('dev', 'comp2');
@@ -864,6 +868,7 @@ describe('merge lanes', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild('comp2');
+      helper.command.export();
       helper.command.createLane();
 
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
@@ -902,6 +907,7 @@ describe('merge lanes', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild('comp2');
+      helper.command.export();
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');

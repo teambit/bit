@@ -3,6 +3,7 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { BitId } from '@teambit/legacy-bit-id';
+import { ApplyVersionResults } from '@teambit/merging';
 import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
 import { Version, Lane } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
@@ -13,11 +14,9 @@ import {
   deleteFilesIfNeeded,
   markFilesToBeRemovedIfNeeded,
 } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
-import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import {
   FailedComponents,
   getMergeStrategyInteractive,
-  ApplyVersionResults,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import threeWayMerge, {
   MergeResultsThreeWay,
@@ -88,15 +87,13 @@ export class LaneSwitcher {
       .map((c) => c.component)
       .filter((c) => c) as ComponentWithDependencies[];
 
-    const manyComponentsWriter = new ManyComponentsWriter({
-      consumer: this.consumer,
+    const manyComponentsWriterOpts = {
       componentsWithDependencies,
-      installNpmPackages: !this.checkoutProps.skipNpmInstall,
-      override: true,
+      skipDependencyInstallation: this.checkoutProps.skipNpmInstall,
       verbose: this.checkoutProps.verbose,
       writeConfig: this.checkoutProps.writeConfig,
-    });
-    await manyComponentsWriter.writeAll();
+    };
+    await this.Lanes.componentWriter.writeMany(manyComponentsWriterOpts);
     await deleteFilesIfNeeded(componentsResults, this.consumer);
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);

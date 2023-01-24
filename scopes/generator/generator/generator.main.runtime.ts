@@ -14,7 +14,6 @@ import { BitError } from '@teambit/bit-error';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { compact } from 'lodash';
-import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
@@ -76,7 +75,6 @@ export class GeneratorMain {
     private envs: EnvsMain,
     private aspectLoader: AspectLoaderMain,
     private newComponentHelper: NewComponentHelperMain,
-    private importer: ImporterMain,
     private componentAspect: ComponentMain
   ) {}
 
@@ -438,14 +436,13 @@ export class GeneratorMain {
     AspectLoaderAspect,
     NewComponentHelperAspect,
     CommunityAspect,
-    ImporterAspect,
     ComponentAspect,
   ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper, community, importer, componentAspect]: [
+    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper, community, componentAspect]: [
       Workspace,
       CLIMain,
       GraphqlMain,
@@ -453,7 +450,6 @@ export class GeneratorMain {
       AspectLoaderMain,
       NewComponentHelperMain,
       CommunityMain,
-      ImporterMain,
       ComponentMain
     ],
     config: GeneratorConfig,
@@ -467,7 +463,6 @@ export class GeneratorMain {
       envs,
       aspectLoader,
       newComponentHelper,
-      importer,
       componentAspect
     );
     const commands = [

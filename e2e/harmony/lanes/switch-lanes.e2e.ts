@@ -24,6 +24,7 @@ describe('bit lane command', function () {
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.command.snapAllComponents();
+        helper.command.export();
         helper.command.createLane();
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
         helper.command.snapAllComponents();
@@ -126,6 +127,7 @@ describe('bit lane command', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
+      helper.command.export();
       helper.command.createLane('migration');
       helper.fs.outputFile('comp1/comp1.spec.js');
       helper.command.addComponent('comp1/');

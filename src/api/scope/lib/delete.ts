@@ -19,7 +19,7 @@ export default async function remove(
   const bitIds = BitIds.deserialize(ids);
   const args = { path, bitIds, force };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  HooksManagerInstance.triggerHook(PRE_REMOVE_REMOTE, args, headers);
+  HooksManagerInstance?.triggerHook(PRE_REMOVE_REMOTE, args, headers);
   const res = await scope.removeMany(bitIds, force);
   const hookArgs = {
     removedComponentsIds: res.removedComponentIds.serialize(),
@@ -31,6 +31,6 @@ export default async function remove(
     scopeName: scope.scopeJson.name,
   };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  await HooksManagerInstance.triggerHook(POST_REMOVE_REMOTE, hookArgs, headers);
+  await HooksManagerInstance?.triggerHook(POST_REMOVE_REMOTE, hookArgs, headers);
   return res.serialize();
 }

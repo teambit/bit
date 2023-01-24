@@ -30,13 +30,13 @@ import {
 import { FilesStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ComponentsPendingMerge from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-merge';
-import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import VersionDependencies, {
   multipleVersionDependenciesToConsumer,
 } from '@teambit/legacy/dist/scope/version-dependencies';
 import { GraphMain } from '@teambit/graph';
 import { Workspace } from '@teambit/workspace';
+import { ComponentWriterMain } from '@teambit/component-writer';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -90,7 +90,12 @@ export default class ImportComponents {
   mergeStatus: { [id: string]: FilesStatus };
   private laneObjects: Lane[];
   private divergeData: Array<ModelComponent> = [];
-  constructor(private workspace: Workspace, private graph: GraphMain, public options: ImportOptions) {
+  constructor(
+    private workspace: Workspace,
+    private graph: GraphMain,
+    private componentWriter: ComponentWriterMain,
+    public options: ImportOptions
+  ) {
     this.consumer = this.workspace.consumer;
     this.scope = this.consumer.scope;
     this.laneObjects = this.options.lanes ? (this.options.lanes.lanes as Lane[]) : [];
@@ -670,15 +675,15 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       return;
     }
     const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(componentsWithDependencies);
-    const manyComponentsWriter = new ManyComponentsWriter({
+    const manyComponentsWriterOpts = {
       consumer: this.consumer,
       componentsWithDependencies: componentsToWrite,
       writeToPath: this.options.writeToPath,
       writeConfig: this.options.writeConfig,
-      installNpmPackages: this.options.installNpmPackages,
+      skipDependencyInstallation: !this.options.installNpmPackages,
       verbose: this.options.verbose,
-      override: this.options.override,
-    });
-    await manyComponentsWriter.writeAll();
+      throwForExistingDir: !this.options.override,
+    };
+    await this.componentWriter.writeMany(manyComponentsWriterOpts);
   }
 }

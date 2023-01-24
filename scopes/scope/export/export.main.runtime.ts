@@ -67,13 +67,13 @@ type ObjectsPerRemoteExtended = ObjectsPerRemote & {
 };
 
 type ExportParams = {
-  ids: string[];
-  eject: boolean;
-  allVersions: boolean;
-  originDirectly: boolean;
-  includeNonStaged: boolean;
-  resumeExportId: string | undefined;
-  ignoreMissingArtifacts: boolean;
+  ids?: string[];
+  eject?: boolean;
+  allVersions?: boolean;
+  originDirectly?: boolean;
+  includeNonStaged?: boolean;
+  resumeExportId?: string | undefined;
+  ignoreMissingArtifacts?: boolean;
 };
 
 export class ExportMain {
@@ -84,8 +84,8 @@ export class ExportMain {
     private logger: Logger
   ) {}
 
-  async export(params: ExportParams) {
-    HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
+  async export(params: ExportParams = {}) {
+    HooksManagerInstance?.triggerHook(PRE_EXPORT_HOOK, params);
     const { updatedIds, nonExistOnBitMap, missingScope, exported, removedIds, exportedLanes } =
       await this.exportComponents(params);
     let ejectResults;
@@ -98,12 +98,13 @@ export class ExportMain {
       ejectResults,
       exportedLanes,
     };
-    HooksManagerInstance.triggerHook(POST_EXPORT_HOOK, exportResults);
+    HooksManagerInstance?.triggerHook(POST_EXPORT_HOOK, exportResults);
     if (Scope.onPostExport) {
       await Scope.onPostExport(exported, exportedLanes).catch((err) => {
         this.logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
       });
     }
+    this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
     return exportResults;
   }
 
@@ -202,7 +203,7 @@ export class ExportMain {
     scope: Scope;
     ids: BitIds;
     laneObject?: Lane;
-    allVersions: boolean;
+    allVersions?: boolean;
     originDirectly?: boolean;
     idsWithFutureScope: BitIds;
     resumeExportId?: string | undefined;
@@ -617,8 +618,8 @@ export class ExportMain {
   }
 
   private async getComponentsToExport(
-    ids: string[],
-    includeNonStaged: boolean
+    ids: string[] = [],
+    includeNonStaged?: boolean
   ): Promise<{ idsToExport: BitIds; missingScope: BitId[]; idsWithFutureScope: BitIds; laneObject?: Lane }> {
     const consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
@@ -685,7 +686,7 @@ export class ExportMain {
 
   private async getLaneCompIdsToExport(
     consumer: Consumer,
-    includeNonStaged: boolean
+    includeNonStaged?: boolean
   ): Promise<{ componentsToExport: BitIds; laneObject: Lane }> {
     const currentLaneId = consumer.getCurrentLaneId();
     const laneObject = await consumer.scope.loadLane(currentLaneId);
@@ -817,3 +818,5 @@ async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
 export function isUserTryingToExportLanes(consumer: Consumer) {
   return consumer.isOnLane();
 }
+
+export default ExportMain;
