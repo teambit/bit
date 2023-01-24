@@ -1,4 +1,9 @@
-import { SchemaNode, ModuleSchema, UnresolvedSchema } from '@teambit/semantics.entities.semantic-schema';
+import {
+  SchemaNode,
+  ModuleSchema,
+  UnresolvedSchema,
+  UnImplementedSchema,
+} from '@teambit/semantics.entities.semantic-schema';
 import ts, {
   Node,
   SyntaxKind,
@@ -62,8 +67,13 @@ export class ExportDeclarationTransformer implements SchemaTransformer {
         throw new Error(`fatal: no specifier`);
       }
       const sourceFile = await context.getSourceFileFromNode(specifier);
+      // export * from 'webpack', export-all from a package
       if (!sourceFile) {
-        throw new Error(`unable to find the source-file`);
+        return new UnImplementedSchema(
+          context.getLocation(exportDec),
+          exportDec.getText(),
+          SyntaxKind[SyntaxKind.ExportDeclaration]
+        );
       }
       return context.computeSchema(sourceFile);
     }

@@ -198,19 +198,24 @@ export class SchemaExtractorContext {
   visitTypeDefinition() {}
 
   findFileInComponent(filePath: string) {
+    const filePathToCompare = pathNormalizeToLinux(filePath);
     const matchingFile = this.component.filesystem.files.find((file) => {
       const currentFilePath = pathNormalizeToLinux(file.path);
       // TODO: fix this line to support further extensions.
-      if (currentFilePath.includes(filePath)) {
+      if (currentFilePath.includes(filePathToCompare)) {
         const strings = ['ts', 'tsx', 'js', 'jsx'].map((format) => {
-          if (filePath.endsWith(format)) return filePath;
-          // check if it is an index file export
-          return `${filePath}.${format}`;
+          if (filePathToCompare.endsWith(`.${format}`)) return filePathToCompare;
+
+          return `${filePathToCompare}.${format}`;
         });
 
         const matchesWithExtension = !!strings.find((string) => string === currentFilePath);
-
-        const matchesIndexFile = ['ts', 'js'].some((format) => `${filePath}/index.${format}` === currentFilePath);
+        // check if it is an index file export
+        const matchesIndexFile =
+          !matchesWithExtension &&
+          ['ts', 'js'].some((format) => {
+            return `${filePathToCompare}/index.${format}` === currentFilePath;
+          });
 
         return matchesWithExtension || matchesIndexFile;
       }
@@ -517,6 +522,7 @@ export class SchemaExtractorContext {
       throw new Error(
         `cannot find file in component \n absolute path:  ${absFilePath}\n source file path ${sourceFilePath}\n identifier file path ${identifier.filePath} \n relative dir ${relativeDir}`
       );
+      return new TypeRefSchema(location, identifier.id);
     }
 
     const idKey = this.getIdentifierKey(compFilePath?.path);
