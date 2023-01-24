@@ -67,6 +67,7 @@ export class ExportDeclarationTransformer implements SchemaTransformer {
         throw new Error(`fatal: no specifier`);
       }
       const sourceFile = await context.getSourceFileFromNode(specifier);
+      // export * from 'webpack', export-all from a package
       if (!sourceFile) {
         return new UnImplementedSchema(
           context.getLocation(exportDec),
