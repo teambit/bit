@@ -7,17 +7,15 @@ import {
 } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
-import { typeElementToSchema } from './utils/type-element-to-schema';
-import { typeNodeToSchema } from './utils/type-node-to-schema';
+import { Identifier } from '../identifier';
 
 export class InterfaceDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === SyntaxKind.InterfaceDeclaration;
   }
 
-  async getIdentifiers(node: InterfaceDeclaration): Promise<ExportIdentifier[]> {
-    return [new ExportIdentifier(node.name.getText(), node.getSourceFile().fileName)];
+  async getIdentifiers(node: InterfaceDeclaration): Promise<Identifier[]> {
+    return [new Identifier(node.name.getText(), node.getSourceFile().fileName)];
   }
 
   private async getExpressionWithTypeArgs(node: InterfaceDeclaration, context: SchemaExtractorContext) {
@@ -33,7 +31,7 @@ export class InterfaceDeclarationTransformer implements SchemaTransformer {
         }),
       async (expressionWithTypeArgs: ts.ExpressionWithTypeArguments & { name: string }) => {
         const { typeArguments, expression, name } = expressionWithTypeArgs;
-        const typeArgsNodes = typeArguments ? await pMapSeries(typeArguments, (t) => typeNodeToSchema(t, context)) : [];
+        const typeArgsNodes = typeArguments ? await pMapSeries(typeArguments, (t) => context.computeSchema(t)) : [];
         const location = context.getLocation(expression);
         const expressionNode =
           (await context.visitDefinition(expression)) || new UnresolvedSchema(location, expression.getText());
@@ -43,7 +41,7 @@ export class InterfaceDeclarationTransformer implements SchemaTransformer {
   }
 
   async transform(interfaceDec: InterfaceDeclaration, context: SchemaExtractorContext) {
-    const members = await pMapSeries(interfaceDec.members, (member) => typeElementToSchema(member, context));
+    const members = await pMapSeries(interfaceDec.members, (member) => context.computeSchema(member));
     const doc = await context.jsDocToDocSchema(interfaceDec);
     const signature = interfaceDec.name ? await context.getQuickInfoDisplayString(interfaceDec.name) : undefined;
     const extendsNodes = await this.getExpressionWithTypeArgs(interfaceDec, context);
