@@ -100,10 +100,12 @@ export class MergeLanesMain {
       if (isDefaultLane) {
         return undefined;
       }
-      const lane = await consumer.scope.loadLane(otherLaneId);
+      let lane = await consumer.scope.loadLane(otherLaneId);
       const shouldFetch = !lane || (!skipFetch && !lane.isNew);
       if (shouldFetch) {
-        return this.lanes.fetchLaneWithItsComponents(otherLaneId);
+        // don't assign `lane` to the result of this command. otherwise, if you have local snaps, it'll ignore them and use the remote-lane.
+        await this.lanes.fetchLaneWithItsComponents(otherLaneId);
+        lane = await consumer.scope.loadLane(otherLaneId);
       }
       return lane;
     };
