@@ -92,16 +92,14 @@ class ReviewManager implements IReviewManager {
     }, '');
   }
 
-  private handleMouseMove(ev: monacoEditor.editor.IEditorMouseEvent) {
-    if (ev.target && ev.target.position && ev.target.position.lineNumber) {
-      this.currentLine = ev.target.position.lineNumber;
-      // console.log('🚀 ~ file: review-manager.ts:242 ~ ReviewManager ~ handleMouseMove ~ handleMouseMove \n');
-      // console.dir(ev);
-      this.renderAddReviewDecoration(ev.target.position.lineNumber);
+  private handleMouseMove(event: monacoEditor.editor.IEditorMouseEvent) {
+    if (event.target && event.target.position && event.target.position.lineNumber) {
+      this.currentLine = event.target.position.lineNumber;
+      this.renderAddReviewDecoration(event.target.position.lineNumber);
     }
   }
 
-  private handleMouseUp(ev: monacoEditor.editor.IEditorMouseEvent) {
+  private handleMouseUp(event: monacoEditor.editor.IEditorMouseEvent) {
     if (this.verbose) {
       // eslint-disable-next-line no-console
       console.log('🚀 ~ file: review-manager.ts:324 ~ ReviewManager ~ handleMouseUp ~ handleMouseUp \n');
@@ -117,25 +115,25 @@ class ReviewManager implements IReviewManager {
       lineNumber: this.currentLine,
       selection: this.currentSelection,
     });
-    this.lastEvent && this.onChange({ type: this.lastEvent, comments, event: ev.event });
+    this.lastEvent && this.onChange({ type: this.lastEvent, comments, event: event.event });
   }
 
-  private handleMouseDown(ev: monacoEditor.editor.IEditorMouseEvent) {
+  private handleMouseDown(event: monacoEditor.editor.IEditorMouseEvent) {
     this.lastEvent = undefined;
 
     if (this.verbose) {
       // eslint-disable-next-line no-console
-      console.log('🚀 ~ file: review-manager.ts:486 ~ handleMouseDown ~ ev\n');
+      console.log('🚀 ~ file: review-manager.ts:486 ~ handleMouseDown ~ event\n');
       // eslint-disable-next-line no-console
-      console.dir(ev);
+      console.dir(event);
     }
     // Not ideal - but couldn't figure out a different way to identify the glyph event
-    if (!ev.target.element?.className) return;
-    if (!this.currentLine && ev.target.position) {
-      this.currentLine = ev.target.position.lineNumber;
+    if (!event.target.element?.className) return;
+    if (!this.currentLine && event.target.position) {
+      this.currentLine = event.target.position.lineNumber;
     }
 
-    if (ev.target.element.className.indexOf(this.settings.lineReviewStyles.className) > -1) {
+    if (event.target.element.className.indexOf(this.settings.lineReviewStyles.className) > -1) {
       // eslint-disable-next-line no-console
       if (this.verbose) console.log('\n clicking on line comment');
 
@@ -144,11 +142,11 @@ class ReviewManager implements IReviewManager {
 
       this.lastEvent = ReviewManagerEventType.UpdateEvent;
     }
-    if (!this.currentLine && ev.target.position) {
-      this.currentLine = ev.target.position.lineNumber;
+    if (!this.currentLine && event.target.position) {
+      this.currentLine = event.target.position.lineNumber;
     }
 
-    if (ev.target.element.className.indexOf('line-numbers') > -1) {
+    if (event.target.element.className.indexOf('line-numbers') > -1) {
       // eslint-disable-next-line no-console
       if (this.verbose) console.log('\n clicking on add review');
 
@@ -159,16 +157,16 @@ class ReviewManager implements IReviewManager {
     }
   }
 
-  private handleChangeCursorSelection(ev: monacoEditor.editor.ICursorSelectionChangedEvent) {
+  private handleChangeCursorSelection(event: monacoEditor.editor.ICursorSelectionChangedEvent) {
     if (this.verbose) {
       // eslint-disable-next-line no-console
       console.log(
         '🚀 ~ file: review-manager.ts:317 ~ ReviewManager ~ handleChangeCursorSelection ~ handleChangeCursorSelection \n'
       );
       // eslint-disable-next-line no-console
-      console.dir(ev);
+      console.dir(event);
     }
-    const { selection } = ev;
+    const { selection } = event;
     if (!isEqual(selection, this.currentSelection)) {
       this.editor.setSelection(selection);
       this.currentSelection = selection;
