@@ -1002,6 +1002,19 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/preview"
     },
+    "preview/preview-mask": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.review",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/review/preview/preview-mask",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "pubsub": {
         "scope": "teambit.harmony",
         "version": "0.0.966",
