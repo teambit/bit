@@ -262,6 +262,8 @@ export class SnappingMain {
     const bitIds = componentIds.map((c) => c._legacy);
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
     const components = await this.scope.import(componentIdsLatest);
+    // needed in order to load all aspects of these components
+    await this.scope.loadMany(components.map((c) => c.id));
     await Promise.all(
       components.map(async (comp) => {
         const tagData = tagDataPerComp.find((t) => t.componentId.isEqual(comp.id, { ignoreVersion: true }));
