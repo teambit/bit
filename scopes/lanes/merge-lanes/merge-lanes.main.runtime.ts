@@ -44,7 +44,7 @@ export type MergeLaneOptions = {
   skipDependencyInstallation?: boolean;
   resolveUnrelated?: MergeStrategy;
   ignoreConfigChanges?: boolean;
-  remote?: boolean;
+  skipFetch?: boolean;
 };
 
 export class MergeLanesMain {
@@ -81,7 +81,7 @@ export class MergeLanesMain {
       skipDependencyInstallation,
       resolveUnrelated,
       ignoreConfigChanges,
-      remote,
+      skipFetch,
     } = options;
 
     const currentLaneId = consumer.getCurrentLaneId();
@@ -100,9 +100,12 @@ export class MergeLanesMain {
       if (isDefaultLane) {
         return undefined;
       }
-      const lane = await consumer.scope.loadLane(otherLaneId);
-      if (remote || !lane) {
-        return this.lanes.fetchLaneWithItsComponents(otherLaneId);
+      let lane = await consumer.scope.loadLane(otherLaneId);
+      const shouldFetch = !lane || (!skipFetch && !lane.isNew);
+      if (shouldFetch) {
+        // don't assign `lane` to the result of this command. otherwise, if you have local snaps, it'll ignore them and use the remote-lane.
+        await this.lanes.fetchLaneWithItsComponents(otherLaneId);
+        lane = await consumer.scope.loadLane(otherLaneId);
       }
       return lane;
     };
