@@ -84,8 +84,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
 
   const compare = _compareId ? compareComponent : component;
 
-  const isEmpty =
-    !compareIsLocalChanges && ((!loading && !compare && !base) || compare?.id.toString() === base?.id.toString());
+  const isEmpty = !compareIsLocalChanges && !loading && compare?.id.toString() === base?.id.toString();
 
   const compCompareId = `${base?.id.toString()}-${compare?.id.toString()}`;
 

@@ -42,4 +42,7 @@
   position: sticky;
   background: var(--background-color, #121212);
   z-index: $nav-z-index;
+  h4 {
+    text-transform: capitalize;
+  }
 }
