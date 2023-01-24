@@ -144,7 +144,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     if (disableDeployPipeline) {
       this.logger.consoleWarning(`--disable-deploy-pipeline is deprecated, please use --disable-tag-pipeline instead`);
     }
-    if (!message && !persist) {
+    if (!message && !persist && !editor) {
       this.logger.consoleWarning(
         `--message will be mandatory in the next few releases. make sure to add a message with your tag`
       );
