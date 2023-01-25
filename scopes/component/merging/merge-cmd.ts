@@ -258,3 +258,12 @@ export function conflictSummaryReport(components: ApplyVersionResult[]): string 
     })
   ).join('\n');
 }
+
+export function installationErrorOutput(installationError?: Error) {
+  if (!installationError) return '';
+  const title = chalk.underline('Installation Error');
+  const subTitle =
+    'The following error had been caught from the package manager, please fix the issue and run "bit install"';
+  const body = chalk.red(installationError.message);
+  return `\n\n${title}\n${subTitle}\n${body}`;
+}

@@ -28,6 +28,8 @@ export interface ManyComponentsWriterParams {
   resetConfig?: boolean;
 }
 
+export type ComponentWriterResults = { installationError?: Error };
+
 export class ComponentWriterMain {
   constructor(
     private installer: InstallMain,
@@ -40,21 +42,23 @@ export class ComponentWriterMain {
     return this.workspace.consumer;
   }
 
-  async writeMany(opts: ManyComponentsWriterParams) {
+  async writeMany(opts: ManyComponentsWriterParams): Promise<ComponentWriterResults> {
     this.logger.debug('writeMany, started');
     await this.populateComponentsFilesToWrite(opts);
     this.moveComponentsIfNeeded(opts);
     await this.persistComponentsData(opts);
+    let installationError: Error | undefined;
     if (!opts.skipDependencyInstallation) {
-      await this.installPackages();
+      installationError = await this.installPackagesGracefully();
       await this.compile(); // no point to compile if the installation is not running. the environment is not ready.
     }
     await this.consumer.writeBitMap();
     this.logger.debug('writeMany, completed!');
+    return { installationError };
   }
 
-  private async installPackages() {
-    this.logger.debug('ManyComponentsWriter, _installPackages');
+  private async installPackagesGracefully() {
+    this.logger.debug('installPackagesGracefully, start installing packages');
     try {
       const installOpts = {
         dedupe: true,
@@ -62,11 +66,12 @@ export class ComponentWriterMain {
         import: false,
       };
       await this.installer.install(undefined, installOpts);
+      this.logger.debug('installPackagesGracefully, completed installing packages successfully');
+      return undefined;
     } catch (err: any) {
-      this.logger.error('_installPackagesIfNeeded, package-installer found an error', err);
-      throw new BitError(`failed installing the packages, consider running the command with "--skip-dependency-installation" flag.
-error from the package-manager: ${err.message}.
-please use the '--log=error' flag for the full error.`);
+      this.logger.consoleFailure(`installation failed with the following error: ${err.message}`);
+      this.logger.error('installPackagesGracefully, package-installer found an error', err);
+      return err;
     }
   }
   private async compile() {
