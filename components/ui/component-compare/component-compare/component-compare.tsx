@@ -92,7 +92,8 @@ export function ComponentCompare(props: ComponentCompareProps) {
     return (compare?.logs || []).slice().reduce(groupByVersion, new Map<string, LegacyComponentLog>());
   }, [compare?.id.toString()]);
 
-  const skipComponentCompareQuery = compareIsLocalChanges || !base?.id.version || !compare?.id.version;
+  const skipComponentCompareQuery =
+    compareIsLocalChanges || base?.id.version?.toString() === compare?.id.version?.toString();
 
   const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
     base?.id.toString(),

@@ -7,7 +7,6 @@ import {
   useUpdatedUrlFromQuery,
 } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
-import { PreviewMask } from '@teambit/review.preview.preview-mask';
 import queryString from 'query-string';
 import React, { useMemo, useState } from 'react';
 import styles from './composition-compare.module.scss';
@@ -88,14 +87,12 @@ export function CompositionCompare(props: CompositionCompareProps) {
     return (
       <div className={styles.subView}>
         <CompositionContextProvider queryParams={baseCompositionParams} setQueryParams={setBaseCompositionParams}>
-          <PreviewMask onMaskClicked={(e) => console.log('\nmask clicked: ', e)}>
-            <CompositionContent
-              emptyState={emptyState}
-              component={component?.base.model}
-              selected={selectedBaseComp}
-              queryParams={baseCompQueryParams}
-            />
-          </PreviewMask>
+          <CompositionContent
+            emptyState={emptyState}
+            component={component?.base.model}
+            selected={selectedBaseComp}
+            queryParams={baseCompQueryParams}
+          />
         </CompositionContextProvider>
       </div>
     );
