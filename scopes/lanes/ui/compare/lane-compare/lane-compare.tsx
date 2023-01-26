@@ -286,8 +286,8 @@ export function LaneCompare({
 function displayChangeType(changeType: ChangeType): string {
   switch (changeType) {
     case ChangeType.SOURCE_CODE:
-      return 'Code';
+      return 'code';
     default:
-      return changeType;
+      return changeType.toLowerCase();
   }
 }
