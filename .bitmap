@@ -285,32 +285,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/code"
     },
-    "code/annotator": {
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.review",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/review/code/annotator",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
-    },
-    "code/code-review": {
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.review",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/review/code/code-review",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
-    },
     "command-bar": {
         "scope": "teambit.explorer",
         "version": "0.0.969",
@@ -1001,19 +975,6 @@
         "version": "0.0.969",
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/preview"
-    },
-    "preview/preview-mask": {
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.review",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/review/preview/preview-mask",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
     },
     "pubsub": {
         "scope": "teambit.harmony",
