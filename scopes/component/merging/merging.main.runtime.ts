@@ -84,6 +84,7 @@ export type ApplyVersionResults = {
   verbose?: boolean;
   newFromLane?: string[];
   newFromLaneAdded?: boolean;
+  installationError?: Error; // in case the package manager failed, it won't throw, instead, it'll return error here
 };
 
 export class MergingMain {

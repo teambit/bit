@@ -150,6 +150,7 @@ export class CheckoutMain {
     }
 
     const leftUnresolvedConflicts = componentWithConflict && checkoutProps.mergeStrategy === 'manual';
+    let componentWriterResults;
     if (componentsWithDependencies.length) {
       const manyComponentsWriterOpts = {
         componentsWithDependencies,
@@ -157,7 +158,7 @@ export class CheckoutMain {
         verbose: checkoutProps.verbose,
         resetConfig: checkoutProps.reset,
       };
-      await this.componentWriter.writeMany(manyComponentsWriterOpts);
+      componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
       await deleteFilesIfNeeded(componentsResults, consumer);
     }
 
@@ -170,6 +171,7 @@ export class CheckoutMain {
       leftUnresolvedConflicts,
       newFromLane: newFromLane?.map((n) => n.toString()),
       newFromLaneAdded,
+      installationError: componentWriterResults?.installationError,
     };
   }
 
