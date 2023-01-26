@@ -7,6 +7,11 @@ export interface ApplicationType<T> {
   name: string;
 
   /**
+   * pattern of the app.
+   */
+  pattern?: string;
+
+  /**
    * a function that creates the app instance.
    */
   createApp(options: T): Application;

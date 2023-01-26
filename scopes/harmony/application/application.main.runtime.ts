@@ -1,5 +1,5 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
-import { flatten, head } from 'lodash';
+import { compact, flatten, head } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
@@ -131,6 +131,54 @@ export class ApplicationMain {
     return head(apps);
   }
 
+  listAppTypes() {
+    return flatten(this.appTypeSlot.values());
+  }
+
+  async listAppsFromComponents() {
+    const components = await this.componentAspect.getHost().list();
+    const appTypesPatterns = this.getAppPatterns();
+    const apps = components.filter((component) => {
+      // has app plugin from registered types.
+      const files = component.filesystem.byGlob(appTypesPatterns);
+      return !!files.length;
+    });
+
+    return apps;
+  }
+
+  getAppPatterns() {
+    const appTypes = this.listAppTypes();
+    const appTypesPatterns = appTypes.map((appType) => {
+      return this.getAppPattern(appType);
+    });
+
+    return appTypesPatterns;
+  }
+
+  async loadApps(): Promise<Application[]> {
+    const apps = await this.listAppsFromComponents();
+    const appTypesPatterns = this.getAppPatterns();
+
+    const pluginsToLoad = apps.flatMap((appComponent) => {
+      const files = appComponent.filesystem.byGlob(appTypesPatterns);
+      return files.map((file) => file.path);
+    });
+    // const app = require(appPath);
+    const appManifests = compact(pluginsToLoad.map((pluginPath) => {
+      try {
+        // eslint-disable-next-line
+        const appManifest = require(pluginPath)?.default;
+        return appManifest;
+      } catch (err) {
+        this.logger.error(`failed loading app manifest: ${pluginPath}`);
+        return undefined;
+      }
+    }));
+    
+    return appManifests;
+  }
+
   /**
    * get an app.
    */
@@ -153,11 +201,16 @@ export class ApplicationMain {
     return byId[0];
   }
 
+  getAppPattern(appType: ApplicationType<unknown>) {
+    if (appType.pattern) return appType.pattern;
+    return `*.${appType.name}.*`;
+  }
+
   /**
    * registers a new app and sets a plugin for it.
    */
   registerAppType<T>(appType: ApplicationType<T>) {
-    const plugin = new AppTypePlugin(`*.${appType.name}.*`, appType, this.appSlot);
+    const plugin = new AppTypePlugin(this.getAppPattern(appType), appType, this.appSlot);
     this.aspectLoader.registerPlugins([plugin]);
     this.appTypeSlot.register([appType]);
     return this;
@@ -190,6 +243,12 @@ export class ApplicationMain {
       ...this.defaultOpts,
       ...opts,
     };
+  }
+
+  async loadAppsToSlot() {
+    const apps = await this.loadApps();
+    this.appSlot.register(apps);
+    return this;
   }
 
   async runApp(appName: string, options?: ServeAppOptions) {
@@ -301,6 +360,9 @@ export class ApplicationMain {
     envs.registerService(appService);
     cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
+    cli.registerOnStart(async () => {
+      await application.loadAppsToSlot();
+    });
     if (workspace) {
       workspace.onComponentLoad(async (loadedComponent) => {
         const app = application.calculateAppByComponent(loadedComponent);
