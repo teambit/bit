@@ -63,8 +63,7 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
    * viewport
    */
   viewport?: number | null;
-  // dropdown 1440
-  //
+
   /**
    * is preview being rendered in full height and should fit view height to content.
    */
