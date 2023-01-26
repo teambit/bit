@@ -14,6 +14,7 @@ export type { WebpackConfigWithDevServer } from './webpack.dev-server';
 export * from './events';
 export { Configuration } from 'webpack';
 export { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
+export { configFactory } from './config/webpack.config';
 export { WebpackBitReporterPlugin } from './plugins/webpack-bit-reporter-plugin';
 export { fallbacks } from './config/webpack-fallbacks';
 export { fallbacksAliases } from './config/webpack-fallbacks-aliases';
