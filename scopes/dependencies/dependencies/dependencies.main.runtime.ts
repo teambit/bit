@@ -7,7 +7,7 @@ import {
   KEY_NAME_BY_LIFECYCLE_TYPE,
 } from '@teambit/dependency-resolver';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { cloneDeep, compact, set } from 'lodash';
+import { cloneDeep, compact, merge, set } from 'lodash';
 import pMapSeries from 'p-map-series';
 import {
   DependenciesBlameCmd,
@@ -62,7 +62,31 @@ export class DependenciesMain {
     };
     await Promise.all(
       compIds.map(async (compId) => {
-        await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, config, true, true);
+        const getConfig = async () => {
+          const extensions = await this.workspace.getExtensionsFromScopeAndSpecific(compId);
+          const obj = extensions.toConfigObject();
+          const currentConfig = obj[DependencyResolverAspect.id];
+          if (!currentConfig?.policy) return config;
+          // merge
+          const currentConfigOfDepField = currentConfig.policy[getDepField()];
+          if (!currentConfigOfDepField || !Array.isArray(currentConfigOfDepField)) {
+            return merge(currentConfig, config);
+          }
+          // it's an array
+          Object.keys(packagesObj).forEach((pkgName) => {
+            const found = currentConfigOfDepField.find((pkg) => pkg.name === pkgName);
+            if (found) {
+              found.force = true;
+              found.version = packagesObj[pkgName];
+            } else {
+              currentConfigOfDepField.push({ name: pkgName, version: packagesObj[pkgName], force: true });
+            }
+          });
+          return currentConfig;
+        };
+
+        const mergedConfig = await getConfig();
+        await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, mergedConfig, true);
       })
     );
 

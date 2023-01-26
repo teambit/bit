@@ -255,6 +255,13 @@ describe('merge config scenarios', function () {
         const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
         expect(ramdaDep.version).to.equal('0.0.21');
       });
+      // @todo: this is still failing. coz "bit show" doesn't know to deal with the new format of the array, only object
+      it('running bit deps set of another pkg, should work', () => {
+        helper.command.dependenciesSet('comp1', 'lodash@1.0.0', '--dev');
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        const lodashDep = showConfig.data.dependencies.find((d) => d.id === 'lodash');
+        expect(lodashDep.version).to.equal('1.0.0');
+      });
     });
   });
   describe('diverge with envs changes', () => {
