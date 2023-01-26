@@ -3,6 +3,7 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { BitId } from '@teambit/legacy-bit-id';
+import { ApplyVersionResults } from '@teambit/merging';
 import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
 import { Version, Lane } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
@@ -16,7 +17,6 @@ import {
 import {
   FailedComponents,
   getMergeStrategyInteractive,
-  ApplyVersionResults,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import threeWayMerge, {
   MergeResultsThreeWay,
@@ -88,21 +88,19 @@ export class LaneSwitcher {
       .filter((c) => c) as ComponentWithDependencies[];
 
     const manyComponentsWriterOpts = {
-      consumer: this.consumer,
       componentsWithDependencies,
-      installNpmPackages: !this.checkoutProps.skipNpmInstall,
-      override: true,
+      skipDependencyInstallation: this.checkoutProps.skipNpmInstall,
       verbose: this.checkoutProps.verbose,
       writeConfig: this.checkoutProps.writeConfig,
     };
-    await this.Lanes.componentWriter.writeMany(manyComponentsWriterOpts);
+    const { installationError } = await this.Lanes.componentWriter.writeMany(manyComponentsWriterOpts);
     await deleteFilesIfNeeded(componentsResults, this.consumer);
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
     await this.consumer.onDestroy();
 
-    return { components: appliedVersionComponents, failedComponents };
+    return { components: appliedVersionComponents, failedComponents, installationError };
   }
 
   private async populateSwitchProps() {

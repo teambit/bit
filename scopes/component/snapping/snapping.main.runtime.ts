@@ -262,6 +262,8 @@ export class SnappingMain {
     const bitIds = componentIds.map((c) => c._legacy);
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
     const components = await this.scope.import(componentIdsLatest);
+    // needed in order to load all aspects of these components
+    await this.scope.loadMany(components.map((c) => c.id));
     await Promise.all(
       components.map(async (comp) => {
         const tagData = tagDataPerComp.find((t) => t.componentId.isEqual(comp.id, { ignoreVersion: true }));
@@ -406,6 +408,7 @@ export class SnappingMain {
     pattern,
     legacyBitIds, // @todo: change to ComponentID[]. pass only if have the ids already parsed.
     unmerged,
+    editor,
     message = '',
     ignoreIssues,
     skipTests = false,
@@ -418,6 +421,7 @@ export class SnappingMain {
     pattern?: string;
     legacyBitIds?: BitIds;
     unmerged?: boolean;
+    editor?: string;
     message?: string;
     ignoreIssues?: string;
     build: boolean;
@@ -446,6 +450,7 @@ export class SnappingMain {
       scope: this.scope,
       snapping: this,
       builder: this.builder,
+      editor,
       consumerComponents: components,
       ids,
       ignoreNewestVersion: false,

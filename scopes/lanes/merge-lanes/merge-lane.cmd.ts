@@ -44,7 +44,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
     ],
     ['', 'verbose', 'show details of components that were not merged legitimately'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
-    ['', 'remote', 'relevant when the target-lane locally is differ than the remote and you want the remote'],
+    ['', 'skip-fetch', 'use the current target-lane if exits locally without updating it from the remote'],
     [
       '',
       'include-deps',
@@ -77,7 +77,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       keepReadme = false,
       noSquash = false,
       skipDependencyInstallation = false,
-      remote = false,
+      skipFetch = false,
       includeDeps = false,
       resolveUnrelated,
       ignoreConfigChanges,
@@ -94,7 +94,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       keepReadme?: boolean;
       noSquash: boolean;
       skipDependencyInstallation?: boolean;
-      remote: boolean;
+      skipFetch: boolean;
       includeDeps?: boolean;
       resolveUnrelated?: string | boolean;
       ignoreConfigChanges?: boolean;
@@ -130,7 +130,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       tag,
       pattern,
       skipDependencyInstallation,
-      remote,
+      skipFetch,
       resolveUnrelated: getResolveUnrelated(),
       ignoreConfigChanges,
       includeDeps,

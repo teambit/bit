@@ -27,12 +27,14 @@ export type CreateFromComponentsOptions = {
   createManifestForComponentsWithoutDependencies: boolean;
   dedupe?: boolean;
   dependencyFilterFn?: DepsFilterFn;
+  resolveVersionsFromDependenciesOnly?: boolean;
 };
 
 const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
   filterComponentsFromManifests: true,
   createManifestForComponentsWithoutDependencies: true,
   dedupe: true,
+  resolveVersionsFromDependenciesOnly: false,
 };
 export class WorkspaceManifestFactory {
   constructor(private dependencyResolver: DependencyResolverMain, private aspectLoader: AspectLoaderMain) {}
@@ -51,7 +53,7 @@ export class WorkspaceManifestFactory {
     const componentDependenciesMap: ComponentDependenciesMap = await this.buildComponentDependenciesMap(
       components,
       optsWithDefaults.filterComponentsFromManifests,
-      rootPolicy,
+      optsWithDefaults.resolveVersionsFromDependenciesOnly ? undefined : rootPolicy,
       optsWithDefaults.dependencyFilterFn,
       hasRootComponents
     );
@@ -112,8 +114,8 @@ export class WorkspaceManifestFactory {
   private async buildComponentDependenciesMap(
     components: Component[],
     filterComponentsFromManifests = true,
-    rootPolicy: WorkspacePolicy,
-    dependencyFilterFn: DepsFilterFn | undefined,
+    rootPolicy?: WorkspacePolicy,
+    dependencyFilterFn?: DepsFilterFn | undefined,
     hasRootComponents?: boolean
   ): Promise<ComponentDependenciesMap> {
     const buildResultsP = components.map(async (component) => {
@@ -169,10 +171,12 @@ export class WorkspaceManifestFactory {
 
   private async updateDependenciesVersions(
     component: Component,
-    rootPolicy: WorkspacePolicy,
+    rootPolicy: WorkspacePolicy | undefined,
     dependencyList: DependencyList
   ): Promise<void> {
-    const mergedPolicies = await this.dependencyResolver.getPolicy(component);
+    // If root policy is not passed, it means that installation happens in a capsule
+    // and we only resolve versions from the dependencies, not any policies.
+    const mergedPolicies = rootPolicy && (await this.dependencyResolver.getPolicy(component));
     dependencyList.forEach((dep) => {
       updateDependencyVersion(dep, rootPolicy, mergedPolicies);
     });
@@ -232,8 +236,8 @@ function filterComponents(dependencyList: DependencyList, componentsToFilterOut:
       // If the package is already in the workspace as a local component,
       // then we don't want to install that package as a dependency to node_modules.
       // Otherwise, it would rewrite the local component inside the root node_modules that is created by bit link.
-      return !componentsToFilterOut.some((component) =>
-        depPkgName === componentIdToPackageName(component.state._consumer)
+      return !componentsToFilterOut.some(
+        (component) => depPkgName === componentIdToPackageName(component.state._consumer)
       );
     }
     // Remove dependencies which has no version (they are new in the workspace)

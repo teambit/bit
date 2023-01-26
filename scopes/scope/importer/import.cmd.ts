@@ -2,6 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { compact } from 'lodash';
 import R from 'ramda';
+import { installationErrorOutput } from '@teambit/merging';
 import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import {
   FileStatus,
@@ -157,10 +158,10 @@ ${WILDCARD_HELP('import')}`;
       fetchDeps,
     };
     const importResults = await this.importer.import(importOptions, this._packageManagerArgs);
-    const { importDetails, importedIds, importedDeps } = importResults;
+    const { importDetails, importedIds, importedDeps, installationError } = importResults;
 
     if (json) {
-      return JSON.stringify({ importDetails }, null, 4);
+      return JSON.stringify({ importDetails, installationError }, null, 4);
     }
 
     if (!importedIds.length) {
@@ -183,7 +184,7 @@ ${WILDCARD_HELP('import')}`;
     });
     const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date`;
     const summary = `${summaryPrefix}${upToDateStr}`;
-    const componentDependenciesOutput = [...compact(importedComponents), chalk.green(summary)].join('\n');
+    const importOutput = [...compact(importedComponents), chalk.green(summary)].join('\n');
     const importedDepsOutput =
       displayDependencies && importedDeps.length
         ? immutableUnshift(
@@ -192,9 +193,9 @@ ${WILDCARD_HELP('import')}`;
           ).join('\n')
         : '';
 
-    const dependenciesOutput = componentDependenciesOutput + importedDepsOutput;
+    const output = importOutput + importedDepsOutput + installationErrorOutput(installationError);
 
-    return dependenciesOutput;
+    return output;
   }
 }
 
