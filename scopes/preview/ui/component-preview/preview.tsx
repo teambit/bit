@@ -24,7 +24,7 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
   /**
    * add inner padding to the iframe.
    */
-  innerBottomPadding?: number;
+   innerBottomPadding?: number;
 
   /**
    * query params to append at the end of the *hash*. Changing this property will not reload the preview
@@ -110,7 +110,7 @@ export function ComponentPreview({
             setWidth(message.data.width);
             setHeight(message.data.height);
           }
-          onLoad && event && onLoad();
+          (onLoad && event) && onLoad();
         },
       },
     });
