@@ -6,6 +6,7 @@
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 12px;
 
   > span {
     overflow: hidden;
@@ -25,6 +26,8 @@
 .compareNavItem {
   color: #fff !important;
   border-right: 0.5px solid var(--surface-neutral-color, #121212);
+  // override the default menu item padding
+  padding: 0px !important;
 
   &.first {
     border-left: 0.5px solid var(--surface-neutral-color, #121212);
@@ -57,7 +60,6 @@
 .codeCompareTabRight {
   display: flex;
   align-items: center;
-  font-size: 12px;
 
   > * {
     margin-right: 4px;

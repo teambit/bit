@@ -73,7 +73,6 @@ function CodeCompareNav({
       {
         props: {
           href,
-          displayName: file,
           active: isActive,
           onClick: onTabClicked && ((e) => onTabClicked(file, e)),
           activeClassName: styles.activeNav,
