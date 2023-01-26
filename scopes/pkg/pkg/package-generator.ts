@@ -1,10 +1,10 @@
-import { EnvContext, EnvHandler } from "@teambit/envs";
-import { PackageJsonProps } from "./pkg.main.runtime";
+import { EnvContext, EnvHandler } from '@teambit/envs';
+import { PackageJsonProps } from './pkg.main.runtime';
 
 export type PackageGeneratorOptions = {
   packageJson: PackageJsonProps;
-  npmIgnore: string[];
-}
+  npmIgnore?: string[];
+};
 
 /**
  * create and maintain build pipelines for component
@@ -28,6 +28,6 @@ export class PackageGenerator {
   static from(options: PackageGeneratorOptions): EnvHandler<PackageGenerator> {
     return (context: EnvContext) => {
       return new PackageGenerator(options.packageJson, options.npmIgnore, context);
-    }
+    };
   }
 }

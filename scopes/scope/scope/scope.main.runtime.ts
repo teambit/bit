@@ -1202,7 +1202,10 @@ needed-for: ${neededFor || '<unknown>'}`);
     if (!component) return undefined;
     const aspectIds = component.state.aspects.ids;
     // load components from type aspects as aspects.
-    if (this.aspectLoader.isAspectComponent(component)) {
+    // important! previously, this was running for any aspect, not only apps. (the if statement was `this.aspectLoader.isAspectComponent(component)`)
+    // Ran suggests changing it and if it breaks something, we'll document is and fix it.
+    const appData = component.state.aspects.get('teambit.harmony/application');
+    if (appData?.data?.appName) {
       aspectIds.push(component.id.toString());
     }
     await this.loadAspects(aspectIds, true, id.toString(), lane);

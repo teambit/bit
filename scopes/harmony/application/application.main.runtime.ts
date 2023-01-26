@@ -39,7 +39,7 @@ export type ApplicationAspectConfig = {
  * Application meta data that is stored on the component on load if it's an application.
  */
 export type ApplicationMetadata = {
-  appName?: string;
+  appName: string;
   type?: string;
 };
 
@@ -364,12 +364,12 @@ export class ApplicationMain {
       await application.loadAppsToSlot();
     });
     if (workspace) {
-      workspace.onComponentLoad(async (loadedComponent) => {
+      workspace.onComponentLoad(async (loadedComponent): Promise<ApplicationMetadata | undefined> => {
         const app = application.calculateAppByComponent(loadedComponent);
-        if (!app) return {};
+        if (!app) return undefined;
         return {
-          appName: app?.name,
-          type: app?.applicationType,
+          appName: app.name,
+          type: app.applicationType,
         };
       });
     }

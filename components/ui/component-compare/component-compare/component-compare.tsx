@@ -84,8 +84,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
 
   const compare = _compareId ? compareComponent : component;
 
-  const isEmpty =
-    !compareIsLocalChanges && ((!loading && !compare && !base) || compare?.id.toString() === base?.id.toString());
+  const isEmpty = !compareIsLocalChanges && !loading && compare?.id.toString() === base?.id.toString();
 
   const compCompareId = `${base?.id.toString()}-${compare?.id.toString()}`;
 
@@ -93,7 +92,8 @@ export function ComponentCompare(props: ComponentCompareProps) {
     return (compare?.logs || []).slice().reduce(groupByVersion, new Map<string, LegacyComponentLog>());
   }, [compare?.id.toString()]);
 
-  const skipComponentCompareQuery = compareIsLocalChanges || !base?.id.version || !compare?.id.version;
+  const skipComponentCompareQuery =
+    compareIsLocalChanges || base?.id.version?.toString() === compare?.id.version?.toString();
 
   const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
     base?.id.toString(),

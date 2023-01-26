@@ -34,12 +34,14 @@ export type InstallArgs = {
 export type InstallOptions = {
   installTeambitBit: boolean;
   packageManagerConfigRootDir?: string;
+  resolveVersionsFromDependenciesOnly?: boolean;
 };
 
 export type GetComponentManifestsOptions = {
   componentDirectoryMap: ComponentMap<string>;
   rootPolicy: WorkspacePolicy;
   rootDir: string;
+  resolveVersionsFromDependenciesOnly?: boolean;
 } & Pick<
   PackageManagerInstallOptions,
   'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents' | 'copyPeerToRuntimeOnRoot' | 'installPeersFromEnvs'
@@ -101,6 +103,7 @@ export class DependencyInstaller {
       componentDirectoryMap,
       rootPolicy,
       rootDir: finalRootDir,
+      resolveVersionsFromDependenciesOnly: options.resolveVersionsFromDependenciesOnly,
     });
     return this.installComponents(
       finalRootDir,
@@ -195,12 +198,14 @@ export class DependencyInstaller {
     copyPeerToRuntimeOnComponents,
     copyPeerToRuntimeOnRoot,
     installPeersFromEnvs,
+    resolveVersionsFromDependenciesOnly,
   }: GetComponentManifestsOptions) {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
       createManifestForComponentsWithoutDependencies: true,
       dedupe,
       dependencyFilterFn,
+      resolveVersionsFromDependenciesOnly,
     };
     const workspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
       undefined,
@@ -217,9 +222,7 @@ export class DependencyInstaller {
         const manifest = workspaceManifest.componentsManifestsMap.get(packageName);
         if (manifest) {
           acc[dir] = manifest.toJson({ copyPeerToRuntime: copyPeerToRuntimeOnComponents });
-          acc[dir].defaultPeerDependencies = fromPairs(
-            manifest.envPolicy.selfPolicy.toNameVersionTuple()
-          );
+          acc[dir].defaultPeerDependencies = fromPairs(manifest.envPolicy.selfPolicy.toNameVersionTuple());
         }
         return acc;
       }, {});
