@@ -414,7 +414,6 @@ export class IsolatorMain {
     const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
     await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), {
       ...linkingOptions,
-      legacyLink: false,
       linkNestedDepsInNM: !this.dependencyResolver.hasRootComponents() && linkingOptions.linkNestedDepsInNM,
     });
     if (!this.dependencyResolver.hasRootComponents()) {

@@ -90,7 +90,6 @@ export class LinkCommand implements Command {
     );
 
     const linkOpts: WorkspaceLinkOptions = {
-      legacyLink: true,
       rewire: opts.rewire,
       linkCoreAspects: true,
       linkTeambitBit: true,

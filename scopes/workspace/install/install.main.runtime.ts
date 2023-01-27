@@ -1,4 +1,5 @@
 import { CommunityMain, CommunityAspect } from '@teambit/community';
+import { link as legacyLink } from '@teambit/legacy/dist/api/consumer/lib/link';
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
@@ -189,14 +190,12 @@ export class InstallMain {
     // TODO: add the links results to the output
     await this.link({
       linkTeambitBit: true,
-      legacyLink: true,
       linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: false,
     });
     const linkOpts = {
       linkTeambitBit: false,
-      legacyLink: true,
       linkCoreAspects: false,
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
@@ -390,6 +389,12 @@ export class InstallMain {
       linkingOptions: options,
     });
     const res = await linker.link(this.workspace.path, mergedRootPolicy, compDirMap, options);
+
+    const bitIds = compDirMap.toArray().map(([component]) => component.id._legacy);
+    const legacyResults = await legacyLink(this.workspace.consumer, bitIds, options.rewire ?? false);
+    res.legacyLinkResults = legacyResults.linksResults;
+    res.legacyLinkCodemodResults = legacyResults.codemodResults;
+
     return res;
   }
 
