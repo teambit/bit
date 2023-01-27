@@ -294,7 +294,6 @@ export type GetVersionResolverOptions = {
 type OnExportIdTransformer = (id: BitId) => BitId;
 
 const defaultLinkingOptions: LinkingOptions = {
-  legacyLink: true,
   linkTeambitBit: true,
   linkCoreAspects: true,
 };
