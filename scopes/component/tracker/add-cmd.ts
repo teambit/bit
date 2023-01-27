@@ -47,7 +47,7 @@ export class AddCmd implements Command {
     }
 
     const normalizedPaths: PathOsBased[] = paths.map((p) => path.normalize(p));
-    const { addedComponents, warnings }: AddActionResults = await this.tracker.add({
+    const { addedComponents, warnings }: AddActionResults = await this.tracker.addForCLI({
       componentPaths: normalizedPaths,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       id,

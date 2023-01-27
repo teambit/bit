@@ -21,16 +21,6 @@ export class TrackerMain {
   static dependencies = [CLIAspect, WorkspaceAspect];
   static runtime = MainRuntime;
 
-  async add(addProps: AddProps): Promise<AddActionResults> {
-    const addContext: AddContext = { consumer: this.workspace.consumer };
-    addProps.shouldHandleOutOfSync = true;
-    const addComponents = new AddComponents(addContext, addProps);
-    const addResults = await addComponents.add();
-    await this.workspace.consumer.onDestroy();
-
-    return addResults;
-  }
-
   /**
    * add a new component to the .bitmap file.
    * this method only adds the records in memory but doesn't persist to the filesystem.
@@ -54,6 +44,16 @@ export class TrackerMain {
     const componentName = addedComponent?.id.name || (trackData.componentName as string);
     const files = addedComponent?.files.map((f) => f.relativePath) || [];
     return { componentName, files, warnings: result.warnings };
+  }
+
+  async addForCLI(addProps: AddProps): Promise<AddActionResults> {
+    const addContext: AddContext = { consumer: this.workspace.consumer };
+    addProps.shouldHandleOutOfSync = true;
+    const addComponents = new AddComponents(addContext, addProps);
+    const addResults = await addComponents.add();
+    await this.workspace.consumer.onDestroy();
+
+    return addResults;
   }
 
   /**
