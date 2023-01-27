@@ -5,7 +5,7 @@ import { BitError } from '@teambit/bit-error';
 import { PathOsBased } from '@teambit/legacy/dist/utils/path';
 import R from 'ramda';
 import { AddActionResults, AddResult } from './add-components';
-import { AddMain } from './add.main.runtime';
+import { TrackerMain } from './tracker.main.runtime';
 
 export class AddCmd implements Command {
   name = 'add [path...]';
@@ -24,7 +24,7 @@ export class AddCmd implements Command {
   loader = true;
   migration = true;
 
-  constructor(private add: AddMain) {}
+  constructor(private tracker: TrackerMain) {}
 
   async report(
     [paths = []]: [string[]],
@@ -47,7 +47,7 @@ export class AddCmd implements Command {
     }
 
     const normalizedPaths: PathOsBased[] = paths.map((p) => path.normalize(p));
-    const { addedComponents, warnings }: AddActionResults = await this.add.add({
+    const { addedComponents, warnings }: AddActionResults = await this.tracker.add({
       componentPaths: normalizedPaths,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       id,

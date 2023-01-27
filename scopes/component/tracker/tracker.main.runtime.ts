@@ -87,9 +87,9 @@ export class TrackerMain {
   }
 
   static async provider([cli, workspace]: [CLIMain, Workspace]) {
-    const addMain = new TrackerMain(workspace);
-    cli.register(new AddCmd(addMain));
-    return addMain;
+    const trackerMain = new TrackerMain(workspace);
+    cli.register(new AddCmd(trackerMain));
+    return trackerMain;
   }
 }
 
