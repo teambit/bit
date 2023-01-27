@@ -1,6 +1,6 @@
 import { MergingAspect } from './merging.aspect';
 
-export { mergeReport, applyVersionReport, conflictSummaryReport } from './merge-cmd';
+export { mergeReport, applyVersionReport, conflictSummaryReport, installationErrorOutput } from './merge-cmd';
 export type { MergingMain, ComponentMergeStatus, ApplyVersionResults } from './merging.main.runtime';
 export { ConfigMergeResult } from './config-merge-result';
 export default MergingAspect;

@@ -13,7 +13,7 @@ import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
 import { DarkTheme } from '@teambit/design.themes.dark-theme';
 import { CodeCompareTree } from './code-compare-tree';
-import { CodeCompareView } from './code-compare-view';
+import { CodeCompareView, CodeCompareViewProps } from './code-compare-view';
 import { Widget } from './code-compare.widgets';
 
 import styles from './code-compare.module.scss';
@@ -22,12 +22,13 @@ const DEFAULT_FILE = 'index.ts';
 
 export type CodeCompareProps = {
   fileIconSlot?: FileIconSlot;
+  CodeView?: React.ComponentType<CodeCompareViewProps>;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
+export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareView }: CodeCompareProps) {
   const componentCompareContext = useComponentCompare();
-  const { base, compare, state: compareState, hooks: compareHooks } = componentCompareContext || {};
 
+  const { base, compare, state: compareState, hooks: compareHooks } = componentCompareContext || {};
   const state = compareState?.code;
   const hook = compareHooks?.code;
 
@@ -76,7 +77,7 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
         </Pane>
         <HoverSplitter className={styles.splitter}></HoverSplitter>
         <Pane className={classNames(styles.right, styles.dark, !isSidebarOpen && styles.collapsed)}>
-          <CodeCompareView
+          <CodeView
             widgets={[Widget]}
             fileName={selectedFile}
             files={fileTree}

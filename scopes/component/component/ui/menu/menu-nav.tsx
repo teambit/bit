@@ -51,7 +51,11 @@ export function CollapsibleMenuNav({
 
     return {
       component: function TopBarNavComponent({ isInMenu }: TabProps) {
-        const widgetDisplayText = menuItem.props.displayName && isInMenu && menuItem.props.displayName;
+        /**
+         * to accommodate for the top level nav which should display the children
+         * in the dropdown secondary menu if there is a displayName set
+         */
+        const widgetDisplayText = menuItem.props.displayName && isInMenu ? menuItem.props.displayName : undefined;
         return (
           <TopBarNav
             {...menuItem.props}

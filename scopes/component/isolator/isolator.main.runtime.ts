@@ -378,6 +378,7 @@ export class IsolatorMain {
     const installOptions: InstallOptions = {
       installTeambitBit: !!isolateInstallOptions.installTeambitBit,
       packageManagerConfigRootDir: isolateInstallOptions.packageManagerConfigRootDir,
+      resolveVersionsFromDependenciesOnly: true,
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
