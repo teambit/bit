@@ -108,7 +108,7 @@ export class LanesMain {
     private merging: MergingMain,
     private componentAspect: ComponentMain,
     public logger: Logger,
-    private importer: ImporterMain,
+    readonly importer: ImporterMain,
     private exporter: ExportMain,
     private componentCompare: ComponentCompareMain,
     readonly componentWriter: ComponentWriterMain

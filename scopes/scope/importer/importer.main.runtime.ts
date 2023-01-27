@@ -6,7 +6,7 @@ import type { CommunityMain } from '@teambit/community';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
+import { BitId, InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import pMapSeries from 'p-map-series';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -15,6 +15,7 @@ import { LaneId } from '@teambit/lane-id';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import loader from '@teambit/legacy/dist/cli/loader';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
@@ -83,6 +84,14 @@ export class ImporterMain {
       }
       throw err;
     }
+  }
+
+  async importObjectsFromMainIfExist(ids: BitId[]) {
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(BitIds.fromArray(ids), {
+      cache: false,
+      includeVersionHistory: true,
+      ignoreMissingHead: true,
+    });
   }
 
   async fetchLaneWithComponents(lane: Lane): Promise<ImportResult> {

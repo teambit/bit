@@ -98,6 +98,8 @@ export class MergeLanesMain {
     const isDefaultLane = otherLaneId.isDefault();
     const getOtherLane = async () => {
       if (isDefaultLane) {
+        if (!skipFetch)
+          await this.lanes.importer.importObjectsFromMainIfExist(currentLane?.toBitIds().toVersionLatest() || []);
         return undefined;
       }
       let lane = await consumer.scope.loadLane(otherLaneId);
