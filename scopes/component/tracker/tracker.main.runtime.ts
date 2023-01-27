@@ -1,5 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AddCmd } from './add-cmd';
 import AddComponents, { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
@@ -47,6 +47,7 @@ export class TrackerMain {
   }
 
   async addForCLI(addProps: AddProps): Promise<AddActionResults> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const addContext: AddContext = { consumer: this.workspace.consumer };
     addProps.shouldHandleOutOfSync = true;
     const addComponents = new AddComponents(addContext, addProps);
