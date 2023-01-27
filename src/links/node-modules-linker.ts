@@ -245,9 +245,9 @@ export default class NodeModuleLinker {
     // packageJson.mergePropsFromExtensions(component);
     // TODO: we need to have an hook here to get the transformer from the pkg extension
 
-    // delete the version, otherwise, we have to maintains it. such as, when tagging, it should be
-    // changed to the new tagged version.
-    delete packageJson.packageJsonObject.version;
+    // don't delete the "version" prop, because in some scenarios, it's needed for the component to work properly.
+    // an example is when developing a vscode extension, vscode expects to have a valid package.json during the development.
+
     this.dataToPersist.addFile(packageJson.toVinylFile());
   }
 
