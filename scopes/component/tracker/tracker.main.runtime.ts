@@ -1,9 +1,9 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { PathOsBasedRelative } from '../../../src/utils/path';
+import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AddCmd } from './add-cmd';
 import AddComponents, { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
-import { AddAspect } from './add.aspect';
+import { TrackerAspect } from './tracker.aspect';
 
 export type TrackResult = { componentName: string; files: string[]; warnings: Warnings };
 
@@ -15,7 +15,7 @@ export type TrackData = {
   config?: { [aspectName: string]: any }; // config specific to this component, which overrides variants of workspace.jsonc
 };
 
-export class AddMain {
+export class TrackerMain {
   constructor(private workspace: Workspace) {}
   static slots = [];
   static dependencies = [CLIAspect, WorkspaceAspect];
@@ -87,12 +87,12 @@ export class AddMain {
   }
 
   static async provider([cli, workspace]: [CLIMain, Workspace]) {
-    const addMain = new AddMain(workspace);
+    const addMain = new TrackerMain(workspace);
     cli.register(new AddCmd(addMain));
     return addMain;
   }
 }
 
-AddAspect.addRuntime(AddMain);
+TrackerAspect.addRuntime(TrackerMain);
 
-export default AddMain;
+export default TrackerMain;
