@@ -5,6 +5,7 @@ import { InstallMain, InstallAspect } from '@teambit/install';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import path from 'path';
+import TrackerAspect, { TrackerMain } from '@teambit/tracker';
 
 /**
  * create dummy components, add, link and compile them.
@@ -13,8 +14,9 @@ import path from 'path';
 export async function mockComponents(workspacePath: string, { numOfComponents = 1, additionalStr = '' } = {}) {
   const compsDirs = await createComponents(workspacePath, { numOfComponents, additionalStr });
   const workspace: Workspace = await loadAspect(WorkspaceAspect, workspacePath);
+  const tracker: TrackerMain = await loadAspect(TrackerAspect, workspacePath);
   await pMapSeries(compsDirs, async (compDir) => {
-    await workspace.track({ rootDir: compDir });
+    await tracker.track({ rootDir: compDir });
   });
   await workspace.bitMap.write();
   const install: InstallMain = await loadAspect(InstallAspect, workspacePath);

@@ -9,6 +9,7 @@ import { ComponentID } from '@teambit/component-id';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { SchemaMain } from './schema.main.runtime';
 import { SchemaAspect } from '.';
+import TrackerAspect, { TrackerMain } from '@teambit/tracker';
 
 chai.use(chaiSubset);
 
@@ -35,7 +36,8 @@ describe('SchemaAspect', function () {
       const src = path.join(getMockDir(), 'button');
       await fs.copy(src, compDir);
       workspace = await loadAspect(WorkspaceAspect, workspacePath);
-      await workspace.track({ rootDir: compDir, defaultScope: 'org.scope' });
+      const tracker: TrackerMain = await loadAspect(TrackerAspect, workspacePath);
+      await tracker.track({ rootDir: compDir, defaultScope: 'org.scope' });
       await workspace.bitMap.write();
       schema = await loadAspect(SchemaAspect, workspacePath);
       const compId = await workspace.resolveComponentId('button');
