@@ -1,22 +1,20 @@
+import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import * as path from 'path';
+import { BitError } from '@teambit/bit-error';
+import { PathOsBased } from '@teambit/legacy/dist/utils/path';
 import R from 'ramda';
+import { AddActionResults, AddResult } from './add-components';
+import { AddMain } from './add.main.runtime';
 
-import { add } from '../../../api/consumer';
-import { AddActionResults, AddResult } from '../../../consumer/component-ops/add-components/add-components';
-import GeneralError from '../../../error/general-error';
-import { PathOsBased } from '../../../utils/path';
-import { Group } from '../../command-groups';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
-
-export default class Add implements LegacyCommand {
+export class AddCmd implements Command {
   name = 'add [path...]';
   description = 'Add any subset of files to be tracked as a component(s).';
-  group: Group = 'development';
+  group = 'development';
   extendedDescription = 'Learn the recommended workflow for tracking directories as components, in the link below.';
   helpUrl = 'docs/workspace/creating-workspaces?new_existing_project=1';
   alias = 'a';
-  opts = [
+  options = [
     ['i', 'id <name>', 'manually set component id'],
     ['m', 'main <file>', 'define entry point for the components'],
     ['n', 'namespace <namespace>', 'organize component in a namespace'],
@@ -26,7 +24,9 @@ export default class Add implements LegacyCommand {
   loader = true;
   migration = true;
 
-  action(
+  constructor(private add: AddMain) {}
+
+  async report(
     [paths = []]: [string[]],
     {
       id,
@@ -41,13 +41,13 @@ export default class Add implements LegacyCommand {
       scope?: string;
       override: boolean;
     }
-  ): Promise<any> {
+  ) {
     if (namespace && id) {
-      throw new GeneralError('please use either [id] or [namespace] to add a particular component');
+      throw new BitError('please use either [id] or [namespace] to add a particular component');
     }
 
     const normalizedPaths: PathOsBased[] = paths.map((p) => path.normalize(p));
-    return add({
+    const { addedComponents, warnings }: AddActionResults = await this.add.add({
       componentPaths: normalizedPaths,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       id,
@@ -57,13 +57,7 @@ export default class Add implements LegacyCommand {
       defaultScope: scope,
       override,
     });
-  }
 
-  splitList(val: string) {
-    return val.split(',');
-  }
-
-  report({ addedComponents, warnings }: AddActionResults): string {
     const paintWarning = () => {
       const alreadyUsedOutput = () => {
         const alreadyUsedWarning = Object.keys(warnings.alreadyUsed)

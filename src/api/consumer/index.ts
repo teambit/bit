@@ -1,5 +1,4 @@
 import diff from './lib//diff';
-import { addMany, addOne as add } from './lib/add';
 import dependencyStatus from './lib/dependency_status';
 import getComponentLogs from './lib/get-component-logs';
 import getConsumerComponent from './lib/get-consumer-component';
@@ -26,8 +25,6 @@ export {
   remoteAdd,
   remoteList,
   remoteRm,
-  add,
-  addMany,
   dependencyStatus,
   move,
   linkAction as link,

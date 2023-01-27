@@ -1,5 +1,4 @@
 import arrayDiff from 'array-difference';
-import globby from 'globby';
 import fs from 'fs-extra';
 import ignore from 'ignore';
 import assignwith from 'lodash.assignwith';
@@ -7,19 +6,18 @@ import groupby from 'lodash.groupby';
 import * as path from 'path';
 import R from 'ramda';
 import format from 'string-format';
-
-import { Analytics } from '../../../analytics/analytics';
-import { BitId, BitIds } from '../../../bit-id';
-import { BitIdStr } from '../../../bit-id/bit-id';
-import { PACKAGE_JSON, VERSION_DELIMITER } from '../../../constants';
-import BitMap from '../../../consumer/bit-map';
-import Consumer from '../../../consumer/consumer';
-import GeneralError from '../../../error/general-error';
-import ShowDoctorError from '../../../error/show-doctor-error';
-import { NodeModuleLinker } from '../../../links';
-import { isSupportedExtension } from '../../../links/link-content';
-import logger from '../../../logger/logger';
-import { ModelComponent } from '../../../scope/models';
+import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
+import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import { BitIdStr } from '@teambit/legacy/dist/bit-id/bit-id';
+import { PACKAGE_JSON, VERSION_DELIMITER } from '@teambit/legacy/dist/constants';
+import BitMap from '@teambit/legacy/dist/consumer/bit-map';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import GeneralError from '@teambit/legacy/dist/error/general-error';
+import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
+import { NodeModuleLinker } from '@teambit/legacy/dist/links';
+import { isSupportedExtension } from '@teambit/legacy/dist/links/link-content';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import {
   calculateFileInfo,
   glob,
@@ -27,20 +25,28 @@ import {
   isDir,
   pathJoinLinux,
   pathNormalizeToLinux,
-  retrieveIgnoreList,
-} from '../../../utils';
-import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../utils/path';
-import ComponentMap, { ComponentMapFile, Config } from '../../bit-map/component-map';
-import MissingMainFile from '../../bit-map/exceptions/missing-main-file';
-import ComponentNotFoundInPath from '../../component/exceptions/component-not-found-in-path';
+} from '@teambit/legacy/dist/utils';
+import { PathLinux, PathLinuxRelative, PathOsBased } from '@teambit/legacy/dist/utils/path';
+import ComponentMap, {
+  ComponentMapFile,
+  Config,
+  getIgnoreListHarmony,
+} from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import MissingMainFile from '@teambit/legacy/dist/consumer/bit-map/exceptions/missing-main-file';
+import {
+  DuplicateIds,
+  EmptyDirectory,
+  ExcludedMainFile,
+  MainFileIsDir,
+  NoFiles,
+  PathsNotExist,
+} from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions';
+import { AddingIndividualFiles } from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/adding-individual-files';
+import MissingMainFileMultipleComponents from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/missing-main-file-multiple-components';
+import { ParentDirTracked } from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/parent-dir-tracked';
+import PathOutsideConsumer from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/path-outside-consumer';
+import VersionShouldBeRemoved from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/version-should-be-removed';
 import determineMainFile from './determine-main-file';
-import { DuplicateIds, EmptyDirectory, ExcludedMainFile, MainFileIsDir, NoFiles, PathsNotExist } from './exceptions';
-import { AddingIndividualFiles } from './exceptions/adding-individual-files';
-import { IgnoredDirectory } from './exceptions/ignored-directory';
-import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
-import { ParentDirTracked } from './exceptions/parent-dir-tracked';
-import PathOutsideConsumer from './exceptions/path-outside-consumer';
-import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 
 export type AddResult = { id: BitId; files: ComponentMapFile[] };
 export type Warnings = {
@@ -807,33 +813,4 @@ function validateNoDuplicateIds(addComponents: Record<string, any>[]) {
     if (newGroupedComponents[key].length > 1) duplicateIds[key] = newGroupedComponents[key];
   });
   if (!R.isEmpty(duplicateIds) && !R.isNil(duplicateIds)) throw new DuplicateIds(duplicateIds);
-}
-
-export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore: any): Promise<ComponentMapFile[]> {
-  const matches = await globby(dir, {
-    cwd: consumerPath,
-    dot: true,
-    onlyFiles: true,
-  });
-  if (!matches.length) throw new ComponentNotFoundInPath(dir);
-  const filteredMatches = gitIgnore.filter(matches);
-  if (!filteredMatches.length) throw new IgnoredDirectory(dir);
-  return filteredMatches.map((match: PathOsBased) => {
-    const normalizedPath = pathNormalizeToLinux(match);
-    // the path is relative to consumer. remove the rootDir.
-    const relativePath = normalizedPath.replace(`${dir}/`, '');
-    return { relativePath, test: false, name: path.basename(match) };
-  });
-}
-
-export function getGitIgnoreHarmony(consumerPath: string): any {
-  const ignoreList = getIgnoreListHarmony(consumerPath);
-  return ignore().add(ignoreList);
-}
-
-function getIgnoreListHarmony(consumerPath: string): string[] {
-  const ignoreList = retrieveIgnoreList(consumerPath);
-  // the ability to track package.json is deprecated since Harmony
-  ignoreList.push(PACKAGE_JSON);
-  return ignoreList;
 }
