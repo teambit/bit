@@ -381,7 +381,6 @@ export class InstallMain {
 
   async link(options: WorkspaceLinkOptions = {}): Promise<LinkResults> {
     await pMapSeries(this.preLinkSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
-    options.consumer = this.workspace.consumer;
     const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const linker = this.dependencyResolver.getLinker({
