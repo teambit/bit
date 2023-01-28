@@ -10,7 +10,6 @@ import linkAction from './lib/link';
 import { listScope } from './lib/list-scope';
 import login from './lib/login';
 import migrate from './lib/migrate';
-import move from './lib/move';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 import show from './lib/show';
 import { clearCache } from './lib/clear-cache';
@@ -26,7 +25,6 @@ export {
   remoteList,
   remoteRm,
   dependencyStatus,
-  move,
   linkAction as link,
   diff,
   migrate,

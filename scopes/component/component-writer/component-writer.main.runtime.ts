@@ -7,6 +7,7 @@ import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
+import MoverAspect, { MoverMain } from '@teambit/mover';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
 import { isDir, isDirEmptySync } from '@teambit/legacy/dist/utils';
@@ -14,7 +15,6 @@ import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute } from '@t
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import { moveExistingComponent } from '@teambit/legacy/dist/consumer/component-ops/move-components';
 import ComponentWriter, { ComponentWriterProps } from './component-writer';
 import { ComponentWriterAspect } from './component-writer.aspect';
 
@@ -35,7 +35,8 @@ export class ComponentWriterMain {
     private installer: InstallMain,
     private compiler: CompilerMain,
     private workspace: Workspace,
-    private logger: Logger
+    private logger: Logger,
+    private mover: MoverMain
   ) {}
 
   get consumer(): Consumer {
@@ -204,7 +205,7 @@ to move all component files to a different directory, run bit remove and then bi
         const absoluteWriteToPath = path.resolve(opts.writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
         if (relativeWrittenPath && absoluteWrittenPath !== absoluteWriteToPath) {
           const component = componentWithDeps.component;
-          moveExistingComponent(this.consumer, component, absoluteWrittenPath, absoluteWriteToPath);
+          this.mover.moveExistingComponent(component, absoluteWrittenPath, absoluteWriteToPath);
         }
       });
     }
@@ -233,16 +234,17 @@ to move all component files to a different directory, run bit remove and then bi
   }
 
   static slots = [];
-  static dependencies = [InstallAspect, CompilerAspect, LoggerAspect, WorkspaceAspect];
+  static dependencies = [InstallAspect, CompilerAspect, LoggerAspect, WorkspaceAspect, MoverAspect];
   static runtime = MainRuntime;
-  static async provider([install, compiler, loggerMain, workspace]: [
+  static async provider([install, compiler, loggerMain, workspace, mover]: [
     InstallMain,
     CompilerMain,
     LoggerMain,
-    Workspace
+    Workspace,
+    MoverMain
   ]) {
     const logger = loggerMain.createLogger(ComponentWriterAspect.id);
-    return new ComponentWriterMain(install, compiler, workspace, logger);
+    return new ComponentWriterMain(install, compiler, workspace, logger, mover);
   }
 }
 

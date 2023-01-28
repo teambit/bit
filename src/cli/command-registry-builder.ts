@@ -25,7 +25,6 @@ import Init from './commands/public-cmds/init-cmd';
 import Dependents from './commands/public-cmds/dependents-cmd';
 import Login from './commands/public-cmds/login-cmd';
 import Logout from './commands/public-cmds/logout-cmd';
-import Move from './commands/public-cmds/move-cmd';
 import Remote from './commands/public-cmds/remote-cmd';
 import ScopeConfig from './commands/public-cmds/scope-config-cmd';
 import Untag from './commands/public-cmds/untag-cmd';
@@ -60,7 +59,6 @@ export default function registerCommands(): CommandRegistry {
     new DependencyStatus(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Untag(),
-    new Move(),
     new Delete(),
     new Latest(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
