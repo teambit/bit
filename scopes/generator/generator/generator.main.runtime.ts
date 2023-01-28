@@ -12,6 +12,7 @@ import { isCoreAspect, loadBit } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import TrackerAspect, { TrackerMain } from '@teambit/tracker';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { compact } from 'lodash';
 import { ComponentTemplate } from './component-template';
@@ -75,7 +76,8 @@ export class GeneratorMain {
     private envs: EnvsMain,
     private aspectLoader: AspectLoaderMain,
     private newComponentHelper: NewComponentHelperMain,
-    private componentAspect: ComponentMain
+    private componentAspect: ComponentMain,
+    private tracker: TrackerMain
   ) {}
 
   /**
@@ -273,6 +275,7 @@ export class GeneratorMain {
       templateWithId.template,
       this.envs,
       this.newComponentHelper,
+      this.tracker,
       templateWithId.id,
       templateWithId.envName ? ComponentID.fromString(templateWithId.id) : undefined
     );
@@ -437,12 +440,13 @@ export class GeneratorMain {
     NewComponentHelperAspect,
     CommunityAspect,
     ComponentAspect,
+    TrackerAspect,
   ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper, community, componentAspect]: [
+    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper, community, componentAspect, tracker]: [
       Workspace,
       CLIMain,
       GraphqlMain,
@@ -450,7 +454,8 @@ export class GeneratorMain {
       AspectLoaderMain,
       NewComponentHelperMain,
       CommunityMain,
-      ComponentMain
+      ComponentMain,
+      TrackerMain
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
@@ -463,7 +468,8 @@ export class GeneratorMain {
       envs,
       aspectLoader,
       newComponentHelper,
-      componentAspect
+      componentAspect,
+      tracker
     );
     const commands = [
       new CreateCmd(generator, community.getDocsDomain()),
