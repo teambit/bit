@@ -1467,6 +1467,9 @@ importers:
   scopes/component/testing/mock-components:
     specifiers: {}
 
+  scopes/component/tracker:
+    specifiers: {}
+
   scopes/component/ui/badges/component-count:
     specifiers: {}
 
@@ -10666,7 +10669,7 @@ packages:
     resolution: {integrity: sha512-EV3L1+UQWGor21OmnvojK36mhg+TyIKDh3iFBKBohr5xeXIhNBcx8oWdgkTEEQ+BEFFYdLRuqMfd5L84N1V5Vg==}
     engines: {node: '>=0.10.0'}
     dependencies:
-      shebang-regex: registry.npmjs.org/shebang-regex/1.0.0
+      shebang-regex: 1.0.0
     dev: false
 
   /shebang-command/2.0.0:
@@ -10674,6 +10677,11 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       shebang-regex: 3.0.0
+    dev: false
+
+  /shebang-regex/1.0.0:
+    resolution: {integrity: sha512-wpoSFAxys6b2a2wHZ1XpDSgD7N9iVjg29Ph9uV/uaP9Ex/KXlkTZTeddxDPSYQpgvzKLGJke2UU0AzoGCjNIvQ==}
+    engines: {node: '>=0.10.0'}
     dev: false
 
   /shebang-regex/3.0.0:
@@ -37524,13 +37532,6 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       shebang-regex: registry.npmjs.org/shebang-regex/3.0.0
-    dev: false
-
-  registry.npmjs.org/shebang-regex/1.0.0:
-    resolution: {integrity: sha512-wpoSFAxys6b2a2wHZ1XpDSgD7N9iVjg29Ph9uV/uaP9Ex/KXlkTZTeddxDPSYQpgvzKLGJke2UU0AzoGCjNIvQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/shebang-regex/-/shebang-regex-1.0.0.tgz}
-    name: shebang-regex
-    version: 1.0.0
-    engines: {node: '>=0.10.0'}
     dev: false
 
   registry.npmjs.org/shebang-regex/3.0.0:
