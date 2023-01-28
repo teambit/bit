@@ -47,6 +47,7 @@ export class MoverMain {
       const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
       await nodeModuleLinker.link();
     }
+    await this.workspace.bitMap.write();
     return changes;
   }
 
