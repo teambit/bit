@@ -1446,6 +1446,9 @@ importers:
   scopes/component/merging:
     specifiers: {}
 
+  scopes/component/mover:
+    specifiers: {}
+
   scopes/component/new-component-helper:
     specifiers: {}
 
