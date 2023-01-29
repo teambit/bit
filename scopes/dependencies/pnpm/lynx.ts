@@ -1,4 +1,3 @@
-import { mapValues } from 'lodash';
 import path from 'path';
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
@@ -176,10 +175,14 @@ export async function install(
   logger?: Logger
 ) {
   let externalDependencies: Set<string> | undefined;
-  if (options?.rootComponents) {
+  const readPackage: ReadPackageHook[] = [];
+  if (options?.rootComponents && !options?.rootComponentsForCapsules) {
     externalDependencies = new Set(
-      Object.values(manifestsByPaths).map(({ name }) => name).filter(Boolean) as string[]
+      Object.values(manifestsByPaths)
+        .map(({ name }) => name)
+        .filter(Boolean) as string[]
     );
+    readPackage.push(readPackageHook as ReadPackageHook);
   }
   if (!manifestsByPaths[rootDir].dependenciesMeta) {
     manifestsByPaths = {
@@ -190,24 +193,7 @@ export async function install(
       },
     };
   }
-  const readPackage: ReadPackageHook[] = [];
-  if (options?.rootComponents) {
-    const rootComponentWrappers = createRootComponentWrapperManifests(rootDir, manifestsByPaths);
-    manifestsByPaths = {
-      ...rootComponentWrappers,
-      ...mapValues(manifestsByPaths, (manifest, dir) => {
-        if (!manifest.name || dir === rootDir) return manifest;
-        return {
-          ...manifest,
-          publishConfig: {
-            directory: path.relative(dir, path.join(rootDir, 'node_modules', manifest.name)),
-            linkDirectory: true,
-          },
-        };
-      }),
-    };
-    readPackage.push(readPackageHook as ReadPackageHook);
-  } else if (options?.rootComponentsForCapsules) {
+  if (options?.rootComponentsForCapsules) {
     readPackage.push(readPackageHookForCapsules as ReadPackageHook);
   }
   const { allProjects, packagesToBuild, workspacePackages } = groupPkgs(manifestsByPaths);
@@ -271,33 +257,6 @@ export async function install(
 }
 
 /**
- * This function creates manifests for root component wrappers.
- * Root component wrappers are used to isolated workspace components with their workspace dependencies
- * and peer dependencies.
- * A root component wrapper has the wrapped component in the dependencies and any of its peer dependencies.
- * This way pnpm will install the wrapped component in isolation from other components and their dependencies.
- */
-function createRootComponentWrapperManifests(rootDir: string, manifestsByPaths: Record<string, ProjectManifest>) {
-  const rootComponentWrappers: Record<string, ProjectManifest> = {};
-  for (const manifest of Object.values(manifestsByPaths)) {
-    const name = manifest.name!.toString(); // eslint-disable-line
-    const compDir = path.join(rootDir, 'node_modules', name);
-    rootComponentWrappers[compDir] = {
-      name: `${name}__root`,
-      dependencies: {
-        [name]: `workspace:*`,
-        ...manifest.peerDependencies,
-        ...manifest['defaultPeerDependencies'], // eslint-disable-line
-      },
-      dependenciesMeta: {
-        [name]: { injected: true },
-      },
-    };
-  }
-  return rootComponentWrappers;
-}
-
-/**
  * This hook is used when installation is executed inside a capsule.
  * The components in the capsules should get their peer dependencies installed,
  * so this hook converts any peer dependencies into runtime dependencies.
@@ -326,11 +285,11 @@ function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string)
  * For direct dependencies, Bit's linking is used.
  */
 function readPackageHook(pkg: PackageManifest, workspaceDir?: string): PackageManifest {
-  if (!pkg.dependencies || pkg.name?.endsWith(`__root`)) {
+  if (!pkg.dependencies) {
     return pkg;
   }
   // workspaceDir is set only for workspace packages
-  if (workspaceDir) {
+  if (workspaceDir && !workspaceDir.includes('.bit_roots')) {
     return readWorkspacePackageHook(pkg);
   }
   return readDependencyPackageHook(pkg);

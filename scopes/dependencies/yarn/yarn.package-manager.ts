@@ -33,7 +33,8 @@ import { npath, PortablePath } from '@yarnpkg/fslib';
 import { Resolution } from '@yarnpkg/parsers';
 import npmPlugin from '@yarnpkg/plugin-npm';
 import { parseOverrides } from '@pnpm/parse-overrides';
-import { omit } from 'lodash';
+import { ProjectManifest } from '@pnpm/types';
+import { omit, mapValues } from 'lodash';
 import userHome from 'user-home';
 import { Logger } from '@teambit/logger';
 import versionSelectorType from 'version-selector-type';
@@ -81,26 +82,19 @@ export class YarnPackageManager implements PackageManager {
     }
 
     if (installOptions.rootComponents) {
-      // Manifests are extended with "wrapper components"
-      // that group all workspace components with their dependencies and peer dependencies.
-      manifests = {
-        ...(await createRootComponentsDir({
-          depResolver: this.depResolver,
-          rootDir,
-          componentDirectoryMap,
-        })),
-        ...Object.entries(manifests).reduce((acc, [dir, manifest]) => {
-          acc[dir] = {
-            ...manifest,
-            dependencies: {
-              ...manifest.peerDependencies,
-              ...manifest['defaultPeerDependencies'], // eslint-disable-line
-              ...manifest.dependencies,
-            },
-          };
-          return acc;
-        }, {}),
-      };
+      await createRootComponentsDir({
+        depResolver: this.depResolver,
+        rootDir,
+        componentDirectoryMap,
+      });
+      manifests = mapValues(manifests, (manifest) => ({
+        ...manifest,
+        dependencies: {
+          ...manifest.peerDependencies,
+          ...manifest['defaultPeerDependencies'], // eslint-disable-line
+          ...manifest.dependencies,
+        },
+      }));
     } else if (installOptions.useNesting) {
       manifests[rootDir] = workspaceManifest;
       // Nesting is used for scope aspect capsules.
@@ -511,6 +505,12 @@ export class YarnPackageManager implements PackageManager {
 
   supportsDedupingOnExistingRoot(): boolean {
     return true;
+  }
+
+  getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
+    return Object.fromEntries(
+      manifests.map((manifest) => [manifest.name, `file:../../.bit_components/${manifest.name}`])
+    );
   }
 }
 

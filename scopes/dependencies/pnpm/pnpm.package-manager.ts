@@ -197,4 +197,8 @@ export class PnpmPackageManager implements PackageManager {
     if (modulesState?.injectedDeps == null) return [];
     return modulesState.injectedDeps[`node_modules/${packageName}`] ?? modulesState.injectedDeps[componentDir] ?? [];
   }
+
+  getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
+    return Object.fromEntries(manifests.map((manifest) => [manifest.name, 'workspace:*']));
+  }
 }

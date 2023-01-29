@@ -3,6 +3,7 @@ import glob from 'glob';
 import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
+import { linkPkgsToBitRoots } from '@teambit/bit-roots';
 import { BitId } from '@teambit/legacy-bit-id';
 import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy/dist/constants';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
@@ -21,6 +22,7 @@ import { Workspace } from '@teambit/workspace';
 import { snapToSemver } from '@teambit/component-package-version';
 import { Component } from '@teambit/component';
 import { PackageJsonTransformer } from './package-json-transformer';
+import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 
 type LinkDetail = { from: string; to: string };
 export type NodeModulesLinksResult = {
@@ -44,9 +46,13 @@ export default class NodeModuleLinker {
   async link(): Promise<NodeModulesLinksResult[]> {
     const links = await this.getLinks();
     const linksResults = this.getLinksResults();
-    if (this.consumer) links.addBasePath(this.consumer.getPath());
+    const workspacePath = this.consumer ? this.consumer.getPath() : undefined;
+    if (workspacePath) links.addBasePath(workspacePath);
     await links.persistAllToFS();
     await this.consumer?.componentFsCache.deleteAllDependenciesDataCache();
+    if (workspacePath) {
+      await linkPkgsToBitRoots(workspacePath, this.components.map(componentIdToPackageName));
+    }
     return linksResults;
   }
   async getLinks(): Promise<DataToPersist> {

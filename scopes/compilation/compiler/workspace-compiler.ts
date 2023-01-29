@@ -17,6 +17,7 @@ import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { UiMain } from '@teambit/ui';
+import { readBitRootsDir } from '@teambit/bit-roots';
 import { groupBy, uniq } from 'lodash';
 import type { PreStartOpts } from '@teambit/ui';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
@@ -132,11 +133,15 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     return [packageDir, ...injectedDirs].map((dist) => path.join(dist, distDirName));
   }
 
-  private async getInjectedDirs(packageName: string): Promise<PathOsBasedRelative[]> {
-    const relativeCompDir = this.workspace.componentDir(this.component.id, undefined, {
-      relative: true,
-    });
-    return this.dependencyResolver.getInjectedDirs(this.workspace.path, relativeCompDir, packageName);
+  private async getInjectedDirs(packageName: string): Promise<string[]> {
+    const rootDirs = await readBitRootsDir(this.workspace.path);
+    if (rootDirs.length === 0) {
+      const relativeCompDir = this.workspace.componentDir(this.component.id, undefined, {
+        relative: true,
+      });
+      return this.dependencyResolver.getInjectedDirs(this.workspace.path, relativeCompDir, packageName);
+    }
+    return rootDirs.map((rootDir) => path.relative(this.workspace.path, path.join(rootDir, packageName)));
   }
 
   private get componentDir(): PathOsBasedAbsolute {
@@ -221,11 +226,7 @@ export class WorkspaceCompiler {
   ) {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
-      // When root components are on, register happens in the installer instead
-      // and the installer runs both installation and compilation.
-      if (!this.dependencyResolver.hasRootComponents()) {
-        this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
-      }
+      this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
       this.workspace.registerOnPreWatch(this.onPreWatch.bind(this));
       this.ui.registerPreStart(this.onPreStart.bind(this));
     }

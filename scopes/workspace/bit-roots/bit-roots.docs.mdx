@@ -1,0 +1,14 @@
+---
+labels: []
+description: 'Utilities for scanning and linking the .bit_roots directory inside node_modules'
+---
+
+API:
+
+```ts
+function readBitRootsDir(workspacePath: string): Promise<string[]>;
+```
+
+```ts
+function linkPkgsToBitRoots(workspacePath: string, pkgNames: string): Promise<string[]>;
+```
