@@ -443,9 +443,9 @@ export class ReactMain {
     const react = new ReactMain(reactEnv, envs, application, appType, dependencyResolver, logger);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
-    generator.registerComponentTemplate(componentTemplates);
-    generator.registerWorkspaceTemplate(workspaceTemplates);
-    application.registerAppType(appType);
+    if (generator) if (generator) generator.registerComponentTemplate(componentTemplates);
+    if (generator) generator.registerWorkspaceTemplate(workspaceTemplates);
+    if (application) application.registerAppType(appType);
 
     return react;
   }

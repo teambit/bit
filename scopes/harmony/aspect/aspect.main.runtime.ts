@@ -256,7 +256,7 @@ export class AspectMain {
     }
 
     envs.registerEnv(aspectEnv);
-    generator.registerComponentTemplate([aspectTemplate]);
+    if (generator) generator.registerComponentTemplate([aspectTemplate]);
     const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs, workspace);
     const aspectCmd = new AspectCmd();
     aspectCmd.commands = [

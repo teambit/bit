@@ -123,8 +123,8 @@ export class ReactNativeMain {
       react.compose([react.useWebpack(webpackModifiers), react.overrideJestConfig(jestConfig)])
     );
     envs.registerEnv(reactNativeComposedEnv);
-    generator.registerComponentTemplate(componentTemplates);
-    generator.registerWorkspaceTemplate(workspaceTemplates);
+    if (generator) generator.registerComponentTemplate(componentTemplates);
+    if (generator) generator.registerWorkspaceTemplate(workspaceTemplates);
     return new ReactNativeMain(react, reactNativeComposedEnv, envs);
   }
 }
