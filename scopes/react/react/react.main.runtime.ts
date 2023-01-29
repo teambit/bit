@@ -443,7 +443,7 @@ export class ReactMain {
     const react = new ReactMain(reactEnv, envs, application, appType, dependencyResolver, logger);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
-    if (generator) if (generator) generator.registerComponentTemplate(componentTemplates);
+    if (generator) generator.registerComponentTemplate(componentTemplates);
     if (generator) generator.registerWorkspaceTemplate(workspaceTemplates);
     if (application) application.registerAppType(appType);
 
