@@ -1,6 +1,6 @@
 import { BuildTask } from "@teambit/builder";
 import { EnvContext, EnvHandler } from "@teambit/envs";
-import { clone } from "lodash";
+import { clone, findIndex } from "lodash";
 import { Task } from './task';
 
 export type TaskHandler = {
@@ -52,16 +52,23 @@ export class Pipeline {
    */
   remove(taskNames: string[]) {
     this._tasks = this._tasks.filter((task) => {
-      return taskNames.includes(task.name);
+      return !taskNames.includes(task.name);
     });
+    return this;
   }
 
   /**
    * replace a build task in the pipeline.
    */
   replace(tasks: TaskHandler[]) {
-    this.remove(tasks.map((task) => task.name));
-    this.add(tasks);
+    tasks.forEach(task => {
+      // Find task index using _.findIndex
+      const matchIndex = findIndex(this._tasks, (origTask) => { return origTask.name === task.name });
+      if (matchIndex !== -1) {
+        // Replace task at index using native splice
+        this._tasks.splice(matchIndex, 1, task);
+      }
+    });
     return this;
   }
 
