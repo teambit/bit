@@ -165,7 +165,8 @@ export class NodeMain {
     envs.registerEnv(nodeEnv);
     const nodeAppType = new NodeAppType('node-app', nodeEnv, logger);
     application.registerAppType(nodeAppType);
-    if (generator) generator.registerComponentTemplate([nodeEnvTemplate, nodeTemplate, expressAppTemplate, expressRouteTemplate]);
+    if (generator)
+      generator.registerComponentTemplate([nodeEnvTemplate, nodeTemplate, expressAppTemplate, expressRouteTemplate]);
     return new NodeMain(react, tsAspect, nodeEnv, envs);
   }
 }

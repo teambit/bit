@@ -113,7 +113,8 @@ export class HtmlMain {
   static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {
     const htmlEnv: HtmlEnv = envs.merge<HtmlEnv, ReactEnv>(new HtmlEnv(), react.reactEnv);
     envs.registerEnv(htmlEnv);
-    if (generator) generator.registerComponentTemplate([htmlEnvTemplate, htmlComponentTemplate, deprecatedHtmlComponentTemplate]);
+    if (generator)
+      generator.registerComponentTemplate([htmlEnvTemplate, htmlComponentTemplate, deprecatedHtmlComponentTemplate]);
     return new HtmlMain(react, htmlEnv, envs);
   }
 }
