@@ -111,7 +111,7 @@ export class MDXMain {
     envs.registerEnv(mdxEnv);
     depResolver.registerDetector(new MDXDependencyDetector(config.extensions));
     docs.registerDocReader(new MDXDocReader(config.extensions));
-    generator.registerComponentTemplate(componentTemplates);
+    if (generator) generator.registerComponentTemplate(componentTemplates);
 
     mdx.mdxEnv = mdxEnv as ReactEnv;
     return mdx;

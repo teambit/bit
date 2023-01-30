@@ -96,6 +96,8 @@ import { CheckoutAspect } from '@teambit/checkout';
 import { APIReferenceAspect } from '@teambit/api-reference';
 import { ApiServerAspect } from '@teambit/api-server';
 import { ComponentWriterAspect } from '@teambit/component-writer';
+import { TrackerAspect } from '@teambit/tracker';
+import { MoverAspect } from '@teambit/mover';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -196,6 +198,8 @@ export const manifestsMap = {
   [ComponentWriterAspect.id]: ComponentWriterAspect,
   [APIReferenceAspect.id]: APIReferenceAspect,
   [ApiServerAspect.id]: ApiServerAspect,
+  [TrackerAspect.id]: TrackerAspect,
+  [MoverAspect.id]: MoverAspect,
 };
 
 export function isCoreAspect(id: string) {

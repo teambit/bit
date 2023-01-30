@@ -5,6 +5,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
+import { ApplyVersionResults } from '@teambit/merging';
 import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import {
@@ -14,7 +15,6 @@ import {
   deleteFilesIfNeeded,
 } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
 import {
-  ApplyVersionResults,
   FailedComponents,
   getMergeStrategyInteractive,
   MergeStrategy,
@@ -150,16 +150,15 @@ export class CheckoutMain {
     }
 
     const leftUnresolvedConflicts = componentWithConflict && checkoutProps.mergeStrategy === 'manual';
+    let componentWriterResults;
     if (componentsWithDependencies.length) {
       const manyComponentsWriterOpts = {
-        consumer,
         componentsWithDependencies,
-        installNpmPackages: !checkoutProps.skipNpmInstall && !leftUnresolvedConflicts,
-        override: true,
+        skipDependencyInstallation: checkoutProps.skipNpmInstall || leftUnresolvedConflicts,
         verbose: checkoutProps.verbose,
         resetConfig: checkoutProps.reset,
       };
-      await this.componentWriter.writeMany(manyComponentsWriterOpts);
+      componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
       await deleteFilesIfNeeded(componentsResults, consumer);
     }
 
@@ -172,6 +171,7 @@ export class CheckoutMain {
       leftUnresolvedConflicts,
       newFromLane: newFromLane?.map((n) => n.toString()),
       newFromLaneAdded,
+      installationError: componentWriterResults?.installationError,
     };
   }
 

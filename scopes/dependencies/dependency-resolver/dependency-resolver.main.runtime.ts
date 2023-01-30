@@ -13,7 +13,12 @@ import { RequireableComponent } from '@teambit/harmony.modules.requireable-compo
 import type { LoggerMain } from '@teambit/logger';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect } from '@teambit/logger';
-import { CFG_PACKAGE_MANAGER_CACHE, CFG_REGISTRY_URL_KEY, CFG_USER_TOKEN_KEY, getCloudDomain } from '@teambit/legacy/dist/constants';
+import {
+  CFG_PACKAGE_MANAGER_CACHE,
+  CFG_REGISTRY_URL_KEY,
+  CFG_USER_TOKEN_KEY,
+  getCloudDomain,
+} from '@teambit/legacy/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
@@ -289,7 +294,6 @@ export type GetVersionResolverOptions = {
 type OnExportIdTransformer = (id: BitId) => BitId;
 
 const defaultLinkingOptions: LinkingOptions = {
-  legacyLink: true,
   linkTeambitBit: true,
   linkCoreAspects: true,
 };
@@ -1272,7 +1276,8 @@ export class DependencyResolverMain {
             .filter(
               (dep) =>
                 typeof dep.getPackageName === 'function' &&
-                dep.version !== 'latest' &&
+                // If the dependency is referenced not via a valid range it means that it wasn't yet published to the registry
+                semver.validRange(dep.version) != null &&
                 !dep['isExtension'] && // eslint-disable-line
                 dep.lifecycle !== 'peer'
             )
@@ -1462,9 +1467,10 @@ export class DependencyResolverMain {
       if (!envPolicy) return undefined;
       return envPolicy.selfPolicy.toVersionManifest();
     });
-    aspectLoader.registerOnLoadRequireableExtensionSlot(
-      dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
-    );
+    if (aspectLoader)
+      aspectLoader.registerOnLoadRequireableExtensionSlot(
+        dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
+      );
 
     graphql.register(dependencyResolverSchema(dependencyResolver));
     envs.registerService(new DependenciesService());

@@ -315,6 +315,13 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
           test: stylesRegexps.cssNoModulesRegex,
           use: [require.resolve('style-loader'), require.resolve('css-loader')],
         },
+        {
+          test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
+          type: 'asset',
+          generator: {
+            filename: 'static/fonts/[hash][ext][query]',
+          },
+        },
       ],
     },
 

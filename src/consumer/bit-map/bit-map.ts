@@ -13,8 +13,13 @@ import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { isDir, outputFile, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
-import { getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
-import ComponentMap, { ComponentMapFile, Config, PathChange } from './component-map';
+import ComponentMap, {
+  ComponentMapFile,
+  Config,
+  PathChange,
+  getFilesByDir,
+  getGitIgnoreHarmony,
+} from './component-map';
 import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 import GeneralError from '../../error/general-error';

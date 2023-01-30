@@ -15,7 +15,7 @@ export function ComponentCompareVersionPicker({ className }: ComponentCompareVer
   const logs =
     (compare?.logs || []).filter((log) => {
       const version = log.tag || log.hash;
-      return version !== compare?.id.version;
+      return componentCompare?.compare?.hasLocalChanges || version !== compare?.id.version;
     }) || [];
 
   const [tags, snaps] = useMemo(() => {
