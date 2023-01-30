@@ -153,7 +153,7 @@ export class CompilerMain {
     if (workspace) {
       workspace.onComponentLoad(compilerMain.addMissingDistsIssue.bind(compilerMain));
     }
-    generator.registerComponentTemplate([compilerTemplate]);
+    if (generator) generator.registerComponentTemplate([compilerTemplate]);
 
     return compilerMain;
   }
