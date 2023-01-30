@@ -29,6 +29,7 @@ import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-w
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
+import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -111,7 +112,8 @@ export class LanesMain {
     private importer: ImporterMain,
     private exporter: ExportMain,
     private componentCompare: ComponentCompareMain,
-    readonly componentWriter: ComponentWriterMain
+    readonly componentWriter: ComponentWriterMain,
+    private removeMain: RemoveMain
   ) {}
 
   async getLanes({
@@ -132,7 +134,7 @@ export class LanesMain {
     if (remote) {
       const remoteObj = await getRemoteByName(remote, consumer);
       const lanes = await remoteObj.listLanes(name, showMergeData);
-      return lanes;
+      return this.filterSoftRemovedLaneComps(lanes);
     }
 
     if (name === DEFAULT_LANE) {
@@ -147,7 +149,30 @@ export class LanesMain {
       if (defaultLane) lanes.push(defaultLane);
     }
 
-    return lanes;
+    return this.filterSoftRemovedLaneComps(lanes);
+  }
+
+  private async filterSoftRemovedLaneComps(lanes: LaneData[]): Promise<LaneData[]> {
+    return Promise.all(
+      lanes.map(async (lane) => {
+        const components = compact(
+          await Promise.all(
+            (
+              await this.getLaneComponentIds(lane)
+            ).map(async (laneCompId) => {
+              if (await this.scope.isComponentRemoved(laneCompId)) return undefined;
+              return { id: new BitId(laneCompId), head: laneCompId.version as string };
+            })
+          )
+        );
+
+        const laneData: LaneData = {
+          ...lane,
+          components,
+        };
+        return laneData;
+      })
+    );
   }
 
   getCurrentLaneName(): string | null {
@@ -499,7 +524,8 @@ export class LanesMain {
     const host = this.componentAspect.getHost();
     const laneComponentIds = await this.getLaneComponentIds(lane);
     const components = await host.getMany(laneComponentIds);
-    return components;
+    // filter out soft removed components
+    return components.filter((c) => !this.removeMain.isRemoved(c));
   }
 
   async getLaneComponentIds(lane: LaneData): Promise<ComponentID[]> {
@@ -761,6 +787,7 @@ export class LanesMain {
     ExpressAspect,
     ComponentCompareAspect,
     ComponentWriterAspect,
+    RemoveAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -776,6 +803,7 @@ export class LanesMain {
     express,
     componentCompare,
     componentWriter,
+    remove,
   ]: [
     CLIMain,
     ScopeMain,
@@ -788,7 +816,8 @@ export class LanesMain {
     ExportMain,
     ExpressMain,
     ComponentCompareMain,
-    ComponentWriterMain
+    ComponentWriterMain,
+    RemoveMain
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(
@@ -800,7 +829,8 @@ export class LanesMain {
       importer,
       exporter,
       componentCompare,
-      componentWriter
+      componentWriter,
+      remove
     );
     const switchCmd = new SwitchCmd(lanesMain);
     const laneCmd = new LaneCmd(lanesMain, workspace, scope);
