@@ -4,6 +4,7 @@ import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { MainRuntime } from '@teambit/cli';
 import { composeComponentPath } from '@teambit/legacy/dist/utils/bit/compose-component-path';
 import { Component } from '@teambit/component';
+import TrackerAspect, { TrackerMain } from '@teambit/tracker';
 import { isDirEmpty } from '@teambit/legacy/dist/utils';
 import { ComponentID } from '@teambit/component-id';
 import { Harmony } from '@teambit/harmony';
@@ -12,7 +13,7 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { NewComponentHelperAspect } from './new-component-helper.aspect';
 
 export class NewComponentHelperMain {
-  constructor(private workspace: Workspace, private harmony: Harmony) {}
+  constructor(private workspace: Workspace, private harmony: Harmony, private tracker: TrackerMain) {}
   /**
    * when creating/forking a component, the user provides the new name and optionally the scope/namespace.
    * from this user input, create a ComponentID.
@@ -48,7 +49,7 @@ export class NewComponentHelperMain {
     await this.throwForExistingPath(targetPath);
     await this.workspace.write(comp, targetPath);
     try {
-      await this.workspace.track({
+      await this.tracker.track({
         rootDir: targetPath,
         componentName: targetId.fullName,
         mainFile: comp.state._consumer.mainFile,
@@ -107,10 +108,10 @@ export class NewComponentHelperMain {
   }
 
   static slots = [];
-  static dependencies = [WorkspaceAspect];
+  static dependencies = [WorkspaceAspect, TrackerAspect];
   static runtime = MainRuntime;
-  static async provider([workspace]: [Workspace], config, _, harmony: Harmony) {
-    return new NewComponentHelperMain(workspace, harmony);
+  static async provider([workspace, tracker]: [Workspace, TrackerMain], config, _, harmony: Harmony) {
+    return new NewComponentHelperMain(workspace, harmony, tracker);
   }
 }
 

@@ -1,6 +1,5 @@
-import { addMany as addManyInternal, getScopeComponent } from './api/consumer/index';
+import { getScopeComponent } from './api/consumer/index';
 import { scopeList } from './api/scope/index';
-import { AddProps } from './consumer/component-ops/add-components/add-components';
 import { Packer } from './pack';
 import HooksManager from './hooks';
 // import { registerCoreExtensions } from './extensions/bit';
@@ -33,10 +32,6 @@ export function list(
   return scopeList(scopePath, namespacesUsingWildcards, loadScopeFromCache).then((listScopeResult) =>
     listScopeResult.map((result) => result.id.toString())
   );
-}
-
-export async function addMany(components: AddProps[], alternateCwd?: string) {
-  return addManyInternal(components, alternateCwd);
 }
 
 const packer = new Packer();

@@ -37,11 +37,6 @@ import { BitId, InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName }
 import { LaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
-import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';
-import type {
-  AddActionResults,
-  Warnings,
-} from '@teambit/legacy/dist/consumer/component-ops/add-components/add-components';
 import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
@@ -115,14 +110,6 @@ export interface EjectConfOptions {
   override?: boolean;
 }
 
-export type TrackData = {
-  rootDir: PathOsBasedRelative; // path relative to the workspace
-  componentName?: string; // if empty, it'll be generated from the path
-  mainFile?: string; // if empty, attempts will be made to guess the best candidate
-  defaultScope?: string; // can be entered as part of "bit create" command, helpful for out-of-sync logic
-  config?: { [aspectName: string]: any }; // config specific to this component, which overrides variants of workspace.jsonc
-};
-
 export type ExtensionsOrigin =
   | 'BitmapFile'
   | 'ModelSpecific'
@@ -132,8 +119,6 @@ export type ExtensionsOrigin =
   | 'ComponentJsonFile'
   | 'WorkspaceDefault'
   | 'FinalAfterMerge';
-
-export type TrackResult = { componentName: string; files: string[]; warnings: Warnings };
 
 const DEFAULT_VENDOR_DIR = 'vendor';
 
@@ -907,29 +892,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     await scopeComponentsImporter.importMany({ ids, lanes: [lane] });
   }
 
-  /**
-   * @deprecated use this.track() instead
-   * track a new component. (practically, add it to .bitmap).
-   *
-   * @param componentPaths component paths relative to the workspace dir
-   * @param id if not set, will be concluded from the filenames
-   * @param main if not set, will try to guess according to some strategies and throws if failed
-   * @param override whether add details to an existing component or re-define it
-   */
-  async add(
-    componentPaths: PathOsBasedRelative[],
-    id?: string,
-    main?: string,
-    override = false
-  ): Promise<AddActionResults> {
-    const addComponent = new AddComponents({ consumer: this.consumer }, { componentPaths, id, main, override });
-    const addResults = await addComponent.add();
-    // @todo: the legacy commands have `consumer.onDestroy()` on command completion, it writes the
-    //  .bitmap file. workspace needs a similar mechanism. once done, remove the next line.
-    await this.bitMap.write();
-    return addResults;
-  }
-
   async use(aspectIdStr: string): Promise<string> {
     const aspectId = await this.resolveComponentId(aspectIdStr);
     let aspectIdToAdd = aspectId.toStringWithoutVersion();
@@ -951,51 +913,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     );
     await config.write();
     return aspectIdToAdd;
-  }
-
-  /**
-   * add a new component to the .bitmap file.
-   * this method only adds the records in memory but doesn't persist to the filesystem.
-   * to write the .bitmap file once completed, run "await this.bitMap.write();"
-   */
-  async track(trackData: TrackData): Promise<TrackResult> {
-    const defaultScope = trackData.defaultScope ? await this.addOwnerToScopeName(trackData.defaultScope) : undefined;
-    const addComponent = new AddComponents(
-      { consumer: this.consumer },
-      {
-        componentPaths: [trackData.rootDir],
-        id: trackData.componentName,
-        main: trackData.mainFile,
-        override: false,
-        defaultScope,
-        config: trackData.config,
-      }
-    );
-    const result = await addComponent.add();
-    const addedComponent = result.addedComponents[0];
-    const componentName = addedComponent?.id.name || (trackData.componentName as string);
-    const files = addedComponent?.files.map((f) => f.relativePath) || [];
-    return { componentName, files, warnings: result.warnings };
-  }
-
-  /**
-   * scopes in bit.dev are "owner.collection".
-   * we might have the scope-name only without the owner and we need to retrieve it from the defaultScope in the
-   * workspace.jsonc file.
-   *
-   * @param scopeName scopeName that might not have the owner part.
-   * @returns full scope name
-   */
-  private async addOwnerToScopeName(scopeName: string): Promise<string> {
-    if (scopeName.includes('.')) return scopeName; // it has owner.
-    const isSelfHosted = !(await this.isHostedByBit(scopeName));
-    if (isSelfHosted) return scopeName;
-    const wsDefaultScope = this.defaultScope;
-    if (!wsDefaultScope.includes('.')) {
-      throw new Error(`the entered scope has no owner nor the defaultScope in workspace.jsonc`);
-    }
-    const [owner] = wsDefaultScope.split('.');
-    return `${owner}.${scopeName}`;
   }
 
   async write(component: Component, rootPath?: string) {
@@ -1636,16 +1553,6 @@ needed-for: ${neededFor || '<unknown>'}`);
       await link(stringIds, false);
     }
     return resolved;
-  }
-
-  /**
-   * whether a scope is hosted by Bit cloud.
-   * otherwise, it is self-hosted
-   */
-  private async isHostedByBit(scopeName: string): Promise<boolean> {
-    // TODO: once scope create a new API for this, replace it with the new one
-    const remotes = await this.scope._legacyRemotes();
-    return remotes.isHub(scopeName);
   }
 
   /**

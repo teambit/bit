@@ -696,7 +696,6 @@
     "merging": {
         "scope": "teambit.component",
         "version": "0.0.284",
-        "defaultScope": "teambit.component",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/merging"
     },
@@ -861,6 +860,13 @@
         "version": "0.0.76",
         "mainFile": "index.ts",
         "rootDir": "scopes/typescript/modules/ts-config-mutator"
+    },
+    "mover": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/mover"
     },
     "multi-compiler": {
         "scope": "teambit.compilation",
@@ -1177,14 +1183,12 @@
     "snapping": {
         "scope": "teambit.component",
         "version": "0.0.284",
-        "defaultScope": "teambit.component",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/snapping"
     },
     "status": {
         "scope": "teambit.component",
         "version": "0.0.281",
-        "defaultScope": "teambit.component",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/status"
     },
@@ -1253,6 +1257,13 @@
         "version": "0.0.490",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/time/time-format"
+    },
+    "tracker": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/tracker"
     },
     "ts-server": {
         "scope": "teambit.typescript",
@@ -1473,7 +1484,6 @@
     "ui/component-compare/models/component-compare-model": {
         "scope": "teambit.component",
         "version": "0.0.3",
-        "defaultScope": "teambit.component",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/models/component-compare-model"
     },
