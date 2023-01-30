@@ -155,7 +155,7 @@ export class LanesMain {
       lanes.map(async (lane) => {
         if (lane.id.isDefault()) return lane;
 
-        const components = compact(
+        const componentIds = compact(
           await Promise.all(
             (
               await this.getLaneComponentIds(lane)
@@ -168,7 +168,7 @@ export class LanesMain {
 
         const laneData: LaneData = {
           ...lane,
-          components,
+          components: componentIds,
         };
         return laneData;
       })
