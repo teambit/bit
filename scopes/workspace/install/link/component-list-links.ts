@@ -1,7 +1,7 @@
 import chalk from 'chalk';
-import { LinksResult as LegacyLinksResult } from '@teambit/legacy/dist/links/node-modules-linker';
 import { getPackageNameFromTarget } from './get-package-name-from-target';
 import { LinkRow, VerboseLinkRow } from './link-row';
+import { LinksResult as LegacyLinksResult } from './node-modules-linker';
 
 type ComponentListLinksProps = {
   componentListLinks?: LegacyLinksResult[];

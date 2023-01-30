@@ -2427,6 +2427,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace"
     },
+    "workspace-linker": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/workspace-linker"
+    },
     "yarn": {
         "scope": "teambit.dependencies",
         "version": "0.0.972",

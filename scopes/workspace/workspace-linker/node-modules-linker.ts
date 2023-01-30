@@ -3,25 +3,25 @@ import glob from 'glob';
 import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
-import { BitId } from '../bit-id';
-import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '../constants';
-import BitMap from '../consumer/bit-map/bit-map';
-import ComponentMap from '../consumer/bit-map/component-map';
-import ComponentsList from '../consumer/component/components-list';
-import Component from '../consumer/component/consumer-component';
-import PackageJsonFile from '../consumer/component/package-json-file';
-import { PackageJsonTransformer } from '../consumer/component/package-json-transformer';
-import DataToPersist from '../consumer/component/sources/data-to-persist';
-import RemovePath from '../consumer/component/sources/remove-path';
-import Consumer from '../consumer/consumer';
-import logger from '../logger/logger';
-import { first } from '../utils';
-import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
-import { PathOsBasedRelative } from '../utils/path';
-import Symlink from './symlink';
+import { BitId } from '@teambit/legacy/dist/bit-id';
+import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy/dist/constants';
+import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
+import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { first } from '@teambit/legacy/dist/utils';
+import getNodeModulesPathOfComponent from '@teambit/legacy/dist/utils/bit/component-node-modules-path';
+import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
+import Symlink from '@teambit/legacy/dist/links/symlink';
 
 type LinkDetail = { from: string; to: string };
-export type LinksResult = {
+export type NodeModulesLinksResult = {
   id: BitId;
   bound: LinkDetail[];
 };
@@ -32,16 +32,16 @@ export type LinksResult = {
  */
 export default class NodeModuleLinker {
   components: Component[];
-  consumer: Consumer | null | undefined;
+  consumer: Consumer;
   bitMap: BitMap; // preparation for the capsule, which is going to have only BitMap with no Consumer
   dataToPersist: DataToPersist;
-  constructor(components: Component[], consumer: Consumer | null | undefined, bitMap: BitMap) {
+  constructor(components: Component[], consumer: Consumer) {
     this.components = ComponentsList.getUniqueComponents(components);
     this.consumer = consumer;
-    this.bitMap = bitMap;
+    this.bitMap = consumer.bitMap;
     this.dataToPersist = new DataToPersist();
   }
-  async link(): Promise<LinksResult[]> {
+  async link(): Promise<NodeModulesLinksResult[]> {
     const links = await this.getLinks();
     const linksResults = this.getLinksResults();
     if (this.consumer) links.addBasePath(this.consumer.getPath());
@@ -62,8 +62,8 @@ export default class NodeModuleLinker {
 
     return this.dataToPersist;
   }
-  getLinksResults(): LinksResult[] {
-    const linksResults: LinksResult[] = [];
+  getLinksResults(): NodeModulesLinksResult[] {
+    const linksResults: NodeModulesLinksResult[] = [];
     const getExistingLinkResult = (id) => linksResults.find((linkResult) => linkResult.id.isEqual(id));
     const addLinkResult = (id: BitId | null | undefined, from: string, to: string) => {
       if (!id) return;

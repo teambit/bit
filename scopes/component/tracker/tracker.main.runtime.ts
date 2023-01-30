@@ -1,4 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import WorkspaceLinkerAspect, { WorkspaceLinkerMain } from '@teambit/workspace-linker';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AddCmd } from './add-cmd';
@@ -16,9 +17,9 @@ export type TrackData = {
 };
 
 export class TrackerMain {
-  constructor(private workspace: Workspace) {}
+  constructor(private workspace: Workspace, private workspaceLinker: WorkspaceLinkerMain) {}
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, WorkspaceLinkerAspect];
   static runtime = MainRuntime;
 
   /**
@@ -29,7 +30,7 @@ export class TrackerMain {
   async track(trackData: TrackData): Promise<TrackResult> {
     const defaultScope = trackData.defaultScope ? await this.addOwnerToScopeName(trackData.defaultScope) : undefined;
     const addComponent = new AddComponents(
-      { consumer: this.workspace.consumer },
+      { consumer: this.workspace.consumer, workspaceLinker: this.workspaceLinker },
       {
         componentPaths: [trackData.rootDir],
         id: trackData.componentName,
@@ -48,7 +49,7 @@ export class TrackerMain {
 
   async addForCLI(addProps: AddProps): Promise<AddActionResults> {
     if (!this.workspace) throw new OutsideWorkspaceError();
-    const addContext: AddContext = { consumer: this.workspace.consumer };
+    const addContext: AddContext = { consumer: this.workspace.consumer, workspaceLinker: this.workspaceLinker };
     addProps.shouldHandleOutOfSync = true;
     const addComponents = new AddComponents(addContext, addProps);
     const addResults = await addComponents.add();
@@ -87,8 +88,8 @@ export class TrackerMain {
     return remotes.isHub(scopeName);
   }
 
-  static async provider([cli, workspace]: [CLIMain, Workspace]) {
-    const trackerMain = new TrackerMain(workspace);
+  static async provider([cli, workspace, workspaceLinker]: [CLIMain, Workspace, WorkspaceLinkerMain]) {
+    const trackerMain = new TrackerMain(workspace, workspaceLinker);
     cli.register(new AddCmd(trackerMain));
     return trackerMain;
   }

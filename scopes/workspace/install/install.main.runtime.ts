@@ -1,5 +1,4 @@
 import { CommunityMain, CommunityAspect } from '@teambit/community';
-import { link as legacyLink } from '@teambit/legacy/dist/api/consumer/lib/link';
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
@@ -29,6 +28,8 @@ import {
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
+import WorkspaceLinkerAspect, { WorkspaceLinkerMain, NodeModulesLinksResult } from '@teambit/workspace-linker';
+import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
 import hash from 'object-hash';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
@@ -41,6 +42,11 @@ import UpdateCmd from './update.cmd';
 export type WorkspaceLinkOptions = LinkingOptions & {
   rootPolicy?: WorkspacePolicy;
 };
+
+export type WorkspaceLinkResults = {
+  legacyLinkResults?: NodeModulesLinksResult[];
+  legacyLinkCodemodResults?: CodemodResult[];
+} & LinkResults;
 
 export type WorkspaceInstallOptions = {
   addMissingPeers?: boolean;
@@ -77,7 +83,9 @@ export class InstallMain {
 
     private preLinkSlot: PreLinkSlot,
 
-    private preInstallSlot: PreInstallSlot
+    private preInstallSlot: PreInstallSlot,
+
+    private workspaceLinker: WorkspaceLinkerMain
   ) {}
   /**
    * Install dependencies for all components in the workspace
@@ -379,7 +387,7 @@ export class InstallMain {
     return res;
   }
 
-  async link(options: WorkspaceLinkOptions = {}): Promise<LinkResults> {
+  async link(options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
     await pMapSeries(this.preLinkSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
     const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
@@ -388,11 +396,12 @@ export class InstallMain {
       linkingOptions: options,
     });
     const res = await linker.link(this.workspace.path, mergedRootPolicy, compDirMap, options);
+    const workspaceRes = res as WorkspaceLinkResults;
 
     const bitIds = compDirMap.toArray().map(([component]) => component.id._legacy);
-    const legacyResults = await legacyLink(this.workspace.consumer, bitIds, options.rewire ?? false);
-    res.legacyLinkResults = legacyResults.linksResults;
-    res.legacyLinkCodemodResults = legacyResults.codemodResults;
+    const legacyResults = await this.workspaceLinker.linkToNodeModulesWithCodemod(bitIds, options.rewire ?? false);
+    workspaceRes.legacyLinkResults = legacyResults.linksResults;
+    workspaceRes.legacyLinkCodemodResults = legacyResults.codemodResults;
 
     return res;
   }
@@ -440,12 +449,13 @@ export class InstallMain {
     CommunityAspect,
     CompilerAspect,
     IssuesAspect,
+    WorkspaceLinkerAspect,
   ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [dependencyResolver, workspace, loggerExt, variants, cli, community, compiler, issues]: [
+    [dependencyResolver, workspace, loggerExt, variants, cli, community, compiler, issues, workspaceLinker]: [
       DependencyResolverMain,
       Workspace,
       LoggerMain,
@@ -453,7 +463,8 @@ export class InstallMain {
       CLIMain,
       CommunityMain,
       CompilerMain,
-      IssuesMain
+      IssuesMain,
+      WorkspaceLinkerMain
     ],
     _,
     [preLinkSlot, preInstallSlot]: [PreLinkSlot, PreInstallSlot]
@@ -466,7 +477,8 @@ export class InstallMain {
       variants,
       compiler,
       preLinkSlot,
-      preInstallSlot
+      preInstallSlot,
+      workspaceLinker
     );
     if (issues) {
       issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));

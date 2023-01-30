@@ -23,11 +23,11 @@ import ComponentsList from '@teambit/legacy/dist/consumer/component/components-l
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { NodeModuleLinker } from '@teambit/legacy/dist/links';
 import { Lane, ModelComponent, Symlink, Version } from '@teambit/legacy/dist/scope/models';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { Scope } from '@teambit/legacy/dist/scope';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import WorkspaceLinkerAspect, { WorkspaceLinkerMain } from '@teambit/workspace-linker';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { LaneReadmeComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
@@ -81,7 +81,8 @@ export class ExportMain {
     private workspace: Workspace,
     private remove: RemoveMain,
     private depResolver: DependencyResolverMain,
-    private logger: Logger
+    private logger: Logger,
+    private workspaceLinker: WorkspaceLinkerMain
   ) {}
 
   async export(params: ExportParams = {}) {
@@ -167,7 +168,8 @@ export class ExportMain {
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();
     const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
-    await linkComponents(updatedIds, consumer);
+    // re-generate the package.json, this way, it has the correct data in the componentId prop.
+    await this.workspaceLinker.linkToNodeModules(updatedIds);
     await this.removeFromStagedConfig(exported);
     Analytics.setExtraData('num_components', exported.length);
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
@@ -709,17 +711,26 @@ export class ExportMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, RemoveAspect, DependencyResolverAspect, LoggerAspect];
-  static async provider([cli, scope, workspace, remove, depResolver, loggerMain]: [
+  static dependencies = [
+    CLIAspect,
+    ScopeAspect,
+    WorkspaceAspect,
+    RemoveAspect,
+    DependencyResolverAspect,
+    LoggerAspect,
+    WorkspaceLinkerAspect,
+  ];
+  static async provider([cli, scope, workspace, remove, depResolver, loggerMain, workspaceLinker]: [
     CLIMain,
     ScopeMain,
     Workspace,
     RemoveMain,
     DependencyResolverMain,
-    LoggerMain
+    LoggerMain,
+    WorkspaceLinkerMain
   ]) {
     const logger = loggerMain.createLogger(ExportAspect.id);
-    const exportMain = new ExportMain(workspace, remove, depResolver, logger);
+    const exportMain = new ExportMain(workspace, remove, depResolver, logger, workspaceLinker);
     cli.register(new ResumeExportCmd(scope), new ExportCmd(exportMain));
     return exportMain;
   }
@@ -755,18 +766,6 @@ async function getParsedId(consumer: Consumer, id: string): Promise<BitId> {
     // not in the consumer, just return the one parsed without the scope name
     return parsedId;
   }
-}
-
-/**
- * re-generate the package.json, this way, it has the correct data in the componentId prop.
- */
-async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
-  // we don't have much of a choice here, we have to load all the exported components in order to link them
-  // some of the components might be authored, some might be imported.
-  // when a component has dists, we need the consumer-component object to retrieve the dists info.
-  const components = await Promise.all(ids.map((id) => consumer.loadComponentFromModel(id)));
-  const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
-  await nodeModuleLinker.link();
 }
 
 async function ejectExportedComponents(componentsIds, logger: Logger): Promise<EjectResults> {

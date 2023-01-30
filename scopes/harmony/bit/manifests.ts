@@ -97,6 +97,7 @@ import { APIReferenceAspect } from '@teambit/api-reference';
 import { ComponentWriterAspect } from '@teambit/component-writer';
 import { TrackerAspect } from '@teambit/tracker';
 import { MoverAspect } from '@teambit/mover';
+import { WorkspaceLinkerAspect } from '@teambit/workspace-linker';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -198,6 +199,7 @@ export const manifestsMap = {
   [APIReferenceAspect.id]: APIReferenceAspect,
   [TrackerAspect.id]: TrackerAspect,
   [MoverAspect.id]: MoverAspect,
+  [WorkspaceLinkerAspect.id]: WorkspaceLinkerAspect,
 };
 
 export function isCoreAspect(id: string) {
