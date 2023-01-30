@@ -360,9 +360,9 @@ export class ApplicationMain {
     envs.registerService(appService);
     cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
-    cli.registerOnStart(async () => {
-      await application.loadAppsToSlot();
-    });
+    // cli.registerOnStart(async () => {
+    //   await application.loadAppsToSlot();
+    // });
     if (workspace) {
       workspace.onComponentLoad(async (loadedComponent): Promise<ApplicationMetadata | undefined> => {
         const app = application.calculateAppByComponent(loadedComponent);
