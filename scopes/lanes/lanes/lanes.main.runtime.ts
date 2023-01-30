@@ -29,7 +29,6 @@ import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-w
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
-import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -112,8 +111,7 @@ export class LanesMain {
     private importer: ImporterMain,
     private exporter: ExportMain,
     private componentCompare: ComponentCompareMain,
-    readonly componentWriter: ComponentWriterMain,
-    private removeMain: RemoveMain
+    readonly componentWriter: ComponentWriterMain
   ) {}
 
   async getLanes({
@@ -527,7 +525,7 @@ export class LanesMain {
     const laneComponentIds = await this.getLaneComponentIds(lane);
     const components = await host.getMany(laneComponentIds);
     // filter out soft removed components
-    return components.filter((c) => !this.removeMain.isRemoved(c));
+    return components;
   }
 
   async getLaneComponentIds(lane: LaneData): Promise<ComponentID[]> {
@@ -789,7 +787,6 @@ export class LanesMain {
     ExpressAspect,
     ComponentCompareAspect,
     ComponentWriterAspect,
-    RemoveAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -805,7 +802,6 @@ export class LanesMain {
     express,
     componentCompare,
     componentWriter,
-    remove,
   ]: [
     CLIMain,
     ScopeMain,
@@ -818,8 +814,7 @@ export class LanesMain {
     ExportMain,
     ExpressMain,
     ComponentCompareMain,
-    ComponentWriterMain,
-    RemoveMain
+    ComponentWriterMain
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(
@@ -831,8 +826,7 @@ export class LanesMain {
       importer,
       exporter,
       componentCompare,
-      componentWriter,
-      remove
+      componentWriter
     );
     const switchCmd = new SwitchCmd(lanesMain);
     const laneCmd = new LaneCmd(lanesMain, workspace, scope);
