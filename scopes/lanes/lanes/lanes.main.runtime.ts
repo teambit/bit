@@ -524,7 +524,6 @@ export class LanesMain {
     const host = this.componentAspect.getHost();
     const laneComponentIds = await this.getLaneComponentIds(lane);
     const components = await host.getMany(laneComponentIds);
-    // filter out soft removed components
     return components;
   }
 
