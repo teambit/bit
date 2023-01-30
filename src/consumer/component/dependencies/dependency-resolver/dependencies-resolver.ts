@@ -1248,6 +1248,10 @@ either, use the ignore file syntax or change the require statement to have a mod
         });
 
         if (
+          // We are checking originAllPackagesDependencies instead of allPackagesDependencies
+          // as it might be already removed from allPackagesDependencies at this point if it was set with
+          // "-" in runtime/dev
+          // in such case we still want to apply it here
           !this.originAllPackagesDependencies.packageDependencies[pkgName] &&
           !this.originAllPackagesDependencies.devPackageDependencies[pkgName] &&
           !this.originAllPackagesDependencies.peerPackageDependencies[pkgName] &&
