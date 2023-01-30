@@ -155,13 +155,15 @@ export class LanesMain {
   private async filterSoftRemovedLaneComps(lanes: LaneData[]): Promise<LaneData[]> {
     return Promise.all(
       lanes.map(async (lane) => {
+        if (lane.id.isDefault()) return lane;
+
         const components = compact(
           await Promise.all(
             (
               await this.getLaneComponentIds(lane)
             ).map(async (laneCompId) => {
               if (await this.scope.isComponentRemoved(laneCompId)) return undefined;
-              return { id: new BitId(laneCompId), head: laneCompId.version as string };
+              return { id: laneCompId._legacy, head: laneCompId.version as string };
             })
           )
         );
