@@ -2,7 +2,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import semver from 'semver';
-import { uniq, isEmpty, union } from 'lodash';
+import { uniq, isEmpty, union, cloneDeep } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
@@ -98,6 +98,11 @@ export default class DependencyResolver {
   tree: DependenciesTree;
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
+  /**
+   * This will store a copy of the package deps before removal
+   * in order to apply auto detected rules that are running after the removal
+   */
+  originAllPackagesDependencies: AllPackagesDependencies;
   issues: IssuesList;
   coreAspects: string[] = [];
   processedFiles: string[];
@@ -245,6 +250,8 @@ export default class DependencyResolver {
       this.processUnidentifiedPackages(file, fileType);
     });
 
+    this.cloneAllPackagesDependencies();
+
     this.removeIgnoredPackagesByOverrides();
     this.removeDevAndEnvDepsIfTheyAlsoRegulars();
     this.addCustomResolvedIssues();
@@ -289,6 +296,10 @@ export default class DependencyResolver {
       }, {});
       this.issues.getOrCreate(IssuesClasses.CustomModuleResolutionUsed).data = importSources;
     }
+  }
+
+  cloneAllPackagesDependencies(){
+    this.originAllPackagesDependencies = cloneDeep(this.allPackagesDependencies);
   }
 
   removeIgnoredPackagesByOverrides() {
@@ -1237,9 +1248,9 @@ either, use the ignore file syntax or change the require statement to have a mod
         });
 
         if (
-          !this.allPackagesDependencies.packageDependencies[pkgName] &&
-          !this.allPackagesDependencies.devPackageDependencies[pkgName] &&
-          !this.allPackagesDependencies.peerPackageDependencies[pkgName] &&
+          !this.originAllPackagesDependencies.packageDependencies[pkgName] &&
+          !this.originAllPackagesDependencies.devPackageDependencies[pkgName] &&
+          !this.originAllPackagesDependencies.peerPackageDependencies[pkgName] &&
           !existsInCompsDeps &&
           !existsInCompsDevDeps &&
           // Check if it was orignally exists in the component
