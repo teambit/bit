@@ -202,7 +202,7 @@ export class ApplicationMain {
   }
 
   getAppPattern(appType: ApplicationType<unknown>) {
-    if (appType.pattern) return appType.pattern;
+    if (appType.globPattern) return appType.globPattern;
     return `*.${appType.name}.*`;
   }
 
