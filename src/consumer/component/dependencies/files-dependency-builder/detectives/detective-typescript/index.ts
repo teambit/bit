@@ -11,15 +11,6 @@ import {
 const Parser = require('@typescript-eslint/typescript-estree');
 const Walker = require('node-source-walk');
 
-const shouldBeIgnored = (node) => {
-  const comments = node?.parent?.parent?.comments;
-  if (!comments) return false;
-  if (comments.some((c) => c.value.includes('@bit-no-check'))) return true;
-  const commentAboveNode = comments.find((c) => c.loc.start.line === node.loc.start.line - 1);
-  if (!commentAboveNode) return false;
-  return commentAboveNode.value.includes('@bit-ignore');
-};
-
 /**
  * Extracts the dependencies of the supplied TypeScript module
  *
@@ -31,6 +22,17 @@ export default function (src, options: Record<string, any> = {}) {
   options.parser = Parser;
   options.comment = true;
   options.loc = true;
+
+  let programNode;
+
+  const shouldBeIgnored = (node) => {
+    const comments = programNode?.comments;
+    if (!comments) return false;
+    if (comments.some((c) => c.value.includes('@bit-no-check'))) return true;
+    const commentAboveNode = comments.find((c) => c.loc.start.line === node.loc.start.line - 1);
+    if (!commentAboveNode) return false;
+    return commentAboveNode.value.includes('@bit-ignore');
+  };
 
   const walker = new Walker(options);
 
@@ -70,6 +72,9 @@ export default function (src, options: Record<string, any> = {}) {
   // eslint-disable-next-line complexity
   walker.walk(src, function (node) {
     switch (node.type) {
+      case 'Program':
+        programNode = node;
+        break;
       case 'ImportDeclaration':
         if (node.source && node.source.value) {
           const dependency = node.source.value;
@@ -104,6 +109,7 @@ export default function (src, options: Record<string, any> = {}) {
       case 'CallExpression':
         {
           const value = getDependenciesFromCallExpression(node);
+          if (shouldBeIgnored(node)) return;
           if (value) addDependency(value);
         }
         break;
