@@ -1,10 +1,10 @@
 import chalk from 'chalk';
+import { NodeModulesLinksResult } from '@teambit/workspace-linker';
 import { getPackageNameFromTarget } from './get-package-name-from-target';
 import { LinkRow, VerboseLinkRow } from './link-row';
-import { LinksResult as LegacyLinksResult } from './node-modules-linker';
 
 type ComponentListLinksProps = {
-  componentListLinks?: LegacyLinksResult[];
+  componentListLinks?: NodeModulesLinksResult[];
   verbose: boolean;
 };
 
@@ -19,7 +19,7 @@ export function ComponentListLinks({ componentListLinks, verbose = false }: Comp
 }
 
 type ComponentLinksProps = {
-  componentLinks: LegacyLinksResult;
+  componentLinks: NodeModulesLinksResult;
   verbose: boolean;
 };
 function ComponentLinks({ componentLinks, verbose = false }: ComponentLinksProps) {
@@ -29,7 +29,7 @@ function ComponentLinks({ componentLinks, verbose = false }: ComponentLinksProps
 }
 
 type RegularComponentLinksProps = {
-  componentLinks: LegacyLinksResult;
+  componentLinks: NodeModulesLinksResult;
 };
 function RegularComponentLinks({ componentLinks }: RegularComponentLinksProps) {
   const id = componentLinks.id.toString();
@@ -39,7 +39,7 @@ function RegularComponentLinks({ componentLinks }: RegularComponentLinksProps) {
 }
 
 type VerboseComponentLinksProps = {
-  componentLinks: LegacyLinksResult;
+  componentLinks: NodeModulesLinksResult;
 };
 function VerboseComponentLinks({ componentLinks }: VerboseComponentLinksProps) {
   const id = componentLinks.id.toString();
