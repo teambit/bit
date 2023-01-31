@@ -31,7 +31,7 @@ import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { VariantsMain } from '@teambit/variants';
-import { link } from '@teambit/legacy/dist/api/consumer';
+// import { link } from '@teambit/legacy/dist/api/consumer';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId, InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
@@ -1437,7 +1437,8 @@ needed-for: ${neededFor || '<unknown>'}`);
     }
 
     if (missingPaths) {
-      await link(stringIds, false);
+      // @todo: check if this is still needed
+      // await link(stringIds, false);
     }
 
     const allDefs = aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
