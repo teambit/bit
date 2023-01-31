@@ -353,7 +353,15 @@ export class LanesUI {
       const { lanesModel } = useLanes();
       if (!lanesModel?.viewedLane) return null;
       const { viewedLane, currentLane } = lanesModel;
-      return <UseLaneMenu host={lanesUi.lanesHost} viewedLaneId={viewedLane.id} currentLaneId={currentLane?.id} />;
+      return (
+        <UseLaneMenu
+          actionName={'Import'}
+          actionIcon={'terminal'}
+          host={lanesUi.lanesHost}
+          viewedLaneId={viewedLane.id}
+          currentLaneId={currentLane?.id}
+        />
+      );
     });
     lanesUi.registerLanesDropdown();
     return lanesUi;
