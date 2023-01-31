@@ -249,4 +249,22 @@ describe('bit lane command', function () {
       expect(list).to.have.lengthOf(1);
     });
   });
+  describe('switch from main to a lane when main has staged components', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('main');
+      helper.command.tagAllWithoutBuild('--unmodified');
+    });
+    it('should block the switch and suggest to export or reset', () => {
+      expect(() => helper.command.switchLocalLane('dev')).to.throw(
+        'please export or reset the following components first'
+      );
+    });
+  });
 });
