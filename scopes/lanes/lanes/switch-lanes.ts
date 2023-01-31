@@ -25,6 +25,7 @@ import { Workspace } from '@teambit/workspace';
 import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { LanesMain } from './lanes.main.runtime';
+import { throwForStagedComponents } from './create-lane';
 
 export type SwitchProps = {
   laneName: string;
@@ -51,6 +52,9 @@ export class LaneSwitcher {
 
   async switch(): Promise<ApplyVersionResults> {
     this.logger.setStatusLine(`switching lanes`);
+    if (this.workspace.isOnMain()) {
+      await throwForStagedComponents(this.consumer);
+    }
     await this.populateSwitchProps();
     const allComponentsStatus: ComponentStatus[] = await this.getAllComponentsStatus();
     const componentWithConflict = allComponentsStatus.find(

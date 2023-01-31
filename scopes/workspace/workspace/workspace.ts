@@ -674,6 +674,10 @@ export class Workspace implements ComponentFactory {
     return this.consumer.getCurrentLaneId();
   }
 
+  isOnMain(): boolean {
+    return this.consumer.isOnMain();
+  }
+
   /**
    * if checked out to a lane and the lane exists in the remote,
    * return the remote lane id (name+scope). otherwise, return null.
