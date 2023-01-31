@@ -1308,28 +1308,34 @@ export class DependencyResolverMain {
   ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
     this.logger.setStatusLine('checking the latest versions of dependencies');
     const resolver = await this.getVersionResolver();
-    const resolve = async (spec: string) =>
-      (
-        await resolver.resolveRemoteVersion(spec, {
-          rootDir,
-        })
-      ).version;
+    const tryResolve = async (spec: string) => {
+      try {
+        return (
+          await resolver.resolveRemoteVersion(spec, {
+            rootDir,
+          })
+        ).version;
+      } catch {
+        // If latest cannot be found for the package, then just ignore it
+        return null;
+      }
+    };
     const outdatedPkgs = compact(
       await Promise.all(
         pkgs.map(async (pkg) => {
-          try {
-            const latestVersion = await resolve(`${pkg.name}@latest`);
-            return {
-              ...pkg,
-              latestRange: latestVersion ? repeatPrefix(pkg.currentRange, latestVersion) : null,
-            } as any;
-          } catch (err) {
-            // If latest cannot be found for the package, then just ignore it
+          const latestVersion = await tryResolve(`${pkg.name}@latest`);
+          if (!latestVersion) return null;
+          const currentVersion = semver.valid(pkg.currentRange.replace(/[\^~]/, ''));
+          // If the current version is newer than the latest, then no need to update the dependency
+          if (currentVersion && (semver.gt(currentVersion, latestVersion) || currentVersion === latestVersion))
             return null;
-          }
+          return {
+            ...pkg,
+            latestRange: repeatPrefix(pkg.currentRange, latestVersion),
+          } as any;
         })
       )
-    ).filter(({ latestRange, currentRange }) => latestRange != null && latestRange !== currentRange);
+    );
     this.logger.consoleSuccess();
     return outdatedPkgs;
   }
