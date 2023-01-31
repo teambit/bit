@@ -160,9 +160,7 @@ describe('bit lane command', function () {
     });
     it('bit create should throw an error suggesting to export or reset first', () => {
       const output = helper.general.runWithTryCatch('bit lane create lane-b');
-      expect(output).to.have.string(
-        'unable to create a new lane, please export or reset the following components first'
-      );
+      expect(output).to.have.string('please export or reset the following components first');
     });
   });
 });
