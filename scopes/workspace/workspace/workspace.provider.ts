@@ -198,11 +198,16 @@ export default async function provideWorkspace(
 
   cli.registerOnStart(async () => {
     await workspace.importCurrentLaneIfMissing();
-    await workspace.loadAspects(
+    const aspects = await workspace.loadAspects(
       aspectLoader.getNotLoadedConfiguredExtensions(),
       undefined,
       'workspace.cli.registerOnStart'
     );
+    // clear aspect cache.
+    const componentIds = await workspace.resolveMultipleComponentIds(aspects);
+    componentIds.forEach((id) => {
+      workspace.clearComponentCache(id);
+    }); 
   });
 
   // add sub-commands "set" and "unset" to envs command.
