@@ -77,20 +77,3 @@ function LaneImportContent({ host, currentLaneId, switchedOutToCurrentLane }: La
     </div>
   );
 }
-
-// type LaneInfoProps = {} & React.HTMLAttributes<HTMLDivElement>;
-
-// function LaneInfo({ ...rest }: LaneInfoProps) {
-//   return (
-//     <TabContent
-//       {...rest}
-//       className={styles.moreInfo}
-//       bottom={
-//         <Link external href={'https://bit.dev/docs/lanes/lanes-overview'} className={linkStyles}>
-//           <Icon of="information-sign" />
-//           <span>Getting Started with Lanes</span>
-//         </Link>
-//       }
-//     ></TabContent>
-//   );
-// }
