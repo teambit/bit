@@ -5,9 +5,9 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import R from 'ramda';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { isDir } from '@teambit/legacy/dist/utils';
-import WorkspaceLinkerAspect, { WorkspaceLinkerMain } from '@teambit/workspace-linker';
 import moveSync from '@teambit/legacy/dist/utils/fs/move-sync';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
+import { linkToNodeModules } from '@teambit/workspace.modules.node-modules-linker';
 import { PathChangeResult } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
@@ -15,7 +15,7 @@ import { MoverAspect } from './mover.aspect';
 import { MoveCmd } from './move-cmd';
 
 export class MoverMain {
-  constructor(private workspace: Workspace, private workspaceLinker: WorkspaceLinkerMain) {}
+  constructor(private workspace: Workspace) {}
 
   async movePaths({ from, to }: { from: PathOsBasedRelative; to: PathOsBasedRelative }): Promise<PathChangeResult[]> {
     const consumer = await this.workspace.consumer;
@@ -42,7 +42,7 @@ export class MoverMain {
     }
     if (!R.isEmpty(changes)) {
       const componentsIds = changes.map((c) => c.id);
-      await this.workspaceLinker.linkToNodeModules(componentsIds);
+      await linkToNodeModules(componentsIds);
     }
     await this.workspace.bitMap.write();
     return changes;
@@ -70,11 +70,11 @@ export class MoverMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, WorkspaceLinkerAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect];
   static runtime = MainRuntime;
 
-  static async provider([cli, workspace, workspaceLinker]: [CLIMain, Workspace, WorkspaceLinkerMain]) {
-    const moverMain = new MoverMain(workspace, workspaceLinker);
+  static async provider([cli, workspace]: [CLIMain, Workspace]) {
+    const moverMain = new MoverMain(workspace);
     cli.register(new MoveCmd(moverMain));
     return moverMain;
   }

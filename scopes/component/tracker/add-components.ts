@@ -23,7 +23,6 @@ import ComponentMap, {
   getIgnoreListHarmony,
 } from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import MissingMainFile from '@teambit/legacy/dist/consumer/bit-map/exceptions/missing-main-file';
-import { WorkspaceLinkerMain } from '@teambit/workspace-linker';
 import {
   DuplicateIds,
   EmptyDirectory,
@@ -37,6 +36,8 @@ import MissingMainFileMultipleComponents from '@teambit/legacy/dist/consumer/com
 import { ParentDirTracked } from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/parent-dir-tracked';
 import PathOutsideConsumer from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/version-should-be-removed';
+import { linkToNodeModules } from '@teambit/workspace.modules.node-modules-linker';
+import { Workspace } from '@teambit/workspace';
 import determineMainFile from './determine-main-file';
 
 export type AddResult = { id: BitId; files: ComponentMapFile[] };
@@ -83,14 +84,13 @@ export type AddProps = {
 // Different from process.cwd(), transfer true.
 // Required for determining if the paths are relative to consumer or to process.cwd().
 export type AddContext = {
-  consumer: Consumer;
-  workspaceLinker: WorkspaceLinkerMain;
+  workspace: Workspace;
   alternateCwd?: string;
 };
 
 export default class AddComponents {
+  workspace: Workspace;
   consumer: Consumer;
-  workspaceLinker: WorkspaceLinkerMain;
   bitMap: BitMap;
   componentPaths: PathOsBased[];
   id: string | null | undefined; // id entered by the user
@@ -109,7 +109,8 @@ export default class AddComponents {
   shouldHandleOutOfSync?: boolean; // only bit-add (not bit-create/new) should handle out-of-sync scenario
   constructor(context: AddContext, addProps: AddProps) {
     this.alternateCwd = context.alternateCwd;
-    this.consumer = context.consumer;
+    this.workspace = context.workspace;
+    this.consumer = context.workspace.consumer;
     this.bitMap = this.consumer.bitMap;
     this.componentPaths = this.joinConsumerPathIfNeeded(addProps.componentPaths);
     this.id = addProps.id;
@@ -126,7 +127,6 @@ export default class AddComponents {
     this.defaultScope = addProps.defaultScope;
     this.config = addProps.config;
     this.shouldHandleOutOfSync = addProps.shouldHandleOutOfSync;
-    this.workspaceLinker = context.workspaceLinker;
   }
 
   joinConsumerPathIfNeeded(paths: PathOrDSL[]): PathOrDSL[] {
@@ -646,7 +646,7 @@ you can add the directory these files are located at and it'll change the root d
       // components in the next line, it gets into an infinite loop.
       return;
     }
-    await this.workspaceLinker.linkToNodeModules(ids);
+    await linkToNodeModules(this.workspace, ids);
   }
 
   async addMultipleComponents(componentPathsStats: PathsStats): Promise<void> {

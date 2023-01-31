@@ -10,6 +10,7 @@ import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import pMapSeries from 'p-map-series';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import { linkToNodeModulesWithCodemod, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
 import { IssuesClasses } from '@teambit/component-issues';
 import {
   WorkspaceDependencyLifecycleType,
@@ -28,7 +29,6 @@ import {
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
-import WorkspaceLinkerAspect, { WorkspaceLinkerMain, NodeModulesLinksResult } from '@teambit/workspace-linker';
 import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
 import hash from 'object-hash';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
@@ -83,9 +83,7 @@ export class InstallMain {
 
     private preLinkSlot: PreLinkSlot,
 
-    private preInstallSlot: PreInstallSlot,
-
-    private workspaceLinker: WorkspaceLinkerMain
+    private preInstallSlot: PreInstallSlot
   ) {}
   /**
    * Install dependencies for all components in the workspace
@@ -399,7 +397,7 @@ export class InstallMain {
     const workspaceRes = res as WorkspaceLinkResults;
 
     const bitIds = compDirMap.toArray().map(([component]) => component.id._legacy);
-    const legacyResults = await this.workspaceLinker.linkToNodeModulesWithCodemod(bitIds, options.rewire ?? false);
+    const legacyResults = await linkToNodeModulesWithCodemod(this.workspace, bitIds, options.rewire ?? false);
     workspaceRes.legacyLinkResults = legacyResults.linksResults;
     workspaceRes.legacyLinkCodemodResults = legacyResults.codemodResults;
 
@@ -449,13 +447,12 @@ export class InstallMain {
     CommunityAspect,
     CompilerAspect,
     IssuesAspect,
-    WorkspaceLinkerAspect,
   ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [dependencyResolver, workspace, loggerExt, variants, cli, community, compiler, issues, workspaceLinker]: [
+    [dependencyResolver, workspace, loggerExt, variants, cli, community, compiler, issues]: [
       DependencyResolverMain,
       Workspace,
       LoggerMain,
@@ -463,8 +460,7 @@ export class InstallMain {
       CLIMain,
       CommunityMain,
       CompilerMain,
-      IssuesMain,
-      WorkspaceLinkerMain
+      IssuesMain
     ],
     _,
     [preLinkSlot, preInstallSlot]: [PreLinkSlot, PreInstallSlot]
@@ -477,8 +473,7 @@ export class InstallMain {
       variants,
       compiler,
       preLinkSlot,
-      preInstallSlot,
-      workspaceLinker
+      preInstallSlot
     );
     if (issues) {
       issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));

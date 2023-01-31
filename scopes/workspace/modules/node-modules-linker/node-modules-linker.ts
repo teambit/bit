@@ -3,7 +3,7 @@ import glob from 'glob';
 import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
-import { BitId } from '@teambit/legacy/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy/dist/constants';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
@@ -18,7 +18,10 @@ import logger from '@teambit/legacy/dist/logger/logger';
 import { first } from '@teambit/legacy/dist/utils';
 import getNodeModulesPathOfComponent from '@teambit/legacy/dist/utils/bit/component-node-modules-path';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { changeCodeFromRelativeToModulePaths } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
 import Symlink from '@teambit/legacy/dist/links/symlink';
+import { Workspace } from '@teambit/workspace';
 
 type LinkDetail = { from: string; to: string };
 export type NodeModulesLinksResult = {
@@ -250,4 +253,25 @@ export default class NodeModuleLinker {
   async _applyTransformers(component: Component, packageJson: PackageJsonFile) {
     return PackageJsonTransformer.applyTransformers(component, packageJson);
   }
+}
+
+export async function linkToNodeModulesWithCodemod(
+  workspace: Workspace,
+  bitIds: BitId[],
+  changeRelativeToModulePaths: boolean
+) {
+  let codemodResults;
+  if (changeRelativeToModulePaths) {
+    codemodResults = await changeCodeFromRelativeToModulePaths(workspace.consumer, bitIds);
+  }
+  const linksResults = await linkToNodeModules(workspace, bitIds);
+  return { linksResults, codemodResults };
+}
+
+export async function linkToNodeModules(workspace: Workspace, bitIds: BitId[] = []): Promise<NodeModulesLinksResult[]> {
+  const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : workspace.consumer.bitMap.getAllIdsAvailableOnLane();
+  if (!componentsIds.length) return [];
+  const { components } = await workspace.consumer.loadComponents(componentsIds);
+  const nodeModuleLinker = new NodeModuleLinker(components, workspace.consumer);
+  return nodeModuleLinker.link();
 }
