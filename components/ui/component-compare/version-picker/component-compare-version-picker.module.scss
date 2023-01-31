@@ -7,8 +7,7 @@
 }
 
 .componentCompareVersionMenu {
-  left: 0;
-  min-width: 400px;
+  max-width: 400px;
 }
 .showMenuOverNav {
   z-index: $topBar-zIndex;
@@ -26,9 +25,6 @@
   align-items: center;
   font-size: 14px;
 
-  &.left {
-    padding-right: 16px;
-  }
   &.right {
     padding-left: 16px;
   }
@@ -48,11 +44,11 @@
   }
 }
 
-.titleText {
+.compareIcon {
   display: flex;
   align-self: center;
-  font-size: 16px;
-  font-weight: bold;
+  font-size: var(--bit-p-sm, 14px);
+  cursor: pointer;
 }
 
 .rightPad {

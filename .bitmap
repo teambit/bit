@@ -1443,6 +1443,19 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/component-compare"
     },
+    "ui/component-compare/component-compare-icon": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/component-compare-icon",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "ui/component-compare/context": {
         "scope": "teambit.component",
         "version": "0.0.6",

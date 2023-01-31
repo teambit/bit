@@ -20,15 +20,14 @@ import { OrderedNavigationSlot, ConsumeMethodSlot } from './nav-plugin';
 import { useIdFromLocation } from '../use-component-from-location';
 import { ComponentID } from '../..';
 import { Filters } from '../use-component-query';
+import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
 
 export type MenuProps = {
   className?: string;
-
   /**
    * skip the right side.
    */
   skipRightSide?: boolean;
-
   /**
    * slot for top bar menu nav items
    */
@@ -98,6 +97,7 @@ export function ComponentMenu({
             {!skipRightSide && (
               <div className={styles.rightSide}>
                 <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
+                <ComponentCompareVersionPicker useComponent={() => component} />
                 <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
               </div>
             )}
@@ -116,7 +116,7 @@ export function VersionRelatedDropdowns({
 }: {
   component: ComponentModel;
   consumeMethods?: ConsumeMethodSlot;
-  className?: string,
+  className?: string;
   host: string;
 }) {
   const location = useLocation();
