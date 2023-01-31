@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { NodeModulesLinksResult } from '@teambit/workspace-linker';
+import { NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
 import { getPackageNameFromTarget } from './get-package-name-from-target';
 import { LinkRow, VerboseLinkRow } from './link-row';
 

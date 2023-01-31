@@ -42,7 +42,7 @@ export class MoverMain {
     }
     if (!R.isEmpty(changes)) {
       const componentsIds = changes.map((c) => c.id);
-      await linkToNodeModules(componentsIds);
+      await linkToNodeModules(this.workspace, componentsIds);
     }
     await this.workspace.bitMap.write();
     return changes;
