@@ -1467,9 +1467,10 @@ export class DependencyResolverMain {
       if (!envPolicy) return undefined;
       return envPolicy.selfPolicy.toVersionManifest();
     });
-    aspectLoader.registerOnLoadRequireableExtensionSlot(
-      dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
-    );
+    if (aspectLoader)
+      aspectLoader.registerOnLoadRequireableExtensionSlot(
+        dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
+      );
 
     graphql.register(dependencyResolverSchema(dependencyResolver));
     envs.registerService(new DependenciesService());
