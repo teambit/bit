@@ -5,7 +5,7 @@ import { getAllCoreAspectsIds } from '@teambit/bit';
 import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent, ComponentID } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
-import { get, pick, uniq } from 'lodash';
+import { compact, get, pick, uniq } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { DependenciesEnv, EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
@@ -1314,14 +1314,19 @@ export class DependencyResolverMain {
           rootDir,
         })
       ).version;
-    const outdatedPkgs = (
+    const outdatedPkgs = compact(
       await Promise.all(
         pkgs.map(async (pkg) => {
-          const latestVersion = await resolve(`${pkg.name}@latest`);
-          return {
-            ...pkg,
-            latestRange: latestVersion ? repeatPrefix(pkg.currentRange, latestVersion) : null,
-          } as any;
+          try {
+            const latestVersion = await resolve(`${pkg.name}@latest`);
+            return {
+              ...pkg,
+              latestRange: latestVersion ? repeatPrefix(pkg.currentRange, latestVersion) : null,
+            } as any;
+          } catch (err) {
+            // If latest cannot be found for the package, then just ignore it
+            return null;
+          }
         })
       )
     ).filter(({ latestRange, currentRange }) => latestRange != null && latestRange !== currentRange);
