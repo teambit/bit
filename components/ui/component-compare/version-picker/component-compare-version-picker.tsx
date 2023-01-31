@@ -18,6 +18,26 @@ export type ComponentCompareVersionPickerProps = {
   dropdownMenuClassName?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
+function getBaseVersion(
+  baseVersion?: string,
+  tags: Array<DropdownComponentVersion> = [],
+  snaps: Array<DropdownComponentVersion> = []
+) {
+  if (baseVersion) {
+    return baseVersion;
+  }
+
+  if (tags.length > 0) {
+    return tags[0].version;
+  }
+
+  if (snaps.length > 0) {
+    return snaps[0].version;
+  }
+
+  return undefined;
+}
+
 export function ComponentCompareVersionPicker({
   className,
   useComponent = () => useContext(ComponentContext),
@@ -58,20 +78,19 @@ export function ComponentCompareVersionPicker({
     setDropdownVisibility((v) => !v);
   };
 
-  baseVersion = baseVersion || tags[0].version;
+  baseVersion = getBaseVersion(baseVersion, tags, snaps);
 
   return (
     <div {...rest} className={classNames(styles.componentCompareVersionPicker, className)}>
       <MenuLinkItem
         href={useUpdatedUrlFromQuery({ baseVersion: isDropdownVisible ? null : baseVersion })}
-        className={classNames(styles.compareIcon, styles.rightPad)}
+        className={classNames(styles.compareIcon)}
         onClick={handleCompareIconClicked}
       >
         <ComponentCompareIcon />
       </MenuLinkItem>
       {isDropdownVisible && (
         <VersionDropdown
-          // key={key}
           className={classNames(styles.componentCompareVersionContainer, styles.left, dropdownClassName)}
           dropdownClassName={classNames(styles.componentCompareDropdown, dropdownClassName)}
           placeholderClassName={classNames(styles.componentCompareVersionPlaceholder, placeholderClassName)}
@@ -79,7 +98,6 @@ export function ComponentCompareVersionPicker({
           snaps={snaps}
           tags={tags}
           currentVersion={baseVersion || tags[0].version}
-          // loading={componentCompare?.loading}
           overrideVersionHref={(_baseVersion) => {
             return useUpdatedUrlFromQuery({ baseVersion: _baseVersion });
           }}

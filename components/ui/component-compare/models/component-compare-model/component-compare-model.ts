@@ -14,7 +14,8 @@ export type ComponentCompareModel = {
   logsByVersion: Map<string, LegacyComponentLog>;
   changes?: ChangeType[] | null;
   fileCompareDataByName?: Map<string, FileCompareResult> | null;
-  fieldCompareResultByName?: Map<string, FieldCompareResult> | null;
+  fieldCompareDataByName?: Map<string, FieldCompareResult> | null;
+  isComparing?: boolean;
 };
 
 export type FileCompareResult = {

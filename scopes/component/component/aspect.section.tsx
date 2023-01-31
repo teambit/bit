@@ -1,5 +1,6 @@
 import React from 'react';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
+import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
 import { Section } from './section';
 import { AspectPage } from './ui/aspect-page';
 
@@ -14,4 +15,5 @@ export class AspectSection implements Section {
     displayName: 'Configuration',
   };
   order = 50;
+  changeType = ChangeType.ASPECTS;
 }

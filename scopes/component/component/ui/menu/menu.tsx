@@ -12,6 +12,9 @@ import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
+import { CompareMenuNav } from '@teambit/component.ui.component-compare.component-compare-nav';
+import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import type { ComponentModel } from '../component-model';
 import { useComponent as useComponentQuery, UseComponentType } from '../use-component';
 import { CollapsibleMenuNav } from './menu-nav';
@@ -20,7 +23,6 @@ import { OrderedNavigationSlot, ConsumeMethodSlot } from './nav-plugin';
 import { useIdFromLocation } from '../use-component-from-location';
 import { ComponentID } from '../..';
 import { Filters } from '../use-component-query';
-import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
 
 export type MenuProps = {
   className?: string;
@@ -76,6 +78,7 @@ export function ComponentMenu({
   const _componentIdStr = getComponentIdStr(componentIdStr);
   const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
   const resolvedComponentIdStr = path || idFromLocation;
+  const componentCompareContext = useComponentCompare();
 
   const useComponentOptions = {
     logFilters: useComponentFilters?.(),
@@ -85,6 +88,10 @@ export function ComponentMenu({
   const { component } = useComponentQuery(host, componentId?.toString() || idFromLocation, useComponentOptions);
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
   if (!component) return <FullLoader />;
+
+  const extractedNav = navigationSlot.toArray();
+  const extractedWidgets = widgetSlot.toArray();
+
   return (
     <Routes>
       <Route
@@ -92,7 +99,12 @@ export function ComponentMenu({
         element={
           <div className={classnames(styles.topBar, className)}>
             <div className={styles.leftSide}>
-              <CollapsibleMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
+              {!componentCompareContext?.isComparing && (
+                <CollapsibleMenuNav navPlugins={extractedNav} widgetPlugins={extractedWidgets} />
+              )}
+              {componentCompareContext?.isComparing && (
+                <CompareMenuNav navPlugins={extractedNav} widgetPlugins={extractedWidgets} />
+              )}
             </div>
             {!skipRightSide && (
               <div className={styles.rightSide}>

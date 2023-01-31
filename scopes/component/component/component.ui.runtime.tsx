@@ -16,6 +16,7 @@ import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import { MenuItem, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { Import } from '@teambit/ui-foundation.ui.use-box.menu';
+import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
 import { AspectSection } from './aspect.section';
 import { ComponentAspect } from './component.aspect';
 import { ComponentModel } from './ui';
@@ -212,10 +213,11 @@ export class ComponentUI {
     return this;
   }
 
-  registerNavigation(nav: LinkProps, order?: number) {
+  registerNavigation(nav: LinkProps, order?: number, changeType?: ChangeType) {
     this.navSlot.register({
       props: nav,
       order,
+      changeType,
     });
   }
 
@@ -223,8 +225,8 @@ export class ComponentUI {
     this.consumeMethodSlot.register(consumeMethods);
   }
 
-  registerWidget(widget: LinkProps, order?: number) {
-    this.widgetSlot.register({ props: widget, order });
+  registerWidget(widget: LinkProps, order?: number, changeType?: ChangeType) {
+    this.widgetSlot.register({ props: widget, order, changeType });
   }
 
   registerMenuItem = (menuItems: MenuItem[]) => {
@@ -302,7 +304,7 @@ export class ComponentUI {
 
     componentUI.registerMenuItem(componentUI.menuItems);
     componentUI.registerRoute(aspectSection.route);
-    componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order);
+    componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order, aspectSection.changeType);
     componentUI.registerConsumeMethod(componentUI.bitMethod);
     return componentUI;
   }

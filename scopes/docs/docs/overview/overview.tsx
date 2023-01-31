@@ -35,7 +35,6 @@ export type OverviewProps = {
 export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
-
   const showHeader = !component.preview?.legacyHeader;
   const [isLoading, setLoading] = useState(true);
 

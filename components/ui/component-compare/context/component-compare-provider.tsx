@@ -10,6 +10,7 @@ import {
 import {
   FileCompareResult,
   FieldCompareResult,
+  ComponentCompareModel,
 } from '@teambit/component.ui.component-compare.models.component-compare-model';
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { useLocation } from '@teambit/base-react.navigation.link';
@@ -131,7 +132,7 @@ export function ComponentCompareProvider(props: ComponentCompareProviderProps) {
     (baseId && deriveChangeType(baseId, compare?.id, fileCompareDataByName, fieldCompareDataByName)) ||
     undefined;
 
-  const componentCompareModel = {
+  const componentCompareModel: ComponentCompareModel = {
     compare: compare && {
       model: compare,
       hasLocalChanges: compareIsLocalChanges,
@@ -144,6 +145,7 @@ export function ComponentCompareProvider(props: ComponentCompareProviderProps) {
     fieldCompareDataByName,
     fileCompareDataByName,
     changes,
+    isComparing: loading || (!!base?.id && !!compare?.id),
   };
 
   return <ComponentCompareContext.Provider value={componentCompareModel}> {children}</ComponentCompareContext.Provider>;

@@ -1456,6 +1456,19 @@
             }
         }
     },
+    "ui/component-compare/component-compare-nav": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/component-compare-nav",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "ui/component-compare/context": {
         "scope": "teambit.component",
         "version": "0.0.6",

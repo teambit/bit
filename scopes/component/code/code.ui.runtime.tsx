@@ -63,7 +63,7 @@ export class CodeUI {
       (fileName) => (isTsx.test(fileName) ? `${staticStorageUrl}/file-icons/file_type_typescript.svg` : undefined),
     ]);
     component.registerRoute([section.route]);
-    component.registerWidget(section.navigationLink, section.order);
+    component.registerWidget(section.navigationLink, section.order, section.changeType);
     const codeCompare = new CodeCompareSection(ui);
     componentCompare.registerNavigation(codeCompare);
     componentCompare.registerRoutes([codeCompare.route]);

@@ -1,4 +1,5 @@
 import type { LinkProps } from '@teambit/base-react.navigation.link';
+import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
 import { RouteProps } from 'react-router-dom';
 
 export interface Section {
@@ -9,4 +10,5 @@ export interface Section {
    */
   displayName?: string;
   order?: number;
+  changeType?: ChangeType;
 }

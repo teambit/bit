@@ -50,7 +50,7 @@ export class GraphUI {
     const graphUI = new GraphUI(componentWidgetSlot);
     const section = new GraphSection(componentWidgetSlot);
     const graphSection = new GraphCompareSection();
-    if (config.componentTab) componentUI.registerNavigation(section.navigationLink, section.order);
+    if (config.componentTab) componentUI.registerNavigation(section.navigationLink, section.order, section.changeType);
     componentUI.registerRoute(section.route);
     componentCompare.registerNavigation(graphSection);
     componentCompare.registerRoutes([graphSection.route]);

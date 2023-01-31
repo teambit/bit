@@ -3,7 +3,7 @@
 .componentCompareVersionPicker {
   display: flex;
   flex-direction: row;
-  padding: 8px 0px;
+  padding: 8px 8px 8px 0px;
 }
 
 .componentCompareVersionMenu {
@@ -49,8 +49,7 @@
   align-self: center;
   font-size: var(--bit-p-sm, 14px);
   cursor: pointer;
-}
-
-.rightPad {
-  padding-right: 8px;
+  border-radius: 6px;
+  padding: 8px;
+  margin: 0px 4px;
 }

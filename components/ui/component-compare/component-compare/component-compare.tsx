@@ -1,7 +1,7 @@
-import React, { useContext, useMemo, HTMLAttributes } from 'react';
+import React, { useContext, useMemo } from 'react';
 import classnames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { CollapsibleMenuNav, ComponentContext, ComponentID, NavPlugin, useComponent } from '@teambit/component';
+import { ComponentContext, ComponentID, useComponent } from '@teambit/component';
 import { ComponentCompareContext } from '@teambit/component.ui.component-compare.context';
 import { useComponentCompareQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare';
 import {
@@ -11,15 +11,13 @@ import {
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
 import { ComponentCompareBlankState } from '@teambit/component.ui.component-compare.blank-state';
-import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { ComponentCompareProps, TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
+import { ComponentCompareProps } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { groupByVersion } from '@teambit/component.ui.component-compare.utils.group-by-version';
-import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tabs';
 import { sortByDateDsc } from '@teambit/component.ui.component-compare.utils.sort-logs';
 import { extractLazyLoadedData } from '@teambit/component.ui.component-compare.utils.lazy-loading';
-import { BlockSkeleton, WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
+import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
 
 import styles from './component-compare.module.scss';
@@ -163,7 +161,7 @@ function RenderCompareScreen(props: ComponentCompareProps) {
         <div className={styles.top}>{state?.versionPicker?.element || <ComponentCompareVersionPicker />}</div>
       )}
       <div className={styles.bottom}>
-        <CompareMenuNav {...props} />
+        {/* <CompareMenuNav {...props} /> */}
         {(extractLazyLoadedData(routes) || []).length > 0 && (
           <SlotRouter routes={extractLazyLoadedData(routes) || []} />
         )}
@@ -171,64 +169,6 @@ function RenderCompareScreen(props: ComponentCompareProps) {
       </div>
     </>
   );
-}
-
-function CompareMenuNav({ tabs, state, hooks, changes: changed }: ComponentCompareProps) {
-  const activeTab = state?.tabs?.id;
-  const isControlled = state?.tabs?.controlled;
-  const _tabs = extractLazyLoadedData(tabs) || [];
-
-  const extractedTabs: [string, NavPlugin & TabItem][] = useMemo(
-    () =>
-      _tabs.sort(sortTabs).map((tab, index) => {
-        const isActive = !state ? undefined : !!activeTab && !!tab?.id && activeTab === tab.id;
-        const changeTypeCss = deriveChangeTypeCssForNav(tab, changed);
-        const loading = changed === undefined;
-        const key = `${tab.id}-tab-${changeTypeCss}`;
-        return [
-          tab.id || `tab-${index}`,
-          {
-            ...tab,
-            props: {
-              ...(tab.props || {}),
-              key,
-              displayName: (!loading && tab.displayName) || undefined,
-              active: isActive,
-              onClick: onNavClicked({ id: tab.id, hooks }),
-              href: (!isControlled && tab.props?.href) || undefined,
-              activeClassName: (!loading && styles.activeNav) || styles.loadingNav,
-              className: styles.navItem,
-              children: (
-                <CompareMenuTab key={key} loading={loading} changeTypeCss={changeTypeCss} changed={changed}>
-                  {tab.props?.children}
-                </CompareMenuTab>
-              ),
-            },
-          },
-        ];
-      }),
-    [_tabs.length, activeTab, changed?.length]
-  );
-
-  const sortedTabs = useMemo(
-    () => extractedTabs.filter(([, tab]) => !tab.widget),
-    [extractedTabs.length, activeTab, changed?.length]
-  );
-  const sortedWidgets = useMemo(
-    () => extractedTabs.filter(([, tab]) => tab.widget),
-    [extractedTabs.length, activeTab, changed?.length]
-  );
-
-  return (
-    <div className={styles.navContainer}>
-      <CollapsibleMenuNav navPlugins={sortedTabs} widgetPlugins={sortedWidgets} />
-    </div>
-  );
-}
-
-function onNavClicked({ hooks, id }: { hooks?: ComponentCompareHooks; id?: string }) {
-  if (!hooks?.tabs?.onClick) return undefined;
-  return (e) => hooks?.tabs?.onClick?.(id, e);
 }
 
 function CompareLoader({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
@@ -245,10 +185,6 @@ function CompareLoader({ className, ...rest }: React.HTMLAttributes<HTMLDivEleme
       </div>
     </div>
   );
-}
-
-function TabLoader() {
-  return <WordSkeleton className={styles.tabLoader} length={5} />;
 }
 
 function deriveChangeType(
@@ -286,36 +222,4 @@ function deriveChangeType(
   }
 
   return changed;
-}
-function deriveChangeTypeCssForNav(tab: TabItem, changed: ChangeType[] | null | undefined): string | null {
-  if (!changed || !tab.changeType) return null;
-  const hasChanged = changed.some((change) => tab.changeType === change);
-  return hasChanged ? styles.hasChanged : null;
-}
-
-function CompareMenuTab({
-  children,
-  changed,
-  changeTypeCss,
-  loading,
-  className,
-  ...rest
-}: HTMLAttributes<HTMLDivElement> & {
-  changeTypeCss?: string | null;
-  loading?: boolean;
-  changed?: ChangeType[] | null;
-}) {
-  const hasChanged = useMemo(
-    () => changed?.some((change) => change !== ChangeType.NONE && change !== ChangeType.NEW),
-    [changeTypeCss]
-  );
-
-  if (loading) return <TabLoader />;
-
-  return (
-    <div {...rest} className={classnames(styles.compareMenuTab, className)}>
-      {changeTypeCss && hasChanged && <div className={classnames(styles.indicator, changeTypeCss)}></div>}
-      <div className={classnames(styles.menuTab)}>{children}</div>
-    </div>
-  );
 }

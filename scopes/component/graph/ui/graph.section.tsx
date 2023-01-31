@@ -1,6 +1,7 @@
 import { Section } from '@teambit/component';
 import React from 'react';
 
+import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
 import { GraphPage } from './graph-page';
 import { ComponentWidgetSlot } from '../graph.ui.runtime';
 
@@ -16,4 +17,5 @@ export class GraphSection implements Section {
     children: 'Dependencies',
   };
   order = 40;
+  changeType = ChangeType.DEPENDENCY;
 }
