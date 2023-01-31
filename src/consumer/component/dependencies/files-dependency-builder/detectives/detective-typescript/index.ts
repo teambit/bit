@@ -11,15 +11,6 @@ import {
 const Parser = require('@typescript-eslint/typescript-estree');
 const Walker = require('node-source-walk');
 
-const shouldBeIgnored = (node) => {
-  const comments = node?.parent?.parent?.comments;
-  if (!comments) return false;
-  if (comments.some((c) => c.value.includes('@bit-no-check'))) return true;
-  const commentAboveNode = comments.find((c) => c.loc.start.line === node.loc.start.line - 1);
-  if (!commentAboveNode) return false;
-  return commentAboveNode.value.includes('@bit-ignore');
-};
-
 /**
  * Extracts the dependencies of the supplied TypeScript module
  *
@@ -32,10 +23,22 @@ export default function (src, options: Record<string, any> = {}) {
   options.comment = true;
   options.loc = true;
 
+  let programNode;
+
+  const shouldBeIgnored = (node) => {
+    const comments = programNode?.comments;
+    if (!comments) return false;
+    if (comments.some((c) => c.value.includes('@bit-no-check'))) return true;
+    const commentAboveNode = comments.find((c) => c.loc.start.line === node.loc.start.line - 1);
+    if (!commentAboveNode) return false;
+    return commentAboveNode.value.includes('@bit-ignore');
+  };
+
   const walker = new Walker(options);
 
   const dependencies = {};
-  const addDependency = (dependency) => {
+  const addDependency = (dependency: string, node?: any) => {
+    if (node && shouldBeIgnored(node)) return;
     if (!dependencies[dependency]) {
       dependencies[dependency] = {};
     }
@@ -70,11 +73,13 @@ export default function (src, options: Record<string, any> = {}) {
   // eslint-disable-next-line complexity
   walker.walk(src, function (node) {
     switch (node.type) {
+      case 'Program':
+        programNode = node;
+        break;
       case 'ImportDeclaration':
         if (node.source && node.source.value) {
           const dependency = node.source.value;
-          if (shouldBeIgnored(node)) return;
-          addDependency(dependency);
+          addDependency(dependency, node);
 
           node.specifiers.forEach((specifier) => {
             const specifierValue = getSpecifierValueForImportDeclaration(specifier);
@@ -85,8 +90,7 @@ export default function (src, options: Record<string, any> = {}) {
       case 'ExportNamedDeclaration':
       case 'ExportAllDeclaration':
         if (node.source && node.source.value) {
-          if (shouldBeIgnored(node)) return;
-          addDependency(node.source.value);
+          addDependency(node.source.value, node);
         } else if (node.specifiers && node.specifiers.length) {
           node.specifiers.forEach((exportSpecifier) => {
             addExportedToImportSpecifier(exportSpecifier.exported.name);
@@ -98,24 +102,24 @@ export default function (src, options: Record<string, any> = {}) {
         break;
       case 'TSExternalModuleReference':
         if (node.expression && node.expression.value) {
-          addDependency(node.expression.value);
+          addDependency(node.expression.value, node);
         }
         break;
       case 'CallExpression':
         {
           const value = getDependenciesFromCallExpression(node);
-          if (value) addDependency(value);
+          if (value) addDependency(value, node);
         }
         break;
       case 'MemberExpression':
         {
           const value = getDependenciesFromMemberExpression(node);
-          if (value) addDependency(value);
+          if (value) addDependency(value, node);
         }
         break;
       case 'ImportExpression': {
         // node represents Dynamic Imports such as import(source)
-        if (node.source?.value) addDependency(node.source?.value);
+        if (node.source?.value) addDependency(node.source?.value, node);
         break;
       }
       case 'Decorator': // parse Angular Decorators to find style/template dependencies

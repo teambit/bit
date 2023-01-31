@@ -1,1 +1,1 @@
-export { CodeCompareView, CodeCompareViewProps } from './code-compare-view';
+export { CodeCompareView, CodeCompareViewProps, CodeCompareViewLoader } from './code-compare-view';
