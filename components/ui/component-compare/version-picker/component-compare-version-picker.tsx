@@ -5,9 +5,9 @@ import {
   useCompareQueryParam,
   useUpdatedUrlFromQuery,
 } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
-// import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { ComponentCompareIcon } from '@teambit/component.ui.component-compare.component-compare-icon';
 import { ComponentContext, ComponentModel } from '@teambit/component';
+import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 
 import styles from './component-compare-version-picker.module.scss';
 
@@ -27,15 +27,18 @@ export function ComponentCompareVersionPicker({
   ...rest
 }: ComponentCompareVersionPickerProps) {
   const component = useComponent();
-  const baseVersion = useCompareQueryParam('baseVersion');
+  const baseVersionFromParams = useCompareQueryParam('baseVersion') ?? null;
 
-  const [isDropdownVisible, setDropdownVisibility] = useState(!!baseVersion);
-
+  let baseVersion: string | undefined;
   const logs =
     (component?.logs || []).filter((log) => {
       const version = log.tag || log.hash;
+      if (version === baseVersionFromParams) baseVersion = version;
       return version !== component.version;
     }) || [];
+
+  const defaultVisibility = !!baseVersion && baseVersion !== component.id.version;
+  const [isDropdownVisible, setDropdownVisibility] = useState(defaultVisibility);
 
   const [tags, snaps] = useMemo(() => {
     return (logs || []).reduce(
@@ -51,19 +54,21 @@ export function ComponentCompareVersionPicker({
     );
   }, [logs]);
 
-  // const baseVersion = componentCompare?.base?.model.version;
-
-  // const key = `base-compare-version-dropdown-${componentCompare?.compare?.model.id.toString()}`;
-
   const handleCompareIconClicked = () => {
     setDropdownVisibility((v) => !v);
   };
 
+  baseVersion = baseVersion || tags[0].version;
+
   return (
     <div {...rest} className={classNames(styles.componentCompareVersionPicker, className)}>
-      <div className={classNames(styles.compareIcon, styles.rightPad)} onClick={handleCompareIconClicked}>
+      <MenuLinkItem
+        href={useUpdatedUrlFromQuery({ baseVersion: isDropdownVisible ? null : baseVersion })}
+        className={classNames(styles.compareIcon, styles.rightPad)}
+        onClick={handleCompareIconClicked}
+      >
         <ComponentCompareIcon />
-      </div>
+      </MenuLinkItem>
       {isDropdownVisible && (
         <VersionDropdown
           // key={key}

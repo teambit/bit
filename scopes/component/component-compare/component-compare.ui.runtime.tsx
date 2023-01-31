@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { RouteProps } from 'react-router-dom';
 import flatten from 'lodash.flatten';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
 import { ComponentCompare } from '@teambit/component.ui.component-compare.component-compare';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { ComponentCompareProps, TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { ComponentCompareChangelog } from '@teambit/component.ui.component-compare.changelog';
 import { ComponentCompareAspects } from '@teambit/component.ui.component-compare.compare-aspects.compare-aspects';
+import { ComponentCompareProvider } from '@teambit/component.ui.component-compare.context';
 import { AspectsCompareSection } from './component-compare-aspects.section';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
@@ -23,7 +24,7 @@ export class ComponentCompareUI {
 
   static slots = [Slot.withType<ComponentCompareNavSlot>(), Slot.withType<RouteSlot>()];
 
-  static dependencies = [ComponentAspect];
+  static dependencies = [ComponentAspect, UIAspect];
 
   getComponentComparePage = (props?: ComponentCompareProps) => {
     const tabs = props?.tabs || (() => flatten(this.navSlot.values()));
@@ -55,6 +56,10 @@ export class ComponentCompareUI {
     return this;
   }
 
+  private renderContext = ({ children }: { children: ReactNode }) => {
+    return <ComponentCompareProvider host={this.host}>{children}</ComponentCompareProvider>;
+  };
+
   get routes() {
     return this.routeSlot.map;
   }
@@ -64,7 +69,7 @@ export class ComponentCompareUI {
   }
 
   static async provider(
-    [componentUi]: [ComponentUI],
+    [componentUi, uiUi]: [ComponentUI, UiUI],
     _,
     [navSlot, routeSlot]: [ComponentCompareNavSlot, RouteSlot],
     harmony: Harmony
@@ -81,6 +86,8 @@ export class ComponentCompareUI {
     componentCompareUI.registerNavigation([aspectCompareSection, compareChangelog]);
 
     componentCompareUI.registerRoutes([aspectCompareSection.route, compareChangelog.route]);
+    if (uiUi) uiUi.registerRenderHooks({ reactContext: componentCompareUI.renderContext });
+
     return componentCompareUI;
   }
 }

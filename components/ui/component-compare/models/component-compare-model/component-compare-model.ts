@@ -1,4 +1,5 @@
 import { ComponentModel } from '@teambit/component';
+import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 
 export type ComponentCompareComponentModel = {
@@ -11,6 +12,7 @@ export type ComponentCompareModel = {
   compare?: ComponentCompareComponentModel;
   loading?: boolean;
   logsByVersion: Map<string, LegacyComponentLog>;
+  changes?: ChangeType[] | null;
   fileCompareDataByName?: Map<string, FileCompareResult> | null;
   fieldCompareResultByName?: Map<string, FieldCompareResult> | null;
 };
