@@ -268,10 +268,22 @@ export async function linkToNodeModulesWithCodemod(
   return { linksResults, codemodResults };
 }
 
-export async function linkToNodeModules(workspace: Workspace, bitIds: BitId[] = []): Promise<NodeModulesLinksResult[]> {
-  const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : workspace.consumer.bitMap.getAllIdsAvailableOnLane();
+export async function linkToNodeModules(
+  workspace: Workspace,
+  bitIds: BitId[],
+  loadFromScope = false
+): Promise<NodeModulesLinksResult[]> {
+  const componentsIds = BitIds.fromArray(bitIds);
   if (!componentsIds.length) return [];
-  const { components } = await workspace.consumer.loadComponents(componentsIds);
+  const getComponents = async () => {
+    if (loadFromScope) {
+      console.log('loading from scope!');
+      return Promise.all(componentsIds.map((id) => workspace.consumer.loadComponentFromModel(id)));
+    }
+    const { components } = await workspace.consumer.loadComponents(componentsIds);
+    return components;
+  };
+  const components = await getComponents();
   const nodeModuleLinker = new NodeModuleLinker(components, workspace.consumer);
   return nodeModuleLinker.link();
 }
