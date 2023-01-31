@@ -1551,7 +1551,8 @@ needed-for: ${neededFor || '<unknown>'}`);
     const resolved = await Promise.all(resolveP);
     // Make sure to link missing components
     if (missingPaths) {
-      await link(stringIds, false);
+      // @todo: check if this is still needed
+      // await link(stringIds, false);
     }
     return resolved;
   }
