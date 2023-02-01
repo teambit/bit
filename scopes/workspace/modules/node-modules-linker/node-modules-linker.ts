@@ -277,7 +277,6 @@ export async function linkToNodeModules(
   if (!componentsIds.length) return [];
   const getComponents = async () => {
     if (loadFromScope) {
-      console.log('loading from scope!');
       return Promise.all(componentsIds.map((id) => workspace.consumer.loadComponentFromModel(id)));
     }
     const { components } = await workspace.consumer.loadComponents(componentsIds);
