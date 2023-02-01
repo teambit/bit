@@ -1533,7 +1533,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/version-picker",
         "config": {
-            "teambit.community/envs/community-react@1.95.12": {},
+            "teambit.community/envs/community-react@2.1.14": {},
             "teambit.envs/envs": {
                 "env": "teambit.community/envs/community-react"
             }
