@@ -1,12 +1,14 @@
-import React, { useState, HTMLAttributes, ComponentType } from 'react';
+import React, { useState, HTMLAttributes, ComponentType, useContext } from 'react';
 import classNames from 'classnames';
-import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
+import { FileTree, useFileTreeContext } from '@teambit/ui-foundation.ui.tree.file-tree';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 import { DependencyTree } from '@teambit/code.ui.dependency-tree';
 import { ArtifactsTree } from '@teambit/component.ui.artifacts.artifacts-tree';
-import { TreeNode } from '@teambit/design.ui.tree';
-import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
+import { TreeNode, TreeNodeProps } from '@teambit/design.ui.tree';
+import { WidgetProps, TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
+import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
+import { FolderTreeNode } from '@teambit/ui-foundation.ui.tree.folder-tree-node';
 
 import styles from './code-tab-tree.module.scss';
 
@@ -60,6 +62,7 @@ export function CodeTabTree({
           getHref={getHref}
           getIcon={getIcon}
           selected={currentFile}
+          TreeNode={FileTreeNode}
         />
       </DrawerUI>
       <DrawerUI
@@ -80,4 +83,31 @@ export function CodeTabTree({
       />
     </div>
   );
+}
+
+function FileTreeNode(props: TreeNodeProps<any>) {
+  const { node } = props;
+  const { id } = node;
+  const fileTreeContext = useFileTreeContext();
+  const { selected, onSelect } = useContext(TreeContext);
+  const href = fileTreeContext?.getHref?.(node);
+  const widgets = fileTreeContext?.widgets;
+  const icon = fileTreeContext?.getIcon?.(node);
+  const isActive = id === selected;
+
+  if (!node?.children) {
+    return (
+      <Node
+        {...props}
+        className={classNames(styles.node)}
+        activeClassName={styles.active}
+        href={href}
+        isActive={isActive}
+        icon={icon}
+        widgets={widgets}
+        onClick={onSelect && ((e) => onSelect(node.id, e))}
+      />
+    );
+  }
+  return <FolderTreeNode className={classNames(styles.node)} {...props} />;
 }

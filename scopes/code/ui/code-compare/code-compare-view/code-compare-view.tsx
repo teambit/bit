@@ -1,6 +1,5 @@
-import React, { HTMLAttributes, useMemo, useRef, useState, ComponentType } from 'react';
+import React, { HTMLAttributes, useMemo, useState, ComponentType } from 'react';
 import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
-import { DiffOnMount } from '@monaco-editor/react';
 import { FileIconSlot } from '@teambit/code';
 import flatten from 'lodash.flatten';
 import classNames from 'classnames';
@@ -62,31 +61,6 @@ export function CodeCompareView({
     return languageOverrides[fileEnding || ''] || fileEnding;
   }, [fileName]);
 
-  const monacoRef = useRef<any>();
-
-  const handleEditorDidMount: DiffOnMount = (_, monaco) => {
-    /**
-     * disable syntax check
-     * ts cant validate all types because imported files aren't available to the editor
-     */
-    monacoRef.current = monaco;
-    if (monacoRef.current) {
-      monacoRef.current.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-        noSemanticValidation: true,
-        noSyntaxValidation: true,
-      });
-    }
-    monaco.editor.defineTheme('bit', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [],
-      colors: {
-        'scrollbar.shadow': '#222222',
-      },
-    });
-    monaco.editor.setTheme('bit');
-  };
-
   const diffEditor = useMemo(
     () => (
       <CodeCompareEditor
@@ -95,7 +69,6 @@ export function CodeCompareView({
         originalPath={originalPath}
         originalFileContent={originalFileContent}
         modifiedFileContent={modifiedFileContent}
-        handleEditorDidMount={handleEditorDidMount}
         ignoreWhitespace={ignoreWhitespace}
         editorViewMode={view}
         wordWrap={wrap}

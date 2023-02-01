@@ -5,6 +5,8 @@ import React, { useMemo, useRef, useEffect } from 'react';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import classNames from 'classnames';
+import { useLocation } from '@teambit/base-react.navigation.link';
+import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 
 import { DropdownComponentVersion } from '../version-dropdown';
 import styles from './version-info.module.scss';
@@ -44,7 +46,7 @@ export function VersionInfo({
     }
   }, [isCurrent]);
 
-  const href = overrideVersionHref ? overrideVersionHref(version) : `?version=${version}`;
+  const href = overrideVersionHref ? overrideVersionHref(version) : useUpdatedUrlFromQuery({ version });
 
   return (
     <div ref={currentVersionRef}>

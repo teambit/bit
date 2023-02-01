@@ -59,12 +59,17 @@ export function CodeView({
   }, [currentFile]);
 
   if (!fileContent && !loading && currentFile) return <EmptyCodeView />;
+  const filesSet = new Set(files);
+  const currentFileName = currentFile.substring(currentFile.lastIndexOf('/') + 1);
+
+  const filesIncludingCurrent = filesSet.has(currentFile) ? files : files.concat(currentFileName);
+  const selected = filesSet.has(currentFile) ? currentFile : currentFileName;
 
   return (
     <div className={classNames(styles.codeView, className)}>
       <CodeNavigation
-        files={files}
-        selectedFile={currentFile}
+        files={filesIncludingCurrent}
+        selectedFile={selected}
         fileIconMatchers={fileIconMatchers}
         onTabClicked={onTabClicked}
         widgets={widgets}

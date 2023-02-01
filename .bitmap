@@ -1215,6 +1215,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/strip-trailing-char"
     },
+    "surfaces/split-pane/split-pane": {
+        "scope": "teambit.base-ui",
+        "version": "1.0.0",
+        "mainFile": "index.ts",
+        "rootDir": "components/surfaces/split-pane/split-pane"
+    },
     "tester": {
         "scope": "teambit.defender",
         "version": "0.0.972",

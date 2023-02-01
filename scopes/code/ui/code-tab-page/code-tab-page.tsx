@@ -1,6 +1,6 @@
 import { ComponentContext } from '@teambit/component';
 import classNames from 'classnames';
-import React, { useContext, useState, HTMLAttributes, useMemo } from 'react';
+import React, { useContext, useState, HTMLAttributes, useMemo, useEffect } from 'react';
 import { flatten } from 'lodash';
 import { Label } from '@teambit/documenter.ui.label';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
@@ -21,6 +21,7 @@ import {
 } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
 import isBinaryPath from 'is-binary-path';
 import { FILE_SIZE_THRESHOLD } from '@teambit/component.ui.artifacts.artifacts-tree';
+import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
 import { DarkTheme } from '@teambit/design.themes.dark-theme';
 
@@ -71,7 +72,18 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
             />
           )}
         </Pane>
-        <HoverSplitter className={styles.splitter}></HoverSplitter>
+        <HoverSplitter className={classNames(styles.splitter, !isSidebarOpen && styles.collapsed)}>
+          {isSidebarOpen && (
+            <Collapser
+              placement="left"
+              isOpen={isSidebarOpen}
+              onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
+              onClick={() => setSidebarOpenness((x) => !x)}
+              tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} file tree`}
+              className={classNames(styles.collapser, !isSidebarOpen && styles.collapsed)}
+            />
+          )}
+        </HoverSplitter>
         <Pane className={styles.right}>
           <CodeView
             componentId={component.id}

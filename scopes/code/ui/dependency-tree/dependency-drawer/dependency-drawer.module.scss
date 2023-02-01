@@ -1,4 +1,6 @@
 .dependencyDrawer {
+  color: #fff;
+
   > div:first-child {
     font-size: 14px;
     border: unset;
@@ -41,6 +43,6 @@
   min-width: 0;
   font-size: 14px;
   &:hover {
-    background: var(--bit-bg-heavy, #f6f6f6);
+    background: var(--surface-neutral-color, #121212);
   }
 }

@@ -61,7 +61,6 @@
         "@teambit/base-ui.surfaces.background": "1.0.1",
         "@teambit/base-ui.surfaces.card": "1.0.1",
         "@teambit/base-ui.surfaces.split-pane.hover-splitter": "1.0.0",
-        "@teambit/base-ui.surfaces.split-pane.split-pane": "1.0.0",
         "@teambit/base-ui.text.muted-text": "1.0.1",
         "@teambit/base-ui.text.paragraph": "1.0.1",
         "@teambit/base-ui.text.text-sizes": "1.0.0",

@@ -5,7 +5,7 @@ import { EditorSettingsState } from '@teambit/code.ui.code-compare';
 
 export type CodeCompareEditorProps = {
   language: string;
-  handleEditorDidMount: DiffOnMount;
+  handleEditorDidMount?: DiffOnMount;
   Loader: React.ReactNode;
   modifiedFileContent?: string;
   originalFileContent?: string;
@@ -33,7 +33,26 @@ export function CodeCompareEditor({
       originalModelPath={originalPath}
       modifiedModelPath={modifiedPath}
       height={'100%'}
-      onMount={handleEditorDidMount}
+      onMount={(editor, monaco) => {
+        /**
+         * disable syntax check
+         * ts cant validate all types because imported files aren't available to the editor
+         */
+        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+          noSemanticValidation: true,
+          noSyntaxValidation: true,
+        });
+        monaco.editor.defineTheme('bit', {
+          base: 'vs-dark',
+          inherit: true,
+          rules: [],
+          colors: {
+            'scrollbar.shadow': '#222222',
+          },
+        });
+        monaco.editor.setTheme('bit');
+        handleEditorDidMount?.(editor, monaco);
+      }}
       className={darkMode}
       theme={'vs-dark'}
       options={{

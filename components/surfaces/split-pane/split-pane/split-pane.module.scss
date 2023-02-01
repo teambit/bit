@@ -1,0 +1,33 @@
+body {
+  padding: 0;
+}
+
+.splitPane {
+  display: flex;
+  flex-direction: column;
+}
+
+.splitPane {
+  &.isDragging {
+    user-select: none;
+    pointer-events: none;
+  }
+
+  &[data-is-dragging='true'] > * {
+    transition: none;
+  }
+
+  // layouts:
+  &[data-split-layout^='row'] {
+    flex-direction: row;
+  }
+  &[data-split-layout^='row reverse'] {
+    flex-direction: row-reverse;
+  }
+  &[data-split-layout^='column'] {
+    flex-direction: column;
+  }
+  &[data-split-layout^='column reverse'] {
+    flex-direction: column-reverse;
+  }
+}
