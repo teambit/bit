@@ -278,17 +278,11 @@ export default class Component extends BitObject {
   async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
     if (!this.divergeData || !fromCache) {
       const remoteHead = (this.laneId ? this.laneHeadRemote : this.remoteHead) || null;
-      let otherRemoteHeads: Ref[] | undefined;
-      if (this.laneId) {
-        otherRemoteHeads = await repo.remoteLanes.getRefsFromAllLanes(this.toBitId());
-        if (this.remoteHead) otherRemoteHeads.push(this.remoteHead);
-      }
       this.divergeData = await getDivergeData({
         repo,
         modelComponent: this,
         targetHead: remoteHead,
         throws,
-        otherTargetsHeads: otherRemoteHeads,
       });
     }
   }

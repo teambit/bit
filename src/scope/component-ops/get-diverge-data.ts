@@ -21,7 +21,6 @@ export async function getDivergeData({
   modelComponent,
   sourceHead, // if empty, use the local head (if on lane - lane head. if on main - component head)
   targetHead,
-  otherTargetsHeads, // when targetHead empty, instead of returning all local snaps, stop if found one of these snaps
   throws = true, // otherwise, save the error instance in the `SnapsDistance` object,
   versionObjects, // relevant for remote-scope where during export the data is not in the repo yet.
 }: {
@@ -29,7 +28,6 @@ export async function getDivergeData({
   modelComponent: ModelComponent;
   sourceHead?: Ref | null;
   targetHead: Ref | null;
-  otherTargetsHeads?: Ref[];
   throws?: boolean;
   versionObjects?: Version[];
 }): Promise<SnapsDistance> {
@@ -42,7 +40,6 @@ export async function getDivergeData({
         repo,
         throws: false,
         versionObjects,
-        stopAt: otherTargetsHeads,
       });
       return new SnapsDistance(allLocalHashes);
     }
@@ -79,8 +76,6 @@ export async function getDivergeData({
   let commonSnapBeforeDiverge: Ref | undefined;
   let hasMultipleParents = false;
   let error: Error | undefined;
-  let sourceSnapFoundOnOtherTargets = false;
-  const sourceSnapsExistsOnOtherTargets: Ref[] = [];
 
   const commonSnapsWithDepths = {};
 
@@ -92,16 +87,10 @@ export async function getDivergeData({
         targetHeadExistsInSource = true;
         return;
       }
-      if (otherTargetsHeads?.find((r) => r.isEqual(version.hash))) {
-        sourceSnapFoundOnOtherTargets = true;
-      }
       if (version.unrelated?.isEqual(targetHead)) {
         targetHeadExistsInSource = true;
         snaps.push(version.hash);
         return;
-      }
-      if (sourceSnapFoundOnOtherTargets) {
-        sourceSnapsExistsOnOtherTargets.push(version.hash);
       }
     } else {
       if (version.hash.isEqual(localHead)) {
@@ -159,8 +148,7 @@ bit import ${modelComponent.id()} --objects`);
   }
   addParentsRecursively(targetVersion, snapsOnTarget, false);
 
-  const snapsOnSourceFiltered = R.difference(snapsOnSource, sourceSnapsExistsOnOtherTargets);
-  const sourceOnlySnaps = R.difference(snapsOnSourceFiltered, snapsOnTarget);
+  const sourceOnlySnaps = R.difference(snapsOnSource, snapsOnTarget);
   const targetOnlySnaps = R.difference(snapsOnTarget, snapsOnSource);
 
   if (sourceHeadExistsInTarget) {
