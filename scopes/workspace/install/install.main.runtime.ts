@@ -350,7 +350,7 @@ export class InstallMain {
   private async _getEnvDependencies(envId: string): Promise<Record<string, string>> {
     const env = this.envs.getEnvDefinitionByStringId(envId);
     if (!env) throw new BitError(`Cannot find environment with id: ${envId}`);
-    const policy = await this.dependencyResolver.getComponentEnvPolicyFromEnvDefinition(env!);
+    const policy = await this.dependencyResolver.getComponentEnvPolicyFromEnvDefinition(env);
     return Object.fromEntries(
       policy.selfPolicy.entries
         .filter(({ force, value }) => force && value.version !== '-')

@@ -18,11 +18,11 @@ import getNodeModulesPathOfComponent from '@teambit/legacy/dist/utils/bit/compon
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { changeCodeFromRelativeToModulePaths } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
 import Symlink from '@teambit/legacy/dist/links/symlink';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { Workspace } from '@teambit/workspace';
 import { snapToSemver } from '@teambit/component-package-version';
 import { Component } from '@teambit/component';
 import { PackageJsonTransformer } from './package-json-transformer';
-import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 
 type LinkDetail = { from: string; to: string };
 export type NodeModulesLinksResult = {
