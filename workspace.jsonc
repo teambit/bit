@@ -933,6 +933,10 @@
           }
         }
       }
+    }, 
+    "components/ui/component-compare/version-picker": {
+      "teambit.harmony/node": "-",
+      "teambit.react/react": "-"
     }
   }
 }
