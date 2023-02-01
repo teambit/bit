@@ -164,6 +164,7 @@ export class ExportMain {
       originDirectly,
       idsWithFutureScope,
       isOnMain,
+      filterOutExistingVersions: Boolean(!params.allVersions && laneObject),
     });
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();
@@ -201,6 +202,7 @@ export class ExportMain {
     ignoreMissingArtifacts,
     isOnMain = true,
     exportHeadsOnly, // relevant when exporting from bare-scope, especially when re-exporting existing versions, the normal calculation based on getDivergeData won't work
+    filterOutExistingVersions, // go to the remote and check whether the version exists there. if so, don't export it
   }: {
     scope: Scope;
     ids: BitIds;
@@ -212,6 +214,7 @@ export class ExportMain {
     ignoreMissingArtifacts?: boolean;
     isOnMain?: boolean;
     exportHeadsOnly?: boolean;
+    filterOutExistingVersions?: boolean;
   }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
     this.logger.debug(`scope.exportMany, ids: ${ids.toString()}`);
     const scopeRemotes: Remotes = await getScopeRemotes(scope);
@@ -304,19 +307,35 @@ export class ExportMain {
         return { modelComponent, refs };
       });
 
-      const allHashesAsStr = refsToPotentialExportPerComponent
-        .map((r) => r.refs)
-        .flat()
-        .map((ref) => ref.toString());
-      const existingOnRemote = await scope.scopeImporter.checkWhatHashesExistOnRemote(remoteNameStr, allHashesAsStr);
-      // for lanes, some snaps might be already on the remote, and the reason they're staged is due to a previous merge.
-      const refsToExportPerComponent = refsToPotentialExportPerComponent.map(({ modelComponent, refs }) => {
-        if (!lane || allVersions) {
-          return { modelComponent, refs }; // no need to filter (can't think of a reason to filter if it's not lane)
+      const getRefsToExportPerComp = async () => {
+        if (!filterOutExistingVersions) {
+          return refsToPotentialExportPerComponent;
         }
-        const refsToExport = refs.filter((ref) => !existingOnRemote.includes(ref.toString()));
-        return refsToExport.length ? { modelComponent, refs: refsToExport } : null;
-      });
+        const allHashesAsStr = refsToPotentialExportPerComponent
+          .map((r) => r.refs)
+          .flat()
+          .map((ref) => ref.toString());
+        const existingOnRemote = await scope.scopeImporter.checkWhatHashesExistOnRemote(remoteNameStr, allHashesAsStr);
+        // for lanes, some snaps might be already on the remote, and the reason they're staged is due to a previous merge.
+        const refsToExportPerComponent = refsToPotentialExportPerComponent.map(({ modelComponent, refs }) => {
+          const filteredOutRefs: string[] = [];
+          const refsToExport = refs.filter((ref) => {
+            const existing = existingOnRemote.includes(ref.toString());
+            if (existing) filteredOutRefs.push(ref.toString());
+            return !existing;
+          });
+          if (filteredOutRefs.length)
+            this.logger.debug(
+              `export-scope-components, the following refs were filtered out from ${modelComponent
+                .id()
+                .toString()} because they already exist on the remote:\n${filteredOutRefs.join('\n')}`
+            );
+
+          return refsToExport.length ? { modelComponent, refs: refsToExport } : null;
+        });
+
+        return compact(refsToExportPerComponent);
+      };
 
       const processModelComponent = async ({
         modelComponent,
@@ -351,8 +370,9 @@ export class ExportMain {
         objectList.addIfNotExist(allObjectsData);
       };
 
+      const refsToExportPerComponent = await getRefsToExportPerComp();
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
-      await mapSeries(compact(refsToExportPerComponent), processModelComponent);
+      await mapSeries(refsToExportPerComponent, processModelComponent);
       if (lane) {
         lane.components.forEach((c) => {
           const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(c.id);
