@@ -1,8 +1,11 @@
 import React, { useEffect, ReactNode, useMemo } from 'react';
-import flatten from 'lodash.flatten';
-import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { RouteProps } from 'react-router-dom';
 import { SlotRegistry } from '@teambit/harmony';
 import { isFunction } from 'lodash';
+import flatten from 'lodash.flatten';
+import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
+import { CompareElement } from '@teambit/component.ui.component-compare.models.component-compare-model';
 import styles from './component.module.scss';
 import { ComponentProvider, ComponentDescriptorProvider } from './context';
 import { useComponent as useComponentQuery, UseComponentType } from './use-component';
@@ -17,9 +20,11 @@ export type ComponentPageElement = {
   content: ReactNode;
 };
 
+export type ComponentRoutes = (RouteProps & CompareElement)[];
+
 export type ComponentProps = {
   containerSlot?: ComponentPageSlot;
-  routeSlot: RouteSlot;
+  routeSlot?: RouteSlot;
   host: string;
   onComponentChange?: (activeComponent?: ComponentModel) => void;
   useComponent?: UseComponentType;
@@ -68,6 +73,21 @@ export function Component({
   const pageItems = useMemo(() => flatten(containerSlot?.values()), [containerSlot]);
   const before = useMemo(() => pageItems.filter((x) => x.type === 'before').map((x) => x.content), [pageItems]);
   const after = useMemo(() => pageItems.filter((x) => x.type === 'after').map((x) => x.content), [pageItems]);
+  const componentCompareContext = useComponentCompare();
+  const isComparing = componentCompareContext?.isComparing;
+
+  const flattenedRoutes: ComponentRoutes = flatten(
+    routeSlot?.toArray().map(([, r]) => (Array.isArray(r) ? flatten(r) : r))
+  );
+
+  const routes = isComparing
+    ? flattenedRoutes.map((route) => ({ ...route, element: route.compareElement }))
+    : flattenedRoutes;
+
+  const MemoizedSlotRouter = useMemo(
+    () => <SlotRouter parentPath={`${resolvedComponentIdStr}/*`} routes={routes} />,
+    [isComparing, routes.length]
+  );
 
   if (error) return error.renderError();
   if (!component) return <div></div>;
@@ -76,9 +96,7 @@ export function Component({
     <ComponentDescriptorProvider componentDescriptor={componentDescriptor}>
       <ComponentProvider component={component}>
         {before}
-        <div className={styles.container}>
-          {routeSlot && <SlotRouter parentPath={`${resolvedComponentIdStr}/*`} slot={routeSlot} />}
-        </div>
+        <div className={styles.container}>{MemoizedSlotRouter}</div>
         {after}
       </ComponentProvider>
     </ComponentDescriptorProvider>

@@ -36,3 +36,7 @@ export type ComponentCompareQueryResponse = {
   code: Array<FileCompareResult>;
   aspects: Array<FieldCompareResult>;
 };
+
+export type CompareElement = {
+  compareElement?: React.ReactNode;
+};

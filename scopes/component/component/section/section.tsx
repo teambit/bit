@@ -1,9 +1,10 @@
+import { CompareElement } from '@teambit/component.ui.component-compare.models.component-compare-model';
 import type { LinkProps } from '@teambit/base-react.navigation.link';
 import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
 import { RouteProps } from 'react-router-dom';
 
 export interface Section {
-  route: RouteProps;
+  route: RouteProps & CompareElement;
   navigationLink: LinkProps;
   /**
    * text to be used in the mobile res dropdown

@@ -9,6 +9,7 @@ export class CodeSection implements Section {
   route = {
     path: '~code/*',
     element: this.codeUI.getCodePage(),
+    compareElement: this.codeUI.getCodeCompare(),
   };
   navigationLink = {
     href: '~code',

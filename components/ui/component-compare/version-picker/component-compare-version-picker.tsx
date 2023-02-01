@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, useMemo, useState, useContext } from 'react';
+import React, { HTMLAttributes, useMemo, useState, useContext, useEffect } from 'react';
 import classNames from 'classnames';
 import { DropdownComponentVersion, VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import {
@@ -8,6 +8,7 @@ import {
 import { ComponentCompareIcon } from '@teambit/component.ui.component-compare.component-compare-icon';
 import { ComponentContext, ComponentModel } from '@teambit/component';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
+import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 
 import styles from './component-compare-version-picker.module.scss';
 
@@ -48,6 +49,7 @@ export function ComponentCompareVersionPicker({
 }: ComponentCompareVersionPickerProps) {
   const component = useComponent();
   const baseVersionFromParams = useCompareQueryParam('baseVersion') ?? null;
+  const componentCompare = useComponentCompare();
 
   let baseVersion: string | undefined;
   const logs =
@@ -57,8 +59,12 @@ export function ComponentCompareVersionPicker({
       return version !== component.version;
     }) || [];
 
-  const defaultVisibility = !!baseVersion && baseVersion !== component.id.version;
+  const defaultVisibility = componentCompare?.isComparing;
   const [isDropdownVisible, setDropdownVisibility] = useState(defaultVisibility);
+
+  useEffect(() => {
+    if (defaultVisibility !== isDropdownVisible) setDropdownVisibility(defaultVisibility);
+  }, [defaultVisibility]);
 
   const [tags, snaps] = useMemo(() => {
     return (logs || []).reduce(
@@ -83,7 +89,10 @@ export function ComponentCompareVersionPicker({
   return (
     <div {...rest} className={classNames(styles.componentCompareVersionPicker, className)}>
       <MenuLinkItem
-        href={useUpdatedUrlFromQuery({ baseVersion: isDropdownVisible ? null : baseVersion })}
+        href={useUpdatedUrlFromQuery({
+          baseVersion: isDropdownVisible ? null : baseVersion,
+          version: componentCompare?.compare?.model.version,
+        })}
         className={classNames(styles.compareIcon)}
         onClick={handleCompareIconClicked}
       >

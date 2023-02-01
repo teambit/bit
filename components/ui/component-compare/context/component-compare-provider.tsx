@@ -69,13 +69,13 @@ export function ComponentCompareProvider(props: ComponentCompareProviderProps) {
     customUseComponent,
   });
 
-  const baseVersion = useCompareQueryParam('baseVersion');
-  const baseId = _baseId || (!!baseVersion && !!compare && compare.id.changeVersion(baseVersion));
-
   const allVersionInfo = useMemo(
     () => compare?.logs?.slice().sort(sortByDateDsc) || [],
     [compare?.id.toString(), loadingCompare]
   );
+
+  const baseVersion = useCompareQueryParam('baseVersion');
+  const baseId = _baseId || (!!baseVersion && !!compare && compare.id.changeVersion(baseVersion));
 
   const isNew = allVersionInfo.length === 0;
   const isWorkspace = host === 'teambit.workspace/workspace';
@@ -96,8 +96,7 @@ export function ComponentCompareProvider(props: ComponentCompareProviderProps) {
     return (compare?.logs || []).slice().reduce(groupByVersion, new Map<string, LegacyComponentLog>());
   }, [compare?.id.toString()]);
 
-  const skipComponentCompareQuery =
-    compareIsLocalChanges || base?.id.version?.toString() === compare?.id.version?.toString();
+  const skipComponentCompareQuery = base?.id.version?.toString() === compare?.id.version?.toString();
 
   const { loading: compCompareLoading, componentCompareData } = customUseComponentCompare(
     base?.id.toString(),
@@ -135,7 +134,7 @@ export function ComponentCompareProvider(props: ComponentCompareProviderProps) {
   const componentCompareModel: ComponentCompareModel = {
     compare: compare && {
       model: compare,
-      hasLocalChanges: compareIsLocalChanges,
+      hasLocalChanges: false,
     },
     base: base && {
       model: base,
@@ -145,7 +144,7 @@ export function ComponentCompareProvider(props: ComponentCompareProviderProps) {
     fieldCompareDataByName,
     fileCompareDataByName,
     changes,
-    isComparing: loading || (!!base?.id && !!compare?.id),
+    isComparing: loading || (!compareIsLocalChanges && !!base?.id && !!compare?.id),
   };
 
   return <ComponentCompareContext.Provider value={componentCompareModel}> {children}</ComponentCompareContext.Provider>;
