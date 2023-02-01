@@ -1531,7 +1531,13 @@
         "scope": "teambit.component",
         "version": "0.0.36",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/version-picker"
+        "rootDir": "components/ui/component-compare/version-picker",
+        "config": {
+            "teambit.community/envs/community-react@1.95.12": {},
+            "teambit.envs/envs": {
+                "env": "teambit.community/envs/community-react"
+            }
+        }
     },
     "ui/component-deprecated": {
         "scope": "teambit.component",
