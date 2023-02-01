@@ -1,28 +1,22 @@
 .codeView {
-  padding: 24px 40px;
   width: 100%;
+  height: 100%;
   overflow: hidden;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: var(--on-surface-neutral-low-color, #282828) !important;
 
-  .codeSnippetWrapper {
-    width: 100%;
-    max-width: 100%;
-    .codeSnippet {
-      display: block;
-      overflow: auto;
-      height: calc(100vh - 200px);
-      > code {
-        > code {
-          // this is to design the line numbers culumn
-          border-right: 1px solid #323232;
-          padding-right: 16px !important;
-          margin-right: 16px;
-        }
-      }
-    }
-    // TODO - fix this in code snippet component. it breaks when the component renders in different places
-    > span {
-      top: 13px !important;
+  &.loading {
+    padding: 0px 24px;
+  }
+
+  .codeViewContainer {
+    display: flex;
+    flex: 1;
+    height: 100%;
+
+    > section {
+      overflow: hidden;
     }
   }
 }
@@ -41,4 +35,14 @@
   margin: auto;
   text-align: center;
   font-size: 24px;
+}
+
+.loader {
+  width: calc(100% - 48px);
+  padding: 16px 24px;
+  color: var(--on-surface-neutral-low-color, #282828);
+  background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
+  > div {
+    background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
+  }
 }

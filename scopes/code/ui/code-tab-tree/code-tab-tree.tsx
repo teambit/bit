@@ -4,9 +4,9 @@ import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 import { DependencyTree } from '@teambit/code.ui.dependency-tree';
+import { ArtifactsTree } from '@teambit/component.ui.artifacts.artifacts-tree';
 import { TreeNode } from '@teambit/design.ui.tree';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
-import { ArtifactsTree } from '@teambit/component.ui.artifacts.artifacts-tree';
 
 import styles from './code-tab-tree.module.scss';
 

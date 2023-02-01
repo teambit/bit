@@ -52,6 +52,7 @@ export function CodeCompareEditor({
         renderLineHighlight: 'none',
         lineHeight: 18,
         padding: { top: 8 },
+        selectOnLineNumbers: true,
       }}
       loading={Loader}
     />

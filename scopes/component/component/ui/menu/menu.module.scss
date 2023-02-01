@@ -56,7 +56,6 @@
   height: 100%;
   padding-left: 16px;
   > * {
-    // margin-right: 12px;
     &:last-child {
       margin-right: 16px;
     }
@@ -73,6 +72,7 @@
 
 .useBox {
   --bit-drawer-margin: 14px;
+  margin-right: 16px;
 }
 
 .componentVersionMenu {

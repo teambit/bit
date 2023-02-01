@@ -5,12 +5,10 @@ import { flatten } from 'lodash';
 import { Label } from '@teambit/documenter.ui.label';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
-import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import type { FileIconSlot } from '@teambit/code';
 import { CodeView } from '@teambit/code.ui.code-view';
 import { CodeTabTree } from '@teambit/code.ui.code-tab-tree';
-import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
@@ -23,9 +21,12 @@ import {
 } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
 import isBinaryPath from 'is-binary-path';
 import { FILE_SIZE_THRESHOLD } from '@teambit/component.ui.artifacts.artifacts-tree';
+import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
+import { DarkTheme } from '@teambit/design.themes.dark-theme';
 
 import styles from './code-tab-page.module.scss';
 
+const DEFAULT_FILE = 'index.ts';
 type CodePageProps = {
   fileIconSlot?: FileIconSlot;
   host: string;
@@ -36,49 +37,53 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
   const component = useContext(ComponentContext);
   const { mainFile, fileTree = [], dependencies, devFiles } = useCode(component.id);
   const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString());
-
-  const currentFile = urlParams.file || mainFile;
+  const [isSidebarOpen, setSidebarOpenness] = useState(false);
+  const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
+  const currentFile = urlParams.file || mainFile || DEFAULT_FILE;
   const currentArtifactFile = getArtifactFileDetailsFromUrl(artifacts, currentFile)?.artifactFile;
   const currentArtifactFileContent = getCurrentArtifactFileContent(currentArtifactFile);
 
-  const isMobile = useIsMobile();
-  const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
-  const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
-  const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
-  const icon = getFileIcon(fileIconMatchers, currentFile);
+  const sidebarIconUrl = isSidebarOpen
+    ? 'https://static.bit.dev/design-system-assets/Icons/sidebar-close.svg'
+    : 'https://static.bit.dev/design-system-assets/Icons/sidebar-open.svg';
+
+  const widgets = useMemo(() => [generateWidget(mainFile, devFiles)], [mainFile, devFiles]);
+  const getHref = useMemo(() => (node) => `${node.id}${affix('?version=', urlParams.version)}`, [urlParams.version]);
+  const getIcon = useMemo(() => generateIcon(fileIconMatchers), fileIconMatchers);
 
   return (
-    <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
-      <Pane className={styles.left}>
-        <CodeView
-          componentId={component.id}
-          currentFile={currentFile}
-          icon={icon}
-          currentFileContent={currentArtifactFileContent}
-        />
-      </Pane>
-      <HoverSplitter className={styles.splitter}>
-        <Collapser
-          placement="left"
-          isOpen={isSidebarOpen}
-          onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
-          onClick={() => setSidebarOpenness((x) => !x)}
-          tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} file tree`}
-          className={styles.collapser}
-        />
-      </HoverSplitter>
-      <Pane className={styles.right}>
-        <CodeTabTree
-          host={host}
-          currentFile={currentFile}
-          dependencies={dependencies}
-          fileTree={fileTree}
-          widgets={useMemo(() => [generateWidget(mainFile, devFiles)], [mainFile, devFiles])}
-          getHref={useMemo(() => (node) => `${node.id}${affix('?version=', urlParams.version)}`, [urlParams.version])}
-          getIcon={useMemo(() => generateIcon(fileIconMatchers), fileIconMatchers)}
-        />
-      </Pane>
-    </SplitPane>
+    <ThemeSwitcher themes={[DarkTheme]} className={classNames(styles.themeContainer, className)}>
+      <SplitPane layout={Layout.row} size={isSidebarOpen ? 200 : 32} className={classNames(styles.codePage, className)}>
+        <Pane className={classNames(styles.left, !isSidebarOpen && styles.collapsed)}>
+          <div className={styles.codeTreeCollapse} onClick={() => setSidebarOpenness((value) => !value)}>
+            <img src={sidebarIconUrl} />
+          </div>
+          {isSidebarOpen && (
+            <CodeTabTree
+              className={styles.codeTree}
+              host={host}
+              currentFile={currentFile}
+              dependencies={dependencies}
+              fileTree={fileTree}
+              widgets={widgets}
+              getHref={getHref}
+              getIcon={getIcon}
+            />
+          )}
+        </Pane>
+        <HoverSplitter className={styles.splitter}></HoverSplitter>
+        <Pane className={styles.right}>
+          <CodeView
+            componentId={component.id}
+            currentFile={currentFile}
+            files={fileTree}
+            fileIconMatchers={fileIconMatchers}
+            currentFileContent={currentArtifactFileContent}
+            getHref={useMemo(() => (node) => `${node.id}${affix('?version=', urlParams.version)}`, [urlParams.version])}
+          />
+        </Pane>
+      </SplitPane>
+    </ThemeSwitcher>
   );
 }
 
