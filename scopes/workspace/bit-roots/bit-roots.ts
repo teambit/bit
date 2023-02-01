@@ -7,7 +7,7 @@ export function getRelativeRootComponentDir(rootComponentId: string): string {
 }
 
 export function getRootComponentDir(workspacePath: string, rootComponentId: string): string {
-  return path.join(getBitRootsDir(workspacePath), rootComponentId.replaceAll(/\//g, '_'));
+  return path.join(getBitRootsDir(workspacePath), rootComponentId.replace(/\//g, '_'));
 }
 
 export function getBitRootsDir(workspacePath: string): string {
