@@ -21,9 +21,8 @@ export async function removeLocalVersion(
   force = false
 ): Promise<untagResult> {
   const component: ModelComponent = await scope.getModelComponentIgnoreScope(id);
-  await component.setDivergeData(scope.objects);
   const idStr = id.toString();
-  const localVersions = component.getLocalHashes();
+  const localVersions = await component.getLocalHashes(scope.objects);
   if (!localVersions.length) throw new GeneralError(`unable to untag ${idStr}, the component is not staged`);
   const headRef = component.getHeadRegardlessOfLane();
   if (!headRef) {

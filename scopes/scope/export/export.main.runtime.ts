@@ -31,6 +31,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { LaneReadmeComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
+import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
@@ -257,23 +258,23 @@ export class ExportMain {
       allHashes.push(head);
     };
 
-    const getVersionsToExport = async (modelComponent: ModelComponent): Promise<string[]> => {
+    const getVersionsToExport = async (modelComponent: ModelComponent): Promise<Ref[]> => {
       if (exportHeadsOnly) {
         const head = modelComponent.head;
         if (!head)
           throw new Error(
             `getVersionsToExport should export the head only, but the head of ${modelComponent.id()} is missing`
           );
-        return modelComponent.switchHashesWithTagsIfExist([head]);
+        return [head];
       }
-      const localTagsOrHashes = await modelComponent.getLocalTagsOrHashes(scope.objects);
+      const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects);
       if (!allVersions) {
         return localTagsOrHashes;
       }
 
       const allHashes = await getAllVersionHashes({ modelComponent, repo: scope.objects });
       await addMainHeadIfPossible(allHashes, modelComponent);
-      return modelComponent.switchHashesWithTagsIfExist(allHashes);
+      return allHashes;
     };
 
     await validateTargetScopeForLanes();
@@ -293,12 +294,41 @@ export class ExportMain {
       const componentsAndObjects: ModelComponentAndObjects[] = [];
       const objectList = new ObjectList();
       const objectListPerName: ObjectListPerName = {};
-      const processModelComponent = async (modelComponent: ModelComponent) => {
-        const versionToExport = await getVersionsToExport(modelComponent);
+
+      const modelComponents = await mapSeries(bitIds, (id) => scope.getModelComponent(id));
+      // super important! otherwise, the processModelComponent() changes objects in memory, while the key remains the same
+      scope.objects.clearCache();
+
+      const refsToPotentialExportPerComponent = await mapSeries(modelComponents, async (modelComponent) => {
+        const refs = await getVersionsToExport(modelComponent);
+        return { modelComponent, refs };
+      });
+
+      const allHashesAsStr = refsToPotentialExportPerComponent
+        .map((r) => r.refs)
+        .flat()
+        .map((ref) => ref.toString());
+      const existingOnRemote = await scope.scopeImporter.checkWhatHashesExistOnRemote(remoteNameStr, allHashesAsStr);
+      // for lanes, some snaps might be already on the remote, and the reason they're staged is due to a previous merge.
+      const refsToExportPerComponent = refsToPotentialExportPerComponent.map(({ modelComponent, refs }) => {
+        if (!lane || allVersions) {
+          return { modelComponent, refs }; // no need to filter (can't think of a reason to filter if it's not lane)
+        }
+        const refsToExport = refs.filter((ref) => !existingOnRemote.includes(ref.toString()));
+        return refsToExport.length ? { modelComponent, refs: refsToExport } : null;
+      });
+
+      const processModelComponent = async ({
+        modelComponent,
+        refs,
+      }: {
+        modelComponent: ModelComponent;
+        refs: Ref[];
+      }) => {
         modelComponent.clearStateData();
         const objectItems = await modelComponent.collectVersionsObjects(
           scope.objects,
-          versionToExport,
+          refs.map((ref) => ref.toString()),
           ignoreMissingArtifacts
         );
         const objectsList = await new ObjectList(objectItems).toBitObjects();
@@ -321,11 +351,8 @@ export class ExportMain {
         objectList.addIfNotExist(allObjectsData);
       };
 
-      const modelComponents = await mapSeries(bitIds, (id) => scope.getModelComponent(id));
-      // super important! otherwise, the processModelComponent() changes objects in memory, while the key remains the same
-      scope.objects.clearCache();
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
-      await mapSeries(modelComponents, processModelComponent);
+      await mapSeries(compact(refsToExportPerComponent), processModelComponent);
       if (lane) {
         lane.components.forEach((c) => {
           const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(c.id);

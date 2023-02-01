@@ -1003,14 +1003,13 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   }
 
   async getLocalTagsOrHashes(repo: Repository): Promise<string[]> {
-    await this.setDivergeData(repo);
-    const divergeData = this.getDivergeData();
-    const localHashes = divergeData.snapsOnSourceOnly;
+    const localHashes = await this.getLocalHashes(repo);
     if (!localHashes.length) return [];
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
-  getLocalHashes(): Ref[] {
+  async getLocalHashes(repo: Repository): Promise<Ref[]> {
+    await this.setDivergeData(repo);
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnSourceOnly;
     if (!localHashes.length) return [];
