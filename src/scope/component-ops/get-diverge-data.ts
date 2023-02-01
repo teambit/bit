@@ -148,8 +148,9 @@ bit import ${modelComponent.id()} --objects`);
     return new SnapsDistance(snapsOnSource, [], targetHead, err);
   }
   addParentsRecursively(localVersion, snapsOnSource, true);
+  const snapsOnSourceFiltered = R.difference(snapsOnSource, sourceSnapsExistsOnOtherTargets);
   if (targetHeadExistsInSource && !hasMultipleParents) {
-    return new SnapsDistance(snapsOnSource, [], targetHead, error);
+    return new SnapsDistance(snapsOnSourceFiltered, [], targetHead, error);
   }
   const targetVersion = getVersionData(targetHead);
   if (!targetVersion) {
@@ -159,7 +160,6 @@ bit import ${modelComponent.id()} --objects`);
   }
   addParentsRecursively(targetVersion, snapsOnTarget, false);
 
-  const snapsOnSourceFiltered = R.difference(snapsOnSource, sourceSnapsExistsOnOtherTargets);
   const sourceOnlySnaps = R.difference(snapsOnSourceFiltered, snapsOnTarget);
   const targetOnlySnaps = R.difference(snapsOnTarget, snapsOnSource);
 
