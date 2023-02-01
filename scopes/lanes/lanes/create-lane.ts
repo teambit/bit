@@ -4,6 +4,9 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ScopeMain } from '@teambit/scope';
 // import { BitIds } from '@teambit/legacy/dist/bit-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
+import { isHash } from '@teambit/component-version';
+import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import { Ref } from '@teambit/legacy/dist/scope/objects';
 
 export async function createLane(
   consumer: Consumer,
@@ -16,12 +19,23 @@ export async function createLane(
     throw new BitError(`lane "${laneName}" already exists, to switch to this lane, please use "bit switch" command`);
   }
   throwForInvalidLaneName(laneName);
+  await throwForStagedComponents(consumer);
   const getDataToPopulateLaneObjectIfNeeded = async (): Promise<LaneComponent[]> => {
     if (remoteLane) return remoteLane.components;
     // when branching from one lane to another, copy components from the origin lane
     // when branching from main, no need to copy anything
     const currentLaneObject = await consumer.getCurrentLaneObject();
-    return currentLaneObject ? currentLaneObject.components : [];
+    if (!currentLaneObject) return [];
+    const laneComponents = currentLaneObject.components;
+    const workspaceIds = consumer.bitMap.getAllBitIds();
+    const laneComponentWithBitmapHead = laneComponents.map(({ id, head }) => {
+      const bitmapHead = workspaceIds.searchWithoutVersion(id);
+      if (bitmapHead && isHash(bitmapHead.version)) {
+        return { id, head: Ref.from(bitmapHead.version as string) };
+      }
+      return { id, head };
+    });
+    return laneComponentWithBitmapHead;
   };
 
   const forkedFrom = await getLaneOrigin(consumer);
@@ -68,6 +82,18 @@ export function throwForInvalidLaneName(laneName: string) {
   if (!isValidLaneName(laneName)) {
     throw new BitError(
       `lane "${laneName}" has invalid characters. lane name can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
+    );
+  }
+}
+
+export async function throwForStagedComponents(consumer: Consumer) {
+  const componentList = new ComponentsList(consumer);
+  const stagedComponents = await componentList.listExportPendingComponentsIds();
+  if (stagedComponents.length) {
+    throw new BitError(
+      `unable to switch/create a new lane, please export or reset the following components first: ${stagedComponents.join(
+        ', '
+      )}`
     );
   }
 }

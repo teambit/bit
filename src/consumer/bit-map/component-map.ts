@@ -1,16 +1,19 @@
 import * as path from 'path';
+import globby from 'globby';
+import ignore from 'ignore';
 import R from 'ramda';
 import { BitId } from '../../bit-id';
-import { BIT_MAP, Extensions } from '../../constants';
+import { BIT_MAP, Extensions, PACKAGE_JSON } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
-import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../utils';
+import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, retrieveIgnoreList } from '../../utils';
 import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '../../utils/path';
-import { getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
 import { removeInternalConfigFields } from '../config/extension-data';
 import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
+import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
+import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
@@ -374,4 +377,33 @@ if you renamed the mainFile, please re-add the component with the "--main" flag 
       throw new ValidationError(`${errorMessage} the following files are duplicated ${duplicateFiles.join(', ')}`);
     }
   }
+}
+
+export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore: any): Promise<ComponentMapFile[]> {
+  const matches = await globby(dir, {
+    cwd: consumerPath,
+    dot: true,
+    onlyFiles: true,
+  });
+  if (!matches.length) throw new ComponentNotFoundInPath(dir);
+  const filteredMatches = gitIgnore.filter(matches);
+  if (!filteredMatches.length) throw new IgnoredDirectory(dir);
+  return filteredMatches.map((match: PathOsBased) => {
+    const normalizedPath = pathNormalizeToLinux(match);
+    // the path is relative to consumer. remove the rootDir.
+    const relativePath = normalizedPath.replace(`${dir}/`, '');
+    return { relativePath, test: false, name: path.basename(match) };
+  });
+}
+
+export function getGitIgnoreHarmony(consumerPath: string): any {
+  const ignoreList = getIgnoreListHarmony(consumerPath);
+  return ignore().add(ignoreList);
+}
+
+export function getIgnoreListHarmony(consumerPath: string): string[] {
+  const ignoreList = retrieveIgnoreList(consumerPath);
+  // the ability to track package.json is deprecated since Harmony
+  ignoreList.push(PACKAGE_JSON);
+  return ignoreList;
 }

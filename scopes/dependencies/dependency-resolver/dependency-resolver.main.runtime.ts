@@ -5,7 +5,7 @@ import { getAllCoreAspectsIds } from '@teambit/bit';
 import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent, ComponentID } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
-import { get, pick, uniq } from 'lodash';
+import { compact, get, pick, uniq } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { DependenciesEnv, EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
@@ -13,7 +13,12 @@ import { RequireableComponent } from '@teambit/harmony.modules.requireable-compo
 import type { LoggerMain } from '@teambit/logger';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect } from '@teambit/logger';
-import { CFG_PACKAGE_MANAGER_CACHE, CFG_REGISTRY_URL_KEY, CFG_USER_TOKEN_KEY } from '@teambit/legacy/dist/constants';
+import {
+  CFG_PACKAGE_MANAGER_CACHE,
+  CFG_REGISTRY_URL_KEY,
+  CFG_USER_TOKEN_KEY,
+  getCloudDomain,
+} from '@teambit/legacy/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
@@ -82,7 +87,7 @@ import { EnvPolicy } from './policy/env-policy';
  * @deprecated use BIT_CLOUD_REGISTRY instead
  */
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
-export const BIT_CLOUD_REGISTRY = 'https://node.bit.cloud/';
+export const BIT_CLOUD_REGISTRY = `https://node.${getCloudDomain()}/`;
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
@@ -289,7 +294,6 @@ export type GetVersionResolverOptions = {
 type OnExportIdTransformer = (id: BitId) => BitId;
 
 const defaultLinkingOptions: LinkingOptions = {
-  legacyLink: true,
   linkTeambitBit: true,
   linkCoreAspects: true,
 };
@@ -1272,7 +1276,8 @@ export class DependencyResolverMain {
             .filter(
               (dep) =>
                 typeof dep.getPackageName === 'function' &&
-                dep.version !== 'latest' &&
+                // If the dependency is referenced not via a valid range it means that it wasn't yet published to the registry
+                semver.validRange(dep.version) != null &&
                 !dep['isExtension'] && // eslint-disable-line
                 dep.lifecycle !== 'peer'
             )
@@ -1303,23 +1308,34 @@ export class DependencyResolverMain {
   ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
     this.logger.setStatusLine('checking the latest versions of dependencies');
     const resolver = await this.getVersionResolver();
-    const resolve = async (spec: string) =>
-      (
-        await resolver.resolveRemoteVersion(spec, {
-          rootDir,
-        })
-      ).version;
-    const outdatedPkgs = (
+    const tryResolve = async (spec: string) => {
+      try {
+        return (
+          await resolver.resolveRemoteVersion(spec, {
+            rootDir,
+          })
+        ).version;
+      } catch {
+        // If latest cannot be found for the package, then just ignore it
+        return null;
+      }
+    };
+    const outdatedPkgs = compact(
       await Promise.all(
         pkgs.map(async (pkg) => {
-          const latestVersion = await resolve(`${pkg.name}@latest`);
+          const latestVersion = await tryResolve(`${pkg.name}@latest`);
+          if (!latestVersion) return null;
+          const currentVersion = semver.valid(pkg.currentRange.replace(/[\^~]/, ''));
+          // If the current version is newer than the latest, then no need to update the dependency
+          if (currentVersion && (semver.gt(currentVersion, latestVersion) || currentVersion === latestVersion))
+            return null;
           return {
             ...pkg,
-            latestRange: latestVersion ? repeatPrefix(pkg.currentRange, latestVersion) : null,
+            latestRange: repeatPrefix(pkg.currentRange, latestVersion),
           } as any;
         })
       )
-    ).filter(({ latestRange, currentRange }) => latestRange != null && latestRange !== currentRange);
+    );
     this.logger.consoleSuccess();
     return outdatedPkgs;
   }
@@ -1462,9 +1478,10 @@ export class DependencyResolverMain {
       if (!envPolicy) return undefined;
       return envPolicy.selfPolicy.toVersionManifest();
     });
-    aspectLoader.registerOnLoadRequireableExtensionSlot(
-      dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
-    );
+    if (aspectLoader)
+      aspectLoader.registerOnLoadRequireableExtensionSlot(
+        dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
+      );
 
     graphql.register(dependencyResolverSchema(dependencyResolver));
     envs.registerService(new DependenciesService());

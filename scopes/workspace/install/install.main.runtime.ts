@@ -1,15 +1,16 @@
 import { CommunityMain, CommunityAspect } from '@teambit/community';
+import { link as legacyLink } from '@teambit/legacy/dist/api/consumer/lib/link';
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
-import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
 import { pick } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
-import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
+import pMapSeries from 'p-map-series';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { IssuesClasses } from '@teambit/component-issues';
 import {
   WorkspaceDependencyLifecycleType,
@@ -27,7 +28,6 @@ import {
   WorkspacePolicy,
 } from '@teambit/dependency-resolver';
 import { pathExists } from 'fs-extra';
-import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import hash from 'object-hash';
@@ -40,7 +40,7 @@ import UninstallCmd from './uninstall.cmd';
 import UpdateCmd from './update.cmd';
 
 export type WorkspaceLinkOptions = LinkingOptions & {
-  rootPolicy?: WorkspacePolicy
+  rootPolicy?: WorkspacePolicy;
 };
 
 export type WorkspaceInstallOptions = {
@@ -58,6 +58,12 @@ export type WorkspaceInstallOptions = {
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
 
+type PreLink = (linkOpts?: WorkspaceLinkOptions) => Promise<void>;
+type PreInstall = (installOpts?: WorkspaceInstallOptions) => Promise<void>;
+
+type PreLinkSlot = SlotRegistry<PreLink>;
+type PreInstallSlot = SlotRegistry<PreInstall>;
+
 export class InstallMain {
   private visitedAspects: Set<string> = new Set();
 
@@ -70,9 +76,11 @@ export class InstallMain {
 
     private variants: VariantsMain,
 
-    private importer: ImporterMain,
+    private compiler: CompilerMain,
 
-    private compiler: CompilerMain
+    private preLinkSlot: PreLinkSlot,
+
+    private preInstallSlot: PreInstallSlot
   ) {}
   /**
    * Install dependencies for all components in the workspace
@@ -109,12 +117,16 @@ export class InstallMain {
         this.logger.console('No missing peer dependencies found.');
       }
     }
-    if (options?.import) {
-      this.logger.setStatusLine('importing missing objects');
-      await this.importObjects();
-      this.logger.consoleSuccess();
-    }
+    await pMapSeries(this.preInstallSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
     return this._installModules(options);
+  }
+
+  registerPreLink(fn: PreLink) {
+    this.preLinkSlot.register(fn);
+  }
+
+  registerPreInstall(fn: PreInstall) {
+    this.preInstallSlot.register(fn);
   }
 
   private async _addPackages(packages: string[], options?: WorkspaceInstallOptions) {
@@ -182,14 +194,12 @@ export class InstallMain {
     // TODO: add the links results to the output
     await this.link({
       linkTeambitBit: true,
-      legacyLink: true,
       linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: false,
     });
     const linkOpts = {
       linkTeambitBit: false,
-      legacyLink: true,
       linkCoreAspects: false,
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
@@ -218,7 +228,7 @@ export class InstallMain {
       await this.linkCoreAspectsAndLegacy({
         linkTeambitBit: false,
         linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
-        rootPolicy: mergedRootPolicy
+        rootPolicy: mergedRootPolicy,
       });
       if (options?.compile) {
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
@@ -390,10 +400,7 @@ export class InstallMain {
   }
 
   async link(options: WorkspaceLinkOptions = {}): Promise<LinkResults> {
-    if (options.fetchObject) {
-      await this.importObjects();
-    }
-    options.consumer = this.workspace.consumer;
+    await pMapSeries(this.preLinkSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
     const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const linker = this.dependencyResolver.getLinker({
@@ -401,25 +408,13 @@ export class InstallMain {
       linkingOptions: options,
     });
     const res = await linker.link(this.workspace.path, mergedRootPolicy, compDirMap, options);
-    return res;
-  }
 
-  private async importObjects() {
-    const importOptions: ImportOptions = {
-      ids: [],
-      objectsOnly: true,
-      installNpmPackages: false,
-    };
-    try {
-      await this.importer.import(importOptions, []);
-    } catch (err: any) {
-      // TODO: this is a hack since the legacy throw an error, we should provide a way to not throw this error from the legacy
-      if (err instanceof NothingToImport) {
-        // Do not write nothing to import warning
-        return;
-      }
-      throw err;
-    }
+    const bitIds = compDirMap.toArray().map(([component]) => component.id._legacy);
+    const legacyResults = await legacyLink(this.workspace.consumer, bitIds, options.rewire ?? false);
+    res.legacyLinkResults = legacyResults.linksResults;
+    res.legacyLinkCodemodResults = legacyResults.codemodResults;
+
+    return res;
   }
 
   /**
@@ -489,7 +484,7 @@ export class InstallMain {
     }
   }
 
-  static slots = [];
+  static slots = [Slot.withType<PreLinkSlot>(), Slot.withType<PreInstallSlot>()];
   static dependencies = [
     DependencyResolverAspect,
     WorkspaceAspect,
@@ -497,47 +492,36 @@ export class InstallMain {
     VariantsAspect,
     CLIAspect,
     CommunityAspect,
-    ImporterAspect,
     CompilerAspect,
     IssuesAspect,
   ];
 
   static runtime = MainRuntime;
 
-  static async provider([
-    dependencyResolver,
-    workspace,
-    loggerExt,
-    variants,
-    cli,
-    community,
-    importer,
-    compiler,
-    issues,
-  ]: [
-    DependencyResolverMain,
-    Workspace,
-    LoggerMain,
-    VariantsMain,
-    CLIMain,
-    CommunityMain,
-    ImporterMain,
-    CompilerMain,
-    IssuesMain
-  ]) {
+  static async provider(
+    [dependencyResolver, workspace, loggerExt, variants, cli, community, compiler, issues]: [
+      DependencyResolverMain,
+      Workspace,
+      LoggerMain,
+      VariantsMain,
+      CLIMain,
+      CommunityMain,
+      CompilerMain,
+      IssuesMain
+    ],
+    _,
+    [preLinkSlot, preInstallSlot]: [PreLinkSlot, PreInstallSlot]
+  ) {
     const logger = loggerExt.createLogger('teambit.bit/install');
-    const installExt = new InstallMain(dependencyResolver, logger, workspace, variants, importer, compiler);
-    ManyComponentsWriter.registerExternalInstaller({
-      install: async () => {
-        // TODO: think how we should pass this options
-        const installOpts: WorkspaceInstallOptions = {
-          dedupe: true,
-          updateExisting: false,
-          import: false,
-        };
-        return installExt.install(undefined, installOpts);
-      },
-    });
+    const installExt = new InstallMain(
+      dependencyResolver,
+      logger,
+      workspace,
+      variants,
+      compiler,
+      preLinkSlot,
+      preInstallSlot
+    );
     if (issues) {
       issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));
     }

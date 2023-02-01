@@ -30,13 +30,13 @@ import {
 import { FilesStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ComponentsPendingMerge from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-merge';
-import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import VersionDependencies, {
   multipleVersionDependenciesToConsumer,
 } from '@teambit/legacy/dist/scope/version-dependencies';
 import { GraphMain } from '@teambit/graph';
 import { Workspace } from '@teambit/workspace';
+import { ComponentWriterMain, ComponentWriterResults } from '@teambit/component-writer';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -82,6 +82,7 @@ export type ImportResult = {
   writtenComponents?: Component[];
   importDetails: ImportDetails[];
   cancellationMessage?: string;
+  installationError?: Error;
 };
 
 export default class ImportComponents {
@@ -90,7 +91,12 @@ export default class ImportComponents {
   mergeStatus: { [id: string]: FilesStatus };
   private laneObjects: Lane[];
   private divergeData: Array<ModelComponent> = [];
-  constructor(private workspace: Workspace, private graph: GraphMain, public options: ImportOptions) {
+  constructor(
+    private workspace: Workspace,
+    private graph: GraphMain,
+    private componentWriter: ComponentWriterMain,
+    public options: ImportOptions
+  ) {
     this.consumer = this.workspace.consumer;
     this.scope = this.consumer.scope;
     this.laneObjects = this.options.lanes ? (this.options.lanes.lanes as Lane[]) : [];
@@ -171,6 +177,7 @@ export default class ImportComponents {
       await Promise.all(mergedLanes.map((mergedLane) => this.scope.lanes.saveLane(mergedLane)));
     }
     let writtenComponents: Component[] = [];
+    let componentWriterResults: ComponentWriterResults | undefined;
     if (!this.options.objectsOnly) {
       const componentsWithDependencies = await multipleVersionDependenciesToConsumer(
         versionDependenciesArr,
@@ -178,7 +185,7 @@ export default class ImportComponents {
       );
       await this._fetchDivergeData(componentsWithDependencies);
       this._throwForDivergedHistory();
-      await this._writeToFileSystem(componentsWithDependencies);
+      componentWriterResults = await this._writeToFileSystem(componentsWithDependencies);
       await this._saveLaneDataIfNeeded(componentsWithDependencies);
       writtenComponents = componentsWithDependencies.map((c) => c.component);
     }
@@ -189,6 +196,7 @@ export default class ImportComponents {
       importedDeps: versionDependenciesArr.map((v) => v.allDependenciesIds).flat(),
       writtenComponents,
       importDetails,
+      installationError: componentWriterResults?.installationError,
     };
   }
 
@@ -401,12 +409,13 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       fromOriginalScope: this.options.fromOriginalScope,
     });
     let writtenComponents: Component[] = [];
+    let componentWriterResults: ComponentWriterResults | undefined;
     if (!this.options.objectsOnly) {
       const componentWithDependencies = await multipleVersionDependenciesToConsumer(
         versionDependenciesArr,
         this.scope.objects
       );
-      await this._writeToFileSystem(componentWithDependencies);
+      componentWriterResults = await this._writeToFileSystem(componentWithDependencies);
       writtenComponents = componentWithDependencies.map((c) => c.component);
     }
 
@@ -417,12 +426,13 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       importedDeps: versionDependenciesArr.map((v) => v.allDependenciesIds).flat(),
       writtenComponents,
       importDetails,
+      installationError: componentWriterResults?.installationError,
     };
   }
 
   private getIdsToImportFromBitmap() {
-    const authoredExportedComponents = this.consumer.bitMap.getExportedComponents();
-    return BitIds.fromArray(authoredExportedComponents);
+    const allIds = this.consumer.bitMap.getAllBitIdsFromAllLanes();
+    return BitIds.fromArray(allIds.filter((id) => id.hasScope()));
   }
 
   async _getCurrentVersions(ids: BitIds): Promise<ImportedVersions> {
@@ -665,20 +675,17 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     await this.scope.lanes.saveLane(currentLane);
   }
 
-  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[]) {
-    if (this.options.objectsOnly) {
-      return;
-    }
+  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[]): Promise<ComponentWriterResults> {
     const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(componentsWithDependencies);
-    const manyComponentsWriter = new ManyComponentsWriter({
+    const manyComponentsWriterOpts = {
       consumer: this.consumer,
       componentsWithDependencies: componentsToWrite,
       writeToPath: this.options.writeToPath,
       writeConfig: this.options.writeConfig,
-      installNpmPackages: this.options.installNpmPackages,
+      skipDependencyInstallation: !this.options.installNpmPackages,
       verbose: this.options.verbose,
-      override: this.options.override,
-    });
-    await manyComponentsWriter.writeAll();
+      throwForExistingDir: !this.options.override,
+    };
+    return this.componentWriter.writeMany(manyComponentsWriterOpts);
   }
 }

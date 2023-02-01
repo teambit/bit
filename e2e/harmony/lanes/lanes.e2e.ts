@@ -135,6 +135,7 @@ describe('bit lane command', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       helper.command.snapAllComponentsWithoutBuild();
@@ -305,106 +306,7 @@ describe('bit lane command', function () {
       );
     });
   });
-  describe('main => lane-a => lane-b, so laneB branched from laneA', () => {
-    let beforeSwitchingBack;
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      // main
-      helper.fs.outputFile('utils/is-type/is-type.js', fixtures.isType);
-      helper.command.addComponent('utils/is-type', { i: 'utils/is-type' });
-      helper.command.snapAllComponentsWithoutBuild();
 
-      // laneA
-      helper.command.createLane('lane-a');
-      helper.fs.outputFile(
-        'utils/is-string/is-string.js',
-        "const isType = require('../is-type/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };"
-      );
-      helper.command.addComponent('utils/is-string', { i: 'utils/is-string' });
-      helper.command.linkAndRewire();
-      helper.command.compile();
-      helper.command.snapAllComponentsWithoutBuild();
-
-      // laneB
-      helper.command.createLane('lane-b');
-      helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
-      helper.command.snapAllComponentsWithoutBuild();
-
-      beforeSwitchingBack = helper.scopeHelper.cloneLocalScope();
-    });
-    it('lane-a should not contain components from main', () => {
-      const lane = helper.command.showOneLaneParsed('lane-a');
-      expect(lane.components).to.have.lengthOf(1);
-    });
-    it('laneB object should include components from laneA, but not from main', () => {
-      const lane = helper.command.showOneLaneParsed('lane-b');
-      expect(lane.components).to.have.lengthOf(2);
-    });
-    it('bit list should show all components available to lane-b', () => {
-      const list = helper.command.listLocalScopeParsed();
-      expect(list).to.have.lengthOf(3);
-    });
-    describe('checking out to lane-a', () => {
-      let switchOutput;
-      before(() => {
-        switchOutput = helper.command.switchLocalLane('lane-a');
-      });
-      it('should indicate that it switched to the new lane', () => {
-        expect(switchOutput).to.have.string(
-          removeChalkCharacters('successfully set "lane-a" as the active lane') as string
-        );
-      });
-      // main components belong to lane-a only if they are snapped on lane-a, so utils/is-type
-      // doesn't belong to lane-a and should not appear as staged when on lane-a.
-      it('bit status should not show neither lane-b nor main components as staged', () => {
-        const staged = helper.command.getStagedIdsFromStatus();
-        expect(staged).to.deep.equal(['utils/is-string']);
-        const status = helper.command.status();
-        expect(status).to.not.have.string('bar/foo');
-      });
-      it('bit list should not show lane-b components', () => {
-        const list = helper.command.listParsed();
-        expect(list).to.have.lengthOf(2);
-      });
-      // @todo: test each one of the commands on bar/foo
-    });
-    describe('checking out from lane-b to main', () => {
-      before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeSwitchingBack);
-        helper.command.switchLocalLane('main');
-      });
-      it('bit list should only show main components', () => {
-        const list = helper.command.listParsed();
-        expect(list).to.have.lengthOf(1);
-      });
-      it('bit status should show only main components as staged', () => {
-        const staged = helper.command.getStagedIdsFromStatus();
-        expect(staged).to.deep.equal(['utils/is-type']);
-        const status = helper.command.status();
-        expect(status).to.not.have.string('bar/foo');
-        expect(status).to.not.have.string('utils/is-string');
-      });
-    });
-    describe('switching to lane-a then to main', () => {
-      before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeSwitchingBack);
-        helper.command.switchLocalLane('lane-a');
-        helper.command.switchLocalLane('main');
-      });
-      it('bit list should only show main components', () => {
-        const list = helper.command.listParsed();
-        expect(list).to.have.lengthOf(1);
-      });
-      it('bit status should show only main components as staged', () => {
-        const staged = helper.command.getStagedIdsFromStatus();
-        expect(staged).to.deep.equal(['utils/is-type']);
-        const status = helper.command.status();
-        expect(status).to.not.have.string('bar/foo');
-        expect(status).to.not.have.string('utils/is-string');
-      });
-    });
-  });
   describe('main => lane => main => lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -1284,6 +1186,7 @@ describe('bit lane command', function () {
       helper.command.removeComponent('comp3', '--force');
       helper.fs.outputFile('comp2/index.js', ''); // remove the dependency from the code
       helper.command.tagWithoutBuild();
+      helper.command.export();
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
     });

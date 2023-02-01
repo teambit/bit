@@ -1,19 +1,23 @@
-import ts, { Node, SourceFile } from 'typescript';
+import ts, { Node, SourceFile, SyntaxKind } from 'typescript';
 import { getTsconfig } from 'get-tsconfig';
 import { SchemaExtractor } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
 import type { Workspace } from '@teambit/workspace';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { SchemaNode, APISchema, ModuleSchema } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, APISchema, ModuleSchema, UnImplementedSchema } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { EnvContext } from '@teambit/envs';
 import { Formatter } from '@teambit/formatter';
-import { flatten } from 'lodash';
+import { Logger } from '@teambit/logger';
+import AspectLoaderAspect, { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
+import pMapSeries from 'p-map-series';
+import { compact, flatten } from 'lodash';
 import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
-import { ExportList } from './export-list';
+import { Identifier } from './identifier';
+import { IdentifierList } from './identifier-list';
 import { ExtractorOptions } from './extractor-options';
 import { TypescriptAspect } from './typescript.aspect';
 
@@ -24,7 +28,9 @@ export class TypeScriptExtractor implements SchemaExtractor {
     private tsMain: TypescriptMain,
     private rootPath: string,
     private depResolver: DependencyResolverMain,
-    private workspace: Workspace | undefined
+    private workspace: Workspace | undefined,
+    private aspectLoader: AspectLoaderMain,
+    private logger: Logger
   ) {}
 
   parseSourceFile(file: AbstractVinyl): SourceFile {
@@ -46,16 +52,46 @@ export class TypeScriptExtractor implements SchemaExtractor {
   async extract(component: Component, formatter?: Formatter): Promise<APISchema> {
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
-    const mainAst = this.parseSourceFile(mainFile);
+    const compatibleExts = ['.tsx', '.jsx', '.ts', '.js'];
+    const internalFiles = component.filesystem.files.filter(
+      (file) => compatibleExts.includes(file.extname) && file.path !== mainFile.path
+    );
+    const allFiles = [mainFile, ...internalFiles];
+
     const context = await this.createContext(tsserver, component, formatter);
-    const exportNames = await this.computeExportedIdentifiers(mainAst, context);
-    context.setExports(new ExportList(exportNames));
+
+    await pMapSeries(allFiles, async (file) => {
+      const ast = this.parseSourceFile(file);
+      const identifiers = await this.computeIdentifiers(ast, context); // compute for every file
+      const cacheKey = context.getIdentifierKeyForNode(ast);
+      context.setIdentifiers(cacheKey, new IdentifierList(identifiers));
+    });
+
+    const mainAst = this.parseSourceFile(mainFile);
     const moduleSchema = (await this.computeSchema(mainAst, context)) as ModuleSchema;
     moduleSchema.flatExportsRecursively();
     const apiScheme = moduleSchema;
+    const internals = await this.computeInternalModules(context, internalFiles);
+
     const location = context.getLocation(mainAst);
 
-    return new APISchema(location, apiScheme, component.id);
+    return new APISchema(location, apiScheme, internals, component.id);
+  }
+
+  async computeInternalModules(context: SchemaExtractorContext, internalFiles: AbstractVinyl[]) {
+    const internals = compact(
+      await Promise.all(
+        [...context.internalIdentifiers.entries()].map(async ([filePath]) => {
+          const file = internalFiles.find((internalFile) => internalFile.path === filePath);
+          if (!file) return undefined;
+          const fileAst = this.parseSourceFile(file);
+          const moduleSchema = (await this.computeSchema(fileAst, context)) as ModuleSchema;
+          moduleSchema.flatExportsRecursively();
+          return moduleSchema;
+        })
+      )
+    );
+    return internals;
   }
 
   dispose() {
@@ -63,12 +99,15 @@ export class TypeScriptExtractor implements SchemaExtractor {
     this.tsserver.killTsServer();
   }
 
-  async computeExportedIdentifiers(node: Node, context: SchemaExtractorContext) {
+  async computeIdentifiers(node: Node, context: SchemaExtractorContext) {
     const transformer = this.getTransformer(node, context);
+    let identifiers: Identifier[] = [];
     if (!transformer || !transformer.getIdentifiers) {
-      throw new TransformerNotFound(node, context.component, context.getLocation(node));
+      this.logger.warn(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
+    } else {
+      identifiers = await transformer.getIdentifiers(node, context);
     }
-    return transformer.getIdentifiers(node, context);
+    return identifiers;
   }
 
   private async createContext(
@@ -105,8 +144,10 @@ export class TypeScriptExtractor implements SchemaExtractor {
 
   async computeSchema(node: Node, context: SchemaExtractorContext): Promise<SchemaNode> {
     const transformer = this.getTransformer(node, context);
-    // leave the next line commented out, it is used for debugging
-    // console.log('transformer', transformer.constructor.name, node.getText());
+
+    if (!transformer) {
+      return new UnImplementedSchema(context.getLocation(node), node.getText(), SyntaxKind[node.kind]);
+    }
     return transformer.transform(node, context);
   }
 
@@ -114,17 +155,28 @@ export class TypeScriptExtractor implements SchemaExtractor {
     if (!this.workspace) {
       return null;
     }
+    const coreAspectIds = this.aspectLoader.getCoreAspectIds();
+    const matchingCoreAspect = coreAspectIds.find((c) => file === getCoreAspectPackageName(c));
+
+    if (matchingCoreAspect) {
+      return this.workspace.resolveComponentId(matchingCoreAspect);
+    }
+
     return this.workspace.getComponentIdByPath(file);
   }
 
   /**
    * select the correct transformer for a node.
    */
-  private getTransformer(node: Node, context: SchemaExtractorContext) {
+  getTransformer(node: Node, context: SchemaExtractorContext) {
     const transformers = flatten(this.schemaTransformerSlot.values());
-    const transformer = transformers.find((singleTransformer) => singleTransformer.predicate(node));
-
-    if (!transformer) throw new TransformerNotFound(node, context.component, context.getLocation(node));
+    const transformer = transformers.find((singleTransformer) => {
+      return singleTransformer.predicate(node);
+    });
+    if (!transformer) {
+      this.logger.warn(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
+      return undefined;
+    }
 
     return transformer;
   }
@@ -133,6 +185,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
     return (context: EnvContext) => {
       const tsconfig = getTsconfig(options.tsconfig)?.config || { compilerOptions: options.compilerOptions };
       const tsMain = context.getAspect<TypescriptMain>(TypescriptAspect.id);
+      const aspectLoaderMain = context.getAspect<AspectLoaderMain>(AspectLoaderAspect.id);
+
       // When loading the env from a scope you don't have a workspace
       const wsPath = tsMain.workspace?.path || '';
       return new TypeScriptExtractor(
@@ -141,7 +195,9 @@ export class TypeScriptExtractor implements SchemaExtractor {
         tsMain,
         wsPath,
         tsMain.depResolver,
-        tsMain.workspace
+        tsMain.workspace,
+        aspectLoaderMain,
+        context.createLogger(options.name)
       );
     };
   }

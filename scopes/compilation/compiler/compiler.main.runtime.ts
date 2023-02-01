@@ -9,7 +9,6 @@ import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { BitId } from '@teambit/legacy-bit-id';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
@@ -154,8 +153,7 @@ export class CompilerMain {
     if (workspace) {
       workspace.onComponentLoad(compilerMain.addMissingDistsIssue.bind(compilerMain));
     }
-    generator.registerComponentTemplate([compilerTemplate]);
-    ManyComponentsWriter.externalCompiler = compilerMain.compileOnWorkspace.bind(compilerMain);
+    if (generator) generator.registerComponentTemplate([compilerTemplate]);
 
     return compilerMain;
   }

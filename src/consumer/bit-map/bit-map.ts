@@ -12,9 +12,14 @@ import { BIT_MAP, OLD_BIT_MAP, VERSION_DELIMITER, BITMAP_PREFIX_MESSAGE } from '
 import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { isDir, outputFile, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
-import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
-import { getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
-import ComponentMap, { ComponentMapFile, Config, PathChange } from './component-map';
+import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import ComponentMap, {
+  ComponentMapFile,
+  Config,
+  PathChange,
+  getFilesByDir,
+  getGitIgnoreHarmony,
+} from './component-map';
 import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 import GeneralError from '../../error/general-error';
@@ -449,20 +454,6 @@ export default class BitMap {
       return componentMap.id;
     });
     return BitIds.fromArray(compact(filteredWithDefaultVersion));
-  }
-
-  getExportedComponents(): BitId[] {
-    const authoredIds = this.getAllIdsAvailableOnLane();
-    return authoredIds.filter((id) => id.hasScope());
-  }
-  getAuthoredNonExportedComponents(): BitId[] {
-    const authoredIds = this.getAllIdsAvailableOnLane();
-    return authoredIds.filter((id) => !id.hasScope());
-  }
-
-  _makePathRelativeToProjectRoot(pathToChange: PathRelative): PathOsBasedRelative {
-    const absolutePath = path.resolve(pathToChange);
-    return path.relative(this.projectRoot, absolutePath);
   }
 
   /**

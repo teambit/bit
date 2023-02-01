@@ -9,7 +9,7 @@ import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
-import { useSchema } from '@teambit/api-reference.hooks.use-schema';
+import { useAPI } from '@teambit/api-reference.hooks.use-api';
 import { APIReferenceExplorer } from '@teambit/api-reference.explorer.api-reference-explorer';
 import { useAPIRefParam } from '@teambit/api-reference.hooks.use-api-ref-url';
 import { APINodeRendererSlot } from '@teambit/api-reference';
@@ -29,7 +29,7 @@ export type APIRefPageProps = {
 export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
   const component = useContext(ComponentContext);
   const renderers = flatten(rendererSlot.values());
-  const { apiModel, loading } = useSchema(host, component.id.toString(), renderers);
+  const { apiModel, loading } = useAPI(host, component.id.toString(), renderers);
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
