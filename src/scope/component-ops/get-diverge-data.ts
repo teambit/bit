@@ -72,8 +72,6 @@ export async function getDivergeData({
   });
   const getVersionData = (ref: Ref): VersionParents | undefined => versionParents.find((v) => v.hash.isEqual(ref));
 
-  const existOnTarget = (ref: Ref) => [targetHead, ...(otherTargetsHeads || [])].find((r) => r.isEqual(ref));
-
   const snapsOnSource: Ref[] = [];
   const snapsOnTarget: Ref[] = [];
   let targetHeadExistsInSource = false;
@@ -81,31 +79,40 @@ export async function getDivergeData({
   let commonSnapBeforeDiverge: Ref | undefined;
   let hasMultipleParents = false;
   let error: Error | undefined;
+  let sourceSnapFoundOnOtherTargets = false;
+  const sourceSnapsExistsOnOtherTargets: Ref[] = [];
 
   const commonSnapsWithDepths = {};
 
   const addParentsRecursively = (version: VersionData, snaps: Ref[], isSource: boolean, depth = 0) => {
-    if (snaps.find((snap) => snap.isEqual(version.hash))) return;
+    if (snaps.find((snap) => snap.isEqual(version.hash))) return; // already processed
 
-    if (isSource && existOnTarget(version.hash)) {
-      targetHeadExistsInSource = true;
-      return;
-    }
-    if (!isSource && version.hash.isEqual(localHead)) {
-      sourceHeadExistsInTarget = true;
-      return;
-    }
-    if (isSource && version.unrelated?.isEqual(targetHead)) {
-      targetHeadExistsInSource = true;
-      snaps.push(version.hash);
-      return;
-    }
-    if (!isSource && version.unrelated?.isEqual(localHead)) {
-      sourceHeadExistsInTarget = true;
-      snaps.push(version.hash);
-      return;
-    }
-    if (!isSource) {
+    if (isSource) {
+      if (targetHead.isEqual(version.hash)) {
+        targetHeadExistsInSource = true;
+        return;
+      }
+      if (otherTargetsHeads?.find((r) => r.isEqual(version.hash))) {
+        sourceSnapFoundOnOtherTargets = true;
+      }
+      if (version.unrelated?.isEqual(targetHead)) {
+        targetHeadExistsInSource = true;
+        snaps.push(version.hash);
+        return;
+      }
+      if (sourceSnapFoundOnOtherTargets) {
+        sourceSnapsExistsOnOtherTargets.push(version.hash);
+      }
+    } else {
+      if (version.hash.isEqual(localHead)) {
+        sourceHeadExistsInTarget = true;
+        return;
+      }
+      if (version.unrelated?.isEqual(localHead)) {
+        sourceHeadExistsInTarget = true;
+        snaps.push(version.hash);
+        return;
+      }
       const snapExistsInSource = snapsOnSource.find((snap) => snap.isEqual(version.hash));
       if (snapExistsInSource) {
         if (!commonSnapBeforeDiverge) commonSnapBeforeDiverge = snapExistsInSource;
@@ -151,13 +158,18 @@ bit import ${modelComponent.id()} --objects`);
     return new SnapsDistance([], [], undefined, err);
   }
   addParentsRecursively(targetVersion, snapsOnTarget, false);
+
+  const snapsOnSourceFiltered = R.difference(snapsOnSource, sourceSnapsExistsOnOtherTargets);
+  const sourceOnlySnaps = R.difference(snapsOnSourceFiltered, snapsOnTarget);
+  const targetOnlySnaps = R.difference(snapsOnTarget, snapsOnSource);
+
   if (sourceHeadExistsInTarget) {
-    return new SnapsDistance([], R.difference(snapsOnTarget, snapsOnSource), localHead, error);
+    return new SnapsDistance([], targetOnlySnaps, localHead, error);
   }
 
   if (targetHeadExistsInSource) {
     // happens when `hasMultipleParents` is true. now that remote was traversed as well, it's possible to find the diff
-    return new SnapsDistance(R.difference(snapsOnSource, snapsOnTarget), [], targetHead, error);
+    return new SnapsDistance(sourceOnlySnaps, [], targetHead, error);
   }
 
   if (!commonSnapBeforeDiverge) {
@@ -172,12 +184,7 @@ bit import ${modelComponent.id()} --objects`);
     return new SnapsDistance(snapsOnSource, snapsOnTarget, undefined, err);
   }
 
-  return new SnapsDistance(
-    R.difference(snapsOnSource, snapsOnTarget),
-    R.difference(snapsOnTarget, snapsOnSource),
-    commonSnapBeforeDiverge,
-    error
-  );
+  return new SnapsDistance(sourceOnlySnaps, targetOnlySnaps, commonSnapBeforeDiverge, error);
 }
 
 type VersionDataRaw = {

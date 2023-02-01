@@ -23,7 +23,6 @@ import ComponentsList from '@teambit/legacy/dist/consumer/component/components-l
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { NodeModuleLinker } from '@teambit/legacy/dist/links';
 import { Lane, ModelComponent, Symlink, Version } from '@teambit/legacy/dist/scope/models';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { Scope } from '@teambit/legacy/dist/scope';
@@ -36,6 +35,7 @@ import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import { linkToNodeModules } from '@teambit/workspace.modules.node-modules-linker';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import {
   persistRemotes,
@@ -167,7 +167,8 @@ export class ExportMain {
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();
     const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
-    await linkComponents(updatedIds, consumer);
+    // re-generate the package.json, this way, it has the correct data in the componentId prop.
+    await linkToNodeModules(this.workspace, updatedIds, true);
     await this.removeFromStagedConfig(exported);
     Analytics.setExtraData('num_components', exported.length);
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
@@ -755,18 +756,6 @@ async function getParsedId(consumer: Consumer, id: string): Promise<BitId> {
     // not in the consumer, just return the one parsed without the scope name
     return parsedId;
   }
-}
-
-/**
- * re-generate the package.json, this way, it has the correct data in the componentId prop.
- */
-async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
-  // we don't have much of a choice here, we have to load all the exported components in order to link them
-  // some of the components might be authored, some might be imported.
-  // when a component has dists, we need the consumer-component object to retrieve the dists info.
-  const components = await Promise.all(ids.map((id) => consumer.loadComponentFromModel(id)));
-  const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
-  await nodeModuleLinker.link();
 }
 
 async function ejectExportedComponents(componentsIds, logger: Logger): Promise<EjectResults> {

@@ -125,7 +125,7 @@ export function ComponentPreview({
   // const currentHeight = fullContentHeight ? '100%' : height || 1024;
   const containerWidth = containerRef.current?.offsetWidth || 0;
   const containerHeight = containerRef.current?.offsetHeight || 0;
-  const currentWidth = fullContentHeight ? '100%' : (width || 1280) + 10;
+  const currentWidth = fullContentHeight ? '100%' : (width || 1280) + 100;
   const legacyCurrentWidth = '100%';
   const targetWidth = currentWidth < containerWidth ? containerWidth : currentWidth;
   const targetHeight = height !== 0 ? height : 5000;

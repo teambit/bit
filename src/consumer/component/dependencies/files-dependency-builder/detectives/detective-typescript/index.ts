@@ -48,6 +48,7 @@ export default function (src, options: Record<string, any> = {}) {
     addDependency(angularDep);
   };
   const addImportSpecifier = (dependency, importSpecifier) => {
+    if (!dependencies[dependency]) return; // in case it was ignored
     if (dependencies[dependency].importSpecifiers) {
       dependencies[dependency].importSpecifiers.push(importSpecifier);
     } else {
