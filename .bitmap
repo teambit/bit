@@ -819,6 +819,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/modules/module-resolver"
     },
+    "modules/node-modules-linker": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/modules/node-modules-linker"
+    },
     "modules/packages-excluder": {
         "scope": "teambit.dependencies",
         "version": "0.0.62",
