@@ -937,6 +937,10 @@
     "components/ui/component-compare/version-picker": {
       "teambit.harmony/node": "-",
       "teambit.react/react": "-"
+    },
+    "scopes/component/ui/version-dropdown": {
+      "teambit.harmony/node": "-",
+      "teambit.react/react": "-"
     }
   }
 }
