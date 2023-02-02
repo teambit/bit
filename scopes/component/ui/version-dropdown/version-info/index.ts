@@ -1,1 +1,2 @@
-export { VersionInfo, VersionInfoProps } from './version-info';
+export { VersionInfo } from './version-info';
+export type { VersionInfoProps } from './version-info';

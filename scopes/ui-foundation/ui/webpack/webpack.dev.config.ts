@@ -219,6 +219,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
               options: {
                 configFile: false,
                 babelrc: false,
+                sourceType: 'unambiguous',
                 presets: [
                   // Preset includes JSX, TypeScript, and some ESnext features
                   require.resolve('babel-preset-react-app'),
