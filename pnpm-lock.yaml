@@ -2345,6 +2345,9 @@ importers:
   scopes/workspace/modules/match-pattern:
     specifiers: {}
 
+  scopes/workspace/modules/node-modules-linker:
+    specifiers: {}
+
   scopes/workspace/testing/mock-workspace:
     specifiers: {}
 
