@@ -844,7 +844,7 @@ jobs:
     resource_class: small
     steps:
       - run: mkdir esbuild-linux-arm64
-      # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
+      # in order to bring new version of esbuild, you need to install it on linux arm64 machine, tar it, and upload to the bucket
       # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
       - run: cd esbuild-linux-arm64 && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-linux-arm64.tar.gz
 
