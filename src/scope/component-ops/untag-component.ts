@@ -11,7 +11,7 @@ import ModelComponent from '../models/model-component';
 export type untagResult = { id: BitId; versions: string[]; component?: ModelComponent };
 
 /**
- * If not specified version, remove all local versions.
+ * If head is false, remove all local versions.
  */
 export async function removeLocalVersion(
   scope: Scope,
