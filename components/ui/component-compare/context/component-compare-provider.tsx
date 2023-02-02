@@ -127,9 +127,9 @@ export function ComponentCompareProvider(props: ComponentCompareProviderProps) {
   }, [compCompareLoading, loading, compCompareId]);
 
   const changes =
-    changesFromProps ||
-    (baseId && deriveChangeType(baseId, compare?.id, fileCompareDataByName, fieldCompareDataByName)) ||
-    undefined;
+    !changesFromProps && !!baseId
+      ? deriveChangeType(baseId, compare?.id, fileCompareDataByName, fieldCompareDataByName)
+      : changesFromProps ?? null;
 
   const componentCompareModel: ComponentCompareModel = {
     compare: compare && {

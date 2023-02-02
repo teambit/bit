@@ -1379,6 +1379,13 @@
             }
         }
     },
+    "ui/code-editor-type-defs": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/code/ui/code-editor-type-defs"
+    },
     "ui/code-navigation": {
         "scope": "",
         "version": "",

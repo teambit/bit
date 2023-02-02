@@ -2,6 +2,7 @@ import React from 'react';
 import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 import { EditorSettingsState } from '@teambit/code.ui.code-compare';
+import { REACT_JSX_TYPE_DEF } from '@teambit/code.ui.code-editor-type-defs';
 
 export type CodeCompareEditorProps = {
   language: string;
@@ -34,14 +35,21 @@ export function CodeCompareEditor({
       modifiedModelPath={modifiedPath}
       height={'100%'}
       onMount={(editor, monaco) => {
-        /**
-         * disable syntax check
-         * ts cant validate all types because imported files aren't available to the editor
-         */
-        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-          noSemanticValidation: true,
-          noSyntaxValidation: true,
+        // JSX typings
+        monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+          target: monaco.languages.typescript.ScriptTarget.ES2016,
+          allowNonTsExtensions: true,
+          moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+          module: monaco.languages.typescript.ModuleKind.CommonJS,
+          noEmit: true,
+          typeRoots: ['node_modules/@types'],
+          jsx: monaco.languages.typescript.JsxEmit.React,
+          jsxFactory: 'JSXAlone.createElement',
         });
+        monaco.languages.typescript.typescriptDefaults.addExtraLib(
+          REACT_JSX_TYPE_DEF,
+          `file:///node_modules/@react/types/index.d.ts`
+        );
         monaco.editor.defineTheme('bit', {
           base: 'vs-dark',
           inherit: true,

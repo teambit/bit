@@ -113,6 +113,7 @@ export default function createWebpackConfig(
         tls: false,
         child_process: false,
         process: fallbacks.process,
+        buffer: fallbacks.buffer,
       },
     },
     module: {
@@ -337,6 +338,9 @@ export default function createWebpackConfig(
       ],
     },
     plugins: [
+      new webpack.ProvidePlugin({
+        Buffer: ['buffer', 'Buffer'],
+      }),
       new MiniCssExtractPlugin({
         // Options similar to the same options in webpackOptions.output
         // both options are optional

@@ -1,8 +1,6 @@
 import React, { HTMLAttributes, useMemo, ComponentType } from 'react';
 import classNames from 'classnames';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
-import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
-import markDownSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { ComponentID } from '@teambit/component';
 import { CodeEditor } from '@teambit/code.ui.code-editor';
@@ -24,7 +22,6 @@ export type CodeViewProps = {
   onTabClicked?: (id: string, event?: React.MouseEvent) => void;
 } & HTMLAttributes<HTMLDivElement>;
 
-SyntaxHighlighter.registerLanguage('md', markDownSyntax);
 // a translation list of specific monaco languages that are not the same as their file ending.
 const languageOverrides = {
   ts: 'typescript',

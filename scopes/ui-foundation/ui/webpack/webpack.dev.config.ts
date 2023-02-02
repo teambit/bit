@@ -184,6 +184,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         path: fallbacks.path,
         stream: false,
         process: fallbacks.process,
+        buffer: fallbacks.buffer,
       },
     },
 
@@ -326,6 +327,9 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
     },
 
     plugins: [
+      new ProvidePlugin({
+        Buffer: ['buffer', 'Buffer'],
+      }),
       new ReactRefreshWebpackPlugin({
         // we use '@pmmmwh/react-refresh-webpack-plugin/loader' directly where relevant.
         // FYI, original defaults of the plugin are:
