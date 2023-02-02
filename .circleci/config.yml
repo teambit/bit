@@ -2044,15 +2044,15 @@ workflows:
       - checkout_code:
           filters:
             branches:
-              only: origin/linux-arm64
+              only: linux-arm64
       - get_linux_arm64_packages:
           filters:
             branches:
-              only: origin/linux-arm64
+              only: linux-arm64
       - bundle_version_linux:
           filters:
             branches:
-              only: origin/linux-arm64
+              only: linux-arm64
           requires:
             - get_linux_arm64_packages
   #     - bundle_version_windows:
