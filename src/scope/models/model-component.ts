@@ -300,9 +300,13 @@ export default class Component extends BitObject {
     if (lane) this.laneId = lane.toLaneId();
     if (this.scope) {
       if (lane) {
-        // const remoteToCheck = lane.isNew && lane.forkedFrom ? lane.forkedFrom : lane.toLaneId();
-        // this.laneHeadRemote = await repo.remoteLanes.getRef(remoteToCheck, this.toBitId());
-        this.laneHeadRemote = await repo.remoteLanes.getRef(lane.toLaneId(), this.toBitId());
+        const getRemoteToCheck = () => {
+          if (!lane.isNew) return lane.toLaneId();
+          if (lane.forkedFrom) return lane.forkedFrom;
+          return LaneId.from(DEFAULT_LANE, this.scope as string);
+        };
+        const remoteToCheck = getRemoteToCheck();
+        this.laneHeadRemote = await repo.remoteLanes.getRef(remoteToCheck, this.toBitId());
       }
       // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
       this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());

@@ -102,7 +102,7 @@ describe('bit reset when on lane', function () {
       helper.command.mergeLane(`${helper.scopes.remote}/dev`);
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
     });
-    // a previous buy showed two staged snaps, because the remote-head was empty.
+    // a previous bug showed two staged snaps, because the remote-head was empty.
     it('bit status should show only one version as staged, not two', () => {
       const status = helper.command.statusJson();
       expect(status.stagedComponents[0].versions).to.have.lengthOf(1);
