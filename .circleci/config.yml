@@ -847,7 +847,7 @@ jobs:
       # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
       # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
       - run: cd esbuild-linux-arm64 && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-linux-arm64.tar.gz
-
+      - run: cd esbuild-linux-arm64 && ls
       # - save_cache:
       #     key: esbuild-0.14.29-linux-arm64-v1
       #     paths:
@@ -896,6 +896,10 @@ jobs:
           command: mkdir linux-arm64
       - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
       - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-linux-arm64
+      - run: cd esbuild-linux-arm64 && ls
+      - run: cd esbuild-linux-arm64/node_modules && ls
+      - run: cd esbuild-linux-arm64/node_modules/esbuild && ls
+
       - run: cp -r esbuild-linux-arm64/node_modules/* bit-${BIT_VERSION}/node_modules
       - run: rm -rf bit-${BIT_VERSION}/node_modules/nan
       - run:
@@ -2035,22 +2039,22 @@ workflows:
   #           branches:
   #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  # bvm_bundle_debug:
-  #   jobs:
-  #     - checkout_code:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #     - get_linux_arm64_packages:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #     - bundle_version_linux:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #         requires:
-  #           - get_linux_arm64_packages
+  bvm_bundle_debug:
+    jobs:
+      - checkout_code:
+          filters:
+            branches:
+              only: origin/linux-arm64
+      - get_linux_arm64_packages:
+          filters:
+            branches:
+              only: origin/linux-arm64
+      - bundle_version_linux:
+          filters:
+            branches:
+              only: origin/linux-arm64
+          requires:
+            - get_linux_arm64_packages
   #     - bundle_version_windows:
   #         filters:
   #           branches:
