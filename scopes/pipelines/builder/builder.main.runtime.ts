@@ -435,7 +435,7 @@ export class BuilderMain {
     );
     component.registerRoute([new BuilderRoute(builder, scope, logger)]);
     graphql.register(builderSchema(builder, logger));
-    generator.registerComponentTemplate([buildTaskTemplate]);
+    if (generator) generator.registerComponentTemplate([buildTaskTemplate]);
     const commands = [new BuilderCmd(builder, workspace, logger), new ArtifactsCmd(builder, scope)];
     cli.register(...commands);
 

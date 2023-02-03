@@ -5,7 +5,7 @@ import { getAllCoreAspectsIds } from '@teambit/bit';
 import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent, ComponentID } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
-import { get, pick, uniq } from 'lodash';
+import { compact, get, pick, uniq } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { DependenciesEnv, EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
@@ -1308,23 +1308,34 @@ export class DependencyResolverMain {
   ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
     this.logger.setStatusLine('checking the latest versions of dependencies');
     const resolver = await this.getVersionResolver();
-    const resolve = async (spec: string) =>
-      (
-        await resolver.resolveRemoteVersion(spec, {
-          rootDir,
-        })
-      ).version;
-    const outdatedPkgs = (
+    const tryResolve = async (spec: string) => {
+      try {
+        return (
+          await resolver.resolveRemoteVersion(spec, {
+            rootDir,
+          })
+        ).version;
+      } catch {
+        // If latest cannot be found for the package, then just ignore it
+        return null;
+      }
+    };
+    const outdatedPkgs = compact(
       await Promise.all(
         pkgs.map(async (pkg) => {
-          const latestVersion = await resolve(`${pkg.name}@latest`);
+          const latestVersion = await tryResolve(`${pkg.name}@latest`);
+          if (!latestVersion) return null;
+          const currentVersion = semver.valid(pkg.currentRange.replace(/[\^~]/, ''));
+          // If the current version is newer than the latest, then no need to update the dependency
+          if (currentVersion && (semver.gt(currentVersion, latestVersion) || currentVersion === latestVersion))
+            return null;
           return {
             ...pkg,
-            latestRange: latestVersion ? repeatPrefix(pkg.currentRange, latestVersion) : null,
+            latestRange: repeatPrefix(pkg.currentRange, latestVersion),
           } as any;
         })
       )
-    ).filter(({ latestRange, currentRange }) => latestRange != null && latestRange !== currentRange);
+    );
     this.logger.consoleSuccess();
     return outdatedPkgs;
   }
@@ -1467,9 +1478,10 @@ export class DependencyResolverMain {
       if (!envPolicy) return undefined;
       return envPolicy.selfPolicy.toVersionManifest();
     });
-    aspectLoader.registerOnLoadRequireableExtensionSlot(
-      dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
-    );
+    if (aspectLoader)
+      aspectLoader.registerOnLoadRequireableExtensionSlot(
+        dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
+      );
 
     graphql.register(dependencyResolverSchema(dependencyResolver));
     envs.registerService(new DependenciesService());

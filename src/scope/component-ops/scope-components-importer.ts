@@ -444,6 +444,18 @@ export default class ScopeComponentsImporter {
     });
   }
 
+  async checkWhatHashesExistOnRemote(remote: string, hashes: string[]): Promise<string[]> {
+    const remotes = await getScopeRemotes(this.scope);
+    const multipleStreams = await remotes.fetch({ [remote]: hashes }, this.scope, { type: 'object' });
+    const bitObjectsList = await this.multipleStreamsToBitObjects(multipleStreams);
+    const allObjects = bitObjectsList.getAll();
+    const existing = allObjects.map((o) => o.hash().toString());
+    logger.debug(
+      `checkWhatHashesExistOnRemote, searched for ${hashes.length} hashes, found ${existing.length} hashes on ${remote}`
+    );
+    return existing;
+  }
+
   private throwForMissingObjects(groupedHashes: HashesPerRemote, receivedObjects: BitObject[]) {
     const allRequestedHashes = uniq(Object.values(groupedHashes).flat());
     const allReceivedHashes = uniq(receivedObjects.map((o) => o.hash().toString()));

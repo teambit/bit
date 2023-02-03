@@ -11,7 +11,7 @@ import ModelComponent from '../models/model-component';
 export type untagResult = { id: BitId; versions: string[]; component?: ModelComponent };
 
 /**
- * If not specified version, remove all local versions.
+ * If head is false, remove all local versions.
  */
 export async function removeLocalVersion(
   scope: Scope,
@@ -21,9 +21,8 @@ export async function removeLocalVersion(
   force = false
 ): Promise<untagResult> {
   const component: ModelComponent = await scope.getModelComponentIgnoreScope(id);
-  await component.setDivergeData(scope.objects);
   const idStr = id.toString();
-  const localVersions = component.getLocalHashes();
+  const localVersions = await component.getLocalHashes(scope.objects);
   if (!localVersions.length) throw new GeneralError(`unable to untag ${idStr}, the component is not staged`);
   const headRef = component.getHeadRegardlessOfLane();
   if (!headRef) {

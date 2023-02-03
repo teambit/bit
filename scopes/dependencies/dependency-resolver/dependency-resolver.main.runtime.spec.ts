@@ -193,24 +193,28 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
   const packageManagerSlot = {
     // @ts-ignore
     get: () => ({
-      resolveRemoteVersion: (spec: string) => ({
-        version: {
-          'root-runtime-dep1@latest': '2.0.0',
-          'root-peer-dep1@latest': '2.0.0',
-          'variant1-runtime-dep1@latest': '2.0.0',
-          'variant1-runtime-dep3@latest': '2.0.0',
-          'variant1-dev-dep1@latest': '2.0.0',
-          'variant1-dev-dep3@latest': '2.0.0',
-          'variant1-peer-dep1@latest': '2.0.0',
-          'variant1-peer-dep3@latest': '2.0.0',
-          'component1-runtime-dep1@latest': '2.0.0',
-          'component1-runtime-dep3@latest': '2.0.0',
-          'component1-dev-dep1@latest': '2.0.0',
-          'component1-dev-dep3@latest': '2.0.0',
-          'component1-peer-dep1@latest': '2.0.0',
-          'component1-peer-dep3@latest': '2.0.0',
-        }[spec],
-      }),
+      resolveRemoteVersion: (spec: string) => {
+        if (spec === 'cannot-resolve@latest') throw new Error('Cannot resolve latest');
+        return {
+          version: {
+            'root-runtime-dep1@latest': '2.0.0',
+            'root-peer-dep1@latest': '2.0.0',
+            'variant1-runtime-dep1@latest': '2.0.0',
+            'variant1-runtime-dep3@latest': '2.0.0',
+            'variant1-dev-dep1@latest': '2.0.0',
+            'variant1-dev-dep3@latest': '2.0.0',
+            'variant1-peer-dep1@latest': '2.0.0',
+            'variant1-peer-dep3@latest': '2.0.0',
+            'component1-runtime-dep1@latest': '2.0.0',
+            'component1-runtime-dep3@latest': '2.0.0',
+            'component1-dev-dep1@latest': '2.0.0',
+            'component1-dev-dep3@latest': '2.0.0',
+            'component1-peer-dep1@latest': '2.0.0',
+            'component1-peer-dep3@latest': '2.0.0',
+            'pkg-with-old-latest@latest': '0.0.0',
+          }[spec],
+        };
+      },
       getNetworkConfig: () => ({}),
     }),
   };
@@ -274,6 +278,8 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
       componentPoliciesById: {
         component1: {
           dependencies: {
+            'pkg-with-old-latest': '1.0.0',
+            'cannot-resolve': '1.0.0',
             'component1-runtime-dep1': '1.0.0',
             'component1-runtime-dep2': '1.0.0',
             'component1-runtime-dep3': '-',

@@ -132,7 +132,7 @@ export class LanesMain {
     if (remote) {
       const remoteObj = await getRemoteByName(remote, consumer);
       const lanes = await remoteObj.listLanes(name, showMergeData);
-      return lanes;
+      return this.filterSoftRemovedLaneComps(lanes);
     }
 
     if (name === DEFAULT_LANE) {
@@ -147,7 +147,32 @@ export class LanesMain {
       if (defaultLane) lanes.push(defaultLane);
     }
 
-    return lanes;
+    return this.filterSoftRemovedLaneComps(lanes);
+  }
+
+  private async filterSoftRemovedLaneComps(lanes: LaneData[]): Promise<LaneData[]> {
+    return Promise.all(
+      lanes.map(async (lane) => {
+        if (lane.id.isDefault()) return lane;
+
+        const componentIds = compact(
+          await Promise.all(
+            (
+              await this.getLaneComponentIds(lane)
+            ).map(async (laneCompId) => {
+              if (await this.scope.isComponentRemoved(laneCompId)) return undefined;
+              return { id: laneCompId._legacy, head: laneCompId.version as string };
+            })
+          )
+        );
+
+        const laneData: LaneData = {
+          ...lane,
+          components: componentIds,
+        };
+        return laneData;
+      })
+    );
   }
 
   getCurrentLaneName(): string | null {
