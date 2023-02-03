@@ -260,7 +260,7 @@ export default class ImportComponents {
           ignoreMissingHead,
           lanes: lane ? [lane] : undefined,
           preferDependencyGraph: !this.options.fetchDeps,
-          reFetchUnBuiltVersion: false,
+          reFetchUnBuiltVersion: true, // when user is running "bit import", we want to re-fetch if it wasn't built. todo: check if this can be disabled when not needed
         });
 
     return results;
