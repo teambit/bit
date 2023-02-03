@@ -27,6 +27,7 @@ import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { compact } from 'lodash';
 import { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
@@ -42,7 +43,6 @@ import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
 import { ConfigMerger } from './config-merger';
 import { ConfigMergeResult } from './config-merge-result';
-import ImporterAspect, { ImporterMain } from '@teambit/importer';
 
 type ResolveUnrelatedData = { strategy: MergeStrategy; head: Ref };
 
