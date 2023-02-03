@@ -1,6 +1,7 @@
 import execa from 'execa';
 import fs from 'fs-extra';
 import path from 'path';
+import ssri from 'ssri';
 import { isSnap } from '@teambit/component-version';
 import isRelative from 'is-relative-path';
 import { checksumFile } from '../utils';
@@ -11,6 +12,7 @@ export type PackResultMetadata = {
   tarPath: string;
   tarName: string;
   checksum?: string;
+  integrity?: string;
 };
 
 export type PackWriteOptions = {
@@ -109,6 +111,7 @@ export class Packer {
       if (!dryRun) {
         const checksum = await checksumFile(tarPath);
         metadata.checksum = checksum;
+        metadata.integrity = await calculateFileIntegrity(tarPath);
       }
       return { metadata, warnings, errors, startTime, endTime: Date.now() };
     } catch (err: any) {
@@ -119,6 +122,10 @@ export class Packer {
       return { errors, startTime, endTime: Date.now() };
     }
   }
+}
+
+async function calculateFileIntegrity(filePath: string): Promise<string> {
+  return ssri.fromData(await fs.readFile(filePath), { algorithms: ['sha512'] }).toString();
 }
 
 function readPackageJson(dir: string) {
