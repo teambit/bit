@@ -42,6 +42,7 @@ import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
 import { ConfigMerger } from './config-merger';
 import { ConfigMergeResult } from './config-merge-result';
+import ImporterAspect, { ImporterMain } from '@teambit/importer';
 
 type ResolveUnrelatedData = { strategy: MergeStrategy; head: Ref };
 
@@ -95,7 +96,8 @@ export class MergingMain {
     private snapping: SnappingMain,
     private checkout: CheckoutMain,
     private logger: Logger,
-    private componentWriter: ComponentWriterMain
+    private componentWriter: ComponentWriterMain,
+    private importer: ImporterMain
   ) {
     this.consumer = this.workspace?.consumer;
   }
@@ -315,10 +317,12 @@ export class MergingMain {
     otherLane?: Lane | null, // the lane we want to merged to our lane. (null if it's "main").
     options?: { resolveUnrelated?: MergeStrategy; ignoreConfigChanges?: boolean }
   ): Promise<ComponentMergeStatus[]> {
+    if (!currentLane && otherLane) {
+      await this.importer.importObjectsFromMainIfExist(otherLane.toBitIds().toVersionLatest());
+    }
     const componentStatusBeforeMergeAttempt = await Promise.all(
       bitIds.map((id) => this.getComponentStatusBeforeMergeAttempt(id, currentLane, options))
     );
-
     const toImport = componentStatusBeforeMergeAttempt
       .map((compStatus) => {
         if (!compStatus.divergeData || !compStatus.divergeData.commonSnapBeforeDiverge) return [];
@@ -798,19 +802,21 @@ other:   ${otherLaneHead.toString()}`);
     InstallAspect,
     LoggerAspect,
     ComponentWriterAspect,
+    ImporterAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, snapping, checkout, install, loggerMain, compWriter]: [
+  static async provider([cli, workspace, snapping, checkout, install, loggerMain, compWriter, importer]: [
     CLIMain,
     Workspace,
     SnappingMain,
     CheckoutMain,
     InstallMain,
     LoggerMain,
-    ComponentWriterMain
+    ComponentWriterMain,
+    ImporterMain
   ]) {
     const logger = loggerMain.createLogger(MergingAspect.id);
-    const merging = new MergingMain(workspace, install, snapping, checkout, logger, compWriter);
+    const merging = new MergingMain(workspace, install, snapping, checkout, logger, compWriter, importer);
     cli.register(new MergeCmd(merging));
     return merging;
   }
