@@ -1,3 +1,4 @@
+// eslint-disable-next-line max-classes-per-file
 import { Graph, CyclicError, Node, Edge } from './index';
 
 class NodeData {
@@ -26,7 +27,7 @@ class EdgeData {
   }
 }
 
-let nodeArr = [
+const nodeArr = [
   new Node('a', new NodeData('a', 'comp1', '1.0.0')),
   new Node('b', new NodeData('b', 'comp2', '2.0.0')),
   new Node('c', new NodeData('c', 'comp3', '1.0.0')),
@@ -36,7 +37,7 @@ let nodeArr = [
   new Node('g', new NodeData('g', 'comp7', '2.0.0')),
 ];
 
-let edgeArr = [
+const edgeArr = [
   new Edge('a', 'b', new EdgeData('peer', 3)),
   new Edge('a', 'c', new EdgeData('dev', 3)),
   new Edge('c', 'd', new EdgeData('regular', 3)),
@@ -46,13 +47,14 @@ let edgeArr = [
   new Edge('g', 'a', new EdgeData('dev', 1)),
 ];
 
-let g = new Graph<NodeData, EdgeData>(nodeArr, edgeArr);
+const g = new Graph<NodeData, EdgeData>(nodeArr, edgeArr);
 
 describe('graphTester', () => {
   describe('basicTester', () => {
     it('should return node', () => {
       expect(g.node('b')).toEqual({
         id: 'b',
+        // @ts-ignore
         attr: { id: 'b', name: 'comp2', version: '2.0.0' },
         _inEdges: ['a->b'],
         _outEdges: [],
@@ -67,6 +69,7 @@ describe('graphTester', () => {
       expect(g.edge('a', 'b')).toEqual({
         sourceId: 'a',
         targetId: 'b',
+        // @ts-ignore
         attr: { dep: 'peer', semDist: 3 },
         bidirectional: false,
       });
@@ -291,13 +294,13 @@ describe('graphTester', () => {
 
     it('should find recursive successors array of a given node', () => {
       const node = g.node('c');
-      const arr = !!node ? g.successors(node.id).map((elem) => elem.id) : [];
+      const arr = node ? g.successors(node.id).map((elem) => elem.id) : [];
       expect(arr).toEqual(['d', 'f', 'e']);
     });
 
     it('should find recursive predecessors array of a given node', () => {
       const node = g.node('d');
-      const arr = !!node ? g.predecessors(node.id).map((elem) => elem.id) : [];
+      const arr = node ? g.predecessors(node.id).map((elem) => elem.id) : [];
       expect(arr).toEqual(['c', 'a', 'g', 'e']);
     });
 
@@ -306,7 +309,7 @@ describe('graphTester', () => {
     });
 
     it('should return all node successors recursively as layers - version 2', () => {
-      let a = new Graph<NodeData, EdgeData>();
+      const a = new Graph<NodeData, EdgeData>();
       a.setNode(new Node('a', new NodeData('a', 'comp1', '1.0.0')));
       a.setNode(new Node('b', new NodeData('b', 'comp2', '2.0.0')));
       a.setNode(new Node('c', new NodeData('c', 'comp3', '1.0.1')));
@@ -344,7 +347,7 @@ describe('graphTester', () => {
       g.setEdge(new Edge('f', 'a', new EdgeData('regular', 3)));
       try {
         g.successorsLayers('a');
-      } catch (e) {
+      } catch (e: any) {
         expect(e.message).toEqual('cyclic dependency');
         g.deleteEdge('f', 'a');
         return;
@@ -437,8 +440,8 @@ describe('graphTester', () => {
 });
 
 describe('graph merge tester', () => {
-  let h = new Graph<NodeData, EdgeData>();
-  let i = new Graph<NodeData, EdgeData>();
+  const h = new Graph<NodeData, EdgeData>();
+  const i = new Graph<NodeData, EdgeData>();
   describe('creating graphs for merge', function () {
     h.setNode(new Node('a', new NodeData('a', 'comp17', '12.0.0')));
     h.setNode(new Node('h', new NodeData('h', 'comp20', '1.0.0')));
@@ -463,22 +466,6 @@ function nodeFilterPredicateVersion(nodeData: Node<NodeData>) {
   return nodeData.attr.version === '2.0.0';
 }
 
-function nodeFilterPredicateComp(nodeData: Node<NodeData>) {
-  return nodeData.attr.id === 'comp2';
-}
-
-function edgeFilterByRegularDep(edgeData: Edge<EdgeData>) {
-  return edgeData.attr.dep === 'regular';
-}
-
 function edgeFilterByDevDep(edgeData: Edge<EdgeData>) {
   return edgeData.attr.dep === 'dev';
-}
-
-function edgeFilterByPeerDep(edgeData: Edge<EdgeData>) {
-  return edgeData.attr.dep === 'peer';
-}
-
-function edgeFilterByPeerOrDevDep(edgeData: Edge<EdgeData>) {
-  return edgeData.attr.dep === 'peer' || edgeData.attr.dep === 'dev';
 }
