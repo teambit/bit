@@ -1,0 +1,21 @@
+{
+  "componentId": {
+    "scope": "teambit.graph",
+    "name": "cleargraph",
+    "version": "0.0.5"
+  },
+  "propagate": false,
+  "extensions": {
+    "teambit.harmony/node": {},
+    "teambit.component/dev-files": {},
+    "teambit.compositions/compositions": {},
+    "teambit.pkg/pkg": {},
+    "teambit.docs/docs": {},
+    "teambit.envs/envs": {},
+    "teambit.dependencies/dependency-resolver": {},
+    "teambit.pipelines/builder": {},
+    "teambit.compilation/compiler": {},
+    "teambit.harmony/application": {},
+    "teambit.preview/preview": {}
+  }
+}
