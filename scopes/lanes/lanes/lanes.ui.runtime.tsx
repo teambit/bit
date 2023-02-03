@@ -80,7 +80,7 @@ export class LanesUI {
             <Route path={LanesModel.lanePath}>
               <Route index element={this.getLaneOverview()} />
               <Route path="~component/*" element={this.getLaneComponent()} />
-              {/* <Route path="~compare/*" element={this.getLanesComparePage()} /> */}
+              <Route path="~compare/*" element={this.getLanesComparePage()} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
@@ -272,28 +272,7 @@ export class LanesUI {
   }
 
   getLaneCompare = (props: LaneCompareProps) => {
-    const routes = this.componentCompareUI.routes;
-    const navLinks = this.componentCompareUI.navLinks;
-
-    const getElement = (routeProps: RouteProps[], href?: string) => {
-      if (routeProps.length === 1) return routeProps[0].element;
-      if (!href) return undefined;
-      return routeProps.find((route) => route.path?.startsWith(href))?.element;
-    };
-
-    const tabs: TabItem[] = flatten(
-      Array.from(navLinks.entries()).map(([id, navProps]) => {
-        const maybeRoutesForId = routes.get(id);
-        const routesForId =
-          (maybeRoutesForId && (Array.isArray(maybeRoutesForId) ? [...maybeRoutesForId] : [maybeRoutesForId])) || [];
-
-        return navProps.map((navProp) => ({
-          ...navProp,
-          id: `${id}-${navProp?.id}`,
-          element: getElement(routesForId, navProp?.props?.href),
-        }));
-      })
-    );
+    const tabs = this.componentCompareUI.tabs;
 
     if (!props.base || !props.compare) return null;
 

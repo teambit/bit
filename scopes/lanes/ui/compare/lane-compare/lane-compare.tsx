@@ -143,15 +143,34 @@ export function LaneCompare({
   }, [allComponents.length]);
 
   const [openDrawerList, onToggleDrawer] = useState<string[]>([]);
+  const [fullScreenDrawerKey, setFullScreen] = useState<string | undefined>(undefined);
 
   const handleDrawerToggle = (id: string) => {
     const isDrawerOpen = openDrawerList.includes(id);
     if (isDrawerOpen) {
       onToggleDrawer((list) => list.filter((drawer) => drawer !== id));
+      if (id === fullScreenDrawerKey) {
+        setFullScreen(undefined);
+      }
       return;
     }
     onToggleDrawer((list) => list.concat(id));
   };
+
+  const onFullScreenClicked = useCallback(
+    (key: string) => (e: React.MouseEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      setFullScreen((fullScreenState) => {
+        if (fullScreenState === key) return undefined;
+        onToggleDrawer((drawers) => {
+          if (!drawers.includes(key)) return [...drawers, key];
+          return drawers;
+        });
+        return key;
+      });
+    },
+    []
+  );
 
   const hooks = useCallback((_base?: ComponentID, _compare?: ComponentID) => {
     const key = computeStateKey(_base, _compare);
@@ -243,16 +262,26 @@ export function LaneCompare({
                 !compareIdStrWithoutVersion || loadingLaneDiff === undefined
                   ? undefined
                   : laneComponentDiffByCompId.get(compareIdStrWithoutVersion)?.changes;
-
+              const isFullScreen = fullScreenDrawerKey === compKey;
               return (
                 <Drawer
                   key={`${compKey}-drawer`}
+                  isFullScreen={isFullScreen}
                   drawerProps={{
                     isOpen: open,
                     onToggle: () => handleDrawerToggle(compKey),
-                    name: <LaneCompareDrawerName compareId={compareId} baseId={baseId} open={open} />,
-                    className: styles.componentCompareDrawer,
-                    contentClass: styles.componentCompareDrawerContent,
+                    name: <></>,
+                    nameElement: (
+                      <LaneCompareDrawerName
+                        compareId={compareId}
+                        baseId={baseId}
+                        open={open}
+                        fullScreen={!!fullScreenDrawerKey}
+                        onFullScreenClicked={onFullScreenClicked(compKey)}
+                      />
+                    ),
+                    className: classnames(styles.componentCompareDrawer, isFullScreen && styles.fullScreen),
+                    contentClass: classnames(styles.componentCompareDrawerContent, isFullScreen && styles.fullScreen),
                   }}
                   compareProps={{
                     host,
@@ -260,7 +289,7 @@ export function LaneCompare({
                     baseId,
                     compareId,
                     changes,
-                    className: styles.componentCompareContainer,
+                    className: classnames(styles.componentCompareContainer, isFullScreen && styles.fullScreen),
                     state: state.get(compKey),
                     hooks: hooks(baseId, compareId),
                     customUseComponent,
@@ -273,12 +302,17 @@ export function LaneCompare({
         </div>
       );
     });
-  }, [base.id.toString(), compare.id.toString(), openDrawerList.length, groupedComponents?.size]);
+  }, [base.id.toString(), compare.id.toString(), openDrawerList.length, groupedComponents?.size, fullScreenDrawerKey]);
 
   return (
-    <div {...rest} className={classnames(styles.laneCompareContainer, className)}>
-      {Loading}
-      {...ComponentCompares}
+    <div className={styles.rootLaneCompare}>
+      <div
+        {...rest}
+        className={classnames(styles.laneCompareContainer, !!fullScreenDrawerKey && styles.fullScreen, className)}
+      >
+        {Loading}
+        {...ComponentCompares}
+      </div>
     </div>
   );
 }

@@ -1,14 +1,28 @@
 @import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
+.rootLaneCompare {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
 .laneCompareContainer {
   display: flex;
   flex-direction: column;
   flex: 1;
-  // overflow: auto;
+  height: 100%;
+  width: 100%;
+  overflow: scroll;
+  &.fullScreen {
+    overflow: hidden;
+  }
 }
 
 .componentCompareContainer {
   height: 55vh;
+  &.fullScreen {
+    height: 100%;
+  }
 }
 
 .versionPicker {
@@ -20,6 +34,16 @@
 .componentCompareDrawer {
   border-bottom: none;
   padding: 8px 0px;
+  &.fullScreen {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: var(--background-color);
+    z-index: $modal-z-index;
+    padding: 0;
+  }
 
   // drawer name
   > div:first-child {
@@ -30,6 +54,10 @@
 
 .componentCompareDrawerContent {
   overflow-y: auto;
+  &.fullScreen {
+    height: 100%;
+    width: 100%;
+  }
 }
 
 .groupedComponentCompareContainer {
@@ -38,9 +66,9 @@
 
 .changeTypeTitle {
   padding: 16px 0px;
-  top: 0;
-  position: sticky;
+  // top: 0;
+  // position: sticky;
   background: var(--background-color, #121212);
-  z-index: $nav-z-index;
+  // z-index: $nav-z-index;
   text-transform: capitalize;
 }
