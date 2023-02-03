@@ -11,7 +11,7 @@ import pMapSeries from 'p-map-series';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
-import { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -122,7 +122,7 @@ export class ImporterMain {
 
     if (lanes) {
       const lanesToFetch = await getLanes(this.logger);
-      const shouldFetchFromMain = !ids.length;
+      const shouldFetchFromMain = !ids.length || ids.includes(DEFAULT_LANE);
       return this.fetchLanes(lanesToFetch, shouldFetchFromMain, { allHistory });
     }
 
@@ -146,11 +146,13 @@ export class ImporterMain {
     async function getLanes(logger: Logger): Promise<Lane[]> {
       let remoteLaneIds: LaneId[] = [];
       if (ids.length) {
-        remoteLaneIds = ids.map((id) => {
-          const trackLane = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(id);
-          if (trackLane) return LaneId.from(trackLane.remoteLane, trackLane.remoteScope);
-          return LaneId.parse(id);
-        });
+        remoteLaneIds = ids
+          .filter((id) => id !== DEFAULT_LANE)
+          .map((id) => {
+            const trackLane = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(id);
+            if (trackLane) return LaneId.from(trackLane.remoteLane, trackLane.remoteScope);
+            return LaneId.parse(id);
+          });
       } else {
         remoteLaneIds = await consumer.scope.objects.remoteLanes.getAllRemoteLaneIds();
       }

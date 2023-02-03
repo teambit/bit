@@ -199,7 +199,7 @@ describe('bit lane command', function () {
         helper.command.import();
         localScope = helper.scopeHelper.cloneLocalScope();
       });
-      it('should not bring main', () => {
+      it('should not bring main (for performance reasons)', () => {
         const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
         const v1Hash = comp.versions['0.0.1'];
         const v2Hash = comp.versions['0.0.2'];
