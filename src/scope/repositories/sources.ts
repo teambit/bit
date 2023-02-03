@@ -300,7 +300,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       if (newHead) {
         laneItem.head = newHead;
       } else {
-        if (lane?.isNew) {
+        if (lane?.isNew && component.scope) {
+          // the fact that the component has a scope-name means it was exported.
           throw new Error(`fatal: unable to find a new head for "${component.id()}".
 this is because the lane ${lane.name} is new so the remote doesn't have previous snaps of this component.
 also, this component wasn't part of a fork, so it's impossible to find a previous snap in the original-lane.
