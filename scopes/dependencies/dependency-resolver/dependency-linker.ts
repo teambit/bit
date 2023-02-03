@@ -4,17 +4,13 @@ import { uniq, compact, flatten, head, omit } from 'lodash';
 import { Stats } from 'fs';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
-import { link as legacyLink } from '@teambit/legacy/dist/api/consumer/lib/link';
 import { ComponentMap, Component, ComponentID, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
 import { createSymlinkOrCopy } from '@teambit/legacy/dist/utils';
-import { LinksResult as LegacyLinksResult } from '@teambit/legacy/dist/links/node-modules-linker';
-import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import Symlink from '@teambit/legacy/dist/links/symlink';
-import { Consumer } from '@teambit/legacy/dist/consumer';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import {
@@ -51,23 +47,12 @@ export type LinkingOptions = {
   fetchObject?: boolean;
 
   /**
-   * make sure to provide the consumer
-   */
-  legacyLink?: boolean;
-
-  /**
-   * consumer is required for the legacyLink
-   */
-  consumer?: Consumer;
-
-  /**
    * Link deps which should be linked to the env
    */
   linkDepsResolvedFromEnv?: boolean;
 };
 
 const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
-  legacyLink: true,
   rewire: false,
   linkTeambitBit: true,
   linkCoreAspects: true,
@@ -98,8 +83,6 @@ export type LinkToDirResult = {
 };
 
 export type LinkResults = {
-  legacyLinkResults?: LegacyLinksResult[];
-  legacyLinkCodemodResults?: CodemodResult[];
   teambitBitLink?: CoreAspectLinkResult;
   coreAspectsLinks?: CoreAspectLinkResult[];
   harmonyLink?: LinkDetail;
@@ -151,13 +134,6 @@ export class DependencyLinker {
       const linkToDirResults = await this.linkToDir(finalRootDir, options.linkToDir, components);
       result.linkToDirResults = linkToDirResults;
       return result;
-    }
-    if (linkingOpts.legacyLink) {
-      const bitIds = componentDirectoryMap.toArray().map(([component]) => component.id._legacy);
-      if (!linkingOpts.consumer) throw new Error(`the consumer is needed to legacy-link`);
-      const legacyResults = await legacyLink(linkingOpts.consumer, bitIds, linkingOpts.rewire ?? false);
-      result.legacyLinkResults = legacyResults.linksResults;
-      result.legacyLinkCodemodResults = legacyResults.codemodResults;
     }
 
     // Link deps which should be linked to the env

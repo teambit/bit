@@ -10,6 +10,7 @@ import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import pMapSeries from 'p-map-series';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import { linkToNodeModulesWithCodemod, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
 import { IssuesClasses } from '@teambit/component-issues';
 import {
   WorkspaceDependencyLifecycleType,
@@ -28,6 +29,7 @@ import {
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
+import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
 import hash from 'object-hash';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
@@ -40,6 +42,11 @@ import UpdateCmd from './update.cmd';
 export type WorkspaceLinkOptions = LinkingOptions & {
   rootPolicy?: WorkspacePolicy;
 };
+
+export type WorkspaceLinkResults = {
+  legacyLinkResults?: NodeModulesLinksResult[];
+  legacyLinkCodemodResults?: CodemodResult[];
+} & LinkResults;
 
 export type WorkspaceInstallOptions = {
   addMissingPeers?: boolean;
@@ -189,14 +196,12 @@ export class InstallMain {
     // TODO: add the links results to the output
     await this.link({
       linkTeambitBit: true,
-      legacyLink: true,
       linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: false,
     });
     const linkOpts = {
       linkTeambitBit: false,
-      legacyLink: true,
       linkCoreAspects: false,
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
@@ -380,9 +385,8 @@ export class InstallMain {
     return res;
   }
 
-  async link(options: WorkspaceLinkOptions = {}): Promise<LinkResults> {
+  async link(options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
     await pMapSeries(this.preLinkSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
-    options.consumer = this.workspace.consumer;
     const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const linker = this.dependencyResolver.getLinker({
@@ -390,6 +394,13 @@ export class InstallMain {
       linkingOptions: options,
     });
     const res = await linker.link(this.workspace.path, mergedRootPolicy, compDirMap, options);
+    const workspaceRes = res as WorkspaceLinkResults;
+
+    const bitIds = compDirMap.toArray().map(([component]) => component.id._legacy);
+    const legacyResults = await linkToNodeModulesWithCodemod(this.workspace, bitIds, options.rewire ?? false);
+    workspaceRes.legacyLinkResults = legacyResults.linksResults;
+    workspaceRes.legacyLinkCodemodResults = legacyResults.codemodResults;
+
     return res;
   }
 

@@ -1,10 +1,9 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import { LinkResults } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { timeFormat } from '@teambit/toolbox.time.time-format';
 import chalk from 'chalk';
 import { Workspace } from '@teambit/workspace';
-import { InstallMain, WorkspaceLinkOptions } from '../install.main.runtime';
+import { InstallMain, WorkspaceLinkOptions, WorkspaceLinkResults } from '../install.main.runtime';
 import { ComponentListLinks } from './component-list-links';
 import { CoreAspectsLinks } from './core-aspects-links';
 import { NestedComponentLinksLinks } from './nested-deps-in-nm-links';
@@ -84,13 +83,12 @@ export class LinkCommand implements Command {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async json([ids]: [string[]], opts: LinkCommandOpts): Promise<LinkResults> {
+  async json([ids]: [string[]], opts: LinkCommandOpts): Promise<WorkspaceLinkResults> {
     this.logger.console(
       `Linking components and core aspects to node_modules for workspaces: '${chalk.cyan(this.workspace.name)}'`
     );
 
     const linkOpts: WorkspaceLinkOptions = {
-      legacyLink: true,
       rewire: opts.rewire,
       linkCoreAspects: true,
       linkTeambitBit: true,
