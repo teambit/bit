@@ -730,11 +730,18 @@ export default class ScopeComponentsImporter {
     return versionDeps;
   }
 
-  private componentsDefToComponentsVersion(defs: ComponentDef[], ignoreMissingHead?: boolean): ComponentVersion[] {
+  private componentsDefToComponentsVersion(
+    defs: ComponentDef[],
+    ignoreMissingHead?: boolean,
+    ignoreIfMissing = false
+  ): ComponentVersion[] {
     const componentVersions = defs.map((def) => {
-      if (ignoreMissingHead && !def.component?.head && !def.id.hasVersion()) return null;
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return def.component!.toComponentVersion(def.id.version);
+      if (!def.component) {
+        if (ignoreIfMissing || ignoreMissingHead) return null;
+        throw new Error(`componentsDefToComponentsVersion, def.component is missing for ${def.id.toString()}`);
+      }
+      if (ignoreMissingHead && !def.component.head && !def.id.hasVersion()) return null;
+      return def.component.toComponentVersion(def.id.version);
     });
 
     return compact(componentVersions);
@@ -786,7 +793,7 @@ export default class ScopeComponentsImporter {
     const finalDefs: ComponentDef[] = await this.sources.getMany(ids);
 
     // @todo: should we warn about the non-missing?
-    return this.componentsDefToComponentsVersion(finalDefs, ignoreMissingHead);
+    return this.componentsDefToComponentsVersion(finalDefs, ignoreMissingHead, true);
   }
 
   private async getLanesForFetcher(lanes?: Lane[]): Promise<Lane[]> {
