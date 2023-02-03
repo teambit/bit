@@ -16,10 +16,18 @@ export class WebpackDevServer implements DevServer {
   constructor(
     private config: WebpackConfigWithDevServer,
     private webpack: typeof webpackCompiler,
-    private webpackDevServerModulePath: string
+    /**
+     * path to the webpack-dev-server module or instance of webpack-dev-server.
+     * this accept getting an instance for backward compatibility.
+     */
+    private webpackDevServer: string | typeof WDS
   ) {
-    // eslint-disable-next-line import/no-dynamic-require, global-require
-    this.WsDevServer = require(this.webpackDevServerModulePath);
+    if (typeof this.webpackDevServer === 'string'){
+      // eslint-disable-next-line import/no-dynamic-require, global-require
+      this.WsDevServer = require(this.webpackDevServer);
+    } else {
+      this.WsDevServer = this.webpackDevServer;
+    }
   }
 
   private getCompiler(): any {
@@ -31,9 +39,12 @@ export class WebpackDevServer implements DevServer {
   displayName = 'Webpack dev server';
 
   version(): string {
+    if (typeof this.webpackDevServer !== 'string') {
+      return 'unknown';
+    }
     // Resolve version from the webpack-dev-server package.json
     try {
-      const root = findRoot(this.webpackDevServerModulePath);
+      const root = findRoot(this.webpackDevServer);
       const packageJsonPath = join(root, 'package.json');
       // eslint-disable-next-line import/no-dynamic-require, global-require
       const packageJson = require(packageJsonPath);

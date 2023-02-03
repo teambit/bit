@@ -9,8 +9,6 @@ import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
 import { createSymlinkOrCopy } from '@teambit/legacy/dist/utils';
-import { LinksResult as LegacyLinksResult } from '@teambit/legacy/dist/links/node-modules-linker';
-import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import Symlink from '@teambit/legacy/dist/links/symlink';
 import { EnvsMain } from '@teambit/envs';
@@ -85,8 +83,6 @@ export type LinkToDirResult = {
 };
 
 export type LinkResults = {
-  legacyLinkResults?: LegacyLinksResult[];
-  legacyLinkCodemodResults?: CodemodResult[];
   teambitBitLink?: CoreAspectLinkResult;
   coreAspectsLinks?: CoreAspectLinkResult[];
   harmonyLink?: LinkDetail;
