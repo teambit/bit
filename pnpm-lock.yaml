@@ -511,6 +511,7 @@ importers:
       socks-proxy-agent: 5.0.0
       source-map-loader: 3.0.0
       ssh2: 1.4.0
+      ssri: 10.0.1
       stream-browserify: 3.0.0
       stream-http: 3.2.0
       string-format: 0.5.0
@@ -995,6 +996,7 @@ importers:
       socks-proxy-agent: 5.0.0
       source-map-loader: 3.0.0_webpack@5.51.1
       ssh2: 1.4.0
+      ssri: 10.0.1
       stream-browserify: 3.0.0
       stream-http: 3.2.0
       string-format: 0.5.0
