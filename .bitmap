@@ -231,6 +231,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/clear-cache"
     },
+    "cleargraph": {
+        "scope": "teambit.graph",
+        "version": "0.0.5",
+        "mainFile": "index.ts",
+        "rootDir": "components/cleargraph"
+    },
     "cli": {
         "scope": "teambit.harmony",
         "version": "0.0.652",
@@ -548,6 +554,12 @@
         "version": "0.0.972",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/graphql"
+    },
+    "harmony": {
+        "scope": "teambit.harmony",
+        "version": "0.4.6",
+        "mainFile": "index.ts",
+        "rootDir": "components/harmony"
     },
     "harmony-ui-app": {
         "scope": "teambit.ui-foundation",

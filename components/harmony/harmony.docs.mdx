@@ -1,0 +1,250 @@
+---
+description: Harmony is an abstract extension system you can use to make any software extendable and composable. It is the engine that drives Bit extensibility and composability.
+labels: ['aspect', 'composition', 'extendability']
+---
+
+## Basic features
+
+Harmony allows you to implement Aspects as the main building blocks that compose your software. Each Aspect has:
+
+- Dependency declaration - Where you declare other Aspects as dependencies.
+- Dependency injection - An Aspect gets providers for all its dependencies.
+- Slots - An easy way for an Aspect to provide API for another aspect to hook into any of its processes.
+- Multiple runtimes - Aspect can annotate in which runtimes it can run (for example providing functionality to run on the server and on the browser).
+
+## Harmony config file
+
+Use a config file to describe your desired composition of Aspects and their configuration. Harmony uses a basic JSON syntax, where each key is an aspect.
+
+```json
+{
+  "teambit.dependencies/dependency-resolver": {}, // load an Aspect without providing configuration
+  "teambit.workspace/workspace": {                // Load an Aspect with configuration
+    "name": "bit",
+    "icon": "https://static.bit.dev/bit-logo.svg",
+}
+```
+
+## Define an aspect
+
+Harmony Aspect is an object that implements the `ExtensionManifest` interface
+
+```js
+export type ExtensionManifest = {
+  /**
+   * Aspect's name.
+   */
+  name: string,
+
+  /**
+   * Aspect unique ID.
+   */
+  id?: string,
+
+  /**
+   * Array of dependencies.
+   * These other Aspects to be installed and resolved prior to this Aspect activation.
+   */
+  dependencies?: ExtensionManifest[],
+
+  /**
+   * Reference to the Aspect factory function.
+   */
+  provider?: ProviderFn,
+
+  /**
+   * Default Aspect configuration.
+   */
+  defaultConfig?: object,
+
+  /**
+   * Alias to the provider.
+   */
+  provide?: ProviderFn,
+
+  /**
+   * Array of slots the Aspect exposes.
+   */
+  slots?: SlotProvider<unknown>[],
+
+  /**
+   * Additional keys which might be expected by other Aspects.
+   */
+  [key: string]: any,
+};
+```
+
+## Programmatic API
+
+### Static API
+
+```js
+// Create instance of harmony with the provided aspects, on specific runtime, with provided config
+static async load(aspects: Aspect[], runtime: string, globalConfig: GlobalConfig) {
+```
+
+### Instance API
+
+```js
+// load an Aspect into the dependency graph
+async load(extensions: ExtensionManifest[])
+
+// set extensions during Harmony runtime.
+async set(extensions: ExtensionManifest[])
+
+export type RequireFn = (aspect: Extension, runtime: RuntimeDefinition) => Promise<void>;
+
+// Start harmony.
+// The require function is a function that get's the aspect and its runtime, and knows to require/load it
+async run(requireFn?: RequireFn)
+```
+
+## Assumptions
+
+- Harmony does not allow circular dependencies between Aspects.
+
+<!--
+
+-------------------------for reference only - to remove ------------------
+
+## composition model
+Harmony proposes a graph composition model.
+composition model should allow:
+
+- full control over composition including dependency composition.
+- easy overrides mechanism for configs.
+- full encapsulation of an extension. 
+
+bit.config.js
+```js
+import FlowSchemaPlugin from '@bit/plugins.flow-schema';
+
+export default () => {
+  return [ // returns an array of PluginInstance
+    [FlowSchemaPlugin, {
+
+    }],
+    [ReactSchemaPlugin, {
+      eslintrc: './.eslintrc'
+    }]
+  ];
+}
+```
+
+configured extensions in bit.json
+```json
+{
+  "extensions": {
+    "bit.envs/eslint@0.0.4": {
+      "eslintrc": "./.eslintrc"
+    },
+    "bit.envs/babel@0.0.1": {
+      "babelrc": "./.babelrc",
+      "strict": true,
+      "__alias": "compile"
+    },
+    "bit.envs/webpack@0.0.1": {
+      "config": "./webpack.config.js",
+      "mode": "prod",
+      "__alias": "bundle"
+    },
+    "bit.envs/mocha@0.0.1": {
+      "reporter": "json",
+      "mochaOptions": "./mocha.opts",
+      "__alias": "test-mocha"
+    }
+  },
+  "pipes": {
+    "tag": [""]
+  },
+  "dist": {
+    "target": "",
+    "entry": ""
+  }
+}
+```
+
+### Open questions
+- How do I install a Bit extensions? Where the component is configured?
+- Is the extension installed with Bit/NPM?
+- What's the impl. behind `bit use <plugin/extension name>`
+- maybe an composition model can co-exist as json and js? what are the tradeoffs?
+
+## extension registration
+```js
+import { register } from 'harmony';
+import { DocGen } from '@bit/bit.exts.doc-gen';
+
+const extensions = register([DocGen]);
+```
+
+## lifecycle event invocation
+
+```js
+import { invoke } from 'harmony';
+
+invoke('tag', ...data);
+```
+
+## lifecycle event registration
+```js
+import { Lifecycle } from 'harmony';
+
+@Lifecycle(Tag);
+function tag() {
+  
+}
+```
+
+## state / schema management
+```ts
+@Lifecycle(Tag)
+function tag(component: Component) {
+  const docs = component.get('docs'); // returns `Maybe` type?
+  const docs: Docs = docs.get();
+}
+```
+
+## function extension 
+
+```js
+export default function foo() {
+  context.a
+}
+```
+
+## configuration
+an extension can declaratively ask for configuration type. this can be reflected
+- extensions can be configured during instantiation.
+- configuration types can be built from multiple sources
+
+## context
+- standard context can be shared between all extensions in the same instance.
+
+## extension composition
+- hook invocation from an extension
+- extension dependencies? how can an extension declare a dependency as part of its execution? 
+- contextual/namespaced hooks
+- config api
+
+## extension resolution
+```js
+import { resolve } from 'harmony';
+
+const extension = resolve('doc-gen');
+```
+
+## Questions (?)
+- can extensions be added/configured during runtime? DI
+- is there a difference between extension composition to registration?
+- how to make autocomplete work for hooks?
+- how to avoid unintentional hook invocation (decorators?) 
+- how to declare a new hook..
+- schema validator
+- dev experience of an extension.
+- how do manage different runtime environments? should I? Why is that relevant?
+- runtime capsules?
+- how can one extension run from both server and client? how capsule is related?
+- in which process extensions will run from? also, what will happen from the backend?
+- 
+-->
