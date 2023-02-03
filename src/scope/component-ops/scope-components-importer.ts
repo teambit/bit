@@ -288,6 +288,10 @@ export default class ScopeComponentsImporter {
         );
         return null;
       }
+      if (ignoreMissingHead && !def.component.head && !def.id.hasVersion()) {
+        logger.debug(`importWithoutDeps, ignored missing head ${def.id.toString()}`);
+        return null;
+      }
       return def.component.toComponentVersion(def.id.version as string);
     });
     const externalDeps = await this.getExternalManyWithoutDeps(externals, {
@@ -726,6 +730,16 @@ export default class ScopeComponentsImporter {
     return versionDeps;
   }
 
+  private componentsDefToComponentsVersion(defs: ComponentDef[], ignoreMissingHead?: boolean): ComponentVersion[] {
+    const componentVersions = defs.map((def) => {
+      if (ignoreMissingHead && !def.component?.head && !def.id.hasVersion()) return null;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return def.component!.toComponentVersion(def.id.version);
+    });
+
+    return compact(componentVersions);
+  }
+
   private async getExternalManyWithoutDeps(
     ids: BitId[],
     {
@@ -745,10 +759,10 @@ export default class ScopeComponentsImporter {
     logger.debug(`getExternalManyWithoutDeps, total ids: ${ids.length}, localFetch: ${localFetch.toString()}`);
     const defs: ComponentDef[] = await this.sources.getMany(ids, true);
     const left = defs.filter((def) => !localFetch || !def.component);
+
     if (left.length === 0) {
       logger.debug('getExternalManyWithoutDeps, no more ids left, all found locally');
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return defs.map((def) => def.component!.toComponentVersion(def.id.version));
+      return this.componentsDefToComponentsVersion(defs, ignoreMissingHead);
     }
     const leftIds = left.map((def) => def.id);
     const leftIdsStr = leftIds.map((id) => id.toString());
@@ -772,7 +786,7 @@ export default class ScopeComponentsImporter {
     const finalDefs: ComponentDef[] = await this.sources.getMany(ids);
 
     // @todo: should we warn about the non-missing?
-    return compact(finalDefs.map((def) => def.component?.toComponentVersion(def.id.version)));
+    return this.componentsDefToComponentsVersion(finalDefs, ignoreMissingHead);
   }
 
   private async getLanesForFetcher(lanes?: Lane[]): Promise<Lane[]> {
