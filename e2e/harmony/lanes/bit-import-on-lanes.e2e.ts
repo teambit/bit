@@ -199,17 +199,17 @@ describe('bit lane command', function () {
         helper.command.import();
         localScope = helper.scopeHelper.cloneLocalScope();
       });
-      it('should not bring all history of main only the head', () => {
+      it('should not bring main', () => {
         const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
         const v1Hash = comp.versions['0.0.1'];
         const v2Hash = comp.versions['0.0.2'];
         const v3Hash = comp.versions['0.0.3'];
         expect(() => helper.command.catObject(v1Hash)).to.throw();
         expect(() => helper.command.catObject(v2Hash)).to.throw();
-        expect(() => helper.command.catObject(v3Hash)).to.not.throw(); // coz it's the head
+        expect(() => helper.command.catObject(v3Hash)).to.throw(); // coz it's the head
       });
-      it('should bring all history if --all-history flag was used', () => {
-        helper.command.import('--all-history');
+      it('should bring all history if fetch --lanes --all-history was used', () => {
+        helper.command.fetchAllLanes('--all-history');
         const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
         const v2Hash = comp.versions['0.0.2'];
         expect(() => helper.command.catObject(v2Hash)).to.not.throw();

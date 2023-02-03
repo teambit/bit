@@ -412,8 +412,8 @@ export default class CommandHelper {
   fetchRemoteLane(id: string) {
     return this.runCmd(`bit fetch ${this.scopes.remote}${LANE_REMOTE_DELIMITER}${id} --lanes`);
   }
-  fetchAllLanes() {
-    return this.runCmd(`bit fetch --lanes`);
+  fetchAllLanes(flags = '') {
+    return this.runCmd(`bit fetch --lanes ${flags}`);
   }
   fetchAllComponents() {
     return this.runCmd(`bit fetch --components`);
