@@ -16,7 +16,6 @@ import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/sc
 import InstallAspect, { InstallMain } from '@teambit/install';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import GraphAspect, { GraphMain } from '@teambit/graph';
@@ -66,27 +65,7 @@ export class ImporterMain {
     return results;
   }
 
-  async importObjects() {
-    try {
-      await this.import(
-        {
-          ids: [],
-          objectsOnly: true,
-          installNpmPackages: false,
-        },
-        []
-      );
-    } catch (err: any) {
-      // TODO: this is a hack since the legacy throw an error, we should provide a way to not throw this error from the legacy
-      if (err instanceof NothingToImport) {
-        // Do not write nothing to import warning
-        return;
-      }
-      throw err;
-    }
-  }
-
-  async importObjectsWithOptions(options: Partial<ImportOptions> = {}): Promise<ImportResult> {
+  async importObjects(options: Partial<ImportOptions> = {}): Promise<ImportResult> {
     const importOptions: ImportOptions = {
       ...options,
       objectsOnly: true,
@@ -107,7 +86,7 @@ export class ImporterMain {
 
   async fetchLaneWithComponents(lane: Lane, options: Partial<ImportOptions> = {}): Promise<ImportResult> {
     options.lanes = { laneIds: [lane.toLaneId()], lanes: [lane] };
-    return this.importObjectsWithOptions(options);
+    return this.importObjects(options);
   }
 
   async fetch(ids: string[], lanes: boolean, components: boolean, fromOriginalScope: boolean, allHistory = false) {
@@ -189,7 +168,7 @@ export class ImporterMain {
     await this.importObjects();
 
     const resultFromMain = shouldFetchFromMain
-      ? await this.importObjectsWithOptions(options)
+      ? await this.importObjects(options)
       : { importedIds: [], importDetails: [], importedDeps: [] };
     const resultsPerLane = await pMapSeries(lanes, async (lane) => {
       this.logger.setStatusLine(`fetching lane ${lane.name}`);

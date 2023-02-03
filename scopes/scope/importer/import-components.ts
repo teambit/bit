@@ -19,7 +19,6 @@ import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import Component from '@teambit/legacy/dist/consumer/component';
-import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
 import {
   FileStatus,
@@ -390,18 +389,18 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
   async importAccordingToBitMap(): Promise<ImportResult> {
     this.options.objectsOnly = !this.options.merge && !this.options.override;
     const componentsIdsToImport = this.getIdsToImportFromBitmap();
-
+    const emptyResult = {
+      importedIds: [],
+      importedDeps: [],
+      importDetails: [],
+    };
     if (R.isEmpty(componentsIdsToImport)) {
-      throw new NothingToImport();
+      return emptyResult;
     }
     await this._throwForModifiedOrNewComponents(componentsIdsToImport);
     const beforeImportVersions = await this._getCurrentVersions(componentsIdsToImport);
     if (!componentsIdsToImport.length) {
-      return {
-        importedIds: [],
-        importedDeps: [],
-        importDetails: [],
-      };
+      return emptyResult;
     }
     if (!this.options.objectsOnly) {
       throw new Error(`bit import with no ids and --merge flag was not implemented yet`);
