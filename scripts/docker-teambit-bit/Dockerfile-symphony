@@ -1,4 +1,4 @@
-FROM node:14.19.3
+FROM node:16.19.0
 RUN adduser --disabled-password --gecos '' user
 RUN chown -R user /usr/local/
 USER user
