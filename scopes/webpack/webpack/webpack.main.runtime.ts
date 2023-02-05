@@ -35,6 +35,10 @@ export type WebpackConfigDevServerTransformContext = GlobalWebpackConfigTransfor
 export type GlobalWebpackConfigTransformContext = {
   mode: BundlerMode;
   /**
+   * Whether the config is for an env template bundling
+   */
+  isEnvTemplate?: boolean;
+  /**
    * A path for the host root dir
    * Host root dir is usually the env root dir
    * This can be used in different bundle options which run require.resolve
