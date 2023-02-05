@@ -1,4 +1,2 @@
-import styles from './ellipsis.module.scss';
-
-export const ellipsis = styles.ellipsis;
+export { ellipsis } from './ellipsis.module.scss';
 export { Ellipsis } from './ellipsis';
