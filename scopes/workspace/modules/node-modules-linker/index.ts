@@ -1,1 +1,6 @@
-export { NodeModulesLinksResult, linkToNodeModules, linkToNodeModulesWithCodemod } from './node-modules-linker';
+export {
+  NodeModulesLinksResult,
+  linkToNodeModules,
+  linkToNodeModulesWithCodemod,
+  linkComponentToNodeModules,
+} from './node-modules-linker';

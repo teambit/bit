@@ -8,7 +8,7 @@ import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/leg
 import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
@@ -22,6 +22,8 @@ import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { changeCodeFromRelativeToModulePaths } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
 import Symlink from '@teambit/legacy/dist/links/symlink';
 import { Workspace } from '@teambit/workspace';
+import { snapToSemver } from '@teambit/component-package-version';
+import { Component } from '@teambit/component';
 
 type LinkDetail = { from: string; to: string };
 export type NodeModulesLinksResult = {
@@ -34,11 +36,11 @@ export type NodeModulesLinksResult = {
  * for example, require('@bit/remote-scope.bar.foo)
  */
 export default class NodeModuleLinker {
-  components: Component[];
+  components: ConsumerComponent[];
   consumer: Consumer;
   bitMap: BitMap; // preparation for the capsule, which is going to have only BitMap with no Consumer
   dataToPersist: DataToPersist;
-  constructor(components: Component[], consumer: Consumer) {
+  constructor(components: ConsumerComponent[], consumer: Consumer) {
     this.components = ComponentsList.getUniqueComponents(components);
     this.consumer = consumer;
     this.bitMap = consumer.bitMap;
@@ -89,7 +91,7 @@ export default class NodeModuleLinker {
     return linksResults;
   }
 
-  _getDefaultScope(component?: Component): string | undefined | null {
+  _getDefaultScope(component?: ConsumerComponent): string | undefined | null {
     if (component) {
       return component.defaultScope;
     }
@@ -102,7 +104,7 @@ export default class NodeModuleLinker {
    * node expects the module inside node_modules to have either package.json with valid "main"
    * property or an index.js file. this main property can't be relative.
    */
-  async _populateComponentsLinks(component: Component): Promise<void> {
+  async _populateComponentsLinks(component: ConsumerComponent): Promise<void> {
     const componentId = component.id;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
       bindingPrefix: component.bindingPrefix,
@@ -120,7 +122,7 @@ export default class NodeModuleLinker {
   /**
    * symlink the entire source directory into "src" in node-modules.
    */
-  private symlinkComponentDir(component: Component, linkPath: PathOsBasedRelative) {
+  private symlinkComponentDir(component: ConsumerComponent, linkPath: PathOsBasedRelative) {
     const componentMap = component.componentMap as ComponentMap;
 
     const filesToBind = componentMap.getAllFilesPaths();
@@ -164,7 +166,7 @@ export default class NodeModuleLinker {
    * When the dists is outside the components directory, it doesn't have access to the node_modules of the component's
    * root-dir. The solution is to go through the node_modules packages one by one and symlink them.
    */
-  _getSymlinkPackages(from: string, to: string, component: Component): Symlink[] {
+  _getSymlinkPackages(from: string, to: string, component: ConsumerComponent): Symlink[] {
     if (!this.consumer) throw new Error('getSymlinkPackages expects the Consumer to be defined');
     const dependenciesSavedAsComponents = component.dependenciesSavedAsComponents;
     const fromNodeModules = path.join(from, 'node_modules');
@@ -195,7 +197,7 @@ export default class NodeModuleLinker {
     bitId: BitId,
     rootDir: PathOsBasedRelative,
     bindingPrefix: string,
-    component: Component
+    component: ConsumerComponent
   ): Symlink {
     const relativeDestPath = getNodeModulesPathOfComponent({
       ...component,
@@ -215,7 +217,7 @@ export default class NodeModuleLinker {
    * Since an authored component doesn't have rootDir, it's impossible to symlink to the component directory.
    * It makes it easier for Author to use absolute syntax between their own components.
    */
-  private async createPackageJson(component: Component) {
+  private async createPackageJson(component: ConsumerComponent) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const hasPackageJsonAsComponentFile = component.files.some((file) => file.relative === PACKAGE_JSON);
     if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
@@ -236,8 +238,9 @@ export default class NodeModuleLinker {
     }
     if (packageJson.packageJsonObject.version === 'latest') {
       packageJson.packageJsonObject.version = '0.0.1-new';
+    } else {
+      packageJson.packageJsonObject.version = snapToSemver(packageJson.packageJsonObject.version);
     }
-
     // packageJson.mergePropsFromExtensions(component);
     // TODO: we need to have an hook here to get the transformer from the pkg extension
 
@@ -250,7 +253,7 @@ export default class NodeModuleLinker {
   /**
    * these are changes made by aspects
    */
-  async _applyTransformers(component: Component, packageJson: PackageJsonFile) {
+  async _applyTransformers(component: ConsumerComponent, packageJson: PackageJsonFile) {
     return PackageJsonTransformer.applyTransformers(component, packageJson);
   }
 }
@@ -284,5 +287,10 @@ export async function linkToNodeModules(
   };
   const components = await getComponents();
   const nodeModuleLinker = new NodeModuleLinker(components, workspace.consumer);
+  return nodeModuleLinker.link();
+}
+
+export async function linkComponentToNodeModules(component: Component, workspace: Workspace) {
+  const nodeModuleLinker = new NodeModuleLinker([component.state._consumer], workspace.consumer);
   return nodeModuleLinker.link();
 }

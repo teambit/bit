@@ -16,6 +16,7 @@ import {
   Extensions,
 } from '@teambit/legacy/dist/constants';
 import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
+import { linkToNodeModules } from '@teambit/workspace.modules.node-modules-linker';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
@@ -309,6 +310,11 @@ export async function tagModelComponent({
         })
       );
       stagedConfig = await updateComponentsVersions(workspace, modelComponents);
+      await linkToNodeModules(
+        workspace,
+        allComponentsToTag.map((c) => c.id),
+        true
+      );
     }
   }
 
