@@ -360,9 +360,9 @@ describe('merge lanes', function () {
       helper.scopeHelper.getClonedLocalScope(workspaceOnLane);
       helper.command.import();
     });
-    it('bit import should bring the latest main objects', () => {
+    it('bit import should not bring the latest main objects', () => {
       const head = helper.command.getHead(`${helper.scopes.remote}/comp2`);
-      expect(head).to.equal(comp2HeadOnMain);
+      expect(head).to.not.equal(comp2HeadOnMain);
     });
     it('bit status should indicate that the main is ahead', () => {
       const status = helper.command.status('--lanes');
