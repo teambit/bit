@@ -6,6 +6,7 @@ import {
   applyVersionReport,
   conflictSummaryReport,
   installationErrorOutput,
+  compilationErrorOutput,
 } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
@@ -107,6 +108,7 @@ export class CheckoutCmd implements Command {
       newFromLane,
       newFromLaneAdded,
       installationError,
+      compilationError,
     }: ApplyVersionResults = await this.checkout.checkoutByCLIValues(to, componentPattern || '', checkoutProps);
     const isHead = to === 'head';
     const isReset = to === 'reset';
@@ -211,7 +213,8 @@ once ready, snap/tag the components to persist the changes`;
       getNewOnLaneOutput() +
       getConflictSummary() +
       getSummary() +
-      installationErrorOutput(installationError)
+      installationErrorOutput(installationError) +
+      compilationErrorOutput(compilationError)
     );
   }
 }
