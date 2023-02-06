@@ -2020,11 +2020,11 @@ workflows:
       - checkout_code:
           filters:
             branches:
-              only: origin/symphony-docker-update-npm
+              only: symphony-docker-update-npm
       - symphony_docker_build:
           filters:
             branches:
-              only: origin/symphony-docker-update-npm
+              only: symphony-docker-update-npm
           requires:
             - checkout_code
   # uncomment to update esbuild arm64 cache
