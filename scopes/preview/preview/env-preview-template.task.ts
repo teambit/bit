@@ -104,10 +104,10 @@ export class EnvPreviewTemplateTask implements BuildTask {
       targets: [],
       entry: [],
       development: context.dev,
-      isEnvTemplate: true,
       metaData: {
         initiator: `${GENERATE_ENV_TEMPLATE_TASK_NAME} task`,
         envId: context.id,
+        isEnvTemplate: true
       },
     });
 
