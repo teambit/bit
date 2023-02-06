@@ -188,6 +188,11 @@ export type MetaData = {
    * Env id (used usually to calculate the config)
    */
   envId?: string;
+
+  /**
+   * Whether the config is for an env template bundling
+   */
+  isEnvTemplate?: boolean;
 };
 export interface BundlerContext extends BuildContext {
   /**

@@ -17,7 +17,7 @@ export class ${namePascalCase}Main {
   * See the docs file of this component for more info
   */
 
-  generator.registerComponentTemplate([
+  if (generator) generator.registerComponentTemplate([
       {
         name: 'component1',
         description: 'description for component1',

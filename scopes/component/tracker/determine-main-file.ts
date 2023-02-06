@@ -6,10 +6,10 @@ import {
   DEFAULT_INDEX_EXTS,
   DEFAULT_INDEX_NAME,
   DEFAULT_SEPARATOR,
-} from '../../../constants';
-import { pathJoinLinux, PathLinux, pathNormalizeToLinux } from '../../../utils/path';
-import ComponentMap from '../../bit-map/component-map';
-import { MissingMainFile } from '../../bit-map/exceptions';
+} from '@teambit/legacy/dist/constants';
+import { pathJoinLinux, PathLinux, pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
+import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import { MissingMainFile } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { AddedComponent } from './add-components';
 
 export default function determineMainFile(

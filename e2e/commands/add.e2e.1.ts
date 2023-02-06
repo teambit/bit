@@ -2,7 +2,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-
+import { OutsideWorkspaceError } from '@teambit/workspace';
 import { InvalidName } from '@teambit/legacy-bit-id';
 import { statusInvalidComponentsMsg } from '../../src/constants';
 import { MissingMainFile } from '../../src/consumer/bit-map/exceptions';
@@ -31,14 +31,10 @@ describe('bit add command', function () {
 
   describe('add before running "bit init"', () => {
     it('Should return message to run "bit init"', () => {
-      let error;
-      try {
-        helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
-      } catch (err: any) {
-        error = err.message;
-      }
-      expect(error).to.have.string('workspace not found. to initiate a new workspace, please use `bit init');
+      helper.fixtures.createComponentBarFoo();
+      const cmd = () => helper.fixtures.addComponentBarFooAsDir();
+      const error = new OutsideWorkspaceError();
+      helper.general.expectToThrow(cmd, error);
     });
   });
   describe('bit add without bitmap and .git/bit initialized', () => {
