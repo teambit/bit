@@ -3,7 +3,6 @@ import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
@@ -52,7 +51,8 @@ export class ComponentWriterMain {
     let compilationError: Error | undefined;
     if (!opts.skipDependencyInstallation) {
       installationError = await this.installPackagesGracefully();
-      compilationError = await this.compileGracefully(); // no point to compile if the installation is not running. the environment is not ready.
+      // no point to compile if the installation is not running. the environment is not ready.
+      compilationError = await this.compileGracefully();
     }
     await this.consumer.writeBitMap();
     this.logger.debug('writeMany, completed!');
