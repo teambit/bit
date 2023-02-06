@@ -115,7 +115,10 @@ export class WebpackMain {
     initialConfigs?: webpack.Configuration[],
     webpackInstance?: any
   ) {
-    const transformerContext: GlobalWebpackConfigTransformContext = { mode: 'prod' };
+    const transformerContext: GlobalWebpackConfigTransformContext = {
+      mode: 'prod',
+      isEnvTemplate: context.metaData?.isEnvTemplate,
+    };
     // eslint-disable-next-line max-len
     const configs =
       initialConfigs ||
