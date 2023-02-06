@@ -13,7 +13,8 @@ import {
 import { MainRuntime } from '@teambit/cli';
 import fs from 'fs-extra';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
-import { link } from '@teambit/legacy/dist/api/consumer';
+import { linkToNodeModules } from '@teambit/workspace.modules.node-modules-linker';
+import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import pMapSeries from 'p-map-series';
 import { difference, compact } from 'lodash';
@@ -113,10 +114,10 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
   your workspace.jsonc has this component-id set. you might want to remove/change it.`);
           }
         }
-  
+
         throw err;
       }
-      
+
     }
 
     const aspectsDefs = await this.resolveAspects(undefined, idsToLoadFromWs, {
@@ -334,8 +335,8 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     await Promise.all(existsP);
     // TODO: this should be done properly by the install aspect by slot
     if (missingPaths) {
-      const stringIds: string[] = ids.map((id) => id._legacy.toString());
-      return link(stringIds, false);
+      const bitIds: BitId[] = ids.map((id) => id._legacy);
+      return linkToNodeModules(this.workspace, bitIds);
     }
     return Promise.resolve();
   }

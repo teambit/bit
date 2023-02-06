@@ -285,7 +285,7 @@ export class Workspace implements ComponentFactory {
     this.onAspectsResolveSlot.register(onAspectsResolveFunc);
     return this;
   }
-  
+
   registerOnRootAspectAdded(onRootAspectAddedFunc: OnRootAspectAdded) {
     this.onRootAspectAddedSlot.register(onRootAspectAddedFunc);
     return this;
