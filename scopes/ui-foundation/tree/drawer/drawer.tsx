@@ -6,7 +6,6 @@ import styles from './drawer.module.scss';
 
 export type DrawerProps = {
   name: ReactNode;
-  nameElement?: ReactNode;
   isOpen: boolean;
   onToggle: (event: React.MouseEvent<HTMLDivElement>) => void;
   Widgets?: ReactNode[];
@@ -17,7 +16,6 @@ export type DrawerProps = {
 
 export function DrawerUI({
   name,
-  nameElement,
   children,
   className,
   isOpen,
@@ -37,7 +35,7 @@ export function DrawerUI({
         <div className={classNames(styles.drawerName, isOpen && styles.open, drawerNameClass)}>
           <div onClick={onToggle}>
             <Icon className={classNames(styles.arrow, !isOpen && styles.collapsed)} of="fat-arrow-down" />
-            {nameElement || <span>{name}</span>}
+            <span>{name}</span>
           </div>
           {Widgets}
         </div>

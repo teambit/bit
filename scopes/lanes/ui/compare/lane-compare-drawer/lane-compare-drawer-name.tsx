@@ -11,17 +11,9 @@ export type LaneCompareDrawerNameProps = {
   baseId?: ComponentID;
   compareId?: ComponentID;
   open?: boolean;
-  onFullScreenClicked?: React.MouseEventHandler<HTMLDivElement>;
-  fullScreen?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function LaneCompareDrawerName({
-  baseId,
-  compareId,
-  open,
-  onFullScreenClicked,
-  fullScreen,
-}: LaneCompareDrawerNameProps) {
+export function LaneCompareDrawerName({ baseId, compareId, open }: LaneCompareDrawerNameProps) {
   const status = !baseId ? 'new' : 'modified';
 
   return (
@@ -48,12 +40,6 @@ export function LaneCompareDrawerName({
             </Tooltip>
           )}
         </div>
-      </div>
-      <div className={styles.fullScreen} onClick={onFullScreenClicked}>
-        <img
-          className={styles.fullScreenIcon}
-          src={`https://static.bit.dev/bit-icons/${fullScreen ? 'shrink' : 'enlarge'}.svg`}
-        ></img>
       </div>
     </div>
   );

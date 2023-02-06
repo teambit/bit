@@ -22,7 +22,7 @@ export function LaneCompareDrawer({ drawerProps, compareProps, isFullScreen }: L
     <DrawerUI {...drawerProps}>
       <AnimateHeight
         height={open ? (isFullScreen && '100%') || 'auto' : 0}
-        className={isFullScreen && styles.fullScreenDrawer}
+        className={(isFullScreen && styles.fullScreenDrawer) || undefined}
       >
         {(!!open && <ComponentCompare key={`lane-compare-component-compare-${key}`} {...compareProps} />) || <></>}
       </AnimateHeight>

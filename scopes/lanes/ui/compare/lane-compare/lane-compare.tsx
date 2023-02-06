@@ -270,16 +270,18 @@ export function LaneCompare({
                   drawerProps={{
                     isOpen: open,
                     onToggle: () => handleDrawerToggle(compKey),
-                    name: <></>,
-                    nameElement: (
-                      <LaneCompareDrawerName
-                        compareId={compareId}
-                        baseId={baseId}
-                        open={open}
-                        fullScreen={!!fullScreenDrawerKey}
-                        onFullScreenClicked={onFullScreenClicked(compKey)}
-                      />
-                    ),
+                    name: <LaneCompareDrawerName compareId={compareId} baseId={baseId} open={open} />,
+                    Widgets: [
+                      <div
+                        key={'full-screen-icon'}
+                        className={styles.fullScreenIcon}
+                        onClick={onFullScreenClicked(compKey)}
+                      >
+                        <img
+                          src={`https://static.bit.dev/bit-icons/${fullScreenDrawerKey ? 'shrink' : 'enlarge'}.svg`}
+                        ></img>
+                      </div>,
+                    ],
                     className: classnames(styles.componentCompareDrawer, isFullScreen && styles.fullScreen),
                     contentClass: classnames(styles.componentCompareDrawerContent, isFullScreen && styles.fullScreen),
                   }}

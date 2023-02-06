@@ -38,6 +38,7 @@
     height: 100%;
     width: 100%;
     position: absolute;
+    box-sizing: border-box;
     top: 0;
     left: 0;
     background-color: var(--background-color);
@@ -66,9 +67,20 @@
 
 .changeTypeTitle {
   padding: 16px 0px;
-  // top: 0;
-  // position: sticky;
   background: var(--background-color, #121212);
-  // z-index: $nav-z-index;
   text-transform: capitalize;
+}
+
+.fullScreenIcon {
+  display: flex;
+  justify-content: flex-end;
+  height: 18px;
+  width: 18px;
+  align-items: center;
+
+  img {
+    display: flex;
+    height: 14px;
+    width: 14px;
+  }
 }

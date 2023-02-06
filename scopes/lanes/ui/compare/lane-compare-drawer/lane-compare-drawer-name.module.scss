@@ -50,6 +50,13 @@
   }
 }
 
+.fullScreenDrawer {
+  height: 100%;
+  > div:first-of-type {
+    height: 100%;
+  }
+}
+
 .fullScreen {
   display: flex;
   justify-content: flex-end;
@@ -61,12 +68,5 @@
     display: flex;
     height: 14px;
     width: 14px;
-  }
-}
-
-.fullScreenDrawer {
-  height: 100%;
-  > div:first-of-type {
-    height: 100%;
   }
 }
