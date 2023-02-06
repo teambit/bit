@@ -303,7 +303,12 @@ export async function tagModelComponent({
     await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer);
 
     if (workspace) {
-      stagedConfig = await updateComponentsVersions(workspace, allComponentsToTag);
+      const modelComponents = await Promise.all(
+        allComponentsToTag.map((c) => {
+          return c.modelComponent || legacyScope.getModelComponent(c.id);
+        })
+      );
+      stagedConfig = await updateComponentsVersions(workspace, modelComponents);
     }
   }
 
@@ -477,7 +482,7 @@ function addBuildStatus(components: Component[], buildStatus: BuildStatus) {
 
 export async function updateComponentsVersions(
   workspace: Workspace,
-  components: Array<ModelComponent | Component>,
+  components: Array<ModelComponent>,
   isTag = true
 ): Promise<StagedConfig> {
   const consumer = workspace.consumer;
@@ -496,13 +501,10 @@ export async function updateComponentsVersions(
     return modelComponent.hasHead();
   };
 
-  const updateVersions = async (unknownComponent: ModelComponent | Component) => {
-    const id: BitId =
-      unknownComponent instanceof ModelComponent
-        ? unknownComponent.toBitIdWithLatestVersionAllowNull()
-        : unknownComponent.id;
+  const updateVersions = async (modelComponent: ModelComponent) => {
+    const id: BitId = modelComponent.toBitIdWithLatestVersionAllowNull();
     consumer.bitMap.updateComponentId(id);
-    const availableOnMain = await isAvailableOnMain(unknownComponent, id);
+    const availableOnMain = await isAvailableOnMain(modelComponent, id);
     if (!availableOnMain) {
       consumer.bitMap.setComponentProp(id, 'onLanesOnly', true);
     }
@@ -513,6 +515,9 @@ export async function updateComponentsVersions(
       const config = componentMap.config;
       stagedConfig.addComponentConfig(compId, config);
       consumer.bitMap.removeConfig(id);
+      const hash = modelComponent.getRef(id.version as string);
+      if (!hash) throw new Error(`updateComponentsVersions: unable to find a hash for ${id.toString()}`);
+      workspace.scope.legacyScope.stagedSnaps.addSnap(hash?.toString());
     } else if (!componentMap.config) {
       componentMap.config = stagedConfig.getConfigPerId(compId);
     }
@@ -522,6 +527,7 @@ export async function updateComponentsVersions(
   // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
   // trying to get the dependencies of comp1 using its package.json.
   await mapSeries(components, updateVersions);
+  await workspace.scope.legacyScope.stagedSnaps.write();
 
   return stagedConfig;
 }
