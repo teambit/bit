@@ -267,3 +267,11 @@ export function installationErrorOutput(installationError?: Error) {
   const body = chalk.red(installationError.message);
   return `\n\n${title}\n${subTitle}\n${body}`;
 }
+
+export function compilationErrorOutput(compilationError?: Error) {
+  if (!compilationError) return '';
+  const title = chalk.underline('Compilation Error');
+  const subTitle = 'The following error had been caught from the compiler, please fix the issue and run "bit compile"';
+  const body = chalk.red(compilationError.message);
+  return `\n\n${title}\n${subTitle}\n${body}`;
+}
