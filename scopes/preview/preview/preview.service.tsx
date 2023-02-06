@@ -35,11 +35,17 @@ export class PreviewService implements EnvService<any> {
     if (!env?.preview) return undefined;
     const preview = env.preview()(envContext);
 
-    return {
+    const transformMap: PreviewTransformationMap = {
       getAdditionalHostDependencies: preview.getHostDependencies.bind(preview),
       getMounter: preview.getMounter.bind(preview),
       getDocsTemplate: preview.getDocsTemplate.bind(preview),
-      getPreviewConfig: preview.getPreviewConfig.bind(preview),
+      getPreviewConfig: preview.getPreviewConfig.bind(preview)
     };
+
+    if (preview.getTemplateBundler) {
+      transformMap.getTemplateBundler = (context) => preview.getTemplateBundler(context)(envContext);
+    }
+
+    return transformMap;
   }
 }
