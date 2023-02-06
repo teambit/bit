@@ -21,8 +21,11 @@ export class ComponentGraph extends Graph<Component, Dependency> {
 
   /**
    * @deprecate use graph.getGraphIds().findCycles()
+   * @ts-ignore
    */
+  // @ts-ignore
   findCycles(graph?: this): string[][] {
+    // @ts-ignore
     const cycles = super.findCycles(graph);
     if (!this.shouldLimitToSeedersOnly()) {
       return cycles;
@@ -45,6 +48,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
         notLatestVersions.forEach((version) => {
           const predecessors = this.predecessorsSubgraph(version);
           const immediatePredecessors = this.predecessors(version).map((predecessor) => predecessor.id);
+          // @ts-ignore
           const subGraph = this.buildFromCleargraph(predecessors);
           const versionSubgraph: VersionSubgraph = {
             versionId: version,
