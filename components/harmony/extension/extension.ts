@@ -119,7 +119,6 @@ export class Extension {
     const config = this.getConfig(context, extensionRuntime);
 
     if (!this.loaded) {
-      console.log('extensionRuntime.provider', extensionRuntime.provider);
       if (extensionRuntime.provider)
         this._instance = await extensionRuntime.provider(dependencies, config, registries, context);
       else {

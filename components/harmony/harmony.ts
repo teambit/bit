@@ -95,8 +95,6 @@ export class Harmony {
     // create an index of all vertices in dependency graph
     const deps = this.graph.getRuntimeDependencies(extension, runtime, this.depOptions);
     const instances = deps.map((ext) => ext.instance);
-    console.log('deps', deps.length, 'instances', instances);
-
     try {
       // eslint-disable-next-line consistent-return
       return extension.__run(instances, this, runtime);
@@ -145,7 +143,6 @@ export class Harmony {
 
     const executionOrder = this.graph.byExecutionOrder().map((e) => e.attr);
     await pMapSeries(executionOrder, async (ext: Extension) => {
-      console.log('! run ', ext.id);
       await this.runOne(ext, runtime);
     });
   }
