@@ -9,7 +9,6 @@ import { getSync } from './api/consumer/lib/global-config';
 const userHome = require('user-home');
 const packageFile = require('../package.json');
 
-
 export const IS_WINDOWS = os.platform() === 'win32';
 
 function getDirectory(): PathOsBased {
@@ -60,8 +59,6 @@ export const BIT_GIT_DIR = 'bit';
 
 export const DOT_GIT_DIR = '.git';
 
-
-
 export const BIT_USAGE = '[--version] [--help] <command> [<args>]';
 
 export const BITS_DIRNAME = 'components';
@@ -86,9 +83,24 @@ export const REPO_NAME = 'teambit/bit';
 
 export const DEFAULT_INDEX_NAME = 'index';
 
-export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass'];
+export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'cjs', 'mjs', 'mts', 'cts', 'css', 'scss', 'less', 'sass'];
 
-export const SUPPORTED_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx', '.css', '.scss', '.less', '.sass', '.vue', '.styl'];
+export const SUPPORTED_EXTENSIONS = [
+  '.js',
+  '.ts',
+  '.jsx',
+  '.tsx',
+  '.css',
+  '.scss',
+  '.less',
+  '.sass',
+  '.vue',
+  '.styl',
+  '.cjs',
+  '.mjs',
+  '.mts',
+  '.cts',
+];
 
 export const NO_PLUGIN_TYPE = 'none';
 
@@ -165,7 +177,7 @@ export const getCloudDomain = (): string => {
   if (resolvedCloudDomain) return resolvedCloudDomain;
   resolvedCloudDomain = getSync(CFG_CLOUD_DOMAIN_KEY) || DEFAULT_CLOUD_DOMAIN;
   return resolvedCloudDomain;
-} 
+};
 
 export const BASE_COMMUNITY_DOMAIN = 'bit.dev';
 
@@ -180,7 +192,7 @@ export const getSymphonyUrl = (): string => {
   if (resolvedSymphonyUrl) return resolvedSymphonyUrl;
   resolvedSymphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || `symphony.${getCloudDomain()}`;
   return resolvedSymphonyUrl;
-} 
+};
 
 export const SYMPHONY_GRAPHQL = `https://${getSymphonyUrl()}/graphql`;
 

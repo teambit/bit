@@ -82,6 +82,7 @@ export type ImportResult = {
   importDetails: ImportDetails[];
   cancellationMessage?: string;
   installationError?: Error;
+  compilationError?: Error;
 };
 
 export default class ImportComponents {
@@ -196,6 +197,7 @@ export default class ImportComponents {
       writtenComponents,
       importDetails,
       installationError: componentWriterResults?.installationError,
+      compilationError: componentWriterResults?.compilationError,
     };
   }
 
@@ -427,6 +429,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       writtenComponents,
       importDetails,
       installationError: componentWriterResults?.installationError,
+      compilationError: componentWriterResults?.compilationError,
     };
   }
 
