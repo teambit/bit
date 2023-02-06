@@ -172,7 +172,11 @@ precinct.paperwork = function (filename, options) {
         if (!options.ts) options.ts = {};
         options.ts.jsx = true;
         return 'ts';
+      case '.mts':
+      case '.cts':
+        return 'ts';
       case '.jsx':
+      case '.mjs':
         return 'es6';
       default:
         if (detectorHook.isSupported(ext)) {
