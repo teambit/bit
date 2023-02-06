@@ -172,6 +172,9 @@ export class ExportMain {
     // re-generate the package.json, this way, it has the correct data in the componentId prop.
     await linkToNodeModules(this.workspace, updatedIds, true);
     await this.removeFromStagedConfig(exported);
+    // ideally we should delete the staged-snaps only for the exported snaps. however, it's not easy, and it's ok to
+    // delete them all because this file is mainly an optimization for the import process.
+    await this.workspace.scope.legacyScope.stagedSnaps.deleteFile();
     Analytics.setExtraData('num_components', exported.length);
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
     // export and eject operations to function independently. we don't want to lose the changes to
