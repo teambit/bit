@@ -1,4 +1,5 @@
 import React, { HTMLAttributes } from 'react';
+import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { ComponentID } from '@teambit/component-id';
 import { CompareStatusResolver } from '@teambit/component.ui.component-compare.status-resolver';
 import { Tooltip } from '@teambit/design.ui.tooltip';
@@ -26,7 +27,7 @@ export function LaneCompareDrawerName({
   return (
     <div className={classnames(styles.drawerNameContainer, open && styles.open)}>
       <div className={styles.left}>
-        <div className={styles.compId}>{compareId?.toStringWithoutVersion()}</div>
+        <div className={classnames(styles.compId, ellipsis)}>{compareId?.toStringWithoutVersion()}</div>
         <div className={styles.status}>
           <CompareStatusResolver status={status} />
         </div>
