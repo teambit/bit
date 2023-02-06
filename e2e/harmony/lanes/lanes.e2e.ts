@@ -1306,4 +1306,39 @@ describe('bit lane command', function () {
       });
     });
   });
+  // lane-b was forked from lane-a.
+  // remotely, lane-b has snapA, and lane-a has snapA + snapX1 + snapX2.
+  // locally, lane-a was merged into lane-b, as a result, lane-b has snapA + snapX1 + snapX2.
+  // from lane-b perspective, snapX1 and snapX2 are staged. from the remote perspective, they both exist, so no need to
+  // export them.
+  describe('exporting a component on a lane when the staged snaps exist already on the remote (from another lane)', function () {
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild(); // snapA
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.command.export();
+      const laneAFirstSnap = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // snapX1
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // snapX2
+      helper.command.export();
+
+      // locally
+      helper.scopeHelper.getClonedLocalScope(laneAFirstSnap);
+      helper.command.mergeLane('lane-a'); // now lane-b has snapA + snapB + snapX1 (from lane-a) + snapX2 (the from lane-a)
+      helper.command.import();
+      // keep this to fetch from all lanes, because in the future, by default, only the current lane is fetched
+      helper.command.fetchAllLanes();
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('bit export should not throw', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+  });
 });
