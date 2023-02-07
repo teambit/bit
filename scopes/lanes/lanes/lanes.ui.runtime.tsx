@@ -216,7 +216,7 @@ export class LanesUI {
         order: 2,
         hide: () => {
           const { lanesModel } = useLanes();
-          return !lanesModel?.viewedLane;
+          return !lanesModel?.viewedLane || lanesModel?.lanes.length < 2;
         },
       },
     ]);
