@@ -65,7 +65,7 @@ export function LaneComparePage({ getLaneCompare, groupByScope, ...rest }: LaneC
           />
         </div>
       </div>
-      <div className={styles.bottom}> {LaneCompareComponent}</div>
+      {LaneCompareComponent}
     </div>
   );
 }
