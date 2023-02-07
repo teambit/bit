@@ -26,7 +26,7 @@ export class PackageJsonTransformer {
 
     const scopeId = component.id.scope;
     const { scope, owner } = parseScope(scopeId);
-    const name = component.id.name;
+    const name = component.id.fullName;
 
     const contextForReplace = {
       mainFile: component.state._consumer.mainFile,
