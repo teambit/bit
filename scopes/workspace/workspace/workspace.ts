@@ -65,7 +65,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
-import { linkToNodeModules } from '@teambit/workspace.modules.node-modules-linker';
+import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ComponentConfigFile } from './component-config-file';
 import {
@@ -1442,7 +1442,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     }
 
     if (missingPaths) {
-      await linkToNodeModules(this, bitIds);
+      await linkToNodeModulesByIds(this, bitIds);
     }
 
     const allDefs = aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
@@ -1555,7 +1555,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const resolved = await Promise.all(resolveP);
     // Make sure to link missing components
     if (missingPaths) {
-      await linkToNodeModules(this, bitIds);
+      await linkToNodeModulesByIds(this, bitIds);
     }
     return resolved;
   }

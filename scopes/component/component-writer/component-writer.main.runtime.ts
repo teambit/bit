@@ -3,7 +3,6 @@ import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
@@ -28,7 +27,7 @@ export interface ManyComponentsWriterParams {
   resetConfig?: boolean;
 }
 
-export type ComponentWriterResults = { installationError?: Error };
+export type ComponentWriterResults = { installationError?: Error; compilationError?: Error };
 
 export class ComponentWriterMain {
   constructor(
@@ -49,16 +48,18 @@ export class ComponentWriterMain {
     this.moveComponentsIfNeeded(opts);
     await this.persistComponentsData(opts);
     let installationError: Error | undefined;
+    let compilationError: Error | undefined;
     if (!opts.skipDependencyInstallation) {
       installationError = await this.installPackagesGracefully();
-      await this.compile(); // no point to compile if the installation is not running. the environment is not ready.
+      // no point to compile if the installation is not running. the environment is not ready.
+      compilationError = await this.compileGracefully();
     }
     await this.consumer.writeBitMap();
     this.logger.debug('writeMany, completed!');
-    return { installationError };
+    return { installationError, compilationError };
   }
 
-  private async installPackagesGracefully() {
+  private async installPackagesGracefully(): Promise<Error | undefined> {
     this.logger.debug('installPackagesGracefully, start installing packages');
     try {
       const installOpts = {
@@ -75,14 +76,14 @@ export class ComponentWriterMain {
       return err;
     }
   }
-  private async compile() {
+  private async compileGracefully(): Promise<Error | undefined> {
     try {
       await this.compiler.compileOnWorkspace();
+      return undefined;
     } catch (err: any) {
-      this.logger.error('compile, compiler found an error', err);
-      throw new BitError(`failed compiling the components. please run "bit compile" once the issue is fixed
-error from the compiler: ${err.message}.
-please use the '--log=error' flag for the full error.`);
+      this.logger.consoleFailure(`compilation failed with the following error: ${err.message}`);
+      this.logger.error('compileGracefully, compiler found an error', err);
+      return err;
     }
   }
   private async persistComponentsData(opts: ManyComponentsWriterParams) {
