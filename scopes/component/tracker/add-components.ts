@@ -36,7 +36,7 @@ import MissingMainFileMultipleComponents from '@teambit/legacy/dist/consumer/com
 import { ParentDirTracked } from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/parent-dir-tracked';
 import PathOutsideConsumer from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions/version-should-be-removed';
-import { linkToNodeModules } from '@teambit/workspace.modules.node-modules-linker';
+import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { Workspace } from '@teambit/workspace';
 import determineMainFile from './determine-main-file';
 
@@ -646,7 +646,7 @@ you can add the directory these files are located at and it'll change the root d
       // components in the next line, it gets into an infinite loop.
       return;
     }
-    await linkToNodeModules(this.workspace, ids);
+    await linkToNodeModulesByIds(this.workspace, ids);
   }
 
   async addMultipleComponents(componentPathsStats: PathsStats): Promise<void> {

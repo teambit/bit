@@ -9,6 +9,8 @@ import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.
 import { ComponentCompareAspectsContext } from '@teambit/component.ui.component-compare.compare-aspects.context';
 import { useCompareAspectsQuery } from '@teambit/component.ui.component-compare.compare-aspects.hooks.use-compare-aspects';
 import { CompareAspectView } from '@teambit/component.ui.component-compare.compare-aspects.compare-aspect-view';
+import { DarkTheme } from '@teambit/design.themes.dark-theme';
+import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
 
 import { Widget } from './compare-aspects.widgets';
 
@@ -29,41 +31,43 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
   const getHref = (node) => _useUpdatedUrlFromQuery({ aspect: node.id });
 
   return (
-    <ComponentCompareAspectsContext.Provider value={context}>
-      <SplitPane
-        layout={sidebarOpenness}
-        size="85%"
-        className={classNames(styles.componentCompareAspectContainer, className)}
-      >
-        <Pane className={styles.left}>
-          <CompareAspectView
-            name={selected}
-            baseAspectData={selectedBase}
-            compareAspectData={selectedCompare}
-            loading={loading}
-          />
-        </Pane>
-        <HoverSplitter className={styles.splitter}>
-          <Collapser
-            placement="left"
-            isOpen={isSidebarOpen}
-            onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
-            onClick={() => setSidebarOpenness((x) => !x)}
-            tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} aspects tree`}
-            className={styles.collapser}
-          />
-        </HoverSplitter>
-        <Pane className={classNames(styles.right, styles.dark)}>
-          <CodeCompareTree
-            fileTree={aspectNames}
-            currentFile={selected}
-            drawerName={'ASPECTS'}
-            widgets={[Widget]}
-            getHref={getHref}
-            onTreeNodeSelected={hook?.onClick}
-          />
-        </Pane>
-      </SplitPane>
-    </ComponentCompareAspectsContext.Provider>
+    <ThemeSwitcher themes={[DarkTheme]} className={classNames(styles.themeContainer, className)}>
+      <ComponentCompareAspectsContext.Provider value={context}>
+        <SplitPane
+          layout={sidebarOpenness}
+          size="85%"
+          className={classNames(styles.componentCompareAspectContainer, className)}
+        >
+          <Pane className={styles.left}>
+            <CompareAspectView
+              name={selected}
+              baseAspectData={selectedBase}
+              compareAspectData={selectedCompare}
+              loading={loading}
+            />
+          </Pane>
+          <HoverSplitter className={styles.splitter}>
+            <Collapser
+              placement="left"
+              isOpen={isSidebarOpen}
+              onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
+              onClick={() => setSidebarOpenness((x) => !x)}
+              tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} aspects tree`}
+              className={styles.collapser}
+            />
+          </HoverSplitter>
+          <Pane className={classNames(styles.right, styles.dark)}>
+            <CodeCompareTree
+              fileTree={aspectNames}
+              currentFile={selected}
+              drawerName={'ASPECTS'}
+              widgets={[Widget]}
+              getHref={getHref}
+              onTreeNodeSelected={hook?.onClick}
+            />
+          </Pane>
+        </SplitPane>
+      </ComponentCompareAspectsContext.Provider>
+    </ThemeSwitcher>
   );
 }

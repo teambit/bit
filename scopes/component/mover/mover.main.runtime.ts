@@ -7,7 +7,7 @@ import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { isDir } from '@teambit/legacy/dist/utils';
 import moveSync from '@teambit/legacy/dist/utils/fs/move-sync';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
-import { linkToNodeModules } from '@teambit/workspace.modules.node-modules-linker';
+import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { PathChangeResult } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
@@ -42,7 +42,7 @@ export class MoverMain {
     }
     if (!R.isEmpty(changes)) {
       const componentsIds = changes.map((c) => c.id);
-      await linkToNodeModules(this.workspace, componentsIds);
+      await linkToNodeModulesByIds(this.workspace, componentsIds);
     }
     await this.workspace.bitMap.write();
     return changes;

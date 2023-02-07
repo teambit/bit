@@ -13,14 +13,13 @@ export function LaneComparePage({ getLaneCompare, ...rest }: LaneComparePageProp
 
   if (!lanesModel) return null;
 
-  const base = lanesModel.lanes[0];
-  const compare = lanesModel.lanes[1];
+  const compare = lanesModel.getDefaultLane();
+  const base = lanesModel.getNonMainLanes()[0];
 
   const LaneCompareComponent = getLaneCompare({ base, compare });
 
   return (
     <div {...rest} className={styles.laneComparePage}>
-      <div className={styles.top}>{`Comparing Lane ${compare?.id.toString()} with ${base?.id.toString()}`}</div>
       {LaneCompareComponent}
     </div>
   );

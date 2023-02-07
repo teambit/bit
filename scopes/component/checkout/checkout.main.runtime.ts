@@ -172,6 +172,7 @@ export class CheckoutMain {
       newFromLane: newFromLane?.map((n) => n.toString()),
       newFromLaneAdded,
       installationError: componentWriterResults?.installationError,
+      compilationError: componentWriterResults?.compilationError,
     };
   }
 
