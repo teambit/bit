@@ -616,21 +616,23 @@ export class LanesMain {
     targetLaneId?: LaneId,
     options?: LaneDiffStatusOptions
   ): Promise<LaneDiffStatus> {
-    const sourceLane = await this.loadLane(sourceLaneId);
-    if (!sourceLane) throw new Error(`unable to find ${sourceLaneId.toString()} in the scope`);
+    const sourceLaneComponents = sourceLaneId.isDefault()
+      ? (await this.getLaneDataOfDefaultLane())?.components.map((main) => ({ id: main.id, head: Ref.from(main.head) }))
+      : (await this.loadLane(sourceLaneId))?.components;
+
     const targetLane = targetLaneId ? await this.loadLane(targetLaneId) : undefined;
     const targetLaneIds = targetLane?.toBitIds();
     const host = this.componentAspect.getHost();
     const diffProps = compact(
       await Promise.all(
-        sourceLane.components.map(async (comp) => {
-          const componentId = await host.resolveComponentId(comp.id);
-          const sourceVersionObj = (await this.scope.legacyScope.objects.load(comp.head)) as Version;
-          if (sourceVersionObj.isRemoved()) {
+        (sourceLaneComponents || []).map(async ({ id, head }) => {
+          const componentId = await host.resolveComponentId(id);
+          const sourceVersionObj = (await this.scope.legacyScope.objects.load(head)) as Version;
+          if (sourceVersionObj?.isRemoved()) {
             return null;
           }
           const headOnTargetLane = targetLaneIds
-            ? targetLaneIds.searchWithoutVersion(comp.id)?.version
+            ? targetLaneIds.searchWithoutVersion(id)?.version
             : await this.getHeadOnMain(componentId);
 
           if (headOnTargetLane) {
@@ -640,7 +642,7 @@ export class LanesMain {
             }
           }
 
-          const sourceHead = comp.head.toString();
+          const sourceHead = head.toString();
           const targetHead = headOnTargetLane;
 
           return { componentId, sourceHead, targetHead };

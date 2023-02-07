@@ -18,12 +18,15 @@ export function LaneComparePage({ getLaneCompare, groupByScope, ...rest }: LaneC
   const [base, setBase] = useState<LaneModel | undefined>();
   const defaultLane = lanesModel?.getDefaultLane();
   const compare = lanesModel?.viewedLane;
-
+  const nonMainLanes = lanesModel?.getNonMainLanes();
   useEffect(() => {
-    if (!base && defaultLane) {
+    if (!base && !compare?.id.isDefault() && defaultLane) {
       setBase(defaultLane);
     }
-  }, [defaultLane]);
+    if (!base && compare?.id.isDefault() && (nonMainLanes?.length ?? 0) > 0) {
+      setBase(nonMainLanes?.[0]);
+    }
+  }, [defaultLane, compare?.id.toString(), nonMainLanes?.length]);
 
   const LaneCompareComponent = useMemo(() => {
     return getLaneCompare({ base, compare });
@@ -31,14 +34,13 @@ export function LaneComparePage({ getLaneCompare, groupByScope, ...rest }: LaneC
 
   const lanes: Array<LaneId> = useMemo(() => {
     const mainLaneId = defaultLane?.id;
-    const nonMainLaneIds = lanesModel?.getNonMainLanes().map((lane) => lane.id) || [];
+    const nonMainLaneIds = nonMainLanes?.map((lane) => lane.id) || [];
     const allLanes = (mainLaneId && [mainLaneId, ...nonMainLaneIds]) || nonMainLaneIds;
     return allLanes.filter((l) => l.toString() !== compare?.id.toString());
-  }, [defaultLane?.id?.toString(), lanesModel?.lanes.length]);
+  }, [base?.id.toString(), compare?.id.toString(), lanesModel?.lanes.length]);
 
   if (!lanesModel) return null;
   if (!lanesModel.viewedLane) return null;
-  if (lanesModel.viewedLane?.id.isDefault()) return null;
   if (!base) return null;
 
   return (
@@ -46,7 +48,7 @@ export function LaneComparePage({ getLaneCompare, groupByScope, ...rest }: LaneC
       <div className={styles.top}>
         <div>Compare</div>
         <div className={styles.compareLane}>
-          <LaneIcon />
+          <LaneIcon className={styles.laneIcon} />
           {compare?.id.name}
         </div>
         <div>with</div>
