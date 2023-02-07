@@ -1,6 +1,6 @@
 export {
   NodeModulesLinksResult,
-  linkToNodeModules,
+  linkToNodeModulesByIds,
   linkToNodeModulesWithCodemod,
-  linkComponentToNodeModules,
+  linkToNodeModulesByComponents,
 } from './node-modules-linker';

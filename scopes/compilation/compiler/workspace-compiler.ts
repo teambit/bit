@@ -11,7 +11,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { AbstractVinyl, Dist } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import { linkComponentToNodeModules } from '@teambit/workspace.modules.node-modules-linker';
+import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -264,7 +264,7 @@ export class WorkspaceCompiler {
       { initiator: initiator || CompilationInitiator.ComponentChanged },
       true
     );
-    await linkComponentToNodeModules(component, this.workspace);
+    await linkToNodeModulesByComponents([component], this.workspace);
     return {
       results: buildResults,
       toString() {

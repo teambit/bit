@@ -267,11 +267,11 @@ export async function linkToNodeModulesWithCodemod(
   if (changeRelativeToModulePaths) {
     codemodResults = await changeCodeFromRelativeToModulePaths(workspace.consumer, bitIds);
   }
-  const linksResults = await linkToNodeModules(workspace, bitIds);
+  const linksResults = await linkToNodeModulesByIds(workspace, bitIds);
   return { linksResults, codemodResults };
 }
 
-export async function linkToNodeModules(
+export async function linkToNodeModulesByIds(
   workspace: Workspace,
   bitIds: BitId[],
   loadFromScope = false
@@ -290,7 +290,10 @@ export async function linkToNodeModules(
   return nodeModuleLinker.link();
 }
 
-export async function linkComponentToNodeModules(component: Component, workspace: Workspace) {
-  const nodeModuleLinker = new NodeModuleLinker([component.state._consumer], workspace.consumer);
+export async function linkToNodeModulesByComponents(components: Component[], workspace: Workspace) {
+  const nodeModuleLinker = new NodeModuleLinker(
+    components.map((c) => c.state._consumer),
+    workspace.consumer
+  );
   return nodeModuleLinker.link();
 }
