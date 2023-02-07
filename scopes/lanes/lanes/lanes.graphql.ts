@@ -13,6 +13,12 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         diffOutput: String
       }
 
+      type SnapDistance {
+        onSource: [String!]!
+        onTarget: [String!]!
+        common: String
+      }
+
       type FieldsDiff {
         fieldName: String!
         diffOutput: String
@@ -60,6 +66,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         """
         changes: [String!]
         upToDate: Boolean
+        snapsDistance: SnapDistance
       }
 
       type LaneDiffStatus {

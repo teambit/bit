@@ -52,6 +52,12 @@ import { LanesDeleteRoute } from './lanes.delete.route';
 
 export { Lane };
 
+export type SnapsDistanceObj = {
+  onSource: string[];
+  onTarget: string[];
+  common?: string;
+};
+
 export type LaneResults = {
   lanes: LaneData[];
   currentLane?: string | null;
@@ -82,6 +88,7 @@ export type LaneComponentDiffStatus = {
   changeType?: ChangeType;
   changes?: ChangeType[];
   upToDate?: boolean;
+  snapsDistance?: SnapsDistanceObj;
 };
 
 export type LaneDiffStatusOptions = {
@@ -695,7 +702,19 @@ export class LanesMain {
     const changes = !options?.skipChanges ? await getChanges() : undefined;
     const changeType = changes ? changes[0] : undefined;
 
-    return { componentId, changeType, changes, sourceHead, targetHead, upToDate: snapsDistance?.isUpToDate() };
+    return {
+      componentId,
+      changeType,
+      changes,
+      sourceHead,
+      targetHead,
+      upToDate: snapsDistance?.isUpToDate(),
+      snapsDistance: {
+        onSource: snapsDistance?.snapsOnSourceOnly.map((s) => s.hash) ?? [],
+        onTarget: snapsDistance?.snapsOnTargetOnly.map((s) => s.hash) ?? [],
+        common: snapsDistance?.commonSnapBeforeDiverge?.hash,
+      },
+    };
   }
 
   async addLaneReadme(readmeComponentIdStr: string, laneName?: string): Promise<{ result: boolean; message?: string }> {
