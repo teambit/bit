@@ -118,20 +118,29 @@ export function getPinoLoggerWithoutWorkers(
   });
 
   const prettyStream = prettifier({
-    ...(!jsonFormat ? prettyOptions : {}),
+    ...prettyOptions,
     destination: dest,
     sync: true,
   });
 
+  const fileStream = jsonFormat ? dest : prettyStream;
+
+  const destConsole = pino.destination({
+    sync: true, // no choice here :( otherwise, it looses data especially when an error is thrown (although pino.final is used to flush)
+  });
+
   const prettyConsoleStream = prettifier({
-    ...(!jsonFormat ? prettyOptionsConsole : {}),
+    ...prettyOptionsConsole,
     destination: 1,
     sync: true,
   });
 
-  const pinoLogger = pino(loggerOptions, prettyStream);
+  const consoleStream = jsonFormat ? destConsole : prettyConsoleStream;
 
-  const pinoLoggerConsole = pino(loggerOptions, prettyConsoleStream);
+
+  const pinoLogger = pino(loggerOptions, fileStream);
+
+  const pinoLoggerConsole = pino(loggerOptions, consoleStream);
 
   return { pinoLogger, pinoLoggerConsole };
 }
