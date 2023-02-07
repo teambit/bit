@@ -12,7 +12,7 @@ the setup process is more involving than expected because we write bit using bit
 - make sure you have `bit` installed via `bvm` (see [instructions](https://bit.dev/docs/quick-start/#install){:target="\_blank" rel="noopener"}), then run:
 
 ```bash
-  npm run full-setup:bit
+  npm run full-setup
 ```
 
 the script does the following:
