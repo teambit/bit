@@ -9,14 +9,32 @@ export type LaneGroupedMenuItemProps = {
   selected?: LaneId;
   current: LaneId[];
   scope: string;
+  getHref?: (laneId: LaneId) => string;
+  onLaneSelected?: (laneId: LaneId) => void;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function LaneGroupedMenuItem({ selected, current, className, scope, ...rest }: LaneGroupedMenuItemProps) {
+export function LaneGroupedMenuItem({
+  selected,
+  current,
+  className,
+  scope,
+  getHref,
+  onLaneSelected,
+  ...rest
+}: LaneGroupedMenuItemProps) {
   if (current.length === 0) return null;
 
-  if (current[0].isDefault()) {
+  if (current.length === 1 && current[0].isDefault()) {
     const defaultLane = current[0] as LaneId;
-    return <LaneMenuItem key={defaultLane.toString()} selected={selected} current={defaultLane} />;
+    return (
+      <LaneMenuItem
+        key={defaultLane.toString()}
+        onLaneSelected={onLaneSelected}
+        getHref={getHref}
+        selected={selected}
+        current={defaultLane}
+      />
+    );
   }
 
   const onClickStopPropagation = (e) => e.stopPropagation();
@@ -27,7 +45,13 @@ export function LaneGroupedMenuItem({ selected, current, className, scope, ...re
         {scope}
       </div>
       {current.map((lane) => (
-        <LaneMenuItem key={lane.toString()} selected={selected} current={lane} />
+        <LaneMenuItem
+          key={lane.toString()}
+          onLaneSelected={onLaneSelected}
+          getHref={getHref}
+          selected={selected}
+          current={lane}
+        />
       ))}
     </div>
   );
