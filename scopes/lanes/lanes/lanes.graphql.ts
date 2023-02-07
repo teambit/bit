@@ -67,6 +67,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         changes: [String!]
         upToDate: Boolean
         snapsDistance: SnapDistance
+        unrelated: Boolean
       }
 
       type LaneDiffStatus {

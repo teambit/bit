@@ -29,6 +29,7 @@ import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-w
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
+import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -89,11 +90,11 @@ export type LaneComponentDiffStatus = {
   changes?: ChangeType[];
   upToDate?: boolean;
   snapsDistance?: SnapsDistanceObj;
+  unrelated?: boolean;
 };
 
 export type LaneDiffStatusOptions = {
   skipChanges?: boolean;
-  skipUpToDate?: boolean;
 };
 
 export type LaneDiffStatus = {
@@ -423,7 +424,12 @@ export class LanesMain {
    * @param targetHead head on the target lane. leave empty if the target is main
    * @returns
    */
-  async getSnapsDistance(componentId: ComponentID, sourceHead?: string, targetHead?: string): Promise<SnapsDistance> {
+  async getSnapsDistance(
+    componentId: ComponentID,
+    sourceHead?: string,
+    targetHead?: string,
+    throws?: boolean
+  ): Promise<SnapsDistance> {
     if (!sourceHead && !targetHead)
       throw new Error(`getDivergeData got sourceHead and targetHead empty. at least one of them should be populated`);
     const modelComponent = await this.scope.legacyScope.getModelComponent(componentId._legacy);
@@ -432,6 +438,7 @@ export class LanesMain {
       repo: this.scope.legacyScope.objects,
       sourceHead: sourceHead ? Ref.from(sourceHead) : modelComponent.head || null,
       targetHead: targetHead ? Ref.from(targetHead) : modelComponent.head || null,
+      throws,
     });
   }
 
@@ -666,16 +673,29 @@ export class LanesMain {
     sourceHead: string,
     targetHead?: string,
     options?: LaneDiffStatusOptions
-  ) {
-    const snapsDistance = !options?.skipUpToDate
-      ? await this.getSnapsDistance(componentId, sourceHead, targetHead)
-      : undefined;
+  ): Promise<LaneComponentDiffStatus> {
+    const snapsDistance = await this.getSnapsDistance(componentId, sourceHead, targetHead, false);
+
+    if (snapsDistance?.err) {
+      const noCommonSnap = snapsDistance.err instanceof NoCommonSnap;
+
+      return {
+        componentId,
+        sourceHead,
+        targetHead,
+        upToDate: snapsDistance?.isUpToDate(),
+        unrelated: noCommonSnap || undefined,
+        changes: [],
+      };
+    }
+
+    const commonSnap = snapsDistance?.commonSnapBeforeDiverge;
 
     const getChanges = async (): Promise<ChangeType[]> => {
-      if (!targetHead) return [ChangeType.NEW];
+      if (!commonSnap) return [ChangeType.NEW];
 
       const compare = await this.componentCompare.compare(
-        componentId.changeVersion(targetHead).toString(),
+        componentId.changeVersion(commonSnap.hash).toString(),
         componentId.changeVersion(sourceHead).toString()
       );
 
@@ -709,7 +729,7 @@ export class LanesMain {
       changeType,
       changes,
       sourceHead,
-      targetHead,
+      targetHead: commonSnap?.hash,
       upToDate: snapsDistance?.isUpToDate(),
       snapsDistance: {
         onSource: snapsDistance?.snapsOnSourceOnly.map((s) => s.hash) ?? [],
