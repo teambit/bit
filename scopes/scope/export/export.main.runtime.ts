@@ -36,7 +36,7 @@ import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
-import { linkToNodeModules } from '@teambit/workspace.modules.node-modules-linker';
+import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import {
   persistRemotes,
@@ -170,7 +170,7 @@ export class ExportMain {
     const removedIds = await this.getRemovedStagedBitIds();
     const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
     // re-generate the package.json, this way, it has the correct data in the componentId prop.
-    await linkToNodeModules(this.workspace, updatedIds, true);
+    await linkToNodeModulesByIds(this.workspace, updatedIds, true);
     await this.removeFromStagedConfig(exported);
     // ideally we should delete the staged-snaps only for the exported snaps. however, it's not easy, and it's ok to
     // delete them all because this file is mainly an optimization for the import process.
