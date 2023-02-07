@@ -3,7 +3,6 @@
   flex-direction: column;
   height: 100%;
   width: 100%;
-  // overflow: scroll;
 }
 .top {
   display: flex;
@@ -15,6 +14,11 @@
   > div {
     display: flex;
   }
+}
+
+.bottom {
+  display: flex;
+  overflow: scroll;
 }
 
 .compareLane {
