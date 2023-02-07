@@ -186,10 +186,10 @@ commands: # reusable commands
       - run: bvm config set RELEASE_TYPE nightly
   set_bit_cloud_registry:
     steps:
-      - run: 
+      - run:
           name: set bit cloud registry in npm config
           command: npm config set @teambit:registry=https://node.bit.cloud
-      
+
   set_git_credentials:
     steps:
       - run:
@@ -786,8 +786,8 @@ jobs:
       - run:
           name: tag persist
           # command: cd bit && bit tag --ignore-newest-version
-          # command: cd bit && bit tag --increment-by 2
-          command: cd bit && bit tag
+          command: cd bit && bit tag --increment-by 2
+          # command: cd bit && bit tag
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
@@ -839,12 +839,33 @@ jobs:
           name: Upload tar file
           command: ./jfrog rt u "bit-${BIT_VERSION}.tar.gz" bvm/dev/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz --flat=false
 
+  get_linux_arm64_packages:
+    <<: *defaults
+    resource_class: small
+    steps:
+      - run: mkdir esbuild-linux-arm64
+      # in order to bring new version of esbuild, you need to install it on linux arm64 machine, tar it, and upload to the bucket
+      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
+      - run: cd esbuild-linux-arm64 && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-linux-arm64.tar.gz
+
+      # - save_cache:
+      #     key: esbuild-0.14.29-linux-arm64-v1
+      #     paths:
+      #       - esbuild-linux-arm64/esbuild-0.14.29-linux-arm64.tar.gz
+      - persist_to_workspace:
+          root: .
+          paths:
+            - esbuild-linux-arm64
+
   bundle_version_linux:
     <<: *defaults
     environment:
       # do not download chromium when installing puppeteer
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
     steps:
+      - attach_workspace:
+            at: ./
+      - run: cd esbuild-linux-arm64 && tar -xvf esbuild-0.14.29-linux-arm64.tar.gz
       - set_bit_cloud_registry
       - run:
           name: print bit version
@@ -870,30 +891,47 @@ jobs:
       - run:
           name: move to linux folder
           command: mv bit-${BIT_VERSION}.tar.gz linux/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: create linux-arm64
+          command: mkdir linux-arm64
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-linux-arm64
+      - run: cp -r esbuild-linux-arm64/node_modules/* bit-${BIT_VERSION}/node_modules
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/nan
+      - run:
+          name: compress bit arm64
+          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: move to linux-arm64 folder
+          command: mv bit-${BIT_VERSION}.tar.gz linux-arm64/bit-${BIT_VERSION}.tar.gz
+
       - persist_to_workspace:
           root: .
           paths:
             - linux
+            - linux-arm64
       - store_artifacts:
           path: linux
+      - store_artifacts:
+          path: linux-arm64
 
-  get_arm64_packages:
+  get_darwin_arm64_packages:
     <<: *defaults
     resource_class: small
     steps:
-      - run: mkdir esbuild-arm
+      - run: mkdir esbuild-darwin-arm64
       # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
       # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
-      - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
+      - run: cd esbuild-darwin-arm64 && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
 
       # - save_cache:
       #     key: esbuild-0.14.29-darwin-arm64-v1
       #     paths:
-      #       - esbuild-arm/esbuild-0.14.29-darwin-arm64.tar.gz
+      #       - esbuild-darwin-arm64/esbuild-0.14.29-darwin-arm64.tar.gz
       - persist_to_workspace:
           root: .
           paths:
-            - esbuild-arm
+            - esbuild-darwin-arm64
 
   bundle_version_macos:
     <<: *mac_defaults
@@ -909,10 +947,10 @@ jobs:
       - run: npm install --global yarn --force
       - run: yarn cache clean
       - run: yarn -v
-      # - run: mkdir esbuild-arm
+      # - run: mkdir esbuild-darwin-arm64
       # - restore_cache:
       #     key: esbuild-0.14.29-darwin-arm64-v1
-      - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
+      - run: cd esbuild-darwin-arm64 && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
       - set_bit_cloud_registry
       - run:
           name: print bit version
@@ -942,8 +980,8 @@ jobs:
           name: create macos-arm64
           command: mkdir macos-arm64
       - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-darwin-64
-      - run: cp -r esbuild-arm/node_modules/* bit-${BIT_VERSION}/node_modules
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-darwin-arm64
+      - run: cp -r esbuild-darwin-arm64/node_modules/* bit-${BIT_VERSION}/node_modules
       - run: rm -rf bit-${BIT_VERSION}/node_modules/nan
       - run:
           name: compress bit arm64
@@ -1051,6 +1089,9 @@ jobs:
       - run:
           name: Upload tar file (Linux)
           command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.tar.gz && mv linux/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-linux-x64.tar.gz && sha256sum bit-${BIT_VERSION}-linux-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.checksum.txt
+      - run:
+          name: Upload tar file (Linux-arm64)
+          command: gsutil cp linux-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-arm64.tar.gz && mv linux-arm64/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-linux-arm64.tar.gz && sha256sum bit-${BIT_VERSION}-linux-arm64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-arm64.checksum.txt
       - run:
           name: Upload tar file (Windows)
           command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-win-x64.tar.gz && mv windows/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-win-x64.tar.gz && sha256sum bit-${BIT_VERSION}-win-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-win-x64.checksum.txt
@@ -1756,7 +1797,8 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_npm_registries
-      - get_arm64_packages
+      - get_darwin_arm64_packages
+      - get_linux_arm64_packages
       - setup_harmony:
           requires:
             - set_npm_registries
@@ -1769,6 +1811,7 @@ workflows:
           <<: *master_only_filter
           requires:
             - bit_tag
+            - get_linux_arm64_packages
       - bundle_version_windows:
           <<: *master_only_filter
           requires:
@@ -1777,7 +1820,7 @@ workflows:
           <<: *master_only_filter
           requires:
             - bit_tag
-            - get_arm64_packages
+            - get_darwin_arm64_packages
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
@@ -1874,7 +1917,11 @@ workflows:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
-      - get_arm64_packages:
+      - get_linux_arm64_packages:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+      - get_darwin_arm64_packages:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
@@ -1902,6 +1949,7 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
+            - get_linux_arm64_packages
       - bundle_version_windows:
           <<: *master_only_filter
           requires:
@@ -1912,7 +1960,7 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
-            - get_arm64_packages
+            - get_darwin_arm64_packages
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
@@ -1982,7 +2030,7 @@ workflows:
   # uncomment to update esbuild arm64 cache
   # get_arm64_workflow_packages:
   #   jobs:
-  #     - get_arm64_packages:
+  #     - get_darwin_arm64_packages:
   #         filters:
   #           branches:
   #             only: circle-esbuild-cache
@@ -1993,15 +2041,21 @@ workflows:
   #         filters:
   #           branches:
   #             only: fix-circle-cache
+  #     - get_linux_arm64_packages:
+  #         filters:
+  #           branches:
+  #             only: fix-circle-cache
   #     - bundle_version_linux:
   #         filters:
   #           branches:
   #             only: fix-circle-cache
+  #         requires:
+  #           - get_linux_arm64_packages
   #     - bundle_version_windows:
   #         filters:
   #           branches:
   #             only: fix-circle-cache
-  #     - get_arm64_packages:
+  #     - get_darwin_arm64_packages:
   #         filters:
   #           branches:
   #             only: fix-circle-cache
@@ -2010,7 +2064,7 @@ workflows:
   #           branches:
   #             only: fix-circle-cache
   #         requires:
-  #           - get_arm64_packages
+  #           - get_darwin_arm64_packages
   #     - harmony_publish_to_gcloud:
   #         filters:
   #           branches:

@@ -46,6 +46,7 @@ export const QUERY_LANE_DIFF_STATUS = gql`
           targetHead
           changes
           upToDate
+          unrelated
         }
       }
     }
@@ -80,6 +81,7 @@ export const useLaneDiffStatus: UseLaneDiffStatus = ({ baseId, compareId, option
     targetLane: LaneId.from(data.lanes.diffStatus.target.name, data.lanes.diffStatus.target.scope).toString(),
     diff: data.lanes.diffStatus.componentsStatus.map((c) => ({
       ...c,
+      changes: c.changes || [],
       componentId: ComponentID.fromObject(c.componentId).toString(),
     })),
   };

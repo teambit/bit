@@ -31,7 +31,7 @@ import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { VariantsMain } from '@teambit/variants';
-import { link } from '@teambit/legacy/dist/api/consumer';
+// import { link } from '@teambit/legacy/dist/api/consumer';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId, InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
@@ -65,6 +65,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
+import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ComponentConfigFile } from './component-config-file';
 import {
@@ -1390,7 +1391,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     let missingPaths = false;
-    const stringIds: string[] = [];
+    const bitIds: BitId[] = [];
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const userAspectsIds: string[] = difference(idsToResolve, coreAspectsIds);
@@ -1399,7 +1400,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const wsComponents = await this.getMany(workspaceIds);
     const aspectDefs = await this.aspectLoader.resolveAspects(wsComponents, async (component) => {
       const compStringId = component.id._legacy.toString();
-      stringIds.push(compStringId);
+      bitIds.push(component.id._legacy);
       const localPath = this.getComponentPackagePath(component);
       const isExist = await fs.pathExists(localPath);
       if (!isExist) {
@@ -1441,7 +1442,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     }
 
     if (missingPaths) {
-      await link(stringIds, false);
+      await linkToNodeModulesByIds(this, bitIds);
     }
 
     const allDefs = aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
@@ -1526,9 +1527,9 @@ needed-for: ${neededFor || '<unknown>'}`);
 
   async requireComponents(components: Component[]): Promise<RequireableComponent[]> {
     let missingPaths = false;
-    const stringIds: string[] = [];
+    const bitIds: BitId[] = [];
     const resolveP = components.map(async (component) => {
-      stringIds.push(component.id._legacy.toString());
+      bitIds.push(component.id._legacy);
       const localPath = this.getComponentPackagePath(component);
       const isExist = await fs.pathExists(localPath);
       if (!isExist) {
@@ -1554,7 +1555,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const resolved = await Promise.all(resolveP);
     // Make sure to link missing components
     if (missingPaths) {
-      await link(stringIds, false);
+      await linkToNodeModulesByIds(this, bitIds);
     }
     return resolved;
   }

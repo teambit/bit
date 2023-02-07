@@ -29,7 +29,7 @@ export class TrackerMain {
   async track(trackData: TrackData): Promise<TrackResult> {
     const defaultScope = trackData.defaultScope ? await this.addOwnerToScopeName(trackData.defaultScope) : undefined;
     const addComponent = new AddComponents(
-      { consumer: this.workspace.consumer },
+      { workspace: this.workspace },
       {
         componentPaths: [trackData.rootDir],
         id: trackData.componentName,
@@ -48,7 +48,7 @@ export class TrackerMain {
 
   async addForCLI(addProps: AddProps): Promise<AddActionResults> {
     if (!this.workspace) throw new OutsideWorkspaceError();
-    const addContext: AddContext = { consumer: this.workspace.consumer };
+    const addContext: AddContext = { workspace: this.workspace };
     addProps.shouldHandleOutOfSync = true;
     const addComponents = new AddComponents(addContext, addProps);
     const addResults = await addComponents.add();

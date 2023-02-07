@@ -360,9 +360,9 @@ describe('merge lanes', function () {
       helper.scopeHelper.getClonedLocalScope(workspaceOnLane);
       helper.command.import();
     });
-    it('bit import should bring the latest main objects', () => {
+    it('bit import should not bring the latest main objects', () => {
       const head = helper.command.getHead(`${helper.scopes.remote}/comp2`);
-      expect(head).to.equal(comp2HeadOnMain);
+      expect(head).to.not.equal(comp2HeadOnMain);
     });
     it('bit status should indicate that the main is ahead', () => {
       const status = helper.command.status('--lanes');
@@ -376,9 +376,9 @@ describe('merge lanes', function () {
         status = helper.command.statusJson();
         afterMergeToMain = helper.scopeHelper.cloneLocalScope();
       });
-      it('bit status should show one staging versions, the merge-snap', () => {
+      it('bit status should show two staging versions, the merge-snap and the one of the original lane because it is new to this lane', () => {
         const stagedVersions = status.stagedComponents.find((c) => c.id === `${helper.scopes.remote}/comp2`);
-        expect(stagedVersions.versions).to.have.lengthOf(1);
+        expect(stagedVersions.versions).to.have.lengthOf(2);
         expect(stagedVersions.versions).to.include(helper.command.getHeadOfLane('dev', 'comp2'));
       });
       it('bit status should not show the components in pending-merge', () => {

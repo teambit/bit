@@ -97,14 +97,16 @@ export class LaneSwitcher {
       verbose: this.checkoutProps.verbose,
       writeConfig: this.checkoutProps.writeConfig,
     };
-    const { installationError } = await this.Lanes.componentWriter.writeMany(manyComponentsWriterOpts);
+    const { installationError, compilationError } = await this.Lanes.componentWriter.writeMany(
+      manyComponentsWriterOpts
+    );
     await deleteFilesIfNeeded(componentsResults, this.consumer);
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
     await this.consumer.onDestroy();
 
-    return { components: appliedVersionComponents, failedComponents, installationError };
+    return { components: appliedVersionComponents, failedComponents, installationError, compilationError };
   }
 
   private async populateSwitchProps() {

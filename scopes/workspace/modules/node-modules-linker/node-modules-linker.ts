@@ -3,25 +3,30 @@ import glob from 'glob';
 import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
-import { BitId } from '../bit-id';
-import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '../constants';
-import BitMap from '../consumer/bit-map/bit-map';
-import ComponentMap from '../consumer/bit-map/component-map';
-import ComponentsList from '../consumer/component/components-list';
-import Component from '../consumer/component/consumer-component';
-import PackageJsonFile from '../consumer/component/package-json-file';
-import { PackageJsonTransformer } from '../consumer/component/package-json-transformer';
-import DataToPersist from '../consumer/component/sources/data-to-persist';
-import RemovePath from '../consumer/component/sources/remove-path';
-import Consumer from '../consumer/consumer';
-import logger from '../logger/logger';
-import { first } from '../utils';
-import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
-import { PathOsBasedRelative } from '../utils/path';
-import Symlink from './symlink';
+import { BitId } from '@teambit/legacy-bit-id';
+import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy/dist/constants';
+import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
+import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { first } from '@teambit/legacy/dist/utils';
+import getNodeModulesPathOfComponent from '@teambit/legacy/dist/utils/bit/component-node-modules-path';
+import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { changeCodeFromRelativeToModulePaths } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
+import Symlink from '@teambit/legacy/dist/links/symlink';
+import { Workspace } from '@teambit/workspace';
+import { snapToSemver } from '@teambit/component-package-version';
+import { Component } from '@teambit/component';
 
 type LinkDetail = { from: string; to: string };
-export type LinksResult = {
+export type NodeModulesLinksResult = {
   id: BitId;
   bound: LinkDetail[];
 };
@@ -31,17 +36,17 @@ export type LinksResult = {
  * for example, require('@bit/remote-scope.bar.foo)
  */
 export default class NodeModuleLinker {
-  components: Component[];
-  consumer: Consumer | null | undefined;
+  components: ConsumerComponent[];
+  consumer: Consumer;
   bitMap: BitMap; // preparation for the capsule, which is going to have only BitMap with no Consumer
   dataToPersist: DataToPersist;
-  constructor(components: Component[], consumer: Consumer | null | undefined, bitMap: BitMap) {
+  constructor(components: ConsumerComponent[], consumer: Consumer) {
     this.components = ComponentsList.getUniqueComponents(components);
     this.consumer = consumer;
-    this.bitMap = bitMap;
+    this.bitMap = consumer.bitMap;
     this.dataToPersist = new DataToPersist();
   }
-  async link(): Promise<LinksResult[]> {
+  async link(): Promise<NodeModulesLinksResult[]> {
     const links = await this.getLinks();
     const linksResults = this.getLinksResults();
     if (this.consumer) links.addBasePath(this.consumer.getPath());
@@ -62,8 +67,8 @@ export default class NodeModuleLinker {
 
     return this.dataToPersist;
   }
-  getLinksResults(): LinksResult[] {
-    const linksResults: LinksResult[] = [];
+  getLinksResults(): NodeModulesLinksResult[] {
+    const linksResults: NodeModulesLinksResult[] = [];
     const getExistingLinkResult = (id) => linksResults.find((linkResult) => linkResult.id.isEqual(id));
     const addLinkResult = (id: BitId | null | undefined, from: string, to: string) => {
       if (!id) return;
@@ -86,7 +91,7 @@ export default class NodeModuleLinker {
     return linksResults;
   }
 
-  _getDefaultScope(component?: Component): string | undefined | null {
+  _getDefaultScope(component?: ConsumerComponent): string | undefined | null {
     if (component) {
       return component.defaultScope;
     }
@@ -99,7 +104,7 @@ export default class NodeModuleLinker {
    * node expects the module inside node_modules to have either package.json with valid "main"
    * property or an index.js file. this main property can't be relative.
    */
-  async _populateComponentsLinks(component: Component): Promise<void> {
+  async _populateComponentsLinks(component: ConsumerComponent): Promise<void> {
     const componentId = component.id;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
       bindingPrefix: component.bindingPrefix,
@@ -117,7 +122,7 @@ export default class NodeModuleLinker {
   /**
    * symlink the entire source directory into "src" in node-modules.
    */
-  private symlinkComponentDir(component: Component, linkPath: PathOsBasedRelative) {
+  private symlinkComponentDir(component: ConsumerComponent, linkPath: PathOsBasedRelative) {
     const componentMap = component.componentMap as ComponentMap;
 
     const filesToBind = componentMap.getAllFilesPaths();
@@ -161,7 +166,7 @@ export default class NodeModuleLinker {
    * When the dists is outside the components directory, it doesn't have access to the node_modules of the component's
    * root-dir. The solution is to go through the node_modules packages one by one and symlink them.
    */
-  _getSymlinkPackages(from: string, to: string, component: Component): Symlink[] {
+  _getSymlinkPackages(from: string, to: string, component: ConsumerComponent): Symlink[] {
     if (!this.consumer) throw new Error('getSymlinkPackages expects the Consumer to be defined');
     const dependenciesSavedAsComponents = component.dependenciesSavedAsComponents;
     const fromNodeModules = path.join(from, 'node_modules');
@@ -192,7 +197,7 @@ export default class NodeModuleLinker {
     bitId: BitId,
     rootDir: PathOsBasedRelative,
     bindingPrefix: string,
-    component: Component
+    component: ConsumerComponent
   ): Symlink {
     const relativeDestPath = getNodeModulesPathOfComponent({
       ...component,
@@ -212,7 +217,7 @@ export default class NodeModuleLinker {
    * Since an authored component doesn't have rootDir, it's impossible to symlink to the component directory.
    * It makes it easier for Author to use absolute syntax between their own components.
    */
-  private async createPackageJson(component: Component) {
+  private async createPackageJson(component: ConsumerComponent) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const hasPackageJsonAsComponentFile = component.files.some((file) => file.relative === PACKAGE_JSON);
     if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
@@ -233,21 +238,62 @@ export default class NodeModuleLinker {
     }
     if (packageJson.packageJsonObject.version === 'latest') {
       packageJson.packageJsonObject.version = '0.0.1-new';
+    } else {
+      packageJson.packageJsonObject.version = snapToSemver(packageJson.packageJsonObject.version);
     }
-
     // packageJson.mergePropsFromExtensions(component);
     // TODO: we need to have an hook here to get the transformer from the pkg extension
 
-    // delete the version, otherwise, we have to maintains it. such as, when tagging, it should be
-    // changed to the new tagged version.
-    delete packageJson.packageJsonObject.version;
+    // don't delete the "version" prop, because in some scenarios, it's needed for the component to work properly.
+    // an example is when developing a vscode extension, vscode expects to have a valid package.json during the development.
+
     this.dataToPersist.addFile(packageJson.toVinylFile());
   }
 
   /**
    * these are changes made by aspects
    */
-  async _applyTransformers(component: Component, packageJson: PackageJsonFile) {
+  async _applyTransformers(component: ConsumerComponent, packageJson: PackageJsonFile) {
     return PackageJsonTransformer.applyTransformers(component, packageJson);
   }
+}
+
+export async function linkToNodeModulesWithCodemod(
+  workspace: Workspace,
+  bitIds: BitId[],
+  changeRelativeToModulePaths: boolean
+) {
+  let codemodResults;
+  if (changeRelativeToModulePaths) {
+    codemodResults = await changeCodeFromRelativeToModulePaths(workspace.consumer, bitIds);
+  }
+  const linksResults = await linkToNodeModulesByIds(workspace, bitIds);
+  return { linksResults, codemodResults };
+}
+
+export async function linkToNodeModulesByIds(
+  workspace: Workspace,
+  bitIds: BitId[],
+  loadFromScope = false
+): Promise<NodeModulesLinksResult[]> {
+  const componentsIds = BitIds.fromArray(bitIds);
+  if (!componentsIds.length) return [];
+  const getComponents = async () => {
+    if (loadFromScope) {
+      return Promise.all(componentsIds.map((id) => workspace.consumer.loadComponentFromModel(id)));
+    }
+    const { components } = await workspace.consumer.loadComponents(componentsIds);
+    return components;
+  };
+  const components = await getComponents();
+  const nodeModuleLinker = new NodeModuleLinker(components, workspace.consumer);
+  return nodeModuleLinker.link();
+}
+
+export async function linkToNodeModulesByComponents(components: Component[], workspace: Workspace) {
+  const nodeModuleLinker = new NodeModuleLinker(
+    components.map((c) => c.state._consumer),
+    workspace.consumer
+  );
+  return nodeModuleLinker.link();
 }
