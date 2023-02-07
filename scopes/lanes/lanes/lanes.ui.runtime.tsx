@@ -1,6 +1,5 @@
 import React, { ReactNode } from 'react';
 import { Route, RouteProps } from 'react-router-dom';
-import { flatten } from 'lodash';
 import { Slot, Harmony, SlotRegistry } from '@teambit/harmony';
 import { LaneCompare, LaneCompareProps as DefaultLaneCompareProps } from '@teambit/lanes.ui.compare.lane-compare';
 import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
@@ -23,7 +22,6 @@ import { LanesProvider, useLanes, IgnoreDerivingFromUrl } from '@teambit/lanes.h
 import { LaneSwitcher } from '@teambit/lanes.ui.navigation.lane-switcher';
 import { LaneId } from '@teambit/lane-id';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
-import { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
 import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
 
@@ -275,28 +273,7 @@ export class LanesUI {
   }
 
   getLaneCompare = (props: LaneCompareProps) => {
-    const routes = this.componentCompareUI.routes;
-    const navLinks = this.componentCompareUI.navLinks;
-
-    const getElement = (routeProps: RouteProps[], href?: string) => {
-      if (routeProps.length === 1) return routeProps[0].element;
-      if (!href) return undefined;
-      return routeProps.find((route) => route.path?.startsWith(href))?.element;
-    };
-
-    const tabs: TabItem[] = flatten(
-      Array.from(navLinks.entries()).map(([id, navProps]) => {
-        const maybeRoutesForId = routes.get(id);
-        const routesForId =
-          (maybeRoutesForId && (Array.isArray(maybeRoutesForId) ? [...maybeRoutesForId] : [maybeRoutesForId])) || [];
-
-        return navProps.map((navProp) => ({
-          ...navProp,
-          id: `${id}-${navProp?.id}`,
-          element: getElement(routesForId, navProp?.props?.href),
-        }));
-      })
-    );
+    const tabs = this.componentCompareUI.tabs;
 
     if (!props.base || !props.compare) return null;
 

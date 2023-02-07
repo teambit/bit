@@ -1,5 +1,5 @@
 import prettifier from 'pino-pretty';
-import type {PrettyOptions} from 'pino-pretty';
+import type { PrettyOptions } from 'pino-pretty';
 import pino, { Logger as PinoLogger, LoggerOptions } from 'pino';
 import { DEBUG_LOG } from '../constants';
 
@@ -91,11 +91,11 @@ export function getPinoLoggerWithWorkers(
 
   const pinoConsoleOpts = {
     ...loggerOptions,
-    transport: transportConsole
+    transport: transportConsole,
     // transport: jsonFormat
-      // ? { targets: [{...transportFile, level: logLevel}, {...transportConsole, level: logLevel}] }
-      // ? { targets: [transportFile, transportConsole] }
-      // : transportConsole,
+    // ? { targets: [{...transportFile, level: logLevel}, {...transportConsole, level: logLevel}] }
+    // ? { targets: [transportFile, transportConsole] }
+    // : transportConsole,
   };
 
   const pinoLogger = pino(pinoFileOpts);
@@ -103,8 +103,6 @@ export function getPinoLoggerWithWorkers(
 
   return { pinoLogger, pinoLoggerConsole };
 }
-
-
 
 export function getPinoLoggerWithoutWorkers(
   jsonFormat: string,
@@ -118,20 +116,28 @@ export function getPinoLoggerWithoutWorkers(
   });
 
   const prettyStream = prettifier({
-    ...(!jsonFormat ? prettyOptions : {}),
+    ...prettyOptions,
     destination: dest,
     sync: true,
   });
 
+  const fileStream = jsonFormat ? dest : prettyStream;
+
+  const destConsole = pino.destination({
+    sync: true, // no choice here :( otherwise, it looses data especially when an error is thrown (although pino.final is used to flush)
+  });
+
   const prettyConsoleStream = prettifier({
-    ...(!jsonFormat ? prettyOptionsConsole : {}),
+    ...prettyOptionsConsole,
     destination: 1,
     sync: true,
   });
 
-  const pinoLogger = pino(loggerOptions, prettyStream);
+  const consoleStream = jsonFormat ? destConsole : prettyConsoleStream;
 
-  const pinoLoggerConsole = pino(loggerOptions, prettyConsoleStream);
+  const pinoLogger = pino(loggerOptions, fileStream);
+
+  const pinoLoggerConsole = pino(loggerOptions, consoleStream);
 
   return { pinoLogger, pinoLoggerConsole };
 }
