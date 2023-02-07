@@ -80,7 +80,7 @@ export class LanesUI {
             <Route path={LanesModel.lanePath}>
               <Route index element={this.getLaneOverview()} />
               <Route path="~component/*" element={this.getLaneComponent()} />
-              {/* <Route path="~compare/*" element={this.getLanesComparePage()} /> */}
+              <Route path="~compare/*" element={this.getLanesComparePage()} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
@@ -211,10 +211,13 @@ export class LanesUI {
       {
         props: {
           href: '~compare',
-          children: 'Lane Compare',
+          children: 'Compare',
         },
         order: 2,
-        hide: () => true,
+        hide: () => {
+          const { lanesModel } = useLanes();
+          return !lanesModel?.viewedLane || lanesModel.viewedLane.id.isDefault();
+        },
       },
     ]);
   }

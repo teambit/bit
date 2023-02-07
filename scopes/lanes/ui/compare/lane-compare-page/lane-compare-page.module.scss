@@ -8,4 +8,29 @@
 .top {
   display: flex;
   padding: 32px;
+  align-items: center;
+  width: 60%;
+
+  > div {
+    display: flex;
+  }
+}
+
+.compareLane {
+  padding: 8px;
+  background: var(--surface-neutral-focus-color);
+  border-radius: 6px;
+  margin: 0px 2px;
+  width: fit-content;
+}
+
+.baseSelectorContainer {
+  padding: 0px 4px;
+  flex: 2;
+  width: 100%;
+  min-width: 100px;
+  max-width: 200px;
+  > div:first-of-type {
+    width: 100%;
+  }
 }

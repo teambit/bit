@@ -9,9 +9,18 @@ import styles from './lane-menu-item.module.scss';
 export type LaneMenuItemProps = {
   selected?: LaneId;
   current: LaneId;
+  getHref?: (laneId: LaneId) => string;
+  onLaneSelected?: (laneId: LaneId) => void;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function LaneMenuItem({ selected, current, className, ...rest }: LaneMenuItemProps) {
+export function LaneMenuItem({
+  selected,
+  current,
+  className,
+  onLaneSelected,
+  getHref = LanesModel.getLaneUrl,
+  ...rest
+}: LaneMenuItemProps) {
   const isCurrent = selected?.toString() === current.toString();
 
   const currentVersionRef = useRef<HTMLDivElement>(null);
@@ -21,11 +30,16 @@ export function LaneMenuItem({ selected, current, className, ...rest }: LaneMenu
     }
   }, [isCurrent]);
 
-  const href = LanesModel.getLaneUrl(current);
+  const href = getHref(current);
 
   return (
     <div {...rest} className={className} ref={currentVersionRef}>
-      <MenuLinkItem active={isCurrent} href={href} className={styles.menuItem}>
+      <MenuLinkItem
+        active={isCurrent}
+        href={href}
+        className={styles.menuItem}
+        onClick={onLaneSelected && (() => onLaneSelected(current))}
+      >
         <div className={styles.laneName}>{current.name}</div>
         {current.isDefault() && (
           <PillLabel className={styles.defaultLanePill}>

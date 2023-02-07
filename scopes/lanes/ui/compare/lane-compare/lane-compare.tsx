@@ -93,7 +93,7 @@ export function LaneCompare({
           componentDiff.componentId.changeVersion(componentDiff.sourceHead),
         ])) ||
       [],
-    [loadingLaneDiff]
+    [loadingLaneDiff, base.id.toString(), compare.id.toString()]
   );
 
   const defaultState = useCallback(() => {
@@ -140,7 +140,7 @@ export function LaneCompare({
         )
       );
     }
-  }, [allComponents.length]);
+  }, [loadingLaneDiff, allComponents.length, base.id.toString(), compare.id.toString()]);
 
   const [openDrawerList, onToggleDrawer] = useState<string[]>([]);
 
@@ -191,7 +191,7 @@ export function LaneCompare({
       accum.set(next.componentId.toStringWithoutVersion(), next);
       return accum;
     }, new Map<string, LaneComponentDiff>());
-  }, [loadingLaneDiff]);
+  }, [base.id.toString(), compare.id.toString(), loadingLaneDiff]);
 
   const groupedComponents = useMemo(() => {
     if (laneComponentDiffByCompId.size === 0) return null;
@@ -211,12 +211,12 @@ export function LaneCompare({
       accum.set(changeType, existing.concat([[baseId, compareId]]));
       return accum;
     }, new Map<ChangeType, Array<[ComponentID | undefined, ComponentID | undefined]>>());
-  }, [base.id.toString(), compare.id.toString(), laneComponentDiffByCompId.size]);
+  }, [base.id.toString(), compare.id.toString(), laneComponentDiffByCompId.size, loadingLaneDiff, laneDiff]);
 
   const Loading = useMemo(() => {
     if (!loadingLaneDiff) return null;
     return <LaneCompareLoader />;
-  }, [loadingLaneDiff]);
+  }, [base.id.toString(), compare.id.toString(), loadingLaneDiff]);
 
   const ComponentCompares = useMemo(() => {
     if (!groupedComponents?.size) return [];
@@ -273,7 +273,7 @@ export function LaneCompare({
         </div>
       );
     });
-  }, [base.id.toString(), compare.id.toString(), openDrawerList.length, groupedComponents?.size]);
+  }, [base.id.toString(), compare.id.toString(), openDrawerList.length, groupedComponents?.size, laneDiff]);
 
   return (
     <div {...rest} className={classnames(styles.laneCompareContainer, className)}>
