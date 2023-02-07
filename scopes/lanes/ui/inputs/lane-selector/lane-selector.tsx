@@ -15,17 +15,27 @@ export type LaneSelectorProps = {
   lanes: Array<LaneId>;
   selectedLaneId?: LaneId;
   groupByScope?: boolean;
+  getHref?: (laneId: LaneId) => string;
+  onLaneSelected?: (laneId: LaneId) => void;
 } & HTMLAttributes<HTMLDivElement>;
 
 type LaneDropdownItems = Array<LaneId> | Array<[scope: string, lanes: LaneId[]]>;
 
-export function LaneSelector({ className, lanes, selectedLaneId, groupByScope = true, ...rest }: LaneSelectorProps) {
+export function LaneSelector({
+  className,
+  lanes,
+  selectedLaneId,
+  groupByScope = true,
+  getHref,
+  onLaneSelected,
+  ...rest
+}: LaneSelectorProps) {
   const [filteredLanes, setFilteredLanes] = useState<LaneId[]>(lanes);
   const [focus, setFocus] = useState<boolean>(false);
 
   useEffect(() => {
     setFilteredLanes(lanes);
-  }, [lanes]);
+  }, [lanes.length]);
 
   const multipleLanes = lanes.length > 1;
   const laneDropdownItems: LaneDropdownItems = groupByScope
@@ -51,7 +61,7 @@ export function LaneSelector({ className, lanes, selectedLaneId, groupByScope = 
       {...rest}
       open={!multipleLanes ? false : undefined}
       dropClass={styles.menu}
-      elevation='none'
+      elevation="none"
       onChange={multipleLanes ? onDropdownToggled : undefined}
       // @ts-ignore - mismatch between @types/react
       placeholder={
@@ -68,12 +78,25 @@ export function LaneSelector({ className, lanes, selectedLaneId, groupByScope = 
       {multipleLanes &&
         groupByScope &&
         (laneDropdownItems as Array<[scope: string, lanes: LaneId[]]>).map(([scope, lanesByScope]) => (
-          <LaneGroupedMenuItem key={scope} scope={scope} selected={selectedLaneId} current={lanesByScope} />
+          <LaneGroupedMenuItem
+            key={scope}
+            onLaneSelected={onLaneSelected}
+            getHref={getHref}
+            scope={scope}
+            selected={selectedLaneId}
+            current={lanesByScope}
+          />
         ))}
       {multipleLanes &&
         !groupByScope &&
         (laneDropdownItems as LaneId[]).map((lane) => (
-          <LaneMenuItem key={lane.toString()} selected={selectedLaneId} current={lane}></LaneMenuItem>
+          <LaneMenuItem
+            onLaneSelected={onLaneSelected}
+            key={lane.toString()}
+            getHref={getHref}
+            selected={selectedLaneId}
+            current={lane}
+          ></LaneMenuItem>
         ))}
     </Dropdown>
   );
