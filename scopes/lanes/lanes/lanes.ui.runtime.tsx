@@ -153,7 +153,7 @@ export class LanesUI {
   }
 
   getLanesComparePage() {
-    return <LaneComparePage getLaneCompare={this.getLaneCompare} />;
+    return <LaneComparePage getLaneCompare={this.getLaneCompare} groupByScope={this.lanesHost === 'workspace'} />;
   }
 
   getMenuRoutes() {
@@ -209,10 +209,13 @@ export class LanesUI {
       {
         props: {
           href: '~compare',
-          children: 'Lane Compare',
+          children: 'Compare',
         },
         order: 2,
-        hide: () => true,
+        hide: () => {
+          const { lanesModel } = useLanes();
+          return !lanesModel?.viewedLane || lanesModel?.lanes.length < 2;
+        },
       },
     ]);
   }
