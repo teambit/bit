@@ -188,7 +188,7 @@ export class ProcessBasedTsServer {
     if (this.options.logToConsole) {
       this.logger.console(`${msg} ${JSON.stringify(obj, undefined, 4)}`);
     } else {
-      this.logger.debug(msg, obj);
+      this.logger.trace(msg, obj);
     }
   }
 
