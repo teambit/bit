@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { compact } from 'lodash';
 import R from 'ramda';
-import { installationErrorOutput } from '@teambit/merging';
+import { installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
 import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import {
   FileStatus,
@@ -158,7 +158,7 @@ ${WILDCARD_HELP('import')}`;
       fetchDeps,
     };
     const importResults = await this.importer.import(importOptions, this._packageManagerArgs);
-    const { importDetails, importedIds, importedDeps, installationError } = importResults;
+    const { importDetails, importedIds, importedDeps, installationError, compilationError } = importResults;
 
     if (json) {
       return JSON.stringify({ importDetails, installationError }, null, 4);
@@ -193,7 +193,11 @@ ${WILDCARD_HELP('import')}`;
           ).join('\n')
         : '';
 
-    const output = importOutput + importedDepsOutput + installationErrorOutput(installationError);
+    const output =
+      importOutput +
+      importedDepsOutput +
+      installationErrorOutput(installationError) +
+      compilationErrorOutput(compilationError);
 
     return output;
   }

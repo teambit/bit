@@ -63,6 +63,28 @@ export class ComponentCompareUI {
     return this.navSlot.map;
   }
 
+  get tabs() {
+    const getElement = (routeProps: RouteProps[], href?: string) => {
+      if (routeProps.length === 1) return routeProps[0].element;
+      if (!href) return undefined;
+      return routeProps.find((route) => route.path?.startsWith(href))?.element;
+    };
+
+    return flatten(
+      this.navSlot.toArray().map(([id, navProps]) => {
+        const maybeRoutesForId = this.routes.get(id);
+        const routesForId =
+          (maybeRoutesForId && (Array.isArray(maybeRoutesForId) ? [...maybeRoutesForId] : [maybeRoutesForId])) || [];
+
+        return navProps.map((navProp) => ({
+          ...navProp,
+          id: `${id}-${navProp?.id}`,
+          element: getElement(routesForId, navProp?.props?.href),
+        }));
+      })
+    );
+  }
+
   static async provider(
     [componentUi]: [ComponentUI],
     _,
