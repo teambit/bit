@@ -28,9 +28,7 @@ export function LaneComparePage({ getLaneCompare, groupByScope, ...rest }: LaneC
     }
   }, [defaultLane, compare?.id.toString(), nonMainLanes?.length]);
 
-  const LaneCompareComponent = useMemo(() => {
-    return getLaneCompare({ base, compare });
-  }, [base?.id.toString(), compare?.id.toString()]);
+  const LaneCompareComponent = getLaneCompare({ base, compare });
 
   const lanes: Array<LaneId> = useMemo(() => {
     const mainLaneId = defaultLane?.id;
