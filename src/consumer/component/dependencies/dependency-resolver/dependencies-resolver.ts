@@ -2,6 +2,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import semver from 'semver';
+import { isSnap } from '@teambit/component-version';
 import { uniq, isEmpty, union, cloneDeep } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
@@ -298,7 +299,7 @@ export default class DependencyResolver {
     }
   }
 
-  cloneAllPackagesDependencies(){
+  cloneAllPackagesDependencies() {
     this.originAllPackagesDependencies = cloneDeep(this.allPackagesDependencies);
   }
 
@@ -829,6 +830,9 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (coerced) {
         return coerced.version;
       }
+    }
+    if (isSnap(version)) {
+      return version;
     }
     // it's probably a relative path to the component
     return null;
