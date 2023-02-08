@@ -99,7 +99,7 @@ async function removeLocal(
 ): Promise<RemovedLocalObjects> {
   // local remove in case user wants to delete tagged components
   const modifiedComponents = new BitIds();
-  const nonModifiedComponents = new BitIds(); // $FlowFixMe
+  const nonModifiedComponents = new BitIds();
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (R.isEmpty(bitIds)) return new RemovedLocalObjects();
   if (!force) {
@@ -149,7 +149,7 @@ async function removeLocal(
       await consumer.cleanFromBitMap(idsToCleanFromWorkspace);
     }
   }
-  if (removedFromLane.length) {
+  if (removedFromLane.length && fromLane) {
     await consumer.cleanOrRevertFromBitMapWhenOnLane(removedFromLane);
   }
   return new RemovedLocalObjects(
