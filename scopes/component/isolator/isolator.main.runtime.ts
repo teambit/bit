@@ -39,7 +39,7 @@ import path from 'path';
 import equals from 'ramda/src/equals';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
-import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
+import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -645,7 +645,7 @@ export class IsolatorMain {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       packageJson.addOrUpdateProperty('version', semver.inc(legacyComp.version!, 'prerelease') || '0.0.1-0');
     }
-    await PackageJsonTransformer.applyTransformers(legacyComp, packageJson);
+    await PackageJsonTransformer.applyTransformers(component, packageJson);
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
     dataToPersist.addFile(packageJson.toVinylFile());
