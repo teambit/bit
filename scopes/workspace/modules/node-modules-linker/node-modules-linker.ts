@@ -51,7 +51,10 @@ export default class NodeModuleLinker {
     await links.persistAllToFS();
     await this.consumer?.componentFsCache.deleteAllDependenciesDataCache();
     if (workspacePath) {
-      await linkPkgsToBitRoots(workspacePath, this.components.map(componentIdToPackageName));
+      await linkPkgsToBitRoots(
+        workspacePath,
+        this.components.map((comp) => componentIdToPackageName(comp.state._consumer))
+      );
     }
     return linksResults;
   }
