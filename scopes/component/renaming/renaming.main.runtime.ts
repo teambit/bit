@@ -15,6 +15,9 @@ import { RenamingAspect } from './renaming.aspect';
 import { RenamingFragment } from './renaming.fragment';
 import { renamingSchema } from './renaming.graphql';
 import { ScopeRenameCmd } from './scope-rename.cmd';
+import { OldScopeNotFound } from './exceptions/old-scope-not-found';
+import { OldScopeExported } from './exceptions/old-scope-exported';
+import { OldScopeTagged } from './exceptions/old-scope-tagged';
 
 export class RenamingMain {
   constructor(
@@ -71,25 +74,18 @@ export class RenamingMain {
     const allComponents = await this.workspace.list();
     const componentsUsingOldScope = allComponents.filter((comp) => comp.id.scope === oldScope);
     if (!componentsUsingOldScope.length && this.workspace.defaultScope !== oldScope) {
-      throw new BitError(
-        `none of the components is using "${oldScope}". also, the workspace is not configured with "${oldScope}"`
-      );
+      throw new OldScopeNotFound(oldScope);
     }
     // verify they're all new.
     const exported = componentsUsingOldScope.filter((comp) => comp.id._legacy.hasScope());
     if (exported.length) {
-      const idsStr = exported.map((comp) => comp.id.toString()).join(', ');
-      throw new BitError(`unable to rename the scope for the following exported components:\n${idsStr}
-because these components were exported already, other components may use them and they'll break upon rename.
-instead, deprecate the above components (using "bit deprecate"), tag, export and then eject them.
-once they are not in the workspace, you can fork them ("bit fork") with the new scope-name`);
+      const idsStr = exported.map((comp) => comp.id.toString());
+      throw new OldScopeExported(idsStr);
     }
     const tagged = componentsUsingOldScope.filter((comp) => comp.id.hasVersion());
     if (tagged.length) {
-      const idsStr = tagged.map((comp) => comp.id.toString()).join(', ');
-      throw new BitError(`unable to rename the scope for the following tagged components:\n${idsStr}
-because these components were tagged, the objects have the dependencies data of the old-scope.
-to be able to rename the scope, please untag the components first (using "bit reset" command)`);
+      const idsStr = tagged.map((comp) => comp.id.toString());
+      throw new OldScopeTagged(idsStr);
     }
     if (this.workspace.defaultScope === oldScope) {
       await this.workspace.setDefaultScope(newScope);
@@ -116,6 +112,62 @@ to be able to rename the scope, please untag the components first (using "bit re
       await this.renameScopeOfAspectIdsInWorkspaceConfig(
         componentsUsingOldScope.map((c) => c.id),
         newScope
+      );
+      await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
+      refactoredIds.push(...changedComponents.map((c) => c.id));
+    }
+
+    return { scopeRenamedComponentIds: componentsUsingOldScope.map((comp) => comp.id), refactoredIds };
+  }
+
+  /**
+   * change the default-scope for new components. optionally (if refactor is true), change the source code to match the
+   * new scope-name.
+   * keep in mind that this is working for new components only, for tagged/exported it's impossible. See the errors
+   * thrown in such cases in this method.
+   */
+  async renameOwner(oldOwner: string, newOwner: string, options: { refactor?: boolean }): Promise<RenameScopeResult> {
+    const allComponents = await this.workspace.list();
+    const componentsUsingOldScope = allComponents.filter((comp) => comp.id.scope.endsWith(`.${oldOwner}`));
+    if (!componentsUsingOldScope.length && !this.workspace.defaultScope.endsWith(`.${oldOwner}`)) {
+      throw new OldScopeNotFound(oldOwner);
+    }
+    // verify they're all new.
+    const exported = componentsUsingOldScope.filter((comp) => comp.id._legacy.hasScope());
+    if (exported.length) {
+      const idsStr = exported.map((comp) => comp.id.toString());
+      throw new OldScopeExported(idsStr);
+    }
+    const tagged = componentsUsingOldScope.filter((comp) => comp.id.hasVersion());
+    if (tagged.length) {
+      const idsStr = tagged.map((comp) => comp.id.toString());
+      throw new OldScopeTagged(idsStr);
+    }
+    if (this.workspace.defaultScope === oldOwner) {
+      await this.workspace.setDefaultScope(newOwner);
+      componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.removeDefaultScope(comp.id));
+    } else {
+      componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.setDefaultScope(comp.id, newOwner));
+    }
+    await this.workspace.bitMap.write();
+    const refactoredIds: ComponentID[] = [];
+    if (options.refactor) {
+      const legacyComps = componentsUsingOldScope.map((c) => c.state._consumer);
+      const packagesToReplace: MultipleStringsReplacement = legacyComps.map((comp) => {
+        return {
+          oldStr: componentIdToPackageName(comp),
+          newStr: componentIdToPackageName({
+            ...comp,
+            bindingPrefix: getBindingPrefixByDefaultScope(newOwner),
+            id: comp.id,
+            defaultScope: newOwner,
+          }),
+        };
+      });
+      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace);
+      await this.renameScopeOfAspectIdsInWorkspaceConfig(
+        componentsUsingOldScope.map((c) => c.id),
+        newOwner
       );
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
       refactoredIds.push(...changedComponents.map((c) => c.id));
