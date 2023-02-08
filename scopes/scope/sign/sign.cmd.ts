@@ -4,7 +4,7 @@ import { ComponentID } from '@teambit/component';
 import { BuildStatus } from '@teambit/legacy/dist/constants';
 import { SignMain } from './sign.main.runtime';
 
-type SignOptions = { multiple: boolean; alwaysSucceed: boolean; push: boolean; lane?: string };
+type SignOptions = { multiple: boolean; alwaysSucceed: boolean; push: boolean; lane?: string; rebuild?: boolean };
 export class SignCmd implements Command {
   name = 'sign [component...]';
   private = true;
@@ -18,14 +18,18 @@ with --multiple, a new bare-scope needs to be created and it will import the com
     ['', 'always-succeed', 'exit with code 0 even though the build failed'],
     ['', 'push', 'export the updated objects to the original scopes once done'],
     ['', 'lane <lane-id>', 'helps to fetch the components from the lane scope (relevant for --multiple)'],
+    ['', 'rebuild', 'allow signing components that their buildStatus is success for testing purposes'],
   ] as CommandOptions;
 
   constructor(private signMain: SignMain) {}
 
-  async report([components = []]: [string[]], { multiple, alwaysSucceed, push, lane }: SignOptions) {
+  async report([components = []]: [string[]], { multiple, alwaysSucceed, push, lane, rebuild }: SignOptions) {
     const componentIds = components.map((c) => ComponentID.fromString(c));
     this.warnForMissingVersions(componentIds);
-    const results = await this.signMain.sign(componentIds, multiple, push, lane);
+    if (push && rebuild) {
+      throw new Error('you can not use --push and --rebuild together');
+    }
+    const results = await this.signMain.sign(componentIds, multiple, push, lane, rebuild);
     if (!results) {
       return chalk.bold('no more components left to sign');
     }

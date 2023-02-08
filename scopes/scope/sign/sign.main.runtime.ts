@@ -48,7 +48,13 @@ export class SignMain {
    * important! this method mutates the legacyScope. it assigns the currentLaneId according to the `bit sign --lane` flag.
    * if for some reason you're using this API in a long-running-process, make sure to revert it.
    */
-  async sign(ids: ComponentID[], isMultiple?: boolean, push?: boolean, laneIdStr?: string): Promise<SignResult | null> {
+  async sign(
+    ids: ComponentID[],
+    isMultiple?: boolean,
+    push?: boolean,
+    laneIdStr?: string,
+    rebuild?: boolean
+  ): Promise<SignResult | null> {
     let lane: Lane | undefined;
     if (isMultiple) {
       const longProcessLogger = this.logger.createLongProcessLogger('import objects');
@@ -64,7 +70,7 @@ export class SignMain {
       longProcessLogger.end();
       this.logger.consoleSuccess();
     }
-    const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids);
+    const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids, rebuild);
     if (ids.length && componentsToSkip.length) {
       // eslint-disable-next-line no-console
       console.log(`the following component(s) were already signed successfully:
@@ -159,7 +165,10 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     });
   }
 
-  private async getComponentIdsToSign(ids: ComponentID[]): Promise<{
+  private async getComponentIdsToSign(
+    ids: ComponentID[],
+    rebuild?: boolean
+  ): Promise<{
     componentsToSkip: ComponentID[];
     componentsToSign: ComponentID[];
   }> {
@@ -173,9 +182,9 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const componentsToSkip: ComponentID[] = [];
     components.forEach((component) => {
       if (component.state._consumer.buildStatus === BuildStatus.Succeed) {
-        componentsToSkip.push(component.id);
-      } else {
         componentsToSign.push(component.id);
+      } else {
+        rebuild ? componentsToSign.push(component.id) : componentsToSkip.push(component.id);
       }
     });
     return { componentsToSkip, componentsToSign };
