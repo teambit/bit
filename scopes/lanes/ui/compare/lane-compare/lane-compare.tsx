@@ -23,6 +23,7 @@ import {
   UseLaneDiffStatus,
 } from '@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status';
 import { ChangeType, LaneComponentDiff } from '@teambit/lanes.entities.lane-diff';
+import { Icon } from '@teambit/design.elements.icon';
 import classnames from 'classnames';
 
 import styles from './lane-compare.module.scss';
@@ -279,9 +280,7 @@ export function LaneCompare({
                         className={styles.fullScreenIcon}
                         onClick={onFullScreenClicked(compKey)}
                       >
-                        <img
-                          src={`https://static.bit.dev/bit-icons/${fullScreenDrawerKey ? 'shrink' : 'enlarge'}.svg`}
-                        ></img>
+                        <Icon of={fullScreenDrawerKey ? 'reduce' : 'expand'} />
                       </div>,
                     ],
                     className: classnames(styles.componentCompareDrawer, isFullScreen && styles.fullScreen),
