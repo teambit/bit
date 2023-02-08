@@ -86,12 +86,12 @@ export function throwForInvalidLaneName(laneName: string) {
   }
 }
 
-async function throwForStagedComponents(consumer: Consumer) {
+export async function throwForStagedComponents(consumer: Consumer) {
   const componentList = new ComponentsList(consumer);
   const stagedComponents = await componentList.listExportPendingComponentsIds();
   if (stagedComponents.length) {
     throw new BitError(
-      `unable to create a new lane, please export or reset the following components first: ${stagedComponents.join(
+      `unable to switch/create a new lane, please export or reset the following components first: ${stagedComponents.join(
         ', '
       )}`
     );

@@ -1,12 +1,10 @@
 import chalk from 'chalk';
+import { Command } from '@teambit/cli';
+import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
+import { PathChangeResult } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import { MoverMain } from './mover.main.runtime';
 
-import { move } from '../../../api/consumer';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
-import { PathChangeResult } from '../../../consumer/bit-map/bit-map';
-import { Group } from '../../command-groups';
-import { LegacyCommand } from '../../legacy-command';
-
-export default class Move implements LegacyCommand {
+export class MoveCmd implements Command {
   name = 'move <current-component-dir> <new-component-dir>';
   description = 'move a component to a different filesystem path';
   helpUrl = 'docs/workspace/moving-components';
@@ -20,16 +18,16 @@ export default class Move implements LegacyCommand {
       description: 'the new relative path (in the workspace) to the component directory',
     },
   ];
-  group: Group = 'development';
+  group = 'development';
   extendedDescription = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/workspace/moving-components`;
   alias = 'mv';
   loader = true;
+  options = [];
 
-  action([from, to]: [string, string]): Promise<any> {
-    return move({ from, to });
-  }
+  constructor(private mover: MoverMain) {}
 
-  report(componentsChanged: PathChangeResult[]): string {
+  async report([from, to]: [string, string]) {
+    const componentsChanged: PathChangeResult[] = await this.mover.movePaths({ from, to });
     const output = componentsChanged.map((component) => {
       const title = chalk.green(`moved component ${component.id.toString()}:\n`);
       const files = component.changes

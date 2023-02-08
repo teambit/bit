@@ -25,6 +25,7 @@ import { Workspace } from '@teambit/workspace';
 import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { LanesMain } from './lanes.main.runtime';
+import { throwForStagedComponents } from './create-lane';
 
 export type SwitchProps = {
   laneName: string;
@@ -51,6 +52,9 @@ export class LaneSwitcher {
 
   async switch(): Promise<ApplyVersionResults> {
     this.logger.setStatusLine(`switching lanes`);
+    if (this.workspace.isOnMain()) {
+      await throwForStagedComponents(this.consumer);
+    }
     await this.populateSwitchProps();
     const allComponentsStatus: ComponentStatus[] = await this.getAllComponentsStatus();
     const componentWithConflict = allComponentsStatus.find(
@@ -93,14 +97,16 @@ export class LaneSwitcher {
       verbose: this.checkoutProps.verbose,
       writeConfig: this.checkoutProps.writeConfig,
     };
-    const { installationError } = await this.Lanes.componentWriter.writeMany(manyComponentsWriterOpts);
+    const { installationError, compilationError } = await this.Lanes.componentWriter.writeMany(
+      manyComponentsWriterOpts
+    );
     await deleteFilesIfNeeded(componentsResults, this.consumer);
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
     await this.consumer.onDestroy();
 
-    return { components: appliedVersionComponents, failedComponents, installationError };
+    return { components: appliedVersionComponents, failedComponents, installationError, compilationError };
   }
 
   private async populateSwitchProps() {

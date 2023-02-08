@@ -9,7 +9,7 @@ export interface ApplicationType<T> {
   /**
    * pattern of the app.
    */
-  pattern?: string;
+  globPattern?: string;
 
   /**
    * a function that creates the app instance.

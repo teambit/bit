@@ -1,6 +1,8 @@
 import timeAgo from '@teambit/base-ui.utils.time-ago';
 import classNames from 'classnames';
 import React, { useEffect, useMemo, useReducer } from 'react';
+import { Tooltip } from '@teambit/design.ui.tooltip';
+import styles from './time-ago.module.scss';
 
 type TimeAgoProps = {
   date: string | number;
@@ -21,8 +23,14 @@ export function TimeAgo(props: TimeAgoProps) {
   }, [date, refreshIdx]);
 
   return (
-    <span {...rest} className={classNames(className)}>
-      {formatted}
-    </span>
+    <Tooltip
+      className={styles.dateTooltip}
+      placement={'top'}
+      content={<div className={styles.dateTooltipContent}>{date}</div>}
+    >
+      <span {...rest} className={classNames(className)}>
+        {formatted}
+      </span>
+    </Tooltip>
   );
 }

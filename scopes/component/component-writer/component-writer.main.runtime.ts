@@ -3,10 +3,10 @@ import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
+import MoverAspect, { MoverMain } from '@teambit/mover';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
 import { isDir, isDirEmptySync } from '@teambit/legacy/dist/utils';
@@ -14,7 +14,6 @@ import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute } from '@t
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import { moveExistingComponent } from '@teambit/legacy/dist/consumer/component-ops/move-components';
 import ComponentWriter, { ComponentWriterProps } from './component-writer';
 import { ComponentWriterAspect } from './component-writer.aspect';
 
@@ -28,14 +27,15 @@ export interface ManyComponentsWriterParams {
   resetConfig?: boolean;
 }
 
-export type ComponentWriterResults = { installationError?: Error };
+export type ComponentWriterResults = { installationError?: Error; compilationError?: Error };
 
 export class ComponentWriterMain {
   constructor(
     private installer: InstallMain,
     private compiler: CompilerMain,
     private workspace: Workspace,
-    private logger: Logger
+    private logger: Logger,
+    private mover: MoverMain
   ) {}
 
   get consumer(): Consumer {
@@ -48,16 +48,18 @@ export class ComponentWriterMain {
     this.moveComponentsIfNeeded(opts);
     await this.persistComponentsData(opts);
     let installationError: Error | undefined;
+    let compilationError: Error | undefined;
     if (!opts.skipDependencyInstallation) {
       installationError = await this.installPackagesGracefully();
-      await this.compile(); // no point to compile if the installation is not running. the environment is not ready.
+      // no point to compile if the installation is not running. the environment is not ready.
+      compilationError = await this.compileGracefully();
     }
     await this.consumer.writeBitMap();
     this.logger.debug('writeMany, completed!');
-    return { installationError };
+    return { installationError, compilationError };
   }
 
-  private async installPackagesGracefully() {
+  private async installPackagesGracefully(): Promise<Error | undefined> {
     this.logger.debug('installPackagesGracefully, start installing packages');
     try {
       const installOpts = {
@@ -74,14 +76,14 @@ export class ComponentWriterMain {
       return err;
     }
   }
-  private async compile() {
+  private async compileGracefully(): Promise<Error | undefined> {
     try {
       await this.compiler.compileOnWorkspace();
+      return undefined;
     } catch (err: any) {
-      this.logger.error('compile, compiler found an error', err);
-      throw new BitError(`failed compiling the components. please run "bit compile" once the issue is fixed
-error from the compiler: ${err.message}.
-please use the '--log=error' flag for the full error.`);
+      this.logger.consoleFailure(`compilation failed with the following error: ${err.message}`);
+      this.logger.error('compileGracefully, compiler found an error', err);
+      return err;
     }
   }
   private async persistComponentsData(opts: ManyComponentsWriterParams) {
@@ -204,7 +206,7 @@ to move all component files to a different directory, run bit remove and then bi
         const absoluteWriteToPath = path.resolve(opts.writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
         if (relativeWrittenPath && absoluteWrittenPath !== absoluteWriteToPath) {
           const component = componentWithDeps.component;
-          moveExistingComponent(this.consumer, component, absoluteWrittenPath, absoluteWriteToPath);
+          this.mover.moveExistingComponent(component, absoluteWrittenPath, absoluteWriteToPath);
         }
       });
     }
@@ -233,16 +235,17 @@ to move all component files to a different directory, run bit remove and then bi
   }
 
   static slots = [];
-  static dependencies = [InstallAspect, CompilerAspect, LoggerAspect, WorkspaceAspect];
+  static dependencies = [InstallAspect, CompilerAspect, LoggerAspect, WorkspaceAspect, MoverAspect];
   static runtime = MainRuntime;
-  static async provider([install, compiler, loggerMain, workspace]: [
+  static async provider([install, compiler, loggerMain, workspace, mover]: [
     InstallMain,
     CompilerMain,
     LoggerMain,
-    Workspace
+    Workspace,
+    MoverMain
   ]) {
     const logger = loggerMain.createLogger(ComponentWriterAspect.id);
-    return new ComponentWriterMain(install, compiler, workspace, logger);
+    return new ComponentWriterMain(install, compiler, workspace, logger, mover);
   }
 }
 

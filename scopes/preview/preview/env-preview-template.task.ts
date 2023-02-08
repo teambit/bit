@@ -107,8 +107,10 @@ export class EnvPreviewTemplateTask implements BuildTask {
       metaData: {
         initiator: `${GENERATE_ENV_TEMPLATE_TASK_NAME} task`,
         envId: context.id,
+        isEnvTemplate: true
       },
     });
+
     const bundlerResults = await mapSeries(Object.entries(groups), async ([, targetsGroup]) => {
       bundlerContext.targets = targetsGroup.targets;
       const bundler: Bundler = await targetsGroup.envToGetBundler.getTemplateBundler(bundlerContext);

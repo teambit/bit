@@ -1,1 +1,2 @@
-export { LaneInfo, LaneInfoProps } from './lane-info';
+export { LaneInfo } from './lane-info';
+export type { LaneInfoProps } from './lane-info';

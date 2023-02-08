@@ -105,9 +105,11 @@ export default class SourceRepository {
       if (bitId.isLocal(this.scope.name) || version.buildStatus === BuildStatus.Succeed || !versionShouldBeBuilt) {
         return component;
       }
-      const hasLocalVersion = await component.hasLocalVersion(this.scope.objects, bitId.version as string);
+      const hash = component.getRef(bitId.version as string);
+      if (!hash) throw new Error(`sources.get: unable to get has for ${bitId.toString()}`);
+      const hasLocalVersion = this.scope.stagedSnaps.has(hash.toString());
       if (hasLocalVersion) {
-        // e.g. during tag
+        // no point to go to the remote, it's local.
         return component;
       }
       const bitIdStr = bitId.toString();
@@ -116,6 +118,9 @@ export default class SourceRepository {
         return fromCache;
       }
       this.cacheUnBuiltIds.set(bitIdStr, component);
+      logger.trace(
+        `sources.get, found ${bitId.toString()}, however the version has build-status of ${version.buildStatus}`
+      );
       return undefined;
     };
 
@@ -127,7 +132,7 @@ export default class SourceRepository {
       // @ts-ignore
       const snap = await this.objects().load(new Ref(bitId.version));
       if (!snap) {
-        logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
+        logger.trace(`sources.get, ${msg} object was not found on the filesystem`);
         return undefined;
       }
       return returnComponent(snap as Version);
@@ -141,7 +146,7 @@ export default class SourceRepository {
     const versionHash = component.versionsIncludeOrphaned[bitId.version];
     const version = (await this.objects().load(versionHash)) as Version;
     if (!version) {
-      logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
+      logger.trace(`sources.get, ${msg} object was not found on the filesystem`);
       return undefined;
     }
     // workaround an issue when a component has a dependency with the same id as the component itself
@@ -166,7 +171,7 @@ export default class SourceRepository {
     } catch (err: any) {
       logger.error(`findComponent got an error ${err}`);
     }
-    logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
+    logger.trace(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
     return undefined;
   }
 
@@ -300,6 +305,15 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       if (newHead) {
         laneItem.head = newHead;
       } else {
+        if (lane?.isNew && component.scope) {
+          // the fact that the component has a scope-name means it was exported.
+          throw new Error(`fatal: unable to find a new head for "${component.id()}".
+this is because the lane ${lane.name} is new so the remote doesn't have previous snaps of this component.
+also, this component wasn't part of a fork, so it's impossible to find a previous snap in the original-lane.
+probably this component landed here as part of a merge from another lane.
+it's impossible to leave the component in the .bitmap with a scope-name and without any version.
+please either remove the component (bit remove) or remove the lane.`);
+        }
         lane?.removeComponent(component.toBitId());
       }
       component.laneHeadLocal = newHead;

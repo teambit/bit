@@ -291,6 +291,34 @@ export class WebpackConfigMutator {
     this.raw = merged;
     return this;
   }
+
+  /**
+   * Add PostCSS plugins
+   * @param plugins
+   * @returns
+   * @example
+   * addPostCssPlugins([require('tailwindcss')]);
+   */
+  addPostCssPlugins(plugins: Array<any>): WebpackConfigMutator {
+    this.raw.module?.rules?.forEach((rule: any) => {
+      if (rule.use) processUseArray(rule.use, plugins);
+      if (rule.oneOf) rule.oneOf.forEach((oneOfRule) => processUseArray(oneOfRule.use, plugins));
+    });
+
+    return this;
+  }
+}
+
+function processUseArray(useArray: any[], plugins: any[]) {
+  if (!useArray) return;
+
+  useArray.forEach((use: any) => {
+    if (!use.loader || !use.loader.includes('postcss-loader')) return;
+    if (!use.options.postcssOptions) return;
+
+    use.options.postcssOptions.plugins = use.options.postcssOptions.plugins || [];
+    use.options.postcssOptions.plugins.unshift(...plugins);
+  });
 }
 
 function getConfigsToMerge(
