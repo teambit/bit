@@ -21,8 +21,8 @@ export class ScopeRenameOwnerCmd implements Command {
   constructor(private renaming: RenamingMain) {}
 
   async report([oldName, newName]: [string, string], { refactor }: { refactor?: boolean }) {
-    const { scopeRenamedComponentIds, refactoredIds } = await this.renaming.renameScope(oldName, newName, { refactor });
-    const title = chalk.green(`successfully replaced "${oldName}" scope with "${newName}"`);
+    const { scopeRenamedComponentIds, refactoredIds } = await this.renaming.renameOwner(oldName, newName, { refactor });
+    const title = chalk.green(`successfully replaced "${oldName}" owner with "${newName}"`);
     const renamedIdsStr = scopeRenamedComponentIds.length
       ? `\n${chalk.bold(
           'the following components were affected by this scope-name change:'

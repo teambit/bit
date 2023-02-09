@@ -1,4 +1,3 @@
-import { BitError } from '@teambit/bit-error';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
@@ -143,30 +142,36 @@ export class RenamingMain {
       const idsStr = tagged.map((comp) => comp.id.toString());
       throw new OldScopeTagged(idsStr);
     }
-    if (this.workspace.defaultScope === oldOwner) {
-      await this.workspace.setDefaultScope(newOwner);
+    if (this.workspace.defaultScope.endsWith(`.${oldOwner}`)) {
+      const newDefaultScope = this.workspace.defaultScope.replace(`.${oldOwner}`, `.${newOwner}`);
+      await this.workspace.setDefaultScope(newDefaultScope);
       componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.removeDefaultScope(comp.id));
     } else {
-      componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.setDefaultScope(comp.id, newOwner));
+      componentsUsingOldScope.forEach((comp) => {
+        const newCompScope = comp.id.scope.replace(`.${oldOwner}`, `.${newOwner}`);
+        this.workspace.bitMap.setDefaultScope(comp.id, newCompScope);
+      });
     }
     await this.workspace.bitMap.write();
     const refactoredIds: ComponentID[] = [];
     if (options.refactor) {
       const legacyComps = componentsUsingOldScope.map((c) => c.state._consumer);
       const packagesToReplace: MultipleStringsReplacement = legacyComps.map((comp) => {
+        const newScope = comp.id.scope.replace(`.${oldOwner}`, `.${newOwner}`);
         return {
           oldStr: componentIdToPackageName(comp),
           newStr: componentIdToPackageName({
             ...comp,
-            bindingPrefix: getBindingPrefixByDefaultScope(newOwner),
+            bindingPrefix: getBindingPrefixByDefaultScope(newScope),
             id: comp.id,
-            defaultScope: newOwner,
+            defaultScope: newScope,
           }),
         };
       });
       const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace);
-      await this.renameScopeOfAspectIdsInWorkspaceConfig(
+      await this.renameOwnerOfAspectIdsInWorkspaceConfig(
         componentsUsingOldScope.map((c) => c.id),
+        oldOwner,
         newOwner
       );
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
@@ -181,6 +186,21 @@ export class RenamingMain {
     if (!config) throw new Error('unable to get workspace config');
     let hasChanged = false;
     ids.forEach((id) => {
+      const changed = config.renameExtensionInRaw(
+        id.toStringWithoutVersion(),
+        id._legacy.changeScope(newScope).toStringWithoutVersion()
+      );
+      if (changed) hasChanged = true;
+    });
+    if (hasChanged) await config.write();
+  }
+
+  private async renameOwnerOfAspectIdsInWorkspaceConfig(ids: ComponentID[], oldOwner: string, newOwner: string) {
+    const config = this.config.workspaceConfig;
+    if (!config) throw new Error('unable to get workspace config');
+    let hasChanged = false;
+    ids.forEach((id) => {
+      const newScope = id.scope.replace(`.${oldOwner}`, `.${newOwner}`);
       const changed = config.renameExtensionInRaw(
         id.toStringWithoutVersion(),
         id._legacy.changeScope(newScope).toStringWithoutVersion()
