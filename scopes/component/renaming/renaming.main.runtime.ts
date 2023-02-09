@@ -17,6 +17,7 @@ import { ScopeRenameCmd } from './scope-rename.cmd';
 import { OldScopeNotFound } from './exceptions/old-scope-not-found';
 import { OldScopeExported } from './exceptions/old-scope-exported';
 import { OldScopeTagged } from './exceptions/old-scope-tagged';
+import { ScopeRenameOwnerCmd } from './scope-rename-owner.cmd';
 
 export class RenamingMain {
   constructor(
@@ -127,8 +128,9 @@ export class RenamingMain {
    */
   async renameOwner(oldOwner: string, newOwner: string, options: { refactor?: boolean }): Promise<RenameScopeResult> {
     const allComponents = await this.workspace.list();
-    const componentsUsingOldScope = allComponents.filter((comp) => comp.id.scope.endsWith(`.${oldOwner}`));
-    if (!componentsUsingOldScope.length && !this.workspace.defaultScope.endsWith(`.${oldOwner}`)) {
+    const isScopeUsesOldOwner = (scope: string) => scope.startsWith(`${oldOwner}.`);
+    const componentsUsingOldScope = allComponents.filter((comp) => isScopeUsesOldOwner(comp.id.scope));
+    if (!componentsUsingOldScope.length && !isScopeUsesOldOwner(this.workspace.defaultScope)) {
       throw new OldScopeNotFound(oldOwner);
     }
     // verify they're all new.
@@ -142,22 +144,25 @@ export class RenamingMain {
       const idsStr = tagged.map((comp) => comp.id.toString());
       throw new OldScopeTagged(idsStr);
     }
-    if (this.workspace.defaultScope.endsWith(`.${oldOwner}`)) {
-      const newDefaultScope = this.workspace.defaultScope.replace(`.${oldOwner}`, `.${newOwner}`);
+    const oldWorkspaceDefaultScope = this.workspace.defaultScope;
+    if (isScopeUsesOldOwner(this.workspace.defaultScope)) {
+      const newDefaultScope = this.renameOwnerInScopeName(this.workspace.defaultScope, oldOwner, newOwner);
       await this.workspace.setDefaultScope(newDefaultScope);
-      componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.removeDefaultScope(comp.id));
-    } else {
       componentsUsingOldScope.forEach((comp) => {
-        const newCompScope = comp.id.scope.replace(`.${oldOwner}`, `.${newOwner}`);
-        this.workspace.bitMap.setDefaultScope(comp.id, newCompScope);
+        if (comp.id.scope === oldWorkspaceDefaultScope) this.workspace.bitMap.removeDefaultScope(comp.id);
       });
     }
+    componentsUsingOldScope.forEach((comp) => {
+      if (comp.id.scope === oldWorkspaceDefaultScope) return;
+      const newCompScope = this.renameOwnerInScopeName(comp.id.scope, oldOwner, newOwner);
+      this.workspace.bitMap.setDefaultScope(comp.id, newCompScope);
+    });
     await this.workspace.bitMap.write();
     const refactoredIds: ComponentID[] = [];
     if (options.refactor) {
       const legacyComps = componentsUsingOldScope.map((c) => c.state._consumer);
       const packagesToReplace: MultipleStringsReplacement = legacyComps.map((comp) => {
-        const newScope = comp.id.scope.replace(`.${oldOwner}`, `.${newOwner}`);
+        const newScope = this.renameOwnerInScopeName(comp.id.scope, oldOwner, newOwner);
         return {
           oldStr: componentIdToPackageName(comp),
           newStr: componentIdToPackageName({
@@ -200,7 +205,7 @@ export class RenamingMain {
     if (!config) throw new Error('unable to get workspace config');
     let hasChanged = false;
     ids.forEach((id) => {
-      const newScope = id.scope.replace(`.${oldOwner}`, `.${newOwner}`);
+      const newScope = this.renameOwnerInScopeName(id.scope, oldOwner, newOwner);
       const changed = config.renameExtensionInRaw(
         id.toStringWithoutVersion(),
         id._legacy.changeScope(newScope).toStringWithoutVersion()
@@ -208,6 +213,10 @@ export class RenamingMain {
       if (changed) hasChanged = true;
     });
     if (hasChanged) await config.write();
+  }
+
+  private renameOwnerInScopeName(scopeName: string, oldOwner: string, newOwner: string): string {
+    return scopeName.replace(`${oldOwner}.`, `${newOwner}.`);
   }
 
   private async getConfig(comp: Component) {
@@ -259,6 +268,7 @@ export class RenamingMain {
 
     const scopeCommand = cli.getCommand('scope');
     scopeCommand?.commands?.push(new ScopeRenameCmd(renaming));
+    scopeCommand?.commands?.push(new ScopeRenameOwnerCmd(renaming));
 
     graphql.register(renamingSchema(renaming));
     componentMain.registerShowFragments([new RenamingFragment(renaming)]);

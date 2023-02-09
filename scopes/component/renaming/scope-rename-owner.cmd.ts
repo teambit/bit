@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { RenamingMain } from './renaming.main.runtime';
 
 export class ScopeRenameOwnerCmd implements Command {
-  name = 'rename <current-owner-name> <new-owner-name>';
+  name = 'rename-owner <current-owner-name> <new-owner-name>';
   description = "Renames the owner part of the scope-name for all components with the specified 'current owner name'";
   arguments = [
     { name: 'current-owner-name', description: 'the owner name to be replaced by another owner name' },
