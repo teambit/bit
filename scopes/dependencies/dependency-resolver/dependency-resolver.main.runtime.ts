@@ -564,15 +564,15 @@ export class DependencyResolverMain {
   /**
    * get the package name of a component.
    */
-  getPackageName(component: Component) {
-    return this.getDepResolverData(component)?.packageName;
+  getPackageName(component: Component): string {
+    return this.getDepResolverData(component)?.packageName ?? this.calcPackageName(component);
   }
 
   getDepResolverData(component: Component): DependencyResolverComponentData | undefined {
     return component.state.aspects.get(DependencyResolverAspect.id)?.data as DependencyResolverComponentData;
   }
 
-  calcPackageName(component: Component) {
+  calcPackageName(component: Component): string {
     return componentIdToPackageName(component.state._consumer);
   }
 
