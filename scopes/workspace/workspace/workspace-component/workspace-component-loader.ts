@@ -252,6 +252,7 @@ export class WorkspaceComponentLoader {
     const dependenciesList = await this.dependencyResolver.extractDepsFromLegacy(component, policy);
 
     const depResolverData = {
+      packageName: this.dependencyResolver.calcPackageName(component),
       dependencies: dependenciesList.serialize(),
       policy: policy.serialize(),
     };
