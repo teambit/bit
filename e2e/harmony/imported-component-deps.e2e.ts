@@ -29,7 +29,7 @@ const isPositive = require('is-positive');
       helper.command.tagComponent('comp3 comp1');
       helper.command.export();
       helper.command.removeComponent('comp1');
-      helper.command.install('is-positive@2.0.0 --update-existing');
+      helper.command.install('is-positive@2.0.0');
       helper.command.tagComponent('comp3 comp2', undefined, '--unmodified');
       helper.command.export();
 
