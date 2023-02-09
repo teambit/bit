@@ -53,7 +53,7 @@ export default class NodeModuleLinker {
     this.dataToPersist = new DataToPersist();
     await pMapSeries(this.components, async (component) => {
       const componentId = component.id.toString();
-      if (!(await this.workspace.hasId(component.id))) {
+      if (!this.bitMap.isExistWithSameVersion(component.id._legacy)) {
         logger.debug(`skip linking component to node_modules: ${componentId}. it's not part of the workspace`);
         return;
       }
