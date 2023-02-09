@@ -101,6 +101,11 @@ export default class BitJsoncHelper {
   addDefaultScope(scope = this.scopes.remote) {
     this.addKeyValToWorkspace('defaultScope', scope);
   }
+  getDefaultScope() {
+    const bitJsonc = this.read();
+    const workspace = bitJsonc['teambit.workspace/workspace'];
+    return workspace.defaultScope;
+  }
 
   setComponentsDir(compDir: string) {
     this.addKeyValToWorkspace('defaultDirectory', compDir);
