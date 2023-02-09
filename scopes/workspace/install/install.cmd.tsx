@@ -11,6 +11,7 @@ type InstallCmdOptions = {
   skipDedupe: boolean;
   skipImport: boolean;
   skipCompile: boolean;
+  updateExisting: boolean;
   savePrefix: string;
   addMissingPeers: boolean;
 };
@@ -27,6 +28,11 @@ export default class InstallCmd implements Command {
   options = [
     ['v', 'variants <variants>', 'add packages to specific variants'],
     ['t', 'type [lifecycleType]', '"runtime" (default) or "peer" (dev is not a valid option)'],
+    [
+      'u',
+      'update-existing [updateExisting]',
+      'DEPRECATED (not needed anymore, it is the default now). update existing dependencies version and types',
+    ],
     ['', 'save-prefix [savePrefix]', 'set the prefix to use when adding dependency to workspace.jsonc'],
     ['', 'skip-dedupe [skipDedupe]', 'do not dedupe dependencies on installation'],
     ['', 'skip-import [skipImport]', 'do not import bit objects post installation'],
@@ -50,6 +56,11 @@ export default class InstallCmd implements Command {
   async report([packages = []]: [string[]], options: InstallCmdOptions) {
     const startTime = Date.now();
     if (!this.workspace) throw new OutsideWorkspaceError();
+    if (options.updateExisting) {
+      this.logger.consoleWarning(
+        `--update-existing is deprecated, please omit it. "bit install" will update existing dependency by default`
+      );
+    }
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const installOpts: WorkspaceInstallOptions = {
       variants: options.variants,
