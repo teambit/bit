@@ -92,6 +92,12 @@ export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 
+export interface DependencyResolverComponentData {
+  packageName: string;
+  policy: SerializedVariantPolicy;
+  dependencies: SerializedDependency;
+}
+
 export interface DependencyResolverWorkspaceConfig {
   policy: WorkspacePolicyConfigObject;
   /**
@@ -559,6 +565,14 @@ export class DependencyResolverMain {
    * get the package name of a component.
    */
   getPackageName(component: Component) {
+    return this.getDepResolverData(component)?.packageName;
+  }
+
+  getDepResolverData(component: Component): DependencyResolverComponentData | undefined {
+    return component.state.aspects.get(DependencyResolverAspect.id)?.data as DependencyResolverComponentData;
+  }
+
+  calcPackageName(component: Component) {
     return componentIdToPackageName(component.state._consumer);
   }
 
