@@ -183,7 +183,7 @@ export class SnappingMain {
     if (!soft) {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     }
-    const components = await this.loadComponentsForTag(legacyBitIds, soft);
+    const components = await this.loadComponentsForTag(legacyBitIds);
     await this.throwForLegacyDependenciesInsideHarmony(components);
     await this.throwForComponentIssues(components, ignoreIssues);
     this.throwForPendingImport(components);
@@ -762,7 +762,7 @@ there are matching among unmodified components thought. consider using --unmodif
     return artifacts;
   }
 
-  private async loadComponentsForTag(ids: BitIds, isSoftTag = false): Promise<ConsumerComponent[]> {
+  private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
     const { components, removedComponents } = await this.workspace.consumer.loadComponents(ids.toVersionLatest());
     components.forEach((component) => {
       const componentMap = component.componentMap as ComponentMap;
@@ -770,7 +770,7 @@ there are matching among unmodified components thought. consider using --unmodif
         throw new Error(`unable to tag ${component.id.toString()}, the "rootDir" is missing in the .bitmap file`);
       }
     });
-    return isSoftTag ? components : [...components, ...removedComponents];
+    return [...components, ...removedComponents];
   }
 
   private async throwForComponentIssues(legacyComponents: ConsumerComponent[], ignoreIssues?: string) {
@@ -883,8 +883,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const componentsList = new ComponentsList(this.workspace.consumer);
     if (persist) {
       const softTaggedComponents = componentsList.listSoftTaggedComponents();
-      const softRemovedComponents = await componentsList.listLocallySoftRemoved();
-      return { bitIds: [...softTaggedComponents, ...softRemovedComponents], warnings: [] };
+      return { bitIds: softTaggedComponents, warnings: [] };
     }
 
     const tagPendingBitIds = includeUnmodified

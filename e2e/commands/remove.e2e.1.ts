@@ -310,12 +310,12 @@ describe('bit remove command', function () {
         helper.fs.outputFile('comp1/index.js', '');
         helper.command.softTag();
       });
-      it('should leave the .bitmap entry intact', () => {
+      it('should leave the .bitmap entry and soft-tag it as well', () => {
         const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('comp2');
         const bitMapEntry = bitMap.comp2;
         expect(bitMapEntry).to.have.property('config');
-        expect(bitMapEntry).to.not.have.property('nextVersion');
+        expect(bitMapEntry).to.have.property('nextVersion');
       });
       describe('tag --persist', () => {
         before(() => {

@@ -108,7 +108,6 @@ async function setFutureVersions(
     : false;
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
-      if (componentToTag.componentMap?.isRemoved()) return;
       const isAutoTag = autoTagIds.hasWithoutVersion(componentToTag.id);
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const nextVersion = componentToTag.componentMap?.nextVersion?.version;
