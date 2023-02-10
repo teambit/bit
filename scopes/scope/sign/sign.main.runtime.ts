@@ -4,6 +4,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import { isSnap } from '@teambit/component-version';
 import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -84,9 +85,11 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     this.logger.setStatusLine(`loading ${componentsToSign.length} components and their aspects...`);
     const components = await this.scope.loadMany(componentsToSign, lane);
     this.logger.clearStatusLine();
+    // it's enough to check the first component whether it's a snap or tag, because it can't be a mix of both
+    const shouldRunSnapPipeline = isSnap(components[0].id.version);
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       components,
-      { throwOnError: false },
+      { throwOnError: false, isSnap: shouldRunSnapPipeline },
       { seedersOnly: true, installOptions: { copyPeerToRuntimeOnComponents: true, installPeersFromEnvs: true } }
     );
     const legacyBuildResults = this.scope.builderDataMapToLegacyOnTagResults(builderDataMap);
