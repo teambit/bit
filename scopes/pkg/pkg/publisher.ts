@@ -10,6 +10,7 @@ import { Scope } from '@teambit/legacy/dist/scope';
 import mapSeries from 'p-map-series';
 import execa from 'execa';
 import { PkgAspect } from './pkg.aspect';
+import { PkgExtensionConfig } from './pkg.main.runtime';
 
 export type PublisherOptions = {
   dryRun?: boolean;
@@ -113,7 +114,9 @@ export class Publisher {
   public shouldPublish(extensions: ExtensionDataList): boolean {
     const pkgExt = extensions.findExtension(PkgAspect.id);
     if (!pkgExt) return false;
-    return pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig;
+    const config = pkgExt.config as PkgExtensionConfig;
+    if (config?.avoidPublishToNPM) return false;
+    return config?.packageJson?.name || config?.packageJson?.publishConfig;
   }
 
   private getExtraArgsFromConfig(component: Component): string | undefined {
