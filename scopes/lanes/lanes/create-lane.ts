@@ -8,6 +8,8 @@ import { isHash } from '@teambit/component-version';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 
+const MAX_LANE_NAME_LENGTH = 800;
+
 export async function createLane(
   consumer: Consumer,
   laneName: string,
@@ -100,6 +102,7 @@ export async function throwForStagedComponents(consumer: Consumer) {
 
 function isValidLaneName(val: unknown): boolean {
   if (typeof val !== 'string') return false;
+  if (val.length > MAX_LANE_NAME_LENGTH) return false;
   // @todo: should we allow slash? if so, we should probably replace the lane-delimiter with something else. (maybe ":")
   return /^[$\-_!a-z0-9]+$/.test(val);
 }

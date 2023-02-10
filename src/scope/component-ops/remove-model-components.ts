@@ -54,12 +54,12 @@ export default class RemoveModelComponents {
 
     const removedFromLane: BitId[] = [];
     const removalDataWithNulls = await mapSeries(foundComponents, (bitId) => {
-      if (this.currentLane && this.fromLane) {
+      if (this.currentLane) {
         const result = this.currentLane.removeComponent(bitId);
         if (result) {
           // component was found on the lane.
           removedFromLane.push(bitId);
-          return null;
+          if (this.fromLane) return null;
         }
         // component was not found on lane. it's ok, it might be on main. continue with the component removal.
       }

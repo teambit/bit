@@ -721,12 +721,11 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
         return;
       }
-      const getExistingIdFromBitMapOrModel = (): BitId | undefined => {
+      const getExistingIdFromBitmap = (): BitId | undefined => {
         const existingIds = this.consumer.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId);
-        if (existingIds.length === 1) {
-          depDebug.versionResolvedFrom = 'BitMap';
-          return existingIds[0];
-        }
+        return existingIds.length === 1 ? existingIds[0] : undefined;
+      };
+      const getExistingIdFromModel = (): BitId | undefined => {
         if (this.componentFromModel) {
           const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
           if (modelDep) {
@@ -737,9 +736,13 @@ either, use the ignore file syntax or change the require statement to have a mod
         return undefined;
       };
       const getExistingId = (): BitId | undefined => {
-        // Happens when the dep is not in the node_modules or it's there without a version
-        // (it's there without a version when it's in the workspace and it's linked)
-        if (!version) return getExistingIdFromBitMapOrModel();
+        const fromBitmap = getExistingIdFromBitmap();
+        if (fromBitmap) {
+          depDebug.versionResolvedFrom = 'BitMap';
+          return fromBitmap;
+        }
+        // Happens when the dep is not in the node_modules
+        if (!version) return getExistingIdFromModel();
 
         // In case it's resolved from the node_modules, and it's also in the ws policy or variants,
         // use the resolved version from the node_modules / package folder
@@ -748,8 +751,8 @@ either, use the ignore file syntax or change the require statement to have a mod
         }
 
         // If there is a version in the node_modules/package folder, but it's not in the ws policy,
-        // prefer the version from the bitmap/model over the version from the node_modules
-        return getExistingIdFromBitMapOrModel() ?? componentId;
+        // prefer the version from the model over the version from the node_modules
+        return getExistingIdFromModel() ?? componentId;
       };
       const existingId = getExistingId();
       if (existingId) {

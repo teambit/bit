@@ -1359,7 +1359,7 @@ module.exports.default = {
     });
     helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/dep-aspect/new-file.ts`, '');
     helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/main-aspect/new-file.ts`, '');
-    helper.command.install('react@17.0.2 --update-existing');
+    helper.command.install('react@17.0.2');
     helper.command.tagAllComponents();
     helper.command.export();
 
