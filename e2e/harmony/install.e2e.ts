@@ -1,4 +1,7 @@
+import path from 'path';
+import fs from 'fs-extra';
 import { IssuesClasses } from '@teambit/component-issues';
+import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
@@ -31,6 +34,32 @@ describe('install command', function () {
     });
     it('bit status should show it with DuplicateComponentAndPackage issue', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.DuplicateComponentAndPackage.name);
+    });
+  });
+});
+
+(supportNpmCiRegistryTesting ? describe : describe.skip)('install --no-optional', function () {
+  this.timeout(0);
+  let helper: Helper;
+  describe('using pnpm', () => {
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      helper.command.install('pkg-with-good-optional --no-optional');
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+    });
+    it('should not install optional dependencies', async () => {
+      const dirs = fs.readdirSync(path.join(helper.fixtures.scopes.localPath, 'node_modules/.pnpm'));
+      expect(dirs).to.not.include('is-positive@1.0.0');
+      expect(dirs).to.include('pkg-with-good-optional@1.0.0');
     });
   });
 });
