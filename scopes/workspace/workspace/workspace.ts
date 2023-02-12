@@ -439,9 +439,11 @@ export class Workspace implements ComponentFactory {
     if (allIds.length === availableIds.length) return [];
     const unavailableIds = allIds.filter((id) => !availableIds.hasWithoutScopeAndVersion(id));
     if (!unavailableIds.length) return [];
+    const removedIds = this.consumer.bitMap.getRemoved();
     const compsWithHead: BitId[] = [];
     await Promise.all(
       unavailableIds.map(async (id) => {
+        if (removedIds.has(id)) return; // we don't care about removed components
         const modelComp = await this.scope.legacyScope.getModelComponentIfExist(id);
         if (modelComp && modelComp.head) compsWithHead.push(id);
       })

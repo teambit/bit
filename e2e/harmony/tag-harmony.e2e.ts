@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import chalk from 'chalk';
+import path from 'path';
 import { uniq } from 'lodash';
 import { Extensions } from '../../src/constants';
 import { SchemaName } from '../../src/consumer/component/component-schema';
@@ -426,6 +427,20 @@ describe('tag components on Harmony', function () {
     it('should not throw', () => {
       // don't skip the build here. otherwise, you won't be able to reproduce.
       expect(() => helper.command.tagAllComponents()).not.to.throw();
+    });
+  });
+  describe('package.json update', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+    });
+    it('should update package.json on the workspace with the new tag', () => {
+      const pkgJson = helper.fs.readJsonFile(
+        path.join('node_modules', `@${helper.scopes.remote}/comp1`, 'package.json')
+      );
+      expect(pkgJson.version).to.equal('0.0.1');
+      expect(pkgJson.componentId.version).to.equal('0.0.1');
     });
   });
 });

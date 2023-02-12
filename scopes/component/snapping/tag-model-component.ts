@@ -349,7 +349,7 @@ export async function tagModelComponent({
     await removeMergeConfigFromComponents(unmergedComps, allComponentsToTag, workspace);
     if (workspace) {
       await linkToNodeModulesByComponents(
-        harmonyComps || (await workspace.getManyByLegacy(allComponentsToTag)),
+        harmonyComps.length ? harmonyComps : await workspace.scope.getManyByLegacy(allComponentsToTag),
         workspace
       );
     }

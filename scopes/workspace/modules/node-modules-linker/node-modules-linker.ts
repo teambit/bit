@@ -38,9 +38,9 @@ export default class NodeModuleLinker {
   consumer: Consumer;
   bitMap: BitMap; // preparation for the capsule, which is going to have only BitMap with no Consumer
   dataToPersist: DataToPersist;
-  constructor(private components: Component[], consumer: Consumer) {
-    this.consumer = consumer;
-    this.bitMap = consumer.bitMap;
+  constructor(private components: Component[], private workspace: Workspace) {
+    this.consumer = this.workspace.consumer;
+    this.bitMap = this.consumer.bitMap;
     this.dataToPersist = new DataToPersist();
   }
   async link(): Promise<NodeModulesLinksResult[]> {
@@ -60,11 +60,14 @@ export default class NodeModuleLinker {
   }
   async getLinks(): Promise<DataToPersist> {
     this.dataToPersist = new DataToPersist();
-    // don't use Promise.all because down the road it calls transformPackageJson of pkg aspect, which loads components
-    await pMapSeries(this.components, (component) => {
+    await pMapSeries(this.components, async (component) => {
       const componentId = component.id.toString();
+      if (!this.bitMap.getComponentIfExist(component.id._legacy)) {
+        logger.debug(`skip linking component to node_modules: ${componentId}. it's not part of the workspace`);
+        return;
+      }
       logger.debug(`linking component to node_modules: ${componentId}`);
-      return this._populateComponentsLinks(component);
+      await this._populateComponentsLinks(component);
     });
 
     return this.dataToPersist;
@@ -288,11 +291,11 @@ export async function linkToNodeModulesByIds(
     return workspace.getMany(componentsIds);
   };
   const components = await getComponents();
-  const nodeModuleLinker = new NodeModuleLinker(components, workspace.consumer);
+  const nodeModuleLinker = new NodeModuleLinker(components, workspace);
   return nodeModuleLinker.link();
 }
 
 export async function linkToNodeModulesByComponents(components: Component[], workspace: Workspace) {
-  const nodeModuleLinker = new NodeModuleLinker(components, workspace.consumer);
+  const nodeModuleLinker = new NodeModuleLinker(components, workspace);
   return nodeModuleLinker.link();
 }

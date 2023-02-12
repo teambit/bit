@@ -43,7 +43,11 @@ export interface PackageJsonProps {
 
 export type PackageJsonPropsRegistry = SlotRegistry<PackageJsonProps>;
 
-export type PkgExtensionConfig = {};
+export type PkgExtensionConfig = {
+  packageManagerPublishArgs?: string[];
+  packageJson?: Record<string, any>;
+  avoidPublishToNPM?: boolean; // by default, if packageJson.name or packageJson.publishConfig are set, it publish to npm.
+};
 
 type GetModulePathOptions = { absPath?: boolean };
 
