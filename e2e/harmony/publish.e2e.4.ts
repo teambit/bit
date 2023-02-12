@@ -151,4 +151,22 @@ describe('publish functionality', function () {
       });
     });
   });
+  describe('prevent publishing to npm when custom-package-name is needed', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      const pkg = {
+        packageJson: {
+          name: 'no', // custom-name so it will try to publish to npm
+        },
+        avoidPublishToNPM: true,
+      };
+      helper.bitJsonc.addToVariant('*', 'teambit.pkg/pkg', pkg);
+    });
+    it('should not publish to npm', () => {
+      // if it was publishing, it would failed with an error:
+      // "failed running npm publish at /Users/davidfirst/Library/Caches/Bit/capsules/d7865720a5a6eb77903fb2536ba6e34efcaa0344/ci.w4hrkz2p-remote_comp1@0.0.1"
+      expect(() => helper.command.tagAllComponents()).to.not.throw();
+    });
+  });
 });
