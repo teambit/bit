@@ -390,6 +390,10 @@ export class SnappingMain {
         idsWithFutureScope: legacyIds,
         allVersions: false,
         laneObject: updatedLane || undefined,
+        // no need other snaps. only the latest one. without this option, when snapping on lane from another-scope, it
+        // may throw an error saying the previous snaps don't exist on the filesystem.
+        // (see the e2e - "snap on a lane when the component is new to the lane and the scope")
+        exportHeadsOnly: true,
       });
       exportedIds = exported.map((e) => e.toString());
     }
