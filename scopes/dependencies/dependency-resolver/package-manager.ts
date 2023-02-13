@@ -47,6 +47,8 @@ export type PackageManagerInstallOptions = {
   nodeVersion?: string;
 
   peerDependencyRules?: PeerDependencyRules;
+
+  includeOptionalDeps?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

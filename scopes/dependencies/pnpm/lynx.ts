@@ -166,6 +166,7 @@ export async function install(
     overrides?: Record<string, string>;
     rootComponents?: boolean;
     rootComponentsForCapsules?: boolean;
+    includeOptionalDeps?: boolean;
   } & Pick<
     InstallOptions,
     'publicHoistPattern' | 'hoistPattern' | 'nodeVersion' | 'engineStrict' | 'peerDependencyRules'
@@ -226,6 +227,11 @@ export async function install(
     resolveSymlinksInInjectedDirs: true,
     resolvePeersFromWorkspaceRoot: true,
     dedupeDirectDeps: true,
+    include: {
+      dependencies: true,
+      devDependencies: true,
+      optionalDependencies: options?.includeOptionalDeps !== false,
+    },
     ...options,
     peerDependencyRules: {
       allowAny: ['*'],
