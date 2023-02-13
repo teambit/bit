@@ -8,6 +8,7 @@ import fs from 'fs-extra';
  * @param destDirs - The target directories.
  */
 export async function hardLinkDirectory(src: string, destDirs: string[]) {
+  if (destDirs.length === 0) return;
   const files = await fs.readdir(src);
   await Promise.all(
     files.map(async (file) => {

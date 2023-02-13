@@ -44,6 +44,7 @@ export default class NodeModuleLinker {
     this.dataToPersist = new DataToPersist();
   }
   async link(): Promise<NodeModulesLinksResult[]> {
+    this.components = this.components.filter((component) => this.bitMap.getComponentIfExist(component.id._legacy));
     const links = await this.getLinks();
     const linksResults = this.getLinksResults();
     const workspacePath = this.consumer ? this.consumer.getPath() : undefined;
@@ -62,10 +63,6 @@ export default class NodeModuleLinker {
     this.dataToPersist = new DataToPersist();
     await pMapSeries(this.components, async (component) => {
       const componentId = component.id.toString();
-      if (!this.bitMap.getComponentIfExist(component.id._legacy)) {
-        logger.debug(`skip linking component to node_modules: ${componentId}. it's not part of the workspace`);
-        return;
-      }
       logger.debug(`linking component to node_modules: ${componentId}`);
       await this._populateComponentsLinks(component);
     });
