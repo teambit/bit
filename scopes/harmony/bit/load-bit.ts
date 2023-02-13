@@ -38,7 +38,7 @@ import BitMap from '@teambit/legacy/dist/consumer/bit-map';
 import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
-import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
+import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { satisfies } from 'semver';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';

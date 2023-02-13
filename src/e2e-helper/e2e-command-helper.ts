@@ -172,6 +172,9 @@ export default class CommandHelper {
   renameScope(oldScope: string, newScope: string, flags = '') {
     return this.runCmd(`bit scope rename ${oldScope} ${newScope} ${flags}`);
   }
+  renameScopeOwner(oldScope: string, newScope: string, flags = '') {
+    return this.runCmd(`bit scope rename-owner ${oldScope} ${newScope} ${flags}`);
+  }
   setEnv(compId: string, envId: string) {
     return this.runCmd(`bit envs set ${compId} ${envId}`);
   }

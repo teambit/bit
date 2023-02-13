@@ -214,6 +214,7 @@ describe('bit remove command', function () {
     });
   });
   describe('soft remove', () => {
+    let afterRemove: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
@@ -221,6 +222,7 @@ describe('bit remove command', function () {
       helper.command.export();
 
       helper.command.removeComponent('comp2', '--soft');
+      afterRemove = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should show a section of removed components', () => {
       const status = helper.command.statusJson();
@@ -228,6 +230,10 @@ describe('bit remove command', function () {
     });
     it('bit status should show the dependent component with an issue because it is now missing the dependency', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
+    });
+    it('bit status should not show the component as unavailable on main', () => {
+      const status = helper.command.statusJson();
+      expect(status.unavailableOnMain).to.have.lengthOf(0);
     });
     it('bit list should not show the removed component', () => {
       const list = helper.command.listParsed();
@@ -295,6 +301,29 @@ describe('bit remove command', function () {
             expect(list).to.have.lengthOf(1);
             expect(list[0].id).to.not.have.string('comp2');
           });
+        });
+      });
+    });
+    describe('soft-tagging the component', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterRemove);
+        helper.fs.outputFile('comp1/index.js', '');
+        helper.command.softTag();
+      });
+      it('should leave the .bitmap entry and soft-tag it as well', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('comp2');
+        const bitMapEntry = bitMap.comp2;
+        expect(bitMapEntry).to.have.property('config');
+        expect(bitMapEntry).to.have.property('nextVersion');
+      });
+      describe('tag --persist', () => {
+        before(() => {
+          helper.command.persistTagWithoutBuild();
+        });
+        it('should remove the entry from .bitmap', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap).to.not.have.property('comp2');
         });
       });
     });

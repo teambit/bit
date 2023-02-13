@@ -23,6 +23,7 @@ import {
   UseLaneDiffStatus,
 } from '@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status';
 import { ChangeType, LaneComponentDiff } from '@teambit/lanes.entities.lane-diff';
+import { Icon } from '@teambit/design.elements.icon';
 import classnames from 'classnames';
 
 import styles from './lane-compare.module.scss';
@@ -93,7 +94,7 @@ export function LaneCompare({
           componentDiff.componentId.changeVersion(componentDiff.sourceHead),
         ])) ||
       [],
-    [loadingLaneDiff]
+    [loadingLaneDiff, base.id.toString(), compare.id.toString()]
   );
 
   const defaultState = useCallback(() => {
@@ -118,7 +119,7 @@ export function LaneCompare({
     return value;
   }, []);
 
-  const [state, setState] = useState<LaneCompareState>(
+  const [laneCompareState, setLaneCompareState] = useState<LaneCompareState>(
     new Map(
       allComponents.map(([_base, _compare]) => {
         const key = computeStateKey(_base, _compare);
@@ -128,9 +129,12 @@ export function LaneCompare({
     )
   );
 
+  const [openDrawerList, setOpenDrawerList] = useState<string[]>([]);
+  const [fullScreenDrawerKey, setFullScreen] = useState<string | undefined>(undefined);
+
   useEffect(() => {
     if (allComponents.length > 0) {
-      setState(
+      setLaneCompareState(
         new Map(
           allComponents.map(([_base, _compare]) => {
             const key = computeStateKey(_base, _compare);
@@ -139,22 +143,21 @@ export function LaneCompare({
           })
         )
       );
+      setFullScreen(undefined);
+      setOpenDrawerList([]);
     }
-  }, [allComponents.length]);
-
-  const [openDrawerList, onToggleDrawer] = useState<string[]>([]);
-  const [fullScreenDrawerKey, setFullScreen] = useState<string | undefined>(undefined);
+  }, [loadingLaneDiff, allComponents.length, base.id.toString(), compare.id.toString()]);
 
   const handleDrawerToggle = (id: string) => {
     const isDrawerOpen = openDrawerList.includes(id);
     if (isDrawerOpen) {
-      onToggleDrawer((list) => list.filter((drawer) => drawer !== id));
+      setOpenDrawerList((list) => list.filter((drawer) => drawer !== id));
       if (id === fullScreenDrawerKey) {
         setFullScreen(undefined);
       }
       return;
     }
-    onToggleDrawer((list) => list.concat(id));
+    setOpenDrawerList((list) => list.concat(id));
   };
 
   const onFullScreenClicked = useCallback(
@@ -162,7 +165,7 @@ export function LaneCompare({
       e.stopPropagation();
       setFullScreen((fullScreenState) => {
         if (fullScreenState === key) return undefined;
-        onToggleDrawer((drawers) => {
+        setOpenDrawerList((drawers) => {
           if (!drawers.includes(key)) return [...drawers, key];
           return drawers;
         });
@@ -177,7 +180,7 @@ export function LaneCompare({
     const _tabs = extractLazyLoadedData(tabs);
 
     const onClicked = (prop: ComponentCompareStateKey) => (id) =>
-      setState((value) => {
+      setLaneCompareState((value) => {
         let existingState = value.get(key);
         const propState = existingState?.[prop];
         if (propState) {
@@ -210,7 +213,7 @@ export function LaneCompare({
       accum.set(next.componentId.toStringWithoutVersion(), next);
       return accum;
     }, new Map<string, LaneComponentDiff>());
-  }, [loadingLaneDiff]);
+  }, [base.id.toString(), compare.id.toString(), loadingLaneDiff]);
 
   const groupedComponents = useMemo(() => {
     if (laneComponentDiffByCompId.size === 0) return null;
@@ -230,12 +233,12 @@ export function LaneCompare({
       accum.set(changeType, existing.concat([[baseId, compareId]]));
       return accum;
     }, new Map<ChangeType, Array<[ComponentID | undefined, ComponentID | undefined]>>());
-  }, [base.id.toString(), compare.id.toString(), laneComponentDiffByCompId.size]);
+  }, [base.id.toString(), compare.id.toString(), laneComponentDiffByCompId.size, loadingLaneDiff, laneDiff]);
 
   const Loading = useMemo(() => {
     if (!loadingLaneDiff) return null;
     return <LaneCompareLoader />;
-  }, [loadingLaneDiff]);
+  }, [base.id.toString(), compare.id.toString(), loadingLaneDiff]);
 
   const ComponentCompares = useMemo(() => {
     if (!groupedComponents?.size) return [];
@@ -277,9 +280,7 @@ export function LaneCompare({
                         className={styles.fullScreenIcon}
                         onClick={onFullScreenClicked(compKey)}
                       >
-                        <img
-                          src={`https://static.bit.dev/bit-icons/${fullScreenDrawerKey ? 'shrink' : 'enlarge'}.svg`}
-                        ></img>
+                        <Icon of={fullScreenDrawerKey ? 'reduce' : 'expand'} />
                       </div>,
                     ],
                     className: classnames(styles.componentCompareDrawer, isFullScreen && styles.fullScreen),
@@ -292,7 +293,7 @@ export function LaneCompare({
                     compareId,
                     changes,
                     className: classnames(styles.componentCompareContainer, isFullScreen && styles.fullScreen),
-                    state: state.get(compKey),
+                    state: laneCompareState.get(compKey),
                     hooks: hooks(baseId, compareId),
                     customUseComponent,
                     Loader: ComponentCompareLoader,

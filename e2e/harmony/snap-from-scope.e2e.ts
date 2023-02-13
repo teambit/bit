@@ -166,4 +166,54 @@ describe('snap components from scope', function () {
       });
     });
   });
+  describe('snap on a lane when the component is new to the lane and the scope', () => {
+    let bareScope;
+    let beforeSnappingOnScope: string;
+    let anotherRemote: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.fixtures.populateComponents(1, false);
+      helper.command.setScope(scopeName, 'comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      // snap multiple times on main. these snaps will be missing locally during the snap-from-scope
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.createLane();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      bareScope = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareScope.scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, bareScope.scopePath);
+      beforeSnappingOnScope = helper.scopeHelper.cloneScope(bareScope.scopePath);
+    });
+    describe('running with --push flag', () => {
+      before(() => {
+        const data = [
+          {
+            componentId: `${anotherRemote}/comp1`,
+            message: `msg`,
+          },
+        ];
+        helper.scopeHelper.getClonedScope(beforeSnappingOnScope, bareScope.scopePath);
+        helper.command.snapFromScope(bareScope.scopePath, data, `--push --lane ${helper.scopes.remote}/dev`);
+      });
+      // previously, it was throwing an error during the export:
+      // error: version "ebf5f55d3b8f1897cb1ac4f236b058b4ddd0c701" of component bnbu2jms-remote2/comp1 was not found on the filesystem. try running "bit import". if it doesn't help, try running "bit import bnbu2jms-remote2/comp1 --objects"
+      // because it was trying to export previous snaps from main although they were not imported locally
+      it('should export successfully to the remote', () => {
+        const snapOnLaneOnBareScope = helper.command.getHeadOfLane('dev', 'comp1', bareScope.scopePath);
+        const snapOnLaneOnRemote = helper.command.getHeadOfLane('dev', 'comp1', helper.scopes.remotePath);
+        expect(snapOnLaneOnBareScope).to.equal(snapOnLaneOnRemote);
+      });
+    });
+  });
 });

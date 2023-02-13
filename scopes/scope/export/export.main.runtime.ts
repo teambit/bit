@@ -266,7 +266,7 @@ export class ExportMain {
 
     const getVersionsToExport = async (modelComponent: ModelComponent): Promise<Ref[]> => {
       if (exportHeadsOnly) {
-        const head = modelComponent.head;
+        const head = laneObject?.getComponent(modelComponent.toBitId())?.head || modelComponent.head;
         if (!head)
           throw new Error(
             `getVersionsToExport should export the head only, but the head of ${modelComponent.id()} is missing`
