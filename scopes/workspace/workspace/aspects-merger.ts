@@ -1,10 +1,12 @@
 import { Harmony } from '@teambit/harmony';
 import { Component, ComponentID } from '@teambit/component';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
+import { BitId } from '@teambit/legacy-bit-id';
 import { EnvsAspect } from '@teambit/envs';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { partition, mergeWith, difference } from 'lodash';
+import { partition, mergeWith, difference, merge } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';
 import { MergeConflictFile } from './merge-conflict-file';
@@ -13,9 +15,14 @@ export class AspectsMerger {
   private consumer: Consumer;
   private warnedAboutMisconfiguredEnvs: string[] = []; // cache env-ids that have been errored about not having "env" type
   readonly mergeConflictFile: MergeConflictFile;
+  private mergeConfigDepsResolverDataCache: { [compIdStr: string]: Record<string, any> } = {};
   constructor(private workspace: Workspace, private harmony: Harmony) {
     this.consumer = workspace.consumer;
     this.mergeConflictFile = new MergeConflictFile(workspace.path);
+  }
+
+  getDepsDataOfMergeConfig(id: BitId) {
+    return this.mergeConfigDepsResolverDataCache[id.toString()];
   }
 
   /**
@@ -64,6 +71,7 @@ export class AspectsMerger {
       conf[EnvsAspect.id] = { env: id };
       conf[env] = {};
     };
+
     const unmergedData = this.getUnmergedData(componentId);
     const unmergedDataMergeConf = unmergedData?.mergedConfig;
     const getMergeConfigCombined = () => {
@@ -81,11 +89,15 @@ export class AspectsMerger {
     };
     const mergeConfigCombined = getMergeConfigCombined();
     adjustEnvsOnConfigMerge(mergeConfigCombined || {});
+
     const configMergeExtensions = mergeConfigCombined
       ? ExtensionDataList.fromConfigObject(mergeConfigCombined)
       : undefined;
 
+    this.removeAutoDepsFromConfig(componentId, configMergeExtensions);
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
+    // backward compatibility. previously, it was saved as an array into the model (when there was merge-config)
+    this.removeAutoDepsFromConfig(componentId, scopeExtensions);
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
     const scopeExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
     const scopeExtensionsSpecific = new ExtensionDataList(...specific);
@@ -185,6 +197,46 @@ export class AspectsMerger {
       beforeMerge: extensionsToMerge,
       errors,
     };
+  }
+
+  /**
+   * from the merge-config we get the dep-resolver policy as an array, because it needs to support "force" prop.
+   * however, when we save the config, we want to save it as an object, so we need split the data into two:
+   * 1. force: true, which gets saved into the config.
+   * 2. force: false, which gets saved into the data.dependencies later on. see the LegacyDependencyResolver.registerOnComponentAutoDetectOverridesGetter hook
+   */
+  private removeAutoDepsFromConfig(componentId: ComponentID, conf?: ExtensionDataList) {
+    if (!conf) return;
+    const policy = conf.findCoreExtension(DependencyResolverAspect.id)?.config.policy;
+    if (!policy) return;
+
+    const mergeConfigObj = {};
+    ['dependencies', 'devDependencies', 'peerDependencies'].forEach((key) => {
+      if (!policy[key]) return;
+      // this is only relevant when it is saved as an array. otherwise, it's always force: true.
+      if (!Array.isArray(policy[key])) return;
+
+      mergeConfigObj[key] = policy[key].filter((dep) => !dep.force);
+      policy[key] = policy[key].filter((dep) => dep.force);
+
+      if (!policy[key].length) {
+        delete policy[key];
+        return;
+      }
+      // convert to object
+      policy[key] = policy[key].reduce((acc, current) => {
+        acc[current.name] = current.version;
+        return acc;
+      }, {});
+    });
+
+    if (!this.mergeConfigDepsResolverDataCache[componentId.toString()]) {
+      this.mergeConfigDepsResolverDataCache[componentId.toString()] = {};
+    }
+    this.mergeConfigDepsResolverDataCache[componentId.toString()] = merge(
+      this.mergeConfigDepsResolverDataCache[componentId.toString()],
+      mergeConfigObj
+    );
   }
 
   private getUnmergedData(componentId: ComponentID): UnmergedComponent | undefined {
