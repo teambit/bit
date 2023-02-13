@@ -543,7 +543,7 @@ export class InstallMain {
     workspaceRes.legacyLinkResults = legacyResults.linksResults;
     workspaceRes.legacyLinkCodemodResults = legacyResults.codemodResults;
 
-    if (options.linkToBitRoots) {
+    if (this.dependencyResolver.hasRootComponents() && options.linkToBitRoots) {
       await this._linkAllComponentsToBitRoots(compDirMap);
     }
     return res;
