@@ -54,7 +54,9 @@ describe('install command', function () {
       helper.command.install('pkg-with-good-optional --no-optional');
     });
     after(() => {
+      helper.command.delConfig('registry');
       npmCiRegistry.destroy();
+      helper.scopeHelper.destroy();
     });
     it('should not install optional dependencies', async () => {
       const dirs = fs.readdirSync(path.join(helper.fixtures.scopes.localPath, 'node_modules/.pnpm'));

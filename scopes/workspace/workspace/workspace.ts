@@ -1045,6 +1045,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.aspectsMerger.mergeConflictFile;
   }
 
+  getDepsDataOfMergeConfig(id: BitId): Record<string, any> | undefined {
+    return this.aspectsMerger.getDepsDataOfMergeConfig(id);
+  }
+
   async listComponentsDuringMerge(): Promise<ComponentID[]> {
     const unmergedComps = this.scope.legacyScope.objects.unmergedComponents.getComponents();
     const bitIds = unmergedComps.map((u) => new BitId(u.id));
