@@ -55,6 +55,7 @@ describe('install command', function () {
     });
     after(() => {
       npmCiRegistry.destroy();
+      helper.scopeHelper.destroy();
     });
     it('should not install optional dependencies', async () => {
       const dirs = fs.readdirSync(path.join(helper.fixtures.scopes.localPath, 'node_modules/.pnpm'));
