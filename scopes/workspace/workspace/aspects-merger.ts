@@ -150,13 +150,16 @@ export class AspectsMerger {
     const setDataListAsSpecific = (extensions: ExtensionDataList) => {
       extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
     };
-    if (configMergeExtensions && !excludeOrigins.includes('ConfigMerge')) {
-      await addExtensionsToMerge(ExtensionDataList.fromArray(configMergeExtensions), 'ConfigMerge');
-    }
     if (bitMapExtensions && !excludeOrigins.includes('BitmapFile')) {
       const extensionDataList = ExtensionDataList.fromConfigObject(bitMapExtensions);
       setDataListAsSpecific(extensionDataList);
       await addExtensionsToMerge(extensionDataList, 'BitmapFile');
+    }
+    // config-merge is after the .bitmap. because normally if you have config set in .bitmap, you won't
+    // be able to lane-merge. (unless you specify --ignore-config-changes).
+    // so, if there is config in .bitmap, it probably happened after lane-merge.
+    if (configMergeExtensions && !excludeOrigins.includes('ConfigMerge')) {
+      await addExtensionsToMerge(ExtensionDataList.fromArray(configMergeExtensions), 'ConfigMerge');
     }
     if (configFileExtensions && !excludeOrigins.includes('ComponentJsonFile')) {
       setDataListAsSpecific(configFileExtensions);
