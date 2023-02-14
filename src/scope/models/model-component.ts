@@ -306,7 +306,7 @@ export default class Component extends BitObject {
           return LaneId.from(DEFAULT_LANE, this.scope as string);
         };
         const remoteToCheck = getRemoteToCheck();
-        this.laneHeadRemote = await repo.remoteLanes.getRef(remoteToCheck, this.toBitId());
+        this.laneHeadRemote = (await repo.remoteLanes.getRef(remoteToCheck, this.toBitId())) || this.head;
       }
       // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
       this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
