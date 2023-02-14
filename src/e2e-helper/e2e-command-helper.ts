@@ -228,6 +228,9 @@ export default class CommandHelper {
   dependenciesSet(pattern: string, pkg: string, flags = '') {
     return this.runCmd(`bit dependencies set ${pattern} ${pkg} ${flags}`);
   }
+  dependenciesUnset(pattern: string, pkg: string, flags = '') {
+    return this.runCmd(`bit dependencies unset ${pattern} ${pkg} ${flags}`);
+  }
   dependenciesRemove(pattern: string, pkg: string, flags = '') {
     return this.runCmd(`bit dependencies remove ${pattern} ${pkg} ${flags}`);
   }

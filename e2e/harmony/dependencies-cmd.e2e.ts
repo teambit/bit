@@ -188,4 +188,38 @@ describe('bit dependencies command', function () {
       expect(showConfig.config.policy.dependencies).to.deep.equal({ lodash: '3.3.1' });
     });
   });
+  describe('bit deps unset', () => {
+    describe('one dep was specifically set and one dep was auto-detected', () => {
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.fixtures.populateComponents(1);
+        helper.fs.writeFile('comp1/index.js', `import lodash from 'lodash';`);
+        helper.npm.addFakeNpmPackage('lodash', '3.3.1');
+        helper.command.dependenciesSet('comp1', 'ramda@0.20.0');
+        helper.command.tagWithoutBuild();
+      });
+      describe('unset the auto-detected', () => {
+        before(() => {
+          helper.command.dependenciesUnset('comp1', 'lodash');
+        });
+        it('should not remove the dependency', () => {
+          const deps = helper.command.showComponentParsedHarmonyByTitle('comp1', 'dependencies');
+          const ids = deps.map((d) => d.id);
+          expect(ids).to.include('lodash');
+          expect(ids).to.include('ramda'); // just to make sure it didn't touch this as well.
+        });
+      });
+      describe('unset the previously deps-set', () => {
+        before(() => {
+          helper.command.dependenciesUnset('comp1', 'ramda');
+        });
+        it('should remove the dependency', () => {
+          const deps = helper.command.showComponentParsedHarmonyByTitle('comp1', 'dependencies');
+          const ids = deps.map((d) => d.id);
+          expect(ids).to.not.include('ramda');
+          expect(ids).to.include('lodash'); // just to make sure it didn't change this
+        });
+      });
+    });
+  });
 });
