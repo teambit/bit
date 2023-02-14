@@ -54,6 +54,7 @@ describe('install command', function () {
       helper.command.install('pkg-with-good-optional --no-optional');
     });
     after(() => {
+      helper.command.delConfig('registry');
       npmCiRegistry.destroy();
       helper.scopeHelper.destroy();
     });
