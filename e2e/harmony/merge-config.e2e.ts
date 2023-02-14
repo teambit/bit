@@ -304,7 +304,7 @@ describe('merge config scenarios', function () {
         const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
         const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
         expect(ramdaDep.version).to.equal('0.0.20');
-        expect(ramdaDep.lifecycle).to.equal('dev');
+        expect(ramdaDep.lifecycle).to.equal('runtime');
       });
     });
     describe('fixing the conflict with theirs', () => {
