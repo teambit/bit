@@ -2,7 +2,12 @@ type generateNodeModulesPatternOptions = {
   /**
    * An array of packages name to exclude in the regex.
    */
-  packages: string[];
+  packages?: string[];
+  /**
+   * The regex should exclude component packages.
+   * A component package looks like `@org/scope.namespace.component-name`.
+   */
+  excludeComponents?: boolean;
 };
 
 /**
@@ -10,19 +15,23 @@ type generateNodeModulesPatternOptions = {
  * @param {string[]} packages - array of packages.
  * @returns {string} node modules catched packages regex.
  */
-export function generateNodeModulesPattern({ packages }: generateNodeModulesPatternOptions): string {
-  const negativeLookahead = packages.reduce((acc, curr) => {
+export function generateNodeModulesPattern({
+  packages = [],
+  excludeComponents,
+}: generateNodeModulesPatternOptions): string {
+  const negativeLookaheadPatterns = packages.reduce((acc: string[], curr) => {
     const yarnPattern = curr;
-    const pnpmPattern = `.pnpm/.*[+/]${curr}.*`;
-    // The new version of pnpm is not adding the registry as part of the path
-    // so adding this as well to support it
-    const newPnpmPattern = `.pnpm/${curr}.*`;
-
-    if (acc) {
-      return `${acc}|${yarnPattern}|${pnpmPattern}|${newPnpmPattern}`;
-    }
-    return `${yarnPattern}|${pnpmPattern}|${newPnpmPattern}`;
-  }, '');
-  const transformIgnorePattern = `node_modules/(?!(${negativeLookahead})/)`;
+    const pnpmCurr = curr.replace(/\//g, '\\+');
+    const pnpmPattern = `\\.pnpm/(.*[+/])?${pnpmCurr}.*`;
+    return [...acc, yarnPattern, pnpmPattern];
+  }, []);
+  if (excludeComponents) {
+    negativeLookaheadPatterns.push(
+      '@[^/]+/([^/]+\\.)+[^/]+',
+      '\\.pnpm/(.+[+/])?@[^+]+\\+([^+]+\\.)+[^+]+',
+      '\\.pnpm/.+/node_modules/@[^/]+/([^/]+\\.)+[^/]+'
+    );
+  }
+  const transformIgnorePattern = `node_modules/(?!(${negativeLookaheadPatterns.join('|')})/)`;
   return transformIgnorePattern;
 }
