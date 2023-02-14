@@ -120,9 +120,11 @@ describe('generateNodeModulesPattern()', () => {
       [false, '@myorg/scope.namespace.comp-name'],
       [false, '@myorg/scope.ns1.ns2.comp-name'],
     ]
+    // @ts-ignore
     it.each(fixtures)(`should return %s for %s in yarn node_modules`, (expectedResult: boolean, pkgName: string) => {
       expect(regex.test(`node_modules/${pkgName}/`)).toEqual(expectedResult);
     });
+    // @ts-ignore
     it.each(fixtures)(`should return %s for %s in pnpm node_modules`, (expectedResult: boolean, pkgName: string) => {
       expect(regex.test(`node_modules/.pnpm/${pkgName.replace(/\//g, '+')}/`)).toEqual(expectedResult);
       expect(regex.test(`node_modules/.pnpm/registry.npmjs.org+${pkgName.replace(/\//g, '+')}/`)).toEqual(expectedResult);
@@ -144,7 +146,6 @@ describe('generateNodeModulesPattern()', () => {
     let regex;
     beforeAll(() => {
       pattern = generateNodeModulesPattern({ packages: ['@shohamgilad'], excludeComponents: false });
-      console.log(pattern);
       regex = new RegExp(pattern);
     });
     it('should exclude package under the .pnpm directory', () => {
@@ -156,7 +157,6 @@ describe('generateNodeModulesPattern()', () => {
     let regex;
     beforeAll(() => {
       pattern = generateNodeModulesPattern({ excludeComponents: true });
-      console.log(pattern);
       regex = new RegExp(pattern);
     });
     it('should exclude package under the .pnpm directory', () => {
