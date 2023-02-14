@@ -17,13 +17,16 @@ export function LiveExample() {
 export function RegexExample() {
   const [packagesToExclude, setPackagesToExclude] = useState('@myorg,react,some-lib');
   const [packageToCheck, setPackageToCheck] = useState('@myorg');
+  const [excludeComponents, setExcludeComponents] = useState(false);
+  const [calculatedRegex, setCalculatedRegex] = useState('');
   const [regexResult, setRegexResult] = useState(true);
 
   useEffect(() => {
-    const pattern = generateNodeModulesPattern({ packages: packagesToExclude.split(',') });
+    const pattern = generateNodeModulesPattern({ packages: packagesToExclude.split(','), excludeComponents });
+    setCalculatedRegex(pattern);
     const regex = new RegExp(pattern);
-    setRegexResult(regex.test(`node_modules/${packageToCheck}/some-path`) === false);
-  }, [packagesToExclude, packageToCheck]);
+    setRegexResult(regex.test(`node_modules/${packageToCheck}/some-path`));
+  }, [packagesToExclude, packageToCheck, excludeComponents]);
 
   return (
     <div style={{ width: 500 }}>
@@ -33,6 +36,12 @@ export function RegexExample() {
         onChange={(e) => setPackagesToExclude(e.target.value)}
         style={{ width: 300, marginBottom: 12 }}
       />
+      <div>Exclude components:</div>
+      <input
+        type="checkbox"
+        checked={excludeComponents}
+        onChange={(e) => setExcludeComponents(e.target.checked)}
+      />
       <div>Write a package that you want to check with Regex test:</div>
       <div style={{ marginBottom: 12 }}>
         <input value="node_modules/" disabled />
@@ -40,7 +49,11 @@ export function RegexExample() {
         <input value="/some-path" disabled />
       </div>
       <div style={{ backgroundColor: '#ededed', padding: 8 }}>
-        regex exclude {packageToCheck} package: {regexResult.toString()}
+        regex exclude {packageToCheck} excludeComponents: {excludeComponents.toString()}
+        <br />
+        regex: {calculatedRegex}
+        <br />
+        result: {regexResult.toString()}
       </div>
     </div>
   );
