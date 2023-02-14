@@ -6,7 +6,7 @@ import { Text, Newline } from 'ink';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import highlight from 'cli-highlight';
 import { sep } from 'path';
-import { BrowserRuntimeSlot } from './bundler.main.runtime';
+import { BrowserRuntimeSlot, BundlerConfigSlot } from './bundler.main.runtime';
 import { ComponentServer } from './component-server';
 import { dedupEnvs } from './dedup-envs';
 import { DevServer } from './dev-server';
@@ -15,7 +15,7 @@ import { getEntry } from './get-entry';
 
 export type DevServerServiceOptions = { dedicatedEnvDevServers?: string[] };
 
-type DevServiceTransformationMap = ServiceTransformationMap  & {
+type DevServiceTransformationMap = ServiceTransformationMap & {
   /**
    * Required for `bit start`
    */
@@ -25,10 +25,8 @@ type DevServiceTransformationMap = ServiceTransformationMap  & {
    * Returns and configures the dev server
    * Required for `bit start`
    */
-  getDevServer?: (
-    context: DevServerContext,
-  ) => DevServer | Promise<DevServer>;
-}
+  getDevServer?: (context: DevServerContext) => DevServer | Promise<DevServer>;
+};
 
 export type DevServerDescriptor = {
   /**
@@ -68,7 +66,9 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     /**
      * browser runtime slot
      */
-    private runtimeSlot: BrowserRuntimeSlot
+    private runtimeSlot: BrowserRuntimeSlot,
+
+    private bundlerConfigSlot: BundlerConfigSlot
   ) {}
 
   async render(env: EnvDefinition, context: ExecutionContext[]) {
@@ -122,7 +122,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       getDevServer: (context) => {
         return preview.getDevServer(context)(envContext);
       },
-    }
+    };
   }
 
   // async run(context: ExecutionContext): Promise<ComponentServer[]> {
@@ -147,7 +147,14 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
         const devServerContext = await this.buildContext(mainContext, additionalContexts);
         const devServer: DevServer = await devServerContext.envRuntime.env.getDevServer(devServerContext);
 
-        return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], devServer);
+        const modifiedDevServer = this.bundlerConfigSlot
+          .values()
+          .reduce(
+            (updatedDevServer, bundleAnalyzerSlotFn) => bundleAnalyzerSlotFn(updatedDevServer, { envId: id }),
+            devServer
+          );
+
+        return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], modifiedDevServer);
       })
     );
 

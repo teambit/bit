@@ -12,8 +12,13 @@ import { BundlerContext } from './bundler-context';
 import { devServerSchema } from './dev-server.graphql';
 import { DevServerService } from './dev-server.service';
 import { BundlerService } from './bundler.service';
+import { DevServer } from './dev-server';
 
 export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
+export type BundlerConfigSlot = SlotRegistry<any>;
+
+type WebpackDevServer = DevServer & { config: { plugins: any[] } };
+export type BundlerConfigSlotFn = (devServer: WebpackDevServer, { envId }: { envId: string }) => WebpackDevServer;
 
 export type BundlerConfig = {
   dedicatedEnvDevServers: string[];
@@ -43,7 +48,9 @@ export class BundlerMain {
     /**
      * browser runtime slot.
      */
-    private runtimeSlot: BrowserRuntimeSlot
+    private runtimeSlot: BrowserRuntimeSlot,
+
+    private bundlerConfigSlot: BundlerConfigSlot
   ) {}
 
   /**
@@ -108,13 +115,22 @@ export class BundlerMain {
   }
 
   /**
+   * register a new bundler analyser configuration.
+   * @param bundlerConfigSlot
+   */
+  registerConfig(bundlerConfigSlot: BundlerConfigSlotFn) {
+    this.bundlerConfigSlot.register(bundlerConfigSlot);
+    return this;
+  }
+
+  /**
    * component servers.
    */
   private _componentServers: null | ComponentServer[];
 
   private indexByComponent() {}
 
-  static slots = [Slot.withType<BrowserRuntime>()];
+  static slots = [Slot.withType<BrowserRuntime>(), Slot.withType<BrowserRuntime>()];
 
   static runtime = MainRuntime;
   static dependencies = [PubsubAspect, EnvsAspect, GraphqlAspect, DependencyResolverAspect, ComponentAspect];
@@ -126,10 +142,10 @@ export class BundlerMain {
   static async provider(
     [pubsub, envs, graphql, dependencyResolver]: [PubsubMain, EnvsMain, GraphqlMain, DependencyResolverMain],
     config,
-    [runtimeSlot]: [BrowserRuntimeSlot]
+    [runtimeSlot, bundlerConfigSlot]: [BrowserRuntimeSlot, any]
   ) {
-    const devServerService = new DevServerService(pubsub, dependencyResolver, runtimeSlot);
-    const bundler = new BundlerMain(config, pubsub, envs, devServerService, runtimeSlot);
+    const devServerService = new DevServerService(pubsub, dependencyResolver, runtimeSlot, bundlerConfigSlot);
+    const bundler = new BundlerMain(config, pubsub, envs, devServerService, runtimeSlot, bundlerConfigSlot); // todo
     envs.registerService(devServerService, new BundlerService());
 
     graphql.register(devServerSchema(bundler));
