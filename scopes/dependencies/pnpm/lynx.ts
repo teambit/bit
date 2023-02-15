@@ -29,7 +29,6 @@ import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
-import userHome from 'user-home';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
@@ -45,12 +44,12 @@ const STORE_CACHE: Record<string, { ctrl: StoreController; dir: string }> = {};
 async function createStoreController(
   options: {
     rootDir: string;
-    storeDir: string;
+    storeDir?: string;
     cacheDir: string;
     registries: Registries;
     proxyConfig: PackageManagerProxyConfig;
     networkConfig: PackageManagerNetworkConfig;
-  } & Pick<CreateStoreControllerOptions, 'packageImportMethod'>
+  } & Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir'>
 ): Promise<{ ctrl: StoreController; dir: string }> {
   const authConfig = getAuthConfig(options.registries);
   const opts: CreateStoreControllerOptions = {
@@ -70,8 +69,8 @@ async function createStoreController(
     maxSockets: options.networkConfig.maxSockets,
     networkConcurrency: options.networkConfig.networkConcurrency,
     packageImportMethod: options.packageImportMethod,
-    pnpmHomeDir: path.join(userHome, '.pnpm'), // This is not actually used in our case
     resolveSymlinksInInjectedDirs: true,
+    pnpmHomeDir: options.pnpmHomeDir,
   };
   // We should avoid the recreation of store.
   // The store holds cache that makes subsequent resolutions faster.
@@ -119,14 +118,14 @@ async function generateResolverAndFetcher(
 export async function getPeerDependencyIssues(
   manifestsByPaths: Record<string, any>,
   opts: {
-    storeDir: string;
+    storeDir?: string;
     cacheDir: string;
     registries: Registries;
     rootDir: string;
     proxyConfig: PackageManagerProxyConfig;
     networkConfig: PackageManagerNetworkConfig;
     overrides?: Record<string, string>;
-  } & Pick<CreateStoreControllerOptions, 'packageImportMethod'>
+  } & Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir'>
 ): Promise<PeerDependencyIssuesByProjects> {
   const projects: ProjectOptions[] = [];
   const workspacePackages = {};
@@ -156,7 +155,7 @@ export async function getPeerDependencyIssues(
 export async function install(
   rootDir: string,
   manifestsByPaths: Record<string, ProjectManifest>,
-  storeDir: string,
+  storeDir: string | undefined,
   cacheDir: string,
   registries: Registries,
   proxyConfig: PackageManagerProxyConfig = {},
@@ -171,7 +170,7 @@ export async function install(
     InstallOptions,
     'publicHoistPattern' | 'hoistPattern' | 'nodeVersion' | 'engineStrict' | 'peerDependencyRules'
   > &
-    Pick<CreateStoreControllerOptions, 'packageImportMethod'>,
+    Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
@@ -208,6 +207,7 @@ export async function install(
     proxyConfig,
     networkConfig,
     packageImportMethod: options?.packageImportMethod,
+    pnpmHomeDir: options?.pnpmHomeDir,
   });
   const opts: InstallOptions = {
     allProjects,

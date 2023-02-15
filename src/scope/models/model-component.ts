@@ -306,7 +306,9 @@ export default class Component extends BitObject {
           return LaneId.from(DEFAULT_LANE, this.scope as string);
         };
         const remoteToCheck = getRemoteToCheck();
-        this.laneHeadRemote = await repo.remoteLanes.getRef(remoteToCheck, this.toBitId());
+        // if no remote-ref was found, because it's checked out to a lane, it's safe to assume that
+        // this.head should be on the original-remote. hence, FetchMissingHistory will retrieve it on lane-remote
+        this.laneHeadRemote = (await repo.remoteLanes.getRef(remoteToCheck, this.toBitId())) || this.head;
       }
       // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
       this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());

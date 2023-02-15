@@ -1488,13 +1488,6 @@ export class DependencyResolverMain {
       const workspacePolicy = dependencyResolver.getWorkspacePolicy();
       return workspacePolicy.toManifest();
     });
-    DependencyResolver.registerOnComponentAutoDetectOverridesGetter(
-      async (configuredExtensions: ExtensionDataList, id: BitId, legacyFiles: SourceFile[]) => {
-        const policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
-        return policy.toLegacyAutoDetectOverrides();
-      }
-    );
-
     DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId, files: SourceFile[]) => {
       const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id, files);
       if (!envPolicy) return undefined;

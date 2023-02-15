@@ -3,7 +3,7 @@ import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain, CommandList } from '@teambit/cli';
 import type { ComponentMain, Component } from '@teambit/component';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverMain, VariantPolicy } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony, SlotRegistry } from '@teambit/harmony';
@@ -16,6 +16,9 @@ import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { BitId } from '@teambit/legacy-bit-id';
+import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { DependencyResolver as LegacyDependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
@@ -131,6 +134,18 @@ export default async function provideWorkspace(
     }
   );
 
+  LegacyDependencyResolver.registerOnComponentAutoDetectOverridesGetter(
+    async (configuredExtensions: ExtensionDataList, id: BitId, legacyFiles: SourceFile[]) => {
+      let policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
+      const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
+      if (depsDataOfMergeConfig) {
+        const policiesFromMergeConfig = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, 'auto');
+        policy = VariantPolicy.mergePolices([policy, policiesFromMergeConfig]);
+      }
+      return policy.toLegacyAutoDetectOverrides();
+    }
+  );
+
   ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id) => {
     const componentId = await workspace.resolveComponentId(id);
     // We call here directly workspace.scope.get instead of workspace.get because part of the workspace get is loading consumer component
@@ -190,7 +205,7 @@ export default async function provideWorkspace(
     const componentIds = await workspace.resolveMultipleComponentIds(aspects);
     componentIds.forEach((id) => {
       workspace.clearComponentCache(id);
-    }); 
+    });
   });
 
   // add sub-commands "set" and "unset" to envs command.
