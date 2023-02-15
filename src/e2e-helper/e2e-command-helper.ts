@@ -163,6 +163,10 @@ export default class CommandHelper {
   delConfig(configName: string) {
     return this.runCmd(`bit config del ${configName}`);
   }
+  /**
+   * careful! this changes the config globally and will affect all e2e-tests.
+   * try to avoid. if not possible, make sure to call `delConfig` in the `after` hook
+   */
   setConfig(configName: string, configVal: string) {
     return this.runCmd(`bit config set ${configName} ${configVal}`);
   }
@@ -223,6 +227,9 @@ export default class CommandHelper {
   }
   dependenciesSet(pattern: string, pkg: string, flags = '') {
     return this.runCmd(`bit dependencies set ${pattern} ${pkg} ${flags}`);
+  }
+  dependenciesUnset(pattern: string, pkg: string, flags = '') {
+    return this.runCmd(`bit dependencies unset ${pattern} ${pkg} ${flags}`);
   }
   dependenciesRemove(pattern: string, pkg: string, flags = '') {
     return this.runCmd(`bit dependencies remove ${pattern} ${pkg} ${flags}`);

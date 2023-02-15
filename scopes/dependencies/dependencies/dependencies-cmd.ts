@@ -158,6 +158,40 @@ export class DependenciesRemoveCmd implements Command {
   }
 }
 
+export class DependenciesUnsetCmd implements Command {
+  name = 'unset <component-pattern> <package...>';
+  arguments = [
+    { name: 'component-pattern', description: COMPONENT_PATTERN_HELP },
+    {
+      name: 'package...',
+      description:
+        'package name with or without a version, e.g. "lodash@1.0.0" or just "lodash" which will remove all lodash instances of any version',
+    },
+  ];
+  group = 'info';
+  description = 'unset a dependency to component(s) that was previously set by "bit deps set"';
+  alias = '';
+  options = [
+    ['d', 'dev', 'unset from devDependencies'],
+    ['p', 'peer', 'unset from peerDependencies'],
+  ] as CommandOptions;
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([pattern, packages]: [string, string[]], removeDepsFlags: RemoveDependenciesFlags) {
+    const results = await this.deps.removeDependency(pattern, packages, removeDepsFlags, true);
+    if (!results.length) {
+      return chalk.yellow('the specified component-pattern do not use the entered packages. nothing to unset');
+    }
+
+    const output = results
+      .map(({ id, removedPackages }) => `${chalk.underline(id.toString())}\n${removedPackages.join('\n')}`)
+      .join('\n\n');
+
+    return `${chalk.green('successfully unset dependencies')}\n${output}`;
+  }
+}
+
 export class DependenciesResetCmd implements Command {
   name = 'reset <component-pattern>';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
