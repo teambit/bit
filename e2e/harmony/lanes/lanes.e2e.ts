@@ -908,6 +908,45 @@ describe('bit lane command', function () {
       expect(getFirstTagFromRemote).to.not.throw();
     });
   });
+  describe('multiple scopes - lane-scope does not have main tags', () => {
+    let anotherRemote: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.fixtures.populateComponents(1, false);
+      helper.command.setScope(scopeName, 'comp1');
+      helper.command.tagAllWithoutBuild();
+      // snap multiple times on main. these snaps will be missing locally during the snap-from-scope
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.command.createLane();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.import(`${anotherRemote}/comp1`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    it('bit status should show only the last snap of the imported component as staged', () => {
+      const status = helper.command.statusJson();
+      status.stagedComponents.forEach((comp) => {
+        expect(comp.versions).to.have.lengthOf(1);
+      });
+    });
+    it('bit export should not throw an error', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+  });
   describe('snapping and un-tagging on a lane', () => {
     let afterFirstSnap: string;
     before(() => {
