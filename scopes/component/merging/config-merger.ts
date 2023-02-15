@@ -105,7 +105,6 @@ export class ConfigMerger {
       if (this.handledExtIds.includes(id)) return null;
       this.handledExtIds.push(id);
       if (otherExt.extensionId && otherExt.extensionId.hasVersion()) {
-        // if (this.compIdStr === 'teambit.dot-cloud/community-cloud') console.log('current', this.currentAspects);
         // avoid using the id from the other lane if it exits in the workspace. prefer the id from the workspace.
         const idFromWorkspace = this.getIdFromWorkspace(otherExt.extensionId.toStringWithoutVersion());
         if (idFromWorkspace) {
