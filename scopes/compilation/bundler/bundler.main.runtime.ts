@@ -14,8 +14,7 @@ import { DevServerService } from './dev-server.service';
 import { BundlerService } from './bundler.service';
 import { DevServer } from './dev-server';
 
-export type WebpackDevServer = DevServer & { config: { plugins: any[] } };
-export type DevServerTransformer = (devServer: WebpackDevServer, { envId }: { envId: string }) => WebpackDevServer;
+export type DevServerTransformer = (devServer: DevServer, { envId }: { envId: string }) => DevServer;
 
 export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
 export type DevServerTransformerSlot = SlotRegistry<DevServerTransformer>;

@@ -6,7 +6,7 @@ import { Text, Newline } from 'ink';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import highlight from 'cli-highlight';
 import { sep } from 'path';
-import { BrowserRuntimeSlot, DevServerTransformerSlot, WebpackDevServer } from './bundler.main.runtime';
+import { BrowserRuntimeSlot, DevServerTransformerSlot } from './bundler.main.runtime';
 import { ComponentServer } from './component-server';
 import { dedupEnvs } from './dedup-envs';
 import { DevServer } from './dev-server';
@@ -191,9 +191,6 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
   private transformDevServer(devServer: DevServer, { envId }: { envId: string }): DevServer {
     return this.devServerTransformerSlot
       .values()
-      .reduce(
-        (updatedDevServer, transformFn) => transformFn(updatedDevServer as WebpackDevServer, { envId }),
-        devServer
-      );
+      .reduce((updatedDevServer, transformFn) => transformFn(updatedDevServer, { envId }), devServer);
   }
 }
