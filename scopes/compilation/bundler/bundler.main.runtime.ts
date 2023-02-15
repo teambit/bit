@@ -49,6 +49,9 @@ export class BundlerMain {
      */
     private runtimeSlot: BrowserRuntimeSlot,
 
+    /**
+     * dev server transformer slot.
+     */
     private devServerTransformerSlot: DevServerTransformerSlot
   ) {}
 
