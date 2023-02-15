@@ -374,11 +374,13 @@ export class InstallMain {
             const appPkgName = this.dependencyResolver.getPackageName(app);
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
             if (!appManifest) return null;
+            const envId = this.envs.getEnvId(app);
             return [
               getRootComponentDir(this.workspace.path, app.id.toString()),
               {
                 ...omit(appManifest, ['name', 'version']),
                 dependencies: {
+                  ...(await this._getEnvDependencies(envId)),
                   ...appManifest.dependencies,
                   ...workspaceDeps,
                 },
