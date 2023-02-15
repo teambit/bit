@@ -378,8 +378,8 @@ export class LanesMain {
     await this.scope.legacyScope.lanes.saveLane(lane);
 
     // change current-lane if needed
-    const currentLaneName = this.getCurrentLaneName();
-    if (currentLaneName === laneNameWithoutScope) {
+    const currentLaneId = this.getCurrentLaneId();
+    if (currentLaneId?.isEqual(laneId)) {
       const newLaneId = LaneId.from(newName, lane.scope);
       const isExported = this.workspace.consumer.bitMap.isLaneExported;
       this.setCurrentLane(newLaneId, undefined, isExported);

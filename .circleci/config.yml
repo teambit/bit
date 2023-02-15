@@ -687,10 +687,6 @@ jobs:
       # - run: cd bit && ls -l node_modules/@babel/cli/bin
       # - run: cd bit && ls -l node_modules/.bin
 
-      # temporary hack to fix the flattenedEdge issue with this component
-      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/sort-logs@0.0.1 --objects --all-history
-      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/group-by-version@0.0.1 --objects --all-history
-
       - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
@@ -769,6 +765,7 @@ jobs:
       - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
       - run: cd bit && bit checkout head teambit.harmony/content/cli-reference --ours --skip-dependency-installation
       - run: cd bit && bit checkout head --skip-dependency-installation
+      - run: cd bit && git diff
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
       # - run: cd bit && bbit checkout head
       # - run: cd bit && npm run link-bit-legacy
@@ -780,18 +777,16 @@ jobs:
       - run: cd bit && bit cc
       # - run: cd bit && bit config set cache.max.objects 100000
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
-      # temporary hack to fix the flattenedEdge issue with this component
-      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/sort-logs@0.0.1 --objects --all-history
-      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/group-by-version@0.0.1 --objects --all-history
       - run:
           name: tag persist
           # command: cd bit && bit tag --ignore-newest-version
-          command: cd bit && bit tag --increment-by 2
-          # command: cd bit && bit tag
+          # command: cd bit && bit tag --increment-by 2
+          command: cd bit && bit tag
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
             NODE_OPTIONS: --max_old_space_size=12000
+      - run: cd bit && git diff
       - run:
           name: backup bit objects (before export)
           command: cd bit && tar -zcvf objects-before-export.tar .git/bit/objects
@@ -1122,6 +1117,7 @@ jobs:
       - update_ssh_agent
       - set_git_credentials
       - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
+      - run: cd bit && git diff
       - run:
           name: export components
           command: cd bit && BIT_FEATURES=export-central bit export

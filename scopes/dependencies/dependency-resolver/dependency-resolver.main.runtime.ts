@@ -92,6 +92,12 @@ export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 
+export interface DependencyResolverComponentData {
+  packageName: string;
+  policy: SerializedVariantPolicy;
+  dependencies: SerializedDependency;
+}
+
 export interface DependencyResolverWorkspaceConfig {
   policy: WorkspacePolicyConfigObject;
   /**
@@ -558,7 +564,15 @@ export class DependencyResolverMain {
   /**
    * get the package name of a component.
    */
-  getPackageName(component: Component) {
+  getPackageName(component: Component): string {
+    return this.getDepResolverData(component)?.packageName ?? this.calcPackageName(component);
+  }
+
+  getDepResolverData(component: Component): DependencyResolverComponentData | undefined {
+    return component.state.aspects.get(DependencyResolverAspect.id)?.data as DependencyResolverComponentData;
+  }
+
+  calcPackageName(component: Component): string {
     return componentIdToPackageName(component.state._consumer);
   }
 
@@ -1466,13 +1480,6 @@ export class DependencyResolverMain {
       const workspacePolicy = dependencyResolver.getWorkspacePolicy();
       return workspacePolicy.toManifest();
     });
-    DependencyResolver.registerOnComponentAutoDetectOverridesGetter(
-      async (configuredExtensions: ExtensionDataList, id: BitId, legacyFiles: SourceFile[]) => {
-        const policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
-        return policy.toLegacyAutoDetectOverrides();
-      }
-    );
-
     DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId, files: SourceFile[]) => {
       const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id, files);
       if (!envPolicy) return undefined;

@@ -59,6 +59,7 @@ export type WorkspaceInstallOptions = {
   updateExisting?: boolean;
   savePrefix?: string;
   compile?: boolean;
+  includeOptionalDeps?: boolean;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -183,6 +184,7 @@ export class InstallMain {
       copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
       copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
       dependencyFilterFn: depsFilterFn,
+      includeOptionalDeps: options?.includeOptionalDeps,
       overrides: this.dependencyResolver.config.overrides,
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       rootComponents: hasRootComponents,

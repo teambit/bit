@@ -357,6 +357,10 @@ export default class ComponentMap {
     if (this.nextVersion && !this.nextVersion.version) {
       throw new ValidationError(`${errorMessage} version attribute should be set when nextVersion prop is set`);
     }
+    if (this.isRemoved()) {
+      // the following validation are related to the files, which don't exist in case of soft-remove
+      return;
+    }
 
     if (!this.files || !this.files.length) throw new ValidationError(`${errorMessage} files list is missing`);
     this.files.forEach((file) => {

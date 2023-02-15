@@ -1,6 +1,7 @@
 .top {
   padding: 16px 24px;
   color: var(--bit-text-color, #414141);
+  padding-left: 0px;
 }
 
 .title {
@@ -35,4 +36,13 @@
 .lanesMenu {
   background-color: var(--bit-bg-color, #ffffff);
   border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  padding: 16px;
+}
+
+.moreInfo {
+  padding-left: 0px;
+
+  > a {
+    padding-left: 0px;
+  }
 }

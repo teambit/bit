@@ -279,6 +279,7 @@ export class LaneRemoveCmd implements Command {
   name = 'remove <lanes...>';
   arguments = [{ name: 'lanes...', description: 'A list of lane names, separated by spaces' }];
   description = `remove lanes`;
+  group = 'collaborate';
   alias = '';
   options = [
     ['r', 'remote', 'remove a remote lane (in the lane arg, use remote/lane-id syntax)'],
@@ -286,7 +287,6 @@ export class LaneRemoveCmd implements Command {
     ['s', 'silent', 'skip confirmation'],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(private lanes: LanesMain) {}

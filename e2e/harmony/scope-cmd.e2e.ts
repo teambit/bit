@@ -54,4 +54,22 @@ describe('bit scope command', function () {
       expect(workspaceJsonc).not.to.have.property(`my-scope/comp2`);
     });
   });
+  describe('bit scope rename-owner', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.addDefaultScope('old-org.my-scope');
+      helper.fixtures.populateComponents(2);
+      helper.command.setScope('old-org.my-scope1', 'comp1');
+      helper.command.setScope('old-org.my-scope2', 'comp2');
+      helper.command.renameScopeOwner('old-org', 'new-org');
+    });
+    it('should rename the default-scope in workspace.jsonc', () => {
+      expect(helper.bitJsonc.getDefaultScope()).to.equal('new-org.my-scope');
+    });
+    it('should rename the scope of the components', () => {
+      const list = helper.command.listParsed();
+      const ids = list.map((c) => c.id);
+      expect(ids).to.have.members(['new-org.my-scope1/comp1', 'new-org.my-scope2/comp2']);
+    });
+  });
 });
