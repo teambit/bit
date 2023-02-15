@@ -6,7 +6,7 @@ import { Text, Newline } from 'ink';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import highlight from 'cli-highlight';
 import { sep } from 'path';
-import { BrowserRuntimeSlot, BundlerConfigSlot } from './bundler.main.runtime';
+import { BrowserRuntimeSlot, DevServerTransformerSlot, WebpackDevServer } from './bundler.main.runtime';
 import { ComponentServer } from './component-server';
 import { dedupEnvs } from './dedup-envs';
 import { DevServer } from './dev-server';
@@ -68,7 +68,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
      */
     private runtimeSlot: BrowserRuntimeSlot,
 
-    private bundlerConfigSlot: BundlerConfigSlot
+    private devServerTransformerSlot: DevServerTransformerSlot
   ) {}
 
   async render(env: EnvDefinition, context: ExecutionContext[]) {
@@ -146,15 +146,9 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
 
         const devServerContext = await this.buildContext(mainContext, additionalContexts);
         const devServer: DevServer = await devServerContext.envRuntime.env.getDevServer(devServerContext);
+        const transformedDevServer: DevServer = this.transformDevServer(devServer, { envId: id });
 
-        const modifiedDevServer = this.bundlerConfigSlot
-          .values()
-          .reduce(
-            (updatedDevServer, bundleAnalyzerSlotFn) => bundleAnalyzerSlotFn(updatedDevServer, { envId: id }),
-            devServer
-          );
-
-        return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], modifiedDevServer);
+        return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], transformedDevServer);
       })
     );
 
@@ -192,5 +186,14 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       hostDependencies: peers,
       aliasHostDependencies: true,
     });
+  }
+
+  private transformDevServer(devServer: DevServer, { envId }: { envId: string }): DevServer {
+    return this.devServerTransformerSlot
+      .values()
+      .reduce(
+        (updatedDevServer, transformFn) => transformFn(updatedDevServer as WebpackDevServer, { envId }),
+        devServer
+      );
   }
 }
