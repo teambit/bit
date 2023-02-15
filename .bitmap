@@ -839,7 +839,7 @@
     },
     "modules/packages-excluder": {
         "scope": "teambit.dependencies",
-        "version": "0.0.65",
+        "version": "0.0.68",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/modules/packages-excluder"
     },
