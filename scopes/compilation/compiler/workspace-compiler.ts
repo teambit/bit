@@ -134,13 +134,17 @@ ${this.compileErrors.map(formatError).join('\n')}`);
   }
 
   private async getInjectedDirs(packageName: string): Promise<string[]> {
+    const relativeCompDir = this.workspace.componentDir(this.component.id, undefined, {
+      relative: true,
+    });
+    const injectedDirs = await this.dependencyResolver.getInjectedDirs(
+      this.workspace.path,
+      relativeCompDir,
+      packageName
+    );
+    if (injectedDirs.length > 0) return injectedDirs;
+
     const rootDirs = await readBitRootsDir(this.workspace.path);
-    if (rootDirs.length === 0) {
-      const relativeCompDir = this.workspace.componentDir(this.component.id, undefined, {
-        relative: true,
-      });
-      return this.dependencyResolver.getInjectedDirs(this.workspace.path, relativeCompDir, packageName);
-    }
     return rootDirs.map((rootDir) => path.relative(this.workspace.path, path.join(rootDir, packageName)));
   }
 
