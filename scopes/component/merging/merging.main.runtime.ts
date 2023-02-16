@@ -321,8 +321,8 @@ export class MergingMain {
     if (!currentLane && otherLane) {
       await this.importer.importObjectsFromMainIfExist(otherLane.toBitIds().toVersionLatest());
     }
-    const componentStatusBeforeMergeAttempt = await Promise.all(
-      bitIds.map((id) => this.getComponentStatusBeforeMergeAttempt(id, currentLane, options))
+    const componentStatusBeforeMergeAttempt = await mapSeries(bitIds, (id) =>
+      this.getComponentStatusBeforeMergeAttempt(id, currentLane, options)
     );
     const toImport = componentStatusBeforeMergeAttempt
       .map((compStatus) => {
