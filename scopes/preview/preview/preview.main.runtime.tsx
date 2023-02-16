@@ -724,8 +724,6 @@ export class PreviewMain {
     updater(executionRef);
 
     await this.updateLinkFiles(executionRef.currentComponents, executionRef.executionCtx);
-    throw new Error('gilad')
-
     return noopResult;
   };
 
