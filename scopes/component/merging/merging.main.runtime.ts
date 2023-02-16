@@ -562,7 +562,8 @@ other:   ${otherLaneHead.toString()}`);
       baseComponent.extensions,
       otherComponent.extensions,
       currentLabel,
-      otherLabel
+      otherLabel,
+      this.logger
     );
     const configMergeResult = configMerger.merge();
 
