@@ -479,6 +479,17 @@ export class LanesMain {
   }
 
   /**
+   * when deleting a lane object, it is sent into the "trash" directory in the scope.
+   * this method restores it and put it back in the "objects" directory.
+   * as an argument, it needs a hash. the reason for not supporting lane-id is because the trash may have multiple
+   * lanes with the same lane-id but different hashes.
+   */
+  async restoreLane(laneHash: string) {
+    const ref = Ref.from(laneHash);
+    await this.scope.legacyScope.objects.restoreFromTrash([ref]);
+  }
+
+  /**
    * switch to a different local or remote lane.
    * switching to a remote lane also imports and writes the components of that remote lane.
    * by default, only the components existing on the workspace will be imported from that lane, unless the "getAll"
