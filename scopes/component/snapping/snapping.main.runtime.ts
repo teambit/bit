@@ -280,6 +280,7 @@ export class SnappingMain {
       consumerComponents,
       tagDataPerComp,
       skipBuildPipeline: true,
+      copyLogFromPreviousSnap: true,
       snapping: this,
       builder: this.builder,
       dependencyResolver: this.dependencyResolver,
