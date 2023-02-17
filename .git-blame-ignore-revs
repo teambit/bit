@@ -5,6 +5,8 @@
 # alternatively, add it to the config of this project: `git config blame.ignoreRevsFile .git-blame-ignore-revs` then use `git blame` as usual
 
 # re-format all source code with prettier (#6544)
+5806f6af42f449d4f4780e86df95b2b1248c6635
+# re-format all source code with prettier (#6544)
 52196a308de40d0bfbff140ed347ab5713743fac
 # upgrade prettier from 1.x to 2.x and re-format all files (#2852)
 7138e50e497dc837347193b70eddc9234883d1a8
