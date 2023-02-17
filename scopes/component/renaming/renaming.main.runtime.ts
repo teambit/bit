@@ -1,5 +1,8 @@
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import fs from 'fs-extra';
+import path from 'path';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
+import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
@@ -40,6 +43,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     const sourceId = await this.workspace.resolveComponentId(sourceIdStr);
     const isTagged = sourceId.hasVersion();
     const sourceComp = await this.workspace.get(sourceId);
+    const sourcePackageName = this.workspace.componentPackageName(sourceComp);
     const targetId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope);
     if (isTagged) {
       const config = await this.getConfig(sourceComp);
@@ -48,14 +52,24 @@ make sure this argument is the name only, without the scope-name. to change the 
     } else {
       this.workspace.bitMap.renameNewComponent(sourceId, targetId);
       await this.workspace.bitMap.write();
+
+      await fs.remove(path.join(this.workspace.path, 'node_modules', sourcePackageName));
     }
+    this.workspace.clearComponentCache(sourceId);
+    const targetComp = await this.workspace.get(targetId);
     if (options.refactor) {
       const allComponents = await this.workspace.list();
-      const { changedComponents } = await this.refactoring.refactorDependencyName(allComponents, sourceId, targetId);
+      const targetPackageName = this.workspace.componentPackageName(targetComp);
+      const { changedComponents } = await this.refactoring.refactorDependencyName(
+        allComponents,
+        sourcePackageName,
+        targetPackageName
+      );
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
     }
 
-    await this.install.link();
+    // link the new-name to node-modules
+    await linkToNodeModulesByComponents([targetComp], this.workspace);
 
     return {
       sourceId,

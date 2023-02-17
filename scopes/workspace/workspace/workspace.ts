@@ -951,9 +951,13 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * by default the absolute path, unless `options.relative` was set
    */
   componentPackageDir(component: Component, options = { relative: false }): string {
-    const packageName = componentIdToPackageName(component.state._consumer);
+    const packageName = this.componentPackageName(component);
     const packageDir = path.join('node_modules', packageName);
     return options.relative ? packageDir : this.consumer.toAbsolutePath(packageDir);
+  }
+
+  componentPackageName(component: Component): string {
+    return componentIdToPackageName(component.state._consumer);
   }
 
   private componentDirFromLegacyId(
