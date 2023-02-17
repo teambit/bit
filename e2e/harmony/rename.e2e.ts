@@ -154,4 +154,16 @@ describe('bit rename command', function () {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
     });
   });
+  describe('rename scope-name with refactoring', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.addDefaultScope('owner.scope');
+      helper.fixtures.populateComponents(2);
+      helper.command.rename('comp2', 'comp2', '--scope owner2.scope2 --refactor');
+    });
+    // previously, rename command was throwing saying the old and new package names are the same
+    it('bit status should not show an issue because the source code has changed to the new package-name', () => {
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
+    });
+  });
 });

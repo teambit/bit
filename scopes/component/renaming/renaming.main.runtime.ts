@@ -43,6 +43,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     const sourceId = await this.workspace.resolveComponentId(sourceIdStr);
     const isTagged = sourceId.hasVersion();
     const sourceComp = await this.workspace.get(sourceId);
+    const sourcePackageName = this.workspace.componentPackageName(sourceComp);
     const targetId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope);
     if (isTagged) {
       const config = await this.getConfig(sourceComp);
@@ -51,18 +52,23 @@ make sure this argument is the name only, without the scope-name. to change the 
     } else {
       this.workspace.bitMap.renameNewComponent(sourceId, targetId);
       await this.workspace.bitMap.write();
-      const sourcePackageName = this.workspace.componentPackageName(sourceComp);
+
       await fs.remove(path.join(this.workspace.path, 'node_modules', sourcePackageName));
     }
     this.workspace.clearComponentCache(sourceId);
+    const targetComp = await this.workspace.get(targetId);
     if (options.refactor) {
       const allComponents = await this.workspace.list();
-      const { changedComponents } = await this.refactoring.refactorDependencyName(allComponents, sourceId, targetId);
+      const targetPackageName = this.workspace.componentPackageName(targetComp);
+      const { changedComponents } = await this.refactoring.refactorDependencyName(
+        allComponents,
+        sourcePackageName,
+        targetPackageName
+      );
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
     }
 
     // link the new-name to node-modules
-    const targetComp = await this.workspace.get(targetId);
     await linkToNodeModulesByComponents([targetComp], this.workspace);
 
     return {
