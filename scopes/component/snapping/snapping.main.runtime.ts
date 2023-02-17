@@ -9,7 +9,7 @@ import semver, { ReleaseType } from 'semver';
 import { compact, difference, uniq } from 'lodash';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
-import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, Extensions, LATEST } from '@teambit/legacy/dist/constants';
+import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, Extensions, LATEST, BuildStatus } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
@@ -272,14 +272,18 @@ export class SnappingMain {
         await this.updateDependenciesVersionsOfComponent(comp, tagData.dependencies, bitIds);
       })
     );
-    const consumerComponents = components.map((c) => c.state._consumer);
+    const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
+    const allComponentsBuildSuccessfully = consumerComponents.every((comp) => {
+      if (!comp.buildStatus) throw new Error(`tag-from-scope expect ${comp.id.toString()} to have buildStatus`);
+      return comp.buildStatus === BuildStatus.Succeed;
+    });
     const legacyIds = BitIds.fromArray(componentIds.map((id) => id._legacy));
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
       consumerComponents,
       tagDataPerComp,
-      skipBuildPipeline: true,
+      skipBuildPipeline: allComponentsBuildSuccessfully,
       copyLogFromPreviousSnap: true,
       snapping: this,
       builder: this.builder,
