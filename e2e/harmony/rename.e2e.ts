@@ -130,4 +130,16 @@ describe('bit rename command', function () {
       expect(content).to.not.have.string('my-scope/my-new-name-other');
     });
   });
+  describe('wrong rename with scope-name inside the name', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.addDefaultScope('owner.scope');
+      helper.fixtures.populateComponents(1);
+    });
+    // previously, it was letting renaming, but afterwards, after any command, it was throwing InvalidName because the
+    // scope-name was entered as part of the name.
+    it('bit rename should throw', () => {
+      expect(() => helper.command.rename('owner.scope/comp1', 'owner.scope2/comp2')).to.throw();
+    });
+  });
 });

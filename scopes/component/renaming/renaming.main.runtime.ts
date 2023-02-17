@@ -9,6 +9,7 @@ import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '
 import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { InstallMain, InstallAspect } from '@teambit/install';
+import { isValidIdChunk, InvalidName } from '@teambit/legacy-bit-id';
 import { RenameCmd, RenameOptions } from './rename.cmd';
 import { RenamingAspect } from './renaming.aspect';
 import { RenamingFragment } from './renaming.fragment';
@@ -29,11 +30,17 @@ export class RenamingMain {
     private config: ConfigMain
   ) {}
 
-  async rename(sourceIdStr: string, targetIdStr: string, options: RenameOptions): Promise<RenameDependencyNameResult> {
+  async rename(sourceIdStr: string, targetName: string, options: RenameOptions): Promise<RenameDependencyNameResult> {
+    if (!isValidIdChunk(targetName)) {
+      if (targetName.includes('.'))
+        throw new Error(`error: new-name argument "${targetName}" includes a dot.
+make sure this argument is the name only, without the scope-name. to change the scope-name, use --scope flag`);
+      throw new InvalidName(targetName);
+    }
     const sourceId = await this.workspace.resolveComponentId(sourceIdStr);
     const isTagged = sourceId.hasVersion();
     const sourceComp = await this.workspace.get(sourceId);
-    const targetId = this.newComponentHelper.getNewComponentId(targetIdStr, undefined, options?.scope);
+    const targetId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope);
     if (isTagged) {
       const config = await this.getConfig(sourceComp);
       await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetId, options, config);
