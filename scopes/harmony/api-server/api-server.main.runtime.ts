@@ -1,29 +1,17 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import express from 'express';
-
 import { ApiServerAspect } from './api-server.aspect';
+import { CLIRoute } from './cli.route';
 import { ServerCmd } from './server.cmd';
 
 export class ApiServerMain {
-  constructor(private cli: CLIMain, private workspace: Workspace, private logger: Logger) {}
+  constructor(private workspace: Workspace, private logger: Logger, private express: ExpressMain) {}
 
   async runApiServer(options: { port: number }) {
-    const app = express();
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    app.get('/cli/:cmd', async (req, res, next) => {
-      this.logger.debug(`cli server: got request for ${req.params.cmd}`);
-      try {
-        const command = this.cli.getCommand(req.params.cmd);
-        if (!command) throw new Error(`command "${req.params.cmd}" was not found`);
-        if (!command.json) throw new Error(`command "${req.params.cmd}" does not have a json method`);
-        const result = await command?.json([], {});
-        res.json(result);
-      } catch (err) {
-        next(err);
-      }
-    });
+    const port = options.port || 3000;
+    await this.express.listen(port);
 
     this.workspace.watcher
       .watchAll({
@@ -34,20 +22,22 @@ export class ApiServerMain {
         this.logger.error('watcher found an error', err);
       });
 
+    // never ending promise to not exit the process (is there a better way?)
     return new Promise(() => {
-      const port = options.port || 3000;
-      app.listen(port, () => {
-        this.logger.consoleSuccess(`Bit Server is listening on port ${port}`);
-      });
+      this.logger.consoleSuccess(`Bit Server is listening on port ${port}`);
     });
   }
 
-  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ExpressAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, loggerMain]: [CLIMain, Workspace, LoggerMain]) {
+  static async provider([cli, workspace, loggerMain, express]: [CLIMain, Workspace, LoggerMain, ExpressMain]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
-    const apiServer = new ApiServerMain(cli, workspace, logger);
+    const apiServer = new ApiServerMain(workspace, logger, express);
     cli.register(new ServerCmd(apiServer));
+
+    const cliRoute = new CLIRoute(logger, cli);
+    express.register([cliRoute]);
+
     return apiServer;
   }
 }
