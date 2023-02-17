@@ -1145,7 +1145,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     }
   }
 
-  async removeSpecificComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist: boolean) {
+  async removeSpecificComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist = false) {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {
       await componentConfigFile.removeAspect(aspectId, markWithMinusIfNotExist, this.resolveComponentId.bind(this));
@@ -1841,8 +1841,8 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
           return;
         }
         const currentEnvWithPotentialVersion = await this.getAspectIdFromConfig(id, currentEnv, true);
-        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv, true);
-        await this.removeSpecificComponentConfig(id, EnvsAspect.id, true);
+        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv);
+        await this.removeSpecificComponentConfig(id, EnvsAspect.id);
         changed.push(id);
       })
     );
