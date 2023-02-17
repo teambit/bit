@@ -3,7 +3,7 @@ import { Logger } from '@teambit/logger';
 import path from 'path';
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
-import { CheckTypes } from '@teambit/workspace';
+import { CheckTypes } from '@teambit/watcher';
 import type { Position } from 'vscode-languageserver-types';
 import commandExists from 'command-exists';
 import { findPathToModule, findPathToYarnSdk } from './modules-resolver';

@@ -78,7 +78,6 @@ import {
   SerializableResults,
 } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
-import { Watcher, WatchOptions } from './watch/watcher';
 import { ComponentStatus } from './workspace-component/component-status';
 import {
   OnComponentAddSlot,
@@ -86,8 +85,6 @@ import {
   OnComponentLoadSlot,
   OnComponentRemoveSlot,
   OnMultipleComponentsAddSlot,
-  OnPreWatch,
-  OnPreWatchSlot,
 } from './workspace.provider';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
@@ -193,8 +190,6 @@ export class Workspace implements ComponentFactory {
 
     private onMultipleComponentsAddSlot: OnMultipleComponentsAddSlot,
 
-    private onPreWatchSlot: OnPreWatchSlot,
-
     private graphql: GraphqlMain
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
@@ -226,11 +221,6 @@ export class Workspace implements ComponentFactory {
     if (!defaultScope) throw new BitError('defaultScope is missing');
     if (!isValidScopeName(defaultScope)) throw new InvalidScopeName(defaultScope);
   }
-
-  /**
-   * watcher api.
-   */
-  readonly watcher = new Watcher(this, this.pubsub);
 
   /**
    * root path of the Workspace.
@@ -270,11 +260,6 @@ export class Workspace implements ComponentFactory {
 
   registerOnComponentRemove(onComponentRemoveFunc: OnComponentRemove) {
     this.onComponentRemoveSlot.register(onComponentRemoveFunc);
-    return this;
-  }
-
-  registerOnPreWatch(onPreWatchFunc: OnPreWatch) {
-    this.onPreWatchSlot.register(onPreWatchFunc);
     return this;
   }
 
@@ -1072,14 +1057,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (typeof consumerComp._isModified === 'boolean') return consumerComp._isModified;
     const componentStatus = await this.consumer.getComponentStatusById(component.id._legacy);
     return componentStatus.modified === true;
-  }
-
-  async triggerOnPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
-    const components = await this.getMany(componentIds);
-    const preWatchFunctions = this.onPreWatchSlot.values();
-    await mapSeries(preWatchFunctions, async (func) => {
-      await func(components, watchOpts);
-    });
   }
 
   /**

@@ -29,6 +29,7 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink, MainModulesMap } from './generate-link';
@@ -796,6 +797,7 @@ export class PreviewMain {
     LoggerAspect,
     DependencyResolverAspect,
     GraphqlAspect,
+    WatcherAspect,
   ];
 
   static defaultConfig = {
@@ -817,6 +819,7 @@ export class PreviewMain {
       loggerMain,
       dependencyResolver,
       graphql,
+      watcher,
     ]: [
       BundlerMain,
       BuilderMain,
@@ -829,7 +832,8 @@ export class PreviewMain {
       AspectLoaderMain,
       LoggerMain,
       DependencyResolverMain,
-      GraphqlMain
+      GraphqlMain,
+      WatcherMain
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
@@ -853,7 +857,8 @@ export class PreviewMain {
       dependencyResolver
     );
 
-    if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger));
+    if (workspace)
+      uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger, watcher));
 
     componentExtension.registerRoute([
       new PreviewRoute(preview, logger),
