@@ -80,6 +80,7 @@ export class Watcher {
       }
       watcher.on('ready', () => {
         msgs?.onReady(this.workspace, this.trackDirs, this.verbose);
+        loader.stop();
       });
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('change', async (filePath) => {

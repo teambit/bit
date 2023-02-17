@@ -16,8 +16,10 @@ export class CLIRoute implements Route {
         if (!command) throw new Error(`command "${req.params.cmd}" was not found`);
         if (!command.json) throw new Error(`command "${req.params.cmd}" does not have a json method`);
         const result = await command?.json([], {});
+        this.logger.consoleSuccess(`command "${req.params.cmd}" had been completed`);
         res.json(result);
       } catch (err) {
+        this.logger.consoleFailure(`command "${req.params.cmd}" had failed`);
         next(err);
       }
     },

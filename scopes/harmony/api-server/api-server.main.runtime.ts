@@ -36,7 +36,10 @@ export class ApiServerMain {
     cli.register(new ServerCmd(apiServer));
 
     const cliRoute = new CLIRoute(logger, cli);
-    express.register([cliRoute]);
+    // register only when the workspace is available. don't register this on a remote-scope, for security reasons.
+    if (workspace) {
+      express.register([cliRoute]);
+    }
 
     return apiServer;
   }
