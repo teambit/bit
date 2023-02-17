@@ -22,6 +22,7 @@ describe('bit lane command', function () {
       helper.fs.outputFile('utils/is-type/is-type.js', fixtures.isType);
       helper.command.addComponent('utils/is-type', { i: 'utils/is-type' });
       helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
 
       // laneA
       helper.command.createLane('lane-a');
@@ -33,6 +34,7 @@ describe('bit lane command', function () {
       helper.command.linkAndRewire();
       helper.command.compile();
       helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
 
       // laneB
       helper.command.createLane('lane-b');
@@ -68,7 +70,7 @@ describe('bit lane command', function () {
       // doesn't belong to lane-a and should not appear as staged when on lane-a.
       it('bit status should not show neither lane-b nor main components as staged', () => {
         const staged = helper.command.getStagedIdsFromStatus();
-        expect(staged).to.deep.equal(['utils/is-string']);
+        expect(staged).to.have.lengthOf(0);
         const status = helper.command.status();
         expect(status).to.not.have.string('bar/foo');
       });
@@ -89,7 +91,7 @@ describe('bit lane command', function () {
       });
       it('bit status should show only main components as staged', () => {
         const staged = helper.command.getStagedIdsFromStatus();
-        expect(staged).to.deep.equal(['utils/is-type']);
+        expect(staged).to.have.lengthOf(0);
         const status = helper.command.status();
         expect(status).to.not.have.string('bar/foo');
         expect(status).to.not.have.string('utils/is-string');
@@ -107,7 +109,7 @@ describe('bit lane command', function () {
       });
       it('bit status should show only main components as staged', () => {
         const staged = helper.command.getStagedIdsFromStatus();
-        expect(staged).to.deep.equal(['utils/is-type']);
+        expect(staged).to.have.lengthOf(0);
         const status = helper.command.status();
         expect(status).to.not.have.string('bar/foo');
         expect(status).to.not.have.string('utils/is-string');
@@ -144,6 +146,21 @@ describe('bit lane command', function () {
       const headOnLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
       expect(headOnLaneB).to.equal(firstSnap);
       expect(headOnLaneB).to.not.equal(secondSnap);
+    });
+  });
+  describe('creating a lane from a lane when it has staged components', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.fixtures.populateComponents(1, false, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+    });
+    it('bit create should throw an error suggesting to export or reset first', () => {
+      const output = helper.general.runWithTryCatch('bit lane create lane-b');
+      expect(output).to.have.string('please export or reset the following components first');
     });
   });
 });

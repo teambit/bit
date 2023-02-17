@@ -538,18 +538,6 @@ bit install <package>@<version>
 bit install lodash@1.0.0
 ```
 
-##### Install packages that are already listed in the Dependency Resolver policies
-
-When trying to install a specific package that is already listed in the Dependency Resolver policies, an error will be thrown.
-
-To override it:
-
-```bash
-bit install <package> --update-existing
-
-bit install <package> -u
-```
-
 ##### Install packages without importing components
 
 The 'install' process includes importing components listed in the `.bitmap` file and linking them to the `node_modules` directory.

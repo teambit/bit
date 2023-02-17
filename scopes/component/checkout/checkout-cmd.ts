@@ -1,13 +1,15 @@
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
 import { Command, CommandOptions } from '@teambit/cli';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import {
   ApplyVersionResults,
-  getMergeStrategy,
   applyVersionReport,
   conflictSummaryReport,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+  installationErrorOutput,
+  compilationErrorOutput,
+} from '@teambit/merging';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
 
 export class CheckoutCmd implements Command {
@@ -105,6 +107,8 @@ export class CheckoutCmd implements Command {
       leftUnresolvedConflicts,
       newFromLane,
       newFromLaneAdded,
+      installationError,
+      compilationError,
     }: ApplyVersionResults = await this.checkout.checkoutByCLIValues(to, componentPattern || '', checkoutProps);
     const isHead = to === 'head';
     const isReset = to === 'reset';
@@ -208,7 +212,9 @@ once ready, snap/tag the components to persist the changes`;
       getSuccessfulOutput() +
       getNewOnLaneOutput() +
       getConflictSummary() +
-      getSummary()
+      getSummary() +
+      installationErrorOutput(installationError) +
+      compilationErrorOutput(compilationError)
     );
   }
 }

@@ -163,6 +163,10 @@ export default class CommandHelper {
   delConfig(configName: string) {
     return this.runCmd(`bit config del ${configName}`);
   }
+  /**
+   * careful! this changes the config globally and will affect all e2e-tests.
+   * try to avoid. if not possible, make sure to call `delConfig` in the `after` hook
+   */
   setConfig(configName: string, configVal: string) {
     return this.runCmd(`bit config set ${configName} ${configVal}`);
   }
@@ -171,6 +175,9 @@ export default class CommandHelper {
   }
   renameScope(oldScope: string, newScope: string, flags = '') {
     return this.runCmd(`bit scope rename ${oldScope} ${newScope} ${flags}`);
+  }
+  renameScopeOwner(oldScope: string, newScope: string, flags = '') {
+    return this.runCmd(`bit scope rename-owner ${oldScope} ${newScope} ${flags}`);
   }
   setEnv(compId: string, envId: string) {
     return this.runCmd(`bit envs set ${compId} ${envId}`);
@@ -220,6 +227,9 @@ export default class CommandHelper {
   }
   dependenciesSet(pattern: string, pkg: string, flags = '') {
     return this.runCmd(`bit dependencies set ${pattern} ${pkg} ${flags}`);
+  }
+  dependenciesUnset(pattern: string, pkg: string, flags = '') {
+    return this.runCmd(`bit dependencies unset ${pattern} ${pkg} ${flags}`);
   }
   dependenciesRemove(pattern: string, pkg: string, flags = '') {
     return this.runCmd(`bit dependencies remove ${pattern} ${pkg} ${flags}`);
@@ -412,8 +422,8 @@ export default class CommandHelper {
   fetchRemoteLane(id: string) {
     return this.runCmd(`bit fetch ${this.scopes.remote}${LANE_REMOTE_DELIMITER}${id} --lanes`);
   }
-  fetchAllLanes() {
-    return this.runCmd(`bit fetch --lanes`);
+  fetchAllLanes(flags = '') {
+    return this.runCmd(`bit fetch --lanes ${flags}`);
   }
   fetchAllComponents() {
     return this.runCmd(`bit fetch --components`);

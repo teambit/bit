@@ -1,6 +1,7 @@
 import chalk from 'chalk';
+import { applyVersionReport, installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
 import { Command, CommandOptions } from '@teambit/cli';
-import { MergeStrategy, applyVersionReport } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { LanesMain } from './lanes.main.runtime';
 
 export class SwitchCmd implements Command {
@@ -44,7 +45,7 @@ export class SwitchCmd implements Command {
       json?: boolean;
     }
   ) {
-    const { components, failedComponents } = await this.lanes.switchLanes(lane, {
+    const { components, failedComponents, installationError, compilationError } = await this.lanes.switchLanes(lane, {
       alias,
       merge,
       getAll,
@@ -81,6 +82,11 @@ export class SwitchCmd implements Command {
     };
     const failedOutput = getFailureOutput();
     const successOutput = getSuccessfulOutput();
-    return failedOutput + successOutput;
+    return (
+      failedOutput +
+      successOutput +
+      installationErrorOutput(installationError) +
+      compilationErrorOutput(compilationError)
+    );
   }
 }

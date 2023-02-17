@@ -1,12 +1,8 @@
 @import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .componentCompareCodeContainer {
-  /**
-  * TODO: Review this
-  * adjust for nav
-  */
-  min-height: 100%;
   display: flex;
+  height: 100%;
   width: 100%;
 }
 
@@ -24,9 +20,7 @@
 
 .left {
   position: relative;
-
   background: var(--on-surface-neutral-low-color, #282828);
-
   overflow-y: auto;
   // this is to fix the right panel when it gets too big or too small
   min-width: 200px;
@@ -62,7 +56,7 @@
 }
 
 .loader {
-  background: var(--on-surface-neutral-low-color, #282828);
+  color: var(--on-surface-neutral-low-color, #282828);
 }
 
 .codeCompareTreeCollapse {
@@ -84,8 +78,11 @@
   min-height: calc(100% - 56px);
   display: flex;
   width: 100%;
+  flex: 1;
+
   > div {
     width: 100%;
     min-height: calc(100% - 56px);
+    display: flex;
   }
 }

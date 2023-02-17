@@ -1,13 +1,18 @@
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { LanesAspect, LanesMain } from '@teambit/lanes';
-import MergingAspect, { MergingMain, ComponentMergeStatus, ConfigMergeResult } from '@teambit/merging';
+import MergingAspect, {
+  MergingMain,
+  ComponentMergeStatus,
+  ConfigMergeResult,
+  ApplyVersionResults,
+} from '@teambit/merging';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
 import { BitId } from '@teambit/legacy-bit-id';
 import pMapSeries from 'p-map-series';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
@@ -39,7 +44,7 @@ export type MergeLaneOptions = {
   skipDependencyInstallation?: boolean;
   resolveUnrelated?: MergeStrategy;
   ignoreConfigChanges?: boolean;
-  remote?: boolean;
+  skipFetch?: boolean;
 };
 
 export class MergeLanesMain {
@@ -76,7 +81,7 @@ export class MergeLanesMain {
       skipDependencyInstallation,
       resolveUnrelated,
       ignoreConfigChanges,
-      remote,
+      skipFetch,
     } = options;
 
     const currentLaneId = consumer.getCurrentLaneId();
@@ -93,11 +98,17 @@ export class MergeLanesMain {
     const isDefaultLane = otherLaneId.isDefault();
     const getOtherLane = async () => {
       if (isDefaultLane) {
+        if (!skipFetch) {
+          await this.lanes.importer.importObjectsFromMainIfExist(currentLane?.toBitIds().toVersionLatest() || []);
+        }
         return undefined;
       }
-      const lane = await consumer.scope.loadLane(otherLaneId);
-      if (remote || !lane) {
-        return this.lanes.fetchLaneWithItsComponents(otherLaneId);
+      let lane = await consumer.scope.loadLane(otherLaneId);
+      const shouldFetch = !lane || (!skipFetch && !lane.isNew);
+      if (shouldFetch) {
+        // don't assign `lane` to the result of this command. otherwise, if you have local snaps, it'll ignore them and use the remote-lane.
+        await this.lanes.fetchLaneWithItsComponents(otherLaneId);
+        lane = await consumer.scope.loadLane(otherLaneId);
       }
       return lane;
     };
@@ -287,6 +298,7 @@ export class MergeLanesMain {
     const bitObjectsPerComp = await pMapSeries(idsToMerge, async (id) => {
       const modelComponent = await this.scope.legacyScope.getModelComponent(id);
       const fromVersionObj = await modelComponent.loadVersion(id.version as string, repo);
+      if (fromVersionObj.isRemoved()) return undefined;
       const fromLaneHead = modelComponent.getRef(id.version as string);
       if (!fromLaneHead) throw new Error(`lane head must be defined for ${id.toString()}`);
       const toLaneHead = toLaneObj ? toLaneObj.getComponent(id)?.head : modelComponent.head || null;

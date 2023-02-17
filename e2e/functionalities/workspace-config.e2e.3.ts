@@ -88,7 +88,8 @@ describe('workspace config', function () {
             expect(showBar.dependencies[0].id).to.not.equal('foo1');
           });
         });
-        describe('when adding the component as devDependency without removing it', () => {
+        // this test is irrelevant on Harmony, because the "+" is not supported.
+        describe.skip('when adding the component as devDependency without removing it', () => {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
             const policy = {

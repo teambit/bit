@@ -12,9 +12,9 @@ import { isCoreAspect, loadBit } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import TrackerAspect, { TrackerMain } from '@teambit/tracker';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { compact } from 'lodash';
-import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
@@ -76,8 +76,8 @@ export class GeneratorMain {
     private envs: EnvsMain,
     private aspectLoader: AspectLoaderMain,
     private newComponentHelper: NewComponentHelperMain,
-    private importer: ImporterMain,
-    private componentAspect: ComponentMain
+    private componentAspect: ComponentMain,
+    private tracker: TrackerMain
   ) {}
 
   /**
@@ -275,6 +275,7 @@ export class GeneratorMain {
       templateWithId.template,
       this.envs,
       this.newComponentHelper,
+      this.tracker,
       templateWithId.id,
       templateWithId.envName ? ComponentID.fromString(templateWithId.id) : undefined
     );
@@ -438,14 +439,14 @@ export class GeneratorMain {
     AspectLoaderAspect,
     NewComponentHelperAspect,
     CommunityAspect,
-    ImporterAspect,
     ComponentAspect,
+    TrackerAspect,
   ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper, community, importer, componentAspect]: [
+    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper, community, componentAspect, tracker]: [
       Workspace,
       CLIMain,
       GraphqlMain,
@@ -453,8 +454,8 @@ export class GeneratorMain {
       AspectLoaderMain,
       NewComponentHelperMain,
       CommunityMain,
-      ImporterMain,
-      ComponentMain
+      ComponentMain,
+      TrackerMain
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
@@ -467,8 +468,8 @@ export class GeneratorMain {
       envs,
       aspectLoader,
       newComponentHelper,
-      importer,
-      componentAspect
+      componentAspect,
+      tracker
     );
     const commands = [
       new CreateCmd(generator, community.getDocsDomain()),
@@ -480,7 +481,8 @@ export class GeneratorMain {
     aspectLoader.registerPlugins([new StarterPlugin(generator)]);
     envs.registerService(new GeneratorService());
 
-    generator.registerComponentTemplate([componentGeneratorTemplate, starterTemplate, workspaceGeneratorTemplate]);
+    if (generator)
+      generator.registerComponentTemplate([componentGeneratorTemplate, starterTemplate, workspaceGeneratorTemplate]);
     return generator;
   }
 }

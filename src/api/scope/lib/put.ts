@@ -28,8 +28,7 @@ export default async function put(
     objectList = ObjectList.fromJsonString(objectList);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  await HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, objectList }, headers);
+  await HooksManagerInstance?.triggerHook(PRE_RECEIVE_OBJECTS, { path, objectList }, headers);
   const scope = await loadScope(path);
   if (pushOptions && pushOptions.clientId) {
     // harmony
@@ -43,7 +42,7 @@ export default async function put(
   if (componentsIds && componentsIds.length) {
     uniqComponentsIds = R.uniq(componentsIds);
   }
-  await HooksManagerInstance.triggerHook(
+  await HooksManagerInstance?.triggerHook(
     POST_RECEIVE_OBJECTS,
     {
       objectList,

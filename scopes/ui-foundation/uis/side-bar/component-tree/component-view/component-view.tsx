@@ -11,12 +11,14 @@ import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { PayloadType } from '../payload-type';
 import { getName } from '../utils/get-name';
 import styles from './component-view.module.scss';
 
 export type ComponentViewProps<Payload = any> = {
   treeNodeSlot?: ComponentTreeSlot;
+  useLanes?: () => { lanesModel?: LanesModel };
 } & TreeNodeProps<Payload>;
 
 export function ComponentView(props: ComponentViewProps<PayloadType>) {
@@ -24,7 +26,8 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   const component = node.payload;
 
   const { onSelect } = useContext(TreeContext);
-  const { lanesModel } = useLanes();
+  const { lanesModel } = (props.useLanes || useLanes)();
+
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
       onSelect && onSelect(node.id, event);

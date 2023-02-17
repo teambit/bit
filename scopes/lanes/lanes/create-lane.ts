@@ -5,7 +5,10 @@ import { ScopeMain } from '@teambit/scope';
 // import { BitIds } from '@teambit/legacy/dist/bit-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { isHash } from '@teambit/component-version';
+import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
+
+const MAX_LANE_NAME_LENGTH = 800;
 
 export async function createLane(
   consumer: Consumer,
@@ -18,6 +21,7 @@ export async function createLane(
     throw new BitError(`lane "${laneName}" already exists, to switch to this lane, please use "bit switch" command`);
   }
   throwForInvalidLaneName(laneName);
+  await throwForStagedComponents(consumer);
   const getDataToPopulateLaneObjectIfNeeded = async (): Promise<LaneComponent[]> => {
     if (remoteLane) return remoteLane.components;
     // when branching from one lane to another, copy components from the origin lane
@@ -84,8 +88,21 @@ export function throwForInvalidLaneName(laneName: string) {
   }
 }
 
+export async function throwForStagedComponents(consumer: Consumer) {
+  const componentList = new ComponentsList(consumer);
+  const stagedComponents = await componentList.listExportPendingComponentsIds();
+  if (stagedComponents.length) {
+    throw new BitError(
+      `unable to switch/create a new lane, please export or reset the following components first: ${stagedComponents.join(
+        ', '
+      )}`
+    );
+  }
+}
+
 function isValidLaneName(val: unknown): boolean {
   if (typeof val !== 'string') return false;
+  if (val.length > MAX_LANE_NAME_LENGTH) return false;
   // @todo: should we allow slash? if so, we should probably replace the lane-delimiter with something else. (maybe ":")
   return /^[$\-_!a-z0-9]+$/.test(val);
 }

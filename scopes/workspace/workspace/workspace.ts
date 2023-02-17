@@ -31,17 +31,12 @@ import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { VariantsMain } from '@teambit/variants';
-import { link } from '@teambit/legacy/dist/api/consumer';
+// import { link } from '@teambit/legacy/dist/api/consumer';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId, InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
-import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';
-import type {
-  AddActionResults,
-  Warnings,
-} from '@teambit/legacy/dist/consumer/component-ops/add-components/add-components';
 import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
@@ -70,6 +65,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
+import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ComponentConfigFile } from './component-config-file';
 import {
@@ -115,14 +111,6 @@ export interface EjectConfOptions {
   override?: boolean;
 }
 
-export type TrackData = {
-  rootDir: PathOsBasedRelative; // path relative to the workspace
-  componentName?: string; // if empty, it'll be generated from the path
-  mainFile?: string; // if empty, attempts will be made to guess the best candidate
-  defaultScope?: string; // can be entered as part of "bit create" command, helpful for out-of-sync logic
-  config?: { [aspectName: string]: any }; // config specific to this component, which overrides variants of workspace.jsonc
-};
-
 export type ExtensionsOrigin =
   | 'BitmapFile'
   | 'ModelSpecific'
@@ -132,8 +120,6 @@ export type ExtensionsOrigin =
   | 'ComponentJsonFile'
   | 'WorkspaceDefault'
   | 'FinalAfterMerge';
-
-export type TrackResult = { componentName: string; files: string[]; warnings: Warnings };
 
 const DEFAULT_VENDOR_DIR = 'vendor';
 
@@ -454,6 +440,26 @@ export class Workspace implements ComponentFactory {
     return graphIdsFromFsBuilder.buildGraph(ids);
   }
 
+  async getUnavailableOnMainComponents(): Promise<ComponentID[]> {
+    const currentLaneId = this.consumer.getCurrentLaneId();
+    if (!currentLaneId.isDefault()) return [];
+    const allIds = this.consumer.bitMap.getAllBitIdsFromAllLanes();
+    const availableIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
+    if (allIds.length === availableIds.length) return [];
+    const unavailableIds = allIds.filter((id) => !availableIds.hasWithoutScopeAndVersion(id));
+    if (!unavailableIds.length) return [];
+    const removedIds = this.consumer.bitMap.getRemoved();
+    const compsWithHead: BitId[] = [];
+    await Promise.all(
+      unavailableIds.map(async (id) => {
+        if (removedIds.has(id)) return; // we don't care about removed components
+        const modelComp = await this.scope.legacyScope.getModelComponentIfExist(id);
+        if (modelComp && modelComp.head) compsWithHead.push(id);
+      })
+    );
+    return this.resolveMultipleComponentIds(compsWithHead);
+  }
+
   async getSavedGraphOfComponentIfExist(component: Component) {
     let versionObj: Version;
     try {
@@ -669,6 +675,10 @@ export class Workspace implements ComponentFactory {
 
   getCurrentLaneId(): LaneId {
     return this.consumer.getCurrentLaneId();
+  }
+
+  isOnMain(): boolean {
+    return this.consumer.isOnMain();
   }
 
   /**
@@ -889,29 +899,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     await scopeComponentsImporter.importMany({ ids, lanes: [lane] });
   }
 
-  /**
-   * @deprecated use this.track() instead
-   * track a new component. (practically, add it to .bitmap).
-   *
-   * @param componentPaths component paths relative to the workspace dir
-   * @param id if not set, will be concluded from the filenames
-   * @param main if not set, will try to guess according to some strategies and throws if failed
-   * @param override whether add details to an existing component or re-define it
-   */
-  async add(
-    componentPaths: PathOsBasedRelative[],
-    id?: string,
-    main?: string,
-    override = false
-  ): Promise<AddActionResults> {
-    const addComponent = new AddComponents({ consumer: this.consumer }, { componentPaths, id, main, override });
-    const addResults = await addComponent.add();
-    // @todo: the legacy commands have `consumer.onDestroy()` on command completion, it writes the
-    //  .bitmap file. workspace needs a similar mechanism. once done, remove the next line.
-    await this.bitMap.write();
-    return addResults;
-  }
-
   async use(aspectIdStr: string): Promise<string> {
     const aspectId = await this.resolveComponentId(aspectIdStr);
     let aspectIdToAdd = aspectId.toStringWithoutVersion();
@@ -933,51 +920,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     );
     await config.write();
     return aspectIdToAdd;
-  }
-
-  /**
-   * add a new component to the .bitmap file.
-   * this method only adds the records in memory but doesn't persist to the filesystem.
-   * to write the .bitmap file once completed, run "await this.bitMap.write();"
-   */
-  async track(trackData: TrackData): Promise<TrackResult> {
-    const defaultScope = trackData.defaultScope ? await this.addOwnerToScopeName(trackData.defaultScope) : undefined;
-    const addComponent = new AddComponents(
-      { consumer: this.consumer },
-      {
-        componentPaths: [trackData.rootDir],
-        id: trackData.componentName,
-        main: trackData.mainFile,
-        override: false,
-        defaultScope,
-        config: trackData.config,
-      }
-    );
-    const result = await addComponent.add();
-    const addedComponent = result.addedComponents[0];
-    const componentName = addedComponent?.id.name || (trackData.componentName as string);
-    const files = addedComponent?.files.map((f) => f.relativePath) || [];
-    return { componentName, files, warnings: result.warnings };
-  }
-
-  /**
-   * scopes in bit.dev are "owner.collection".
-   * we might have the scope-name only without the owner and we need to retrieve it from the defaultScope in the
-   * workspace.jsonc file.
-   *
-   * @param scopeName scopeName that might not have the owner part.
-   * @returns full scope name
-   */
-  private async addOwnerToScopeName(scopeName: string): Promise<string> {
-    if (scopeName.includes('.')) return scopeName; // it has owner.
-    const isSelfHosted = !(await this.isHostedByBit(scopeName));
-    if (isSelfHosted) return scopeName;
-    const wsDefaultScope = this.defaultScope;
-    if (!wsDefaultScope.includes('.')) {
-      throw new Error(`the entered scope has no owner nor the defaultScope in workspace.jsonc`);
-    }
-    const [owner] = wsDefaultScope.split('.');
-    return `${owner}.${scopeName}`;
   }
 
   async write(component: Component, rootPath?: string) {
@@ -1103,6 +1045,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.aspectsMerger.mergeConflictFile;
   }
 
+  getDepsDataOfMergeConfig(id: BitId): Record<string, any> | undefined {
+    return this.aspectsMerger.getDepsDataOfMergeConfig(id);
+  }
+
   async listComponentsDuringMerge(): Promise<ComponentID[]> {
     const unmergedComps = this.scope.legacyScope.objects.unmergedComponents.getComponents();
     const bitIds = unmergedComps.map((u) => new BitId(u.id));
@@ -1199,7 +1145,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     }
   }
 
-  async removeSpecificComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist: boolean) {
+  async removeSpecificComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist = false) {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {
       await componentConfigFile.removeAspect(aspectId, markWithMinusIfNotExist, this.resolveComponentId.bind(this));
@@ -1451,7 +1397,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     let missingPaths = false;
-    const stringIds: string[] = [];
+    const bitIds: BitId[] = [];
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const userAspectsIds: string[] = difference(idsToResolve, coreAspectsIds);
@@ -1460,7 +1406,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const wsComponents = await this.getMany(workspaceIds);
     const aspectDefs = await this.aspectLoader.resolveAspects(wsComponents, async (component) => {
       const compStringId = component.id._legacy.toString();
-      stringIds.push(compStringId);
+      bitIds.push(component.id._legacy);
       const localPath = this.getComponentPackagePath(component);
       const isExist = await fs.pathExists(localPath);
       if (!isExist) {
@@ -1502,7 +1448,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     }
 
     if (missingPaths) {
-      await link(stringIds, false);
+      await linkToNodeModulesByIds(this, bitIds);
     }
 
     const allDefs = aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
@@ -1587,9 +1533,9 @@ needed-for: ${neededFor || '<unknown>'}`);
 
   async requireComponents(components: Component[]): Promise<RequireableComponent[]> {
     let missingPaths = false;
-    const stringIds: string[] = [];
+    const bitIds: BitId[] = [];
     const resolveP = components.map(async (component) => {
-      stringIds.push(component.id._legacy.toString());
+      bitIds.push(component.id._legacy);
       const localPath = this.getComponentPackagePath(component);
       const isExist = await fs.pathExists(localPath);
       if (!isExist) {
@@ -1615,19 +1561,9 @@ needed-for: ${neededFor || '<unknown>'}`);
     const resolved = await Promise.all(resolveP);
     // Make sure to link missing components
     if (missingPaths) {
-      await link(stringIds, false);
+      await linkToNodeModulesByIds(this, bitIds);
     }
     return resolved;
-  }
-
-  /**
-   * whether a scope is hosted by Bit cloud.
-   * otherwise, it is self-hosted
-   */
-  private async isHostedByBit(scopeName: string): Promise<boolean> {
-    // TODO: once scope create a new API for this, replace it with the new one
-    const remotes = await this.scope._legacyRemotes();
-    return remotes.isHub(scopeName);
   }
 
   /**
@@ -1905,8 +1841,8 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
           return;
         }
         const currentEnvWithPotentialVersion = await this.getAspectIdFromConfig(id, currentEnv, true);
-        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv, true);
-        await this.removeSpecificComponentConfig(id, EnvsAspect.id, true);
+        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv);
+        await this.removeSpecificComponentConfig(id, EnvsAspect.id);
         changed.push(id);
       })
     );

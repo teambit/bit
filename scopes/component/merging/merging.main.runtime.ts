@@ -1,15 +1,12 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import R from 'ramda';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import {
-  ApplyVersionResults,
   MergeStrategy,
-  mergeVersion,
-  ApplyVersionResult,
   FailedComponents,
   FileStatus,
+  ApplyVersionResult,
   getMergeStrategyInteractive,
   MergeOptions,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
@@ -28,8 +25,9 @@ import { Ref } from '@teambit/legacy/dist/scope/objects';
 import chalk from 'chalk';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
+import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { compact } from 'lodash';
 import { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
@@ -75,6 +73,22 @@ export type ComponentMergeStatusBeforeMergeAttempt = {
   };
 };
 
+export type ApplyVersionResults = {
+  components?: ApplyVersionResult[];
+  version?: string;
+  failedComponents?: FailedComponents[];
+  resolvedComponents?: ConsumerComponent[]; // relevant for bit merge --resolve
+  abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
+  mergeSnapResults?: { snappedComponents: ConsumerComponent[]; autoSnappedResults: AutoTagResult[] } | null;
+  mergeSnapError?: Error;
+  leftUnresolvedConflicts?: boolean;
+  verbose?: boolean;
+  newFromLane?: string[];
+  newFromLaneAdded?: boolean;
+  installationError?: Error; // in case the package manager failed, it won't throw, instead, it'll return error here
+  compilationError?: Error; // in case the compiler failed, it won't throw, instead, it'll return error here
+};
+
 export class MergingMain {
   private consumer: Consumer;
   constructor(
@@ -82,18 +96,15 @@ export class MergingMain {
     private install: InstallMain,
     private snapping: SnappingMain,
     private checkout: CheckoutMain,
-    private logger: Logger
+    private logger: Logger,
+    private componentWriter: ComponentWriterMain,
+    private importer: ImporterMain
   ) {
     this.consumer = this.workspace?.consumer;
   }
 
-  /**
-   * merge components according to the "values" param.
-   * if the first param is a version, then merge the component ids to that version.
-   * otherwise, merge from the remote head to the local.
-   */
   async merge(
-    values: string[],
+    ids: string[],
     mergeStrategy: MergeStrategy,
     abort: boolean,
     resolve: boolean,
@@ -105,13 +116,12 @@ export class MergingMain {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer: Consumer = this.workspace.consumer;
     let mergeResults;
-    const firstValue = R.head(values);
     if (resolve) {
-      mergeResults = await this.resolveMerge(values, message, build);
+      mergeResults = await this.resolveMerge(ids, message, build);
     } else if (abort) {
-      mergeResults = await this.abortMerge(values);
-    } else if (!BitId.isValidVersion(firstValue)) {
-      const bitIds = this.getComponentsToMerge(consumer, values);
+      mergeResults = await this.abortMerge(ids);
+    } else {
+      const bitIds = this.getComponentsToMerge(consumer, ids);
       // @todo: version could be the lane only or remote/lane
       mergeResults = await this.mergeComponentsFromRemote(
         consumer,
@@ -122,11 +132,6 @@ export class MergingMain {
         build,
         skipDependencyInstallation
       );
-    } else {
-      const version = firstValue;
-      const ids = R.tail(values);
-      const bitIds = this.getComponentsToMerge(consumer, ids);
-      mergeResults = await mergeVersion(consumer, version, bitIds, mergeStrategy);
     }
     await consumer.onDestroy();
     return mergeResults;
@@ -313,10 +318,12 @@ export class MergingMain {
     otherLane?: Lane | null, // the lane we want to merged to our lane. (null if it's "main").
     options?: { resolveUnrelated?: MergeStrategy; ignoreConfigChanges?: boolean }
   ): Promise<ComponentMergeStatus[]> {
-    const componentStatusBeforeMergeAttempt = await Promise.all(
-      bitIds.map((id) => this.getComponentStatusBeforeMergeAttempt(id, currentLane, options))
+    if (!currentLane && otherLane) {
+      await this.importer.importObjectsFromMainIfExist(otherLane.toBitIds().toVersionLatest());
+    }
+    const componentStatusBeforeMergeAttempt = await mapSeries(bitIds, (id) =>
+      this.getComponentStatusBeforeMergeAttempt(id, currentLane, options)
     );
-
     const toImport = componentStatusBeforeMergeAttempt
       .map((compStatus) => {
         if (!compStatus.divergeData || !compStatus.divergeData.commonSnapBeforeDiverge) return [];
@@ -555,7 +562,8 @@ other:   ${otherLaneHead.toString()}`);
       baseComponent.extensions,
       otherComponent.extensions,
       currentLabel,
-      otherLabel
+      otherLabel,
+      this.logger
     );
     const configMergeResult = configMerger.merge();
 
@@ -649,15 +657,13 @@ other:   ${otherLaneHead.toString()}`);
       filesStatus = { ...filesStatus, ...modifiedStatus };
     }
 
-    const manyComponentsWriter = new ManyComponentsWriter({
+    const manyComponentsWriterOpts = {
       consumer,
       componentsWithDependencies: [componentWithDependencies],
-      installNpmPackages: false,
-      override: true,
+      skipDependencyInstallation: true,
       writeConfig: false, // @todo: should write if config exists before, needs to figure out how to do it.
-      verbose: false, // @todo: do we need a flag here?
-    });
-    await manyComponentsWriter.writeAll();
+    };
+    await this.componentWriter.writeMany(manyComponentsWriterOpts);
 
     if (configMergeResult) {
       if (!componentWithDependencies.component.writtenPath) {
@@ -790,18 +796,29 @@ other:   ${otherLaneHead.toString()}`);
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, SnappingAspect, CheckoutAspect, InstallAspect, LoggerAspect];
+  static dependencies = [
+    CLIAspect,
+    WorkspaceAspect,
+    SnappingAspect,
+    CheckoutAspect,
+    InstallAspect,
+    LoggerAspect,
+    ComponentWriterAspect,
+    ImporterAspect,
+  ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, snapping, checkout, install, loggerMain]: [
+  static async provider([cli, workspace, snapping, checkout, install, loggerMain, compWriter, importer]: [
     CLIMain,
     Workspace,
     SnappingMain,
     CheckoutMain,
     InstallMain,
-    LoggerMain
+    LoggerMain,
+    ComponentWriterMain,
+    ImporterMain
   ]) {
     const logger = loggerMain.createLogger(MergingAspect.id);
-    const merging = new MergingMain(workspace, install, snapping, checkout, logger);
+    const merging = new MergingMain(workspace, install, snapping, checkout, logger, compWriter, importer);
     cli.register(new MergeCmd(merging));
     return merging;
   }

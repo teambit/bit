@@ -46,11 +46,11 @@ import RemovedObjects from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
 import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-json';
-import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
 import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
 import { getDivergeData } from './component-ops/get-diverge-data';
+import { StagedSnaps } from './staged-snaps';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -118,6 +118,7 @@ export default class Scope {
    * another instance this is needed is for bit-sign, this way when loading aspects and fetching dists, it'll go to lane-scope.
    */
   currentLaneId?: LaneId;
+  stagedSnaps: StagedSnaps;
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
     this.scopeJson = scopeProps.scopeJson;
@@ -128,30 +129,13 @@ export default class Scope {
     this.lanes = new Lanes(this.objects, this.scopeJson);
     this.isBare = scopeProps.isBare ?? false;
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
+    this.stagedSnaps = StagedSnaps.load(this.path);
   }
 
   static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
 
   public async refreshScopeIndex(force = false) {
     await this.objects.reloadScopeIndexIfNeed(force);
-  }
-
-  /**
-   * import components to the `Scope.
-   */
-  async import(
-    ids: BitIds,
-    cache = true,
-    reFetchUnBuiltVersion = true,
-    lanes?: Lane[]
-  ): Promise<VersionDependencies[]> {
-    return this.scopeImporter.importMany({
-      ids,
-      cache,
-      throwForDependencyNotFound: false,
-      reFetchUnBuiltVersion,
-      lanes,
-    });
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {

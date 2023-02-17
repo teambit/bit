@@ -135,6 +135,7 @@ describe('bit lane command', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       helper.command.snapAllComponentsWithoutBuild();
@@ -907,6 +908,45 @@ describe('bit lane command', function () {
       expect(getFirstTagFromRemote).to.not.throw();
     });
   });
+  describe('multiple scopes - lane-scope does not have main tags', () => {
+    let anotherRemote: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.fixtures.populateComponents(1, false);
+      helper.command.setScope(scopeName, 'comp1');
+      helper.command.tagAllWithoutBuild();
+      // snap multiple times on main. these snaps will be missing locally during the snap-from-scope
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.command.createLane();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.import(`${anotherRemote}/comp1`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    it('bit status should show only the last snap of the imported component as staged', () => {
+      const status = helper.command.statusJson();
+      status.stagedComponents.forEach((comp) => {
+        expect(comp.versions).to.have.lengthOf(1);
+      });
+    });
+    it('bit export should not throw an error', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+  });
   describe('snapping and un-tagging on a lane', () => {
     let afterFirstSnap: string;
     before(() => {
@@ -1185,6 +1225,7 @@ describe('bit lane command', function () {
       helper.command.removeComponent('comp3', '--force');
       helper.fs.outputFile('comp2/index.js', ''); // remove the dependency from the code
       helper.command.tagWithoutBuild();
+      helper.command.export();
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
     });
@@ -1302,6 +1343,41 @@ describe('bit lane command', function () {
         const list = helper.command.listParsed();
         expect(list).to.have.lengthOf(1);
       });
+    });
+  });
+  // lane-b was forked from lane-a.
+  // remotely, lane-b has snapA, and lane-a has snapA + snapX1 + snapX2.
+  // locally, lane-a was merged into lane-b, as a result, lane-b has snapA + snapX1 + snapX2.
+  // from lane-b perspective, snapX1 and snapX2 are staged. from the remote perspective, they both exist, so no need to
+  // export them.
+  describe('exporting a component on a lane when the staged snaps exist already on the remote (from another lane)', function () {
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild(); // snapA
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.command.export();
+      const laneAFirstSnap = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // snapX1
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // snapX2
+      helper.command.export();
+
+      // locally
+      helper.scopeHelper.getClonedLocalScope(laneAFirstSnap);
+      helper.command.mergeLane('lane-a'); // now lane-b has snapA + snapB + snapX1 (from lane-a) + snapX2 (the from lane-a)
+      helper.command.import();
+      // keep this to fetch from all lanes, because in the future, by default, only the current lane is fetched
+      helper.command.fetchAllLanes();
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('bit export should not throw', () => {
+      expect(() => helper.command.export()).to.not.throw();
     });
   });
 });

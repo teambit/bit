@@ -278,17 +278,11 @@ export default class Component extends BitObject {
   async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
     if (!this.divergeData || !fromCache) {
       const remoteHead = (this.laneId ? this.laneHeadRemote : this.remoteHead) || null;
-      let otherRemoteHeads: Ref[] | undefined;
-      if (this.laneId) {
-        otherRemoteHeads = await repo.remoteLanes.getRefsFromAllLanes(this.toBitId());
-        if (this.remoteHead) otherRemoteHeads.push(this.remoteHead);
-      }
       this.divergeData = await getDivergeData({
         repo,
         modelComponent: this,
         targetHead: remoteHead,
         throws,
-        otherTargetsHeads: otherRemoteHeads,
       });
     }
   }
@@ -306,9 +300,15 @@ export default class Component extends BitObject {
     if (lane) this.laneId = lane.toLaneId();
     if (this.scope) {
       if (lane) {
-        // const remoteToCheck = lane.isNew && lane.forkedFrom ? lane.forkedFrom : lane.toLaneId();
-        // this.laneHeadRemote = await repo.remoteLanes.getRef(remoteToCheck, this.toBitId());
-        this.laneHeadRemote = await repo.remoteLanes.getRef(lane.toLaneId(), this.toBitId());
+        const getRemoteToCheck = () => {
+          if (!lane.isNew) return lane.toLaneId();
+          if (lane.forkedFrom) return lane.forkedFrom;
+          return LaneId.from(DEFAULT_LANE, this.scope as string);
+        };
+        const remoteToCheck = getRemoteToCheck();
+        // if no remote-ref was found, because it's checked out to a lane, it's safe to assume that
+        // this.head should be on the original-remote. hence, FetchMissingHistory will retrieve it on lane-remote
+        this.laneHeadRemote = (await repo.remoteLanes.getRef(remoteToCheck, this.toBitId())) || this.head;
       }
       // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
       this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
@@ -1003,14 +1003,13 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   }
 
   async getLocalTagsOrHashes(repo: Repository): Promise<string[]> {
-    await this.setDivergeData(repo);
-    const divergeData = this.getDivergeData();
-    const localHashes = divergeData.snapsOnSourceOnly;
+    const localHashes = await this.getLocalHashes(repo);
     if (!localHashes.length) return [];
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
-  getLocalHashes(): Ref[] {
+  async getLocalHashes(repo: Repository): Promise<Ref[]> {
+    await this.setDivergeData(repo);
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnSourceOnly;
     if (!localHashes.length) return [];

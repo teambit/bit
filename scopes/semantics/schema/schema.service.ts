@@ -2,9 +2,9 @@ import { EnvService, ExecutionContext, Env, EnvContext, ServiceTransformationMap
 import { SchemaExtractor } from './schema-extractor';
 // import { APISchema } from './schema';
 
-type SchemaTransformationMap = ServiceTransformationMap  & {
+type SchemaTransformationMap = ServiceTransformationMap & {
   getSchemaExtractor: () => SchemaExtractor;
-}
+};
 export class SchemaService implements EnvService<{}> {
   name = 'schema';
 
@@ -16,7 +16,7 @@ export class SchemaService implements EnvService<{}> {
     // Old env
     if (!env?.schemaExtractor) return undefined;
     return {
-      getSchemaExtractor: env.schemaExtractor()(context),
-    }
+      getSchemaExtractor: () => env.schemaExtractor()(context),
+    };
   }
 }

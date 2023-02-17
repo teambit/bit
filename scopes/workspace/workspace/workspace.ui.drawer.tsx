@@ -7,20 +7,29 @@ import {
   ScopePayload,
   ScopeTreeNode,
 } from '@teambit/ui-foundation.ui.side-bar';
-import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { useLanes as defaultUseLanesHook } from '@teambit/lanes.hooks.use-lanes';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
 import { TreeNodeProps } from '@teambit/design.ui.tree';
 import { ComponentModel } from '@teambit/component';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { SidebarWidgetSlot } from './workspace.ui.runtime';
 
 export type WorkspaceDrawerProps = {
   treeWidgets: SidebarWidgetSlot;
   filtersSlot: ComponentFiltersSlot;
   drawerWidgetSlot: DrawerWidgetSlot;
+  overrideUseLanes?: () => { lanesModel?: LanesModel; loading?: boolean };
 };
 
-export const workspaceDrawer = ({ treeWidgets, filtersSlot, drawerWidgetSlot }: WorkspaceDrawerProps) =>
-  new ComponentsDrawer({
+export const workspaceDrawer = ({
+  treeWidgets,
+  filtersSlot,
+  drawerWidgetSlot,
+  overrideUseLanes: useLanesFromProps,
+}: WorkspaceDrawerProps) => {
+  const useLanes = useLanesFromProps || defaultUseLanesHook;
+
+  return new ComponentsDrawer({
     order: 0,
     id: 'workspace-components-drawer',
     name: 'COMPONENTS',
@@ -31,7 +40,7 @@ export const workspaceDrawer = ({ treeWidgets, filtersSlot, drawerWidgetSlot }: 
           function TreeNode(props: TreeNodeProps<PayloadType>) {
             const children = props.node.children;
 
-            if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />; // non collapse
+            if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} useLanes={useLanes} />; // non collapse
 
             if (props.node.payload instanceof ScopePayload) return <ScopeTreeNode {...props} />;
 
@@ -42,6 +51,7 @@ export const workspaceDrawer = ({ treeWidgets, filtersSlot, drawerWidgetSlot }: 
       drawerWidgets: drawerWidgetSlot,
     },
     emptyMessage: 'Workspace is empty',
+    useLanes,
     useComponents: () => {
       const { lanesModel, loading: lanesLoading } = useLanes();
       const viewedLaneId = lanesModel?.viewedLane?.id;
@@ -62,6 +72,7 @@ export const workspaceDrawer = ({ treeWidgets, filtersSlot, drawerWidgetSlot }: 
       };
     },
   });
+};
 
 function mergeComponents(mainComponents: ComponentModel[], laneComponents: ComponentModel[]): ComponentModel[] {
   const mainComponentsThatAreNotOnLane = mainComponents.filter((mainComponent) => {

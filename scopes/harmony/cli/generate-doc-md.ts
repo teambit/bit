@@ -17,7 +17,23 @@ export class GenerateCommandsDoc {
     let output = `${this.getFrontmatter()}
 # CLI Reference
 
-Commands that are marked as workspace only must be executed inside a workspace. Commands that are marked as not workspace only, can be executed from anywhere and will run on a remote server.
+Run the following to list all available Bit commands (alternatively, use the \`-h\` alias, instead of \`--help\`):
+
+\`\`\`sh
+bit --help
+\`\`\`
+
+Run the following to get help on a specific command:
+
+\`\`\`sh
+bit COMMAND --help
+\`\`\`
+
+Run the following to get help on a specific sub-command:
+
+\`\`\`sh
+bit COMMAND SUB_COMMAND --help
+\`\`\`
 `;
     output += commands.map((cmd) => this.generateCommand(cmd)).join('\n');
 
@@ -64,7 +80,6 @@ Commands that are marked as workspace only must be executed inside a workspace. 
     if (cmd.alias && cmd.alias.length > 0) {
       result += `**Alias**: \`${cmd.alias}\`  \n`;
     }
-    result += `**Workspace only**: ${cmd.skipWorkspace ? 'no' : 'yes'}  \n`;
     result += `**Description**: ${this.formatDescription(cmd)}`;
     result += `\`bit ${cmd.name}\`  \n\n`;
 

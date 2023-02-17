@@ -8,11 +8,11 @@ import {
   ScopeTreeNode,
 } from '@teambit/ui-foundation.ui.side-bar';
 import { TreeNode as TreeNodeType, TreeNodeProps } from '@teambit/design.ui.tree';
-import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { useLanes as defaultUseLanesHook } from '@teambit/lanes.hooks.use-lanes';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
 import { ComponentModel } from '@teambit/component';
 import { useScope, ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
-// import { WorkspaceModel } from '@teambit/workspace';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { SidebarSlot } from './scope.ui.runtime';
 
 export type ScopeDrawerProps = {
@@ -21,6 +21,7 @@ export type ScopeDrawerProps = {
   drawerWidgetSlot: DrawerWidgetSlot;
   assumeScopeInUrl?: boolean;
   overrideUseComponents?: () => { components: ComponentModel[] };
+  overrideUseLanes?: () => { lanesModel?: LanesModel; loading?: boolean };
 };
 
 export const scopeDrawer = ({
@@ -29,12 +30,15 @@ export const scopeDrawer = ({
   drawerWidgetSlot,
   assumeScopeInUrl = false,
   overrideUseComponents,
+  overrideUseLanes: useLanesFromProps,
 }: ScopeDrawerProps) => {
+  const useLanes = useLanesFromProps || defaultUseLanesHook;
+
   const customScopeTreeNodeRenderer = (treeNodeSlot, host?: any) =>
     function TreeNode(props: TreeNodeProps<PayloadType>) {
       const children = props.node.children;
 
-      if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
+      if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} useLanes={useLanes} />;
 
       // skip over scope node and render only children
       if (props.node.payload instanceof ScopePayload) {
@@ -76,6 +80,7 @@ export const scopeDrawer = ({
       drawerWidgets: drawerWidgetSlot,
     },
     useHost: () => useScope(),
+    useLanes,
     emptyMessage: 'Scope is empty',
     // TODO: create an interface for Component host.
     transformTree: (host?: any) => {

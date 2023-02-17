@@ -2,7 +2,8 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import semver from 'semver';
-import { uniq, isEmpty, union } from 'lodash';
+import { isSnap } from '@teambit/component-version';
+import { uniq, isEmpty, union, cloneDeep } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
@@ -98,6 +99,11 @@ export default class DependencyResolver {
   tree: DependenciesTree;
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
+  /**
+   * This will store a copy of the package deps before removal
+   * in order to apply auto detected rules that are running after the removal
+   */
+  originAllPackagesDependencies: AllPackagesDependencies;
   issues: IssuesList;
   coreAspects: string[] = [];
   processedFiles: string[];
@@ -245,6 +251,8 @@ export default class DependencyResolver {
       this.processUnidentifiedPackages(file, fileType);
     });
 
+    this.cloneAllPackagesDependencies();
+
     this.removeIgnoredPackagesByOverrides();
     this.removeDevAndEnvDepsIfTheyAlsoRegulars();
     this.addCustomResolvedIssues();
@@ -289,6 +297,10 @@ export default class DependencyResolver {
       }, {});
       this.issues.getOrCreate(IssuesClasses.CustomModuleResolutionUsed).data = importSources;
     }
+  }
+
+  cloneAllPackagesDependencies() {
+    this.originAllPackagesDependencies = cloneDeep(this.allPackagesDependencies);
   }
 
   removeIgnoredPackagesByOverrides() {
@@ -709,12 +721,11 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
         return;
       }
-      const getExistingIdFromBitMapOrModel = (): BitId | undefined => {
+      const getExistingIdFromBitmap = (): BitId | undefined => {
         const existingIds = this.consumer.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId);
-        if (existingIds.length === 1) {
-          depDebug.versionResolvedFrom = 'BitMap';
-          return existingIds[0];
-        }
+        return existingIds.length === 1 ? existingIds[0] : undefined;
+      };
+      const getExistingIdFromModel = (): BitId | undefined => {
         if (this.componentFromModel) {
           const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
           if (modelDep) {
@@ -725,9 +736,13 @@ either, use the ignore file syntax or change the require statement to have a mod
         return undefined;
       };
       const getExistingId = (): BitId | undefined => {
-        // Happens when the dep is not in the node_modules or it's there without a version
-        // (it's there without a version when it's in the workspace and it's linked)
-        if (!version) return getExistingIdFromBitMapOrModel();
+        const fromBitmap = getExistingIdFromBitmap();
+        if (fromBitmap) {
+          depDebug.versionResolvedFrom = 'BitMap';
+          return fromBitmap;
+        }
+        // Happens when the dep is not in the node_modules
+        if (!version) return getExistingIdFromModel();
 
         // In case it's resolved from the node_modules, and it's also in the ws policy or variants,
         // use the resolved version from the node_modules / package folder
@@ -736,8 +751,8 @@ either, use the ignore file syntax or change the require statement to have a mod
         }
 
         // If there is a version in the node_modules/package folder, but it's not in the ws policy,
-        // prefer the version from the bitmap/model over the version from the node_modules
-        return getExistingIdFromBitMapOrModel() ?? componentId;
+        // prefer the version from the model over the version from the node_modules
+        return getExistingIdFromModel() ?? componentId;
       };
       const existingId = getExistingId();
       if (existingId) {
@@ -818,6 +833,9 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (coerced) {
         return coerced.version;
       }
+    }
+    if (isSnap(version)) {
+      return version;
     }
     // it's probably a relative path to the component
     return null;
@@ -1237,9 +1255,13 @@ either, use the ignore file syntax or change the require statement to have a mod
         });
 
         if (
-          !this.allPackagesDependencies.packageDependencies[pkgName] &&
-          !this.allPackagesDependencies.devPackageDependencies[pkgName] &&
-          !this.allPackagesDependencies.peerPackageDependencies[pkgName] &&
+          // We are checking originAllPackagesDependencies instead of allPackagesDependencies
+          // as it might be already removed from allPackagesDependencies at this point if it was set with
+          // "-" in runtime/dev
+          // in such case we still want to apply it here
+          !this.originAllPackagesDependencies.packageDependencies[pkgName] &&
+          !this.originAllPackagesDependencies.devPackageDependencies[pkgName] &&
+          !this.originAllPackagesDependencies.peerPackageDependencies[pkgName] &&
           !existsInCompsDeps &&
           !existsInCompsDevDeps &&
           // Check if it was orignally exists in the component
@@ -1281,7 +1303,14 @@ either, use the ignore file syntax or change the require statement to have a mod
         // delete this.allPackagesDependencies.packageDependencies[pkgName];
         // delete this.allPackagesDependencies.devPackageDependencies[pkgName];
         // delete this.allPackagesDependencies.peerPackageDependencies[pkgName];
-        if (pkgVal !== MANUALLY_REMOVE_DEPENDENCY) {
+
+        // If it exists in comps deps / comp dev deps, we don't want to add it to the allPackagesDependencies
+        // as it will make the same dep both a dev and runtime dep
+        // since we are here only for auto detected deps, it means we already resolved the version correctly
+        // so we don't need to really modify the version
+        // also the version here might have a range (^ or ~ for example) so we can't
+        // just put it as is, as it is not valid for component deps to have range
+        if (pkgVal !== MANUALLY_REMOVE_DEPENDENCY && !existsInCompsDeps && !existsInCompsDevDeps) {
           this.allPackagesDependencies[key][pkgName] = pkgVal;
         }
       }, autoDetectOverrides[field]);

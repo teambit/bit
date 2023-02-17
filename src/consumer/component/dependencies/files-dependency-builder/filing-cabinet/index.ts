@@ -22,9 +22,13 @@ const debug = require('debug')('cabinet');
 
 const defaultLookups = {
   '.js': jsLookup,
+  '.cjs': jsLookup,
+  '.mjs': jsLookup,
   '.jsx': jsLookup,
   '.ts': tsLookup,
   '.tsx': tsLookup,
+  '.cts': tsLookup,
+  '.mts': tsLookup,
   '.scss': cssPreprocessorLookup,
   '.sass': cssPreprocessorLookup,
   '.styl': stylusLookup,

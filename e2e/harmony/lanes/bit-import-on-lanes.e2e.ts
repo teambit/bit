@@ -199,17 +199,17 @@ describe('bit lane command', function () {
         helper.command.import();
         localScope = helper.scopeHelper.cloneLocalScope();
       });
-      it('should not bring all history of main only the head', () => {
+      it('should not bring main (for performance reasons)', () => {
         const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
         const v1Hash = comp.versions['0.0.1'];
         const v2Hash = comp.versions['0.0.2'];
         const v3Hash = comp.versions['0.0.3'];
         expect(() => helper.command.catObject(v1Hash)).to.throw();
         expect(() => helper.command.catObject(v2Hash)).to.throw();
-        expect(() => helper.command.catObject(v3Hash)).to.not.throw(); // coz it's the head
+        expect(() => helper.command.catObject(v3Hash)).to.throw(); // coz it's the head
       });
-      it('should bring all history if --all-history flag was used', () => {
-        helper.command.import('--all-history');
+      it('should bring all history if fetch --lanes --all-history was used', () => {
+        helper.command.fetchAllLanes('--all-history');
         const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
         const v2Hash = comp.versions['0.0.2'];
         expect(() => helper.command.catObject(v2Hash)).to.not.throw();
@@ -221,6 +221,45 @@ describe('bit lane command', function () {
         const v1Hash = comp.versions['0.0.1'];
         expect(() => helper.command.catObject(v1Hash)).to.not.throw();
       });
+    });
+  });
+  describe('import objects for multiple lanes', () => {
+    let afterFirstSnap: string;
+    let secondSnapMain: string;
+    let secondSnapLaneA: string;
+    let secondSnapLaneB: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      afterFirstSnap = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      secondSnapLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
+      helper.command.switchLocalLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      secondSnapLaneA = helper.command.getHeadOfLane('lane-a', 'comp1');
+      helper.command.switchLocalLane('main');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      secondSnapMain = helper.command.getHead('comp1');
+
+      helper.scopeHelper.getClonedLocalScope(afterFirstSnap);
+    });
+    it('bit fetch --lane should bring updates for all lanes', () => {
+      helper.command.fetchAllLanes();
+      expect(helper.command.getHeadOfLane('lane-a', 'comp1')).to.equal(secondSnapLaneA, 'lane-a was not updated');
+      expect(helper.command.getHeadOfLane('lane-b', 'comp1')).to.equal(secondSnapLaneB, 'lane-b was not updated');
+      expect(helper.command.getHead('comp1')).to.equal(secondSnapMain, 'main was not updated');
     });
   });
 });

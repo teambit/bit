@@ -16,6 +16,7 @@ export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
   description = 'EXPERIMENTAL. create an immutable and exportable component snapshot (no release version)';
   extendedDescription: string;
+  group = 'development';
   arguments = [
     {
       name: 'component-pattern',
@@ -31,6 +32,11 @@ export class SnapCmd implements Command {
       'b',
       'build',
       'EXPERIMENTAL. not needed for now. run the build pipeline in case the feature-flag build-on-ci is enabled',
+    ],
+    [
+      '',
+      'editor [editor]',
+      'EXPERIMENTAL. open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
     ],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
@@ -51,7 +57,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     ],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {
@@ -66,6 +71,7 @@ ${WILDCARD_HELP('snap')}`;
       all = false,
       force = false,
       unmerged = false,
+      editor = '',
       ignoreIssues,
       build,
       skipTests = false,
@@ -78,6 +84,7 @@ ${WILDCARD_HELP('snap')}`;
       all?: boolean;
       force?: boolean;
       unmerged?: boolean;
+      editor?: string;
       ignoreIssues?: string;
       build?: boolean;
       skipTests?: boolean;
@@ -104,7 +111,7 @@ ${WILDCARD_HELP('snap')}`;
       );
       if (pattern) unmodified = true;
     }
-    if (!message) {
+    if (!message && !editor) {
       this.logger.consoleWarning(
         `--message will be mandatory in the next few releases. make sure to add a message with your snap`
       );
@@ -114,6 +121,7 @@ ${WILDCARD_HELP('snap')}`;
       pattern,
       message,
       unmerged,
+      editor,
       ignoreIssues,
       build,
       skipTests,
