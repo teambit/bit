@@ -24,7 +24,7 @@ export function LanesProvider({
   skipNetworkCall,
 }: LanesProviderProps) {
   const { lanesModel, loading } = useLanes(targetLanes, skipNetworkCall);
- 
+
   const [lanesState, setLanesState] = useState<LanesModel | undefined>(lanesModel);
   const [viewedLaneId, setViewedLaneId] = useState<LaneId | undefined>(viewedIdFromProps);
 

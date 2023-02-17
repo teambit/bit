@@ -165,17 +165,19 @@ export class ApplicationMain {
       return files.map((file) => file.path);
     });
     // const app = require(appPath);
-    const appManifests = compact(pluginsToLoad.map((pluginPath) => {
-      try {
-        // eslint-disable-next-line
-        const appManifest = require(pluginPath)?.default;
-        return appManifest;
-      } catch (err) {
-        this.logger.error(`failed loading app manifest: ${pluginPath}`);
-        return undefined;
-      }
-    }));
-    
+    const appManifests = compact(
+      pluginsToLoad.map((pluginPath) => {
+        try {
+          // eslint-disable-next-line
+          const appManifest = require(pluginPath)?.default;
+          return appManifest;
+        } catch (err) {
+          this.logger.error(`failed loading app manifest: ${pluginPath}`);
+          return undefined;
+        }
+      })
+    );
+
     return appManifests;
   }
 

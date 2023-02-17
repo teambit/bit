@@ -1,7 +1,7 @@
-import { ComponentID } from "@teambit/component";
-import { Harmony } from "@teambit/harmony";
-import { Logger, LoggerMain } from "@teambit/logger";
-import { WorkerMain } from "@teambit/worker";
+import { ComponentID } from '@teambit/component';
+import { Harmony } from '@teambit/harmony';
+import { Logger, LoggerMain } from '@teambit/logger';
+import { WorkerMain } from '@teambit/worker';
 
 export class ServiceHandlerContext {
   constructor(
@@ -18,10 +18,8 @@ export class ServiceHandlerContext {
    * return a logger instance for the env.
    */
   createLogger(name?: string): Logger {
-    const loggerName = name  
-      ? `${this.envId.toString()}::${name}`
-      : this.envId.toString();
-      
+    const loggerName = name ? `${this.envId.toString()}::${name}` : this.envId.toString();
+
     return this.loggerMain.createLogger(loggerName);
   }
 

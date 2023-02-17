@@ -71,7 +71,7 @@ export class DevFilesMain {
         config: configuredPatterns,
       },
       fromSlot.patterns,
-      fromEnv,
+      fromEnv
     );
     return res;
   }
@@ -125,7 +125,7 @@ export class DevFilesMain {
       if (!acc[aspectId]) acc[aspectId] = [];
       acc[aspectId] = acc[aspectId].concat(pattern);
       return acc;
-    }, {})
+    }, {});
     return envPatternsObject;
   }
 
