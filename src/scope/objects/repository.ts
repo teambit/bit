@@ -29,6 +29,7 @@ import { Lane, ModelComponent, Symlink } from '../models';
 import { ComponentFsCache } from '../../consumer/component/component-fs-cache';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
+const TRASH_DIR = 'trash';
 
 export default class Repository {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -114,6 +115,10 @@ export default class Repository {
   getBackupPath(dirName?: string): string {
     const backupPath = path.join(this.scopePath, OBJECTS_BACKUP_DIR);
     return dirName ? path.join(backupPath, dirName) : backupPath;
+  }
+
+  getTrashDir() {
+    return path.join(this.scopePath, TRASH_DIR);
   }
 
   getLicense(): Promise<string> {
@@ -473,6 +478,35 @@ export default class Repository {
     await pMap(uniqRefs, (ref) => this._deleteOne(ref), { concurrency });
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
+  }
+
+  async moveObjectsToTrash(refs: Ref[]): Promise<void> {
+    if (!refs.length) return;
+    const uniqRefs = uniqBy(refs, 'hash');
+    logger.debug(`Repository.moveObjectsToTrash: ${uniqRefs.length} objects`);
+    const concurrency = concurrentIOLimit();
+    await pMap(uniqRefs, (ref) => this.moveOneObjectToTrash(ref), { concurrency });
+    const removed = this.scopeIndex.removeMany(uniqRefs);
+    if (removed) await this.scopeIndex.write();
+  }
+
+  async restoreFromTrash(refs: Ref[]) {
+    logger.debug(`Repository.restoreFromTrash: ${refs.length} objects`);
+    const objectsFromTrash = await Promise.all(
+      refs.map(async (ref) => {
+        const trashObjPath = path.join(this.getTrashDir(), this.hashPath(ref));
+        const buffer = await fs.readFile(trashObjPath);
+        return BitObject.parseObject(buffer, trashObjPath);
+      })
+    );
+    await this.writeObjectsToTheFS(objectsFromTrash);
+  }
+
+  private async moveOneObjectToTrash(ref: Ref) {
+    const currentPath = this.objectPath(ref);
+    const trashObjPath = path.join(this.getTrashDir(), this.hashPath(ref));
+    await fs.move(currentPath, trashObjPath);
+    this.removeFromCache(ref);
   }
 
   async deleteRecordsFromUnmergedComponents(componentNames: string[]) {
