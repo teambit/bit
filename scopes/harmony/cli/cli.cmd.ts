@@ -1,14 +1,12 @@
 // eslint-disable-next-line max-classes-per-file
 import { Command, CommandOptions } from '@teambit/cli';
 import legacyLogger from '@teambit/legacy/dist/logger/logger';
-import { Logger } from '@teambit/logger';
 import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import readline from 'readline';
 import { CLIParser } from './cli-parser';
 import { CLIMain } from './cli.main.runtime';
 import { GenerateCommandsDoc, GenerateOpts } from './generate-doc-md';
-import { runApiServer } from './bit-server';
 
 export class CliGenerateCmd implements Command {
   name = 'generate';
@@ -74,23 +72,6 @@ export class CliCmd implements Command {
         resolve('Have a great day!');
       });
     });
-  }
-}
-
-export class CliServerCmd implements Command {
-  name = 'server';
-  description = 'EXPERIMENTAL. communicate with bit cli program via http requests';
-  alias = '';
-  commands: Command[] = [];
-  loader = false;
-  group = 'general';
-  options = [['p', 'port [port]', 'port to run the server on']] as CommandOptions;
-
-  constructor(private cliMain: CLIMain, private logger: Logger) {}
-
-  async report(args, options: { port: number }): Promise<string> {
-    await runApiServer(this.cliMain, this.logger, options);
-    return 'server is running successfully'; // should never get here, the previous line is blocking
   }
 }
 

@@ -13,7 +13,7 @@ import { getCommandId } from './get-command-id';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { CLIParser } from './cli-parser';
 import { CompletionCmd } from './completion.cmd';
-import { CliCmd, CliGenerateCmd, CliServerCmd } from './cli.cmd';
+import { CliCmd, CliGenerateCmd } from './cli.cmd';
 import { HelpCmd } from './help.cmd';
 
 export type CommandList = Array<Command>;
@@ -146,7 +146,6 @@ export class CLIMain {
     const cliCmd = new CliCmd(cliMain, community.getDocsDomain());
     const helpCmd = new HelpCmd(cliMain, community.getDocsDomain());
     cliCmd.commands.push(cliGenerateCmd);
-    cliCmd.commands.push(new CliServerCmd(cliMain, logger));
     cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd, helpCmd);
     return cliMain;
   }
