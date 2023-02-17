@@ -127,9 +127,9 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
                     );
 
                     if (!path) return;
-                    if(!path.includes(composition.identifier.toLowerCase())) {
-                      const nextPath = location.pathname.concat(`/${composition.identifier.toLowerCase()}`)
-                      navigate(nextPath)
+                    if (!path.includes(composition.identifier.toLowerCase())) {
+                      const nextPath = location.pathname.concat(`/${composition.identifier.toLowerCase()}`);
+                      navigate(nextPath);
                       return;
                     }
                     navigate(path);

@@ -1,4 +1,4 @@
-import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from "@teambit/preview";
+import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
 
 export const EnvEnvType = 'env';
 

@@ -29,18 +29,20 @@ export function CompositionCard({
   return (
     <div {...rest} key={composition.identifier} className={classnames(styles.compositionCard, className)}>
       <div className={styles.compositionPreview}>
-        {!isLoading && <ComponentComposition
-          onLoad={() => setLoading(false)}
-          onError={() => {
-            // we need to handle exceptions in ther iframe and what to show here
-            setLoading(false)
-          }}
-          loading="lazy"
-          className={previewClass}
-          composition={composition}
-          component={component}
-          pubsub={false}
-        />}
+        {!isLoading && (
+          <ComponentComposition
+            onLoad={() => setLoading(false)}
+            onError={() => {
+              // we need to handle exceptions in ther iframe and what to show here
+              setLoading(false);
+            }}
+            loading="lazy"
+            className={previewClass}
+            composition={composition}
+            component={component}
+            pubsub={false}
+          />
+        )}
         <div className={styles.previewOverlay}>{previewLoading && <PreviewSkeleton />}</div>
       </div>
       <div className={styles.bottom}>
