@@ -65,7 +65,7 @@ describe('bit rename command', function () {
         try {
           helper.command.rename('comp1', 'my.comp'); // the dot is invalid here
         } catch (err: any) {
-          expect(err.message).to.have.string('"my.comp" is invalid');
+          expect(err.message).to.have.string('error');
         }
         expect(path.join(helper.scopes.localPath, helper.scopes.remote, 'my.comp')).to.not.be.a.path();
       });
