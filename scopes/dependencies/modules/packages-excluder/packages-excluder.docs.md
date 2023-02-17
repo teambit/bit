@@ -9,8 +9,8 @@ A function that returns a pattern (string) of a regex that matches any `node_mod
 
 Options:
 
-* `packages` - **string[]** - optional. A list of package names and package scopes that we want to exclude.
-* `excludeComponents` - **boolean** - optional. If set to `true`, all component packages are excluded.
+- `packages` - **string[]** - optional. A list of package names and package scopes that we want to exclude.
+- `excludeComponents` - **boolean** - optional. If set to `true`, all component packages are excluded.
 
 Basic example:
 

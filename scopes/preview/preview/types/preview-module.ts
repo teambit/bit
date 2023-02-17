@@ -19,10 +19,10 @@ export type PreviewModule<T = any> = {
   modulesMap: {
     default: {
       default: MainModuleExports;
-    }
+    };
     [envId: string]: {
       default: MainModuleExports;
-    }
+    };
   };
 
   isSplitComponentBundle?: boolean;

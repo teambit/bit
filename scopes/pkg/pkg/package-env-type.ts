@@ -1,5 +1,5 @@
-import { EnvHandler } from "@teambit/envs";
-import { PackageGenerator } from "./package-generator";
+import { EnvHandler } from '@teambit/envs';
+import { PackageGenerator } from './package-generator';
 
 export interface PackageEnv {
   /**

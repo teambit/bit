@@ -1,5 +1,5 @@
-import { EnvHandler } from "@teambit/envs";
-import { SchemaExtractor } from "./schema-extractor";
+import { EnvHandler } from '@teambit/envs';
+import { SchemaExtractor } from './schema-extractor';
 
 /**
  * define a schema extractor to extract type information
