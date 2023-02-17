@@ -2,6 +2,7 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { IssuesClasses } from '@teambit/component-issues';
 
 chai.use(require('chai-fs'));
 
@@ -140,6 +141,17 @@ describe('bit rename command', function () {
     // scope-name was entered as part of the name.
     it('bit rename should throw', () => {
       expect(() => helper.command.rename('owner.scope/comp1', 'owner.scope2/comp2')).to.throw();
+    });
+  });
+  describe('rename scope-name without refactoring', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.addDefaultScope('owner.scope');
+      helper.fixtures.populateComponents(2);
+      helper.command.rename('comp2', 'comp2', '--scope owner2.scope2');
+    });
+    it('bit status should show an issue because the code points to the renamed component', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
     });
   });
 });

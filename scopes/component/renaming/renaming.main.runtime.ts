@@ -1,5 +1,8 @@
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import fs from 'fs-extra';
+import path from 'path';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
+import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
@@ -48,14 +51,19 @@ make sure this argument is the name only, without the scope-name. to change the 
     } else {
       this.workspace.bitMap.renameNewComponent(sourceId, targetId);
       await this.workspace.bitMap.write();
+      const sourcePackageName = this.workspace.componentPackageName(sourceComp);
+      await fs.remove(path.join(this.workspace.path, 'node_modules', sourcePackageName));
     }
+    this.workspace.clearComponentCache(sourceId);
     if (options.refactor) {
       const allComponents = await this.workspace.list();
       const { changedComponents } = await this.refactoring.refactorDependencyName(allComponents, sourceId, targetId);
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
     }
 
-    await this.install.link();
+    // link the new-name to node-modules
+    const targetComp = await this.workspace.get(targetId);
+    await linkToNodeModulesByComponents([targetComp], this.workspace);
 
     return {
       sourceId,
