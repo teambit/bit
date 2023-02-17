@@ -8,7 +8,7 @@ import readline from 'readline';
 import { CLIParser } from './cli-parser';
 import { CLIMain } from './cli.main.runtime';
 import { GenerateCommandsDoc, GenerateOpts } from './generate-doc-md';
-import { runBitServer } from './bit-server';
+import { runApiServer } from './bit-server';
 
 export class CliGenerateCmd implements Command {
   name = 'generate';
@@ -89,7 +89,7 @@ export class CliServerCmd implements Command {
   constructor(private cliMain: CLIMain, private logger: Logger) {}
 
   async report(args, options: { port: number }): Promise<string> {
-    await runBitServer(this.cliMain, this.logger, options);
+    await runApiServer(this.cliMain, this.logger, options);
     return 'server is running successfully'; // should never get here, the previous line is blocking
   }
 }

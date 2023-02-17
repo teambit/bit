@@ -1,5 +1,5 @@
 import { Aspect } from '@teambit/harmony';
 
-export const BitServerAspect = Aspect.create({
+export const ApiServerAspect = Aspect.create({
   id: 'teambit.harmony/api-server',
 });

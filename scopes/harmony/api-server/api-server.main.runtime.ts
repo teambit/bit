@@ -3,13 +3,13 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import express from 'express';
 
-import { BitServerAspect } from './bit-server.aspect';
+import { ApiServerAspect } from './api-server.aspect';
 import { ServerCmd } from './server.cmd';
 
-export class BitServerMain {
+export class ApiServerMain {
   constructor(private cli: CLIMain, private workspace: Workspace, private logger: Logger) {}
 
-  async runBitServer(options: { port: number }) {
+  async runApiServer(options: { port: number }) {
     const app = express();
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     app.get('/cli/:cmd', async (req, res, next) => {
@@ -45,13 +45,13 @@ export class BitServerMain {
   static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect];
   static runtime = MainRuntime;
   static async provider([cli, workspace, loggerMain]: [CLIMain, Workspace, LoggerMain]) {
-    const logger = loggerMain.createLogger(BitServerAspect.id);
-    const bitServer = new BitServerMain(cli, workspace, logger);
-    cli.register(new ServerCmd(bitServer));
-    return bitServer;
+    const logger = loggerMain.createLogger(ApiServerAspect.id);
+    const apiServer = new ApiServerMain(cli, workspace, logger);
+    cli.register(new ServerCmd(apiServer));
+    return apiServer;
   }
 }
 
-BitServerAspect.addRuntime(BitServerMain);
+ApiServerAspect.addRuntime(ApiServerMain);
 
-export default BitServerMain;
+export default ApiServerMain;
