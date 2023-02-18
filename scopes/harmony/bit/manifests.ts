@@ -98,6 +98,7 @@ import { ApiServerAspect } from '@teambit/api-server';
 import { ComponentWriterAspect } from '@teambit/component-writer';
 import { TrackerAspect } from '@teambit/tracker';
 import { MoverAspect } from '@teambit/mover';
+import { WatcherAspect } from '@teambit/watcher';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -200,6 +201,7 @@ export const manifestsMap = {
   [ApiServerAspect.id]: ApiServerAspect,
   [TrackerAspect.id]: TrackerAspect,
   [MoverAspect.id]: MoverAspect,
+  [WatcherAspect.id]: WatcherAspect,
 };
 
 export function isCoreAspect(id: string) {

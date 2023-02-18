@@ -5,8 +5,6 @@ export type { default as Workspace, ExtensionsOrigin } from './workspace';
 export type { ResolvedComponent } from '@teambit/harmony.modules.resolved-component';
 export type { AlreadyExistsError as ComponentConfigFileAlreadyExistsError } from './component-config-file';
 export type { WorkspaceMain } from './workspace.main.runtime';
-export type { WatchOptions } from './watch/watcher';
-export { CheckTypes } from './watch/check-types';
 export * from './events';
 export type { WorkspaceUI } from './workspace.ui.runtime';
 export type { SerializableResults, OnComponentLoad, OnComponentEventResult } from './on-component-events';

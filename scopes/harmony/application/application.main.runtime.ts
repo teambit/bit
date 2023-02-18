@@ -4,6 +4,7 @@ import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
+import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -79,7 +80,8 @@ export class ApplicationMain {
     private appService: AppService,
     private aspectLoader: AspectLoaderMain,
     private workspace: Workspace,
-    private logger: Logger
+    private logger: Logger,
+    private watcher: WatcherMain
   ) {}
 
   /**
@@ -268,8 +270,8 @@ export class ApplicationMain {
 
     const port = await app.run(context);
     if (options.watch) {
-      this.workspace.watcher
-        .watchAll({
+      this.watcher
+        .watch({
           preCompile: false,
         })
         .catch((err) => {
@@ -317,6 +319,7 @@ export class ApplicationMain {
     ComponentAspect,
     AspectLoaderAspect,
     WorkspaceAspect,
+    WatcherAspect,
   ];
 
   static slots = [
@@ -326,14 +329,15 @@ export class ApplicationMain {
   ];
 
   static async provider(
-    [cli, loggerAspect, builder, envs, component, aspectLoader, workspace]: [
+    [cli, loggerAspect, builder, envs, component, aspectLoader, workspace, watcher]: [
       CLIMain,
       LoggerMain,
       BuilderMain,
       EnvsMain,
       ComponentMain,
       AspectLoaderMain,
-      Workspace
+      Workspace,
+      WatcherMain
     ],
     config: ApplicationAspectConfig,
     [appTypeSlot, appSlot, deploymentProviderSlot]: [ApplicationTypeSlot, ApplicationSlot, DeploymentProviderSlot]
@@ -350,7 +354,8 @@ export class ApplicationMain {
       appService,
       aspectLoader,
       workspace,
-      logger
+      logger,
+      watcher
     );
     appService.registerAppType = application.registerAppType.bind(application);
     const appCmd = new AppCmd();

@@ -3,14 +3,15 @@ import moment from 'moment';
 import { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { BitBaseEvent, PubsubMain } from '@teambit/pubsub';
+import { OnComponentEventResult } from '@teambit/workspace';
 
 // import IDs and events
 import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
 
-import { Watcher, WatchOptions } from './watcher';
+import { WatchOptions } from './watcher';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
-import { OnComponentEventResult } from '../on-component-events';
 import { CheckTypes } from './check-types';
+import { WatcherMain } from './watcher.main.runtime';
 
 export type WatchCmdOpts = {
   verbose?: boolean;
@@ -108,7 +109,7 @@ export class WatchCommand implements Command {
     /**
      * watcher extension.
      */
-    private watcher: Watcher
+    private watcher: WatcherMain
   ) {
     this.registerToEvents();
   }
@@ -149,7 +150,7 @@ export class WatchCommand implements Command {
       spawnTSServer: Boolean(checkTypes), // if check-types is enabled, it must spawn the tsserver.
       checkTypes: getCheckTypesEnum(),
     };
-    await this.watcher.watchAll(watchOpts);
+    await this.watcher.watch(watchOpts);
     return 'watcher terminated';
   }
 }

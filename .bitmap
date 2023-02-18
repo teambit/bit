@@ -15,6 +15,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/api-reference"
     },
+    "api-server": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/api-server"
+    },
     "application": {
         "scope": "teambit.harmony",
         "version": "0.0.630",
@@ -188,13 +195,6 @@
         "version": "0.0.402",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit-error"
-    },
-    "api-server": {
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.harmony",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/api-server"
     },
     "builder": {
         "scope": "teambit.pipelines",
@@ -2421,6 +2421,13 @@
         "version": "0.0.768",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/variants"
+    },
+    "watcher": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/watcher"
     },
     "webpack": {
         "scope": "teambit.webpack",
