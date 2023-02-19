@@ -6,6 +6,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Component, ComponentID } from '@teambit/component';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
+import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { BitId } from '@teambit/legacy-bit-id';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -112,6 +113,7 @@ export class CompilerMain {
     UIAspect,
     GeneratorAspect,
     DependencyResolverAspect,
+    WatcherAspect,
   ];
 
   static async provider([
@@ -125,6 +127,7 @@ export class CompilerMain {
     ui,
     generator,
     dependencyResolver,
+    watcher,
   ]: [
     CLIMain,
     Workspace,
@@ -135,7 +138,8 @@ export class CompilerMain {
     BuilderMain,
     UiMain,
     GeneratorMain,
-    DependencyResolverMain
+    DependencyResolverMain,
+    WatcherMain
   ]) {
     const logger = loggerMain.createLogger(CompilerAspect.id);
     const workspaceCompiler = new WorkspaceCompiler(
@@ -145,7 +149,8 @@ export class CompilerMain {
       aspectLoader,
       ui,
       logger,
-      dependencyResolver
+      dependencyResolver,
+      watcher
     );
     envs.registerService(new CompilerService());
     const compilerMain = new CompilerMain(pubsub, workspaceCompiler, envs, builder, workspace, dependencyResolver);

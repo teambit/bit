@@ -119,7 +119,7 @@ describe('generateNodeModulesPattern()', () => {
       [false, '@myorg/scope.comp-name'],
       [false, '@myorg/scope.namespace.comp-name'],
       [false, '@myorg/scope.ns1.ns2.comp-name'],
-    ]
+    ];
     // @ts-ignore
     it.each(fixtures)(`should return %s for %s in yarn node_modules`, (expectedResult: boolean, pkgName: string) => {
       expect(regex.test(`node_modules/${pkgName}/`)).toEqual(expectedResult);
@@ -127,7 +127,9 @@ describe('generateNodeModulesPattern()', () => {
     // @ts-ignore
     it.each(fixtures)(`should return %s for %s in pnpm node_modules`, (expectedResult: boolean, pkgName: string) => {
       expect(regex.test(`node_modules/.pnpm/${pkgName.replace(/\//g, '+')}/`)).toEqual(expectedResult);
-      expect(regex.test(`node_modules/.pnpm/registry.npmjs.org+${pkgName.replace(/\//g, '+')}/`)).toEqual(expectedResult);
+      expect(regex.test(`node_modules/.pnpm/registry.npmjs.org+${pkgName.replace(/\//g, '+')}/`)).toEqual(
+        expectedResult
+      );
     });
   });
   describe('should exclude components and listed packages', () => {
@@ -149,7 +151,11 @@ describe('generateNodeModulesPattern()', () => {
       regex = new RegExp(pattern);
     });
     it('should exclude package under the .pnpm directory', () => {
-      expect(regex.test('node_modules/.pnpm/file+shohamgilad.test-new-env_ui_button@0.0.27_react@18.2.0/node_modules/@shohamgilad/test-new-env.ui.button/dist/index.js')).toBeFalsy();
+      expect(
+        regex.test(
+          'node_modules/.pnpm/file+shohamgilad.test-new-env_ui_button@0.0.27_react@18.2.0/node_modules/@shohamgilad/test-new-env.ui.button/dist/index.js'
+        )
+      ).toBeFalsy();
     });
   });
   describe('should work with components under the .pnpm directory', () => {
@@ -160,7 +166,11 @@ describe('generateNodeModulesPattern()', () => {
       regex = new RegExp(pattern);
     });
     it('should exclude package under the .pnpm directory', () => {
-      expect(regex.test('node_modules/.pnpm/file+shohamgilad.test-new-env_ui_button@0.0.27_react@18.2.0/node_modules/@shohamgilad/test-new-env.ui.button/dist/index.js')).toBeFalsy();
+      expect(
+        regex.test(
+          'node_modules/.pnpm/file+shohamgilad.test-new-env_ui_button@0.0.27_react@18.2.0/node_modules/@shohamgilad/test-new-env.ui.button/dist/index.js'
+        )
+      ).toBeFalsy();
     });
   });
 });

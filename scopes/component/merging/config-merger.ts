@@ -1,5 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import semver from 'semver';
+import { Logger } from '@teambit/logger';
 import { isHash } from '@teambit/component-version';
 import {
   DependencyResolverAspect,
@@ -75,12 +76,14 @@ export class ConfigMerger {
     private baseAspects: ExtensionDataList,
     private otherAspects: ExtensionDataList,
     private currentLabel: string,
-    private otherLabel: string
+    private otherLabel: string,
+    private logger: Logger
   ) {
     this.otherLaneIdsStr = otherLane?.components.map((c) => c.id.toStringWithoutVersion()) || [];
   }
 
   merge(): ConfigMergeResult {
+    this.logger.trace(`************** start config-merger for ${this.compIdStr} **************`);
     this.populateEnvs();
     const results = this.currentAspects.map((currentExt) => {
       const id = currentExt.stringId;
@@ -105,7 +108,6 @@ export class ConfigMerger {
       if (this.handledExtIds.includes(id)) return null;
       this.handledExtIds.push(id);
       if (otherExt.extensionId && otherExt.extensionId.hasVersion()) {
-        // if (this.compIdStr === 'teambit.dot-cloud/community-cloud') console.log('current', this.currentAspects);
         // avoid using the id from the other lane if it exits in the workspace. prefer the id from the workspace.
         const idFromWorkspace = this.getIdFromWorkspace(otherExt.extensionId.toStringWithoutVersion());
         if (idFromWorkspace) {
@@ -123,6 +125,7 @@ export class ConfigMerger {
       return { id, mergedConfig: this.getConfig(otherExt) };
     });
     const envResult = [this.envStrategy()] || [];
+    this.logger.trace(`*** end config-merger for ${this.compIdStr} ***\n`);
     return new ConfigMergeResult(this.compIdStr, compact([...results, ...otherAspectsNotHandledResults, ...envResult]));
   }
 
@@ -195,6 +198,7 @@ export class ConfigMerger {
   private mergePerStrategy(mergeStrategyParams: MergeStrategyParams): MergeStrategyResult | null {
     const { id, currentExt, otherExt, baseExt } = mergeStrategyParams;
     const depResolverResult = this.depResolverStrategy(mergeStrategyParams);
+
     if (depResolverResult) {
       // if (depResolverResult.mergedConfig || depResolverResult?.conflict) console.log("\n\nDepResolverResult", this.compIdStr, '\n', JSON.stringify(depResolverResult, undefined, 2))
       return depResolverResult;
@@ -229,8 +233,9 @@ export class ConfigMerger {
     currentConfig,
     otherConfig,
   }: MergeStrategyParamsWithRemoved): MergeStrategyResult {
-    // uncomment to debug
-    // console.log('basicConflictGenerator', this.compIdStr, id, 'currentConfig', currentConfig, 'otherConfig', otherConfig);
+    this.logger.trace(
+      `basicConflictGenerator, aspect-id ${id}, currentConfig, ${currentConfig}, otherConfig, ${otherConfig}`
+    );
     let conflict: string;
     if (currentConfig === '-') {
       conflict = `${'<'.repeat(7)} ${this.currentLabel}
@@ -266,6 +271,7 @@ ${'>'.repeat(7)} ${this.otherLabel}
 
   private depResolverStrategy(params: MergeStrategyParams): MergeStrategyResult | undefined {
     if (params.id !== DependencyResolverAspect.id) return undefined;
+    this.logger.trace('start depResolverStrategy');
     const { currentExt, otherExt, baseExt } = params;
 
     const currentConfig = this.getConfig(currentExt);
@@ -469,12 +475,17 @@ ${'>'.repeat(7)} ${this.otherLabel}
       });
     };
 
-    // uncomment to debug
-    // console.log('\n\n**************', this.compIdStr, '**************');
-    // console.log('currentData', currentData.length, '\n', currentData.map((d) => `${d.__type} ${d.id} ${d.version}`).join('\n'));
-    // console.log('otherData', otherData.length, '\n', otherData.map((d) => `${d.__type} ${d.id} ${d.version}`).join('\n'));
-    // console.log('otherData', baseData.length, '\n', baseData.map((d) => `${d.__type} ${d.id} ${d.version}`).join('\n'));
-    // console.log('** END **\n\n');
+    this.logger.trace(
+      `currentData, ${currentAllData.length}\n${currentAllData
+        .map((d) => `${d.__type} ${d.id} ${d.version}`)
+        .join('\n')}`
+    );
+    this.logger.trace(
+      `otherData, ${otherData.length}\n${otherData.map((d) => `${d.__type} ${d.id} ${d.version}`).join('\n')}`
+    );
+    this.logger.trace(
+      `baseData, ${baseData.length}\n${baseData.map((d) => `${d.__type} ${d.id} ${d.version}`).join('\n')}`
+    );
 
     // eslint-disable-next-line complexity
     currentAndOtherData.forEach((depData) => {
@@ -484,6 +495,8 @@ ${'>'.repeat(7)} ${this.otherLabel}
       }
       const currentDep = currentAllData.find((d) => d.id === depData.id);
       const otherDep = otherData.find((d) => d.id === depData.id);
+      this.logger.trace(`currentDep`, currentDep);
+      this.logger.trace(`otherDep`, otherDep);
       if (!otherDep) {
         return;
       }
@@ -492,6 +505,7 @@ ${'>'.repeat(7)} ${this.otherLabel}
         addSerializedDepToPolicy(otherDep);
         return;
       }
+
       if (
         currentDep.policy &&
         otherDep.policy &&

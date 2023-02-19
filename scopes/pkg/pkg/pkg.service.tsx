@@ -1,6 +1,13 @@
 import React from 'react';
 import { Text, Newline } from 'ink';
-import { EnvService, EnvDefinition, Env, EnvContext, ServiceTransformationMap, GetNpmIgnoreContext } from '@teambit/envs';
+import {
+  EnvService,
+  EnvDefinition,
+  Env,
+  EnvContext,
+  ServiceTransformationMap,
+  GetNpmIgnoreContext,
+} from '@teambit/envs';
 import highlight from 'cli-highlight';
 import { PackageJsonProps } from './pkg.main.runtime';
 
@@ -10,10 +17,10 @@ export type PkgDescriptor = {
   config?: string;
 };
 
-type PkgTransformationMap = ServiceTransformationMap  & {
-  getPackageJsonProps: () => PackageJsonProps,
+type PkgTransformationMap = ServiceTransformationMap & {
+  getPackageJsonProps: () => PackageJsonProps;
   getNpmIgnore: (npmIgnoreContext?: GetNpmIgnoreContext) => string[];
-}
+};
 
 export class PkgService implements EnvService<{}, PkgDescriptor> {
   name = 'Pkg';
@@ -42,7 +49,7 @@ export class PkgService implements EnvService<{}, PkgDescriptor> {
       getPackageJsonProps: () => packageGenerator.packageJsonProps,
       // TODO: somehow handle context here? used in the aspect env
       getNpmIgnore: () => packageGenerator.npmIgnore,
-    }
+    };
   }
 
   getDescriptor(env: EnvDefinition): PkgDescriptor | undefined {

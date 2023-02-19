@@ -22,7 +22,7 @@ export class WebpackDevServer implements DevServer {
      */
     private webpackDevServer: string | typeof WDS
   ) {
-    if (typeof this.webpackDevServer === 'string'){
+    if (typeof this.webpackDevServer === 'string') {
       // eslint-disable-next-line import/no-dynamic-require, global-require
       this.WsDevServer = require(this.webpackDevServer);
     } else {
