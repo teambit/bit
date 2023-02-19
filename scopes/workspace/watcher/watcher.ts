@@ -275,7 +275,6 @@ export class Watcher {
         this.executeWatchOperationsOnComponent(this.trackDirs[dir], [], false)
       );
       results.push(...addResults.flat());
-      await this.workspace.triggerOnMultipleComponentsAdd();
     }
     if (removedDirs.length) {
       await this.fsWatcher.unwatch(removedDirs);

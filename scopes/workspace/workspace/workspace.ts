@@ -74,7 +74,6 @@ import {
   OnComponentEventResult,
   OnComponentLoad,
   OnComponentRemove,
-  OnMultipleComponentsAdd,
   SerializableResults,
 } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
@@ -84,7 +83,6 @@ import {
   OnComponentChangeSlot,
   OnComponentLoadSlot,
   OnComponentRemoveSlot,
-  OnMultipleComponentsAddSlot,
 } from './workspace.provider';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
@@ -188,8 +186,6 @@ export class Workspace implements ComponentFactory {
 
     private onComponentRemoveSlot: OnComponentRemoveSlot,
 
-    private onMultipleComponentsAddSlot: OnMultipleComponentsAddSlot,
-
     private graphql: GraphqlMain
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
@@ -250,11 +246,6 @@ export class Workspace implements ComponentFactory {
 
   registerOnComponentAdd(onComponentAddFunc: OnComponentAdd) {
     this.onComponentAddSlot.register(onComponentAddFunc);
-    return this;
-  }
-
-  registerOnMultipleComponentsAdd(onMultipleComponentsAddFunc: OnMultipleComponentsAdd) {
-    this.onMultipleComponentsAddSlot.register(onMultipleComponentsAddFunc);
     return this;
   }
 
@@ -643,11 +634,6 @@ export class Workspace implements ComponentFactory {
 
     await this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { componentIds: [id.toObject()] } });
     return results;
-  }
-
-  async triggerOnMultipleComponentsAdd(): Promise<void> {
-    const onAddEntries = this.onMultipleComponentsAddSlot.toArray();
-    await mapSeries(onAddEntries, async ([, onAddFunc]) => onAddFunc());
   }
 
   getState(id: ComponentID, hash: string) {

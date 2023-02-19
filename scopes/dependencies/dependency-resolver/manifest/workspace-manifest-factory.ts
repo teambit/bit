@@ -28,6 +28,7 @@ export type CreateFromComponentsOptions = {
   dedupe?: boolean;
   dependencyFilterFn?: DepsFilterFn;
   resolveVersionsFromDependenciesOnly?: boolean;
+  referenceLocalPackages?: boolean;
 };
 
 const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
@@ -55,7 +56,7 @@ export class WorkspaceManifestFactory {
       optsWithDefaults.filterComponentsFromManifests,
       optsWithDefaults.resolveVersionsFromDependenciesOnly ? undefined : rootPolicy,
       optsWithDefaults.dependencyFilterFn,
-      hasRootComponents
+      optsWithDefaults.referenceLocalPackages && hasRootComponents
     );
     let dedupedDependencies = getEmptyDedupedDependencies();
     rootPolicy = rootPolicy.filter((dep) => dep.dependencyId !== '@teambit/legacy');
@@ -116,14 +117,14 @@ export class WorkspaceManifestFactory {
     filterComponentsFromManifests = true,
     rootPolicy?: WorkspacePolicy,
     dependencyFilterFn?: DepsFilterFn | undefined,
-    hasRootComponents?: boolean
+    referenceLocalPackages = false
   ): Promise<ComponentDependenciesMap> {
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
       let depList = await this.dependencyResolver.getDependencies(component, { includeHidden: true });
       const componentPolicy = await this.dependencyResolver.getPolicy(component);
       const additionalDeps = {};
-      if (hasRootComponents) {
+      if (referenceLocalPackages) {
         const coreAspectIds = this.aspectLoader.getCoreAspectIds();
         for (const comp of depList.toTypeArray('component') as ComponentDependency[]) {
           const [compIdWithoutVersion] = comp.id.split('@');
@@ -282,5 +283,5 @@ function filterResolvedFromEnv(dependencyList: DependencyList, componentPolicy: 
 }
 
 function excludeWorkspaceDependencies(deps: DepObjectValue): DepObjectValue {
-  return pickBy(deps, (versionSpec) => !versionSpec.startsWith('workspace:'));
+  return pickBy(deps, (versionSpec) => !versionSpec.startsWith('file:') && !versionSpec.startsWith('workspace:'));
 }

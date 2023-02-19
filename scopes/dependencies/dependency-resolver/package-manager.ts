@@ -106,4 +106,10 @@ export interface PackageManager {
    * If the package manager is not capable of doing so, we want to disable the deduping.
    */
   supportsDedupingOnExistingRoot?: () => boolean;
+
+  /**
+   * Returns "dependencies" entries for ".bit_roots".
+   * These entries tell the package manager from where to the local components should be installed.
+   */
+  getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string>;
 }

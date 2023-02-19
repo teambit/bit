@@ -195,6 +195,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit-error"
     },
+    "bit-roots": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/bit-roots"
+    },
     "builder": {
         "scope": "teambit.pipelines",
         "version": "0.0.989",

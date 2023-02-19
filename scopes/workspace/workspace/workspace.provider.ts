@@ -21,13 +21,7 @@ import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { DependencyResolver as LegacyDependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
-import {
-  OnComponentLoad,
-  OnComponentAdd,
-  OnComponentChange,
-  OnComponentRemove,
-  OnMultipleComponentsAdd,
-} from './on-component-events';
+import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { Workspace } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
@@ -65,8 +59,6 @@ export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
 
 export type OnComponentRemoveSlot = SlotRegistry<OnComponentRemove>;
 
-export type OnMultipleComponentsAddSlot = SlotRegistry<OnMultipleComponentsAdd>;
-
 export default async function provideWorkspace(
   [
     pubsub,
@@ -84,18 +76,11 @@ export default async function provideWorkspace(
     envs,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
-  [
-    onComponentLoadSlot,
-    onComponentChangeSlot,
-    onComponentAddSlot,
-    onComponentRemoveSlot,
-    onMultipleComponentsAddSlot,
-  ]: [
+  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot, onComponentRemoveSlot]: [
     OnComponentLoadSlot,
     OnComponentChangeSlot,
     OnComponentAddSlot,
-    OnComponentRemoveSlot,
-    OnMultipleComponentsAddSlot
+    OnComponentRemoveSlot
   ],
   harmony: Harmony
 ) {
@@ -121,7 +106,6 @@ export default async function provideWorkspace(
     envs,
     onComponentAddSlot,
     onComponentRemoveSlot,
-    onMultipleComponentsAddSlot,
     graphql
   );
 
