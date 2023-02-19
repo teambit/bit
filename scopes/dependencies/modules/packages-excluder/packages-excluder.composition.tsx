@@ -37,11 +37,7 @@ export function RegexExample() {
         style={{ width: 300, marginBottom: 12 }}
       />
       <div>Exclude components:</div>
-      <input
-        type="checkbox"
-        checked={excludeComponents}
-        onChange={(e) => setExcludeComponents(e.target.checked)}
-      />
+      <input type="checkbox" checked={excludeComponents} onChange={(e) => setExcludeComponents(e.target.checked)} />
       <div>Write a package that you want to check with Regex test:</div>
       <div style={{ marginBottom: 12 }}>
         <input value="node_modules/" disabled />

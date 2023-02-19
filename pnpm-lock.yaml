@@ -1742,6 +1742,9 @@ importers:
   scopes/generator/generator:
     specifiers: {}
 
+  scopes/harmony/api-server:
+    specifiers: {}
+
   scopes/harmony/application:
     specifiers: {}
 
@@ -2367,6 +2370,9 @@ importers:
     specifiers: {}
 
   scopes/workspace/variants:
+    specifiers: {}
+
+  scopes/workspace/watcher:
     specifiers: {}
 
   scopes/workspace/workspace:

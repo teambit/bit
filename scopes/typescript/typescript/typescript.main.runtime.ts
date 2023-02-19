@@ -7,11 +7,12 @@ import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
 import { PackageJsonProps } from '@teambit/pkg';
 import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
 import { WorkspaceAspect } from '@teambit/workspace';
-import type { WatchOptions, Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import WatcherAspect, { WatcherMain, WatchOptions } from '@teambit/watcher';
 import type { Component } from '@teambit/component';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { TypeScriptExtractor } from './typescript.extractor';
@@ -306,11 +307,12 @@ export class TypescriptMain {
     CLIAspect,
     DependencyResolverAspect,
     EnvsAspect,
+    WatcherAspect,
   ];
   static slots = [Slot.withType<SchemaTransformer[]>()];
 
   static async provider(
-    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs]: [
+    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs, watcher]: [
       SchemaMain,
       LoggerMain,
       AspectLoaderMain,
@@ -318,7 +320,7 @@ export class TypescriptMain {
       CLIMain,
       DependencyResolverMain,
       EnvsMain,
-      AspectLoaderMain
+      WatcherMain
     ],
     config,
     [schemaTransformerSlot]: [SchemaTransformerSlot]
@@ -376,7 +378,7 @@ export class TypescriptMain {
     ]);
 
     if (workspace) {
-      workspace.registerOnPreWatch(tsMain.onPreWatch.bind(tsMain));
+      watcher.registerOnPreWatch(tsMain.onPreWatch.bind(tsMain));
       workspace.registerOnComponentChange(tsMain.onComponentChange.bind(tsMain));
       workspace.registerOnComponentAdd(tsMain.onComponentChange.bind(tsMain));
     }

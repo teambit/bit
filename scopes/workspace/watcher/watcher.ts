@@ -15,11 +15,16 @@ import chokidar, { FSWatcher } from 'chokidar';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { PathLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { CompilationInitiator } from '@teambit/compiler';
-import { WorkspaceAspect } from '../';
-import { OnComponentChangeEvent, OnComponentAddEvent, OnComponentRemovedEvent } from '../events';
-import { Workspace } from '../workspace';
-import { OnComponentEventResult } from '../on-component-events';
+import {
+  WorkspaceAspect,
+  Workspace,
+  OnComponentEventResult,
+  OnComponentChangeEvent,
+  OnComponentAddEvent,
+  OnComponentRemovedEvent,
+} from '@teambit/workspace';
 import { CheckTypes } from './check-types';
+import { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: BitId; componentIds: BitId[] };
@@ -53,6 +58,7 @@ export class Watcher {
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
+    private watcherMain: WatcherMain,
     private trackDirs: { [dir: PathLinux]: ComponentID } = {},
     private verbose = false,
     private multipleWatchers: WatcherProcessData[] = []
@@ -67,7 +73,7 @@ export class Watcher {
     // TODO: run build in the beginning of process (it's work like this in other envs)
     const pathsToWatch = await this.getPathsToWatch();
     const componentIds = Object.values(this.trackDirs);
-    await this.workspace.triggerOnPreWatch(componentIds, watchOpts);
+    await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
     await this.createWatcher(pathsToWatch);
     const watcher = this.fsWatcher;
     msgs?.onStart(this.workspace);
@@ -80,6 +86,7 @@ export class Watcher {
       }
       watcher.on('ready', () => {
         msgs?.onReady(this.workspace, this.trackDirs, this.verbose);
+        loader.stop();
       });
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('change', async (filePath) => {

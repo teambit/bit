@@ -2,7 +2,7 @@ import { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain, CommandList } from '@teambit/cli';
-import type { ComponentMain, Component } from '@teambit/component';
+import type { ComponentMain } from '@teambit/component';
 import { DependencyResolverMain, VariantPolicy } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -23,8 +23,6 @@ import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
-import { WatchCommand } from './watch/watch.cmd';
-import { Watcher, WatchOptions } from './watch/watcher';
 import { Workspace } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
@@ -61,9 +59,6 @@ export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
 
 export type OnComponentRemoveSlot = SlotRegistry<OnComponentRemove>;
 
-export type OnPreWatch = (components: Component[], watchOpts: WatchOptions) => Promise<void>;
-export type OnPreWatchSlot = SlotRegistry<OnPreWatch>;
-
 export default async function provideWorkspace(
   [
     pubsub,
@@ -81,12 +76,11 @@ export default async function provideWorkspace(
     envs,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
-  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot, onComponentRemoveSlot, onPreWatchSlot]: [
+  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot, onComponentRemoveSlot]: [
     OnComponentLoadSlot,
     OnComponentChangeSlot,
     OnComponentAddSlot,
-    OnComponentRemoveSlot,
-    OnPreWatchSlot
+    OnComponentRemoveSlot
   ],
   harmony: Harmony
 ) {
@@ -112,7 +106,6 @@ export default async function provideWorkspace(
     envs,
     onComponentAddSlot,
     onComponentRemoveSlot,
-    onPreWatchSlot,
     graphql
   );
 
@@ -182,13 +175,7 @@ export default async function provideWorkspace(
     new CapsuleCreateCmd(workspace, isolator),
     new CapsuleDeleteCmd(isolator, workspace),
   ];
-  const watcher = new Watcher(workspace, pubsub);
-  const commands: CommandList = [
-    new EjectConfCmd(workspace),
-    capsuleCmd,
-    new WatchCommand(pubsub, logger, watcher),
-    new UseCmd(workspace),
-  ];
+  const commands: CommandList = [new EjectConfCmd(workspace), capsuleCmd, new UseCmd(workspace)];
 
   commands.push(new PatternCommand(workspace));
   cli.register(...commands);

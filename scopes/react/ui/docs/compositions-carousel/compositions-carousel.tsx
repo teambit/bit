@@ -5,7 +5,6 @@ import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import { RenderingContext } from '@teambit/preview';
 
-
 export interface CompositionsCarouselProps extends SectionProps {
   compositions: {};
   compositionCardClass?: string;

@@ -1,21 +1,19 @@
-import { BuildTask } from "@teambit/builder";
-import { EnvContext, EnvHandler } from "@teambit/envs";
-import { clone, findIndex } from "lodash";
+import { BuildTask } from '@teambit/builder';
+import { EnvContext, EnvHandler } from '@teambit/envs';
+import { clone, findIndex } from 'lodash';
 import { Task } from './task';
 
 export type TaskHandler = {
   handler: EnvHandler<Task>;
   name: string;
-}
+};
 
 /**
  * create and maintain build pipelines for component
  * dev environments.
  */
 export class Pipeline {
-  constructor(
-    private _tasks: TaskHandler[],
-  ) {}
+  constructor(private _tasks: TaskHandler[]) {}
 
   /**
    * list all tasks in the build pipeline.
@@ -32,7 +30,7 @@ export class Pipeline {
     const buildTasks: BuildTask[] = _tasks.map((task) => {
       // @ts-ignore
       const aspectId = task.aspectId || envId;
-      const buildTask: BuildTask = Object.assign(clone(task), {aspectId});
+      const buildTask: BuildTask = Object.assign(clone(task), { aspectId });
       return buildTask;
     });
 
@@ -61,9 +59,11 @@ export class Pipeline {
    * replace a build task in the pipeline.
    */
   replace(tasks: TaskHandler[]) {
-    tasks.forEach(task => {
+    tasks.forEach((task) => {
       // Find task index using _.findIndex
-      const matchIndex = findIndex(this._tasks, (origTask) => { return origTask.name === task.name });
+      const matchIndex = findIndex(this._tasks, (origTask) => {
+        return origTask.name === task.name;
+      });
       if (matchIndex !== -1) {
         // Replace task at index using native splice
         this._tasks.splice(matchIndex, 1, task);

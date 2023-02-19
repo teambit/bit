@@ -99,6 +99,6 @@ export class CompilerTask implements BuildTask {
       const name = options.name || 'compiler-task';
       const depResolve = context.getAspect<any>('teambit.dependencies/dependency-resolver');
       return new CompilerTask(aspectId, name, options.compiler(context), depResolve);
-    }
+    };
   }
 }

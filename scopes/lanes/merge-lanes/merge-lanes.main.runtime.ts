@@ -298,6 +298,7 @@ export class MergeLanesMain {
     const bitObjectsPerComp = await pMapSeries(idsToMerge, async (id) => {
       const modelComponent = await this.scope.legacyScope.getModelComponent(id);
       const fromVersionObj = await modelComponent.loadVersion(id.version as string, repo);
+      if (fromVersionObj.isRemoved()) return undefined;
       const fromLaneHead = modelComponent.getRef(id.version as string);
       if (!fromLaneHead) throw new Error(`lane head must be defined for ${id.toString()}`);
       const toLaneHead = toLaneObj ? toLaneObj.getComponent(id)?.head : modelComponent.head || null;

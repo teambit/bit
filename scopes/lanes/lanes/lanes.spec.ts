@@ -123,4 +123,37 @@ describe('LanesAspect', function () {
       expect(laneDiffResults.componentsStatus[0].changeType).to.equal(ChangeType.NONE);
     });
   });
+
+  describe('restoreLane()', () => {
+    let lanes: LanesMain;
+    let workspaceData: WorkspaceData;
+    before(async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath);
+      lanes = await loadAspect(LanesAspect, workspacePath);
+      await lanes.createLane('stage');
+
+      // as an intermediate step, make sure the lane was created
+      const currentLanes = await lanes.getLanes({});
+      expect(currentLanes).to.have.lengthOf(1);
+
+      await lanes.switchLanes('main', { skipDependencyInstallation: true });
+      await lanes.removeLanes(['stage']);
+
+      // as an intermediate step, make sure the lane was removed
+      const lanesAfterDelete = await lanes.getLanes({});
+      expect(lanesAfterDelete).to.have.lengthOf(0);
+
+      await lanes.restoreLane(currentLanes[0].hash);
+    });
+    after(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+    it('should restore the deleted lane', async () => {
+      const currentLanes = await lanes.getLanes({});
+      expect(currentLanes).to.have.lengthOf(1);
+      expect(currentLanes[0].id.name).to.equal('stage');
+    });
+  });
 });

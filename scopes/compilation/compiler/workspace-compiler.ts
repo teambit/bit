@@ -3,7 +3,8 @@ import mapSeries from 'p-map-series';
 import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
-import { SerializableResults, Workspace, WatchOptions, OutsideWorkspaceError } from '@teambit/workspace';
+import { SerializableResults, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
+import { WatcherMain, WatchOptions } from '@teambit/watcher';
 import path from 'path';
 import { BitId } from '@teambit/legacy-bit-id';
 import { Logger } from '@teambit/logger';
@@ -226,12 +227,13 @@ export class WorkspaceCompiler {
     private aspectLoader: AspectLoaderMain,
     private ui: UiMain,
     private logger: Logger,
-    private dependencyResolver: DependencyResolverMain
+    private dependencyResolver: DependencyResolverMain,
+    private watcher: WatcherMain
   ) {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
       this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
-      this.workspace.registerOnPreWatch(this.onPreWatch.bind(this));
+      this.watcher.registerOnPreWatch(this.onPreWatch.bind(this));
       this.ui.registerPreStart(this.onPreStart.bind(this));
     }
     if (this.aspectLoader) {

@@ -1,6 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
 import { Command, CommandOptions } from '@teambit/cli';
-import logger from '@teambit/legacy/dist/logger/logger';
+import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import readline from 'readline';
@@ -46,7 +46,7 @@ export class CliCmd implements Command {
   constructor(private cliMain: CLIMain, private docsDomain: string) {}
 
   async report(): Promise<string> {
-    logger.isDaemon = true;
+    legacyLogger.isDaemon = true;
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,

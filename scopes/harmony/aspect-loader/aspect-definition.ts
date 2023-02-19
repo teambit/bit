@@ -35,8 +35,7 @@ export class AspectDefinition {
     /**
      * aspect defined using 'file://' protocol
      */
-    readonly local?: boolean,
-
+    readonly local?: boolean
   ) {}
 
   get getId() {

@@ -1,5 +1,5 @@
-import { EnvHandler } from "@teambit/envs";
-import { Compiler } from "./types";
+import { EnvHandler } from '@teambit/envs';
+import { Compiler } from './types';
 
 export interface CompilerEnv {
   /**

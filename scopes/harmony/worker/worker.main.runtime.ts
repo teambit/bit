@@ -8,10 +8,7 @@ export type WorkerSlot = SlotRegistry<HarmonyWorker<unknown>>;
 export type WorkerNameSlot = SlotRegistry<string>;
 
 export class WorkerMain {
-  constructor(
-    private workerSlot: WorkerSlot,
-    private workerNameSlot: WorkerNameSlot
-  ) {}
+  constructor(private workerSlot: WorkerSlot, private workerNameSlot: WorkerNameSlot) {}
 
   static runtime = MainRuntime;
 
@@ -57,11 +54,7 @@ export class WorkerMain {
 
   static dependencies = [];
 
-  static async provider(
-    _deps,
-    _config,
-    [workerSlot, workerNameSlot]: [WorkerSlot, WorkerNameSlot]
-  ) {
+  static async provider(_deps, _config, [workerSlot, workerNameSlot]: [WorkerSlot, WorkerNameSlot]) {
     return new WorkerMain(workerSlot, workerNameSlot);
   }
 }

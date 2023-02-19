@@ -25,15 +25,6 @@ The following describes the final implementation, which differs from the specifi
 - (internal) cat lane object: `bit cat-lane <name>`
 ```
 
-## Remaining tasks
-
-- [ ] Remove components from a remote lane.
-- [ ] Tag dependencies to include them in a lane.
-- [ ] Test bit-fetch components
-- [ ] Rename lanes: enable importing a lane after rename.
-- [ ] Fix performance issue. Now it fetches all parents every time. It doesn't make sense.
-- [ ] Fix performance issue. Now it traverses all parents to see if a hash in there.
-
 ## Important points
 
 ### Lane ID
@@ -99,5 +90,38 @@ Summary of when/what lanes data is saved per command:
 ### Remove component from a lane
 
 Locally, to remove a component from a lane, use `bit remove` command. It will remove the component from the local lane-object.
-This change won't affect the remote scope, even after exporting the lane. This is becuase on the remote, the merge-lane process doesn't remove anything, only adds/changes components to the lane object.
+This change won't affect the remote scope, even after exporting the lane.
+This is becuase on the remote, the merge-lane process doesn't remove anything, only adds/changes components to the lane object.
 Remember that by default when importing a lane, only the components on the workspace are part of the lane, so the same lane-object, locally can have less components than the remote and obviously in this case we don't want to remove them from the remote on export.
+
+To mark a component as removed on the lane, use `bit remove --soft`, which will modify the component, mark it as removed, then, on the next snap+export, the remote will be updated.
+Once a component is marked as removed, it won't be merged during `bit lane merge`, and won't be imported during `bit lane import`.
+
+### Debug issues during merge
+
+The merge operation performs 3-way merge to minimize the number of conflicts.
+It searches the common parent of the current-snap and the other-snap. This parent-snap or base-snap is common to these two lanes.
+For most case, it works as follows:
+If the base and current has the same data but the other has different data, it means, the other made a change.
+In which case, no need for conflicts, just bring the data from the other to the local.
+On the other hand, if the base the other has the same data but the current has different data, then, the current made a change. No need to do anything.
+Only when the current and the other, both are different, and both are different than the base, there is a conflict.
+
+In case of merging lanes, and it's unclear why/how some changes were introduced or marked conflicted, go to the log to find out what is the base-snap and the other-snap.
+The log message starts with "merging snaps details", and it lists per component-id the base-snap, current-snap and other-snap.
+From here, you can investigate the data of each one of the snaps by running `bit cat-object -p <snap>`.
+To make this process easier, there are some tools that can help. keep reading.
+
+#### source code merges/conflicts
+
+To find out when a change was introduced to a file or when a file was added/removed, run `bit log-file <file-path>`.
+It might be helpful to create a new temorary workspace, import the other lane and run the same there.
+This way, you get the full picture from both lanes when a change was introduced, and you can see whether it happened before and after the split from the base-snap.
+Obviously, `bit log <comp-id> --one-line` is helpful here to see the distance from each lane from the base-snap.
+
+#### dependencies merges/conflicts
+
+Similar to file-changes, you can run `bit deps blame` to understhand when a dependency was introduced/deleted/changed from a component.
+Here again, it'll be helpful to import to a new workspace the other lane and run the same there.
+Also, becuase the dependencies merge is pretty complex, during the merge lots of valuable info is printed to the log.
+However, to avoid the extra noise it is not logged as "debug" but as "trace". Before you run the merge, you can add `--log=trace` to see these messages on the screen.

@@ -1,4 +1,3 @@
-
 export type ExtractorOptions = {
   /**
    * name of the string.
