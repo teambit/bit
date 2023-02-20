@@ -2540,7 +2540,7 @@ packages:
       slash: 2.0.0
     optionalDependencies:
       '@nicolo-ribaudo/chokidar-2': 2.1.8-no-fsevents.3
-      chokidar: 3.5.3
+      chokidar: 3.5.1
     dev: false
 
   /@babel/code-frame/7.10.4:
@@ -11926,18 +11926,18 @@ packages:
   /@types/babel__generator/7.6.4:
     resolution: {integrity: sha512-tFkciB9j2K755yrTALxD44McOrk+gfpIpvC3sxHjRawj6PfnQxrse4Clq5y/Rq+G3mrBurMax/lG8Qn2t9mSsg==}
     dependencies:
-      '@babel/types': 7.20.7
+      '@babel/types': 7.20.0
 
   /@types/babel__template/7.4.1:
     resolution: {integrity: sha512-azBFKemX6kMg5Io+/rdGT0dkGreboUVR0Cdm3fz9QJWpaQGJRQXl7C+6hOTCZcMll7KFyEQpgbYI2lHdsS4U7g==}
     dependencies:
       '@babel/parser': 7.20.13
-      '@babel/types': 7.20.7
+      '@babel/types': 7.20.0
 
   /@types/babel__traverse/7.18.3:
     resolution: {integrity: sha512-1kbcJ40lLB7MHsj39U4Sh1uTd2E7rLEa79kmDpI6cy+XiXsteB3POdQomoq4FxszMrO3ZYchkhYJw7A2862b3w==}
     dependencies:
-      '@babel/types': 7.20.7
+      '@babel/types': 7.20.0
 
   /@types/bluebird/3.5.33:
     resolution: {integrity: sha512-ndEo1xvnYeHxm7I/5sF6tBvnsA4Tdi3zj1keRKRs12SP+2ye2A27NDJ1B6PqkfMbGAcT+mqQVqbZRIrhfOp5PQ==}
@@ -12304,7 +12304,7 @@ packages:
   /@types/mdx-js__react/1.5.5:
     resolution: {integrity: sha512-k8pnaP6JXVlQh18HgL5X6sYFNC/qZnzO7R2+HsmwrwUd+JnnsU0d9lyyT0RQrHg1anxDU36S98TI/fsGtmYqqg==}
     dependencies:
-      '@types/react': 17.0.53
+      '@types/react': 17.0.8
     dev: true
 
   /@types/memoizee/0.4.5:
@@ -12419,26 +12419,19 @@ packages:
   /@types/react-dom/17.0.18:
     resolution: {integrity: sha512-rLVtIfbwyur2iFKykP2w0pl/1unw26b5td16d5xMgp7/yjTHomkyxPYChFoCr/FtEX1lN9wY6lFj1qvKdS5kDw==}
     dependencies:
-      '@types/react': 17.0.53
+      '@types/react': 17.0.8
 
   /@types/react-syntax-highlighter/13.5.0:
     resolution: {integrity: sha512-U7DrUaQRv3b+fsbPXMf7vC21K7DOkdNCQtp14Wm0Z5YLI9fPhndN4YTZ9eVXwmAivIg6lZ3YBVtGYucAS3H76A==}
     dependencies:
-      '@types/react': 17.0.53
+      '@types/react': 17.0.8
     dev: true
 
   /@types/react-tabs/2.3.2:
     resolution: {integrity: sha512-QfMelaJSdMcp+CenKhATp12XFFqqUcLXILgwpX3dgWfVYNZPtsLXZDDCRsVn+kwmBOWB+DFPKpQorxbUhnXINw==}
     dependencies:
-      '@types/react': 17.0.53
+      '@types/react': 17.0.8
     dev: true
-
-  /@types/react/17.0.53:
-    resolution: {integrity: sha512-1yIpQR2zdYu1Z/dc1OxC+MA6GR240u3gcnP4l6mvj/PJiVaqHsQPmWttsvHsfnhfPbU2FuGmo0wSITPygjBmsw==}
-    dependencies:
-      '@types/prop-types': 15.7.5
-      '@types/scheduler': 0.16.2
-      csstype: 3.1.1
 
   /@types/react/17.0.8:
     resolution: {integrity: sha512-3sx4c0PbXujrYAKwXxNONXUtRp9C+hE2di0IuxFyf5BELD+B+AXL8G7QrmSKhVwKZDbv0igiAjQAMhXj8Yg3aw==}
