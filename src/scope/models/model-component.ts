@@ -1,5 +1,5 @@
 import { clone, equals, forEachObjIndexed } from 'ramda';
-import { isEmpty } from 'lodash';
+import { isEmpty, pickBy } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
@@ -22,7 +22,7 @@ import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
-import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
+import { empty, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
 import findDuplications from '../../utils/array/find-duplications';
 import ComponentObjects from '../component-objects';
 import { SnapsDistance } from '../component-ops/snaps-distance';
@@ -332,11 +332,11 @@ export default class Component extends BitObject {
     local: boolean // for 'bit import' the local is true, for 'bit export' the local is false
   ): { thisComponentVersions: Versions; otherComponentVersions: Versions } {
     const otherLocalVersion = otherComponent.getLocalVersions();
-    const otherComponentVersions = filterObject(
+    const otherComponentVersions = pickBy(
       otherComponent.versions,
       (val, key) => Object.keys(this.versions).includes(key) && (!local || otherLocalVersion.includes(key))
     );
-    const thisComponentVersions = filterObject(
+    const thisComponentVersions = pickBy(
       this.versions,
       (val, key) => Object.keys(otherComponentVersions).includes(key) && (!local || otherLocalVersion.includes(key))
     );

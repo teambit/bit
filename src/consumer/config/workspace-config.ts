@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import { pickBy } from 'lodash';
 import R from 'ramda';
 
 import {
@@ -8,7 +9,7 @@ import {
   DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS,
 } from '../../constants';
 import logger from '../../logger/logger';
-import { filterObject, isValidPath } from '../../utils';
+import { isValidPath } from '../../utils';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import { ResolveModulesConfig } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import AbstractConfig from './abstract-config';
@@ -150,7 +151,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       return true;
     };
 
-    return filterObject(consumerObject, isPropDefault);
+    return pickBy(consumerObject, isPropDefault);
   }
 
   static create(workspaceConfigProps: WorkspaceConfigProps): WorkspaceConfig {

@@ -1,10 +1,10 @@
 import mapSeries from 'p-map-series';
+import { pickBy } from 'lodash';
 import R from 'ramda';
 import { BitId } from '../../bit-id';
 import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
-import { filterObject } from '../../utils';
 import Component from '../component/consumer-component';
 import PackageJsonFile from '../component/package-json-file';
 import AbstractConfig from './abstract-config';
@@ -59,7 +59,7 @@ export default class ComponentConfig extends AbstractConfig {
       if (key === 'overrides') return !R.isEmpty(val);
       return true;
     };
-    return filterObject(componentObject, isPropDefaultOrEmpty);
+    return pickBy(componentObject, isPropDefaultOrEmpty);
   }
 
   validate(bitJsonPath: string) {
