@@ -357,6 +357,7 @@
       "@types/fs-capacitor": "2.0.0"
     },
     "nodeLinker": "hoisted",
+    "rootComponents": true,
     "nodeVersion": "14.19.3",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
