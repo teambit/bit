@@ -43,9 +43,7 @@ import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, pathResolveToLi
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { pathIsInside } from './path-is-inside';
 import prependBang from './prepend-bang';
-import toResultObject from './promise-to-result-object';
 import Queue from './queue';
-import removeFromRequireCache from './remove-from-require-cache';
 import getLatestVersionNumber from './resolveLatestVersion';
 import identityFile from './ssh/identity-file';
 import parseSSHUrl from './ssh/parse-url';
@@ -59,7 +57,6 @@ import removeChalkCharacters from './string/remove-chalk-characters';
 import stripTrailingChar from './string/strip-trailing-char';
 import toBase64 from './string/to-base64';
 import toBase64ArrayBuffer from './string/to-base64-array-buffer';
-import toBoolean from './to-boolean';
 import { unpackCommand } from './unpack-command';
 import deflate from './zlib-deflate';
 import inflate from './zlib-inflate';
@@ -112,11 +109,9 @@ export {
   flatten,
   currentDirName,
   immutableUnshift,
-  toResultObject,
   packCommand,
   unpackCommand,
   buildCommandMessage,
-  removeFromRequireCache,
   outputFile,
   stripTrailingChar,
   getLatestVersionNumber,
@@ -134,6 +129,5 @@ export {
   eol,
   generateRandomStr,
   Queue,
-  toBoolean,
   isRelativeImport,
 };
