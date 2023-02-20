@@ -10,12 +10,12 @@ import forEach from './foreach';
  *  filter({ a: 1, b: 2, c: 3 }, (val, key) => val === 1) // => { a: 1 }
  * ```
  */
-export default function filter(obj: Record<string, any>, cb: (val: any, key: any) => boolean) {
+export default function filter(obj: Record<string, any>, cb: (val: any, key: any) => boolean): any {
   const newObj = {};
 
   forEach(obj, (val, key) => {
     if (cb(val, key)) newObj[key] = val;
   });
 
-  return obj;
+  return newObj;
 }

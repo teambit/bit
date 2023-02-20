@@ -8,8 +8,7 @@ import {
   DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS,
 } from '../../constants';
 import logger from '../../logger/logger';
-import { isValidPath } from '../../utils';
-import filterObject from '../../utils/filter-object';
+import { filterObject, isValidPath } from '../../utils';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import { ResolveModulesConfig } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import AbstractConfig from './abstract-config';
