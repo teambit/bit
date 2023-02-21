@@ -75,29 +75,31 @@ export function LaneSelector({
           <LaneSearch focus={focus} onChange={handleOnChange} />
         </div>
       )}
-      {multipleLanes &&
-        groupByScope &&
-        (laneDropdownItems as Array<[scope: string, lanes: LaneId[]]>).map(([scope, lanesByScope]) => (
-          <LaneGroupedMenuItem
-            key={scope}
-            onLaneSelected={onLaneSelected}
-            getHref={getHref}
-            scope={scope}
-            selected={selectedLaneId}
-            current={lanesByScope}
-          />
-        ))}
-      {multipleLanes &&
-        !groupByScope &&
-        (laneDropdownItems as LaneId[]).map((lane) => (
-          <LaneMenuItem
-            onLaneSelected={onLaneSelected}
-            key={lane.toString()}
-            getHref={getHref}
-            selected={selectedLaneId}
-            current={lane}
-          ></LaneMenuItem>
-        ))}
+      <div className={styles.items}>
+        {multipleLanes &&
+          groupByScope &&
+          (laneDropdownItems as Array<[scope: string, lanes: LaneId[]]>).map(([scope, lanesByScope]) => (
+            <LaneGroupedMenuItem
+              key={scope}
+              onLaneSelected={onLaneSelected}
+              getHref={getHref}
+              scope={scope}
+              selected={selectedLaneId}
+              current={lanesByScope}
+            />
+          ))}
+        {multipleLanes &&
+          !groupByScope &&
+          (laneDropdownItems as LaneId[]).map((lane) => (
+            <LaneMenuItem
+              onLaneSelected={onLaneSelected}
+              key={lane.toString()}
+              getHref={getHref}
+              selected={selectedLaneId}
+              current={lane}
+            ></LaneMenuItem>
+          ))}
+      </div>
     </Dropdown>
   );
 }
