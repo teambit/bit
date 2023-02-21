@@ -22,7 +22,7 @@ export function DocsApp({ componentId, docs = defaultDocs, compositions, context
   const { examples = [] } = docs;
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
   const withoutHash = window.location.hash.substring(1);
-    const [, after] = withoutHash.split('?');
+  const [, after] = withoutHash.split('?');
   const params = new URLSearchParams(after);
   const isSkipInclude = params.get('skipIncludes');
 

@@ -1,5 +1,5 @@
+import { OnComponentEventResult } from '@teambit/workspace';
 import chalk from 'chalk';
-import { OnComponentEventResult } from '../on-component-events';
 
 const verboseComponentFilesArrayToString = (componentFiles) => {
   return componentFiles.reduce((outputString, filePath) => `${outputString} \t - ${filePath}\n`, ``);

@@ -20,13 +20,16 @@ export type UIServerConsoleProps = {
 
 export function UIServerConsole({ appName, futureUiServer, url }: UIServerConsoleProps) {
   const [uiServer, setUiServer] = useState<UIServer>();
+  const [uiServerReady, setUiServerReady] = useState<boolean>(false);
   const [plugins, setPlugins] = useState<ComponentType[]>();
 
   useEffect(() => {
     futureUiServer
-      .then((server) => {
+      .then(async (server) => {
         setUiServer(server);
         setPlugins(server.getPluginsComponents());
+        await server.whenReady;
+        setUiServerReady(true);
       })
       .catch((err) => {
         throw err;
@@ -40,11 +43,15 @@ export function UIServerConsole({ appName, futureUiServer, url }: UIServerConsol
       {plugins?.map((Plugin, key) => {
         return <Plugin key={key} />;
       })}
-      <Newline />
-      <Text>
-        You can now view '<Text color="cyan">{uiServer?.getName()}</Text>' components in the browser.
-      </Text>
-      <Text>Bit server is running on {url || uiServer.fullUrl}</Text>
+      {uiServerReady && (
+        <>
+          <Newline />
+          <Text>
+            You can now view '<Text color="cyan">{uiServer?.getName()}</Text>' components in the browser.
+          </Text>
+          <Text>Bit server is running on {url || uiServer.fullUrl}</Text>
+        </>
+      )}
     </>
   );
 }

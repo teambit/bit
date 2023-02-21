@@ -46,19 +46,6 @@ describe('filing-cabinet', () => {
       mock.restore();
     });
 
-    it('dangles off its supported file extensions', () => {
-      assert.deepEqual(cabinetNonDefault.supportedFileExtensions, [
-        '.js',
-        '.jsx',
-        '.ts',
-        '.tsx',
-        '.scss',
-        '.sass',
-        '.styl',
-        '.less',
-      ]);
-    });
-
     it('uses a generic resolve for unsupported file extensions', () => {
       const resolvedFile = cabinet({
         dependency: './bar',

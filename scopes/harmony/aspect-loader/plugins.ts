@@ -54,15 +54,29 @@ export class Plugins {
     try {
       return plugin.register(aspect);
     } catch (firstErr: any) {
-      this.logger.warn(`failed loading plugin with pattern "${plugin.def.pattern}", in component ${this.component.id.toString()}, will try to fix and reload`, firstErr);
+      this.logger.warn(
+        `failed loading plugin with pattern "${
+          plugin.def.pattern
+        }", in component ${this.component.id.toString()}, will try to fix and reload`,
+        firstErr
+      );
       const isFixed = await this.triggerOnAspectLoadError(firstErr, this.component);
       let errAfterReLoad;
       if (isFixed) {
-        this.logger.info(`the loading issue might be fixed now, re-loading plugin with pattern "${plugin.def.pattern}", in component ${this.component.id.toString()}`);
+        this.logger.info(
+          `the loading issue might be fixed now, re-loading plugin with pattern "${
+            plugin.def.pattern
+          }", in component ${this.component.id.toString()}`
+        );
         try {
           return plugin.register(aspect);
         } catch (err: any) {
-          this.logger.warn(`re-load of the plugin with pattern "${plugin.def.pattern}", in component ${this.component.id.toString()} failed as well`, err);
+          this.logger.warn(
+            `re-load of the plugin with pattern "${
+              plugin.def.pattern
+            }", in component ${this.component.id.toString()} failed as well`,
+            err
+          );
           errAfterReLoad = err;
         }
       }

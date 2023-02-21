@@ -105,7 +105,9 @@ describe('remove lanes', function () {
         const lanes = helper.command.listRemoteLanesParsed();
         expect(lanes.lanes).to.have.lengthOf(0);
       });
-      it('the remote should not have the components anymore as they dont belong to any lane', () => {
+      // this has been changed to support the ability to restore a deleted lane.
+      // it's ok that the model-components objects are there. it doesn't harm.
+      it.skip('the remote should not have the components anymore as they dont belong to any lane', () => {
         const remoteComps = helper.command.catScope(undefined, helper.scopes.remotePath);
         expect(remoteComps).to.have.lengthOf(0);
       });

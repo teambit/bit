@@ -30,6 +30,7 @@ export class NewCmd implements Command {
       'aspect <aspect-id>',
       'aspect-id of the template. mandatory for non-core aspects. helpful for core aspects in case of a name collision',
     ],
+    ['', 'env <env-id>', 'env-id of the template'],
     ['d', 'default-scope <scope-name>', `set defaultScope in the new workspace.jsonc`],
     ['', 'standalone', 'DEPRECATED. use --skip-git instead'],
     ['s', 'skip-git', 'skip generation of Git repository'],
@@ -43,8 +44,15 @@ export class NewCmd implements Command {
 
   constructor(private generator: GeneratorMain) {}
 
-  async report([templateName, workspaceName]: [string, string], options: NewOptions & { standalone: boolean }) {
+  async report(
+    [templateName, workspaceName]: [string, string],
+    options: NewOptions & {
+      standalone: boolean;
+      env?: string;
+    }
+  ) {
     options.skipGit = options.skipGit ?? options.standalone;
+    options.aspect = options.aspect ?? options.env;
     const { workspacePath, appName } = await this.generator.generateWorkspaceTemplate(
       workspaceName,
       templateName,

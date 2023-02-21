@@ -143,24 +143,20 @@ export function comp() {
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
       helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-      helper.fixtures.populateEnvMainRuntime(
-        `custom-react/env1/env1.main.runtime.ts`,
-        {
-          envName: 'env1',
-          dependencies: {
-            dependencies: {},
-            devDependencies: {
+      helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
+        envName: 'env1',
+        dependencies: {
+          dependencies: {},
+          devDependencies: {},
+          peers: [
+            {
+              name: 'react',
+              supportedRange: '^16.8.0',
+              version: '16.14.0',
             },
-            peers: [
-              {
-                name: 'react',
-                supportedRange: '^16.8.0',
-                version: '16.14.0',
-              },
-            ],
-          },
-        }
-      );
+          ],
+        },
+      });
       helper.command.install();
       helper.command.tagAllComponents();
       helper.command.export();

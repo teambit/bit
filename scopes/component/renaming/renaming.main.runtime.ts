@@ -1,5 +1,8 @@
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import fs from 'fs-extra';
+import path from 'path';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
+import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
@@ -9,6 +12,7 @@ import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '
 import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { InstallMain, InstallAspect } from '@teambit/install';
+import { isValidIdChunk, InvalidName } from '@teambit/legacy-bit-id';
 import { RenameCmd, RenameOptions } from './rename.cmd';
 import { RenamingAspect } from './renaming.aspect';
 import { RenamingFragment } from './renaming.fragment';
@@ -29,11 +33,18 @@ export class RenamingMain {
     private config: ConfigMain
   ) {}
 
-  async rename(sourceIdStr: string, targetIdStr: string, options: RenameOptions): Promise<RenameDependencyNameResult> {
+  async rename(sourceIdStr: string, targetName: string, options: RenameOptions): Promise<RenameDependencyNameResult> {
+    if (!isValidIdChunk(targetName)) {
+      if (targetName.includes('.'))
+        throw new Error(`error: new-name argument "${targetName}" includes a dot.
+make sure this argument is the name only, without the scope-name. to change the scope-name, use --scope flag`);
+      throw new InvalidName(targetName);
+    }
     const sourceId = await this.workspace.resolveComponentId(sourceIdStr);
     const isTagged = sourceId.hasVersion();
     const sourceComp = await this.workspace.get(sourceId);
-    const targetId = this.newComponentHelper.getNewComponentId(targetIdStr, undefined, options?.scope);
+    const sourcePackageName = this.workspace.componentPackageName(sourceComp);
+    const targetId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope);
     if (isTagged) {
       const config = await this.getConfig(sourceComp);
       await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetId, options, config);
@@ -41,14 +52,24 @@ export class RenamingMain {
     } else {
       this.workspace.bitMap.renameNewComponent(sourceId, targetId);
       await this.workspace.bitMap.write();
+
+      await fs.remove(path.join(this.workspace.path, 'node_modules', sourcePackageName));
     }
+    this.workspace.clearComponentCache(sourceId);
+    const targetComp = await this.workspace.get(targetId);
     if (options.refactor) {
       const allComponents = await this.workspace.list();
-      const { changedComponents } = await this.refactoring.refactorDependencyName(allComponents, sourceId, targetId);
+      const targetPackageName = this.workspace.componentPackageName(targetComp);
+      const { changedComponents } = await this.refactoring.refactorDependencyName(
+        allComponents,
+        sourcePackageName,
+        targetPackageName
+      );
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
     }
 
-    await this.install.link();
+    // link the new-name to node-modules
+    await linkToNodeModulesByComponents([targetComp], this.workspace);
 
     return {
       sourceId,

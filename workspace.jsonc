@@ -20,24 +20,24 @@
         "@mdx-js/react": "1.6.22",
         "@monaco-editor/react": "4.4.6",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
-        "@pnpm/client": "9.1.1",
+        "@pnpm/client": "9.1.4",
         "@pnpm/colorize-semver-diff": "1.0.1",
-        "@pnpm/config": "16.5.5",
-        "@pnpm/core": "7.7.3",
-        "@pnpm/default-reporter": "11.0.31",
+        "@pnpm/config": "16.6.2",
+        "@pnpm/core": "7.8.2",
+        "@pnpm/default-reporter": "11.0.34",
         "@pnpm/error": "4.0.1",
-        "@pnpm/fetch": "6.0.5",
+        "@pnpm/fetch": "6.0.6",
         "@pnpm/logger": "5.0.0",
         "@pnpm/modules-yaml": "11.1.0",
-        "@pnpm/network.agent": "0.0.4",
+        "@pnpm/network.agent": "0.1.0",
         "@pnpm/network.ca-file": "1.0.2",
-        "@pnpm/package-store": "15.1.5",
+        "@pnpm/package-store": "15.1.7",
         "@pnpm/parse-overrides": "3.0.3",
         "@pnpm/pick-registry-for-package": "4.0.3",
         "@pnpm/registry-mock": "2.20.0",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/sort-packages": "4.0.3",
-        "@pnpm/store-connection-manager": "5.2.9",
+        "@pnpm/store-connection-manager": "5.2.12",
         "@pnpm/types": "8.10.0",
         "@pnpm/workspace.pkgs-graph": "1.0.0",
         "@react-hook/latest": "1.0.3",
@@ -340,7 +340,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.442",
+        "@teambit/legacy": "1.0.447",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "browserslist": "4.16.3",
@@ -357,6 +357,7 @@
       "@types/fs-capacitor": "2.0.0"
     },
     "nodeLinker": "hoisted",
+    "rootComponents": true,
     "nodeVersion": "14.19.3",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
@@ -431,7 +432,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.442"
+            "@teambit/legacy": "1.0.447"
           }
         }
       },
@@ -692,7 +693,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.442"
+            "@teambit/legacy": "1.0.447"
           }
         }
       }
@@ -782,7 +783,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.442",
+            "@teambit/legacy": "1.0.447",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -917,7 +918,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.442"
+            "@teambit/legacy": "1.0.447"
           }
         }
       }

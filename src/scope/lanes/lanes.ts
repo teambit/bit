@@ -1,9 +1,8 @@
 import { BitError } from '@teambit/bit-error';
-import { compact } from 'lodash';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
 import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import { Lane } from '../models';
 import { Repository } from '../objects';
@@ -95,21 +94,21 @@ export default class Lanes {
         })
       );
     }
-    await this.objects.deleteObjectsFromFS(lanesToRemove.map((l) => l.hash()));
+    await this.objects.moveObjectsToTrash(lanesToRemove.map((l) => l.hash()));
 
-    const compIdsFromDeletedLanes = BitIds.uniqFromArray(lanesToRemove.map((l) => l.toBitIds()).flat());
-    const notDeletedLanes = existingLanes.filter((l) => !lanes.includes(l.name));
-    const compIdsFromNonDeletedLanes = BitIds.uniqFromArray(notDeletedLanes.map((l) => l.toBitIds()).flat());
-    const pendingDeleteCompIds = compIdsFromDeletedLanes.filter(
-      (id) => !compIdsFromNonDeletedLanes.hasWithoutVersion(id)
-    );
-    const modelComponents = await Promise.all(pendingDeleteCompIds.map((id) => scope.getModelComponentIfExist(id)));
-    const modelComponentsWithoutHead = compact(modelComponents).filter((comp) => !comp.hasHead());
-    if (modelComponentsWithoutHead.length) {
-      const idsStr = modelComponentsWithoutHead.map((comp) => comp.id()).join(', ');
-      logger.debug(`lanes, deleting the following orphaned components: ${idsStr}`);
-      await this.objects.deleteObjectsFromFS(modelComponentsWithoutHead.map((comp) => comp.hash()));
-    }
+    // const compIdsFromDeletedLanes = BitIds.uniqFromArray(lanesToRemove.map((l) => l.toBitIds()).flat());
+    // const notDeletedLanes = existingLanes.filter((l) => !lanes.includes(l.name));
+    // const compIdsFromNonDeletedLanes = BitIds.uniqFromArray(notDeletedLanes.map((l) => l.toBitIds()).flat());
+    // const pendingDeleteCompIds = compIdsFromDeletedLanes.filter(
+    //   (id) => !compIdsFromNonDeletedLanes.hasWithoutVersion(id)
+    // );
+    // const modelComponents = await Promise.all(pendingDeleteCompIds.map((id) => scope.getModelComponentIfExist(id)));
+    // const modelComponentsWithoutHead = compact(modelComponents).filter((comp) => !comp.hasHead());
+    // if (modelComponentsWithoutHead.length) {
+    //   const idsStr = modelComponentsWithoutHead.map((comp) => comp.id()).join(', ');
+    //   logger.debug(`lanes, deleting the following orphaned components: ${idsStr}`);
+    //   await this.objects.deleteObjectsFromFS(modelComponentsWithoutHead.map((comp) => comp.hash()));
+    // }
 
     return lanes;
   }

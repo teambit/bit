@@ -1,5 +1,5 @@
-import { EnvHandler } from "@teambit/envs";
-import { Linter } from "./linter";
+import { EnvHandler } from '@teambit/envs';
+import { Linter } from './linter';
 
 export interface LinterEnv {
   /**
