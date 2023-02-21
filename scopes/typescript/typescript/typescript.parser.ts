@@ -17,29 +17,39 @@ export class TypeScriptParser implements Parser {
     const staticProperties = this.parseStaticProperties(sourceFile);
 
     const exports = sourceFile.statements.filter((statement) => {
-      if (!statement.modifiers) return false;
-      return statement.modifiers.find((modifier) => {
-        return modifier.kind === ts.SyntaxKind.ExportKeyword;
-      });
+      if (statement.modifiers) {
+        return statement.modifiers.find((modifier) => {
+          return modifier.kind === ts.SyntaxKind.ExportKeyword;
+        });
+      }
+      if (statement.kind === ts.SyntaxKind.ExportDeclaration) {
+        // console.log('statement', statement.exportClause.elements)
+        return true;
+      }
+      if (statement.kind === ts.SyntaxKind.ExpressionStatement) {
+        // console.log('statement', statement.expression)
+        return true;
+      }
+      return false;
     });
 
     const exportModels = exports.map((statement) => {
       // todo refactor to a registry of variable statements.
       if (isVariableStatement(statement)) {
         const child = (statement as VariableStatement).declarationList.declarations[0];
-        const name = (child as any).name.text;
+        const name = (child.name as ts.Identifier).escapedText.toString();
         return new Export(name, staticProperties.get(name));
       }
 
       if (isFunctionDeclaration(statement)) {
         if (!statement.name) return undefined;
-        const name = statement.name.text;
+        const name = statement.name.escapedText.toString();
         return new Export(name, staticProperties.get(name));
       }
 
       if (isClassDeclaration(statement)) {
         if (!statement.name) return undefined;
-        const name = statement.name.text;
+        const name = statement.name.escapedText.toString();
         return new Export(name, staticProperties.get(name));
       }
 
