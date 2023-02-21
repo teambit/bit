@@ -571,7 +571,13 @@ export default class Component extends BitObject {
     return sha1(v4());
   }
 
-  addVersion(version: Version, versionToAdd: string, lane: Lane | null, repo: Repository): string {
+  addVersion(
+    version: Version,
+    versionToAdd: string,
+    lane: Lane | null,
+    repo: Repository,
+    previouslyUsedVersion?: string
+  ): string {
     if (lane) {
       if (isTag(versionToAdd)) {
         throw new GeneralError(
@@ -580,10 +586,18 @@ export default class Component extends BitObject {
       }
       const currentBitId = this.toBitId();
       const versionToAddRef = Ref.from(versionToAdd);
-      const existingComponentInLane = lane.getComponentByName(currentBitId);
-      const currentHead = (existingComponentInLane && existingComponentInLane.head) || this.getHead();
-      if (currentHead && !currentHead.isEqual(versionToAddRef)) {
-        version.addAsOnlyParent(currentHead);
+      const parent = previouslyUsedVersion ? this.getRef(previouslyUsedVersion) : null;
+      if (!parent) {
+        const existingComponentInLane = lane.getComponentByName(currentBitId);
+        const currentHead = (existingComponentInLane && existingComponentInLane.head) || this.getHead();
+        if (currentHead) {
+          throw new Error(
+            `component ${currentBitId.toString()} has a head (${currentHead.toString()}) but previouslyUsedVersion is empty`
+          );
+        }
+      }
+      if (parent && !parent.isEqual(versionToAddRef)) {
+        version.addAsOnlyParent(parent);
       }
       lane.addComponent({ id: currentBitId, head: versionToAddRef });
 
@@ -598,8 +612,8 @@ export default class Component extends BitObject {
     const head = this.getHead();
     if (
       head &&
-      head.toString() !== versionToAdd && // happens with auto-snap
-      !this.hasTag(versionToAdd)
+      head.toString() !== versionToAdd &&
+      !this.hasTag(versionToAdd) // happens with auto-snap
     ) {
       // happens with auto-tag
       // if this is a tag and this tag exists, the same version was added before with a different hash.
@@ -609,7 +623,7 @@ export default class Component extends BitObject {
       // @todo: fix it in a more elegant way
       version.addAsOnlyParent(head);
     }
-    if (!version.isLegacy) this.setHead(version.hash());
+    this.setHead(version.hash());
     if (isTag(versionToAdd)) {
       this.setVersion(versionToAdd, version.hash());
     }

@@ -86,6 +86,7 @@ function updateDependenciesVersions(
 
 function setHashes(componentsToTag: ConsumerComponent[]): void {
   componentsToTag.forEach((componentToTag) => {
+    componentToTag.previouslyUsedVersion = componentToTag.version;
     componentToTag.version = sha1(v4());
   });
 }

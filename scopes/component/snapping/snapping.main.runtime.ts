@@ -700,7 +700,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const { version, files } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     this.objectsRepo.add(version);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, this.objectsRepo);
+    component.addVersion(version, source.version, lane, this.objectsRepo, source.previouslyUsedVersion);
 
     const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
     if (unmergedComponent) {
@@ -736,7 +736,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const { version, files } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     objectRepo.add(version);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, objectRepo);
+    component.addVersion(version, source.version, lane, objectRepo, source.previouslyUsedVersion);
     objectRepo.add(component);
     files.forEach((file) => objectRepo.add(file.file));
     if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
