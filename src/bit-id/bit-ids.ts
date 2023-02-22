@@ -1,8 +1,8 @@
 import R from 'ramda';
+import { forEach } from 'lodash';
 
 import BitId, { BitIdStr } from '../bit-id/bit-id';
 import { LATEST_BIT_VERSION } from '../constants';
-import forEach from '../utils/object/foreach';
 import getLatestVersionNumber from '../utils/resolveLatestVersion';
 
 export default class BitIds extends Array<BitId> {

@@ -109,11 +109,7 @@ export class CompositionsMain {
 
     if (!maybeFiles) return [];
     const [, files] = maybeFiles;
-    return files
-      .map((file) => {
-        return this.computeCompositions(component, file);
-      })
-      .flat();
+    return files.map((file) => this.computeCompositions(component, file)).flat();
   }
 
   getCompositionFilePattern() {
