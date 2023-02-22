@@ -13,7 +13,7 @@ import Component from '../component/consumer-component';
 import { SourceFile } from '../component/sources';
 import { diffBetweenComponentsObjects } from './components-object-diff';
 
-export type DiffStatus = 'MODIFIED' | 'UNCHANGED' | 'NEW';
+export type DiffStatus = 'MODIFIED' | 'UNCHANGED' | 'NEW' | 'DELETED';
 
 export type FileDiff = {
   filePath: string;
@@ -232,7 +232,8 @@ export async function getFilesDiff(
 
     let status: DiffStatus = 'UNCHANGED';
     if (diffOutput && !fileAContent) status = 'NEW';
-    else if (diffOutput && fileAContent) status = 'MODIFIED';
+    else if (diffOutput && !fileBContent) status = 'DELETED';
+    else if (diffOutput) status = 'MODIFIED';
 
     return { filePath: relativePath, diffOutput, status, fromContent: fileAContent, toContent: fileBContent };
   });
