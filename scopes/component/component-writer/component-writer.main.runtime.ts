@@ -189,8 +189,7 @@ export class ComponentWriterMain {
   private moveComponentsIfNeeded(opts: ManyComponentsWriterParams) {
     if (opts.writeToPath && this.consumer) {
       opts.components.forEach((component) => {
-        // @ts-ignore componentWithDeps.component.componentMap is set
-        const componentMap: ComponentMap = component.component.componentMap;
+        const componentMap = component.componentMap as ComponentMap;
         if (!componentMap.rootDir) {
           throw new GeneralError(`unable to use "--path" flag.
 to move individual files, use bit move.
