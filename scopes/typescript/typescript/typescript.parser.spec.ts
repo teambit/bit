@@ -119,7 +119,7 @@ describe('TypescriptParser', () => {
       const exportFunction1 = exports.find((x) => x.identifier === 'default');
       const exportFunction2 = exports.find((x) => x.identifier === 'function2');
 
-      expect(exportFunction1).to.exist;
+      expect(exportFunction1).not.to.exist;
       expect(exportFunction2).to.exist;
     });
 

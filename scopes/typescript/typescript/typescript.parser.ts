@@ -23,7 +23,9 @@ export class TypeScriptParser implements Parser {
           if (ts.isNamedExports(statement.exportClause)) {
             statement.exportClause.elements.forEach((element) => {
               const name = element.name.escapedText.toString();
-              exportModels.push(new Export(name, staticProperties.get(name)));
+              if (name !== 'default') {
+                exportModels.push(new Export(name, staticProperties.get(name)));
+              }
             });
           }
           if (ts.isNamespaceExport(statement.exportClause)) {
