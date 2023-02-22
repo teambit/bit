@@ -103,8 +103,8 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
         await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus, lane);
       } else {
         await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
+        await this.clearScopesCaches(legacyComponents);
       }
-      await this.clearScopesCaches(legacyComponents);
     }
     await this.triggerOnPostSign(components);
 
