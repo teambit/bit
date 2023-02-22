@@ -87,6 +87,7 @@ export class ImporterMain {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const importOptions: ImportOptions = {
       ids: [],
+      objectsOnly: true,
       installNpmPackages: false,
     };
     const currentRemoteLane = await this.workspace.getCurrentRemoteLane();
