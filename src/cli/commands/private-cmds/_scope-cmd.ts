@@ -1,5 +1,6 @@
+import { isEmpty } from 'lodash';
 import { describeScope } from '../../../api/scope';
-import { buildCommandMessage, empty, fromBase64, packCommand, unpackCommand } from '../../../utils';
+import { buildCommandMessage, fromBase64, packCommand, unpackCommand } from '../../../utils';
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 import { LegacyCommand } from '../../legacy-command';
 
@@ -19,7 +20,7 @@ export default class Prepare implements LegacyCommand {
   }
 
   report(scopeObj: any): string {
-    if (empty(scopeObj)) return '';
+    if (isEmpty(scopeObj)) return '';
     return packCommand(buildCommandMessage(scopeObj, undefined, compressResponse), true, compressResponse);
   }
 }
