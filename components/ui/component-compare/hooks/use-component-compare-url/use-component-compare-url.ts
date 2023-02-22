@@ -1,5 +1,5 @@
-import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
-import { useLocation } from '@teambit/base-react.navigation.link';
+import { useQuery as defaultUseQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
+import { useLocation as defaultUseLocation, Location } from '@teambit/base-react.navigation.link';
 
 export type ComponentCompareQueryParams = {
   baseVersion?: string;
@@ -10,7 +10,11 @@ export type ComponentCompareQueryParams = {
   aspect?: string;
 };
 
-export function useUpdatedUrlFromQuery(queryParams: ComponentCompareQueryParams): string {
+export function useUpdatedUrlFromQuery(
+  queryParams: ComponentCompareQueryParams,
+  useQuery: () => URLSearchParams = defaultUseQuery,
+  useLocation: () => Location | undefined = defaultUseLocation
+): string {
   const query = useQuery();
   const location = useLocation() || { pathname: '/' };
 
@@ -23,7 +27,7 @@ export function useUpdatedUrlFromQuery(queryParams: ComponentCompareQueryParams)
 }
 
 export function useCompareQueryParam(key: keyof ComponentCompareQueryParams): string | undefined {
-  const query = useQuery();
+  const query = defaultUseQuery();
   const queryParam = query.get(key);
   return queryParam ?? undefined;
 }

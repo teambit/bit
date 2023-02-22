@@ -12,6 +12,8 @@ import {
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
 import { DarkTheme } from '@teambit/design.themes.dark-theme';
+import { useLocation, Location } from '@teambit/base-react.navigation.link';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { CodeCompareTree } from './code-compare-tree';
 import { CodeCompareView, CodeCompareViewProps } from './code-compare-view';
 import { Widget } from './code-compare.widgets';
@@ -27,6 +29,8 @@ export type CodeCompareProps = {
 
 export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareView }: CodeCompareProps) {
   const componentCompareContext = useComponentCompare();
+  const query = useQuery();
+  const location = (useLocation() as Location) || { pathname: '/' };
 
   const { base, compare, state: compareState, hooks: compareHooks } = componentCompareContext || {};
   const state = compareState?.code;
@@ -75,10 +79,20 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
 
   const controlledHref = useUpdatedUrlFromQuery({});
   const getHref = (node) => {
-    const hrefFromHook = hook?.useUpdatedUrlFromQuery?.({ file: node.id }) ?? null;
-    const defaultHref = useUpdatedUrlFromQuery({ file: node.id });
+    const hrefFromHook =
+      hook?.useUpdatedUrlFromQuery?.(
+        { file: node.id },
+        () => query,
+        () => location
+      ) ?? null;
+    const defaultHref = useUpdatedUrlFromQuery(
+      { file: node.id },
+      () => query,
+      () => location
+    );
     return hrefFromHook || state?.controlled ? controlledHref : defaultHref;
   };
+
   const sidebarIconUrl = isSidebarOpen
     ? 'https://static.bit.dev/design-system-assets/Icons/sidebar-close.svg'
     : 'https://static.bit.dev/design-system-assets/Icons/sidebar-open.svg';
