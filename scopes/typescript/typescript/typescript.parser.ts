@@ -40,7 +40,7 @@ export class TypeScriptParser implements Parser {
       // - function statement
       // - class statement
       if (statement.modifiers) {
-        statement.modifiers.find((modifier) => {
+        statement.modifiers.some((modifier) => {
           if (modifier.kind === ts.SyntaxKind.ExportKeyword) {
             if (ts.isVariableStatement(statement)) {
               const child = statement.declarationList.declarations[0];
