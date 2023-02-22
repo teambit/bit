@@ -1,9 +1,8 @@
-import { first } from '../utils';
 import { LegacyCommand } from './legacy-command';
 
 export function parseCommandName(commandName: string): string {
   if (!commandName) return '';
-  return first(commandName.split(' '));
+  return commandName.split(' ')[0];
 }
 
 export default class CommandRegistry {

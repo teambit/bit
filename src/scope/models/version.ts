@@ -13,7 +13,7 @@ import { ComponentOverridesData } from '../../consumer/config/component-override
 import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
-import { first, getStringifyArgs } from '../../utils';
+import { getStringifyArgs } from '../../utils';
 import { PathLinux } from '../../utils/path';
 import VersionInvalid from '../exceptions/version-invalid';
 import { BitObject, Ref } from '../objects';
@@ -410,7 +410,7 @@ export default class Version extends BitObject {
     } = contentParsed;
 
     const _getDependencies = (deps = []): Dependency[] => {
-      if (deps.length && R.is(String, first(deps))) {
+      if (deps.length && R.is(String, deps[0])) {
         // backward compatibility
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return deps.map((dependency) => ({ id: BitId.parseObsolete(dependency) }));
