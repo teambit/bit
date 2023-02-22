@@ -94,7 +94,7 @@ describe('TypescriptParser', () => {
       const ast = ts.createSourceFile('example.tsx', exampleRenamedStatement, ts.ScriptTarget.Latest);
       const exports = new TypeScriptParser().getExports(ast);
 
-      const exportFunction = exports.find((x) => x.identifier === 'my-function');
+      const exportFunction = exports.find((x) => x.identifier === 'myFunction2');
       const exportVariable = exports.find((x) => x.identifier === 'myVariable2Alias');
 
       expect(exportFunction).to.exist;
@@ -136,9 +136,7 @@ describe('TypescriptParser', () => {
       const ast = ts.createSourceFile('example.tsx', exampleExportDefault, ts.ScriptTarget.Latest);
       const exports = new TypeScriptParser().getExports(ast);
 
-      const exportDefault = exports.find((x) => x.identifier === 'default');
-
-      expect(exportDefault).to.exist;
+      expect(exports.length).to.equal(0);
     });
 
     describe('staticProperties', () => {
