@@ -277,7 +277,7 @@ export default class ScopeComponentsImporter {
     if (!idsWithoutNils.length) return [];
     logger.debug(`importWithoutDeps, total ids: ${ids.length}`);
 
-    const [externals, locals] = partition(idsWithoutNils, (id) => id.isLocal(this.scope.name));
+    const [locals, externals] = partition(idsWithoutNils, (id) => id.isLocal(this.scope.name));
 
     const localDefs: ComponentDef[] = await this.sources.getMany(locals);
     const componentVersionArr = localDefs.map((def) => {
@@ -955,7 +955,7 @@ export default class ScopeComponentsImporter {
   }
 
   private throwIfExternalFound(ids: BitIds) {
-    const [externals] = partition(ids, (id) => id.isLocal(this.scope.name));
+    const [_, externals] = partition(ids, (id) => id.isLocal(this.scope.name));
     if (externals.length) {
       const externalStr = externals.map((id) => id.toString()).join(', ');
       // we can't support fetching-with-dependencies of external components as we risk going into an infinite loop
