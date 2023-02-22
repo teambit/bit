@@ -366,7 +366,7 @@ export default class Component extends BitObject {
   getHeadRegardlessOfLaneAsTagOrHash(returnVersionZeroForNoHead = false): string {
     const head = this.getHeadRegardlessOfLane();
     if (!head) {
-      if (!empty(this.versions))
+      if (!isEmpty(this.versions))
         throw new Error(`error: ${this.id()} has tags but no head, it might be originated from legacy`);
       if (returnVersionZeroForNoHead) return VERSION_ZERO;
       throw new Error(`getHeadRegardlessOfLaneAsTagOrHash() failed finding a head for ${this.id()}`);
