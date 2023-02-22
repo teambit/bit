@@ -3,7 +3,6 @@ import * as path from 'path';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
 import GeneralError from '../../error/general-error';
-import { ComponentWithDependencies } from '../../scope';
 import Version from '../../scope/models/version';
 import { pathNormalizeToLinux, PathOsBased } from '../../utils/path';
 import ConsumerComponent from '../component';
@@ -37,7 +36,7 @@ export type ComponentStatus = {
   mergeResults?: MergeResultsThreeWay | null | undefined;
 };
 
-type ApplyVersionWithComps = { applyVersionResult: ApplyVersionResult; component?: ComponentWithDependencies };
+type ApplyVersionWithComps = { applyVersionResult: ApplyVersionResult; component?: ConsumerComponent };
 
 /**
  * 1) when the files are modified with conflicts and the strategy is "ours", leave the FS as is
@@ -77,14 +76,11 @@ export async function applyVersion(
     consumer.bitMap.updateComponentId(id);
     return { applyVersionResult: { id, filesStatus } };
   }
-  const componentWithDependencies = await consumer.loadComponentWithDependenciesFromModel(id);
+  const component = await consumer.loadComponentFromModelImportIfNeeded(id);
   const componentMap = componentFromFS && componentFromFS.componentMap;
   if (componentFromFS && !componentMap) throw new GeneralError('applyVersion: componentMap was not found');
-  if (componentMap && !id.scope) {
-    componentWithDependencies.dependencies = [];
-    componentWithDependencies.devDependencies = [];
-  }
-  const files = componentWithDependencies.component.files;
+
+  const files = component.files;
   files.forEach((file) => {
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
@@ -92,15 +88,12 @@ export async function applyVersion(
     // update files according to the merge results
     const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(files, mergeResults, mergeStrategy);
     filesStatus = { ...filesStatus, ...modifiedStatus };
-    componentWithDependencies.component.files = modifiedFiles;
+    component.files = modifiedFiles;
   }
-  const shouldDependenciesSaveAsComponents = await consumer.shouldDependenciesSavedAsComponents([id]);
-  componentWithDependencies.component.dependenciesSavedAsComponents =
-    shouldDependenciesSaveAsComponents[0].saveDependenciesAsComponents;
 
   return {
     applyVersionResult: { id, filesStatus },
-    component: componentWithDependencies,
+    component,
   };
 }
 
@@ -215,8 +208,8 @@ export async function deleteFilesIfNeeded(
   const pathsToRemoveIncludeNull = componentsResults.map((compResult) => {
     return Object.keys(compResult.applyVersionResult.filesStatus).map((filePath) => {
       if (compResult.applyVersionResult.filesStatus[filePath] === FileStatus.removed) {
-        if (!compResult.component?.component.writtenPath) return null;
-        return path.join(compResult.component?.component.writtenPath, filePath);
+        if (!compResult.component?.writtenPath) return null;
+        return path.join(compResult.component?.writtenPath, filePath);
       }
       return null;
     });
