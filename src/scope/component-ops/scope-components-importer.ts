@@ -955,7 +955,7 @@ export default class ScopeComponentsImporter {
   }
 
   private throwIfExternalFound(ids: BitIds) {
-    const [_, externals] = partition(ids, (id) => id.isLocal(this.scope.name));
+    const externals = ids.filter((id) => !id.isLocal(this.scope.name));
     if (externals.length) {
       const externalStr = externals.map((id) => id.toString()).join(', ');
       // we can't support fetching-with-dependencies of external components as we risk going into an infinite loop
