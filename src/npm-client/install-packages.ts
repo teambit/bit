@@ -1,13 +1,13 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
+import pFilter from 'p-filter';
 
 import loader from '../cli/loader';
 import { BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
 import { DEFAULT_PACKAGE_MANAGER, PACKAGE_JSON } from '../constants';
 import Consumer from '../consumer/consumer';
 import { ComponentWithDependencies } from '../scope';
-import filterAsync from '../utils/array/filter-async';
 import { PathAbsolute, PathOsBasedRelative } from '../utils/path';
 import npmClient from '.';
 
@@ -108,5 +108,5 @@ export function getAllRootDirectoriesFor(
 }
 
 async function filterDirsWithoutPackageJson(dirs: PathAbsolute[]): Promise<PathAbsolute[]> {
-  return filterAsync(dirs, (dir) => fs.pathExists(path.join(dir, PACKAGE_JSON)));
+  return pFilter(dirs, (dir) => fs.pathExists(path.join(dir, PACKAGE_JSON)));
 }

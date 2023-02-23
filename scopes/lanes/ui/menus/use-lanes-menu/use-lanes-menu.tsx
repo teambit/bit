@@ -34,7 +34,7 @@ export function UseLaneMenu({
       <div className={styles.top}>
         <div className={styles.title}>
           <Icon className={styles.titleIcon} of="terminal" />
-          <Ellipsis className={styles.titleText}>{`Bulk import from ${viewedLaneId.name}`}</Ellipsis>
+          <Ellipsis className={styles.titleText}>Import lane</Ellipsis>
         </div>
       </div>
       <LaneImportContent host={host} currentLaneId={viewedLaneId} switchedOutToCurrentLane={switchedOutToCurrentLane} />
@@ -71,7 +71,7 @@ function LaneImportContent({ host, currentLaneId, switchedOutToCurrentLane }: La
   }
   return (
     <div className={styles.importContent}>
-      <div className={styles.importContentLabel}>Switch and Import all components from {laneId}</div>
+      <div className={styles.importContentLabel}>Import the lane {laneId}</div>
       <CopyBox className={styles.importContentCmd}>{`bit lane import ${laneId}`}</CopyBox>
     </div>
   );

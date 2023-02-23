@@ -50,6 +50,7 @@ import { LaneSwitcher } from './switch-lanes';
 import { createLane, createLaneInScope, throwForInvalidLaneName } from './create-lane';
 import { LanesCreateRoute } from './lanes.create.route';
 import { LanesDeleteRoute } from './lanes.delete.route';
+import { LanesRestoreRoute } from './lanes.restore.route';
 
 export { Lane };
 
@@ -824,6 +825,10 @@ export class LanesMain {
     return '/lanes/delete';
   }
 
+  get restoreRoutePath() {
+    return '/lanes/restore';
+  }
+
   static slots = [];
   static dependencies = [
     CLIAspect,
@@ -897,7 +902,11 @@ export class LanesMain {
     ];
     cli.register(laneCmd, switchCmd);
     graphql.register(lanesSchema(lanesMain));
-    express.register([new LanesCreateRoute(lanesMain, logger), new LanesDeleteRoute(lanesMain, logger)]);
+    express.register([
+      new LanesCreateRoute(lanesMain, logger),
+      new LanesDeleteRoute(lanesMain, logger),
+      new LanesRestoreRoute(lanesMain, logger),
+    ]);
     return lanesMain;
   }
 }
