@@ -644,7 +644,7 @@ other:   ${otherLaneHead.toString()}`);
     const remoteId = id.changeVersion(remoteHead.toString());
     const idToLoad = !mergeResults || mergeStrategy === MergeOptions.theirs ? remoteId : id;
     const legacyComponent = await consumer.loadComponentFromModelImportIfNeeded(idToLoad);
-    legacyComponent.version = id.version;
+    if (mergeResults && mergeStrategy === MergeOptions.theirs) legacyComponent.version = id.version;
     const files = legacyComponent.files;
     files.forEach((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
