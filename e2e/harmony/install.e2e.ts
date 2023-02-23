@@ -51,7 +51,7 @@ describe('install command', function () {
       await npmCiRegistry.init();
 
       helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
-      helper.command.install('pkg-with-good-optional --no-optional');
+      helper.command.install('@pnpm.e2e/pkg-with-good-optional --no-optional');
     });
     after(() => {
       helper.command.delConfig('registry');
@@ -61,7 +61,7 @@ describe('install command', function () {
     it('should not install optional dependencies', async () => {
       const dirs = fs.readdirSync(path.join(helper.fixtures.scopes.localPath, 'node_modules/.pnpm'));
       expect(dirs).to.not.include('is-positive@1.0.0');
-      expect(dirs).to.include('pkg-with-good-optional@1.0.0');
+      expect(dirs).to.include('@pnpm.e2e+pkg-with-good-optional@1.0.0');
     });
   });
 });

@@ -34,7 +34,7 @@
         "@pnpm/package-store": "15.1.7",
         "@pnpm/parse-overrides": "3.0.3",
         "@pnpm/pick-registry-for-package": "4.0.3",
-        "@pnpm/registry-mock": "2.20.0",
+        "@pnpm/registry-mock": "3.4.0",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/sort-packages": "4.0.3",
         "@pnpm/store-connection-manager": "5.2.13",
