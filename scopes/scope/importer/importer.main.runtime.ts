@@ -65,6 +65,10 @@ export class ImporterMain {
     return results;
   }
 
+  /**
+   * fetch objects according to the criteria set by `options` param.
+   * to fetch current objects according to the current lane or main, use `this.importCurrentObjects()`.
+   */
   async importObjects(options: Partial<ImportOptions> = {}): Promise<ImportResult> {
     const importOptions: ImportOptions = {
       ...options,
@@ -72,6 +76,24 @@ export class ImporterMain {
       ids: options.ids || [],
       installNpmPackages: false,
     };
+    const importComponents = new ImportComponents(this.workspace, this.graph, this.componentWriter, importOptions);
+    return importComponents.importComponents();
+  }
+
+  /**
+   * if on main, fetch main objects, if on lane, fetch lane objects.
+   */
+  async importCurrentObjects(): Promise<ImportResult> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    const importOptions: ImportOptions = {
+      ids: [],
+      objectsOnly: true,
+      installNpmPackages: false,
+    };
+    const currentRemoteLane = await this.workspace.getCurrentRemoteLane();
+    if (currentRemoteLane) {
+      importOptions.lanes = { laneIds: [currentRemoteLane.toLaneId()], lanes: [currentRemoteLane] };
+    }
     const importComponents = new ImportComponents(this.workspace, this.graph, this.componentWriter, importOptions);
     return importComponents.importComponents();
   }
@@ -162,11 +184,6 @@ export class ImporterMain {
     shouldFetchFromMain?: boolean,
     options: Partial<ImportOptions> = {}
   ): Promise<ImportResult> {
-    // workaround for an issue where we have the current-lane object at hand but not its components, the sources.get
-    // throws an error about missing the Version object in the filesystem. to reproduce, comment the following line and
-    // run the e2e-test "import objects for multiple lanes".
-    await this.importObjects();
-
     const resultFromMain = shouldFetchFromMain
       ? await this.importObjects(options)
       : { importedIds: [], importDetails: [], importedDeps: [] };
@@ -247,11 +264,11 @@ export class ImporterMain {
     install.registerPreInstall(async (opts) => {
       if (!opts?.import) return;
       logger.setStatusLine('importing missing objects');
-      await importerMain.importObjects();
+      await importerMain.importCurrentObjects();
       logger.consoleSuccess();
     });
     install.registerPreLink(async (opts) => {
-      if (opts?.fetchObject) await importerMain.importObjects();
+      if (opts?.fetchObject) await importerMain.importCurrentObjects();
     });
     cli.register(new ImportCmd(importerMain, community.getDocsDomain()), new FetchCmd(importerMain));
     return importerMain;
