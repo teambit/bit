@@ -420,4 +420,75 @@ describe('merge config scenarios', function () {
       });
     });
   });
+  // for this test, there are two workspace.
+  // 1. includes a component "bar/foo" which is used as a package for the another workspace.
+  // 2. has a component "comp1", which uses bar.foo pkg in different versions.
+  // we maintain two "Helper" instances to gradually update both workspaces.
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'diverge with different component dependencies versions',
+    () => {
+      let npmCiRegistry: NpmCiRegistry;
+      let beforeDiverge: string;
+      let beforeMerges: string;
+      let barPkg: string;
+      before(async () => {
+        const pkgHelper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        pkgHelper.scopeHelper.setNewLocalAndRemoteScopes();
+        pkgHelper.fixtures.createComponentBarFoo();
+        pkgHelper.fixtures.addComponentBarFooAsDir();
+        npmCiRegistry = new NpmCiRegistry(pkgHelper);
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        await npmCiRegistry.init();
+        pkgHelper.command.tagAllComponents();
+        barPkg = pkgHelper.general.getPackageNameByCompName('bar/foo');
+        pkgHelper.command.export();
+
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.addRemoteScope(pkgHelper.scopes.remotePath);
+        helper.fixtures.populateComponents(1, false);
+        helper.fs.outputFile('comp1/index.js', `require("${barPkg}");`);
+        helper.command.install(barPkg);
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+        beforeDiverge = helper.scopeHelper.cloneLocalScope();
+
+        pkgHelper.command.tagAllComponents('--unmodified');
+        pkgHelper.command.export();
+
+        helper.command.createLane();
+        helper.command.install(`${barPkg}@0.0.2`);
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.export();
+
+        // add another tag on main to make it diverged from the lane.
+        helper.scopeHelper.getClonedLocalScope(beforeDiverge);
+        helper.command.tagAllWithoutBuild('--unmodified');
+        helper.command.export();
+
+        beforeMerges = helper.scopeHelper.cloneLocalScope();
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      describe('when the dep was updated on the lane only, not on main', () => {
+        describe('when the dep is in workspace.jsonc', () => {
+          before(() => {});
+          it('should change workspace.jsonc with the updated dependency', () => {});
+        });
+        describe('when the dep is not in the workspace.jsonc', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(beforeMerges);
+            helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: {} });
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+          });
+          // @todo: now it fails because `applyAutoDetectOverridesOnComponent()` doesn't update it. should be fixed.
+          it('should auto-update the dependency according to the lane, because only there it was changed', () => {
+            const deps = helper.command.getCompDepsIdsFromData('comp1');
+            expect(deps).to.include(`${barPkg}@0.0.2`);
+            expect(deps).to.not.include(`${barPkg}@0.0.1`);
+          });
+        });
+      });
+    }
+  );
 });

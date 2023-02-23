@@ -585,6 +585,11 @@ export default class CommandHelper {
     return show.find((_) => _.title === 'configuration').json.find((_) => _.id === aspectId);
   }
 
+  getCompDepsIdsFromData(compId: string): string[] {
+    const aspectConf = this.showAspectConfig(compId, Extensions.dependencyResolver);
+    return aspectConf.data.dependencies.map((dep) => dep.id);
+  }
+
   showComponentParsedHarmonyByTitle(compId: string, title: string) {
     const show = this.showComponentParsedHarmony(compId);
     return show.find((_) => _.title === title).json;
