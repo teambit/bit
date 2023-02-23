@@ -2,10 +2,10 @@
 
 import chalk from 'chalk';
 import Table from 'cli-table';
+import { forEach, isEmpty } from 'lodash';
 
 import { remoteAdd, remoteList, remoteRm } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
-import { empty, forEach } from '../../../utils';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import RemoteUndefined from '../exceptions/remote-undefined';
@@ -63,7 +63,7 @@ export default class Remote implements LegacyCommand {
   }
 
   report(remotes: { [key: string]: string }): string {
-    if (empty(remotes)) return chalk.red('no configured remotes found in scope');
+    if (isEmpty(remotes)) return chalk.red('no configured remotes found in scope');
 
     const table = new Table({ head: ['scope name', 'host'], style: { head: ['cyan'] } });
     forEach(remotes, (host, name) => {
