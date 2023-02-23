@@ -83,7 +83,7 @@ type OnComponentAutoDetectOverrides = (
   files: SourceFile[]
 ) => Promise<DependenciesOverridesData>;
 
-type OnComponentAutoDetectConfigMerge = (componentId: BitId) => Promise<DependenciesOverridesData>;
+type OnComponentAutoDetectConfigMerge = (componentId: BitId) => Promise<DependenciesOverridesData | undefined>;
 
 const DepsKeysToAllPackagesDepsKeys = {
   dependencies: 'packageDependencies',
