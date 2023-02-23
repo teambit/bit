@@ -644,6 +644,10 @@ other:   ${otherLaneHead.toString()}`);
     const remoteId = id.changeVersion(remoteHead.toString());
     const idToLoad = !mergeResults || mergeStrategy === MergeOptions.theirs ? remoteId : id;
     const legacyComponent = await consumer.loadComponentFromModelImportIfNeeded(idToLoad);
+    if (mergeResults && mergeStrategy === MergeOptions.theirs) {
+      // in this case, we don't want to update .bitmap with the version of the remote. we want to keep the same version
+      legacyComponent.version = id.version;
+    }
     const files = legacyComponent.files;
     files.forEach((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
