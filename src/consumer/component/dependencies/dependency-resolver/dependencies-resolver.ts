@@ -55,7 +55,7 @@ export type DebugComponentsDependency = {
   dependencyPackageJsonPath?: string;
   dependentPackageJsonPath?: string;
   // can be resolved here or can be any one of the strategies in dependencies-version-resolver
-  versionResolvedFrom?: 'DependencyPkgJson' | 'DependentPkgJson' | 'BitMap' | 'Model' | string;
+  versionResolvedFrom?: 'DependencyPkgJson' | 'DependentPkgJson' | 'BitMap' | 'Model' | 'MergeConfig' | string;
   version?: string;
   componentIdResolvedFrom?: 'DependencyPkgJson' | 'DependencyPath';
   packageName?: string;
@@ -82,6 +82,8 @@ type OnComponentAutoDetectOverrides = (
   componentId: BitId,
   files: SourceFile[]
 ) => Promise<DependenciesOverridesData>;
+
+type OnComponentAutoDetectConfigMerge = (componentId: BitId) => Promise<DependenciesOverridesData>;
 
 const DepsKeysToAllPackagesDepsKeys = {
   dependencies: 'packageDependencies',
@@ -110,6 +112,7 @@ export default class DependencyResolver {
   overridesDependencies: OverridesDependencies;
   debugDependenciesData: DebugDependencies;
   autoDetectOverrides: Record<string, any>;
+  autoDetectConfigMerge: Record<string, any>;
 
   static getWorkspacePolicy: WorkspacePolicyGetter;
   static registerWorkspacePolicyGetter(func: WorkspacePolicyGetter) {
@@ -119,6 +122,11 @@ export default class DependencyResolver {
   static getOnComponentAutoDetectOverrides: OnComponentAutoDetectOverrides;
   static registerOnComponentAutoDetectOverridesGetter(func: OnComponentAutoDetectOverrides) {
     this.getOnComponentAutoDetectOverrides = func;
+  }
+
+  static getOnComponentAutoDetectConfigMerge: OnComponentAutoDetectConfigMerge;
+  static registerOnComponentAutoDetectConfigMergeGetter(func: OnComponentAutoDetectConfigMerge) {
+    this.getOnComponentAutoDetectConfigMerge = func;
   }
 
   /**
@@ -234,6 +242,7 @@ export default class DependencyResolver {
    */
   async populateDependencies(files: string[], testsFiles: string[]) {
     await this.loadAutoDetectOverrides();
+    await this.loadAutoDetectConfigMerge();
     files.forEach((file) => {
       const fileType: FileType = {
         isTestFile: testsFiles.includes(file),
@@ -280,6 +289,11 @@ export default class DependencyResolver {
       this.component.files
     );
     this.autoDetectOverrides = autoDetectOverrides;
+  }
+
+  private async loadAutoDetectConfigMerge() {
+    const autoDetectOverrides = await DependencyResolver.getOnComponentAutoDetectConfigMerge(this.component.id);
+    this.autoDetectConfigMerge = autoDetectOverrides || {};
   }
 
   addCustomResolvedIssues() {
@@ -725,6 +739,15 @@ either, use the ignore file syntax or change the require statement to have a mod
         const existingIds = this.consumer.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId);
         return existingIds.length === 1 ? existingIds[0] : undefined;
       };
+      const getFromMergeConfig = () => {
+        let foundVersion: string | undefined;
+        DEPENDENCIES_FIELDS.forEach((field) => {
+          if (this.autoDetectConfigMerge[field]?.[compDep.name]) {
+            foundVersion = this.autoDetectConfigMerge[field]?.[compDep.name];
+          }
+        });
+        return foundVersion ? componentId.changeVersion(foundVersion) : undefined;
+      };
       const getExistingIdFromModel = (): BitId | undefined => {
         if (this.componentFromModel) {
           const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
@@ -740,6 +763,11 @@ either, use the ignore file syntax or change the require statement to have a mod
         if (fromBitmap) {
           depDebug.versionResolvedFrom = 'BitMap';
           return fromBitmap;
+        }
+        const fromMergeConfig = getFromMergeConfig();
+        if (fromMergeConfig) {
+          depDebug.versionResolvedFrom = 'MergeConfig';
+          return fromMergeConfig;
         }
         // Happens when the dep is not in the node_modules
         if (!version) return getExistingIdFromModel();

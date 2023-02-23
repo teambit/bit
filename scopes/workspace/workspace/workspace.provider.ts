@@ -139,6 +139,14 @@ export default async function provideWorkspace(
     }
   );
 
+  LegacyDependencyResolver.registerOnComponentAutoDetectConfigMergeGetter(async (id: BitId) => {
+    const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
+    if (depsDataOfMergeConfig) {
+      const policy = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, 'auto');
+      return policy.toLegacyAutoDetectOverrides();
+    }
+  });
+
   ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id) => {
     const componentId = await workspace.resolveComponentId(id);
     // We call here directly workspace.scope.get instead of workspace.get because part of the workspace get is loading consumer component
