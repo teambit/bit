@@ -134,12 +134,13 @@ export default async function provideWorkspace(
     }
   );
 
-  LegacyDependencyResolver.registerOnComponentAutoDetectConfigMergeGetter(async (id: BitId) => {
+  LegacyDependencyResolver.registerOnComponentAutoDetectConfigMergeGetter((id: BitId) => {
     const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
     if (depsDataOfMergeConfig) {
       const policy = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, 'auto');
       return policy.toLegacyAutoDetectOverrides();
     }
+    return undefined;
   });
 
   ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id) => {
