@@ -469,7 +469,10 @@ export class IsolatorMain {
       components.map(async (component) => {
         const capsule = capsuleList.getCapsule(component.id);
         if (!capsule) return;
-        const scope = (await CapsuleList.capsuleUsePreviouslySavedDists(component)) ? legacyScope : undefined;
+        const scope =
+          (await CapsuleList.capsuleUsePreviouslySavedDists(component)) || opts?.populateArtifactsFromParent
+            ? legacyScope
+            : undefined;
         const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(component, allIds, scope, opts);
         await dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
       })
@@ -707,6 +710,7 @@ export class IsolatorMain {
   ): Promise<AbstractVinyl[]> {
     const legacyComp: ConsumerComponent = component.state._consumer;
     if (!legacyScope) {
+      if (fetchParentArtifacts) throw new Error(`unable to fetch from parent, the legacyScope was not provided`);
       // when capsules are written via the workspace, do not write artifacts, they get created by
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return [];
@@ -718,7 +722,9 @@ export class IsolatorMain {
     const artifactFilesToFetch = async () => {
       if (fetchParentArtifacts) {
         const parent = component.head?.parents[0];
-        const compParent = await legacyScope.getConsumerComponent(legacyComp.id.changeVersion(parent?.toString()));
+        if (!parent)
+          throw new Error(`unable to fetch artifacts from parent. parent is missing for ${component.id.toString()}`);
+        const compParent = await legacyScope.getConsumerComponent(legacyComp.id.changeVersion(parent.toString()));
         return getArtifactFilesExcludeExtension(compParent.extensions, 'teambit.pkg/pkg');
       }
       const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];
