@@ -1310,7 +1310,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         // so we don't need to really modify the version
         // also the version here might have a range (^ or ~ for example) so we can't
         // just put it as is, as it is not valid for component deps to have range
-        if (pkgVal !== MANUALLY_REMOVE_DEPENDENCY && !existsInCompsDeps && !existsInCompsDevDeps) {
+        if (pkgVal !== MANUALLY_REMOVE_DEPENDENCY) {
           this.allPackagesDependencies[key][pkgName] = pkgVal;
         }
       }, autoDetectOverrides[field]);
