@@ -106,6 +106,29 @@ describe('custom env', function () {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MultipleEnvs.name);
     });
   });
+  describe('change an env after tag2 and then change it back to the custom-env in the workspace', () => {
+    let envId;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setPackageManager();
+      const envName = helper.env.setCustomEnv();
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.fixtures.populateComponents(1, false);
+      helper.command.setEnv('comp1', envId);
+      helper.command.compile();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      const newEnvId = 'teambit.react/react';
+      helper.command.setEnv('comp1', newEnvId);
+      helper.command.setEnv('comp1', envId);
+    });
+    // previous bug was showing the custom-env with minus in .bitmap and then again with an empty object, causing the
+    // env to fallback to node.
+    it('should have the correct env', () => {
+      const env = helper.env.getComponentEnv('comp1');
+      expect(env).to.include(envId);
+    });
+  });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('custom env installed as a package', () => {
     let envId;
     let envName;

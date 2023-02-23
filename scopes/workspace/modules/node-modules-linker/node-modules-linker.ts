@@ -3,6 +3,7 @@ import glob from 'glob';
 import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
+import { linkPkgsToBitRoots } from '@teambit/bit-roots';
 import { BitId } from '@teambit/legacy-bit-id';
 import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy/dist/constants';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
@@ -12,11 +13,11 @@ import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { first } from '@teambit/legacy/dist/utils';
 import getNodeModulesPathOfComponent from '@teambit/legacy/dist/utils/bit/component-node-modules-path';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { changeCodeFromRelativeToModulePaths } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
 import Symlink from '@teambit/legacy/dist/links/symlink';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { Workspace } from '@teambit/workspace';
 import { snapToSemver } from '@teambit/component-package-version';
 import { Component } from '@teambit/component';
@@ -42,21 +43,25 @@ export default class NodeModuleLinker {
     this.dataToPersist = new DataToPersist();
   }
   async link(): Promise<NodeModulesLinksResult[]> {
+    this.components = this.components.filter((component) => this.bitMap.getComponentIfExist(component.id._legacy));
     const links = await this.getLinks();
     const linksResults = this.getLinksResults();
-    if (this.consumer) links.addBasePath(this.consumer.getPath());
+    const workspacePath = this.consumer ? this.consumer.getPath() : undefined;
+    if (workspacePath) links.addBasePath(workspacePath);
     await links.persistAllToFS();
     await this.consumer?.componentFsCache.deleteAllDependenciesDataCache();
+    if (workspacePath) {
+      await linkPkgsToBitRoots(
+        workspacePath,
+        this.components.map((comp) => componentIdToPackageName(comp.state._consumer))
+      );
+    }
     return linksResults;
   }
   async getLinks(): Promise<DataToPersist> {
     this.dataToPersist = new DataToPersist();
     await pMapSeries(this.components, async (component) => {
       const componentId = component.id.toString();
-      if (!this.bitMap.getComponentIfExist(component.id._legacy)) {
-        logger.debug(`skip linking component to node_modules: ${componentId}. it's not part of the workspace`);
-        return;
-      }
       logger.debug(`linking component to node_modules: ${componentId}`);
       await this._populateComponentsLinks(component);
     });
@@ -178,7 +183,7 @@ export default class NodeModuleLinker {
     const customResolvedData = component.dependencies.getCustomResolvedData();
     if (!R.isEmpty(customResolvedData)) {
       // filter out packages that are actually symlinks to dependencies
-      Object.keys(customResolvedData).forEach((importSource) => dirsToFilter.push(first(importSource.split('/'))));
+      Object.keys(customResolvedData).forEach((importSource) => dirsToFilter.push(importSource.split('/')[0]));
     }
     const dirs = dirsToFilter.length ? unfilteredDirs.filter((dir) => !dirsToFilter.includes(dir)) : unfilteredDirs;
     if (!dirs.length) return [];

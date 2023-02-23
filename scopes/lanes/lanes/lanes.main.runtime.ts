@@ -50,6 +50,7 @@ import { LaneSwitcher } from './switch-lanes';
 import { createLane, createLaneInScope, throwForInvalidLaneName } from './create-lane';
 import { LanesCreateRoute } from './lanes.create.route';
 import { LanesDeleteRoute } from './lanes.delete.route';
+import { LanesRestoreRoute } from './lanes.restore.route';
 
 export { Lane };
 
@@ -479,6 +480,17 @@ export class LanesMain {
   }
 
   /**
+   * when deleting a lane object, it is sent into the "trash" directory in the scope.
+   * this method restores it and put it back in the "objects" directory.
+   * as an argument, it needs a hash. the reason for not supporting lane-id is because the trash may have multiple
+   * lanes with the same lane-id but different hashes.
+   */
+  async restoreLane(laneHash: string) {
+    const ref = Ref.from(laneHash);
+    await this.scope.legacyScope.objects.restoreFromTrash([ref]);
+  }
+
+  /**
    * switch to a different local or remote lane.
    * switching to a remote lane also imports and writes the components of that remote lane.
    * by default, only the components existing on the workspace will be imported from that lane, unless the "getAll"
@@ -813,6 +825,10 @@ export class LanesMain {
     return '/lanes/delete';
   }
 
+  get restoreRoutePath() {
+    return '/lanes/restore';
+  }
+
   static slots = [];
   static dependencies = [
     CLIAspect,
@@ -886,7 +902,11 @@ export class LanesMain {
     ];
     cli.register(laneCmd, switchCmd);
     graphql.register(lanesSchema(lanesMain));
-    express.register([new LanesCreateRoute(lanesMain, logger), new LanesDeleteRoute(lanesMain, logger)]);
+    express.register([
+      new LanesCreateRoute(lanesMain, logger),
+      new LanesDeleteRoute(lanesMain, logger),
+      new LanesRestoreRoute(lanesMain, logger),
+    ]);
     return lanesMain;
   }
 }

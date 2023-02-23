@@ -44,4 +44,9 @@ export interface DevServer {
    * return the dev server version.
    */
   version?(): string;
+
+  /**
+   * Support dev server configuration properties
+   */
+  [key: string]: any;
 }

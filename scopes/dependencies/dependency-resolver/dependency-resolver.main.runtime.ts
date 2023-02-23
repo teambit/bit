@@ -2,6 +2,7 @@ import mapSeries from 'p-map-series';
 import { parse } from 'comment-json';
 import { MainRuntime } from '@teambit/cli';
 import { getAllCoreAspectsIds } from '@teambit/bit';
+import { getRelativeRootComponentDir } from '@teambit/bit-roots';
 import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent, ComponentID } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
@@ -32,7 +33,7 @@ import fs from 'fs-extra';
 import { BitId } from '@teambit/legacy-bit-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
-import { PeerDependencyRules } from '@pnpm/types';
+import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
@@ -372,6 +373,12 @@ export class DependencyResolverMain {
     return Boolean(this.config.rootComponents);
   }
 
+  nodeLinker(): 'hoisted' | 'isolated' {
+    if (this.config.nodeLinker) return this.config.nodeLinker;
+    if (this.config.packageManager === 'teambit.dependencies/pnpm') return 'isolated';
+    return 'hoisted';
+  }
+
   linkCoreAspects(): boolean {
     return this.config.linkCoreAspects ?? DependencyResolverMain.defaultConfig.linkCoreAspects;
   }
@@ -581,12 +588,13 @@ export class DependencyResolverMain {
    * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
    */
   getRuntimeModulePath(component: Component) {
-    const modulePath = this.getModulePath(component);
     if (!this.hasRootComponents()) {
+      const modulePath = this.getModulePath(component);
       return modulePath;
     }
     const pkgName = this.getPackageName(component);
-    return join(modulePath, 'node_modules', pkgName);
+    const envId = this.envs.getEnvId(component);
+    return join(getRelativeRootComponentDir(envId), 'node_modules', pkgName);
   }
 
   /**
@@ -1480,13 +1488,6 @@ export class DependencyResolverMain {
       const workspacePolicy = dependencyResolver.getWorkspacePolicy();
       return workspacePolicy.toManifest();
     });
-    DependencyResolver.registerOnComponentAutoDetectOverridesGetter(
-      async (configuredExtensions: ExtensionDataList, id: BitId, legacyFiles: SourceFile[]) => {
-        const policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
-        return policy.toLegacyAutoDetectOverrides();
-      }
-    );
-
     DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId, files: SourceFile[]) => {
       const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id, files);
       if (!envPolicy) return undefined;
@@ -1524,6 +1525,14 @@ export class DependencyResolverMain {
       return packageManager.getInjectedDirs(rootDir, componentDir, packageName);
     }
     return [];
+  }
+
+  getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    if (!packageManager) {
+      throw new PackageManagerNotFound(this.config.packageManager);
+    }
+    return packageManager.getWorkspaceDepsOfBitRoots(manifests);
   }
 }
 

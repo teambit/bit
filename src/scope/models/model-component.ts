@@ -1,5 +1,5 @@
 import { clone, equals, forEachObjIndexed } from 'ramda';
-import { isEmpty } from 'lodash';
+import { forEach, isEmpty, pickBy, mapValues } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
@@ -22,7 +22,7 @@ import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
-import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
+import { getStringifyArgs, sha1 } from '../../utils';
 import findDuplications from '../../utils/array/find-duplications';
 import ComponentObjects from '../component-objects';
 import { SnapsDistance } from '../component-ops/snaps-distance';
@@ -306,7 +306,9 @@ export default class Component extends BitObject {
           return LaneId.from(DEFAULT_LANE, this.scope as string);
         };
         const remoteToCheck = getRemoteToCheck();
-        this.laneHeadRemote = await repo.remoteLanes.getRef(remoteToCheck, this.toBitId());
+        // if no remote-ref was found, because it's checked out to a lane, it's safe to assume that
+        // this.head should be on the original-remote. hence, FetchMissingHistory will retrieve it on lane-remote
+        this.laneHeadRemote = (await repo.remoteLanes.getRef(remoteToCheck, this.toBitId())) || this.head;
       }
       // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
       this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
@@ -330,11 +332,11 @@ export default class Component extends BitObject {
     local: boolean // for 'bit import' the local is true, for 'bit export' the local is false
   ): { thisComponentVersions: Versions; otherComponentVersions: Versions } {
     const otherLocalVersion = otherComponent.getLocalVersions();
-    const otherComponentVersions = filterObject(
+    const otherComponentVersions = pickBy(
       otherComponent.versions,
       (val, key) => Object.keys(this.versions).includes(key) && (!local || otherLocalVersion.includes(key))
     );
-    const thisComponentVersions = filterObject(
+    const thisComponentVersions = pickBy(
       this.versions,
       (val, key) => Object.keys(otherComponentVersions).includes(key) && (!local || otherLocalVersion.includes(key))
     );
@@ -354,7 +356,7 @@ export default class Component extends BitObject {
   }
 
   isEmpty() {
-    return empty(this.versions) && !this.hasHead();
+    return isEmpty(this.versions) && !this.hasHead();
   }
 
   /**
@@ -364,7 +366,7 @@ export default class Component extends BitObject {
   getHeadRegardlessOfLaneAsTagOrHash(returnVersionZeroForNoHead = false): string {
     const head = this.getHeadRegardlessOfLane();
     if (!head) {
-      if (!empty(this.versions))
+      if (!isEmpty(this.versions))
         throw new Error(`error: ${this.id()} has tags but no head, it might be originated from legacy`);
       if (returnVersionZeroForNoHead) return VERSION_ZERO;
       throw new Error(`getHeadRegardlessOfLaneAsTagOrHash() failed finding a head for ${this.id()}`);
@@ -397,12 +399,12 @@ export default class Component extends BitObject {
   }
 
   latestVersion(): string {
-    if (empty(this.versions)) return VERSION_ZERO;
+    if (isEmpty(this.versions)) return VERSION_ZERO;
     return getLatestVersion(this.listVersions());
   }
 
   latestVersionIfExist(): string | undefined {
-    if (empty(this.versions)) return undefined;
+    if (isEmpty(this.versions)) return undefined;
     return getLatestVersion(this.listVersions());
   }
 
@@ -437,7 +439,7 @@ export default class Component extends BitObject {
    * @memberof Component
    */
   latestExisting(repository: Repository): string {
-    if (empty(this.versions)) return VERSION_ZERO;
+    if (isEmpty(this.versions)) return VERSION_ZERO;
     const versions = this.listVersions('ASC');
     let version = null;
     let versionStr = null;
@@ -1105,13 +1107,13 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return Component.from({
       name: rawComponent.box ? `${rawComponent.box}/${rawComponent.name}` : rawComponent.name,
       scope: rawComponent.scope,
-      versions: mapObject(rawComponent.versions, (val) => Ref.from(val)),
+      versions: mapValues(rawComponent.versions as Record<string, string>, (val) => Ref.from(val)),
       lang: rawComponent.lang,
       deprecated: rawComponent.deprecated,
       bindingPrefix: rawComponent.bindingPrefix,
       local: rawComponent.local,
       state: rawComponent.state,
-      orphanedVersions: mapObject(rawComponent.orphanedVersions || {}, (val) => Ref.from(val)),
+      orphanedVersions: mapValues(rawComponent.orphanedVersions || {}, (val) => Ref.from(val)),
       scopesList: rawComponent.remotes,
       head: rawComponent.head ? Ref.from(rawComponent.head) : undefined,
       schema: rawComponent.schema || (rawComponent.head ? SchemaName.Harmony : SchemaName.Legacy),

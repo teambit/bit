@@ -1,4 +1,5 @@
 import { compact } from 'lodash';
+import pFilter from 'p-filter';
 import R from 'ramda';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { BitId, BitIds } from '../../bit-id';
@@ -9,7 +10,6 @@ import { Lane } from '../../scope/models';
 import ModelComponent from '../../scope/models/model-component';
 import Scope from '../../scope/scope';
 import { fetchRemoteVersions } from '../../scope/scope-remotes';
-import { filterAsync } from '../../utils';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 import BitMap from '../bit-map/bit-map';
 import ComponentMap from '../bit-map/component-map';
@@ -375,7 +375,7 @@ export default class ComponentsList {
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {
     const fromBitMap = this.bitMap.getAllBitIds();
     const modelComponents = await this.getModelComponents();
-    const pendingExportComponents = await filterAsync(modelComponents, async (component: ModelComponent) => {
+    const pendingExportComponents = await pFilter(modelComponents, async (component: ModelComponent) => {
       if (!fromBitMap.searchWithoutVersion(component.toBitId())) {
         // it's not on the .bitmap only in the scope, as part of the out-of-sync feature, it should
         // be considered as staged and should be exported. same for soft-removed components, which are on scope only.

@@ -18,6 +18,7 @@ import {
   DependenciesRemoveCmd,
   DependenciesResetCmd,
   DependenciesSetCmd,
+  DependenciesUnsetCmd,
   RemoveDependenciesFlags,
   SetDependenciesFlags,
 } from './dependencies-cmd';
@@ -77,7 +78,8 @@ export class DependenciesMain {
   async removeDependency(
     componentPattern: string,
     packages: string[],
-    options: RemoveDependenciesFlags = {}
+    options: RemoveDependenciesFlags = {},
+    removeOnlyIfExists = false // unset
   ): Promise<RemoveDependencyResult[]> {
     const compIds = await this.workspace.idsByPattern(componentPattern);
     const results = await Promise.all(
@@ -111,6 +113,7 @@ export class DependenciesMain {
             if (existsInSpecificConfig === '-') return null;
             delete newDepResolverConfig.policy[depField][depName];
           } else {
+            if (removeOnlyIfExists) return null;
             set(newDepResolverConfig, ['policy', depField, depName], '-');
           }
           return `${depName}@${dependency.version}`;
@@ -217,6 +220,7 @@ export class DependenciesMain {
     depsCmd.commands = [
       new DependenciesGetCmd(),
       new DependenciesRemoveCmd(depsMain),
+      new DependenciesUnsetCmd(depsMain),
       new DependenciesDebugCmd(),
       new DependenciesSetCmd(depsMain),
       new DependenciesResetCmd(depsMain),

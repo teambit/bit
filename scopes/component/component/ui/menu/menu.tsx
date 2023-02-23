@@ -116,7 +116,7 @@ export function VersionRelatedDropdowns({
 }: {
   component: ComponentModel;
   consumeMethods?: ConsumeMethodSlot;
-  className?: string,
+  className?: string;
   host: string;
 }) {
   const location = useLocation();

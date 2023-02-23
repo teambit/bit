@@ -8,7 +8,7 @@ export type {
   ComponentPreviewSize,
   PreviewStrategyName,
   PreviewFiles,
-  ComponentPreviewMetaData
+  ComponentPreviewMetaData,
 } from './preview.main.runtime';
 export type { PreviewPreview, RenderingContextOptions, RenderingContextProvider } from './preview.preview.runtime';
 export { PreviewDefinition } from './preview-definition';

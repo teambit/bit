@@ -321,8 +321,8 @@ export class MergingMain {
     if (!currentLane && otherLane) {
       await this.importer.importObjectsFromMainIfExist(otherLane.toBitIds().toVersionLatest());
     }
-    const componentStatusBeforeMergeAttempt = await Promise.all(
-      bitIds.map((id) => this.getComponentStatusBeforeMergeAttempt(id, currentLane, options))
+    const componentStatusBeforeMergeAttempt = await mapSeries(bitIds, (id) =>
+      this.getComponentStatusBeforeMergeAttempt(id, currentLane, options)
     );
     const toImport = componentStatusBeforeMergeAttempt
       .map((compStatus) => {
@@ -562,7 +562,8 @@ other:   ${otherLaneHead.toString()}`);
       baseComponent.extensions,
       otherComponent.extensions,
       currentLabel,
-      otherLabel
+      otherLabel,
+      this.logger
     );
     const configMergeResult = configMerger.merge();
 
@@ -642,8 +643,12 @@ other:   ${otherLaneHead.toString()}`);
     }
     const remoteId = id.changeVersion(remoteHead.toString());
     const idToLoad = !mergeResults || mergeStrategy === MergeOptions.theirs ? remoteId : id;
-    const componentWithDependencies = await consumer.loadComponentWithDependenciesFromModel(idToLoad);
-    const files = componentWithDependencies.component.files;
+    const legacyComponent = await consumer.loadComponentFromModelImportIfNeeded(idToLoad);
+    if (mergeResults && mergeStrategy === MergeOptions.theirs) {
+      // in this case, we don't want to update .bitmap with the version of the remote. we want to keep the same version
+      legacyComponent.version = id.version;
+    }
+    const files = legacyComponent.files;
     files.forEach((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
@@ -652,21 +657,21 @@ other:   ${otherLaneHead.toString()}`);
     if (mergeResults) {
       // update files according to the merge results
       const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(files, mergeResults, mergeStrategy);
-      componentWithDependencies.component.files = modifiedFiles;
+      legacyComponent.files = modifiedFiles;
       filesStatus = { ...filesStatus, ...modifiedStatus };
     }
 
     const manyComponentsWriterOpts = {
       consumer,
-      componentsWithDependencies: [componentWithDependencies],
+      components: [legacyComponent],
       skipDependencyInstallation: true,
       writeConfig: false, // @todo: should write if config exists before, needs to figure out how to do it.
     };
     await this.componentWriter.writeMany(manyComponentsWriterOpts);
 
     if (configMergeResult) {
-      if (!componentWithDependencies.component.writtenPath) {
-        throw new Error(`componentWithDependencies.component.writtenPath is missing for ${id.toString()}`);
+      if (!legacyComponent.writtenPath) {
+        throw new Error(`component.writtenPath is missing for ${id.toString()}`);
       }
       const successfullyMergedConfig = configMergeResult.getSuccessfullyMergedConfig();
       if (successfullyMergedConfig) {

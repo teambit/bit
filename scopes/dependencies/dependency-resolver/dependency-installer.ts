@@ -42,6 +42,7 @@ export type GetComponentManifestsOptions = {
   rootPolicy: WorkspacePolicy;
   rootDir: string;
   resolveVersionsFromDependenciesOnly?: boolean;
+  referenceLocalPackages?: boolean;
 } & Pick<
   PackageManagerInstallOptions,
   'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents' | 'copyPeerToRuntimeOnRoot' | 'installPeersFromEnvs'
@@ -104,6 +105,7 @@ export class DependencyInstaller {
       rootPolicy,
       rootDir: finalRootDir,
       resolveVersionsFromDependenciesOnly: options.resolveVersionsFromDependenciesOnly,
+      referenceLocalPackages: packageManagerOptions.rootComponentsForCapsules,
     });
     return this.installComponents(
       finalRootDir,
@@ -199,6 +201,7 @@ export class DependencyInstaller {
     copyPeerToRuntimeOnRoot,
     installPeersFromEnvs,
     resolveVersionsFromDependenciesOnly,
+    referenceLocalPackages,
   }: GetComponentManifestsOptions) {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
@@ -206,6 +209,7 @@ export class DependencyInstaller {
       dedupe,
       dependencyFilterFn,
       resolveVersionsFromDependenciesOnly,
+      referenceLocalPackages,
     };
     const workspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
       undefined,

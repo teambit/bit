@@ -14,6 +14,7 @@ type InstallCmdOptions = {
   updateExisting: boolean;
   savePrefix: string;
   addMissingPeers: boolean;
+  noOptional: boolean;
 };
 
 export default class InstallCmd implements Command {
@@ -38,6 +39,7 @@ export default class InstallCmd implements Command {
     ['', 'skip-import [skipImport]', 'do not import bit objects post installation'],
     ['', 'skip-compile [skipCompile]', 'do not compile components'],
     ['', 'add-missing-peers [addMissingPeers]', 'install all missing peer dependencies'],
+    ['', 'no-optional [noOptional]', 'do not install optional dependencies (works with pnpm only)'],
   ] as CommandOptions;
 
   constructor(
@@ -71,6 +73,7 @@ export default class InstallCmd implements Command {
       savePrefix: options.savePrefix,
       addMissingPeers: options.addMissingPeers,
       compile: !options.skipCompile,
+      includeOptionalDeps: !options.noOptional,
     };
     const components = await this.install.install(packages, installOpts);
     const endTime = Date.now();

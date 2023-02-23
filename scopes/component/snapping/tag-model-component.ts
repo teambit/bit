@@ -195,6 +195,7 @@ export async function tagModelComponent({
   incrementBy,
   packageManagerConfigRootDir,
   dependencyResolver,
+  copyLogFromPreviousSnap = false,
 }: {
   workspace?: Workspace;
   scope: ScopeMain;
@@ -204,6 +205,7 @@ export async function tagModelComponent({
   ids: BitIds;
   tagDataPerComp?: TagDataPerComp[];
   skipBuildPipeline?: boolean;
+  copyLogFromPreviousSnap?: boolean;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
   incrementBy?: number;
@@ -294,7 +296,7 @@ export async function tagModelComponent({
   // go through all dependencies and update their versions
   updateDependenciesVersions(allComponentsToTag, dependencyResolver);
 
-  await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId);
+  await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId, copyLogFromPreviousSnap);
   // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
   const unmergedComps = workspace ? await workspace.listComponentsDuringMerge() : [];
   let stagedConfig;
@@ -431,7 +433,8 @@ async function addLogToComponents(
   autoTagComps: ConsumerComponent[],
   persist: boolean,
   message: string,
-  messagePerComponent: MessagePerComponent[]
+  messagePerComponent: MessagePerComponent[],
+  copyLogFromPreviousSnap = false
 ) {
   const username = await globalConfig.get(CFG_USER_NAME_KEY);
   const bitCloudUsername = await getBitCloudUsername();
@@ -439,6 +442,17 @@ async function addLogToComponents(
   const getLog = (component: ConsumerComponent): Log => {
     const nextVersion = persist ? component.componentMap?.nextVersion : null;
     const msgFromEditor = messagePerComponent.find((item) => item.id.isEqualWithoutVersion(component.id))?.msg;
+    if (copyLogFromPreviousSnap) {
+      const currentLog = component.log;
+      if (!currentLog) {
+        throw new Error(
+          `addLogToComponents is set  copyLogFromPreviousSnap: true, but it is unable to find log in the previous snap`
+        );
+      }
+      currentLog.message = msgFromEditor || message || currentLog.message;
+      return currentLog;
+    }
+
     return {
       username: nextVersion?.username || bitCloudUsername || username,
       email: nextVersion?.email || email,

@@ -1,4 +1,5 @@
 import { groupBy, prop } from 'ramda';
+import { forEach } from 'lodash';
 import pMap from 'p-map';
 import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '../api/scope/lib/fetch';
 import { BitId } from '../bit-id';
@@ -7,7 +8,7 @@ import logger from '../logger/logger';
 import { ScopeNotFound } from '../scope/exceptions';
 import DependencyGraph from '../scope/graph/scope-graph';
 import Scope from '../scope/scope';
-import { flatten, forEach, prependBang } from '../utils';
+import { prependBang } from '../utils';
 import { PrimaryOverloaded } from './exceptions';
 import Remote from './remote';
 import remoteResolver from './remote-resolver/remote-resolver';
@@ -114,7 +115,7 @@ ${failedScopesErr.join('\n')}`);
     );
 
     const components = await Promise.all(promises);
-    const flattenComponents = flatten(components);
+    const flattenComponents = components.flat();
     return flattenComponents.map((componentId) => BitId.parse(componentId, true));
   }
 

@@ -19,7 +19,7 @@ import {
 } from '../constants';
 import GeneralError from '../error/general-error';
 import logger from '../logger/logger';
-import { ComponentWithDependencies, Scope } from '../scope';
+import { Scope } from '../scope';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
@@ -307,7 +307,7 @@ export default class Consumer {
   /**
    * For legacy, it loads all the dependencies. For Harmony, it's not needed.
    */
-  async loadComponentWithDependenciesFromModel(id: BitId, throwIfNotExist = true): Promise<ComponentWithDependencies> {
+  async loadComponentFromModelImportIfNeeded(id: BitId, throwIfNotExist = true): Promise<Component> {
     const scopeComponentsImporter = this.scope.scopeImporter;
     const getModelComponent = async (): Promise<ModelComponent> => {
       if (throwIfNotExist) return this.scope.getModelComponent(id);
@@ -318,17 +318,12 @@ export default class Consumer {
     };
     const modelComponent = await getModelComponent();
     if (!id.version) {
-      throw new TypeError('consumer.loadComponentWithDependenciesFromModel, version is missing from the id');
+      throw new TypeError('consumer.loadComponentFromModelImportIfNeeded, version is missing from the id');
     }
 
     const compVersion = modelComponent.toComponentVersion(id.version);
     const consumerComp = await compVersion.toConsumer(this.scope.objects);
-    return new ComponentWithDependencies({
-      component: consumerComp,
-      dependencies: [],
-      devDependencies: [],
-      extensionDependencies: [],
-    });
+    return consumerComp;
   }
 
   async loadComponent(id: BitId, loadOpts?: ComponentLoadOptions): Promise<Component> {

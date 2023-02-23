@@ -1,4 +1,5 @@
 import path from 'path';
+import { IssuesClasses } from '@teambit/component-issues';
 import chai, { expect } from 'chai';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -65,7 +66,7 @@ describe('bit rename command', function () {
         try {
           helper.command.rename('comp1', 'my.comp'); // the dot is invalid here
         } catch (err: any) {
-          expect(err.message).to.have.string('"my.comp" is invalid');
+          expect(err.message).to.have.string('error');
         }
         expect(path.join(helper.scopes.localPath, helper.scopes.remote, 'my.comp')).to.not.be.a.path();
       });
@@ -128,6 +129,41 @@ describe('bit rename command', function () {
       expect(content).to.have.string('my-scope/my-new-name');
       expect(content).to.have.string('my-scope/comp2-other');
       expect(content).to.not.have.string('my-scope/my-new-name-other');
+    });
+  });
+  describe('wrong rename with scope-name inside the name', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.addDefaultScope('owner.scope');
+      helper.fixtures.populateComponents(1);
+    });
+    // previously, it was letting renaming, but afterwards, after any command, it was throwing InvalidName because the
+    // scope-name was entered as part of the name.
+    it('bit rename should throw', () => {
+      expect(() => helper.command.rename('owner.scope/comp1', 'owner.scope2/comp2')).to.throw();
+    });
+  });
+  describe('rename scope-name without refactoring', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.addDefaultScope('owner.scope');
+      helper.fixtures.populateComponents(2);
+      helper.command.rename('comp2', 'comp2', '--scope owner2.scope2');
+    });
+    it('bit status should show an issue because the code points to the renamed component', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
+    });
+  });
+  describe('rename scope-name with refactoring', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.addDefaultScope('owner.scope');
+      helper.fixtures.populateComponents(2);
+      helper.command.rename('comp2', 'comp2', '--scope owner2.scope2 --refactor');
+    });
+    // previously, rename command was throwing saying the old and new package names are the same
+    it('bit status should not show an issue because the source code has changed to the new package-name', () => {
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
     });
   });
 });

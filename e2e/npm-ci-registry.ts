@@ -232,4 +232,8 @@ module.exports = (scopeName) => {
       throw new Error('expect package.json name to start with "@ci" in order to publish it to @ci scope');
     }
   }
+
+  getRegistryUrl() {
+    return this.ciRegistry;
+  }
 }

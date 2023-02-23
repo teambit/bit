@@ -2,8 +2,8 @@ import { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain, CommandList } from '@teambit/cli';
-import type { ComponentMain, Component } from '@teambit/component';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { ComponentMain } from '@teambit/component';
+import { DependencyResolverMain, VariantPolicy } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony, SlotRegistry } from '@teambit/harmony';
@@ -16,18 +16,13 @@ import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { BitId } from '@teambit/legacy-bit-id';
+import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { DependencyResolver as LegacyDependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
-import {
-  OnComponentLoad,
-  OnComponentAdd,
-  OnComponentChange,
-  OnComponentRemove,
-  OnMultipleComponentsAdd,
-} from './on-component-events';
+import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
-import { WatchCommand } from './watch/watch.cmd';
-import { Watcher, WatchOptions } from './watch/watcher';
 import { Workspace } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
@@ -64,11 +59,6 @@ export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
 
 export type OnComponentRemoveSlot = SlotRegistry<OnComponentRemove>;
 
-export type OnMultipleComponentsAddSlot = SlotRegistry<OnMultipleComponentsAdd>;
-
-export type OnPreWatch = (components: Component[], watchOpts: WatchOptions) => Promise<void>;
-export type OnPreWatchSlot = SlotRegistry<OnPreWatch>;
-
 export default async function provideWorkspace(
   [
     pubsub,
@@ -86,20 +76,11 @@ export default async function provideWorkspace(
     envs,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
-  [
-    onComponentLoadSlot,
-    onComponentChangeSlot,
-    onComponentAddSlot,
-    onComponentRemoveSlot,
-    onMultipleComponentsAddSlot,
-    onPreWatchSlot,
-  ]: [
+  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot, onComponentRemoveSlot]: [
     OnComponentLoadSlot,
     OnComponentChangeSlot,
     OnComponentAddSlot,
-    OnComponentRemoveSlot,
-    OnMultipleComponentsAddSlot,
-    OnPreWatchSlot
+    OnComponentRemoveSlot
   ],
   harmony: Harmony
 ) {
@@ -125,8 +106,6 @@ export default async function provideWorkspace(
     envs,
     onComponentAddSlot,
     onComponentRemoveSlot,
-    onMultipleComponentsAddSlot,
-    onPreWatchSlot,
     graphql
   );
 
@@ -145,6 +124,18 @@ export default async function provideWorkspace(
       const id = await workspace.resolveComponentId(legacyComponent.id);
       const newComponent = await workspace.get(id, legacyComponent, true, true, opts);
       return newComponent.state._consumer;
+    }
+  );
+
+  LegacyDependencyResolver.registerOnComponentAutoDetectOverridesGetter(
+    async (configuredExtensions: ExtensionDataList, id: BitId, legacyFiles: SourceFile[]) => {
+      let policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
+      const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
+      if (depsDataOfMergeConfig) {
+        const policiesFromMergeConfig = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, 'auto');
+        policy = VariantPolicy.mergePolices([policy, policiesFromMergeConfig]);
+      }
+      return policy.toLegacyAutoDetectOverrides();
     }
   );
 
@@ -184,13 +175,7 @@ export default async function provideWorkspace(
     new CapsuleCreateCmd(workspace, isolator),
     new CapsuleDeleteCmd(isolator, workspace),
   ];
-  const watcher = new Watcher(workspace, pubsub);
-  const commands: CommandList = [
-    new EjectConfCmd(workspace),
-    capsuleCmd,
-    new WatchCommand(pubsub, logger, watcher),
-    new UseCmd(workspace),
-  ];
+  const commands: CommandList = [new EjectConfCmd(workspace), capsuleCmd, new UseCmd(workspace)];
 
   commands.push(new PatternCommand(workspace));
   cli.register(...commands);
@@ -207,7 +192,7 @@ export default async function provideWorkspace(
     const componentIds = await workspace.resolveMultipleComponentIds(aspects);
     componentIds.forEach((id) => {
       workspace.clearComponentCache(id);
-    }); 
+    });
   });
 
   // add sub-commands "set" and "unset" to envs command.
