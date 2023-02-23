@@ -163,6 +163,7 @@ export async function install(
   proxyConfig: PackageManagerProxyConfig = {},
   networkConfig: PackageManagerNetworkConfig = {},
   options: {
+    updateAll?: boolean;
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
     rootComponents?: boolean;
@@ -240,6 +241,8 @@ export async function install(
       ignoreMissing: ['*'],
       ...options?.peerDependencyRules,
     },
+    update: options.updateAll,
+    depth: options.updateAll ? Infinity : 0,
   };
 
   const stopReporting = initDefaultReporter({

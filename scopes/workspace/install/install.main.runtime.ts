@@ -67,6 +67,7 @@ export type WorkspaceInstallOptions = {
   savePrefix?: string;
   compile?: boolean;
   includeOptionalDeps?: boolean;
+  updateAll?: boolean;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -200,6 +201,7 @@ export class InstallMain {
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       rootComponents: hasRootComponents,
       nodeLinker: this.dependencyResolver.nodeLinker(),
+      updateAll: options?.updateAll,
     };
     // TODO: pass get install options
     const installer = this.dependencyResolver.getInstaller({});

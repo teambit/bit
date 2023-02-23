@@ -403,7 +403,7 @@ export class DependencyResolverMain {
   }
 
   getSavePrefix(): string {
-    return this.config.savePrefix || '';
+    return this.config.savePrefix || '^';
   }
 
   getVersionWithSavePrefix(version: string, overridePrefix?: string): string {

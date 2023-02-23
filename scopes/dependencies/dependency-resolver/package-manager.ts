@@ -49,6 +49,8 @@ export type PackageManagerInstallOptions = {
   peerDependencyRules?: PeerDependencyRules;
 
   includeOptionalDeps?: boolean;
+
+  updateAll?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
