@@ -43,7 +43,7 @@ import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { ComponentID } from '@teambit/component-id';
-import { BitObject, Repository } from '@teambit/legacy/dist/scope/objects';
+import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
 import {
   ArtifactFiles,
   ArtifactSource,
@@ -708,7 +708,13 @@ there are matching among unmodified components thought. consider using --unmodif
         this.logger.debug(
           `sources.addSource, unmerged component "${component.name}". adding an unrelated entry ${unmergedComponent.head.hash}`
         );
-        version.unrelated = { head: source.previouslyUsedVersion, laneId: unmergedComponent.laneId };
+        if (!source.previouslyUsedVersion) {
+          throw new Error(
+            `source.previouslyUsedVersion must be set for ${component.name} because it's unrelated resolved.`
+          );
+        }
+        const unrelatedHead = Ref.from(source.previouslyUsedVersion);
+        version.unrelated = { head: unrelatedHead, laneId: unmergedComponent.laneId };
         version.addAsOnlyParent(unmergedComponent.head);
       } else {
         // this is adding a second parent to the version. the order is important. the first parent is coming from the current-lane.
