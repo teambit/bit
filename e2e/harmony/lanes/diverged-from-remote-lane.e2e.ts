@@ -6,6 +6,7 @@ chai.use(require('chai-fs'));
 describe('local is diverged from the remote', function () {
   this.timeout(0);
   let helper: Helper;
+  let beforeDiverge: string;
   before(() => {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -13,22 +14,47 @@ describe('local is diverged from the remote', function () {
     helper.fixtures.populateComponents(1, false);
     helper.command.snapAllComponentsWithoutBuild();
     helper.command.export();
-    const beforeDiverge = helper.scopeHelper.cloneLocalScope();
+    beforeDiverge = helper.scopeHelper.cloneLocalScope();
     helper.command.snapAllComponentsWithoutBuild('--unmodified');
     helper.command.export();
-    helper.scopeHelper.getClonedLocalScope(beforeDiverge);
-    helper.command.snapAllComponentsWithoutBuild('--unmodified');
-    helper.command.import();
   });
   after(() => {
     helper.scopeHelper.destroy();
   });
-  it('bit status should show it as merge-pending', () => {
-    const status = helper.command.statusJson();
-    expect(status.mergePendingComponents).to.have.lengthOf(1);
+  describe('snap first then import', () => {
+    before(() => {
+      helper.scopeHelper.getClonedLocalScope(beforeDiverge);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.import();
+    });
+    it('bit status should show it as merge-pending', () => {
+      const status = helper.command.statusJson();
+      expect(status.mergePendingComponents).to.have.lengthOf(1);
+    });
+    it('bit reset should not throw', () => {
+      expect(() => helper.command.untagAll()).to.not.throw();
+    });
   });
-  it('bit reset should not throw', () => {
-    expect(() => helper.command.untagAll()).to.not.throw();
+  describe('import first then snap', () => {
+    let currentSnap: string;
+    before(() => {
+      helper.scopeHelper.getClonedLocalScope(beforeDiverge);
+      currentSnap = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.import();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    // previous bug was using the head on the lane as the parent.
+    it('parent of the snap should be the previous local snap, not the remote snap', () => {
+      const cmp = helper.command.catComponent('comp1@latest');
+      const parent = cmp.parents[0];
+      expect(parent).to.equal(currentSnap);
+      const remoteSnap = helper.general.getRemoteHead('comp1', 'dev');
+      expect(parent).to.not.equal(remoteSnap);
+    });
+    it('bit status should show it as merge-pending', () => {
+      const status = helper.command.statusJson();
+      expect(status.mergePendingComponents).to.have.lengthOf(1);
+    });
   });
 });
 

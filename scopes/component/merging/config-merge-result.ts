@@ -1,16 +1,22 @@
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { compact } from 'lodash';
-import { MergeStrategyResult } from './config-merger';
+import { MergeStrategyResult, conflictIndicator, GenericConfigOrRemoved } from './config-merger';
 
 export class ConfigMergeResult {
-  constructor(readonly compIdStr: string, private results: MergeStrategyResult[]) {}
+  constructor(
+    readonly compIdStr: string,
+    private currentLabel: string,
+    private otherLabel: string,
+    private results: MergeStrategyResult[]
+  ) {}
   hasConflicts(): boolean {
     return this.results.some((result) => result.conflict);
   }
   generateMergeConflictFile(): string | null {
     const resultsWithConflict = this.results.filter((result) => result.conflict);
     if (!resultsWithConflict.length) return null;
-    const configMergeAspects = compact(resultsWithConflict.map((result) => result.conflict));
-    const configMergeFormatted = configMergeAspects.map((c) => this.formatConflict(c));
+    const allConflicts = compact(resultsWithConflict.map((result) => this.generateConflictStringPerAspect(result)));
+    const configMergeFormatted = allConflicts.map((c) => this.formatConflict(c));
     const conflictStr = `{
 ${this.concatenateConflicts(configMergeFormatted)}
 }`;
@@ -22,6 +28,66 @@ ${this.concatenateConflicts(configMergeFormatted)}
       const currObject = { [curr.id]: curr.mergedConfig };
       return { ...acc, ...currObject };
     }, {});
+  }
+
+  private generateConflictStringPerAspect(result: MergeStrategyResult): string | undefined {
+    if (!result.conflict) return undefined;
+    if (result.id === DependencyResolverAspect.id) {
+      return this.depsResolverConfigGenerator(result.conflict);
+    }
+    return this.basicConflictGenerator(result.id, result.conflict);
+  }
+
+  private depsResolverConfigGenerator(conflict: Record<string, any>): string {
+    const mergedConfigSplit = JSON.stringify({ policy: conflict }, undefined, 2).split('\n');
+    const conflictLines = mergedConfigSplit.map((line) => {
+      if (!line.includes(conflictIndicator)) return line;
+      const [, currentVal, otherVal] = line.split('::');
+      return `${'<'.repeat(7)} ${this.currentLabel}
+      "version": "${currentVal}",
+=======
+      "version": "${otherVal}",
+${'>'.repeat(7)} ${this.otherLabel}`;
+    });
+    // replace the first line with line with the id
+    conflictLines.shift();
+    conflictLines.unshift(`"${DependencyResolverAspect.id}": {`);
+    return conflictLines.join('\n');
+  }
+
+  private basicConflictGenerator(id: string, conflictObj: Record<string, any>): string {
+    const { currentConfig, otherConfig } = conflictObj;
+    let conflict: string;
+    if (currentConfig === '-') {
+      conflict = `${'<'.repeat(7)} ${this.currentLabel}
+"${id}": "-"
+=======
+"${id}": ${JSON.stringify(otherConfig, undefined, 2)}
+${'>'.repeat(7)} ${this.otherLabel}`;
+    } else if (otherConfig === '-') {
+      conflict = `${'<'.repeat(7)} ${this.currentLabel}
+"${id}": ${JSON.stringify(currentConfig, undefined, 2)}
+=======
+"${id}": "-"
+${'>'.repeat(7)} ${this.otherLabel}`;
+    } else {
+      const formatConfig = (conf: GenericConfigOrRemoved) => {
+        const confStr = JSON.stringify(conf, undefined, 2);
+        const confStrSplit = confStr.split('\n');
+        confStrSplit.shift(); // remove first {
+        confStrSplit.pop(); // remove last }
+        return confStrSplit.join('\n');
+      };
+      conflict = `"${id}": {
+${'<'.repeat(7)} ${this.currentLabel}
+${formatConfig(currentConfig)}
+=======
+${formatConfig(otherConfig)}
+${'>'.repeat(7)} ${this.otherLabel}
+}`;
+    }
+
+    return conflict;
   }
 
   private formatConflict(conflict: string) {
