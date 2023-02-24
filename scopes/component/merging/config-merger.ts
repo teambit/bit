@@ -15,16 +15,18 @@ import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/cons
 import { compact, omit, uniqBy } from 'lodash';
 import { ConfigMergeResult } from './config-merge-result';
 
-type GenericConfigOrRemoved = Record<string, any> | '-';
+export type GenericConfigOrRemoved = Record<string, any> | '-';
 
 type EnvData = { id: string; version?: string; config?: GenericConfigOrRemoved };
 
 type SerializedDependencyWithPolicy = SerializedDependency & { policy?: string; packageName?: string };
 
+export const conflictIndicator = 'CONFLICT::';
+
 export type MergeStrategyResult = {
   id: string;
   mergedConfig?: GenericConfigOrRemoved;
-  conflict?: string;
+  conflict?: Record<string, any>;
 };
 type MergeStrategyParamsWithRemoved = {
   id: string;
@@ -98,7 +100,7 @@ export class ConfigMerger {
       // exist in current but not in other
       if (baseExt) {
         // was removed on other
-        return this.basicConflictGenerator({ id, currentConfig: this.getConfig(currentExt), otherConfig: '-' });
+        return { id, conflict: { currentConfig: this.getConfig(currentExt), otherConfig: '-' } };
       }
       // exist in current but not in other and base, so it got created on current. nothing to do.
       return null;
@@ -119,14 +121,19 @@ export class ConfigMerger {
       const baseExt = this.baseAspects.findExtension(id, true);
       if (baseExt) {
         // was removed on current
-        return this.basicConflictGenerator({ id, currentConfig: '-', otherConfig: this.getConfig(otherExt) });
+        return { id, conflict: { currentConfig: '-', otherConfig: this.getConfig(otherExt) } };
       }
       // exist in other but not in current and base, so it got created on other.
       return { id, mergedConfig: this.getConfig(otherExt) };
     });
     const envResult = [this.envStrategy()] || [];
     this.logger.trace(`*** end config-merger for ${this.compIdStr} ***\n`);
-    return new ConfigMergeResult(this.compIdStr, compact([...results, ...otherAspectsNotHandledResults, ...envResult]));
+    return new ConfigMergeResult(
+      this.compIdStr,
+      this.currentLabel,
+      this.otherLabel,
+      compact([...results, ...otherAspectsNotHandledResults, ...envResult])
+    );
   }
 
   private populateEnvs() {
@@ -224,49 +231,7 @@ export class ConfigMerger {
       return { id, mergedConfig: otherConfig };
     }
     // either no baseConfig, or baseConfig is also different from both: other and local. that's a conflict.
-    const mergeStrategyConfigParams = { id, currentConfig, otherConfig, baseConfig };
-    return this.basicConflictGenerator(mergeStrategyConfigParams);
-  }
-
-  private basicConflictGenerator({
-    id,
-    currentConfig,
-    otherConfig,
-  }: MergeStrategyParamsWithRemoved): MergeStrategyResult {
-    this.logger.trace(
-      `basicConflictGenerator, aspect-id ${id}, currentConfig, ${currentConfig}, otherConfig, ${otherConfig}`
-    );
-    let conflict: string;
-    if (currentConfig === '-') {
-      conflict = `${'<'.repeat(7)} ${this.currentLabel}
-"${id}": "-"
-=======
-"${id}": ${JSON.stringify(otherConfig, undefined, 2)}
-${'>'.repeat(7)} ${this.otherLabel}`;
-    } else if (otherConfig === '-') {
-      conflict = `${'<'.repeat(7)} ${this.currentLabel}
-"${id}": ${JSON.stringify(currentConfig, undefined, 2)}
-=======
-"${id}": "-"
-${'>'.repeat(7)} ${this.otherLabel}`;
-    } else {
-      const formatConfig = (conf: GenericConfigOrRemoved) => {
-        const confStr = JSON.stringify(conf, undefined, 2);
-        const confStrSplit = confStr.split('\n');
-        confStrSplit.shift(); // remove first {
-        confStrSplit.pop(); // remove last }
-        return confStrSplit.join('\n');
-      };
-      conflict = `"${id}": {
-${'<'.repeat(7)} ${this.currentLabel}
-${formatConfig(currentConfig)}
-=======
-${formatConfig(otherConfig)}
-${'>'.repeat(7)} ${this.otherLabel}
-}`;
-    }
-
-    return { id, conflict };
+    return { id, conflict: { currentConfig, otherConfig, baseConfig } };
   }
 
   private depResolverStrategy(params: MergeStrategyParams): MergeStrategyResult | undefined {
@@ -347,7 +312,6 @@ ${'>'.repeat(7)} ${this.otherLabel}
       peerDependencies: [],
     };
     let hasConflict = false;
-    const conflictIndicator = 'CONFLICT::';
     const lifecycleToDepType = {
       runtime: 'dependencies',
       dev: 'devDependencies',
@@ -542,26 +506,6 @@ ${'>'.repeat(7)} ${this.otherLabel}
         addSerializedDepToPolicy(otherDep);
         return;
       }
-      // either no baseVal, or baseVal is also different from both: other and local. that's probably a conflict.
-
-      // @todo: this should be the correct way to check satisfies. currently, it doesn't work correctly because there is no policy
-      // try to resolve according to semver
-      // if (
-      //   currentDep.policy &&
-      //   otherDep.policy &&
-      //   isRange(currentDep.policy, currentDep.id) &&
-      //   isRange(otherDep.policy, otherDep.id)
-      // ) {
-      //   if (this.compIdStr.includes('teambit.dot-graph/ui/graph!')) console.log('DATA working on ', depData.id, 'POLICY');
-      //   if (semver.satisfies(currentDep.version, otherDep.policy)) {
-      //     return;
-      //   }
-      //   if (semver.satisfies(otherDep.version, currentDep.policy)) {
-      //     if (this.compIdStr.includes('teambit.dot-graph/ui/graph!')) console.log('DATA working on ', depData.id, 'FINAL');
-      //     addSerializedDepToPolicy(otherDep);
-      //     return;
-      //   }
-      // }
       hasConflict = true;
       conflictedPolicy[depType].push({
         name: getDepIdAsPkgName(currentDep),
@@ -575,26 +519,10 @@ ${'>'.repeat(7)} ${this.otherLabel}
       if (!conflictedPolicy[depType].length) delete conflictedPolicy[depType];
     });
 
-    let conflictStr: string | undefined;
-    if (hasConflict) {
-      const mergedConfigSplit = JSON.stringify({ policy: conflictedPolicy }, undefined, 2).split('\n');
-      const conflictLines = mergedConfigSplit.map((line) => {
-        if (!line.includes(conflictIndicator)) return line;
-        const [, currentVal, otherVal] = line.split('::');
-        return `${'<'.repeat(7)} ${this.currentLabel}
-        "version": "${currentVal}",
-=======
-        "version": "${otherVal}",
-${'>'.repeat(7)} ${this.otherLabel}`;
-      });
-      // replace the first line with line with the id
-      conflictLines.shift();
-      conflictLines.unshift(`"${params.id}": {`);
-      conflictStr = conflictLines.join('\n');
-    }
     const config = Object.keys(mergedPolicy).length ? { policy: mergedPolicy } : undefined;
+    const conflict = hasConflict ? { policy: conflictedPolicy } : undefined;
 
-    return { id: params.id, mergedConfig: config, conflict: conflictStr };
+    return { id: params.id, mergedConfig: config, conflict };
   }
 
   private isIdInWorkspace(id: string): boolean {
