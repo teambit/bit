@@ -86,7 +86,7 @@ function updateDependenciesVersions(
 
 function setHashes(componentsToTag: ConsumerComponent[]): void {
   componentsToTag.forEach((componentToTag) => {
-    componentToTag.version = sha1(v4());
+    componentToTag.setNewVersion(sha1(v4()));
   });
 }
 
@@ -111,44 +111,45 @@ async function setFutureVersions(
       const isAutoTag = autoTagIds.hasWithoutVersion(componentToTag.id);
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const nextVersion = componentToTag.componentMap?.nextVersion?.version;
-      componentToTag.previouslyUsedVersion = componentToTag.version;
-      if (tagDataPerComp) {
-        const tagData = tagDataPerComp.find((t) => t.componentId._legacy.isEqualWithoutVersion(componentToTag.id));
-        if (!tagData) throw new Error(`tag-data is missing for ${componentToTag.id.toStringWithoutVersion()}`);
-        if (!tagData.versionToTag)
-          throw new Error(`tag-data.TagResults is missing for ${componentToTag.id.toStringWithoutVersion()}`);
-        const exactVersionOrReleaseType = getValidVersionOrReleaseType(tagData.versionToTag);
-        componentToTag.version = modelComponent.getVersionToAdd(
-          exactVersionOrReleaseType.releaseType,
-          exactVersionOrReleaseType.exactVersion,
-          undefined,
-          tagData.prereleaseId
-        );
-      } else if (nextVersion && persist) {
-        const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
-        componentToTag.version = modelComponent.getVersionToAdd(
-          exactVersionOrReleaseType.releaseType,
-          exactVersionOrReleaseType.exactVersion,
-          undefined,
-          componentToTag.componentMap?.nextVersion?.preRelease
-        );
-      } else if (isAutoTag) {
-        // auto-tag always bumped as patch unless it's pre-release
-        if (isPreReleaseLike) {
-          componentToTag.version = soft
-            ? releaseType
-            : modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preReleaseId);
-        } else {
-          componentToTag.version = soft
-            ? 'patch'
-            : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
+      const getNewVersion = (): string => {
+        if (tagDataPerComp) {
+          const tagData = tagDataPerComp.find((t) => t.componentId._legacy.isEqualWithoutVersion(componentToTag.id));
+          if (!tagData) throw new Error(`tag-data is missing for ${componentToTag.id.toStringWithoutVersion()}`);
+          if (!tagData.versionToTag)
+            throw new Error(`tag-data.TagResults is missing for ${componentToTag.id.toStringWithoutVersion()}`);
+          const exactVersionOrReleaseType = getValidVersionOrReleaseType(tagData.versionToTag);
+          return modelComponent.getVersionToAdd(
+            exactVersionOrReleaseType.releaseType,
+            exactVersionOrReleaseType.exactVersion,
+            undefined,
+            tagData.prereleaseId
+          );
         }
-      } else {
+        if (nextVersion && persist) {
+          const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
+          return modelComponent.getVersionToAdd(
+            exactVersionOrReleaseType.releaseType,
+            exactVersionOrReleaseType.exactVersion,
+            undefined,
+            componentToTag.componentMap?.nextVersion?.preRelease
+          );
+        }
+        if (isAutoTag) {
+          // auto-tag always bumped as patch unless it's pre-release
+          if (isPreReleaseLike) {
+            return soft
+              ? (releaseType as string)
+              : modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preReleaseId);
+          }
+          return soft ? 'patch' : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
+        }
         const versionByEnteredId = getVersionByEnteredId(ids, componentToTag, modelComponent);
-        componentToTag.version = soft
-          ? versionByEnteredId || exactVersion || releaseType
+        return soft
+          ? versionByEnteredId || exactVersion || (releaseType as string)
           : versionByEnteredId || modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preReleaseId);
-      }
+      };
+      const newVersion = getNewVersion();
+      componentToTag.setNewVersion(newVersion);
     })
   );
 }

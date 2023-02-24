@@ -251,10 +251,10 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       const modelComponent = await this.scope.legacyScope.getModelComponent(legacyComp.id);
       if (this.updateDepsOptions.tag) {
         const { releaseType, exactVersion } = getValidVersionOrReleaseType(depUpdateItem.versionToTag || 'patch');
-        legacyComp.version = modelComponent.getVersionToAdd(releaseType, exactVersion);
+        legacyComp.setNewVersion(modelComponent.getVersionToAdd(releaseType, exactVersion));
       } else {
         // snap is the default
-        legacyComp.version = modelComponent.getSnapToAdd();
+        legacyComp.setNewVersion();
       }
     });
   }
