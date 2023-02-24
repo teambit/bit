@@ -162,7 +162,7 @@ bit import ${modelComponent.id()} --objects`);
 
   if (!commonSnapBeforeDiverge) {
     const unmergedData = repo.unmergedComponents.getEntry(modelComponent.name);
-    const isUnrelatedFromUnmerged = unmergedData?.unrelated && unmergedData.head.isEqual(targetHead);
+    const isUnrelatedFromUnmerged = unmergedData?.unrelated && unmergedData.head.isEqual(localHead);
     const isUnrelatedFromVersionObj = localVersion.unrelated?.isEqual(targetHead);
     if (isUnrelatedFromUnmerged || isUnrelatedFromVersionObj) {
       return new SnapsDistance(snapsOnSource, snapsOnTarget, undefined);
