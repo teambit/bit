@@ -3,7 +3,6 @@ import { forEach, isEmpty, pickBy, mapValues } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
-import { v4 } from 'uuid';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
@@ -22,7 +21,7 @@ import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
-import { getStringifyArgs, sha1 } from '../../utils';
+import { getStringifyArgs } from '../../utils';
 import findDuplications from '../../utils/array/find-duplications';
 import ComponentObjects from '../component-objects';
 import { SnapsDistance } from '../component-ops/snaps-distance';
@@ -565,10 +564,6 @@ export default class Component extends BitObject {
     }
 
     return hasSameVersions;
-  }
-
-  getSnapToAdd() {
-    return sha1(v4());
   }
 
   addVersion(
