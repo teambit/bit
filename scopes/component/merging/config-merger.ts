@@ -520,7 +520,7 @@ export class ConfigMerger {
     });
 
     const config = Object.keys(mergedPolicy).length ? { policy: mergedPolicy } : undefined;
-    const conflict = hasConflict ? { policy: conflictedPolicy } : undefined;
+    const conflict = hasConflict ? conflictedPolicy : undefined;
 
     return { id: params.id, mergedConfig: config, conflict };
   }
