@@ -129,7 +129,12 @@ export default async function provideWorkspace(
 
   LegacyDependencyResolver.registerOnComponentAutoDetectOverridesGetter(
     async (configuredExtensions: ExtensionDataList, id: BitId, legacyFiles: SourceFile[]) => {
-      const policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
+      let policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
+      const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
+      if (depsDataOfMergeConfig) {
+        const policiesFromMergeConfig = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, 'auto');
+        policy = VariantPolicy.mergePolices([policy, policiesFromMergeConfig]);
+      }
       return policy.toLegacyAutoDetectOverrides();
     }
   );
