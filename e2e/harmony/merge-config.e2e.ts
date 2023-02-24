@@ -430,7 +430,8 @@ describe('merge config scenarios', function () {
       let npmCiRegistry: NpmCiRegistry;
       let beforeDiverge: string;
       let beforeMerges: string;
-      let barPkg: string;
+      let barPkgName: string;
+      let barCompName: string;
       before(async () => {
         const pkgHelper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
         pkgHelper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -440,14 +441,15 @@ describe('merge config scenarios', function () {
         npmCiRegistry.configureCiInPackageJsonHarmony();
         await npmCiRegistry.init();
         pkgHelper.command.tagAllComponents();
-        barPkg = pkgHelper.general.getPackageNameByCompName('bar/foo');
+        barPkgName = pkgHelper.general.getPackageNameByCompName('bar/foo');
+        barCompName = `${pkgHelper.scopes.remote}/bar/foo`;
         pkgHelper.command.export();
 
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.scopeHelper.addRemoteScope(pkgHelper.scopes.remotePath);
         helper.fixtures.populateComponents(1, false);
-        helper.fs.outputFile('comp1/index.js', `require("${barPkg}");`);
-        helper.command.install(barPkg);
+        helper.fs.outputFile('comp1/index.js', `require("${barPkgName}");`);
+        helper.command.install(barPkgName);
         helper.command.tagAllWithoutBuild();
         helper.command.export();
         beforeDiverge = helper.scopeHelper.cloneLocalScope();
@@ -456,7 +458,7 @@ describe('merge config scenarios', function () {
         pkgHelper.command.export();
 
         helper.command.createLane();
-        helper.command.install(`${barPkg}@0.0.2`);
+        helper.command.install(`${barPkgName}@0.0.2`);
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
 
@@ -481,11 +483,10 @@ describe('merge config scenarios', function () {
             helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: {} });
             helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
           });
-          // @todo: now it fails because `applyAutoDetectOverridesOnComponent()` doesn't update it. should be fixed.
           it('should auto-update the dependency according to the lane, because only there it was changed', () => {
             const deps = helper.command.getCompDepsIdsFromData('comp1');
-            expect(deps).to.include(`${barPkg}@0.0.2`);
-            expect(deps).to.not.include(`${barPkg}@0.0.1`);
+            expect(deps).to.include(`${barCompName}@0.0.2`);
+            expect(deps).to.not.include(`${barCompName}@0.0.1`);
           });
         });
       });
