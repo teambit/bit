@@ -23,6 +23,7 @@ import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-com
 import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import chalk from 'chalk';
+import { ConfigAspect, ConfigMain } from '@teambit/config';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
@@ -35,8 +36,10 @@ import threeWayMerge, {
   MergeResultsThreeWay,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
+import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
@@ -45,6 +48,9 @@ import { ConfigMerger } from './config-merger';
 import { ConfigMergeResult } from './config-merge-result';
 
 type ResolveUnrelatedData = { strategy: MergeStrategy; head: Ref };
+type PkgEntry = { name: string; version: string; force: boolean };
+
+export type WorkspaceDepsUpdates = { [pkgName: string]: [string, string] };
 
 export type ComponentMergeStatus = {
   currentComponent?: ConsumerComponent | null;
@@ -87,6 +93,7 @@ export type ApplyVersionResults = {
   newFromLaneAdded?: boolean;
   installationError?: Error; // in case the package manager failed, it won't throw, instead, it'll return error here
   compilationError?: Error; // in case the compiler failed, it won't throw, instead, it'll return error here
+  workspaceDepsUpdates?: WorkspaceDepsUpdates; // in case workspace.jsonc has been updated with dependencies versions
 };
 
 export class MergingMain {
@@ -98,7 +105,8 @@ export class MergingMain {
     private checkout: CheckoutMain,
     private logger: Logger,
     private componentWriter: ComponentWriterMain,
-    private importer: ImporterMain
+    private importer: ImporterMain,
+    private config: ConfigMain
   ) {
     this.consumer = this.workspace?.consumer;
   }
@@ -236,8 +244,10 @@ export class MergingMain {
       }
     );
 
-    const allConfigMerge = succeededComponents.map((c) => c.configMergeResult);
-    await this.generateConfigMergeConflictFileForAll(compact(allConfigMerge));
+    const allConfigMerge = compact(succeededComponents.map((c) => c.configMergeResult));
+    await this.generateConfigMergeConflictFileForAll(allConfigMerge);
+
+    const workspaceDepsUpdates = await this.updateWorkspaceJsoncWithDepsIfNeeded(allConfigMerge);
 
     if (localLane) consumer.scope.objects.add(localLane);
 
@@ -291,6 +301,7 @@ export class MergingMain {
       mergeSnapResults,
       mergeSnapError,
       leftUnresolvedConflicts,
+      workspaceDepsUpdates,
     };
   }
 
@@ -304,6 +315,60 @@ export class MergingMain {
     if (configMergeFile.hasConflict()) {
       await configMergeFile.write();
     }
+  }
+
+  private async updateWorkspaceJsoncWithDepsIfNeeded(
+    allConfigMerge: ConfigMergeResult[]
+  ): Promise<WorkspaceDepsUpdates | undefined> {
+    const allResults = allConfigMerge.map((c) => c.getDepsResolverResult());
+    const allPolicies = compact(
+      allResults.map((result) => {
+        if (!result?.mergedConfig || result.mergedConfig === '-') return undefined;
+        return result.mergedConfig.policy;
+      })
+    );
+    const allDeps: { [pkgName: string]: string[] } = {};
+    allPolicies.forEach((policy) => {
+      DEPENDENCIES_FIELDS.forEach((depField) => {
+        if (!policy[depField]) return;
+        policy[depField].forEach((pkg: PkgEntry) => {
+          if (pkg.force) return; // we only care about auto-detected dependencies
+          if (allDeps[pkg.name]) {
+            if (!allDeps[pkg.name].includes(pkg.version)) allDeps[pkg.name].push(pkg.version);
+            return;
+          }
+          allDeps[pkg.name] = [pkg.version];
+        });
+      });
+    });
+    const allPackages = Object.keys(allDeps);
+    if (!allPackages.length) return undefined;
+
+    const workspaceConfig = this.config.workspaceConfig;
+    if (!workspaceConfig) throw new Error(`updateWorkspaceJsoncWithDepsIfNeeded unable to get workspace config`);
+    const depResolver = workspaceConfig.extensions.findCoreExtension(DependencyResolverAspect.id);
+    const policy = depResolver?.config.policy;
+    if (!policy) return undefined;
+    const workspaceJsonUpdates = {};
+    allPackages.forEach((pkgName) => {
+      if (allDeps[pkgName].length > 1) {
+        // we only want the deps that the other lane has them in the workspace.json and that all comps use the same dep.
+        return;
+      }
+      DEPENDENCIES_FIELDS.forEach((depField) => {
+        if (!policy[depField]?.[pkgName]) return;
+        const currentVer = policy[depField][pkgName];
+        const newVer = allDeps[pkgName][0];
+        workspaceJsonUpdates[pkgName] = [currentVer, newVer];
+        policy[depField][pkgName] = newVer;
+      });
+    });
+
+    if (Object.keys(workspaceJsonUpdates).length) {
+      await workspaceConfig.write();
+      return workspaceJsonUpdates;
+    }
+    return undefined;
   }
 
   /**
@@ -807,9 +872,10 @@ other:   ${otherLaneHead.toString()}`);
     LoggerAspect,
     ComponentWriterAspect,
     ImporterAspect,
+    ConfigAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, snapping, checkout, install, loggerMain, compWriter, importer]: [
+  static async provider([cli, workspace, snapping, checkout, install, loggerMain, compWriter, importer, config]: [
     CLIMain,
     Workspace,
     SnappingMain,
@@ -817,10 +883,11 @@ other:   ${otherLaneHead.toString()}`);
     InstallMain,
     LoggerMain,
     ComponentWriterMain,
-    ImporterMain
+    ImporterMain,
+    ConfigMain
   ]) {
     const logger = loggerMain.createLogger(MergingAspect.id);
-    const merging = new MergingMain(workspace, install, snapping, checkout, logger, compWriter, importer);
+    const merging = new MergingMain(workspace, install, snapping, checkout, logger, compWriter, importer, config);
     cli.register(new MergeCmd(merging));
     return merging;
   }

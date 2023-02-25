@@ -115,6 +115,7 @@ export function mergeReport({
   leftUnresolvedConflicts,
   verbose,
   configMergeResults,
+  workspaceDepsUpdates,
 }: ApplyVersionResults & { configMergeResults?: ConfigMergeResult[] }): string {
   const getSuccessOutput = () => {
     if (!components || !components.length) return '';
@@ -174,6 +175,20 @@ ${mergeSnapError.message}
     )}\n(${'components that snapped as a result of the merge'})\n${outputComponents(snappedComponents)}\n`;
   };
 
+  const getWorkspaceDepsOutput = () => {
+    if (!workspaceDepsUpdates) return '';
+
+    const title = '\nworkspace.jsonc has been updated with the following dependencies';
+    const body = Object.keys(workspaceDepsUpdates)
+      .map((pkgName) => {
+        const [from, to] = workspaceDepsUpdates[pkgName];
+        return `  ${pkgName}: ${from} => ${to}`;
+      })
+      .join('\n');
+
+    return `\n${chalk.underline(title)}\n${body}\n\n`;
+  };
+
   const getFailureOutput = () => {
     if (!failedComponents || !failedComponents.length) return '';
     const title = '\nthe merge has been skipped on the following component(s)';
@@ -212,6 +227,7 @@ ${mergeSnapError.message}
     getSuccessOutput() +
     getFailureOutput() +
     getSnapsOutput() +
+    getWorkspaceDepsOutput() +
     getConfigMergeConflictSummary() +
     getConflictSummary() +
     getSummary()

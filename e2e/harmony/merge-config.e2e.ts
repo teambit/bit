@@ -474,8 +474,13 @@ describe('merge config scenarios', function () {
       });
       describe('when the dep was updated on the lane only, not on main', () => {
         describe('when the dep is in workspace.jsonc', () => {
-          before(() => {});
-          it('should change workspace.jsonc with the updated dependency', () => {});
+          before(() => {
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+          });
+          it('should change workspace.jsonc with the updated dependency', () => {
+            const policy = helper.bitJsonc.getPolicyFromDependencyResolver();
+            expect(policy.dependencies[barPkgName]).to.equal('0.0.2');
+          });
         });
         describe('when the dep is not in the workspace.jsonc', () => {
           before(() => {
