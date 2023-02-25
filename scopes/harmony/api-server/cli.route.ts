@@ -33,14 +33,15 @@ export class CLIRoute implements Route {
         const optsToString = Object.keys(options || {})
           .map((key) => `--${key}`)
           .join(' ');
-        this.logger.console(`started a new command: ${req.params.cmd} ${args.join(' ')} ${optsToString}`);
+        this.logger.console(`started a new command: ${req.params.cmd} ${(args || []).join(' ')} ${optsToString}`);
         const startTask = process.hrtime();
         const result = await command?.json(args || [], options || {});
         const duration = prettyTime(process.hrtime(startTask));
         this.logger.consoleSuccess(`command "${req.params.cmd}" had been completed in ${duration}`);
         res.json(result);
-      } catch (err) {
-        this.logger.consoleFailure(`command "${req.params.cmd}" had failed`);
+      } catch (err: any) {
+        this.logger.error(`command "${req.params.cmd}" had failed`, err);
+        this.logger.consoleFailure(`command "${req.params.cmd}" had failed. ${err.message}`);
         next(err);
       }
     },
