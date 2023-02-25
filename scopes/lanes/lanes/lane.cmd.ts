@@ -326,7 +326,7 @@ export class LaneImportCmd implements Command {
   arguments = [{ name: 'lane', description: 'the remote lane name' }];
   alias = '';
   options = [
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
   ] as CommandOptions;
   loader = true;
   private = true;

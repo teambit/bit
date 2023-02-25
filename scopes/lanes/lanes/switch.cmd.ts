@@ -21,7 +21,7 @@ export class SwitchCmd implements Command {
       'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"',
     ],
     ['a', 'get-all', 'checkout all components in a lane include ones that do not exist in the workspace'],
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
   loader = true;

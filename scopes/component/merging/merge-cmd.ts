@@ -29,7 +29,7 @@ ${WILDCARD_HELP('merge')}`;
     ['', 'no-snap', 'EXPERIMENTAL. do not auto snap in case the merge completed without conflicts'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['', 'verbose', 'show details of components that were not merged legitimately'],
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
     ['m', 'message <message>', 'EXPERIMENTAL. override the default message for the auto snap'],
   ] as CommandOptions;
   loader = true;
