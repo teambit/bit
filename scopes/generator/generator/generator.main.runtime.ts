@@ -143,7 +143,7 @@ export class GeneratorMain {
    * returns a specific component template.
    */
   async getComponentTemplate(name: string, aspectId?: string): Promise<ComponentTemplateWithId | undefined> {
-    const fromEnv = await this.listEnvComponentTemplates();
+    const fromEnv = await this.listEnvComponentTemplates([], aspectId);
     if (fromEnv && fromEnv.length) {
       const found = this.findTemplateByAspectIdAndName<ComponentTemplateWithId>(aspectId, name, fromEnv);
       if (found) return found;
@@ -161,25 +161,41 @@ export class GeneratorMain {
   ): T | undefined {
     // @ts-ignore (should set T to be extends ComponentTemplateWithId or WorkspaceTemplateWithId)
     const found = templates.find(({ id, template }) => {
-      if (aspectId && id !== aspectId) return false;
+      // When doing something like:
+      // bit create react-env my-env --aspect teambit.react/react-env
+      // we will get the aspectId without version
+      // but the env might be loaded from the global scope then it will be with a version
+      // so it won't found if we don't look for it like this
+      const idWithoutVersion = id.split('@')[0];
+      if (aspectId && id !== aspectId && idWithoutVersion !== aspectId) return false;
       return template.name === name;
     });
     return found;
   }
 
   /**
-   * in the case the aspect-id is given and this aspect doesn't exist locally, import it to the
-   * global scope and load it from the capsule
+   * Get the generator aspect and the envs aspect from an harmony instance of the global scope
    */
-  async findTemplateInGlobalScope(
-    aspectId: string,
-    name?: string
-  ): Promise<{ workspaceTemplate?: WorkspaceTemplate; aspect?: Component }> {
+  private async getGlobalGeneratorEnvs(
+    aspectId: string
+  ): Promise<{ remoteGenerator: GeneratorMain; fullAspectId: string; remoteEnvsAspect: EnvsMain; aspect: any }> {
     const { globalScopeHarmony, components } = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
     const remoteGenerator = globalScopeHarmony.get<GeneratorMain>(GeneratorAspect.id);
     const remoteEnvsAspect = globalScopeHarmony.get<EnvsMain>(EnvsAspect.id);
     const aspect = components[0];
     const fullAspectId = aspect.id.toString();
+    return { remoteGenerator, fullAspectId, remoteEnvsAspect, aspect };
+  }
+
+  /**
+   * in the case the aspect-id is given and this aspect doesn't exist locally, import it to the
+   * global scope and load it from the capsule
+   */
+  async findWorkspaceTemplateInGlobalScope(
+    aspectId: string,
+    name?: string
+  ): Promise<{ workspaceTemplate?: WorkspaceTemplate; aspect?: Component }> {
+    const { remoteGenerator, fullAspectId, remoteEnvsAspect, aspect } = await this.getGlobalGeneratorEnvs(aspectId);
     const fromGlobal = await remoteGenerator.searchRegisteredWorkspaceTemplate.call(
       remoteGenerator,
       name,
@@ -225,7 +241,7 @@ export class GeneratorMain {
       throw new BitError(`template "${name}" was not found, if this is a custom-template, please use --aspect flag`);
     }
 
-    const { workspaceTemplate, aspect } = await this.findTemplateInGlobalScope(aspectId, name);
+    const { workspaceTemplate, aspect } = await this.findWorkspaceTemplateInGlobalScope(aspectId, name);
     if (workspaceTemplate) {
       return { workspaceTemplate, aspect };
     }
@@ -265,7 +281,7 @@ export class GeneratorMain {
     if (!templateWithId) throw new BitError(`template "${templateName}" was not found`);
 
     const componentIds = componentNames.map((componentName) =>
-      this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
+    this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
     );
 
     const componentGenerator = new ComponentGenerator(
@@ -278,7 +294,7 @@ export class GeneratorMain {
       this.tracker,
       templateWithId.id,
       templateWithId.envName ? ComponentID.fromString(templateWithId.id) : undefined
-    );
+      );
     return componentGenerator.generate();
   }
 
@@ -303,7 +319,7 @@ export class GeneratorMain {
   }
 
   private async getAllComponentTemplatesDescriptorsFlattened(aspectId?: string): Promise<Array<TemplateDescriptor>> {
-    const envTemplates = await this.listEnvComponentTemplateDescriptors();
+    const envTemplates = await this.listEnvComponentTemplateDescriptors([], aspectId);
     if (envTemplates && envTemplates.length) {
       if (!aspectId) return envTemplates;
       const filtered = envTemplates.filter((template) => template.aspectId === aspectId);
@@ -370,8 +386,8 @@ export class GeneratorMain {
   /**
    * list all component templates registered by an env.
    */
-  async listEnvComponentTemplateDescriptors(ids: string[] = []): Promise<TemplateDescriptor[]> {
-    const envTemplates = await this.listEnvComponentTemplates(ids);
+  async listEnvComponentTemplateDescriptors(ids: string[] = [], aspectId?: string): Promise<TemplateDescriptor[]> {
+    const envTemplates = await this.listEnvComponentTemplates(ids, aspectId);
     const templates: TemplateDescriptor[] = envTemplates.map((envTemplate) => {
       const componentId = ComponentID.fromString(envTemplate.id);
       return {
@@ -384,9 +400,17 @@ export class GeneratorMain {
     return templates;
   }
 
-  async listEnvComponentTemplates(ids: string[] = []): Promise<Array<ComponentTemplateWithId>> {
+  async listEnvComponentTemplates(ids: string[] = [], aspectId?: string): Promise<Array<ComponentTemplateWithId>> {
     const configEnvs = this.config.envs || [];
-    const envs = await this.loadEnvs(configEnvs?.concat(ids));
+    let remoteEnvsAspect;
+    let fullAspectId;
+    if (aspectId && !configEnvs.includes(aspectId)){
+      const globals = await this.getGlobalGeneratorEnvs(aspectId);
+      remoteEnvsAspect = globals.remoteEnvsAspect;
+      fullAspectId = globals.fullAspectId;
+    }
+    const allIds = configEnvs?.concat(ids).concat([aspectId, fullAspectId]).filter(Boolean);
+    const envs = await this.loadEnvs(allIds, remoteEnvsAspect);
     const templates = envs.flatMap((env) => {
       if (!env.env.getGeneratorTemplates) return [];
       const tpls = env.env.getGeneratorTemplates() || [];
