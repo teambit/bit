@@ -162,3 +162,23 @@ describe('install new dependencies', function () {
     });
   });
 });
+
+describe('named install', function () {
+  this.timeout(0);
+  let helper: Helper;
+  let bitJsonc;
+  before(() => {
+    helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+    helper.command.install('is-positive@1.0.0');
+    helper.command.install('is-positive');
+    bitJsonc = helper.bitJsonc.read();
+  });
+  after(() => {
+    helper.scopeHelper.destroy();
+  });
+  it('should override already existing dependency with the latest version', () => {
+    expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal('^3.1.0');
+  });
+});
