@@ -15783,7 +15783,6 @@ importers:
     specifiers:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
-      '@types/chai': 4.2.15
       '@types/jest': ^26.0.0
       '@types/lodash': 4.14.165
       '@types/mocha': 9.1.0
@@ -15811,7 +15810,6 @@ importers:
       react-dom: 17.0.2_react@17.0.2
       semver: 7.3.4
     devDependencies:
-      '@types/chai': 4.2.15
       '@types/jest': 26.0.20
       '@types/lodash': 4.14.165
       '@types/mocha': 9.1.0
