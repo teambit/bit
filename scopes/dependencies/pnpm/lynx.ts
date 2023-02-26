@@ -455,17 +455,18 @@ export async function resolveRemoteVersion(
       alias: parsedPackage.name,
       pref: parsedPackage.version,
     };
-    const isValidRange = parsedPackage.version ? !!semver.validRange(parsedPackage.version) : false;
     resolveOpts.registry = registry;
     const val = await resolve(wantedDep, resolveOpts);
     if (!val.manifest) {
       throw new BitError('The resolved package has no manifest');
     }
-    const version = isValidRange ? parsedPackage.version : val.manifest.version;
+    const wantedRange =
+      parsedPackage.version && semver.validRange(parsedPackage.version) ? parsedPackage.version : undefined;
 
     return {
       packageName: val.manifest.name,
-      version,
+      version: val.manifest.version,
+      wantedRange,
       isSemver: true,
       resolvedVia: val.resolvedVia,
     };
