@@ -109,25 +109,56 @@ describe('install new dependencies', function () {
   this.timeout(0);
   let helper: Helper;
   let bitJsonc;
-  before(() => {
-    helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.command.install('is-positive@~1.0.0 is-odd@1.0.0 is-even@1 is-negative');
-    bitJsonc = helper.bitJsonc.read();
+  describe('using pnpm', () => {
+    before(() => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+      helper.command.install('is-positive@~1.0.0 is-odd@1.0.0 is-even@1 is-negative');
+      bitJsonc = helper.bitJsonc.read();
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('should add new dependency preserving the ~ prefix', () => {
+      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal(
+        '~1.0.0'
+      );
+    });
+    it('should add new dependency with ^ prefix if the dependency was installed by specifying the exact version', () => {
+      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal('^1.0.0');
+    });
+    it('should add new dependency with ^ prefix if the dependency was installed by specifying a range not using ~', () => {
+      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-even']).to.equal('^1.0.0');
+    });
+    it('should add new dependency with ^ prefix by default', () => {
+      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative'][0]).to.equal('^');
+    });
   });
-  after(() => {
-    helper.scopeHelper.destroy();
-  });
-  it('should add new dependency preserving the ~ prefix', () => {
-    expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal('~1.0.0');
-  });
-  it('should add new dependency with ^ prefix if the dependency was installed by specifying the exact version', () => {
-    expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal('^1.0.0');
-  });
-  it('should add new dependency with ^ prefix if the dependency was installed by specifying a range not using ~', () => {
-    expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-even']).to.equal('^1.0.0');
-  });
-  it('should add new dependency with ^ prefix by default', () => {
-    expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative'][0]).to.equal('^');
+  describe('using yarn', () => {
+    before(() => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/yarn');
+      helper.command.install('is-positive@~1.0.0 is-odd@1.0.0 is-even@1 is-negative');
+      bitJsonc = helper.bitJsonc.read();
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('should add new dependency preserving the ~ prefix', () => {
+      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal(
+        '~1.0.0'
+      );
+    });
+    it('should add new dependency with ^ prefix if the dependency was installed by specifying the exact version', () => {
+      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal('^1.0.0');
+    });
+    it('should add new dependency with ^ prefix if the dependency was installed by specifying a range not using ~', () => {
+      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-even']).to.equal('^1.0.0');
+    });
+    it('should add new dependency with ^ prefix by default', () => {
+      expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative'][0]).to.equal('^');
+    });
   });
 });
