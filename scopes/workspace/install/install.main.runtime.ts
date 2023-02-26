@@ -67,6 +67,7 @@ export type WorkspaceInstallOptions = {
   savePrefix?: string;
   compile?: boolean;
   includeOptionalDeps?: boolean;
+  updateAll?: boolean;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -159,10 +160,11 @@ export class InstallMain {
     const newWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
     resolvedPackages.forEach((resolvedPackage) => {
       if (resolvedPackage.version) {
-        const versionWithPrefix = this.dependencyResolver.getVersionWithSavePrefix(
-          resolvedPackage.version,
-          options?.savePrefix
-        );
+        const versionWithPrefix = this.dependencyResolver.getVersionWithSavePrefix({
+          version: resolvedPackage.version,
+          overridePrefix: options?.savePrefix,
+          wantedRange: resolvedPackage.wantedRange,
+        });
         newWorkspacePolicyEntries.push({
           dependencyId: resolvedPackage.packageName,
           value: {
@@ -200,6 +202,7 @@ export class InstallMain {
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       rootComponents: hasRootComponents,
       nodeLinker: this.dependencyResolver.nodeLinker(),
+      updateAll: options?.updateAll,
     };
     // TODO: pass get install options
     const installer = this.dependencyResolver.getInstaller({});

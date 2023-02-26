@@ -194,7 +194,7 @@ const get = require("lodash.get");`
     });
     it("should install the package from the root manifest when the component doesn't have a policy for it", () => {
       const comp4Output = helper.command.showComponentParsed('comp4');
-      expect(comp4Output.packageDependencies['lodash.get']).to.equal('4.4.2');
+      expect(comp4Output.packageDependencies['lodash.get']).to.equal('^4.4.2');
     });
   });
 });
