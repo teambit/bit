@@ -160,10 +160,11 @@ export class InstallMain {
     const newWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
     resolvedPackages.forEach((resolvedPackage) => {
       if (resolvedPackage.version) {
-        const versionWithPrefix = this.dependencyResolver.getVersionWithSavePrefix(
-          resolvedPackage.version,
-          options?.savePrefix
-        );
+        const versionWithPrefix = this.dependencyResolver.getVersionWithSavePrefix({
+          version: resolvedPackage.version,
+          overridePrefix: options?.savePrefix,
+          wantedRange: resolvedPackage.wantedRange,
+        });
         newWorkspacePolicyEntries.push({
           dependencyId: resolvedPackage.packageName,
           value: {
