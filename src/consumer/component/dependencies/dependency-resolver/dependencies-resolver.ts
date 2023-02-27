@@ -740,10 +740,11 @@ either, use the ignore file syntax or change the require statement to have a mod
         return existingIds.length === 1 ? existingIds[0] : undefined;
       };
       const getFromMergeConfig = () => {
-        let foundVersion: string | undefined;
+        let foundVersion: string | undefined | null;
         DEPENDENCIES_FIELDS.forEach((field) => {
           if (this.autoDetectConfigMerge[field]?.[compDep.name]) {
             foundVersion = this.autoDetectConfigMerge[field]?.[compDep.name];
+            foundVersion = foundVersion ? this.getValidVersion(foundVersion) : null;
           }
         });
         return foundVersion ? componentId.changeVersion(foundVersion) : undefined;
