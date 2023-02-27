@@ -37,6 +37,7 @@ export class ObjectsWritable extends Writable {
       await this.writeObjectToFs(obj);
       return callback();
     } catch (err: any) {
+      logger.error(`found an issue during write of ${obj.ref.toString()}`, err);
       return callback(err);
     }
   }
