@@ -49,6 +49,8 @@ export type PackageManagerInstallOptions = {
   peerDependencyRules?: PeerDependencyRules;
 
   includeOptionalDeps?: boolean;
+
+  updateAll?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -56,6 +58,7 @@ export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstall
 export type ResolvedPackageVersion = {
   packageName: string;
   version: string | null;
+  wantedRange?: string;
   isSemver: boolean;
   resolvedVia?: string;
 };

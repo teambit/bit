@@ -35,7 +35,7 @@ export class ForkCmd implements Command {
       'relative path in the workspace for the new component. by default the path is `<scope>/<namespace>/<name>`',
     ],
     ['r', 'refactor', 'update the import/require statements in all dependent components (in the same workspace)'],
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
     [
       '',
       'skip-config',

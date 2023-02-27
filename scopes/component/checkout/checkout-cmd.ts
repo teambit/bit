@@ -49,7 +49,7 @@ export class CheckoutCmd implements Command {
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'reset', 'DEPRECATED. run "bit checkout reset" instead'],
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
   ] as CommandOptions;
   loader = true;
 

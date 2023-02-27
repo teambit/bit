@@ -436,6 +436,7 @@ export class YarnPackageManager implements PackageManager {
       return {
         packageName: parsedPackage.name,
         version: parsedVersion,
+        wantedRange: parsedVersion,
         isSemver: true,
       };
     }
@@ -478,6 +479,7 @@ export class YarnPackageManager implements PackageManager {
     return {
       packageName: parsedPackage.name,
       version,
+      wantedRange: parsedVersion,
       isSemver: true,
     };
   }

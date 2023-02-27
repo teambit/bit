@@ -18,7 +18,9 @@ export class ApiServerMain {
   async runApiServer(options: { port: number }) {
     const port = options.port || 3000;
     await this.express.listen(port);
-
+    if (!this.workspace) {
+      throw new Error(`unable to run bit-server, the current directory ${process.cwd()} is not a workspace`);
+    }
     this.watcher
       .watch({
         preCompile: false,

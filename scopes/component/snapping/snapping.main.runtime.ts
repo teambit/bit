@@ -43,7 +43,7 @@ import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { ComponentID } from '@teambit/component-id';
-import { BitObject, Repository } from '@teambit/legacy/dist/scope/objects';
+import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
 import {
   ArtifactFiles,
   ArtifactSource,
@@ -700,7 +700,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const { version, files } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     this.objectsRepo.add(version);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, this.objectsRepo);
+    component.addVersion(version, source.version, lane, this.objectsRepo, source.previouslyUsedVersion);
 
     const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
     if (unmergedComponent) {
@@ -708,7 +708,14 @@ there are matching among unmodified components thought. consider using --unmodif
         this.logger.debug(
           `sources.addSource, unmerged component "${component.name}". adding an unrelated entry ${unmergedComponent.head.hash}`
         );
-        version.unrelated = { head: unmergedComponent.head, laneId: unmergedComponent.laneId };
+        if (!source.previouslyUsedVersion) {
+          throw new Error(
+            `source.previouslyUsedVersion must be set for ${component.name} because it's unrelated resolved.`
+          );
+        }
+        const unrelatedHead = Ref.from(source.previouslyUsedVersion);
+        version.unrelated = { head: unrelatedHead, laneId: unmergedComponent.laneId };
+        version.addAsOnlyParent(unmergedComponent.head);
       } else {
         // this is adding a second parent to the version. the order is important. the first parent is coming from the current-lane.
         version.addParent(unmergedComponent.head);
@@ -736,7 +743,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const { version, files } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     objectRepo.add(version);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, objectRepo);
+    component.addVersion(version, source.version, lane, objectRepo, source.previouslyUsedVersion);
     objectRepo.add(component);
     files.forEach((file) => objectRepo.add(file.file));
     if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
