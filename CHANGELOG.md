@@ -49,7 +49,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Do not build core-js (#6914)
 - Update pnpm and improve deduplication (#6876)
 
-### Big Fixes
+### Bug Fixes
 
 - Resolve edge cases for advanced dependency management issues (#7022 #6968 #6975 #6919 #6915 #6908 #6906 #6892 #6941 #6849 #7020 #6958 #6864 #7032 #7021 #7079 #7019 #6839 #6788 #6861 #6843 #6988)
 - strict-ssl, key, ca, and cert settings should work with an https proxy (#7062)
