@@ -1,5 +1,5 @@
 import { useQuery as defaultUseQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
-import { useLocation as defaultUseLocation, Location } from '@teambit/base-react.navigation.link';
+import { useLocation as defaultUseLocation } from '@teambit/base-react.navigation.link';
 
 export type ComponentCompareQueryParams = {
   baseVersion?: string;
@@ -13,7 +13,7 @@ export type ComponentCompareQueryParams = {
 export function useUpdatedUrlFromQuery(
   queryParams: ComponentCompareQueryParams,
   useQuery: () => URLSearchParams = defaultUseQuery,
-  useLocation: () => Location | undefined = defaultUseLocation
+  useLocation: () => { pathname: string } | undefined = defaultUseLocation
 ): string {
   const query = useQuery();
   const location = useLocation() || { pathname: '/' };

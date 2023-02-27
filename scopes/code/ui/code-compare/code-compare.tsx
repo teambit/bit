@@ -12,7 +12,7 @@ import {
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
 import { DarkTheme } from '@teambit/design.themes.dark-theme';
-import { useLocation, Location } from '@teambit/base-react.navigation.link';
+import { useLocation } from '@teambit/base-react.navigation.link';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { CodeCompareTree } from './code-compare-tree';
 import { CodeCompareView, CodeCompareViewProps } from './code-compare-view';
@@ -30,7 +30,7 @@ export type CodeCompareProps = {
 export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareView }: CodeCompareProps) {
   const componentCompareContext = useComponentCompare();
   const query = useQuery();
-  const location = (useLocation() as Location) || { pathname: '/' };
+  const location = useLocation() || { pathname: '/' };
 
   const { base, compare, state: compareState, hooks: compareHooks } = componentCompareContext || {};
   const state = compareState?.code;
