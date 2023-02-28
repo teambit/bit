@@ -2325,7 +2325,7 @@ importers:
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
       '@teambit/cloud': file:scopes/cloud/cloud_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code': file:scopes/component/code_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/code.ui.code-compare': file:scopes/code/ui/code-compare_p6ohgni3bqdqjsx37jpwzjorqq
+      '@teambit/code.ui.code-compare': file:scopes/code/ui/code-compare_cb4csrwhr5d234eavgrutgpzpy
       '@teambit/code.ui.code-compare-section': file:components/code-compare-section_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code.ui.code-tab-page': file:scopes/code/ui/code-tab-page_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code.ui.code-tab-tree': file:scopes/code/ui/code-tab-tree_sfoxds7t5ydpegc3knd667wn6m
@@ -3968,7 +3968,7 @@ importers:
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
       '@teambit/cloud': file:scopes/cloud/cloud_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code': file:scopes/component/code_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/code.ui.code-compare': file:scopes/code/ui/code-compare_p6ohgni3bqdqjsx37jpwzjorqq
+      '@teambit/code.ui.code-compare': file:scopes/code/ui/code-compare_cb4csrwhr5d234eavgrutgpzpy
       '@teambit/code.ui.code-compare-section': file:components/code-compare-section_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code.ui.code-tab-page': file:scopes/code/ui/code-tab-page_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code.ui.code-tab-tree': file:scopes/code/ui/code-tab-tree_sfoxds7t5ydpegc3knd667wn6m
@@ -5605,7 +5605,7 @@ importers:
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
       '@teambit/cloud': file:scopes/cloud/cloud_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code': file:scopes/component/code_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/code.ui.code-compare': file:scopes/code/ui/code-compare_p6ohgni3bqdqjsx37jpwzjorqq
+      '@teambit/code.ui.code-compare': file:scopes/code/ui/code-compare_cb4csrwhr5d234eavgrutgpzpy
       '@teambit/code.ui.code-compare-section': file:components/code-compare-section_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code.ui.code-tab-page': file:scopes/code/ui/code-tab-page_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code.ui.code-tab-tree': file:scopes/code/ui/code-tab-tree_sfoxds7t5ydpegc3knd667wn6m
@@ -7242,7 +7242,7 @@ importers:
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
       '@teambit/cloud': file:scopes/cloud/cloud_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code': file:scopes/component/code_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/code.ui.code-compare': file:scopes/code/ui/code-compare_p6ohgni3bqdqjsx37jpwzjorqq
+      '@teambit/code.ui.code-compare': file:scopes/code/ui/code-compare_cb4csrwhr5d234eavgrutgpzpy
       '@teambit/code.ui.code-compare-section': file:components/code-compare-section_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code.ui.code-tab-page': file:scopes/code/ui/code-tab-page_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code.ui.code-tab-tree': file:scopes/code/ui/code-tab-tree_sfoxds7t5ydpegc3knd667wn6m
@@ -8879,7 +8879,7 @@ importers:
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
       '@teambit/cloud': file:scopes/cloud/cloud_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code': file:scopes/component/code_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/code.ui.code-compare': file:scopes/code/ui/code-compare_p6ohgni3bqdqjsx37jpwzjorqq
+      '@teambit/code.ui.code-compare': file:scopes/code/ui/code-compare_cb4csrwhr5d234eavgrutgpzpy
       '@teambit/code.ui.code-compare-section': file:components/code-compare-section_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code.ui.code-tab-page': file:scopes/code/ui/code-tab-page_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code.ui.code-tab-tree': file:scopes/code/ui/code-tab-tree_sfoxds7t5ydpegc3knd667wn6m
@@ -10516,7 +10516,7 @@ importers:
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
       '@teambit/cloud': file:scopes/cloud/cloud_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code': file:scopes/component/code_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/code.ui.code-compare': file:scopes/code/ui/code-compare_p6ohgni3bqdqjsx37jpwzjorqq
+      '@teambit/code.ui.code-compare': file:scopes/code/ui/code-compare_cb4csrwhr5d234eavgrutgpzpy
       '@teambit/code.ui.code-compare-section': file:components/code-compare-section_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code.ui.code-tab-page': file:scopes/code/ui/code-tab-page_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code.ui.code-tab-tree': file:scopes/code/ui/code-tab-tree_sfoxds7t5ydpegc3knd667wn6m
@@ -12153,7 +12153,7 @@ importers:
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
       '@teambit/cloud': file:scopes/cloud/cloud_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code': file:scopes/component/code_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/code.ui.code-compare': file:scopes/code/ui/code-compare_p6ohgni3bqdqjsx37jpwzjorqq
+      '@teambit/code.ui.code-compare': file:scopes/code/ui/code-compare_cb4csrwhr5d234eavgrutgpzpy
       '@teambit/code.ui.code-compare-section': file:components/code-compare-section_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code.ui.code-tab-page': file:scopes/code/ui/code-tab-page_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/code.ui.code-tab-tree': file:scopes/code/ui/code-tab-tree_sfoxds7t5ydpegc3knd667wn6m
@@ -14270,6 +14270,7 @@ importers:
     specifiers:
       '@babel/runtime': 7.20.0
       '@monaco-editor/react': 4.4.6
+      '@teambit/base-react.navigation.link': 2.0.27
       '@teambit/base-ui.graph.tree.tree-context': 1.0.0
       '@teambit/base-ui.loaders.skeleton': 1.0.1
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.0
@@ -14297,6 +14298,7 @@ importers:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@monaco-editor/react': 4.4.6_m23risk2t2ktwbmyoufat5z4ue
+      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.graph.tree.tree-context': registry.npmjs.org/@teambit/base-ui.graph.tree.tree-context/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.loaders.skeleton': 1.0.1_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/1.0.0_sfoxds7t5ydpegc3knd667wn6m
@@ -56082,7 +56084,7 @@ packages:
       react-dom: 17.0.2_react@17.0.2
     dev: false
 
-  file:scopes/code/ui/code-compare_p6ohgni3bqdqjsx37jpwzjorqq:
+  file:scopes/code/ui/code-compare_cb4csrwhr5d234eavgrutgpzpy:
     resolution: {directory: scopes/code/ui/code-compare, type: directory}
     id: file:scopes/code/ui/code-compare
     name: '@teambit/code.ui.code-compare'
@@ -56092,6 +56094,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@monaco-editor/react': 4.4.6_m23risk2t2ktwbmyoufat5z4ue
+      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.graph.tree.tree-context': registry.npmjs.org/@teambit/base-ui.graph.tree.tree-context/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.loaders.skeleton': 1.0.1_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/1.0.0_sfoxds7t5ydpegc3knd667wn6m
@@ -56110,6 +56113,7 @@ packages:
       react-dom: 17.0.2_react@17.0.2
     transitivePeerDependencies:
       - '@testing-library/react'
+      - '@types/react'
       - monaco-editor
     dev: false
 
