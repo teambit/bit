@@ -29,7 +29,7 @@ import { concurrentComponentsLimit } from '../../utils/concurrency';
 import { BuildStatus } from '../../constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
-import { getAllVersionHashes, getAllVersionsInfo } from './traverse-versions';
+import { getAllVersionHashes } from './traverse-versions';
 import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
 
 type HashesPerRemote = { [remoteName: string]: string[] };
@@ -192,28 +192,41 @@ export default class ScopeComponentsImporter {
       return;
     }
     const missingHistoryWithNulls = await mapSeries(externals, async (id) => {
-      const modelComponent = await this.scope.getModelComponent(id);
-      if (!modelComponent.head) return null; // doesn't exist on the remote.
-      try {
-        await getAllVersionsInfo({ modelComponent, repo: this.repo });
-      } catch (err: any) {
-        if (errorIsTypeOfMissingObject(err)) {
-          return id;
-        }
-        // we don't care much about other errors here. but it's good to know about them.
-        logger.warn(`importMissingHistory, failed traversing ${id.toString()}, err: ${err.message}`, err);
-        return null;
-      }
-      return null;
+      const missingId = await this.importMissingHistoryOne(id);
+      return missingId;
     });
     const missingHistory = compact(missingHistoryWithNulls);
-    if (!missingHistory.length) return;
+    if (!missingHistory.length) {
+      logger.debug(`importMissingHistory, all history is already in scope, nothing to fetch`);
+      return;
+    }
     logger.debug(`importMissingHistory, total ${missingHistory.length} component has history missing`);
     await this.importManyDeltaWithoutDeps({
       ids: BitIds.fromArray(missingHistory),
       fromHead: true,
       collectParents: true,
     });
+  }
+
+  /**
+   * an efficient way to verify that all history exists locally.
+   * instead of all versions objects, load only the VersionHistory, get the graph from head, then only check whether
+   * the objects exist in the filesystem.
+   */
+  private async importMissingHistoryOne(id: BitId) {
+    const modelComponent = await this.scope.getModelComponent(id);
+    if (!modelComponent.head) return null; // doesn't exist on the remote.
+    const verHistory = await modelComponent.getAndPopulateVersionHistory(this.scope.objects, modelComponent.head);
+    const { found, missing } = verHistory.getAllHashesFrom(modelComponent.head);
+    if (missing?.length) {
+      return id;
+    }
+    if (!found)
+      throw new Error(`importMissingHistoryOne, found is empty, it must be populated when nothing is missing`);
+    const allExist = await Promise.all(found.map((f) => this.scope.objects.has(Ref.from(f))));
+    const someAreMissing = allExist.some((e) => !e);
+    if (someAreMissing) return id;
+    return null;
   }
 
   /**
