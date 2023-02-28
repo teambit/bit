@@ -210,7 +210,7 @@ export default class ScopeComponentsImporter {
 
   /**
    * an efficient way to verify that all history exists locally.
-   * instead of all versions objects, load only the VersionHistory, get the graph from head, then only check whether
+   * instead of loading all versions objects, load only the VersionHistory, get the graph from head, then only check whether
    * the objects exist in the filesystem.
    */
   private async importMissingHistoryOne(id: BitId) {
