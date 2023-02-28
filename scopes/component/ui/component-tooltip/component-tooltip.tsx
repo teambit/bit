@@ -6,17 +6,15 @@ import styles from './component-tooltip.module.scss';
 export type StatusTooltipProps = {
   status?: ComponentStatus;
   issuesCount?: number;
-  isInCurrentLane?: boolean;
 };
 
 // TODO - how do I get the status type without tying this to workspace?
-export function StatusTooltip({ status, issuesCount, isInCurrentLane, children }: any) {
+export function StatusTooltip({ status, issuesCount, children }: any) {
   if (!status) return children;
 
   const { isNew, isStaged, isOutdated, modifyInfo = {} } = status;
   const { hasModifiedDependencies, hasModifiedFiles } = modifyInfo;
-  if (!isNew && !isStaged && !hasModifiedDependencies && !hasModifiedFiles && !isOutdated && !isInCurrentLane)
-    return null;
+  if (!isNew && !isStaged && !hasModifiedDependencies && !hasModifiedFiles && !isOutdated) return null;
 
   const content = (
     <ul className={styles.list}>
@@ -26,7 +24,6 @@ export function StatusTooltip({ status, issuesCount, isInCurrentLane, children }
       {isStaged && <li>Staged component</li>}
       {isOutdated && <li>Updates pending</li>}
       {hasModifiedDependencies && <li>Modified dependencies</li>}
-      {isInCurrentLane && <li>On Current Lane</li>}
     </ul>
   );
 

@@ -97,7 +97,7 @@ export class AspectsMerger {
     this.removeAutoDepsFromConfig(componentId, configMergeExtensions);
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
     // backward compatibility. previously, it was saved as an array into the model (when there was merge-config)
-    this.removeAutoDepsFromConfig(componentId, scopeExtensions);
+    this.removeAutoDepsFromConfig(componentId, scopeExtensions, true);
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
     const scopeExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
     const scopeExtensionsSpecific = new ExtensionDataList(...specific);
@@ -208,7 +208,7 @@ export class AspectsMerger {
    * 1. force: true, which gets saved into the config.
    * 2. force: false, which gets saved into the data.dependencies later on. see the LegacyDependencyResolver.registerOnComponentAutoDetectOverridesGetter hook
    */
-  private removeAutoDepsFromConfig(componentId: ComponentID, conf?: ExtensionDataList) {
+  private removeAutoDepsFromConfig(componentId: ComponentID, conf?: ExtensionDataList, fromScope = false) {
     if (!conf) return;
     const policy = conf.findCoreExtension(DependencyResolverAspect.id)?.config.policy;
     if (!policy) return;
@@ -233,13 +233,15 @@ export class AspectsMerger {
       }, {});
     });
 
-    if (!this.mergeConfigDepsResolverDataCache[componentId.toString()]) {
-      this.mergeConfigDepsResolverDataCache[componentId.toString()] = {};
+    if (!fromScope) {
+      if (!this.mergeConfigDepsResolverDataCache[componentId.toString()]) {
+        this.mergeConfigDepsResolverDataCache[componentId.toString()] = {};
+      }
+      this.mergeConfigDepsResolverDataCache[componentId.toString()] = merge(
+        this.mergeConfigDepsResolverDataCache[componentId.toString()],
+        mergeConfigObj
+      );
     }
-    this.mergeConfigDepsResolverDataCache[componentId.toString()] = merge(
-      this.mergeConfigDepsResolverDataCache[componentId.toString()],
-      mergeConfigObj
-    );
   }
 
   private getUnmergedData(componentId: ComponentID): UnmergedComponent | undefined {

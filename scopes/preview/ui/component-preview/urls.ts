@@ -4,9 +4,14 @@ import { affix } from '@teambit/base-ui.utils.string.affix';
 /**
  * generates a full url to a preview (overview / docs etc)
  */
-export function toPreviewUrl(component: ComponentModel, previewName?: string, additionalParams?: string | string[]) {
+export function toPreviewUrl(
+  component: ComponentModel,
+  previewName?: string,
+  additionalParams?: string | string[],
+  includeEnvId = true
+) {
   const serverPath = toPreviewServer(component, previewName);
-  const envId = component.environment?.id;
+  const envId = includeEnvId ? component.environment?.id : undefined;
   const hash = toPreviewHash(component, previewName, envId, additionalParams);
 
   return `${serverPath}#${hash}`;

@@ -49,7 +49,7 @@ export function CodeCompareView({
 
   const getDefaultView: () => EditorViewMode = () => {
     if (!baseId) return 'inline';
-    if (!originalFileContent && modifiedFileContent) return 'inline';
+    if (!originalFileContent || !modifiedFileContent) return 'inline';
     return 'split';
   };
 

@@ -11,6 +11,7 @@ type InstallCmdOptions = {
   skipDedupe: boolean;
   skipImport: boolean;
   skipCompile: boolean;
+  update: boolean;
   updateExisting: boolean;
   savePrefix: string;
   addMissingPeers: boolean;
@@ -29,8 +30,9 @@ export default class InstallCmd implements Command {
   options = [
     ['v', 'variants <variants>', 'add packages to specific variants'],
     ['t', 'type [lifecycleType]', '"runtime" (default) or "peer" (dev is not a valid option)'],
+    ['u', 'update', 'update all dependencies'],
     [
-      'u',
+      '',
       'update-existing [updateExisting]',
       'DEPRECATED (not needed anymore, it is the default now). update existing dependencies version and types',
     ],
@@ -74,6 +76,7 @@ export default class InstallCmd implements Command {
       addMissingPeers: options.addMissingPeers,
       compile: !options.skipCompile,
       includeOptionalDeps: !options.noOptional,
+      updateAll: options.update,
     };
     const components = await this.install.install(packages, installOpts);
     const endTime = Date.now();
