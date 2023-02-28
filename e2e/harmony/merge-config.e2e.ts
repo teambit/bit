@@ -432,8 +432,9 @@ describe('merge config scenarios', function () {
       let beforeMerges: string;
       let barPkgName: string;
       let barCompName: string;
+      let pkgHelper: Helper;
       before(async () => {
-        const pkgHelper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        pkgHelper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
         pkgHelper.scopeHelper.setNewLocalAndRemoteScopes();
         pkgHelper.fixtures.createComponentBarFoo();
         pkgHelper.fixtures.addComponentBarFooAsDir();
@@ -454,7 +455,7 @@ describe('merge config scenarios', function () {
         helper.command.export();
         beforeDiverge = helper.scopeHelper.cloneLocalScope();
 
-        pkgHelper.command.tagAllComponents('--unmodified');
+        pkgHelper.command.tagAllComponents('--unmodified'); // 0.0.2
         pkgHelper.command.export();
 
         helper.command.createLane();
@@ -493,6 +494,28 @@ describe('merge config scenarios', function () {
             expect(deps).to.include(`${barCompName}@0.0.2`);
             expect(deps).to.not.include(`${barCompName}@0.0.1`);
           });
+        });
+      });
+      describe('when the dep was updated in both, the lane and main so there is a conflict', () => {
+        before(() => {
+          pkgHelper.command.tagAllComponents('--unmodified'); // 0.0.3
+          pkgHelper.command.export();
+
+          // on main
+          helper.scopeHelper.getClonedLocalScope(beforeMerges);
+          helper.command.install(`${barPkgName}@0.0.3`);
+          helper.command.tagAllWithoutBuild();
+          helper.command.export();
+        });
+        describe('when the dep is in workspace.jsonc', () => {
+          before(() => {
+            // helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+          });
+          it.only('should not change workspace.jsonc with the lane version', () => {
+            const policy = helper.bitJsonc.getPolicyFromDependencyResolver();
+            expect(policy.dependencies[barPkgName]).to.equal('0.0.1');
+          });
+          it('should show conflict', () => {});
         });
       });
     }
