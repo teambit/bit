@@ -1,8 +1,10 @@
 import { ComponentModel } from '@teambit/component';
+import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 
 export type ComponentCompareComponentModel = {
   model: ComponentModel;
+  descriptor?: ComponentDescriptor;
   hasLocalChanges?: boolean;
 };
 

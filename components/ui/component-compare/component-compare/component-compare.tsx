@@ -74,8 +74,16 @@ export function ComponentCompare(props: ComponentCompareProps) {
     (lastVersionInfo && component.id.changeVersion(lastVersionInfo.tag || lastVersionInfo.hash)) ||
     component.id;
 
-  const { component: base, loading: loadingBase } = useComponent(host, baseId.toString(), { customUseComponent });
-  const { component: compareComponent, loading: loadingCompare } = useComponent(host, _compareId?.toString() || '', {
+  const {
+    component: base,
+    loading: loadingBase,
+    componentDescriptor: baseComponentDescriptor,
+  } = useComponent(host, baseId.toString(), { customUseComponent });
+  const {
+    component: compareComponent,
+    loading: loadingCompare,
+    componentDescriptor: compareComponentDescriptor,
+  } = useComponent(host, _compareId?.toString() || '', {
     skip: !_compareId,
     customUseComponent,
   });
@@ -83,8 +91,6 @@ export function ComponentCompare(props: ComponentCompareProps) {
   const loading = loadingBase || loadingCompare;
 
   const compare = _compareId ? compareComponent : component;
-
-  const isEmpty = !compareIsLocalChanges && !loading && compare?.id.toString() === base?.id.toString();
 
   const compCompareId = `${base?.id.toString()}-${compare?.id.toString()}`;
 
@@ -126,10 +132,12 @@ export function ComponentCompare(props: ComponentCompareProps) {
   const componentCompareModel = {
     compare: compare && {
       model: compare,
+      descriptor: compareComponentDescriptor,
       hasLocalChanges: compareIsLocalChanges,
     },
     base: base && {
       model: base,
+      descriptor: baseComponentDescriptor,
     },
     loading,
     logsByVersion,
@@ -146,8 +154,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
     <ComponentCompareContext.Provider value={componentCompareModel}>
       <div className={classnames(styles.componentCompareContainer, className)} {...rest}>
         {loading && <Loader className={classnames(styles.loader)} />}
-        {isEmpty && <ComponentCompareBlankState />}
-        {!loading && !isEmpty && <RenderCompareScreen key={compCompareId} {...props} changes={changes} />}
+        {!loading && <RenderCompareScreen key={compCompareId} {...props} changes={changes} />}
       </div>
     </ComponentCompareContext.Provider>
   );
