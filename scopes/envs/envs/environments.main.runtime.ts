@@ -516,7 +516,7 @@ export class EnvsMain {
     return this.getEnvDefinitionById(newId);
   }
 
-  private getEnvDefinitionByStringId(envId: string): EnvDefinition | undefined {
+  public getEnvDefinitionByStringId(envId: string): EnvDefinition | undefined {
     const env = this.envSlot.get(envId);
     if (env) {
       return new EnvDefinition(envId, env as Environment);

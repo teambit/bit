@@ -4,6 +4,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import { isSnap } from '@teambit/component-version';
 import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -48,7 +49,13 @@ export class SignMain {
    * important! this method mutates the legacyScope. it assigns the currentLaneId according to the `bit sign --lane` flag.
    * if for some reason you're using this API in a long-running-process, make sure to revert it.
    */
-  async sign(ids: ComponentID[], isMultiple?: boolean, push?: boolean, laneIdStr?: string): Promise<SignResult | null> {
+  async sign(
+    ids: ComponentID[],
+    isMultiple?: boolean,
+    push?: boolean,
+    laneIdStr?: string,
+    rebuild?: boolean
+  ): Promise<SignResult | null> {
     let lane: Lane | undefined;
     if (isMultiple) {
       const longProcessLogger = this.logger.createLongProcessLogger('import objects');
@@ -64,7 +71,7 @@ export class SignMain {
       longProcessLogger.end();
       this.logger.consoleSuccess();
     }
-    const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids);
+    const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids, rebuild);
     if (ids.length && componentsToSkip.length) {
       // eslint-disable-next-line no-console
       console.log(`the following component(s) were already signed successfully:
@@ -78,9 +85,11 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     this.logger.setStatusLine(`loading ${componentsToSign.length} components and their aspects...`);
     const components = await this.scope.loadMany(componentsToSign, lane);
     this.logger.clearStatusLine();
+    // it's enough to check the first component whether it's a snap or tag, because it can't be a mix of both
+    const shouldRunSnapPipeline = isSnap(components[0].id.version);
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       components,
-      { throwOnError: false },
+      { throwOnError: false, isSnap: shouldRunSnapPipeline },
       { seedersOnly: true, installOptions: { copyPeerToRuntimeOnComponents: true, installPeersFromEnvs: true } }
     );
     const legacyBuildResults = this.scope.builderDataMapToLegacyOnTagResults(builderDataMap);
@@ -94,8 +103,8 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
         await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus, lane);
       } else {
         await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
+        await this.clearScopesCaches(legacyComponents);
       }
-      await this.clearScopesCaches(legacyComponents);
     }
     await this.triggerOnPostSign(components);
 
@@ -159,7 +168,10 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     });
   }
 
-  private async getComponentIdsToSign(ids: ComponentID[]): Promise<{
+  private async getComponentIdsToSign(
+    ids: ComponentID[],
+    rebuild?: boolean
+  ): Promise<{
     componentsToSkip: ComponentID[];
     componentsToSign: ComponentID[];
   }> {
@@ -173,7 +185,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const componentsToSkip: ComponentID[] = [];
     components.forEach((component) => {
       if (component.state._consumer.buildStatus === BuildStatus.Succeed) {
-        componentsToSkip.push(component.id);
+        rebuild ? componentsToSign.push(component.id) : componentsToSkip.push(component.id);
       } else {
         componentsToSign.push(component.id);
       }

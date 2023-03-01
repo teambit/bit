@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { applyVersionReport, installationErrorOutput } from '@teambit/merging';
+import { applyVersionReport, installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
 import { Command, CommandOptions } from '@teambit/cli';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { LanesMain } from './lanes.main.runtime';
@@ -21,7 +21,7 @@ export class SwitchCmd implements Command {
       'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"',
     ],
     ['a', 'get-all', 'checkout all components in a lane include ones that do not exist in the workspace'],
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
   loader = true;
@@ -45,7 +45,7 @@ export class SwitchCmd implements Command {
       json?: boolean;
     }
   ) {
-    const { components, failedComponents, installationError } = await this.lanes.switchLanes(lane, {
+    const { components, failedComponents, installationError, compilationError } = await this.lanes.switchLanes(lane, {
       alias,
       merge,
       getAll,
@@ -82,6 +82,11 @@ export class SwitchCmd implements Command {
     };
     const failedOutput = getFailureOutput();
     const successOutput = getSuccessfulOutput();
-    return failedOutput + successOutput + installationErrorOutput(installationError);
+    return (
+      failedOutput +
+      successOutput +
+      installationErrorOutput(installationError) +
+      compilationErrorOutput(compilationError)
+    );
   }
 }

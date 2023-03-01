@@ -134,7 +134,7 @@ export class CheckoutMain {
 
     markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
 
-    const componentsWithDependencies = compact(componentsResults.map((c) => c.component));
+    const componentsLegacy = compact(componentsResults.map((c) => c.component));
 
     let newFromLane: ComponentID[] | undefined;
     let newFromLaneAdded = false;
@@ -142,18 +142,18 @@ export class CheckoutMain {
       newFromLane = await this.getNewComponentsFromLane(checkoutProps.ids || []);
       if (checkoutProps.entireLane) {
         const compsNewFromLane = await Promise.all(
-          newFromLane.map((id) => consumer.loadComponentWithDependenciesFromModel(id._legacy))
+          newFromLane.map((id) => consumer.loadComponentFromModelImportIfNeeded(id._legacy))
         );
-        componentsWithDependencies.push(...compsNewFromLane);
+        componentsLegacy.push(...compsNewFromLane);
         newFromLaneAdded = true;
       }
     }
 
     const leftUnresolvedConflicts = componentWithConflict && checkoutProps.mergeStrategy === 'manual';
     let componentWriterResults;
-    if (componentsWithDependencies.length) {
+    if (componentsLegacy.length) {
       const manyComponentsWriterOpts = {
-        componentsWithDependencies,
+        components: componentsLegacy,
         skipDependencyInstallation: checkoutProps.skipNpmInstall || leftUnresolvedConflicts,
         verbose: checkoutProps.verbose,
         resetConfig: checkoutProps.reset,
@@ -172,6 +172,7 @@ export class CheckoutMain {
       newFromLane: newFromLane?.map((n) => n.toString()),
       newFromLaneAdded,
       installationError: componentWriterResults?.installationError,
+      compilationError: componentWriterResults?.compilationError,
     };
   }
 

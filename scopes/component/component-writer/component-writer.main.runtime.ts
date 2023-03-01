@@ -3,13 +3,12 @@ import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 import MoverAspect, { MoverMain } from '@teambit/mover';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
-import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
 import { isDir, isDirEmptySync } from '@teambit/legacy/dist/utils';
 import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
@@ -19,7 +18,7 @@ import ComponentWriter, { ComponentWriterProps } from './component-writer';
 import { ComponentWriterAspect } from './component-writer.aspect';
 
 export interface ManyComponentsWriterParams {
-  componentsWithDependencies: ComponentWithDependencies[];
+  components: ConsumerComponent[];
   writeToPath?: string;
   throwForExistingDir?: boolean;
   writeConfig?: boolean;
@@ -28,7 +27,7 @@ export interface ManyComponentsWriterParams {
   resetConfig?: boolean;
 }
 
-export type ComponentWriterResults = { installationError?: Error };
+export type ComponentWriterResults = { installationError?: Error; compilationError?: Error };
 
 export class ComponentWriterMain {
   constructor(
@@ -49,16 +48,18 @@ export class ComponentWriterMain {
     this.moveComponentsIfNeeded(opts);
     await this.persistComponentsData(opts);
     let installationError: Error | undefined;
+    let compilationError: Error | undefined;
     if (!opts.skipDependencyInstallation) {
       installationError = await this.installPackagesGracefully();
-      await this.compile(); // no point to compile if the installation is not running. the environment is not ready.
+      // no point to compile if the installation is not running. the environment is not ready.
+      compilationError = await this.compileGracefully();
     }
     await this.consumer.writeBitMap();
     this.logger.debug('writeMany, completed!');
-    return { installationError };
+    return { installationError, compilationError };
   }
 
-  private async installPackagesGracefully() {
+  private async installPackagesGracefully(): Promise<Error | undefined> {
     this.logger.debug('installPackagesGracefully, start installing packages');
     try {
       const installOpts = {
@@ -75,22 +76,19 @@ export class ComponentWriterMain {
       return err;
     }
   }
-  private async compile() {
+  private async compileGracefully(): Promise<Error | undefined> {
     try {
       await this.compiler.compileOnWorkspace();
+      return undefined;
     } catch (err: any) {
-      this.logger.error('compile, compiler found an error', err);
-      throw new BitError(`failed compiling the components. please run "bit compile" once the issue is fixed
-error from the compiler: ${err.message}.
-please use the '--log=error' flag for the full error.`);
+      this.logger.consoleFailure(`compilation failed with the following error: ${err.message}`);
+      this.logger.error('compileGracefully, compiler found an error', err);
+      return err;
     }
   }
   private async persistComponentsData(opts: ManyComponentsWriterParams) {
     const dataToPersist = new DataToPersist();
-    opts.componentsWithDependencies.forEach((componentWithDeps) => {
-      const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
-      allComponents.forEach((component) => dataToPersist.merge(component.dataToPersist));
-    });
+    opts.components.forEach((component) => dataToPersist.merge(component.dataToPersist));
     const componentsConfig = this.consumer?.config?.componentsConfig;
     if (componentsConfig?.hasChanged) {
       const jsonFiles = await this.consumer?.config.toVinyl(this.consumer.getPath());
@@ -102,8 +100,8 @@ please use the '--log=error' flag for the full error.`);
     await dataToPersist.persistAllToFS();
   }
   private async populateComponentsFilesToWrite(opts: ManyComponentsWriterParams) {
-    const writeComponentsParams = opts.componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) =>
-      this.getWriteParamsOfOneComponent(componentWithDeps, opts)
+    const writeComponentsParams = opts.components.map((component) =>
+      this.getWriteParamsOfOneComponent(component, opts)
     );
     const componentWriterInstances = writeComponentsParams.map((writeParams) => new ComponentWriter(writeParams));
     this.fixDirsIfNested(componentWriterInstances);
@@ -160,18 +158,18 @@ please use the '--log=error' flag for the full error.`);
   }
 
   private getWriteParamsOfOneComponent(
-    componentWithDeps: ComponentWithDependencies,
+    component: ConsumerComponent,
     opts: ManyComponentsWriterParams
   ): ComponentWriterProps {
     const componentRootDir: PathLinuxRelative = opts.writeToPath
       ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(opts.writeToPath)))
-      : this.consumer.composeRelativeComponentPath(componentWithDeps.component.id);
+      : this.consumer.composeRelativeComponentPath(component.id);
     const getParams = () => {
       if (!this.consumer) {
         return {};
       }
       // components can't be saved with multiple versions, so we can ignore the version to find the component in bit.map
-      const componentMap = this.consumer.bitMap.getComponentIfExist(componentWithDeps.component.id, {
+      const componentMap = this.consumer.bitMap.getComponentIfExist(component.id, {
         ignoreVersion: true,
       });
       this.throwErrorWhenDirectoryNotEmpty(this.consumer.toAbsolutePath(componentRootDir), componentMap, opts);
@@ -182,7 +180,7 @@ please use the '--log=error' flag for the full error.`);
     return {
       consumer: this.consumer,
       bitMap: this.consumer.bitMap,
-      component: componentWithDeps.component,
+      component,
       writeToPath: componentRootDir,
       writeConfig: opts.writeConfig,
       ...getParams(),
@@ -190,21 +188,19 @@ please use the '--log=error' flag for the full error.`);
   }
   private moveComponentsIfNeeded(opts: ManyComponentsWriterParams) {
     if (opts.writeToPath && this.consumer) {
-      opts.componentsWithDependencies.forEach((componentWithDeps) => {
-        // @ts-ignore componentWithDeps.component.componentMap is set
-        const componentMap: ComponentMap = componentWithDeps.component.componentMap;
+      opts.components.forEach((component) => {
+        const componentMap = component.componentMap as ComponentMap;
         if (!componentMap.rootDir) {
           throw new GeneralError(`unable to use "--path" flag.
 to move individual files, use bit move.
 to move all component files to a different directory, run bit remove and then bit import --path`);
         }
-        const relativeWrittenPath = componentWithDeps.component.writtenPath;
+        const relativeWrittenPath = component.writtenPath;
         // @ts-ignore relativeWrittenPath is set at this point
         const absoluteWrittenPath = this.consumer.toAbsolutePath(relativeWrittenPath);
         // @ts-ignore this.writeToPath is set at this point
         const absoluteWriteToPath = path.resolve(opts.writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
         if (relativeWrittenPath && absoluteWrittenPath !== absoluteWriteToPath) {
-          const component = componentWithDeps.component;
           this.mover.moveExistingComponent(component, absoluteWrittenPath, absoluteWriteToPath);
         }
       });

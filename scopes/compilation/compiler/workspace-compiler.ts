@@ -3,7 +3,8 @@ import mapSeries from 'p-map-series';
 import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
-import { SerializableResults, Workspace, WatchOptions, OutsideWorkspaceError } from '@teambit/workspace';
+import { SerializableResults, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
+import { WatcherMain, WatchOptions } from '@teambit/watcher';
 import path from 'path';
 import { BitId } from '@teambit/legacy-bit-id';
 import { Logger } from '@teambit/logger';
@@ -11,11 +12,13 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { AbstractVinyl, Dist } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { UiMain } from '@teambit/ui';
+import { readBitRootsDir } from '@teambit/bit-roots';
 import { groupBy, uniq } from 'lodash';
 import type { PreStartOpts } from '@teambit/ui';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
@@ -131,11 +134,19 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     return [packageDir, ...injectedDirs].map((dist) => path.join(dist, distDirName));
   }
 
-  private async getInjectedDirs(packageName: string): Promise<PathOsBasedRelative[]> {
+  private async getInjectedDirs(packageName: string): Promise<string[]> {
     const relativeCompDir = this.workspace.componentDir(this.component.id, undefined, {
       relative: true,
     });
-    return this.dependencyResolver.getInjectedDirs(this.workspace.path, relativeCompDir, packageName);
+    const injectedDirs = await this.dependencyResolver.getInjectedDirs(
+      this.workspace.path,
+      relativeCompDir,
+      packageName
+    );
+    if (injectedDirs.length > 0) return injectedDirs;
+
+    const rootDirs = await readBitRootsDir(this.workspace.path);
+    return rootDirs.map((rootDir) => path.relative(this.workspace.path, path.join(rootDir, packageName)));
   }
 
   private get componentDir(): PathOsBasedAbsolute {
@@ -216,16 +227,13 @@ export class WorkspaceCompiler {
     private aspectLoader: AspectLoaderMain,
     private ui: UiMain,
     private logger: Logger,
-    private dependencyResolver: DependencyResolverMain
+    private dependencyResolver: DependencyResolverMain,
+    private watcher: WatcherMain
   ) {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
-      // When root components are on, register happens in the installer instead
-      // and the installer runs both installation and compilation.
-      if (!this.dependencyResolver.hasRootComponents()) {
-        this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
-      }
-      this.workspace.registerOnPreWatch(this.onPreWatch.bind(this));
+      this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
+      this.watcher.registerOnPreWatch(this.onPreWatch.bind(this));
       this.ui.registerPreStart(this.onPreStart.bind(this));
     }
     if (this.aspectLoader) {
@@ -263,6 +271,7 @@ export class WorkspaceCompiler {
       { initiator: initiator || CompilationInitiator.ComponentChanged },
       true
     );
+    await linkToNodeModulesByComponents([component], this.workspace);
     return {
       results: buildResults,
       toString() {

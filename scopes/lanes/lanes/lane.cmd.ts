@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import yn from 'yn';
 import { ScopeMain } from '@teambit/scope';
-import { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
@@ -129,8 +129,8 @@ export class LaneListCmd implements Command {
 }
 
 export class LaneShowCmd implements Command {
-  name = 'show <lane-name>';
-  description = `show lane details`;
+  name = 'show [lane-name]';
+  description = `show lane details. if no lane specified, show the current lane`;
   alias = '';
   options = [
     ['j', 'json', 'show the lane details in json format'],
@@ -147,6 +147,9 @@ export class LaneShowCmd implements Command {
   async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
     const { remote } = laneOptions;
 
+    if (!name) {
+      name = this.lanes.getCurrentLaneName() || DEFAULT_LANE;
+    }
     const lanes = await this.lanes.getLanes({
       name,
       remote,
@@ -155,7 +158,9 @@ export class LaneShowCmd implements Command {
     const onlyLane = lanes[0];
     const title = `showing information for ${chalk.bold(onlyLane.id.toString())}\n`;
     const author = `author: ${onlyLane.log?.username || 'N/A'} <${onlyLane.log?.email || 'N/A'}>\n`;
-    const date = onlyLane.log?.date ? `${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n` : undefined;
+    const date = onlyLane.log?.date
+      ? `created: ${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n`
+      : undefined;
     return title + author + date + outputComponents(onlyLane.components);
   }
 
@@ -279,6 +284,7 @@ export class LaneRemoveCmd implements Command {
   name = 'remove <lanes...>';
   arguments = [{ name: 'lanes...', description: 'A list of lane names, separated by spaces' }];
   description = `remove lanes`;
+  group = 'collaborate';
   alias = '';
   options = [
     ['r', 'remote', 'remove a remote lane (in the lane arg, use remote/lane-id syntax)'],
@@ -286,7 +292,6 @@ export class LaneRemoveCmd implements Command {
     ['s', 'silent', 'skip confirmation'],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(private lanes: LanesMain) {}
@@ -321,7 +326,7 @@ export class LaneImportCmd implements Command {
   arguments = [{ name: 'lane', description: 'the remote lane name' }];
   alias = '';
   options = [
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
   ] as CommandOptions;
   loader = true;
   private = true;

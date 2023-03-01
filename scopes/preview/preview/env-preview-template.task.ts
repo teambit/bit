@@ -104,10 +104,10 @@ export class EnvPreviewTemplateTask implements BuildTask {
       targets: [],
       entry: [],
       development: context.dev,
-      isEnvTemplate: true,
       metaData: {
         initiator: `${GENERATE_ENV_TEMPLATE_TASK_NAME} task`,
         envId: context.id,
+        isEnvTemplate: true,
       },
     });
 
@@ -247,7 +247,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
           if (!def.renderTemplatePathByEnv) return undefined;
           return {
             name: def.prefix,
-            path: await def.renderTemplatePathByEnv(envDef.env) || '',
+            path: (await def.renderTemplatePathByEnv(envDef.env)) || '',
             include: def.include,
           };
         })

@@ -39,7 +39,7 @@ export class PreviewService implements EnvService<any> {
       getAdditionalHostDependencies: preview.getHostDependencies.bind(preview),
       getMounter: preview.getMounter.bind(preview),
       getDocsTemplate: preview.getDocsTemplate.bind(preview),
-      getPreviewConfig: preview.getPreviewConfig.bind(preview)
+      getPreviewConfig: preview.getPreviewConfig.bind(preview),
     };
 
     if (preview.getTemplateBundler) {

@@ -7,9 +7,11 @@ import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { BitError } from '@teambit/bit-error';
 import { Scope } from '@teambit/legacy/dist/scope';
+import fsx from 'fs-extra';
 import mapSeries from 'p-map-series';
 import execa from 'execa';
 import { PkgAspect } from './pkg.aspect';
+import { PkgExtensionConfig } from './pkg.main.runtime';
 
 export type PublisherOptions = {
   dryRun?: boolean;
@@ -61,18 +63,18 @@ export class Publisher {
     const errors: string[] = [];
     let metadata: TaskMetadata = {};
     try {
+      this.logger.off();
       // @todo: once capsule.exec works properly, replace this
-      const { stdout, stderr } = await execa(this.packageManager, publishParams, { cwd });
+      // It is important to use stdio: 'inherit' so when npm asks for the OTP, the user can enter it
+      await execa(this.packageManager, publishParams, { cwd, stdio: 'inherit' });
+      this.logger.on();
       this.logger.debug(`${componentIdStr}, successfully ran ${this.packageManager} ${publishParamsStr} at ${cwd}`);
-      this.logger.debug(`${componentIdStr}, stdout: ${stdout}`);
-      this.logger.debug(`${componentIdStr}, stderr: ${stderr}`);
-      const publishedPackage = stdout.replace('+ ', ''); // npm adds "+ " prefix before the published package
-      metadata = this.options.dryRun ? {} : { publishedPackage };
+      const pkg = await fsx.readJSON(`${capsule.path}/package.json`);
+      metadata = this.options.dryRun ? {} : { publishedPackage: `${pkg.name}@${pkg.version}` };
     } catch (err: any) {
       const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}`;
       this.logger.error(`${componentIdStr}, ${errorMsg}`);
-      if (err.stderr) this.logger.error(`${componentIdStr}, ${err.stderr}`);
-      errors.push(`${errorMsg}\n${err.stderr}`);
+      errors.push(errorMsg);
     }
     const component = capsule.component;
     return { component, metadata, errors, startTime, endTime: Date.now() };
@@ -113,7 +115,9 @@ export class Publisher {
   public shouldPublish(extensions: ExtensionDataList): boolean {
     const pkgExt = extensions.findExtension(PkgAspect.id);
     if (!pkgExt) return false;
-    return pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig;
+    const config = pkgExt.config as PkgExtensionConfig;
+    if (config?.avoidPublishToNPM) return false;
+    return config?.packageJson?.name || config?.packageJson?.publishConfig;
   }
 
   private getExtraArgsFromConfig(component: Component): string | undefined {

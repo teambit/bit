@@ -289,7 +289,7 @@ describe('import functionality on Harmony', function () {
 
       // intermediate step, make sure the types are saved in the
       const show = helper.command.showComponentParsed('bar');
-      expect(show.devPackageDependencies).to.include({ '@types/cors': '2.8.10' });
+      expect(show.devPackageDependencies).to.include({ '@types/cors': '^2.8.10' });
 
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -303,7 +303,7 @@ describe('import functionality on Harmony', function () {
     });
     it('bit show should show the typed dependency', () => {
       const show = helper.command.showComponentParsed('bar');
-      expect(show.devPackageDependencies).to.include({ '@types/cors': '2.8.10' });
+      expect(show.devPackageDependencies).to.include({ '@types/cors': '^2.8.10' });
     });
   });
 });

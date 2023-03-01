@@ -60,6 +60,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
+
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ComponentConfigFile } from './component-config-file';
 import {
@@ -68,11 +69,9 @@ import {
   OnComponentEventResult,
   OnComponentLoad,
   OnComponentRemove,
-  OnMultipleComponentsAdd,
   SerializableResults,
 } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
-import { Watcher, WatchOptions } from './watch/watcher';
 import { ComponentStatus } from './workspace-component/component-status';
 import {
   OnAspectsResolve,
@@ -81,9 +80,6 @@ import {
   OnComponentChangeSlot,
   OnComponentLoadSlot,
   OnComponentRemoveSlot,
-  OnMultipleComponentsAddSlot,
-  OnPreWatch,
-  OnPreWatchSlot,
   OnRootAspectAdded,
   OnRootAspectAddedSlot,
 } from './workspace.provider';
@@ -190,10 +186,6 @@ export class Workspace implements ComponentFactory {
 
     private onComponentRemoveSlot: OnComponentRemoveSlot,
 
-    private onMultipleComponentsAddSlot: OnMultipleComponentsAddSlot,
-
-    private onPreWatchSlot: OnPreWatchSlot,
-
     private onAspectsResolveSlot: OnAspectsResolveSlot,
 
     private onRootAspectAddedSlot: OnRootAspectAddedSlot,
@@ -231,11 +223,6 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
-   * watcher api.
-   */
-  readonly watcher = new Watcher(this, this.pubsub);
-
-  /**
    * root path of the Workspace.
    */
   get path() {
@@ -266,18 +253,8 @@ export class Workspace implements ComponentFactory {
     return this;
   }
 
-  registerOnMultipleComponentsAdd(onMultipleComponentsAddFunc: OnMultipleComponentsAdd) {
-    this.onMultipleComponentsAddSlot.register(onMultipleComponentsAddFunc);
-    return this;
-  }
-
   registerOnComponentRemove(onComponentRemoveFunc: OnComponentRemove) {
     this.onComponentRemoveSlot.register(onComponentRemoveFunc);
-    return this;
-  }
-
-  registerOnPreWatch(onPreWatchFunc: OnPreWatch) {
-    this.onPreWatchSlot.register(onPreWatchFunc);
     return this;
   }
 
@@ -461,9 +438,11 @@ export class Workspace implements ComponentFactory {
     if (allIds.length === availableIds.length) return [];
     const unavailableIds = allIds.filter((id) => !availableIds.hasWithoutScopeAndVersion(id));
     if (!unavailableIds.length) return [];
+    const removedIds = this.consumer.bitMap.getRemoved();
     const compsWithHead: BitId[] = [];
     await Promise.all(
       unavailableIds.map(async (id) => {
+        if (removedIds.has(id)) return; // we don't care about removed components
         const modelComp = await this.scope.legacyScope.getModelComponentIfExist(id);
         if (modelComp && modelComp.head) compsWithHead.push(id);
       })
@@ -674,11 +653,6 @@ export class Workspace implements ComponentFactory {
 
     await this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { componentIds: [id.toObject()] } });
     return results;
-  }
-
-  async triggerOnMultipleComponentsAdd(): Promise<void> {
-    const onAddEntries = this.onMultipleComponentsAddSlot.toArray();
-    await mapSeries(onAddEntries, async ([, onAddFunc]) => onAddFunc());
   }
 
   getState(id: ComponentID, hash: string) {
@@ -949,9 +923,13 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * by default the absolute path, unless `options.relative` was set
    */
   componentPackageDir(component: Component, options = { relative: false }): string {
-    const packageName = componentIdToPackageName(component.state._consumer);
+    const packageName = this.componentPackageName(component);
     const packageDir = path.join('node_modules', packageName);
     return options.relative ? packageDir : this.consumer.toAbsolutePath(packageDir);
+  }
+
+  componentPackageName(component: Component): string {
+    return componentIdToPackageName(component.state._consumer);
   }
 
   private componentDirFromLegacyId(
@@ -1043,6 +1021,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.aspectsMerger.mergeConflictFile;
   }
 
+  getDepsDataOfMergeConfig(id: BitId): Record<string, any> | undefined {
+    return this.aspectsMerger.getDepsDataOfMergeConfig(id);
+  }
+
   async listComponentsDuringMerge(): Promise<ComponentID[]> {
     const unmergedComps = this.scope.legacyScope.objects.unmergedComponents.getComponents();
     const bitIds = unmergedComps.map((u) => new BitId(u.id));
@@ -1066,14 +1048,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (typeof consumerComp._isModified === 'boolean') return consumerComp._isModified;
     const componentStatus = await this.consumer.getComponentStatusById(component.id._legacy);
     return componentStatus.modified === true;
-  }
-
-  async triggerOnPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
-    const components = await this.getMany(componentIds);
-    const preWatchFunctions = this.onPreWatchSlot.values();
-    await mapSeries(preWatchFunctions, async (func) => {
-      await func(components, watchOpts);
-    });
   }
 
   /**
@@ -1139,7 +1113,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     }
   }
 
-  async removeSpecificComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist: boolean) {
+  async removeSpecificComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist = false) {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {
       await componentConfigFile.removeAspect(aspectId, markWithMinusIfNotExist, this.resolveComponentId.bind(this));
@@ -1552,8 +1526,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
           return;
         }
         const currentEnvWithPotentialVersion = await this.getAspectIdFromConfig(id, currentEnv, true);
-        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv, true);
-        await this.removeSpecificComponentConfig(id, EnvsAspect.id, true);
+        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv);
+        await this.removeSpecificComponentConfig(id, EnvsAspect.id);
         changed.push(id);
       })
     );

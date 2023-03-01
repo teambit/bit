@@ -1,12 +1,7 @@
 import { GraphQLClient, gql } from 'graphql-request';
 import { InvalidScopeName, isValidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import { getSync } from '../../api/consumer/lib/global-config';
-import {
-  CFG_HUB_DOMAIN_KEY,
-  DEFAULT_HUB_DOMAIN,
-  CFG_USER_TOKEN_KEY,
-  getSymphonyUrl
-} from '../../constants';
+import { CFG_HUB_DOMAIN_KEY, DEFAULT_HUB_DOMAIN, CFG_USER_TOKEN_KEY, getSymphonyUrl } from '../../constants';
 
 import Scope from '../../scope/scope';
 import { getAuthHeader, getFetcherWithAgent } from '../../scope/network/http/http';

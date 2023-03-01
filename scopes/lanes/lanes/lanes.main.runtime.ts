@@ -29,6 +29,7 @@ import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-w
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
+import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -49,8 +50,15 @@ import { LaneSwitcher } from './switch-lanes';
 import { createLane, createLaneInScope, throwForInvalidLaneName } from './create-lane';
 import { LanesCreateRoute } from './lanes.create.route';
 import { LanesDeleteRoute } from './lanes.delete.route';
+import { LanesRestoreRoute } from './lanes.restore.route';
 
 export { Lane };
+
+export type SnapsDistanceObj = {
+  onSource: string[];
+  onTarget: string[];
+  common?: string;
+};
 
 export type LaneResults = {
   lanes: LaneData[];
@@ -82,11 +90,12 @@ export type LaneComponentDiffStatus = {
   changeType?: ChangeType;
   changes?: ChangeType[];
   upToDate?: boolean;
+  snapsDistance?: SnapsDistanceObj;
+  unrelated?: boolean;
 };
 
 export type LaneDiffStatusOptions = {
   skipChanges?: boolean;
-  skipUpToDate?: boolean;
 };
 
 export type LaneDiffStatus = {
@@ -108,7 +117,7 @@ export class LanesMain {
     private merging: MergingMain,
     private componentAspect: ComponentMain,
     public logger: Logger,
-    private importer: ImporterMain,
+    readonly importer: ImporterMain,
     private exporter: ExportMain,
     private componentCompare: ComponentCompareMain,
     readonly componentWriter: ComponentWriterMain
@@ -132,7 +141,8 @@ export class LanesMain {
     if (remote) {
       const remoteObj = await getRemoteByName(remote, consumer);
       const lanes = await remoteObj.listLanes(name, showMergeData);
-      return this.filterSoftRemovedLaneComps(lanes);
+      // no need to filter soft-removed here. it was filtered already in the remote
+      return lanes;
     }
 
     if (name === DEFAULT_LANE) {
@@ -370,8 +380,8 @@ export class LanesMain {
     await this.scope.legacyScope.lanes.saveLane(lane);
 
     // change current-lane if needed
-    const currentLaneName = this.getCurrentLaneName();
-    if (currentLaneName === laneNameWithoutScope) {
+    const currentLaneId = this.getCurrentLaneId();
+    if (currentLaneId?.isEqual(laneId)) {
       const newLaneId = LaneId.from(newName, lane.scope);
       const isExported = this.workspace.consumer.bitMap.isLaneExported;
       this.setCurrentLane(newLaneId, undefined, isExported);
@@ -416,7 +426,12 @@ export class LanesMain {
    * @param targetHead head on the target lane. leave empty if the target is main
    * @returns
    */
-  async getSnapsDistance(componentId: ComponentID, sourceHead?: string, targetHead?: string): Promise<SnapsDistance> {
+  async getSnapsDistance(
+    componentId: ComponentID,
+    sourceHead?: string,
+    targetHead?: string,
+    throws?: boolean
+  ): Promise<SnapsDistance> {
     if (!sourceHead && !targetHead)
       throw new Error(`getDivergeData got sourceHead and targetHead empty. at least one of them should be populated`);
     const modelComponent = await this.scope.legacyScope.getModelComponent(componentId._legacy);
@@ -425,6 +440,7 @@ export class LanesMain {
       repo: this.scope.legacyScope.objects,
       sourceHead: sourceHead ? Ref.from(sourceHead) : modelComponent.head || null,
       targetHead: targetHead ? Ref.from(targetHead) : modelComponent.head || null,
+      throws,
     });
   }
 
@@ -462,6 +478,17 @@ export class LanesMain {
     if (this.workspace) await this.workspace.consumer.onDestroy();
 
     return results.laneResults;
+  }
+
+  /**
+   * when deleting a lane object, it is sent into the "trash" directory in the scope.
+   * this method restores it and put it back in the "objects" directory.
+   * as an argument, it needs a hash. the reason for not supporting lane-id is because the trash may have multiple
+   * lanes with the same lane-id but different hashes.
+   */
+  async restoreLane(laneHash: string) {
+    const ref = Ref.from(laneHash);
+    await this.scope.legacyScope.objects.restoreFromTrash([ref]);
   }
 
   /**
@@ -609,21 +636,23 @@ export class LanesMain {
     targetLaneId?: LaneId,
     options?: LaneDiffStatusOptions
   ): Promise<LaneDiffStatus> {
-    const sourceLane = await this.loadLane(sourceLaneId);
-    if (!sourceLane) throw new Error(`unable to find ${sourceLaneId.toString()} in the scope`);
+    const sourceLaneComponents = sourceLaneId.isDefault()
+      ? (await this.getLaneDataOfDefaultLane())?.components.map((main) => ({ id: main.id, head: Ref.from(main.head) }))
+      : (await this.loadLane(sourceLaneId))?.components;
+
     const targetLane = targetLaneId ? await this.loadLane(targetLaneId) : undefined;
     const targetLaneIds = targetLane?.toBitIds();
     const host = this.componentAspect.getHost();
     const diffProps = compact(
       await Promise.all(
-        sourceLane.components.map(async (comp) => {
-          const componentId = await host.resolveComponentId(comp.id);
-          const sourceVersionObj = (await this.scope.legacyScope.objects.load(comp.head)) as Version;
-          if (sourceVersionObj.isRemoved()) {
+        (sourceLaneComponents || []).map(async ({ id, head }) => {
+          const componentId = await host.resolveComponentId(id);
+          const sourceVersionObj = (await this.scope.legacyScope.objects.load(head)) as Version;
+          if (sourceVersionObj?.isRemoved()) {
             return null;
           }
           const headOnTargetLane = targetLaneIds
-            ? targetLaneIds.searchWithoutVersion(comp.id)?.version
+            ? targetLaneIds.searchWithoutVersion(id)?.version
             : await this.getHeadOnMain(componentId);
 
           if (headOnTargetLane) {
@@ -633,7 +662,7 @@ export class LanesMain {
             }
           }
 
-          const sourceHead = comp.head.toString();
+          const sourceHead = head.toString();
           const targetHead = headOnTargetLane;
 
           return { componentId, sourceHead, targetHead };
@@ -657,16 +686,29 @@ export class LanesMain {
     sourceHead: string,
     targetHead?: string,
     options?: LaneDiffStatusOptions
-  ) {
-    const snapsDistance = !options?.skipUpToDate
-      ? await this.getSnapsDistance(componentId, sourceHead, targetHead)
-      : undefined;
+  ): Promise<LaneComponentDiffStatus> {
+    const snapsDistance = await this.getSnapsDistance(componentId, sourceHead, targetHead, false);
+
+    if (snapsDistance?.err) {
+      const noCommonSnap = snapsDistance.err instanceof NoCommonSnap;
+
+      return {
+        componentId,
+        sourceHead,
+        targetHead,
+        upToDate: snapsDistance?.isUpToDate(),
+        unrelated: noCommonSnap || undefined,
+        changes: [],
+      };
+    }
+
+    const commonSnap = snapsDistance?.commonSnapBeforeDiverge;
 
     const getChanges = async (): Promise<ChangeType[]> => {
-      if (!targetHead) return [ChangeType.NEW];
+      if (!commonSnap) return [ChangeType.NEW];
 
       const compare = await this.componentCompare.compare(
-        componentId.changeVersion(targetHead).toString(),
+        componentId.changeVersion(commonSnap.hash).toString(),
         componentId.changeVersion(sourceHead).toString()
       );
 
@@ -695,7 +737,19 @@ export class LanesMain {
     const changes = !options?.skipChanges ? await getChanges() : undefined;
     const changeType = changes ? changes[0] : undefined;
 
-    return { componentId, changeType, changes, sourceHead, targetHead, upToDate: snapsDistance?.isUpToDate() };
+    return {
+      componentId,
+      changeType,
+      changes,
+      sourceHead,
+      targetHead: commonSnap?.hash,
+      upToDate: snapsDistance?.isUpToDate(),
+      snapsDistance: {
+        onSource: snapsDistance?.snapsOnSourceOnly.map((s) => s.hash) ?? [],
+        onTarget: snapsDistance?.snapsOnTargetOnly.map((s) => s.hash) ?? [],
+        common: snapsDistance?.commonSnapBeforeDiverge?.hash,
+      },
+    };
   }
 
   async addLaneReadme(readmeComponentIdStr: string, laneName?: string): Promise<{ result: boolean; message?: string }> {
@@ -772,6 +826,10 @@ export class LanesMain {
     return '/lanes/delete';
   }
 
+  get restoreRoutePath() {
+    return '/lanes/restore';
+  }
+
   static slots = [];
   static dependencies = [
     CLIAspect,
@@ -845,7 +903,11 @@ export class LanesMain {
     ];
     cli.register(laneCmd, switchCmd);
     graphql.register(lanesSchema(lanesMain));
-    express.register([new LanesCreateRoute(lanesMain, logger), new LanesDeleteRoute(lanesMain, logger)]);
+    express.register([
+      new LanesCreateRoute(lanesMain, logger),
+      new LanesDeleteRoute(lanesMain, logger),
+      new LanesRestoreRoute(lanesMain, logger),
+    ]);
     return lanesMain;
   }
 }

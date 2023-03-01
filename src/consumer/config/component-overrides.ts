@@ -1,4 +1,5 @@
 import R from 'ramda';
+import { pickBy } from 'lodash';
 
 import { BitId } from '../../bit-id';
 import {
@@ -7,7 +8,6 @@ import {
   OVERRIDE_COMPONENT_PREFIX,
   OVERRIDE_FILE_PREFIX,
 } from '../../constants';
-import { filterObject } from '../../utils';
 import { SourceFile } from '../component/sources';
 import ComponentConfig from './component-config';
 import {
@@ -234,6 +234,6 @@ async function runOnLoadOverridesEvent(
   const extensionsAddedOverrides = await Promise.all(extensionsAddedOverridesP);
   let extensionsConfigModificationsObject = mergeExtensionsOverrides(extensionsAddedOverrides);
   const filterFunc = (val) => !R.isEmpty(val);
-  extensionsConfigModificationsObject = filterObject(extensionsConfigModificationsObject, filterFunc);
+  extensionsConfigModificationsObject = pickBy(extensionsConfigModificationsObject, filterFunc);
   return extensionsConfigModificationsObject;
 }

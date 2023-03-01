@@ -1,4 +1,6 @@
+import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { expect } from 'chai';
+import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
@@ -29,7 +31,7 @@ const isPositive = require('is-positive');
       helper.command.tagComponent('comp3 comp1');
       helper.command.export();
       helper.command.removeComponent('comp1');
-      helper.command.install('is-positive@2.0.0 --update-existing');
+      helper.command.install('is-positive@2.0.0');
       helper.command.tagComponent('comp3 comp2', undefined, '--unmodified');
       helper.command.export();
 
@@ -49,10 +51,18 @@ const isPositive = require('is-positive');
       ).to.eq('0.0.2');
     });
     it('should install package dependencies from their respective models to the imported components', () => {
-      expect(helper.fs.readJsonFile(`node_modules/is-positive/package.json`).version).to.eq('1.0.0');
       expect(
-        helper.fs.readJsonFile(
-          path.join(helper.scopes.remoteWithoutOwner, `comp2/node_modules/is-positive/package.json`)
+        fs.readJsonSync(
+          resolveFrom(path.join(helper.fixtures.scopes.localPath, helper.scopes.remoteWithoutOwner, 'comp1'), [
+            'is-positive/package.json',
+          ])
+        ).version
+      ).to.eq('1.0.0');
+      expect(
+        fs.readJsonSync(
+          resolveFrom(path.join(helper.fixtures.scopes.localPath, helper.scopes.remoteWithoutOwner, 'comp2'), [
+            'is-positive/package.json',
+          ])
         ).version
       ).to.eq('2.0.0');
     });

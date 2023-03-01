@@ -1,5 +1,5 @@
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
-import { CompositionContent, EmptyStateSlot } from '@teambit/compositions';
+import { CompositionContent, CompositionContentProps, EmptyStateSlot } from '@teambit/compositions';
 import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
 import { CompareSplitLayoutPreset } from '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset';
 import {
@@ -14,10 +14,11 @@ import { CompositionDropdown } from './composition-dropdown';
 
 export type CompositionCompareProps = {
   emptyState?: EmptyStateSlot;
+  PreviewView?: React.ComponentType<CompositionContentProps>;
 };
 
 export function CompositionCompare(props: CompositionCompareProps) {
-  const { emptyState } = props;
+  const { emptyState, PreviewView = CompositionContent } = props;
 
   const component = useComponentCompare();
 
@@ -87,7 +88,7 @@ export function CompositionCompare(props: CompositionCompareProps) {
     return (
       <div className={styles.subView}>
         <CompositionContextProvider queryParams={baseCompositionParams} setQueryParams={setBaseCompositionParams}>
-          <CompositionContent
+          <PreviewView
             emptyState={emptyState}
             component={component?.base.model}
             selected={selectedBaseComp}
@@ -106,7 +107,7 @@ export function CompositionCompare(props: CompositionCompareProps) {
     return (
       <div className={styles.subView}>
         <CompositionContextProvider queryParams={compareCompositionParams} setQueryParams={setCompareCompositionParams}>
-          <CompositionContent
+          <PreviewView
             emptyState={emptyState}
             component={component.compare.model}
             selected={selectedCompareComp}

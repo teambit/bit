@@ -27,6 +27,7 @@ import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { compact } from 'lodash';
 import { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
@@ -85,6 +86,7 @@ export type ApplyVersionResults = {
   newFromLane?: string[];
   newFromLaneAdded?: boolean;
   installationError?: Error; // in case the package manager failed, it won't throw, instead, it'll return error here
+  compilationError?: Error; // in case the compiler failed, it won't throw, instead, it'll return error here
 };
 
 export class MergingMain {
@@ -95,7 +97,8 @@ export class MergingMain {
     private snapping: SnappingMain,
     private checkout: CheckoutMain,
     private logger: Logger,
-    private componentWriter: ComponentWriterMain
+    private componentWriter: ComponentWriterMain,
+    private importer: ImporterMain
   ) {
     this.consumer = this.workspace?.consumer;
   }
@@ -315,10 +318,12 @@ export class MergingMain {
     otherLane?: Lane | null, // the lane we want to merged to our lane. (null if it's "main").
     options?: { resolveUnrelated?: MergeStrategy; ignoreConfigChanges?: boolean }
   ): Promise<ComponentMergeStatus[]> {
-    const componentStatusBeforeMergeAttempt = await Promise.all(
-      bitIds.map((id) => this.getComponentStatusBeforeMergeAttempt(id, currentLane, options))
+    if (!currentLane && otherLane) {
+      await this.importer.importObjectsFromMainIfExist(otherLane.toBitIds().toVersionLatest());
+    }
+    const componentStatusBeforeMergeAttempt = await mapSeries(bitIds, (id) =>
+      this.getComponentStatusBeforeMergeAttempt(id, currentLane, options)
     );
-
     const toImport = componentStatusBeforeMergeAttempt
       .map((compStatus) => {
         if (!compStatus.divergeData || !compStatus.divergeData.commonSnapBeforeDiverge) return [];
@@ -557,7 +562,8 @@ other:   ${otherLaneHead.toString()}`);
       baseComponent.extensions,
       otherComponent.extensions,
       currentLabel,
-      otherLabel
+      otherLabel,
+      this.logger
     );
     const configMergeResult = configMerger.merge();
 
@@ -611,10 +617,8 @@ other:   ${otherLaneHead.toString()}`);
       if (!localLane) throw new Error('localLane must be defined when resolvedUnrelated');
       if (!resolvedUnrelated?.head) throw new Error('resolvedUnrelated must have head prop');
       localLane.addComponent({ id, head: resolvedUnrelated.head });
-      const head = modelComponent.getRef(currentComponent.id.version as string);
-      if (!head) throw new Error(`unable to get the head for resolved-unrelated ${id.toString()}`);
       unmergedComponent.laneId = localLane.toLaneId();
-      unmergedComponent.head = head;
+      unmergedComponent.head = resolvedUnrelated.head;
       unmergedComponent.unrelated = true;
       consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
       return { id, filesStatus };
@@ -637,8 +641,12 @@ other:   ${otherLaneHead.toString()}`);
     }
     const remoteId = id.changeVersion(remoteHead.toString());
     const idToLoad = !mergeResults || mergeStrategy === MergeOptions.theirs ? remoteId : id;
-    const componentWithDependencies = await consumer.loadComponentWithDependenciesFromModel(idToLoad);
-    const files = componentWithDependencies.component.files;
+    const legacyComponent = await consumer.loadComponentFromModelImportIfNeeded(idToLoad);
+    if (mergeResults && mergeStrategy === MergeOptions.theirs) {
+      // in this case, we don't want to update .bitmap with the version of the remote. we want to keep the same version
+      legacyComponent.version = id.version;
+    }
+    const files = legacyComponent.files;
     files.forEach((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
@@ -647,21 +655,21 @@ other:   ${otherLaneHead.toString()}`);
     if (mergeResults) {
       // update files according to the merge results
       const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(files, mergeResults, mergeStrategy);
-      componentWithDependencies.component.files = modifiedFiles;
+      legacyComponent.files = modifiedFiles;
       filesStatus = { ...filesStatus, ...modifiedStatus };
     }
 
     const manyComponentsWriterOpts = {
       consumer,
-      componentsWithDependencies: [componentWithDependencies],
+      components: [legacyComponent],
       skipDependencyInstallation: true,
       writeConfig: false, // @todo: should write if config exists before, needs to figure out how to do it.
     };
     await this.componentWriter.writeMany(manyComponentsWriterOpts);
 
     if (configMergeResult) {
-      if (!componentWithDependencies.component.writtenPath) {
-        throw new Error(`componentWithDependencies.component.writtenPath is missing for ${id.toString()}`);
+      if (!legacyComponent.writtenPath) {
+        throw new Error(`component.writtenPath is missing for ${id.toString()}`);
       }
       const successfullyMergedConfig = configMergeResult.getSuccessfullyMergedConfig();
       if (successfullyMergedConfig) {
@@ -798,19 +806,21 @@ other:   ${otherLaneHead.toString()}`);
     InstallAspect,
     LoggerAspect,
     ComponentWriterAspect,
+    ImporterAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, snapping, checkout, install, loggerMain, compWriter]: [
+  static async provider([cli, workspace, snapping, checkout, install, loggerMain, compWriter, importer]: [
     CLIMain,
     Workspace,
     SnappingMain,
     CheckoutMain,
     InstallMain,
     LoggerMain,
-    ComponentWriterMain
+    ComponentWriterMain,
+    ImporterMain
   ]) {
     const logger = loggerMain.createLogger(MergingAspect.id);
-    const merging = new MergingMain(workspace, install, snapping, checkout, logger, compWriter);
+    const merging = new MergingMain(workspace, install, snapping, checkout, logger, compWriter, importer);
     cli.register(new MergeCmd(merging));
     return merging;
   }

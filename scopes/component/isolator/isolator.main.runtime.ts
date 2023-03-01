@@ -39,7 +39,7 @@ import path from 'path';
 import equals from 'ramda/src/equals';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
-import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
+import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -469,7 +469,10 @@ export class IsolatorMain {
       components.map(async (component) => {
         const capsule = capsuleList.getCapsule(component.id);
         if (!capsule) return;
-        const scope = (await CapsuleList.capsuleUsePreviouslySavedDists(component)) ? legacyScope : undefined;
+        const scope =
+          (await CapsuleList.capsuleUsePreviouslySavedDists(component)) || opts?.populateArtifactsFromParent
+            ? legacyScope
+            : undefined;
         const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(component, allIds, scope, opts);
         await dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
       })
@@ -645,7 +648,7 @@ export class IsolatorMain {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       packageJson.addOrUpdateProperty('version', semver.inc(legacyComp.version!, 'prerelease') || '0.0.1-0');
     }
-    await PackageJsonTransformer.applyTransformers(legacyComp, packageJson);
+    await PackageJsonTransformer.applyTransformers(component, packageJson);
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
     dataToPersist.addFile(packageJson.toVinylFile());
@@ -707,6 +710,7 @@ export class IsolatorMain {
   ): Promise<AbstractVinyl[]> {
     const legacyComp: ConsumerComponent = component.state._consumer;
     if (!legacyScope) {
+      if (fetchParentArtifacts) throw new Error(`unable to fetch from parent, the legacyScope was not provided`);
       // when capsules are written via the workspace, do not write artifacts, they get created by
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return [];
@@ -718,7 +722,9 @@ export class IsolatorMain {
     const artifactFilesToFetch = async () => {
       if (fetchParentArtifacts) {
         const parent = component.head?.parents[0];
-        const compParent = await legacyScope.getConsumerComponent(legacyComp.id.changeVersion(parent?.toString()));
+        if (!parent)
+          throw new Error(`unable to fetch artifacts from parent. parent is missing for ${component.id.toString()}`);
+        const compParent = await legacyScope.getConsumerComponent(legacyComp.id.changeVersion(parent.toString()));
         return getArtifactFilesExcludeExtension(compParent.extensions, 'teambit.pkg/pkg');
       }
       const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];

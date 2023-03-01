@@ -16,6 +16,7 @@ export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
   description = 'EXPERIMENTAL. create an immutable and exportable component snapshot (no release version)';
   extendedDescription: string;
+  group = 'development';
   arguments = [
     {
       name: 'component-pattern',
@@ -56,7 +57,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     ],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {

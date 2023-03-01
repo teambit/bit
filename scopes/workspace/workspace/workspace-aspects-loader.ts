@@ -13,7 +13,7 @@ import {
 import { MainRuntime } from '@teambit/cli';
 import fs from 'fs-extra';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
-import { linkToNodeModules } from '@teambit/workspace.modules.node-modules-linker';
+import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import pMapSeries from 'p-map-series';
@@ -336,7 +336,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     // TODO: this should be done properly by the install aspect by slot
     if (missingPaths) {
       const bitIds: BitId[] = ids.map((id) => id._legacy);
-      return linkToNodeModules(this.workspace, bitIds);
+      return linkToNodeModulesByIds(this.workspace, bitIds);
     }
     return Promise.resolve();
   }

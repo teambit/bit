@@ -240,13 +240,13 @@ jobs:
       - run: cd bit && docker push bitcli/bit-symphony:`npm show @teambit/bit version`
       - run: cd bit && docker push bitcli/bit-symphony:latest
 
-  docker_build:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - attach_workspace:
-          at: ./
-      - docker_build_and_push
+  # docker_build:
+  #   machine:
+  #     image: ubuntu-2004:202111-02
+  #   steps:
+  #     - attach_workspace:
+  #         at: ./
+  #     - docker_build_and_push
 
   docker_build_node_14:
     machine:
@@ -268,15 +268,15 @@ jobs:
           docker_build_arg_value: "node:16.15.0"
           docker_tag_suffix: "-node-16.15.0"
 
-  docker_non_root_build:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - attach_workspace:
-          at: ./
-      - docker_build_and_push:
-          image_name: "bitcli/bit-non-root"
-          docker_file_name: "Dockerfile-bit-non-root"
+  # docker_non_root_build:
+  #   machine:
+  #     image: ubuntu-2004:202111-02
+  #   steps:
+  #     - attach_workspace:
+  #         at: ./
+  #     - docker_build_and_push:
+  #         image_name: "bitcli/bit-non-root"
+  #         docker_file_name: "Dockerfile-bit-non-root"
 
   docker_non_root_build_node_14:
     machine:
@@ -687,10 +687,6 @@ jobs:
       # - run: cd bit && ls -l node_modules/@babel/cli/bin
       # - run: cd bit && ls -l node_modules/.bin
 
-      # temporary hack to fix the flattenedEdge issue with this component
-      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/sort-logs@0.0.1 --objects --all-history
-      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/group-by-version@0.0.1 --objects --all-history
-
       - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
@@ -769,6 +765,7 @@ jobs:
       - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
       - run: cd bit && bit checkout head teambit.harmony/content/cli-reference --ours --skip-dependency-installation
       - run: cd bit && bit checkout head --skip-dependency-installation
+      - run: cd bit && git diff
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
       # - run: cd bit && bbit checkout head
       # - run: cd bit && npm run link-bit-legacy
@@ -780,9 +777,6 @@ jobs:
       - run: cd bit && bit cc
       # - run: cd bit && bit config set cache.max.objects 100000
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
-      # temporary hack to fix the flattenedEdge issue with this component
-      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/sort-logs@0.0.1 --objects --all-history
-      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/group-by-version@0.0.1 --objects --all-history
       - run:
           name: tag persist
           # command: cd bit && bit tag --ignore-newest-version
@@ -792,6 +786,7 @@ jobs:
           no_output_timeout: '25m'
           environment:
             NODE_OPTIONS: --max_old_space_size=12000
+      - run: cd bit && git diff
       - run:
           name: backup bit objects (before export)
           command: cd bit && tar -zcvf objects-before-export.tar .git/bit/objects
@@ -1122,6 +1117,7 @@ jobs:
       - update_ssh_agent
       - set_git_credentials
       - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
+      - run: cd bit && git diff
       - run:
           name: export components
           command: cd bit && BIT_FEATURES=export-central bit export
@@ -1835,15 +1831,15 @@ workflows:
       - symphony_docker_build:
           requires:
             - bit_tag
-      - docker_build:
-          requires:
-            - harmony_publish_to_gcloud
-      - docker_non_root_build:
-          requires:
-            - harmony_publish_to_gcloud
-      - server_docker_build:
-          requires:
-            - docker_build
+      # - docker_build:
+      #     requires:
+      #       - harmony_publish_to_gcloud
+      # - docker_non_root_build:
+      #     requires:
+      #       - harmony_publish_to_gcloud
+      # - server_docker_build:
+      #     requires:
+      #       - docker_build
       - docker_build_node_14:
           requires:
             - harmony_publish_to_gcloud
@@ -1978,18 +1974,18 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
-      - docker_build:
-          requires:
-            - harmony_deploy_approval_job
-            - harmony_publish_to_gcloud
-      - docker_non_root_build:
-          requires:
-            - harmony_deploy_approval_job
-            - harmony_publish_to_gcloud
-      - server_docker_build:
-          requires:
-            - harmony_deploy_approval_job
-            - docker_build
+      # - docker_build:
+      #     requires:
+      #       - harmony_deploy_approval_job
+      #       - harmony_publish_to_gcloud
+      # - docker_non_root_build:
+      #     requires:
+      #       - harmony_deploy_approval_job
+      #       - harmony_publish_to_gcloud
+      # - server_docker_build:
+      #     requires:
+      #       - harmony_deploy_approval_job
+      #       - docker_build
       - docker_build_node_14:
           requires:
             - harmony_deploy_approval_job

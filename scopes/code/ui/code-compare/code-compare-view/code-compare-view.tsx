@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, useMemo, useRef, useState, ComponentType } from 'react';
+import React, { HTMLAttributes, useMemo, useRef, useState, ComponentType, useEffect } from 'react';
 import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DiffOnMount } from '@monaco-editor/react';
 import { FileIconSlot } from '@teambit/code';
@@ -47,20 +47,26 @@ export function CodeCompareView({
     fileName,
   });
 
-  const defaultView: EditorViewMode = useMemo(() => {
+  const getDefaultView: () => EditorViewMode = () => {
     if (!baseId) return 'inline';
+    if (!originalFileContent || !modifiedFileContent) return 'inline';
     return 'split';
-  }, [baseId?.toString()]);
+  };
 
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
   const [ignoreWhitespace, setIgnoreWhitespace] = useState<boolean>(false);
-  const [view, setView] = useState<EditorViewMode>(defaultView);
+  const [view, setView] = useState<EditorViewMode>(getDefaultView());
   const [wrap, setWrap] = useState<boolean>(false);
   const language = useMemo(() => {
     if (!fileName) return languageOverrides.ts;
     const fileEnding = fileName?.split('.').pop();
     return languageOverrides[fileEnding || ''] || fileEnding;
   }, [fileName]);
+
+  useEffect(() => {
+    const updatedView = getDefaultView();
+    if (view !== updatedView) setView(updatedView);
+  }, [baseId?.toString(), originalFileContent, modifiedFileContent]);
 
   const monacoRef = useRef<any>();
 

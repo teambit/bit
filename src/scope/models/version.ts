@@ -1,4 +1,5 @@
 import R from 'ramda';
+import { pickBy } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import { LaneId } from '@teambit/lane-id';
 import { BitId, BitIds } from '../../bit-id';
@@ -12,7 +13,7 @@ import { ComponentOverridesData } from '../../consumer/config/component-override
 import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
-import { filterObject, first, getStringifyArgs } from '../../utils';
+import { getStringifyArgs } from '../../utils';
 import { PathLinux } from '../../utils/path';
 import VersionInvalid from '../exceptions/version-invalid';
 import { BitObject, Ref } from '../objects';
@@ -185,7 +186,7 @@ export default class Version extends BitObject {
     };
 
     return JSON.stringify(
-      filterObject(
+      pickBy(
         {
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           mainFile: obj.mainFile,
@@ -325,7 +326,7 @@ export default class Version extends BitObject {
         type: depEdge.type,
       };
     };
-    return filterObject(
+    return pickBy(
       {
         files: this.files ? this.files.map(_convertFileToObject) : null,
         mainFile: this.mainFile,
@@ -409,7 +410,7 @@ export default class Version extends BitObject {
     } = contentParsed;
 
     const _getDependencies = (deps = []): Dependency[] => {
-      if (deps.length && R.is(String, first(deps))) {
+      if (deps.length && R.is(String, deps[0])) {
         // backward compatibility
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return deps.map((dependency) => ({ id: BitId.parseObsolete(dependency) }));

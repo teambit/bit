@@ -27,8 +27,8 @@ export function CodeCompareEditor({
 }: CodeCompareEditorProps) {
   return (
     <DiffEditor
-      modified={modifiedFileContent}
-      original={originalFileContent}
+      modified={modifiedFileContent || undefined}
+      original={originalFileContent || undefined}
       language={language}
       originalModelPath={originalPath}
       modifiedModelPath={modifiedPath}

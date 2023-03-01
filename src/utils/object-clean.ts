@@ -1,4 +1,4 @@
-import forEach from './object/foreach';
+import { forEach } from 'lodash';
 
 /**
  * Cleans all object's properties that contains a falsy value

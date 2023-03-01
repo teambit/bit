@@ -1,4 +1,5 @@
 import { v4 } from 'uuid';
+import { pickBy } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
@@ -6,7 +7,7 @@ import { BitId, BitIds } from '../../bit-id';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, PREVIOUS_DEFAULT_LANE } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
-import { filterObject, getStringifyArgs, sha1 } from '../../utils';
+import { getStringifyArgs, sha1 } from '../../utils';
 import { hasVersionByRef } from '../component-ops/traverse-versions';
 import { BitObject, Ref, Repository } from '../objects';
 import { Version } from '.';
@@ -65,7 +66,7 @@ export default class Lane extends BitObject {
     lane.validate();
   }
   toObject() {
-    const obj = filterObject(
+    const obj = pickBy(
       {
         name: this.name,
         scope: this.scope,

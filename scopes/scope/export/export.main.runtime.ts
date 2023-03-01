@@ -36,7 +36,7 @@ import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
-import { linkToNodeModules } from '@teambit/workspace.modules.node-modules-linker';
+import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import {
   persistRemotes,
@@ -170,8 +170,11 @@ export class ExportMain {
     const removedIds = await this.getRemovedStagedBitIds();
     const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
     // re-generate the package.json, this way, it has the correct data in the componentId prop.
-    await linkToNodeModules(this.workspace, updatedIds, true);
+    await linkToNodeModulesByIds(this.workspace, updatedIds, true);
     await this.removeFromStagedConfig(exported);
+    // ideally we should delete the staged-snaps only for the exported snaps. however, it's not easy, and it's ok to
+    // delete them all because this file is mainly an optimization for the import process.
+    await this.workspace.scope.legacyScope.stagedSnaps.deleteFile();
     Analytics.setExtraData('num_components', exported.length);
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
     // export and eject operations to function independently. we don't want to lose the changes to
@@ -263,7 +266,7 @@ export class ExportMain {
 
     const getVersionsToExport = async (modelComponent: ModelComponent): Promise<Ref[]> => {
       if (exportHeadsOnly) {
-        const head = modelComponent.head;
+        const head = laneObject?.getComponent(modelComponent.toBitId())?.head || modelComponent.head;
         if (!head)
           throw new Error(
             `getVersionsToExport should export the head only, but the head of ${modelComponent.id()} is missing`

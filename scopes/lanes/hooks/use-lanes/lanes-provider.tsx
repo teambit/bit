@@ -24,7 +24,7 @@ export function LanesProvider({
   skipNetworkCall,
 }: LanesProviderProps) {
   const { lanesModel, loading } = useLanes(targetLanes, skipNetworkCall);
- 
+
   const [lanesState, setLanesState] = useState<LanesModel | undefined>(lanesModel);
   const [viewedLaneId, setViewedLaneId] = useState<LaneId | undefined>(viewedIdFromProps);
 
@@ -43,19 +43,23 @@ export function LanesProvider({
   useEffect(() => {
     if (ignoreDerivingFromUrl(location)) return;
 
-    const onHomeRoute = location?.pathname === '/';
+    // const onHomeRoute = location?.pathname === '/';
     const viewedLaneIdFromUrl =
       (location?.pathname && LanesModel.getLaneIdFromPathname(location?.pathname, query)) || undefined;
 
     const viewedLaneIdToSet =
-      viewedLaneIdFromUrl ||
-      (onHomeRoute && lanesModel?.currentLane?.id) ||
-      lanesModel?.lanes.find((lane) => lane.id.isDefault())?.id;
+      viewedLaneIdFromUrl || lanesModel?.currentLane?.id || lanesModel?.lanes.find((lane) => lane.id.isDefault())?.id;
 
     setViewedLaneId(viewedLaneIdToSet);
   }, [location?.pathname]);
 
   useEffect(() => {
+    if (viewedLaneId === undefined && lanesModel?.currentLane?.id) {
+      setViewedLaneId(lanesModel.currentLane.id);
+      lanesModel?.setViewedOrDefaultLane(lanesModel.currentLane.id);
+      setLanesState(lanesModel);
+      return;
+    }
     lanesModel?.setViewedOrDefaultLane(viewedLaneId);
     setLanesState(lanesModel);
   }, [loading, lanesModel?.lanes.length]);

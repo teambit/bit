@@ -17,5 +17,8 @@ describe('installing in an angular workspace', function () {
       helper.command.install(undefined, undefined, workspaceDir);
     });
   });
+  after(() => {
+    helper.scopeHelper.destroy();
+  });
   // TODO: test the same with pnpm
 });
