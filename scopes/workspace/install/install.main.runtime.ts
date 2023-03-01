@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs, { pathExists } from 'fs-extra';
 import path from 'path';
 import { getRootComponentDir, getBitRootsDir, linkPkgsToBitRoots } from '@teambit/bit-roots';
 import { CommunityMain, CommunityAspect } from '@teambit/community';
@@ -33,7 +33,6 @@ import {
   OutdatedPkg,
   WorkspacePolicy,
 } from '@teambit/dependency-resolver';
-import { pathExists } from 'fs-extra';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
