@@ -939,4 +939,24 @@ describe('merge lanes', function () {
       expect(list).to.have.lengthOf(1);
     });
   });
+  describe('merge from main when a component head is a tag on main and was not changed on lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(3);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.mergeLane('dev', '-x');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('dev', '-x');
+      helper.command.mergeLane('main', '-x');
+    });
+    // previously, it was throwing an error
+    // id o5kaxkjd-remote/comp1@0.0.1 exists in flattenedEdges but not in flattened of o5kaxkjd-remote/comp1@6f820556b472253cd08331b20e704fe74217fd31
+    it('bit status should not throw', () => {
+      expect(() => helper.command.status()).to.not.throw();
+    });
+  });
 });
