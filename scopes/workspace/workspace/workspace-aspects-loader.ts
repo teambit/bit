@@ -17,7 +17,7 @@ import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-
 import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import pMapSeries from 'p-map-series';
-import { difference, compact } from 'lodash';
+import { difference, compact, groupBy } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID, ResolveAspectsOptions } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
@@ -117,7 +117,6 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
         throw err;
       }
-
     }
 
     const aspectsDefs = await this.resolveAspects(undefined, idsToLoadFromWs, {
@@ -209,21 +208,26 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     await this.linkIfMissingWorkspaceAspects(wsAspectDefs, workspaceCompsIds);
 
-    let nonWorkspaceAspectsDefs: AspectDefinition[] = [];
-
-    if (mergedOpts.useScopeAspectsCapsule) {
-      const scopeIds = nonWorkspaceComps.map((c) => c.id);
-      if (scopeIds.length) {
-        nonWorkspaceAspectsDefs = await this.scope.resolveAspects(runtimeName, scopeIds, mergedOpts);
-      }
-    } else {
-      nonWorkspaceAspectsDefs = await this.aspectLoader.resolveAspects(
-        nonWorkspaceComps,
-        this.getInstalledAspectResolver(graph, rootAspectsIds, runtimeName, {
-          throwOnError: opts?.throwOnError ?? false,
-        })
-      );
+    let componentsToResolveFromScope = nonWorkspaceComps;
+    let componentsToResolveFromInstalled: Component[] = [];
+    if (!mergedOpts.useScopeAspectsCapsule) {
+      const nonWorkspaceCompsGroups = groupBy(nonWorkspaceComps, (component) => this.envs.isEnv(component));
+      componentsToResolveFromScope = nonWorkspaceCompsGroups.true || [];
+      componentsToResolveFromInstalled = nonWorkspaceCompsGroups.false || [];
     }
+
+    const scopeIds = componentsToResolveFromScope.map((c) => c.id);
+    const scopeAspectsDefs: AspectDefinition[] = scopeIds.length
+      ? await this.scope.resolveAspects(runtimeName, scopeIds, mergedOpts)
+      : [];
+    const installedAspectsDefs: AspectDefinition[] = componentsToResolveFromInstalled.length
+      ? await this.aspectLoader.resolveAspects(
+          componentsToResolveFromInstalled,
+          this.getInstalledAspectResolver(graph, rootAspectsIds, runtimeName, {
+            throwOnError: opts?.throwOnError ?? false,
+          })
+        )
+      : [];
 
     let coreAspectDefs = await Promise.all(
       coreAspectsIds.map(async (coreId) => {
@@ -238,8 +242,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
         return coreAspect.runtimePath;
       });
     }
-
-    const allDefs = wsAspectDefs.concat(coreAspectDefs).concat(nonWorkspaceAspectsDefs);
+    const allDefs = wsAspectDefs.concat(coreAspectDefs).concat(scopeAspectsDefs).concat(installedAspectsDefs);
     const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
     const filteredDefs = this.aspectLoader.filterAspectDefs(allDefs, idsToFilter, runtimeName, mergedOpts);
     return filteredDefs;
