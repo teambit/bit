@@ -40,7 +40,7 @@ Bit is developed with Bit and you can find all its components on [Bit Cloud Here
 
 ## Getting Started
 
-To get started with Bit head over to the [Community and Documentation site](https://bit.dev) and try the [Quick-Start](https://bit.dev/docs/quick-start/*) guide to get up and running in a few minutes, or the longer [Getting Started](https://bit.dev/docs/getting-started/installing-bit/installing-bit) section to try the full tutorial.
+To get started with Bit head over to the [Community and Documentation site](https://bit.dev) and try the [Quick-Start](https://bit.dev/docs/quick-start/) guide to get up and running in a few minutes, or the longer [Getting Started](https://bit.dev/docs/getting-started/installing-bit/installing-bit) section to try the full tutorial.
 
 Want to learn more? Try the [Thinking in Components](https://bit.dev/docs/thinking-in-components) section.
 
