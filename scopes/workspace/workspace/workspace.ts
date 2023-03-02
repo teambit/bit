@@ -60,7 +60,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
-
+import { isHash } from '@teambit/component-version';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ComponentConfigFile } from './component-config-file';
 import {
@@ -465,7 +465,17 @@ export class Workspace implements ComponentFactory {
       return null;
     }
     const flattenedBitIdCompIdMap: { [bitIdStr: string]: ComponentID } = {};
-    flattenedBitIdCompIdMap[component.id._legacy.toString()] = component.id;
+    const getCurrentVersionAsTagIfPossible = (): string | undefined => {
+      const currentVer = component.id.version;
+      if (!currentVer) return undefined;
+      const isCurrentVerAHash = isHash(currentVer);
+      if (!isCurrentVerAHash) return currentVer;
+      const tag = component.tags.byHash(currentVer)?.version.raw;
+      return tag || currentVer;
+    };
+    const currentVersion = getCurrentVersionAsTagIfPossible();
+
+    flattenedBitIdCompIdMap[component.id._legacy.changeVersion(currentVersion).toString()] = component.id;
     await Promise.all(
       versionObj.flattenedDependencies.map(async (bitId) => {
         flattenedBitIdCompIdMap[bitId.toString()] = await this.resolveComponentId(bitId);

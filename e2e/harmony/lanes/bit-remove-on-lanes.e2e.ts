@@ -136,6 +136,21 @@ describe('bit lane command', function () {
         expect(list[0].id).to.not.have.string('comp2');
       });
     });
+    describe('forking the lane and exporting', () => {
+      let exportOutput: string;
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importLane('dev');
+        helper.command.createLane('dev2');
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        exportOutput = helper.command.export();
+      });
+      it('should not export the soft-removed', () => {
+        expect(exportOutput).to.not.have.string('comp2');
+        expect(exportOutput).to.have.string('comp1');
+      });
+    });
   });
   describe('remove a new component on a lane', () => {
     before(() => {
