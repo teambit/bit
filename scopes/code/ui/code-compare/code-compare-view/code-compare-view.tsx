@@ -34,8 +34,6 @@ const languageOverrides = {
   md: 'markdown',
 };
 
-const SCROLL_THRESHOLD = 10;
-
 export function CodeCompareView({
   className,
   fileName,
@@ -73,35 +71,6 @@ export function CodeCompareView({
   }, [baseId?.toString(), originalFileContent, modifiedFileContent]);
 
   const monacoRef = useRef<any>();
-  const containerRef = useRef() as React.MutableRefObject<HTMLDivElement>;
-  const lastScrollLeftRef = useRef<number>(0);
-
-  /**
-   * checks if the horizontal scroll position has changed since the last scroll event
-   * if changes, it checks if the user has scrolled by a significant threshold (more than 10 pixels).
-   * If the scroll distance is significant,
-   * it prevents the default behavior of the event and manually updates the scrollLeft property to reflect the new position
-   */
-  function handleScroll(e) {
-    if (containerRef.current.scrollLeft !== lastScrollLeftRef.current) {
-      const scrollDelta = containerRef.current.scrollLeft - lastScrollLeftRef.current;
-      if (Math.abs(scrollDelta) > SCROLL_THRESHOLD) {
-        e.preventDefault();
-        containerRef.current.scrollLeft = lastScrollLeftRef.current;
-      } else {
-        lastScrollLeftRef.current = containerRef.current.scrollLeft;
-      }
-    } else {
-      lastScrollLeftRef.current = containerRef.current.scrollLeft;
-    }
-  }
-
-  useEffect(() => {
-    if (containerRef.current) containerRef.current.addEventListener('scroll', handleScroll);
-    return () => {
-      if (containerRef.current) containerRef.current.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   const handleEditorDidMount: DiffOnMount = (_, monaco) => {
     /**
@@ -148,7 +117,6 @@ export function CodeCompareView({
     <div
       key={`component-compare-code-view-${fileName}`}
       className={classNames(styles.componentCompareCodeViewContainer, className, loading && styles.loading)}
-      ref={containerRef}
     >
       <CodeCompareNavigation
         files={files}

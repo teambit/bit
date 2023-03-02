@@ -41,7 +41,7 @@ export function CodeCompareEditor({
         readOnly: true,
         renderSideBySide: editorViewMode === 'split',
         minimap: { enabled: false },
-        scrollbar: { alwaysConsumeMouseWheel: false },
+        scrollbar: { alwaysConsumeMouseWheel: true },
         scrollBeyondLastLine: false,
         folding: false,
         overviewRulerLanes: 0,
