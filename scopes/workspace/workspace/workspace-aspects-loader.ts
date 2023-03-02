@@ -195,7 +195,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     this.logger.debug(
       `${loggerPrefix} ${
         nonWorkspaceComps.length
-      } components are not in the workspace and are loaded from the node_modules:\n${nonWorkspaceComps
+      } components are not in the workspace and are loaded from the scope capsules or from the node_modules:\n${nonWorkspaceComps
         .map((c) => c.id.toString())
         .join('\n')}`
     );
@@ -208,6 +208,12 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     await this.linkIfMissingWorkspaceAspects(wsAspectDefs, workspaceCompsIds);
 
+    // TODO: hard coded use the old approach and loading from the scope capsules
+    // This is because right now loading from the ws node_modules causes issues in some cases
+    // like for the cloud app
+    // it should be removed once we fix the issues
+    mergedOpts.useScopeAspectsCapsule = true;
+
     let componentsToResolveFromScope = nonWorkspaceComps;
     let componentsToResolveFromInstalled: Component[] = [];
     if (!mergedOpts.useScopeAspectsCapsule) {
@@ -217,9 +223,24 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     }
 
     const scopeIds = componentsToResolveFromScope.map((c) => c.id);
+    this.logger.debug(
+      `${loggerPrefix} ${
+        scopeIds.length
+      } components are not in the workspace and are loaded from the scope capsules:\n${scopeIds
+        .map((id) => id.toString())
+        .join('\n')}`
+    );
     const scopeAspectsDefs: AspectDefinition[] = scopeIds.length
       ? await this.scope.resolveAspects(runtimeName, scopeIds, mergedOpts)
       : [];
+    
+    this.logger.debug(
+      `${loggerPrefix} ${
+        componentsToResolveFromInstalled.length
+      } components are not in the workspace and are loaded from the node_modules:\n${componentsToResolveFromInstalled
+        .map((c) => c.id.toString())
+        .join('\n')}`
+    );
     const installedAspectsDefs: AspectDefinition[] = componentsToResolveFromInstalled.length
       ? await this.aspectLoader.resolveAspects(
           componentsToResolveFromInstalled,
