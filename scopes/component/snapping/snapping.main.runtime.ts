@@ -808,11 +808,12 @@ there are matching among unmodified components thought. consider using --unmodif
   }
 
   private throwForPendingImport(components: ConsumerComponent[]) {
-    const areComponentsMissingFromScope = components
+    const componentsMissingFromScope = components
       .filter((c) => !c.removed)
-      .some((c) => !c.componentFromModel && c.id.hasScope());
-    if (areComponentsMissingFromScope) {
-      throw new ComponentsPendingImport();
+      .filter((c) => !c.componentFromModel && c.id.hasScope())
+      .map((c) => c.id.toString());
+    if (componentsMissingFromScope.length) {
+      throw new ComponentsPendingImport(componentsMissingFromScope);
     }
   }
 
