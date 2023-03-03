@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { ComponentsDrawer, ComponentFiltersSlot, DrawerWidgetSlot } from '@teambit/component.ui.component-drawer';
 import {
   ComponentView,
@@ -13,6 +13,7 @@ import { TreeNodeProps } from '@teambit/design.ui.tree';
 import { ComponentModel } from '@teambit/component';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { SidebarWidgetSlot } from './workspace.ui.runtime';
+import { WorkspaceContext } from './ui/workspace/workspace-context';
 
 export type WorkspaceDrawerProps = {
   treeWidgets: SidebarWidgetSlot;
@@ -54,17 +55,25 @@ export const workspaceDrawer = ({
     useLanes,
     useComponents: () => {
       const { lanesModel, loading: lanesLoading } = useLanes();
+
       const viewedLaneId = lanesModel?.viewedLane?.id;
       const defaultLane = lanesModel?.getDefaultLane();
       const isViewingDefaultLane = viewedLaneId && defaultLane?.id.isEqual(viewedLaneId);
+      const isViewingWorkspaceVersions = lanesModel?.isViewingCurrentLane();
 
-      const { components: laneComponents = [], loading: laneCompsLoading } = useLaneComponents(viewedLaneId);
+      const { components: laneComponents = [], loading: laneCompsLoading } = useLaneComponents(
+        !isViewingWorkspaceVersions ? viewedLaneId : undefined
+      );
       const { components: mainComponents = [], loading: mainCompsLoading } = useLaneComponents(
         !isViewingDefaultLane ? defaultLane?.id : undefined
       );
+      const workspace = useContext(WorkspaceContext);
+      const { components: workspaceComponents } = workspace;
 
       // lane components + main components
-      const components = isViewingDefaultLane ? laneComponents : mergeComponents(mainComponents, laneComponents);
+      const components = isViewingDefaultLane
+        ? laneComponents
+        : (!isViewingWorkspaceVersions && mergeComponents(mainComponents, laneComponents)) || workspaceComponents;
 
       return {
         loading: lanesLoading || laneCompsLoading || mainCompsLoading,

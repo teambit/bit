@@ -196,7 +196,7 @@ describe('components that are not synced between the scope and the consumer', fu
     });
     describe('bit tag', () => {
       it('should stop the tagging process and throw an error suggesting to import the components', () => {
-        const err = new ComponentsPendingImport();
+        const err = new ComponentsPendingImport([`${helper.scopes.remote}/bar/foo@0.0.1`]);
         helper.general.expectToThrow(() => helper.command.tagWithoutBuild('bar/foo'), err);
       });
     });
@@ -261,19 +261,19 @@ describe('components that are not synced between the scope and the consumer', fu
       });
       describe('bit status', () => {
         it('should throw an error suggesting to import the components', () => {
-          const err = new ComponentsPendingImport();
+          const err = new ComponentsPendingImport([`${helper.scopes.remote}/bar/foo@2.0.0`]);
           helper.general.expectToThrow(() => helper.command.status(), err);
         });
       });
       describe('bit show', () => {
         it('should throw an error suggesting to import the components', () => {
-          const err = new ComponentsPendingImport();
+          const err = new ComponentsPendingImport([`${helper.scopes.remote}/bar/foo@2.0.0`]);
           helper.general.expectToThrow(() => helper.command.showComponent('bar/foo'), err);
         });
       });
       describe('bit tag', () => {
         it('should throw an error suggesting to import the components', () => {
-          const err = new ComponentsPendingImport();
+          const err = new ComponentsPendingImport([`${helper.scopes.remote}/bar/foo@2.0.0`]);
           helper.general.expectToThrow(() => helper.command.tagAllWithoutBuild(), err);
         });
       });

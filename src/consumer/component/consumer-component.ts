@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import { v4 } from 'uuid';
 import * as path from 'path';
 import R from 'ramda';
 import { IssuesList } from '@teambit/component-issues';
@@ -18,7 +19,7 @@ import logger from '../../logger/logger';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import { ScopeListItem } from '../../scope/models/model-component';
 import Version, { DepEdge, Log } from '../../scope/models/version';
-import { pathNormalizeToLinux } from '../../utils';
+import { pathNormalizeToLinux, sha1 } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedRelative } from '../../utils/path';
 import ComponentMap from '../bit-map/component-map';
 import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
@@ -255,6 +256,11 @@ export default class Component {
 
   setDevDependencies(devDependencies?: Dependency[]) {
     this.devDependencies = new Dependencies(devDependencies);
+  }
+
+  setNewVersion(version = sha1(v4())) {
+    this.previouslyUsedVersion = this.version;
+    this.version = version;
   }
 
   getFileExtension(): string {
@@ -515,7 +521,7 @@ export default class Component {
     if (!componentFromModel && id.scope) {
       const inScopeWithAnyVersion = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
       // if it's in scope with another version, the component will be synced in _handleOutOfSyncScenarios()
-      if (!inScopeWithAnyVersion) throw new ComponentsPendingImport();
+      if (!inScopeWithAnyVersion) throw new ComponentsPendingImport([id.toString()]);
     }
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     const compDirAbs = path.join(consumer.getPath(), componentMap.getComponentDir());

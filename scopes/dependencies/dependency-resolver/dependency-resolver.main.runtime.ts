@@ -403,10 +403,21 @@ export class DependencyResolverMain {
   }
 
   getSavePrefix(): string {
-    return this.config.savePrefix || '';
+    return this.config.savePrefix || '^';
   }
 
-  getVersionWithSavePrefix(version: string, overridePrefix?: string): string {
+  getVersionWithSavePrefix({
+    version,
+    overridePrefix,
+    wantedRange,
+  }: {
+    version: string;
+    overridePrefix?: string;
+    wantedRange?: string;
+  }): string {
+    if (wantedRange && ['~', '^'].includes(wantedRange[0])) {
+      return wantedRange;
+    }
     const prefix = overridePrefix || this.getSavePrefix();
     const versionWithPrefix = `${prefix}${version}`;
     if (!semver.validRange(versionWithPrefix)) {

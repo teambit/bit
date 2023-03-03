@@ -43,7 +43,7 @@ export class ImportCmd implements Command {
     ['j', 'json', 'return the output as JSON'],
     // ['', 'conf', 'write the configuration file (component.json) of the component'], // not working. need to fix once ComponentWriter is moved to Harmony
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
     [
       'm',
       'merge [strategy]',

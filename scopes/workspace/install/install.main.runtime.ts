@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs, { pathExists } from 'fs-extra';
 import path from 'path';
 import { getRootComponentDir, getBitRootsDir, linkPkgsToBitRoots } from '@teambit/bit-roots';
 import { CommunityMain, CommunityAspect } from '@teambit/community';
@@ -67,6 +67,7 @@ export type WorkspaceInstallOptions = {
   savePrefix?: string;
   compile?: boolean;
   includeOptionalDeps?: boolean;
+  updateAll?: boolean;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -78,6 +79,8 @@ type PreLinkSlot = SlotRegistry<PreLink>;
 type PreInstallSlot = SlotRegistry<PreInstall>;
 
 export class InstallMain {
+  private visitedAspects: Set<string> = new Set();
+
   constructor(
     private dependencyResolver: DependencyResolverMain,
 
@@ -159,10 +162,11 @@ export class InstallMain {
     const newWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
     resolvedPackages.forEach((resolvedPackage) => {
       if (resolvedPackage.version) {
-        const versionWithPrefix = this.dependencyResolver.getVersionWithSavePrefix(
-          resolvedPackage.version,
-          options?.savePrefix
-        );
+        const versionWithPrefix = this.dependencyResolver.getVersionWithSavePrefix({
+          version: resolvedPackage.version,
+          overridePrefix: options?.savePrefix,
+          wantedRange: resolvedPackage.wantedRange,
+        });
         newWorkspacePolicyEntries.push({
           dependencyId: resolvedPackage.packageName,
           value: {
@@ -187,7 +191,8 @@ export class InstallMain {
       `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
     );
     this.logger.debug(`installing dependencies in workspace with options`, options);
-    const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
+    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
+    const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy(workspacePolicy);
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
     const hasRootComponents = this.dependencyResolver.hasRootComponents();
     const pmInstallOptions: PackageManagerInstallOptions = {
@@ -200,6 +205,7 @@ export class InstallMain {
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       rootComponents: hasRootComponents,
       nodeLinker: this.dependencyResolver.nodeLinker(),
+      updateAll: options?.updateAll,
     };
     // TODO: pass get install options
     const installer = this.dependencyResolver.getInstaller({});
@@ -256,6 +262,22 @@ export class InstallMain {
     } while ((!prevManifests.has(hash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
+  }
+
+  private async addConfiguredAspectsToWorkspacePolicy(
+    rootPolicy: WorkspacePolicy,
+  ): Promise<WorkspacePolicy> {
+    const aspectsPackages = await this.workspace.getConfiguredUserAspectsPackages({externalsOnly: true});
+    aspectsPackages.forEach(aspectsPackage => {
+      rootPolicy.add({
+        dependencyId: aspectsPackage.packageName,
+        value: {
+          version: aspectsPackage.version,
+        },
+        lifecycleType: 'runtime',
+      });
+    })
+    return rootPolicy;
   }
 
   private async _getComponentsManifests(
@@ -600,6 +622,40 @@ export class InstallMain {
     return ComponentMap.as<string>(components, (component) => this.workspace.componentDir(component.id));
   }
 
+  private async onRootAspectAddedSubscriber(_aspectId: ComponentID, inWs: boolean): Promise<void> {
+    if (!inWs) {
+      await this.install();
+    }
+  }
+  private async onAspectsResolveSubscriber(aspectComponents: Component[]): Promise<void> {
+    let needLink = false;
+    let needInstall = false;
+    const promises = aspectComponents.map(async (aspectComponent) => {
+      const aspectIdStr = aspectComponent.id.toString();
+      if (this.visitedAspects.has(aspectIdStr)) return;
+
+      this.visitedAspects.add(aspectIdStr);
+      const packagePath = this.workspace.getComponentPackagePath(aspectComponent);
+      const exists = await pathExists(packagePath);
+      if (!exists){
+        const inWs = await this.workspace.hasId(aspectComponent.id);
+        if (inWs) {
+          needLink = true;
+        } else {
+          needInstall = true;
+        }
+      }
+    });
+    await Promise.all(promises);
+    if (needInstall) {
+      await this.install();
+      return;
+    }
+    if (needLink) {
+      await this.link();
+    }
+  }
+
   static slots = [Slot.withType<PreLinkSlot>(), Slot.withType<PreInstallSlot>()];
   static dependencies = [
     DependencyResolverAspect,
@@ -653,6 +709,11 @@ export class InstallMain {
       new UpdateCmd(installExt),
       new LinkCommand(installExt, workspace, logger, community.getDocsDomain()),
     ];
+    // For now do not automate installation during aspect resolving
+    // workspace.registerOnAspectsResolve(installExt.onAspectsResolveSubscriber.bind(installExt));
+    if (workspace){
+      workspace.registerOnRootAspectAdded(installExt.onRootAspectAddedSubscriber.bind(installExt));
+    }
     cli.register(...commands);
     return installExt;
   }

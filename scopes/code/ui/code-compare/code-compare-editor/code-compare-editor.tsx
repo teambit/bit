@@ -27,8 +27,8 @@ export function CodeCompareEditor({
 }: CodeCompareEditorProps) {
   return (
     <DiffEditor
-      modified={modifiedFileContent}
-      original={originalFileContent}
+      modified={modifiedFileContent || undefined}
+      original={originalFileContent || undefined}
       language={language}
       originalModelPath={originalPath}
       modifiedModelPath={modifiedPath}
@@ -41,7 +41,7 @@ export function CodeCompareEditor({
         readOnly: true,
         renderSideBySide: editorViewMode === 'split',
         minimap: { enabled: false },
-        scrollbar: { alwaysConsumeMouseWheel: false },
+        scrollbar: { alwaysConsumeMouseWheel: true },
         scrollBeyondLastLine: false,
         folding: false,
         overviewRulerLanes: 0,

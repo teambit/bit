@@ -43,7 +43,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       'allow merging when component are modified due to config changes (such as dependencies) only and not files',
     ],
     ['', 'verbose', 'show details of components that were not merged legitimately'],
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
     ['', 'skip-fetch', 'use the current target-lane if exits locally without updating it from the remote'],
     [
       '',

@@ -41,6 +41,9 @@ export class Plugins {
             return this.registerPluginWithTryCatch(plugin, aspect);
           })
         );
+        // Return an empty object so haromny will have something in the extension instance
+        // otherwise it will throw an error when trying to access the extension instance (harmony.get)
+        return {};
       },
       runtime,
       // dependencies: this.computeDependencies(runtime)

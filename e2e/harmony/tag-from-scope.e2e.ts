@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import path from 'path';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
@@ -85,6 +86,13 @@ describe('tag components on Harmony', function () {
 
         const pkgJson = builder.aspectsData.find((a) => a.aspectId === Extensions.pkg);
         expect(pkgJson.data.pkgJson.version).to.equal('0.0.2'); // new tag
+      });
+      it('the package should have the dists', () => {
+        helper.scopeHelper.reInitLocalScope();
+        const pkgName = helper.general.getPackageNameByCompName('comp1');
+        helper.command.install(pkgName);
+        const distPath = path.join(helper.scopes.localPath, 'node_modules', pkgName, 'dist');
+        expect(distPath).to.be.a.path();
       });
       describe('running with --push flag', () => {
         before(() => {

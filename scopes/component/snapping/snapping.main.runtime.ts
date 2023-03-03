@@ -43,7 +43,7 @@ import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { ComponentID } from '@teambit/component-id';
-import { BitObject, Repository } from '@teambit/legacy/dist/scope/objects';
+import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
 import {
   ArtifactFiles,
   ArtifactSource,
@@ -183,17 +183,18 @@ export class SnappingMain {
     if (!soft) {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     }
-    const components = await this.loadComponentsForTag(legacyBitIds);
-    await this.throwForLegacyDependenciesInsideHarmony(components);
+    const consumerComponents = await this.loadComponentsForTag(legacyBitIds);
+    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
+    const components = await this.workspace.getManyByLegacy(consumerComponents);
     await this.throwForComponentIssues(components, ignoreIssues);
-    this.throwForPendingImport(components);
+    this.throwForPendingImport(consumerComponents);
 
     const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig } = await tagModelComponent({
       workspace: this.workspace,
       scope: this.scope,
       snapping: this,
       builder: this.builder,
-      consumerComponents: components,
+      consumerComponents,
       ids: legacyBitIds,
       message,
       editor,
@@ -449,10 +450,11 @@ export class SnappingMain {
     if (!ids) return null;
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
-    const components = await this.loadComponentsForTag(ids);
-    await this.throwForLegacyDependenciesInsideHarmony(components);
+    const consumerComponents = await this.loadComponentsForTag(ids);
+    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
+    const components = await this.workspace.getManyByLegacy(consumerComponents);
     await this.throwForComponentIssues(components, ignoreIssues);
-    this.throwForPendingImport(components);
+    this.throwForPendingImport(consumerComponents);
 
     const { taggedComponents, autoTaggedResults, stagedConfig } = await tagModelComponent({
       workspace: this.workspace,
@@ -460,7 +462,7 @@ export class SnappingMain {
       snapping: this,
       builder: this.builder,
       editor,
-      consumerComponents: components,
+      consumerComponents,
       ids,
       ignoreNewestVersion: false,
       message,
@@ -700,7 +702,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const { version, files } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     this.objectsRepo.add(version);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, this.objectsRepo);
+    component.addVersion(version, source.version, lane, this.objectsRepo, source.previouslyUsedVersion);
 
     const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
     if (unmergedComponent) {
@@ -708,7 +710,14 @@ there are matching among unmodified components thought. consider using --unmodif
         this.logger.debug(
           `sources.addSource, unmerged component "${component.name}". adding an unrelated entry ${unmergedComponent.head.hash}`
         );
-        version.unrelated = { head: unmergedComponent.head, laneId: unmergedComponent.laneId };
+        if (!source.previouslyUsedVersion) {
+          throw new Error(
+            `source.previouslyUsedVersion must be set for ${component.name} because it's unrelated resolved.`
+          );
+        }
+        const unrelatedHead = Ref.from(source.previouslyUsedVersion);
+        version.unrelated = { head: unrelatedHead, laneId: unmergedComponent.laneId };
+        version.addAsOnlyParent(unmergedComponent.head);
       } else {
         // this is adding a second parent to the version. the order is important. the first parent is coming from the current-lane.
         version.addParent(unmergedComponent.head);
@@ -736,7 +745,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const { version, files } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     objectRepo.add(version);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, objectRepo);
+    component.addVersion(version, source.version, lane, objectRepo, source.previouslyUsedVersion);
     objectRepo.add(component);
     files.forEach((file) => objectRepo.add(file.file));
     if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
@@ -782,7 +791,7 @@ there are matching among unmodified components thought. consider using --unmodif
     return [...components, ...removedComponents];
   }
 
-  private async throwForComponentIssues(legacyComponents: ConsumerComponent[], ignoreIssues?: string) {
+  private async throwForComponentIssues(components: Component[], ignoreIssues?: string) {
     if (ignoreIssues === '*') {
       // ignore all issues
       return;
@@ -790,10 +799,9 @@ there are matching among unmodified components thought. consider using --unmodif
     const issuesToIgnoreFromFlag = ignoreIssues?.split(',').map((issue) => issue.trim()) || [];
     const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnoreGlobally();
     const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
-    const components = await this.workspace.getManyByLegacy(legacyComponents);
     await this.issues.triggerAddComponentIssues(components, issuesToIgnore);
     this.issues.removeIgnoredIssuesFromComponents(components, issuesToIgnore);
-
+    const legacyComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
     if (!R.isEmpty(componentsWithBlockingIssues)) {
       throw new ComponentsHaveIssues(componentsWithBlockingIssues);
@@ -801,11 +809,12 @@ there are matching among unmodified components thought. consider using --unmodif
   }
 
   private throwForPendingImport(components: ConsumerComponent[]) {
-    const areComponentsMissingFromScope = components
+    const componentsMissingFromScope = components
       .filter((c) => !c.removed)
-      .some((c) => !c.componentFromModel && c.id.hasScope());
-    if (areComponentsMissingFromScope) {
-      throw new ComponentsPendingImport();
+      .filter((c) => !c.componentFromModel && c.id.hasScope())
+      .map((c) => c.id.toString());
+    if (componentsMissingFromScope.length) {
+      throw new ComponentsPendingImport(componentsMissingFromScope);
     }
   }
 

@@ -210,7 +210,11 @@ export async function getAllVersionParents({
   return versionParents;
 }
 
-function getSubsetOfVersionParents(versionParents: VersionParents[], from: Ref, stopAt?: Ref[]): VersionParents[] {
+export function getSubsetOfVersionParents(
+  versionParents: VersionParents[],
+  from: Ref,
+  stopAt?: Ref[]
+): VersionParents[] {
   const results: VersionParents[] = [];
   const shouldStop = (ref: Ref): boolean => Boolean(stopAt?.find((r) => r.isEqual(ref)));
   const getVersionParent = (ref: Ref) => versionParents.find((v) => v.hash.isEqual(ref));

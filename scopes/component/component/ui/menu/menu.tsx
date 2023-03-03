@@ -121,7 +121,7 @@ export function VersionRelatedDropdowns({
 }) {
   const location = useLocation();
   const { lanesModel } = useLanes();
-  const currentLane =
+  const viewedLane =
     lanesModel?.viewedLane?.id && !lanesModel?.viewedLane?.id.isDefault() ? lanesModel.viewedLane : undefined;
 
   const { logs } = component;
@@ -149,12 +149,12 @@ export function VersionRelatedDropdowns({
   const isNew = snaps.length === 0 && tags.length === 0;
 
   const lanes = lanesModel?.getLanesByComponentId(component.id)?.filter((lane) => !lane.id.isDefault()) || [];
-  const localVersion = isWorkspace && !isNew && !currentLane;
+  const localVersion = isWorkspace && !isNew && (!viewedLane || lanesModel?.isViewingCurrentLane());
 
   const currentVersion =
     isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.version;
 
-  const methods = useConsumeMethods(component, consumeMethods, currentLane);
+  const methods = useConsumeMethods(component, consumeMethods, viewedLane);
   return (
     <>
       {consumeMethods && tags.length > 0 && (
@@ -171,7 +171,7 @@ export function VersionRelatedDropdowns({
         localVersion={localVersion}
         currentVersion={currentVersion}
         latestVersion={component.latest}
-        currentLane={currentLane}
+        currentLane={viewedLane}
         className={className}
         menuClassName={styles.componentVersionMenu}
       />
