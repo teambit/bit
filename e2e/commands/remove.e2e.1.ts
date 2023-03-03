@@ -344,4 +344,52 @@ describe('bit remove command', function () {
       helper.bitMap.expectNotToHaveId('comp2');
     });
   });
+  describe('remove new component with --keep-files flag', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.removeComponent('comp1', '--keep-files');
+    });
+    it('should remove the component from .bitmap', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.not.have.property('comp1');
+    });
+    it('should not delete the directory from the filesystem', () => {
+      expect(path.join(helper.scopes.localPath, 'comp1')).to.be.a.directory();
+    });
+    it('should delete the directory from the node_modules', () => {
+      expect(path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}`, 'comp1')).to.not.be.a.path();
+    });
+  });
+  describe('remove new component without --keep-files flag', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.removeComponent('comp1');
+    });
+    it('should remove the component from .bitmap', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.not.have.property('comp1');
+    });
+    it('should delete the directory from the filesystem', () => {
+      expect(path.join(helper.scopes.localPath, 'comp1')).to.not.be.a.path();
+    });
+    it('should delete the directory from the node_modules', () => {
+      expect(path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}`, 'comp1')).to.not.be.a.path();
+    });
+  });
+  describe('soft-remove then snap with --ignore-issues', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.removeComponent('comp1', '--soft');
+      helper.command.snapAllComponentsWithoutBuild('--ignore-issues="*"');
+    });
+    it('should show it as removed', () => {
+      const removeAspect = helper.command.showAspectConfig('comp1', 'teambit.component/remove');
+      expect(removeAspect).to.be.an('Object');
+      expect(removeAspect.config.removed).to.be.true;
+    });
+  });
 });
