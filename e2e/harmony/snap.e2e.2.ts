@@ -733,4 +733,18 @@ describe('bit snap command', function () {
       });
     });
   });
+  describe('snap with --unmodified after soft-remove', () => {
+    let output: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, undefined);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.removeComponent('comp1', '--soft');
+      output = helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    it('should indicate that the component was snapped successfully', () => {
+      expect(output).to.have.string('changed components');
+    });
+  });
 });
