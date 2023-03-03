@@ -89,7 +89,11 @@ import { BitMap } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
 import { GraphIdsFromFsBuilder } from './build-graph-ids-from-fs';
 import { AspectsMerger } from './aspects-merger';
-import { AspectPackage, GetConfiguredUserAspectsPackagesOptions, WorkspaceAspectsLoader } from './workspace-aspects-loader';
+import {
+  AspectPackage,
+  GetConfiguredUserAspectsPackagesOptions,
+  WorkspaceAspectsLoader,
+} from './workspace-aspects-loader';
 import { MergeConflictFile } from './merge-conflict-file';
 
 export type EjectConfResult = {
@@ -675,6 +679,10 @@ export class Workspace implements ComponentFactory {
 
   getCurrentLaneId(): LaneId {
     return this.consumer.getCurrentLaneId();
+  }
+
+  async getCurrentLaneObject(): Promise<Lane | null> {
+    return this.consumer.getCurrentLaneObject();
   }
 
   isOnMain(): boolean {
@@ -1263,7 +1271,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return cacheDir;
   }
 
-  getWorkspaceAspectsLoader(): WorkspaceAspectsLoader{
+  getWorkspaceAspectsLoader(): WorkspaceAspectsLoader {
     const workspaceAspectsLoader = new WorkspaceAspectsLoader(
       this,
       this.scope,
