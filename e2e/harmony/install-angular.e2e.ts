@@ -1,7 +1,7 @@
 import path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
-// @todo: Oliver
+// @todo: Olivier
 describe.skip('installing in an angular workspace', function () {
   this.timeout(0);
   let helper: Helper;
