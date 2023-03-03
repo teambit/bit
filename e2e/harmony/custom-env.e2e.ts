@@ -306,6 +306,25 @@ describe('custom env', function () {
       expect(() => helper.command.setEnv('comp1', envId));
     });
   });
+  describe('custom-env is 0.0.2 on the workspace, but comp1 is using it with 0.0.1', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      const envName = helper.env.setCustomEnv();
+      const envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
+      helper.command.tagAllWithoutBuild();
+      helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.2
+    });
+    // @gilad todo: currently, this is failing with ComponentNotFound error.
+    // it's happening during the load of comp1, we have the onLoad, where the workspace calculate extensions.
+    // Once it has all extensions it's loading them. in this case, comp1 has the custom-env with 0.0.1 in the envs/envs
+    // it's unable to find it in the workspace and asks the scope, which can't find it because it's the full-id include
+    // scope-name.
+    it.skip('any bit command should not throw', () => {
+      expect(() => helper.command.status()).to.not.throw();
+    });
+  });
 });
 
 function getEnvIdFromModel(compModel: any): string {
