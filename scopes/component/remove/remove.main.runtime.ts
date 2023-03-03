@@ -71,6 +71,7 @@ export class RemoveMain {
           .join('\n')}`
       );
     }
+    await this.throwForMainComponentWhenOnLane(components);
     await removeComponentsFromNodeModules(
       this.workspace.consumer,
       components.map((c) => c.state._consumer)
@@ -87,6 +88,17 @@ export class RemoveMain {
     await deleteComponentsFiles(this.workspace.consumer, bitIds);
 
     return componentIds;
+  }
+
+  private async throwForMainComponentWhenOnLane(components: Component[]) {
+    const currentLane = await this.workspace.getCurrentLaneObject();
+    if (!currentLane) return; // user on main
+    const laneComps = currentLane.toBitIds();
+    const mainComps = components.filter((comp) => !laneComps.hasWithoutVersion(comp.id._legacy));
+    if (mainComps.length) {
+      throw new BitError(`the following components belong to main, they cannot be soft-removed when on a lane. consider removing them without --soft.
+${mainComps.map((c) => c.id.toString()).join('\n')}`);
+    }
   }
 
   getRemoveInfo(component: Component): RemoveInfo {
