@@ -7,7 +7,7 @@ describe('installing in an angular workspace', function () {
   let workspaceDir: string;
   function prepare() {
     helper = new Helper();
-    helper.command.new('ng-workspace', '--aspect=teambit.angular/angular');
+    helper.command.new('ng-workspace', '--aspect=teambit.angular/angular@2.0.8');
     workspaceDir = path.join(helper.scopes.localPath, 'my-workspace');
     helper.command.create('ng-module', 'ui/my-button', undefined, workspaceDir);
   }
