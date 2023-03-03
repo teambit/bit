@@ -171,4 +171,20 @@ describe('bit lane command', function () {
       expect(() => helper.command.export()).to.not.throw();
     });
   });
+  describe('soft-remove main component when on a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+    });
+    it('should throw an error', () => {
+      expect(() => helper.command.removeComponent('comp2', '--soft')).to.throw(
+        'the following components belong to main, they cannot be soft-removed when on a lane'
+      );
+    });
+  });
 });
