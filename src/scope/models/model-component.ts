@@ -720,7 +720,8 @@ export default class Component extends BitObject {
   async collectVersionsObjects(
     repo: Repository,
     versions: string[],
-    ignoreMissingArtifacts?: boolean
+    ignoreMissingLocalArtifacts = false,
+    ignoreMissingExternalArtifacts = true
   ): Promise<ObjectItem[]> {
     const refsWithoutArtifacts: Ref[] = [];
     const artifactsRefs: Ref[] = [];
@@ -739,7 +740,7 @@ export default class Component extends BitObject {
       const refs = versionObject.refsWithOptions(false, false);
       refsWithoutArtifacts.push(...refs);
       const refsFromExtensions = getRefsFromExtensions(versionObject.extensions);
-      locallyChangedHashes.includes(versionObject.hash.toString())
+      locallyChangedHashes.includes(versionObject.hash.toString()) || !ignoreMissingExternalArtifacts
         ? artifactsRefs.push(...refsFromExtensions)
         : artifactsRefsFromExportedVersions.push(...refsFromExtensions);
     });
@@ -755,7 +756,7 @@ for a component "${this.id()}", versions: ${versions.join(', ')}`);
       throw err;
     }
     try {
-      const loaded = ignoreMissingArtifacts
+      const loaded = ignoreMissingLocalArtifacts
         ? await repo.loadManyRawIgnoreMissing(artifactsRefs)
         : await repo.loadManyRaw(artifactsRefs);
       loadedRefs.push(...loaded);
