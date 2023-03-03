@@ -27,7 +27,7 @@ import ComponentObjects from '../component-objects';
 import { SnapsDistance } from '../component-ops/snaps-distance';
 import { getDivergeData } from '../component-ops/get-diverge-data';
 import {
-  getAllVersionHashes,
+  getAllVersionParents,
   getAllVersionsInfo,
   getVersionParentsFromVersion,
 } from '../component-ops/traverse-versions';
@@ -223,8 +223,12 @@ export default class Component extends BitObject {
     if (isTag(version)) {
       return includeOrphaned ? this.hasTagIncludeOrphaned(version) : this.hasTag(version);
     }
-    const allHashes = await getAllVersionHashes({ modelComponent: this, repo, throws: false });
-    return allHashes.some((hash) => hash.toString() === version);
+    const head = this.getHeadRegardlessOfLane();
+    if (!head) {
+      return false;
+    }
+    const versionParents = await getAllVersionParents({ repo, modelComponent: this, heads: [head] });
+    return versionParents.map((v) => v.hash).some((hash) => hash.toString() === version);
   }
 
   hasTag(version: string): boolean {
