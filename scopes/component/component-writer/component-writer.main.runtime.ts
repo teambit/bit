@@ -25,6 +25,7 @@ export interface ManyComponentsWriterParams {
   skipDependencyInstallation?: boolean;
   verbose?: boolean;
   resetConfig?: boolean;
+  skipWritingToFs?: boolean;
 }
 
 export type ComponentWriterResults = { installationError?: Error; compilationError?: Error };
@@ -87,6 +88,7 @@ export class ComponentWriterMain {
     }
   }
   private async persistComponentsData(opts: ManyComponentsWriterParams) {
+    if (opts.skipWritingToFs) return;
     const dataToPersist = new DataToPersist();
     opts.components.forEach((component) => dataToPersist.merge(component.dataToPersist));
     const componentsConfig = this.consumer?.config?.componentsConfig;
@@ -211,6 +213,7 @@ to move all component files to a different directory, run bit remove and then bi
     componentMap: ComponentMap | null | undefined,
     opts: ManyComponentsWriterParams
   ) {
+    if (opts.skipWritingToFs) return;
     // if not writeToPath specified, it goes to the default directory. When componentMap exists, the
     // component is not new, and it's ok to override the existing directory.
     if (!opts.writeToPath && componentMap) return;
