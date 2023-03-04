@@ -50,10 +50,7 @@ export async function removeLocalVersion(
     });
   }
 
-  const allVersionsObjects = await Promise.all(
-    versionsToRemoveStr.map((localVer) => component.loadVersion(localVer, scope.objects))
-  );
-  scope.sources.removeComponentVersions(component, versionsToRemoveStr, allVersionsObjects, lane, head);
+  await scope.sources.removeComponentVersions(component, versionsToRemoveStr, lane, head);
 
   return { id, versions: versionsToRemoveStr, component };
 }
