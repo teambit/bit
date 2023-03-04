@@ -350,7 +350,9 @@ export default class ComponentsList {
    * list all components that can be tagged.
    */
   async listPotentialTagAllWorkspace(): Promise<BitId[]> {
-    return this.idsFromBitMap();
+    const removedIds = await this.listLocallySoftRemoved();
+    const allIdsExcludeRemoved = this.idsFromBitMap();
+    return [...removedIds, ...allIdsExcludeRemoved];
   }
 
   /**

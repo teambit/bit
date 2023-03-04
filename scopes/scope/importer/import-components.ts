@@ -35,7 +35,7 @@ import VersionDependencies, {
 } from '@teambit/legacy/dist/scope/version-dependencies';
 import { GraphMain } from '@teambit/graph';
 import { Workspace } from '@teambit/workspace';
-import { ComponentWriterMain, ComponentWriterResults } from '@teambit/component-writer';
+import { ComponentWriterMain, ComponentWriterResults, ManyComponentsWriterParams } from '@teambit/component-writer';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -58,6 +58,7 @@ export type ImportOptions = {
   };
   allHistory?: boolean;
   fetchDeps?: boolean; // by default, if a component was tagged with > 0.0.900, it has the flattened-deps-graph in the object
+  trackOnly?: boolean;
 };
 type ComponentMergeStatus = {
   component: Component;
@@ -483,7 +484,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     // the typical objectsOnly option is when a user cloned a project with components tagged to the source code, but
     // doesn't have the model objects. in that case, calling getComponentStatusById() may return an error as it relies
     // on the model objects when there are dependencies
-    if (this.options.override || this.options.objectsOnly || this.options.merge) return;
+    if (this.options.override || this.options.objectsOnly || this.options.merge || this.options.trackOnly) return;
     const componentsStatuses = await this.consumer.getManyComponentsStatuses(ids);
     const modifiedComponents = componentsStatuses
       .filter(({ status }) => status.modified || status.newlyCreated)
@@ -656,14 +657,14 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
 
   async _writeToFileSystem(components: Component[]): Promise<ComponentWriterResults> {
     const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(components);
-    const manyComponentsWriterOpts = {
-      consumer: this.consumer,
+    const manyComponentsWriterOpts: ManyComponentsWriterParams = {
       components: componentsToWrite,
       writeToPath: this.options.writeToPath,
       writeConfig: this.options.writeConfig,
       skipDependencyInstallation: !this.options.installNpmPackages,
       verbose: this.options.verbose,
       throwForExistingDir: !this.options.override,
+      skipWritingToFs: this.options.trackOnly,
     };
     return this.componentWriter.writeMany(manyComponentsWriterOpts);
   }
