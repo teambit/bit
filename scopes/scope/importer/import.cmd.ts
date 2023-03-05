@@ -66,6 +66,7 @@ export class ImportCmd implements Command {
       'relevant for fetching all components objects. avoid optimizations, fetch all history versions, always',
     ],
     ['', 'fetch-deps', 'fetch dependencies objects'],
+    ['', 'track-only', 'do not write any file, just create .bitmap entries of the imported components'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -95,6 +96,7 @@ ${WILDCARD_HELP('import')}`;
       dependents = false,
       allHistory = false,
       fetchDeps = false,
+      trackOnly = false,
     }: {
       path?: string;
       objects?: boolean;
@@ -111,6 +113,7 @@ ${WILDCARD_HELP('import')}`;
       dependents?: boolean;
       allHistory?: boolean;
       fetchDeps?: boolean;
+      trackOnly?: boolean;
     }
   ): Promise<any> {
     if (objects && merge) {
@@ -124,6 +127,9 @@ ${WILDCARD_HELP('import')}`;
     }
     if (!ids.length && dependents) {
       throw new GeneralError('you have to specify ids to use "--dependents" flag');
+    }
+    if (!ids.length && trackOnly) {
+      throw new GeneralError('you have to specify ids to use "--track-only" flag');
     }
     if (skipNpmInstall) {
       // eslint-disable-next-line no-console
@@ -156,6 +162,7 @@ ${WILDCARD_HELP('import')}`;
       importDependents: dependents,
       allHistory,
       fetchDeps,
+      trackOnly,
     };
     const importResults = await this.importer.import(importOptions, this._packageManagerArgs);
     const { importDetails, importedIds, importedDeps, installationError, compilationError } = importResults;

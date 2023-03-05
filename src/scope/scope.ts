@@ -57,7 +57,6 @@ const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
 
 type HasIdOpts = {
   includeSymlink?: boolean;
-  includeOrphaned?: boolean;
   includeVersion?: boolean;
 };
 
@@ -291,10 +290,7 @@ export default class Scope {
     if (!opts.includeVersion || !id.version) return true;
     if (id.getVersion().latest) return true;
     const modelComponent = modelComponentList[0] as ModelComponent;
-    if (opts.includeOrphaned) {
-      return modelComponent.hasTagIncludeOrphaned(id.version);
-    }
-    return modelComponent.hasTag(id.version);
+    return modelComponent.hasVersion(id.version, this.objects);
   }
 
   async list(): Promise<ModelComponent[]> {
