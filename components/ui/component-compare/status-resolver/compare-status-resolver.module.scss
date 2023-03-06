@@ -32,7 +32,7 @@
     color: #ff8b00;
   }
   &.deleted {
-    color: #df083e;
+    color: var(--negative-color, #e62e5c);
   }
   &.new {
     color: #37b26c;

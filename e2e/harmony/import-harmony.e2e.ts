@@ -289,7 +289,7 @@ describe('import functionality on Harmony', function () {
 
       // intermediate step, make sure the types are saved in the
       const show = helper.command.showComponentParsed('bar');
-      expect(show.devPackageDependencies).to.include({ '@types/cors': '2.8.10' });
+      expect(show.devPackageDependencies).to.include({ '@types/cors': '^2.8.10' });
 
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -303,7 +303,29 @@ describe('import functionality on Harmony', function () {
     });
     it('bit show should show the typed dependency', () => {
       const show = helper.command.showComponentParsed('bar');
-      expect(show.devPackageDependencies).to.include({ '@types/cors': '2.8.10' });
+      expect(show.devPackageDependencies).to.include({ '@types/cors': '^2.8.10' });
+    });
+  });
+  describe('with --track-only flag', () => {
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      const emptyBitMap = helper.bitMap.read();
+      helper.command.importComponent('*');
+      helper.fs.writeFile(`${helper.scopes.remote}/comp1/file`, 'hello');
+      helper.bitMap.write(emptyBitMap);
+
+      helper.command.importComponent('*', '--track-only');
+    });
+    it('should only add the entries to the .bitmap without writing files', () => {
+      helper.bitMap.expectToHaveId('comp1');
+      expect(path.join(helper.scopes.localPath, `${helper.scopes.remote}/comp1/file`)).to.be.a.file();
     });
   });
 });

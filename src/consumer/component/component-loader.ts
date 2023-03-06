@@ -295,7 +295,7 @@ export default class ComponentLoader {
       // whether one of the hashes exist.
       // @ts-ignore version is set here
       if (remoteComponent && remoteComponent.hasTag(currentId.version)) {
-        throw new ComponentsPendingImport();
+        throw new ComponentsPendingImport([currentId.toString()]);
       }
     }
   }

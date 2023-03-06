@@ -163,6 +163,7 @@ export async function install(
   proxyConfig: PackageManagerProxyConfig = {},
   networkConfig: PackageManagerNetworkConfig = {},
   options: {
+    updateAll?: boolean;
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
     rootComponents?: boolean;
@@ -198,7 +199,9 @@ export async function install(
   if (options?.rootComponentsForCapsules) {
     readPackage.push(readPackageHookForCapsules as ReadPackageHook);
   }
-  const { allProjects, packagesToBuild, workspacePackages } = groupPkgs(manifestsByPaths);
+  const { allProjects, packagesToBuild, workspacePackages } = groupPkgs(manifestsByPaths, {
+    update: options?.updateAll,
+  });
   const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
   const storeController = await createStoreController({
@@ -214,6 +217,7 @@ export async function install(
   const opts: InstallOptions = {
     allProjects,
     storeDir: storeController.dir,
+    dedupePeerDependents: true,
     dir: rootDir,
     storeController: storeController.ctrl,
     workspacePackages,
@@ -240,6 +244,7 @@ export async function install(
       ignoreMissing: ['*'],
       ...options?.peerDependencyRules,
     },
+    depth: options.updateAll ? Infinity : 0,
   };
 
   const stopReporting = initDefaultReporter({
@@ -388,7 +393,7 @@ function readWorkspacePackageHook(pkg: PackageManifest): PackageManifest {
   };
 }
 
-function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>) {
+function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>, opts: { update?: boolean }) {
   const pkgs = Object.entries(manifestsByPaths).map(([dir, manifest]) => ({ dir, manifest }));
   const { graph } = createPkgGraph(pkgs);
   const chunks = sortPackages(graph as any);
@@ -419,6 +424,7 @@ function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>) {
       packagesToBuild.push({
         rootDir,
         mutation: 'install',
+        update: opts.update,
       });
       if (manifest.name) {
         workspacePackages[manifest.name] = workspacePackages[manifest.name] || {};
@@ -452,17 +458,18 @@ export async function resolveRemoteVersion(
       alias: parsedPackage.name,
       pref: parsedPackage.version,
     };
-    const isValidRange = parsedPackage.version ? !!semver.validRange(parsedPackage.version) : false;
     resolveOpts.registry = registry;
     const val = await resolve(wantedDep, resolveOpts);
     if (!val.manifest) {
       throw new BitError('The resolved package has no manifest');
     }
-    const version = isValidRange ? parsedPackage.version : val.manifest.version;
+    const wantedRange =
+      parsedPackage.version && semver.validRange(parsedPackage.version) ? parsedPackage.version : undefined;
 
     return {
       packageName: val.manifest.name,
-      version,
+      version: val.manifest.version,
+      wantedRange,
       isSemver: true,
       resolvedVia: val.resolvedVia,
     };

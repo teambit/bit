@@ -141,7 +141,8 @@ export class LanesMain {
     if (remote) {
       const remoteObj = await getRemoteByName(remote, consumer);
       const lanes = await remoteObj.listLanes(name, showMergeData);
-      return this.filterSoftRemovedLaneComps(lanes);
+      // no need to filter soft-removed here. it was filtered already in the remote
+      return lanes;
     }
 
     if (name === DEFAULT_LANE) {

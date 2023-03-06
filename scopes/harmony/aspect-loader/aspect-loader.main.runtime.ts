@@ -6,7 +6,7 @@ import { GLOBAL_SCOPE, DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constan
 import { MainRuntime } from '@teambit/cli';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
-import { ComponentID, Component } from '@teambit/component';
+import { ComponentID, Component, FilterAspectsOptions } from '@teambit/component';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { replaceFileExtToJs } from '@teambit/compilation.modules.babel-compiler';
@@ -37,7 +37,7 @@ export type AspectDescriptor = {
   icon?: string;
 };
 
-export type AspectResolver = (component: Component) => Promise<ResolvedAspect>;
+export type AspectResolver = (component: Component) => Promise<ResolvedAspect | undefined>;
 
 export type ResolvedAspect = {
   aspectPath: string;
@@ -92,6 +92,8 @@ export type MainAspect = {
 };
 
 export class AspectLoaderMain {
+  private inMemoryConfiguredAspects: string[] = [];
+
   constructor(
     private logger: Logger,
     private envs: EnvsMain,
@@ -207,8 +209,28 @@ export class AspectLoaderMain {
     }
   }
 
-  getNotLoadedConfiguredExtensions() {
+  /**
+   * This is used when adding aspects to workspace.jsonc during the process (like in bit use command)
+   * and we want to make sure that follow operation (like bit install) will recognize those aspects
+   * but the harmony config is already in memory.
+   * Probably a better to do it is to make sure we can re-load the config somehow
+   * ideally by adding the config class in harmony a reload API
+   * @param aspectId 
+   */
+  addInMemoryConfiguredAspect(aspectId: string): void {
+    this.inMemoryConfiguredAspects.push(aspectId);
+  }
+
+  /**
+   * get all the configured aspects in the config file (workspace.jsonc / bit.jsonc)
+   */
+  getConfiguredAspects(): string[] {
     const configuredAspects = Array.from(this.harmony.config.raw.keys());
+    const iMemoryConfiguredAspects = this.inMemoryConfiguredAspects;
+    return configuredAspects.concat(iMemoryConfiguredAspects);
+  }
+  getNotLoadedConfiguredExtensions() {
+    const configuredAspects = this.getConfiguredAspects();
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(configuredAspects, loadedExtensions);
     return extensionsToLoad;
@@ -275,6 +297,7 @@ export class AspectLoaderMain {
   async resolveAspects(components: Component[], resolver: AspectResolver): Promise<AspectDefinition[]> {
     const promises = components.map(async (component) => {
       const resolvedAspect = await resolver(component);
+      if (!resolvedAspect) return undefined;
       return new AspectDefinition(
         resolvedAspect.aspectPath,
         resolvedAspect.aspectFilePath,
@@ -285,7 +308,7 @@ export class AspectLoaderMain {
 
     const aspectDefs = await Promise.all(promises);
     // return aspectDefs.filter((def) => def.runtimePath);
-    return aspectDefs;
+    return compact(aspectDefs);
   }
 
   private _mainAspect: MainAspect;
@@ -407,7 +430,7 @@ export class AspectLoaderMain {
     if (this.logger.isLoaderStarted) {
       this.logger.consoleFailure(msg);
     } else {
-      this.logger.console(msg);
+      this.logger.consoleWarning(msg);
     }
   }
 
@@ -489,6 +512,43 @@ export class AspectLoaderMain {
     return { components, globalScopeHarmony };
   }
 
+  filterAspectDefs(
+    allDefs: AspectDefinition[],
+    componentIds: ComponentID[],
+    runtimeName: string | undefined,
+    filterOpts: FilterAspectsOptions = {}
+  ) {
+    const coreIds = this.getCoreAspectIds();
+    const stringIds = componentIds.map((id) => id.toStringWithoutVersion());
+    const afterExclusion = filterOpts.excludeCore
+      ? allDefs.filter((def) => {
+          const isCore = coreIds.includes(def.getId || '');
+          const id = ComponentID.fromString(def.getId || '');
+          const isTarget = stringIds.includes(id.toStringWithoutVersion());
+          if (isTarget) return true;
+          return !isCore;
+        })
+      : allDefs;
+
+    const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
+    let defs = uniqDefs;
+    if (runtimeName && filterOpts.filterByRuntime) {
+      defs = defs.filter((def) => def.runtimePath);
+    }
+
+    if (componentIds && componentIds.length && filterOpts.requestedOnly) {
+      const componentIdsString = componentIds.map((id) => id.toString());
+      defs = defs.filter((def) => {
+        return (
+          (def.id && componentIdsString.includes(def.id)) ||
+          (def.component && componentIdsString.includes(def.component?.id.toString()))
+        );
+      });
+    }
+
+    return defs;
+  }
+
   private prepareManifests(manifests: Array<ExtensionManifest | Aspect>): Aspect[] {
     return manifests.map((manifest: any) => {
       if (this.isAspect(manifest)) return manifest as Aspect;
@@ -546,8 +606,8 @@ export class AspectLoaderMain {
       if (this.logger.isLoaderStarted) {
         this.logger.consoleFailure(warning);
       } else {
-        this.logger.console(warning);
-        this.logger.console(e);
+        this.logger.consoleWarning(warning);
+        this.logger.consoleWarning(e);
       }
       if (throwOnError) {
         throw e;

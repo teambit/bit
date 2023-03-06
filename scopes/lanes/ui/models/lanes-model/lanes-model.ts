@@ -200,9 +200,19 @@ export class LanesModel {
 
   getLaneComponentUrlByVersion = (componentId: ComponentID, laneId?: LaneId) => {
     // if there is no version, the component is new and is on main
+    // if the component is on the currently checked out lane then remove version
     const defaultLane = this.getDefaultLane();
-    if (!componentId.version || !laneId || !defaultLane) return LanesModel.getMainComponentUrl(componentId);
+    if (
+      !componentId.version ||
+      !laneId ||
+      !defaultLane ||
+      (laneId && this.currentLane && laneId.isEqual(this.currentLane.id))
+    ) {
+      return LanesModel.getMainComponentUrl(componentId);
+    }
+
     const lane = this.getLanesByComponentId(componentId)?.find((l) => l.id.isEqual(laneId));
+
     if (!lane) {
       // return url from main if it exits
       return defaultLane.components.find((c) => c.isEqual(componentId))
@@ -241,6 +251,8 @@ export class LanesModel {
       (comp) => includeVersion && comp.isEqual(componentId, { ignoreVersion: true })
     );
   };
+
+  isViewingCurrentLane = () => this.currentLane && this.viewedLane && this.currentLane.id.isEqual(this.viewedLane.id);
 
   getLanesByComponentName = (componentId: ComponentID) => this.lanesByComponentName.get(componentId.fullName);
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.toString());

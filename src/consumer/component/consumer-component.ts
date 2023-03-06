@@ -521,7 +521,7 @@ export default class Component {
     if (!componentFromModel && id.scope) {
       const inScopeWithAnyVersion = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
       // if it's in scope with another version, the component will be synced in _handleOutOfSyncScenarios()
-      if (!inScopeWithAnyVersion) throw new ComponentsPendingImport();
+      if (!inScopeWithAnyVersion) throw new ComponentsPendingImport([id.toString()]);
     }
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     const compDirAbs = path.join(consumer.getPath(), componentMap.getComponentDir());
