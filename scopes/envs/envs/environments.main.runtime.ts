@@ -1,5 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMain, ComponentID, AspectData } from '@teambit/component';
+import { Component, ComponentAspect, ComponentMain, ComponentID } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -35,11 +35,35 @@ export type EnvTransformer = (env: Environment) => Environment;
 
 export type ServicesRegistry = SlotRegistry<Array<EnvService<any>>>;
 
-export type Descriptor = {
+export type RegularCompDescriptor = {
   id: string;
-  icon: string;
-  services?: [];
+  icon?: string;
+  type?: string;
+  name?: string;
+  description?: string;
 };
+export type EnvCompDescriptorProps = RegularCompDescriptor & {
+  services?: {
+    env: {
+      id: string;
+      icon: string;
+      name?: string;
+      description?: string;
+    };
+    services: Array<{
+      id: string;
+      name?: string;
+      description?: string;
+      data: any;
+    }>;
+  };
+};
+
+export type EnvCompDescriptor = EnvCompDescriptorProps & {
+  self?: EnvCompDescriptorProps;
+};
+
+export type Descriptor = RegularCompDescriptor | EnvCompDescriptor;
 
 export const DEFAULT_ENV = 'teambit.harmony/node';
 
@@ -160,14 +184,14 @@ export class EnvsMain {
     return targetEnv as T & S;
   }
 
-  getEnvData(component: Component): AspectData {
+  getEnvData(component: Component): Descriptor {
     let envsData = component.state.aspects.get(EnvsAspect.id);
     if (!envsData) {
       // TODO: remove this once we re-export old components used to store the data here
       envsData = component.state.aspects.get('teambit.workspace/workspace');
     }
     if (!envsData) throw new Error(`env was not configured on component ${component.id.toString()}`);
-    return envsData.data;
+    return envsData.data as Descriptor;
   }
 
   /**
@@ -277,10 +301,65 @@ export class EnvsMain {
    */
   getDescriptor(component: Component): Descriptor | null {
     const envsData = this.getEnvData(component);
+    return envsData;
+  }
+
+  async calcDescriptor(component: Component): Promise<Descriptor | undefined> {
+    const componentDescriptor = await this.getComponentEnvDescriptor(component);
+    if (!componentDescriptor) return undefined;
+    const envComponentSelfDescriptor = await this.getEnvSelfDescriptor(component);
+    const result = envComponentSelfDescriptor
+      ? { ...componentDescriptor, self: envComponentSelfDescriptor }
+      : componentDescriptor;
+    return result;
+  }
+
+  /**
+   * Get env descriptor from the env itself if the component is an env
+   * This will be empty for regular component, and will only contain data for env themself
+   */
+  private async getEnvSelfDescriptor(envComponent: Component): Promise<EnvCompDescriptorProps | undefined> {
+    // !important calculate only on the env itself.
+    if (!this.isEnvRegistered(envComponent.id.toString())) {
+      return undefined;
+    }
+
+    const envDef = this.getEnvFromComponent(envComponent);
+    if (!envDef) return undefined;
+
+    const services = this.getServices(envDef);
+    // const selfDescriptor = (await this.getEnvDescriptorFromEnvDef(envDef)) || {};
+    const selfDescriptor = await this.getEnvDescriptorFromEnvDef(envDef);
+
+    if (!selfDescriptor) return undefined;
     return {
-      id: this.getEnvId(component),
-      icon: envsData.icon,
-      services: envsData.services,
+      ...selfDescriptor,
+      services: services.toObject(),
+    };
+  }
+
+  /**
+   * Get env descriptor from the env that a given component is using
+   */
+  private async getComponentEnvDescriptor(component: Component): Promise<RegularCompDescriptor | undefined> {
+    const envDef = this.calculateEnv(component);
+    return this.getEnvDescriptorFromEnvDef(envDef);
+  }
+
+  private async getEnvDescriptorFromEnvDef(envDef: EnvDefinition): Promise<RegularCompDescriptor | undefined> {
+    if (!envDef.env.__getDescriptor || typeof envDef.env.__getDescriptor !== 'function') {
+      return undefined;
+    }
+    const systemDescriptor = await envDef.env.__getDescriptor();
+
+    return {
+      type: systemDescriptor.type,
+      // Make sure to store the env id in the data without the version
+      // The version should always come from the aspect id configured on the component
+      id: envDef.id.split('@')[0],
+      name: envDef.name,
+      icon: envDef.env.icon,
+      description: envDef.description,
     };
   }
 
@@ -651,7 +730,7 @@ export class EnvsMain {
     const resolvedAspects = await host.resolveAspects(MainRuntime.name, [id], {
       requestedOnly: true,
       filterByRuntime: false,
-      useScopeAspectsCapsule: true
+      useScopeAspectsCapsule: true,
     });
     const def = resolvedAspects[0];
 

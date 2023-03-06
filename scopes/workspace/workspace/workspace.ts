@@ -13,7 +13,6 @@ import {
   ComponentFactory,
   ComponentID,
   AspectList,
-  AspectData,
   InvalidComponent,
   ResolveAspectsOptions,
 } from '@teambit/component';
@@ -21,7 +20,7 @@ import { BitError } from '@teambit/bit-error';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { EnvsMain, EnvsAspect, EnvServiceList } from '@teambit/envs';
+import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { Logger } from '@teambit/logger';
@@ -579,31 +578,6 @@ export class Workspace implements ComponentFactory {
   async getConfiguredUserAspectsPackages(options: GetConfiguredUserAspectsPackagesOptions): Promise<AspectPackage[]> {
     const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
     return workspaceAspectsLoader.getConfiguredUserAspectsPackages(options);
-  }
-
-  // TODO: @gilad we should refactor this asap into to the envs aspect.
-  async getEnvSystemDescriptor(component: Component): Promise<AspectData> {
-    const env = this.envs.calculateEnv(component);
-    if (env.env.__getDescriptor && typeof env.env.__getDescriptor === 'function') {
-      const systemDescriptor = await env.env.__getDescriptor();
-      // !important persist services only on the env itself.
-      let services: undefined | EnvServiceList;
-      if (this.envs.isEnvRegistered(component.id.toString())) services = this.envs.getServices(env);
-      const icon = this.aspectLoader.getDescriptor(env.id)?.icon || env.env.icon;
-
-      return {
-        type: systemDescriptor.type,
-        // Make sure to store the env id in the data without the version
-        // The version should always come from the aspect id configured on the component
-        id: env.id.split('@')[0],
-        name: env.name,
-        icon,
-        description: env.description,
-        services: services?.toObject(),
-      };
-    }
-
-    return {};
   }
 
   clearCache() {

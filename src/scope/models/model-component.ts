@@ -27,7 +27,7 @@ import ComponentObjects from '../component-objects';
 import { SnapsDistance } from '../component-ops/snaps-distance';
 import { getDivergeData } from '../component-ops/get-diverge-data';
 import {
-  getAllVersionHashes,
+  getAllVersionParents,
   getAllVersionsInfo,
   getVersionParentsFromVersion,
 } from '../component-ops/traverse-versions';
@@ -223,8 +223,12 @@ export default class Component extends BitObject {
     if (isTag(version)) {
       return includeOrphaned ? this.hasTagIncludeOrphaned(version) : this.hasTag(version);
     }
-    const allHashes = await getAllVersionHashes({ modelComponent: this, repo, throws: false });
-    return allHashes.some((hash) => hash.toString() === version);
+    const head = this.getHeadRegardlessOfLane();
+    if (!head) {
+      return false;
+    }
+    const versionParents = await getAllVersionParents({ repo, modelComponent: this, heads: [head] });
+    return versionParents.map((v) => v.hash).some((hash) => hash.toString() === version);
   }
 
   hasTag(version: string): boolean {
@@ -720,7 +724,8 @@ export default class Component extends BitObject {
   async collectVersionsObjects(
     repo: Repository,
     versions: string[],
-    ignoreMissingArtifacts?: boolean
+    ignoreMissingLocalArtifacts = false,
+    ignoreMissingExternalArtifacts = true
   ): Promise<ObjectItem[]> {
     const refsWithoutArtifacts: Ref[] = [];
     const artifactsRefs: Ref[] = [];
@@ -739,7 +744,7 @@ export default class Component extends BitObject {
       const refs = versionObject.refsWithOptions(false, false);
       refsWithoutArtifacts.push(...refs);
       const refsFromExtensions = getRefsFromExtensions(versionObject.extensions);
-      locallyChangedHashes.includes(versionObject.hash.toString())
+      locallyChangedHashes.includes(versionObject.hash.toString()) || !ignoreMissingExternalArtifacts
         ? artifactsRefs.push(...refsFromExtensions)
         : artifactsRefsFromExportedVersions.push(...refsFromExtensions);
     });
@@ -755,7 +760,7 @@ for a component "${this.id()}", versions: ${versions.join(', ')}`);
       throw err;
     }
     try {
-      const loaded = ignoreMissingArtifacts
+      const loaded = ignoreMissingLocalArtifacts
         ? await repo.loadManyRawIgnoreMissing(artifactsRefs)
         : await repo.loadManyRaw(artifactsRefs);
       loadedRefs.push(...loaded);

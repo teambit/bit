@@ -59,7 +59,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
     // improves HMR - assume node_modules might change
     snapshot: { managedPaths: [] },
 
-    devtool: 'inline-source-map',
+    devtool: 'eval-cheap-source-map',
 
     // Entry point of app
     entry: {

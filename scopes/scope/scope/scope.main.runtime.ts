@@ -586,7 +586,6 @@ export class ScopeMain implements ComponentFactory {
   async hasId(componentId: ComponentID, includeCache = false): Promise<boolean> {
     if (!includeCache && componentId.scope !== this.name) return false;
     const opts = {
-      includeOrphaned: true,
       includeVersion: true,
     };
 
@@ -788,6 +787,10 @@ export class ScopeMain implements ComponentFactory {
     // Ran suggests changing it and if it breaks something, we'll document is and fix it.
     const appData = component.state.aspects.get('teambit.harmony/application');
     if (appData?.data?.appName) {
+      aspectIds.push(component.id.toString());
+    }
+    const envsData = component.state.aspects.get(EnvsAspect.id);
+    if (envsData?.data?.services || envsData?.data?.self){
       aspectIds.push(component.id.toString());
     }
     await this.loadAspects(aspectIds, true, id.toString(), lane);
