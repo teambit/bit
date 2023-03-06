@@ -267,6 +267,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    */
   async removeComponentVersions(
     component: ModelComponent,
+    versionsRefs: Ref[],
     versions: string[],
     lane: Lane | null,
     removeOnlyHead?: boolean
@@ -275,10 +276,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const objectRepo = this.objects();
     const componentHadHead = component.hasHead();
     const laneItem = lane?.getComponentByName(component.toBitId());
-    const removedRefs = versions.map((version) => {
-      const ref = component.removeVersion(version);
-      return ref;
-    });
+
     let allVersionsObjects: Version[] | undefined;
 
     const getNewHead = async () => {
@@ -300,7 +298,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       const headVersion = allVersionsObjects.find((ver) => ver.hash().isEqual(head));
       return this.findHeadInExistingVersions(allVersionsObjects, component.id(), headVersion);
     };
-    const refWasDeleted = (ref: Ref) => removedRefs.find((removedRef) => ref.isEqual(removedRef));
+    const refWasDeleted = (ref: Ref) => versionsRefs.find((removedRef) => ref.isEqual(removedRef));
     if (component.head && refWasDeleted(component.head)) {
       const newHead = await getNewHead();
       component.setHead(newHead);
@@ -338,6 +336,10 @@ please either remove the component (bit remove) or remove the lane.`);
     if (componentHadHead && !component.hasHead() && component.versionArray.length) {
       throw new Error(`fatal: "head" prop was removed from "${component.id()}", although it has versions`);
     }
+    versions.map((version) => {
+      const ref = component.removeVersion(version);
+      return ref;
+    });
     if (component.versionArray.length || component.hasHead() || component.laneHeadLocal) {
       objectRepo.add(component); // add the modified component object
     } else {

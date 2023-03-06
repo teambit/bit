@@ -50,7 +50,7 @@ export async function removeLocalVersion(
     });
   }
 
-  await scope.sources.removeComponentVersions(component, versionsToRemoveStr, lane, head);
+  await scope.sources.removeComponentVersions(component, versionsToRemove, versionsToRemoveStr, lane, head);
 
   return { id, versions: versionsToRemoveStr, component };
 }
