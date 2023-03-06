@@ -306,4 +306,26 @@ describe('import functionality on Harmony', function () {
       expect(show.devPackageDependencies).to.include({ '@types/cors': '^2.8.10' });
     });
   });
+  describe('with --track-only flag', () => {
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      const emptyBitMap = helper.bitMap.read();
+      helper.command.importComponent('*');
+      helper.fs.writeFile(`${helper.scopes.remote}/comp1/file`, 'hello');
+      helper.bitMap.write(emptyBitMap);
+
+      helper.command.importComponent('*', '--track-only');
+    });
+    it('should only add the entries to the .bitmap without writing files', () => {
+      helper.bitMap.expectToHaveId('comp1');
+      expect(path.join(helper.scopes.localPath, `${helper.scopes.remote}/comp1/file`)).to.be.a.file();
+    });
+  });
 });
