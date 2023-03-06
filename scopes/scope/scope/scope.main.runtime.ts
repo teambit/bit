@@ -586,7 +586,6 @@ export class ScopeMain implements ComponentFactory {
   async hasId(componentId: ComponentID, includeCache = false): Promise<boolean> {
     if (!includeCache && componentId.scope !== this.name) return false;
     const opts = {
-      includeOrphaned: true,
       includeVersion: true,
     };
 

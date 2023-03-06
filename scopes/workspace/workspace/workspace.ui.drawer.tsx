@@ -59,6 +59,7 @@ export const workspaceDrawer = ({
       const viewedLaneId = lanesModel?.viewedLane?.id;
       const defaultLane = lanesModel?.getDefaultLane();
       const isViewingDefaultLane = viewedLaneId && defaultLane?.id.isEqual(viewedLaneId);
+
       const isViewingWorkspaceVersions = lanesModel?.isViewingCurrentLane();
 
       const { components: laneComponents = [], loading: laneCompsLoading } = useLaneComponents(
@@ -67,17 +68,34 @@ export const workspaceDrawer = ({
       const { components: mainComponents = [], loading: mainCompsLoading } = useLaneComponents(
         !isViewingDefaultLane ? defaultLane?.id : undefined
       );
+
       const workspace = useContext(WorkspaceContext);
       const { components: workspaceComponents } = workspace;
 
-      // lane components + main components
-      const components = isViewingDefaultLane
-        ? laneComponents
-        : (!isViewingWorkspaceVersions && mergeComponents(mainComponents, laneComponents)) || workspaceComponents;
+      const loading = lanesLoading || laneCompsLoading || mainCompsLoading;
+
+      /**
+       * if viewing locally checked out lane, return all components from the workspace
+       * when viewing main when locally checked out to another lane, explicitly return components from the "main" lane
+       * when viewing another lane when locally checked out to a different lane, return "main" + "lane" components
+       * */
+      if (isViewingWorkspaceVersions) {
+        return {
+          loading,
+          components: workspaceComponents,
+        };
+      }
+
+      if (isViewingDefaultLane) {
+        return {
+          loading,
+          components: mainComponents,
+        };
+      }
 
       return {
-        loading: lanesLoading || laneCompsLoading || mainCompsLoading,
-        components,
+        loading,
+        components: mergeComponents(mainComponents, laneComponents),
       };
     },
   });

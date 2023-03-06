@@ -292,7 +292,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
 
     const getLaneStr = () => {
       if (currentLaneId.isDefault()) return '';
-      const prefix = `\non ${chalk.bold(currentLaneId.toString())} lane`;
+      const prefix = `\n\ncurrent lane ${chalk.bold(currentLaneId.toString())}`;
       if (lanes) return prefix;
       return `${prefix}\nconsider adding "--lanes" flag to see updates from main/forked`;
     };
