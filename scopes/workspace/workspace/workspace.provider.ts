@@ -3,7 +3,7 @@ import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain, CommandList } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
-import { DependencyResolverMain, VariantPolicy } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain, VariantPolicy } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony, SlotRegistry } from '@teambit/harmony';
@@ -109,13 +109,36 @@ export default async function provideWorkspace(
     graphql
   );
 
+  const configMergeFile = workspace.getConflictMergeFile();
+  await configMergeFile.loadIfNeeded();
+
   const getWorkspacePolicyFromPackageJson = () => {
     const packageJson = workspace.consumer.packageJson?.packageJsonObject || {};
     const policyFromPackageJson = dependencyResolver.getWorkspacePolicyFromPackageJson(packageJson);
     return policyFromPackageJson;
   };
 
-  dependencyResolver.registerRootPolicy(getWorkspacePolicyFromPackageJson());
+  const getWorkspacePolicyFromMergeConfig = () => {
+    const wsConfigMerge = workspace.getWorkspaceJsonConflictFromMergeConfig();
+    const policy = wsConfigMerge.data?.[DependencyResolverAspect.id]?.policy || {};
+    ['dependencies', 'peerDependencies'].forEach((depField) => {
+      if (!policy[depField]) return;
+      policy[depField] = policy[depField].reduce((acc, current) => {
+        acc[current.name] = current.version;
+        return acc;
+      }, {});
+    });
+    const wsPolicy = dependencyResolver.getWorkspacePolicyFromConfigObject(policy);
+    return wsPolicy;
+  };
+
+  const getRootPolicy = () => {
+    const pkgJsonPolicy = getWorkspacePolicyFromPackageJson();
+    const configMergePolicy = getWorkspacePolicyFromMergeConfig();
+    return dependencyResolver.mergeWorkspacePolices([pkgJsonPolicy, configMergePolicy]);
+  };
+
+  dependencyResolver.registerRootPolicy(getRootPolicy());
 
   consumer.onCacheClear.push(() => workspace.clearCache());
 

@@ -91,6 +91,7 @@ import { WorkspaceAspect } from './workspace.aspect';
 import { GraphIdsFromFsBuilder } from './build-graph-ids-from-fs';
 import { AspectsMerger } from './aspects-merger';
 import { MergeConflictFile } from './merge-conflict-file';
+import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 
 export type EjectConfResult = {
   configPath: string;
@@ -1022,6 +1023,22 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   getDepsDataOfMergeConfig(id: BitId): Record<string, any> | undefined {
     return this.aspectsMerger.getDepsDataOfMergeConfig(id);
+  }
+
+  getWorkspaceJsonConflictFromMergeConfig(): { data?: Record<string, any>; conflict: boolean } {
+    const configMergeFile = this.getConflictMergeFile();
+    let data: Record<string, any> | undefined;
+    let conflict = false;
+    try {
+      data = configMergeFile.getConflictParsed('WORKSPACE');
+    } catch (err) {
+      if (!(err instanceof MergeConfigConflict)) {
+        throw err;
+      }
+      conflict = true;
+      this.logger.error(`unable to parse the config file for the workspace due to conflicts`);
+    }
+    return { data, conflict };
   }
 
   async listComponentsDuringMerge(): Promise<ComponentID[]> {

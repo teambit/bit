@@ -36,7 +36,7 @@ import threeWayMerge, {
   MergeResultsThreeWay,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, WorkspacePolicyConfigKeysNames } from '@teambit/dependency-resolver';
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
@@ -51,7 +51,7 @@ type ResolveUnrelatedData = { strategy: MergeStrategy; head: Ref };
 type PkgEntry = { name: string; version: string; force: boolean };
 
 export type WorkspaceDepsUpdates = { [pkgName: string]: [string, string] }; // from => to
-export type WorkspaceDepsConflicts = { [pkgName: string]: string }; // in a format of CONFLICT::OURS::THEIRS
+export type WorkspaceDepsConflicts = Record<WorkspacePolicyConfigKeysNames, Array<{ name: string; version: string }>>; // the pkg value is in a format of CONFLICT::OURS::THEIRS
 
 export type ComponentMergeStatus = {
   currentComponent?: ConsumerComponent | null;
@@ -384,7 +384,8 @@ export class MergingMain {
     const policy = depResolver?.config.policy;
     if (!policy) return {};
     const workspaceJsonUpdates = {};
-    const workspaceJsonConflicts = {};
+    const WS_DEPS_FIELDS = ['dependencies', 'peerDependencies'];
+    const workspaceJsonConflicts = { dependencies: [], peerDependencies: [] };
     allPackages.forEach((pkgName) => {
       if (allDeps[pkgName].length > 1) {
         // we only want the deps that the other lane has them in the workspace.json and that all comps use the same dep.
@@ -407,17 +408,22 @@ export class MergingMain {
       const conflict = allConflictDeps[pkgName][0];
       const [, currentVal] = conflict.split('::');
 
-      DEPENDENCIES_FIELDS.forEach((depField) => {
+      WS_DEPS_FIELDS.forEach((depField) => {
         if (!policy[depField]?.[pkgName]) return;
         const currentVer = policy[depField][pkgName];
         if (currentVer !== currentVal) return;
         // the version is coming from the workspace.jsonc
-        workspaceJsonConflicts[pkgName] = conflict;
+        workspaceJsonConflicts[depField].push({ name: pkgName, version: conflict, force: false });
       });
+    });
+    WS_DEPS_FIELDS.forEach((depField) => {
+      if (isEmpty(workspaceJsonConflicts[depField])) delete workspaceJsonConflicts[depField];
     });
 
     if (Object.keys(workspaceJsonConflicts).length) {
-      const conflictedPkgs = Object.keys(workspaceJsonConflicts);
+      const conflictedPkgs = Object.keys(workspaceJsonConflicts)
+        .map((depField) => workspaceJsonConflicts[depField].map((d) => d.name))
+        .flat();
       allResults.forEach((result) => {
         if (result?.conflict) {
           DEPENDENCIES_FIELDS.forEach((depField) => {

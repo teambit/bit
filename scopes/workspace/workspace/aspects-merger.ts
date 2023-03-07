@@ -55,7 +55,7 @@ export class AspectsMerger {
 
     let configMerge: Record<string, any> | undefined;
     try {
-      configMerge = await this.mergeConflictFile.getConflictParsed(componentId.toStringWithoutVersion());
+      configMerge = this.mergeConflictFile.getConflictParsed(componentId.toStringWithoutVersion());
     } catch (err) {
       if (!(err instanceof MergeConfigConflict)) {
         throw err;
