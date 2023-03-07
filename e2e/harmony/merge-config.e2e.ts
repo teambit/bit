@@ -337,6 +337,7 @@ describe('merge config scenarios', function () {
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.setEnv('comp1', envId);
       helper.command.tagAllWithoutBuild();
+      helper.command.export();
       helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.2
       helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.3
 

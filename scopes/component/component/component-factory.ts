@@ -9,7 +9,16 @@ import { Component, InvalidComponent } from './component';
 import { State } from './state';
 import { Snap } from './snap';
 
-export type ResolveAspectsOptions = {
+export type ResolveAspectsOptions = FilterAspectsOptions & {
+  throwOnError?: boolean;
+  useScopeAspectsCapsule?: boolean;
+};
+
+export type LoadAspectsOptions = {
+  [key: string]: any;
+};
+
+export type FilterAspectsOptions = {
   /**
    * Do not return results for the core aspects
    */

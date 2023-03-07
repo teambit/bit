@@ -5,7 +5,13 @@ import { BuildStatus } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import logger from '../../logger/logger';
 import ComponentObjects from '../component-objects';
-import { getAllVersionHashes, getAllVersionsInfo, VersionInfo } from '../component-ops/traverse-versions';
+import {
+  getAllVersionHashes,
+  getAllVersionsInfo,
+  getSubsetOfVersionParents,
+  getVersionParentsFromVersion,
+  VersionInfo,
+} from '../component-ops/traverse-versions';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import { ModelComponent, Symlink, Version } from '../models';
@@ -527,6 +533,9 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
 
     const existingLane = hasSameHash ? existingLaneWithSameId : await this.scope.loadLaneByHash(lane.hash());
 
+    const sentVersionHashes = versionObjects?.map((v) => v.hash().toString());
+    const versionParents = versionObjects?.map((v) => getVersionParentsFromVersion(v));
+
     if (existingLane && !existingLaneWithSameId) {
       // the lane id has changed
       existingLane.scope = lane.scope;
@@ -534,6 +543,8 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
     }
     const mergeResults: MergeResult[] = [];
     const mergeErrors: ComponentNeedsUpdate[] = [];
+    const isExport = !isImport;
+
     await Promise.all(
       lane.components.map(async (component) => {
         const modelComponent =
@@ -544,6 +555,21 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
         }
         const existingComponent = existingLane ? existingLane.components.find((c) => c.id.isEqual(component.id)) : null;
         if (!existingComponent) {
+          if (isExport) {
+            if (!sentVersionHashes?.includes(component.head.toString())) {
+              // during export, the remote might got a lane when some components were not sent from the client. ignore them.
+              return;
+            }
+            if (!versionParents) throw new Error('mergeLane, versionParents must be set during export');
+            const subsetOfVersionParents = getSubsetOfVersionParents(versionParents, component.head);
+            if (existingLane) existingLane.addComponent(component);
+            mergeResults.push({
+              mergedComponent: modelComponent,
+              mergedVersions: subsetOfVersionParents.map((h) => h.hash.toString()),
+            });
+            return;
+          }
+
           const allVersions = await getAllVersionHashes({
             modelComponent,
             repo,

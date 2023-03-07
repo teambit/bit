@@ -459,7 +459,7 @@ export class PreviewMain {
       ENV_STRATEGY_ARTIFACT_NAME
     );
     const envType = this.envs.getEnvData(component).type;
-    return !!artifacts && !!artifacts.length && ENV_WITH_LEGACY_DOCS.includes(envType);
+    return !!artifacts && !!artifacts.length && ENV_WITH_LEGACY_DOCS.includes(envType || '');
   }
 
   /**
