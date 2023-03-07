@@ -35,4 +35,5 @@ export enum TagName {
   implements = 'implements',
   return = 'return',
   deprecated = 'deprecated',
+  exports = 'exports',
 }
