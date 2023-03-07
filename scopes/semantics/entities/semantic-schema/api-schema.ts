@@ -38,7 +38,8 @@ export class APISchema extends SchemaNode {
     this.taggedModuleExports = this.listTaggedExports(module);
   }
 
-  listTaggedExports(module: ModuleSchema) {
+  listTaggedExports(module?: ModuleSchema) {
+    if (!module) return [];
     return module.exports.filter((e) => e.doc?.hasTag(TagName.exports));
   }
 
