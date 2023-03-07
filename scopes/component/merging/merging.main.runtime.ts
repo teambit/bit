@@ -30,7 +30,7 @@ import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-w
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { compact } from 'lodash';
+import { compact, isEmpty } from 'lodash';
 import { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
 import threeWayMerge, {
   MergeResultsThreeWay,
@@ -50,7 +50,8 @@ import { ConfigMergeResult } from './config-merge-result';
 type ResolveUnrelatedData = { strategy: MergeStrategy; head: Ref };
 type PkgEntry = { name: string; version: string; force: boolean };
 
-export type WorkspaceDepsUpdates = { [pkgName: string]: [string, string] };
+export type WorkspaceDepsUpdates = { [pkgName: string]: [string, string] }; // from => to
+export type WorkspaceDepsConflicts = { [pkgName: string]: string }; // in a format of CONFLICT::OURS::THEIRS
 
 export type ComponentMergeStatus = {
   currentComponent?: ConsumerComponent | null;
@@ -245,9 +246,12 @@ export class MergingMain {
     );
 
     const allConfigMerge = compact(succeededComponents.map((c) => c.configMergeResult));
-    await this.generateConfigMergeConflictFileForAll(allConfigMerge);
 
-    const workspaceDepsUpdates = await this.updateWorkspaceJsoncWithDepsIfNeeded(allConfigMerge);
+    const { workspaceDepsUpdates, workspaceDepsConflicts } = await this.updateWorkspaceJsoncWithDepsIfNeeded(
+      allConfigMerge
+    );
+
+    await this.generateConfigMergeConflictFileForAll(allConfigMerge, workspaceDepsConflicts);
 
     if (localLane) consumer.scope.objects.add(localLane);
 
@@ -305,8 +309,20 @@ export class MergingMain {
     };
   }
 
-  private async generateConfigMergeConflictFileForAll(allConfigMerge: ConfigMergeResult[]) {
+  private async generateConfigMergeConflictFileForAll(
+    allConfigMerge: ConfigMergeResult[],
+    workspaceDepsConflicts?: WorkspaceDepsConflicts
+  ) {
     const configMergeFile = this.workspace.getConflictMergeFile();
+    if (workspaceDepsConflicts) {
+      const workspaceConflict = new ConfigMergeResult('WORKSPACE', 'ours', 'theirs', [
+        {
+          id: DependencyResolverAspect.id,
+          conflict: workspaceDepsConflicts,
+        },
+      ]);
+      allConfigMerge.unshift(workspaceConflict);
+    }
     allConfigMerge.forEach((configMerge) => {
       const conflict = configMerge.generateMergeConflictFile();
       if (!conflict) return;
@@ -319,7 +335,7 @@ export class MergingMain {
 
   private async updateWorkspaceJsoncWithDepsIfNeeded(
     allConfigMerge: ConfigMergeResult[]
-  ): Promise<WorkspaceDepsUpdates | undefined> {
+  ): Promise<{ workspaceDepsUpdates?: WorkspaceDepsUpdates; workspaceDepsConflicts?: WorkspaceDepsConflicts }> {
     const allResults = allConfigMerge.map((c) => c.getDepsResolverResult());
     const allPolicies = compact(
       allResults.map((result) => {
@@ -341,15 +357,34 @@ export class MergingMain {
         });
       });
     });
+
+    const allConflicts = compact(allResults.map((result) => result?.conflict));
+    const allConflictDeps: { [pkgName: string]: string[] } = {};
+    allConflicts.forEach((policy) => {
+      DEPENDENCIES_FIELDS.forEach((depField) => {
+        if (!policy[depField]) return;
+        policy[depField].forEach((pkg: PkgEntry) => {
+          if (pkg.force) return; // we only care about auto-detected dependencies
+          if (allConflictDeps[pkg.name]) {
+            if (!allConflictDeps[pkg.name].includes(pkg.version)) allConflictDeps[pkg.name].push(pkg.version);
+            return;
+          }
+          allConflictDeps[pkg.name] = [pkg.version];
+        });
+      });
+    });
+
     const allPackages = Object.keys(allDeps);
-    if (!allPackages.length) return undefined;
+    const allConflictedPackages = Object.keys(allConflictDeps);
+    if (!allPackages.length && !allConflictedPackages.length) return {};
 
     const workspaceConfig = this.config.workspaceConfig;
     if (!workspaceConfig) throw new Error(`updateWorkspaceJsoncWithDepsIfNeeded unable to get workspace config`);
     const depResolver = workspaceConfig.extensions.findCoreExtension(DependencyResolverAspect.id);
     const policy = depResolver?.config.policy;
-    if (!policy) return undefined;
+    if (!policy) return {};
     const workspaceJsonUpdates = {};
+    const workspaceJsonConflicts = {};
     allPackages.forEach((pkgName) => {
       if (allDeps[pkgName].length > 1) {
         // we only want the deps that the other lane has them in the workspace.json and that all comps use the same dep.
@@ -364,11 +399,45 @@ export class MergingMain {
       });
     });
 
+    allConflictedPackages.forEach((pkgName) => {
+      if (allConflictDeps[pkgName].length > 1) {
+        // we only want the deps that the other lane has them in the workspace.json and that all comps use the same dep.
+        return;
+      }
+      const conflict = allConflictDeps[pkgName][0];
+      const [, currentVal] = conflict.split('::');
+
+      DEPENDENCIES_FIELDS.forEach((depField) => {
+        if (!policy[depField]?.[pkgName]) return;
+        const currentVer = policy[depField][pkgName];
+        if (currentVer !== currentVal) return;
+        // the version is coming from the workspace.jsonc
+        workspaceJsonConflicts[pkgName] = conflict;
+      });
+    });
+
+    if (Object.keys(workspaceJsonConflicts).length) {
+      const conflictedPkgs = Object.keys(workspaceJsonConflicts);
+      allResults.forEach((result) => {
+        if (result?.conflict) {
+          DEPENDENCIES_FIELDS.forEach((depField) => {
+            if (!result.conflict?.[depField]) return;
+            result.conflict[depField] = result.conflict?.[depField].filter((dep) => !conflictedPkgs.includes(dep.name));
+            if (!result.conflict[depField].length) delete result.conflict[depField];
+          });
+          if (isEmpty(result.conflict)) result.conflict = undefined;
+        }
+      });
+    }
+
     if (Object.keys(workspaceJsonUpdates).length) {
       await workspaceConfig.write();
-      return workspaceJsonUpdates;
     }
-    return undefined;
+
+    return {
+      workspaceDepsUpdates: Object.keys(workspaceJsonUpdates).length ? workspaceJsonUpdates : undefined,
+      workspaceDepsConflicts: Object.keys(workspaceJsonConflicts).length ? workspaceJsonConflicts : undefined,
+    };
   }
 
   /**
