@@ -725,6 +725,23 @@ describe('bit lane command', function () {
         helper.command.expectStatusToBeClean();
       });
     });
+    describe('merging from scope', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedRemoteScope(remoteScope);
+        helper.command.export();
+        const bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+        helper.scopeHelper.addRemoteScope(anotherRemotePath, bareMerge.scopePath);
+        helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`, '--push');
+      });
+      it('should push the artifacts to the original-scope', () => {
+        const artifacts = helper.command.getArtifacts(`${anotherRemote}/bar2@latest`, anotherRemotePath);
+        const pkgArtifacts = artifacts.find((a) => a.generatedBy === 'teambit.pkg/pkg');
+        const hash = pkgArtifacts.files[0].file;
+        expect(() => helper.command.catObject(hash, false, anotherRemotePath)).to.not.throw();
+      });
+    });
   });
   describe('multiple scopes when the components are new', () => {
     let anotherRemote: string;

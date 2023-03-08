@@ -33,9 +33,9 @@ importers:
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.4
       '@pnpm/client': 9.1.4
       '@pnpm/colorize-semver-diff': 1.0.1
-      '@pnpm/config': 16.6.3
-      '@pnpm/core': 7.8.3
-      '@pnpm/default-reporter': 11.0.35
+      '@pnpm/config': 16.7.1
+      '@pnpm/core': 8.0.0
+      '@pnpm/default-reporter': 11.0.38
       '@pnpm/error': 4.0.1
       '@pnpm/fetch': 6.0.6
       '@pnpm/logger': 5.0.0
@@ -48,7 +48,7 @@ importers:
       '@pnpm/registry-mock': 3.4.0
       '@pnpm/semver-diff': 1.1.0
       '@pnpm/sort-packages': 4.0.3
-      '@pnpm/store-connection-manager': 5.2.13
+      '@pnpm/store-connection-manager': 5.2.16
       '@pnpm/types': 8.10.0
       '@pnpm/workspace.pkgs-graph': 1.0.0
       '@react-hook/latest': 1.0.3
@@ -102,7 +102,6 @@ importers:
       '@teambit/component.content.component-overview': 1.95.0
       '@teambit/component.content.dev-files': 1.95.9
       '@teambit/component.instructions.exporting-components': 0.0.6
-      '@teambit/component.ui.component-compare.blank-state': 0.0.1
       '@teambit/defender.content.formatter-overview': 1.96.1
       '@teambit/defender.content.linter-overview': 1.95.0
       '@teambit/defender.content.tester-overview': 1.95.0
@@ -168,6 +167,7 @@ importers:
       '@teambit/react.rendering.ssr': 0.0.3
       '@teambit/react.ui.component-highlighter': 0.2.1
       '@teambit/scope.content.scope-overview': 1.95.0
+      '@teambit/scope.ui.scope-icon': 0.0.91
       '@teambit/toolbox.network.agent': 0.0.116
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.1
       '@teambit/workspace.content.variants': 1.95.9
@@ -589,9 +589,9 @@ importers:
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.4_7q33xsmrxo6yi27rjwzpvdse5a
       '@pnpm/client': 9.1.4_543n76fbszlmh3ctdn6mgrgqxa
       '@pnpm/colorize-semver-diff': 1.0.1
-      '@pnpm/config': 16.6.3_udg42pbvf5wucmjcwfysol5v2e
-      '@pnpm/core': 7.8.3_udg42pbvf5wucmjcwfysol5v2e
-      '@pnpm/default-reporter': 11.0.35_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/config': 16.7.1_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/core': 8.0.0_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/default-reporter': 11.0.38_udg42pbvf5wucmjcwfysol5v2e
       '@pnpm/error': 4.0.1
       '@pnpm/fetch': 6.0.6_@pnpm+logger@5.0.0
       '@pnpm/logger': 5.0.0
@@ -604,7 +604,7 @@ importers:
       '@pnpm/registry-mock': 3.4.0
       '@pnpm/semver-diff': 1.1.0
       '@pnpm/sort-packages': 4.0.3
-      '@pnpm/store-connection-manager': 5.2.13_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/store-connection-manager': 5.2.16_udg42pbvf5wucmjcwfysol5v2e
       '@pnpm/types': 8.10.0
       '@pnpm/workspace.pkgs-graph': 1.0.0
       '@react-hook/latest': 1.0.3_react@17.0.2
@@ -651,7 +651,6 @@ importers:
       '@teambit/community.constants.links': 0.0.2
       '@teambit/component-version': 0.0.406
       '@teambit/component.instructions.exporting-components': registry.npmjs.org/@teambit/component.instructions.exporting-components/0.0.6_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/component.ui.component-compare.blank-state': 0.0.1_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.elements.icon': 1.0.5_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.inputs.dropdown': 1.2.16_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.inputs.selectors.checkbox-item': 1.1.11_sfoxds7t5ydpegc3knd667wn6m
@@ -706,6 +705,7 @@ importers:
       '@teambit/react.instructions.react.adding-tests': registry.npmjs.org/@teambit/react.instructions.react.adding-tests/0.0.6_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/react.rendering.ssr': 0.0.3_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/react.ui.component-highlighter': 0.2.1_foy4f5uudmzx6x46zk2kggw6ni
+      '@teambit/scope.ui.scope-icon': 0.0.91_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/toolbox.network.agent': registry.npmjs.org/@teambit/toolbox.network.agent/0.0.116
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.1_aglxfttm42xkl6otq2xcl4uoua
       '@testing-library/jest-dom': 5.16.2
@@ -1351,7 +1351,6 @@ importers:
       '@babel/runtime': 7.20.0
       '@teambit/base-react.navigation.link': 2.0.27
       '@teambit/base-ui.loaders.skeleton': 1.0.1
-      '@teambit/component.ui.component-compare.blank-state': 0.0.1
       '@types/classnames': 2.2.11
       '@types/jest': ^26.0.0
       '@types/mocha': 9.1.0
@@ -1366,7 +1365,6 @@ importers:
     dependencies:
       '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.loaders.skeleton': 1.0.1_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/component.ui.component-compare.blank-state': 0.0.1_sfoxds7t5ydpegc3knd667wn6m
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -2170,7 +2168,6 @@ importers:
       '@teambit/scope.ui.hooks.scope-context': workspace:*
       '@teambit/scope.ui.hooks.use-scope': workspace:*
       '@teambit/scope.ui.scope-details': workspace:*
-      '@teambit/scope.ui.scope-icon': workspace:*
       '@teambit/scope.ui.scope-labels': workspace:*
       '@teambit/scope.ui.scope-title': workspace:*
       '@teambit/semantics.entities.semantic-schema': workspace:*
@@ -2586,9 +2583,8 @@ importers:
       '@teambit/scope.ui.hooks.scope-context': file:scopes/scope/ui/hooks/scope-context_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/scope.ui.hooks.use-scope': file:scopes/scope/ui/hooks/use-scope_roe5erhgkobpyh5piuida3dzbe
       '@teambit/scope.ui.scope-details': file:scopes/scope/ui/scope-details_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/scope.ui.scope-icon': file:scopes/scope/ui/scope-icon_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/scope.ui.scope-labels': file:scopes/scope/ui/scope-labels_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/scope.ui.scope-title': file:scopes/scope/ui/scope-title_sfoxds7t5ydpegc3knd667wn6m
+      '@teambit/scope.ui.scope-title': file:scopes/scope/ui/scope-title_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/semantics.entities.semantic-schema': file:scopes/semantics/entities/semantic-schema
       '@teambit/sidebar': file:scopes/ui-foundation/sidebar_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/sign': file:scopes/scope/sign_sfoxds7t5ydpegc3knd667wn6m
@@ -3312,8 +3308,6 @@ importers:
         injected: true
       '@teambit/scope.ui.scope-details':
         injected: true
-      '@teambit/scope.ui.scope-icon':
-        injected: true
       '@teambit/scope.ui.scope-labels':
         injected: true
       '@teambit/scope.ui.scope-title':
@@ -3819,7 +3813,6 @@ importers:
       '@teambit/scope.ui.hooks.scope-context': workspace:*
       '@teambit/scope.ui.hooks.use-scope': workspace:*
       '@teambit/scope.ui.scope-details': workspace:*
-      '@teambit/scope.ui.scope-icon': workspace:*
       '@teambit/scope.ui.scope-labels': workspace:*
       '@teambit/scope.ui.scope-title': workspace:*
       '@teambit/semantics.entities.semantic-schema': workspace:*
@@ -4228,9 +4221,8 @@ importers:
       '@teambit/scope.ui.hooks.scope-context': file:scopes/scope/ui/hooks/scope-context_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/scope.ui.hooks.use-scope': file:scopes/scope/ui/hooks/use-scope_roe5erhgkobpyh5piuida3dzbe
       '@teambit/scope.ui.scope-details': file:scopes/scope/ui/scope-details_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/scope.ui.scope-icon': file:scopes/scope/ui/scope-icon_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/scope.ui.scope-labels': file:scopes/scope/ui/scope-labels_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/scope.ui.scope-title': file:scopes/scope/ui/scope-title_sfoxds7t5ydpegc3knd667wn6m
+      '@teambit/scope.ui.scope-title': file:scopes/scope/ui/scope-title_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/semantics.entities.semantic-schema': file:scopes/semantics/entities/semantic-schema
       '@teambit/sidebar': file:scopes/ui-foundation/sidebar_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/sign': file:scopes/scope/sign_sfoxds7t5ydpegc3knd667wn6m
@@ -4948,8 +4940,6 @@ importers:
       '@teambit/scope.ui.hooks.use-scope':
         injected: true
       '@teambit/scope.ui.scope-details':
-        injected: true
-      '@teambit/scope.ui.scope-icon':
         injected: true
       '@teambit/scope.ui.scope-labels':
         injected: true
@@ -5456,7 +5446,6 @@ importers:
       '@teambit/scope.ui.hooks.scope-context': workspace:*
       '@teambit/scope.ui.hooks.use-scope': workspace:*
       '@teambit/scope.ui.scope-details': workspace:*
-      '@teambit/scope.ui.scope-icon': workspace:*
       '@teambit/scope.ui.scope-labels': workspace:*
       '@teambit/scope.ui.scope-title': workspace:*
       '@teambit/semantics.entities.semantic-schema': workspace:*
@@ -5865,9 +5854,8 @@ importers:
       '@teambit/scope.ui.hooks.scope-context': file:scopes/scope/ui/hooks/scope-context_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/scope.ui.hooks.use-scope': file:scopes/scope/ui/hooks/use-scope_roe5erhgkobpyh5piuida3dzbe
       '@teambit/scope.ui.scope-details': file:scopes/scope/ui/scope-details_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/scope.ui.scope-icon': file:scopes/scope/ui/scope-icon_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/scope.ui.scope-labels': file:scopes/scope/ui/scope-labels_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/scope.ui.scope-title': file:scopes/scope/ui/scope-title_sfoxds7t5ydpegc3knd667wn6m
+      '@teambit/scope.ui.scope-title': file:scopes/scope/ui/scope-title_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/semantics.entities.semantic-schema': file:scopes/semantics/entities/semantic-schema
       '@teambit/sidebar': file:scopes/ui-foundation/sidebar_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/sign': file:scopes/scope/sign_sfoxds7t5ydpegc3knd667wn6m
@@ -6585,8 +6573,6 @@ importers:
       '@teambit/scope.ui.hooks.use-scope':
         injected: true
       '@teambit/scope.ui.scope-details':
-        injected: true
-      '@teambit/scope.ui.scope-icon':
         injected: true
       '@teambit/scope.ui.scope-labels':
         injected: true
@@ -7093,7 +7079,6 @@ importers:
       '@teambit/scope.ui.hooks.scope-context': workspace:*
       '@teambit/scope.ui.hooks.use-scope': workspace:*
       '@teambit/scope.ui.scope-details': workspace:*
-      '@teambit/scope.ui.scope-icon': workspace:*
       '@teambit/scope.ui.scope-labels': workspace:*
       '@teambit/scope.ui.scope-title': workspace:*
       '@teambit/semantics.entities.semantic-schema': workspace:*
@@ -7502,9 +7487,8 @@ importers:
       '@teambit/scope.ui.hooks.scope-context': file:scopes/scope/ui/hooks/scope-context_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/scope.ui.hooks.use-scope': file:scopes/scope/ui/hooks/use-scope_roe5erhgkobpyh5piuida3dzbe
       '@teambit/scope.ui.scope-details': file:scopes/scope/ui/scope-details_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/scope.ui.scope-icon': file:scopes/scope/ui/scope-icon_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/scope.ui.scope-labels': file:scopes/scope/ui/scope-labels_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/scope.ui.scope-title': file:scopes/scope/ui/scope-title_sfoxds7t5ydpegc3knd667wn6m
+      '@teambit/scope.ui.scope-title': file:scopes/scope/ui/scope-title_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/semantics.entities.semantic-schema': file:scopes/semantics/entities/semantic-schema
       '@teambit/sidebar': file:scopes/ui-foundation/sidebar_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/sign': file:scopes/scope/sign_sfoxds7t5ydpegc3knd667wn6m
@@ -8222,8 +8206,6 @@ importers:
       '@teambit/scope.ui.hooks.use-scope':
         injected: true
       '@teambit/scope.ui.scope-details':
-        injected: true
-      '@teambit/scope.ui.scope-icon':
         injected: true
       '@teambit/scope.ui.scope-labels':
         injected: true
@@ -8730,7 +8712,6 @@ importers:
       '@teambit/scope.ui.hooks.scope-context': workspace:*
       '@teambit/scope.ui.hooks.use-scope': workspace:*
       '@teambit/scope.ui.scope-details': workspace:*
-      '@teambit/scope.ui.scope-icon': workspace:*
       '@teambit/scope.ui.scope-labels': workspace:*
       '@teambit/scope.ui.scope-title': workspace:*
       '@teambit/semantics.entities.semantic-schema': workspace:*
@@ -9139,9 +9120,8 @@ importers:
       '@teambit/scope.ui.hooks.scope-context': file:scopes/scope/ui/hooks/scope-context_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/scope.ui.hooks.use-scope': file:scopes/scope/ui/hooks/use-scope_roe5erhgkobpyh5piuida3dzbe
       '@teambit/scope.ui.scope-details': file:scopes/scope/ui/scope-details_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/scope.ui.scope-icon': file:scopes/scope/ui/scope-icon_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/scope.ui.scope-labels': file:scopes/scope/ui/scope-labels_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/scope.ui.scope-title': file:scopes/scope/ui/scope-title_sfoxds7t5ydpegc3knd667wn6m
+      '@teambit/scope.ui.scope-title': file:scopes/scope/ui/scope-title_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/semantics.entities.semantic-schema': file:scopes/semantics/entities/semantic-schema
       '@teambit/sidebar': file:scopes/ui-foundation/sidebar_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/sign': file:scopes/scope/sign_sfoxds7t5ydpegc3knd667wn6m
@@ -9859,8 +9839,6 @@ importers:
       '@teambit/scope.ui.hooks.use-scope':
         injected: true
       '@teambit/scope.ui.scope-details':
-        injected: true
-      '@teambit/scope.ui.scope-icon':
         injected: true
       '@teambit/scope.ui.scope-labels':
         injected: true
@@ -10367,7 +10345,6 @@ importers:
       '@teambit/scope.ui.hooks.scope-context': workspace:*
       '@teambit/scope.ui.hooks.use-scope': workspace:*
       '@teambit/scope.ui.scope-details': workspace:*
-      '@teambit/scope.ui.scope-icon': workspace:*
       '@teambit/scope.ui.scope-labels': workspace:*
       '@teambit/scope.ui.scope-title': workspace:*
       '@teambit/semantics.entities.semantic-schema': workspace:*
@@ -10776,9 +10753,8 @@ importers:
       '@teambit/scope.ui.hooks.scope-context': file:scopes/scope/ui/hooks/scope-context_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/scope.ui.hooks.use-scope': file:scopes/scope/ui/hooks/use-scope_roe5erhgkobpyh5piuida3dzbe
       '@teambit/scope.ui.scope-details': file:scopes/scope/ui/scope-details_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/scope.ui.scope-icon': file:scopes/scope/ui/scope-icon_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/scope.ui.scope-labels': file:scopes/scope/ui/scope-labels_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/scope.ui.scope-title': file:scopes/scope/ui/scope-title_sfoxds7t5ydpegc3knd667wn6m
+      '@teambit/scope.ui.scope-title': file:scopes/scope/ui/scope-title_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/semantics.entities.semantic-schema': file:scopes/semantics/entities/semantic-schema
       '@teambit/sidebar': file:scopes/ui-foundation/sidebar_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/sign': file:scopes/scope/sign_sfoxds7t5ydpegc3knd667wn6m
@@ -11496,8 +11472,6 @@ importers:
       '@teambit/scope.ui.hooks.use-scope':
         injected: true
       '@teambit/scope.ui.scope-details':
-        injected: true
-      '@teambit/scope.ui.scope-icon':
         injected: true
       '@teambit/scope.ui.scope-labels':
         injected: true
@@ -12004,7 +11978,6 @@ importers:
       '@teambit/scope.ui.hooks.scope-context': workspace:*
       '@teambit/scope.ui.hooks.use-scope': workspace:*
       '@teambit/scope.ui.scope-details': workspace:*
-      '@teambit/scope.ui.scope-icon': workspace:*
       '@teambit/scope.ui.scope-labels': workspace:*
       '@teambit/scope.ui.scope-title': workspace:*
       '@teambit/semantics.entities.semantic-schema': workspace:*
@@ -12413,9 +12386,8 @@ importers:
       '@teambit/scope.ui.hooks.scope-context': file:scopes/scope/ui/hooks/scope-context_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/scope.ui.hooks.use-scope': file:scopes/scope/ui/hooks/use-scope_roe5erhgkobpyh5piuida3dzbe
       '@teambit/scope.ui.scope-details': file:scopes/scope/ui/scope-details_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/scope.ui.scope-icon': file:scopes/scope/ui/scope-icon_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/scope.ui.scope-labels': file:scopes/scope/ui/scope-labels_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/scope.ui.scope-title': file:scopes/scope/ui/scope-title_sfoxds7t5ydpegc3knd667wn6m
+      '@teambit/scope.ui.scope-title': file:scopes/scope/ui/scope-title_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/semantics.entities.semantic-schema': file:scopes/semantics/entities/semantic-schema
       '@teambit/sidebar': file:scopes/ui-foundation/sidebar_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/sign': file:scopes/scope/sign_sfoxds7t5ydpegc3knd667wn6m
@@ -13133,8 +13105,6 @@ importers:
       '@teambit/scope.ui.hooks.use-scope':
         injected: true
       '@teambit/scope.ui.scope-details':
-        injected: true
-      '@teambit/scope.ui.scope-icon':
         injected: true
       '@teambit/scope.ui.scope-labels':
         injected: true
@@ -17816,7 +17786,7 @@ importers:
   scopes/dependencies/dependency-resolver:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@pnpm/core': 7.8.3
+      '@pnpm/core': 8.0.0
       '@pnpm/network.ca-file': 1.0.2
       '@pnpm/types': 8.10.0
       '@teambit/harmony': 0.4.6
@@ -17851,7 +17821,7 @@ importers:
       semver-range-intersect: 0.3.1
     dependencies:
       '@babel/runtime': 7.20.0
-      '@pnpm/core': 7.8.3_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/core': 8.0.0_udg42pbvf5wucmjcwfysol5v2e
       '@pnpm/network.ca-file': 1.0.2
       '@pnpm/types': 8.10.0
       '@teambit/harmony': 0.4.6
@@ -17907,16 +17877,16 @@ importers:
     specifiers:
       '@babel/runtime': 7.20.0
       '@pnpm/client': 9.1.4
-      '@pnpm/config': 16.6.3
-      '@pnpm/core': 7.8.3
-      '@pnpm/default-reporter': 11.0.35
+      '@pnpm/config': 16.7.1
+      '@pnpm/core': 8.0.0
+      '@pnpm/default-reporter': 11.0.38
       '@pnpm/error': 4.0.1
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-yaml': 11.1.0
       '@pnpm/package-store': 15.1.7
       '@pnpm/pick-registry-for-package': 4.0.3
       '@pnpm/sort-packages': 4.0.3
-      '@pnpm/store-connection-manager': 5.2.13
+      '@pnpm/store-connection-manager': 5.2.16
       '@pnpm/types': 8.10.0
       '@pnpm/workspace.pkgs-graph': 1.0.0
       '@teambit/harmony': 0.4.6
@@ -17941,16 +17911,16 @@ importers:
     dependencies:
       '@babel/runtime': 7.20.0
       '@pnpm/client': 9.1.4_543n76fbszlmh3ctdn6mgrgqxa
-      '@pnpm/config': 16.6.3_udg42pbvf5wucmjcwfysol5v2e
-      '@pnpm/core': 7.8.3_udg42pbvf5wucmjcwfysol5v2e
-      '@pnpm/default-reporter': 11.0.35_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/config': 16.7.1_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/core': 8.0.0_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/default-reporter': 11.0.38_udg42pbvf5wucmjcwfysol5v2e
       '@pnpm/error': 4.0.1
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-yaml': 11.1.0
       '@pnpm/package-store': 15.1.7_@pnpm+logger@5.0.0
       '@pnpm/pick-registry-for-package': 4.0.3
       '@pnpm/sort-packages': 4.0.3
-      '@pnpm/store-connection-manager': 5.2.13_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/store-connection-manager': 5.2.16_udg42pbvf5wucmjcwfysol5v2e
       '@pnpm/types': 8.10.0
       '@pnpm/workspace.pkgs-graph': 1.0.0
       '@teambit/harmony': 0.4.6
@@ -20348,18 +20318,21 @@ importers:
       '@types/node': 12.20.4
       '@types/react': ^17.0.8
       '@types/react-dom': ^17.0.5
+      '@types/semver': 7.3.4
       '@types/testing-library__jest-dom': 5.9.5
       classnames: 2.2.6
       core-js: ^3.0.0
       react: ^16.8.0 || ^17.0.0
       react-animate-height: 2.0.23
       react-dom: ^16.8.0 || ^17.0.0
+      semver: 7.3.4
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
       react-animate-height: 2.0.23_sfoxds7t5ydpegc3knd667wn6m
       react-dom: 17.0.2_react@17.0.2
+      semver: 7.3.4
     devDependencies:
       '@babel/runtime': 7.20.0
       '@types/classnames': 2.2.11
@@ -20368,6 +20341,7 @@ importers:
       '@types/node': 12.20.4
       '@types/react': 17.0.8
       '@types/react-dom': 17.0.18
+      '@types/semver': 7.3.4
       '@types/testing-library__jest-dom': 5.9.5
 
   scopes/lanes/ui/compare/lane-compare-hooks/use-lane-diff-status:
@@ -22549,39 +22523,6 @@ importers:
       '@types/react-dom': 17.0.18
       '@types/testing-library__jest-dom': 5.9.5
 
-  scopes/scope/ui/scope-icon:
-    specifiers:
-      '@babel/runtime': 7.20.0
-      '@teambit/base-ui.text.text-sizes': 1.0.0
-      '@testing-library/react': ^12.1.5
-      '@types/classnames': 2.2.11
-      '@types/jest': ^26.0.0
-      '@types/mocha': 9.1.0
-      '@types/node': 12.20.4
-      '@types/react': ^17.0.8
-      '@types/react-dom': ^17.0.5
-      '@types/testing-library__jest-dom': 5.9.5
-      classnames: 2.2.6
-      core-js: ^3.0.0
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/base-ui.text.text-sizes': registry.npmjs.org/@teambit/base-ui.text.text-sizes/1.0.0_sfoxds7t5ydpegc3knd667wn6m
-      '@testing-library/react': 12.1.5_sfoxds7t5ydpegc3knd667wn6m
-      classnames: 2.2.6
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
-    devDependencies:
-      '@babel/runtime': 7.20.0
-      '@types/classnames': 2.2.11
-      '@types/jest': 26.0.20
-      '@types/mocha': 9.1.0
-      '@types/node': 12.20.4
-      '@types/react': 17.0.8
-      '@types/react-dom': 17.0.18
-      '@types/testing-library__jest-dom': 5.9.5
-
   scopes/scope/ui/scope-labels:
     specifiers:
       '@babel/runtime': 7.20.0
@@ -22620,6 +22561,7 @@ importers:
       '@babel/runtime': 7.20.0
       '@teambit/base-ui.text.muted-text': 1.0.1
       '@teambit/documenter.ui.heading': 4.1.1
+      '@teambit/scope.ui.scope-icon': 0.0.91
       '@types/classnames': 2.2.11
       '@types/jest': ^26.0.0
       '@types/mocha': 9.1.0
@@ -22634,6 +22576,7 @@ importers:
     dependencies:
       '@teambit/base-ui.text.muted-text': registry.npmjs.org/@teambit/base-ui.text.muted-text/1.0.1_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.ui.heading': registry.npmjs.org/@teambit/documenter.ui.heading/4.1.1_sfoxds7t5ydpegc3knd667wn6m
+      '@teambit/scope.ui.scope-icon': 0.0.91_cuf6fvcrkey6ktqfghqvi47tva
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -25426,6 +25369,7 @@ importers:
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/harmony': 0.4.6
       '@teambit/workspace.content.workspace-overview': 1.95.0
+      '@types/find-root': 1.1.2
       '@types/fs-extra': 9.0.7
       '@types/jest': ^26.0.0
       '@types/lodash': 4.14.165
@@ -25441,6 +25385,7 @@ importers:
       core-js: ^3.0.0
       detect-indent: 5.0.0
       detect-newline: 3.1.0
+      find-root: 1.1.0
       fs-extra: 10.0.0
       graphql-tag: 2.12.1
       ink: 3.2.0
@@ -25467,6 +25412,7 @@ importers:
       core-js: 3.13.0
       detect-indent: 5.0.0
       detect-newline: 3.1.0
+      find-root: 1.1.0
       fs-extra: 10.0.0
       graphql-tag: 2.12.1_graphql@14.7.0
       ink: 3.2.0_xtmjigr2wljfewy4e7ae6ueipe
@@ -25482,6 +25428,7 @@ importers:
       stringify-package: 1.0.1
     devDependencies:
       '@teambit/workspace.content.workspace-overview': 1.95.0_sfoxds7t5ydpegc3knd667wn6m
+      '@types/find-root': 1.1.2
       '@types/fs-extra': 9.0.7
       '@types/jest': 26.0.20
       '@types/lodash': 4.14.165
@@ -29643,8 +29590,8 @@ packages:
     engines: {node: '>=12.22.0'}
     dev: false
 
-  /@pnpm/config/16.6.3_udg42pbvf5wucmjcwfysol5v2e:
-    resolution: {integrity: sha512-ktvaTVAiQvJtgOeI1IpfzRxwRYnyt938gpKGS4q6dNd/h8iEhoSCPQOEZ3s1POiBUOLlOEt5PTdMyFkWZV/+vQ==}
+  /@pnpm/config/16.7.1_udg42pbvf5wucmjcwfysol5v2e:
+    resolution: {integrity: sha512-o0SAnpSDpMqgApLIvqnvFQVyJXt+XpEm2IpzfOonw4hVtZ8C5jpUiIdjFOJKmeQ2Aii0Oj/TbWfxS6rTrjTmZQ==}
     engines: {node: '>=14.6'}
     dependencies:
       '@pnpm/config.env-replace': 1.0.0
@@ -29653,7 +29600,7 @@ packages:
       '@pnpm/git-utils': 0.1.0
       '@pnpm/matcher': 4.0.1
       '@pnpm/npm-conf': 2.0.4
-      '@pnpm/pnpmfile': 4.0.33_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/pnpmfile': 4.0.36_udg42pbvf5wucmjcwfysol5v2e
       '@pnpm/read-project-manifest': 4.1.3
       '@pnpm/types': 8.10.0
       camelcase: 6.3.0
@@ -29691,8 +29638,8 @@ packages:
       '@pnpm/types': 8.10.0
     dev: false
 
-  /@pnpm/core/7.8.3_udg42pbvf5wucmjcwfysol5v2e:
-    resolution: {integrity: sha512-amhnvpA+hO6SXP0khOgtRxwK+AxuiRlob6E/QZboprOcUhW54Rv2fz6Sgn57/D3h3tP7ia3QFi9ppxyF4OPspg==}
+  /@pnpm/core/8.0.0_udg42pbvf5wucmjcwfysol5v2e:
+    resolution: {integrity: sha512-GSZHjcvaV3F3xmsydbty1gQNa+AxW6F0EJW8h8a9ZdEFR8gcz/3dOBTHYEU1U5S+087TtFp1Ne8BlwMGVMNzIw==}
     engines: {node: '>=14.6'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -29705,15 +29652,15 @@ packages:
       '@pnpm/dependency-path': 1.1.3
       '@pnpm/error': 4.0.1
       '@pnpm/filter-lockfile': 7.0.10_@pnpm+logger@5.0.0
-      '@pnpm/get-context': 8.2.2_@pnpm+logger@5.0.0
+      '@pnpm/get-context': 8.2.3_@pnpm+logger@5.0.0
       '@pnpm/graph-sequencer': 1.0.0
-      '@pnpm/headless': 19.5.0_543n76fbszlmh3ctdn6mgrgqxa
+      '@pnpm/headless': 19.5.1_543n76fbszlmh3ctdn6mgrgqxa
       '@pnpm/hoist': 7.0.15_@pnpm+logger@5.0.0
-      '@pnpm/hooks.read-package-hook': 2.0.12_@yarnpkg+core@3.4.0
+      '@pnpm/hooks.read-package-hook': 2.1.1_@yarnpkg+core@3.4.0
       '@pnpm/lifecycle': 14.1.6_543n76fbszlmh3ctdn6mgrgqxa
       '@pnpm/link-bins': 8.0.8_@pnpm+logger@5.0.0
-      '@pnpm/lockfile-file': 7.0.4_@pnpm+logger@5.0.0
-      '@pnpm/lockfile-to-pnp': 2.0.12_@pnpm+logger@5.0.0
+      '@pnpm/lockfile-file': 7.0.5_@pnpm+logger@5.0.0
+      '@pnpm/lockfile-to-pnp': 2.0.13_@pnpm+logger@5.0.0
       '@pnpm/lockfile-utils': 5.0.7
       '@pnpm/lockfile-walker': 6.0.8
       '@pnpm/logger': 5.0.0
@@ -29731,7 +29678,7 @@ packages:
       '@pnpm/read-package-json': 7.0.5
       '@pnpm/read-project-manifest': 4.1.3
       '@pnpm/remove-bins': 4.0.5_@pnpm+logger@5.0.0
-      '@pnpm/resolve-dependencies': 29.3.2_@pnpm+logger@5.0.0
+      '@pnpm/resolve-dependencies': 30.0.0_@pnpm+logger@5.0.0
       '@pnpm/resolver-base': 9.2.0
       '@pnpm/store-controller-types': 14.3.1
       '@pnpm/symlink-dependency': 6.0.3_@pnpm+logger@5.0.0
@@ -29780,13 +29727,13 @@ packages:
       rfc4648: 1.5.2
     dev: false
 
-  /@pnpm/default-reporter/11.0.35_udg42pbvf5wucmjcwfysol5v2e:
-    resolution: {integrity: sha512-VzRppPv3/3ETyxjh+SUqsJQS/EW5tOg1zKt9bFQr5tKw+D8s+mhR77C8RZy4KC0KeruaG8VL9QhSNXiVje9GSA==}
+  /@pnpm/default-reporter/11.0.38_udg42pbvf5wucmjcwfysol5v2e:
+    resolution: {integrity: sha512-3e5DRkuBwaIdf7M4B1i4X29OgyaxMbYozCdN3n6N7X5XdcdWMj3atzqzB11XIccNxFX8W+k4lEsPBz+kiFO4YA==}
     engines: {node: '>=14.6'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
-      '@pnpm/config': 16.6.3_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/config': 16.7.1_udg42pbvf5wucmjcwfysol5v2e
       '@pnpm/core-loggers': 8.0.3_@pnpm+logger@5.0.0
       '@pnpm/error': 4.0.1
       '@pnpm/logger': 5.0.0
@@ -29937,8 +29884,8 @@ packages:
       sanitize-filename: 1.6.3
     dev: false
 
-  /@pnpm/get-context/8.2.2_@pnpm+logger@5.0.0:
-    resolution: {integrity: sha512-NgzWqnvT2x/kZOHggHe1ty8luyPgAxf897KcEUs0adBNaY43aDU3gyzVWJPWlQaiF7Ki5eRdH7dnkZlibLAJ8g==}
+  /@pnpm/get-context/8.2.3_@pnpm+logger@5.0.0:
+    resolution: {integrity: sha512-CIaNGVygJU9kZSaQoMZIEzCrgXHzErchQE2xOrvfqJZ5Pry3MWVRi8Jcz0ioGa/KP9LslkuzHIKSg+EqriT6DA==}
     engines: {node: '>=14.6'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -29946,10 +29893,10 @@ packages:
       '@pnpm/constants': 6.2.0
       '@pnpm/core-loggers': 8.0.3_@pnpm+logger@5.0.0
       '@pnpm/error': 4.0.1
-      '@pnpm/lockfile-file': 7.0.4_@pnpm+logger@5.0.0
+      '@pnpm/lockfile-file': 7.0.5_@pnpm+logger@5.0.0
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-yaml': 11.1.0
-      '@pnpm/read-projects-context': 7.0.10_@pnpm+logger@5.0.0
+      '@pnpm/read-projects-context': 7.0.11_@pnpm+logger@5.0.0
       '@pnpm/types': 8.10.0
       '@zkochan/rimraf': 2.1.2
       ci-info: 3.7.1
@@ -30006,8 +29953,8 @@ packages:
     resolution: {integrity: sha512-iIJhmi7QjmafhijaEkh34Yxhjq3S/eiZnxww9K/SRXuDB5/30QnCyihR4R7vep8ONsGIR29hNPAtaNGd1rC/VA==}
     dev: false
 
-  /@pnpm/headless/19.5.0_543n76fbszlmh3ctdn6mgrgqxa:
-    resolution: {integrity: sha512-UbLfI1ztyTdtFoXwb/hpY0kALGpVha1lXsjYMlwoRGlUfSth94+hjElxnFdWACYm4BFN2WXZoIZ+O7qjRknqww==}
+  /@pnpm/headless/19.5.1_543n76fbszlmh3ctdn6mgrgqxa:
+    resolution: {integrity: sha512-3nzGKX7Zlp3yqNshwp8OsgC+biGjwKb3Zl50+f3yRpK/OX8e35gPXBfgdsa/T6lbfzpsNUKKeFyG/YTI+7hJaw==}
     engines: {node: '>=14.6'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -30022,8 +29969,8 @@ packages:
       '@pnpm/hoist': 7.0.15_@pnpm+logger@5.0.0
       '@pnpm/lifecycle': 14.1.6_543n76fbszlmh3ctdn6mgrgqxa
       '@pnpm/link-bins': 8.0.8_@pnpm+logger@5.0.0
-      '@pnpm/lockfile-file': 7.0.4_@pnpm+logger@5.0.0
-      '@pnpm/lockfile-to-pnp': 2.0.12_@pnpm+logger@5.0.0
+      '@pnpm/lockfile-file': 7.0.5_@pnpm+logger@5.0.0
+      '@pnpm/lockfile-to-pnp': 2.0.13_@pnpm+logger@5.0.0
       '@pnpm/lockfile-utils': 5.0.7
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-cleaner': 13.0.12_@pnpm+logger@5.0.0
@@ -30071,10 +30018,11 @@ packages:
       symlink-dir: 5.1.1
     dev: false
 
-  /@pnpm/hooks.read-package-hook/2.0.12_@yarnpkg+core@3.4.0:
-    resolution: {integrity: sha512-9GT4U3GDpaGGVN1YcG+5mKaykXRDo1bDru0PIQ7+XA2IDO3ys5geNtsZHT6CyJv+6MLalEnQsmNvN+gjJ1xcBw==}
+  /@pnpm/hooks.read-package-hook/2.1.1_@yarnpkg+core@3.4.0:
+    resolution: {integrity: sha512-wNdmQUyOrTfQFWyz020JTbMHWp6lsh8FEp6Df7o8lyDrZLJJrWAsknoMfFeGAPy6Z8iTxTWOWiBUGotBDg26Dw==}
     engines: {node: '>=14.6'}
     dependencies:
+      '@pnpm/error': 4.0.1
       '@pnpm/matcher': 4.0.1
       '@pnpm/parse-overrides': 3.0.3
       '@pnpm/parse-wanted-dependency': 4.1.0
@@ -30146,8 +30094,8 @@ packages:
       ssri: 10.0.1
     dev: false
 
-  /@pnpm/lockfile-file/7.0.4_@pnpm+logger@5.0.0:
-    resolution: {integrity: sha512-6B0Zf+XQkVwSgCHbdvv5XihhjArpVZjmptug3q3arkO0X4UOD1fSFK//oWomPsQ5ySMEV1qQVfb/uhjfaVWJAg==}
+  /@pnpm/lockfile-file/7.0.5_@pnpm+logger@5.0.0:
+    resolution: {integrity: sha512-KjgoJ9VQTkstwzCVqGOX7UVHzVOal1YGfnb1LSVriqdCxYAtA5iTGji1Vr5sGmyfbwGFjTFWdqx6QGRGP0rggw==}
     engines: {node: '>=14.6'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -30172,14 +30120,14 @@ packages:
       write-file-atomic: 5.0.0
     dev: false
 
-  /@pnpm/lockfile-to-pnp/2.0.12_@pnpm+logger@5.0.0:
-    resolution: {integrity: sha512-U+XTHt+s0fzo8tfqkaybvC7oq+vRCMi+Qj2Rt+jFmRE1XZ9etKAF8j+g3WmteDvh2wLfWGaTC/mxjqI20zsylg==}
+  /@pnpm/lockfile-to-pnp/2.0.13_@pnpm+logger@5.0.0:
+    resolution: {integrity: sha512-IdyVYrQObhcRY0/gADumZoyVnmDqzmNhLoTxbx+ZJTUPsPqKV2eCQRSodG8vQrgyWaGnoBfSxzLH6oVybediaA==}
     engines: {node: '>=14.6'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/dependency-path': 1.1.3
-      '@pnpm/lockfile-file': 7.0.4_@pnpm+logger@5.0.0
+      '@pnpm/lockfile-file': 7.0.5_@pnpm+logger@5.0.0
       '@pnpm/lockfile-utils': 5.0.7
       '@pnpm/logger': 5.0.0
       '@pnpm/types': 8.10.0
@@ -30559,13 +30507,13 @@ packages:
       resolve-link-target: 2.0.0
     dev: false
 
-  /@pnpm/pnpmfile/4.0.33_udg42pbvf5wucmjcwfysol5v2e:
-    resolution: {integrity: sha512-nUsMG66bVg0faU4l9mxEltqI91BRRd8VAHNwQzyUDjpeNrIfLaZPvy9TgATo0jay8MI44c2RcZp0ZPEW52Y+7g==}
+  /@pnpm/pnpmfile/4.0.36_udg42pbvf5wucmjcwfysol5v2e:
+    resolution: {integrity: sha512-C7EwNMOb3AURao8S7zYRBeharVh72LFQJiNKFsbt7INL+VXSR+fBg4YkWZw5mG7ASBhNoyKZHLkYWs05VufIGg==}
     engines: {node: '>=14.6'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
-      '@pnpm/core': 7.8.3_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/core': 8.0.0_udg42pbvf5wucmjcwfysol5v2e
       '@pnpm/core-loggers': 8.0.3_@pnpm+logger@5.0.0
       '@pnpm/error': 4.0.1
       '@pnpm/lockfile-types': 4.3.6
@@ -30648,13 +30596,13 @@ packages:
       strip-bom: 4.0.0
     dev: false
 
-  /@pnpm/read-projects-context/7.0.10_@pnpm+logger@5.0.0:
-    resolution: {integrity: sha512-2mqFIW9/RfjkpKdfiI3XopBa25QQ2W2FBSToTY3EtPBBtfhXcrCoKZr62nWuSbCB3cknRkL46f9kXWDhqzsg1A==}
+  /@pnpm/read-projects-context/7.0.11_@pnpm+logger@5.0.0:
+    resolution: {integrity: sha512-RG/LnzoPCf5WvDElGHm1v2ZI3z/ArIW+EfoiZMrBBxOFFdReURvpeo7Sw8n044nnx0f+Bz9NPlT7Q6xwJtLVew==}
     engines: {node: '>=14.6'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
-      '@pnpm/lockfile-file': 7.0.4_@pnpm+logger@5.0.0
+      '@pnpm/lockfile-file': 7.0.5_@pnpm+logger@5.0.0
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-yaml': 11.1.0
       '@pnpm/normalize-registries': 4.0.3
@@ -30716,8 +30664,8 @@ packages:
       cli-columns: 4.0.0
     dev: false
 
-  /@pnpm/resolve-dependencies/29.3.2_@pnpm+logger@5.0.0:
-    resolution: {integrity: sha512-aF4HH0SkqRWPK0bxx+YkcvPay3G8YImo3WSb1PyRuwlAwDslFmZCtMbHM25d+0uvQcthAAFzLB4e2K9X/NHk8A==}
+  /@pnpm/resolve-dependencies/30.0.0_@pnpm+logger@5.0.0:
+    resolution: {integrity: sha512-byZ/GA2lUOYz1Kc0PF+DPFru24yjxh+x15j0R0+zUlWJNDr/dtWXZYOHTly5VvtJfkhDMan+viiPQMQqFlKhQA==}
     engines: {node: '>=14.6'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
@@ -30804,15 +30752,15 @@ packages:
       '@pnpm/types': 8.10.0
     dev: false
 
-  /@pnpm/store-connection-manager/5.2.13_udg42pbvf5wucmjcwfysol5v2e:
-    resolution: {integrity: sha512-2O0I2ph0fFprv79LsB2MUw42r7AEq16Vf0r8ZgEuETwCKHEkCZcYKZVphxJS3skqyLsbmjYrZpgNHWANJ9SVdg==}
+  /@pnpm/store-connection-manager/5.2.16_udg42pbvf5wucmjcwfysol5v2e:
+    resolution: {integrity: sha512-mEg/vUhl1eC5yLQKkzMAFrTzzY88z2qnzkvjZk7kH9wlbS9Q3lBQu5jnbhTjDA5bOYxmLP7NfbMhzTmo01W5PA==}
     engines: {node: '>=14.6'}
     peerDependencies:
       '@pnpm/logger': ^5.0.0
     dependencies:
       '@pnpm/cli-meta': 4.0.3
       '@pnpm/client': 9.1.4_543n76fbszlmh3ctdn6mgrgqxa
-      '@pnpm/config': 16.6.3_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/config': 16.7.1_udg42pbvf5wucmjcwfysol5v2e
       '@pnpm/error': 4.0.1
       '@pnpm/logger': 5.0.0
       '@pnpm/package-store': 15.1.7_@pnpm+logger@5.0.0
@@ -33988,6 +33936,24 @@ packages:
       - '@teambit/legacy'
     dev: true
 
+  /@teambit/scope.ui.scope-icon/0.0.91_cuf6fvcrkey6ktqfghqvi47tva:
+    resolution: {integrity: sha1-97V68EjNCwa1AUPriiK721YbKXA=, tarball: tarballs/teambit.scope/ui/scope-icon@0.0.91.tgz}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      '@testing-library/react': ^12.1.5
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-ui.text.text-sizes': registry.npmjs.org/@teambit/base-ui.text.text-sizes/1.0.0_sfoxds7t5ydpegc3knd667wn6m
+      '@teambit/toolbox.string.get-initials': 0.0.491
+      '@teambit/toolbox.url.add-avatar-query-params': 0.0.492
+      '@testing-library/react': 12.1.5_sfoxds7t5ydpegc3knd667wn6m
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+    dev: false
+
   /@teambit/scopes.scope-id/0.0.1:
     resolution: {integrity: sha1-05xOQrV0zf4O4Y6AJZIsA5tT0kE=, tarball: tarballs/teambit.scopes/scope-id@0.0.1.tgz}
     dependencies:
@@ -34026,6 +33992,11 @@ packages:
     engines: {node: '>=12.22.0'}
     dev: false
 
+  /@teambit/toolbox.string.get-initials/0.0.491:
+    resolution: {integrity: sha1-dMkF7hxhtmK2aXz7QCkAAajSrKI=, tarball: tarballs/teambit.toolbox/string/get-initials@0.0.491.tgz}
+    engines: {node: '>=12.22.0'}
+    dev: false
+
   /@teambit/toolbox.types.serializable/0.0.483:
     resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=, tarball: tarballs/teambit.toolbox/types/serializable@0.0.483.tgz}
     engines: {node: '>=12.22.0'}
@@ -34033,6 +34004,11 @@ packages:
 
   /@teambit/toolbox.url.add-avatar-query-params/0.0.483:
     resolution: {integrity: sha1-oyxnM4oFZ2iiNiqxDPWHI2v7IeE=, tarball: tarballs/teambit.toolbox/url/add-avatar-query-params@0.0.483.tgz}
+    engines: {node: '>=12.22.0'}
+    dev: false
+
+  /@teambit/toolbox.url.add-avatar-query-params/0.0.492:
+    resolution: {integrity: sha1-dECMYTXTkMlAIUaK22cpmNlTsak=, tarball: tarballs/teambit.toolbox/url/add-avatar-query-params@0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -35022,7 +34998,7 @@ packages:
       '@typescript-eslint/scope-manager': 5.35.1
       '@typescript-eslint/type-utils': 5.35.1_hxadhbs2xogijvk7vq4t2azzbu
       '@typescript-eslint/utils': 5.35.1_hxadhbs2xogijvk7vq4t2azzbu
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
       eslint: 7.32.0
       functional-red-black-tree: 1.0.1
       ignore: 5.2.4
@@ -35159,7 +35135,7 @@ packages:
       '@typescript-eslint/scope-manager': 5.35.1
       '@typescript-eslint/types': 5.35.1
       '@typescript-eslint/typescript-estree': 5.35.1_typescript@4.7.4
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
       eslint: 7.32.0
       typescript: 4.7.4
     transitivePeerDependencies:
@@ -35201,7 +35177,7 @@ packages:
         optional: true
     dependencies:
       '@typescript-eslint/utils': 5.35.1_hxadhbs2xogijvk7vq4t2azzbu
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
       eslint: 7.32.0
       tsutils: 3.21.0_typescript@4.7.4
       typescript: 4.7.4
@@ -35326,7 +35302,7 @@ packages:
     dependencies:
       '@typescript-eslint/types': 5.35.1
       '@typescript-eslint/visitor-keys': 5.35.1
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
       globby: 11.1.0
       is-glob: 4.0.3
       semver: 7.3.8
@@ -35403,7 +35379,7 @@ packages:
     dependencies:
       '@verdaccio/core': 6.0.0-6-next.55
       '@verdaccio/utils': 6.0.0-6-next.23
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
       lodash: 4.17.21
       minimatch: 3.1.2
       yaml: 2.2.0
@@ -35439,7 +35415,7 @@ packages:
       '@verdaccio/file-locking': 10.3.0
       '@verdaccio/streams': 10.2.0
       async: 3.2.4
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
       lodash: 4.17.21
       lowdb: 1.0.0
       mkdirp: 1.0.4
@@ -35459,7 +35435,7 @@ packages:
       '@verdaccio/core': 6.0.0-6-next.55
       '@verdaccio/url': 11.0.0-6-next.21
       '@verdaccio/utils': 6.0.0-6-next.23
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
       lodash: 4.17.21
     transitivePeerDependencies:
       - supports-color
@@ -35474,7 +35450,7 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       '@verdaccio/core': 6.0.0-6-next.55
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
       lodash: 4.17.21
       validator: 13.7.0
     transitivePeerDependencies:
@@ -36389,7 +36365,7 @@ packages:
     resolution: {integrity: sha512-+V/rGa3EuU74H6wR04plBb7Ks10FbtUQgRj/FQOG7uUIEuaINI+AiqJR1k6t3SVNs7o7ZjIdus6706qqzVq8jQ==}
     engines: {node: '>= 8.0.0'}
     dependencies:
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
       depd: 1.1.2
       humanize-ms: 1.2.1
     transitivePeerDependencies:
@@ -39780,17 +39756,6 @@ packages:
       ms: 2.0.0
     dev: false
 
-  /debug/3.1.0:
-    resolution: {integrity: sha512-OX8XqP7/1a9cqkxYw2yXss15f26NKWBpDXQd0/uK/KPqdQhxbPa994hnzjcE2VqQpDslf55723cKPUOGSmMY3g==}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
-    dependencies:
-      ms: 2.0.0
-    dev: false
-
   /debug/3.1.0_supports-color@5.4.0:
     resolution: {integrity: sha512-OX8XqP7/1a9cqkxYw2yXss15f26NKWBpDXQd0/uK/KPqdQhxbPa994hnzjcE2VqQpDslf55723cKPUOGSmMY3g==}
     peerDependencies:
@@ -39836,18 +39801,6 @@ packages:
     dependencies:
       ms: 2.1.2
       supports-color: 8.1.1
-    dev: false
-
-  /debug/4.3.4:
-    resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
-    engines: {node: '>=6.0'}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
-    dependencies:
-      ms: 2.1.2
     dev: false
 
   /debug/4.3.4_supports-color@9.3.1:
@@ -40494,7 +40447,7 @@ packages:
     dependencies:
       component-emitter: 1.3.0
       component-inherit: 0.0.3
-      debug: 3.1.0
+      debug: 3.1.0_supports-color@5.4.0
       engine.io-parser: 2.2.1
       has-cors: 1.1.0
       indexof: 0.0.1
@@ -43624,7 +43577,7 @@ packages:
     dependencies:
       '@tootallnate/once': 1.1.2
       agent-base: 6.0.2
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -43735,7 +43688,7 @@ packages:
     engines: {node: '>= 6'}
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -43987,7 +43940,7 @@ packages:
     peerDependencies:
       html-webpack-plugin: ^5.3.1
     dependencies:
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
       html-webpack-plugin: 5.3.2_webpack@5.51.1
       insert-string-after: 1.0.0
       insert-string-before: 1.0.0
@@ -49619,7 +49572,7 @@ packages:
     requiresBuild: true
     dependencies:
       cross-fetch: 3.1.5
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
       devtools-protocol: 0.0.981744
       extract-zip: 2.0.1
       https-proxy-agent: 5.0.1
@@ -51659,7 +51612,7 @@ packages:
       backo2: 1.0.2
       component-bind: 1.0.0
       component-emitter: 1.3.0
-      debug: 3.1.0
+      debug: 3.1.0_supports-color@5.4.0
       engine.io-client: 3.5.3_olxz6bwltfka3jtzzpy366rsky
       has-binary2: 1.0.3
       indexof: 0.0.1
@@ -51677,7 +51630,7 @@ packages:
     resolution: {integrity: sha512-qOg87q1PMWWTeO01768Yh9ogn7chB9zkKtQnya41Y355S0UmpXgpcrFwAgjYJxu9BdKug5r5e9YtVSeWhKBUZg==}
     dependencies:
       component-emitter: 1.3.0
-      debug: 3.1.0
+      debug: 3.1.0_supports-color@5.4.0
       isarray: 2.0.1
     transitivePeerDependencies:
       - supports-color
@@ -51696,7 +51649,7 @@ packages:
     engines: {node: '>= 6'}
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
       socks: 2.7.1
     transitivePeerDependencies:
       - supports-color
@@ -52434,7 +52387,7 @@ packages:
     hasBin: true
     dependencies:
       commander: 2.20.3
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -53931,7 +53884,7 @@ packages:
       cookies: 0.8.0
       cors: 2.8.5
       dayjs: 1.11.7
-      debug: 4.3.4
+      debug: 4.3.4_supports-color@9.3.1
       envinfo: 7.8.1
       express: 4.18.2
       express-rate-limit: 5.5.1
@@ -55126,7 +55079,7 @@ packages:
     resolution: {directory: components/ui/component-compare/changelog, type: directory}
     id: file:components/ui/component-compare/changelog
     name: '@teambit/component.ui.component-compare.changelog'
-    version: 0.0.54
+    version: 0.0.61
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55162,7 +55115,7 @@ packages:
     resolution: {directory: components/ui/component-compare/compare-aspects/compare-aspects, type: directory}
     id: file:components/ui/component-compare/compare-aspects/compare-aspects
     name: '@teambit/component.ui.component-compare.compare-aspects.compare-aspects'
-    version: 0.0.34
+    version: 0.0.38
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55198,7 +55151,7 @@ packages:
     resolution: {directory: components/ui/component-compare/compare-aspects/hooks/use-compare-aspects, type: directory}
     id: file:components/ui/component-compare/compare-aspects/hooks/use-compare-aspects
     name: '@teambit/component.ui.component-compare.compare-aspects.hooks.use-compare-aspects'
-    version: 0.0.7
+    version: 0.0.11
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -55229,7 +55182,7 @@ packages:
     resolution: {directory: components/ui/component-compare/component-compare, type: directory}
     id: file:components/ui/component-compare/component-compare
     name: '@teambit/component.ui.component-compare.component-compare'
-    version: 0.0.54
+    version: 0.0.61
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55250,7 +55203,7 @@ packages:
     resolution: {directory: components/ui/component-compare/context, type: directory}
     id: file:components/ui/component-compare/context
     name: '@teambit/component.ui.component-compare.context'
-    version: 0.0.7
+    version: 0.0.11
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55282,7 +55235,7 @@ packages:
     resolution: {directory: components/ui/component-compare/hooks/use-component-compare, type: directory}
     id: file:components/ui/component-compare/hooks/use-component-compare
     name: '@teambit/component.ui.component-compare.hooks.use-component-compare'
-    version: 0.0.5
+    version: 0.0.9
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -55341,7 +55294,7 @@ packages:
     resolution: {directory: components/ui/component-compare/models/component-compare-model, type: directory}
     id: file:components/ui/component-compare/models/component-compare-model
     name: '@teambit/component.ui.component-compare.models.component-compare-model'
-    version: 0.0.3
+    version: 0.0.7
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55475,7 +55428,7 @@ packages:
     resolution: {directory: components/ui/component-compare/version-picker, type: directory}
     id: file:components/ui/component-compare/version-picker
     name: '@teambit/component.ui.component-compare.version-picker'
-    version: 0.0.54
+    version: 0.0.61
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
@@ -55520,7 +55473,7 @@ packages:
     resolution: {directory: scopes/api-reference/api-reference, type: directory}
     id: file:scopes/api-reference/api-reference
     name: '@teambit/api-reference'
-    version: 0.0.105
+    version: 0.0.118
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55569,7 +55522,7 @@ packages:
     resolution: {directory: scopes/api-reference/hooks/use-api, type: directory}
     id: file:scopes/api-reference/hooks/use-api
     name: '@teambit/api-reference.hooks.use-api'
-    version: 0.0.3
+    version: 0.0.5
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -55585,7 +55538,7 @@ packages:
     resolution: {directory: scopes/api-reference/hooks/use-schema, type: directory}
     id: file:scopes/api-reference/hooks/use-schema
     name: '@teambit/api-reference.hooks.use-schema'
-    version: 0.0.8
+    version: 0.0.10
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -55601,7 +55554,7 @@ packages:
     resolution: {directory: scopes/api-reference/models/api-node-renderer, type: directory}
     id: file:scopes/api-reference/models/api-node-renderer
     name: '@teambit/api-reference.models.api-node-renderer'
-    version: 0.0.8
+    version: 0.0.10
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55615,7 +55568,7 @@ packages:
     resolution: {directory: scopes/api-reference/models/api-reference-model, type: directory}
     id: file:scopes/api-reference/models/api-reference-model
     name: '@teambit/api-reference.models.api-reference-model'
-    version: 0.0.8
+    version: 0.0.10
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55629,7 +55582,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/api-node-details, type: directory}
     id: file:scopes/api-reference/renderers/api-node-details
     name: '@teambit/api-reference.renderers.api-node-details'
-    version: 0.0.14
+    version: 0.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55653,7 +55606,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/api-node-details, type: directory}
     id: file:scopes/api-reference/renderers/api-node-details
     name: '@teambit/api-reference.renderers.api-node-details'
-    version: 0.0.14
+    version: 0.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55677,7 +55630,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/class, type: directory}
     id: file:scopes/api-reference/renderers/class
     name: '@teambit/api-reference.renderers.class'
-    version: 0.0.14
+    version: 0.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55691,7 +55644,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/enum, type: directory}
     id: file:scopes/api-reference/renderers/enum
     name: '@teambit/api-reference.renderers.enum'
-    version: 0.0.14
+    version: 0.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55705,7 +55658,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/function, type: directory}
     id: file:scopes/api-reference/renderers/function
     name: '@teambit/api-reference.renderers.function'
-    version: 0.0.14
+    version: 0.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55721,7 +55674,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/grouped-schema-nodes-summary, type: directory}
     id: file:scopes/api-reference/renderers/grouped-schema-nodes-summary
     name: '@teambit/api-reference.renderers.grouped-schema-nodes-summary'
-    version: 0.0.14
+    version: 0.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55737,7 +55690,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/inference-type, type: directory}
     id: file:scopes/api-reference/renderers/inference-type
     name: '@teambit/api-reference.renderers.inference-type'
-    version: 0.0.10
+    version: 0.0.12
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55751,7 +55704,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/interface, type: directory}
     id: file:scopes/api-reference/renderers/interface
     name: '@teambit/api-reference.renderers.interface'
-    version: 0.0.14
+    version: 0.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55765,7 +55718,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/parameter, type: directory}
     id: file:scopes/api-reference/renderers/parameter
     name: '@teambit/api-reference.renderers.parameter'
-    version: 0.0.12
+    version: 0.0.14
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55779,7 +55732,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/schema-node-member-summary, type: directory}
     id: file:scopes/api-reference/renderers/schema-node-member-summary
     name: '@teambit/api-reference.renderers.schema-node-member-summary'
-    version: 0.0.14
+    version: 0.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55795,7 +55748,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/schema-nodes-index, type: directory}
     id: file:scopes/api-reference/renderers/schema-nodes-index
     name: '@teambit/api-reference.renderers.schema-nodes-index'
-    version: 0.0.14
+    version: 0.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55818,7 +55771,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/type-array, type: directory}
     id: file:scopes/api-reference/renderers/type-array
     name: '@teambit/api-reference.renderers.type-array'
-    version: 0.0.10
+    version: 0.0.12
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55832,7 +55785,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/type-intersection, type: directory}
     id: file:scopes/api-reference/renderers/type-intersection
     name: '@teambit/api-reference.renderers.type-intersection'
-    version: 0.0.10
+    version: 0.0.12
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55847,7 +55800,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/type-literal, type: directory}
     id: file:scopes/api-reference/renderers/type-literal
     name: '@teambit/api-reference.renderers.type-literal'
-    version: 0.0.14
+    version: 0.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55861,7 +55814,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/type-ref, type: directory}
     id: file:scopes/api-reference/renderers/type-ref
     name: '@teambit/api-reference.renderers.type-ref'
-    version: 0.0.14
+    version: 0.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55880,7 +55833,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/type-union, type: directory}
     id: file:scopes/api-reference/renderers/type-union
     name: '@teambit/api-reference.renderers.type-union'
-    version: 0.0.10
+    version: 0.0.12
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55895,7 +55848,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/type, type: directory}
     id: file:scopes/api-reference/renderers/type
     name: '@teambit/api-reference.renderers.type'
-    version: 0.0.14
+    version: 0.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55909,7 +55862,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/unresolved, type: directory}
     id: file:scopes/api-reference/renderers/unresolved
     name: '@teambit/api-reference.renderers.unresolved'
-    version: 0.0.14
+    version: 0.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55923,7 +55876,7 @@ packages:
     resolution: {directory: scopes/api-reference/renderers/variable, type: directory}
     id: file:scopes/api-reference/renderers/variable
     name: '@teambit/api-reference.renderers.variable'
-    version: 0.0.14
+    version: 0.0.16
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55937,7 +55890,7 @@ packages:
     resolution: {directory: scopes/api-reference/sections/api-reference-page, type: directory}
     id: file:scopes/api-reference/sections/api-reference-page
     name: '@teambit/api-reference.sections.api-reference-page'
-    version: 0.0.18
+    version: 0.0.20
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -55981,13 +55934,13 @@ packages:
   file:scopes/api-reference/utils/copy-schema-node:
     resolution: {directory: scopes/api-reference/utils/copy-schema-node, type: directory}
     name: '@teambit/api-reference.utils.copy-schema-node'
-    version: 0.0.5
+    version: 0.0.7
     dev: false
 
   file:scopes/api-reference/utils/group-schema-node-by-signature:
     resolution: {directory: scopes/api-reference/utils/group-schema-node-by-signature, type: directory}
     name: '@teambit/api-reference.utils.group-schema-node-by-signature'
-    version: 0.0.5
+    version: 0.0.7
     dependencies:
       pluralize: 8.0.0
     dev: false
@@ -55995,20 +55948,20 @@ packages:
   file:scopes/api-reference/utils/schema-node-signature-transform:
     resolution: {directory: scopes/api-reference/utils/schema-node-signature-transform, type: directory}
     name: '@teambit/api-reference.utils.schema-node-signature-transform'
-    version: 0.0.7
+    version: 0.0.9
     dev: false
 
   file:scopes/api-reference/utils/sort-api-nodes:
     resolution: {directory: scopes/api-reference/utils/sort-api-nodes, type: directory}
     name: '@teambit/api-reference.utils.sort-api-nodes'
-    version: 0.0.8
+    version: 0.0.10
     dev: false
 
   file:scopes/cloud/cloud_sfoxds7t5ydpegc3knd667wn6m:
     resolution: {directory: scopes/cloud/cloud, type: directory}
     id: file:scopes/cloud/cloud
     name: '@teambit/cloud'
-    version: 0.0.218
+    version: 0.0.225
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56088,7 +56041,7 @@ packages:
     resolution: {directory: scopes/code/ui/code-compare, type: directory}
     id: file:scopes/code/ui/code-compare
     name: '@teambit/code.ui.code-compare'
-    version: 0.0.169
+    version: 0.0.173
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56208,7 +56161,7 @@ packages:
     resolution: {directory: scopes/community/community, type: directory}
     id: file:scopes/community/community
     name: '@teambit/community'
-    version: 0.0.218
+    version: 0.0.225
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56269,7 +56222,7 @@ packages:
     resolution: {directory: scopes/compilation/babel, type: directory}
     id: file:scopes/compilation/babel
     name: '@teambit/babel'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56292,7 +56245,7 @@ packages:
     resolution: {directory: scopes/compilation/bundler, type: directory}
     id: file:scopes/compilation/bundler
     name: '@teambit/bundler'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -56333,7 +56286,7 @@ packages:
     resolution: {directory: scopes/compilation/compiler, type: directory}
     id: file:scopes/compilation/compiler
     name: '@teambit/compiler'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56370,7 +56323,7 @@ packages:
     resolution: {directory: scopes/compilation/multi-compiler, type: directory}
     id: file:scopes/compilation/multi-compiler
     name: '@teambit/multi-compiler'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56402,7 +56355,7 @@ packages:
     resolution: {directory: scopes/component/changelog, type: directory}
     id: file:scopes/component/changelog
     name: '@teambit/changelog'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56424,7 +56377,7 @@ packages:
     resolution: {directory: scopes/component/checkout, type: directory}
     id: file:scopes/component/checkout
     name: '@teambit/checkout'
-    version: 0.0.168
+    version: 0.0.181
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56443,7 +56396,7 @@ packages:
     resolution: {directory: scopes/component/code, type: directory}
     id: file:scopes/component/code
     name: '@teambit/code'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56460,7 +56413,7 @@ packages:
     resolution: {directory: scopes/component/component-compare, type: directory}
     id: file:scopes/component/component-compare
     name: '@teambit/component-compare'
-    version: 0.0.247
+    version: 0.0.260
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56482,7 +56435,7 @@ packages:
     resolution: {directory: scopes/component/component-compare, type: directory}
     id: file:scopes/component/component-compare
     name: '@teambit/component-compare'
-    version: 0.0.247
+    version: 0.0.260
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56504,7 +56457,7 @@ packages:
     resolution: {directory: scopes/component/component-descriptor, type: directory}
     id: file:scopes/component/component-descriptor
     name: '@teambit/component-descriptor'
-    version: 0.0.239
+    version: 0.0.246
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56519,7 +56472,7 @@ packages:
     resolution: {directory: scopes/component/component-drawer, type: directory}
     id: file:scopes/component/component-drawer
     name: '@teambit/component.ui.component-drawer'
-    version: 0.0.228
+    version: 0.0.235
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56537,7 +56490,7 @@ packages:
     resolution: {directory: scopes/component/component-filters/component-filter-context, type: directory}
     id: file:scopes/component/component-filters/component-filter-context
     name: '@teambit/component.ui.component-filters.component-filter-context'
-    version: 0.0.102
+    version: 0.0.109
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56552,7 +56505,7 @@ packages:
     resolution: {directory: scopes/component/component-filters/deprecate-filter, type: directory}
     id: file:scopes/component/component-filters/deprecate-filter
     name: '@teambit/component.ui.component-filters.deprecate-filter'
-    version: 0.0.102
+    version: 0.0.109
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56568,7 +56521,7 @@ packages:
     resolution: {directory: scopes/component/component-filters/env-filter, type: directory}
     id: file:scopes/component/component-filters/env-filter
     name: '@teambit/component.ui.component-filters.env-filter'
-    version: 0.0.108
+    version: 0.0.115
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56588,7 +56541,7 @@ packages:
     resolution: {directory: scopes/component/component-filters/show-main-filter, type: directory}
     id: file:scopes/component/component-filters/show-main-filter
     name: '@teambit/component.ui.component-filters.show-main-filter'
-    version: 0.0.95
+    version: 0.0.102
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56618,7 +56571,7 @@ packages:
     resolution: {directory: scopes/component/component-log, type: directory}
     id: file:scopes/component/component-log
     name: '@teambit/component-log'
-    version: 0.0.376
+    version: 0.0.389
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56645,7 +56598,7 @@ packages:
     resolution: {directory: scopes/component/component-sizer, type: directory}
     id: file:scopes/component/component-sizer
     name: '@teambit/component-sizer'
-    version: 0.0.372
+    version: 0.0.385
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56664,7 +56617,7 @@ packages:
     resolution: {directory: scopes/component/component-tree, type: directory}
     id: file:scopes/component/component-tree
     name: '@teambit/component-tree'
-    version: 0.0.787
+    version: 0.0.800
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56703,7 +56656,7 @@ packages:
     resolution: {directory: scopes/component/component-writer, type: directory}
     id: file:scopes/component/component-writer
     name: '@teambit/component-writer'
-    version: 0.0.35
+    version: 0.0.48
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56721,7 +56674,7 @@ packages:
     resolution: {directory: scopes/component/component, type: directory}
     id: file:scopes/component/component
     name: '@teambit/component'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -56762,7 +56715,7 @@ packages:
     resolution: {directory: scopes/component/component, type: directory}
     id: file:scopes/component/component
     name: '@teambit/component'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -56803,7 +56756,7 @@ packages:
     resolution: {directory: scopes/component/deprecation, type: directory}
     id: file:scopes/component/deprecation
     name: '@teambit/deprecation'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56823,7 +56776,7 @@ packages:
     resolution: {directory: scopes/component/dev-files, type: directory}
     id: file:scopes/component/dev-files
     name: '@teambit/dev-files'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56844,7 +56797,7 @@ packages:
     resolution: {directory: scopes/component/forking, type: directory}
     id: file:scopes/component/forking
     name: '@teambit/forking'
-    version: 0.0.403
+    version: 0.0.416
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56867,7 +56820,7 @@ packages:
     resolution: {directory: scopes/component/graph, type: directory}
     id: file:scopes/component/graph
     name: '@teambit/graph'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -56901,7 +56854,7 @@ packages:
     resolution: {directory: scopes/component/isolator, type: directory}
     id: file:scopes/component/isolator
     name: '@teambit/isolator'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56932,7 +56885,7 @@ packages:
     resolution: {directory: scopes/component/issues, type: directory}
     id: file:scopes/component/issues
     name: '@teambit/issues'
-    version: 0.0.307
+    version: 0.0.320
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56966,7 +56919,7 @@ packages:
     resolution: {directory: scopes/component/lister, type: directory}
     id: file:scopes/component/lister
     name: '@teambit/lister'
-    version: 0.0.235
+    version: 0.0.248
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -56986,7 +56939,7 @@ packages:
     resolution: {directory: scopes/component/merging, type: directory}
     id: file:scopes/component/merging
     name: '@teambit/merging'
-    version: 0.0.314
+    version: 0.0.327
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57006,7 +56959,7 @@ packages:
     resolution: {directory: scopes/component/mover, type: directory}
     id: file:scopes/component/mover
     name: '@teambit/mover'
-    version: 0.0.30
+    version: 0.0.43
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57025,7 +56978,7 @@ packages:
     resolution: {directory: scopes/component/new-component-helper, type: directory}
     id: file:scopes/component/new-component-helper
     name: '@teambit/new-component-helper'
-    version: 0.0.403
+    version: 0.0.416
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57042,7 +56995,7 @@ packages:
     resolution: {directory: scopes/component/refactoring, type: directory}
     id: file:scopes/component/refactoring
     name: '@teambit/refactoring'
-    version: 0.0.296
+    version: 0.0.309
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57061,7 +57014,7 @@ packages:
     resolution: {directory: scopes/component/remove, type: directory}
     id: file:scopes/component/remove
     name: '@teambit/remove'
-    version: 0.0.176
+    version: 0.0.189
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57083,7 +57036,7 @@ packages:
     resolution: {directory: scopes/component/renaming, type: directory}
     id: file:scopes/component/renaming
     name: '@teambit/renaming'
-    version: 0.0.403
+    version: 0.0.416
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57104,7 +57057,7 @@ packages:
     resolution: {directory: scopes/component/snapping, type: directory}
     id: file:scopes/component/snapping
     name: '@teambit/snapping'
-    version: 0.0.314
+    version: 0.0.327
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57131,7 +57084,7 @@ packages:
     resolution: {directory: scopes/component/status, type: directory}
     id: file:scopes/component/status
     name: '@teambit/status'
-    version: 0.0.311
+    version: 0.0.324
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57150,7 +57103,7 @@ packages:
   file:scopes/component/testing/mock-components:
     resolution: {directory: scopes/component/testing/mock-components, type: directory}
     name: '@teambit/component.testing.mock-components'
-    version: 0.0.34
+    version: 0.0.41
     dependencies:
       fs-extra: 10.0.0
       p-map-series: 2.1.0
@@ -57160,7 +57113,7 @@ packages:
     resolution: {directory: scopes/component/tracker, type: directory}
     id: file:scopes/component/tracker
     name: '@teambit/tracker'
-    version: 0.0.30
+    version: 0.0.43
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57270,7 +57223,7 @@ packages:
     resolution: {directory: scopes/component/ui/component-meta, type: directory}
     id: file:scopes/component/ui/component-meta
     name: '@teambit/component.ui.component-meta'
-    version: 0.0.237
+    version: 0.0.244
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57417,7 +57370,7 @@ packages:
     resolution: {directory: scopes/component/ui/version-block, type: directory}
     id: file:scopes/component/ui/version-block
     name: '@teambit/component.ui.version-block'
-    version: 0.0.753
+    version: 0.0.760
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57438,7 +57391,7 @@ packages:
     resolution: {directory: scopes/component/ui/version-dropdown, type: directory}
     id: file:scopes/component/ui/version-dropdown
     name: '@teambit/component.ui.version-dropdown'
-    version: 0.0.736
+    version: 0.0.743
     peerDependencies:
       '@testing-library/react': ^12.1.5
       react: ^16.8.0 || ^17.0.0
@@ -57463,7 +57416,7 @@ packages:
     resolution: {directory: scopes/component/ui/version-dropdown, type: directory}
     id: file:scopes/component/ui/version-dropdown
     name: '@teambit/component.ui.version-dropdown'
-    version: 0.0.736
+    version: 0.0.743
     peerDependencies:
       '@testing-library/react': ^12.1.5
       react: ^16.8.0 || ^17.0.0
@@ -57521,7 +57474,7 @@ packages:
     resolution: {directory: scopes/compositions/composition-card, type: directory}
     id: file:scopes/compositions/composition-card
     name: '@teambit/composition-card'
-    version: 0.0.32
+    version: 0.0.39
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57539,7 +57492,7 @@ packages:
     resolution: {directory: scopes/compositions/compositions, type: directory}
     id: file:scopes/compositions/compositions
     name: '@teambit/compositions'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57576,7 +57529,7 @@ packages:
     resolution: {directory: scopes/compositions/compositions, type: directory}
     id: file:scopes/compositions/compositions
     name: '@teambit/compositions'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57632,7 +57585,7 @@ packages:
     resolution: {directory: scopes/compositions/panels/composition-gallery, type: directory}
     id: file:scopes/compositions/panels/composition-gallery
     name: '@teambit/compositions.panels.composition-gallery'
-    version: 0.0.32
+    version: 0.0.39
     peerDependencies:
       react: 17.0.2
     dependencies:
@@ -57686,7 +57639,7 @@ packages:
     resolution: {directory: scopes/compositions/ui/composition-compare, type: directory}
     id: file:scopes/compositions/ui/composition-compare
     name: '@teambit/compositions.ui.composition-compare'
-    version: 0.0.145
+    version: 0.0.149
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57762,7 +57715,7 @@ packages:
     resolution: {directory: scopes/defender/eslint, type: directory}
     id: file:scopes/defender/eslint
     name: '@teambit/eslint'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57785,7 +57738,7 @@ packages:
     resolution: {directory: scopes/defender/formatter, type: directory}
     id: file:scopes/defender/formatter
     name: '@teambit/formatter'
-    version: 0.0.550
+    version: 0.0.563
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57811,7 +57764,7 @@ packages:
     resolution: {directory: scopes/defender/jest, type: directory}
     id: file:scopes/defender/jest
     name: '@teambit/jest'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       jest: 27.5.1
       react: ^16.8.0 || ^17.0.0
@@ -57837,7 +57790,7 @@ packages:
     resolution: {directory: scopes/defender/linter, type: directory}
     id: file:scopes/defender/linter
     name: '@teambit/linter'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57863,7 +57816,7 @@ packages:
     resolution: {directory: scopes/defender/mocha, type: directory}
     id: file:scopes/defender/mocha
     name: '@teambit/mocha'
-    version: 0.0.336
+    version: 0.0.349
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57886,7 +57839,7 @@ packages:
     resolution: {directory: scopes/defender/multi-tester, type: directory}
     id: file:scopes/defender/multi-tester
     name: '@teambit/multi-tester'
-    version: 0.0.168
+    version: 0.0.181
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57913,7 +57866,7 @@ packages:
     resolution: {directory: scopes/defender/prettier, type: directory}
     id: file:scopes/defender/prettier
     name: '@teambit/prettier'
-    version: 0.0.550
+    version: 0.0.563
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57931,7 +57884,7 @@ packages:
     resolution: {directory: scopes/defender/tester, type: directory}
     id: file:scopes/defender/tester
     name: '@teambit/tester'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -57982,7 +57935,7 @@ packages:
     resolution: {directory: scopes/defender/ui/test-compare, type: directory}
     id: file:scopes/defender/ui/test-compare
     name: '@teambit/defender.ui.test-compare'
-    version: 0.0.143
+    version: 0.0.147
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -58110,7 +58063,7 @@ packages:
     resolution: {directory: scopes/dependencies/dependencies, type: directory}
     id: file:scopes/dependencies/dependencies
     name: '@teambit/dependencies'
-    version: 0.0.192
+    version: 0.0.205
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -58132,13 +58085,13 @@ packages:
     resolution: {directory: scopes/dependencies/dependency-resolver, type: directory}
     id: file:scopes/dependencies/dependency-resolver
     name: '@teambit/dependency-resolver'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@pnpm/core': 7.8.3_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/core': 8.0.0_udg42pbvf5wucmjcwfysol5v2e
       '@pnpm/network.ca-file': 1.0.2
       '@pnpm/types': 8.10.0
       '@teambit/harmony': 0.4.6
@@ -58187,23 +58140,23 @@ packages:
     resolution: {directory: scopes/dependencies/pnpm, type: directory}
     id: file:scopes/dependencies/pnpm
     name: '@teambit/pnpm'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
       '@pnpm/client': 9.1.4_543n76fbszlmh3ctdn6mgrgqxa
-      '@pnpm/config': 16.6.3_udg42pbvf5wucmjcwfysol5v2e
-      '@pnpm/core': 7.8.3_udg42pbvf5wucmjcwfysol5v2e
-      '@pnpm/default-reporter': 11.0.35_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/config': 16.7.1_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/core': 8.0.0_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/default-reporter': 11.0.38_udg42pbvf5wucmjcwfysol5v2e
       '@pnpm/error': 4.0.1
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-yaml': 11.1.0
       '@pnpm/package-store': 15.1.7_@pnpm+logger@5.0.0
       '@pnpm/pick-registry-for-package': 4.0.3
       '@pnpm/sort-packages': 4.0.3
-      '@pnpm/store-connection-manager': 5.2.13_udg42pbvf5wucmjcwfysol5v2e
+      '@pnpm/store-connection-manager': 5.2.16_udg42pbvf5wucmjcwfysol5v2e
       '@pnpm/types': 8.10.0
       '@pnpm/workspace.pkgs-graph': 1.0.0
       '@teambit/harmony': 0.4.6
@@ -58227,7 +58180,7 @@ packages:
     resolution: {directory: scopes/dependencies/yarn, type: directory}
     id: file:scopes/dependencies/yarn
     name: '@teambit/yarn'
-    version: 0.0.1000
+    version: 0.0.1013
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -58604,7 +58557,7 @@ packages:
     resolution: {directory: scopes/docs/docs, type: directory}
     id: file:scopes/docs/docs
     name: '@teambit/docs'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -58640,7 +58593,7 @@ packages:
     resolution: {directory: scopes/docs/ui/overview-compare, type: directory}
     id: file:scopes/docs/ui/overview-compare
     name: '@teambit/docs.ui.overview-compare'
-    version: 0.0.188
+    version: 0.0.195
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -58686,7 +58639,7 @@ packages:
     resolution: {directory: scopes/envs/env, type: directory}
     id: file:scopes/envs/env
     name: '@teambit/env'
-    version: 0.0.372
+    version: 0.0.385
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -58702,7 +58655,7 @@ packages:
     resolution: {directory: scopes/envs/envs, type: directory}
     id: file:scopes/envs/envs
     name: '@teambit/envs'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -58742,7 +58695,7 @@ packages:
     resolution: {directory: scopes/explorer/command-bar, type: directory}
     id: file:scopes/explorer/command-bar
     name: '@teambit/command-bar'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -58766,7 +58719,7 @@ packages:
     resolution: {directory: scopes/explorer/command-bar, type: directory}
     id: file:scopes/explorer/command-bar
     name: '@teambit/command-bar'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -58790,7 +58743,7 @@ packages:
     resolution: {directory: scopes/explorer/insights, type: directory}
     id: file:scopes/explorer/insights
     name: '@teambit/insights'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -58873,7 +58826,7 @@ packages:
     resolution: {directory: scopes/generator/generator, type: directory}
     id: file:scopes/generator/generator
     name: '@teambit/generator'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -58899,7 +58852,7 @@ packages:
     resolution: {directory: scopes/harmony/api-server, type: directory}
     id: file:scopes/harmony/api-server
     name: '@teambit/api-server'
-    version: 0.0.11
+    version: 0.0.24
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -58916,7 +58869,7 @@ packages:
     resolution: {directory: scopes/harmony/application, type: directory}
     id: file:scopes/harmony/application
     name: '@teambit/application'
-    version: 0.0.641
+    version: 0.0.654
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -58971,7 +58924,7 @@ packages:
     resolution: {directory: scopes/harmony/aspect-loader, type: directory}
     id: file:scopes/harmony/aspect-loader
     name: '@teambit/aspect-loader'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -58992,7 +58945,7 @@ packages:
     resolution: {directory: scopes/harmony/aspect, type: directory}
     id: file:scopes/harmony/aspect
     name: '@teambit/aspect'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59026,7 +58979,7 @@ packages:
     resolution: {directory: scopes/harmony/bit-custom-aspect, type: directory}
     id: file:scopes/harmony/bit-custom-aspect
     name: '@teambit/bit-custom-aspect'
-    version: 0.0.336
+    version: 0.0.349
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59048,7 +59001,7 @@ packages:
     resolution: {directory: scopes/harmony/bit, type: directory}
     id: file:scopes/harmony/bit
     name: '@teambit/bit'
-    version: 0.0.1001
+    version: 0.0.1014
     dependencies:
       '@apollo/client': 3.6.9_rzpomlatuyfxwlgxrsehlwhq3u
       '@babel/runtime': 7.20.0
@@ -59082,7 +59035,7 @@ packages:
     resolution: {directory: scopes/harmony/bit, type: directory}
     id: file:scopes/harmony/bit
     name: '@teambit/bit'
-    version: 0.0.1001
+    version: 0.0.1014
     dependencies:
       '@apollo/client': 3.6.9_cm7dmat4tatiymdnjnpg7tvksm
       '@babel/runtime': 7.20.0
@@ -59116,7 +59069,7 @@ packages:
     resolution: {directory: scopes/harmony/cache, type: directory}
     id: file:scopes/harmony/cache
     name: '@teambit/cache'
-    version: 0.0.763
+    version: 0.0.770
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59135,7 +59088,7 @@ packages:
     resolution: {directory: scopes/harmony/cli-reference, type: directory}
     id: file:scopes/harmony/cli-reference
     name: '@teambit/harmony.content.cli-reference'
-    version: 1.95.124
+    version: 1.95.126
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59150,7 +59103,7 @@ packages:
     resolution: {directory: scopes/harmony/cli, type: directory}
     id: file:scopes/harmony/cli
     name: '@teambit/cli'
-    version: 0.0.670
+    version: 0.0.677
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59177,7 +59130,7 @@ packages:
     resolution: {directory: scopes/harmony/config, type: directory}
     id: file:scopes/harmony/config
     name: '@teambit/config'
-    version: 0.0.683
+    version: 0.0.690
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59197,7 +59150,7 @@ packages:
     resolution: {directory: scopes/harmony/diagnostic, type: directory}
     id: file:scopes/harmony/diagnostic
     name: '@teambit/diagnostic'
-    version: 0.0.292
+    version: 0.0.305
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59216,7 +59169,7 @@ packages:
     resolution: {directory: scopes/harmony/express, type: directory}
     id: file:scopes/harmony/express
     name: '@teambit/express'
-    version: 0.0.768
+    version: 0.0.775
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59237,7 +59190,7 @@ packages:
     resolution: {directory: scopes/harmony/global-config, type: directory}
     id: file:scopes/harmony/global-config
     name: '@teambit/global-config'
-    version: 0.0.672
+    version: 0.0.679
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59255,7 +59208,7 @@ packages:
     resolution: {directory: scopes/harmony/graphql, type: directory}
     id: file:scopes/harmony/graphql
     name: '@teambit/graphql'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       '@apollo/client': ^3.6.0
       graphql: 14.7.0
@@ -59302,7 +59255,7 @@ packages:
     resolution: {directory: scopes/harmony/logger, type: directory}
     id: file:scopes/harmony/logger
     name: '@teambit/logger'
-    version: 0.0.763
+    version: 0.0.770
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59332,7 +59285,7 @@ packages:
     resolution: {directory: scopes/harmony/node, type: directory}
     id: file:scopes/harmony/node
     name: '@teambit/node'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59351,7 +59304,7 @@ packages:
     resolution: {directory: scopes/harmony/pubsub, type: directory}
     id: file:scopes/harmony/pubsub
     name: '@teambit/pubsub'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59368,7 +59321,7 @@ packages:
   file:scopes/harmony/testing/load-aspect:
     resolution: {directory: scopes/harmony/testing/load-aspect, type: directory}
     name: '@teambit/harmony.testing.load-aspect'
-    version: 0.0.33
+    version: 0.0.40
     dependencies:
       '@teambit/harmony': 0.4.6
     dev: false
@@ -59397,7 +59350,7 @@ packages:
     resolution: {directory: scopes/harmony/worker, type: directory}
     id: file:scopes/harmony/worker
     name: '@teambit/worker'
-    version: 0.0.974
+    version: 0.0.981
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59429,7 +59382,7 @@ packages:
     resolution: {directory: scopes/html/html, type: directory}
     id: file:scopes/html/html
     name: '@teambit/html'
-    version: 0.0.567
+    version: 0.0.580
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59459,13 +59412,13 @@ packages:
   file:scopes/html/modules/render-template:
     resolution: {directory: scopes/html/modules/render-template, type: directory}
     name: '@teambit/html.modules.render-template'
-    version: 0.0.104
+    version: 1.0.3
     dev: false
 
   file:scopes/lanes/diff:
     resolution: {directory: scopes/lanes/diff, type: directory}
     name: '@teambit/lanes.modules.diff'
-    version: 0.0.305
+    version: 0.0.312
     dependencies:
       chalk: 2.4.2
     dev: false
@@ -59473,14 +59426,14 @@ packages:
   file:scopes/lanes/entities/lane-diff:
     resolution: {directory: scopes/lanes/entities/lane-diff, type: directory}
     name: '@teambit/lanes.entities.lane-diff'
-    version: 0.0.32
+    version: 0.0.39
     dev: false
 
   file:scopes/lanes/hooks/use-lane-components_@apollo+client@3.6.9:
     resolution: {directory: scopes/lanes/hooks/use-lane-components, type: directory}
     id: file:scopes/lanes/hooks/use-lane-components
     name: '@teambit/lanes.hooks.use-lane-components'
-    version: 0.0.132
+    version: 0.0.139
     peerDependencies:
       '@apollo/client': ^3.6.0
     dependencies:
@@ -59491,7 +59444,7 @@ packages:
     resolution: {directory: scopes/lanes/hooks/use-lane-readme, type: directory}
     id: file:scopes/lanes/hooks/use-lane-readme
     name: '@teambit/lanes.hooks.use-lane-readme'
-    version: 0.0.132
+    version: 0.0.139
     peerDependencies:
       '@apollo/client': ^3.6.0
     dependencies:
@@ -59502,7 +59455,7 @@ packages:
     resolution: {directory: scopes/lanes/hooks/use-lanes, type: directory}
     id: file:scopes/lanes/hooks/use-lanes
     name: '@teambit/lanes.hooks.use-lanes'
-    version: 0.0.133
+    version: 0.0.140
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -59522,7 +59475,7 @@ packages:
     resolution: {directory: scopes/lanes/hooks/use-viewed-lane-from-url, type: directory}
     id: file:scopes/lanes/hooks/use-viewed-lane-from-url
     name: '@teambit/lanes.hooks.use-viewed-lane-from-url'
-    version: 0.0.95
+    version: 0.0.102
     dependencies:
       '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
     transitivePeerDependencies:
@@ -59535,14 +59488,14 @@ packages:
   file:scopes/lanes/lane-id:
     resolution: {directory: scopes/lanes/lane-id, type: directory}
     name: '@teambit/lane-id'
-    version: 0.0.187
+    version: 0.0.194
     dev: false
 
   file:scopes/lanes/lanes_hdlndkrrllklise4c5alrvmbmu:
     resolution: {directory: scopes/lanes/lanes, type: directory}
     id: file:scopes/lanes/lanes
     name: '@teambit/lanes'
-    version: 0.0.571
+    version: 0.0.584
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59567,7 +59520,7 @@ packages:
     resolution: {directory: scopes/lanes/lanes, type: directory}
     id: file:scopes/lanes/lanes
     name: '@teambit/lanes'
-    version: 0.0.571
+    version: 0.0.584
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59592,7 +59545,7 @@ packages:
     resolution: {directory: scopes/lanes/merge-lanes, type: directory}
     id: file:scopes/lanes/merge-lanes
     name: '@teambit/merge-lanes'
-    version: 0.0.176
+    version: 0.0.189
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59611,7 +59564,7 @@ packages:
     resolution: {directory: scopes/lanes/ui/compare/lane-compare-drawer, type: directory}
     id: file:scopes/lanes/ui/compare/lane-compare-drawer
     name: '@teambit/lanes.ui.compare.lane-compare-drawer'
-    version: 0.0.33
+    version: 0.0.40
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59621,13 +59574,14 @@ packages:
       react: 17.0.2
       react-animate-height: 2.0.23_sfoxds7t5ydpegc3knd667wn6m
       react-dom: 17.0.2_react@17.0.2
+      semver: 7.3.4
     dev: false
 
   file:scopes/lanes/ui/compare/lane-compare-hooks/use-lane-diff-status_roe5erhgkobpyh5piuida3dzbe:
     resolution: {directory: scopes/lanes/ui/compare/lane-compare-hooks/use-lane-diff-status, type: directory}
     id: file:scopes/lanes/ui/compare/lane-compare-hooks/use-lane-diff-status
     name: '@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status'
-    version: 0.0.32
+    version: 0.0.39
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -59659,7 +59613,7 @@ packages:
     resolution: {directory: scopes/lanes/ui/compare/lane-compare-page, type: directory}
     id: file:scopes/lanes/ui/compare/lane-compare-page
     name: '@teambit/lanes.ui.compare.lane-compare-page'
-    version: 0.0.35
+    version: 0.0.42
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59687,7 +59641,7 @@ packages:
     resolution: {directory: scopes/lanes/ui/compare/lane-compare, type: directory}
     id: file:scopes/lanes/ui/compare/lane-compare
     name: '@teambit/lanes.ui.compare.lane-compare'
-    version: 0.0.51
+    version: 0.0.58
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59719,7 +59673,7 @@ packages:
     resolution: {directory: scopes/lanes/ui/inputs/lane-selector, type: directory}
     id: file:scopes/lanes/ui/inputs/lane-selector
     name: '@teambit/lanes.ui.inputs.lane-selector'
-    version: 0.0.95
+    version: 0.0.102
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59741,7 +59695,7 @@ packages:
     resolution: {directory: scopes/lanes/ui/lane-details, type: directory}
     id: file:scopes/lanes/ui/lane-details
     name: '@teambit/lanes.ui.lane-details'
-    version: 0.0.92
+    version: 0.0.99
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59757,7 +59711,7 @@ packages:
     resolution: {directory: scopes/lanes/ui/lane-overview, type: directory}
     id: file:scopes/lanes/ui/lane-overview
     name: '@teambit/lanes.ui.lane-overview'
-    version: 0.0.96
+    version: 0.0.103
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59773,7 +59727,7 @@ packages:
     resolution: {directory: scopes/lanes/ui/lane-readme, type: directory}
     id: file:scopes/lanes/ui/lane-readme
     name: '@teambit/lanes.ui.lane-readme'
-    version: 0.0.99
+    version: 0.0.106
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59790,7 +59744,7 @@ packages:
     resolution: {directory: scopes/lanes/ui/lane-readme, type: directory}
     id: file:scopes/lanes/ui/lane-readme
     name: '@teambit/lanes.ui.lane-readme'
-    version: 0.0.99
+    version: 0.0.106
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59853,7 +59807,7 @@ packages:
     resolution: {directory: scopes/lanes/ui/menus/use-lanes-menu, type: directory}
     id: file:scopes/lanes/ui/menus/use-lanes-menu
     name: '@teambit/lanes.ui.menus.use-lanes-menu'
-    version: 0.0.95
+    version: 0.0.102
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59873,7 +59827,7 @@ packages:
     resolution: {directory: scopes/lanes/ui/models/lanes-model, type: directory}
     id: file:scopes/lanes/ui/models/lanes-model
     name: '@teambit/lanes.ui.models.lanes-model'
-    version: 0.0.95
+    version: 0.0.102
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59889,7 +59843,7 @@ packages:
     resolution: {directory: scopes/lanes/ui/navigation/lane-switcher, type: directory}
     id: file:scopes/lanes/ui/navigation/lane-switcher
     name: '@teambit/lanes.ui.navigation.lane-switcher'
-    version: 0.0.95
+    version: 0.0.102
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59925,7 +59879,7 @@ packages:
     resolution: {directory: scopes/mdx/mdx, type: directory}
     id: file:scopes/mdx/mdx
     name: '@teambit/mdx'
-    version: 0.0.979
+    version: 0.0.992
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -59983,7 +59937,7 @@ packages:
     resolution: {directory: scopes/mdx/readme, type: directory}
     id: file:scopes/mdx/readme
     name: '@teambit/readme'
-    version: 0.0.283
+    version: 0.0.296
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60084,7 +60038,7 @@ packages:
     resolution: {directory: scopes/pipelines/builder, type: directory}
     id: file:scopes/pipelines/builder
     name: '@teambit/builder'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60119,7 +60073,7 @@ packages:
     resolution: {directory: scopes/pipelines/modules/builder-data, type: directory}
     id: file:scopes/pipelines/modules/builder-data
     name: '@teambit/builder-data'
-    version: 0.0.222
+    version: 0.0.229
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60157,7 +60111,7 @@ packages:
     resolution: {directory: scopes/pkg/pkg, type: directory}
     id: file:scopes/pkg/pkg
     name: '@teambit/pkg'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60227,7 +60181,7 @@ packages:
     resolution: {directory: scopes/preview/preview, type: directory}
     id: file:scopes/preview/preview
     name: '@teambit/preview'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60348,7 +60302,7 @@ packages:
     resolution: {directory: scopes/react/eslint-config-bit-react, type: directory}
     id: file:scopes/react/eslint-config-bit-react
     name: '@teambit/react.eslint-config-bit-react'
-    version: 0.0.742
+    version: 0.0.749
     peerDependencies:
       eslint: '> 7.0.0'
     dependencies:
@@ -60385,7 +60339,7 @@ packages:
     resolution: {directory: scopes/react/react-elements, type: directory}
     id: file:scopes/react/react-elements
     name: '@teambit/react-elements'
-    version: 0.0.452
+    version: 0.0.465
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60443,7 +60397,7 @@ packages:
     resolution: {directory: scopes/react/react-native, type: directory}
     id: file:scopes/react/react-native
     name: '@teambit/react-native'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60475,7 +60429,7 @@ packages:
     resolution: {directory: scopes/react/react, type: directory}
     id: file:scopes/react/react
     name: '@teambit/react'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60754,7 +60708,7 @@ packages:
     resolution: {directory: scopes/scope/export, type: directory}
     id: file:scopes/scope/export
     name: '@teambit/export'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60774,7 +60728,7 @@ packages:
     resolution: {directory: scopes/scope/importer, type: directory}
     id: file:scopes/scope/importer
     name: '@teambit/importer'
-    version: 0.0.428
+    version: 0.0.441
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60793,14 +60747,14 @@ packages:
   file:scopes/scope/models/scope-model:
     resolution: {directory: scopes/scope/models/scope-model, type: directory}
     name: '@teambit/scope.models.scope-model'
-    version: 0.0.328
+    version: 0.0.335
     dev: false
 
   file:scopes/scope/scope_e7uyyy75f3lw3kiu4szp7baeoi:
     resolution: {directory: scopes/scope/scope, type: directory}
     id: file:scopes/scope/scope
     name: '@teambit/scope'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60836,7 +60790,7 @@ packages:
     resolution: {directory: scopes/scope/scope, type: directory}
     id: file:scopes/scope/scope
     name: '@teambit/scope'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60872,7 +60826,7 @@ packages:
     resolution: {directory: scopes/scope/sign, type: directory}
     id: file:scopes/scope/sign
     name: '@teambit/sign'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60905,7 +60859,7 @@ packages:
     resolution: {directory: scopes/scope/ui/hooks/scope-context, type: directory}
     id: file:scopes/scope/ui/hooks/scope-context
     name: '@teambit/scope.ui.hooks.scope-context'
-    version: 0.0.328
+    version: 0.0.335
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60919,7 +60873,7 @@ packages:
     resolution: {directory: scopes/scope/ui/hooks/use-scope, type: directory}
     id: file:scopes/scope/ui/hooks/use-scope
     name: '@teambit/scope.ui.hooks.use-scope'
-    version: 0.0.333
+    version: 0.0.340
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -60935,7 +60889,7 @@ packages:
     resolution: {directory: scopes/scope/ui/scope-details, type: directory}
     id: file:scopes/scope/ui/scope-details
     name: '@teambit/scope.ui.scope-details'
-    version: 0.0.514
+    version: 0.0.515
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -60945,24 +60899,6 @@ packages:
       classnames: 2.2.6
       core-js: 3.13.0
       lodash: 4.17.21
-      react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
-    dev: false
-
-  file:scopes/scope/ui/scope-icon_cuf6fvcrkey6ktqfghqvi47tva:
-    resolution: {directory: scopes/scope/ui/scope-icon, type: directory}
-    id: file:scopes/scope/ui/scope-icon
-    name: '@teambit/scope.ui.scope-icon'
-    version: 0.0.90
-    peerDependencies:
-      '@testing-library/react': ^12.1.5
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/base-ui.text.text-sizes': registry.npmjs.org/@teambit/base-ui.text.text-sizes/1.0.0_sfoxds7t5ydpegc3knd667wn6m
-      '@testing-library/react': 12.1.5_sfoxds7t5ydpegc3knd667wn6m
-      classnames: 2.2.6
-      core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
     dev: false
@@ -60983,28 +60919,31 @@ packages:
       react-dom: 17.0.2_react@17.0.2
     dev: false
 
-  file:scopes/scope/ui/scope-title_sfoxds7t5ydpegc3knd667wn6m:
+  file:scopes/scope/ui/scope-title_cuf6fvcrkey6ktqfghqvi47tva:
     resolution: {directory: scopes/scope/ui/scope-title, type: directory}
     id: file:scopes/scope/ui/scope-title
     name: '@teambit/scope.ui.scope-title'
-    version: 0.0.507
+    version: 0.0.508
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.text.muted-text': registry.npmjs.org/@teambit/base-ui.text.muted-text/1.0.1_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.ui.heading': registry.npmjs.org/@teambit/documenter.ui.heading/4.1.1_sfoxds7t5ydpegc3knd667wn6m
+      '@teambit/scope.ui.scope-icon': 0.0.91_cuf6fvcrkey6ktqfghqvi47tva
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
+    transitivePeerDependencies:
+      - '@testing-library/react'
     dev: false
 
   file:scopes/scope/update-dependencies_sfoxds7t5ydpegc3knd667wn6m:
     resolution: {directory: scopes/scope/update-dependencies, type: directory}
     id: file:scopes/scope/update-dependencies
     name: '@teambit/update-dependencies'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -61022,7 +60961,7 @@ packages:
   file:scopes/semantics/entities/semantic-schema:
     resolution: {directory: scopes/semantics/entities/semantic-schema, type: directory}
     name: '@teambit/semantics.entities.semantic-schema'
-    version: 0.0.51
+    version: 0.0.53
     dependencies:
       chalk: 2.4.2
       class-transformer: 0.5.1
@@ -61033,7 +60972,7 @@ packages:
     resolution: {directory: scopes/semantics/schema, type: directory}
     id: file:scopes/semantics/schema
     name: '@teambit/schema'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -61214,7 +61153,7 @@ packages:
     resolution: {directory: scopes/typescript/typescript, type: directory}
     id: file:scopes/typescript/typescript
     name: '@teambit/typescript'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -61325,7 +61264,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/harmony-ui-app/harmony-ui-app, type: directory}
     id: file:scopes/ui-foundation/harmony-ui-app/harmony-ui-app
     name: '@teambit/harmony-ui-app'
-    version: 0.0.641
+    version: 0.0.654
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -61374,7 +61313,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/notifications/aspect, type: directory}
     id: file:scopes/ui-foundation/notifications/aspect
     name: '@teambit/notifications'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -61454,7 +61393,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/panels, type: directory}
     id: file:scopes/ui-foundation/panels
     name: '@teambit/panels'
-    version: 0.0.671
+    version: 0.0.678
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -61472,7 +61411,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/react-router/react-router, type: directory}
     id: file:scopes/ui-foundation/react-router/react-router
     name: '@teambit/react-router'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -61495,7 +61434,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/react-router/react-router, type: directory}
     id: file:scopes/ui-foundation/react-router/react-router
     name: '@teambit/react-router'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -61580,7 +61519,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/sidebar, type: directory}
     id: file:scopes/ui-foundation/sidebar
     name: '@teambit/sidebar'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -61675,7 +61614,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/ui, type: directory}
     id: file:scopes/ui-foundation/ui
     name: '@teambit/ui'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -61761,7 +61700,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/ui, type: directory}
     id: file:scopes/ui-foundation/ui
     name: '@teambit/ui'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -62093,7 +62032,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/uis/side-bar, type: directory}
     id: file:scopes/ui-foundation/uis/side-bar
     name: '@teambit/ui-foundation.ui.side-bar'
-    version: 0.0.745
+    version: 0.0.752
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -62278,7 +62217,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/user-agent, type: directory}
     id: file:scopes/ui-foundation/user-agent
     name: '@teambit/user-agent'
-    version: 0.0.685
+    version: 0.0.698
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -62295,7 +62234,7 @@ packages:
     resolution: {directory: scopes/web-components/elements, type: directory}
     id: file:scopes/web-components/elements
     name: '@teambit/elements'
-    version: 0.0.452
+    version: 0.0.465
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -62375,7 +62314,7 @@ packages:
     resolution: {directory: scopes/webpack/webpack, type: directory}
     id: file:scopes/webpack/webpack
     name: '@teambit/webpack'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -62453,7 +62392,7 @@ packages:
     resolution: {directory: scopes/workspace/bit-roots, type: directory}
     id: file:scopes/workspace/bit-roots
     name: '@teambit/bit-roots'
-    version: 0.0.7
+    version: 0.0.14
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -62469,7 +62408,7 @@ packages:
     resolution: {directory: scopes/workspace/clear-cache, type: directory}
     id: file:scopes/workspace/clear-cache
     name: '@teambit/clear-cache'
-    version: 0.0.229
+    version: 0.0.236
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -62486,7 +62425,7 @@ packages:
     resolution: {directory: scopes/workspace/eject, type: directory}
     id: file:scopes/workspace/eject
     name: '@teambit/eject'
-    version: 0.0.470
+    version: 0.0.483
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -62502,7 +62441,7 @@ packages:
     resolution: {directory: scopes/workspace/install, type: directory}
     id: file:scopes/workspace/install
     name: '@teambit/install'
-    version: 0.0.121
+    version: 0.0.128
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -62538,7 +62477,7 @@ packages:
   file:scopes/workspace/modules/node-modules-linker:
     resolution: {directory: scopes/workspace/modules/node-modules-linker, type: directory}
     name: '@teambit/workspace.modules.node-modules-linker'
-    version: 0.0.14
+    version: 0.0.21
     dependencies:
       fs-extra: 10.0.0
       glob: 7.1.6
@@ -62622,7 +62561,7 @@ packages:
     resolution: {directory: scopes/workspace/variants, type: directory}
     id: file:scopes/workspace/variants
     name: '@teambit/variants'
-    version: 0.0.775
+    version: 0.0.782
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -62640,7 +62579,7 @@ packages:
     resolution: {directory: scopes/workspace/watcher, type: directory}
     id: file:scopes/workspace/watcher
     name: '@teambit/watcher'
-    version: 0.0.11
+    version: 0.0.24
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -62662,7 +62601,7 @@ packages:
     resolution: {directory: scopes/workspace/workspace, type: directory}
     id: file:scopes/workspace/workspace
     name: '@teambit/workspace'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -62681,6 +62620,7 @@ packages:
       core-js: 3.13.0
       detect-indent: 5.0.0
       detect-newline: 3.1.0
+      find-root: 1.1.0
       fs-extra: 10.0.0
       graphql-tag: 2.12.1_graphql@14.7.0
       ink: 3.2.0_xtmjigr2wljfewy4e7ae6ueipe
@@ -62706,7 +62646,7 @@ packages:
     resolution: {directory: scopes/workspace/workspace, type: directory}
     id: file:scopes/workspace/workspace
     name: '@teambit/workspace'
-    version: 0.0.999
+    version: 0.0.1012
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -62725,6 +62665,7 @@ packages:
       core-js: 3.13.0
       detect-indent: 5.0.0
       detect-newline: 3.1.0
+      find-root: 1.1.0
       fs-extra: 10.0.0
       graphql-tag: 2.12.1_graphql@14.7.0
       ink: 3.2.0_xtmjigr2wljfewy4e7ae6ueipe

@@ -183,17 +183,18 @@ export class SnappingMain {
     if (!soft) {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     }
-    const components = await this.loadComponentsForTag(legacyBitIds);
-    await this.throwForLegacyDependenciesInsideHarmony(components);
+    const consumerComponents = await this.loadComponentsForTag(legacyBitIds);
+    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
+    const components = await this.workspace.getManyByLegacy(consumerComponents);
     await this.throwForComponentIssues(components, ignoreIssues);
-    this.throwForPendingImport(components);
+    this.throwForPendingImport(consumerComponents);
 
     const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig } = await tagModelComponent({
       workspace: this.workspace,
       scope: this.scope,
       snapping: this,
       builder: this.builder,
-      consumerComponents: components,
+      consumerComponents,
       ids: legacyBitIds,
       message,
       editor,
@@ -449,10 +450,11 @@ export class SnappingMain {
     if (!ids) return null;
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
-    const components = await this.loadComponentsForTag(ids);
-    await this.throwForLegacyDependenciesInsideHarmony(components);
+    const consumerComponents = await this.loadComponentsForTag(ids);
+    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
+    const components = await this.workspace.getManyByLegacy(consumerComponents);
     await this.throwForComponentIssues(components, ignoreIssues);
-    this.throwForPendingImport(components);
+    this.throwForPendingImport(consumerComponents);
 
     const { taggedComponents, autoTaggedResults, stagedConfig } = await tagModelComponent({
       workspace: this.workspace,
@@ -460,7 +462,7 @@ export class SnappingMain {
       snapping: this,
       builder: this.builder,
       editor,
-      consumerComponents: components,
+      consumerComponents,
       ids,
       ignoreNewestVersion: false,
       message,
@@ -789,7 +791,7 @@ there are matching among unmodified components thought. consider using --unmodif
     return [...components, ...removedComponents];
   }
 
-  private async throwForComponentIssues(legacyComponents: ConsumerComponent[], ignoreIssues?: string) {
+  private async throwForComponentIssues(components: Component[], ignoreIssues?: string) {
     if (ignoreIssues === '*') {
       // ignore all issues
       return;
@@ -797,10 +799,9 @@ there are matching among unmodified components thought. consider using --unmodif
     const issuesToIgnoreFromFlag = ignoreIssues?.split(',').map((issue) => issue.trim()) || [];
     const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnoreGlobally();
     const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
-    const components = await this.workspace.getManyByLegacy(legacyComponents);
     await this.issues.triggerAddComponentIssues(components, issuesToIgnore);
     this.issues.removeIgnoredIssuesFromComponents(components, issuesToIgnore);
-
+    const legacyComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
     if (!R.isEmpty(componentsWithBlockingIssues)) {
       throw new ComponentsHaveIssues(componentsWithBlockingIssues);
@@ -808,11 +809,12 @@ there are matching among unmodified components thought. consider using --unmodif
   }
 
   private throwForPendingImport(components: ConsumerComponent[]) {
-    const areComponentsMissingFromScope = components
+    const componentsMissingFromScope = components
       .filter((c) => !c.removed)
-      .some((c) => !c.componentFromModel && c.id.hasScope());
-    if (areComponentsMissingFromScope) {
-      throw new ComponentsPendingImport();
+      .filter((c) => !c.componentFromModel && c.id.hasScope())
+      .map((c) => c.id.toString());
+    if (componentsMissingFromScope.length) {
+      throw new ComponentsPendingImport(componentsMissingFromScope);
     }
   }
 
