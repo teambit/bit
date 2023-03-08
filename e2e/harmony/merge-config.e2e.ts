@@ -498,6 +498,7 @@ describe('merge config scenarios', function () {
         });
       });
       describe('when the dep was updated in both, the lane and main so there is a conflict', () => {
+        let afterExport: string;
         before(() => {
           pkgHelper.command.tagAllComponents('--unmodified'); // 0.0.3
           pkgHelper.command.export();
@@ -509,6 +510,7 @@ describe('merge config scenarios', function () {
           helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: { [barPkgName]: '0.0.3' } });
           helper.command.tagAllWithoutBuild();
           helper.command.export();
+          afterExport = helper.scopeHelper.cloneLocalScope();
         });
         describe('when the dep is in workspace.jsonc', () => {
           before(() => {
@@ -532,6 +534,38 @@ describe('merge config scenarios', function () {
           it('bit status should show it as a workspace issue', () => {
             const status = helper.command.statusJson();
             expect(status.workspaceIssues).to.have.lengthOf(1);
+          });
+          describe('resolving the conflict as theirs', () => {
+            before(() => {
+              helper.general.fixMergeConfigConflict('theirs');
+            });
+            it('should install the version from the merge-config file and not from the workspace.jsonc file', () => {
+              helper.command.install();
+              const deps = helper.command.getCompDepsIdsFromData('comp1');
+              expect(deps).to.include(`${barCompName}@0.0.2`);
+              expect(deps).to.not.include(`${barCompName}@0.0.3`);
+            });
+            it('bit status should not show a workspace issue anymore', () => {
+              const status = helper.command.statusJson();
+              expect(status.workspaceIssues).to.have.lengthOf(0);
+            });
+          });
+        });
+        describe('when the dep is not in the workspace.jsonc', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(afterExport);
+            helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: {} });
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+          });
+          it('bit status should not show a workspace issue', () => {
+            const status = helper.command.statusJson();
+            expect(status.workspaceIssues).to.have.lengthOf(0);
+          });
+          it('bit status should show it as a component conflict', () => {
+            const status = helper.command.statusJson();
+            expect(status.componentsWithIssues).to.have.lengthOf(1);
+            expect(status.componentsWithIssues[0].id).to.includes('comp1');
+            expect(status.componentsWithIssues[0].issues[0].type).to.equal(IssuesClasses.MergeConfigHasConflict);
           });
         });
       });
