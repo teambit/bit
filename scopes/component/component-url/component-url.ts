@@ -18,8 +18,9 @@ export type toQueryOptions = toUrlOptions;
 
 function toUrl(id: ComponentID, options: toUrlOptions = {}) {
   const query = queryString.stringify(toQuery(id, options));
+  const domain = window.location.host.startsWith('localhost') ? baseUrl : window.location.origin;
 
-  return `${baseUrl}/${toPathname(id)}${affix('?', query)}`;
+  return `${domain}/${toPathname(id)}${affix('?', query)}`;
 }
 
 function toPathname(id: ComponentID) {
