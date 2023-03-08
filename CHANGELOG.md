@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [[0.1.0] - 2023-03-08](https://github.com/teambit/bit/releases/tag/v0.1.0)
+### New Features
+
+- feat(Schema): allow querying explicitly tagged exports (#7125)
+- feat(import): introduce "--track-only" to only write entries to .bitmap (#7117)
+
+### Changes
+
+- feat(Lane): CLI: create cmd: add note to lane create output if branched off non default lane (#7126)
+- improvement(status): improve the output around the current lane (#7114)
+- fix(remove): block soft-remove main components when on a lane (#7112)
+
+### Performance
+
+- perf(webpack): update sourcemaps for faster builds (#7115)
+
+### Bug Fixes
+
+- fix(WorkspaceDrawer): fix viewing new components on main (#7123)
+- fix(artifacts): support running on snaps (#7116)
+- fix(snap/tag): tag soft-removed components when using --unmodified flag (#7113)
+- fix, show the ids of pending-import in the error message (#7110)
+- fix(soft-remove): mark as removed when the snap/tag was with ignore-issues (#7111)
+- fix(Compare): Compare UI Fixes (#7102)
+- fix, fix error "exists in flattenedEdges but not in flattened" (#7107)
+- fix(lane-list), avoid checking for soft-remove when using --remote (#7099)
+- fix, change a version coming from merge-config from a range to an exact version (#7096)
+
+### Internal
+
+- fix(envs) store envs data for env itself + load envs as aspect from scope (#7124)
+- feat: dedupe peer dependents (#7122)
+- fix(merge-from-scope), push artifacts to original scopes (#7119)
+- change(aspects): resolve (installed) aspects in workspace from its node_modules  (#6901)
+- fix(export): use the Version objects sent to the remote to indicate what was exported (#7109)
+- fix(lane-merge), import missing artifacts before starting the merge process (#7103)
+- fix, avoid adding deps from scope into merge-config (#7100)
+- Workspace: Components Drawer: Local changes to Lane Components (#7072)
+- fix logging when zlib error is coming from the remote (#7097)
+- fix(aspects): return an empty object from a plugin auto generated provider (#7095)
+
 ## [[0.0.1000] - 2023-02-27](https://github.com/teambit/bit/releases/tag/v0.0.1000)
 
 ### New Features
