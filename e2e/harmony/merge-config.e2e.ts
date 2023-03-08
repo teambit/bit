@@ -565,7 +565,7 @@ describe('merge config scenarios', function () {
             const status = helper.command.statusJson();
             expect(status.componentsWithIssues).to.have.lengthOf(1);
             expect(status.componentsWithIssues[0].id).to.includes('comp1');
-            expect(status.componentsWithIssues[0].issues[0].type).to.equal(IssuesClasses.MergeConfigHasConflict);
+            expect(status.componentsWithIssues[0].issues[0].type).to.equal(IssuesClasses.MergeConfigHasConflict.name);
           });
         });
       });
