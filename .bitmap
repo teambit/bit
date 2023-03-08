@@ -181,7 +181,13 @@
         "scope": "teambit.harmony",
         "version": "0.0.1014",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/bit"
+        "rootDir": "scopes/harmony/bit",
+        "nextVersion": {
+          "version": "minor",
+          "message": "bump minor version",
+          "username": "shohamgilad",
+          "email": "shoham.gilad@gmail.com"
+        }
     },
     "bit-custom-aspect": {
         "scope": "teambit.harmony",
