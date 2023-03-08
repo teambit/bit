@@ -1,0 +1,121 @@
+---
+description: A component for in-memory representation and processing of graphs
+labels: ['graph', 'traversal', 'graph algorithms']
+---
+
+Cleargraph is a graph library offering:
+
+- An abstraction over graphs that supports generic data types
+- Traversal over successors and predecessors
+- Use of user-defined filters on nodes and edges information and traversal
+- Strictly-typed implementation
+
+## Getting started
+
+The nodes in the graph are of type `Node<N>`, whose instantiation requires at least the following arguments: `id: string` and `attr: N` which stores the attributes of the node.
+
+The edges of the graph are of type `Edge<E>`, and their instantiation requires the following arguments: `sourceId: string` - the id of the "from" node, `targetId: string` - the id of the "to" node, and `attr: E` on which you can save any attributes of the edge.
+
+When instantiating the graph, extend it into your own specific graph and specify the values of `N` and `E`. In addition, extend classes `Node<N>` and `Edge<E>` with your specific node and edge classes or types. If your Node and Edge require a more sophisticated serialization than JSON.stringify(), you can implement your own `stringify()` method on your Node and Edge, and the graph will use your custom method. Otherwise, it will use its default stringify method.
+
+```typescript
+class Orb {
+  name: string;
+  radius: number;
+  constructor(name: string, radius: number) {
+    this.name = name;
+    this.radius = radius;
+  }
+}
+```
+
+class OrbRelation{
+relationType: string;
+proximity: number;
+constructor(relationType: string, proximity: number){
+this.relationType = relationType;
+this.proximity = proximity;
+}
+}
+
+````
+
+Now use them to create your specific Node and Edge classes by extending the graph's classes, like so:
+
+```ts
+import { Graph, Edge, Node } from '@teambit/graph.cleargraph';
+
+export class OrbGraphNode extends Node<Orb> {};
+export class OrbGraphEdge extends Edge<OrbRelation> {};
+````
+
+And finally create the graph itself by extending cleargraph's Graph class:
+
+```ts
+import { Graph, Edge, Node } from '@teambit/graph.cleargraph';
+
+export class OrbGraph extends Graph<Orb, OrbRelation> {}
+```
+
+Now we can instantiate an OrbGraph:
+
+```ts
+let g = new OrbGraph();
+
+g.setNode(new OrbGraphNode('earth', new Orb('earth', 6371)));
+g.setNode(new OrbGraphNode('moon', new Orb('moon', 1737)));
+g.setNode(new OrbGraphNode('sun', new Orb('sun', 696340)));
+g.setEdge(new OrbGraphEdge('moon', 'earth', new OrbRelation('orbits', 384400)));
+g.setEdge(new OrbGraphEdge('earth', 'sun', new OrbRelation('orbits', 147240000)));
+```
+
+And here are some uses of the graph:
+
+```ts
+g.node('moon');
+// Node {
+//   id: 'moon',
+//   attr: Orb { name: 'moon', radius: 1737 }
+// }
+```
+
+```ts
+g.edge('earth', 'sun');
+// Edge {
+//       sourceId: 'earth',
+//       targetId: 'sun',
+//       attr: OrbRelation {
+//          relationType: 'orbits',
+//          proximity: 147240000 }
+//     }
+```
+
+```ts
+g.succssors('moon'); // returns the nodes the given node points to recursively
+// [
+//    Node {
+//         id: 'earth',
+//         attr: Orb { name: 'earth', radius: 6371 }
+//    }
+// ]
+```
+
+```ts
+g.toposort(); // performs a topological sort on the graph
+// Array(3) [Orb, Orb, Orb]
+// 0:Node { id: 'moon', attr: Orb {name: 'moon',radius: 1737} }
+// 1:Node { id: 'earth', attr: Orb {name: 'earth',radius: 6371} }
+// 2:Node { id: 'sun', attr: Orb {name: 'sun', radius: 696340} }
+```
+
+## License
+
+Apache 2.0 license
+
+## Changelog
+
+### Version 8.0.0
+
+- Constructor and setters now get Node[] and Edge[] where
+  Node objects = `{id: string, attr: <N>}`
+  and Edge objects = `{sourceId: string, targetId: string, attr: <E>}`

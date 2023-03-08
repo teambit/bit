@@ -1,0 +1,47 @@
+{
+  "componentId": {
+    "scope": "teambit.harmony",
+    "name": "harmony",
+    "version": "0.4.6"
+  },
+  "propagate": false,
+  "extensions": {
+    "teambit.pkg/pkg": {
+      "packageJson": {
+        "name": "@teambit/{name}",
+        "private": false,
+        "license": "Apache-2.0",
+        "engines": {
+          "node": ">=12.22.0"
+        },
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/teambit/harmony"
+        },
+        "description": "abstract extension system",
+        "keywords": [
+          "bit",
+          "bit-aspect",
+          "components",
+          "collaboration",
+          "harmony",
+          "aspects",
+          "extensions"
+        ]
+      },
+      "packageManagerPublishArgs": [
+        "--access public"
+      ]
+    },
+    "teambit.component/dev-files": {},
+    "teambit.compositions/compositions": {},
+    "teambit.docs/docs": {},
+    "teambit.envs/envs": {},
+    "teambit.dependencies/dependency-resolver": {},
+    "teambit.pipelines/builder": {},
+    "teambit.compilation/compiler": {},
+    "teambit.harmony/application": {},
+    "teambit.preview/preview": {},
+    "teambit.harmony/node": {}
+  }
+}
