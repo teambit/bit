@@ -16,7 +16,7 @@ export class ExportPersist implements Action<Options, string[]> {
   async execute(scope: Scope, options: Options, authData?: AuthData): Promise<string[]> {
     const objectList = await scope.readObjectsFromPendingDir(options.clientId);
 
-    logger.debugAndAddBreadCrumb('ExportPersist', `going to merge ${objectList.objects.length} objects`);
+    logger.debug(`ExportPersist, going to merge ${objectList.objects.length} objects`);
     const bitIds: BitIds = await saveObjects(scope, objectList);
 
     const componentsIds: string[] = bitIds.map((id) => id.toString());
@@ -28,6 +28,7 @@ export class ExportPersist implements Action<Options, string[]> {
         // let the process continue. we don't want to stop it when onPutHook failed.
       });
     }
+    logger.debug(`ExportPersist, completed successfully, total ${componentsIds.length} components exported`);
     return componentsIds;
   }
 

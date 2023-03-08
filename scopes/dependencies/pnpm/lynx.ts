@@ -199,7 +199,9 @@ export async function install(
   if (options?.rootComponentsForCapsules) {
     readPackage.push(readPackageHookForCapsules as ReadPackageHook);
   }
-  const { allProjects, packagesToBuild, workspacePackages } = groupPkgs(manifestsByPaths);
+  const { allProjects, packagesToBuild, workspacePackages } = groupPkgs(manifestsByPaths, {
+    update: options?.updateAll,
+  });
   const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
   const storeController = await createStoreController({
@@ -215,6 +217,7 @@ export async function install(
   const opts: InstallOptions = {
     allProjects,
     storeDir: storeController.dir,
+    dedupePeerDependents: true,
     dir: rootDir,
     storeController: storeController.ctrl,
     workspacePackages,
@@ -241,7 +244,6 @@ export async function install(
       ignoreMissing: ['*'],
       ...options?.peerDependencyRules,
     },
-    update: options.updateAll,
     depth: options.updateAll ? Infinity : 0,
   };
 
@@ -391,7 +393,7 @@ function readWorkspacePackageHook(pkg: PackageManifest): PackageManifest {
   };
 }
 
-function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>) {
+function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>, opts: { update?: boolean }) {
   const pkgs = Object.entries(manifestsByPaths).map(([dir, manifest]) => ({ dir, manifest }));
   const { graph } = createPkgGraph(pkgs);
   const chunks = sortPackages(graph as any);
@@ -422,6 +424,7 @@ function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>) {
       packagesToBuild.push({
         rootDir,
         mutation: 'install',
+        update: opts.update,
       });
       if (manifest.name) {
         workspacePackages[manifest.name] = workspacePackages[manifest.name] || {};

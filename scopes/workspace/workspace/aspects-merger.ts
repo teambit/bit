@@ -6,7 +6,7 @@ import { EnvsAspect } from '@teambit/envs';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { partition, mergeWith, difference, merge } from 'lodash';
+import { partition, mergeWith, merge } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';
 import { MergeConflictFile } from './merge-conflict-file';
@@ -313,23 +313,10 @@ export class AspectsMerger {
     originatedFrom?: ComponentID,
     throwOnError = false
   ): Promise<void> {
-    const extensionsIdsP = extensions.map(async (extensionEntry) => {
-      // Core extension
-      if (!extensionEntry.extensionId) {
-        return extensionEntry.stringId as string;
-      }
-
-      const id = await this.workspace.resolveComponentId(extensionEntry.extensionId);
-      // return this.resolveComponentId(extensionEntry.extensionId);
-      return id.toString();
-    });
-    const extensionsIds: string[] = await Promise.all(extensionsIdsP);
-    const loadedExtensions = this.harmony.extensionsIds;
-    const extensionsToLoad = difference(extensionsIds, loadedExtensions);
-    if (!extensionsToLoad.length) return;
-    await this.workspace.loadAspects(extensionsToLoad, throwOnError, originatedFrom?.toString());
+    const workspaceAspectsLoader = this.workspace.getWorkspaceAspectsLoader();
+    return workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, throwOnError);
   }
-
+  
   /**
    * This will mutate the entries with extensionId prop to have resolved legacy id
    * This should be worked on the extension data list not the new aspect list

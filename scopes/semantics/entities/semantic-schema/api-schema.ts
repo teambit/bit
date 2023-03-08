@@ -15,6 +15,7 @@ import {
 import { Location, SchemaNode } from './schema-node';
 import { schemaObjArrayToInstances, schemaObjToInstance } from './class-transformers';
 import { componentIdTransformer } from './class-transformers/comp-id-transformer';
+import { TagName } from './schemas/docs/tag';
 
 export class APISchema extends SchemaNode {
   @Transform(schemaObjToInstance)
@@ -26,11 +27,20 @@ export class APISchema extends SchemaNode {
   @Transform(componentIdTransformer)
   readonly componentId: ComponentID;
 
+  @Transform(schemaObjArrayToInstances)
+  readonly taggedModuleExports: SchemaNode[];
+
   constructor(readonly location: Location, module: ModuleSchema, internals: ModuleSchema[], componentId: ComponentID) {
     super();
     this.module = module;
     this.internals = internals;
     this.componentId = componentId;
+    this.taggedModuleExports = this.listTaggedExports(module);
+  }
+
+  listTaggedExports(module?: ModuleSchema) {
+    if (!module) return [];
+    return module.exports.filter((e) => e.doc?.hasTag(TagName.exports));
   }
 
   toString() {

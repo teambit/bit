@@ -1,5 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { LanesAspect, LanesMain } from '@teambit/lanes';
 import MergingAspect, {
   MergingMain,
@@ -19,11 +20,10 @@ import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/sc
 import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
-import { getRefsFromExtensions } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { compact, uniq } from 'lodash';
+import { compact } from 'lodash';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitObject } from '@teambit/legacy/dist/scope/objects';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
@@ -56,7 +56,8 @@ export class MergeLanesMain {
     private logger: Logger,
     private remove: RemoveMain,
     private scope: ScopeMain,
-    private exporter: ExportMain
+    private exporter: ExportMain,
+    private importer: ImporterMain
   ) {}
 
   async mergeLane(
@@ -100,7 +101,7 @@ export class MergeLanesMain {
     const getOtherLane = async () => {
       if (isDefaultLane) {
         if (!skipFetch) {
-          await this.lanes.importer.importObjectsFromMainIfExist(currentLane?.toBitIds().toVersionLatest() || []);
+          await this.importer.importObjectsFromMainIfExist(currentLane?.toBitIds().toVersionLatest() || []);
         }
         return undefined;
       }
@@ -110,16 +111,7 @@ export class MergeLanesMain {
         // don't assign `lane` to the result of this command. otherwise, if you have local snaps, it'll ignore them and use the remote-lane.
         const otherLane = await this.lanes.fetchLaneWithItsComponents(otherLaneId);
 
-        // get all artifacts
-        const allIds = otherLane.toBitIds();
-        const laneComps = await consumer.scope.getManyConsumerComponents(allIds);
-        const allRefs = laneComps.map((comp) => getRefsFromExtensions(comp.extensions)).flat();
-        const allRefsUniq = uniq(allRefs.map((r) => r.toString()));
-        try {
-          await consumer.scope.scopeImporter.importManyObjects({ [otherLaneId.scope]: allRefsUniq });
-        } catch (err) {
-          this.logger.error(`failed fetching artifacts for lane ${otherLaneId.toString()}`, err);
-        }
+        await this.importer.importHeadArtifactsFromLane(otherLane, true);
 
         lane = await consumer.scope.loadLane(otherLaneId);
       }
@@ -300,6 +292,7 @@ export class MergeLanesMain {
       ignoreMissingHead: true,
       lane: toLaneObj,
     });
+    await this.importer.importHeadArtifactsFromLane(fromLaneObj, true);
     await this.throwIfNotUpToDate(fromLaneId, toLaneId);
     const repo = this.scope.legacyScope.objects;
     // loop through all components, make sure they're all ahead of main (it might not be on main yet).
@@ -359,6 +352,9 @@ export class MergeLanesMain {
         // no need to export anything else other than the head. the normal calculation of what to export won't apply here
         // as it is done from the scope.
         exportHeadsOnly: shouldSquash,
+        // all artifacts must be pushed. they're all considered "external" in this case, because it's running from a
+        // bare-scope, but we don't want to ignore them, otherwise, they'll be missing from the component-scopes.
+        ignoreMissingExternalArtifacts: false,
       });
       exportedIds = exported.map((id) => id.toString());
     }
@@ -388,10 +384,11 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
     RemoveAspect,
     ScopeAspect,
     ExportAspect,
+    ImporterAspect,
   ];
   static runtime = MainRuntime;
 
-  static async provider([lanes, cli, workspace, merging, loggerMain, remove, scope, exporter]: [
+  static async provider([lanes, cli, workspace, merging, loggerMain, remove, scope, exporter, importer]: [
     LanesMain,
     CLIMain,
     Workspace,
@@ -399,11 +396,12 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
     LoggerMain,
     RemoveMain,
     ScopeMain,
-    ExportMain
+    ExportMain,
+    ImporterMain
   ]) {
     const logger = loggerMain.createLogger(MergeLanesAspect.id);
     const lanesCommand = cli.getCommand('lane');
-    const mergeLanesMain = new MergeLanesMain(workspace, merging, lanes, logger, remove, scope, exporter);
+    const mergeLanesMain = new MergeLanesMain(workspace, merging, lanes, logger, remove, scope, exporter, importer);
     lanesCommand?.commands?.push(new MergeLaneCmd(mergeLanesMain));
     cli.register(new MergeLaneFromScopeCmd(mergeLanesMain));
     return mergeLanesMain;
