@@ -50,10 +50,7 @@ export async function removeLocalVersion(
     });
   }
 
-  const allVersionsObjects = await Promise.all(
-    versionsToRemoveStr.map((localVer) => component.loadVersion(localVer, scope.objects))
-  );
-  scope.sources.removeComponentVersions(component, versionsToRemoveStr, allVersionsObjects, lane, head);
+  await scope.sources.removeComponentVersions(component, versionsToRemove, versionsToRemoveStr, lane, head);
 
   return { id, versions: versionsToRemoveStr, component };
 }
@@ -77,7 +74,7 @@ export async function removeLocalVersionsForMultipleComponents(
   scope: Scope
 ) {
   if (!componentsToUntag.length) {
-    throw new GeneralError(`no components found to untag on your workspace`);
+    throw new GeneralError(`no components found to reset on your workspace`);
   }
   // if only head is removed, there is risk of deleting dependencies version without their dependents.
   if (!force && head) {

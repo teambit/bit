@@ -803,9 +803,9 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   removeVersion(version: string): Ref {
     const objectRef = this.getRef(version);
     if (!objectRef) throw new Error(`removeVersion failed finding version ${version}`);
-    if (objectRef) delete this.versions[version];
+    delete this.versions[version];
     if (this.state.versions && this.state.versions[version]) delete this.state.versions[version];
-    return objectRef || Ref.from(version);
+    return objectRef;
   }
 
   toComponentVersion(versionStr?: string): ComponentVersion {
