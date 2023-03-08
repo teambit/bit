@@ -206,6 +206,7 @@ a lane created from another lane has all the components of the original lane.`;
   constructor(private lanes: LanesMain) {}
 
   async report([name]: [string], createLaneOptions: CreateLaneOptions): Promise<string> {
+    const currentLane = await this.lanes.getCurrentLane();
     const result = await this.lanes.createLane(name, createLaneOptions);
     const remoteScopeOrDefaultScope = createLaneOptions.remoteScope
       ? `the remote scope ${chalk.bold(createLaneOptions.remoteScope)}`
@@ -213,7 +214,9 @@ a lane created from another lane has all the components of the original lane.`;
           result.laneId.scope
         )}. to change it, please run "bit lane change-scope" command`;
     const title = chalk.green(
-      `successfully added and checked out to a new lane ${chalk.bold(result.alias || result.laneId.name)}`
+      `successfully added and checked out to a new lane ${chalk.bold(result.alias || result.laneId.name)}
+      ${currentLane !== null ? chalk.yellow(`\nnote - your new lane will be based on lane ${currentLane.name}`) : ''}
+      `
     );
     const remoteScopeOutput = `this lane will be exported to ${remoteScopeOrDefaultScope}`;
     return `${title}\n${remoteScopeOutput}`;
