@@ -12,13 +12,15 @@ export const ComponentUrl = {
 
 export type toUrlOptions = {
   includeVersion?: boolean;
+  useLocationOrigin?: boolean;
 };
 
 export type toQueryOptions = toUrlOptions;
 
 function toUrl(id: ComponentID, options: toUrlOptions = {}) {
   const query = queryString.stringify(toQuery(id, options));
-  const domain = window.location.host.startsWith('localhost') ? baseUrl : window.location.origin;
+  const { useLocationOrigin } = options;
+  const domain = useLocationOrigin ? window.location.origin : baseUrl;
 
   return `${domain}/${toPathname(id)}${affix('?', query)}`;
 }
