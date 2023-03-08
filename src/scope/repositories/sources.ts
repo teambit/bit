@@ -333,13 +333,14 @@ please either remove the component (bit remove) or remove the lane.`);
         );
       }
     });
-    if (componentHadHead && !component.hasHead() && component.versionArray.length) {
-      throw new Error(`fatal: "head" prop was removed from "${component.id()}", although it has versions`);
-    }
     versions.map((version) => {
       const ref = component.removeVersion(version);
       return ref;
     });
+    if (componentHadHead && !component.hasHead() && component.versionArray.length) {
+      throw new Error(`fatal: "head" prop was removed from "${component.id()}", although it has versions`);
+    }
+
     if (component.versionArray.length || component.hasHead() || component.laneHeadLocal) {
       objectRepo.add(component); // add the modified component object
     } else {
