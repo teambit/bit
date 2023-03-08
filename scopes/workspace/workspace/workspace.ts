@@ -1034,6 +1034,19 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return { data, conflict };
   }
 
+  getWorkspaceIssues(): Error[] {
+    const errors: Error[] = [];
+    const configMergeFile = this.getConflictMergeFile();
+    try {
+      configMergeFile.getConflictParsed('WORKSPACE');
+    } catch (err) {
+      if (err instanceof MergeConfigConflict) {
+        errors.push(err);
+      }
+    }
+    return errors;
+  }
+
   async listComponentsDuringMerge(): Promise<ComponentID[]> {
     const unmergedComps = this.scope.legacyScope.objects.unmergedComponents.getComponents();
     const bitIds = unmergedComps.map((u) => new BitId(u.id));
