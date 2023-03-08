@@ -74,7 +74,7 @@ export async function removeLocalVersionsForMultipleComponents(
   scope: Scope
 ) {
   if (!componentsToUntag.length) {
-    throw new GeneralError(`no components found to untag on your workspace`);
+    throw new GeneralError(`no components found to reset on your workspace`);
   }
   // if only head is removed, there is risk of deleting dependencies version without their dependents.
   if (!force && head) {
