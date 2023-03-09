@@ -349,15 +349,14 @@ once done, to continue working, please run "bit cc"`
    * the goal is to check whether a given id with the given version exits on the given lane or it's on main.
    * it's needed for importing artifacts to know whether the artifact could be found on the origin scope or on the
    * lane-scope
-   *
-   * here is another complication.
-   * it's possible that a snap on a lane was later merged+tagged on the cloud, which the tag pipeline was running
-   * on the same snap hash that exists on the lane. therefore, the pkg artifact exists only on main not on the lane.
-   * so we prefer to get it from main is possible, even when it exits on both.
    */
   async isIdOnLane(id: BitId, lane?: Lane | null): Promise<boolean | null> {
     if (!lane) return false;
 
+    // it's possible that main was merged to the lane, so the ref in the lane object is actually a tag.
+    // in which case, we prefer to go to main instead of the lane.
+    // for some reason (needs to check why) the tag-artifacts which got created using merge+tag from-scope
+    // exist only on main and not on the lane-scope.
     const component = await this.getModelComponent(id);
     if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
     if (component.head.toString() === id.version) return false; // it's on main
