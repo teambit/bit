@@ -3,6 +3,7 @@ import * as pathLib from 'path';
 import R from 'ramda';
 import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
+import { isTag } from '@teambit/component-version';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -351,16 +352,24 @@ once done, to continue working, please run "bit cc"`
    */
   async isIdOnLane(id: BitId, lane?: Lane | null): Promise<boolean | null> {
     if (!lane) return false;
+
+    // it's possible that main was merged to the lane, so the ref in the lane object is actually a tag.
+    // in which case, we prefer to go to main instead of the lane.
+    // for some reason (needs to check why) the tag-artifacts which got created using merge+tag from-scope
+    // exist only on main and not on the lane-scope.
+    const component = await this.getModelComponent(id);
+    if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
+    if (component.head.toString() === id.version) return false; // it's on main
+    if (isTag(id.version)) return false; // tags can be on main only
+
     const laneIds = lane.toBitIds();
     if (laneIds.has(id)) return true; // in the lane with the same version
     const laneIdWithDifferentVersion = laneIds.searchWithoutVersion(id);
     if (!laneIdWithDifferentVersion) return false; // not in the lane at all
+
     // component is in the lane object but with a different version.
     // we have to figure out whether the current version exists on the lane or not.
-    const component = await this.getModelComponent(id);
-    if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
-    if (component.head.toString() === id.version) return false; // it's on main
-    // get the diverge between main and the lane. (in this context, main is "remote", lane is "local").
+    // get the diverge between main and the lane.
     const divergeData = await getDivergeData({
       repo: this.objects,
       modelComponent: component,
