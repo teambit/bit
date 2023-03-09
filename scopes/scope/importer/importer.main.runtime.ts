@@ -14,7 +14,10 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
-import { getRefsFromExtensions } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import {
+  getRefsFromExtensions,
+  importAllArtifacts,
+} from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
@@ -89,10 +92,8 @@ export class ImporterMain {
   async importHeadArtifactsFromLane(lane: Lane, throwIfMissing = false) {
     const ids = lane.toBitIds();
     const laneComps = await this.scope.legacyScope.getManyConsumerComponents(ids);
-    const allRefs = laneComps.map((comp) => getRefsFromExtensions(comp.extensions)).flat();
-    const allRefsUniq = uniq(allRefs.map((r) => r.toString()));
     try {
-      await this.scope.legacyScope.scopeImporter.importManyObjects({ [lane.scope]: allRefsUniq });
+      await importAllArtifacts(this.scope.legacyScope, laneComps, lane);
     } catch (err) {
       this.logger.error(`failed fetching artifacts for lane ${lane.id.toString()}`, err);
       if (throwIfMissing) throw err;

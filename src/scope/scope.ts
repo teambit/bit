@@ -51,6 +51,7 @@ import ClientIdInUse from './exceptions/client-id-in-use';
 import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
 import { getDivergeData } from './component-ops/get-diverge-data';
 import { StagedSnaps } from './staged-snaps';
+import { isTag } from '@teambit/component-version';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -348,19 +349,28 @@ once done, to continue working, please run "bit cc"`
    * the goal is to check whether a given id with the given version exits on the given lane or it's on main.
    * it's needed for importing artifacts to know whether the artifact could be found on the origin scope or on the
    * lane-scope
+   *
+   * here is another complication.
+   * it's possible that a snap on a lane was later merged+tagged on the cloud, which the tag pipeline was running
+   * on the same snap hash that exists on the lane. therefore, the pkg artifact exists only on main not on the lane.
+   * so we prefer to get it from main is possible, even when it exits on both.
    */
   async isIdOnLane(id: BitId, lane?: Lane | null): Promise<boolean | null> {
     if (!lane) return false;
+
+    const component = await this.getModelComponent(id);
+    if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
+    if (component.head.toString() === id.version) return false; // it's on main
+    if (isTag(id.version)) return false; // tags can be on main only
+
     const laneIds = lane.toBitIds();
     if (laneIds.has(id)) return true; // in the lane with the same version
     const laneIdWithDifferentVersion = laneIds.searchWithoutVersion(id);
     if (!laneIdWithDifferentVersion) return false; // not in the lane at all
+
     // component is in the lane object but with a different version.
     // we have to figure out whether the current version exists on the lane or not.
-    const component = await this.getModelComponent(id);
-    if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
-    if (component.head.toString() === id.version) return false; // it's on main
-    // get the diverge between main and the lane. (in this context, main is "remote", lane is "local").
+    // get the diverge between main and the lane.
     const divergeData = await getDivergeData({
       repo: this.objects,
       modelComponent: component,
