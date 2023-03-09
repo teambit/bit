@@ -196,7 +196,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const aspectIds = idsWithoutCore.filter((id) => !id.startsWith('file://'));
     // TODO: use diff instead of filter twice
     const localAspects = ids.filter((id) => id.startsWith('file://'));
-    this.localAspects = this.localAspects.concat(localAspects);
+    this.scope.localAspects = this.scope.localAspects.concat(localAspects);
     // load local aspects for debugging purposes.
     await this.loadAspectFromPath(localAspects);
     const componentIds = await this.scope.resolveMultipleComponentIds(aspectIds);
@@ -455,12 +455,13 @@ needed-for: ${neededFor || '<unknown>'}`);
     }
 
     const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
-      return !this.localAspects.find((localAspect) => {
+      return !this.scope.localAspects.find((localAspect) => {
         return localAspect.includes(aspectId.fullName.replace('/', '.'));
       });
     });
+    
     const userAspectsDefs = await this.resolveUserAspects(runtimeName, withoutLocalAspects);
-    const localResolved = await this.resolveLocalAspects(this.localAspects, runtimeName);
+    const localResolved = await this.resolveLocalAspects(this.scope.localAspects, runtimeName);
     const coreAspectsDefs = await this.aspectLoader.getCoreAspectDefs(runtimeName);
 
     const allDefs = userAspectsDefs.concat(coreAspectsDefs).concat(localResolved);

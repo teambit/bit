@@ -135,6 +135,8 @@ export class ScopeMain implements ComponentFactory {
 
   priority?: boolean | undefined;
 
+  localAspects: string[] = [];
+
   /**
    * name of the scope
    */
