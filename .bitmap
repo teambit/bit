@@ -849,12 +849,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/modules/prerenderer-puppeteer"
     },
-    "modules/render-template": {
-        "scope": "teambit.html",
-        "version": "1.0.3",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/html/modules/render-template"
-    },
     "modules/requireable-component": {
         "scope": "teambit.harmony",
         "version": "0.0.491",
