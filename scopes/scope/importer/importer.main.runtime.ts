@@ -2,7 +2,6 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { CommunityAspect } from '@teambit/community';
-import { uniq } from 'lodash';
 import type { CommunityMain } from '@teambit/community';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -14,10 +13,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
-import {
-  getRefsFromExtensions,
-  importAllArtifacts,
-} from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { importAllArtifacts } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BitIds } from '@teambit/legacy/dist/bit-id';

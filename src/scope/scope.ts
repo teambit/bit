@@ -3,6 +3,7 @@ import * as pathLib from 'path';
 import R from 'ramda';
 import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
+import { isTag } from '@teambit/component-version';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -51,7 +52,6 @@ import ClientIdInUse from './exceptions/client-id-in-use';
 import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
 import { getDivergeData } from './component-ops/get-diverge-data';
 import { StagedSnaps } from './staged-snaps';
-import { isTag } from '@teambit/component-version';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
