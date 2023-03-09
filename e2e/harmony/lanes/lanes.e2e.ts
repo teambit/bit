@@ -726,10 +726,12 @@ describe('bit lane command', function () {
       });
     });
     describe('merging from scope', () => {
+      let afterExport: string;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.scopeHelper.getClonedRemoteScope(remoteScope);
         helper.command.export();
+        afterExport = helper.scopeHelper.cloneLocalScope();
         const bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
         helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
         helper.scopeHelper.addRemoteScope(anotherRemotePath, bareMerge.scopePath);
@@ -740,6 +742,36 @@ describe('bit lane command', function () {
         const pkgArtifacts = artifacts.find((a) => a.generatedBy === 'teambit.pkg/pkg');
         const hash = pkgArtifacts.files[0].file;
         expect(() => helper.command.catObject(hash, false, anotherRemotePath)).to.not.throw();
+      });
+      describe('tagging from scope', () => {
+        before(() => {
+          const bareTag = helper.scopeHelper.getNewBareScope('-bare-tag');
+          helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+          helper.scopeHelper.addRemoteScope(anotherRemotePath, bareTag.scopePath);
+          const data = [
+            {
+              componentId: `${helper.scopes.remote}/bar1`,
+            },
+            {
+              componentId: `${anotherRemote}/bar2`,
+            },
+          ];
+          helper.command.tagFromScope(bareTag.scopePath, data, '--push');
+        });
+        describe('merging main into the lane', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(afterExport);
+            helper.command.mergeLane('main', '-x');
+            helper.command.export();
+            helper.scopeHelper.getClonedLocalScope(afterExport);
+            helper.command.switchLocalLane('main', '-x');
+            helper.command.import();
+            helper.command.mergeLane('dev');
+          });
+          it('should merge successfully without throwing errors about missing objects', () => {
+            expect(() => helper.command.mergeLane('dev')).to.not.throw();
+          });
+        });
       });
     });
   });
