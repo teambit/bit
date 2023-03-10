@@ -123,6 +123,14 @@ export default class Component extends BitObject {
    * when checked out to a lane, this prop is either Ref or null. otherwise (when on main), this prop is undefined.
    */
   laneHeadRemote?: Ref | null;
+
+  /**
+   * when checked out to a lane, calculate what should be the head on the remote.
+   * if the laneHeadRemote is null, for example, when the lane is new, then used the the lane it was forked from.
+   * it no head is found on the lane/forked, then use the component.head.
+   */
+  calculatedRemoteHeadWhenOnLane?: Ref | null;
+
   laneId?: LaneId; // doesn't get saved in the scope.
   laneDataIsPopulated = false; // doesn't get saved in the scope, used to improve performance of loading the lane data
   schema: string | undefined;
@@ -280,7 +288,7 @@ export default class Component extends BitObject {
    */
   async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
     if (!this.divergeData || !fromCache) {
-      const remoteHead = (this.laneId ? this.laneHeadRemote : this.remoteHead) || null;
+      const remoteHead = (this.laneId ? this.calculatedRemoteHeadWhenOnLane : this.remoteHead) || null;
       this.divergeData = await getDivergeData({
         repo,
         modelComponent: this,
@@ -311,7 +319,12 @@ export default class Component extends BitObject {
         const remoteToCheck = getRemoteToCheck();
         // if no remote-ref was found, because it's checked out to a lane, it's safe to assume that
         // this.head should be on the original-remote. hence, FetchMissingHistory will retrieve it on lane-remote
-        this.laneHeadRemote = (await repo.remoteLanes.getRef(remoteToCheck, this.toBitId())) || this.head;
+        const remoteRef = await repo.remoteLanes.getRef(remoteToCheck, this.toBitId());
+        this.calculatedRemoteHeadWhenOnLane = remoteRef || this.head;
+
+        this.laneHeadRemote = remoteToCheck.isEqual(lane.toLaneId())
+          ? remoteRef
+          : await repo.remoteLanes.getRef(lane.toLaneId(), this.toBitId());
       }
       // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
       this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
@@ -396,6 +409,12 @@ export default class Component extends BitObject {
     }
 
     // either a user is on main or a lane, check whether the remote is ahead of the local
+    if (this.laneId && !this.laneHeadRemote) {
+      // when on a lane, setDivergeData is using the `this.calculatedRemoteHeadWhenOnLane`,
+      // which takes into account main-head and forked-head. here, we don't want this. we care only about the
+      // remote-lane head.
+      return latestLocally;
+    }
     await this.setDivergeData(repo, false);
     const divergeData = this.getDivergeData();
     return divergeData.isTargetAhead() ? remoteHead.toString() : latestLocally;
@@ -415,7 +434,7 @@ export default class Component extends BitObject {
   isLatestGreaterThan(version: string | null | undefined): boolean {
     if (!version) throw TypeError('isLatestGreaterThan expect to get a Version');
     const latest = this.getHeadRegardlessOfLaneAsTagOrHash(true);
-    if (this.isEmpty() && !this.laneHeadRemote) {
+    if (this.isEmpty() && !this.calculatedRemoteHeadWhenOnLane) {
       return false; // in case a snap was created on another lane
     }
     if (isTag(latest) && isTag(version)) {
