@@ -2,7 +2,6 @@ import React from 'react';
 import flatten from 'lodash.flatten';
 import copy from 'copy-to-clipboard';
 import type { RouteProps } from 'react-router-dom';
-import * as semver from 'semver';
 import type { LinkProps } from '@teambit/base-react.navigation.link';
 import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
@@ -16,6 +15,7 @@ import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import { MenuItem, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { Import } from '@teambit/ui-foundation.ui.use-box.menu';
+import { snapToSemver } from '@teambit/component-package-version';
 import { AspectSection } from './aspect.section';
 import { ComponentAspect } from './component.aspect';
 import { ComponentModel } from './ui';
@@ -80,8 +80,7 @@ export class ComponentUI {
   private activeComponent?: ComponentModel;
 
   formatToInstallableVersion(version: string) {
-    if (semver.valid(version)) return version;
-    return `0.0.0-${version}`;
+    return snapToSemver(version);
   }
 
   private copyNpmId = () => {
