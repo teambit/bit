@@ -10,16 +10,20 @@ export class PnpmUI {
   static dependencies = [ComponentAspect];
 
   static async provider([componentUI]: [ComponentUI]) {
-    const pnpm = new PnpmUI();
+    const pnpm = new PnpmUI(componentUI);
     componentUI.registerConsumeMethod(pnpm.consumeMethod);
     return pnpm;
   }
+
+  constructor(private compUI: ComponentUI) {}
 
   private consumeMethod: ConsumePlugin = (comp, options) => {
     if (options?.currentLane) return undefined;
 
     const registry = comp.packageName.split('/')[0];
-    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
+    const packageVersion =
+      comp.version === comp.latest ? '' : `@${this.compUI.formatToInstallableVersion(comp.version)}`;
+
     return {
       Title: <img style={{ height: '16px', marginTop: '-2px' }} src="https://static.bit.dev/brands/pnpm.svg" />,
       Component: (

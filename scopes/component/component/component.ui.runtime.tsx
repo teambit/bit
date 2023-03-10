@@ -2,7 +2,7 @@ import React from 'react';
 import flatten from 'lodash.flatten';
 import copy from 'copy-to-clipboard';
 import type { RouteProps } from 'react-router-dom';
-
+import * as semver from 'semver';
 import type { LinkProps } from '@teambit/base-react.navigation.link';
 import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
@@ -79,11 +79,16 @@ export class ComponentUI {
    */
   private activeComponent?: ComponentModel;
 
+  formatToInstallableVersion(version: string) {
+    if (semver.valid(version)) return version;
+    return `0.0.0-${version}`;
+  }
+
   private copyNpmId = () => {
     const packageName = this.activeComponent?.packageName;
     if (packageName) {
       const version = this.activeComponent?.id.version;
-      const versionString = version ? `@${version}` : '';
+      const versionString = version ? `@${this.formatToInstallableVersion(version)}` : '';
       copy(`${packageName}${versionString}`);
     }
   };
@@ -136,7 +141,7 @@ export class ComponentUI {
   ];
 
   private bitMethod: ConsumePlugin = (comp, options) => {
-    const version = comp.version === comp.latest ? '' : `@${comp.version}`;
+    const version = comp.version === comp.latest ? '' : `@${this.formatToInstallableVersion(comp.version)}`;
     return {
       Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
       Component: (
