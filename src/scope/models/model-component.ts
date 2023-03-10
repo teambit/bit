@@ -309,26 +309,27 @@ export default class Component extends BitObject {
   async populateLocalAndRemoteHeads(repo: Repository, lane: Lane | null) {
     this.setLaneHeadLocal(lane);
     if (lane) this.laneId = lane.toLaneId();
-    if (this.scope) {
-      if (lane) {
-        const getRemoteToCheck = () => {
-          if (!lane.isNew) return lane.toLaneId();
-          if (lane.forkedFrom) return lane.forkedFrom;
-          return LaneId.from(DEFAULT_LANE, this.scope as string);
-        };
-        const remoteToCheck = getRemoteToCheck();
-        // if no remote-ref was found, because it's checked out to a lane, it's safe to assume that
-        // this.head should be on the original-remote. hence, FetchMissingHistory will retrieve it on lane-remote
-        const remoteRef = await repo.remoteLanes.getRef(remoteToCheck, this.toBitId());
-        this.calculatedRemoteHeadWhenOnLane = remoteRef || this.head;
-
-        this.laneHeadRemote = remoteToCheck.isEqual(lane.toLaneId())
-          ? remoteRef
-          : await repo.remoteLanes.getRef(lane.toLaneId(), this.toBitId());
-      }
-      // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
-      this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
+    if (!this.scope) {
+      return; // no remote to update. it's local.
     }
+    this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
+    if (!lane) {
+      return;
+    }
+    this.laneHeadRemote = lane.isNew ? null : await repo.remoteLanes.getRef(lane.toLaneId(), this.toBitId());
+
+    const calculateRemote = async () => {
+      if (this.laneHeadRemote) return this.laneHeadRemote;
+      if (lane.isNew && lane.forkedFrom) {
+        const headFromFork = await repo.remoteLanes.getRef(lane.forkedFrom, this.toBitId());
+        if (headFromFork) return headFromFork;
+      }
+      // if no remote-ref was found, because it's checked out to a lane, it's safe to assume that
+      // this.head should be on the original-remote. hence, FetchMissingHistory will retrieve it on lane-remote
+      return this.remoteHead || this.head;
+    };
+
+    this.calculatedRemoteHeadWhenOnLane = await calculateRemote();
   }
 
   setLaneHeadLocal(lane: Lane | null) {
