@@ -19,7 +19,7 @@ import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
-import { BitId } from '@teambit/legacy-bit-id';
+import { BitId, InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { compact } from 'lodash';
@@ -324,6 +324,13 @@ export class LanesMain {
     const lane = await this.loadLane(laneId);
     if (!lane) {
       throw new BitError(`unable to find a local lane "${laneName}"`);
+    }
+    if (!lane.isNew) {
+      throw new BitError(`changing lane scope-name is allowed for new lanes only. this lane has been exported already.
+please create a new lane instead, which will include all components of this lane`);
+    }
+    if (!isValidScopeName(remoteScope)) {
+      throw new InvalidScopeName(remoteScope);
     }
     const remoteScopeBefore = lane.scope;
     lane.scope = remoteScope;

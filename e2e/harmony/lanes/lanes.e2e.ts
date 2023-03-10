@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
+import { InvalidScopeName } from '@teambit/legacy-bit-id';
 import path from 'path';
 import { statusWorkspaceIsCleanMsg, AUTO_SNAPPED_MSG, IMPORT_PENDING_MSG } from '../../../src/constants';
 import { LANE_KEY } from '../../../src/consumer/bit-map/bit-map';
@@ -1427,6 +1428,34 @@ describe('bit lane command', function () {
     });
     it('bit export should not throw', () => {
       expect(() => helper.command.export()).to.not.throw();
+    });
+  });
+  describe('change-scope', () => {
+    describe('when the lane is exported', () => {
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.command.createLane();
+        helper.fixtures.populateComponents(1, false);
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.export();
+      });
+      it('should block the rename', () => {
+        expect(() => helper.command.changeLaneScope('dev', 'new-scope')).to.throw(
+          'changing lane scope-name is allowed for new lanes only'
+        );
+      });
+    });
+    describe('when the scope-name is invalid', () => {
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.command.createLane();
+        helper.fixtures.populateComponents(1, false);
+      });
+      it('should throw InvalidScopeName error', () => {
+        const err = new InvalidScopeName('invalid.scope.name');
+        const cmd = () => helper.command.changeLaneScope('dev', 'invalid.scope.name');
+        helper.general.expectToThrow(cmd, err);
+      });
     });
   });
 });
