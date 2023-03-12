@@ -451,6 +451,7 @@ async function addLogToComponents(
         );
       }
       currentLog.message = msgFromEditor || message || currentLog.message;
+      currentLog.date = Date.now().toString();
       return currentLog;
     }
 

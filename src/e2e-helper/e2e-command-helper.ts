@@ -201,6 +201,9 @@ export default class CommandHelper {
   removeComponent(id: string, flags = '') {
     return this.runCmd(`bit remove ${id} --silent ${flags}`);
   }
+  softRemoveComponent(id: string, flags = '') {
+    return this.runCmd(`bit remove ${id} --silent --soft ${flags}`);
+  }
   deprecateComponent(id: string, flags = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }

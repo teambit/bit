@@ -10,16 +10,20 @@ export class YarnUI {
   static dependencies = [ComponentAspect];
 
   static async provider([componentUI]: [ComponentUI]) {
-    const yarn = new YarnUI();
+    const yarn = new YarnUI(componentUI);
     componentUI.registerConsumeMethod(yarn.consumeMethod);
     return yarn;
   }
+
+  constructor(private compUI: ComponentUI) {}
 
   private consumeMethod: ConsumePlugin = (comp, options) => {
     if (options?.currentLane) return undefined;
 
     const registry = comp.packageName.split('/')[0];
-    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
+    const packageVersion =
+      comp.version === comp.latest ? '' : `@${this.compUI.formatToInstallableVersion(comp.version)}`;
+
     return {
       Title: (
         <img style={{ height: '17px', paddingTop: '4px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />

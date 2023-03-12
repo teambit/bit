@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
+import { InvalidScopeName } from '@teambit/legacy-bit-id';
 import path from 'path';
 import { statusWorkspaceIsCleanMsg, AUTO_SNAPPED_MSG, IMPORT_PENDING_MSG } from '../../../src/constants';
 import { LANE_KEY } from '../../../src/consumer/bit-map/bit-map';
@@ -726,10 +727,12 @@ describe('bit lane command', function () {
       });
     });
     describe('merging from scope', () => {
+      let afterExport: string;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.scopeHelper.getClonedRemoteScope(remoteScope);
         helper.command.export();
+        afterExport = helper.scopeHelper.cloneLocalScope();
         const bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
         helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
         helper.scopeHelper.addRemoteScope(anotherRemotePath, bareMerge.scopePath);
@@ -740,6 +743,36 @@ describe('bit lane command', function () {
         const pkgArtifacts = artifacts.find((a) => a.generatedBy === 'teambit.pkg/pkg');
         const hash = pkgArtifacts.files[0].file;
         expect(() => helper.command.catObject(hash, false, anotherRemotePath)).to.not.throw();
+      });
+      describe('tagging from scope', () => {
+        before(() => {
+          const bareTag = helper.scopeHelper.getNewBareScope('-bare-tag');
+          helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+          helper.scopeHelper.addRemoteScope(anotherRemotePath, bareTag.scopePath);
+          const data = [
+            {
+              componentId: `${helper.scopes.remote}/bar1`,
+            },
+            {
+              componentId: `${anotherRemote}/bar2`,
+            },
+          ];
+          helper.command.tagFromScope(bareTag.scopePath, data, '--push');
+        });
+        describe('merging main into the lane', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(afterExport);
+            helper.command.mergeLane('main', '-x');
+            helper.command.export();
+            helper.scopeHelper.getClonedLocalScope(afterExport);
+            helper.command.switchLocalLane('main', '-x');
+            helper.command.import();
+            helper.command.mergeLane('dev');
+          });
+          it('should merge successfully without throwing errors about missing objects', () => {
+            expect(() => helper.command.mergeLane('dev')).to.not.throw();
+          });
+        });
       });
     });
   });
@@ -1395,6 +1428,34 @@ describe('bit lane command', function () {
     });
     it('bit export should not throw', () => {
       expect(() => helper.command.export()).to.not.throw();
+    });
+  });
+  describe('change-scope', () => {
+    describe('when the lane is exported', () => {
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.command.createLane();
+        helper.fixtures.populateComponents(1, false);
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.export();
+      });
+      it('should block the rename', () => {
+        expect(() => helper.command.changeLaneScope('dev', 'new-scope')).to.throw(
+          'changing lane scope-name is allowed for new lanes only'
+        );
+      });
+    });
+    describe('when the scope-name is invalid', () => {
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.command.createLane();
+        helper.fixtures.populateComponents(1, false);
+      });
+      it('should throw InvalidScopeName error', () => {
+        const err = new InvalidScopeName('invalid.scope.name');
+        const cmd = () => helper.command.changeLaneScope('dev', 'invalid.scope.name');
+        helper.general.expectToThrow(cmd, err);
+      });
     });
   });
 });
