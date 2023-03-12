@@ -323,7 +323,7 @@ export class WebpackConfigMutator {
    * @returns
    * @example
    * addElementToHtmlTemplate({ tag: 'script', content: 'console.log("hello")' });
-   * addElementToHtmlTemplate({ tag: 'script', attributes: { src: "https://example.com/script.js" } });
+   * addElementToHtmlTemplate({ tag: 'script', attributes: { src: 'https://example.com/script.js' } });
    */
   addElementToHtmlTemplate(element: CustomHtmlElement) {
     if (!this.raw.plugins) {
@@ -374,8 +374,8 @@ export class WebpackConfigMutator {
    * @param element
    * @returns
    * @example
-   * removeElementFromHtmlTemplate({ tag: 'script', content: 'console.log("hello")' });
-   * removeElementFromHtmlTemplate({ tag: 'script', attributes: { src: "https://example.com/script.js" } });
+   * removeElementFromHtmlTemplate('<script>console.log("hello")</script>');
+   * removeElementFromHtmlTemplate('<script src="https://example.com/script.js"></script>');
    */
   removeElementFromHtmlTemplate(element: string) {
     if (!this.raw.plugins) {
