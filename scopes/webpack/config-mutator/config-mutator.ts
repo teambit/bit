@@ -2,6 +2,8 @@ import { isObject, omit } from 'lodash';
 import { Configuration, ResolveOptions, RuleSetRule } from 'webpack';
 import { merge, mergeWithCustomize, mergeWithRules, CustomizeRule } from 'webpack-merge';
 import { ICustomizeOptions } from 'webpack-merge/dist/types';
+import { load } from 'cheerio';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 
 export * from 'webpack-merge';
 
@@ -22,6 +24,13 @@ type MergeOpts = {
 
 type Rules = {
   [s: string]: CustomizeRule | Rules;
+};
+
+type CustomHtmlElement = {
+  position: 'head' | 'body';
+  tag: string;
+  content?: string;
+  attributes?: { [key: string]: string };
 };
 
 const defaultAddToArrayOpts: AddToArrayOpts = {
@@ -304,6 +313,91 @@ export class WebpackConfigMutator {
       if (rule.use) processUseArray(rule.use, plugins);
       if (rule.oneOf) rule.oneOf.forEach((oneOfRule) => processUseArray(oneOfRule.use, plugins));
     });
+
+    return this;
+  }
+
+  /**
+   * Add a custom element to the html template
+   * @param element
+   * @returns
+   * @example
+   * addElementToHtmlTemplate({ tag: 'script', content: 'console.log("hello")' });
+   * addElementToHtmlTemplate({ tag: 'script', attributes: { src: "https://example.com/script.js" } });
+   */
+  addElementToHtmlTemplate(element: CustomHtmlElement) {
+    if (!this.raw.plugins) {
+      this.raw.plugins = [];
+    }
+
+    const htmlWebpackPlugin = this.raw.plugins.find((plugin) => plugin.constructor.name === 'HtmlWebpackPlugin');
+    if (!htmlWebpackPlugin) {
+      throw new Error('HtmlWebpackPlugin not found');
+    }
+
+    const htmlPlugin = this.raw?.plugins?.find((plugin) => plugin instanceof HtmlWebpackPlugin) as HtmlWebpackPlugin;
+
+    if (htmlPlugin) {
+      const htmlContent =
+        typeof htmlPlugin.userOptions?.templateContent === 'string'
+          ? htmlPlugin.userOptions?.templateContent
+          : // @ts-ignore-next-line
+            htmlPlugin.userOptions.templateContent();
+
+      const $ = load(htmlContent);
+      const $element = $(`<${element.tag}>${element.content}</${element.tag}>`);
+      if (element.attributes) {
+        Object.keys(element.attributes).forEach((key) => {
+          // @ts-ignore-next-line
+          $element.attr(key, element.attributes[key]);
+        });
+      }
+
+      if (element.position === 'head') {
+        $('head').append($element);
+      }
+
+      if (element.position === 'body') {
+        $('body').append($element);
+      }
+
+      htmlPlugin.userOptions.templateContent = $.html();
+
+      return this;
+    }
+
+    return this;
+  }
+
+  /**
+   * Remove a custom element from the html template
+   * @param element
+   * @returns
+   * @example
+   * removeElementFromHtmlTemplate({ tag: 'script', content: 'console.log("hello")' });
+   * removeElementFromHtmlTemplate({ tag: 'script', attributes: { src: "https://example.com/script.js" } });
+   */
+  removeElementFromHtmlTemplate(element: string) {
+    if (!this.raw.plugins) {
+      this.raw.plugins = [];
+    }
+
+    const htmlPlugin = this.raw?.plugins?.find((plugin) => plugin instanceof HtmlWebpackPlugin) as HtmlWebpackPlugin;
+
+    if (htmlPlugin) {
+      const htmlContent =
+        typeof htmlPlugin.userOptions?.templateContent === 'string'
+          ? htmlPlugin.userOptions?.templateContent
+          : // @ts-ignore-next-line
+            htmlPlugin.userOptions.templateContent();
+
+      const $ = load(htmlContent);
+      const $element = $(element);
+      $element.remove();
+      htmlPlugin.userOptions.templateContent = $.html();
+
+      return this;
+    }
 
     return this;
   }
