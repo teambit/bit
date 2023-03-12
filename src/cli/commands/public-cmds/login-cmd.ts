@@ -26,14 +26,14 @@ export default class Login implements LegacyCommand {
   action(
     [], // eslint-disable-line no-empty-pattern
     {
-      cluster,
+      hub_domain_login,
       port,
       suppressBrowserLaunch = false,
       npmrcPath,
       skipRegistryConfig = false,
       machineName,
     }: {
-      cluster?: string;
+      hub_domain_login?: string;
       port: string;
       suppressBrowserLaunch?: boolean;
       npmrcPath: string;
@@ -41,10 +41,12 @@ export default class Login implements LegacyCommand {
       machineName?: string;
     }
   ): Promise<any> {
-    return login(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName, cluster).then((results) => ({
-      ...results,
-      skipRegistryConfig,
-    }));
+    return login(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName, hub_domain_login).then(
+      (results) => ({
+        ...results,
+        skipRegistryConfig,
+      })
+    );
   }
   report({
     isAlreadyLoggedIn = false,
