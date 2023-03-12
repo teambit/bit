@@ -61,6 +61,12 @@ export class RemoveMain {
 
   async softRemove(componentsPattern: string): Promise<ComponentID[]> {
     if (!this.workspace) throw new ConsumerNotFound();
+    const currentLane = await this.workspace.getCurrentLaneObject();
+    if (currentLane?.isNew) {
+      throw new BitError(
+        `unable to soft-remove on a new (not-exported) lane "${currentLane.name}". please remove without --soft`
+      );
+    }
     const componentIds = await this.workspace.idsByPattern(componentsPattern);
     const components = await this.workspace.getMany(componentIds);
     const newComps = components.filter((c) => !c.id.hasVersion());

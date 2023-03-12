@@ -11,7 +11,7 @@ export function toPreviewUrl(
   includeEnvId = true
 ) {
   const serverPath = toPreviewServer(component, previewName);
-  const envId = includeEnvId ? component.environment?.id : undefined;
+  const envId = includeEnvId && component.server?.url ? component.environment?.id : undefined;
   const hash = toPreviewHash(component, previewName, envId, additionalParams);
 
   return `${serverPath}#${hash}`;

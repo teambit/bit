@@ -1,6 +1,6 @@
 import mapSeries from 'p-map-series';
 import { Consumer } from '..';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import { LATEST } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { ModelComponent } from '../../scope/models';
@@ -64,7 +64,14 @@ export class ComponentStatusLoader {
       // loadOne to not find model component as it assumes there is no version
       // also, don't leave the id as is, otherwise, it'll cause issues with import --merge, when
       // imported version is bigger than .bitmap, it won't find it and will consider as deleted
-      componentFromFileSystem = await this.consumer.loadComponent(id.changeVersion(LATEST));
+      const { components, removedComponents } = await this.consumer.loadComponents(
+        new BitIds(id.changeVersion(LATEST))
+      );
+      if (removedComponents.length) {
+        status.deleted = true;
+        return status;
+      }
+      componentFromFileSystem = components[0];
     } catch (err: any) {
       if (
         err instanceof MissingFilesFromComponent ||
