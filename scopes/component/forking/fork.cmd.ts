@@ -8,7 +8,7 @@ export type ForkOptions = {
   refactor?: boolean;
   skipDependencyInstallation?: boolean;
   skipConfig?: boolean;
-  rename?: boolean;
+  preserve?: boolean;
   noLink?: boolean;
 };
 
@@ -42,7 +42,7 @@ export class ForkCmd implements Command {
       'skip-config',
       'do not copy the config (aspects-config) to the new component. helpful when it fails during aspect loading',
     ],
-    ['', 'rename', 'rename files and variables/classes according to the new component name'],
+    ['', 'preserve', 'avoid renaming files and variables/classes according to the new component name'],
     ['', 'no-link', 'avoid saving a reference to the original component'],
   ] as CommandOptions;
 
