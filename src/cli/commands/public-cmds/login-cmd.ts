@@ -12,7 +12,7 @@ export default class Login implements LegacyCommand {
   alias = '';
   skipWorkspace = true;
   opts = [
-    ['d', 'hubDomainLogin <url>', 'hub domain login url (default https://bit.cloud)'],
+    ['d', 'hub-domain-login <url>', 'hub domain login url (default https://bit.cloud)'],
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
     ['', 'suppress-browser-launch', 'do not open a browser for authentication'],
     ['', 'npmrc-path <path>', `path to npmrc file to configure ${getCloudDomain()} registry`],

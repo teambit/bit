@@ -29,7 +29,7 @@ export default function loginToBitSrc(
   npmrcPath: string,
   skipRegistryConfig: boolean,
   machineName: string | null | undefined,
-  hub_domain_login?: string
+  hubDomainLogin?: string
 ): Promise<{
   isAlreadyLoggedIn?: boolean;
   username?: string;
@@ -116,7 +116,7 @@ export default function loginToBitSrc(
       }
 
       const encoded = encodeURI(
-        `${`${hub_domain_login}/bit-login` || getSync(CFG_HUB_LOGIN_KEY) || DEFAULT_HUB_LOGIN}?port=${
+        `${`${hubDomainLogin}/bit-login` || getSync(CFG_HUB_LOGIN_KEY) || DEFAULT_HUB_LOGIN}?port=${
           port || DEFAULT_PORT
         }&clientId=${clientGeneratedId}&responseType=token&deviceName=${machineName || os.hostname()}&os=${
           process.platform
