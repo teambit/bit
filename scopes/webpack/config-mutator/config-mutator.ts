@@ -4,7 +4,6 @@ import { merge, mergeWithCustomize, mergeWithRules, CustomizeRule } from 'webpac
 import { ICustomizeOptions } from 'webpack-merge/dist/types';
 import { load } from 'cheerio';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import console from 'console';
 
 export * from 'webpack-merge';
 
@@ -330,8 +329,6 @@ export class WebpackConfigMutator {
     if (!this.raw.plugins) {
       this.raw.plugins = [];
     }
-
-    console.log('ADD ELEMENT TO HTML TEMPLATE');
 
     const htmlPlugin = this.raw?.plugins?.find(
       (plugin) => plugin.constructor.name === 'HtmlWebpackPlugin'
