@@ -336,17 +336,15 @@ export class WebpackConfigMutator {
 
     if (htmlPlugin) {
       const htmlContent =
-        typeof htmlPlugin.userOptions?.templateContent === 'string'
-          ? htmlPlugin.userOptions?.templateContent
-          : // @ts-ignore-next-line
-            htmlPlugin.userOptions.templateContent();
+        typeof htmlPlugin.userOptions?.templateContent === 'function'
+          ? htmlPlugin.userOptions?.templateContent({})
+          : htmlPlugin.userOptions.templateContent;
 
-      const $ = load(htmlContent);
+      const $ = load(htmlContent as string);
       const $element = $(`<${element.tag}>${element.content ?? ''}</${element.tag}>`);
       if (element.attributes) {
         Object.keys(element.attributes).forEach((key) => {
-          // @ts-ignore-next-line
-          $element.attr(key, element.attributes[key]);
+          if (element.attributes) $element.attr(key, element.attributes[key]);
         });
       }
 
@@ -392,12 +390,11 @@ export class WebpackConfigMutator {
 
     if (htmlPlugin) {
       const htmlContent =
-        typeof htmlPlugin.userOptions?.templateContent === 'string'
-          ? htmlPlugin.userOptions?.templateContent
-          : // @ts-ignore-next-line
-            htmlPlugin.userOptions.templateContent();
+        typeof htmlPlugin.userOptions?.templateContent === 'function'
+          ? htmlPlugin.userOptions?.templateContent({})
+          : htmlPlugin.userOptions.templateContent;
 
-      htmlPlugin.userOptions.templateContent = htmlContent.replace(element, '');
+      htmlPlugin.userOptions.templateContent = (htmlContent as string).replace(element, '');
 
       this.raw.plugins = this.raw.plugins.map((plugin) => {
         if (plugin.constructor.name === 'HtmlWebpackPlugin') {
