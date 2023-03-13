@@ -4,6 +4,7 @@ import { merge, mergeWithCustomize, mergeWithRules, CustomizeRule } from 'webpac
 import { ICustomizeOptions } from 'webpack-merge/dist/types';
 import { load } from 'cheerio';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import console from 'console';
 
 export * from 'webpack-merge';
 
@@ -330,12 +331,11 @@ export class WebpackConfigMutator {
       this.raw.plugins = [];
     }
 
-    const htmlWebpackPlugin = this.raw.plugins.find((plugin) => plugin.constructor.name === 'HtmlWebpackPlugin');
-    if (!htmlWebpackPlugin) {
-      throw new Error('HtmlWebpackPlugin not found');
-    }
+    console.log('ADD ELEMENT TO HTML TEMPLATE');
 
-    const htmlPlugin = this.raw?.plugins?.find((plugin) => plugin instanceof HtmlWebpackPlugin) as HtmlWebpackPlugin;
+    const htmlPlugin = this.raw?.plugins?.find(
+      (plugin) => plugin.constructor.name === 'HtmlWebpackPlugin'
+    ) as HtmlWebpackPlugin;
 
     if (htmlPlugin) {
       const htmlContent =
@@ -345,7 +345,7 @@ export class WebpackConfigMutator {
             htmlPlugin.userOptions.templateContent();
 
       const $ = load(htmlContent);
-      const $element = $(`<${element.tag}>${element.content}</${element.tag}>`);
+      const $element = $(`<${element.tag}>${element.content ?? ''}</${element.tag}>`);
       if (element.attributes) {
         Object.keys(element.attributes).forEach((key) => {
           // @ts-ignore-next-line
@@ -363,10 +363,17 @@ export class WebpackConfigMutator {
 
       htmlPlugin.userOptions.templateContent = $.html();
 
+      this.raw.plugins = this.raw.plugins.map((plugin) => {
+        if (plugin.constructor.name === 'HtmlWebpackPlugin') {
+          return htmlPlugin;
+        }
+        return plugin;
+      });
+
       return this;
     }
 
-    return this;
+    throw new Error('HtmlWebpackPlugin not found');
   }
 
   /**
@@ -382,7 +389,9 @@ export class WebpackConfigMutator {
       this.raw.plugins = [];
     }
 
-    const htmlPlugin = this.raw?.plugins?.find((plugin) => plugin instanceof HtmlWebpackPlugin) as HtmlWebpackPlugin;
+    const htmlPlugin = this.raw?.plugins?.find(
+      (plugin) => plugin.constructor.name === 'HtmlWebpackPlugin'
+    ) as HtmlWebpackPlugin;
 
     if (htmlPlugin) {
       const htmlContent =
@@ -391,15 +400,19 @@ export class WebpackConfigMutator {
           : // @ts-ignore-next-line
             htmlPlugin.userOptions.templateContent();
 
-      const $ = load(htmlContent);
-      const $element = $(element);
-      $element.remove();
-      htmlPlugin.userOptions.templateContent = $.html();
+      htmlPlugin.userOptions.templateContent = htmlContent.replace(element, '');
+
+      this.raw.plugins = this.raw.plugins.map((plugin) => {
+        if (plugin.constructor.name === 'HtmlWebpackPlugin') {
+          return htmlPlugin;
+        }
+        return plugin;
+      });
 
       return this;
     }
 
-    return this;
+    throw new Error('HtmlWebpackPlugin not found');
   }
 }
 
