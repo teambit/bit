@@ -116,7 +116,7 @@ export default function loginToBitSrc(
       }
 
       const encoded = encodeURI(
-        `${`${hubDomainLogin}/bit-login` || getSync(CFG_HUB_LOGIN_KEY) || DEFAULT_HUB_LOGIN}?port=${
+        `${hubDomainLogin || getSync(CFG_HUB_LOGIN_KEY) || DEFAULT_HUB_LOGIN}?port=${
           port || DEFAULT_PORT
         }&clientId=${clientGeneratedId}&responseType=token&deviceName=${machineName || os.hostname()}&os=${
           process.platform
