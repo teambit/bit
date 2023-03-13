@@ -43,13 +43,15 @@ export function CodeCompareView({
   fileIconSlot,
   widgets,
 }: CodeCompareViewProps) {
-  const { baseId, modifiedFileContent, originalFileContent, modifiedPath, originalPath, loading } = useCodeCompare({
-    fileName,
-  });
+  const { baseId, compareId, modifiedFileContent, originalFileContent, modifiedPath, originalPath, loading } =
+    useCodeCompare({
+      fileName,
+    });
 
   const getDefaultView: () => EditorViewMode = () => {
     if (!baseId) return 'inline';
-    if (!originalFileContent && modifiedFileContent) return 'inline';
+    if (baseId && compareId && baseId.isEqual(compareId)) return 'inline';
+    if (!originalFileContent || !modifiedFileContent) return 'inline';
     return 'split';
   };
 

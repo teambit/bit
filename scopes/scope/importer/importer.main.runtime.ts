@@ -13,6 +13,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
+import { importAllArtifacts } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
@@ -78,6 +79,21 @@ export class ImporterMain {
     };
     const importComponents = new ImportComponents(this.workspace, this.graph, this.componentWriter, importOptions);
     return importComponents.importComponents();
+  }
+
+  /**
+   * given a lane object, load all components by their head on the lane, find the artifacts refs and import them from
+   * the lane scope
+   */
+  async importHeadArtifactsFromLane(lane: Lane, throwIfMissing = false) {
+    const ids = lane.toBitIds();
+    const laneComps = await this.scope.legacyScope.getManyConsumerComponents(ids);
+    try {
+      await importAllArtifacts(this.scope.legacyScope, laneComps, lane);
+    } catch (err) {
+      this.logger.error(`failed fetching artifacts for lane ${lane.id.toString()}`, err);
+      if (throwIfMissing) throw err;
+    }
   }
 
   /**

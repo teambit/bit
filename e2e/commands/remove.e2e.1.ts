@@ -221,7 +221,7 @@ describe('bit remove command', function () {
       helper.command.tagWithoutBuild();
       helper.command.export();
 
-      helper.command.removeComponent('comp2', '--soft');
+      helper.command.softRemoveComponent('comp2');
       afterRemove = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should show a section of removed components', () => {
@@ -342,6 +342,79 @@ describe('bit remove command', function () {
     // only removing from scope needs the --force. from workspace it's not an irreversible action.
     it('should remove successfully without the need for --force flag', () => {
       helper.bitMap.expectNotToHaveId('comp2');
+    });
+  });
+  describe('remove new component with --keep-files flag', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.removeComponent('comp1', '--keep-files');
+    });
+    it('should remove the component from .bitmap', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.not.have.property('comp1');
+    });
+    it('should not delete the directory from the filesystem', () => {
+      expect(path.join(helper.scopes.localPath, 'comp1')).to.be.a.directory();
+    });
+    it('should delete the directory from the node_modules', () => {
+      expect(path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}`, 'comp1')).to.not.be.a.path();
+    });
+  });
+  describe('remove new component without --keep-files flag', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.removeComponent('comp1');
+    });
+    it('should remove the component from .bitmap', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.not.have.property('comp1');
+    });
+    it('should delete the directory from the filesystem', () => {
+      expect(path.join(helper.scopes.localPath, 'comp1')).to.not.be.a.path();
+    });
+    it('should delete the directory from the node_modules', () => {
+      expect(path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}`, 'comp1')).to.not.be.a.path();
+    });
+  });
+  describe('soft-remove then snap with --ignore-issues', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.removeComponent('comp1', '--soft');
+      helper.command.snapAllComponentsWithoutBuild('--ignore-issues="*"');
+    });
+    it('should show it as removed', () => {
+      const removeAspect = helper.command.showAspectConfig('comp1', 'teambit.component/remove');
+      expect(removeAspect).to.be.an('Object');
+      expect(removeAspect.config.removed).to.be.true;
+    });
+  });
+  describe('soft-remove when a lane is new', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+    });
+    it('should throw an error suggesting to remove without --soft', () => {
+      expect(() => helper.command.softRemoveComponent('comp1')).to.throw();
+    });
+  });
+
+  describe('soft-remove then import', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(2);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.softRemoveComponent('comp2');
+    });
+    it('should not throwing an error upon import', () => {
+      expect(() => helper.command.importComponent('comp2')).to.not.throw();
     });
   });
 });

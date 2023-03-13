@@ -41,7 +41,10 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   const envTooltip = (
     <Link
       className={styles.envLink}
-      href={ComponentUrl.toUrl(envId, { includeVersion: true })}
+      href={ComponentUrl.toUrl(envId, {
+        includeVersion: true,
+        useLocationOrigin: !window.location.host.startsWith('localhost'),
+      })}
       external={true}
       onClick={(event) => {
         // do not trigger component selection

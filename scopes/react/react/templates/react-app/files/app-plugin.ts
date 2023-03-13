@@ -5,10 +5,7 @@ export function appPlugin({ name, namePascalCase: Name }: ComponentContext) {
 
 export const ${Name}App: ReactAppOptions = {
   name: '${name}',
-  entry: [require.resolve('./${name}.app-root')],
-  prerender: {
-    routes: ['/']
-  }
+  entry: [require.resolve('./${name}.app-root')]
 };
 
 export default ${Name}App;

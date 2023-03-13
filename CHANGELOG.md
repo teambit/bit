@@ -5,6 +5,138 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [[0.1.0] - 2023-03-08](https://github.com/teambit/bit/releases/tag/v0.1.0)
+### New Features
+
+- feat(Schema): allow querying explicitly tagged exports (#7125)
+- feat(import): introduce "--track-only" to only write entries to .bitmap (#7117)
+
+### Changes
+
+- feat(Lane): CLI: create cmd: add note to lane create output if branched off non default lane (#7126)
+- improvement(status): improve the output around the current lane (#7114)
+- fix(remove): block soft-remove main components when on a lane (#7112)
+
+### Performance
+
+- perf(webpack): update sourcemaps for faster builds (#7115)
+
+### Bug Fixes
+
+- fix(WorkspaceDrawer): fix viewing new components on main (#7123)
+- fix(artifacts): support running on snaps (#7116)
+- fix(snap/tag): tag soft-removed components when using --unmodified flag (#7113)
+- fix, show the ids of pending-import in the error message (#7110)
+- fix(soft-remove): mark as removed when the snap/tag was with ignore-issues (#7111)
+- fix(Compare): Compare UI Fixes (#7102)
+- fix, fix error "exists in flattenedEdges but not in flattened" (#7107)
+- fix(lane-list), avoid checking for soft-remove when using --remote (#7099)
+- fix, change a version coming from merge-config from a range to an exact version (#7096)
+
+### Internal
+
+- fix(envs) store envs data for env itself + load envs as aspect from scope (#7124)
+- feat: dedupe peer dependents (#7122)
+- fix(merge-from-scope), push artifacts to original scopes (#7119)
+- change(aspects): resolve (installed) aspects in workspace from its node_modules  (#6901)
+- fix(export): use the Version objects sent to the remote to indicate what was exported (#7109)
+- fix(lane-merge), import missing artifacts before starting the merge process (#7103)
+- fix, avoid adding deps from scope into merge-config (#7100)
+- Workspace: Components Drawer: Local changes to Lane Components (#7072)
+- fix logging when zlib error is coming from the remote (#7097)
+- fix(aspects): return an empty object from a plugin auto generated provider (#7095)
+
+## [[0.0.1000] - 2023-02-27](https://github.com/teambit/bit/releases/tag/v0.0.1000)
+
+### New Features
+
+- Improve dependency management with new commands: `bit deps unset`, `bit deps reset`, `bit deps eject`, `bit deps blame` (#7043 #6898 #6884 #6945)
+- Support more TS export cases for generating compositions (#7075)
+- Ability to restore deleted Lanes (#7074 #7050)
+- Introduce ability to compare between Lanes (#7011 #6998 #6778)
+- Update only owner name of a scope with `bit scope rename-owner` (#7023)
+- Ability to update implementation of forked components with `bit fork ... --rename` (#6955)
+- New Slot for aspects to expand and debug dev-server (#7037)
+- Introduce a new command `bit envs update` to update environment versions (#6909 #6862)
+- Support soft-tag for soft-removed components (#7029)
+- Load apps without needing to register them in `workspace.jsonc` (#6976)
+- Support dependencies detection for `.cjs`, `.mjs`, `.mts`, `.cts` extensions (#7009 #7038)
+- Add new service for environments - Schema (#6937 #6953 #6938 #6665)
+- Support ignoring deps by `@bit-ignore` comment (#6855 #6980)
+- Introduce a new command `file-log` to see file changes per snap (#6888)
+- Support linux-arm64 version for Bit (#6994)
+- Introduce `--editor` flag for `bit snap` (#6956)
+- Introduce `--no-optional` for `bit install` (#7030)
+
+### Changes
+
+- Improve documentation, error messages and outputs (#7087 #6882 #6905 #6928 #6960 #7014 #7054 #6851 #7007 #7010 #6895 #7041 #7024
+- Updated UI for Component Compare (#6913 #7015 #6935 #6923 #6883 #7090)
+- Newly installed dependencies are saved in workspace.jsonc with the ^ prefix by default (#7085)
+- bit install --update updates all dependencies (direct and indirect). Existing semver ranges are respected *#7085)
+- Quality of life improvements for developer experience using Lanes (#6911 #6981 #7008 #7026 #6929 #6942 #6931 #6867 #6854 #6858 #7047 #6853 #7016 #6979 #7081 #6949)
+- Improve lane merge handling (#7055 #7042 #6917 #7044 #6951 #6865 #6822 #6875 #6877 #6835 #7045 #6873)
+- UI fixes and improvements for Lanes (#7071 #6936)
+- Add an alias `-x` to `--skip-dependency-installation` flag (#7091)
+- Better handling of module names in `node_modules` upon `bit rename` (#7059)
+- Add full date timestamp tooltip for version drop down and correct import syntax (#6984)
+- Improved UI for scope-overview (#6891)
+
+### Performance
+
+- Avoid importing from main when on a lane (#6872)
+- Cache staged-snaps hashes to avoid fetching them from a remote (#7003)
+- Check the remote before exporting to filter out existing versions (#6992)
+- Do not build core-js (#6914)
+- Update pnpm and improve deduplication (#6876)
+
+### Bug Fixes
+
+- Resolve edge cases for advanced dependency management issues (#7022 #6968 #6975 #6919 #6915 #6908 #6906 #6892 #6941 #6849 #7020 #6958 #6864 #7032 #7021 #7079 #7019 #6839 #6788 #6861 #6843 #6988)
+- strict-ssl, key, ca, and cert settings should work with an https proxy (#7062)
+- Better handling for `.bitmap` edge cases (#6944 #7080 #6866)
+- Set workspace-env correctly after multiple `bit env set` (#7052)
+- Resolve edge cases for automatic dependency updates with `bit update` (#6948 #6983)
+- UI fixes for component page (#6818)
+
+### Internal
+
+- Remove code from legacy and move to components (#7089 #7060 #7033 #6987 #6982 #6977 #6970 #6971 #6969 #6965 #6950 #6946 #6943 #6932 #6922 #6912 #7013 #6857)
+- Remove many unneeded utils (#6643 #7066 #7064 #7063 #7070 #7068 #7067)
+- Ready for "new envs api" capabilities (#7040 #6973 #6957 #6933 #6934 #6874 #6780 #6846 #6940 #6926 #7005 #7000 #6904 #7048 #6869 #6963 #7004 #7077)
+- Ability to `snap`, `tag` and merge components from remote scopes (#7084 #7053 #7051 #7031 #6952 #6836 #7049 #6850 #6886 #7036)
+- Ability to "sign" a snap or a tag from a remote (#7078 #7028 #7017)
+- Update the registry mock (#7082)
+- Update pnpm version (#7069 #6993)
+- Move Bit to use `rootComponents:true` (#6642)
+- Re-format all source code with prettier (#7057)
+- Load apps as aspects (#6961)
+- Allow not adding the env id to the Preview URL (#7083)
+- Apply auto-detect-overrides regardless whether it was detected beforehand (#7088)
+- Improve application metadata type (#6947)
+- Resolve webpack-dev-server version for `bit envs get <component>` (#6939)
+- Allow configuring via `bit config` - `cloud_domain` and `symphony_url` (#6930)
+- Add `addPostCssPlugins` method to webpack config mutator (#6972)
+- Support getting an instance of webpack dev server instead of path to it (#6990)
+- Calculate tarball sha512 integrity when packing (#6989)
+- Refactor around `pino-pretty` (#6789 #6870)
+- Setting `packageImportMethod` for Yarn (#6860 #6871)
+- Add missing flattened and edges to new snap/tag (#6848)
+- Support reload scope's `index.json` if need (#6838)
+- Avoid loading envs aspects from various sources once an env is determined either by config or data (#6837)
+- Ensure generator is loaded before register slot (#6974)
+- Export component preview type (#6903)
+- Support multiple docs template and mounters on the same dev server (#6825)
+- Add app service transform func (#6847)
+- Group by envs and apps for rootComponents (#6800)
+- Improve component history handling (#7073 #6856 #6985 #6924)
+- Use the default store and cache locations for pnpm (#7039)
+- Add `--skip-config` to help in cases aspects fail to load during `bit fork` (#6910)
+- Introduce a new flag `--one-line` for `bit log` (#6885 #7012)
+- Introduce an API Server to run commands through HTTP server (#7056)
+- Fix id-graph to not use graph from the scope when a dependency is in the workspace (#6897)
+- Avoid writing staged-config file before `bit tag` is successful (#6852)
+
 ## [[0.0.945] - 2022-12-27](https://github.com/teambit/bit/releases/tag/v0.0.945)
 
 ### New Features

@@ -262,4 +262,26 @@ describe('bit lane command', function () {
       expect(helper.command.getHead('comp1')).to.equal(secondSnapMain, 'main was not updated');
     });
   });
+  describe('import previous version from main when on a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.createLane();
+      helper.command.importComponent('comp1@0.0.1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    // previous bug showed this component in the pending-updates section.
+    // it was because the calculation whether it's up-to-date was based also on the component-head.
+    // it should be based on the remote-lane object only.
+    it('bit status should not show the component as pending-updates because it does not exits on the remote lane', () => {
+      const status = helper.command.statusJson();
+      expect(status.outdatedComponents).to.have.lengthOf(0);
+    });
+  });
 });

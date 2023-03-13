@@ -272,11 +272,10 @@ the reason is that the refactor changes the components using ${sourceId.toString
     const fromExisting = options?.skipConfig
       ? {}
       : await this.newComponentHelper.getConfigFromExistingToNewComponent(comp);
+    const linkToOriginal = options?.noLink ? {} : { [ForkingAspect.id]: { forkedFrom: comp.id.toObject() } };
     return {
       ...fromExisting,
-      [ForkingAspect.id]: {
-        forkedFrom: comp.id.toObject(),
-      },
+      ...linkToOriginal,
     };
   }
 

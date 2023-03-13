@@ -84,6 +84,27 @@ export default class VersionHistory extends BitObject {
     });
   }
 
+  getAllHashesFrom(start: Ref): { found?: string[]; missing?: string[] } {
+    const item = this.versions.find((ver) => ver.hash.isEqual(start));
+    if (!item) return { missing: [start.toString()] };
+    const allHashes: string[] = [item.hash.toString()];
+    const missing: string[] = [];
+    const addHashesRecursively = (ver: VersionParents) => {
+      ver.parents.forEach((parent) => {
+        if (allHashes.includes(parent.toString())) return;
+        const parentVer = this.versions.find((verItem) => verItem.hash.isEqual(parent));
+        if (!parentVer) {
+          missing.push(parent.toString());
+          return;
+        }
+        allHashes.push(parent.toString());
+        if (parentVer.parents.length) addHashesRecursively(parentVer);
+      });
+    };
+    addHashesRecursively(item);
+    return { found: allHashes, missing };
+  }
+
   getAllHashesAsString(): string[] {
     return this.versions.map((v) => v.hash.toString());
   }

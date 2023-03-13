@@ -201,6 +201,9 @@ export default class CommandHelper {
   removeComponent(id: string, flags = '') {
     return this.runCmd(`bit remove ${id} --silent ${flags}`);
   }
+  softRemoveComponent(id: string, flags = '') {
+    return this.runCmd(`bit remove ${id} --silent --soft ${flags}`);
+  }
   deprecateComponent(id: string, flags = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
@@ -362,8 +365,8 @@ export default class CommandHelper {
     const component = lane.components.find((c) => c.id.name === componentName);
     return component.head;
   }
-  getArtifacts(id: string) {
-    const comp = this.catComponent(`${id}@latest`);
+  getArtifacts(id: string, cwd?: string) {
+    const comp = this.catComponent(`${id}@latest`, cwd);
     const builderExt = comp.extensions.find((ext) => ext.name === 'teambit.pipelines/builder');
     if (!builderExt) throw new Error(`unable to find builder data for ${id}`);
     const artifacts = builderExt.data.artifacts;

@@ -10,16 +10,21 @@ export class PkgUI {
   static dependencies = [ComponentAspect];
 
   static async provider([componentUI]: [ComponentUI]) {
-    const pkg = new PkgUI();
+    const pkg = new PkgUI(componentUI);
     componentUI.registerConsumeMethod(pkg.npmConsumeMethod);
     return pkg;
   }
+
+  constructor(private compUI: ComponentUI) {}
 
   private npmConsumeMethod: ConsumePlugin = (comp, options) => {
     if (options?.currentLane) return undefined;
 
     const registry = comp.packageName.split('/')[0];
-    const packageVersion = comp.version === comp.latest ? '' : `@${comp.version}`;
+
+    const packageVersion =
+      comp.version === comp.latest ? '' : `@${this.compUI.formatToInstallableVersion(comp.version)}`;
+
     return {
       Title: <img style={{ width: '30px' }} src="https://static.bit.dev/brands/logo-npm-new.svg" />,
       Component: (

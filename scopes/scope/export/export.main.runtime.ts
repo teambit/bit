@@ -203,6 +203,7 @@ export class ExportMain {
     idsWithFutureScope,
     resumeExportId,
     ignoreMissingArtifacts,
+    ignoreMissingExternalArtifacts = true,
     isOnMain = true,
     exportHeadsOnly, // relevant when exporting from bare-scope, especially when re-exporting existing versions, the normal calculation based on getDivergeData won't work
     filterOutExistingVersions, // go to the remote and check whether the version exists there. if so, don't export it
@@ -215,6 +216,7 @@ export class ExportMain {
     idsWithFutureScope: BitIds;
     resumeExportId?: string | undefined;
     ignoreMissingArtifacts?: boolean;
+    ignoreMissingExternalArtifacts?: boolean;
     isOnMain?: boolean;
     exportHeadsOnly?: boolean;
     filterOutExistingVersions?: boolean;
@@ -351,7 +353,8 @@ export class ExportMain {
         const objectItems = await modelComponent.collectVersionsObjects(
           scope.objects,
           refs.map((ref) => ref.toString()),
-          ignoreMissingArtifacts
+          ignoreMissingArtifacts,
+          ignoreMissingExternalArtifacts
         );
         const objectsList = await new ObjectList(objectItems).toBitObjects();
         const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
