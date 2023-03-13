@@ -337,39 +337,45 @@ export class MergingMain {
     allConfigMerge: ConfigMergeResult[]
   ): Promise<{ workspaceDepsUpdates?: WorkspaceDepsUpdates; workspaceDepsConflicts?: WorkspaceDepsConflicts }> {
     const allResults = allConfigMerge.map((c) => c.getDepsResolverResult());
-    const allPolicies = compact(
-      allResults.map((result) => {
-        if (!result?.mergedConfig || result.mergedConfig === '-') return undefined;
-        return result.mergedConfig.policy;
-      })
-    );
     const allDeps: { [pkgName: string]: string[] } = {};
-    allPolicies.forEach((policy) => {
+    const allDepsSources: { [pkgName: string]: string[] } = {}; // for logging/debugging purposes
+
+    allConfigMerge.forEach((configMerge) => {
+      const mergedConfig = configMerge.getDepsResolverResult()?.mergedConfig;
+      if (!mergedConfig || mergedConfig === '-') return;
+      const policy = mergedConfig.policy || {};
       DEPENDENCIES_FIELDS.forEach((depField) => {
         if (!policy[depField]) return;
         policy[depField].forEach((pkg: PkgEntry) => {
           if (pkg.force) return; // we only care about auto-detected dependencies
           if (allDeps[pkg.name]) {
             if (!allDeps[pkg.name].includes(pkg.version)) allDeps[pkg.name].push(pkg.version);
+            allDepsSources[pkg.name].push(configMerge.compIdStr);
             return;
           }
           allDeps[pkg.name] = [pkg.version];
+          allDepsSources[pkg.name] = [configMerge.compIdStr];
         });
       });
     });
 
-    const allConflicts = compact(allResults.map((result) => result?.conflict));
     const allConflictDeps: { [pkgName: string]: string[] } = {};
-    allConflicts.forEach((policy) => {
+    const conflictDepsSources: { [pkgName: string]: string[] } = {}; // for logging/debugging purposes
+
+    allConfigMerge.forEach((configMerge) => {
+      const policy = configMerge.getDepsResolverResult()?.conflict;
+      if (!policy) return;
       DEPENDENCIES_FIELDS.forEach((depField) => {
         if (!policy[depField]) return;
         policy[depField].forEach((pkg: PkgEntry) => {
           if (pkg.force) return; // we only care about auto-detected dependencies
           if (allConflictDeps[pkg.name]) {
             if (!allConflictDeps[pkg.name].includes(pkg.version)) allConflictDeps[pkg.name].push(pkg.version);
+            conflictDepsSources[pkg.name].push(configMerge.compIdStr);
             return;
           }
           allConflictDeps[pkg.name] = [pkg.version];
+          conflictDepsSources[pkg.name] = [configMerge.compIdStr];
         });
       });
     });
@@ -395,8 +401,14 @@ export class MergingMain {
         if (!policy[depField]?.[pkgName]) return;
         const currentVer = policy[depField][pkgName];
         const newVer = allDeps[pkgName][0];
+        if (currentVer === newVer) return;
         workspaceJsonUpdates[pkgName] = [currentVer, newVer];
         policy[depField][pkgName] = newVer;
+        this.logger.debug(
+          `update workspace.jsonc: ${pkgName} from ${currentVer} to ${newVer}. Triggered by: ${allDepsSources[
+            pkgName
+          ].join(', ')}`
+        );
       });
     });
 
@@ -406,7 +418,7 @@ export class MergingMain {
         return;
       }
       const conflict = allConflictDeps[pkgName][0];
-      const [, currentVal] = conflict.split('::');
+      const [, currentVal, otherVal] = conflict.split('::');
 
       WS_DEPS_FIELDS.forEach((depField) => {
         if (!policy[depField]?.[pkgName]) return;
@@ -414,6 +426,11 @@ export class MergingMain {
         if (currentVer !== currentVal) return;
         // the version is coming from the workspace.jsonc
         workspaceJsonConflicts[depField].push({ name: pkgName, version: conflict, force: false });
+        this.logger.debug(
+          `conflict workspace.jsonc: ${pkgName} current: ${currentVer}, other: ${otherVal}. Triggered by: ${conflictDepsSources[
+            pkgName
+          ].join(', ')}`
+        );
       });
     });
     WS_DEPS_FIELDS.forEach((depField) => {
@@ -439,6 +456,9 @@ export class MergingMain {
     if (Object.keys(workspaceJsonUpdates).length) {
       await workspaceConfig.write();
     }
+
+    this.logger.debug('final workspace.jsonc updates', workspaceJsonUpdates);
+    this.logger.debug('final workspace.jsonc conflicts', workspaceJsonConflicts);
 
     return {
       workspaceDepsUpdates: Object.keys(workspaceJsonUpdates).length ? workspaceJsonUpdates : undefined,
