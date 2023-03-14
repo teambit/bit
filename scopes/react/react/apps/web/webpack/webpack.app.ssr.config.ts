@@ -27,7 +27,7 @@ export function clientConfig(): Configuration {
 export function ssrConfig(): Configuration {
   return {
     target: 'node',
-    devtool: 'eval-cheap-source-map',
+    devtool: 'eval-cheap-module-source-map',
 
     output: {
       libraryTarget: 'commonjs',
@@ -49,7 +49,7 @@ export function buildConfig({ outputPath }: { outputPath: string }): Configurati
 export function ssrBuildConfig({ outputPath }: { outputPath: string }): Configuration {
   return {
     target: 'node',
-    devtool: 'eval-cheap-source-map',
+    devtool: 'eval-cheap-module-source-map',
 
     output: {
       path: outputPath,
