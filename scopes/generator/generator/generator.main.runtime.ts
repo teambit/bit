@@ -4,6 +4,7 @@ import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/work
 import { EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
+import ComponentConfig from '@teambit/legacy/dist/consumer/config';
 
 import ComponentAspect, { ComponentID } from '@teambit/component';
 import type { ComponentMain, Component } from '@teambit/component';
@@ -277,11 +278,17 @@ export class GeneratorMain {
     if (!this.workspace) throw new OutsideWorkspaceError();
     await this.loadAspects();
     const { namespace, aspect: aspectId } = options;
+
+    const componentConfigLoadingRegistry = ComponentConfig.componentConfigLoadingRegistry;
+
     const templateWithId = await this.getComponentTemplate(templateName, aspectId);
+
+    ComponentConfig.componentConfigLoadingRegistry = componentConfigLoadingRegistry;
+
     if (!templateWithId) throw new BitError(`template "${templateName}" was not found`);
 
     const componentIds = componentNames.map((componentName) =>
-    this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
+      this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
     );
 
     const componentGenerator = new ComponentGenerator(
@@ -294,7 +301,7 @@ export class GeneratorMain {
       this.tracker,
       templateWithId.id,
       templateWithId.envName ? ComponentID.fromString(templateWithId.id) : undefined
-      );
+    );
     return componentGenerator.generate();
   }
 
@@ -404,7 +411,7 @@ export class GeneratorMain {
     const configEnvs = this.config.envs || [];
     let remoteEnvsAspect;
     let fullAspectId;
-    if (aspectId && !configEnvs.includes(aspectId)){
+    if (aspectId && !configEnvs.includes(aspectId)) {
       const globals = await this.getGlobalGeneratorEnvs(aspectId);
       remoteEnvsAspect = globals.remoteEnvsAspect;
       fullAspectId = globals.fullAspectId;
