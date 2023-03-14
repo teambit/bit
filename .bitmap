@@ -2439,6 +2439,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace"
     },
+    "workspace-config-files": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/workspace-config-files"
+    },
     "yarn": {
         "scope": "teambit.dependencies",
         "version": "0.0.1017",
