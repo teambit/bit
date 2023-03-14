@@ -280,15 +280,23 @@ export class AspectsMerger {
   ) {
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
     const envFromEnvsAspect: string | undefined = envAspect?.config.env || envAspect?.data.id;
-    if (envWasFoundPreviously && envAspect) {
+    const aspectsRegisteredAsEnvs = extensionDataList
+      .filter((aspect) => this.workspace.envs.getEnvDefinitionByStringId(aspect.stringId))
+      .map((aspect) => aspect.stringId);
+    if (envWasFoundPreviously && (envAspect || aspectsRegisteredAsEnvs.length)) {
       const nonEnvs = extensionDataList.filter((e) => {
         // normally the env-id inside the envs aspect doesn't have a version, but the aspect itself has a version.
-        if (e.stringId === envFromEnvsAspect || e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect)
+        if (
+          e.stringId === envFromEnvsAspect ||
+          e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect ||
+          aspectsRegisteredAsEnvs.includes(e.stringId)
+        ) {
           return false;
+        }
         return true;
       });
       // still, aspect env may have other data other then config.env.
-      delete envAspect.config.env;
+      if (envAspect) delete envAspect.config.env;
       return { extensionDataListFiltered: new ExtensionDataList(...nonEnvs), envIsCurrentlySet: true };
     }
     if (envFromEnvsAspect && (origin === 'ModelNonSpecific' || origin === 'ModelSpecific')) {
@@ -316,7 +324,7 @@ export class AspectsMerger {
     const workspaceAspectsLoader = this.workspace.getWorkspaceAspectsLoader();
     return workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, throwOnError);
   }
-  
+
   /**
    * This will mutate the entries with extensionId prop to have resolved legacy id
    * This should be worked on the extension data list not the new aspect list
