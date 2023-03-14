@@ -31,7 +31,6 @@ export class LaneListCmd implements Command {
     ['', 'not-merged', 'show lanes that are not merged'],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
   remoteOp = true;
   skipWorkspace = true;
@@ -137,7 +136,6 @@ export class LaneShowCmd implements Command {
     ['r', 'remote <string>', 'show remote lanes'],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
   remoteOp = true;
   skipWorkspace = true;
@@ -200,7 +198,6 @@ a lane created from another lane has all the components of the original lane.`;
     ],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(private lanes: LanesMain) {}
@@ -231,7 +228,6 @@ it is useful when having multiple lanes with the same name, but with different r
   alias = '';
   options = [] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(private lanes: LanesMain) {}
@@ -248,7 +244,6 @@ export class LaneChangeScopeCmd implements Command {
   alias = '';
   options = [] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(private lanes: LanesMain) {}
@@ -267,7 +262,6 @@ export class LaneRenameCmd implements Command {
   alias = '';
   options = [] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(private lanes: LanesMain) {}
@@ -332,7 +326,6 @@ export class LaneImportCmd implements Command {
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(private switchCmd: SwitchCmd) {}
@@ -357,8 +350,8 @@ export class LaneCmd implements Command {
     ['', 'not-merged', 'show not merged lanes'],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
+  group = 'collaborate';
   remoteOp = true;
   skipWorkspace = true;
   helpUrl = 'docs/components/lanes';
@@ -376,7 +369,6 @@ export class LaneRemoveReadmeCmd implements Command {
   description = 'EXPERIMENTAL. remove lane readme component';
   options = [] as CommandOptions;
   loader = true;
-  private = true;
   skipWorkspace = false;
 
   constructor(private lanes: LanesMain) {}
@@ -405,7 +397,6 @@ export class LaneAddReadmeCmd implements Command {
   ];
   options = [] as CommandOptions;
   loader = true;
-  private = true;
   skipWorkspace = false;
 
   constructor(private lanes: LanesMain) {}
