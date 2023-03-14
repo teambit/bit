@@ -200,7 +200,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
         },
       ]
     );
-    if (options?.rename) {
+    if (!options?.preserve) {
       await this.refactoring.replaceMultipleStrings(
         [component],
         [
