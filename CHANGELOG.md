@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [[0.1.4] - 2023-03-14](https://github.com/teambit/bit/releases/tag/v0.1.4)
+### New Features
+- Support generating a component for `bit create` with `--aspect` or `--env` option (#7093)
+- Introduce "bit fork --no-link" flag to avoid saving a reference to the original comp (#7140)
+- Add option for `bit login` to pass custom login url (#7143)
+
+### Changes
+- `--rename` flag is now default for `bit fork` (#7146)
+- Remove pre-render by default from the react app template (#7132)
+
+### Bug Fixes
+- Fix Package version for snaps on main in use-dropdown (#7141)
+- On changing scope for a lane, block when lane is exported, throw when scope-name is invalid (#7139)
+- On `bit status` avoid showing components as pending-update when their remote-lane is empty (#7138)
+- Handle soft-remove on a new lane and import soft-removed components (#7137)
+- Add EnvId in preview url (#7136)
+- Fetch artifacts from `main` if possible (#7134)
+- Fix error text for `bit reset`, change untag to reset (#7130)
+- Fix incorrect domain in for new cloud (#7129)
+- Fix `VersionNotFound` error when resetting a lane after merge (#7121)
+- Remove `*` from url in Readme (#7108)
+
+### Internal
+- Fix aspects loading from scope (#7133)
+- Eject `teambit.html/modules/render-template` (#7135)
+
 ## [[0.1.0] - 2023-03-08](https://github.com/teambit/bit/releases/tag/v0.1.0)
 ### New Features
 
