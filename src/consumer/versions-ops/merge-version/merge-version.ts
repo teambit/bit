@@ -17,6 +17,7 @@ export const FileStatus = {
   overridden: chalk.yellow('overridden'),
   unchanged: chalk.green('unchanged'),
   remainDeleted: chalk.green('remain-deleted'),
+  deletedConflict: chalk.red('CONFLICT-deleted-and-modified'),
 };
 // fileName is PathLinux. TS doesn't let anything else in the keys other than string and number
 export type FilesStatus = { [fileName: string]: keyof typeof FileStatus };

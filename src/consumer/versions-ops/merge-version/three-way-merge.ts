@@ -22,6 +22,10 @@ export type MergeResultsThreeWay = {
   remainDeletedFiles: Array<{
     filePath: PathLinux;
   }>;
+  deletedConflictFiles: Array<{
+    filePath: PathLinux;
+    fsFile?: SourceFile;
+  }>;
   modifiedFiles: Array<{
     filePath: PathLinux;
     fsFile: SourceFile;
@@ -96,6 +100,7 @@ export default async function threeWayMergeVersions({
     addFiles: [],
     removeFiles: [],
     remainDeletedFiles: [],
+    deletedConflictFiles: [],
     modifiedFiles: [],
     unModifiedFiles: [],
     overrideFiles: [],
@@ -104,6 +109,8 @@ export default async function threeWayMergeVersions({
   };
   const getFileResult = async (fsFile: SourceFile, baseFile?: SourceFileModel, otherFile?: SourceFileModel) => {
     const filePath: PathLinux = pathNormalizeToLinux(fsFile.relative);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const fsFileHash = sha1(fsFile.contents);
     if (!otherFile) {
       // if !otherFile && !baseFile, the file was created after the last tag, no need to do any
       // calculation, the file should be added
@@ -111,9 +118,12 @@ export default async function threeWayMergeVersions({
         results.addFiles.push({ filePath, fsFile });
         return;
       }
-      // if !otherFile && baseFile, the file was created as part of the last tag but not
-      // available on the other, so it needs to be removed.
-      results.removeFiles.push({ filePath });
+      const baseFileHash = baseFile.file.hash;
+      if (fsFileHash === baseFileHash) {
+        results.removeFiles.push({ filePath });
+        return;
+      }
+      results.deletedConflictFiles.push({ filePath });
       return;
     }
     if (!baseFile) {
@@ -121,8 +131,7 @@ export default async function threeWayMergeVersions({
       results.overrideFiles.push({ filePath, fsFile });
       return;
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const fsFileHash = sha1(fsFile.contents);
+
     const baseFileHash = baseFile.file.hash;
     const otherFileHash = otherFile.file.hash;
     if (fsFileHash === otherFileHash) {
@@ -155,18 +164,39 @@ export default async function threeWayMergeVersions({
   );
   const fsFilesPaths = currentFiles.map((fsFile) => pathNormalizeToLinux(fsFile.relative));
   const baseFilesPaths = baseFiles.map((baseFile) => baseFile.relativePath);
+  const isOtherSameAsBase = (otherFile: SourceFileModel) => {
+    const baseFile = baseFiles.find((file) => file.relativePath === otherFile.relativePath);
+    if (!baseFile) throw new Error('isOtherSameAsBase expect the base to be there');
+    return baseFile.file.hash === otherFile.file.hash;
+  };
   const deletedFromFs = otherFiles.filter(
-    (otherFile) => !fsFilesPaths.includes(otherFile.relativePath) && baseFilesPaths.includes(otherFile.relativePath)
+    (otherFile) =>
+      !fsFilesPaths.includes(otherFile.relativePath) &&
+      baseFilesPaths.includes(otherFile.relativePath) &&
+      isOtherSameAsBase(otherFile)
+  );
+  const deletedAndModified = otherFiles.filter(
+    (otherFile) =>
+      !fsFilesPaths.includes(otherFile.relativePath) &&
+      baseFilesPaths.includes(otherFile.relativePath) &&
+      !isOtherSameAsBase(otherFile)
   );
   const addedOnOther = otherFiles.filter(
     (otherFile) => !fsFilesPaths.includes(otherFile.relativePath) && !baseFilesPaths.includes(otherFile.relativePath)
   );
   deletedFromFs.forEach((file) => results.remainDeletedFiles.push({ filePath: file.relativePath }));
+  deletedAndModified.forEach((file) => results.deletedConflictFiles.push({ filePath: file.relativePath }));
 
   await Promise.all(
     addedOnOther.map(async (file) => {
       const fsFile = await SourceFile.loadFromSourceFileModel(file, consumer.scope.objects);
       results.addFiles.push({ filePath: file.relativePath, fsFile });
+    })
+  );
+  await Promise.all(
+    deletedAndModified.map(async (file) => {
+      const fsFile = await SourceFile.loadFromSourceFileModel(file, consumer.scope.objects);
+      results.deletedConflictFiles.push({ filePath: file.relativePath, fsFile });
     })
   );
   if (R.isEmpty(results.modifiedFiles)) return results;
