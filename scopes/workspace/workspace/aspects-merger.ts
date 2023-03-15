@@ -287,8 +287,8 @@ export class AspectsMerger {
       const nonEnvs = extensionDataList.filter((e) => {
         // normally the env-id inside the envs aspect doesn't have a version, but the aspect itself has a version.
         if (
-          e.stringId === envFromEnvsAspect ||
-          e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect ||
+          (envFromEnvsAspect && e.stringId === envFromEnvsAspect) ||
+          (envFromEnvsAspect && e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect) ||
           aspectsRegisteredAsEnvs.includes(e.stringId)
         ) {
           return false;
