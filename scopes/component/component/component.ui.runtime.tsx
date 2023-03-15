@@ -140,13 +140,15 @@ export class ComponentUI {
   ];
 
   private bitMethod: ConsumePlugin = (comp, options) => {
-    const version = comp.version === comp.latest ? '' : `@${this.formatToInstallableVersion(comp.version)}`;
+    const version = comp.version === comp.latest ? '' : `@${comp.version}`;
+    const packageVersion = comp.version === comp.latest ? '' : `@${this.formatToInstallableVersion(comp.version)}`;
+
     return {
       Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
       Component: (
         <Import
           componentId={`${comp.id.toString({ ignoreVersion: true })}${version}`}
-          packageName={`${comp.packageName}${version}`}
+          packageName={`${comp.packageName}${packageVersion}`}
           componentName={comp.id.name}
           showInstallMethod={!options?.currentLane}
         />
