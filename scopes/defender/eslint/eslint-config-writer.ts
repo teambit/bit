@@ -1,9 +1,8 @@
 import { sha1 } from '@teambit/legacy/dist/utils';
 import fs from 'fs-extra';
 import { ExecutionContext } from '@teambit/envs';
-import { ConfigWriterEntry, EnvMapValue, WrittenConfigFile } from '@teambit/workspace-config-files';
+import type { ConfigWriterEntry, EnvMapValue, WrittenConfigFile, ExtendingConfigFile, ConfigFile } from '@teambit/workspace-config-files';
 import { dirname, relative } from 'path';
-import { ConfigFile } from '@teambit/workspace-config-files/config-writer-entry';
 import { flatten, set } from 'lodash';
 import { LinterMain } from '@teambit/linter';
 import { EslintLinterInterface } from './eslint-linter-interface';
@@ -77,14 +76,14 @@ export class EslintConfigWriter implements ConfigWriterEntry {
     return Promise.resolve();
   }
 
-  generateExtendingFile(writtenConfigFiles: WrittenConfigFile[]): ConfigFile | undefined {
+  generateExtendingFile(writtenConfigFiles: WrittenConfigFile[]): ExtendingConfigFile | undefined {
     const eslintConfigFile = writtenConfigFiles.find((file) => file.name.includes('.eslintrc.bit'));
     if (!eslintConfigFile) return undefined;
     const config = {
       extends: [eslintConfigFile.filePath],
     };
     const content = `${BIT_GENERATED_ESLINT_CONFIG_COMMENT}\n${JSON.stringify(config, null, 2)}`;
-    return { content, name: '.eslintrc.json' };
+    return { content, name: '.eslintrc.json', extendingTarget: eslintConfigFile.filePath};
   }
   calcName(hash: string): string {
     return `.eslintrc.bit.${hash}.json`;

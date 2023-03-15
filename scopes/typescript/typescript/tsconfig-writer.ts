@@ -191,6 +191,7 @@ function getAllParentsDirOfPath(p: PathLinuxRelative): PathLinuxRelative[] {
  * components, this env will be optimized. other components, will have the files written inside their dirs.
  */
 export function dedupePaths(pathsPerEnvId: PathsPerEnvIds[]): PathsPerEnvIds[] {
+  console.log("🚀 ~ file: tsconfig-writer.ts:194 ~ dedupePaths ~ pathsPerEnvId:", pathsPerEnvId)
   const rootDir = '.';
   const individualPathPerConcatenatedEnvIds: { [path: string]: string } = pathsPerEnvId.reduce((acc, current) => {
     current.paths.forEach((p) => {
@@ -198,6 +199,7 @@ export function dedupePaths(pathsPerEnvId: PathsPerEnvIds[]): PathsPerEnvIds[] {
     });
     return acc;
   }, {});
+  console.log("🚀 ~ file: tsconfig-writer.ts:202 ~ constindividualPathPerConcatenatedEnvIds:{[path:string]:string}=pathsPerEnvId.reduce ~ individualPathPerConcatenatedEnvIds:", individualPathPerConcatenatedEnvIds)
   const allPaths = Object.keys(individualPathPerConcatenatedEnvIds);
   const allPossibleDirs = getAllPossibleDirsFromPaths(allPaths);
 
@@ -241,8 +243,10 @@ export function dedupePaths(pathsPerEnvId: PathsPerEnvIds[]): PathsPerEnvIds[] {
 
   const envIdsPerDedupedPaths = invertBy(dedupedPathsPerEnvIds);
 
-  return Object.keys(envIdsPerDedupedPaths).map((envIdStr) => ({
+  const dedupedPaths = Object.keys(envIdsPerDedupedPaths).map((envIdStr) => ({
     ids: envIdStr.split(','),
     paths: envIdsPerDedupedPaths[envIdStr],
   }));
+  console.log("🚀 ~ file: tsconfig-writer.ts:250 ~ dedupedPaths ~ dedupedPaths:", dedupedPaths)
+  return dedupedPaths;
 }

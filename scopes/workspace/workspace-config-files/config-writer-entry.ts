@@ -18,6 +18,13 @@ export type ConfigFile = {
   hash?: string;
 };
 
+export type ExtendingConfigFile = ConfigFile & {
+  /**
+   * Name of the config file that this config file extends.
+   */
+  extendingTarget: string;
+}
+
 export interface ConfigWriterEntry {
   /**
    * Get's the component env and return the config file content
@@ -55,7 +62,7 @@ export interface ConfigWriterEntry {
    * That way we can avoid writing the same config file multiple times.
    * It also reduces the risk of the user manually change the config file and then the changes will be lost.
    */
-  generateExtendingFile(writtenConfigFiles: WrittenConfigFile[]): ConfigFile | undefined;
+  generateExtendingFile(writtenConfigFiles: WrittenConfigFile[]): ExtendingConfigFile | undefined;
 
   /**
    * Find all the files that are relevant for the config type.
