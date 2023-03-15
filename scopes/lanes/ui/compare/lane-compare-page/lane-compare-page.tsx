@@ -54,7 +54,7 @@ export function LaneComparePage({ getLaneCompare, groupByScope, ...rest }: LaneC
           <LaneSelector
             selectedLaneId={base.id}
             className={styles.baseSelector}
-            lanes={lanes}
+            nonMainLanes={lanes}
             groupByScope={groupByScope}
             getHref={() => ''}
             onLaneSelected={(laneId) => {

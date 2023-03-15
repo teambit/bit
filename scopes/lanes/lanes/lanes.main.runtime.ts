@@ -696,6 +696,11 @@ please create a new lane instead, which will include all components of this lane
   ): Promise<LaneComponentDiffStatus> {
     const snapsDistance = await this.getSnapsDistance(componentId, sourceHead, targetHead, false);
 
+    if (!snapsDistance.isDiverged() && snapsDistance.isTargetAhead()) {
+      // target has changed
+      // when was the last time it diverged
+    }
+
     if (snapsDistance?.err) {
       const noCommonSnap = snapsDistance.err instanceof NoCommonSnap;
 

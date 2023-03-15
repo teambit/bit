@@ -7,22 +7,37 @@
   padding-right: 8px;
   border-top: 1px solid var(--bit-border-color-lightest, #ededed);
   border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  gap: 4px;
 }
 
 .laneGalleryIcon {
   display: flex;
-  flex: 0;
   border-radius: 8px;
-  font-size: 14px;
+
+  > img {
+    height: 16px;
+    width: 16px;
+  }
 
   > span:first-child {
     margin-right: 0px;
   }
 }
 
-.laneSelector {
+.laneSelectorContainer {
+  display: flex;
   flex: 1;
-  padding-right: 8px;
-  // override dropdown default width: 100%
-  width: calc(100% - 40px) !important;
+  width: calc(100% - 36px);
+}
+
+.laneIconContainer {
+  display: flex;
+  flex: 0;
+  width: 36px;
+
+  @media screen and (max-width: 200px) {
+    &.laneIconContainer {
+      display: none;
+    }
+  }
 }

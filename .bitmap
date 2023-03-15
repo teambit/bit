@@ -2133,6 +2133,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/ui/scope-title"
     },
+    "ui/search/search-input": {
+        "scope": "teambit.explorer",
+        "version": "1.95.6",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/search/search-input"
+    },
     "ui/side-bar": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.755",

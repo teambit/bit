@@ -80,12 +80,19 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         componentsStatus: [LaneComponentDiffStatus!]!
       }
 
+      type LaneOwner {
+        name: String
+        email: String
+      }
+
       type Lane {
         id: LaneId!
         hash: String
         laneComponentIds: [ComponentID!]!
         components(offset: Int, limit: Int): [Component!]!
         readmeComponent: Component
+        createdBy: LaneOwner
+        createdAt: String
       }
 
       # Lane API
@@ -171,6 +178,12 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         readmeComponent: async (lane: LaneData) => {
           const laneReadmeComponent = await lanesMainRuntime.getLaneReadmeComponent(lane);
           return laneReadmeComponent;
+        },
+        createdAt: async (lane: LaneData) => {
+          return lane.log?.date;
+        },
+        createdBy: async (lane: LaneData) => {
+          return { name: lane.log?.username, email: lane.log?.email };
         },
       },
       Query: {
