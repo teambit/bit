@@ -27,7 +27,7 @@
 }
 
 .menu {
-  width: 300px;
+  width: 350px;
   border-radius: 8px;
   padding: 0;
   // border: 1px solid var(--border-medium-color);
@@ -46,4 +46,36 @@
 
 .searchInput {
   width: 100%;
+}
+
+.sortAndGroupBy {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 8px;
+}
+
+.groupBy {
+  display: flex;
+}
+
+.sort {
+  display: flex;
+  text-align: right;
+}
+
+.sortToggle {
+  font-size: var(--bit-p-xs, '14px');
+  text-transform: capitalize;
+  height: 32px;
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  padding: 2px;
+}
+
+.sortIcon {
+  height: 14px;
+  width: 14px;
+  padding-right: 4px;
+  filter: invert(46%) sepia(8%) saturate(298%) hue-rotate(189deg) brightness(95%) contrast(91%);
 }

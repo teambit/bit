@@ -19,6 +19,7 @@ export type LaneComponentQueryResult = {
 export type LaneQueryLaneOwner = {
   name: string;
   email: string;
+  profileImage?: string;
 };
 /**
  * GQL
@@ -154,20 +155,22 @@ export class LanesModel {
     const readmeComponentModel = readmeComponent && ComponentModel.from({ ...readmeComponent, host });
 
     const createdAtDate = (createdAt && new Date(+createdAt)) || undefined;
-    const createdBy =
-      ((createdByData?.name || createdByData?.email) && {
-        name: createdByData?.name ?? undefined,
-        email: createdByData.email ?? undefined,
-      }) ||
-      undefined;
+    const createdBy = createdByData
+      ? {
+          name: createdByData?.name ?? undefined,
+          email: createdByData.email ?? undefined,
+          profileImage: createdByData.profileImage ?? undefined,
+        }
+      : undefined;
 
     const updatedAtDate = (updatedAt && new Date(+updatedAt)) || undefined;
-    const updatedBy =
-      ((updatedByData?.name || updatedByData?.email) && {
-        name: updatedByData?.name ?? undefined,
-        email: updatedByData.email ?? undefined,
-      }) ||
-      undefined;
+    const updatedBy = updatedByData?.name
+      ? {
+          name: updatedByData?.name ?? undefined,
+          email: updatedByData.email ?? undefined,
+          profileImage: updatedByData.profileImage ?? undefined,
+        }
+      : undefined;
 
     return {
       id: LaneId.from(id.name, id.scope),

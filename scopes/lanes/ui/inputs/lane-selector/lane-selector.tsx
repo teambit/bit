@@ -1,9 +1,10 @@
-import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect } from 'react';
+import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect, useCallback, useMemo } from 'react';
 import classnames from 'classnames';
 import { LaneId } from '@teambit/lane-id';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
 import { SearchInput } from '@teambit/explorer.ui.search.search-input';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
+import { ToggleButton } from '@teambit/design.inputs.toggle-button';
 
 import { LaneSelectorList } from './lane-selector-list';
 import { LanePlaceholder } from './lane-placeholder';
@@ -17,6 +18,9 @@ export type LaneSelectorProps = {
   groupByScope?: boolean;
   getHref?: (laneId: LaneId) => string;
   onLaneSelected?: (laneId: LaneId) => void;
+  mainIcon?: { iconUrl: string; bgColor: string };
+  sortBy?: LaneSelectorSortBy;
+  sortOptions?: LaneSelectorSortBy[];
 } & HTMLAttributes<HTMLDivElement>;
 
 export type GroupedLaneDropdownItem = [scope: string, lanes: LaneModel[]];
@@ -41,11 +45,37 @@ export function LaneSelector(props: LaneSelectorProps) {
     getHref,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onLaneSelected,
+    sortBy: sortByFromProps = LaneSelectorSortBy.ALPHABETICAL,
+    sortOptions = [LaneSelectorSortBy.ALPHABETICAL, LaneSelectorSortBy.CREATED],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    mainIcon,
     ...rest
   } = props;
-  const [filteredLanes, setFilteredLanes] = useState<LaneModel[]>(nonMainLanes);
+  const compareFn = useCallback((_sortBy: LaneSelectorSortBy) => {
+    switch (_sortBy) {
+      case LaneSelectorSortBy.UPDATED:
+        return (a: LaneModel, b: LaneModel) => {
+          return (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0);
+        };
+      case LaneSelectorSortBy.CREATED:
+        return (a: LaneModel, b: LaneModel) => {
+          return (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0);
+        };
+      default:
+        return (a: LaneModel, b: LaneModel) => {
+          return a.id.name.toLowerCase().localeCompare(b.id.name.toLowerCase());
+        };
+    }
+  }, []);
+
   const [search, setSearch] = useState<string>('');
-  // const [focus, setFocus] = useState<boolean>(false);
+  const [sortBy, setSortBy] = useState<LaneSelectorSortBy>(sortByFromProps);
+
+  const sortedNonMainLanes = useMemo(() => {
+    return nonMainLanes.sort(compareFn(sortBy));
+  }, [sortBy, nonMainLanes.length]);
+
+  const [filteredLanes, setFilteredLanes] = useState<LaneModel[]>(sortedNonMainLanes);
 
   useEffect(() => {
     if (filteredLanes.length !== nonMainLanes.length) {
@@ -60,11 +90,11 @@ export function LaneSelector(props: LaneSelectorProps) {
     e.stopPropagation();
     const searchTerm = e.target.value;
     if (!searchTerm || searchTerm === '') {
-      setFilteredLanes(nonMainLanes);
+      setFilteredLanes(sortedNonMainLanes);
     } else {
       setFilteredLanes(() => {
         // first search for items that startWith search term
-        let updatedLanes = nonMainLanes.filter((lane) => {
+        let updatedLanes = sortedNonMainLanes.filter((lane) => {
           const laneName = lane.id.name;
           return laneName.toLowerCase().startsWith(searchTerm.toLowerCase());
         });
@@ -107,10 +137,42 @@ export function LaneSelector(props: LaneSelectorProps) {
               value={search}
               onChange={handleSearchOnChange}
               onClick={handleSearchOnClick}
+              autoFocus={true}
             />
           </div>
         )}
-        <LaneSelectorList {...props} nonMainLanes={filteredLanes} search={search} />
+        {multipleLanes && (
+          <div className={styles.sortAndGroupBy}>
+            <div className={styles.groupBy}></div>
+            <div className={styles.sort}>
+              <ToggleButton
+                className={classnames(styles.sortToggle)}
+                defaultIndex={sortOptions.indexOf(sortBy)}
+                options={sortOptions.map((option) => {
+                  return {
+                    value: option,
+                    icon:
+                      option === LaneSelectorSortBy.ALPHABETICAL ? (
+                        <img className={styles.sortIcon} src="https://static.bit.cloud/bit-icons/ripple-list.svg" />
+                      ) : (
+                        <img className={styles.sortIcon} src="https://static.bit.cloud/bit-icons/clock.svg" />
+                      ),
+                    element: option === LaneSelectorSortBy.ALPHABETICAL ? 'a-Z' : option.toLowerCase(),
+                  };
+                })}
+                onOptionSelect={(index, e) => {
+                  e?.stopPropagation();
+                  setSortBy(sortOptions[index]);
+                  setFilteredLanes((_state) => {
+                    const sortedState = _state.sort(compareFn(sortOptions[index]));
+                    return [...sortedState];
+                  });
+                }}
+              />
+            </div>
+          </div>
+        )}
+        <LaneSelectorList {...props} nonMainLanes={filteredLanes} search={search} sortBy={sortBy} />
       </Dropdown>
     </div>
   );

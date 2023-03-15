@@ -83,6 +83,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
       type LaneOwner {
         name: String
         email: String
+        profileImage: String
       }
 
       type Lane {
@@ -183,7 +184,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
           return lane.log?.date;
         },
         createdBy: async (lane: LaneData) => {
-          return { name: lane.log?.username, email: lane.log?.email };
+          return { name: lane.log?.username, email: lane.log?.email, profileImage: lane.log?.profileImage };
         },
       },
       Query: {

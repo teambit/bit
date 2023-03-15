@@ -1,6 +1,6 @@
 import React, { HTMLAttributes, useEffect, useState, useRef } from 'react';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { LaneSelector } from '@teambit/lanes.ui.inputs.lane-selector';
+import { LaneSelector, LaneSelectorSortBy } from '@teambit/lanes.ui.inputs.lane-selector';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import classnames from 'classnames';
@@ -9,6 +9,9 @@ import styles from './lane-switcher.module.scss';
 
 export type LaneSwitcherProps = {
   groupByScope?: boolean;
+  mainIcon?: () => { iconUrl: string; bgColor: string };
+  sortBy?: LaneSelectorSortBy;
+  sortOptions?: LaneSelectorSortBy[];
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LaneSwitcher({
@@ -16,6 +19,9 @@ export function LaneSwitcher({
   // @todo implement grouped for workspace
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   groupByScope = false,
+  mainIcon,
+  sortBy,
+  sortOptions,
   ...rest
 }: LaneSwitcherProps) {
   const { lanesModel } = useLanes();
@@ -41,7 +47,10 @@ export function LaneSwitcher({
           selectedLaneId={selectedLane?.id}
           nonMainLanes={nonMainLanes}
           mainLane={mainLane}
+          mainIcon={mainIcon?.()}
           groupByScope={false}
+          sortBy={sortBy}
+          sortOptions={sortOptions}
           {...rest}
         />
       </div>

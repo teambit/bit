@@ -17,6 +17,7 @@ const GET_LANES = gql`
         createdBy {
           name
           email
+          profileImage
         }
         readmeComponent {
           id {

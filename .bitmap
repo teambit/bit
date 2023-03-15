@@ -621,6 +621,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/importer"
     },
+    "info/icon-text": {
+        "scope": "teambit.design",
+        "version": "0.0.16",
+        "mainFile": "index.ts",
+        "rootDir": "components/info/icon-text"
+    },
+    "inputs/toggle-button": {
+        "scope": "teambit.design",
+        "version": "0.0.6",
+        "mainFile": "index.ts",
+        "rootDir": "components/inputs/toggle-button"
+    },
     "insights": {
         "scope": "teambit.explorer",
         "version": "0.0.1016",

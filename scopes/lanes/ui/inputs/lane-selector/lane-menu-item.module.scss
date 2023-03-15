@@ -31,6 +31,10 @@
     width: 100%;
     flex: 2;
 
+    &.mainLane {
+      align-items: center;
+    }
+
     .laneInfo {
       display: flex;
       flex-direction: column;
@@ -67,5 +71,19 @@
       // @todo replace with var
       color: #9598a1;
     }
+  }
+}
+
+.icon {
+  display: flex;
+
+  > img {
+    height: 16px;
+    width: 16px;
+  }
+
+  &.defaultMainLaneIcon {
+    padding-right: 4px;
+    padding-left: 4px;
   }
 }

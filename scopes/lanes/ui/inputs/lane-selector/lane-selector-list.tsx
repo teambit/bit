@@ -1,8 +1,9 @@
 import React, { HTMLAttributes, useMemo } from 'react';
 import classnames from 'classnames';
-import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { compact } from 'lodash';
-import { LaneDropdownItems, LaneSelectorProps } from './lane-selector';
+import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import { ScopeIcon } from '@teambit/scope.ui.scope-icon';
+import { LaneDropdownItems, LaneSelectorProps, LaneSelectorSortBy } from './lane-selector';
 // import { LaneGroupedMenuItem } from './lane-grouped-menu-item';
 import { LaneMenuItem } from './lane-menu-item';
 
@@ -22,6 +23,9 @@ export function LaneSelectorList({
   getHref,
   onLaneSelected,
   search = '',
+  mainIcon,
+  sortBy,
+  sortOptions,
   ...rest
 }: LaneSelectorListProps) {
   // do not render the list if there aren't multiple lanes
@@ -30,23 +34,23 @@ export function LaneSelectorList({
   const selectedNonMainLane =
     (!!selectedLaneId && nonMainLanes.find((nonMainLane) => nonMainLane.id.isEqual(selectedLaneId))) || undefined;
 
-  const lanesToRender = useMemo(() => {
-    const mainLaneToRender =
-      search === '' || mainLane?.id.name.toLowerCase().includes(search.toLowerCase()) ? mainLane : undefined;
-
-    if (selectedNonMainLane) {
-      const nonMainLanesWithoutSelected = nonMainLanes.filter(
-        (nonMainLane) => !nonMainLane.id.isEqual(selectedNonMainLane.id)
-      );
-      return compact([selectedNonMainLane, mainLaneToRender, ...nonMainLanesWithoutSelected]);
-    }
-
-    return compact([mainLaneToRender, ...nonMainLanes]);
-  }, [selectedLaneId?.toString(), nonMainLanes.length, search]);
-
   const laneDropdownItems: LaneDropdownItems = useMemo(() => {
+    const lanesToRenderFn = () => {
+      const mainLaneToRender =
+        search === '' || mainLane?.id.name.toLowerCase().includes(search.toLowerCase()) ? mainLane : undefined;
+
+      if (selectedNonMainLane) {
+        const nonMainLanesWithoutSelected = nonMainLanes.filter(
+          (nonMainLane) => !nonMainLane.id.isEqual(selectedNonMainLane.id)
+        );
+        return compact([selectedNonMainLane, mainLaneToRender, ...nonMainLanesWithoutSelected]);
+      }
+
+      return compact([mainLaneToRender, ...nonMainLanes]);
+    };
+    const lanesToRender = lanesToRenderFn();
     return groupByScope ? Array.from(LanesModel.groupLanesByScope(lanesToRender).entries()) : lanesToRender;
-  }, [lanesToRender.length, selectedLaneId?.toString()]);
+  }, [selectedLaneId?.toString(), nonMainLanes.length, search, sortBy]);
 
   return (
     <div {...rest} className={classnames(className, styles.laneSelectorList)}>
@@ -69,6 +73,17 @@ export function LaneSelectorList({
             getHref={getHref}
             selected={selectedLaneId}
             current={lane}
+            timestamp={sortOptions?.includes(LaneSelectorSortBy.UPDATED) ? lane.updatedAt : lane.createdAt}
+            icon={
+              lane.id.isDefault() && mainIcon ? (
+                <ScopeIcon
+                  size={24}
+                  scopeImage={mainIcon.iconUrl}
+                  bgColor={mainIcon.bgColor}
+                  className={styles.mainIcon}
+                />
+              ) : undefined
+            }
           ></LaneMenuItem>
         ))}
     </div>

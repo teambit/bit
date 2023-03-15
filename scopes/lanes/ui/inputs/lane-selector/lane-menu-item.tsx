@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { LaneId } from '@teambit/lane-id';
 import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
-import { ScopeIcon } from '@teambit/scope.ui.scope-icon';
+import { UserAvatar } from '@teambit/design.ui.avatar';
 import { TimeAgo } from '@teambit/design.ui.time-ago';
 
 import styles from './lane-menu-item.module.scss';
@@ -13,6 +13,8 @@ export type LaneMenuItemProps = {
   current: LaneModel;
   getHref?: (laneId: LaneId) => string;
   onLaneSelected?: (laneId: LaneId) => void;
+  icon?: React.ReactNode;
+  timestamp?: Date;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LaneMenuItem({
@@ -21,10 +23,14 @@ export function LaneMenuItem({
   className,
   onLaneSelected,
   getHref = LanesModel.getLaneUrl,
+  icon,
+  timestamp,
   ...rest
 }: LaneMenuItemProps) {
   const isCurrent = selected?.toString() === current.id.toString();
   const isDefaultLane = current.id.isDefault();
+  const iconWithDefault: React.ReactNode =
+    icon || (isDefaultLane ? <img src="https://static.bit.cloud/bit-icons/changed-components.svg" /> : undefined);
 
   const href = getHref(current.id);
 
@@ -34,14 +40,27 @@ export function LaneMenuItem({
 
   const laneDescription = current.description || current.id.name;
   const laneName = current.id.name;
-  const timestamp = current.updatedAt || current.createdAt;
+  const user = current.updatedBy || current.createdBy;
+
+  const avatar = iconWithDefault || (
+    <UserAvatar
+      size={24}
+      account={{
+        name: user?.name?.split(' ')[0],
+        displayName: user?.name,
+        profileImage: user?.profileImage,
+      }}
+    />
+  );
 
   return (
     <div {...rest} className={classnames(className, styles.laneMenuItemContainer)}>
       <MenuLinkItem active={isCurrent} href={href} className={styles.menuItem} onClick={onClick}>
         <div className={styles.laneContainer}>
-          <div className={styles.left}>
-            <div className={styles.icon}>{isDefaultLane ? <ScopeIcon size={14} /> : <ScopeIcon size={14} />}</div>
+          <div className={classnames(styles.left, isDefaultLane && styles.mainLane)}>
+            <div className={classnames(styles.icon, isDefaultLane && !icon && styles.defaultMainLaneIcon)}>
+              {avatar}
+            </div>
             <div className={styles.laneInfo}>
               <div className={classnames(styles.laneDescription)}>{laneDescription}</div>
               {!isDefaultLane && <div className={styles.laneName}>{laneName}</div>}

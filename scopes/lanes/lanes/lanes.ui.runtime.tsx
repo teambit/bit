@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useContext } from 'react';
 import { Route, RouteProps } from 'react-router-dom';
 import { Slot, Harmony, SlotRegistry } from '@teambit/harmony';
 import { LaneCompare, LaneCompareProps as DefaultLaneCompareProps } from '@teambit/lanes.ui.compare.lane-compare';
@@ -6,7 +6,7 @@ import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
 import { LanesAspect } from '@teambit/lanes';
 import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
-import ScopeAspect, { ScopeUI } from '@teambit/scope';
+import ScopeAspect, { ScopeContext, ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
 import ComponentAspect, { ComponentID, ComponentUI, useIdFromLocation } from '@teambit/component';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
@@ -24,6 +24,7 @@ import { LaneId } from '@teambit/lane-id';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
 import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
 import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
+import { LaneSelectorSortBy } from '@teambit/lanes.ui.inputs.lane-selector';
 
 export type LaneCompareProps = Partial<DefaultLaneCompareProps>;
 export type LaneProviderIgnoreSlot = SlotRegistry<IgnoreDerivingFromUrl>;
@@ -226,7 +227,17 @@ export class LanesUI {
   }
 
   getLanesSwitcher() {
-    const LanesSwitcher = <LaneSwitcher groupByScope={this.lanesHost === 'workspace'} />;
+    const mainIcon = () => {
+      const scope = useContext(ScopeContext);
+      return { iconUrl: scope.icon, bgColor: scope.backgroundIconColor };
+    };
+
+    const LanesSwitcher = (
+      <LaneSwitcher
+        groupByScope={this.lanesHost === 'workspace'}
+        mainIcon={this.lanesHost === 'scope' ? mainIcon : undefined}
+      />
+    );
     return LanesSwitcher;
   }
 

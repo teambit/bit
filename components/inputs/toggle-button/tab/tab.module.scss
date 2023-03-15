@@ -1,0 +1,9 @@
+.tab {
+  left: 0;
+  position: absolute;
+  transition: transform 150ms ease-in-out, width 150ms ease-in-out;
+  background-color: var(--surface02-color, #f7f2fd);
+  top: 2px;
+  border-radius: 6px;
+  height: calc(100% - 4px);
+}

@@ -477,7 +477,7 @@ async function addLogToComponents(
   });
 }
 
-async function getBitCloudUsername(): Promise<string | undefined> {
+export async function getBitCloudUsername(): Promise<string | undefined> {
   const token = await globalConfig.get(CFG_USER_TOKEN_KEY);
   if (!token) return '';
   try {
@@ -491,6 +491,35 @@ async function getBitCloudUsername(): Promise<string | undefined> {
     const user = object.payload;
     const username = user.username;
     return username;
+  } catch (error) {
+    return undefined;
+  }
+}
+
+export type BitCloudUser = {
+  username?: string;
+  name?: string;
+  displayName?: string;
+  profileImage?: string;
+};
+
+export async function getBitCloudUser(): Promise<BitCloudUser | undefined> {
+  const token = await globalConfig.get(CFG_USER_TOKEN_KEY);
+  if (!token) return undefined;
+
+  try {
+    const res = await fetch(`https://api.${getCloudDomain()}/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    const object = await res.json();
+    const user = object.payload;
+
+    return {
+      ...user,
+    };
   } catch (error) {
     return undefined;
   }
