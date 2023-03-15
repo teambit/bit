@@ -505,7 +505,7 @@ export default class Repository {
   private async moveOneObjectToTrash(ref: Ref) {
     const currentPath = this.objectPath(ref);
     const trashObjPath = path.join(this.getTrashDir(), this.hashPath(ref));
-    await fs.move(currentPath, trashObjPath);
+    await fs.move(currentPath, trashObjPath, { overwrite: true });
     this.removeFromCache(ref);
   }
 
