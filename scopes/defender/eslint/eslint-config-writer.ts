@@ -10,6 +10,8 @@ import { EslintLinterInterface } from './eslint-linter-interface';
 const BIT_GENERATED_ESLINT_CONFIG_COMMENT = '// bit-generated-eslint-config';
 
 export class EslintConfigWriter implements ConfigWriterEntry {
+  name = 'EslintConfigWriter';
+
   constructor(private linter: LinterMain) {}
   patterns: string[] = ['**/.eslintrc.json'];
 

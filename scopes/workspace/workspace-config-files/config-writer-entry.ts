@@ -27,6 +27,11 @@ export type ExtendingConfigFile = ConfigFile & {
 
 export interface ConfigWriterEntry {
   /**
+   * Name of the config writer.
+   * used for outputs and logging.
+   */
+  name: string
+  /**
    * Get's the component env and return the config file content
    * for example the eslint config to tsconfig.
    * This also enable to return a hash of the config file, which will be used to determine if
