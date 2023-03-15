@@ -188,7 +188,7 @@ once ready, snap/tag the components to persist the changes`;
       if (!newFromLane?.length) return '';
       const title = newFromLaneAdded
         ? `successfully added the following components from the lane`
-        : `the following components introduced on the lane and were not added. use --entire-lane flag to add them`;
+        : `the following components introduced on the lane and were not added. omit --workspace-only flag to add them`;
       const body = newFromLane.join('\n');
       return `\n\n${chalk.underline(title)}\n${body}`;
     };
