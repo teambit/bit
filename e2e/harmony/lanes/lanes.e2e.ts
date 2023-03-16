@@ -1458,7 +1458,7 @@ describe('bit lane command', function () {
       });
     });
   });
-  describe.only('checking out to a different version from main', () => {
+  describe('checking out to a different version from main', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1, false);
