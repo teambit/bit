@@ -3,7 +3,6 @@ import { LaneCompareProps } from '@teambit/lanes';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSelector } from '@teambit/lanes.ui.inputs.lane-selector';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
-import { LaneId } from '@teambit/lane-id';
 import { LaneIcon } from '@teambit/lanes.ui.icons.lane-icon';
 
 import styles from './lane-compare-page.module.scss';
@@ -18,7 +17,7 @@ export function LaneComparePage({ getLaneCompare, groupByScope, ...rest }: LaneC
   const [base, setBase] = useState<LaneModel | undefined>();
   const defaultLane = lanesModel?.getDefaultLane();
   const compare = lanesModel?.viewedLane;
-  const nonMainLanes = lanesModel?.getNonMainLanes();
+  const nonMainLanes = lanesModel?.getNonMainLanes() || [];
   useEffect(() => {
     if (!base && !compare?.id.isDefault() && defaultLane) {
       setBase(defaultLane);
@@ -30,10 +29,8 @@ export function LaneComparePage({ getLaneCompare, groupByScope, ...rest }: LaneC
 
   const LaneCompareComponent = getLaneCompare({ base, compare });
 
-  const lanes: Array<LaneId> = useMemo(() => {
-    const mainLaneId = defaultLane?.id;
-    const nonMainLaneIds = nonMainLanes?.map((lane) => lane.id) || [];
-    const allLanes = (mainLaneId && [mainLaneId, ...nonMainLaneIds]) || nonMainLaneIds;
+  const lanes: Array<LaneModel> = useMemo(() => {
+    const allLanes = (defaultLane && [defaultLane, ...nonMainLanes]) || nonMainLanes;
     return allLanes.filter((l) => l.toString() !== compare?.id.toString());
   }, [base?.id.toString(), compare?.id.toString(), lanesModel?.lanes.length]);
 

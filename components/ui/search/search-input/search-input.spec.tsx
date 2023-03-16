@@ -1,6 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import { SearchInputWithValue } from './search-input.composition';
+import '@testing-library/jest-dom';
 
 describe('should render search input', () => {
   let rendered;
