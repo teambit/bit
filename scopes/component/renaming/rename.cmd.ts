@@ -6,6 +6,7 @@ export type RenameOptions = {
   scope?: string;
   path?: string;
   refactor?: boolean;
+  preserve?: boolean;
 };
 
 export class RenameCmd implements Command {
@@ -34,6 +35,7 @@ export class RenameCmd implements Command {
       'relative path in the workspace. by default the path is `<scope>/<namespace>/<name>`',
     ],
     ['r', 'refactor', 'update the import/require statements in all dependent components (in the same workspace)'],
+    ['', 'preserve', 'avoid renaming files and variables/classes according to the new component name'],
   ] as CommandOptions;
   loader = true;
   migration = true;

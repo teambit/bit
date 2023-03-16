@@ -166,4 +166,15 @@ describe('bit rename command', function () {
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
     });
   });
+  describe('rename an aspect', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.create('aspect', 'my-aspect');
+      helper.command.rename('my-aspect', 'foo');
+    });
+    it('should rename the root-dir by default', () => {
+      expect(path.join(helper.scopes.localPath, `${helper.scopes.remote}/my-aspect`)).to.not.be.a.path();
+      expect(path.join(helper.scopes.localPath, `${helper.scopes.remote}/foo`)).to.be.a.directory();
+    });
+  });
 });
