@@ -1,8 +1,8 @@
 import chalk from "chalk";
 import { AspectWritersResults, EnvsWrittenConfigFile, EnvsWrittenConfigFiles, EnvsWrittenExtendingConfigFile, EnvsWrittenExtendingConfigFiles, OneConfigFileWriterResult, WriteConfigFilesResult } from "./workspace-config-files.main.runtime";
-import { Flags } from "./ws-config.cmd";
+import type { CleanConfigCmdFlags, WriteConfigCmdFlags } from "./ws-config.cmd";
 
-export function formatWriteOutput(writeConfigFilesResult: WriteConfigFilesResult, flags: Flags): string {
+export function formatWriteOutput(writeConfigFilesResult: WriteConfigFilesResult, flags: WriteConfigCmdFlags): string {
   const { cleanResults, writeResults } = writeConfigFilesResult;
   const isDryRun = !!(flags.dryRun || flags.dryRunWithContent);
   const cleanResultsOutput = getCleanResultsOutput(cleanResults, isDryRun);
@@ -11,11 +11,18 @@ export function formatWriteOutput(writeConfigFilesResult: WriteConfigFilesResult
   return `${cleanResultsOutput}${writeResultsOutput}`;
 }
 
+export function formatCleanOutput(cleanResults: string[] = [], flags: CleanConfigCmdFlags): string {
+  const isDryRun = !!flags.dryRun;
+  const cleanResultsOutput = getCleanResultsOutput(cleanResults, isDryRun);
+
+  return `${cleanResultsOutput}`;
+}
+
 function getCleanResultsOutput(cleanResults: string[] | undefined, isDryRun: boolean) {
   const cleanResultsOutput = cleanResults
     ? `${chalk.green(
-        `the following ${cleanResults.length} paths ${isDryRun ? 'will be' : 'were'} deleted`
-      )}\n${cleanResults.join('\n')}\n\n`
+        `the following ${cleanResults.length} paths ${isDryRun ? 'will be' : 'were'} deleted:`
+      )}\n  ${cleanResults.join('\n  ')}\n`
     : '';
   return cleanResultsOutput;
 }

@@ -7,9 +7,14 @@ import {
   WorkspaceConfigFilesMain,
   WriteConfigFilesResult
 } from './workspace-config-files.main.runtime';
-import { formatWriteOutput } from './format-outputs';
+import { formatCleanOutput, formatWriteOutput } from './format-outputs';
 
-export type Flags = {
+export type CleanConfigCmdFlags = {
+  dryRun?: boolean;
+  silent?: boolean;
+};
+
+export type WriteConfigCmdFlags = {
   dryRun?: boolean;
   noDedupe?: boolean;
   dryRunWithContent?: boolean;
@@ -33,7 +38,7 @@ export class WsConfigCmd implements Command {
   }
 }
 
-export default class WsConfigWriteCmd implements Command {
+export class WsConfigWriteCmd implements Command {
   name = 'write';
   description = 'EXPERIMENTAL. write config files in the workspace. useful for IDEs';
   alias = '';
@@ -57,7 +62,7 @@ export default class WsConfigWriteCmd implements Command {
 
   constructor(private workspaceConfigFilesMain: WorkspaceConfigFilesMain) {}
 
-  async report(_args, flags: Flags) {
+  async report(_args, flags: WriteConfigCmdFlags) {
     const results = (await this.json(_args, flags)) as WriteConfigFilesResult;
     if (flags.dryRunWithContent) {
       throw new Error(`use --json flag along with --dry-run-with-content`);
@@ -65,7 +70,7 @@ export default class WsConfigWriteCmd implements Command {
     return formatWriteOutput(results, flags);
   }
 
-  async json(_args, flags: Flags) {
+  async json(_args, flags: WriteConfigCmdFlags) {
     const { clean, silent, noDedupe, dryRunWithContent } = flags;
     const dryRun = dryRunWithContent ? true : flags.dryRun;
     const { cleanResults, writeResults } = await this.workspaceConfigFilesMain.writeConfigFiles({
@@ -87,5 +92,33 @@ export default class WsConfigWriteCmd implements Command {
       };
     }
     return { cleanResults, writeResults };
+  }
+}
+
+export class WsConfigCleanCmd implements Command {
+  name = 'clean';
+  description = 'EXPERIMENTAL. clean (delete) written config files in the workspace. useful for IDEs';
+  alias = '';
+  group = 'development';
+  options = [
+    ['s', 'silent', 'do not prompt for confirmation'],
+    ['', 'dry-run', 'show the paths that configs will be written per env'],
+    ['j', 'json', 'json format'],
+  ] as CommandOptions;
+
+  constructor(private workspaceConfigFilesMain: WorkspaceConfigFilesMain) {}
+
+  async report(_args, flags: CleanConfigCmdFlags) {
+    const results = await this.json(_args, flags);
+    return formatCleanOutput(results, flags);
+  }
+
+  async json(_args, flags: WriteConfigCmdFlags) {
+    const { silent, dryRun } = flags;
+    const cleanResults = await this.workspaceConfigFilesMain.cleanConfigFiles({
+      dryRun,
+      silent,
+    });
+    return cleanResults;
   }
 }

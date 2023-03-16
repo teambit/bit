@@ -91,7 +91,7 @@ export class EslintConfigWriter implements ConfigWriterEntry {
     return `.eslintrc.bit.${hash}.json`;
   }
 
-  shouldClean(filePath: string): boolean {
+  isBitGenerated(filePath: string): boolean {
     const content = fs.readFileSync(filePath).toString();
     return content.includes(BIT_GENERATED_ESLINT_CONFIG_COMMENT);
   }

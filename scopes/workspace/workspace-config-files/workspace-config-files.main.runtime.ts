@@ -19,9 +19,14 @@ import { Logger, LoggerAspect } from '@teambit/logger';
 import type { LoggerMain } from '@teambit/logger';
 import { WorkspaceConfigFilesAspect } from './workspace-config-files.aspect';
 import { ConfigFile, ConfigWriterEntry, ExtendingConfigFile } from './config-writer-entry';
-import WriteConfigsCmd, { WsConfigCmd } from './ws-config.cmd';
+import { WsConfigCleanCmd, WsConfigCmd, WsConfigWriteCmd } from './ws-config.cmd';
 
 export type ConfigWriterSlot = SlotRegistry<ConfigWriterEntry[]>;
+
+export type CleanConfigFilesOptions = {
+  silent?: boolean; // no prompt
+  dryRun?: boolean;
+};
 
 export type WriteConfigFilesOptions = {
   clean?: boolean;
@@ -102,7 +107,7 @@ export class WorkspaceConfigFilesMain {
 
     let cleanResults: string[] | undefined;
     if (options.clean) {
-      cleanResults = await this.clean(execContext, options);
+      cleanResults = await this.clean(options);
     }
 
     const aspectsWritersResults = await this.write(execContext, options);
@@ -112,6 +117,12 @@ export class WorkspaceConfigFilesMain {
     const writeResults = { aspectsWritersResults, totalWrittenFiles };
 
     return { writeResults, cleanResults };
+  }
+
+  async cleanConfigFiles(options: CleanConfigFilesOptions = {}): Promise<string[]> {
+    // const execContext = await this.getExecContext();
+    const cleanResults = await this.clean(options);
+    return cleanResults;
   }
 
   private async write(
@@ -381,12 +392,18 @@ export class WorkspaceConfigFilesMain {
    * @returns Array of paths of deleted config files
    */
   async clean(
-    envsExecutionContext: ExecutionContext[],
     { dryRun, silent }: WriteConfigFilesOptions
   ): Promise<string[]> {
     const configWriters = this.getFlatConfigWriters();
-    const patternsFlattened = configWriters.map((configWriter) => configWriter.patterns).flat();
-    const paths = globby.sync(patternsFlattened, { cwd: this.workspace.path });
+    const paths = configWriters.map((configWriter) => {
+      const patterns = configWriter.patterns;
+      const currPaths = globby.sync(patterns, { cwd: this.workspace.path, dot: true, onlyFiles: true, ignore: ['**/node_modules/**'] });
+      const filteredPaths = currPaths.filter((path) => {
+        const fullPath = join(this.workspace.path, path);
+        return configWriter.isBitGenerated ? configWriter.isBitGenerated(fullPath) : true;
+      });
+      return filteredPaths;
+    }).flat();
     if (dryRun) return paths;
     if (!silent) await this.promptForCleaning(paths);
     await this.deleteFiles(paths);
@@ -406,7 +423,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
   }
 
   private async deleteFiles(paths: string[]) {
-    await Promise.all(paths.map((f) => fs.remove(f)));
+    await Promise.all(paths.map((f) => fs.remove(join(this.workspace.path, f))));
   }
 
   registerConfigWriter(...configWriterEntries: ConfigWriterEntry[]) {
@@ -429,8 +446,9 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
     const workspaceConfigFilesMain = new WorkspaceConfigFilesMain(configWriterSlot, workspace, envs, logger);
     const wsConfigCmd = new WsConfigCmd();
     wsConfigCmd.commands = [
-      new WriteConfigsCmd(workspaceConfigFilesMain)
-    ]
+      new WsConfigWriteCmd(workspaceConfigFilesMain),
+      new WsConfigCleanCmd(workspaceConfigFilesMain),
+    ];
     cli.register(wsConfigCmd);
     return workspaceConfigFilesMain;
   }
