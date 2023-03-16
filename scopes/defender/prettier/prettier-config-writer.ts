@@ -22,7 +22,7 @@ export class PrettierConfigWriter implements ConfigWriterEntry {
     const content = `module.exports = ${JSON.stringify(config.prettierConfig, null, 2)}`;
     const prettierConfigFile = {
       content,
-      name: '.prettierrc.bit.{hash}.json',
+      name: '.prettierrc.bit.{hash}.cjs',
     };
     return [prettierConfigFile];
   }
