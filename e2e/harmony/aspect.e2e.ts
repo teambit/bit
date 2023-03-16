@@ -111,4 +111,26 @@ describe('aspect', function () {
       expect(cmp).not.to.have.string(`${helper.scopes.remote}/my-aspect@0.0.1`);
     });
   });
+  describe('bit aspect unset command', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.create('aspect', 'my-aspect');
+      helper.command.compile();
+      helper.command.install();
+      helper.command.tagAllWithoutBuild();
+      helper.fixtures.populateComponents(1);
+      helper.command.setAspect('comp1', `${helper.scopes.remote}/my-aspect`);
+      helper.command.tagWithoutBuild('comp1');
+      helper.command.export();
+    });
+    describe('without specifying the aspect version', () => {
+      before(() => {
+        helper.command.unsetAspect('comp1', `${helper.scopes.remote}/my-aspect`);
+      });
+      it('should unset the aspect', () => {
+        const aspect = helper.command.showAspectConfig('comp1', `${helper.scopes.remote}/my-aspect@0.0.1`);
+        expect(aspect).to.be.undefined;
+      });
+    });
+  });
 });

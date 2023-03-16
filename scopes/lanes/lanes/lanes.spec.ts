@@ -155,5 +155,14 @@ describe('LanesAspect', function () {
       expect(currentLanes).to.have.lengthOf(1);
       expect(currentLanes[0].id.name).to.equal('stage');
     });
+    describe('delete restored lane', () => {
+      let output: string[];
+      before(async () => {
+        output = await lanes.removeLanes(['stage']);
+      });
+      it('should not throw', () => {
+        expect(output).to.have.lengthOf(1);
+      });
+    });
   });
 });
