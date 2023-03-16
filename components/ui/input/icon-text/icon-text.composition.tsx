@@ -5,6 +5,7 @@ import { IconTextInput } from './icon-text';
 export const BasicIconTextInput = () => (
   <IconTextInput
     placeholder="search..."
+    // eslint-disable-next-line no-alert
     icon={<Icon of="discovery" style={{ cursor: 'pointer' }} onClick={() => alert('on icon click')} />}
     data-testid="test-input"
   />
@@ -17,6 +18,7 @@ export const IconTextInputWithImage = () => (
       <img
         src="https://static.bit.dev/bit-icons/filter.svg"
         style={{ cursor: 'pointer', top: '0.55em', right: '0.4em' }}
+        // eslint-disable-next-line no-alert
         onClick={() => alert('on icon click')}
       />
     }
@@ -27,6 +29,7 @@ export const IconTextInputWithImage = () => (
 export const BigIconTextInputWithIcon = () => (
   <IconTextInput
     placeholder="bigger with font size"
+    // eslint-disable-next-line no-alert
     icon={<Icon of="discovery" style={{ cursor: 'pointer' }} onClick={() => alert('on icon click')} />}
     data-testid="test-input"
     style={{ fontSize: 20 }}

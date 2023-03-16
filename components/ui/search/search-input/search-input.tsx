@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { IconTextInput, IconTextInputProps, IconTextInputWithRef } from '@teambit/design.ui.input.icon-text';
 import { Icon } from '@teambit/design.elements.icon';
 
@@ -11,7 +11,7 @@ export type SearchInputProps = {
   ref?: React.Ref<HTMLInputElement>;
 } & IconTextInputProps;
 
-export function SearchInput({ placeholder = 'Search', onSubmit, ref, onMount, ...rest }: SearchInputProps) {
+export function SearchInput({ placeholder = 'Search', onSubmit, ref, ...rest }: SearchInputProps) {
   const onKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
