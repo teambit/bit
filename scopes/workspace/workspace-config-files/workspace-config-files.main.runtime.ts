@@ -198,6 +198,16 @@ export class WorkspaceConfigFilesMain {
         this.buildExtendingConfigFilesMap(configWriter, writtenConfigFiles, envId, extendingConfigFilesMap);
       }
     });
+    if (!writtenConfigFilesMap || Object.keys(writtenConfigFilesMap).length === 0) {
+      return {
+        name: configWriter.name,
+        configFiles: [],
+        totalConfigFiles: 0,
+        totalWrittenFiles: 0,
+        extendingConfigFiles: [],
+        totalExtendingConfigFiles: 0,
+      };
+    }
     console.log(
       '🚀 ~ file: workspace-config-files.main.runtime.ts:159 ~ WorkspaceConfigFilesMain ~ awaitpMapSeries ~ extendingConfigFilesMap:',
       extendingConfigFilesMap
@@ -392,19 +402,24 @@ export class WorkspaceConfigFilesMain {
    * @param param1
    * @returns Array of paths of deleted config files
    */
-  async clean(
-    { dryRun, silent }: WriteConfigFilesOptions
-  ): Promise<string[]> {
+  async clean({ dryRun, silent }: WriteConfigFilesOptions): Promise<string[]> {
     const configWriters = this.getFlatConfigWriters();
-    const paths = configWriters.map((configWriter) => {
-      const patterns = configWriter.patterns;
-      const currPaths = globby.sync(patterns, { cwd: this.workspace.path, dot: true, onlyFiles: true, ignore: ['**/node_modules/**'] });
-      const filteredPaths = currPaths.filter((path) => {
-        const fullPath = join(this.workspace.path, path);
-        return configWriter.isBitGenerated ? configWriter.isBitGenerated(fullPath) : true;
-      });
-      return filteredPaths;
-    }).flat();
+    const paths = configWriters
+      .map((configWriter) => {
+        const patterns = configWriter.patterns;
+        const currPaths = globby.sync(patterns, {
+          cwd: this.workspace.path,
+          dot: true,
+          onlyFiles: true,
+          ignore: ['**/node_modules/**'],
+        });
+        const filteredPaths = currPaths.filter((path) => {
+          const fullPath = join(this.workspace.path, path);
+          return configWriter.isBitGenerated ? configWriter.isBitGenerated(fullPath) : true;
+        });
+        return filteredPaths;
+      })
+      .flat();
     if (dryRun) return paths;
     if (!silent) await this.promptForCleaning(paths);
     await this.deleteFiles(paths);
