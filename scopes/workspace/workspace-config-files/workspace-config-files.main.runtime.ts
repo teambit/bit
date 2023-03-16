@@ -92,6 +92,7 @@ export type AspectWritersResults = {
 export type WriteConfigFilesResult = {
   cleanResults?: string[];
   writeResults: { totalWrittenFiles: number; aspectsWritersResults: AspectWritersResults[] };
+  wsDir: string;
 };
 
 export class WorkspaceConfigFilesMain {
@@ -116,7 +117,7 @@ export class WorkspaceConfigFilesMain {
     }, 0);
     const writeResults = { aspectsWritersResults, totalWrittenFiles };
 
-    return { writeResults, cleanResults };
+    return { writeResults, cleanResults, wsDir: this.workspace.path };
   }
 
   async cleanConfigFiles(options: CleanConfigFilesOptions = {}): Promise<string[]> {

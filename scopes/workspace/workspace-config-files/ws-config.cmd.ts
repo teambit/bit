@@ -73,7 +73,7 @@ export class WsConfigWriteCmd implements Command {
   async json(_args, flags: WriteConfigCmdFlags) {
     const { clean, silent, noDedupe, dryRunWithContent } = flags;
     const dryRun = dryRunWithContent ? true : flags.dryRun;
-    const { cleanResults, writeResults } = await this.workspaceConfigFilesMain.writeConfigFiles({
+    const { cleanResults, writeResults, wsDir } = await this.workspaceConfigFilesMain.writeConfigFiles({
       clean,
       dedupe: !noDedupe,
       dryRun,
@@ -87,11 +87,12 @@ export class WsConfigWriteCmd implements Command {
         : writeResults.aspectsWritersResults.map((s) => omit(s, ['content']));
       // return JSON.stringify({ cleanResults, writeResults: writeJson }, undefined, 2);
       return {
+        wsDir,
         cleanResults,
         writeResults: { totalWrittenFiles: writeResults.totalWrittenFiles, aspectsWritersResults },
       };
     }
-    return { cleanResults, writeResults };
+    return { wsDir, cleanResults, writeResults };
   }
 }
 
