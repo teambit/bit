@@ -194,7 +194,7 @@ a lane created from another lane has all the components of the original lane.`;
     [
       '',
       'alias <name>',
-      'a local alias to refer to this lane, defaults to the <lane-name> (can be added later with "bit lane alias")',
+      'a local alias to refer to this lane, defaults to the `<lane-name>` (can be added later with "bit lane alias")',
     ],
   ] as CommandOptions;
   loader = true;
