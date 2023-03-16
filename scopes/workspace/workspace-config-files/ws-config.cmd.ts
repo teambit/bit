@@ -1,3 +1,5 @@
+/* eslint-disable max-classes-per-file */
+
 import { omit } from 'lodash';
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
@@ -14,8 +16,24 @@ import {
 
 type Flags = { dryRun?: boolean; noDedupe?: boolean; dryRunWithContent?: boolean; clean?: boolean; silent?: boolean };
 
-export default class WriteConfigsCmd implements Command {
-  name = 'write-configs';
+export class WsConfigCmd implements Command {
+  name = 'ws-config <sub-command>';
+  alias = 'workspace-config';
+  description = 'manage workspace config files';
+  options = [];
+  group = 'development';
+  commands: Command[] = [];
+  // helpUrl = '';
+
+  async report([unrecognizedSubcommand]: [string]) {
+    return chalk.red(
+      `"${unrecognizedSubcommand}" is not a subcommand of "ws-config", please run "bit ws-config --help" to list the subcommands`
+    );
+  }
+}
+
+export default class WsConfigWriteCmd implements Command {
+  name = 'write';
   description = 'EXPERIMENTAL. write config files in the workspace. useful for IDEs';
   alias = '';
   group = 'development';

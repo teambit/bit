@@ -19,7 +19,7 @@ import { Logger, LoggerAspect } from '@teambit/logger';
 import type { LoggerMain } from '@teambit/logger';
 import { WorkspaceConfigFilesAspect } from './workspace-config-files.aspect';
 import { ConfigFile, ConfigWriterEntry, ExtendingConfigFile } from './config-writer-entry';
-import WriteConfigsCmd from './write-configs.cmd';
+import WriteConfigsCmd, { WsConfigCmd } from './ws-config.cmd';
 
 export type ConfigWriterSlot = SlotRegistry<ConfigWriterEntry[]>;
 
@@ -427,8 +427,11 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
   ) {
     const logger = loggerAspect.createLogger(WorkspaceConfigFilesAspect.id);
     const workspaceConfigFilesMain = new WorkspaceConfigFilesMain(configWriterSlot, workspace, envs, logger);
-    const writeTsconfigCmd = new WriteConfigsCmd(workspaceConfigFilesMain);
-    cli.register(writeTsconfigCmd);
+    const wsConfigCmd = new WsConfigCmd();
+    wsConfigCmd.commands = [
+      new WriteConfigsCmd(workspaceConfigFilesMain)
+    ]
+    cli.register(wsConfigCmd);
     return workspaceConfigFilesMain;
   }
 }
