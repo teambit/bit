@@ -621,12 +621,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/importer"
     },
-    "info/icon-text": {
-        "scope": "teambit.design",
-        "version": "0.0.16",
-        "mainFile": "index.ts",
-        "rootDir": "components/info/icon-text"
-    },
     "inputs/toggle-button": {
         "scope": "teambit.design",
         "version": "0.0.6",
@@ -1904,6 +1898,12 @@
         "version": "0.0.4",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/ui/icons/lane-icon"
+    },
+    "ui/input/icon-text": {
+        "scope": "teambit.design",
+        "version": "1.0.12",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/input/icon-text"
     },
     "ui/inputs/lane-selector": {
         "scope": "teambit.lanes",

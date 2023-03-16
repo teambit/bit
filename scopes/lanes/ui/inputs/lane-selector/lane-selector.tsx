@@ -1,8 +1,8 @@
-import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect, useCallback, useMemo } from 'react';
+import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect, useCallback, useMemo, useRef } from 'react';
 import classnames from 'classnames';
 import { LaneId } from '@teambit/lane-id';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
-import { SearchInput } from '@teambit/explorer.ui.search.search-input';
+import { SearchInputWithRef } from '@teambit/explorer.ui.search.search-input';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { ToggleButton } from '@teambit/design.inputs.toggle-button';
 
@@ -70,6 +70,7 @@ export function LaneSelector(props: LaneSelectorProps) {
 
   const [search, setSearch] = useState<string>('');
   const [sortBy, setSortBy] = useState<LaneSelectorSortBy>(sortByFromProps);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const sortedNonMainLanes = useMemo(() => {
     return nonMainLanes.sort(compareFn(sortBy));
@@ -115,9 +116,25 @@ export function LaneSelector(props: LaneSelectorProps) {
     e.stopPropagation();
   };
 
-  // const onDropdownToggled = (_, open) => {
-  //   setFocus(open);
-  // };
+  function LaneSearch() {
+    inputRef.current?.focus();
+
+    return (
+      (multipleLanes && (
+        <div className={styles.search}>
+          <SearchInputWithRef
+            ref={inputRef}
+            className={styles.searchInput}
+            value={search}
+            onChange={handleSearchOnChange}
+            onClick={handleSearchOnClick}
+            autoFocus={true}
+          />
+        </div>
+      )) ||
+      null
+    );
+  }
 
   return (
     <div {...rest} className={classnames(className, styles.laneSelector)}>
@@ -130,17 +147,7 @@ export function LaneSelector(props: LaneSelectorProps) {
         }
         className={classnames(styles.dropdown, !multipleLanes && styles.disabled)}
       >
-        {multipleLanes && (
-          <div className={styles.search}>
-            <SearchInput
-              className={styles.searchInput}
-              value={search}
-              onChange={handleSearchOnChange}
-              onClick={handleSearchOnClick}
-              autoFocus={true}
-            />
-          </div>
-        )}
+        <LaneSearch />
         {multipleLanes && (
           <div className={styles.sortAndGroupBy}>
             <div className={styles.groupBy}></div>
