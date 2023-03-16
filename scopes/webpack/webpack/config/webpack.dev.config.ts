@@ -157,5 +157,15 @@ export function configFactory(
         options: { pubsub, devServerID },
       }),
     ],
+
+    cache: {
+      name: devServerID,
+      type: 'filesystem',
+      cacheDirectory: path.join(workspaceDir, 'node_modules/.cache/bit/webpack'),
+    },
+
+    snapshot: {
+      managedPaths: [path.join(workspaceDir, 'node_modules')],
+    },
   };
 }
