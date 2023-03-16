@@ -212,6 +212,7 @@
     "vinyl": "2.2.1",
     "vinyl-file": "3.0.0",
     "winston": "3.3.3",
+    "write-file-atomic": "5.0.0",
     "yargs": "17.0.1",
     "yn": "2.0.0"
   },
