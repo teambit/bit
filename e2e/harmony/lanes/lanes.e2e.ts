@@ -1359,14 +1359,14 @@ describe('bit lane command', function () {
       helper.scopeHelper.getClonedLocalScope(secondWorkspace);
       helper.command.import();
     });
-    it('bit checkout without --entire-lane flag should not add the component and should suggest using --entire-lane flag', () => {
-      const output = helper.command.checkoutHead('--skip-dependency-installation');
+    it('bit checkout with --workspace-only flag should not add the component and should suggest omitting --workspace-only flag', () => {
+      const output = helper.command.checkoutHead('--skip-dependency-installation --workspace-only');
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(1);
-      expect(output).to.have.string('use --entire-lane flag to add them');
+      expect(output).to.have.string('omit --workspace-only flag to add them');
     });
-    it('bit checkout with --entire-lane flag', () => {
-      helper.command.checkoutHead('--entire-lane --skip-dependency-installation');
+    it('bit checkout without --workspace-only flag should add the new components', () => {
+      helper.command.checkoutHead('--skip-dependency-installation');
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(2);
     });
@@ -1382,14 +1382,14 @@ describe('bit lane command', function () {
         helper.command.import();
         beforeCheckout = helper.scopeHelper.cloneLocalScope();
       });
-      it('bit checkout without --entire-lane flag, should not suggest adding it', () => {
+      it('bit checkout with --workspace-only flag, should not suggest omitting it', () => {
         const output = helper.command.checkoutHead('--skip-dependency-installation');
-        expect(output).to.not.have.string('use --entire-lane flag to add them');
+        expect(output).to.not.have.string('omit --workspace-only flag to add them');
         expect(output).to.not.have.string('comp2');
       });
-      it('bit checkout with --entire-lane flag should not add it', () => {
+      it('bit checkout head should not add it', () => {
         helper.scopeHelper.getClonedLocalScope(beforeCheckout);
-        helper.command.checkoutHead('--entire-lane --skip-dependency-installation');
+        helper.command.checkoutHead('--skip-dependency-installation');
         const list = helper.command.listParsed();
         expect(list).to.have.lengthOf(1);
       });

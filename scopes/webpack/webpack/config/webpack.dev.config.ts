@@ -40,7 +40,7 @@ export function configFactory(
     // Environment mode
     mode: 'development',
 
-    devtool: 'eval-cheap-source-map',
+    devtool: 'eval-cheap-module-source-map',
 
     // Entry point of app
     entry: entryFiles.map((filePath) => resolveWorkspacePath(filePath)),
