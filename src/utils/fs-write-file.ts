@@ -18,6 +18,6 @@ export default async function writeFile(
     const user = userInfo();
     chown = { uid: options.uid || user.uid, gid: options.gid || user.gid };
   }
-  await fs.mkdir(pathLib.dirname(path));
+  await fs.ensureDir(pathLib.dirname(path));
   await writeFileAtomic(path, contents, { chown });
 }
