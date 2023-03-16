@@ -24,7 +24,6 @@ import { LaneId } from '@teambit/lane-id';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
 import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
 import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
-import { LaneSelectorSortBy } from '@teambit/lanes.ui.inputs.lane-selector';
 
 export type LaneCompareProps = Partial<DefaultLaneCompareProps>;
 export type LaneProviderIgnoreSlot = SlotRegistry<IgnoreDerivingFromUrl>;

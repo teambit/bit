@@ -202,6 +202,7 @@ export class ComponentUI {
         path={options.path}
         componentIdStr={options.componentId}
         useComponentFilters={options.useComponentFilters}
+        RightNode={options.RightNode}
       />
     );
   }

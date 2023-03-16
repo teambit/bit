@@ -38,7 +38,7 @@ export function ToggleButtonWithCustomElements() {
     },
   ];
 
-  const onOptionSelect = (selectedOption: number) => setSelectedOption(selectedOption);
+  const onOptionSelect = (_selectedOption: number) => setSelectedOption(_selectedOption);
 
   return <ToggleButton options={options} defaultIndex={selectedOption} onOptionSelect={onOptionSelect} />;
 }
