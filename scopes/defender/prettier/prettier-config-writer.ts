@@ -29,7 +29,9 @@ export class PrettierConfigWriter implements ConfigWriterEntry {
 
   generateExtendingFile(writtenConfigFiles: WrittenConfigFile[]): ExtendingConfigFile | undefined {
     const prettierConfigFile = writtenConfigFiles[0];
-    const configContent = `module.exports = {...require('${prettierConfigFile.filePath}')}`;
+    const configContent = `module.exports = {
+  ...require('${prettierConfigFile.filePath}')
+}`;
     const content = `${BIT_GENERATED_PRETTIER_CONFIG_COMMENT}\n${configContent}`;
     return { content, name: CONFIG_NAME, extendingTarget: prettierConfigFile.filePath};
   }
