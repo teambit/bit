@@ -9,17 +9,17 @@ import styles from './lane-switcher.module.scss';
 
 export type LaneSwitcherProps = {
   groupByScope?: boolean;
-  mainIcon?: () => { iconUrl: string; bgColor: string };
   sortBy?: LaneSelectorSortBy;
   sortOptions?: LaneSelectorSortBy[];
+  mainIcon?: () => React.ReactNode;
+  scopeIcon?: (scopeName: string) => React.ReactNode;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LaneSwitcher({
   className,
-  // @todo implement grouped for workspace
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   groupByScope = false,
   mainIcon,
+  scopeIcon,
   sortBy,
   sortOptions,
   ...rest
@@ -28,14 +28,23 @@ export function LaneSwitcher({
   const [viewedLane, setViewedLane] = useState(lanesModel?.viewedLane);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const mainLane = lanesModel?.getDefaultLane();
+  const nonMainLanes = lanesModel?.getNonMainLanes() || [];
+
+  const scopeIconLookup = new Map<string, React.ReactNode>(
+    groupByScope
+      ? nonMainLanes.map(({ id: { scope } }) => {
+          const icon = scopeIcon?.(scope) ?? null;
+          return [scope, icon];
+        })
+      : []
+  );
+
   useEffect(() => {
     if (lanesModel?.viewedLane?.id.toString() !== viewedLane?.id.toString()) {
       setViewedLane(lanesModel?.viewedLane);
     }
   }, [lanesModel?.viewedLane?.id.toString()]);
-
-  const mainLane = lanesModel?.getDefaultLane();
-  const nonMainLanes = lanesModel?.getNonMainLanes() || [];
 
   const selectedLane = viewedLane || mainLane;
   const selectedLaneGalleryHref = selectedLane && LanesModel.getLaneUrl(selectedLane.id);
@@ -48,9 +57,11 @@ export function LaneSwitcher({
           nonMainLanes={nonMainLanes}
           mainLane={mainLane}
           mainIcon={mainIcon?.()}
-          groupByScope={false}
+          scopeIcon={scopeIcon}
+          groupByScope={groupByScope}
           sortBy={sortBy}
           sortOptions={sortOptions}
+          scopeIconLookup={scopeIconLookup}
           {...rest}
         />
       </div>

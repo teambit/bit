@@ -2,9 +2,10 @@ import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect, useCall
 import classnames from 'classnames';
 import { LaneId } from '@teambit/lane-id';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
-import { SearchInputWithRef } from '@teambit/explorer.ui.search.search-input';
+import { SearchInput } from '@teambit/explorer.ui.search.search-input';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { ToggleButton } from '@teambit/design.inputs.toggle-button';
+import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
 
 import { LaneSelectorList } from './lane-selector-list';
 import { LanePlaceholder } from './lane-placeholder';
@@ -18,9 +19,11 @@ export type LaneSelectorProps = {
   groupByScope?: boolean;
   getHref?: (laneId: LaneId) => string;
   onLaneSelected?: (laneId: LaneId) => void;
-  mainIcon?: { iconUrl: string; bgColor: string };
+  mainIcon?: React.ReactNode;
+  scopeIcon?: (scopeName: string) => React.ReactNode;
   sortBy?: LaneSelectorSortBy;
   sortOptions?: LaneSelectorSortBy[];
+  scopeIconLookup?: Map<string, React.ReactNode>;
 } & HTMLAttributes<HTMLDivElement>;
 
 export type GroupedLaneDropdownItem = [scope: string, lanes: LaneModel[]];
@@ -49,8 +52,12 @@ export function LaneSelector(props: LaneSelectorProps) {
     sortOptions = [LaneSelectorSortBy.ALPHABETICAL, LaneSelectorSortBy.CREATED],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mainIcon,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    scopeIcon,
+    scopeIconLookup,
     ...rest
   } = props;
+
   const compareFn = useCallback((_sortBy: LaneSelectorSortBy) => {
     switch (_sortBy) {
       case LaneSelectorSortBy.UPDATED:
@@ -63,6 +70,8 @@ export function LaneSelector(props: LaneSelectorProps) {
         };
       default:
         return (a: LaneModel, b: LaneModel) => {
+          const scopeCompareResult = a.id.scope.localeCompare(b.id.scope);
+          if (groupByScope && scopeCompareResult !== 0) return scopeCompareResult;
           return a.id.name.toLowerCase().localeCompare(b.id.name.toLowerCase());
         };
     }
@@ -78,6 +87,18 @@ export function LaneSelector(props: LaneSelectorProps) {
 
   const [filteredLanes, setFilteredLanes] = useState<LaneModel[]>(sortedNonMainLanes);
 
+  const [, setTrackedDropdownOpenState] = useState<boolean>(false);
+  const onDropdownPlaceholderToggled = () => {
+    setTrackedDropdownOpenState((v) => {
+      if (!v) {
+        inputRef.current?.focus();
+      }
+      return !v;
+    });
+  };
+
+  const [groupScope, setGroupScope] = useState<boolean>(groupByScope);
+
   useEffect(() => {
     if (filteredLanes.length !== nonMainLanes.length) {
       setFilteredLanes(nonMainLanes);
@@ -85,7 +106,6 @@ export function LaneSelector(props: LaneSelectorProps) {
   }, [nonMainLanes.length]);
 
   const multipleLanes = nonMainLanes.length > 1;
-  // const filteredLaneIds = filteredLanes.map((lane) => lane.id);
 
   const handleSearchOnChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     e.stopPropagation();
@@ -113,16 +133,15 @@ export function LaneSelector(props: LaneSelectorProps) {
   };
 
   const handleSearchOnClick = (e) => {
+    // prevent dropdown from closing
     e.stopPropagation();
   };
 
   function LaneSearch() {
-    inputRef.current?.focus();
-
     return (
       (multipleLanes && (
         <div className={styles.search}>
-          <SearchInputWithRef
+          <SearchInput
             ref={inputRef}
             className={styles.searchInput}
             value={search}
@@ -136,12 +155,33 @@ export function LaneSelector(props: LaneSelectorProps) {
     );
   }
 
+  function LaneGroup() {
+    return (
+      (multipleLanes && groupByScope && (
+        <div className={styles.group}>
+          <CheckboxItem
+            checked={groupByScope}
+            onInputChanged={(e) => {
+              // prevent dropdown from closing
+              setGroupScope((v) => !v);
+              e.stopPropagation();
+            }}
+          >
+            Group scopes
+          </CheckboxItem>
+        </div>
+      )) ||
+      null
+    );
+  }
+
   return (
     <div {...rest} className={classnames(className, styles.laneSelector)}>
       <Dropdown
         dropClass={styles.menu}
         position="bottom"
-        clickToggles={true}
+        clickPlaceholderToggles={true}
+        onPlaceholderToggle={onDropdownPlaceholderToggled}
         placeholderContent={
           <LanePlaceholder disabled={!multipleLanes} selectedLaneId={selectedLaneId} showScope={groupByScope} />
         }
@@ -150,7 +190,9 @@ export function LaneSelector(props: LaneSelectorProps) {
         <LaneSearch />
         {multipleLanes && (
           <div className={styles.sortAndGroupBy}>
-            <div className={styles.groupBy}></div>
+            <div className={styles.groupBy}>
+              <LaneGroup />
+            </div>
             <div className={styles.sort}>
               <ToggleButton
                 className={classnames(styles.sortToggle)}
@@ -179,7 +221,14 @@ export function LaneSelector(props: LaneSelectorProps) {
             </div>
           </div>
         )}
-        <LaneSelectorList {...props} nonMainLanes={filteredLanes} search={search} sortBy={sortBy} />
+        <LaneSelectorList
+          {...props}
+          nonMainLanes={filteredLanes}
+          search={search}
+          sortBy={sortBy}
+          groupByScope={groupScope}
+          scopeIconLookup={scopeIconLookup}
+        />
       </Dropdown>
     </div>
   );

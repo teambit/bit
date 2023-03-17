@@ -50,7 +50,7 @@
       font-weight: 400;
       font-size: var(--bit-p-xxs, '12px');
       background: #f6f5fe;
-      border-radius: 8px;
+      border-radius: 4px;
       width: fit-content;
       padding: 2px 4px;
     }
@@ -83,7 +83,6 @@
   }
 
   &.defaultMainLaneIcon {
-    padding-right: 4px;
-    padding-left: 4px;
+    padding: 0px 4px;
   }
 }

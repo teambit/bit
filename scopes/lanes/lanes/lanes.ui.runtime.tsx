@@ -24,6 +24,9 @@ import { LaneId } from '@teambit/lane-id';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
 import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
 import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
+import { ScopeIcon } from '@teambit/scope.ui.scope-icon';
+
+import styles from './lanes.ui.module.scss';
 
 export type LaneCompareProps = Partial<DefaultLaneCompareProps>;
 export type LaneProviderIgnoreSlot = SlotRegistry<IgnoreDerivingFromUrl>;
@@ -228,7 +231,14 @@ export class LanesUI {
   getLanesSwitcher() {
     const mainIcon = () => {
       const scope = useContext(ScopeContext);
-      return { iconUrl: scope.icon, bgColor: scope.backgroundIconColor };
+      return (
+        <ScopeIcon
+          size={24}
+          scopeImage={scope.icon}
+          bgColor={scope.backgroundIconColor}
+          className={styles.mainLaneIcon}
+        />
+      );
     };
 
     const LanesSwitcher = (
@@ -237,6 +247,7 @@ export class LanesUI {
         mainIcon={this.lanesHost === 'scope' ? mainIcon : undefined}
       />
     );
+
     return LanesSwitcher;
   }
 

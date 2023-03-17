@@ -15,21 +15,21 @@ export type IconTextInputProps = {
   /**
    * ref to forward to the input element
    */
-  ref?: React.Ref<HTMLInputElement>;
+  inputRef?: React.Ref<HTMLInputElement>;
 } & TextProps;
 
-export function IconTextInput({ icon, inputClass, className, style, value, ref, ...rest }: IconTextInputProps) {
+function _IconTextInput({ icon, inputClass, className, style, value, inputRef, ...rest }: IconTextInputProps) {
   return (
     <div className={classNames(styles.iconTextInput, icon && styles.withIcon, className)} style={style}>
-      <TextInput ref={ref} className={classNames(styles.input, inputClass)} value={value} {...rest} />
+      <TextInput ref={inputRef} className={classNames(styles.input, inputClass)} value={value} {...rest} />
       {icon}
     </div>
   );
 }
 
-export const IconTextInputWithRef = React.forwardRef(function IconTextInputRefWrapper(
+export const IconTextInput = React.forwardRef(function IconTextInputRefWrapper(
   props: IconTextInputProps,
-  ref: React.Ref<HTMLInputElement>
+  inputRef: React.Ref<HTMLInputElement>
 ) {
-  return <IconTextInput {...{ ...props, ref }} />;
+  return <_IconTextInput {...{ ...props, inputRef }} />;
 });

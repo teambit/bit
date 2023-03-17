@@ -1,10 +1,27 @@
 .groupedMenuItem {
   display: flex;
   flex-direction: column;
-  min-width: 120px;
+  // min-width: 120px;
 }
 
 .scope {
   padding: 8px 16px;
-  font-weight: 700;
+  color: #707279;
+  display: flex;
+  gap: 8px;
+}
+
+.scopeIcon {
+  display: flex;
+
+  > img {
+    height: 16px;
+    width: 16px;
+  }
+}
+
+.defaultScopeIcon {
+  height: 16px;
+  width: 16px;
+  padding: 0px 2px;
 }
