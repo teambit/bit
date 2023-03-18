@@ -38,6 +38,10 @@
   position: relative;
   overflow: unset;
   height: 100%;
+
+  &.collapsed {
+    overflow: hidden;
+  }
 }
 
 .pane {
