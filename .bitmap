@@ -2444,7 +2444,13 @@
         "version": "",
         "defaultScope": "teambit.workspace",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/workspace-config-files"
+        "rootDir": "scopes/workspace/workspace-config-files",
+        "config": {
+            "teambit.harmony/bit-custom-aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/bit-custom-aspect"
+            }
+        }
     },
     "yarn": {
         "scope": "teambit.dependencies",
