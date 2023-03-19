@@ -1,7 +1,15 @@
-import chalk from "chalk";
-import { AspectWritersResults, EnvsWrittenConfigFile, EnvsWrittenConfigFiles, EnvsWrittenExtendingConfigFile, EnvsWrittenExtendingConfigFiles, OneConfigFileWriterResult, WriteConfigFilesResult } from "./workspace-config-files.main.runtime";
-import type { CleanConfigCmdFlags, WriteConfigCmdFlags } from "./ws-config.cmd";
-import { relative } from "path";
+import chalk from 'chalk';
+import { relative } from 'path';
+import {
+  AspectWritersResults,
+  EnvsWrittenConfigFile,
+  EnvsWrittenConfigFiles,
+  EnvsWrittenExtendingConfigFile,
+  EnvsWrittenExtendingConfigFiles,
+  OneConfigFileWriterResult,
+  WriteConfigFilesResult,
+} from './workspace-config-files.main.runtime';
+import type { CleanConfigCmdFlags, WriteConfigCmdFlags } from './ws-config.cmd';
 
 export function formatWriteOutput(writeConfigFilesResult: WriteConfigFilesResult, flags: WriteConfigCmdFlags): string {
   const { cleanResults, writeResults, wsDir } = writeConfigFilesResult;
@@ -39,7 +47,9 @@ function getWriteResultsOutput(writeResults: WriteConfigFilesResult['writeResult
   return `${writeTitle}\n${writeOutput}`;
 }
 function getOneAspectOutput(aspectWritersResults: AspectWritersResults, wsDir: string): string {
-  const title = chalk.blue(`The following paths are according to aspect ${chalk.bold(aspectWritersResults.aspectId.toString())}`);
+  const title = chalk.blue(
+    `The following paths are according to aspect ${chalk.bold(aspectWritersResults.aspectId.toString())}`
+  );
   const writersOutput = aspectWritersResults.writersResult
     .map((oneWritersResults) => getOneWriterOutput(oneWritersResults, wsDir))
     .join('\n\n');
@@ -60,7 +70,9 @@ function getRealConfigFilesOutput(envsWrittenConfigFiles: EnvsWrittenConfigFiles
   return `${title}\n${writtenConfigFilesOutput}`;
 }
 function getEnvGroupConfigFilesOutput(envsWrittenConfigFile: EnvsWrittenConfigFile, wsDir: string): string {
-  const title = `    The following paths are according to env(s) ${chalk.bold(envsWrittenConfigFile.envIds.join(', '))}`;
+  const title = `    The following paths are according to env(s) ${chalk.bold(
+    envsWrittenConfigFile.envIds.join(', ')
+  )}`;
   const filePath = relative(wsDir, envsWrittenConfigFile.configFile.filePath);
   return `${title}\n      ${filePath}`;
 }
@@ -82,6 +94,8 @@ function getEnvGroupExtendingConfigFilesOutput(
     envsWrittenExtendingConfigFile.envIds.join(', ')
   )}`;
   const extendingConfigFile = envsWrittenExtendingConfigFile.extendingConfigFile;
-  const paths = extendingConfigFile.filePaths.map((p) => `  ${relative(wsDir, p)} --> ${relative(wsDir, extendingConfigFile.extendingTarget)}`).join('\n    ');
+  const paths = extendingConfigFile.filePaths
+    .map((p) => `  ${relative(wsDir, p)} --> ${relative(wsDir, extendingConfigFile.extendingTarget)}`)
+    .join('\n    ');
   return `${title}\n    ${paths}`;
 }
