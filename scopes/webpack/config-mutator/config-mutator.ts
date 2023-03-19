@@ -2,8 +2,8 @@ import { isObject, omit } from 'lodash';
 import { Configuration, ResolveOptions, RuleSetRule } from 'webpack';
 import { merge, mergeWithCustomize, mergeWithRules, CustomizeRule } from 'webpack-merge';
 import { ICustomizeOptions } from 'webpack-merge/dist/types';
-import { load } from 'cheerio';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import { inject } from 'easy-html-injector';
 
 export * from 'webpack-merge';
 
@@ -27,7 +27,8 @@ type Rules = {
 };
 
 type CustomHtmlElement = {
-  position: 'head' | 'body';
+  parent: 'head' | 'body';
+  position: 'prepend' | 'append';
   tag: string;
   content?: string;
   attributes?: { [key: string]: string };
@@ -322,53 +323,34 @@ export class WebpackConfigMutator {
    * @param element
    * @returns
    * @example
-   * addElementToHtmlTemplate({ tag: 'script', content: 'console.log("hello")' });
-   * addElementToHtmlTemplate({ tag: 'script', attributes: { src: 'https://example.com/script.js' } });
+   * addElementToHtmlTemplate({ parent: 'head', position: 'append', tag: 'script', attributes: { src: 'https://cdn.com/script.js', async: true } });
+   * addElementToHtmlTemplate({ parent: 'body', position: 'prepend', tag: 'script', content: 'console.log("hello world")' });
    */
   addElementToHtmlTemplate(element: CustomHtmlElement) {
     if (!this.raw.plugins) {
       this.raw.plugins = [];
     }
 
-    const htmlPlugin = this.raw?.plugins?.find(
+    const htmlPlugins = this.raw?.plugins?.filter(
       (plugin) => plugin.constructor.name === 'HtmlWebpackPlugin'
-    ) as HtmlWebpackPlugin;
+    ) as HtmlWebpackPlugin[];
 
-    if (htmlPlugin) {
-      const htmlContent =
-        typeof htmlPlugin.userOptions?.templateContent === 'function'
-          ? htmlPlugin.userOptions?.templateContent({})
-          : htmlPlugin.userOptions.templateContent;
+    if (htmlPlugins) {
+      // iterate over all html plugins and add the scripts to the html
+      htmlPlugins.forEach((htmlPlugin) => {
+        const htmlContent =
+          typeof htmlPlugin.userOptions?.templateContent === 'function'
+            ? (htmlPlugin.userOptions?.templateContent({}) as string)
+            : (htmlPlugin.userOptions?.templateContent as string);
 
-      const $ = load(htmlContent as string);
-      const $element = $(`<${element.tag}>${element.content ?? ''}</${element.tag}>`);
-      if (element.attributes) {
-        Object.keys(element.attributes).forEach((key) => {
-          if (element.attributes) $element.attr(key, element.attributes[key]);
-        });
-      }
+        const newHtmlContent = inject(htmlContent, element);
 
-      if (element.position === 'head') {
-        $('head').append($element);
-      }
-
-      if (element.position === 'body') {
-        $('body').append($element);
-      }
-
-      htmlPlugin.userOptions.templateContent = $.html();
-
-      this.raw.plugins = this.raw.plugins.map((plugin) => {
-        if (plugin.constructor.name === 'HtmlWebpackPlugin') {
-          return htmlPlugin;
-        }
-        return plugin;
+        // @ts-ignore-next-line
+        htmlPlugin.userOptions.templateContent = newHtmlContent;
       });
-
-      return this;
     }
 
-    throw new Error('HtmlWebpackPlugin not found');
+    return this;
   }
 
   /**
@@ -402,11 +384,8 @@ export class WebpackConfigMutator {
         }
         return plugin;
       });
-
-      return this;
     }
-
-    throw new Error('HtmlWebpackPlugin not found');
+    return this;
   }
 }
 

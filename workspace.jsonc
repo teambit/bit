@@ -206,7 +206,6 @@
         "buffer": "6.0.3",
         "camelcase": "6.2.0",
         "chai-subset": "1.6.0",
-        "cheerio": "^1.0.0-rc.12",
         "class-transformer": "0.5.1",
         "classnames": "2.2.6",
         "cli-highlight": "2.1.9",
@@ -221,6 +220,7 @@
         "css-minimizer-webpack-plugin": "3.0.2",
         "dagre": "0.8.5",
         "didyoumean": "1.2.1",
+        "easy-html-injector": "^1.0.6",
         "enquirer": "2.3.6",
         "eslint-config-airbnb-typescript": {
           "version": "5.1.0",
