@@ -1,5 +1,5 @@
 import { Environment, ExecutionContext } from '@teambit/envs';
-import { EnvMapValue, WrittenConfigFile } from './workspace-config-files.main.runtime';
+import { EnvCompsDirsMap, EnvMapValue, EnvsWrittenExtendingConfigFiles, WrittenConfigFile } from './workspace-config-files.main.runtime';
 
 export type ConfigFile = {
   /**
@@ -23,6 +23,13 @@ export type ExtendingConfigFile = ConfigFile & {
    * Name of the config file that this config file extends.
    */
   extendingTarget: string;
+}
+
+export type PostProcessExtendingConfigFilesArgs = {
+  workspaceDir: string,
+  configsRootDir: string,
+  writtenExtendingConfigFiles: EnvsWrittenExtendingConfigFiles,
+  envCompsDirsMap: EnvCompsDirsMap
 }
 
 export interface ConfigWriterEntry {
@@ -68,6 +75,16 @@ export interface ConfigWriterEntry {
    * It also reduces the risk of the user manually change the config file and then the changes will be lost.
    */
   generateExtendingFile(writtenConfigFiles: WrittenConfigFile[]): ExtendingConfigFile | undefined;
+
+
+  /**
+   * This enables the writer to do some post processing after the extending config files were written.
+   * this is important in case when we need to change a config file / extending config file after it was written based on all
+   * the environments in the ws
+   * or based on other config files that were written.
+   * @param args
+   */
+  postProcessExtendingConfigFiles?(args: PostProcessExtendingConfigFilesArgs): Promise<void>;
 
   /**
    * Find all the files that are relevant for the config type.

@@ -218,6 +218,16 @@ export class WorkspaceConfigFilesMain {
       fileHashPerDedupedPaths,
       opts
     );
+    if (configWriter.postProcessExtendingConfigFiles) {
+      await configWriter.postProcessExtendingConfigFiles(
+        {
+          workspaceDir: this.workspace.path,
+          configsRootDir,
+          writtenExtendingConfigFiles: extendingConfigFiles,
+          envCompsDirsMap
+        }
+      );
+    }
     const totalExtendingConfigFiles = extendingConfigFiles.reduce(
       (acc, curr) => acc + curr.extendingConfigFile.filePaths.length,
       0
@@ -296,8 +306,8 @@ export class WorkspaceConfigFilesMain {
     extendingConfigFilesMap: ExtendingConfigFilesMap,
     fileHashPerDedupedPaths: DedupedPaths,
     opts: WriteConfigFilesOptions
-  ): Promise<EnvsWrittenExtendingConfigFile[]> {
-    const finalResult: EnvsWrittenExtendingConfigFile[] = await Promise.all(
+  ): Promise<EnvsWrittenExtendingConfigFiles> {
+    const finalResult: EnvsWrittenExtendingConfigFiles = await Promise.all(
       fileHashPerDedupedPaths.map(async ({ fileHash, paths }) => {
         const envsConfigFile = extendingConfigFilesMap[fileHash];
         const configFile = envsConfigFile.extendingConfigFile;
