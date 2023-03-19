@@ -69,7 +69,6 @@ export function dedupePaths(
   extendingConfigFilesMap: ExtendingConfigFilesMap,
   envCompsDirsMap: EnvCompsDirsMap
 ): DedupedPaths {
-  console.log('🚀 ~ file: tsconfig-writer.ts:194 ~ dedupePaths ~ extendingConfigFilesMap:', extendingConfigFilesMap);
   const rootDir = '.';
 
   const compPathExtendingHashMap = buildCompPathExtendingHashMap(extendingConfigFilesMap, envCompsDirsMap);
