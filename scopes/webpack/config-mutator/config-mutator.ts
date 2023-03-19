@@ -345,7 +345,6 @@ export class WebpackConfigMutator {
 
         const newHtmlContent = inject(htmlContent, element);
 
-        // @ts-ignore-next-line
         htmlPlugin.userOptions.templateContent = newHtmlContent;
       });
     }
