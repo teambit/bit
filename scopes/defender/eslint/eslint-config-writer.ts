@@ -2,8 +2,8 @@ import { sha1 } from '@teambit/legacy/dist/utils';
 import fs from 'fs-extra';
 import { ExecutionContext } from '@teambit/envs';
 import type { ConfigWriterEntry, EnvMapValue, WrittenConfigFile, ExtendingConfigFile, ConfigFile } from '@teambit/workspace-config-files';
-import { dirname, relative } from 'path';
-import { flatten, set } from 'lodash';
+import { expandIncludeExclude } from '@teambit/typescript';
+import { set } from 'lodash';
 import { LinterMain } from '@teambit/linter';
 import { EslintLinterInterface } from './eslint-linter-interface';
 
@@ -51,30 +51,9 @@ export class EslintConfigWriter implements ConfigWriterEntry {
     const tsConfigPath = tsConfigFile.filePath;
     const tsConfig = await fs.readJson(tsConfigPath);
     const compDirs: string[] = envMapValue.paths;
-    const tsConfigDir = dirname(tsConfigPath);
+    const newTsConfig = expandIncludeExclude(tsConfigPath, tsConfig, compDirs);
 
-    if (tsConfig.include) {
-      tsConfig.include = flatten(
-        tsConfig.include.map((includedPath) => {
-          return compDirs.map((compDir) => {
-            const compDirRelative = relative(tsConfigDir, compDir);
-            return `${compDirRelative}/${includedPath}`;
-          })
-        })
-      );
-    }
-    if (tsConfig.exclude) {
-      tsConfig.exclude = flatten(
-        tsConfig.exclude.map((excludedPath) => {
-          return compDirs.map((compDir) => {
-            const compDirRelative = relative(tsConfigDir, compDir);
-            return `${compDirRelative}/${excludedPath}`;
-          })
-        })
-      );
-    }
-
-    fs.outputJSONSync(tsConfigPath, tsConfig, { spaces: 2 });
+    fs.outputJSONSync(tsConfigPath, newTsConfig, { spaces: 2 });
     return Promise.resolve();
   }
 
@@ -86,9 +65,6 @@ export class EslintConfigWriter implements ConfigWriterEntry {
     };
     const content = `${BIT_GENERATED_ESLINT_CONFIG_COMMENT}\n${JSON.stringify(config, null, 2)}`;
     return { content, name: '.eslintrc.json', extendingTarget: eslintConfigFile.filePath};
-  }
-  calcName(hash: string): string {
-    return `.eslintrc.bit.${hash}.json`;
   }
 
   isBitGenerated(filePath: string): boolean {
