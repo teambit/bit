@@ -21,6 +21,7 @@ const GLOBAL_TYPES_DIR = 'global-types';
 
 export class TypescriptConfigWriter implements ConfigWriterEntry {
   name = 'TypescriptConfigWriter';
+  cliName = 'ts';
 
   constructor(private compiler: CompilerMain) {}
   patterns: string[] = [`**/${CONFIG_NAME}`];

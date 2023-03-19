@@ -11,6 +11,7 @@ const BIT_GENERATED_ESLINT_CONFIG_COMMENT = '// bit-generated-eslint-config';
 
 export class EslintConfigWriter implements ConfigWriterEntry {
   name = 'EslintConfigWriter';
+  cliName = 'eslint';
 
   constructor(private linter: LinterMain) {}
   patterns: string[] = ['**/.eslintrc.json'];

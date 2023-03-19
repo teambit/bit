@@ -38,6 +38,12 @@ export interface ConfigWriterEntry {
    * used for outputs and logging.
    */
   name: string
+
+  /**
+   * Name that is used to filter the config writer by the cli when using --writers flag.
+   */
+  cliName: string;
+
   /**
    * Get's the component env and return the config file content
    * for example the eslint config to tsconfig.

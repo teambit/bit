@@ -7,7 +7,7 @@ import {
   WorkspaceConfigFilesMain,
   WriteConfigFilesResult
 } from './workspace-config-files.main.runtime';
-import { formatCleanOutput, formatWriteOutput } from './format-outputs';
+import { formatCleanOutput, formatListOutput, formatWriteOutput } from './format-outputs';
 
 export type CleanConfigCmdFlags = {
   dryRun?: boolean;
@@ -120,6 +120,28 @@ export class WsConfigCleanCmd implements Command {
       dryRun,
       silent,
     });
+    return cleanResults;
+  }
+}
+
+export class WsConfigListCmd implements Command {
+  name = 'list';
+  description = 'EXPERIMENTAL. list config writers';
+  alias = '';
+  group = 'development';
+  options = [
+    ['j', 'json', 'json format'],
+  ] as CommandOptions;
+
+  constructor(private workspaceConfigFilesMain: WorkspaceConfigFilesMain) {}
+
+  async report() {
+    const results = await this.json();
+    return formatListOutput(results);
+  }
+
+  async json() {
+    const cleanResults = await this.workspaceConfigFilesMain.listConfigWriters();
     return cleanResults;
   }
 }

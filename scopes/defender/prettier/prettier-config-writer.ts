@@ -9,6 +9,7 @@ const BIT_GENERATED_PRETTIER_CONFIG_COMMENT = '// bit-generated-prettier-config'
 
 export class PrettierConfigWriter implements ConfigWriterEntry {
   name = 'PrettierConfigWriter';
+  cliName = 'prettier';
 
   constructor(private formatter: FormatterMain) {}
   patterns: string[] = [`**/${CONFIG_NAME}`];

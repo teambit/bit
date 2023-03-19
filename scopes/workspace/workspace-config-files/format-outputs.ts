@@ -1,7 +1,9 @@
+import Table from 'cli-table';
 import chalk from 'chalk';
 import { relative } from 'path';
 import {
   AspectWritersResults,
+  ConfigWritersList,
   EnvsWrittenConfigFile,
   EnvsWrittenConfigFiles,
   EnvsWrittenExtendingConfigFile,
@@ -11,6 +13,20 @@ import {
 } from './workspace-config-files.main.runtime';
 import type { CleanConfigCmdFlags, WriteConfigCmdFlags } from './ws-config.cmd';
 
+export function formatListOutput(result: ConfigWritersList): string {
+  const head = ['Aspect ID', 'name', 'CLI name'];
+
+  const rows = result.map((entry) => {
+    return [
+      entry.aspectId,
+      entry.configWriter.name,
+      entry.configWriter.cliName,
+    ]
+  });
+  const table = new Table({ head, style: { head: ['cyan'] } });
+  table.push(...rows)
+  return table.toString();
+}
 export function formatWriteOutput(writeConfigFilesResult: WriteConfigFilesResult, flags: WriteConfigCmdFlags): string {
   const { cleanResults, writeResults, wsDir } = writeConfigFilesResult;
   const isDryRun = !!(flags.dryRun || flags.dryRunWithContent);

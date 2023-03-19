@@ -17,10 +17,15 @@ import { Logger, LoggerAspect } from '@teambit/logger';
 import type { LoggerMain } from '@teambit/logger';
 import { WorkspaceConfigFilesAspect } from './workspace-config-files.aspect';
 import { ConfigFile, ConfigWriterEntry, ExtendingConfigFile } from './config-writer-entry';
-import { WsConfigCleanCmd, WsConfigCmd, WsConfigWriteCmd } from './ws-config.cmd';
+import { WsConfigCleanCmd, WsConfigCmd, WsConfigListCmd, WsConfigWriteCmd } from './ws-config.cmd';
 import { DedupedPaths, dedupePaths } from './dedup-paths';
 
 export type ConfigWriterSlot = SlotRegistry<ConfigWriterEntry[]>;
+
+export type ConfigWritersList = Array<{
+  aspectId: string;
+  configWriter: ConfigWriterEntry;
+}>;
 
 export type CleanConfigFilesOptions = {
   silent?: boolean; // no prompt
@@ -120,6 +125,19 @@ export class WorkspaceConfigFilesMain {
     return cleanResults;
   }
 
+  /**
+   * It returns a list of all the config writers that have been registered with the config writer slot
+   * @returns An array of objects with aspectId and configWriter properties.
+   */
+  listConfigWriters(): ConfigWritersList {
+    const slotEntries = this.configWriterSlot.toArray();
+    const result: ConfigWritersList = slotEntries.reduce((acc, [aspectId, configWriters]) => {
+      const curr = configWriters.map((configWriter) => ({ aspectId, configWriter }));
+      return acc.concat(curr);
+    }, [] as ConfigWritersList);
+    return result;
+  }
+
   private async write(
     envsExecutionContext: ExecutionContext[],
     opts: WriteConfigFilesOptions
@@ -201,14 +219,12 @@ export class WorkspaceConfigFilesMain {
       opts
     );
     if (configWriter.postProcessExtendingConfigFiles) {
-      await configWriter.postProcessExtendingConfigFiles(
-        {
-          workspaceDir: this.workspace.path,
-          configsRootDir,
-          writtenExtendingConfigFiles: extendingConfigFiles,
-          envCompsDirsMap
-        }
-      );
+      await configWriter.postProcessExtendingConfigFiles({
+        workspaceDir: this.workspace.path,
+        configsRootDir,
+        writtenExtendingConfigFiles: extendingConfigFiles,
+        envCompsDirsMap,
+      });
     }
     const totalExtendingConfigFiles = extendingConfigFiles.reduce(
       (acc, curr) => acc + curr.extendingConfigFile.filePaths.length,
@@ -450,6 +466,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
     wsConfigCmd.commands = [
       new WsConfigWriteCmd(workspaceConfigFilesMain),
       new WsConfigCleanCmd(workspaceConfigFilesMain),
+      new WsConfigListCmd(workspaceConfigFilesMain),
     ];
     cli.register(wsConfigCmd);
     return workspaceConfigFilesMain;
