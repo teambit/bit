@@ -119,6 +119,5 @@ export function dedupePaths(
     fileHash,
     paths: fileHashPerDedupedPaths[fileHash],
   }));
-  console.log('🚀 ~ file: tsconfig-writer.ts:250 ~ dedupedPaths ~ dedupedPaths:', dedupedPaths);
   return dedupedPaths;
 }
