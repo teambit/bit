@@ -3,7 +3,7 @@ import globby from 'globby';
 import ignore from 'ignore';
 import R from 'ramda';
 import { BitId } from '../../bit-id';
-import { BIT_MAP, Extensions, PACKAGE_JSON } from '../../constants';
+import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, retrieveIgnoreList } from '../../utils';
@@ -390,14 +390,16 @@ export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore
     onlyFiles: true,
   });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
-  const filteredMatches = gitIgnore.filter(matches);
-  if (!filteredMatches.length) throw new IgnoredDirectory(dir);
-  return filteredMatches.map((match: PathOsBased) => {
-    const normalizedPath = pathNormalizeToLinux(match);
-    // the path is relative to consumer. remove the rootDir.
-    const relativePath = normalizedPath.replace(`${dir}/`, '');
-    return { relativePath, test: false, name: path.basename(match) };
-  });
+  const filteredMatches: string[] = gitIgnore.filter(matches);
+  // the path is relative to consumer. remove the rootDir.
+  const relativePathsLinux = filteredMatches.map((match) => pathNormalizeToLinux(match).replace(`${dir}/`, ''));
+  const filteredByIgnoredFromRoot = relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
+  if (!filteredByIgnoredFromRoot.length) throw new IgnoredDirectory(dir);
+  return filteredByIgnoredFromRoot.map((relativePath) => ({
+    relativePath,
+    test: false,
+    name: path.basename(relativePath),
+  }));
 }
 
 export function getGitIgnoreHarmony(consumerPath: string): any {
