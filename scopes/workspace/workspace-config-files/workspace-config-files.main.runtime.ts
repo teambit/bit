@@ -1,8 +1,7 @@
-import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
 import format from 'string-format';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import fs from 'fs-extra';
-import { dirname, join } from 'path';
+import { join } from 'path';
 import globby from 'globby';
 import chalk from 'chalk';
 import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
@@ -13,13 +12,13 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { Workspace } from '@teambit/workspace';
 import { Environment, EnvsAspect, ExecutionContext } from '@teambit/envs';
-import { invertBy, uniq } from 'lodash';
 import type { EnvsMain } from '@teambit/envs';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import type { LoggerMain } from '@teambit/logger';
 import { WorkspaceConfigFilesAspect } from './workspace-config-files.aspect';
 import { ConfigFile, ConfigWriterEntry, ExtendingConfigFile } from './config-writer-entry';
 import { WsConfigCleanCmd, WsConfigCmd, WsConfigWriteCmd } from './ws-config.cmd';
+import { DedupedPaths, dedupePaths } from './dedup-paths';
 
 export type ConfigWriterSlot = SlotRegistry<ConfigWriterEntry[]>;
 
@@ -44,24 +43,19 @@ export type WrittenExtendingConfigFile = ExtendingConfigFile & {
   filePaths: string[];
 };
 
-type WrittenConfigFilesMap = {
+export type WrittenConfigFilesMap = {
   [configFileHash: string]: {
     envIds: string[];
     configFile: WrittenConfigFile;
   };
 };
 
-type ExtendingConfigFilesMap = {
+export type ExtendingConfigFilesMap = {
   [configFileHash: string]: {
     envIds: string[];
     extendingConfigFile: Required<ExtendingConfigFile>;
   };
 };
-
-type DedupedPaths = Array<{
-  fileHash: string;
-  paths: string[];
-}>;
 
 export type CompPathExtendingHashMap = { [compPath: string]: string };
 
@@ -130,18 +124,9 @@ export class WorkspaceConfigFilesMain {
     envsExecutionContext: ExecutionContext[],
     opts: WriteConfigFilesOptions
   ): Promise<AspectWritersResults[]> {
-    console.log('🚀 ~ file: workspace-config-files.main.runtime.ts:66 ~ WorkspaceConfigFilesMain ~');
     const envCompDirsMap = this.getEnvComponentsDirsMap(envsExecutionContext);
     const slotEntries = this.configWriterSlot.toArray();
-    console.log(
-      '🚀 ~ file: workspace-config-files.main.runtime.ts:83 ~ WorkspaceConfigFilesMain ~ slotEntries:',
-      slotEntries
-    );
     const configsRootDir = this.getConfigsRootDir();
-    console.log(
-      '🚀 ~ file: workspace-config-files.main.runtime.ts:70 ~ WorkspaceConfigFilesMain ~ configsRootDir:',
-      configsRootDir
-    );
     const results = await pMapSeries(slotEntries, async (aspectEntry) => {
       const [aspectId, configWriters] = aspectEntry;
       return this.handleOneAspectWriter(
@@ -208,10 +193,7 @@ export class WorkspaceConfigFilesMain {
         totalExtendingConfigFiles: 0,
       };
     }
-    console.log(
-      '🚀 ~ file: workspace-config-files.main.runtime.ts:159 ~ WorkspaceConfigFilesMain ~ awaitpMapSeries ~ extendingConfigFilesMap:',
-      extendingConfigFilesMap
-    );
+
     const fileHashPerDedupedPaths = dedupePaths(extendingConfigFilesMap, envCompsDirsMap);
     const extendingConfigFiles = await this.writeExtendingConfigFiles(
       extendingConfigFilesMap,
@@ -243,7 +225,6 @@ export class WorkspaceConfigFilesMain {
       extendingConfigFiles,
       totalExtendingConfigFiles,
     };
-    console.log('🚀 ~ file: workspace-config-files.main.runtime.ts:190 ~ WorkspaceConfigFilesMain ~ result:', result);
     return result;
   }
 
@@ -257,10 +238,6 @@ export class WorkspaceConfigFilesMain {
     opts: WriteConfigFilesOptions
   ): Promise<WrittenConfigFile[] | undefined> {
     const calculatedConfigFiles = configWriter.calcConfigFiles(executionContext, envMapValue.env, configsRootDir);
-    console.log(
-      '🚀 ~ file: workspace-config-files.main.runtime.ts:119 ~ WorkspaceConfigFilesMain ~ Object.entries ~ calculatedConfigFiles:',
-      calculatedConfigFiles
-    );
     if (!calculatedConfigFiles) return undefined;
     const writtenConfigFiles = await Promise.all(
       calculatedConfigFiles.map(async (configFile) => {
@@ -298,7 +275,6 @@ export class WorkspaceConfigFilesMain {
       filePath,
       content: configFile.content,
     };
-    console.log('🚀 ~ file: workspace-config-files.main.runtime.ts:158 ~ WorkspaceConfigFilesMain ~ res:', res);
     return res;
   }
 
@@ -478,118 +454,6 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
     cli.register(wsConfigCmd);
     return workspaceConfigFilesMain;
   }
-}
-
-function getAllPossibleDirsFromPaths(paths: PathLinuxRelative[]): PathLinuxRelative[] {
-  const dirs = paths.map((p) => getAllParentsDirOfPath(p)).flat();
-  dirs.push('.'); // add the root dir
-  return uniq(dirs);
-}
-
-function getAllParentsDirOfPath(p: PathLinuxRelative): PathLinuxRelative[] {
-  const all: string[] = [];
-  let current = p;
-  while (current !== '.') {
-    all.push(current);
-    current = dirname(current);
-  }
-  return all;
-}
-
-export function buildCompPathExtendingHashMap(
-  extendingConfigFilesMap: ExtendingConfigFilesMap,
-  envCompsDirsMap: EnvCompsDirsMap
-): CompPathExtendingHashMap {
-  const map = Object.entries(extendingConfigFilesMap).reduce((acc, [hash, { envIds }]) => {
-    envIds.forEach((envId) => {
-      const envCompDirs = envCompsDirsMap[envId];
-      envCompDirs.paths.forEach((compPath) => {
-        acc[compPath] = hash;
-      });
-    });
-    return acc;
-  }, {});
-  return map;
-}
-
-/**
- * easier to understand by an example:
- * input:
- * [
- *   { fileHash: hash1, paths: [ui/button, ui/form] },
- *   { fileHash: hash2, paths: [p/a1, p/a2] },
- *   { fileHash: hash3, paths: [p/n1] },
- * ]
- *
- * output:
- * [
- *   { fileHash: hash1, paths: [ui] },
- *   { fileHash: hash2, paths: [p] },
- *   { fileHash: hash3, paths: [p/n1] },
- * ]
- *
- * the goal is to minimize the amount of files to write per env if possible.
- * when multiple components of the same env share a root-dir, then, it's enough to write a file in that shared dir.
- * if in a shared-dir, some components using env1 and some env2, it finds the env that has the max number of
- * components, this env will be optimized. other components, will have the files written inside their dirs.
- */
-export function dedupePaths(
-  extendingConfigFilesMap: ExtendingConfigFilesMap,
-  envCompsDirsMap: EnvCompsDirsMap
-): DedupedPaths {
-  console.log('🚀 ~ file: tsconfig-writer.ts:194 ~ dedupePaths ~ extendingConfigFilesMap:', extendingConfigFilesMap);
-  const rootDir = '.';
-
-  const compPathExtendingHashMap = buildCompPathExtendingHashMap(extendingConfigFilesMap, envCompsDirsMap);
-  const allPaths = Object.keys(compPathExtendingHashMap);
-  const allPossibleDirs = getAllPossibleDirsFromPaths(allPaths);
-
-  const allPathsPerFileHash: { [path: string]: string | null } = {}; // null when parent-dir has same amount of comps per env.
-
-  const calculateBestFileForDir = (dir: string) => {
-    if (compPathExtendingHashMap[dir]) {
-      // it's the component dir, so it's the file that should be written.
-      allPathsPerFileHash[dir] = compPathExtendingHashMap[dir];
-      return;
-    }
-    const allPathsShareSameDir = dir === rootDir ? allPaths : allPaths.filter((p) => p.startsWith(`${dir}/`));
-    const countPerFileHash: { [fileHash: string]: number } = {};
-    allPathsShareSameDir.forEach((p) => {
-      const fileHash = compPathExtendingHashMap[p];
-      if (countPerFileHash[fileHash]) countPerFileHash[fileHash] += 1;
-      else countPerFileHash[fileHash] = 1;
-    });
-    const max = Math.max(...Object.values(countPerFileHash));
-    const fileHashWithMax = Object.keys(countPerFileHash).filter((fileHash) => countPerFileHash[fileHash] === max);
-    if (!fileHashWithMax.length) throw new Error(`must be at least one fileHash related to path "${dir}"`);
-    if (fileHashWithMax.length > 1) allPathsPerFileHash[dir] = null;
-    else allPathsPerFileHash[dir] = fileHashWithMax[0];
-  };
-
-  allPossibleDirs.forEach((dirPath) => {
-    calculateBestFileForDir(dirPath);
-  });
-
-  // this is the actual deduping. if found a shorter path with the same env, then no need for this path.
-  // in other words, return only the paths that their parent is null or has a different env.
-  const dedupedPathsPerFileHash = Object.keys(allPathsPerFileHash).reduce((acc, current) => {
-    if (allPathsPerFileHash[current] && allPathsPerFileHash[dirname(current)] !== allPathsPerFileHash[current]) {
-      acc[current] = allPathsPerFileHash[current];
-    }
-
-    return acc;
-  }, {});
-  // rootDir parent is always rootDir, so leave it as is.
-  if (allPathsPerFileHash[rootDir]) dedupedPathsPerFileHash[rootDir] = allPathsPerFileHash[rootDir];
-
-  const fileHashPerDedupedPaths = invertBy(dedupedPathsPerFileHash);
-
-  const dedupedPaths = Object.keys(fileHashPerDedupedPaths).map((fileHash) => ({
-    fileHash,
-    paths: fileHashPerDedupedPaths[fileHash],
-  }));
-  console.log('🚀 ~ file: tsconfig-writer.ts:250 ~ dedupedPaths ~ dedupedPaths:', dedupedPaths);
-  return dedupedPaths;
 }
 
 WorkspaceConfigFilesAspect.addRuntime(WorkspaceConfigFilesMain);
