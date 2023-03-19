@@ -16,14 +16,17 @@ export type CleanConfigCmdFlags = {
 
 export type WriteConfigCmdFlags = {
   dryRun?: boolean;
+  writers?: string;
   noDedupe?: boolean;
   dryRunWithContent?: boolean;
   clean?: boolean;
   silent?: boolean;
 };
 
+const COMMAND_NAME = 'ws-config';
+
 export class WsConfigCmd implements Command {
-  name = 'ws-config <sub-command>';
+  name = `${COMMAND_NAME} <sub-command>`;
   alias = 'workspace-config';
   description = 'manage workspace config files';
   options = [];
@@ -49,6 +52,7 @@ export class WsConfigWriteCmd implements Command {
       'clean',
       'delete existing config files from the workspace. highly recommended to run it with "--dry-run" first',
     ],
+    ['w', 'writers <writers>', `only write config files for the given writers. use comma to separate multiple writers. use ${COMMAND_NAME} list to see all writers`],
     ['s', 'silent', 'do not prompt for confirmation'],
     ['', 'no-dedupe', "write configs inside each one of the component's dir, avoid deduping"],
     ['', 'dry-run', 'show the paths that configs will be written per env'],
@@ -71,7 +75,7 @@ export class WsConfigWriteCmd implements Command {
   }
 
   async json(_args, flags: WriteConfigCmdFlags) {
-    const { clean, silent, noDedupe, dryRunWithContent } = flags;
+    const { clean, silent, noDedupe, dryRunWithContent, writers } = flags;
     const dryRun = dryRunWithContent ? true : flags.dryRun;
     const { cleanResults, writeResults, wsDir } = await this.workspaceConfigFilesMain.writeConfigFiles({
       clean,
@@ -79,6 +83,7 @@ export class WsConfigWriteCmd implements Command {
       dryRun,
       dryRunWithContent,
       silent,
+      writers: writers?.split(',')
     });
 
     if (dryRun) {
@@ -103,6 +108,7 @@ export class WsConfigCleanCmd implements Command {
   group = 'development';
   options = [
     ['s', 'silent', 'do not prompt for confirmation'],
+    ['w', 'writers <writers>', `only write config files for the given writers. use comma to separate multiple writers. use ${COMMAND_NAME} list to see all writers`],
     ['', 'dry-run', 'show the paths that configs will be written per env'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
@@ -119,6 +125,7 @@ export class WsConfigCleanCmd implements Command {
     const cleanResults = await this.workspaceConfigFilesMain.cleanConfigFiles({
       dryRun,
       silent,
+      writers: flags.writers?.split(','),
     });
     return cleanResults;
   }

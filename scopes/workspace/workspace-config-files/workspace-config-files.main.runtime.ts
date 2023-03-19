@@ -7,6 +7,7 @@ import chalk from 'chalk';
 import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
 import pMapSeries from 'p-map-series';
 import yesno from 'yesno';
+import { compact } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { WorkspaceAspect } from '@teambit/workspace';
@@ -30,6 +31,7 @@ export type ConfigWritersList = Array<{
 export type CleanConfigFilesOptions = {
   silent?: boolean; // no prompt
   dryRun?: boolean;
+  writers?: string[];
 };
 
 export type WriteConfigFilesOptions = {
@@ -38,6 +40,7 @@ export type WriteConfigFilesOptions = {
   dedupe?: boolean;
   dryRun?: boolean;
   dryRunWithContent?: boolean;
+  writers?: string[];
 };
 
 export type WrittenConfigFile = Required<ConfigFile> & {
@@ -168,12 +171,15 @@ export class WorkspaceConfigFilesMain {
     opts: WriteConfigFilesOptions
   ): Promise<AspectWritersResults> {
     const results = await pMapSeries(configWriters, async (configWriter) => {
+      if (opts.writers && !(opts.writers.includes(configWriter.name) || opts.writers.includes(configWriter.cliName)))
+        return undefined;
       return this.handleOneConfigFileWriter(configWriter, envCompsDirsMap, configsRootDir, envsExecutionContext, opts);
     });
-    const totalWrittenFiles = results.reduce((acc, curr) => {
+    const compactResults = compact(results);
+    const totalWrittenFiles = compactResults.reduce((acc, curr) => {
       return acc + curr.totalWrittenFiles;
     }, 0);
-    return { aspectId, writersResult: results, totalWrittenFiles };
+    return { aspectId, writersResult: compactResults, totalWrittenFiles };
   }
 
   private async handleOneConfigFileWriter(
@@ -404,9 +410,14 @@ export class WorkspaceConfigFilesMain {
    * @param param1
    * @returns Array of paths of deleted config files
    */
-  async clean({ dryRun, silent }: WriteConfigFilesOptions): Promise<string[]> {
+  async clean({ dryRun, silent, writers }: WriteConfigFilesOptions): Promise<string[]> {
     const configWriters = this.getFlatConfigWriters();
-    const paths = configWriters
+    const filteredConfigWriters = writers
+      ? configWriters.filter(
+          (configWriter) => writers.includes(configWriter.name) || writers.includes(configWriter.cliName)
+        )
+      : configWriters;
+    const paths = filteredConfigWriters
       .map((configWriter) => {
         const patterns = configWriter.patterns;
         const currPaths = globby.sync(patterns, {
