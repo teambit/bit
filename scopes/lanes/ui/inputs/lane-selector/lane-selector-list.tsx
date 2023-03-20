@@ -75,10 +75,10 @@ export function LaneSelectorList({
   return (
     <div {...rest} className={classnames(className, styles.laneSelectorList)}>
       {groupByScope &&
-        (laneDropdownItems as Array<[scope: string, lanes: LaneModel[]]>).map(([scope, lanesByScope]) => {
+        (laneDropdownItems as Array<[scope: string, lanes: LaneModel[]]>).map(([scope, lanesByScope], index) => {
           return (
             <LaneGroupedMenuItem
-              key={scope ?? 'main'}
+              key={`${scope ?? 'main'}-${index}`}
               onLaneSelected={onLaneSelected}
               getHref={getHref}
               scope={scope}
@@ -92,10 +92,10 @@ export function LaneSelectorList({
           );
         })}
       {!groupByScope &&
-        (laneDropdownItems as LaneModel[]).map((lane) => (
+        (laneDropdownItems as LaneModel[]).map((lane, index) => (
           <LaneMenuItem
             onLaneSelected={onLaneSelected}
-            key={lane.id.toString()}
+            key={`${lane.id.toString()}-${index}`}
             getHref={getHref}
             selected={selectedLaneId}
             current={lane}
