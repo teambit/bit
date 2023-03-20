@@ -3,7 +3,7 @@ import { Configuration, ResolveOptions, RuleSetRule } from 'webpack';
 import { merge, mergeWithCustomize, mergeWithRules, CustomizeRule } from 'webpack-merge';
 import { ICustomizeOptions } from 'webpack-merge/dist/types';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import { inject } from 'easy-html-injector';
+import { inject } from '@teambit/html.modules.inject-html-element';
 
 export * from 'webpack-merge';
 
