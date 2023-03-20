@@ -10,6 +10,8 @@ import {
   DependencyResolverAspect,
   DependencyResolverMain,
   LinkingOptions,
+  LinkDetail,
+  LinkResults,
   WorkspacePolicy,
   InstallOptions,
   DependencyList,
@@ -330,8 +332,16 @@ export class IsolatorMain {
         await Promise.all(
           capsuleList.map(async (capsule) => {
             const newCapsuleList = CapsuleList.fromArray([capsule]);
-            await this.installInCapsules(capsule.path, newCapsuleList, installOptions, cachePackagesOnCapsulesRoot);
-            await this.linkInCapsules(capsulesDir, newCapsuleList, capsulesWithPackagesData, linkingOptions);
+            const linkedDependencies = await this.linkInCapsules(
+              capsulesDir,
+              newCapsuleList,
+              capsulesWithPackagesData,
+              linkingOptions
+            );
+            await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
+              cachePackagesOnCapsulesRoot,
+              linkedDependencies,
+            });
           })
         );
       } else {
@@ -339,8 +349,16 @@ export class IsolatorMain {
         // and all other components (which are the dependencies of the entry component) are installed in
         // a subdirectory.
         const rootDir = installOptions?.useNesting ? capsuleList[0].path : capsulesDir;
-        await this.installInCapsules(rootDir, capsuleList, installOptions, cachePackagesOnCapsulesRoot);
-        await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, linkingOptions);
+        const linkedDependencies = await this.linkInCapsules(
+          capsulesDir,
+          capsuleList,
+          capsulesWithPackagesData,
+          linkingOptions
+        );
+        await this.installInCapsules(rootDir, capsuleList, installOptions, {
+          cachePackagesOnCapsulesRoot,
+          linkedDependencies,
+        });
       }
       longProcessLogger.end();
       this.logger.consoleSuccess();
@@ -365,11 +383,14 @@ export class IsolatorMain {
     capsulesDir: string,
     capsuleList: CapsuleList,
     isolateInstallOptions: IsolateComponentsInstallOptions,
-    cachePackagesOnCapsulesRoot?: boolean
+    opts: {
+      cachePackagesOnCapsulesRoot?: boolean;
+      linkedDependencies?: Record<string, Record<string, string>>;
+    }
   ) {
     const installer = this.dependencyResolver.getInstaller({
       rootDir: capsulesDir,
-      cacheRootDirectory: cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
+      cacheRootDirectory: opts.cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
     });
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace
@@ -379,6 +400,7 @@ export class IsolatorMain {
       installTeambitBit: !!isolateInstallOptions.installTeambitBit,
       packageManagerConfigRootDir: isolateInstallOptions.packageManagerConfigRootDir,
       resolveVersionsFromDependenciesOnly: true,
+      linkedDependencies: opts.linkedDependencies,
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
@@ -405,20 +427,22 @@ export class IsolatorMain {
     capsuleList: CapsuleList,
     capsulesWithPackagesData: CapsulePackageJsonData[],
     linkingOptions: LinkingOptions
-  ) {
+  ): Promise<Record<string, Record<string, string>>> {
     const linker = this.dependencyResolver.getLinker({
       rootDir: capsulesDir,
       linkingOptions,
     });
     const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
-    const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
-    await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), {
+    const linkResults = await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), {
       ...linkingOptions,
       linkNestedDepsInNM: !this.dependencyResolver.hasRootComponents() && linkingOptions.linkNestedDepsInNM,
     });
+    let rootLinks: LinkDetail[] | undefined;
+    let nestedLinks: Record<string, Record<string, string>> | undefined;
     if (!this.dependencyResolver.hasRootComponents()) {
-      await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
-      await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
+      rootLinks = await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
+      const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
+      nestedLinks = await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
     } else {
       const coreAspectIds = this.aspectLoader.getCoreAspectIds();
       const coreAspectCapsules = CapsuleList.fromArray(
@@ -427,8 +451,52 @@ export class IsolatorMain {
           return coreAspectIds.includes(compIdWithoutVersion);
         })
       );
-      await symlinkOnCapsuleRoot(coreAspectCapsules, this.logger, capsulesDir);
+      rootLinks = await symlinkOnCapsuleRoot(coreAspectCapsules, this.logger, capsulesDir);
     }
+    return {
+      ...nestedLinks,
+      [capsulesDir]: this.toLocalLinks(linkResults, rootLinks),
+    };
+  }
+
+  private toLocalLinks(linkResults: LinkResults, rootLinks: LinkDetail[] | undefined): Record<string, string> {
+    const localLinks: Array<[string, string]> = [];
+    if (linkResults.teambitBitLink) {
+      localLinks.push(this.linkDetailToLocalDepEntry(linkResults.teambitBitLink.linkDetail));
+    }
+    if (linkResults.coreAspectsLinks) {
+      linkResults.coreAspectsLinks.forEach((link) => {
+        localLinks.push(this.linkDetailToLocalDepEntry(link.linkDetail));
+      });
+    }
+    if (linkResults.harmonyLink) {
+      localLinks.push(this.linkDetailToLocalDepEntry(linkResults.harmonyLink));
+    }
+    if (linkResults.teambitLegacyLink) {
+      localLinks.push(this.linkDetailToLocalDepEntry(linkResults.teambitLegacyLink));
+    }
+    if (linkResults.resolvedFromEnvLinks) {
+      linkResults.resolvedFromEnvLinks.forEach((link) => {
+        link.linksDetail.forEach((linkDetail) => {
+          localLinks.push(this.linkDetailToLocalDepEntry(linkDetail));
+        });
+      });
+    }
+    if (linkResults.linkToDirResults) {
+      linkResults.linkToDirResults.forEach((link) => {
+        localLinks.push(this.linkDetailToLocalDepEntry(link.linksDetail));
+      });
+    }
+    if (rootLinks) {
+      rootLinks.forEach((link) => {
+        localLinks.push(this.linkDetailToLocalDepEntry(link));
+      });
+    }
+    return Object.fromEntries(localLinks.map(([key, value]) => [key, `link:${value}`]));
+  }
+
+  private linkDetailToLocalDepEntry(linkDetail: LinkDetail): [string, string] {
+    return [linkDetail.packageName, linkDetail.from];
   }
 
   private getCapsulesWithModifiedPackageJson(capsulesWithPackagesData: CapsulePackageJsonData[]) {
