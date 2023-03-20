@@ -60,7 +60,7 @@ const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
   linkNestedDepsInNM: true,
 };
 
-export type LinkDetail = { from: string; to: string };
+export type LinkDetail = { packageName: string; from: string; to: string };
 
 export type CoreAspectLinkResult = {
   aspectId: string;
@@ -209,6 +209,7 @@ export class DependencyLinker {
       return {
         componentId: component.id.toString(),
         linksDetail: {
+          packageName: componentPackageName,
           from: path.join(rootDir, 'node_modules', componentPackageName),
           to: path.join(targetDir, 'node_modules', componentPackageName),
         },
@@ -297,6 +298,7 @@ export class DependencyLinker {
         // const linkSrc = folderEntry.origPath || folderEntry.path;
         const origPath = folderEntry.origPath ? `(${folderEntry.origPath})` : '';
         const linkDetail: LinkDetail = {
+          packageName: folderEntry.moduleName,
           from: `${linkSrc} ${origPath}`,
           to: linkTarget,
         };
@@ -374,6 +376,7 @@ export class DependencyLinker {
         }
         const linkSrc = resolveModuleDirFromFile(resolvedModule, depEntry.dependencyId);
         const linkDetail: LinkDetail = {
+          packageName: depEntry.dependencyId,
           from: linkSrc,
           to: linkTarget,
         };
@@ -427,15 +430,7 @@ export class DependencyLinker {
     const src = this.aspectLoader.mainAspect.path;
     await fs.ensureDir(path.dirname(target));
     createSymlinkOrCopy(src, target);
-    return { from: src, to: target };
-  }
-
-  async linkCoreAspects(dir: string): Promise<Array<CoreAspectLinkResult | undefined>> {
-    const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
-    const coreAspectsIdsWithoutMain = coreAspectsIds.filter((id) => id !== this.aspectLoader.mainAspect.id);
-    return coreAspectsIdsWithoutMain.map((id) => {
-      return this.linkCoreAspect(dir, id, getCoreAspectName(id), getCoreAspectPackageName(id));
-    });
+    return { packageName: this.aspectLoader.mainAspect.packageName, from: src, to: target };
   }
 
   private async linkNonExistingCoreAspects(
@@ -498,7 +493,7 @@ export class DependencyLinker {
       this.logger.debug(`linkCoreAspect: aspectDir ${aspectDir} does not exist, linking it to ${target}`);
       aspectDir = getAspectDir(id);
       createSymlinkOrCopy(aspectDir, target);
-      return { aspectId: id, linkDetail: { from: aspectDir, to: target } };
+      return { aspectId: id, linkDetail: { packageName, from: aspectDir, to: target } };
     }
 
     try {
@@ -513,7 +508,7 @@ export class DependencyLinker {
       }
       this.logger.debug(`linkCoreAspect: linking aspectPath ${aspectPath} to ${target}`);
       createSymlinkOrCopy(aspectPath, target);
-      return { aspectId: id, linkDetail: { from: aspectPath, to: target } };
+      return { aspectId: id, linkDetail: { packageName, from: aspectPath, to: target } };
     } catch (err: any) {
       throw new CoreAspectLinkError(id, err);
     }
@@ -577,7 +572,7 @@ export class DependencyLinker {
     if (!isDistDirExist) {
       const newDir = getDistDirForDevEnv(packageName);
       createSymlinkOrCopy(newDir, target);
-      return { from: newDir, to: target };
+      return { packageName, from: newDir, to: target };
     }
 
     try {
@@ -590,7 +585,7 @@ export class DependencyLinker {
         return undefined;
       }
       createSymlinkOrCopy(resolvedPath, target);
-      return { from: resolvedPath, to: target };
+      return { packageName, from: resolvedPath, to: target };
     } catch (err: any) {
       throw new NonAspectCorePackageLinkError(err, packageName);
     }

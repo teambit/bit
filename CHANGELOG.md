@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [[0.1.7] - 2023-03-20](https://github.com/teambit/bit/releases/tag/v0.1.7)
+### Changes
+- Set `--entire-lane` flag as default for `bit lane checkout` (#7152)
+
+### Bug Fixes
+- Load envs' templates correctly from `workspace.jsonc` (#7172)
+- Fetch versions that are shown in `.bitmap` but not in the lane object (#7167)
+- Allow ignoring files from components root-dir (#7163)
+- Write objects atomically (#7160)
+- Fix compilation error for content/cli-reference component (#7162)
+- Avoid loading envs that are not set via envs/envs if found an env previously (#7153)
+- Allow `aspect-unset` without specifying the aspect version (#7157)
+- Fix error "dest already exists" when removing a restored lane (#7156)
+- Consume plugin: display version for bit import, snap (#7151)
+
+### Internal
+- Remove old implementation of Stencil (#7170)
+- Better development sourcemaps for Webpack (#7147)
+- Make bit-lane command public (#7150)
+
 ## [[0.1.4] - 2023-03-14](https://github.com/teambit/bit/releases/tag/v0.1.4)
 ### New Features
 - Support generating a component for `bit create` with `--aspect` or `--env` option (#7093)
