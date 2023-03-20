@@ -90,6 +90,12 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     let idsToLoadFromWs = componentIds;
     let scopeAspectIds: string[] = [];
 
+    // TODO: hard coded use the old approach and loading from the scope capsules
+    // This is because right now loading from the ws node_modules causes issues in some cases
+    // like for the cloud app
+    // it should be removed once we fix the issues
+    mergedOpts.useScopeAspectsCapsule = true;
+
     if (mergedOpts.useScopeAspectsCapsule) {
       idsToLoadFromWs = workspaceIds;
       const currentLane = await this.consumer.getCurrentLaneObject();
@@ -233,7 +239,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const scopeAspectsDefs: AspectDefinition[] = scopeIds.length
       ? await this.scope.resolveAspects(runtimeName, scopeIds, mergedOpts)
       : [];
-    
+
     this.logger.debug(
       `${loggerPrefix} ${
         componentsToResolveFromInstalled.length

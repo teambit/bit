@@ -92,6 +92,7 @@ import {
   AspectPackage,
   GetConfiguredUserAspectsPackagesOptions,
   WorkspaceAspectsLoader,
+  WorkspaceLoadAspectsOptions,
 } from './workspace-aspects-loader';
 import { MergeConflictFile } from './merge-conflict-file';
 
@@ -1189,9 +1190,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * load aspects from the workspace and if not exists in the workspace, load from the scope.
    * keep in mind that the graph may have circles.
    */
-  async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: string): Promise<string[]> {
+  async loadAspects(
+    ids: string[] = [],
+    throwOnError = false,
+    neededFor?: string,
+    opts: WorkspaceLoadAspectsOptions = {}
+  ): Promise<string[]> {
     const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
-    return workspaceAspectsLoader.loadAspects(ids, throwOnError, neededFor);
+    return workspaceAspectsLoader.loadAspects(ids, throwOnError, neededFor, opts);
   }
 
   /**
