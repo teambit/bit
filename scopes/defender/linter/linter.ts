@@ -151,5 +151,6 @@ export type LintResults = {
 };
 
 export interface Linter {
+  id: string;
   lint(context: LinterContext, buildContext?: BuildContext): Promise<LintResults>;
 }

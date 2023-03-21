@@ -241,8 +241,9 @@ export function dedupePaths(pathsPerEnvId: PathsPerEnvIds[]): PathsPerEnvIds[] {
 
   const envIdsPerDedupedPaths = invertBy(dedupedPathsPerEnvIds);
 
-  return Object.keys(envIdsPerDedupedPaths).map((envIdStr) => ({
+  const dedupedPaths = Object.keys(envIdsPerDedupedPaths).map((envIdStr) => ({
     ids: envIdStr.split(','),
     paths: envIdsPerDedupedPaths[envIdStr],
   }));
+  return dedupedPaths;
 }
