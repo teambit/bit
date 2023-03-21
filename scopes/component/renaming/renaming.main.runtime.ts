@@ -47,6 +47,10 @@ make sure this argument is the name only, without the scope-name. to change the 
     const sourceComp = await this.workspace.get(sourceId);
     const sourcePackageName = this.workspace.componentPackageName(sourceComp);
     const targetId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope);
+    if (!options.preserve) {
+      await this.refactoring.refactorVariableAndClasses(sourceComp, sourceId, targetId);
+      this.refactoring.refactorFilenames(sourceComp, sourceId, targetId);
+    }
     if (isTagged) {
       const config = await this.getConfig(sourceComp);
       await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetId, options, config);
@@ -54,6 +58,13 @@ make sure this argument is the name only, without the scope-name. to change the 
     } else {
       this.workspace.bitMap.renameNewComponent(sourceId, targetId);
       await this.workspace.bitMap.write();
+
+      if (!options.preserve) {
+        await this.componentWriter.writeMany({
+          components: [sourceComp.state._consumer],
+          skipDependencyInstallation: true,
+        });
+      }
 
       await fs.remove(path.join(this.workspace.path, 'node_modules', sourcePackageName));
     }

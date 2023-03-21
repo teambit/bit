@@ -166,15 +166,76 @@ describe('bit rename command', function () {
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
     });
   });
-  describe('rename an aspect', () => {
+  describe('rename a new aspect without --preserve flag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.command.create('aspect', 'my-aspect');
       helper.command.rename('my-aspect', 'foo');
     });
-    it('should rename the root-dir by default', () => {
+    it('should rename the root-dir', () => {
       expect(path.join(helper.scopes.localPath, `${helper.scopes.remote}/my-aspect`)).to.not.be.a.path();
       expect(path.join(helper.scopes.localPath, `${helper.scopes.remote}/foo`)).to.be.a.directory();
+    });
+    it('should rename the files', () => {
+      expect(path.join(helper.scopes.localPath, `${helper.scopes.remote}/foo`, 'foo.aspect.ts')).to.be.a.file();
+      expect(
+        path.join(helper.scopes.localPath, `${helper.scopes.remote}/foo`, 'my-aspect.aspect.ts')
+      ).to.not.be.a.path();
+    });
+    it('should rename the class-name', () => {
+      const fileContent = helper.fs.readFile(path.join(`${helper.scopes.remote}/foo`, 'foo.aspect.ts'));
+      expect(fileContent).to.have.string('FooAspect');
+      expect(fileContent).to.not.have.string('MyAspectAspect');
+    });
+  });
+  describe('rename a new aspect with --preserve flag', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.create('aspect', 'my-aspect');
+      helper.command.rename('my-aspect', 'foo', '--preserve');
+    });
+    it('should not rename the root-dir', () => {
+      expect(path.join(helper.scopes.localPath, `${helper.scopes.remote}/my-aspect`)).to.be.a.directory();
+      expect(path.join(helper.scopes.localPath, `${helper.scopes.remote}/foo`)).to.not.be.a.path();
+    });
+    it('should not rename the files', () => {
+      expect(
+        path.join(helper.scopes.localPath, `${helper.scopes.remote}/my-aspect`, 'my-aspect.aspect.ts')
+      ).to.be.a.file();
+      expect(
+        path.join(helper.scopes.localPath, `${helper.scopes.remote}/my-aspect`, 'foo.aspect.ts')
+      ).to.not.be.a.path();
+    });
+    it('should not rename the class-name', () => {
+      const fileContent = helper.fs.readFile(path.join(`${helper.scopes.remote}/my-aspect`, 'my-aspect.aspect.ts'));
+      expect(fileContent).to.have.string('MyAspectAspect');
+      expect(fileContent).to.not.have.string('FooAspect');
+    });
+  });
+  describe('rename an exported aspect', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.create('aspect', 'my-aspect');
+      helper.command.install();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.rename('my-aspect', 'foo');
+    });
+    it('should rename the files', () => {
+      expect(path.join(helper.scopes.localPath, `${helper.scopes.remote}/foo`, 'foo.aspect.ts')).to.be.a.file();
+      expect(
+        path.join(helper.scopes.localPath, `${helper.scopes.remote}/foo`, 'my-aspect.aspect.ts')
+      ).to.not.be.a.path();
+    });
+    it('should rename the class-name', () => {
+      const fileContent = helper.fs.readFile(path.join(`${helper.scopes.remote}/foo`, 'foo.aspect.ts'));
+      expect(fileContent).to.have.string('FooAspect');
+      expect(fileContent).to.not.have.string('MyAspectAspect');
+    });
+    it('should not rename the class-name of the original component', () => {
+      const fileContent = helper.fs.readFile(path.join(`${helper.scopes.remote}/my-aspect`, 'my-aspect.aspect.ts'));
+      expect(fileContent).to.have.string('MyAspectAspect');
+      expect(fileContent).to.not.have.string('FooAspect');
     });
   });
 });
