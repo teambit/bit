@@ -160,15 +160,23 @@ export default class Version extends BitObject {
    * it's backward compatible with the previous way this was stored on the Version object itself.
    */
   async getFlattenedEdges(repo: Repository): Promise<DepEdge[]> {
-    if (!this._flattenedEdges) {
+    const getWithBackwardCompatibility = async (): Promise<DepEdge[]> => {
       if (this.flattenedEdgesRef) {
-        const flattenedEdgesSource = (await repo.load(this.flattenedEdgesRef)) as Source;
-        const flattenedEdgesJson = JSON.parse(flattenedEdgesSource.contents.toString());
-        this._flattenedEdges = flattenedEdgesJson.map((item) => Version.depEdgeFromObject(item));
-      } else if (this.flattenedEdges.length) {
-        this._flattenedEdges = this.flattenedEdges;
+        // it's possible that there is a ref but the file is not there.
+        // it can happen if the remote-scope uses an older version that doesn't know to collect this ref.
+        // in which case, the client will get the Version object with the ref prop, but not the Source object.
+        const throws = false;
+        const flattenedEdgesSource = (await repo.load(this.flattenedEdgesRef, throws)) as Source | undefined;
+        if (flattenedEdgesSource) {
+          const flattenedEdgesJson = JSON.parse(flattenedEdgesSource.contents.toString());
+          return flattenedEdgesJson.map((item) => Version.depEdgeFromObject(item));
+        }
       }
-      if (!this._flattenedEdges) this._flattenedEdges = [];
+      return this.flattenedEdges || [];
+    };
+
+    if (!this._flattenedEdges) {
+      this._flattenedEdges = await getWithBackwardCompatibility();
     }
 
     return this._flattenedEdges;
