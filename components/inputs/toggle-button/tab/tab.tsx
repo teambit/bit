@@ -4,33 +4,39 @@ import styles from './tab.module.scss';
 
 export type TabProps = {
   selectedTab?: HTMLElement;
+  enableAnimation?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 
 type BorderStyle = {
   width: undefined | string;
   transform: undefined | string;
+  transition: undefined | string;
 };
 
-export const Tab = forwardRef<HTMLDivElement, TabProps>(({ selectedTab, className, ...rest }: TabProps, ref) => {
-  const [borderStyles, setBorderStyle] = useState<BorderStyle>({
-    width: undefined,
-    transform: undefined,
-  });
+export const Tab = forwardRef<HTMLDivElement, TabProps>(
+  ({ selectedTab, enableAnimation = false, className, ...rest }: TabProps, ref) => {
+    const [borderStyles, setBorderStyle] = useState<BorderStyle>({
+      width: undefined,
+      transform: undefined,
+      transition: undefined,
+    });
 
-  useEffect(() => {
-    if (selectedTab) {
-      const styleObj: BorderStyle = {
-        width: undefined,
-        transform: undefined,
-      };
-      const offset = selectedTab.offsetLeft;
+    useEffect(() => {
+      if (selectedTab) {
+        const styleObj: BorderStyle = {
+          width: undefined,
+          transform: undefined,
+          transition: undefined,
+        };
 
-      styleObj.width = `${selectedTab.offsetWidth}px`;
-      styleObj.transform = `translateX(${offset}px)`;
+        styleObj.width = `${selectedTab.offsetWidth}px`;
+        styleObj.transform = `translateX(${selectedTab.offsetLeft}px)`;
+        if (enableAnimation) styleObj.transition = 'transform 150ms ease-in-out, width 150ms ease-in-out';
 
-      setBorderStyle(styleObj);
-    }
-  }, [selectedTab]);
+        setBorderStyle(styleObj);
+      }
+    }, [selectedTab, enableAnimation]);
 
-  return <div className={classNames(styles.tab, className)} style={borderStyles} ref={ref} {...rest} />;
-});
+    return <div className={classNames(styles.tab, className)} style={borderStyles} ref={ref} {...rest} />;
+  }
+);

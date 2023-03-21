@@ -22,4 +22,7 @@
   &.active {
     color: var(--on-surface-color, #2b2b2b);
   }
+  &.noAnimation {
+    background-color: var(--surface02-color, #f7f2fd);
+  }
 }

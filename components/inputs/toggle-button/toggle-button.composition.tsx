@@ -19,7 +19,7 @@ export function MultipleToggleButton() {
     { value: 'Four', element: 'Four' },
     { value: 'Five', element: 'Five' },
   ];
-  return <ToggleButton options={options} />;
+  return <ToggleButton options={options} defaultIndex={2} />;
 }
 
 export function ToggleButtonWithCustomElements() {
@@ -40,7 +40,7 @@ export function ToggleButtonWithCustomElements() {
 
   const onOptionSelect = (_selectedOption: number) => setSelectedOption(_selectedOption);
 
-  return <ToggleButton options={options} defaultIndex={selectedOption} onOptionSelect={onOptionSelect} />;
+  return <ToggleButton options={options} defaultIndex={1} onOptionSelect={onOptionSelect} />;
 }
 
 function EarthSvg({ fill = '#707279' }: { fill?: string }) {

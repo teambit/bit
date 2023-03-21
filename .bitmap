@@ -623,7 +623,7 @@
     },
     "inputs/toggle-button": {
         "scope": "teambit.design",
-        "version": "0.0.6",
+        "version": "0.0.8",
         "mainFile": "index.ts",
         "rootDir": "components/inputs/toggle-button"
     },
