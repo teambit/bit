@@ -2,9 +2,10 @@ import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect, useCall
 import classnames from 'classnames';
 import { LaneId } from '@teambit/lane-id';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
-import { SearchInput } from '@teambit/explorer.ui.search.search-input';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
+import { InputText as SearchInput } from '@teambit/design.inputs.input-text';
 import { ToggleButton } from '@teambit/design.inputs.toggle-button';
+import { Icon } from '@teambit/design.elements.icon';
 import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
 
 import { LaneSelectorList } from './lane-selector-list';
@@ -148,6 +149,7 @@ export function LaneSelector(props: LaneSelectorProps) {
             onChange={handleSearchOnChange}
             onClick={handleSearchOnClick}
             autoFocus={true}
+            icon={<Icon of="magnifying" className={styles.searchIcon} />}
           />
         </div>
       )) ||

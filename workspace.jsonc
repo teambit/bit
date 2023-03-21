@@ -89,6 +89,7 @@
         "@teambit/defender.content.tester-overview": "1.95.0",
         "@teambit/design.elements.icon": "1.0.5",
         "@teambit/design.inputs.dropdown": "1.2.16",
+        "@teambit/design.inputs.input-text": "^1.0.21",
         "@teambit/design.inputs.selectors.multi-select": "0.0.20",
         "@teambit/design.inputs.toggle-switch": "0.0.6",
         "@teambit/design.navigation.content-tabs": "0.0.5",
