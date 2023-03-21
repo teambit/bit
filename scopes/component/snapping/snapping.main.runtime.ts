@@ -50,7 +50,7 @@ import {
   getArtifactsFiles,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
-import { DepEdge, DepEdgeType } from '@teambit/legacy/dist/scope/models/version';
+import Version, { DepEdge, DepEdgeType } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
@@ -693,19 +693,7 @@ there are matching among unmodified components thought. consider using --unmodif
     lane: Lane | null;
     shouldValidateVersion?: boolean;
   }): Promise<ModelComponent> {
-    // if a component exists in the model, add a new version. Otherwise, create a new component on the model
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const component: ModelComponent = await this.scope.legacyScope.sources.findOrAddComponent(source);
-
-    const artifactFiles = getArtifactsFiles(source.extensions);
-    const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
-    const { version, files, flattenedEdges } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
-    this.objectsRepo.add(version);
-    if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, this.objectsRepo, source.previouslyUsedVersion);
-
-    if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
-
+    const { component, version } = await this._addCompFromScopeToObjects(source, lane);
     const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
     if (unmergedComponent) {
       if (unmergedComponent.unrelated) {
@@ -730,28 +718,31 @@ there are matching among unmodified components thought. consider using --unmodif
       }
       consumer.scope.objects.unmergedComponents.removeComponent(component.name);
     }
-    this.objectsRepo.add(component);
-
-    files.forEach((file) => this.objectsRepo.add(file.file));
-    if (artifacts) artifacts.forEach((file) => this.objectsRepo.add(file.source));
     if (shouldValidateVersion) version.validate();
     return component;
   }
 
-  async _addCompFromScopeToObjects(source: ConsumerComponent, lane: Lane | null): Promise<ModelComponent> {
+  async _addCompFromScopeToObjects(
+    source: ConsumerComponent,
+    lane: Lane | null
+  ): Promise<{
+    component: ModelComponent;
+    version: Version;
+  }> {
     const objectRepo = this.objectsRepo;
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
     const component = await this.scope.legacyScope.sources.findOrAddComponent(source);
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
-    const { version, files } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
+    const { version, files, flattenedEdges } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     objectRepo.add(version);
+    if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
     component.addVersion(version, source.version, lane, objectRepo, source.previouslyUsedVersion);
     objectRepo.add(component);
     files.forEach((file) => objectRepo.add(file.file));
     if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
-    return component;
+    return { component, version };
   }
 
   async _enrichComp(consumerComponent: ConsumerComponent) {
