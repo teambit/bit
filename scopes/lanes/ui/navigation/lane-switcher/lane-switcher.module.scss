@@ -34,10 +34,4 @@
   display: flex;
   flex: 0;
   width: 36px;
-
-  @media screen and (max-width: 200px) {
-    &.laneIconContainer {
-      display: none;
-    }
-  }
 }
