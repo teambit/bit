@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { globalBitTempDir } from '@teambit/defender.fs.global-bit-temp-dir';
+import symlinkDir from 'symlink-dir';
 import { hardLinkDirectory } from './hard-link-directory';
 
 test('hardLinkDirectory()', async () => {
@@ -31,4 +32,23 @@ test('hardLinkDirectory()', async () => {
   // It should not link files from node_modules
   expect(fs.existsSync(path.join(dest1Dir, 'node_modules/file.txt'))).toBe(false);
   expect(fs.existsSync(path.join(dest2Dir, 'node_modules/file.txt'))).toBe(false);
+});
+
+test('hard link a directory that has a symlinked directory', async () => {
+  const tempDir = globalBitTempDir();
+  const symlinkTargetDir = path.join(tempDir, 'symlink-target');
+  const srcDir = path.join(tempDir, 'source');
+  const dest1Dir = path.join(tempDir, 'dest1');
+  const dest2Dir = path.join(tempDir, 'dest2');
+
+  fs.mkdirpSync(symlinkTargetDir);
+  fs.writeFileSync(path.join(symlinkTargetDir, 'file.txt'), 'Hello World');
+  fs.mkdirpSync(srcDir);
+  fs.mkdirpSync(dest1Dir);
+  await symlinkDir(symlinkTargetDir, path.join(srcDir, 'symlinked-dir'));
+
+  await hardLinkDirectory(srcDir, [dest1Dir, dest2Dir]);
+
+  expect(fs.readFileSync(path.join(dest1Dir, 'symlinked-dir', 'file.txt'), 'utf8')).toBe('Hello World');
+  expect(fs.readFileSync(path.join(dest2Dir, 'symlinked-dir', 'file.txt'), 'utf8')).toBe('Hello World');
 });

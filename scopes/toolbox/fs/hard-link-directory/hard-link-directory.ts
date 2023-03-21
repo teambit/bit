@@ -1,5 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
+import symlinkDir from 'symlink-dir';
+import resolveLinkTarget from 'resolve-link-target';
 
 /**
  * Hard link all files from a directory to several target directories.
@@ -14,7 +16,8 @@ export async function hardLinkDirectory(src: string, destDirs: string[]) {
     files.map(async (file) => {
       if (file === 'node_modules') return;
       const srcFile = path.join(src, file);
-      if ((await fs.lstat(srcFile)).isDirectory()) {
+      const stat = await fs.lstat(srcFile);
+      if (stat.isDirectory()) {
         const destSubdirs = await Promise.all(
           destDirs.map(async (destDir) => {
             const destSubdir = path.join(destDir, file);
@@ -27,6 +30,16 @@ export async function hardLinkDirectory(src: string, destDirs: string[]) {
           })
         );
         await hardLinkDirectory(srcFile, destSubdirs);
+        return;
+      }
+      if (stat.isSymbolicLink()) {
+        const target = await resolveLinkTarget(srcFile);
+        await Promise.all(
+          destDirs.map(async (destDir) => {
+            const destSubdir = path.join(destDir, file);
+            await symlinkDir(target, destSubdir);
+          })
+        );
         return;
       }
       await Promise.all(
