@@ -6,7 +6,7 @@
 
 .scope {
   padding: 8px 16px;
-  color: #707279;
+  color: var(--on-surface-medium-color, #707279);
   display: flex;
   gap: 8px;
 }

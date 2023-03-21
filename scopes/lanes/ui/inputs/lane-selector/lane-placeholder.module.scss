@@ -5,8 +5,8 @@
   line-height: var(--bit-p-md, 16px);
   border-radius: 6px;
   font-size: 14px;
-  border: 1px solid #ededed;
-  background-color: #ffffff;
+  border: 1px solid var(--border-medium-color, #ededed);
+  background-color: var(--surface-neutral-hover-color, #f7f7f7);
   &.disabled {
     border: unset;
   }
