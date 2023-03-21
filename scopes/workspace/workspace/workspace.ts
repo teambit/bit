@@ -462,7 +462,7 @@ export class Workspace implements ComponentFactory {
       return null;
     }
 
-    const flattenedEdges = versionObj.flattenedEdges;
+    const flattenedEdges = await versionObj.getFlattenedEdges(this.scope.legacyScope.objects);
     if (!flattenedEdges.length && versionObj.flattenedDependencies.length) {
       // there are flattenedDependencies, so must be edges, if they're empty, it's because the component was tagged
       // with a version < ~0.0.901, so this flattenedEdges wasn't exist.

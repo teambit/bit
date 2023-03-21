@@ -699,10 +699,12 @@ there are matching among unmodified components thought. consider using --unmodif
 
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
-    const { version, files } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
+    const { version, files, flattenedEdges } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     this.objectsRepo.add(version);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
     component.addVersion(version, source.version, lane, this.objectsRepo, source.previouslyUsedVersion);
+
+    if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
 
     const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
     if (unmergedComponent) {

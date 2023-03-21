@@ -598,7 +598,7 @@ export class ExportMain {
     // return true if one of the versions has changed or the component itself
     return haveVersionsChanged.some((x) => x) || hasComponentChanged;
 
-    function changeDependencyScope(version: Version): boolean {
+    async function changeDependencyScope(version: Version): Promise<boolean> {
       let hasChanged = false;
       version.getAllDependencies().forEach((dependency) => {
         const updatedIdWithScope = getIdWithUpdatedScope(dependency.id);
@@ -613,17 +613,27 @@ export class ExportMain {
         version.flattenedDependencies = getBitIdsWithUpdatedScope(flattenedIds);
         hasChanged = true;
       }
-      version.flattenedEdges = version.flattenedEdges.map((edge) => {
+      let hasFlattenedEdgesChanged = false;
+      const flattenedEdges = await version.getFlattenedEdges(scope.objects);
+      const updatedFlattenedEdges = flattenedEdges.map((edge) => {
         if (edge.source.scope && edge.target.scope) {
           return edge;
         }
-        hasChanged = true;
+        hasFlattenedEdgesChanged = true;
         return {
           ...edge,
           source: getIdWithUpdatedScope(edge.source),
           target: getIdWithUpdatedScope(edge.target),
         };
       });
+      if (hasFlattenedEdgesChanged) {
+        // safe to remove the next line once `version.flattenedEdges` is deleted
+        if (version.flattenedEdges) version.flattenedEdges = updatedFlattenedEdges;
+        const source = Version.flattenedEdgeToSource(updatedFlattenedEdges);
+        version.flattenedEdgesRef = source?.hash();
+        if (source) componentsObjects.objects.push(source);
+        hasChanged = true;
+      }
       return hasChanged;
     }
 
