@@ -1,11 +1,13 @@
 import { MainRuntime } from '@teambit/cli';
 // import { Linter as ESLinter, ESLint as ESLintLib } from 'eslint';
 import { ESLint as ESLintLib } from 'eslint';
-import { Linter, LinterContext } from '@teambit/linter';
+import LinterAspect, { Linter, LinterContext, LinterMain } from '@teambit/linter';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { EslintConfigMutator } from '@teambit/defender.eslint.config-mutator';
+import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { ESLintAspect } from './eslint.aspect';
 import { ESLintLinter } from './eslint.linter';
+import { EslintConfigWriter } from './eslint-config-writer';
 
 export type ESLintOptions = {
   /**
@@ -72,10 +74,15 @@ export class ESLintMain {
 
   static runtime = MainRuntime;
 
-  static dependencies = [LoggerAspect];
+  static dependencies = [LoggerAspect, WorkspaceConfigFilesAspect, LinterAspect];
 
-  static async provider([loggerExt]: [LoggerMain]): Promise<ESLintMain> {
+  static async provider([loggerExt, workspaceConfigFiles, linter]: [
+    LoggerMain,
+    WorkspaceConfigFilesMain,
+    LinterMain
+  ]): Promise<ESLintMain> {
     const logger = loggerExt.createLogger(ESLintAspect.id);
+    workspaceConfigFiles.registerConfigWriter(new EslintConfigWriter(linter));
     return new ESLintMain(logger);
   }
 }

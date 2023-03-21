@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, Newline } from 'ink';
-import { EnvService, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
+import { EnvService, EnvDefinition, Env, EnvContext, ServiceTransformationMap, ExecutionContext } from '@teambit/envs';
 import highlight from 'cli-highlight';
 import { Compiler } from './types';
 
@@ -16,6 +16,11 @@ type CompilerTransformationMap = ServiceTransformationMap & {
 
 export class CompilerService implements EnvService<{}, CompilerDescriptor> {
   name = 'Compile';
+
+  getCompiler(context: ExecutionContext): Compiler {
+    const compiler: Compiler = context.env.getCompiler();
+    return compiler;
+  }
 
   render(env: EnvDefinition) {
     const descriptor = this.getDescriptor(env);
