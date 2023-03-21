@@ -52,3 +52,25 @@ test('hard link a directory that has a symlinked directory', async () => {
   expect(fs.readFileSync(path.join(dest1Dir, 'symlinked-dir', 'file.txt'), 'utf8')).toBe('Hello World');
   expect(fs.readFileSync(path.join(dest2Dir, 'symlinked-dir', 'file.txt'), 'utf8')).toBe('Hello World');
 });
+
+test('copy symlinked files', async () => {
+  const tempDir = globalBitTempDir();
+  const symlinkTargetDir = path.join(tempDir, 'symlink-target');
+  const srcDir = path.join(tempDir, 'source');
+  const dest1Dir = path.join(tempDir, 'dest1');
+  const dest2Dir = path.join(tempDir, 'dest2');
+
+  fs.mkdirpSync(symlinkTargetDir);
+  fs.mkdirpSync(srcDir);
+  fs.mkdirpSync(dest1Dir);
+  const symlinkTargetFile = path.join(symlinkTargetDir, 'file.txt');
+  fs.writeFileSync(symlinkTargetFile, 'Hello World');
+  await symlinkDir(symlinkTargetFile, path.join(srcDir, 'file.txt'));
+
+  await hardLinkDirectory(srcDir, [dest1Dir, dest2Dir]);
+
+  expect(fs.readFileSync(path.join(dest1Dir, 'file.txt'), 'utf8')).toBe('Hello World');
+  expect(fs.lstatSync(path.join(dest1Dir, 'file.txt')).isSymbolicLink()).toBeFalsy();
+  expect(fs.readFileSync(path.join(dest2Dir, 'file.txt'), 'utf8')).toBe('Hello World');
+  expect(fs.lstatSync(path.join(dest2Dir, 'file.txt')).isSymbolicLink()).toBeFalsy();
+});
