@@ -13,6 +13,12 @@ const GET_LANES = gql`
           scope
         }
         hash
+        createdAt
+        createdBy {
+          name
+          email
+          profileImage
+        }
         readmeComponent {
           id {
             name
