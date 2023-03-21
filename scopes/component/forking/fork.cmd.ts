@@ -8,6 +8,8 @@ export type ForkOptions = {
   refactor?: boolean;
   skipDependencyInstallation?: boolean;
   skipConfig?: boolean;
+  preserve?: boolean;
+  noLink?: boolean;
 };
 
 export class ForkCmd implements Command {
@@ -34,12 +36,14 @@ export class ForkCmd implements Command {
       'relative path in the workspace for the new component. by default the path is `<scope>/<namespace>/<name>`',
     ],
     ['r', 'refactor', 'update the import/require statements in all dependent components (in the same workspace)'],
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
     [
       '',
       'skip-config',
       'do not copy the config (aspects-config) to the new component. helpful when it fails during aspect loading',
     ],
+    ['', 'preserve', 'avoid renaming files and variables/classes according to the new component name'],
+    ['', 'no-link', 'avoid saving a reference to the original component'],
   ] as CommandOptions;
 
   example: [

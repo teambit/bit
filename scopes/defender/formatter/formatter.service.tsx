@@ -7,9 +7,9 @@ import { Formatter, FormatResults } from './formatter';
 import { FormatterContext, FormatterOptions } from './formatter-context';
 import { FormatterConfig } from './formatter.main.runtime';
 
-type FormatterTransformationMap = ServiceTransformationMap  & {
+type FormatterTransformationMap = ServiceTransformationMap & {
   getFormatter: () => Formatter;
-}
+};
 export class FormatterService implements EnvService<FormatResults> {
   name = 'formatter';
 
@@ -18,10 +18,18 @@ export class FormatterService implements EnvService<FormatResults> {
   async run(context: ExecutionContext, options: FormatterOptions): Promise<FormatResults> {
     const mergedOpts = this.optionsWithDefaults(options);
     const formatterContext: FormatterContext = this.mergeContext(mergedOpts, context);
-    const formatter: Formatter = context.env.getFormatter(formatterContext);
+    const formatter = this.getFormatter(context, options);
 
     const results = options.check ? await formatter.check(formatterContext) : await formatter.format(formatterContext);
     return results;
+  }
+
+  getFormatter(context: ExecutionContext, options: FormatterOptions): Formatter {
+    const mergedOpts = this.optionsWithDefaults(options);
+    const formatterContext: FormatterContext = this.mergeContext(mergedOpts, context);
+    const formatter: Formatter = context.env.getFormatter(formatterContext);
+
+    return formatter;
   }
 
   private optionsWithDefaults(options: FormatterOptions): FormatterOptions {
@@ -58,7 +66,7 @@ export class FormatterService implements EnvService<FormatResults> {
     if (!env?.formatter) return undefined;
     return {
       getFormatter: () => env.formatter()(context),
-    }
+    };
   }
 
   getDescriptor(env: EnvDefinition) {

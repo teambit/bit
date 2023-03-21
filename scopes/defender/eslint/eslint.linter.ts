@@ -8,8 +8,9 @@ import objectHash from 'object-hash';
 import { ComponentMap } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { ESLintOptions } from './eslint.main.runtime';
+import { EslintLinterInterface } from './eslint-linter-interface';
 
-export class ESLintLinter implements Linter {
+export class ESLintLinter implements EslintLinterInterface, Linter {
   constructor(
     private logger: Logger,
 
@@ -21,7 +22,15 @@ export class ESLintLinter implements Linter {
     private ESLint?: any
   ) {}
 
+  id = 'eslint-linter';
   displayName = 'ESlint';
+
+  generateIdeConfig(){
+    return {
+      eslintConfig: this.options.config.overrideConfig || {},
+      tsconfig: this.options.tsConfig,
+    }
+  }
 
   displayConfig() {
     return JSON.stringify(this.options, null, 2);
@@ -124,14 +133,18 @@ export class ESLintLinter implements Linter {
     };
     const compDirs: string[] = componentDirMap.toArray().map(([, compDir]) => compDir);
     if (tsConfig.include) {
-      newTsConfig.include = flatten(tsConfig.include.map((includedPath) => {
-        return compDirs.map((compDir) => `../../${compDir}/${includedPath}`);
-      }));
+      newTsConfig.include = flatten(
+        tsConfig.include.map((includedPath) => {
+          return compDirs.map((compDir) => `../../${compDir}/${includedPath}`);
+        })
+      );
     }
     if (tsConfig.exclude) {
-      newTsConfig.exclude = flatten(tsConfig.exclude.map((excludedPath) => {
-        return compDirs.map((compDir) => `../../${compDir}/${excludedPath}`);
-      }));
+      newTsConfig.exclude = flatten(
+        tsConfig.exclude.map((excludedPath) => {
+          return compDirs.map((compDir) => `../../${compDir}/${excludedPath}`);
+        })
+      );
     }
     const cacheDir = getCacheDir(rootDir);
     const hash = objectHash(newTsConfig);

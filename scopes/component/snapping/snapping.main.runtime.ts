@@ -9,7 +9,7 @@ import semver, { ReleaseType } from 'semver';
 import { compact, difference, uniq } from 'lodash';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
-import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, Extensions, LATEST } from '@teambit/legacy/dist/constants';
+import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, Extensions, LATEST, BuildStatus } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
@@ -43,7 +43,7 @@ import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { ComponentID } from '@teambit/component-id';
-import { BitObject, Repository } from '@teambit/legacy/dist/scope/objects';
+import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
 import {
   ArtifactFiles,
   ArtifactSource,
@@ -183,17 +183,18 @@ export class SnappingMain {
     if (!soft) {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     }
-    const components = await this.loadComponentsForTag(legacyBitIds);
-    await this.throwForLegacyDependenciesInsideHarmony(components);
+    const consumerComponents = await this.loadComponentsForTag(legacyBitIds);
+    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
+    const components = await this.workspace.getManyByLegacy(consumerComponents);
     await this.throwForComponentIssues(components, ignoreIssues);
-    this.throwForPendingImport(components);
+    this.throwForPendingImport(consumerComponents);
 
     const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig } = await tagModelComponent({
       workspace: this.workspace,
       scope: this.scope,
       snapping: this,
       builder: this.builder,
-      consumerComponents: components,
+      consumerComponents,
       ids: legacyBitIds,
       message,
       editor,
@@ -262,6 +263,8 @@ export class SnappingMain {
     const bitIds = componentIds.map((c) => c._legacy);
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
     const components = await this.scope.import(componentIdsLatest);
+    // needed in order to load all aspects of these components
+    await this.scope.loadMany(components.map((c) => c.id));
     await Promise.all(
       components.map(async (comp) => {
         const tagData = tagDataPerComp.find((t) => t.componentId.isEqual(comp.id, { ignoreVersion: true }));
@@ -270,14 +273,19 @@ export class SnappingMain {
         await this.updateDependenciesVersionsOfComponent(comp, tagData.dependencies, bitIds);
       })
     );
-    const consumerComponents = components.map((c) => c.state._consumer);
+    const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
+    const allComponentsBuildSuccessfully = consumerComponents.every((comp) => {
+      if (!comp.buildStatus) throw new Error(`tag-from-scope expect ${comp.id.toString()} to have buildStatus`);
+      return comp.buildStatus === BuildStatus.Succeed;
+    });
     const legacyIds = BitIds.fromArray(componentIds.map((id) => id._legacy));
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
       consumerComponents,
       tagDataPerComp,
-      skipBuildPipeline: true,
+      skipBuildPipeline: allComponentsBuildSuccessfully,
+      copyLogFromPreviousSnap: true,
       snapping: this,
       builder: this.builder,
       dependencyResolver: this.dependencyResolver,
@@ -388,6 +396,10 @@ export class SnappingMain {
         idsWithFutureScope: legacyIds,
         allVersions: false,
         laneObject: updatedLane || undefined,
+        // no need other snaps. only the latest one. without this option, when snapping on lane from another-scope, it
+        // may throw an error saying the previous snaps don't exist on the filesystem.
+        // (see the e2e - "snap on a lane when the component is new to the lane and the scope")
+        exportHeadsOnly: true,
       });
       exportedIds = exported.map((e) => e.toString());
     }
@@ -406,6 +418,7 @@ export class SnappingMain {
     pattern,
     legacyBitIds, // @todo: change to ComponentID[]. pass only if have the ids already parsed.
     unmerged,
+    editor,
     message = '',
     ignoreIssues,
     skipTests = false,
@@ -418,6 +431,7 @@ export class SnappingMain {
     pattern?: string;
     legacyBitIds?: BitIds;
     unmerged?: boolean;
+    editor?: string;
     message?: string;
     ignoreIssues?: string;
     build: boolean;
@@ -436,17 +450,19 @@ export class SnappingMain {
     if (!ids) return null;
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
-    const components = await this.loadComponentsForTag(ids);
-    await this.throwForLegacyDependenciesInsideHarmony(components);
+    const consumerComponents = await this.loadComponentsForTag(ids);
+    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
+    const components = await this.workspace.getManyByLegacy(consumerComponents);
     await this.throwForComponentIssues(components, ignoreIssues);
-    this.throwForPendingImport(components);
+    this.throwForPendingImport(consumerComponents);
 
     const { taggedComponents, autoTaggedResults, stagedConfig } = await tagModelComponent({
       workspace: this.workspace,
       scope: this.scope,
       snapping: this,
       builder: this.builder,
-      consumerComponents: components,
+      editor,
+      consumerComponents,
       ids,
       ignoreNewestVersion: false,
       message,
@@ -686,7 +702,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const { version, files } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     this.objectsRepo.add(version);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, this.objectsRepo);
+    component.addVersion(version, source.version, lane, this.objectsRepo, source.previouslyUsedVersion);
 
     const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
     if (unmergedComponent) {
@@ -694,7 +710,14 @@ there are matching among unmodified components thought. consider using --unmodif
         this.logger.debug(
           `sources.addSource, unmerged component "${component.name}". adding an unrelated entry ${unmergedComponent.head.hash}`
         );
-        version.unrelated = { head: unmergedComponent.head, laneId: unmergedComponent.laneId };
+        if (!source.previouslyUsedVersion) {
+          throw new Error(
+            `source.previouslyUsedVersion must be set for ${component.name} because it's unrelated resolved.`
+          );
+        }
+        const unrelatedHead = Ref.from(source.previouslyUsedVersion);
+        version.unrelated = { head: unrelatedHead, laneId: unmergedComponent.laneId };
+        version.addAsOnlyParent(unmergedComponent.head);
       } else {
         // this is adding a second parent to the version. the order is important. the first parent is coming from the current-lane.
         version.addParent(unmergedComponent.head);
@@ -722,7 +745,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const { version, files } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     objectRepo.add(version);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, objectRepo);
+    component.addVersion(version, source.version, lane, objectRepo, source.previouslyUsedVersion);
     objectRepo.add(component);
     files.forEach((file) => objectRepo.add(file.file));
     if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
@@ -768,7 +791,7 @@ there are matching among unmodified components thought. consider using --unmodif
     return [...components, ...removedComponents];
   }
 
-  private async throwForComponentIssues(legacyComponents: ConsumerComponent[], ignoreIssues?: string) {
+  private async throwForComponentIssues(components: Component[], ignoreIssues?: string) {
     if (ignoreIssues === '*') {
       // ignore all issues
       return;
@@ -776,10 +799,9 @@ there are matching among unmodified components thought. consider using --unmodif
     const issuesToIgnoreFromFlag = ignoreIssues?.split(',').map((issue) => issue.trim()) || [];
     const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnoreGlobally();
     const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
-    const components = await this.workspace.getManyByLegacy(legacyComponents);
     await this.issues.triggerAddComponentIssues(components, issuesToIgnore);
     this.issues.removeIgnoredIssuesFromComponents(components, issuesToIgnore);
-
+    const legacyComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
     if (!R.isEmpty(componentsWithBlockingIssues)) {
       throw new ComponentsHaveIssues(componentsWithBlockingIssues);
@@ -787,11 +809,12 @@ there are matching among unmodified components thought. consider using --unmodif
   }
 
   private throwForPendingImport(components: ConsumerComponent[]) {
-    const areComponentsMissingFromScope = components
+    const componentsMissingFromScope = components
       .filter((c) => !c.removed)
-      .some((c) => !c.componentFromModel && c.id.hasScope());
-    if (areComponentsMissingFromScope) {
-      throw new ComponentsPendingImport();
+      .filter((c) => !c.componentFromModel && c.id.hasScope())
+      .map((c) => c.id.toString());
+    if (componentsMissingFromScope.length) {
+      throw new ComponentsPendingImport(componentsMissingFromScope);
     }
   }
 

@@ -13,6 +13,8 @@ import { MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { merge } from 'webpack-merge';
+// We want to import it to make sure bit recognizes it as a dependency
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import WsDevServer from 'webpack-dev-server';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 
@@ -32,6 +34,10 @@ export type WebpackConfigDevServerTransformContext = GlobalWebpackConfigTransfor
 
 export type GlobalWebpackConfigTransformContext = {
   mode: BundlerMode;
+  /**
+   * Whether the config is for an env template bundling
+   */
+  isEnvTemplate?: boolean;
   /**
    * A path for the host root dir
    * Host root dir is usually the env root dir
@@ -96,7 +102,7 @@ export class WebpackMain {
       transformerContext
     );
     // @ts-ignore - fix this
-    return new WebpackDevServer(afterMutation.raw, webpack, WsDevServer);
+    return new WebpackDevServer(afterMutation.raw, webpack, require.resolve('webpack-dev-server'));
   }
 
   mergeConfig(target: any, source: any): any {
@@ -109,7 +115,10 @@ export class WebpackMain {
     initialConfigs?: webpack.Configuration[],
     webpackInstance?: any
   ) {
-    const transformerContext: GlobalWebpackConfigTransformContext = { mode: 'prod' };
+    const transformerContext: GlobalWebpackConfigTransformContext = {
+      mode: 'prod',
+      isEnvTemplate: context.metaData?.isEnvTemplate,
+    };
     // eslint-disable-next-line max-len
     const configs =
       initialConfigs ||

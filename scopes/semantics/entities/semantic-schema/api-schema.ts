@@ -13,20 +13,34 @@ import {
   VariableLikeSchema,
 } from './schemas';
 import { Location, SchemaNode } from './schema-node';
-import { schemaObjToInstance } from './class-transformers';
+import { schemaObjArrayToInstances, schemaObjToInstance } from './class-transformers';
 import { componentIdTransformer } from './class-transformers/comp-id-transformer';
+import { TagName } from './schemas/docs/tag';
 
 export class APISchema extends SchemaNode {
   @Transform(schemaObjToInstance)
-  readonly module: ModuleSchema;
+  readonly module: ModuleSchema; // index
+
+  @Transform(schemaObjArrayToInstances)
+  readonly internals: ModuleSchema[];
 
   @Transform(componentIdTransformer)
   readonly componentId: ComponentID;
 
-  constructor(readonly location: Location, module: ModuleSchema, componentId: ComponentID) {
+  @Transform(schemaObjArrayToInstances)
+  readonly taggedModuleExports: SchemaNode[];
+
+  constructor(readonly location: Location, module: ModuleSchema, internals: ModuleSchema[], componentId: ComponentID) {
     super();
     this.module = module;
+    this.internals = internals;
     this.componentId = componentId;
+    this.taggedModuleExports = this.listTaggedExports(module);
+  }
+
+  listTaggedExports(module?: ModuleSchema) {
+    if (!module) return [];
+    return module.exports.filter((e) => e.doc?.hasTag(TagName.exports));
   }
 
   toString() {
@@ -73,7 +87,8 @@ export class APISchema extends SchemaNode {
   static empty(componentId: ComponentID) {
     return new APISchema(
       { filePath: '', line: 0, character: 0 },
-      new ModuleSchema({ filePath: '', line: 0, character: 0 }, []),
+      new ModuleSchema({ filePath: '', line: 0, character: 0 }, [], []),
+      [],
       componentId
     );
   }

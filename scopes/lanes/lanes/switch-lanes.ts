@@ -3,7 +3,8 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { BitId } from '@teambit/legacy-bit-id';
-import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ApplyVersionResults } from '@teambit/merging';
 import { Version, Lane } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import {
@@ -13,11 +14,9 @@ import {
   deleteFilesIfNeeded,
   markFilesToBeRemovedIfNeeded,
 } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
-import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import {
   FailedComponents,
   getMergeStrategyInteractive,
-  ApplyVersionResults,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import threeWayMerge, {
   MergeResultsThreeWay,
@@ -26,6 +25,7 @@ import { Workspace } from '@teambit/workspace';
 import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { LanesMain } from './lanes.main.runtime';
+import { throwForStagedComponents } from './create-lane';
 
 export type SwitchProps = {
   laneName: string;
@@ -52,6 +52,9 @@ export class LaneSwitcher {
 
   async switch(): Promise<ApplyVersionResults> {
     this.logger.setStatusLine(`switching lanes`);
+    if (this.workspace.isOnMain()) {
+      await throwForStagedComponents(this.consumer);
+    }
     await this.populateSwitchProps();
     const allComponentsStatus: ComponentStatus[] = await this.getAllComponentsStatus();
     const componentWithConflict = allComponentsStatus.find(
@@ -84,26 +87,24 @@ export class LaneSwitcher {
 
     await this.saveLanesData();
 
-    const componentsWithDependencies = componentsResults
-      .map((c) => c.component)
-      .filter((c) => c) as ComponentWithDependencies[];
+    const components = componentsResults.map((c) => c.component).filter((c) => c) as ConsumerComponent[];
 
-    const manyComponentsWriter = new ManyComponentsWriter({
-      consumer: this.consumer,
-      componentsWithDependencies,
-      installNpmPackages: !this.checkoutProps.skipNpmInstall,
-      override: true,
+    const manyComponentsWriterOpts = {
+      components,
+      skipDependencyInstallation: this.checkoutProps.skipNpmInstall,
       verbose: this.checkoutProps.verbose,
       writeConfig: this.checkoutProps.writeConfig,
-    });
-    await manyComponentsWriter.writeAll();
+    };
+    const { installationError, compilationError } = await this.Lanes.componentWriter.writeMany(
+      manyComponentsWriterOpts
+    );
     await deleteFilesIfNeeded(componentsResults, this.consumer);
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
     await this.consumer.onDestroy();
 
-    return { components: appliedVersionComponents, failedComponents };
+    return { components: appliedVersionComponents, failedComponents, installationError, compilationError };
   }
 
   private async populateSwitchProps() {

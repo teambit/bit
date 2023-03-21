@@ -2,49 +2,70 @@ import { Parser } from '@teambit/schema';
 import { Export, StaticProperties } from '@teambit/semantics.entities.semantic-schema';
 import { Logger } from '@teambit/logger';
 import { readFileSync } from 'fs-extra';
-import ts, {
-  isClassDeclaration,
-  isFunctionDeclaration,
-  isVariableStatement,
-  SourceFile,
-  VariableStatement,
-} from 'typescript';
+import ts from 'typescript';
 
 export class TypeScriptParser implements Parser {
   public extension = /^.*\.(js|jsx|ts|tsx)$/;
 
-  getExports(sourceFile: SourceFile): Export[] {
+  getExports(sourceFile: ts.SourceFile): Export[] {
     const staticProperties = this.parseStaticProperties(sourceFile);
+    const exportModels: Export[] = [];
 
-    const exports = sourceFile.statements.filter((statement) => {
-      if (!statement.modifiers) return false;
-      return statement.modifiers.find((modifier) => {
-        return modifier.kind === ts.SyntaxKind.ExportKeyword;
-      });
+    sourceFile.statements.forEach((statement) => {
+      // export default
+      if (ts.isExportAssignment(statement)) {
+        // export default
+      }
+
+      // export declarations or re-exports
+      if (ts.isExportDeclaration(statement)) {
+        if (statement.exportClause) {
+          if (ts.isNamedExports(statement.exportClause)) {
+            statement.exportClause.elements.forEach((element) => {
+              const name = element.name.escapedText.toString();
+              if (name !== 'default') {
+                exportModels.push(new Export(name, staticProperties.get(name)));
+              }
+            });
+          }
+          if (ts.isNamespaceExport(statement.exportClause)) {
+            const name = statement.exportClause.name.escapedText.toString();
+            exportModels.push(new Export(name, staticProperties.get(name)));
+          }
+        }
+      }
+
+      // export modifiers
+      // - variable statement
+      // - function statement
+      // - class statement
+      if (statement.modifiers) {
+        statement.modifiers.some((modifier) => {
+          if (modifier.kind === ts.SyntaxKind.ExportKeyword) {
+            if (ts.isVariableStatement(statement)) {
+              const child = statement.declarationList.declarations[0];
+              if (ts.isIdentifier(child.name)) {
+                const name = child.name.escapedText.toString();
+                exportModels.push(new Export(name, staticProperties.get(name)));
+              }
+            } else if (ts.isFunctionDeclaration(statement)) {
+              if (statement.name) {
+                const name = statement.name.escapedText.toString();
+                exportModels.push(new Export(name, staticProperties.get(name)));
+              }
+            } else if (ts.isClassDeclaration(statement)) {
+              if (statement.name) {
+                const name = statement.name.escapedText.toString();
+                exportModels.push(new Export(name, staticProperties.get(name)));
+              }
+            }
+            return true;
+          }
+          return false;
+        });
+      }
     });
 
-    const exportModels = exports.map((statement) => {
-      // todo refactor to a registry of variable statements.
-      if (isVariableStatement(statement)) {
-        const child = (statement as VariableStatement).declarationList.declarations[0];
-        const name = (child as any).name.text;
-        return new Export(name, staticProperties.get(name));
-      }
-
-      if (isFunctionDeclaration(statement)) {
-        if (!statement.name) return undefined;
-        const name = statement.name.text;
-        return new Export(name, staticProperties.get(name));
-      }
-
-      if (isClassDeclaration(statement)) {
-        if (!statement.name) return undefined;
-        const name = statement.name.text;
-        return new Export(name, staticProperties.get(name));
-      }
-
-      return undefined;
-    });
     const withoutEmpty = exportModels.filter((exportModel) => exportModel !== undefined);
     // @ts-ignore
     return withoutEmpty;
@@ -57,7 +78,7 @@ export class TypeScriptParser implements Parser {
     return moduleExports;
   }
 
-  parseStaticProperties(sourceFile: SourceFile) {
+  parseStaticProperties(sourceFile: ts.SourceFile) {
     // TODO - should we also parse staticProperties inside classes / objects?
 
     const exportStaticProperties = new Map<string, StaticProperties>();

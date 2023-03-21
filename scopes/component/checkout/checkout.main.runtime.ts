@@ -5,7 +5,9 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
+import { ApplyVersionResults } from '@teambit/merging';
 import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
+import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import {
   applyVersion,
   markFilesToBeRemovedIfNeeded,
@@ -13,7 +15,6 @@ import {
   deleteFilesIfNeeded,
 } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
 import {
-  ApplyVersionResults,
   FailedComponents,
   getMergeStrategyInteractive,
   MergeStrategy,
@@ -24,7 +25,6 @@ import mapSeries from 'p-map-series';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { Version, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
-import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ComponentID } from '@teambit/component-id';
 import { CheckoutCmd } from './checkout-cmd';
@@ -42,7 +42,7 @@ export type CheckoutProps = {
   reset?: boolean; // remove local changes. if set, the version is undefined.
   all?: boolean; // checkout all ids
   isLane?: boolean;
-  entireLane?: boolean;
+  workspaceOnly?: boolean;
 };
 
 export type ComponentStatusBeforeMergeAttempt = {
@@ -60,7 +60,7 @@ export type ComponentStatusBeforeMergeAttempt = {
 type CheckoutTo = 'head' | 'reset' | string;
 
 export class CheckoutMain {
-  constructor(private workspace: Workspace, private logger: Logger) {}
+  constructor(private workspace: Workspace, private logger: Logger, private componentWriter: ComponentWriterMain) {}
 
   async checkout(checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
     const consumer = this.workspace.consumer;
@@ -134,32 +134,31 @@ export class CheckoutMain {
 
     markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
 
-    const componentsWithDependencies = compact(componentsResults.map((c) => c.component));
+    const componentsLegacy = compact(componentsResults.map((c) => c.component));
 
     let newFromLane: ComponentID[] | undefined;
     let newFromLaneAdded = false;
     if (checkoutProps.head) {
       newFromLane = await this.getNewComponentsFromLane(checkoutProps.ids || []);
-      if (checkoutProps.entireLane) {
+      if (!checkoutProps.workspaceOnly) {
         const compsNewFromLane = await Promise.all(
-          newFromLane.map((id) => consumer.loadComponentWithDependenciesFromModel(id._legacy))
+          newFromLane.map((id) => consumer.loadComponentFromModelImportIfNeeded(id._legacy))
         );
-        componentsWithDependencies.push(...compsNewFromLane);
+        componentsLegacy.push(...compsNewFromLane);
         newFromLaneAdded = true;
       }
     }
 
     const leftUnresolvedConflicts = componentWithConflict && checkoutProps.mergeStrategy === 'manual';
-    if (componentsWithDependencies.length) {
-      const manyComponentsWriter = new ManyComponentsWriter({
-        consumer,
-        componentsWithDependencies,
-        installNpmPackages: !checkoutProps.skipNpmInstall && !leftUnresolvedConflicts,
-        override: true,
+    let componentWriterResults;
+    if (componentsLegacy.length) {
+      const manyComponentsWriterOpts = {
+        components: componentsLegacy,
+        skipDependencyInstallation: checkoutProps.skipNpmInstall || leftUnresolvedConflicts,
         verbose: checkoutProps.verbose,
         resetConfig: checkoutProps.reset,
-      });
-      await manyComponentsWriter.writeAll();
+      };
+      componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
       await deleteFilesIfNeeded(componentsResults, consumer);
     }
 
@@ -172,6 +171,8 @@ export class CheckoutMain {
       leftUnresolvedConflicts,
       newFromLane: newFromLane?.map((n) => n.toString()),
       newFromLaneAdded,
+      installationError: componentWriterResults?.installationError,
+      compilationError: componentWriterResults?.compilationError,
     };
   }
 
@@ -183,6 +184,7 @@ export class CheckoutMain {
     this.logger.setStatusLine(BEFORE_CHECKOUT);
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
+    if (to === 'head') await this.makeLaneComponentsAvailableOnMain();
     await this.parseValues(to, componentPattern, checkoutProps);
     const checkoutResults = await this.checkout(checkoutProps);
     await consumer.onDestroy();
@@ -202,6 +204,12 @@ export class CheckoutMain {
       // don't stop the process. it's possible that the scope doesn't exist yet because these are new components
       this.logger.error(`unable to sync new components due to an error`, err);
     }
+  }
+
+  private async makeLaneComponentsAvailableOnMain() {
+    const unavailableOnMain = await this.workspace.getUnavailableOnMainComponents();
+    if (!unavailableOnMain.length) return;
+    this.workspace.bitMap.makeComponentsAvailableOnMain(unavailableOnMain);
   }
 
   private async parseValues(to: CheckoutTo, componentPattern: string, checkoutProps: CheckoutProps) {
@@ -230,8 +238,8 @@ export class CheckoutMain {
     if (!componentPattern && !checkoutProps.all) {
       throw new GeneralError('please specify [component-pattern] or use --all flag');
     }
-    if (checkoutProps.entireLane && !checkoutProps.head) {
-      throw new BitError(`--entire-lane flag can only be used with "head" (bit checkout head --entire-lane)`);
+    if (checkoutProps.workspaceOnly && !checkoutProps.head) {
+      throw new BitError(`--workspace-only flag can only be used with "head" (bit checkout head --workspace-only)`);
     }
     const idsOnWorkspace = componentPattern
       ? await this.workspace.idsByPattern(componentPattern)
@@ -376,13 +384,18 @@ export class CheckoutMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ComponentWriterAspect];
 
   static runtime = MainRuntime;
 
-  static async provider([cli, workspace, loggerMain]: [CLIMain, Workspace, LoggerMain]) {
+  static async provider([cli, workspace, loggerMain, compWriter]: [
+    CLIMain,
+    Workspace,
+    LoggerMain,
+    ComponentWriterMain
+  ]) {
     const logger = loggerMain.createLogger(CheckoutAspect.id);
-    const checkoutMain = new CheckoutMain(workspace, logger);
+    const checkoutMain = new CheckoutMain(workspace, logger, compWriter);
     cli.register(new CheckoutCmd(checkoutMain));
     return checkoutMain;
   }

@@ -8,9 +8,7 @@ import {
 import ts, { Node, ClassDeclaration } from 'typescript';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
-import { classElementToSchema } from './utils/class-element-to-schema';
-import { typeNodeToSchema } from './utils/type-node-to-schema';
+import { Identifier } from '../identifier';
 
 export class ClassDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
@@ -23,7 +21,7 @@ export class ClassDeclarationTransformer implements SchemaTransformer {
   }
 
   async getIdentifiers(node: ClassDeclaration) {
-    return [new ExportIdentifier(this.getName(node), node.getSourceFile().fileName)];
+    return [new Identifier(this.getName(node), node.getSourceFile().fileName)];
   }
 
   private async getExpressionWithTypeArgs(
@@ -43,7 +41,7 @@ export class ClassDeclarationTransformer implements SchemaTransformer {
         }),
       async (expressionWithTypeArgs: ts.ExpressionWithTypeArguments & { name: string }) => {
         const { typeArguments, expression, name } = expressionWithTypeArgs;
-        const typeArgsNodes = typeArguments ? await pMapSeries(typeArguments, (t) => typeNodeToSchema(t, context)) : [];
+        const typeArgsNodes = typeArguments ? await pMapSeries(typeArguments, (t) => context.computeSchema(t)) : [];
         const location = context.getLocation(expression);
         const expressionNode =
           (await context.visitDefinition(expression)) || new UnresolvedSchema(location, expression.getText());
@@ -75,7 +73,7 @@ export class ClassDeclarationTransformer implements SchemaTransformer {
       if (isPrivate) {
         return null;
       }
-      return classElementToSchema(member, context);
+      return context.computeSchema(member);
     });
     const doc = await context.jsDocToDocSchema(node);
 

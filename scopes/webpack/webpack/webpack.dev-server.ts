@@ -1,4 +1,6 @@
+import { join } from 'path';
 import type { DevServer } from '@teambit/bundler';
+import findRoot from 'find-root';
 import type { Server } from 'http';
 import type { webpack as webpackCompiler, Configuration } from 'webpack';
 import type * as WDS from 'webpack-dev-server';
@@ -10,11 +12,23 @@ export interface WebpackConfigWithDevServer extends Configuration {
   favicon?: string;
 }
 export class WebpackDevServer implements DevServer {
+  private readonly WsDevServer: typeof WDS;
   constructor(
     private config: WebpackConfigWithDevServer,
     private webpack: typeof webpackCompiler,
-    private WsDevServer: WDS
-  ) {}
+    /**
+     * path to the webpack-dev-server module or instance of webpack-dev-server.
+     * this accept getting an instance for backward compatibility.
+     */
+    private webpackDevServer: string | typeof WDS
+  ) {
+    if (typeof this.webpackDevServer === 'string') {
+      // eslint-disable-next-line import/no-dynamic-require, global-require
+      this.WsDevServer = require(this.webpackDevServer);
+    } else {
+      this.WsDevServer = this.webpackDevServer;
+    }
+  }
 
   private getCompiler(): any {
     return this.webpack(this.config);
@@ -23,6 +37,22 @@ export class WebpackDevServer implements DevServer {
   id = WebpackAspect.id;
 
   displayName = 'Webpack dev server';
+
+  version(): string {
+    if (typeof this.webpackDevServer !== 'string') {
+      return 'unknown';
+    }
+    // Resolve version from the webpack-dev-server package.json
+    try {
+      const root = findRoot(this.webpackDevServer);
+      const packageJsonPath = join(root, 'package.json');
+      // eslint-disable-next-line import/no-dynamic-require, global-require
+      const packageJson = require(packageJsonPath);
+      return packageJson.version;
+    } catch (err) {
+      return 'unknown';
+    }
+  }
 
   displayConfig(): string {
     return inspect(this.config, { depth: 10 });

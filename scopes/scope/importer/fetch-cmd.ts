@@ -18,6 +18,11 @@ export class FetchCmd implements Command {
       'EXPERIMENTAL. fetch component objects from lanes. note, it does not save the remote lanes objects locally, only the refs',
     ],
     ['c', 'components', 'fetch components'],
+    [
+      '',
+      'all-history',
+      'for each one of the component, fetch all its versions. by default, only the latest version is fetched',
+    ],
     ['j', 'json', 'return the output as JSON'],
     [
       '',
@@ -36,14 +41,22 @@ export class FetchCmd implements Command {
       components = false,
       json = false,
       fromOriginalScope = false,
+      allHistory = false,
     }: {
       lanes?: boolean;
       components?: boolean;
       json?: boolean;
       fromOriginalScope?: boolean;
+      allHistory?: boolean;
     }
   ) {
-    const { importedIds, importDetails } = await this.importer.fetch(ids, lanes, components, fromOriginalScope);
+    const { importedIds, importDetails } = await this.importer.fetch(
+      ids,
+      lanes,
+      components,
+      fromOriginalScope,
+      allHistory
+    );
     if (json) {
       return JSON.stringify({ importDetails }, null, 4);
     }

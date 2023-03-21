@@ -2,6 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { compact } from 'lodash';
 import R from 'ramda';
+import { installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
 import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import {
   FileStatus,
@@ -42,7 +43,7 @@ export class ImportCmd implements Command {
     ['j', 'json', 'return the output as JSON'],
     // ['', 'conf', 'write the configuration file (component.json) of the component'], // not working. need to fix once ComponentWriter is moved to Harmony
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
     [
       'm',
       'merge [strategy]',
@@ -65,6 +66,7 @@ export class ImportCmd implements Command {
       'relevant for fetching all components objects. avoid optimizations, fetch all history versions, always',
     ],
     ['', 'fetch-deps', 'fetch dependencies objects'],
+    ['', 'track-only', 'do not write any file, just create .bitmap entries of the imported components'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -94,6 +96,7 @@ ${WILDCARD_HELP('import')}`;
       dependents = false,
       allHistory = false,
       fetchDeps = false,
+      trackOnly = false,
     }: {
       path?: string;
       objects?: boolean;
@@ -110,6 +113,7 @@ ${WILDCARD_HELP('import')}`;
       dependents?: boolean;
       allHistory?: boolean;
       fetchDeps?: boolean;
+      trackOnly?: boolean;
     }
   ): Promise<any> {
     if (objects && merge) {
@@ -123,6 +127,9 @@ ${WILDCARD_HELP('import')}`;
     }
     if (!ids.length && dependents) {
       throw new GeneralError('you have to specify ids to use "--dependents" flag');
+    }
+    if (!ids.length && trackOnly) {
+      throw new GeneralError('you have to specify ids to use "--track-only" flag');
     }
     if (skipNpmInstall) {
       // eslint-disable-next-line no-console
@@ -155,12 +162,13 @@ ${WILDCARD_HELP('import')}`;
       importDependents: dependents,
       allHistory,
       fetchDeps,
+      trackOnly,
     };
     const importResults = await this.importer.import(importOptions, this._packageManagerArgs);
-    const { importDetails, importedIds, importedDeps } = importResults;
+    const { importDetails, importedIds, importedDeps, installationError, compilationError } = importResults;
 
     if (json) {
-      return JSON.stringify({ importDetails }, null, 4);
+      return JSON.stringify({ importDetails, installationError }, null, 4);
     }
 
     if (!importedIds.length) {
@@ -183,7 +191,7 @@ ${WILDCARD_HELP('import')}`;
     });
     const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date`;
     const summary = `${summaryPrefix}${upToDateStr}`;
-    const componentDependenciesOutput = [...compact(importedComponents), chalk.green(summary)].join('\n');
+    const importOutput = [...compact(importedComponents), chalk.green(summary)].join('\n');
     const importedDepsOutput =
       displayDependencies && importedDeps.length
         ? immutableUnshift(
@@ -192,9 +200,13 @@ ${WILDCARD_HELP('import')}`;
           ).join('\n')
         : '';
 
-    const dependenciesOutput = componentDependenciesOutput + importedDepsOutput;
+    const output =
+      importOutput +
+      importedDepsOutput +
+      installationErrorOutput(installationError) +
+      compilationErrorOutput(compilationError);
 
-    return dependenciesOutput;
+    return output;
   }
 }
 

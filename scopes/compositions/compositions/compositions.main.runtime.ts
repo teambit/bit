@@ -5,7 +5,6 @@ import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import { flatten } from '@teambit/legacy/dist/utils';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import { SchemaAspect, SchemaMain } from '@teambit/schema';
 import { matchPatterns, splitPatterns } from '@teambit/toolbox.path.match-patterns';
@@ -110,11 +109,7 @@ export class CompositionsMain {
 
     if (!maybeFiles) return [];
     const [, files] = maybeFiles;
-    return flatten(
-      files.map((file) => {
-        return this.computeCompositions(component, file);
-      })
-    );
+    return files.map((file) => this.computeCompositions(component, file)).flat();
   }
 
   getCompositionFilePattern() {
@@ -127,7 +122,7 @@ export class CompositionsMain {
       ? env.getCompositionsDevPatterns(component)
       : [];
     const componentPatterns = componentEnvCompositionsDevPatterns.concat(this.getCompositionFilePattern());
-    return {name: 'compositions', pattern: componentPatterns};
+    return { name: 'compositions', pattern: componentPatterns };
   }
 
   getDevPatternToRegister() {

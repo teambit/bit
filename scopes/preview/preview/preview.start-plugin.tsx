@@ -4,10 +4,11 @@ import { PreviewServerStatus } from '@teambit/preview.cli.preview-server-status'
 import { BundlerMain, ComponentServer } from '@teambit/bundler';
 import { PubsubMain } from '@teambit/pubsub';
 import { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
-import { Workspace, CheckTypes } from '@teambit/workspace';
+import { Workspace } from '@teambit/workspace';
 import { SubscribeToWebpackEvents, CompilationResult } from '@teambit/preview.cli.webpack-events-listener';
 import { CompilationInitiator } from '@teambit/compiler';
 import { Logger } from '@teambit/logger';
+import { CheckTypes, WatcherMain } from '@teambit/watcher';
 
 type CompilationServers = Record<string, CompilationResult>;
 type ServersSetter = Dispatch<SetStateAction<CompilationServers>>;
@@ -18,7 +19,8 @@ export class PreviewStartPlugin implements StartPlugin {
     private bundler: BundlerMain,
     private ui: UiMain,
     private pubsub: PubsubMain,
-    private logger: Logger
+    private logger: Logger,
+    private watcher: WatcherMain
   ) {}
 
   previewServers: ComponentServer[] = [];
@@ -32,8 +34,8 @@ export class PreviewStartPlugin implements StartPlugin {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     previewServers.forEach((server) => server.listen());
     // DON'T add wait! this promise never resolve so it's stop all the start process!
-    this.workspace.watcher
-      .watchAll({
+    this.watcher
+      .watch({
         spawnTSServer: true,
         checkTypes: CheckTypes.None,
         preCompile: false,

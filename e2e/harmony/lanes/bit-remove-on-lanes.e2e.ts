@@ -136,5 +136,55 @@ describe('bit lane command', function () {
         expect(list[0].id).to.not.have.string('comp2');
       });
     });
+    describe('forking the lane and exporting', () => {
+      let exportOutput: string;
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importLane('dev');
+        helper.command.createLane('dev2');
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        exportOutput = helper.command.export();
+      });
+      it('should not export the soft-removed', () => {
+        expect(exportOutput).to.not.have.string('comp2');
+        expect(exportOutput).to.have.string('comp1');
+      });
+    });
+  });
+  describe('remove a new component on a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.removeComponent('comp1');
+    });
+    it('should remove from the lane object as well', () => {
+      const lane = helper.command.showOneLaneParsed('dev');
+      expect(lane.components).to.have.lengthOf(1);
+      expect(lane.components[0].id.name).to.not.have.string('comp1');
+    });
+    // previously, it was throwing: "Error: unable to merge lane dev, the component 87ql0ef4-remote/comp1 was not found"
+    // because the component was not removed from the lane-object.
+    it('bit export should not throw', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+  });
+  describe('soft-remove main component when on a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+    });
+    it('should throw an error', () => {
+      expect(() => helper.command.removeComponent('comp2', '--soft')).to.throw(
+        'the following components belong to main, they cannot be soft-removed when on a lane'
+      );
+    });
   });
 });

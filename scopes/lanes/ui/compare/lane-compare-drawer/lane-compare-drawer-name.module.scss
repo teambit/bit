@@ -1,12 +1,19 @@
 .drawerNameContainer {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   padding: 8px 0px;
   font-size: var(--bit-p-xxs);
+  width: 100%;
+  justify-content: space-between;
 }
 
 .versionContainer {
   display: flex;
+}
+
+.left {
+  display: flex;
+  width: 100%;
 }
 
 .compId,
@@ -40,5 +47,26 @@
     height: 12px;
     display: flex;
     align-self: center;
+  }
+}
+
+.fullScreenDrawer {
+  height: 100%;
+  > div:first-of-type {
+    height: 100%;
+  }
+}
+
+.fullScreen {
+  display: flex;
+  justify-content: flex-end;
+  height: 18px;
+  width: 18px;
+  align-items: center;
+
+  img {
+    display: flex;
+    height: 14px;
+    width: 14px;
   }
 }

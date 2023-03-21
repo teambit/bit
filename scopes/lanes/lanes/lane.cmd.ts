@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import yn from 'yn';
 import { ScopeMain } from '@teambit/scope';
-import { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
@@ -31,7 +31,6 @@ export class LaneListCmd implements Command {
     ['', 'not-merged', 'show lanes that are not merged'],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
   remoteOp = true;
   skipWorkspace = true;
@@ -129,15 +128,14 @@ export class LaneListCmd implements Command {
 }
 
 export class LaneShowCmd implements Command {
-  name = 'show <lane-name>';
-  description = `show lane details`;
+  name = 'show [lane-name]';
+  description = `show lane details. if no lane specified, show the current lane`;
   alias = '';
   options = [
     ['j', 'json', 'show the lane details in json format'],
     ['r', 'remote <string>', 'show remote lanes'],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
   remoteOp = true;
   skipWorkspace = true;
@@ -147,6 +145,9 @@ export class LaneShowCmd implements Command {
   async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
     const { remote } = laneOptions;
 
+    if (!name) {
+      name = this.lanes.getCurrentLaneName() || DEFAULT_LANE;
+    }
     const lanes = await this.lanes.getLanes({
       name,
       remote,
@@ -155,7 +156,9 @@ export class LaneShowCmd implements Command {
     const onlyLane = lanes[0];
     const title = `showing information for ${chalk.bold(onlyLane.id.toString())}\n`;
     const author = `author: ${onlyLane.log?.username || 'N/A'} <${onlyLane.log?.email || 'N/A'}>\n`;
-    const date = onlyLane.log?.date ? `${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n` : undefined;
+    const date = onlyLane.log?.date
+      ? `created: ${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n`
+      : undefined;
     return title + author + date + outputComponents(onlyLane.components);
   }
 
@@ -191,16 +194,16 @@ a lane created from another lane has all the components of the original lane.`;
     [
       '',
       'alias <name>',
-      'a local alias to refer to this lane, defaults to the <lane-name> (can be added later with "bit lane alias")',
+      'a local alias to refer to this lane, defaults to the `<lane-name>` (can be added later with "bit lane alias")',
     ],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(private lanes: LanesMain) {}
 
   async report([name]: [string], createLaneOptions: CreateLaneOptions): Promise<string> {
+    const currentLane = await this.lanes.getCurrentLane();
     const result = await this.lanes.createLane(name, createLaneOptions);
     const remoteScopeOrDefaultScope = createLaneOptions.remoteScope
       ? `the remote scope ${chalk.bold(createLaneOptions.remoteScope)}`
@@ -208,7 +211,9 @@ a lane created from another lane has all the components of the original lane.`;
           result.laneId.scope
         )}. to change it, please run "bit lane change-scope" command`;
     const title = chalk.green(
-      `successfully added and checked out to a new lane ${chalk.bold(result.alias || result.laneId.name)}`
+      `successfully added and checked out to a new lane ${chalk.bold(result.alias || result.laneId.name)}
+      ${currentLane !== null ? chalk.yellow(`\nnote - your new lane will be based on lane ${currentLane.name}`) : ''}
+      `
     );
     const remoteScopeOutput = `this lane will be exported to ${remoteScopeOrDefaultScope}`;
     return `${title}\n${remoteScopeOutput}`;
@@ -223,7 +228,6 @@ it is useful when having multiple lanes with the same name, but with different r
   alias = '';
   options = [] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(private lanes: LanesMain) {}
@@ -240,7 +244,6 @@ export class LaneChangeScopeCmd implements Command {
   alias = '';
   options = [] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(private lanes: LanesMain) {}
@@ -259,7 +262,6 @@ export class LaneRenameCmd implements Command {
   alias = '';
   options = [] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(private lanes: LanesMain) {}
@@ -279,6 +281,7 @@ export class LaneRemoveCmd implements Command {
   name = 'remove <lanes...>';
   arguments = [{ name: 'lanes...', description: 'A list of lane names, separated by spaces' }];
   description = `remove lanes`;
+  group = 'collaborate';
   alias = '';
   options = [
     ['r', 'remote', 'remove a remote lane (in the lane arg, use remote/lane-id syntax)'],
@@ -286,7 +289,6 @@ export class LaneRemoveCmd implements Command {
     ['s', 'silent', 'skip confirmation'],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(private lanes: LanesMain) {}
@@ -321,10 +323,9 @@ export class LaneImportCmd implements Command {
   arguments = [{ name: 'lane', description: 'the remote lane name' }];
   alias = '';
   options = [
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
 
   constructor(private switchCmd: SwitchCmd) {}
@@ -349,8 +350,8 @@ export class LaneCmd implements Command {
     ['', 'not-merged', 'show not merged lanes'],
   ] as CommandOptions;
   loader = true;
-  private = true;
   migration = true;
+  group = 'collaborate';
   remoteOp = true;
   skipWorkspace = true;
   helpUrl = 'docs/components/lanes';
@@ -368,7 +369,6 @@ export class LaneRemoveReadmeCmd implements Command {
   description = 'EXPERIMENTAL. remove lane readme component';
   options = [] as CommandOptions;
   loader = true;
-  private = true;
   skipWorkspace = false;
 
   constructor(private lanes: LanesMain) {}
@@ -397,7 +397,6 @@ export class LaneAddReadmeCmd implements Command {
   ];
   options = [] as CommandOptions;
   loader = true;
-  private = true;
   skipWorkspace = false;
 
   constructor(private lanes: LanesMain) {}

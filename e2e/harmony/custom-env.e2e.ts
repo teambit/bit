@@ -106,6 +106,29 @@ describe('custom env', function () {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MultipleEnvs.name);
     });
   });
+  describe('change an env after tag2 and then change it back to the custom-env in the workspace', () => {
+    let envId;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setPackageManager();
+      const envName = helper.env.setCustomEnv();
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.fixtures.populateComponents(1, false);
+      helper.command.setEnv('comp1', envId);
+      helper.command.compile();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      const newEnvId = 'teambit.react/react';
+      helper.command.setEnv('comp1', newEnvId);
+      helper.command.setEnv('comp1', envId);
+    });
+    // previous bug was showing the custom-env with minus in .bitmap and then again with an empty object, causing the
+    // env to fallback to node.
+    it('should have the correct env', () => {
+      const env = helper.env.getComponentEnv('comp1');
+      expect(env).to.include(envId);
+    });
+  });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('custom env installed as a package', () => {
     let envId;
     let envName;
@@ -281,6 +304,25 @@ describe('custom env', function () {
     // previously, it errored "Cannot read property 'id' of undefined"
     it('bit env-set should not throw any error', () => {
       expect(() => helper.command.setEnv('comp1', envId));
+    });
+  });
+  describe('custom-env is 0.0.2 on the workspace, but comp1 is using it with 0.0.1', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      const envName = helper.env.setCustomEnv();
+      const envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
+      helper.command.tagAllWithoutBuild();
+      helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.2
+    });
+    // @gilad todo: currently, this is failing with ComponentNotFound error.
+    // it's happening during the load of comp1, we have the onLoad, where the workspace calculate extensions.
+    // Once it has all extensions it's loading them. in this case, comp1 has the custom-env with 0.0.1 in the envs/envs
+    // it's unable to find it in the workspace and asks the scope, which can't find it because it's the full-id include
+    // scope-name.
+    it.skip('any bit command should not throw', () => {
+      expect(() => helper.command.status()).to.not.throw();
     });
   });
 });

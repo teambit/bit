@@ -10,6 +10,8 @@ import {
   DependencyResolverAspect,
   DependencyResolverMain,
   LinkingOptions,
+  LinkDetail,
+  LinkResults,
   WorkspacePolicy,
   InstallOptions,
   DependencyList,
@@ -39,7 +41,7 @@ import path from 'path';
 import equals from 'ramda/src/equals';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
-import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
+import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -330,8 +332,16 @@ export class IsolatorMain {
         await Promise.all(
           capsuleList.map(async (capsule) => {
             const newCapsuleList = CapsuleList.fromArray([capsule]);
-            await this.installInCapsules(capsule.path, newCapsuleList, installOptions, cachePackagesOnCapsulesRoot);
-            await this.linkInCapsules(capsulesDir, newCapsuleList, capsulesWithPackagesData, linkingOptions);
+            const linkedDependencies = await this.linkInCapsules(
+              capsulesDir,
+              newCapsuleList,
+              capsulesWithPackagesData,
+              linkingOptions
+            );
+            await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
+              cachePackagesOnCapsulesRoot,
+              linkedDependencies,
+            });
           })
         );
       } else {
@@ -339,8 +349,16 @@ export class IsolatorMain {
         // and all other components (which are the dependencies of the entry component) are installed in
         // a subdirectory.
         const rootDir = installOptions?.useNesting ? capsuleList[0].path : capsulesDir;
-        await this.installInCapsules(rootDir, capsuleList, installOptions, cachePackagesOnCapsulesRoot);
-        await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, linkingOptions);
+        const linkedDependencies = await this.linkInCapsules(
+          capsulesDir,
+          capsuleList,
+          capsulesWithPackagesData,
+          linkingOptions
+        );
+        await this.installInCapsules(rootDir, capsuleList, installOptions, {
+          cachePackagesOnCapsulesRoot,
+          linkedDependencies,
+        });
       }
       longProcessLogger.end();
       this.logger.consoleSuccess();
@@ -365,11 +383,14 @@ export class IsolatorMain {
     capsulesDir: string,
     capsuleList: CapsuleList,
     isolateInstallOptions: IsolateComponentsInstallOptions,
-    cachePackagesOnCapsulesRoot?: boolean
+    opts: {
+      cachePackagesOnCapsulesRoot?: boolean;
+      linkedDependencies?: Record<string, Record<string, string>>;
+    }
   ) {
     const installer = this.dependencyResolver.getInstaller({
       rootDir: capsulesDir,
-      cacheRootDirectory: cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
+      cacheRootDirectory: opts.cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
     });
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace
@@ -378,6 +399,8 @@ export class IsolatorMain {
     const installOptions: InstallOptions = {
       installTeambitBit: !!isolateInstallOptions.installTeambitBit,
       packageManagerConfigRootDir: isolateInstallOptions.packageManagerConfigRootDir,
+      resolveVersionsFromDependenciesOnly: true,
+      linkedDependencies: opts.linkedDependencies,
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
@@ -404,21 +427,22 @@ export class IsolatorMain {
     capsuleList: CapsuleList,
     capsulesWithPackagesData: CapsulePackageJsonData[],
     linkingOptions: LinkingOptions
-  ) {
+  ): Promise<Record<string, Record<string, string>>> {
     const linker = this.dependencyResolver.getLinker({
       rootDir: capsulesDir,
       linkingOptions,
     });
     const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
-    const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
-    await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), {
+    const linkResults = await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), {
       ...linkingOptions,
-      legacyLink: false,
       linkNestedDepsInNM: !this.dependencyResolver.hasRootComponents() && linkingOptions.linkNestedDepsInNM,
     });
+    let rootLinks: LinkDetail[] | undefined;
+    let nestedLinks: Record<string, Record<string, string>> | undefined;
     if (!this.dependencyResolver.hasRootComponents()) {
-      await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
-      await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
+      rootLinks = await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
+      const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
+      nestedLinks = await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
     } else {
       const coreAspectIds = this.aspectLoader.getCoreAspectIds();
       const coreAspectCapsules = CapsuleList.fromArray(
@@ -427,8 +451,52 @@ export class IsolatorMain {
           return coreAspectIds.includes(compIdWithoutVersion);
         })
       );
-      await symlinkOnCapsuleRoot(coreAspectCapsules, this.logger, capsulesDir);
+      rootLinks = await symlinkOnCapsuleRoot(coreAspectCapsules, this.logger, capsulesDir);
     }
+    return {
+      ...nestedLinks,
+      [capsulesDir]: this.toLocalLinks(linkResults, rootLinks),
+    };
+  }
+
+  private toLocalLinks(linkResults: LinkResults, rootLinks: LinkDetail[] | undefined): Record<string, string> {
+    const localLinks: Array<[string, string]> = [];
+    if (linkResults.teambitBitLink) {
+      localLinks.push(this.linkDetailToLocalDepEntry(linkResults.teambitBitLink.linkDetail));
+    }
+    if (linkResults.coreAspectsLinks) {
+      linkResults.coreAspectsLinks.forEach((link) => {
+        localLinks.push(this.linkDetailToLocalDepEntry(link.linkDetail));
+      });
+    }
+    if (linkResults.harmonyLink) {
+      localLinks.push(this.linkDetailToLocalDepEntry(linkResults.harmonyLink));
+    }
+    if (linkResults.teambitLegacyLink) {
+      localLinks.push(this.linkDetailToLocalDepEntry(linkResults.teambitLegacyLink));
+    }
+    if (linkResults.resolvedFromEnvLinks) {
+      linkResults.resolvedFromEnvLinks.forEach((link) => {
+        link.linksDetail.forEach((linkDetail) => {
+          localLinks.push(this.linkDetailToLocalDepEntry(linkDetail));
+        });
+      });
+    }
+    if (linkResults.linkToDirResults) {
+      linkResults.linkToDirResults.forEach((link) => {
+        localLinks.push(this.linkDetailToLocalDepEntry(link.linksDetail));
+      });
+    }
+    if (rootLinks) {
+      rootLinks.forEach((link) => {
+        localLinks.push(this.linkDetailToLocalDepEntry(link));
+      });
+    }
+    return Object.fromEntries(localLinks.map(([key, value]) => [key, `link:${value}`]));
+  }
+
+  private linkDetailToLocalDepEntry(linkDetail: LinkDetail): [string, string] {
+    return [linkDetail.packageName, linkDetail.from];
   }
 
   private getCapsulesWithModifiedPackageJson(capsulesWithPackagesData: CapsulePackageJsonData[]) {
@@ -469,7 +537,10 @@ export class IsolatorMain {
       components.map(async (component) => {
         const capsule = capsuleList.getCapsule(component.id);
         if (!capsule) return;
-        const scope = (await CapsuleList.capsuleUsePreviouslySavedDists(component)) ? legacyScope : undefined;
+        const scope =
+          (await CapsuleList.capsuleUsePreviouslySavedDists(component)) || opts?.populateArtifactsFromParent
+            ? legacyScope
+            : undefined;
         const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(component, allIds, scope, opts);
         await dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
       })
@@ -645,7 +716,7 @@ export class IsolatorMain {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       packageJson.addOrUpdateProperty('version', semver.inc(legacyComp.version!, 'prerelease') || '0.0.1-0');
     }
-    await PackageJsonTransformer.applyTransformers(legacyComp, packageJson);
+    await PackageJsonTransformer.applyTransformers(component, packageJson);
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
     dataToPersist.addFile(packageJson.toVinylFile());
@@ -707,6 +778,7 @@ export class IsolatorMain {
   ): Promise<AbstractVinyl[]> {
     const legacyComp: ConsumerComponent = component.state._consumer;
     if (!legacyScope) {
+      if (fetchParentArtifacts) throw new Error(`unable to fetch from parent, the legacyScope was not provided`);
       // when capsules are written via the workspace, do not write artifacts, they get created by
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return [];
@@ -718,7 +790,9 @@ export class IsolatorMain {
     const artifactFilesToFetch = async () => {
       if (fetchParentArtifacts) {
         const parent = component.head?.parents[0];
-        const compParent = await legacyScope.getConsumerComponent(legacyComp.id.changeVersion(parent?.toString()));
+        if (!parent)
+          throw new Error(`unable to fetch artifacts from parent. parent is missing for ${component.id.toString()}`);
+        const compParent = await legacyScope.getConsumerComponent(legacyComp.id.changeVersion(parent.toString()));
         return getArtifactFilesExcludeExtension(compParent.extensions, 'teambit.pkg/pkg');
       }
       const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];

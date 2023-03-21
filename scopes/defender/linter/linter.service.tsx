@@ -9,9 +9,9 @@ import { Linter, LintResults } from './linter';
 import { LinterContext, LinterOptions } from './linter-context';
 import { LinterConfig } from './linter.main.runtime';
 
-type LinterTransformationMap = ServiceTransformationMap  & {
+type LinterTransformationMap = ServiceTransformationMap & {
   getLinter: () => Linter;
-}
+};
 
 export class LinterService implements EnvService<LintResults> {
   name = 'linter';
@@ -21,10 +21,17 @@ export class LinterService implements EnvService<LintResults> {
   async run(context: ExecutionContext, options: LinterOptions): Promise<LintResults> {
     const mergedOpts = this.optionsWithDefaults(options);
     const linterContext = this.mergeContext(mergedOpts, context);
-    const linter: Linter = context.env.getLinter(linterContext);
+    const linter: Linter = this.getLinter(context, options)
 
     const results = await linter.lint(linterContext);
     return results;
+  }
+
+  getLinter(context: ExecutionContext, options: LinterOptions): Linter {
+    const mergedOpts = this.optionsWithDefaults(options);
+    const linterContext = this.mergeContext(mergedOpts, context);
+    const linter: Linter = context.env.getLinter(linterContext);
+    return linter;
   }
 
   private optionsWithDefaults(options: LinterOptions): LinterOptions {
@@ -81,7 +88,7 @@ export class LinterService implements EnvService<LintResults> {
     if (!env?.linter) return undefined;
     return {
       getLinter: () => env.linter()(context),
-    }
+    };
   }
 
   getDescriptor(env: EnvDefinition) {

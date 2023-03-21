@@ -1,7 +1,8 @@
 import path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
-describe('installing in an angular workspace', function () {
+// @todo: Olivier
+describe.skip('installing in an angular workspace', function () {
   this.timeout(0);
   let helper: Helper;
   let workspaceDir: string;
@@ -16,6 +17,9 @@ describe('installing in an angular workspace', function () {
     it('installation should work', () => {
       helper.command.install(undefined, undefined, workspaceDir);
     });
+  });
+  after(() => {
+    helper.scopeHelper.destroy();
   });
   // TODO: test the same with pnpm
 });

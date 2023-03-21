@@ -3,25 +3,22 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
 import { WILDCARD_HELP, AUTO_SNAPPED_MSG, MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import {
-  ApplyVersionResults,
-  conflictSummaryReport,
   getMergeStrategy,
-  applyVersionReport,
+  FileStatus,
+  ApplyVersionResult,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BitError } from '@teambit/bit-error';
-import { MergingMain } from './merging.main.runtime';
+import { ApplyVersionResults, MergingMain } from './merging.main.runtime';
 import { ConfigMergeResult } from './config-merge-result';
 
 export class MergeCmd implements Command {
-  name = 'merge [values...]';
-  description = 'merge changes of different component versions';
+  name = 'merge [ids...]';
+  description = 'merge changes of the remote head into local';
   helpUrl = 'docs/components/merging-changes';
   group = 'development';
-  extendedDescription = `merge changes of different component versions
-  \`bit merge <version> [ids...]\` => merge changes of the given version into the checked out version
-  \`bit merge [ids...]\` => EXPERIMENTAL. merge changes of the remote head into local, optionally use '--abort' or '--resolve'
-  ${WILDCARD_HELP('merge 0.0.1')}`;
+  extendedDescription = `merge changes of the remote head into local, optionally use '--abort' or '--resolve
+${WILDCARD_HELP('merge')}`;
   alias = '';
   options = [
     ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
@@ -32,7 +29,7 @@ export class MergeCmd implements Command {
     ['', 'no-snap', 'EXPERIMENTAL. do not auto snap in case the merge completed without conflicts'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['', 'verbose', 'show details of components that were not merged legitimately'],
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
     ['m', 'message <message>', 'EXPERIMENTAL. override the default message for the auto snap'],
   ] as CommandOptions;
   loader = true;
@@ -40,7 +37,7 @@ export class MergeCmd implements Command {
   constructor(private merging: MergingMain) {}
 
   async report(
-    [values = []]: [string[]],
+    [ids = []]: [string[]],
     {
       ours = false,
       theirs = false,
@@ -78,7 +75,7 @@ export class MergeCmd implements Command {
       mergeSnapResults,
       mergeSnapError,
     }: ApplyVersionResults = await this.merging.merge(
-      values,
+      ids,
       mergeStrategy as any,
       abort,
       resolve,
@@ -219,4 +216,62 @@ ${mergeSnapError.message}
     getConflictSummary() +
     getSummary()
   );
+}
+
+export function applyVersionReport(components: ApplyVersionResult[], addName = true, showVersion = false): string {
+  const tab = addName ? '\t' : '';
+  return components
+    .map((component: ApplyVersionResult) => {
+      const name = showVersion ? component.id.toString() : component.id.toStringWithoutVersion();
+      const files = Object.keys(component.filesStatus)
+        .map((file) => {
+          const note =
+            component.filesStatus[file] === FileStatus.manual
+              ? chalk.white(
+                  'automatic merge failed. please fix conflicts manually and then run "bit install" and "bit compile"'
+                )
+              : '';
+          return `${tab}${component.filesStatus[file]} ${chalk.bold(file)} ${note}`;
+        })
+        .join('\n');
+      return `${addName ? name : ''}\n${chalk.cyan(files)}`;
+    })
+    .join('\n\n');
+}
+
+export function conflictSummaryReport(components: ApplyVersionResult[]): string {
+  const tab = '\t';
+  return compact(
+    components.map((component: ApplyVersionResult) => {
+      const name = component.id.toStringWithoutVersion();
+      const files = compact(
+        Object.keys(component.filesStatus).map((file) => {
+          if (component.filesStatus[file] === FileStatus.manual) {
+            return `${tab}${component.filesStatus[file]} ${chalk.bold(file)}`;
+          }
+          return null;
+        })
+      );
+      if (!files.length) return null;
+
+      return `${name}\n${chalk.cyan(files.join('\n'))}`;
+    })
+  ).join('\n');
+}
+
+export function installationErrorOutput(installationError?: Error) {
+  if (!installationError) return '';
+  const title = chalk.underline('Installation Error');
+  const subTitle =
+    'The following error had been caught from the package manager, please fix the issue and run "bit install"';
+  const body = chalk.red(installationError.message);
+  return `\n\n${title}\n${subTitle}\n${body}`;
+}
+
+export function compilationErrorOutput(compilationError?: Error) {
+  if (!compilationError) return '';
+  const title = chalk.underline('Compilation Error');
+  const subTitle = 'The following error had been caught from the compiler, please fix the issue and run "bit compile"';
+  const body = chalk.red(compilationError.message);
+  return `\n\n${title}\n${subTitle}\n${body}`;
 }

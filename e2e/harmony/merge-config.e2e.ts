@@ -255,6 +255,74 @@ describe('merge config scenarios', function () {
         const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
         expect(ramdaDep.version).to.equal('0.0.21');
       });
+      it('running bit deps set of another pkg, should work', () => {
+        helper.command.dependenciesSet('comp1', 'lodash@1.0.0', '--dev');
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        const lodashDep = showConfig.data.dependencies.find((d) => d.id === 'lodash');
+        expect(lodashDep.version).to.equal('1.0.0');
+      });
+    });
+  });
+  describe('diverge with different auto-detected dependencies config', () => {
+    let mainBeforeDiverge: string;
+    let beforeConfigResolved: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/index.js', `import R from 'ramda';`);
+      helper.npm.addFakeNpmPackage('ramda', '0.0.19');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      mainBeforeDiverge = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.createLane();
+      helper.npm.addFakeNpmPackage('ramda', '0.0.20');
+      helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: { ramda: '0.0.20' } });
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
+      helper.npm.addFakeNpmPackage('ramda', '0.0.21');
+      helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: { ramda: '0.0.21' } });
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('dev', '--skip-dependency-installation');
+      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation --ignore-config-changes');
+      beforeConfigResolved = helper.scopeHelper.cloneLocalScope();
+    });
+    it('bit status should show the component with an issue of MergeConfigHasConflict', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.MergeConfigHasConflict.name);
+    });
+    describe('fixing the conflict with ours', () => {
+      before(() => {
+        helper.general.fixMergeConfigConflict('ours');
+      });
+      it('should show the dev-dependency as it was set on the lane', () => {
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
+        expect(ramdaDep.version).to.equal('0.0.20');
+        expect(ramdaDep.lifecycle).to.equal('runtime');
+      });
+    });
+    describe('fixing the conflict with theirs', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeConfigResolved);
+        helper.general.fixMergeConfigConflict('theirs');
+      });
+      it('should show the dev-dependency as it was set on main', () => {
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
+        expect(ramdaDep.version).to.equal('0.0.21');
+      });
+      it('running bit deps set of another pkg, should work', () => {
+        helper.command.dependenciesSet('comp1', 'lodash@1.0.0', '--dev');
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        const lodashDep = showConfig.data.dependencies.find((d) => d.id === 'lodash');
+        expect(lodashDep.version).to.equal('1.0.0');
+      });
     });
   });
   describe('diverge with envs changes', () => {
@@ -269,6 +337,7 @@ describe('merge config scenarios', function () {
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.setEnv('comp1', envId);
       helper.command.tagAllWithoutBuild();
+      helper.command.export();
       helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.2
       helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.3
 

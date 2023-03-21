@@ -8,7 +8,7 @@ export type MainModulesMap = {
    */
   default: string;
   [envId: string]: string;
-}
+};
 
 // :TODO refactor to building an AST and generate source code based on it.
 export function generateLink(
@@ -42,7 +42,7 @@ ${links
   .filter((line) => line !== '') // prevent empty lines
   .join('\n')}
 
-${modulesLinks.map((module) =>`import * as ${module.varName} from "${module.resolveFrom}";`).join('\n')}
+${modulesLinks.map((module) => `import * as ${module.varName} from "${module.resolveFrom}";`).join('\n')}
 
 linkModules('${prefix}', {
   modulesMap: {
@@ -67,7 +67,7 @@ function moduleVarName(componentIdx: number, fileIdx: number) {
 }
 
 function getEnvVarName(envId: string) {
-  const envNameFormatted = camelcase(envId.replace('@', '').replace('.','-').replace(/\//g, '-'));
+  const envNameFormatted = camelcase(envId.replace('@', '').replace('.', '-').replace(/\//g, '-'));
   const varName = `${envNameFormatted}MainModule`;
   return varName;
 }

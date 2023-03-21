@@ -5,7 +5,8 @@ export default (async function loginAction(
   suppressBrowserLaunch: boolean,
   npmrcPath: string,
   skipRegistryConfig: boolean,
-  machineName: string | null | undefined
+  machineName: string | null | undefined,
+  hubDomainLogin?: string
 ): Promise<{ isAlreadyLoggedIn?: boolean; username?: string; npmrcPath?: string }> {
-  return loginToBitSrc(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName);
+  return loginToBitSrc(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName, hubDomainLogin);
 });

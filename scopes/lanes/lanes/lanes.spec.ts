@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
+import { ExportAspect, ExportMain } from '@teambit/export';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
@@ -40,6 +41,8 @@ describe('LanesAspect', function () {
       await mockComponents(workspacePath);
       snapping = await loadAspect(SnappingAspect, workspacePath);
       await snapping.tag({ ids: ['comp1'], build: false, ignoreIssues: 'MissingManuallyConfiguredPackages' });
+      const exporter: ExportMain = await loadAspect(ExportAspect, workspacePath);
+      await exporter.export();
       lanes = await loadAspect(LanesAspect, workspacePath);
       await lanes.createLane('stage');
       await modifyMockedComponents(workspacePath, 'v2');
@@ -91,6 +94,8 @@ describe('LanesAspect', function () {
       await mockComponents(workspacePath);
       snapping = await loadAspect(SnappingAspect, workspacePath);
       await snapping.tag({ ids: ['comp1'], build: false });
+      const exporter: ExportMain = await loadAspect(ExportAspect, workspacePath);
+      await exporter.export();
       lanes = await loadAspect(LanesAspect, workspacePath);
       await lanes.createLane('stage');
       const result = await snapping.snap({ pattern: 'comp1', build: false, unmodified: true });
@@ -116,6 +121,48 @@ describe('LanesAspect', function () {
       const laneDiffResults = await lanes.diffStatus(currentLane.toLaneId());
       expect(laneDiffResults.componentsStatus[0].upToDate).to.be.false;
       expect(laneDiffResults.componentsStatus[0].changeType).to.equal(ChangeType.NONE);
+    });
+  });
+
+  describe('restoreLane()', () => {
+    let lanes: LanesMain;
+    let workspaceData: WorkspaceData;
+    before(async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath);
+      lanes = await loadAspect(LanesAspect, workspacePath);
+      await lanes.createLane('stage');
+
+      // as an intermediate step, make sure the lane was created
+      const currentLanes = await lanes.getLanes({});
+      expect(currentLanes).to.have.lengthOf(1);
+
+      await lanes.switchLanes('main', { skipDependencyInstallation: true });
+      await lanes.removeLanes(['stage']);
+
+      // as an intermediate step, make sure the lane was removed
+      const lanesAfterDelete = await lanes.getLanes({});
+      expect(lanesAfterDelete).to.have.lengthOf(0);
+
+      await lanes.restoreLane(currentLanes[0].hash);
+    });
+    after(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+    it('should restore the deleted lane', async () => {
+      const currentLanes = await lanes.getLanes({});
+      expect(currentLanes).to.have.lengthOf(1);
+      expect(currentLanes[0].id.name).to.equal('stage');
+    });
+    describe('delete restored lane', () => {
+      let output: string[];
+      before(async () => {
+        output = await lanes.removeLanes(['stage']);
+      });
+      it('should not throw', () => {
+        expect(output).to.have.lengthOf(1);
+      });
     });
   });
 });

@@ -1,17 +1,19 @@
 import ts from 'typescript';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Compiler } from '@teambit/compiler';
+import { Compiler, CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
 import { PackageJsonProps } from '@teambit/pkg';
 import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
 import { WorkspaceAspect } from '@teambit/workspace';
-import type { WatchOptions, Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import WatcherAspect, { WatcherMain, WatchOptions } from '@teambit/watcher';
 import type { Component } from '@teambit/component';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { TypeScriptExtractor } from './typescript.extractor';
@@ -22,9 +24,14 @@ import { TypeScriptParser } from './typescript.parser';
 import { SchemaTransformer } from './schema-transformer';
 import { SchemaTransformerPlugin } from './schema-transformer.plugin';
 import {
-  ExportDeclaration,
+  ExportDeclarationTransformer,
   TypeAliasTransformer,
-  FunctionDeclaration,
+  FunctionLikeTransformer,
+  SetAccessorTransformer,
+  GetAccessorTransformer,
+  IndexSignatureTransformer,
+  PropertyDeclarationTransformer,
+  ParameterTransformer,
   VariableStatementTransformer,
   VariableDeclaration,
   SourceFileTransformer,
@@ -32,11 +39,32 @@ import {
   InterfaceDeclarationTransformer,
   EnumDeclarationTransformer,
   BindingElementTransformer,
+  ExportAssignmentTransformer,
+  ImportDeclarationTransformer,
+  IntersectionTypeTransformer,
+  UnionTypeTransformer,
+  TypeReferenceTransformer,
+  TypeLiteralTransformer,
+  LiteralTypeTransformer,
+  TypeQueryTransformer,
+  ArrayTypeTransformer,
+  TypeOperatorTransformer,
+  KeywordTypeTransformer,
+  TupleTypeTransformer,
+  ParenthesizedTypeTransformer,
+  TypePredicateTransformer,
+  IndexedAccessTypeTransformer,
+  TemplateLiteralTypeSpanTransformer,
+  TemplateLiteralTypeTransformer,
+  ThisTypeTransformer,
+  ConditionalTypeTransformer,
+  NamedTupleTransformer,
+  ConstructorTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
 import WriteTsconfigCmd from './cmds/write-tsconfig.cmd';
-import { ExportAssignmentDeclaration } from './transformers/export-assignment-declaration';
+import { TypescriptConfigWriter } from './ts-config-writer';
 
 export type TsMode = 'build' | 'dev';
 
@@ -66,7 +94,8 @@ export class TypescriptMain {
     readonly workspace: Workspace,
     readonly depResolver: DependencyResolverMain,
     private envs: EnvsMain,
-    private tsConfigWriter: TsconfigWriter
+    private tsConfigWriter: TsconfigWriter,
+    private aspectLoader: AspectLoaderMain
   ) {}
 
   private tsServer: TsserverClient;
@@ -182,7 +211,9 @@ export class TypescriptMain {
       this,
       path || this.workspace.path,
       this.depResolver,
-      this.workspace
+      this.workspace,
+      this.aspectLoader,
+      this.logger
     );
   }
 
@@ -278,31 +309,52 @@ export class TypescriptMain {
     CLIAspect,
     DependencyResolverAspect,
     EnvsAspect,
+    WatcherAspect,
+    WorkspaceConfigFilesAspect,
+    CompilerAspect
   ];
   static slots = [Slot.withType<SchemaTransformer[]>()];
 
   static async provider(
-    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs]: [
+    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs, watcher, workspaceConfigFiles, compiler]: [
       SchemaMain,
       LoggerMain,
       AspectLoaderMain,
       Workspace,
       CLIMain,
       DependencyResolverMain,
-      EnvsMain
+      EnvsMain,
+      WatcherMain,
+      WorkspaceConfigFilesMain,
+      CompilerMain
     ],
     config,
     [schemaTransformerSlot]: [SchemaTransformerSlot]
   ) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
+    workspaceConfigFiles.registerConfigWriter(new TypescriptConfigWriter(compiler));
+
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
     const tsconfigWriter = new TsconfigWriter(workspace, logger);
-    const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace, depResolver, envs, tsconfigWriter);
+    const tsMain = new TypescriptMain(
+      logger,
+      schemaTransformerSlot,
+      workspace,
+      depResolver,
+      envs,
+      tsconfigWriter,
+      aspectLoader
+    );
     schemaTransformerSlot.register([
-      new ExportDeclaration(),
-      new ExportAssignmentDeclaration(),
-      new FunctionDeclaration(),
+      new ExportDeclarationTransformer(),
+      new ExportAssignmentTransformer(),
+      new FunctionLikeTransformer(),
+      new ParameterTransformer(),
+      new SetAccessorTransformer(),
+      new GetAccessorTransformer(),
+      new IndexSignatureTransformer(),
+      new PropertyDeclarationTransformer(),
       new VariableStatementTransformer(),
       new VariableDeclaration(),
       new SourceFileTransformer(),
@@ -311,10 +363,30 @@ export class TypescriptMain {
       new InterfaceDeclarationTransformer(),
       new EnumDeclarationTransformer(),
       new BindingElementTransformer(),
+      new IntersectionTypeTransformer(),
+      new UnionTypeTransformer(),
+      new TypeReferenceTransformer(),
+      new TypeLiteralTransformer(),
+      new LiteralTypeTransformer(),
+      new TypeQueryTransformer(),
+      new ArrayTypeTransformer(),
+      new TypeOperatorTransformer(),
+      new KeywordTypeTransformer(),
+      new TupleTypeTransformer(),
+      new ParenthesizedTypeTransformer(),
+      new TypePredicateTransformer(),
+      new IndexedAccessTypeTransformer(),
+      new TemplateLiteralTypeSpanTransformer(),
+      new TemplateLiteralTypeTransformer(),
+      new ThisTypeTransformer(),
+      new ConditionalTypeTransformer(),
+      new NamedTupleTransformer(),
+      new ConstructorTransformer(),
+      new ImportDeclarationTransformer(),
     ]);
 
     if (workspace) {
-      workspace.registerOnPreWatch(tsMain.onPreWatch.bind(tsMain));
+      watcher.registerOnPreWatch(tsMain.onPreWatch.bind(tsMain));
       workspace.registerOnComponentChange(tsMain.onComponentChange.bind(tsMain));
       workspace.registerOnComponentAdd(tsMain.onComponentChange.bind(tsMain));
     }

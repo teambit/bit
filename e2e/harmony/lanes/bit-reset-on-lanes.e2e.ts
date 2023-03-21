@@ -20,6 +20,7 @@ describe('bit reset when on lane', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
       helper.command.createLane();
       helper.fixtures.populateComponents(1, false, 'v2');
       helper.command.snapAllComponentsWithoutBuild();
@@ -49,12 +50,14 @@ describe('bit reset when on lane', function () {
       expect(() => helper.command.untagAll()).to.not.throw();
     });
   });
-  describe('reset on lane after fork from another non-exported lane', () => {
+  // this state is now impossible because we blocked the option to create a lane when there are
+  describe.skip('reset on lane after fork from another non-exported lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1, false);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
       helper.command.createLane('dev2');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
     });
@@ -86,7 +89,7 @@ describe('bit reset when on lane', function () {
       expect(() => helper.command.untagAll()).to.not.throw();
     });
   });
-  describe('reset on lane after merging from another lane', () => {
+  describe('reset on a new lane after merging from another lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1, false);
@@ -99,13 +102,41 @@ describe('bit reset when on lane', function () {
       helper.command.mergeLane(`${helper.scopes.remote}/dev`);
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
     });
-    // a previous buy showed two staged snaps, because the remote-head was empty.
-    it('bit status should show only one version as staged, not two', () => {
+    it('bit status should show not only one version as staged, but two', () => {
       const status = helper.command.statusJson();
-      expect(status.stagedComponents[0].versions).to.have.lengthOf(1);
+      expect(status.stagedComponents[0].versions).to.have.lengthOf(2);
     });
+    // suggesting the user to either remove the component or the lane. (we don't have a better solution here.
+    // it is similar to running git-reset without specifying any origin and expecting all the local commits to be removed.
+    // there is no way to know what should be the new head)
+    it('bit reset should throw a descriptive error suggesting either removing the component or the lane', () => {
+      expect(() => helper.command.untagAll()).to.throw();
+    });
+  });
+  describe('reset after merge where it snapped multiple snaps on the other lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('dev2');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('dev', '-x');
+      // this is intended. so then later on, the workspace won't have these snaps, only the latest
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('dev2', '-x');
+      helper.command.mergeLane(`${helper.scopes.remote}/dev`, '-x');
+    });
+    // previously, it was throwing VersionNotFound error as it doesn't have the version objects snapped on the other lane
     it('bit reset should not throw', () => {
-      expect(() => helper.command.untagAll()).to.not.throw();
+      expect(() => helper.command.untagAll()).not.to.throw();
     });
   });
 });

@@ -115,7 +115,7 @@ export type RuntimeOptions = {
   /**
    * skip build the UI before start
    */
-   skipUiBuild?: boolean;
+  skipUiBuild?: boolean;
 };
 
 export class UiMain {

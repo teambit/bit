@@ -11,7 +11,7 @@ import ModelComponent from '../models/model-component';
 export type untagResult = { id: BitId; versions: string[]; component?: ModelComponent };
 
 /**
- * If not specified version, remove all local versions.
+ * If head is false, remove all local versions.
  */
 export async function removeLocalVersion(
   scope: Scope,
@@ -21,9 +21,8 @@ export async function removeLocalVersion(
   force = false
 ): Promise<untagResult> {
   const component: ModelComponent = await scope.getModelComponentIgnoreScope(id);
-  await component.setDivergeData(scope.objects);
   const idStr = id.toString();
-  const localVersions = component.getLocalHashes();
+  const localVersions = await component.getLocalHashes(scope.objects);
   if (!localVersions.length) throw new GeneralError(`unable to untag ${idStr}, the component is not staged`);
   const headRef = component.getHeadRegardlessOfLane();
   if (!headRef) {
@@ -51,10 +50,7 @@ export async function removeLocalVersion(
     });
   }
 
-  const allVersionsObjects = await Promise.all(
-    versionsToRemoveStr.map((localVer) => component.loadVersion(localVer, scope.objects))
-  );
-  scope.sources.removeComponentVersions(component, versionsToRemoveStr, allVersionsObjects, lane, head);
+  await scope.sources.removeComponentVersions(component, versionsToRemove, versionsToRemoveStr, lane, head);
 
   return { id, versions: versionsToRemoveStr, component };
 }
@@ -78,7 +74,7 @@ export async function removeLocalVersionsForMultipleComponents(
   scope: Scope
 ) {
   if (!componentsToUntag.length) {
-    throw new GeneralError(`no components found to untag on your workspace`);
+    throw new GeneralError(`no components found to reset on your workspace`);
   }
   // if only head is removed, there is risk of deleting dependencies version without their dependents.
   if (!force && head) {

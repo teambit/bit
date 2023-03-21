@@ -1,0 +1,97 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
+.codeCompareTab {
+  display: flex;
+  align-items: center;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+
+  > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-left: 4px; // to align to sibling with icon
+    margin-right: 8px;
+  }
+
+  img {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+  }
+}
+
+.compareNavItem {
+  color: #fff !important;
+  border-right: 0.5px solid var(--surface-neutral-color, #121212);
+  // override the default menu item padding
+  padding: 0px !important;
+
+  &.first {
+    border-left: 0.5px solid var(--surface-neutral-color, #121212);
+  }
+
+  &:hover:not(.activeNav) {
+    background-color: var(--surface-neutral-color, #121212) !important;
+    > div {
+      background-color: var(--surface-neutral-color, #121212) !important;
+    }
+  }
+}
+
+.activeNav {
+  background-color: var(--surface-neutral-color, #121212);
+  &::after {
+    background-color: var(--surface-neutral-color, #121212) !important;
+  }
+}
+
+.compareNav {
+  background-color: var(--on-surface-neutral-low-color, #282828);
+  gap: 0px !important;
+}
+
+.compareSecondaryNav {
+  background: var(--on-surface-neutral-low-color, #282828) !important;
+  overflow-y: auto;
+  max-height: 300px;
+}
+
+.codeCompareTabRight {
+  display: flex;
+  align-items: center;
+
+  > * {
+    margin-right: 4px;
+  }
+  > :last-child() {
+    margin-right: 0px;
+  }
+}
+
+.codeCompareMenu {
+  z-index: $modal-z-index;
+  top: 100%;
+  right: 50%;
+  background: var(--on-surface-neutral-low-color, #282828) !important;
+  color: #fff;
+  min-width: 200px;
+}
+
+.codeCompareWidgets {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 4px;
+
+  .settings {
+    cursor: pointer;
+
+    img {
+      display: flex;
+      width: 16px;
+    }
+  }
+}

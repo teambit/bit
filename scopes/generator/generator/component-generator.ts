@@ -6,6 +6,7 @@ import { Workspace } from '@teambit/workspace';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import camelcase from 'camelcase';
 import { BitError } from '@teambit/bit-error';
+import { TrackerMain } from '@teambit/tracker';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -32,6 +33,7 @@ export class ComponentGenerator {
     private template: ComponentTemplate,
     private envs: EnvsMain,
     private newComponentHelper: NewComponentHelperMain,
+    private tracker: TrackerMain,
     private aspectId: string,
     private envId?: ComponentID
   ) {}
@@ -94,13 +96,12 @@ export class ComponentGenerator {
     });
     const mainFile = files.find((file) => file.isMain);
     await this.writeComponentFiles(componentPath, files);
-    const addResults = await this.workspace.track({
+    const addResults = await this.tracker.track({
       rootDir: componentPath,
       mainFile: mainFile?.relativePath,
       componentName: componentId.fullName,
       defaultScope: this.options.scope,
     });
-    await this.workspace.triggerOnMultipleComponentsAdd();
     const component = await this.workspace.get(componentId);
     const hasEnvConfiguredOriginally = this.envs.hasEnvConfigured(component);
     const envBeforeConfigChanges = this.envs.getEnv(component);

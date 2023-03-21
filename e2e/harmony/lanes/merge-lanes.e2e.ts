@@ -178,6 +178,7 @@ describe('merge lanes', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
+      helper.command.export();
       helper.command.createLane('dev');
       helper.fixtures.populateComponents(1, undefined, 'v2');
       helper.command.snapAllComponentsWithoutBuild();
@@ -227,6 +228,7 @@ describe('merge lanes', function () {
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       headOnMain = helper.command.getHead('comp1');
+      helper.command.export();
       helper.command.createLane('dev');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
@@ -358,9 +360,9 @@ describe('merge lanes', function () {
       helper.scopeHelper.getClonedLocalScope(workspaceOnLane);
       helper.command.import();
     });
-    it('bit import should bring the latest main objects', () => {
+    it('bit import should not bring the latest main objects', () => {
       const head = helper.command.getHead(`${helper.scopes.remote}/comp2`);
-      expect(head).to.equal(comp2HeadOnMain);
+      expect(head).to.not.equal(comp2HeadOnMain);
     });
     it('bit status should indicate that the main is ahead', () => {
       const status = helper.command.status('--lanes');
@@ -374,9 +376,9 @@ describe('merge lanes', function () {
         status = helper.command.statusJson();
         afterMergeToMain = helper.scopeHelper.cloneLocalScope();
       });
-      it('bit status should show one staging versions, the merge-snap', () => {
+      it('bit status should show two staging versions, the merge-snap and the one of the original lane because it is new to this lane', () => {
         const stagedVersions = status.stagedComponents.find((c) => c.id === `${helper.scopes.remote}/comp2`);
-        expect(stagedVersions.versions).to.have.lengthOf(1);
+        expect(stagedVersions.versions).to.have.lengthOf(2);
         expect(stagedVersions.versions).to.include(helper.command.getHeadOfLane('dev', 'comp2'));
       });
       it('bit status should not show the components in pending-merge', () => {
@@ -713,6 +715,7 @@ describe('merge lanes', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
+      helper.command.export();
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.switchLocalLane('main');
@@ -741,6 +744,7 @@ describe('merge lanes', function () {
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild('comp2');
       comp2HeadOnMain = helper.command.getHead('comp2');
+      helper.command.export();
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       comp2PreviousHeadOnLane = helper.command.getHeadOfLane('dev', 'comp2');
@@ -864,6 +868,7 @@ describe('merge lanes', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild('comp2');
+      helper.command.export();
       helper.command.createLane();
 
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
@@ -902,6 +907,7 @@ describe('merge lanes', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild('comp2');
+      helper.command.export();
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
@@ -931,6 +937,26 @@ describe('merge lanes', function () {
     it('should merge', () => {
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(1);
+    });
+  });
+  describe('merge from main when a component head is a tag on main and was not changed on lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(3);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.mergeLane('dev', '-x');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('dev', '-x');
+      helper.command.mergeLane('main', '-x');
+    });
+    // previously, it was throwing an error
+    // id o5kaxkjd-remote/comp1@0.0.1 exists in flattenedEdges but not in flattened of o5kaxkjd-remote/comp1@6f820556b472253cd08331b20e704fe74217fd31
+    it('bit status should not throw', () => {
+      expect(() => helper.command.status()).to.not.throw();
     });
   });
 });

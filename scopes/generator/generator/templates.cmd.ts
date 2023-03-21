@@ -18,11 +18,7 @@ export class TemplatesCmd implements Command {
   group = 'development';
   options = [
     ['s', 'show-all', 'show hidden templates'],
-    [
-      'a',
-      'aspect <aspect-id>',
-      'show templates provided by the aspect-id',
-    ],
+    ['a', 'aspect <aspect-id>', 'show templates provided by the aspect-id'],
   ] as CommandOptions;
 
   constructor(private generator: GeneratorMain) {}

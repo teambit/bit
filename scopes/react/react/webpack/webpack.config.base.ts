@@ -60,7 +60,7 @@ export default function (isEnvProduction = false): Configuration {
 
   return {
     // TODO: make the dev tool according to shouldUseSourceMap and isEnvProduction
-    // devtool: 'inline-source-map',
+    // devtool: 'eval-cheap-module-source-map',
     resolve: {
       // These are the reasonable defaults supported by the Node ecosystem.
       // We also include JSX as a common component filename extension to support

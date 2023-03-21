@@ -1,0 +1,46 @@
+.settingsMenu {
+  padding: 8px;
+}
+
+.settingsTitle {
+  font-weight: 500;
+  font-size: var(--bit-p-md, 16px);
+  padding-bottom: 8px;
+}
+
+.splitSettings {
+  padding: 8px 0px;
+  display: flex;
+  align-items: center;
+}
+
+.splitOption {
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+  color: #fff;
+
+  > span {
+    padding-left: 8px;
+  }
+}
+
+.ignoreWhitespaceSettings,
+.wordWrapSettings,
+.splitSettings {
+  padding-bottom: 8px;
+  &:hover {
+    background: var(--on-surface-neutral-low-color, #282828);
+  }
+}
+
+.ignoreWhitespaceSettings,
+.wordWrapSettings {
+  > label {
+    padding: 8px 8px 8px 0px;
+    color: #fff;
+    &:hover {
+      background: var(--on-surface-neutral-low-color, #282828) !important;
+    }
+  }
+}

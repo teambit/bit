@@ -50,7 +50,7 @@ export default class VersionDependencies {
 export async function multipleVersionDependenciesToConsumer(
   versionDependencies: VersionDependencies[],
   repo: Repository
-): Promise<ComponentWithDependencies[]> {
+): Promise<ConsumerComponent[]> {
   const flattenedCompVer: { [id: string]: ComponentVersion } = {};
   const flattenedConsumerComp: { [id: string]: ConsumerComponent } = {};
 
@@ -66,13 +66,7 @@ export async function multipleVersionDependenciesToConsumer(
       flattenedConsumerComp[idStr] = await flattenedCompVer[idStr].toConsumer(repo);
     })
   );
-  return versionDependencies.map((verDep) => {
-    return new ComponentWithDependencies({
-      component: flattenedConsumerComp[verDep.component.id.toString()] as ConsumerComponent,
-      dependencies: verDep.dependencies.map((d) => flattenedConsumerComp[d.id.toString()]),
-      devDependencies: [],
-      extensionDependencies: [],
-      missingDependencies: verDep.getMissingDependencies(),
-    });
-  });
+  return versionDependencies.map(
+    (verDep) => flattenedConsumerComp[verDep.component.id.toString()] as ConsumerComponent
+  );
 }

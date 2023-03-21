@@ -55,6 +55,7 @@ export class StatusCmd implements Command {
       componentsDuringMergeState,
       softTaggedComponents,
       snappedComponents,
+      unavailableOnMain,
       pendingUpdatesFromMain,
       updatesFromForked,
       currentLaneId,
@@ -64,6 +65,7 @@ export class StatusCmd implements Command {
       newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
       modifiedComponents: modifiedComponents.map((c) => c.toString()),
       stagedComponents: stagedComponents.map((c) => ({ id: c.id.toStringWithoutVersion(), versions: c.versions })),
+      unavailableOnMain: unavailableOnMain.map((c) => c.toString()),
       componentsWithIssues: componentsWithIssues.map((c) => ({
         id: c.id.toString(),
         issues: c.issues?.toObject(),
@@ -107,6 +109,7 @@ export class StatusCmd implements Command {
       snappedComponents,
       pendingUpdatesFromMain,
       updatesFromForked,
+      unavailableOnMain,
       currentLaneId,
       forkedLaneId,
     }: StatusResult = await this.status.status({ lanes });
@@ -246,6 +249,12 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
     ).join('\n');
 
+    const unavailableOnMainDesc = '\n(use "bit checkout head" to make it available)\n';
+    const unavailableOnMainOutput = immutableUnshift(
+      unavailableOnMain.map((c) => format(c)),
+      unavailableOnMain.length ? chalk.underline.white('unavailable on main components') + unavailableOnMainDesc : ''
+    ).join('\n');
+
     const getUpdateFromMsg = (divergeData: SnapsDistance, from = 'main'): string => {
       if (divergeData.err) return divergeData.err.message;
       let msg = `${from} is ahead by ${divergeData.snapsOnTargetOnly.length || 0} snaps`;
@@ -283,7 +292,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
 
     const getLaneStr = () => {
       if (currentLaneId.isDefault()) return '';
-      const prefix = `\non ${chalk.bold(currentLaneId.toString())} lane`;
+      const prefix = `\n\ncurrent lane ${chalk.bold(currentLaneId.toString())}`;
       if (lanes) return prefix;
       return `${prefix}\nconsider adding "--lanes" flag to see updates from main/forked`;
     };
@@ -302,6 +311,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
         modifiedComponentOutput,
         snappedComponentsOutput,
         stagedComponentsOutput,
+        unavailableOnMainOutput,
         autoTagPendingOutput,
         invalidComponentOutput,
         locallySoftRemovedOutput,

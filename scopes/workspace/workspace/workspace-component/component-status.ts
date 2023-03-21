@@ -45,19 +45,10 @@ export class ComponentStatus {
     /**
      *  the component is not authored and not imported.
      */
-    readonly nested?: boolean,
-    /**
-     * does the component exist on the current lane
-     */
-    readonly isInCurrentLane?: boolean
+    readonly nested?: boolean
   ) {}
 
-  static fromLegacy(
-    status: LegacyComponentStatus,
-    hasModifiedDependencies: boolean,
-    isOutdated: boolean,
-    isInCurrentLane?: boolean
-  ) {
+  static fromLegacy(status: LegacyComponentStatus, hasModifiedDependencies: boolean, isOutdated: boolean) {
     const modify: ModifyInfo = {
       hasModifiedFiles: !!status.modified,
       hasModifiedDependencies,
@@ -70,8 +61,7 @@ export class ComponentStatus {
       !status.notExist,
       !status.missingFromScope,
       isOutdated,
-      !!status.nested,
-      isInCurrentLane
+      !!status.nested
     );
   }
 }

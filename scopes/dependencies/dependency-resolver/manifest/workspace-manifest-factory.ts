@@ -27,12 +27,15 @@ export type CreateFromComponentsOptions = {
   createManifestForComponentsWithoutDependencies: boolean;
   dedupe?: boolean;
   dependencyFilterFn?: DepsFilterFn;
+  resolveVersionsFromDependenciesOnly?: boolean;
+  referenceLocalPackages?: boolean;
 };
 
 const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
   filterComponentsFromManifests: true,
   createManifestForComponentsWithoutDependencies: true,
   dedupe: true,
+  resolveVersionsFromDependenciesOnly: false,
 };
 export class WorkspaceManifestFactory {
   constructor(private dependencyResolver: DependencyResolverMain, private aspectLoader: AspectLoaderMain) {}
@@ -51,9 +54,9 @@ export class WorkspaceManifestFactory {
     const componentDependenciesMap: ComponentDependenciesMap = await this.buildComponentDependenciesMap(
       components,
       optsWithDefaults.filterComponentsFromManifests,
-      rootPolicy,
+      optsWithDefaults.resolveVersionsFromDependenciesOnly ? undefined : rootPolicy,
       optsWithDefaults.dependencyFilterFn,
-      hasRootComponents
+      optsWithDefaults.referenceLocalPackages && hasRootComponents
     );
     let dedupedDependencies = getEmptyDedupedDependencies();
     rootPolicy = rootPolicy.filter((dep) => dep.dependencyId !== '@teambit/legacy');
@@ -112,16 +115,16 @@ export class WorkspaceManifestFactory {
   private async buildComponentDependenciesMap(
     components: Component[],
     filterComponentsFromManifests = true,
-    rootPolicy: WorkspacePolicy,
-    dependencyFilterFn: DepsFilterFn | undefined,
-    hasRootComponents?: boolean
+    rootPolicy?: WorkspacePolicy,
+    dependencyFilterFn?: DepsFilterFn | undefined,
+    referenceLocalPackages = false
   ): Promise<ComponentDependenciesMap> {
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
       let depList = await this.dependencyResolver.getDependencies(component, { includeHidden: true });
       const componentPolicy = await this.dependencyResolver.getPolicy(component);
       const additionalDeps = {};
-      if (hasRootComponents) {
+      if (referenceLocalPackages) {
         const coreAspectIds = this.aspectLoader.getCoreAspectIds();
         for (const comp of depList.toTypeArray('component') as ComponentDependency[]) {
           const [compIdWithoutVersion] = comp.id.split('@');
@@ -169,10 +172,12 @@ export class WorkspaceManifestFactory {
 
   private async updateDependenciesVersions(
     component: Component,
-    rootPolicy: WorkspacePolicy,
+    rootPolicy: WorkspacePolicy | undefined,
     dependencyList: DependencyList
   ): Promise<void> {
-    const mergedPolicies = await this.dependencyResolver.getPolicy(component);
+    // If root policy is not passed, it means that installation happens in a capsule
+    // and we only resolve versions from the dependencies, not any policies.
+    const mergedPolicies = rootPolicy && (await this.dependencyResolver.getPolicy(component));
     dependencyList.forEach((dep) => {
       updateDependencyVersion(dep, rootPolicy, mergedPolicies);
     });
@@ -226,9 +231,15 @@ export class WorkspaceManifestFactory {
 
 function filterComponents(dependencyList: DependencyList, componentsToFilterOut: Component[]): DependencyList {
   const filtered = dependencyList.filter((dep) => {
-    // Do not filter non components (like packages) dependencies
     if (!(dep instanceof ComponentDependency)) {
-      return true;
+      const depPkgName = dep.getPackageName?.();
+      if (!depPkgName) return true;
+      // If the package is already in the workspace as a local component,
+      // then we don't want to install that package as a dependency to node_modules.
+      // Otherwise, it would rewrite the local component inside the root node_modules that is created by bit link.
+      return !componentsToFilterOut.some(
+        (component) => depPkgName === componentIdToPackageName(component.state._consumer)
+      );
     }
     // Remove dependencies which has no version (they are new in the workspace)
     if (!dep.componentId.hasVersion()) return false;
@@ -272,5 +283,5 @@ function filterResolvedFromEnv(dependencyList: DependencyList, componentPolicy: 
 }
 
 function excludeWorkspaceDependencies(deps: DepObjectValue): DepObjectValue {
-  return pickBy(deps, (versionSpec) => !versionSpec.startsWith('workspace:'));
+  return pickBy(deps, (versionSpec) => !versionSpec.startsWith('file:') && !versionSpec.startsWith('workspace:'));
 }

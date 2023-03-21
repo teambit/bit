@@ -1,9 +1,10 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
-import { flatten, head } from 'lodash';
+import { compact, flatten, head } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
+import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -39,7 +40,7 @@ export type ApplicationAspectConfig = {
  * Application meta data that is stored on the component on load if it's an application.
  */
 export type ApplicationMetadata = {
-  appName?: string;
+  appName: string;
   type?: string;
 };
 
@@ -79,7 +80,8 @@ export class ApplicationMain {
     private appService: AppService,
     private aspectLoader: AspectLoaderMain,
     private workspace: Workspace,
-    private logger: Logger
+    private logger: Logger,
+    private watcher: WatcherMain
   ) {}
 
   /**
@@ -131,6 +133,56 @@ export class ApplicationMain {
     return head(apps);
   }
 
+  listAppTypes() {
+    return flatten(this.appTypeSlot.values());
+  }
+
+  async listAppsFromComponents() {
+    const components = await this.componentAspect.getHost().list();
+    const appTypesPatterns = this.getAppPatterns();
+    const apps = components.filter((component) => {
+      // has app plugin from registered types.
+      const files = component.filesystem.byGlob(appTypesPatterns);
+      return !!files.length;
+    });
+
+    return apps;
+  }
+
+  getAppPatterns() {
+    const appTypes = this.listAppTypes();
+    const appTypesPatterns = appTypes.map((appType) => {
+      return this.getAppPattern(appType);
+    });
+
+    return appTypesPatterns;
+  }
+
+  async loadApps(): Promise<Application[]> {
+    const apps = await this.listAppsFromComponents();
+    const appTypesPatterns = this.getAppPatterns();
+
+    const pluginsToLoad = apps.flatMap((appComponent) => {
+      const files = appComponent.filesystem.byGlob(appTypesPatterns);
+      return files.map((file) => file.path);
+    });
+    // const app = require(appPath);
+    const appManifests = compact(
+      pluginsToLoad.map((pluginPath) => {
+        try {
+          // eslint-disable-next-line
+          const appManifest = require(pluginPath)?.default;
+          return appManifest;
+        } catch (err) {
+          this.logger.error(`failed loading app manifest: ${pluginPath}`);
+          return undefined;
+        }
+      })
+    );
+
+    return appManifests;
+  }
+
   /**
    * get an app.
    */
@@ -153,11 +205,16 @@ export class ApplicationMain {
     return byId[0];
   }
 
+  getAppPattern(appType: ApplicationType<unknown>) {
+    if (appType.globPattern) return appType.globPattern;
+    return `*.${appType.name}.*`;
+  }
+
   /**
    * registers a new app and sets a plugin for it.
    */
   registerAppType<T>(appType: ApplicationType<T>) {
-    const plugin = new AppTypePlugin(`*.${appType.name}.*`, appType, this.appSlot);
+    const plugin = new AppTypePlugin(this.getAppPattern(appType), appType, this.appSlot);
     this.aspectLoader.registerPlugins([plugin]);
     this.appTypeSlot.register([appType]);
     return this;
@@ -192,6 +249,12 @@ export class ApplicationMain {
     };
   }
 
+  async loadAppsToSlot() {
+    const apps = await this.loadApps();
+    this.appSlot.register(apps);
+    return this;
+  }
+
   async runApp(appName: string, options?: ServeAppOptions) {
     options = this.computeOptions(options);
     const app = this.getAppOrThrow(appName);
@@ -207,8 +270,8 @@ export class ApplicationMain {
 
     const port = await app.run(context);
     if (options.watch) {
-      this.workspace.watcher
-        .watchAll({
+      this.watcher
+        .watch({
           preCompile: false,
         })
         .catch((err) => {
@@ -256,6 +319,7 @@ export class ApplicationMain {
     ComponentAspect,
     AspectLoaderAspect,
     WorkspaceAspect,
+    WatcherAspect,
   ];
 
   static slots = [
@@ -265,14 +329,15 @@ export class ApplicationMain {
   ];
 
   static async provider(
-    [cli, loggerAspect, builder, envs, component, aspectLoader, workspace]: [
+    [cli, loggerAspect, builder, envs, component, aspectLoader, workspace, watcher]: [
       CLIMain,
       LoggerMain,
       BuilderMain,
       EnvsMain,
       ComponentMain,
       AspectLoaderMain,
-      Workspace
+      Workspace,
+      WatcherMain
     ],
     config: ApplicationAspectConfig,
     [appTypeSlot, appSlot, deploymentProviderSlot]: [ApplicationTypeSlot, ApplicationSlot, DeploymentProviderSlot]
@@ -289,7 +354,8 @@ export class ApplicationMain {
       appService,
       aspectLoader,
       workspace,
-      logger
+      logger,
+      watcher
     );
     appService.registerAppType = application.registerAppType.bind(application);
     const appCmd = new AppCmd();
@@ -301,13 +367,16 @@ export class ApplicationMain {
     envs.registerService(appService);
     cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
+    // cli.registerOnStart(async () => {
+    //   await application.loadAppsToSlot();
+    // });
     if (workspace) {
-      workspace.onComponentLoad(async (loadedComponent) => {
+      workspace.onComponentLoad(async (loadedComponent): Promise<ApplicationMetadata | undefined> => {
         const app = application.calculateAppByComponent(loadedComponent);
-        if (!app) return {};
+        if (!app) return undefined;
         return {
-          appName: app?.name,
-          type: app?.applicationType,
+          appName: app.name,
+          type: app.applicationType,
         };
       });
     }

@@ -10,9 +10,9 @@ import { MergeLanesMain } from './merge-lanes.main.runtime';
 export class MergeLaneCmd implements Command {
   name = 'merge <lane> [pattern]';
   description = `merge a local or a remote lane`;
-  extendedDescription = `if the <lane> exists locally, it will be merged from the local lane.
-otherwise, it will fetch the lane from the remote and merge it.
-in case the <lane> exists locally but you want to merge the remote version of it, use --remote flag.
+  extendedDescription = `by default, the provided lane will be fetched from the remote before merging.
+to merge the lane from the local scope without updating it first, use "--skip-fetch" flag.
+
 when the current and the other lanes are diverged in history and the files could be merged with no conflicts,
 it will snap-merge these components to complete the merge. use "no-snap" to opt-out, or "tag" to tag instead`;
   arguments = [
@@ -43,8 +43,8 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       'allow merging when component are modified due to config changes (such as dependencies) only and not files',
     ],
     ['', 'verbose', 'show details of components that were not merged legitimately'],
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
-    ['', 'remote', 'relevant when the target-lane locally is differ than the remote and you want the remote'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['', 'skip-fetch', 'use the current target-lane if exits locally without updating it from the remote'],
     [
       '',
       'include-deps',
@@ -77,7 +77,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       keepReadme = false,
       noSquash = false,
       skipDependencyInstallation = false,
-      remote = false,
+      skipFetch = false,
       includeDeps = false,
       resolveUnrelated,
       ignoreConfigChanges,
@@ -94,7 +94,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       keepReadme?: boolean;
       noSquash: boolean;
       skipDependencyInstallation?: boolean;
-      remote: boolean;
+      skipFetch: boolean;
       includeDeps?: boolean;
       resolveUnrelated?: string | boolean;
       ignoreConfigChanges?: boolean;
@@ -130,7 +130,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       tag,
       pattern,
       skipDependencyInstallation,
-      remote,
+      skipFetch,
       resolveUnrelated: getResolveUnrelated(),
       ignoreConfigChanges,
       includeDeps,

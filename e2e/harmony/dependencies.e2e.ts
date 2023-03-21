@@ -96,7 +96,10 @@ import lodash from 'lodash';`
         'comp1/index.ts',
         `// @bit-no-check
 import lodash from 'lodash';
-import R from 'ramda';`
+import R from 'ramda';
+
+const isPositive = require('is-positive');
+`
       );
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
     });

@@ -1,4 +1,3 @@
-import pMap from 'p-map';
 import { BitError } from '@teambit/bit-error';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
@@ -6,7 +5,13 @@ import { BuildStatus } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import logger from '../../logger/logger';
 import ComponentObjects from '../component-objects';
-import { getAllVersionHashes, getAllVersionsInfo, VersionInfo } from '../component-ops/traverse-versions';
+import {
+  getAllVersionHashes,
+  getAllVersionsInfo,
+  getSubsetOfVersionParents,
+  getVersionParentsFromVersion,
+  VersionInfo,
+} from '../component-ops/traverse-versions';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import { ModelComponent, Symlink, Version } from '../models';
@@ -22,6 +27,7 @@ import { InMemoryCache } from '../../cache/in-memory-cache';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { pathNormalizeToLinux } from '../../utils';
 import { getDivergeData } from '../component-ops/get-diverge-data';
+import { pMapPool } from '../../utils/promise-with-concurrent';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -68,7 +74,7 @@ export default class SourceRepository {
     const concurrency = concurrentComponentsLimit();
     logger.trace(`sources.getMany, Ids: ${ids.join(', ')}`);
     logger.debug(`sources.getMany, ${ids.length} Ids`);
-    return pMap(
+    return pMapPool(
       ids,
       async (id) => {
         const component = await this.get(id, versionShouldBeBuilt);
@@ -105,9 +111,11 @@ export default class SourceRepository {
       if (bitId.isLocal(this.scope.name) || version.buildStatus === BuildStatus.Succeed || !versionShouldBeBuilt) {
         return component;
       }
-      const hasLocalVersion = await component.hasLocalVersion(this.scope.objects, bitId.version as string);
+      const hash = component.getRef(bitId.version as string);
+      if (!hash) throw new Error(`sources.get: unable to get has for ${bitId.toString()}`);
+      const hasLocalVersion = this.scope.stagedSnaps.has(hash.toString());
       if (hasLocalVersion) {
-        // e.g. during tag
+        // no point to go to the remote, it's local.
         return component;
       }
       const bitIdStr = bitId.toString();
@@ -116,6 +124,9 @@ export default class SourceRepository {
         return fromCache;
       }
       this.cacheUnBuiltIds.set(bitIdStr, component);
+      logger.trace(
+        `sources.get, found ${bitId.toString()}, however the version has build-status of ${version.buildStatus}`
+      );
       return undefined;
     };
 
@@ -127,7 +138,7 @@ export default class SourceRepository {
       // @ts-ignore
       const snap = await this.objects().load(new Ref(bitId.version));
       if (!snap) {
-        logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
+        logger.trace(`sources.get, ${msg} object was not found on the filesystem`);
         return undefined;
       }
       return returnComponent(snap as Version);
@@ -141,7 +152,7 @@ export default class SourceRepository {
     const versionHash = component.versionsIncludeOrphaned[bitId.version];
     const version = (await this.objects().load(versionHash)) as Version;
     if (!version) {
-      logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
+      logger.trace(`sources.get, ${msg} object was not found on the filesystem`);
       return undefined;
     }
     // workaround an issue when a component has a dependency with the same id as the component itself
@@ -166,7 +177,7 @@ export default class SourceRepository {
     } catch (err: any) {
       logger.error(`findComponent got an error ${err}`);
     }
-    logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
+    logger.trace(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
     return undefined;
   }
 
@@ -254,28 +265,21 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * it doesn't persist anything to the filesystem.
    * (repository.persist() needs to be called at the end of the operation)
    */
-  removeComponentVersions(
+  async removeComponentVersions(
     component: ModelComponent,
+    versionsRefs: Ref[],
     versions: string[],
-    allVersionsObjects: Version[],
     lane: Lane | null,
     removeOnlyHead?: boolean
-  ): void {
+  ) {
     logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);
     const objectRepo = this.objects();
     const componentHadHead = component.hasHead();
     const laneItem = lane?.getComponentByName(component.toBitId());
-    const removedRefs = versions.map((version) => {
-      const ref = component.removeVersion(version);
-      const versionObject = allVersionsObjects.find((v) => v.hash().isEqual(ref));
-      const refStr = ref.toString();
-      if (!versionObject) throw new Error(`removeComponentVersions failed finding a version object of ${refStr}`);
-      // avoid deleting the Version object from the filesystem. see the e2e-case: "'snapping on a lane, switching to main, snapping and running "bit reset"'"
-      // objectRepo.removeObject(ref);
-      return ref;
-    });
 
-    const getNewHead = () => {
+    let allVersionsObjects: Version[] | undefined;
+
+    const getNewHead = async () => {
       if (!removeOnlyHead) {
         const divergeData = component.getDivergeData();
         if (divergeData.commonSnapBeforeDiverge) {
@@ -287,26 +291,39 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       if (!head) {
         return undefined;
       }
+      allVersionsObjects =
+        allVersionsObjects ||
+        (await Promise.all(versions.map((localVer) => component.loadVersion(localVer, this.objects()))));
+
       const headVersion = allVersionsObjects.find((ver) => ver.hash().isEqual(head));
       return this.findHeadInExistingVersions(allVersionsObjects, component.id(), headVersion);
     };
-    const refWasDeleted = (ref: Ref) => removedRefs.find((removedRef) => ref.isEqual(removedRef));
+    const refWasDeleted = (ref: Ref) => versionsRefs.find((removedRef) => ref.isEqual(removedRef));
     if (component.head && refWasDeleted(component.head)) {
-      const newHead = getNewHead();
+      const newHead = await getNewHead();
       component.setHead(newHead);
     }
     if (laneItem && refWasDeleted(laneItem.head)) {
-      const newHead = getNewHead();
+      const newHead = await getNewHead();
       if (newHead) {
         laneItem.head = newHead;
       } else {
+        if (lane?.isNew && component.scope) {
+          // the fact that the component has a scope-name means it was exported.
+          throw new Error(`fatal: unable to find a new head for "${component.id()}".
+this is because the lane ${lane.name} is new so the remote doesn't have previous snaps of this component.
+also, this component wasn't part of a fork, so it's impossible to find a previous snap in the original-lane.
+probably this component landed here as part of a merge from another lane.
+it's impossible to leave the component in the .bitmap with a scope-name and without any version.
+please either remove the component (bit remove) or remove the lane.`);
+        }
         lane?.removeComponent(component.toBitId());
       }
       component.laneHeadLocal = newHead;
       objectRepo.add(lane);
     }
 
-    allVersionsObjects.forEach((versionObj) => {
+    allVersionsObjects?.forEach((versionObj) => {
       const wasDeleted = refWasDeleted(versionObj.hash());
       if (!wasDeleted && versionObj.parents.some((parent) => refWasDeleted(parent))) {
         throw new Error(
@@ -316,9 +333,14 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         );
       }
     });
+    versions.map((version) => {
+      const ref = component.removeVersion(version);
+      return ref;
+    });
     if (componentHadHead && !component.hasHead() && component.versionArray.length) {
       throw new Error(`fatal: "head" prop was removed from "${component.id()}", although it has versions`);
     }
+
     if (component.versionArray.length || component.hasHead() || component.laneHeadLocal) {
       objectRepo.add(component); // add the modified component object
     } else {
@@ -513,6 +535,9 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
 
     const existingLane = hasSameHash ? existingLaneWithSameId : await this.scope.loadLaneByHash(lane.hash());
 
+    const sentVersionHashes = versionObjects?.map((v) => v.hash().toString());
+    const versionParents = versionObjects?.map((v) => getVersionParentsFromVersion(v));
+
     if (existingLane && !existingLaneWithSameId) {
       // the lane id has changed
       existingLane.scope = lane.scope;
@@ -520,6 +545,8 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
     }
     const mergeResults: MergeResult[] = [];
     const mergeErrors: ComponentNeedsUpdate[] = [];
+    const isExport = !isImport;
+
     await Promise.all(
       lane.components.map(async (component) => {
         const modelComponent =
@@ -530,6 +557,21 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
         }
         const existingComponent = existingLane ? existingLane.components.find((c) => c.id.isEqual(component.id)) : null;
         if (!existingComponent) {
+          if (isExport) {
+            if (!sentVersionHashes?.includes(component.head.toString())) {
+              // during export, the remote might got a lane when some components were not sent from the client. ignore them.
+              return;
+            }
+            if (!versionParents) throw new Error('mergeLane, versionParents must be set during export');
+            const subsetOfVersionParents = getSubsetOfVersionParents(versionParents, component.head);
+            if (existingLane) existingLane.addComponent(component);
+            mergeResults.push({
+              mergedComponent: modelComponent,
+              mergedVersions: subsetOfVersionParents.map((h) => h.hash.toString()),
+            });
+            return;
+          }
+
           const allVersions = await getAllVersionHashes({
             modelComponent,
             repo,

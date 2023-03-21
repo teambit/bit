@@ -3,6 +3,7 @@ import * as pathLib from 'path';
 import R from 'ramda';
 import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
+import { isTag } from '@teambit/component-version';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -27,7 +28,7 @@ import Consumer from '../consumer/consumer';
 import GeneralError from '../error/general-error';
 import logger from '../logger/logger';
 import getMigrationVersions, { MigrationResult } from '../migration/migration-helper';
-import { currentDirName, first, pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
+import { pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
 import { PathOsBasedAbsolute } from '../utils/path';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
@@ -46,18 +47,17 @@ import RemovedObjects from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
 import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-json';
-import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
 import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
 import { getDivergeData } from './component-ops/get-diverge-data';
+import { StagedSnaps } from './staged-snaps';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
 
 type HasIdOpts = {
   includeSymlink?: boolean;
-  includeOrphaned?: boolean;
   includeVersion?: boolean;
 };
 
@@ -118,6 +118,7 @@ export default class Scope {
    * another instance this is needed is for bit-sign, this way when loading aspects and fetching dists, it'll go to lane-scope.
    */
   currentLaneId?: LaneId;
+  stagedSnaps: StagedSnaps;
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
     this.scopeJson = scopeProps.scopeJson;
@@ -128,30 +129,13 @@ export default class Scope {
     this.lanes = new Lanes(this.objects, this.scopeJson);
     this.isBare = scopeProps.isBare ?? false;
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
+    this.stagedSnaps = StagedSnaps.load(this.path);
   }
 
   static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
 
   public async refreshScopeIndex(force = false) {
     await this.objects.reloadScopeIndexIfNeed(force);
-  }
-
-  /**
-   * import components to the `Scope.
-   */
-  async import(
-    ids: BitIds,
-    cache = true,
-    reFetchUnBuiltVersion = true,
-    lanes?: Lane[]
-  ): Promise<VersionDependencies[]> {
-    return this.scopeImporter.importMany({
-      ids,
-      cache,
-      throwForDependencyNotFound: false,
-      reFetchUnBuiltVersion,
-      lanes,
-    });
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
@@ -307,10 +291,7 @@ export default class Scope {
     if (!opts.includeVersion || !id.version) return true;
     if (id.getVersion().latest) return true;
     const modelComponent = modelComponentList[0] as ModelComponent;
-    if (opts.includeOrphaned) {
-      return modelComponent.hasTagIncludeOrphaned(id.version);
-    }
-    return modelComponent.hasTag(id.version);
+    return modelComponent.hasVersion(id.version, this.objects);
   }
 
   async list(): Promise<ModelComponent[]> {
@@ -371,16 +352,24 @@ once done, to continue working, please run "bit cc"`
    */
   async isIdOnLane(id: BitId, lane?: Lane | null): Promise<boolean | null> {
     if (!lane) return false;
+
+    // it's possible that main was merged to the lane, so the ref in the lane object is actually a tag.
+    // in which case, we prefer to go to main instead of the lane.
+    // for some reason (needs to check why) the tag-artifacts which got created using merge+tag from-scope
+    // exist only on main and not on the lane-scope.
+    const component = await this.getModelComponent(id);
+    if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
+    if (component.head.toString() === id.version) return false; // it's on main
+    if (isTag(id.version)) return false; // tags can be on main only
+
     const laneIds = lane.toBitIds();
     if (laneIds.has(id)) return true; // in the lane with the same version
     const laneIdWithDifferentVersion = laneIds.searchWithoutVersion(id);
     if (!laneIdWithDifferentVersion) return false; // not in the lane at all
+
     // component is in the lane object but with a different version.
     // we have to figure out whether the current version exists on the lane or not.
-    const component = await this.getModelComponent(id);
-    if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
-    if (component.head.toString() === id.version) return false; // it's on main
-    // get the diverge between main and the lane. (in this context, main is "remote", lane is "local").
+    // get the diverge between main and the lane.
     const divergeData = await getDivergeData({
       repo: this.objects,
       modelComponent: component,
@@ -557,7 +546,7 @@ once done, to continue working, please run "bit cc"`
       // search for the complete ID
       const components: ModelComponent[] = await this.list();
       const foundComponent = components.filter((c) => c.toBitId().isEqualWithoutScopeAndVersion(id));
-      if (foundComponent.length) return first(foundComponent);
+      if (foundComponent.length) return foundComponent[0];
     }
     throw new ComponentNotFound(id.toString());
   }
@@ -744,7 +733,7 @@ once done, to continue working, please run "bit cc"`
     name?: string | null | undefined,
     groupName?: string | null | undefined
   ): ScopeJson {
-    if (!name) name = currentDirName();
+    if (!name) name = pathLib.basename(process.cwd());
     if (name === CURRENT_UPSTREAM) {
       throw new GeneralError(`the name "${CURRENT_UPSTREAM}" is a reserved word, please use another name`);
     }

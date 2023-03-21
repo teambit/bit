@@ -2,6 +2,8 @@ import { isObject, omit } from 'lodash';
 import { Configuration, ResolveOptions, RuleSetRule } from 'webpack';
 import { merge, mergeWithCustomize, mergeWithRules, CustomizeRule } from 'webpack-merge';
 import { ICustomizeOptions } from 'webpack-merge/dist/types';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import { inject } from '@teambit/html.modules.inject-html-element';
 
 export * from 'webpack-merge';
 
@@ -22,6 +24,14 @@ type MergeOpts = {
 
 type Rules = {
   [s: string]: CustomizeRule | Rules;
+};
+
+type CustomHtmlElement = {
+  parent: 'head' | 'body';
+  position: 'prepend' | 'append';
+  tag: string;
+  content?: string;
+  attributes?: { [key: string]: string };
 };
 
 const defaultAddToArrayOpts: AddToArrayOpts = {
@@ -291,6 +301,103 @@ export class WebpackConfigMutator {
     this.raw = merged;
     return this;
   }
+
+  /**
+   * Add PostCSS plugins
+   * @param plugins
+   * @returns
+   * @example
+   * addPostCssPlugins([require('tailwindcss')]);
+   */
+  addPostCssPlugins(plugins: Array<any>): WebpackConfigMutator {
+    this.raw.module?.rules?.forEach((rule: any) => {
+      if (rule.use) processUseArray(rule.use, plugins);
+      if (rule.oneOf) rule.oneOf.forEach((oneOfRule) => processUseArray(oneOfRule.use, plugins));
+    });
+
+    return this;
+  }
+
+  /**
+   * Add a custom element to the html template
+   * @param element
+   * @returns
+   * @example
+   * addElementToHtmlTemplate({ parent: 'head', position: 'append', tag: 'script', attributes: { src: 'https://cdn.com/script.js', async: true } });
+   * addElementToHtmlTemplate({ parent: 'body', position: 'prepend', tag: 'script', content: 'console.log("hello world")' });
+   */
+  addElementToHtmlTemplate(element: CustomHtmlElement) {
+    if (!this.raw.plugins) {
+      this.raw.plugins = [];
+    }
+
+    const htmlPlugins = this.raw?.plugins?.filter(
+      (plugin) => plugin.constructor.name === 'HtmlWebpackPlugin'
+    ) as HtmlWebpackPlugin[];
+
+    if (htmlPlugins) {
+      // iterate over all html plugins and add the scripts to the html
+      htmlPlugins.forEach((htmlPlugin) => {
+        const htmlContent =
+          typeof htmlPlugin.userOptions?.templateContent === 'function'
+            ? (htmlPlugin.userOptions?.templateContent({}) as string)
+            : (htmlPlugin.userOptions?.templateContent as string);
+
+        const newHtmlContent = inject(htmlContent, element);
+
+        htmlPlugin.userOptions.templateContent = newHtmlContent;
+      });
+    }
+
+    return this;
+  }
+
+  /**
+   * Remove a custom element from the html template
+   * @param element
+   * @returns
+   * @example
+   * removeElementFromHtmlTemplate('<script>console.log("hello")</script>');
+   * removeElementFromHtmlTemplate('<script src="https://example.com/script.js"></script>');
+   */
+  removeElementFromHtmlTemplate(element: string) {
+    if (!this.raw.plugins) {
+      this.raw.plugins = [];
+    }
+
+    const htmlPlugin = this.raw?.plugins?.find(
+      (plugin) => plugin.constructor.name === 'HtmlWebpackPlugin'
+    ) as HtmlWebpackPlugin;
+
+    if (htmlPlugin) {
+      const htmlContent =
+        typeof htmlPlugin.userOptions?.templateContent === 'function'
+          ? htmlPlugin.userOptions?.templateContent({})
+          : htmlPlugin.userOptions.templateContent;
+
+      htmlPlugin.userOptions.templateContent = (htmlContent as string).replace(element, '');
+
+      this.raw.plugins = this.raw.plugins.map((plugin) => {
+        if (plugin.constructor.name === 'HtmlWebpackPlugin') {
+          return htmlPlugin;
+        }
+        return plugin;
+      });
+    }
+    return this;
+  }
+}
+
+function processUseArray(useArray: any[], plugins: any[]) {
+  if (!useArray) return;
+
+  useArray.forEach((use: any) => {
+    if (!use.loader || !use.loader.includes('postcss-loader')) return;
+    if (!use.options.postcssOptions) return;
+
+    use.options.postcssOptions.plugins = use.options.postcssOptions.plugins || [];
+    use.options.postcssOptions.plugins.unshift(...plugins);
+  });
 }
 
 function getConfigsToMerge(

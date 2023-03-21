@@ -241,7 +241,7 @@ export class WorkspaceComponentLoader {
 
     // Special load events which runs from the workspace but should run from the correct aspect
     // TODO: remove this once those extensions dependent on workspace
-    const envsData = await this.workspace.getEnvSystemDescriptor(component);
+    const envsData = await this.envs.calcDescriptor(component);
 
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const policy = await this.dependencyResolver.mergeVariantPolicies(
@@ -252,6 +252,7 @@ export class WorkspaceComponentLoader {
     const dependenciesList = await this.dependencyResolver.extractDepsFromLegacy(component, policy);
 
     const depResolverData = {
+      packageName: this.dependencyResolver.calcPackageName(component),
       dependencies: dependenciesList.serialize(),
       policy: policy.serialize(),
     };

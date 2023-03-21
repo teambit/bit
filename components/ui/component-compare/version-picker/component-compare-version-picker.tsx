@@ -1,10 +1,7 @@
-import React, { HTMLAttributes, useContext, useMemo } from 'react';
-import compact from 'lodash.compact';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import React, { HTMLAttributes, useMemo } from 'react';
 import { DropdownComponentVersion, VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
-import { ComponentContext } from '@teambit/component';
 import classNames from 'classnames';
 
 import styles from './component-compare-version-picker.module.scss';
@@ -12,37 +9,30 @@ import styles from './component-compare-version-picker.module.scss';
 export type ComponentCompareVersionPickerProps = {} & HTMLAttributes<HTMLDivElement>;
 
 export function ComponentCompareVersionPicker({ className }: ComponentCompareVersionPickerProps) {
-  const component = useContext(ComponentContext);
   const componentCompare = useComponentCompare();
+  const compare = componentCompare?.compare?.model;
 
-  const snaps: DropdownComponentVersion[] = useMemo(() => {
-    const logs = component?.logs;
-    return (logs || [])
-      .filter((log) => !log.tag)
-      .map((snap) => ({ ...snap, version: snap.hash }))
-      .reverse();
-  }, [component?.logs]);
+  const logs =
+    (compare?.logs || []).filter((log) => {
+      const version = log.tag || log.hash;
+      return componentCompare?.compare?.hasLocalChanges || version !== compare?.id.version;
+    }) || [];
 
-  const tags: DropdownComponentVersion[] = useMemo(() => {
-    const tagLookup = new Map<string, LegacyComponentLog>();
-    const logs = component?.logs;
+  const [tags, snaps] = useMemo(() => {
+    return (logs || []).reduce(
+      ([_tags, _snaps], log) => {
+        if (!log.tag) {
+          _snaps.push({ ...log, version: log.hash });
+        } else {
+          _tags.push({ ...log, version: log.tag as string });
+        }
+        return [_tags, _snaps];
+      },
+      [new Array<DropdownComponentVersion>(), new Array<DropdownComponentVersion>()]
+    );
+  }, [logs]);
 
-    (logs || [])
-      .filter((log) => log.tag)
-      .forEach((tag) => {
-        tagLookup.set(tag?.tag as string, tag);
-      });
-    return compact(
-      component?.tags
-        ?.toArray()
-        .reverse()
-        .map((tag) => tagLookup.get(tag.version.version))
-    ).map((tag) => ({ ...tag, version: tag.tag as string }));
-  }, [component?.logs]);
-
-  const compareVersion = componentCompare?.compare?.hasLocalChanges
-    ? 'workspace'
-    : componentCompare?.compare?.model.version;
+  const compareVersion = componentCompare?.compare?.hasLocalChanges ? 'workspace' : compare?.version;
 
   const baseVersion = componentCompare?.base?.model.version;
 

@@ -23,7 +23,6 @@ import ComponentsList from '@teambit/legacy/dist/consumer/component/components-l
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { NodeModuleLinker } from '@teambit/legacy/dist/links';
 import { Lane, ModelComponent, Symlink, Version } from '@teambit/legacy/dist/scope/models';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { Scope } from '@teambit/legacy/dist/scope';
@@ -32,10 +31,12 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { LaneReadmeComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
+import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import {
   persistRemotes,
@@ -67,13 +68,13 @@ type ObjectsPerRemoteExtended = ObjectsPerRemote & {
 };
 
 type ExportParams = {
-  ids: string[];
-  eject: boolean;
-  allVersions: boolean;
-  originDirectly: boolean;
-  includeNonStaged: boolean;
-  resumeExportId: string | undefined;
-  ignoreMissingArtifacts: boolean;
+  ids?: string[];
+  eject?: boolean;
+  allVersions?: boolean;
+  originDirectly?: boolean;
+  includeNonStaged?: boolean;
+  resumeExportId?: string | undefined;
+  ignoreMissingArtifacts?: boolean;
 };
 
 export class ExportMain {
@@ -84,8 +85,8 @@ export class ExportMain {
     private logger: Logger
   ) {}
 
-  async export(params: ExportParams) {
-    HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
+  async export(params: ExportParams = {}) {
+    HooksManagerInstance?.triggerHook(PRE_EXPORT_HOOK, params);
     const { updatedIds, nonExistOnBitMap, missingScope, exported, removedIds, exportedLanes } =
       await this.exportComponents(params);
     let ejectResults;
@@ -98,12 +99,13 @@ export class ExportMain {
       ejectResults,
       exportedLanes,
     };
-    HooksManagerInstance.triggerHook(POST_EXPORT_HOOK, exportResults);
+    HooksManagerInstance?.triggerHook(POST_EXPORT_HOOK, exportResults);
     if (Scope.onPostExport) {
       await Scope.onPostExport(exported, exportedLanes).catch((err) => {
         this.logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
       });
     }
+    this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
     return exportResults;
   }
 
@@ -162,12 +164,17 @@ export class ExportMain {
       originDirectly,
       idsWithFutureScope,
       isOnMain,
+      filterOutExistingVersions: Boolean(!params.allVersions && laneObject),
     });
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();
     const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
-    await linkComponents(updatedIds, consumer);
+    // re-generate the package.json, this way, it has the correct data in the componentId prop.
+    await linkToNodeModulesByIds(this.workspace, updatedIds, true);
     await this.removeFromStagedConfig(exported);
+    // ideally we should delete the staged-snaps only for the exported snaps. however, it's not easy, and it's ok to
+    // delete them all because this file is mainly an optimization for the import process.
+    await this.workspace.scope.legacyScope.stagedSnaps.deleteFile();
     Analytics.setExtraData('num_components', exported.length);
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
     // export and eject operations to function independently. we don't want to lose the changes to
@@ -196,19 +203,23 @@ export class ExportMain {
     idsWithFutureScope,
     resumeExportId,
     ignoreMissingArtifacts,
+    ignoreMissingExternalArtifacts = true,
     isOnMain = true,
     exportHeadsOnly, // relevant when exporting from bare-scope, especially when re-exporting existing versions, the normal calculation based on getDivergeData won't work
+    filterOutExistingVersions, // go to the remote and check whether the version exists there. if so, don't export it
   }: {
     scope: Scope;
     ids: BitIds;
     laneObject?: Lane;
-    allVersions: boolean;
+    allVersions?: boolean;
     originDirectly?: boolean;
     idsWithFutureScope: BitIds;
     resumeExportId?: string | undefined;
     ignoreMissingArtifacts?: boolean;
+    ignoreMissingExternalArtifacts?: boolean;
     isOnMain?: boolean;
     exportHeadsOnly?: boolean;
+    filterOutExistingVersions?: boolean;
   }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
     this.logger.debug(`scope.exportMany, ids: ${ids.toString()}`);
     const scopeRemotes: Remotes = await getScopeRemotes(scope);
@@ -255,23 +266,23 @@ export class ExportMain {
       allHashes.push(head);
     };
 
-    const getVersionsToExport = async (modelComponent: ModelComponent): Promise<string[]> => {
+    const getVersionsToExport = async (modelComponent: ModelComponent): Promise<Ref[]> => {
       if (exportHeadsOnly) {
-        const head = modelComponent.head;
+        const head = laneObject?.getComponent(modelComponent.toBitId())?.head || modelComponent.head;
         if (!head)
           throw new Error(
             `getVersionsToExport should export the head only, but the head of ${modelComponent.id()} is missing`
           );
-        return modelComponent.switchHashesWithTagsIfExist([head]);
+        return [head];
       }
-      const localTagsOrHashes = await modelComponent.getLocalTagsOrHashes(scope.objects);
+      const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects);
       if (!allVersions) {
         return localTagsOrHashes;
       }
 
       const allHashes = await getAllVersionHashes({ modelComponent, repo: scope.objects });
       await addMainHeadIfPossible(allHashes, modelComponent);
-      return modelComponent.switchHashesWithTagsIfExist(allHashes);
+      return allHashes;
     };
 
     await validateTargetScopeForLanes();
@@ -291,13 +302,59 @@ export class ExportMain {
       const componentsAndObjects: ModelComponentAndObjects[] = [];
       const objectList = new ObjectList();
       const objectListPerName: ObjectListPerName = {};
-      const processModelComponent = async (modelComponent: ModelComponent) => {
-        const versionToExport = await getVersionsToExport(modelComponent);
+
+      const modelComponents = await mapSeries(bitIds, (id) => scope.getModelComponent(id));
+      // super important! otherwise, the processModelComponent() changes objects in memory, while the key remains the same
+      scope.objects.clearCache();
+
+      const refsToPotentialExportPerComponent = await mapSeries(modelComponents, async (modelComponent) => {
+        const refs = await getVersionsToExport(modelComponent);
+        return { modelComponent, refs };
+      });
+
+      const getRefsToExportPerComp = async () => {
+        if (!filterOutExistingVersions) {
+          return refsToPotentialExportPerComponent;
+        }
+        const allHashesAsStr = refsToPotentialExportPerComponent
+          .map((r) => r.refs)
+          .flat()
+          .map((ref) => ref.toString());
+        const existingOnRemote = await scope.scopeImporter.checkWhatHashesExistOnRemote(remoteNameStr, allHashesAsStr);
+        // for lanes, some snaps might be already on the remote, and the reason they're staged is due to a previous merge.
+        const refsToExportPerComponent = refsToPotentialExportPerComponent.map(({ modelComponent, refs }) => {
+          const filteredOutRefs: string[] = [];
+          const refsToExport = refs.filter((ref) => {
+            const existing = existingOnRemote.includes(ref.toString());
+            if (existing) filteredOutRefs.push(ref.toString());
+            return !existing;
+          });
+          if (filteredOutRefs.length)
+            this.logger.debug(
+              `export-scope-components, the following refs were filtered out from ${modelComponent
+                .id()
+                .toString()} because they already exist on the remote:\n${filteredOutRefs.join('\n')}`
+            );
+
+          return refsToExport.length ? { modelComponent, refs: refsToExport } : null;
+        });
+
+        return compact(refsToExportPerComponent);
+      };
+
+      const processModelComponent = async ({
+        modelComponent,
+        refs,
+      }: {
+        modelComponent: ModelComponent;
+        refs: Ref[];
+      }) => {
         modelComponent.clearStateData();
         const objectItems = await modelComponent.collectVersionsObjects(
           scope.objects,
-          versionToExport,
-          ignoreMissingArtifacts
+          refs.map((ref) => ref.toString()),
+          ignoreMissingArtifacts,
+          ignoreMissingExternalArtifacts
         );
         const objectsList = await new ObjectList(objectItems).toBitObjects();
         const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
@@ -319,11 +376,9 @@ export class ExportMain {
         objectList.addIfNotExist(allObjectsData);
       };
 
-      const modelComponents = await mapSeries(bitIds, (id) => scope.getModelComponent(id));
-      // super important! otherwise, the processModelComponent() changes objects in memory, while the key remains the same
-      scope.objects.clearCache();
+      const refsToExportPerComponent = await getRefsToExportPerComp();
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
-      await mapSeries(modelComponents, processModelComponent);
+      await mapSeries(refsToExportPerComponent, processModelComponent);
       if (lane) {
         lane.components.forEach((c) => {
           const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(c.id);
@@ -617,8 +672,8 @@ export class ExportMain {
   }
 
   private async getComponentsToExport(
-    ids: string[],
-    includeNonStaged: boolean
+    ids: string[] = [],
+    includeNonStaged?: boolean
   ): Promise<{ idsToExport: BitIds; missingScope: BitId[]; idsWithFutureScope: BitIds; laneObject?: Lane }> {
     const consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
@@ -685,7 +740,7 @@ export class ExportMain {
 
   private async getLaneCompIdsToExport(
     consumer: Consumer,
-    includeNonStaged: boolean
+    includeNonStaged?: boolean
   ): Promise<{ componentsToExport: BitIds; laneObject: Lane }> {
     const currentLaneId = consumer.getCurrentLaneId();
     const laneObject = await consumer.scope.loadLane(currentLaneId);
@@ -756,18 +811,6 @@ async function getParsedId(consumer: Consumer, id: string): Promise<BitId> {
   }
 }
 
-/**
- * re-generate the package.json, this way, it has the correct data in the componentId prop.
- */
-async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
-  // we don't have much of a choice here, we have to load all the exported components in order to link them
-  // some of the components might be authored, some might be imported.
-  // when a component has dists, we need the consumer-component object to retrieve the dists info.
-  const components = await Promise.all(ids.map((id) => consumer.loadComponentFromModel(id)));
-  const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
-  await nodeModuleLinker.link();
-}
-
 async function ejectExportedComponents(componentsIds, logger: Logger): Promise<EjectResults> {
   const consumer: Consumer = await loadConsumer(undefined, true);
   let ejectResults: EjectResults;
@@ -817,3 +860,5 @@ async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
 export function isUserTryingToExportLanes(consumer: Consumer) {
   return consumer.isOnLane();
 }
+
+export default ExportMain;

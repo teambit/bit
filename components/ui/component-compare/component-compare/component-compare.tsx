@@ -10,7 +10,6 @@ import {
 } from '@teambit/component.ui.component-compare.models.component-compare-model';
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
-import { ComponentCompareBlankState } from '@teambit/component.ui.component-compare.blank-state';
 import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
@@ -74,8 +73,16 @@ export function ComponentCompare(props: ComponentCompareProps) {
     (lastVersionInfo && component.id.changeVersion(lastVersionInfo.tag || lastVersionInfo.hash)) ||
     component.id;
 
-  const { component: base, loading: loadingBase } = useComponent(host, baseId.toString(), { customUseComponent });
-  const { component: compareComponent, loading: loadingCompare } = useComponent(host, _compareId?.toString() || '', {
+  const {
+    component: base,
+    loading: loadingBase,
+    componentDescriptor: baseComponentDescriptor,
+  } = useComponent(host, baseId.toString(), { customUseComponent });
+  const {
+    component: compareComponent,
+    loading: loadingCompare,
+    componentDescriptor: compareComponentDescriptor,
+  } = useComponent(host, _compareId?.toString() || '', {
     skip: !_compareId,
     customUseComponent,
   });
@@ -84,16 +91,14 @@ export function ComponentCompare(props: ComponentCompareProps) {
 
   const compare = _compareId ? compareComponent : component;
 
-  const isEmpty =
-    !compareIsLocalChanges && ((!loading && !compare && !base) || compare?.id.toString() === base?.id.toString());
-
   const compCompareId = `${base?.id.toString()}-${compare?.id.toString()}`;
 
   const logsByVersion = useMemo(() => {
     return (compare?.logs || []).slice().reduce(groupByVersion, new Map<string, LegacyComponentLog>());
   }, [compare?.id.toString()]);
 
-  const skipComponentCompareQuery = compareIsLocalChanges || !base?.id.version || !compare?.id.version;
+  const skipComponentCompareQuery =
+    compareIsLocalChanges || base?.id.version?.toString() === compare?.id.version?.toString();
 
   const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
     base?.id.toString(),
@@ -126,10 +131,12 @@ export function ComponentCompare(props: ComponentCompareProps) {
   const componentCompareModel = {
     compare: compare && {
       model: compare,
+      descriptor: compareComponentDescriptor,
       hasLocalChanges: compareIsLocalChanges,
     },
     base: base && {
       model: base,
+      descriptor: baseComponentDescriptor,
     },
     loading,
     logsByVersion,
@@ -146,8 +153,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
     <ComponentCompareContext.Provider value={componentCompareModel}>
       <div className={classnames(styles.componentCompareContainer, className)} {...rest}>
         {loading && <Loader className={classnames(styles.loader)} />}
-        {isEmpty && <ComponentCompareBlankState />}
-        {!loading && !isEmpty && <RenderCompareScreen key={compCompareId} {...props} changes={changes} />}
+        {!loading && <RenderCompareScreen key={compCompareId} {...props} changes={changes} />}
       </div>
     </ComponentCompareContext.Provider>
   );

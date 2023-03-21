@@ -9,8 +9,7 @@ import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
-import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { CloneConfig } from '@teambit/new-component-helper';
 import { BitError } from '@teambit/bit-error';
@@ -44,7 +43,11 @@ export interface PackageJsonProps {
 
 export type PackageJsonPropsRegistry = SlotRegistry<PackageJsonProps>;
 
-export type PkgExtensionConfig = {};
+export type PkgExtensionConfig = {
+  packageManagerPublishArgs?: string[];
+  packageJson?: Record<string, any>;
+  avoidPublishToNPM?: boolean; // by default, if packageJson.name or packageJson.publishConfig are set, it publish to npm.
+};
 
 type GetModulePathOptions = { absPath?: boolean };
 
@@ -472,16 +475,10 @@ export class PkgMain implements CloneConfig {
   }
 
   async transformPackageJson(
-    legacyComponent: LegacyComponent,
+    component: Component,
     packageJsonObject: Record<string, any>
   ): Promise<Record<string, any>> {
-    // const newId = await this.workspace.resolveComponentId(component.id);
-    // const newComponent = await this.workspace.get(newId);
-    const host = this.componentAspect.getHost();
-    const id = await host.resolveComponentId(legacyComponent.id);
-    const newComponent = await host.get(id);
-    if (!newComponent) throw new Error(`cannot transform package.json of component: ${legacyComponent.id.toString()}`);
-    const newProps = this.getPackageJsonModifications(newComponent);
+    const newProps = this.getPackageJsonModifications(component);
     return Object.assign(packageJsonObject, newProps);
   }
 }

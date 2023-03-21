@@ -30,7 +30,7 @@ export type FETCH_OPTIONS = {
   ignoreMissingHead?: boolean; // if asking for id without version and the component has no head, don't throw, just ignore
   /**
    * whether include VersionHistory object to get the snaps graph. it's needed to be able to traverse the snaps without
-   * having all Version objects locally
+   * having all Version objects locally. default - false.
    */
   includeVersionHistory?: boolean;
   /**
@@ -63,7 +63,7 @@ export default async function fetch(
   // This might be undefined in case of fork process like during bit test command
   if (HooksManagerInstance) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    HooksManagerInstance.triggerHook(PRE_SEND_OBJECTS, args, headers);
+    HooksManagerInstance?.triggerHook(PRE_SEND_OBJECTS, args, headers);
   }
   const fetchSchema = fetchOptions.fetchSchema || '0.0.1';
   const clientSupportsVersionHistory = semver.gte(fetchSchema, '0.0.2');
@@ -229,7 +229,7 @@ export default async function fetch(
   }
 
   if (HooksManagerInstance) {
-    await HooksManagerInstance.triggerHook(
+    await HooksManagerInstance?.triggerHook(
       POST_SEND_OBJECTS,
       {
         objectList,

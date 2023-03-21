@@ -1,4 +1,5 @@
 import { compact } from 'lodash';
+import pFilter from 'p-filter';
 import R from 'ramda';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { BitId, BitIds } from '../../bit-id';
@@ -9,7 +10,6 @@ import { Lane } from '../../scope/models';
 import ModelComponent from '../../scope/models/model-component';
 import Scope from '../../scope/scope';
 import { fetchRemoteVersions } from '../../scope/scope-remotes';
-import { filterAsync } from '../../utils';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 import BitMap from '../bit-map/bit-map';
 import ComponentMap from '../bit-map/component-map';
@@ -178,6 +178,15 @@ export default class ComponentsList {
       // if a component is merge-pending, it needs to be resolved first before getting more updates from main
       .filter((c) => !duringMergeIds.hasWithoutVersion(c.toBitId()));
 
+    // by default, when on a lane, main is not fetched. we need to fetch it to get the latest updates.
+    await this.scope.scopeImporter.importWithoutDeps(
+      BitIds.fromArray(compFromModelOnWorkspace.map((c) => c.toBitId())),
+      {
+        cache: false,
+        includeVersionHistory: true,
+        ignoreMissingHead: true,
+      }
+    );
     const results = await Promise.all(
       compFromModelOnWorkspace.map(async (modelComponent) => {
         const headOnMain = modelComponent.head;
@@ -218,15 +227,26 @@ export default class ComponentsList {
     const forkedFromLane = await this.scope.loadLane(forkedFromLaneId);
     if (!forkedFromLane) return []; // should we fetch it here?
 
-    const authoredAndImportedIds = this.bitMap.getAllBitIds();
+    const workspaceIds = this.bitMap.getAllBitIds();
 
     const duringMergeIds = this.listDuringMergeStateComponents();
 
     const componentsFromModel = await this.getModelComponents();
     const compFromModelOnWorkspace = componentsFromModel
-      .filter((c) => authoredAndImportedIds.hasWithoutVersion(c.toBitId()))
+      .filter((c) => workspaceIds.hasWithoutVersion(c.toBitId()))
       // if a component is merge-pending, it needs to be resolved first before getting more updates from main
       .filter((c) => !duringMergeIds.hasWithoutVersion(c.toBitId()));
+
+    // by default, when on a lane, forked is not fetched. we need to fetch it to get the latest updates.
+    await this.scope.scopeImporter.importWithoutDeps(
+      BitIds.fromArray(compFromModelOnWorkspace.map((c) => c.toBitId())),
+      {
+        cache: false,
+        includeVersionHistory: true,
+        lanes: [forkedFromLane],
+        ignoreMissingHead: true,
+      }
+    );
 
     const remoteForkedLane = await this.scope.objects.remoteLanes.getRemoteLane(forkedFromLaneId);
     if (!remoteForkedLane.length) return [];
@@ -330,7 +350,9 @@ export default class ComponentsList {
    * list all components that can be tagged.
    */
   async listPotentialTagAllWorkspace(): Promise<BitId[]> {
-    return this.idsFromBitMap();
+    const removedIds = await this.listLocallySoftRemoved();
+    const allIdsExcludeRemoved = this.idsFromBitMap();
+    return [...removedIds, ...allIdsExcludeRemoved];
   }
 
   /**
@@ -355,7 +377,7 @@ export default class ComponentsList {
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {
     const fromBitMap = this.bitMap.getAllBitIds();
     const modelComponents = await this.getModelComponents();
-    const pendingExportComponents = await filterAsync(modelComponents, async (component: ModelComponent) => {
+    const pendingExportComponents = await pFilter(modelComponents, async (component: ModelComponent) => {
       if (!fromBitMap.searchWithoutVersion(component.toBitId())) {
         // it's not on the .bitmap only in the scope, as part of the out-of-sync feature, it should
         // be considered as staged and should be exported. same for soft-removed components, which are on scope only.

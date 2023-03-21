@@ -7,10 +7,10 @@ export function ReadmeSkeleton() {
     <div className={styles.readmeSkeleton}>
       <LineSkeleton width="80%" />
       <LineSkeleton width="70%" />
-      <LineSkeleton width="40%" style={{marginBottom: 40}} />
+      <LineSkeleton width="40%" style={{ marginBottom: 40 }} />
 
-      <LineSkeleton width="30%" style={{marginBottom: 16}} />
-      <BlockSkeleton lines={10} style={{width: '100%', marginBottom: 40}} />
+      <LineSkeleton width="30%" style={{ marginBottom: 16 }} />
+      <BlockSkeleton lines={10} style={{ width: '100%', marginBottom: 40 }} />
       <LineSkeleton width="80%" />
       <LineSkeleton width="40%" />
       <LineSkeleton width="25%" />

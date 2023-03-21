@@ -1,13 +1,15 @@
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
 import { Command, CommandOptions } from '@teambit/cli';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import {
   ApplyVersionResults,
-  getMergeStrategy,
   applyVersionReport,
   conflictSummaryReport,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+  installationErrorOutput,
+  compilationErrorOutput,
+} from '@teambit/merging';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
 
 export class CheckoutCmd implements Command {
@@ -43,11 +45,15 @@ export class CheckoutCmd implements Command {
     ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
     ['r', 'reset', 'revert changes that were not snapped/tagged'],
     ['a', 'all', 'all components'],
-    ['e', 'entire-lane', 'write also new components that were introduced on the remote lane and do not exist locally'],
+    [
+      'e',
+      'workspace-only',
+      'when on a lane, avoid introducing new components from the remote lane that do not exist locally',
+    ],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'reset', 'DEPRECATED. run "bit checkout reset" instead'],
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
   ] as CommandOptions;
   loader = true;
 
@@ -62,7 +68,7 @@ export class CheckoutCmd implements Command {
       manual = false,
       reset = false,
       all = false,
-      entireLane = false,
+      workspaceOnly = false,
       verbose = false,
       skipNpmInstall = false,
       skipDependencyInstallation = false,
@@ -73,7 +79,7 @@ export class CheckoutCmd implements Command {
       manual?: boolean;
       reset?: boolean;
       all?: boolean;
-      entireLane?: boolean;
+      workspaceOnly?: boolean;
       verbose?: boolean;
       skipNpmInstall?: boolean;
       skipDependencyInstallation?: boolean;
@@ -96,7 +102,7 @@ export class CheckoutCmd implements Command {
       verbose,
       isLane: false,
       skipNpmInstall: skipDependencyInstallation,
-      entireLane,
+      workspaceOnly,
     };
     const {
       components,
@@ -105,6 +111,8 @@ export class CheckoutCmd implements Command {
       leftUnresolvedConflicts,
       newFromLane,
       newFromLaneAdded,
+      installationError,
+      compilationError,
     }: ApplyVersionResults = await this.checkout.checkoutByCLIValues(to, componentPattern || '', checkoutProps);
     const isHead = to === 'head';
     const isReset = to === 'reset';
@@ -180,7 +188,7 @@ once ready, snap/tag the components to persist the changes`;
       if (!newFromLane?.length) return '';
       const title = newFromLaneAdded
         ? `successfully added the following components from the lane`
-        : `the following components introduced on the lane and were not added. use --entire-lane flag to add them`;
+        : `the following components introduced on the lane and were not added. omit --workspace-only flag to add them`;
       const body = newFromLane.join('\n');
       return `\n\n${chalk.underline(title)}\n${body}`;
     };
@@ -208,7 +216,9 @@ once ready, snap/tag the components to persist the changes`;
       getSuccessfulOutput() +
       getNewOnLaneOutput() +
       getConflictSummary() +
-      getSummary()
+      getSummary() +
+      installationErrorOutput(installationError) +
+      compilationErrorOutput(compilationError)
     );
   }
 }

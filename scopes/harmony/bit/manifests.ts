@@ -94,6 +94,12 @@ import { RemoveAspect } from '@teambit/remove/remove.aspect';
 import { MergeLanesAspect } from '@teambit/merge-lanes/merge-lanes.aspect';
 import { CheckoutAspect } from '@teambit/checkout/checkout.aspect';
 import { APIReferenceAspect } from '@teambit/api-reference/api-reference.aspect';
+import { ApiServerAspect } from '@teambit/api-server/api-server.aspect';
+import { ComponentWriterAspect } from '@teambit/component-writer/component-writer.aspect';
+import { TrackerAspect } from '@teambit/tracker/tracker.aspect';
+import { MoverAspect } from '@teambit/mover/mover.aspect';
+import { WatcherAspect } from '@teambit/watcher/watcher.aspect';
+import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files/workspace-config-files.aspect';
 
 import { AspectMain } from '@teambit/aspect/aspect.main.runtime';
 import { AspectLoaderMain } from '@teambit/aspect-loader/aspect-loader.main.runtime';
@@ -182,6 +188,11 @@ import { DependenciesMain } from '@teambit/dependencies/dependencies.main.runtim
 import { RemoveMain } from '@teambit/remove/remove.main.runtime';
 import { MergeLanesMain } from '@teambit/merge-lanes/merge-lanes.main.runtime';
 import { CheckoutMain } from '@teambit/checkout/checkout.main.runtime';
+import { ComponentWriterMain } from '@teambit/component-writer/component-writer.main.runtime';
+import { TrackerMain } from '@teambit/tracker/tracker.main.runtime';
+import { MoverMain } from '@teambit/mover/mover.main.runtime';
+import { WatcherMain } from '@teambit/watcher/watcher.main.runtime';
+import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files/workspace-config-files.main.runtime';
 
 import { BitMain } from './bit.main.runtime';
 import { BitAspect } from './bit.aspect';
@@ -191,6 +202,7 @@ export const manifestsMap = {
   [CLIAspect.id]: CLIAspect,
   [DevFilesAspect.id]: DevFilesAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
+  [WorkspaceConfigFilesAspect.id]: WorkspaceConfigFilesAspect,
   [InstallAspect.id]: InstallAspect,
   [ESLintAspect.id]: ESLintAspect,
   [PrettierAspect.id]: PrettierAspect,
@@ -281,7 +293,12 @@ export const manifestsMap = {
   [RemoveAspect.id]: RemoveAspect,
   [MergeLanesAspect.id]: MergeLanesAspect,
   [CheckoutAspect.id]: CheckoutAspect,
+  [ComponentWriterAspect.id]: ComponentWriterAspect,
   [APIReferenceAspect.id]: APIReferenceAspect,
+  [ApiServerAspect.id]: ApiServerAspect,
+  [TrackerAspect.id]: TrackerAspect,
+  [MoverAspect.id]: MoverAspect,
+  [WatcherAspect.id]: WatcherAspect,
 };
 
 export const runtimesMap = {
@@ -371,6 +388,11 @@ export const runtimesMap = {
   [RemoveAspect.id]: RemoveMain,
   [MergeLanesAspect.id]: MergeLanesMain,
   [CheckoutAspect.id]: CheckoutMain,
+  [ComponentWriterAspect.id]: ComponentWriterMain,
+  [TrackerAspect.id]: TrackerMain,
+  [MoverAspect.id]: MoverMain,
+  [WatcherAspect.id]: WatcherMain,
+  [WorkspaceConfigFilesAspect.id]: WorkspaceConfigFilesMain,
   [BitAspect.id]: BitMain,
 };
 

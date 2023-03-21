@@ -105,16 +105,21 @@ export class AspectMain {
     return componentIds;
   }
 
-  async unsetAspectsFromComponents(pattern: string, aspectId: string): Promise<ComponentID[]> {
+  async unsetAspectsFromComponents(pattern: string, aspectIdStr: string): Promise<ComponentID[]> {
     const componentIds = await this.workspace.idsByPattern(pattern);
+    const aspectId = await this.workspace.resolveComponentId(aspectIdStr);
+    const components = await this.workspace.getMany(componentIds);
+    const updatedCompIds: ComponentID[] = [];
     await Promise.all(
-      componentIds.map(async (componentId) => {
-        await this.workspace.removeSpecificComponentConfig(componentId, aspectId, true);
+      components.map(async (component) => {
+        const existAspect = component.state.aspects.get(aspectId.toStringWithoutVersion());
+        if (!existAspect) return;
+        await this.workspace.removeSpecificComponentConfig(component.id, existAspect.id.toString(), true);
+        updatedCompIds.push(component.id);
       })
     );
     await this.workspace.bitMap.write();
-
-    return componentIds;
+    return updatedCompIds;
   }
 
   /**
@@ -256,7 +261,7 @@ export class AspectMain {
     }
 
     envs.registerEnv(aspectEnv);
-    generator.registerComponentTemplate([aspectTemplate]);
+    if (generator) generator.registerComponentTemplate([aspectTemplate]);
     const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs, workspace);
     const aspectCmd = new AspectCmd();
     aspectCmd.commands = [

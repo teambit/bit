@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import { pickBy } from 'lodash';
 import R from 'ramda';
 
 import {
@@ -9,7 +10,6 @@ import {
 } from '../../constants';
 import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
-import filterObject from '../../utils/filter-object';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import { ResolveModulesConfig } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import AbstractConfig from './abstract-config';
@@ -151,7 +151,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       return true;
     };
 
-    return filterObject(consumerObject, isPropDefault);
+    return pickBy(consumerObject, isPropDefault);
   }
 
   static create(workspaceConfigProps: WorkspaceConfigProps): WorkspaceConfig {

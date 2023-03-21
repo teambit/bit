@@ -24,7 +24,7 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
   /**
    * add inner padding to the iframe.
    */
-   innerBottomPadding?: number;
+  innerBottomPadding?: number;
 
   /**
    * query params to append at the end of the *hash*. Changing this property will not reload the preview
@@ -49,6 +49,8 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
    */
   className?: string;
 
+  disableScroll?: boolean;
+
   /**
    * set specific height for the iframe.
    */
@@ -64,6 +66,8 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
    */
   viewport?: number | null;
 
+  includeEnv?: boolean;
+
   /**
    * is preview being rendered in full height and should fit view height to content.
    */
@@ -78,7 +82,9 @@ export function ComponentPreview({
   previewName,
   className,
   forceHeight,
+  includeEnv = true,
   queryParams,
+  disableScroll = false,
   pubsub,
   innerBottomPadding = 0,
   // fitView = 1280,
@@ -110,7 +116,7 @@ export function ComponentPreview({
             setWidth(message.data.width);
             setHeight(message.data.height);
           }
-          (onLoad && event) && onLoad();
+          onLoad && event && onLoad();
         },
       },
     });
@@ -121,11 +127,11 @@ export function ComponentPreview({
     : compact([queryParams, `viewport=${viewport}`]);
 
   const targetParams = viewport === null ? queryParams : params;
-  const url = toPreviewUrl(component, previewName, isScaling ? targetParams : queryParams);
+  const url = toPreviewUrl(component, previewName, isScaling ? targetParams : queryParams, includeEnv);
   // const currentHeight = fullContentHeight ? '100%' : height || 1024;
   const containerWidth = containerRef.current?.offsetWidth || 0;
   const containerHeight = containerRef.current?.offsetHeight || 0;
-  const currentWidth = fullContentHeight ? '100%' : (width || 1280) + 10;
+  const currentWidth = fullContentHeight ? '100%' : (width || 1280);
   const legacyCurrentWidth = '100%';
   const targetWidth = currentWidth < containerWidth ? containerWidth : currentWidth;
   const targetHeight = height !== 0 ? height : 5000;
@@ -148,6 +154,7 @@ export function ComponentPreview({
           transformOrigin: 'top left',
         }}
         src={url}
+        scrolling={disableScroll ? 'no': undefined}
       />
     </div>
   );

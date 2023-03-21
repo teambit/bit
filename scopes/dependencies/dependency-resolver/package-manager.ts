@@ -47,6 +47,10 @@ export type PackageManagerInstallOptions = {
   nodeVersion?: string;
 
   peerDependencyRules?: PeerDependencyRules;
+
+  includeOptionalDeps?: boolean;
+
+  updateAll?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -54,6 +58,7 @@ export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstall
 export type ResolvedPackageVersion = {
   packageName: string;
   version: string | null;
+  wantedRange?: string;
   isSemver: boolean;
   resolvedVia?: string;
 };
@@ -104,4 +109,10 @@ export interface PackageManager {
    * If the package manager is not capable of doing so, we want to disable the deduping.
    */
   supportsDedupingOnExistingRoot?: () => boolean;
+
+  /**
+   * Returns "dependencies" entries for ".bit_roots".
+   * These entries tell the package manager from where to the local components should be installed.
+   */
+  getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string>;
 }

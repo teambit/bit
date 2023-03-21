@@ -21,7 +21,6 @@ export async function getDivergeData({
   modelComponent,
   sourceHead, // if empty, use the local head (if on lane - lane head. if on main - component head)
   targetHead,
-  otherTargetsHeads, // when targetHead empty, instead of returning all local snaps, stop if found one of these snaps
   throws = true, // otherwise, save the error instance in the `SnapsDistance` object,
   versionObjects, // relevant for remote-scope where during export the data is not in the repo yet.
 }: {
@@ -29,7 +28,6 @@ export async function getDivergeData({
   modelComponent: ModelComponent;
   sourceHead?: Ref | null;
   targetHead: Ref | null;
-  otherTargetsHeads?: Ref[];
   throws?: boolean;
   versionObjects?: Version[];
 }): Promise<SnapsDistance> {
@@ -42,7 +40,6 @@ export async function getDivergeData({
         repo,
         throws: false,
         versionObjects,
-        stopAt: otherTargetsHeads,
       });
       return new SnapsDistance(allLocalHashes);
     }
@@ -72,8 +69,6 @@ export async function getDivergeData({
   });
   const getVersionData = (ref: Ref): VersionParents | undefined => versionParents.find((v) => v.hash.isEqual(ref));
 
-  const existOnTarget = (ref: Ref) => [targetHead, ...(otherTargetsHeads || [])].find((r) => r.isEqual(ref));
-
   const snapsOnSource: Ref[] = [];
   const snapsOnTarget: Ref[] = [];
   let targetHeadExistsInSource = false;
@@ -85,27 +80,28 @@ export async function getDivergeData({
   const commonSnapsWithDepths = {};
 
   const addParentsRecursively = (version: VersionData, snaps: Ref[], isSource: boolean, depth = 0) => {
-    if (snaps.find((snap) => snap.isEqual(version.hash))) return;
+    if (snaps.find((snap) => snap.isEqual(version.hash))) return; // already processed
 
-    if (isSource && existOnTarget(version.hash)) {
-      targetHeadExistsInSource = true;
-      return;
-    }
-    if (!isSource && version.hash.isEqual(localHead)) {
-      sourceHeadExistsInTarget = true;
-      return;
-    }
-    if (isSource && version.unrelated?.isEqual(targetHead)) {
-      targetHeadExistsInSource = true;
-      snaps.push(version.hash);
-      return;
-    }
-    if (!isSource && version.unrelated?.isEqual(localHead)) {
-      sourceHeadExistsInTarget = true;
-      snaps.push(version.hash);
-      return;
-    }
-    if (!isSource) {
+    if (isSource) {
+      if (targetHead.isEqual(version.hash)) {
+        targetHeadExistsInSource = true;
+        return;
+      }
+      if (version.unrelated?.isEqual(targetHead)) {
+        targetHeadExistsInSource = true;
+        snaps.push(version.hash);
+        return;
+      }
+    } else {
+      if (version.hash.isEqual(localHead)) {
+        sourceHeadExistsInTarget = true;
+        return;
+      }
+      if (version.unrelated?.isEqual(localHead)) {
+        sourceHeadExistsInTarget = true;
+        snaps.push(version.hash);
+        return;
+      }
       const snapExistsInSource = snapsOnSource.find((snap) => snap.isEqual(version.hash));
       if (snapExistsInSource) {
         if (!commonSnapBeforeDiverge) commonSnapBeforeDiverge = snapExistsInSource;
@@ -151,18 +147,22 @@ bit import ${modelComponent.id()} --objects`);
     return new SnapsDistance([], [], undefined, err);
   }
   addParentsRecursively(targetVersion, snapsOnTarget, false);
+
+  const sourceOnlySnaps = R.difference(snapsOnSource, snapsOnTarget);
+  const targetOnlySnaps = R.difference(snapsOnTarget, snapsOnSource);
+
   if (sourceHeadExistsInTarget) {
-    return new SnapsDistance([], R.difference(snapsOnTarget, snapsOnSource), localHead, error);
+    return new SnapsDistance([], targetOnlySnaps, localHead, error);
   }
 
   if (targetHeadExistsInSource) {
     // happens when `hasMultipleParents` is true. now that remote was traversed as well, it's possible to find the diff
-    return new SnapsDistance(R.difference(snapsOnSource, snapsOnTarget), [], targetHead, error);
+    return new SnapsDistance(sourceOnlySnaps, [], targetHead, error);
   }
 
   if (!commonSnapBeforeDiverge) {
     const unmergedData = repo.unmergedComponents.getEntry(modelComponent.name);
-    const isUnrelatedFromUnmerged = unmergedData?.unrelated && unmergedData.head.isEqual(targetHead);
+    const isUnrelatedFromUnmerged = unmergedData?.unrelated && unmergedData.head.isEqual(localHead);
     const isUnrelatedFromVersionObj = localVersion.unrelated?.isEqual(targetHead);
     if (isUnrelatedFromUnmerged || isUnrelatedFromVersionObj) {
       return new SnapsDistance(snapsOnSource, snapsOnTarget, undefined);
@@ -172,12 +172,7 @@ bit import ${modelComponent.id()} --objects`);
     return new SnapsDistance(snapsOnSource, snapsOnTarget, undefined, err);
   }
 
-  return new SnapsDistance(
-    R.difference(snapsOnSource, snapsOnTarget),
-    R.difference(snapsOnTarget, snapsOnSource),
-    commonSnapBeforeDiverge,
-    error
-  );
+  return new SnapsDistance(sourceOnlySnaps, targetOnlySnaps, commonSnapBeforeDiverge, error);
 }
 
 type VersionDataRaw = {

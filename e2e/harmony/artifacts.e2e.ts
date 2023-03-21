@@ -23,4 +23,15 @@ describe('bit artifacts command', function () {
       expect(() => helper.command.artifacts('comp1')).to.not.throw();
     });
   });
+  describe('running the command on a snap', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponents();
+    });
+    it('should not throw an error about non exist component', () => {
+      const head = helper.command.getHead('comp1');
+      expect(() => helper.command.artifacts(`comp1@${head}`)).to.not.throw();
+    });
+  });
 });
