@@ -1212,6 +1212,15 @@ export class DependencyResolverMain {
     return this;
   }
 
+  async getComponentEnvDepDetectors(extensions: ExtensionDataList) {
+    const envDef = this.envs.calculateEnvFromExtensions(extensions);
+    const depEnv = envDef.env as DependenciesEnv;
+    if (typeof depEnv?.getDepDetectors === 'function') {
+      return depEnv.getDepDetectors();
+    }
+    return null;
+  }
+
   /**
    * This function registered to the onLoadRequireableExtensionSlot of the aspect-loader
    * Update the aspect / manifest deps versions in the runtimes (recursively)
@@ -1503,6 +1512,9 @@ export class DependencyResolverMain {
     DependencyResolver.registerWorkspacePolicyGetter(() => {
       const workspacePolicy = dependencyResolver.getWorkspacePolicy();
       return workspacePolicy.toManifest();
+    });
+    DependencyResolver.registerEnvDetectorGetter(async (extensions: ExtensionDataList) => {
+      return dependencyResolver.getComponentEnvDepDetectors(extensions);
     });
     DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId, files: SourceFile[]) => {
       const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id, files);

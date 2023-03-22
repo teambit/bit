@@ -28,6 +28,7 @@ import { ExtensionDataList } from '../../../config';
 import PackageJsonFile from '../../../../consumer/component/package-json-file';
 import { SourceFile } from '../../sources';
 import { DependenciesOverridesData } from '../../../config/component-overrides';
+import { DependencyDetector } from '../files-dependency-builder/detector-hook';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -91,6 +92,8 @@ const DepsKeysToAllPackagesDepsKeys = {
   peerDependencies: 'peerPackageDependencies',
 };
 
+type GetEnvDetectors = (extensions: ExtensionDataList) => Promise<DependencyDetector[] | null>;
+
 export default class DependencyResolver {
   component: Component;
   consumer: Consumer;
@@ -117,6 +120,11 @@ export default class DependencyResolver {
   static getWorkspacePolicy: WorkspacePolicyGetter;
   static registerWorkspacePolicyGetter(func: WorkspacePolicyGetter) {
     this.getWorkspacePolicy = func;
+  }
+
+  static envDetectorsGetter: GetEnvDetectors;
+  static registerEnvDetectorGetter(getter: GetEnvDetectors) {
+    this.envDetectorsGetter = getter;
   }
 
   static getOnComponentAutoDetectOverrides: OnComponentAutoDetectOverrides;
@@ -199,6 +207,10 @@ export default class DependencyResolver {
       : this.consumerPath;
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
     const allFiles = [...nonTestsFiles, ...testsFiles];
+    const envDetectrors = await this.getEnvDetectors();
+
+    // TODO: consume the detectors further in the dependency resolution process
+    envDetectrors;
     // find the dependencies (internal files and packages) through automatic dependency resolution
     const dependenciesTree = await getDependencyTree({
       componentDir,
@@ -219,6 +231,10 @@ export default class DependencyResolver {
       manuallyAddedDependencies: this.overridesDependencies.manuallyAddedDependencies,
       missingPackageDependencies: this.overridesDependencies.missingPackageDependencies,
     });
+  }
+
+  async getEnvDetectors(): Promise<DependencyDetector[] | null> {
+    return DependencyResolver.envDetectorsGetter(this.component.extensions);
   }
 
   /**
