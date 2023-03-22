@@ -35,6 +35,7 @@ export type InstallOptions = {
   installTeambitBit: boolean;
   packageManagerConfigRootDir?: string;
   resolveVersionsFromDependenciesOnly?: boolean;
+  linkedDependencies?: Record<string, Record<string, string>>;
 };
 
 export type GetComponentManifestsOptions = {
@@ -137,6 +138,27 @@ export class DependencyInstaller {
     const finalRootDir = rootDir || this.rootDir;
     if (!finalRootDir) {
       throw new RootDirNotDefined();
+    }
+    if (options.linkedDependencies) {
+      const directDeps = new Set<string>();
+      Object.values(manifests).forEach((manifest) => {
+        for (const depName of Object.keys({ ...manifest.dependencies, ...manifest.devDependencies })) {
+          directDeps.add(depName);
+        }
+      });
+      if (options.linkedDependencies[finalRootDir]) {
+        for (const manifest of Object.values(manifests)) {
+          if (manifest.name && directDeps.has(manifest.name)) {
+            delete options.linkedDependencies[finalRootDir][manifest.name];
+          }
+        }
+      }
+      Object.entries(options.linkedDependencies).forEach(([dir, linkedDeps]) => {
+        if (!manifests[dir]) {
+          manifests[dir] = {};
+        }
+        manifests[dir].dependencies = Object.assign({}, manifests[dir].dependencies, linkedDeps);
+      });
     }
     // Make sure to take other default if passed options with only one option
     const calculatedPmOpts = {

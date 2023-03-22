@@ -42,7 +42,7 @@ export type CheckoutProps = {
   reset?: boolean; // remove local changes. if set, the version is undefined.
   all?: boolean; // checkout all ids
   isLane?: boolean;
-  entireLane?: boolean;
+  workspaceOnly?: boolean;
 };
 
 export type ComponentStatusBeforeMergeAttempt = {
@@ -140,7 +140,7 @@ export class CheckoutMain {
     let newFromLaneAdded = false;
     if (checkoutProps.head) {
       newFromLane = await this.getNewComponentsFromLane(checkoutProps.ids || []);
-      if (checkoutProps.entireLane) {
+      if (!checkoutProps.workspaceOnly) {
         const compsNewFromLane = await Promise.all(
           newFromLane.map((id) => consumer.loadComponentFromModelImportIfNeeded(id._legacy))
         );
@@ -238,8 +238,8 @@ export class CheckoutMain {
     if (!componentPattern && !checkoutProps.all) {
       throw new GeneralError('please specify [component-pattern] or use --all flag');
     }
-    if (checkoutProps.entireLane && !checkoutProps.head) {
-      throw new BitError(`--entire-lane flag can only be used with "head" (bit checkout head --entire-lane)`);
+    if (checkoutProps.workspaceOnly && !checkoutProps.head) {
+      throw new BitError(`--workspace-only flag can only be used with "head" (bit checkout head --workspace-only)`);
     }
     const idsOnWorkspace = componentPattern
       ? await this.workspace.idsByPattern(componentPattern)

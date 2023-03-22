@@ -37,7 +37,9 @@ export function DrawerUI({
             <Icon className={classNames(styles.arrow, !isOpen && styles.collapsed)} of="fat-arrow-down" />
             <span>{name}</span>
           </div>
-          {Widgets}
+          {Widgets?.map((Widget, index) => (
+            <React.Fragment key={index}>{Widget}</React.Fragment>
+          ))}
         </div>
         <div className={classNames(styles.drawerContent, contentClass, isOpen && styles.open)}>{children}</div>
       </Context>
