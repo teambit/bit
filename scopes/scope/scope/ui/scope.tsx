@@ -83,7 +83,7 @@ export function Scope({
           />
 
           <SplitPane className={styles.main} size={264} layout={sidebarOpenness}>
-            <Pane className={styles.sidebar}>{sidebar}</Pane>
+            <Pane className={classNames(styles.sidebar, !isSidebarOpen && styles.collapsed)}>{sidebar}</Pane>
             <HoverSplitter className={styles.splitter}>
               <Collapser
                 isOpen={isSidebarOpen}

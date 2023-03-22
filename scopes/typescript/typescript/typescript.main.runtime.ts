@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Compiler } from '@teambit/compiler';
+import { Compiler, CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
 import { PackageJsonProps } from '@teambit/pkg';
@@ -12,6 +12,7 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import WatcherAspect, { WatcherMain, WatchOptions } from '@teambit/watcher';
 import type { Component } from '@teambit/component';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
@@ -63,6 +64,7 @@ import {
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
 import WriteTsconfigCmd from './cmds/write-tsconfig.cmd';
+import { TypescriptConfigWriter } from './ts-config-writer';
 
 export type TsMode = 'build' | 'dev';
 
@@ -308,11 +310,13 @@ export class TypescriptMain {
     DependencyResolverAspect,
     EnvsAspect,
     WatcherAspect,
+    WorkspaceConfigFilesAspect,
+    CompilerAspect
   ];
   static slots = [Slot.withType<SchemaTransformer[]>()];
 
   static async provider(
-    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs, watcher]: [
+    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs, watcher, workspaceConfigFiles, compiler]: [
       SchemaMain,
       LoggerMain,
       AspectLoaderMain,
@@ -320,13 +324,17 @@ export class TypescriptMain {
       CLIMain,
       DependencyResolverMain,
       EnvsMain,
-      WatcherMain
+      WatcherMain,
+      WorkspaceConfigFilesMain,
+      CompilerMain
     ],
     config,
     [schemaTransformerSlot]: [SchemaTransformerSlot]
   ) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
+    workspaceConfigFiles.registerConfigWriter(new TypescriptConfigWriter(compiler));
+
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
     const tsconfigWriter = new TsconfigWriter(workspace, logger);
     const tsMain = new TypescriptMain(

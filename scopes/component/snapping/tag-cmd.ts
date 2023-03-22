@@ -2,7 +2,9 @@ import chalk from 'chalk';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { Command, CommandOptions } from '@teambit/cli';
 import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { DEFAULT_BIT_RELEASE_TYPE } from '@teambit/legacy/dist/constants';
+import { BitId } from '@teambit/legacy-bit-id';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
@@ -245,15 +247,20 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
     const tagExplanation = results.isSoftTag ? tagExplanationSoft : tagExplanationPersist;
 
-    const outputComponents = (comps) => {
+    const compInBold = (id: BitId) => {
+      const version = id.hasVersion() ? `@${id.version}` : '';
+      return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
+    };
+
+    const outputComponents = (comps: ConsumerComponent[]) => {
       return comps
         .map((component) => {
-          let componentOutput = `     > ${component.id.toString()}`;
+          let componentOutput = `     > ${compInBold(component.id)}`;
           const autoTag = autoTaggedResults.filter((result) =>
             result.triggeredBy.searchWithoutScopeAndVersion(component.id)
           );
           if (autoTag.length) {
-            const autoTagComp = autoTag.map((a) => a.component.id.toString());
+            const autoTagComp = autoTag.map((a) => compInBold(a.component.id));
             componentOutput += `\n       ${AUTO_TAGGED_MSG}:
             ${autoTagComp.join('\n            ')}`;
           }
@@ -274,7 +281,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     };
 
     const softTagPrefix = results.isSoftTag ? 'soft-tagged ' : '';
-    const outputIfExists = (label, explanation, components) => {
+    const outputIfExists = (label, explanation, components: ConsumerComponent[]) => {
       if (!components.length) return '';
       return `\n${chalk.underline(softTagPrefix + label)}\n(${explanation})\n${outputComponents(components)}\n`;
     };
