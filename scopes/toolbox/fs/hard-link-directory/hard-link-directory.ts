@@ -11,16 +11,15 @@ import resolveLinkTarget from 'resolve-link-target';
  */
 export async function hardLinkDirectory(src: string, destDirs: string[]) {
   if (destDirs.length === 0) return;
-  const files = await fs.readdir(src);
+  const files = await fs.readdir(src, { withFileTypes: true });
   await Promise.all(
     files.map(async (file) => {
-      if (file === 'node_modules') return;
-      const srcFile = path.join(src, file);
-      const stat = await fs.lstat(srcFile);
-      if (stat.isDirectory()) {
+      if (file.name === 'node_modules') return;
+      let srcFile = path.join(src, file.name);
+      if (file.isDirectory()) {
         const destSubdirs = await Promise.all(
           destDirs.map(async (destDir) => {
-            const destSubdir = path.join(destDir, file);
+            const destSubdir = path.join(destDir, file.name);
             try {
               await fs.mkdir(destSubdir, { recursive: true });
             } catch (err: any) {
@@ -32,19 +31,21 @@ export async function hardLinkDirectory(src: string, destDirs: string[]) {
         await hardLinkDirectory(srcFile, destSubdirs);
         return;
       }
-      if (stat.isSymbolicLink() && (await fs.stat(srcFile)).isDirectory()) {
-        const target = await resolveLinkTarget(srcFile);
-        await Promise.all(
-          destDirs.map(async (destDir) => {
-            const destSubdir = path.join(destDir, file);
-            await symlinkDir(target, destSubdir);
-          })
-        );
-        return;
+      if (file.isSymbolicLink()) {
+        srcFile = await resolveLinkTarget(srcFile);
+        if ((await fs.stat(srcFile)).isDirectory()) {
+          await Promise.all(
+            destDirs.map(async (destDir) => {
+              const destSubdir = path.join(destDir, file.name);
+              await symlinkDir(srcFile, destSubdir);
+            })
+          );
+          return;
+        }
       }
       await Promise.all(
         destDirs.map(async (destDir) => {
-          const destFile = path.join(destDir, file);
+          const destFile = path.join(destDir, file.name);
           try {
             await linkFile(srcFile, destFile);
           } catch (err: any) {
