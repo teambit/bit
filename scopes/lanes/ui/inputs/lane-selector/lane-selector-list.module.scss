@@ -1,0 +1,15 @@
+.laneSelectorList {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  width: 350px;
+  max-height: 50vh;
+}
+
+.mainIcon {
+  > img {
+    height: 16px;
+    width: 16px;
+    padding: 0px 2px;
+  }
+}

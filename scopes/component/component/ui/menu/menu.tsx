@@ -23,12 +23,14 @@ import { Filters } from '../use-component-query';
 
 export type MenuProps = {
   className?: string;
-
   /**
    * skip the right side.
    */
   skipRightSide?: boolean;
-
+  /**
+   * custom render the right side
+   */
+  RightNode?: React.ReactNode;
   /**
    * slot for top bar menu nav items
    */
@@ -37,6 +39,9 @@ export type MenuProps = {
    * right side menu item slot
    */
   widgetSlot: OrderedNavigationSlot;
+  /**
+   * workspace or scope
+   */
   host: string;
   /**
    * main dropdown item slot
@@ -69,6 +74,7 @@ export function ComponentMenu({
   consumeMethodSlot,
   componentIdStr,
   skipRightSide,
+  RightNode,
   useComponent,
   path,
   useComponentFilters,
@@ -85,7 +91,20 @@ export function ComponentMenu({
 
   const { component } = useComponentQuery(host, componentId?.toString() || idFromLocation, useComponentOptions);
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
+
   if (!component) return <FullLoader />;
+
+  const RightSide = (
+    <div className={styles.rightSide}>
+      {RightNode || (
+        <>
+          <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
+          <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
+        </>
+      )}
+    </div>
+  );
+
   return (
     <Routes>
       <Route
@@ -95,12 +114,7 @@ export function ComponentMenu({
             <div className={styles.leftSide}>
               <CollapsibleMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
             </div>
-            {!skipRightSide && (
-              <div className={styles.rightSide}>
-                <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
-                <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
-              </div>
-            )}
+            {!skipRightSide && <div className={styles.rightSide}>{RightSide}</div>}
           </div>
         }
       />

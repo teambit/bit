@@ -18,10 +18,18 @@ export class FormatterService implements EnvService<FormatResults> {
   async run(context: ExecutionContext, options: FormatterOptions): Promise<FormatResults> {
     const mergedOpts = this.optionsWithDefaults(options);
     const formatterContext: FormatterContext = this.mergeContext(mergedOpts, context);
-    const formatter: Formatter = context.env.getFormatter(formatterContext);
+    const formatter = this.getFormatter(context, options);
 
     const results = options.check ? await formatter.check(formatterContext) : await formatter.format(formatterContext);
     return results;
+  }
+
+  getFormatter(context: ExecutionContext, options: FormatterOptions): Formatter {
+    const mergedOpts = this.optionsWithDefaults(options);
+    const formatterContext: FormatterContext = this.mergeContext(mergedOpts, context);
+    const formatter: Formatter = context.env.getFormatter(formatterContext);
+
+    return formatter;
   }
 
   private optionsWithDefaults(options: FormatterOptions): FormatterOptions {

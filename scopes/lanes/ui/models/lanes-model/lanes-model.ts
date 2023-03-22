@@ -3,6 +3,7 @@ import { LaneId } from '@teambit/lane-id';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { affix } from '@teambit/base-ui.utils.string.affix';
 import { pathToRegexp } from 'path-to-regexp';
+
 /**
  * GQL (lanes/getLanes/components)
  * Return type of each Component in a Lane
@@ -10,6 +11,15 @@ import { pathToRegexp } from 'path-to-regexp';
 export type LaneComponentQueryResult = {
   id: ComponentIdObj;
   head: string;
+};
+/**
+ * GQL
+ * LaneOwner
+ */
+export type LaneQueryLaneOwner = {
+  name: string;
+  email: string;
+  profileImage?: string;
 };
 /**
  * GQL
@@ -21,9 +31,14 @@ export type LaneQueryResult = {
   id: { name: string; scope: string };
   remote?: string;
   isMerged: boolean;
+  description?: string;
   laneComponentIds: Array<ComponentIdObj>;
   readmeComponent?: ComponentModelProps;
   hash: string;
+  createdAt?: string;
+  createdBy?: LaneQueryLaneOwner;
+  updatedAt?: Date;
+  updatedBy?: LaneQueryLaneOwner;
 };
 /**
  * GQL
@@ -43,7 +58,6 @@ export type LanesQuery = {
 };
 
 export type LanesHost = 'workspace' | 'scope';
-// export type LaneComponentModel = { model: ComponentModel; url: string };
 /**
  * Represents a single Lane in a Workspace/Scope
  */
@@ -52,6 +66,11 @@ export type LaneModel = {
   hash: string;
   components: ComponentID[];
   readmeComponent?: ComponentModel;
+  description?: string;
+  createdAt?: Date;
+  createdBy?: LaneQueryLaneOwner;
+  updatedAt?: Date;
+  updatedBy?: LaneQueryLaneOwner;
 };
 /**
  * Props to instantiate a LanesModel
@@ -115,7 +134,17 @@ export class LanesModel {
   };
 
   static mapToLaneModel(laneData: LaneQueryResult, host: string): LaneModel {
-    const { id, laneComponentIds, readmeComponent, hash } = laneData;
+    const {
+      id,
+      laneComponentIds,
+      readmeComponent,
+      hash,
+      createdAt,
+      createdBy: createdByData,
+      updatedAt,
+      updatedBy: updatedByData,
+      description,
+    } = laneData;
 
     const componentIds =
       laneComponentIds?.map((laneComponentId) => {
@@ -125,15 +154,38 @@ export class LanesModel {
 
     const readmeComponentModel = readmeComponent && ComponentModel.from({ ...readmeComponent, host });
 
+    const createdAtDate = (createdAt && new Date(+createdAt)) || undefined;
+    const createdBy = createdByData
+      ? {
+          name: createdByData?.name ?? undefined,
+          email: createdByData.email ?? undefined,
+          profileImage: createdByData.profileImage ?? undefined,
+        }
+      : undefined;
+
+    const updatedAtDate = (updatedAt && new Date(+updatedAt)) || undefined;
+    const updatedBy = updatedByData?.name
+      ? {
+          name: updatedByData?.name ?? undefined,
+          email: updatedByData.email ?? undefined,
+          profileImage: updatedByData.profileImage ?? undefined,
+        }
+      : undefined;
+
     return {
       id: LaneId.from(id.name, id.scope),
       components: componentIds,
       readmeComponent: readmeComponentModel,
+      createdAt: createdAtDate,
+      updatedAt: updatedAtDate,
       hash,
+      description,
+      updatedBy,
+      createdBy,
     };
   }
 
-  static groupByScope(laneIds: LaneId[]): Map<string, LaneId[]> {
+  static groupLaneIdsByScope(laneIds: LaneId[]): Map<string, LaneId[]> {
     const grouped = new Map<string, LaneId[]>();
     laneIds.forEach((laneId) => {
       const { scope } = laneId;
@@ -142,6 +194,20 @@ export class LanesModel {
       } else {
         const existing = grouped.get(scope) as LaneId[];
         grouped.set(scope, [...existing, laneId]);
+      }
+    });
+    return grouped;
+  }
+
+  static groupLanesByScope(lanes: LaneModel[]): Map<string, LaneModel[]> {
+    const grouped = new Map<string, LaneModel[]>();
+    lanes.forEach((lane) => {
+      const { scope } = lane.id;
+      if (!grouped.has(scope)) {
+        grouped.set(scope, [lane]);
+      } else {
+        const existing = grouped.get(scope) as LaneModel[];
+        grouped.set(scope, [...existing, lane]);
       }
     });
     return grouped;
@@ -184,7 +250,7 @@ export class LanesModel {
     this.viewedLane = viewedLane;
     this.currentLane = currentLane;
     this.lanes = lanes || [];
-    this.laneIdsByScope = LanesModel.groupByScope(this.lanes.map((lane) => lane.id));
+    this.laneIdsByScope = LanesModel.groupLaneIdsByScope(this.lanes.map((lane) => lane.id));
     const { byId, byName } = LanesModel.groupByComponentNameAndId(this.lanes);
     this.lanesByComponentId = byId;
     this.lanesByComponentName = byName;

@@ -1,13 +1,88 @@
 .menuItem {
   display: flex;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 50px;
   flex-direction: row;
   padding: 8px 16px;
   cursor: pointer;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  // border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
 }
 
-.defaultLanePill {
-  font-size: var(--bit-p-xxs, 12px);
-  text-transform: lowercase;
+.laneMenuItemContainer {
+  display: flex;
+  width: 100%;
+
+  &.selected {
+    background-color: var(--surface-active-color, #dcd8f9);
+  }
+}
+
+.laneContainer {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
+
+  .left {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+    flex: 2;
+
+    &.mainLane {
+      align-items: center;
+    }
+
+    .laneInfo {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .laneDescription {
+      font-weight: 700;
+      font-size: var(--bit-p-xs, '14px');
+    }
+
+    .laneName {
+      font-weight: 400;
+      font-size: var(--bit-p-xxs, '12px');
+      background: var(--surface-neutral-hover-color, #f7f7f7);
+      border-radius: 4px;
+      width: fit-content;
+      padding: 2px 4px;
+    }
+  }
+
+  .right {
+    display: flex;
+    text-align: right;
+    flex: 1;
+    align-items: flex-end;
+    justify-content: flex-end;
+
+    .timeStamp {
+      > span {
+        font-size: var(--bit-p-xxs, '12px');
+      }
+      font-size: var(--bit-p-xxs, '12px');
+      // @todo replace with var
+      color: #9598a1;
+    }
+  }
+}
+
+.icon {
+  display: flex;
+
+  > img {
+    height: 16px;
+    width: 16px;
+  }
+
+  &.defaultMainLaneIcon {
+    padding: 0px 4px;
+  }
 }
