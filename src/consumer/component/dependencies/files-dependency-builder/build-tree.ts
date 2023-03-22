@@ -224,6 +224,7 @@ export async function getDependencyTree({
   resolveModulesConfig,
   visited = {},
   cacheProjectAst,
+  envDetectrors,
 }: DependencyTreeParams): Promise<{ tree: DependenciesTree }> {
   const resolveConfigAbsolute = getResolveConfigAbsolute(workspacePath, resolveModulesConfig);
   const config = {
@@ -235,6 +236,7 @@ export async function getDependencyTree({
     nonExistent: [],
     resolveConfig: resolveConfigAbsolute,
     cacheProjectAst,
+    envDetectrors,
   };
   // This is important because without this, madge won't know to resolve files if we run the
   // CMD not from the root dir
