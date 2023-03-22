@@ -959,4 +959,41 @@ describe('merge lanes', function () {
       expect(() => helper.command.status()).to.not.throw();
     });
   });
+  describe('merging from a lane to main when it has a long history which does not exist locally', () => {
+    let beforeMerge: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp3');
+      beforeMerge = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('merging one component', () => {
+      // previously it was throwing VersionNotFound
+      it('should not throw', () => {
+        expect(() =>
+          helper.command.mergeLane(`${helper.scopes.remote}/dev`, `${helper.scopes.remote}/comp3 --no-squash -x`)
+        ).to.not.throw();
+      });
+    });
+    describe('merging the entire lane', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeMerge);
+        helper.command.mergeLane(`${helper.scopes.remote}/dev`, `--no-squash -x`);
+      });
+      // previously it was throwing VersionNotFound
+      it('bit export should not throw', () => {
+        expect(() => helper.command.export()).to.not.throw();
+      });
+    });
+  });
 });
