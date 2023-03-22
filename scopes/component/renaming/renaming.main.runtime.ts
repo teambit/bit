@@ -58,14 +58,6 @@ make sure this argument is the name only, without the scope-name. to change the 
     } else {
       this.workspace.bitMap.renameNewComponent(sourceId, targetId);
       await this.workspace.bitMap.write();
-
-      if (!options.preserve) {
-        await this.componentWriter.writeMany({
-          components: [sourceComp.state._consumer],
-          skipDependencyInstallation: true,
-        });
-      }
-
       await fs.remove(path.join(this.workspace.path, 'node_modules', sourcePackageName));
     }
     this.workspace.clearComponentCache(sourceId);
