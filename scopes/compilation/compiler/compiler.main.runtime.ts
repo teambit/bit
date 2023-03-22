@@ -7,7 +7,7 @@ import { IssuesClasses } from '@teambit/component-issues';
 import { Component, ComponentID } from '@teambit/component';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
 import { BitId } from '@teambit/legacy-bit-id';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -32,8 +32,13 @@ export class CompilerMain {
     private envs: EnvsMain,
     private builder: BuilderMain,
     private workspace: Workspace,
-    private dependencyResolver: DependencyResolverMain
+    private dependencyResolver: DependencyResolverMain,
+    private compilerService: CompilerService
   ) {}
+
+  getCompiler(context: ExecutionContext): Compiler {
+    return this.compilerService.getCompiler(context);
+  }
 
   /**
    * Run compilation on `bit new` and when new components are imported
@@ -142,6 +147,8 @@ export class CompilerMain {
     WatcherMain
   ]) {
     const logger = loggerMain.createLogger(CompilerAspect.id);
+    const compilerService = new CompilerService();
+
     const workspaceCompiler = new WorkspaceCompiler(
       workspace,
       envs,
@@ -152,8 +159,16 @@ export class CompilerMain {
       dependencyResolver,
       watcher
     );
-    envs.registerService(new CompilerService());
-    const compilerMain = new CompilerMain(pubsub, workspaceCompiler, envs, builder, workspace, dependencyResolver);
+    envs.registerService(compilerService);
+    const compilerMain = new CompilerMain(
+      pubsub,
+      workspaceCompiler,
+      envs,
+      builder,
+      workspace,
+      dependencyResolver,
+      compilerService
+    );
     cli.register(new CompileCmd(workspaceCompiler, logger, pubsub));
     if (workspace) {
       workspace.onComponentLoad(compilerMain.addMissingDistsIssue.bind(compilerMain));

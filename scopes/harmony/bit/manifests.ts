@@ -47,6 +47,7 @@ import { UIAspect } from '@teambit/ui';
 import { VariantsAspect } from '@teambit/variants';
 import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
+import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
 import { InstallAspect } from '@teambit/install';
 import { LinterAspect } from '@teambit/linter';
 import { FormatterAspect } from '@teambit/formatter';
@@ -106,6 +107,7 @@ export const manifestsMap = {
   [CLIAspect.id]: CLIAspect,
   [DevFilesAspect.id]: DevFilesAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
+  [WorkspaceConfigFilesAspect.id]: WorkspaceConfigFilesAspect,
   [InstallAspect.id]: InstallAspect,
   [ESLintAspect.id]: ESLintAspect,
   [PrettierAspect.id]: PrettierAspect,

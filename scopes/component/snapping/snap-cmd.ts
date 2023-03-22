@@ -1,4 +1,6 @@
 import chalk from 'chalk';
+import { BitId } from '@teambit/legacy-bit-id';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
@@ -143,15 +145,20 @@ ${WILDCARD_HELP('snap')}`;
     const tagExplanation = `\n(use "bit export" to push these components to a remote")
 (use "bit reset" to unstage versions)\n`;
 
-    const outputComponents = (comps) => {
+    const compInBold = (id: BitId) => {
+      const version = id.hasVersion() ? `@${id.version}` : '';
+      return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
+    };
+
+    const outputComponents = (comps: ConsumerComponent[]) => {
       return comps
         .map((component) => {
-          let componentOutput = `     > ${component.id.toString()}`;
+          let componentOutput = `     > ${compInBold(component.id)}`;
           const autoTag = autoSnappedResults.filter((result) =>
             result.triggeredBy.searchWithoutScopeAndVersion(component.id)
           );
           if (autoTag.length) {
-            const autoTagComp = autoTag.map((a) => a.component.id.toString());
+            const autoTagComp = autoTag.map((a) => compInBold(a.component.id));
             componentOutput += `\n       ${AUTO_SNAPPED_MSG} (${autoTagComp.length} total):
             ${autoTagComp.join('\n            ')}`;
           }
