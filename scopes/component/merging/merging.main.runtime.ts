@@ -279,10 +279,12 @@ export class MergingMain {
     };
     let mergeSnapResults: ApplyVersionResults['mergeSnapResults'] = null;
     let mergeSnapError: Error | undefined;
+    const bitMapSnapshot = this.workspace.bitMap.takeSnapshot();
     try {
       mergeSnapResults = await getSnapOrTagResults();
     } catch (err: any) {
       mergeSnapError = err;
+      this.workspace.bitMap.restoreFromSnapshot(bitMapSnapshot);
     }
 
     return {
