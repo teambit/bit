@@ -63,8 +63,6 @@ module.exports.toList = function (options) {
  */
 module.exports._getDependencies = function (config) {
   let dependenciesRaw; // from some detectives it comes as an array, from some it is an object
-  // TODO: try new detector options
-  // const precinctOptions = config.envDetectrors;
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
   precinctOptions.envDetectrors = config.envDetectrors;

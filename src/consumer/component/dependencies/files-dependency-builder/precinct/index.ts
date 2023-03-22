@@ -291,6 +291,9 @@ export const getDeps = (filename, options) => {
     options || {}
   );
 
+  // TODO:
+  options.envDetectrors;
+
   const content = fs.readFileSync(filename, 'utf8');
   const ext = path.extname(filename);
 
