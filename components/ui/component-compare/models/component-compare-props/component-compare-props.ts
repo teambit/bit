@@ -21,16 +21,6 @@ export interface TabItem {
 export type ComponentCompareProps = {
   state?: ComponentCompareState;
   hooks?: ComponentCompareHooks;
-  baseContext?: {
-    state?: ComponentCompareState;
-    hooks?: ComponentCompareHooks;
-  };
-  compareContext?: {
-    state?: ComponentCompareState;
-    hooks?: ComponentCompareHooks;
-  };
-  compareState?: ComponentCompareState;
-  compareHooks?: ComponentCompareHooks;
   tabs?: MaybeLazyLoaded<TabItem[]>;
   routes?: MaybeLazyLoaded<RouteProps[]>;
   host: string;
