@@ -29,6 +29,12 @@ export interface DependencyDetector {
   isSupported(context: FileContext): boolean;
 
   /**
+   * determine what type of content the detector is for.
+   * if no type provided, the type would be the ext.
+   */
+  type?: string;
+
+  /**
    * detect file dependencies. list of file dependencies of the module.
    */
   detect(fileContent: string): string[];
@@ -40,10 +46,18 @@ export interface DependencyDetector {
   dependencyLookup?(file: DependencyContext): string;
 }
 
+export interface BuilinDependencyDetector extends DependencyDetector {
+  /**
+   * detect file dependencies. list of file dependencies of the module.
+   */
+  detect(fileContent: string): string[];
+  detect(fileContent: string | object, options: any): string[];
+}
+
 export class DetectorHook {
   static hooks: DependencyDetector[] = [];
 
-  isSupported(ext: string): boolean {
+  isSupported(ext: string): boolean | string {
     return !!DetectorHook.hooks.find((hook) => {
       return hook.isSupported({
         ext,
