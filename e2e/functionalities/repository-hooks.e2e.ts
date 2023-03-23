@@ -35,8 +35,8 @@ describe('repository-hooks', function () {
     it('should run the on persist hook', () => {
       const regex = new RegExp('on persist run', 'g');
       const count = exportOutput.match(regex);
-      // 3 objects - component, version and file
-      expect(count).to.have.lengthOf(3);
+      // 4 objects - component, version, file and flattenedEdges
+      expect(count).to.have.lengthOf(4);
     });
 
     describe('import from remote scope with manipulation hook', () => {
@@ -46,8 +46,8 @@ describe('repository-hooks', function () {
       it('should run the on read hook', () => {
         const regex = new RegExp('on read run', 'g');
         const count = importOutput.match(regex);
-        // total 4 objects - component, version, version-history and file
-        // the reason for the 5 reading is that it happens in two places.
+        // total 5 objects - component, version, version-history, file and flattened-edges
+        // the reason for the 6 reading is that it happens in two places.
         // 1. repository.load(), it reads 2 files, the component and the version objects.
         // 2. repository.loadRaw(), it reads 3 files, component, version and file.
         // ideally, loadRaw could use the cached file from load. but it might be safer to not use the cache,
@@ -55,7 +55,7 @@ describe('repository-hooks', function () {
 
         // if this test fails, and the number is bigger than 5. this could indicate a serious performance issue,
         // because for components with large amount of versions, this could become a huge number.
-        expect(count).to.have.lengthOf(6);
+        expect(count).to.have.lengthOf(7);
       });
       it('should be able to import the component as usual', () => {
         expect(importOutput).to.have.string('successfully imported one component');

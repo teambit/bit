@@ -661,14 +661,17 @@ export default class ScopeComponentsImporter {
     const componentsWithVersion = compact(componentsWithVersionsWithNulls);
 
     const flattenedDepsToFetch = new BitIds();
-    componentsWithVersion.forEach((compWithVer) => {
-      if (skipComponentsWithDepsGraph && compWithVer.versionObj.flattenedEdges.length) return;
-      if (skipComponentsWithDepsGraph)
-        logger.debug(
-          `scopeComponentImporter, unable to get dependencies graph from ${compWithVer.componentVersion.id.toString()}, will import all its deps`
-        );
-      flattenedDepsToFetch.add(compWithVer.versionObj.flattenedDependencies);
-    });
+    await Promise.all(
+      componentsWithVersion.map(async (compWithVer) => {
+        const flattenedEdges = await compWithVer.versionObj.getFlattenedEdges(this.repo);
+        if (skipComponentsWithDepsGraph && flattenedEdges.length) return;
+        if (skipComponentsWithDepsGraph)
+          logger.debug(
+            `scopeComponentImporter, unable to get dependencies graph from ${compWithVer.componentVersion.id.toString()}, will import all its deps`
+          );
+        flattenedDepsToFetch.add(compWithVer.versionObj.flattenedDependencies);
+      })
+    );
 
     const compVersionsOfDeps = await this.importWithoutDeps(flattenedDepsToFetch, { lanes });
 
@@ -876,7 +879,8 @@ export default class ScopeComponentsImporter {
         externalsToFetch.push(id);
         return;
       }
-      if (preferDependencyGraph && version.flattenedEdges.length) {
+      const flattenedEdges = await version.getFlattenedEdges(this.repo);
+      if (preferDependencyGraph && flattenedEdges.length) {
         return;
       }
       const flattenedDepsToLocate = version.flattenedDependencies.filter((dep) => !existingCache.has(dep));
@@ -942,10 +946,13 @@ export default class ScopeComponentsImporter {
       return new VersionDependencies(versionComp, [], version);
     });
     const versionDeps = compact(versionDepsWithNulls);
-    const allFlattened = versionDeps.map((v) => {
-      if (preferDependencyGraph && v.version.flattenedEdges.length) return [];
-      return v.version.getAllFlattenedDependencies();
-    });
+    const allFlattened = await Promise.all(
+      versionDeps.map(async (v) => {
+        const flattenedEdges = await v.version.getFlattenedEdges(this.repo);
+        if (preferDependencyGraph && flattenedEdges.length) return [];
+        return v.version.getAllFlattenedDependencies();
+      })
+    );
     const allFlattenedUniq = BitIds.uniqFromArray(flatten(allFlattened));
     const allFlattenedDefs = await this.sources.getMany(allFlattenedUniq);
     const flattenedComponentVersions = compact(
