@@ -2,6 +2,7 @@ import timeAgo from '@teambit/base-ui.utils.time-ago';
 import classNames from 'classnames';
 import React, { useEffect, useMemo, useReducer } from 'react';
 import { Tooltip } from '@teambit/design.ui.tooltip';
+
 import styles from './time-ago.module.scss';
 
 type TimeAgoProps = {

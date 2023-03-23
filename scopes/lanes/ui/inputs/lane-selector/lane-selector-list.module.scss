@@ -2,7 +2,8 @@
   display: flex;
   flex-direction: column;
   overflow: auto;
-  width: 350px;
+  // adjust for border
+  width: calc(300px - 2px);
   max-height: 50vh;
 }
 
