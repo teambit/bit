@@ -6,7 +6,7 @@ export type {
   MainAspect,
   OnLoadRequireableExtension,
   AspectResolver,
-  ResolvedAspect
+  ResolvedAspect,
 } from './aspect-loader.main.runtime';
 export {
   getAspectDef,

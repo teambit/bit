@@ -30,6 +30,10 @@ ${this.concatenateConflicts(configMergeFormatted)}
     }, {});
   }
 
+  getDepsResolverResult(): MergeStrategyResult | undefined {
+    return this.results.find((result) => result.id === DependencyResolverAspect.id);
+  }
+
   private generateConflictStringPerAspect(result: MergeStrategyResult): string | undefined {
     if (!result.conflict) return undefined;
     if (result.id === DependencyResolverAspect.id) {

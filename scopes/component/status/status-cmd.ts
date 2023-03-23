@@ -60,6 +60,7 @@ export class StatusCmd implements Command {
       updatesFromForked,
       currentLaneId,
       forkedLaneId,
+      workspaceIssues,
     }: StatusResult = await this.status.status({ lanes });
     return {
       newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
@@ -87,6 +88,7 @@ export class StatusCmd implements Command {
       })),
       currentLaneId,
       forkedLaneId,
+      workspaceIssues,
     };
   }
 
@@ -112,6 +114,7 @@ export class StatusCmd implements Command {
       unavailableOnMain,
       currentLaneId,
       forkedLaneId,
+      workspaceIssues,
     }: StatusResult = await this.status.status({ lanes });
     // If there is problem with at least one component we want to show a link to the
     // troubleshooting doc
@@ -297,6 +300,13 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       return `${prefix}\nconsider adding "--lanes" flag to see updates from main/forked`;
     };
 
+    const getWorkspaceIssuesOutput = () => {
+      if (!workspaceIssues.length) return '';
+      const title = chalk.underline.white('workspace issues');
+      const issues = workspaceIssues.join('\n');
+      return `\n\n${title}\n${issues}`;
+    };
+
     const troubleshootingStr = showTroubleshootingLink ? `\n${TROUBLESHOOTING_MESSAGE}` : '';
 
     const statusMsg =
@@ -319,7 +329,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       ]).join(chalk.underline('\n                         \n') + chalk.white('\n')) +
       troubleshootingStr;
 
-    const results = (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + getLaneStr();
+    const results = (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + getWorkspaceIssuesOutput() + getLaneStr();
 
     const exitCode = componentsWithIssues.length && strict ? 1 : 0;
 
