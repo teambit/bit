@@ -1121,7 +1121,7 @@ jobs:
       - run: cd bit && git diff
       - run:
           name: export components
-          command: cd bit && BIT_FEATURES=export-central bit export
+          command: cd bit && bit export
           no_output_timeout: '20m'
       - run:
           name: backup bit objects (after export)
