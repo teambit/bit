@@ -193,8 +193,10 @@ export default async function provideWorkspace(
     // We call here directly workspace.scope.get instead of workspace.get because part of the workspace get is loading consumer component
     // which in turn run this event, which will make an infinite loop
     // This component from scope here are only used for merging the extensions with the workspace components
-    const componentFromScope = await workspace.scope.get(componentId);
-    const { extensions } = await workspace.componentExtensions(componentId, componentFromScope);
+    const consumerComponentFromScope = await workspace.scope.legacyScope.getConsumerComponentIfExist(
+      componentId._legacy
+    );
+    const { extensions } = await workspace.componentExtensions(componentId, consumerComponentFromScope?.extensions);
     const defaultScope = await workspace.componentDefaultScope(componentId);
 
     const extensionsWithLegacyIdsP = extensions.map(async (extension) => {

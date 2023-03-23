@@ -146,7 +146,7 @@ export class WorkspaceComponentLoader {
       if (!componentFromScope) throw new MissingBitMapComponent(id.toString());
       return componentFromScope;
     }
-    const { extensions, errors } = await this.workspace.componentExtensions(id, componentFromScope);
+    const { extensions, errors } = await this.workspace.componentExtensions(id, componentFromScope?.config.extensions);
     if (errors?.some((err) => err instanceof MergeConfigConflict)) {
       consumerComponent.issues.getOrCreate(IssuesClasses.MergeConfigHasConflict).data = true;
     }

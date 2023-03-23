@@ -36,7 +36,7 @@ export class AspectsMerger {
   // eslint-disable-next-line complexity
   async merge(
     componentId: ComponentID,
-    componentFromScope?: Component,
+    extensionsFromScope?: ExtensionDataList,
     excludeOrigins: ExtensionsOrigin[] = []
   ): Promise<{
     extensions: ExtensionDataList;
@@ -95,7 +95,7 @@ export class AspectsMerger {
       : undefined;
 
     this.removeAutoDepsFromConfig(componentId, configMergeExtensions);
-    const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
+    const scopeExtensions = extensionsFromScope || new ExtensionDataList();
     // backward compatibility. previously, it was saved as an array into the model (when there was merge-config)
     this.removeAutoDepsFromConfig(componentId, scopeExtensions, true);
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);

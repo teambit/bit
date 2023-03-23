@@ -726,8 +726,8 @@ export class Workspace implements ComponentFactory {
   }
 
   async getExtensionsFromScopeAndSpecific(id: ComponentID): Promise<ExtensionDataList> {
-    const componentFromScope = await this.scope.get(id);
-    const { extensions } = await this.componentExtensions(id, componentFromScope, [
+    const consumerComponentFromScope = await this.scope.legacyScope.getConsumerComponentIfExist(id._legacy);
+    const { extensions } = await this.componentExtensions(id, consumerComponentFromScope?.extensions, [
       'WorkspaceDefault',
       'WorkspaceVariants',
     ]);
@@ -997,14 +997,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   async componentExtensions(
     componentId: ComponentID,
-    componentFromScope?: Component,
+    extensionsFromScope?: ExtensionDataList,
     excludeOrigins: ExtensionsOrigin[] = []
   ): Promise<{
     extensions: ExtensionDataList;
     beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
     errors?: Error[];
   }> {
-    return this.aspectsMerger.merge(componentId, componentFromScope, excludeOrigins);
+    return this.aspectsMerger.merge(componentId, extensionsFromScope, excludeOrigins);
   }
 
   getConfigMergeFilePath(): string {
