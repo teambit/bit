@@ -31,7 +31,7 @@ export type LaneQueryResult = {
   id: { name: string; scope: string };
   remote?: string;
   isMerged: boolean;
-  description?: string;
+  displayName?: string;
   laneComponentIds: Array<ComponentIdObj>;
   readmeComponent?: ComponentModelProps;
   hash: string;
@@ -66,7 +66,7 @@ export type LaneModel = {
   hash: string;
   components: ComponentID[];
   readmeComponent?: ComponentModel;
-  description?: string;
+  displayName?: string;
   createdAt?: Date;
   createdBy?: LaneQueryLaneOwner;
   updatedAt?: Date;
@@ -140,10 +140,10 @@ export class LanesModel {
       readmeComponent,
       hash,
       createdAt,
-      createdBy: createdByData,
+      displayName,
       updatedAt,
+      createdBy: createdByData,
       updatedBy: updatedByData,
-      description,
     } = laneData;
 
     const componentIds =
@@ -178,8 +178,8 @@ export class LanesModel {
       readmeComponent: readmeComponentModel,
       createdAt: createdAtDate,
       updatedAt: updatedAtDate,
+      displayName,
       hash,
-      description,
       updatedBy,
       createdBy,
     };
