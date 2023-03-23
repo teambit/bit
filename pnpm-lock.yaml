@@ -501,6 +501,7 @@ importers:
       resolve: 1.20.0
       resolve-dependency-path: 2.0.0
       resolve-from: 5.0.0
+      resolve-link-target: ^1.0.1
       resolve-url-loader: 5.0.0
       rewire: 4.0.1
       sanitize.css: 12.0.1
@@ -528,6 +529,7 @@ importers:
       style-loader: 2.0.0
       stylus-lookup: 3.0.2
       subscriptions-transport-ws: 0.9.18
+      symlink-dir: ^5.1.1
       table: 5.4.6
       tar: 6.1.11
       tar-stream: 2.2.0
@@ -992,6 +994,7 @@ importers:
       resolve: 1.20.0
       resolve-dependency-path: 2.0.0
       resolve-from: 5.0.0
+      resolve-link-target: 1.0.1
       resolve-url-loader: 5.0.0
       rewire: 4.0.1
       sanitize.css: 12.0.1
@@ -1019,6 +1022,7 @@ importers:
       style-loader: 2.0.0_webpack@5.51.1
       stylus-lookup: 3.0.2
       subscriptions-transport-ws: 0.9.18_ejelnobsodxz4e5ozf4g7k4fa4
+      symlink-dir: 5.1.1
       table: 5.4.6
       tar: 6.1.11
       tar-stream: 2.2.0
@@ -24579,8 +24583,12 @@ importers:
       '@types/mocha': 9.1.0
       '@types/node': 12.20.4
       fs-extra: 10.0.0
+      resolve-link-target: ^1.0.1
+      symlink-dir: ^5.1.1
     dependencies:
       fs-extra: 10.0.0
+      resolve-link-target: 1.0.1
+      symlink-dir: 5.1.1
     devDependencies:
       '@babel/runtime': 7.20.0
       '@teambit/defender.fs.global-bit-temp-dir': 0.0.1
@@ -52977,6 +52985,13 @@ packages:
     engines: {node: '>=8'}
     dev: false
 
+  /resolve-link-target/1.0.1:
+    resolution: {integrity: sha512-uid343+whX+g+LLUzwCYaZBOZPX8Hi3Y7qZBr0r1Rvb0y6WMWVLT32uuGllxD5uNQR+mddUE/Dx/wwvgGrZLSA==}
+    engines: {node: '>=4'}
+    dependencies:
+      graceful-fs: 4.2.10
+    dev: false
+
   /resolve-link-target/2.0.0:
     resolution: {integrity: sha512-jR9pmK8PUtjwUSNYn4fuTewcNUJE5e9B8tWD1C2dmDk40dvig+l1WSPmdH/03cx3ULWK7oS0E3cdam+poDepYQ==}
     engines: {node: '>=10'}
@@ -63238,6 +63253,8 @@ packages:
     version: 0.0.12
     dependencies:
       fs-extra: 10.0.0
+      resolve-link-target: 1.0.1
+      symlink-dir: 5.1.1
     dev: false
 
   file:scopes/toolbox/modules/module-resolver:

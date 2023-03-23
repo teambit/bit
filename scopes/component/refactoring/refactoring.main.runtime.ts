@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { isBinaryFile } from 'isbinaryfile';
+import camelCase from 'camelcase';
 import { compact } from 'lodash';
 import replacePackageName from '@teambit/legacy/dist/utils/string/replace-package-name';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
@@ -35,6 +36,38 @@ export class RefactoringMain {
       })
     );
     return { oldPackageName, newPackageName, changedComponents: compact(changedComponents) };
+  }
+
+  /**
+   * replaces the old-name inside the source code of the given component with the new name.
+   * helpful when renaming/forking an aspect/env where the component-name is used as the class-name and variable-name.
+   */
+  async refactorVariableAndClasses(component: Component, sourceId: ComponentID, targetId: ComponentID) {
+    await this.replaceMultipleStrings(
+      [component],
+      [
+        {
+          oldStr: sourceId.name,
+          newStr: targetId.name,
+        },
+        {
+          oldStr: camelCase(sourceId.name),
+          newStr: camelCase(targetId.name),
+        },
+        {
+          oldStr: camelCase(sourceId.name, { pascalCase: true }),
+          newStr: camelCase(targetId.name, { pascalCase: true }),
+        },
+      ]
+    );
+  }
+
+  refactorFilenames(component: Component, sourceId: ComponentID, targetId: ComponentID) {
+    component.filesystem.files.forEach((file) => {
+      if (file.relative.includes(sourceId.name)) {
+        file.updatePaths({ newRelative: file.relative.replace(sourceId.name, targetId.name) });
+      }
+    });
   }
 
   /**

@@ -1,5 +1,6 @@
-import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect, useCallback, useMemo } from 'react';
 import classnames from 'classnames';
+import { startCase } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
@@ -7,6 +8,7 @@ import { InputText as SearchInput } from '@teambit/design.inputs.input-text';
 import { ToggleButton } from '@teambit/design.inputs.toggle-button';
 import { Icon } from '@teambit/design.elements.icon';
 import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 
 import { LaneSelectorList } from './lane-selector-list';
 import { LanePlaceholder } from './lane-placeholder';
@@ -80,23 +82,12 @@ export function LaneSelector(props: LaneSelectorProps) {
 
   const [search, setSearch] = useState<string>('');
   const [sortBy, setSortBy] = useState<LaneSelectorSortBy>(sortByFromProps);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const sortedNonMainLanes = useMemo(() => {
     return nonMainLanes.sort(compareFn(sortBy));
   }, [sortBy, nonMainLanes.length]);
 
   const [filteredLanes, setFilteredLanes] = useState<LaneModel[]>(sortedNonMainLanes);
-
-  const [, setTrackedDropdownOpenState] = useState<boolean>(false);
-  const onDropdownPlaceholderToggled = () => {
-    setTrackedDropdownOpenState((v) => {
-      if (!v) {
-        inputRef.current?.focus();
-      }
-      return !v;
-    });
-  };
 
   const [groupScope, setGroupScope] = useState<boolean>(groupByScope);
 
@@ -143,8 +134,11 @@ export function LaneSelector(props: LaneSelectorProps) {
       (multipleLanes && (
         <div className={styles.search}>
           <SearchInput
-            ref={inputRef}
+            activeLabel={false}
+            inputSize={'s'}
+            // ref={inputRef}
             className={styles.searchInput}
+            placeholder={'Search'}
             value={search}
             onChange={handleSearchOnChange}
             onClick={handleSearchOnClick}
@@ -159,21 +153,18 @@ export function LaneSelector(props: LaneSelectorProps) {
 
   function LaneGroup() {
     return (
-      (multipleLanes && groupByScope && (
-        <div className={styles.group}>
-          <CheckboxItem
-            checked={groupByScope}
-            onInputChanged={(e) => {
-              // prevent dropdown from closing
-              setGroupScope((v) => !v);
-              e.stopPropagation();
-            }}
-          >
-            Group scopes
-          </CheckboxItem>
-        </div>
-      )) ||
-      null
+      <div className={styles.group}>
+        <CheckboxItem
+          checked={groupByScope}
+          onInputChanged={(e) => {
+            // prevent dropdown from closing
+            setGroupScope((v) => !v);
+            e.stopPropagation();
+          }}
+        >
+          Group scopes
+        </CheckboxItem>
+      </div>
     );
   }
 
@@ -183,18 +174,20 @@ export function LaneSelector(props: LaneSelectorProps) {
         dropClass={styles.menu}
         position="bottom"
         clickPlaceholderToggles={true}
-        onPlaceholderToggle={onDropdownPlaceholderToggled}
+        clickToggles={true}
         placeholderContent={
           <LanePlaceholder disabled={!multipleLanes} selectedLaneId={selectedLaneId} showScope={groupByScope} />
         }
         className={classnames(styles.dropdown, !multipleLanes && styles.disabled)}
       >
-        <LaneSearch />
         {multipleLanes && (
-          <div className={styles.sortAndGroupBy}>
-            <div className={styles.groupBy}>
-              <LaneGroup />
-            </div>
+          <div className={styles.toolbar}>
+            {multipleLanes && groupByScope && (
+              <div className={styles.groupBy}>
+                <LaneGroup />
+              </div>
+            )}
+            <LaneSearch />
             <div className={styles.sort}>
               <ToggleButton
                 className={classnames(styles.sortToggle)}
@@ -204,11 +197,15 @@ export function LaneSelector(props: LaneSelectorProps) {
                     value: option,
                     icon:
                       option === LaneSelectorSortBy.ALPHABETICAL ? (
-                        <img className={styles.sortIcon} src="https://static.bit.cloud/bit-icons/ripple-list.svg" />
+                        <Tooltip placement={'bottom'} content={`Sort by Lane ID (A-Z)`}>
+                          <img className={styles.sortIcon} src="https://static.bit.cloud/bit-icons/ripple-list.svg" />
+                        </Tooltip>
                       ) : (
-                        <img className={styles.sortIcon} src="https://static.bit.cloud/bit-icons/clock.svg" />
+                        <Tooltip placement={'bottom'} content={`Sort by ${startCase(option.toLowerCase())} Date`}>
+                          <img className={styles.sortIcon} src="https://static.bit.cloud/bit-icons/clock.svg" />
+                        </Tooltip>
                       ),
-                    element: option === LaneSelectorSortBy.ALPHABETICAL ? 'a-Z' : option.toLowerCase(),
+                    element: null,
                   };
                 })}
                 onOptionSelect={(index, e) => {

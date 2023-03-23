@@ -9,6 +9,7 @@ import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
+import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { InstallMain, InstallAspect } from '@teambit/install';
@@ -30,7 +31,8 @@ export class RenamingMain {
     private newComponentHelper: NewComponentHelperMain,
     private deprecation: DeprecationMain,
     private refactoring: RefactoringMain,
-    private config: ConfigMain
+    private config: ConfigMain,
+    private componentWriter: ComponentWriterMain
   ) {}
 
   async rename(sourceIdStr: string, targetName: string, options: RenameOptions): Promise<RenameDependencyNameResult> {
@@ -45,6 +47,10 @@ make sure this argument is the name only, without the scope-name. to change the 
     const sourceComp = await this.workspace.get(sourceId);
     const sourcePackageName = this.workspace.componentPackageName(sourceComp);
     const targetId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope);
+    if (!options.preserve) {
+      await this.refactoring.refactorVariableAndClasses(sourceComp, sourceId, targetId);
+      this.refactoring.refactorFilenames(sourceComp, sourceId, targetId);
+    }
     if (isTagged) {
       const config = await this.getConfig(sourceComp);
       await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetId, options, config);
@@ -52,7 +58,6 @@ make sure this argument is the name only, without the scope-name. to change the 
     } else {
       this.workspace.bitMap.renameNewComponent(sourceId, targetId);
       await this.workspace.bitMap.write();
-
       await fs.remove(path.join(this.workspace.path, 'node_modules', sourcePackageName));
     }
     this.workspace.clearComponentCache(sourceId);
@@ -66,6 +71,15 @@ make sure this argument is the name only, without the scope-name. to change the 
         targetPackageName
       );
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
+    }
+    if (!options.preserve) {
+      await this.refactoring.refactorVariableAndClasses(targetComp, sourceId, targetId);
+      this.refactoring.refactorFilenames(targetComp, sourceId, targetId);
+      await this.componentWriter.writeMany({
+        components: [targetComp.state._consumer],
+        skipDependencyInstallation: true,
+        writeToPath: this.newComponentHelper.getNewComponentPath(targetId),
+      });
     }
 
     // link the new-name to node-modules
@@ -261,6 +275,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     RefactoringAspect,
     InstallAspect,
     ConfigAspect,
+    ComponentWriterAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -273,6 +288,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     refactoring,
     install,
     config,
+    componentWriter,
   ]: [
     CLIMain,
     Workspace,
@@ -282,9 +298,18 @@ make sure this argument is the name only, without the scope-name. to change the 
     GraphqlMain,
     RefactoringMain,
     InstallMain,
-    ConfigMain
+    ConfigMain,
+    ComponentWriterMain
   ]) {
-    const renaming = new RenamingMain(workspace, install, newComponentHelper, deprecation, refactoring, config);
+    const renaming = new RenamingMain(
+      workspace,
+      install,
+      newComponentHelper,
+      deprecation,
+      refactoring,
+      config,
+      componentWriter
+    );
     cli.register(new RenameCmd(renaming));
 
     const scopeCommand = cli.getCommand('scope');

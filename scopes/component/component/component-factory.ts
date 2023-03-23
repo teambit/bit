@@ -10,13 +10,13 @@ import { State } from './state';
 import { Snap } from './snap';
 
 export type ResolveAspectsOptions = FilterAspectsOptions & {
-  throwOnError?: boolean
-  useScopeAspectsCapsule?: boolean
+  throwOnError?: boolean;
+  useScopeAspectsCapsule?: boolean;
 };
 
 export type LoadAspectsOptions = {
-  [key: string]: any
-}
+  [key: string]: any;
+};
 
 export type FilterAspectsOptions = {
   /**
