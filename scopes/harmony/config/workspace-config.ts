@@ -1,4 +1,3 @@
-import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
 import { ResolveModulesConfig } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
@@ -81,9 +80,6 @@ export class WorkspaceConfig implements HostConfig {
 
   constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {
     this.isLegacy = Boolean(legacyConfig);
-    const isHarmony = !this.isLegacy;
-    logger.debug(`workspace-config, isLegacy: ${this.isLegacy}`);
-    Analytics.setExtraData('is_harmony', isHarmony);
     this.raw = data;
     this.loadExtensions();
   }

@@ -26,8 +26,14 @@ export class MergeConflictFile {
     return this.conflictPerId[id];
   }
 
-  async getConflictParsed(id: string): Promise<Record<string, any> | undefined> {
-    const configMergeContent = await this.getConflict(id);
+  getConflictAssumeIsLoaded(id: string): string | undefined {
+    if (!this.conflictPerId)
+      throw new Error(`MergeConflictFile was not loaded yet, please load it before calling this function`);
+    return this.conflictPerId[id];
+  }
+
+  getConflictParsed(id: string): Record<string, any> | undefined {
+    const configMergeContent = this.getConflictAssumeIsLoaded(id);
     if (!configMergeContent) return undefined;
     try {
       return JSON.parse(configMergeContent);

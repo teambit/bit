@@ -526,6 +526,11 @@ export class DependencyResolverMain {
     return factory.fromConfigObject(this.config.policy);
   }
 
+  getWorkspacePolicyFromConfigObject(obj: WorkspacePolicyConfigObject): WorkspacePolicy {
+    const factory = new WorkspacePolicyFactory();
+    return factory.fromConfigObject(obj);
+  }
+
   getWorkspacePolicyFromPackageJson(packageJson: Record<string, any>): WorkspacePolicy {
     const factory = new WorkspacePolicyFactory();
     return factory.fromPackageJson(packageJson);
