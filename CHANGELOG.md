@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [[0.1.7] - 2023-03-20](https://github.com/teambit/bit/releases/tag/v0.1.7)
+### Changes
+- Set `--entire-lane` flag as default for `bit lane checkout` (#7152)
+
+### Bug Fixes
+- Load envs' templates correctly from `workspace.jsonc` (#7172)
+- Fetch versions that are shown in `.bitmap` but not in the lane object (#7167)
+- Allow ignoring files from components root-dir (#7163)
+- Write objects atomically (#7160)
+- Fix compilation error for content/cli-reference component (#7162)
+- Avoid loading envs that are not set via envs/envs if found an env previously (#7153)
+- Allow `aspect-unset` without specifying the aspect version (#7157)
+- Fix error "dest already exists" when removing a restored lane (#7156)
+- Consume plugin: display version for bit import, snap (#7151)
+
+### Internal
+- Remove old implementation of Stencil (#7170)
+- Better development sourcemaps for Webpack (#7147)
+- Make bit-lane command public (#7150)
+
+## [[0.1.4] - 2023-03-14](https://github.com/teambit/bit/releases/tag/v0.1.4)
+### New Features
+- Support generating a component for `bit create` with `--aspect` or `--env` option (#7093)
+- Introduce "bit fork --no-link" flag to avoid saving a reference to the original comp (#7140)
+- Add option for `bit login` to pass custom login url (#7143)
+
+### Changes
+- `--rename` flag is now default for `bit fork` (#7146)
+- Remove pre-render by default from the react app template (#7132)
+
+### Bug Fixes
+- Fix Package version for snaps on main in use-dropdown (#7141)
+- On changing scope for a lane, block when lane is exported, throw when scope-name is invalid (#7139)
+- On `bit status` avoid showing components as pending-update when their remote-lane is empty (#7138)
+- Handle soft-remove on a new lane and import soft-removed components (#7137)
+- Add EnvId in preview url (#7136)
+- Fetch artifacts from `main` if possible (#7134)
+- Fix error text for `bit reset`, change untag to reset (#7130)
+- Fix incorrect domain in for new cloud (#7129)
+- Fix `VersionNotFound` error when resetting a lane after merge (#7121)
+- Remove `*` from url in Readme (#7108)
+
+### Internal
+- Fix aspects loading from scope (#7133)
+- Eject `teambit.html/modules/render-template` (#7135)
+
 ## [[0.1.0] - 2023-03-08](https://github.com/teambit/bit/releases/tag/v0.1.0)
 ### New Features
 

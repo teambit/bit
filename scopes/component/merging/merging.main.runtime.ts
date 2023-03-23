@@ -486,8 +486,12 @@ export class MergingMain {
     );
     const toImport = componentStatusBeforeMergeAttempt
       .map((compStatus) => {
-        if (!compStatus.divergeData || !compStatus.divergeData.commonSnapBeforeDiverge) return [];
-        return [compStatus.id.changeVersion(compStatus.divergeData.commonSnapBeforeDiverge.toString())];
+        if (!compStatus.divergeData) return [];
+        const versionsToImport = compact([
+          ...compStatus.divergeData.snapsOnTargetOnly,
+          compStatus.divergeData.commonSnapBeforeDiverge,
+        ]);
+        return versionsToImport.map((v) => compStatus.id.changeVersion(v.toString()));
       })
       .flat();
 

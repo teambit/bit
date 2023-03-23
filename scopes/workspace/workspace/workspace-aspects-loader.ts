@@ -2,7 +2,7 @@ import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { Graph } from '@teambit/graph.cleargraph';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { Harmony } from '@teambit/harmony';
+import { ExtensionManifest, Harmony, Aspect } from '@teambit/harmony';
 import {
   AspectDefinition,
   AspectLoaderMain,
@@ -90,6 +90,12 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     let idsToLoadFromWs = componentIds;
     let scopeAspectIds: string[] = [];
 
+    // TODO: hard coded use the old approach and loading from the scope capsules
+    // This is because right now loading from the ws node_modules causes issues in some cases
+    // like for the cloud app
+    // it should be removed once we fix the issues
+    mergedOpts.useScopeAspectsCapsule = true;
+
     if (mergedOpts.useScopeAspectsCapsule) {
       idsToLoadFromWs = workspaceIds;
       const currentLane = await this.consumer.getCurrentLaneObject();
@@ -125,18 +131,19 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       throwOnError,
       ...mergedOpts,
     });
-    const requireableComponents = this.aspectDefsToRequireableComponents(aspectsDefs);
-    const manifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
-      requireableComponents,
+
+    const { manifests, requireableComponents } = await this.loadAspectDefsByOrder(
+      aspectsDefs,
+      idsWithoutCore,
       throwOnError
     );
+
     const potentialPluginsIndexes = compact(
       manifests.map((manifest, index) => {
         if (this.aspectLoader.isValidAspect(manifest)) return undefined;
         return index;
       })
     );
-    await this.aspectLoader.loadExtensionsByManifests(manifests, throwOnError, idsWithoutCore);
 
     // Try require components for potential plugins
     const pluginsRequireableComponents = potentialPluginsIndexes.map((index) => {
@@ -151,6 +158,30 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
     const manifestIds = manifests.map((manifest) => manifest.id);
     return compact(manifestIds.concat(scopeAspectIds));
+  }
+
+  private async loadAspectDefsByOrder(
+    aspectsDefs: AspectDefinition[],
+    seeders: string[],
+    throwOnError: boolean
+  ): Promise<{ manifests: Array<Aspect | ExtensionManifest>; requireableComponents: RequireableComponent[] }> {
+    const { nonWorkspaceDefs } = await this.groupAspectDefsByWorkspaceExistence(aspectsDefs);
+    const scopeAspectsLoader = this.scope.getScopeAspectsLoader();
+    const scopeIds: string[] = compact(nonWorkspaceDefs.map((aspectDef) => aspectDef.getId));
+    const scopeIdsGrouped = await scopeAspectsLoader.groupAspectIdsByEnvOfTheList(scopeIds);
+
+    // Make sure to first load envs from the list otherwise it will fail when trying to load other aspects
+    // as their envs might not be loaded yet
+    if (scopeIdsGrouped.envs && scopeIdsGrouped.envs.length) {
+      await this.scope.loadAspects(scopeIdsGrouped.envs, throwOnError, 'workspace.loadAspects loading scope aspects');
+    }
+    const requireableComponents = this.aspectDefsToRequireableComponents(aspectsDefs);
+    const manifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
+      requireableComponents,
+      throwOnError
+    );
+    await this.aspectLoader.loadExtensionsByManifests(manifests, throwOnError, seeders);
+    return { manifests, requireableComponents };
   }
 
   async resolveAspects(
@@ -621,6 +652,26 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       })
     );
     return { workspaceComps, nonWorkspaceComps };
+  }
+
+  /**
+   * split the provided components into 2 groups, one which are workspace components and the other which are not.
+   * @param components
+   * @returns
+   */
+  private async groupAspectDefsByWorkspaceExistence(
+    aspectDefs: AspectDefinition[]
+  ): Promise<{ workspaceDefs: AspectDefinition[]; nonWorkspaceDefs: AspectDefinition[] }> {
+    const workspaceDefs: AspectDefinition[] = [];
+    const nonWorkspaceDefs: AspectDefinition[] = [];
+    await Promise.all(
+      aspectDefs.map(async (aspectDef) => {
+        const id = aspectDef.component?.id;
+        const existOnWorkspace = id ? await this.workspace.hasId(id) : true;
+        existOnWorkspace ? workspaceDefs.push(aspectDef) : nonWorkspaceDefs.push(aspectDef);
+      })
+    );
+    return { workspaceDefs, nonWorkspaceDefs };
   }
 
   private async groupIdsByWorkspaceExistence(

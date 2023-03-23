@@ -92,6 +92,7 @@ import {
   AspectPackage,
   GetConfiguredUserAspectsPackagesOptions,
   WorkspaceAspectsLoader,
+  WorkspaceLoadAspectsOptions,
 } from './workspace-aspects-loader';
 import { MergeConflictFile } from './merge-conflict-file';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
@@ -462,7 +463,7 @@ export class Workspace implements ComponentFactory {
       return null;
     }
 
-    const flattenedEdges = versionObj.flattenedEdges;
+    const flattenedEdges = await versionObj.getFlattenedEdges(this.scope.legacyScope.objects);
     if (!flattenedEdges.length && versionObj.flattenedDependencies.length) {
       // there are flattenedDependencies, so must be edges, if they're empty, it's because the component was tagged
       // with a version < ~0.0.901, so this flattenedEdges wasn't exist.
@@ -1219,9 +1220,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * load aspects from the workspace and if not exists in the workspace, load from the scope.
    * keep in mind that the graph may have circles.
    */
-  async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: string): Promise<string[]> {
+  async loadAspects(
+    ids: string[] = [],
+    throwOnError = false,
+    neededFor?: string,
+    opts: WorkspaceLoadAspectsOptions = {}
+  ): Promise<string[]> {
     const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
-    return workspaceAspectsLoader.loadAspects(ids, throwOnError, neededFor);
+    return workspaceAspectsLoader.loadAspects(ids, throwOnError, neededFor, opts);
   }
 
   /**

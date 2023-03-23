@@ -268,9 +268,10 @@ export default class ImportComponents {
     const bitIdsFromLane = BitIds.fromArray(this.laneObjects.flatMap((lane) => lane.toBitIds()));
 
     if (!this.options.ids.length) {
-      const mainIds = this.consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
-      const mainIdsToImport = mainIds.filter((id) => id.hasScope() && !bitIdsFromLane.hasWithoutVersion(id));
-      bitIdsFromLane.push(...mainIdsToImport);
+      const bitMapIds = this.consumer.bitMap.getAllBitIds();
+      const bitMapIdsToImport = bitMapIds.filter((id) => id.hasScope() && !bitIdsFromLane.has(id));
+      bitIdsFromLane.push(...bitMapIdsToImport);
+
       return bitIdsFromLane;
     }
 
