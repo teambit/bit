@@ -3,8 +3,9 @@
 .dropdown {
   // otherwise when the dropdown is open it clashes with the content of the tree
   // (this is bizarre, the tree has no position absolute)
-  z-index: $nav-z-index;
+  z-index: $modal-z-index;
   border-radius: 8px;
+  width: 100%;
 
   &.disabled {
     > div {
@@ -19,17 +20,13 @@
 }
 
 .search {
-  margin: 8px 0px 0px 0px;
-  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   display: flex;
-  justify-content: space-around;
 }
 
 .menu {
-  width: 100%;
+  width: 300px;
   border-radius: 8px;
   padding: 0;
-  padding-top: 8px;
   // border: 1px solid var(--border-medium-color);
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.16);
 }
@@ -37,4 +34,51 @@
 .items {
   max-height: 200px;
   overflow: auto;
+}
+
+.laneSelector {
+  width: 100%;
+  display: flex;
+}
+
+.searchInput {
+  width: 100%;
+  padding-top: 0;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+}
+
+.groupBy {
+  display: flex;
+}
+
+.sort {
+  display: flex;
+  text-align: right;
+}
+
+.sortToggle {
+  font-size: var(--bit-p-xs, '14px');
+  text-transform: capitalize;
+  height: 32px;
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  padding: 2px;
+}
+
+.sortIcon {
+  height: 14px;
+  width: 14px;
+  padding-right: 4px;
+  filter: invert(46%) sepia(8%) saturate(298%) hue-rotate(189deg) brightness(95%) contrast(91%);
+}
+
+.searchIcon {
+  top: calc(50% - 0.4rem) !important;
 }

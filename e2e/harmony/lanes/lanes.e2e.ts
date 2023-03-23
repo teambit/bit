@@ -1458,4 +1458,35 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe('checking out to a different version from main', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild(); // 0.0.1
+      helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.2
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.createLane();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.importComponent('comp1@0.0.1', '--save-in-lane'); // now the lane has it as 0.0.1
+      helper.command.export();
+
+      helper.command.checkoutVersion('0.0.2', 'comp1', '-x');
+
+      // deleting the local scope
+      helper.command.init('--reset-scope');
+
+      helper.command.import();
+    });
+    it('bit import should bring the version in the bitmap', () => {
+      expect(() => helper.command.catComponent(`${helper.scopes.remote}/comp1@0.0.2`)).to.not.throw();
+    });
+    it('bit status should not throw ComponentsPendingImport', () => {
+      expect(() => helper.command.status()).to.not.throw();
+    });
+  });
 });

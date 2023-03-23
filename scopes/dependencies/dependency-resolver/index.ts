@@ -43,6 +43,7 @@ export {
 export {
   WorkspacePolicyEntry,
   WorkspacePolicy,
+  WorkspacePolicyConfigObject,
   VariantPolicyConfigObject,
   Policy,
   PolicySemver,
@@ -51,6 +52,7 @@ export {
   PolicyEntry,
   VariantPolicy,
   SerializedVariantPolicy,
+  WorkspacePolicyConfigKeysNames,
   EnvPolicyConfigObject,
   EnvPolicy,
 } from './policy';

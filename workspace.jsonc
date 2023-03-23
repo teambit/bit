@@ -89,6 +89,7 @@
         "@teambit/defender.content.tester-overview": "1.95.0",
         "@teambit/design.elements.icon": "1.0.5",
         "@teambit/design.inputs.dropdown": "1.2.16",
+        "@teambit/design.inputs.input-text": "^1.0.21",
         "@teambit/design.inputs.selectors.multi-select": "0.0.20",
         "@teambit/design.inputs.toggle-switch": "0.0.6",
         "@teambit/design.navigation.content-tabs": "0.0.5",
@@ -135,6 +136,7 @@
         "@teambit/graph.cleargraph": "0.0.1",
         "@teambit/graphql.hooks.use-query-light": "1.0.0",
         "@teambit/harmony": "0.4.6",
+        "@teambit/html.modules.inject-html-element": "^0.0.2",
         "@teambit/html.modules.render-template": "0.0.104",
         "@teambit/pkg.content.packages-overview": "1.95.9",
         "@teambit/react.content.react-overview": "1.95.0",
@@ -307,6 +309,7 @@
         "remark-frontmatter": "2.0.0",
         "reset-css": "5.0.1",
         "resolve-from": "5.0.0",
+        "resolve-link-target": "^1.0.1",
         "resolve-url-loader": "5.0.0",
         "semver": "7.3.4",
         "semver-intersect": "1.4.0",
@@ -315,6 +318,7 @@
         "socks-proxy-agent": "5.0.0",
         "strip-ansi": "6.0.0",
         "subscriptions-transport-ws": "0.9.18",
+        "symlink-dir": "^5.1.1",
         "table": "6.7.3",
         "tempy": "1.0.1",
         "terser-webpack-plugin": "5.2.0",
@@ -342,7 +346,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.461",
+        "@teambit/legacy": "1.0.464",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "browserslist": "4.16.3",
@@ -434,7 +438,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.461"
+            "@teambit/legacy": "1.0.464"
           }
         }
       },
@@ -695,7 +699,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.461"
+            "@teambit/legacy": "1.0.464"
           }
         }
       }
@@ -785,7 +789,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.461",
+            "@teambit/legacy": "1.0.464",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -920,7 +924,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.461"
+            "@teambit/legacy": "1.0.464"
           }
         }
       }

@@ -41,6 +41,7 @@ export type StatusResult = {
   unavailableOnMain: ComponentID[];
   currentLaneId: LaneId;
   forkedLaneId?: LaneId;
+  workspaceIssues: string[];
 };
 
 export class StatusMain {
@@ -118,6 +119,7 @@ export class StatusMain {
     const currentLaneId = consumer.getCurrentLaneId();
     const currentLane = await consumer.getCurrentLaneObject();
     const forkedLaneId = currentLane?.forkedFrom;
+    const workspaceIssues = this.workspace.getWorkspaceIssues();
     Analytics.setExtraData('new_components', newComponents.length);
     Analytics.setExtraData('staged_components', stagedComponents.length);
     Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithIssues.length);
@@ -175,6 +177,7 @@ export class StatusMain {
       unavailableOnMain,
       currentLaneId,
       forkedLaneId,
+      workspaceIssues: workspaceIssues.map((err) => err.message),
     };
   }
 

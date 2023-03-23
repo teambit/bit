@@ -5,6 +5,7 @@ import { ScopeMain } from '@teambit/scope';
 // import { BitIds } from '@teambit/legacy/dist/bit-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { isHash } from '@teambit/component-version';
+import { getBitCloudUser } from '@teambit/snapping';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 
@@ -20,6 +21,7 @@ export async function createLane(
   if (lanes.find((lane) => lane.name === laneName)) {
     throw new BitError(`lane "${laneName}" already exists, to switch to this lane, please use "bit switch" command`);
   }
+  const bitCloudUser = await getBitCloudUser();
   throwForInvalidLaneName(laneName);
   await throwForStagedComponents(consumer);
   const getDataToPopulateLaneObjectIfNeeded = async (): Promise<LaneComponent[]> => {
@@ -49,7 +51,7 @@ export async function createLane(
         scope: remoteLane.scope,
         forkedFrom,
       })
-    : Lane.create(laneName, scopeName, forkedFrom);
+    : Lane.create(laneName, scopeName, forkedFrom, bitCloudUser);
   const dataToPopulate = await getDataToPopulateLaneObjectIfNeeded();
   newLane.setLaneComponents(dataToPopulate);
 

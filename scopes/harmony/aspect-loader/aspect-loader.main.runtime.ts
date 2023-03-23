@@ -215,7 +215,7 @@ export class AspectLoaderMain {
    * but the harmony config is already in memory.
    * Probably a better to do it is to make sure we can re-load the config somehow
    * ideally by adding the config class in harmony a reload API
-   * @param aspectId 
+   * @param aspectId
    */
   addInMemoryConfiguredAspect(aspectId: string): void {
     this.inMemoryConfiguredAspects.push(aspectId);

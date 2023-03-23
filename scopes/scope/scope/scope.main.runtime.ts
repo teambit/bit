@@ -792,7 +792,7 @@ export class ScopeMain implements ComponentFactory {
       aspectIds.push(component.id.toString());
     }
     const envsData = component.state.aspects.get(EnvsAspect.id);
-    if (envsData?.data?.services || envsData?.data?.self){
+    if (envsData?.data?.services || envsData?.data?.self) {
       aspectIds.push(component.id.toString());
     }
     await this.loadAspects(aspectIds, true, id.toString(), lane);

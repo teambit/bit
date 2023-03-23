@@ -14,7 +14,7 @@ import {
 } from '../component-ops/traverse-versions';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { ModelComponent, Symlink, Version } from '../models';
+import { ModelComponent, Source, Symlink, Version } from '../models';
 import Lane from '../models/lane';
 import { ComponentProps } from '../models/model-component';
 import { BitObject, Ref } from '../objects';
@@ -224,7 +224,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * @see model-components.toConsumerComponent() for the opposite action. (converting Version to
    * ConsumerComponent).
    */
-  async consumerComponentToVersion(consumerComponent: ConsumerComponent): Promise<{ version: Version; files: any }> {
+  async consumerComponentToVersion(consumerComponent: ConsumerComponent): Promise<{
+    version: Version;
+    files: any;
+    flattenedEdges?: Source;
+  }> {
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const files = consumerComponent.files.map((file) => {
       return {
@@ -234,14 +238,18 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         test: file.test,
       };
     });
+
+    const flattenedEdges = Version.flattenedEdgeToSource(consumerComponent.flattenedEdges);
+
     const version: Version = Version.fromComponent({
       component: clonedComponent,
       files: files as any,
+      flattenedEdges,
     });
     // $FlowFixMe it's ok to override the pendingVersion attribute
     consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
 
-    return { version, files };
+    return { version, files, flattenedEdges };
   }
 
   put({ component, objects }: ComponentTree): ModelComponent {

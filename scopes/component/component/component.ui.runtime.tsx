@@ -194,6 +194,7 @@ export class ComponentUI {
   getMenu(host: string, options: GetComponentsOptions = {}) {
     return (
       <ComponentMenu
+        className={options.className}
         skipRightSide={options.skipRightSide}
         navigationSlot={this.navSlot}
         consumeMethodSlot={this.consumeMethodSlot}
@@ -204,6 +205,7 @@ export class ComponentUI {
         path={options.path}
         componentIdStr={options.componentId}
         useComponentFilters={options.useComponentFilters}
+        RightNode={options.RightNode}
       />
     );
   }

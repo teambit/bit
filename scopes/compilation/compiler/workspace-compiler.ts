@@ -318,9 +318,8 @@ export class WorkspaceCompiler {
     components.forEach((c) => {
       const environment = this.envs.getEnv(c).env;
       const compilerInstance = environment.getCompiler?.();
-      // if there is no componentDir (e.g. author that added files, not dir), then we can't write the dists
-      // inside the component dir.
-      if (compilerInstance && c.state._consumer.componentMap?.getComponentDir()) {
+
+      if (compilerInstance) {
         const compilerName = compilerInstance.constructor.name || 'compiler';
         componentsCompilers.push(
           new ComponentCompiler(
@@ -333,6 +332,8 @@ export class WorkspaceCompiler {
             this.dependencyResolver
           )
         );
+      } else {
+        this.logger.warn(`unable to find a compiler instance for ${c.id.toString()}`);
       }
     });
     const resultOnWorkspace = await mapSeries(componentsCompilers, (componentCompiler) =>

@@ -92,8 +92,10 @@ import {
   AspectPackage,
   GetConfiguredUserAspectsPackagesOptions,
   WorkspaceAspectsLoader,
+  WorkspaceLoadAspectsOptions,
 } from './workspace-aspects-loader';
 import { MergeConflictFile } from './merge-conflict-file';
+import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 
 export type EjectConfResult = {
   configPath: string;
@@ -461,7 +463,7 @@ export class Workspace implements ComponentFactory {
       return null;
     }
 
-    const flattenedEdges = versionObj.flattenedEdges;
+    const flattenedEdges = await versionObj.getFlattenedEdges(this.scope.legacyScope.objects);
     if (!flattenedEdges.length && versionObj.flattenedDependencies.length) {
       // there are flattenedDependencies, so must be edges, if they're empty, it's because the component was tagged
       // with a version < ~0.0.901, so this flattenedEdges wasn't exist.
@@ -1017,6 +1019,35 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.aspectsMerger.getDepsDataOfMergeConfig(id);
   }
 
+  getWorkspaceJsonConflictFromMergeConfig(): { data?: Record<string, any>; conflict: boolean } {
+    const configMergeFile = this.getConflictMergeFile();
+    let data: Record<string, any> | undefined;
+    let conflict = false;
+    try {
+      data = configMergeFile.getConflictParsed('WORKSPACE');
+    } catch (err) {
+      if (!(err instanceof MergeConfigConflict)) {
+        throw err;
+      }
+      conflict = true;
+      this.logger.error(`unable to parse the config file for the workspace due to conflicts`);
+    }
+    return { data, conflict };
+  }
+
+  getWorkspaceIssues(): Error[] {
+    const errors: Error[] = [];
+    const configMergeFile = this.getConflictMergeFile();
+    try {
+      configMergeFile.getConflictParsed('WORKSPACE');
+    } catch (err) {
+      if (err instanceof MergeConfigConflict) {
+        errors.push(err);
+      }
+    }
+    return errors;
+  }
+
   async listComponentsDuringMerge(): Promise<ComponentID[]> {
     const unmergedComps = this.scope.legacyScope.objects.unmergedComponents.getComponents();
     const bitIds = unmergedComps.map((u) => new BitId(u.id));
@@ -1189,9 +1220,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * load aspects from the workspace and if not exists in the workspace, load from the scope.
    * keep in mind that the graph may have circles.
    */
-  async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: string): Promise<string[]> {
+  async loadAspects(
+    ids: string[] = [],
+    throwOnError = false,
+    neededFor?: string,
+    opts: WorkspaceLoadAspectsOptions = {}
+  ): Promise<string[]> {
     const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
-    return workspaceAspectsLoader.loadAspects(ids, throwOnError, neededFor);
+    return workspaceAspectsLoader.loadAspects(ids, throwOnError, neededFor, opts);
   }
 
   /**
