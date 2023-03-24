@@ -96,6 +96,11 @@ export class MergeLanesMain {
         `unable to merge lane "${otherLaneId.toString()}", you're already at this lane. to get updates, simply run "bit checkout head"`
       );
     }
+    if (resolveUnrelated && currentLaneId.isDefault()) {
+      throw new BitError(
+        `unable to resolve unrelated when on main. switch to ${otherLaneId.toString()} and run "bit lane merge main --resolve-unrelated"`
+      );
+    }
     const currentLane = currentLaneId.isDefault() ? null : await consumer.scope.loadLane(currentLaneId);
     const isDefaultLane = otherLaneId.isDefault();
     const getOtherLane = async () => {
