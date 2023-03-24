@@ -217,13 +217,13 @@ export function CompositionContent({
 
   return (
     <ComponentComposition
-      forceHeight="100%"
-      fullContentHeight
       className={styles.compositionsIframe}
       // TODO: Oded to add control for viewport.
       viewport={null}
       component={component}
+      forceHeight="100%"
       composition={selected}
+      fullContentHeight
       pubsub={true}
       queryParams={queryParams}
       {...componentCompositionProps}
