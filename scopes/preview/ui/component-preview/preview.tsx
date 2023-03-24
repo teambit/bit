@@ -9,6 +9,8 @@ import { computePreviewScale } from './compute-preview-scale';
 import { useIframeContentHeight } from './use-iframe-content-height';
 import styles from './preview.module.scss';
 
+export type OnPreviewLoadProps = { height?: string; width?: string };
+
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
 export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
   /**
@@ -36,7 +38,7 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
   /**
    * event to be fired when iframe loads
    */
-  onLoad?: () => void;
+  onLoad?: (event?: any, props?: OnPreviewLoadProps) => void;
 
   /**
    * establish a pubsub connection to the iframe,
@@ -116,7 +118,7 @@ export function ComponentPreview({
             setWidth(message.data.width);
             setHeight(message.data.height);
           }
-          onLoad && event && onLoad();
+          onLoad && event && onLoad(event, { height: message.data.height, width: message.data.width });
         },
       },
     });
@@ -131,7 +133,7 @@ export function ComponentPreview({
   // const currentHeight = fullContentHeight ? '100%' : height || 1024;
   const containerWidth = containerRef.current?.offsetWidth || 0;
   const containerHeight = containerRef.current?.offsetHeight || 0;
-  const currentWidth = fullContentHeight ? '100%' : (width || 1280);
+  const currentWidth = fullContentHeight ? '100%' : width || 1280;
   const legacyCurrentWidth = '100%';
   const targetWidth = currentWidth < containerWidth ? containerWidth : currentWidth;
   const targetHeight = height !== 0 ? height : 5000;
@@ -154,7 +156,7 @@ export function ComponentPreview({
           transformOrigin: 'top left',
         }}
         src={url}
-        scrolling={disableScroll ? 'no': undefined}
+        scrolling={disableScroll ? 'no' : undefined}
       />
     </div>
   );
