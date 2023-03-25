@@ -1489,4 +1489,19 @@ describe('bit lane command', function () {
       expect(() => helper.command.status()).to.not.throw();
     });
   });
+  describe('snapping when checked out to non-head snap', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      const firstSnap = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.checkoutVersion(firstSnap, 'comp1');
+    });
+    it('should block the snap', () => {
+      expect(() => helper.command.snapAllComponentsWithoutBuild('--unmodified')).to.throw('are not up to date');
+    });
+  });
 });

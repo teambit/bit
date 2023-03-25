@@ -455,6 +455,7 @@ export class SnappingMain {
     const components = await this.workspace.getManyByLegacy(consumerComponents);
     await this.throwForComponentIssues(components, ignoreIssues);
     this.throwForPendingImport(consumerComponents);
+    await this.throwForOutdatedOnLane(ids);
 
     const { taggedComponents, autoTaggedResults, stagedConfig } = await tagModelComponent({
       workspace: this.workspace,
@@ -814,6 +815,26 @@ there are matching among unmodified components thought. consider using --unmodif
       .map((c) => c.id.toString());
     if (componentsMissingFromScope.length) {
       throw new ComponentsPendingImport(componentsMissingFromScope);
+    }
+  }
+
+  /**
+   * on lane, if snapping on a pervious version, the current head is lost and the new head points to the version in .bitmap
+   * to avoid this, we block the snap altogether and suggest to run "bit checkout head"
+   */
+  async throwForOutdatedOnLane(ids: BitIds) {
+    const lane = await this.workspace.getCurrentLaneObject();
+    if (!lane) return; // on main
+    const laneIds = lane.toBitIds();
+    const mismatchIds = ids.filter((id) => {
+      if (!id.hasVersion()) return false;
+      const onLane = laneIds.searchWithoutVersion(id);
+      if (!onLane) return false;
+      return onLane.version !== id.version;
+    });
+    if (mismatchIds.length) {
+      throw new BitError(`the following id(s) are not up to date, please run "bit checkout head" first.
+${mismatchIds.join('\n')}`);
     }
   }
 
