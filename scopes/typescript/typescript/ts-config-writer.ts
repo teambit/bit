@@ -12,6 +12,7 @@ import type {
   PostProcessExtendingConfigFilesArgs,
 } from '@teambit/workspace-config-files';
 import { CompilerMain } from '@teambit/compiler';
+import { Logger } from '@teambit/logger';
 import { IdeConfig, TypescriptCompilerInterface } from './typescript-compiler-interface';
 import { expandIncludeExclude } from './expand-include-exclude';
 
@@ -23,7 +24,7 @@ export class TypescriptConfigWriter implements ConfigWriterEntry {
   name = 'TypescriptConfigWriter';
   cliName = 'ts';
 
-  constructor(private compiler: CompilerMain) {}
+  constructor(private compiler: CompilerMain, private logger: Logger) {}
   patterns: string[] = [`**/${CONFIG_NAME}`];
 
   calcConfigFiles(executionContext: ExecutionContext): ConfigFile[] | undefined {
@@ -66,6 +67,12 @@ export class TypescriptConfigWriter implements ConfigWriterEntry {
     const tsConfigFile = writtenConfigFiles.find((file) => file.name.includes('tsconfig.bit'));
     if (!tsConfigFile) return Promise.resolve();
     const tsConfigPath = tsConfigFile.filePath;
+    const exists = await fs.pathExists(tsConfigPath);
+
+    if (!exists) {
+      this.logger.warn(`TypescriptConfigWriter, tsconfig file ${tsConfigPath} was not found for post process. if it is part of --dry-run, it is ok.`);
+      return Promise.resolve();
+    }
     const tsConfig = await fs.readJson(tsConfigPath);
     const compDirs: string[] = envMapValue.paths;
 
@@ -86,6 +93,7 @@ export class TypescriptConfigWriter implements ConfigWriterEntry {
   }
 
   async postProcessExtendingConfigFiles?(args: PostProcessExtendingConfigFilesArgs): Promise<void> {
+    if (!args.configsRootDir || args.dryRun) return;
     const { workspaceDir, configsRootDir } = args;
     const rootTsConfigPath = join(workspaceDir, 'tsconfig.json');
     const exists = await fs.pathExists(rootTsConfigPath);
