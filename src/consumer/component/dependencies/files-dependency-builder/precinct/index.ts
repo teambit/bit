@@ -18,7 +18,16 @@ import detectiveScss from '../detectives/detective-scss';
 import detectiveTypeScript from '../detectives/detective-typescript';
 
 import { SUPPORTED_EXTENSIONS } from '../../../../../constants';
-import { BuiltinDependencyDetector, BuiltinDeps, DetectorHook } from '../detector-hook';
+import { BuiltinDeps, DependencyDetector, DetectorHook } from '../detector-hook';
+
+type Options = {
+  envDetectors?: DependencyDetector[];
+  useContent?: boolean;
+  includeCore?: boolean;
+  [lang: string]: any;
+};
+
+type Detective = (fileContent: string | object, options?: any) => BuiltinDeps;
 
 const extToType = {
   '.css': 'css',
@@ -34,7 +43,7 @@ const extToType = {
 
 const jsExt = ['.js', '.jsx', '.cjs', '.mjs'];
 
-const typeToDetective = {
+const typeToDetective: Record<string, Detective> = {
   css: detectiveCss,
   sass: detectiveSass,
   less: detectiveLess,
@@ -57,21 +66,25 @@ type FileInfo = {
   ext: string;
   content: string | object;
   ast: any;
+  type: string;
 };
+
 const getFileInfo = (filename: string): FileInfo => {
   const ext = path.extname(filename);
   const content = fs.readFileSync(filename, 'utf8');
-  return { ext, content, ast: content };
+  return { ext, content, ast: content, type: '' };
 };
 
-const getDetector = (fileInfo: FileInfo, options: Record<string, any>): BuiltinDependencyDetector | undefined => {
+const getDetector = (fileInfo: FileInfo, options?: Options): Detective | undefined => {
   const { ext } = fileInfo;
+  const normalizedOptions: Options = options || {};
 
   // from env detectors
-  if (options.envDetectors) {
+  if (options?.envDetectors) {
     for (const detector of options.envDetectors) {
       if (detector.isSupported({ ext })) {
-        return detector;
+        fileInfo.type = detector.type || '';
+        return detector.detect as Detective;
       }
     }
   }
@@ -80,11 +93,11 @@ const getDetector = (fileInfo: FileInfo, options: Record<string, any>): BuiltinD
   const type = extToType[ext];
   if (typeToDetective[type]) {
     const detective = typeToDetective[type];
-    detective.type = type;
+    fileInfo.type = type;
     // special logic for tsx files
     if (ext === '.tsx') {
-      if (!options.ts) options.ts = {};
-      options.ts.jsx = true;
+      if (!normalizedOptions.ts) normalizedOptions.ts = {};
+      normalizedOptions.ts.jsx = true;
     }
     return detective;
   }
@@ -93,16 +106,16 @@ const getDetector = (fileInfo: FileInfo, options: Record<string, any>): BuiltinD
   if (detectorHook.isSupported(ext)) {
     const detector = detectorHook.getDetector(ext);
     if (detector) {
-      detector.type = ext;
-      typeToDetective[ext] = detector.detect.bind(detector);
+      fileInfo.type = ext;
+      typeToDetective[ext] = detector.detect as Detective;
+      return detector.detect as Detective;
     }
-    return detector as BuiltinDependencyDetector;
   }
 
   return undefined;
 };
 
-const getJsDetector = (fileInfo: FileInfo, options: Record<string, any>): BuiltinDependencyDetector | undefined => {
+const getJsDetector = (fileInfo: FileInfo, options?: Options): Detective | undefined => {
   if (!jsExt.includes(fileInfo.ext)) {
     return undefined;
   }
@@ -116,32 +129,33 @@ const getJsDetector = (fileInfo: FileInfo, options: Record<string, any>): Builti
     }
   }
 
-  const type = options.useContent ? getModuleType.fromSource(fileInfo.content) : getModuleType.fromSource(fileInfo.ast);
+  const useContent = options?.useContent;
+  const type = useContent ? getModuleType.fromSource(fileInfo.content) : getModuleType.fromSource(fileInfo.ast);
   const detector = typeToDetective[type];
-  detector.type = type;
+  fileInfo.type = type;
 
   return detector;
 };
 
-const normalizeDeps = (deps: BuiltinDeps, includeCore: boolean): string[] => {
+const normalizeDeps = (deps: BuiltinDeps, includeCore?: boolean): string[] => {
   const normalizedDeps = Array.isArray(deps) ? deps : Object.keys(deps);
   return includeCore ? normalizedDeps : normalizedDeps.filter((d) => !natives[d]);
 };
 
-export const getDepsFromFile = (filename: string, options: Record<string, any>): string[] => {
-  options = assign({ includeCore: true }, options || {});
+const getDepsFromFile = (filename: string, options?: Options): string[] => {
+  const normalizedOptions: Options = assign({ includeCore: true }, options || {});
   const fileInfo = getFileInfo(filename);
 
-  const detector = getDetector(fileInfo, options) || getJsDetector(fileInfo, options);
-  if (!detector) {
+  const detective = getDetector(fileInfo, normalizedOptions) || getJsDetector(fileInfo, normalizedOptions);
+  if (!detective) {
     debug(`skipping unsupported file ${filename}`);
     return [];
   }
-  debug('module type: ', detector.type);
+  debug('module type: ', fileInfo.type);
 
-  const deps = detector.detect(fileInfo.ast, options[detector.type]);
+  const deps = detective(fileInfo.ast, normalizedOptions[fileInfo.type]);
 
-  return normalizeDeps(deps, options.includeCore);
+  return normalizeDeps(deps, normalizedOptions?.includeCore);
 };
 
 // Legacy implementation
@@ -260,6 +274,10 @@ function assign(o1, o2) {
   return o1;
 }
 
+precinct.paperwork = getDepsFromFile;
+
+export default precinct;
+
 /**
  * Returns the dependencies for the given file path
  *
@@ -268,7 +286,7 @@ function assign(o1, o2) {
  * @param {Boolean} [options.includeCore=true] - Whether or not to include core modules in the dependency list
  * @return {String[]}
  */
-precinct.paperwork = function (filename, options) {
+export const legacyPaperwork = function (filename, options) {
   options = assign(
     {
       includeCore: true,
@@ -336,5 +354,3 @@ precinct.paperwork = function (filename, options) {
 };
 
 export const detectors = [];
-
-export default precinct;
