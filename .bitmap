@@ -1665,12 +1665,6 @@
         "mainFile": "z-indexes.module.scss",
         "rootDir": "scopes/ui-foundation/uis/constants/z-indexes"
     },
-    "ui/contributors": {
-        "scope": "teambit.design",
-        "version": "0.0.514",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/contributors"
-    },
     "ui/corner": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.508",
