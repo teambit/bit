@@ -5,6 +5,7 @@ export {
   WorkspacePolicyConfigObject,
   AddEntryOptions as WorkspacePolicyAddEntryOptions,
   WorkspacePolicyEntry,
+  WorkspacePolicyConfigKeysNames,
 } from './workspace-policy';
 export { VariantPolicy, VariantPolicyConfigObject, SerializedVariantPolicy } from './variant-policy';
 

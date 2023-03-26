@@ -9,4 +9,5 @@ export type GetComponentsOptions = {
   path?: string;
   skipRightSide?: boolean;
   RightNode?: React.ReactNode;
+  className?: string;
 };

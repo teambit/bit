@@ -799,6 +799,12 @@ there are matching among unmodified components thought. consider using --unmodif
     if (!R.isEmpty(componentsWithBlockingIssues)) {
       throw new ComponentsHaveIssues(componentsWithBlockingIssues);
     }
+
+    const workspaceIssues = this.workspace.getWorkspaceIssues();
+    if (workspaceIssues.length) {
+      const issuesStr = workspaceIssues.map((issueErr) => issueErr.message).join('\n');
+      throw new BitError(`the workspace has the following issues:\n${issuesStr}`);
+    }
   }
 
   private throwForPendingImport(components: ConsumerComponent[]) {

@@ -38,7 +38,7 @@ export function LaneMenuItem({
     onLaneSelected?.(current.id);
   };
 
-  const laneDescription = current.description || current.id.name;
+  const laneDisplayName = current.displayName || current.id.name;
   const laneName = current.id.name;
   const user = current.updatedBy || current.createdBy;
 
@@ -53,23 +53,33 @@ export function LaneMenuItem({
     />
   );
 
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  };
+  const formattedTimestamp = timestamp?.toLocaleString(undefined, options).replace(',', '');
+
   return (
     <div {...rest} className={classnames(className, styles.laneMenuItemContainer)}>
       <MenuLinkItem active={isCurrent} href={href} className={styles.menuItem} onClick={onClick}>
         <div className={styles.laneContainer}>
-          <div className={classnames(styles.left, isDefaultLane && styles.mainLane)}>
+          <div className={classnames(styles.top, isDefaultLane && styles.mainLane)}>
             <div className={classnames(styles.icon, isDefaultLane && !icon && styles.defaultMainLaneIcon)}>
               {avatar}
             </div>
-            <div className={styles.laneInfo}>
-              <div className={classnames(styles.laneDescription)}>{laneDescription}</div>
-              {!isDefaultLane && <div className={styles.laneName}>{laneName}</div>}
-            </div>
+            <div className={classnames(styles.laneDisplayName)}>{laneDisplayName}</div>
           </div>
-          <div className={styles.right}>
-            {timestamp && (
+          <div className={styles.bottom}>
+            {!isDefaultLane && <div className={styles.laneName}>{laneName}</div>}
+
+            {formattedTimestamp && (
               <div className={styles.timeStamp}>
-                <TimeAgo date={timestamp?.toString()} />
+                <TimeAgo date={formattedTimestamp} />
               </div>
             )}
           </div>

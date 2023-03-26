@@ -264,11 +264,9 @@ export class InstallMain {
     return current.componentDirectoryMap;
   }
 
-  private async addConfiguredAspectsToWorkspacePolicy(
-    rootPolicy: WorkspacePolicy,
-  ): Promise<WorkspacePolicy> {
-    const aspectsPackages = await this.workspace.getConfiguredUserAspectsPackages({externalsOnly: true});
-    aspectsPackages.forEach(aspectsPackage => {
+  private async addConfiguredAspectsToWorkspacePolicy(rootPolicy: WorkspacePolicy): Promise<WorkspacePolicy> {
+    const aspectsPackages = await this.workspace.getConfiguredUserAspectsPackages({ externalsOnly: true });
+    aspectsPackages.forEach((aspectsPackage) => {
       rootPolicy.add({
         dependencyId: aspectsPackage.packageName,
         value: {
@@ -276,7 +274,7 @@ export class InstallMain {
         },
         lifecycleType: 'runtime',
       });
-    })
+    });
     return rootPolicy;
   }
 
@@ -637,7 +635,7 @@ export class InstallMain {
       this.visitedAspects.add(aspectIdStr);
       const packagePath = this.workspace.getComponentPackagePath(aspectComponent);
       const exists = await pathExists(packagePath);
-      if (!exists){
+      if (!exists) {
         const inWs = await this.workspace.hasId(aspectComponent.id);
         if (inWs) {
           needLink = true;
@@ -711,7 +709,7 @@ export class InstallMain {
     ];
     // For now do not automate installation during aspect resolving
     // workspace.registerOnAspectsResolve(installExt.onAspectsResolveSubscriber.bind(installExt));
-    if (workspace){
+    if (workspace) {
       workspace.registerOnRootAspectAdded(installExt.onRootAspectAddedSubscriber.bind(installExt));
     }
     cli.register(...commands);

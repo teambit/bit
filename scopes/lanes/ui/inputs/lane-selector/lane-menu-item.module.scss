@@ -20,13 +20,13 @@
 
 .laneContainer {
   display: flex;
-  justify-content: space-between;
-  gap: 4px;
+  flex-direction: column;
   width: 100%;
+  gap: 4px;
 
-  .left {
+  .top {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
     width: 100%;
     flex: 2;
@@ -35,18 +35,21 @@
       align-items: center;
     }
 
-    .laneInfo {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .laneDescription {
+    .laneDisplayName {
       font-weight: 700;
       font-size: var(--bit-p-xs, '14px');
     }
+  }
+
+  .bottom {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
 
     .laneName {
+      text-align: left;
       font-weight: 400;
       font-size: var(--bit-p-xxs, '12px');
       background: var(--surface-neutral-hover-color, #f7f7f7);
@@ -54,16 +57,9 @@
       width: fit-content;
       padding: 2px 4px;
     }
-  }
-
-  .right {
-    display: flex;
-    text-align: right;
-    flex: 1;
-    align-items: flex-end;
-    justify-content: flex-end;
 
     .timeStamp {
+      text-align: right;
       > span {
         font-size: var(--bit-p-xxs, '12px');
       }
