@@ -78,5 +78,5 @@ export type DependencyTreeParams = {
   visited?: Record<string, any>;
   cacheResolvedDependencies?: Record<string, any>;
   cacheProjectAst?: Record<string, any>;
-  envDetectrors?: DependencyDetector[] | null;
+  envDetectors?: DependencyDetector[] | null;
 };

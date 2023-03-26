@@ -159,7 +159,7 @@ export default function generateTree(files: string[] = [], config): GenerateTree
         nonExistent,
         pathMap,
         cacheProjectAst: config.cacheProjectAst,
-        envDetectrors: config.envDetectrors,
+        envDetectors: config.envDetectors,
       });
       Object.assign(depTree, dependencyTreeResult);
     } catch (err: any) {

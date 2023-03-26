@@ -31,7 +31,7 @@ export default function Config(options) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   this.cacheProjectAst = options.cacheProjectAst;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.envDetectrors = options.envDetectrors;
+  this.envDetectors = options.envDetectors;
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   this.filter = options.filter;
