@@ -2,7 +2,7 @@
  * this file had been forked from https://github.com/dependents/node-dependency-tree
  */
 import cabinet from '../filing-cabinet';
-import precinct from '../precinct';
+import precinct, { getDepsFromFile } from '../precinct';
 import Config from './Config';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const debug = require('debug')('tree');
@@ -70,7 +70,7 @@ module.exports._getDependencies = function (config) {
   delete precinct.ast;
 
   try {
-    dependenciesRaw = precinct.paperwork(config.filename, precinctOptions);
+    dependenciesRaw = getDepsFromFile(config.filename, precinctOptions);
   } catch (e: any) {
     debug(`error getting dependencies: ${e.message}`);
     debug(e.stack);
