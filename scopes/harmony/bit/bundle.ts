@@ -12,7 +12,7 @@ function bundle() {
       // 'process.env.JSON_LOGS': 'true',
       'process.env.BIT_LOG': `'debug'`,
       // 'import_meta_url': 'import_meta_url',
-      'import_meta.url': 'import_meta_url',
+      // 'import_meta.url': 'import_meta_url',
     },
     entryPoints: ['/Users/giladshoham/dev/bit/bit/scopes/harmony/bit/app.ts'],
     // entryPoints: ['/Users/giladshoham/dev/bit/bit/node_modules/@teambit/bit/dist/app.js'],
@@ -25,9 +25,11 @@ function bundle() {
     format: 'cjs',
     keepNames: true,
     outfile: _outfile,
-    inject: [join(__dirname, './import-meta-url.js')],
+    // inject: [join(__dirname, './import-meta-url.js')],
 
     external: [
+      'yoga-layout-prebuilt',
+      '@surma/rollup-plugin-off-main-thread',
       '@babel/preset-react',
       'ink',
       'style-loader',
