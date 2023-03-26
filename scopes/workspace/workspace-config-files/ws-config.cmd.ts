@@ -76,12 +76,11 @@ export class WsConfigWriteCmd implements Command {
 
   async json(_args, flags: WriteConfigCmdFlags) {
     const { clean, silent, noDedupe, dryRunWithContent, writers } = flags;
-    const dryRun = dryRunWithContent ? true : flags.dryRun;
+    const dryRun = dryRunWithContent ? true : !!flags.dryRun;
     const { cleanResults, writeResults, wsDir } = await this.workspaceConfigFilesMain.writeConfigFiles({
       clean,
       dedupe: !noDedupe,
       dryRun,
-      dryRunWithContent,
       silent,
       writers: writers?.split(',')
     });

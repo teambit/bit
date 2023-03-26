@@ -365,7 +365,8 @@ export class WorkspaceCompiler {
     changed = false
   ): Promise<ComponentID[]> {
     if (componentsIds.length) {
-      return this.workspace.resolveMultipleComponentIds(componentsIds);
+      const componentIds = await this.workspace.resolveMultipleComponentIds(componentsIds);
+      return this.workspace.filterIds(componentIds);
     }
     if (changed) {
       return this.workspace.getNewAndModifiedIds();
