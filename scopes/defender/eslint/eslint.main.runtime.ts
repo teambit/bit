@@ -82,7 +82,7 @@ export class ESLintMain {
     LinterMain
   ]): Promise<ESLintMain> {
     const logger = loggerExt.createLogger(ESLintAspect.id);
-    workspaceConfigFiles.registerConfigWriter(new EslintConfigWriter(linter));
+    workspaceConfigFiles.registerConfigWriter(new EslintConfigWriter(linter, logger));
     return new ESLintMain(logger);
   }
 }
