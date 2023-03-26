@@ -222,6 +222,8 @@
         "dagre": "0.8.5",
         "didyoumean": "1.2.1",
         "enquirer": "2.3.6",
+        "esbuild": "^0.17.12",
+        "esbuild-plugin-ignore": "^1.1.1",
         "eslint-config-airbnb-typescript": {
           "version": "5.1.0",
           "preserve": true
