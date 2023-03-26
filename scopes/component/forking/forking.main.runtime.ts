@@ -1,5 +1,4 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import camelCase from 'camelcase';
 import { ComponentDependency, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { BitId } from '@teambit/legacy-bit-id';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
@@ -201,28 +200,8 @@ the reason is that the refactor changes the components using ${sourceId.toString
       ]
     );
     if (!options?.preserve) {
-      await this.refactoring.replaceMultipleStrings(
-        [component],
-        [
-          {
-            oldStr: sourceId.name,
-            newStr: targetCompId.name,
-          },
-          {
-            oldStr: camelCase(sourceId.name),
-            newStr: camelCase(targetCompId.name),
-          },
-          {
-            oldStr: camelCase(sourceId.name, { pascalCase: true }),
-            newStr: camelCase(targetCompId.name, { pascalCase: true }),
-          },
-        ]
-      );
-      component.filesystem.files.forEach((file) => {
-        if (file.relative.includes(sourceId.name)) {
-          file.updatePaths({ newRelative: file.relative.replace(sourceId.name, targetCompId.name) });
-        }
-      });
+      await this.refactoring.refactorVariableAndClasses(component, sourceId, targetCompId);
+      this.refactoring.refactorFilenames(component, sourceId, targetCompId);
     }
     const config = await this.getConfig(component, options);
     await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, options, config);

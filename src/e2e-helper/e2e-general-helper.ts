@@ -141,7 +141,7 @@ export default class GeneralHelper {
     return path.join(this.scopes.localPath, MergeConfigFilename);
   }
 
-  fixMergeConfigConflict(strategy: string) {
+  fixMergeConfigConflict(strategy: 'ours' | 'theirs') {
     const filePath = this.getConfigMergePath();
     const fileContent = fs.readFileSync(filePath).toString();
     const toRemove = strategy === 'ours' ? '>>>>>>>' : '<<<<<<<';
