@@ -285,15 +285,15 @@ export class TsserverClient {
       return this.options.tsServerPath;
     }
     const tsServerPath = path.join('typescript', 'lib', 'tsserver.js');
-    // 1) look into .yarn/sdks of workspace root
-    const sdk = findPathToYarnSdk(this.projectPath, tsServerPath);
-    if (sdk) {
-      return sdk;
-    }
-    // 2) look into node_modules of workspace root
+    // 1) look into node_modules of workspace root
     const executable = findPathToModule(this.projectPath, tsServerPath);
     if (executable) {
       return executable;
+    }
+    // 2) look into .yarn/sdks of workspace root
+    const sdk = findPathToYarnSdk(this.projectPath, tsServerPath);
+    if (sdk) {
+      return sdk;
     }
     // 3) use globally installed tsserver
     if (commandExists.sync(getTsserverExecutable())) {
