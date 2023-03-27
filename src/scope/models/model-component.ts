@@ -86,7 +86,7 @@ export type ComponentProps = {
   schema?: string | undefined;
 };
 
-const VERSION_ZERO = '0.0.0';
+export const VERSION_ZERO = '0.0.0';
 
 /**
  * we can't rename the class as ModelComponent because old components are already saved in the model
