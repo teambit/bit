@@ -159,6 +159,7 @@ const getJsDetector = (fileInfo: FileInfo, options?: Options): Detective | undef
   if (!jsExt.includes(fileInfo.ext)) {
     return undefined;
   }
+
   if (typeof fileInfo.content !== 'object') {
     const walker = new Walker();
     try {
@@ -220,7 +221,7 @@ const precinct = (content: string | object, options?: string | Options): Builtin
   const fileInfo: FileInfo = {
     content,
     ast: content,
-    ext: '',
+    ext: type ? '' : '.js',
     type,
   };
 
