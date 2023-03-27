@@ -1489,4 +1489,21 @@ describe('bit lane command', function () {
       expect(() => helper.command.status()).to.not.throw();
     });
   });
+  describe('create comp on a lane then same on main', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.fetchLane(`${helper.scopes.remote}/dev`);
+    });
+    // previously, it was throwing "getHeadRegardlessOfLaneAsTagOrHash() failed finding a head for lyq5piak-remote/comp1"
+    it('bit status should not throw', () => {
+      expect(() => helper.command.status()).to.not.throw();
+    });
+  });
 });

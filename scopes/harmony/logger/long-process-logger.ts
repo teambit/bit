@@ -29,9 +29,10 @@ export class LongProcessLogger {
     this.logPublisher.setStatusLine(`${this.extensionName}, ${message}`);
   }
 
-  end() {
+  end(alternateDescriptionPrefix?: string) {
+    const description = alternateDescriptionPrefix || this.processDescription;
     const duration = process.hrtime(this.startTime);
-    const message = `${this.processDescription} (completed in ${prettyTime(duration)})`;
+    const message = `${description} (completed in ${prettyTime(duration)})`;
     this.logAndConsole(message);
   }
 

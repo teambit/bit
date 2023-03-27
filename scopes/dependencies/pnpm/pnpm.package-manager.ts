@@ -59,7 +59,9 @@ export class PnpmPackageManager implements PackageManager {
         includeOptionalDeps: installOptions.includeOptionalDeps,
         overrides: installOptions.overrides,
         hoistPattern: config.hoistPattern,
-        publicHoistPattern: ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
+        publicHoistPattern: config.shamefullyHoist
+          ? ['*']
+          : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
         rootComponents: installOptions.rootComponents,
         rootComponentsForCapsules: installOptions.rootComponentsForCapsules,

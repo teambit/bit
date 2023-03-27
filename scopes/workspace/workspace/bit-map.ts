@@ -189,4 +189,13 @@ export class BitMap {
   hasChanged(): boolean {
     return this.legacyBitMap.hasChanged;
   }
+
+  takeSnapshot(): ComponentMap[] {
+    return this.legacyBitMap.components.map((comp) => comp.clone());
+  }
+
+  restoreFromSnapshot(componentMaps: ComponentMap[]) {
+    this.legacyBitMap.components = componentMaps;
+    this.legacyBitMap._invalidateCache();
+  }
 }

@@ -585,6 +585,11 @@ export default class Consumer {
     await Scope.reset(this.scope.path, true);
   }
 
+  async resetLaneNew() {
+    this.bitMap.resetLaneComponentsToNew();
+    await Scope.reset(this.scope.path, true);
+  }
+
   static locateProjectScope(projectPath: string) {
     if (fs.existsSync(path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR))) {
       return path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR);
