@@ -110,8 +110,7 @@ export interface WorkspaceTemplate {
   importComponents?: () => ForkComponentInfo[];
 
   /**
-   * populate existing components into the new workspace and add them as new components.
-   * don't change their source code.
+   * import components into the new workspace, don't change their source code.
    */
   import?: () => ImportComponentInfo[];
 
