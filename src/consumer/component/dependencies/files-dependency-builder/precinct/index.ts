@@ -230,7 +230,11 @@ const precinct = (content: string | object, options?: string | Options): Builtin
     return [];
   }
 
-  return detective(fileInfo.ast, normalizedOptions[fileInfo.type]);
+  const deps = detective(fileInfo.ast, normalizedOptions[fileInfo.type]);
+  // @ts-ignore
+  precinct.ast = detective.ast || fileInfo.ast;
+
+  return deps;
 };
 
 precinct.paperwork = getDepsFromFile;

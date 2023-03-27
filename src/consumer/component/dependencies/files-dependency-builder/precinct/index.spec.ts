@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { DependencyDetector } from '../detector-hook';
 
 const assert = require('assert');
 const fs = require('fs');
@@ -198,6 +199,27 @@ describe('node-precinct', () => {
         amd: config.amd,
       });
       assert.deepEqual(deps, ['./a', './b']);
+    });
+
+    it('supports passing env detectors', () => {
+      const detector: DependencyDetector = {
+        detect: (fileContent: string) => {
+          return fileContent.indexOf('foo') === -1 ? [] : ['foo'];
+        },
+        isSupported: ({ ext }) => {
+          return ext === '.foo';
+        },
+        type: 'foo',
+      };
+      const result = precinct.paperwork(`${fixturesFullPath}/foo.foo`, {
+        envDetectors: [detector],
+      });
+      assert.deepEqual(result, []);
+
+      const result2 = precinct.paperwork(`${fixturesFullPath}/bar.foo`, {
+        envDetectors: [detector],
+      });
+      assert.deepEqual(result2, ['foo']);
     });
 
     describe('when given detective configuration', () => {
