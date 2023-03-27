@@ -21,6 +21,7 @@
 
 .search {
   display: flex;
+  width: 100%;
 }
 
 .menu {
@@ -41,9 +42,14 @@
   display: flex;
 }
 
-.searchInput {
+.searchInputContainer {
   width: 100%;
   padding-top: 0;
+}
+
+.searchInput {
+  // otherwise, search input defaults to 12px for 's' inputSize
+  font-size: var(--bit-p-xs, '14px') !important;
 }
 
 .toolbar {
@@ -51,6 +57,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 6px 8px;
+  gap: 8px;
 }
 
 .groupBy {
@@ -80,5 +87,6 @@
 }
 
 .searchIcon {
-  top: calc(50% - 0.4rem) !important;
+  // otherwise the search icon is not aligned with the placeholder
+  top: calc(50% - 0.5rem) !important;
 }

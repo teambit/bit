@@ -137,7 +137,8 @@ export function LaneSelector(props: LaneSelectorProps) {
             activeLabel={false}
             inputSize={'s'}
             // ref={inputRef}
-            className={styles.searchInput}
+            className={styles.searchInputContainer}
+            inputClass={styles.searchInput}
             placeholder={'Search'}
             value={search}
             onChange={handleSearchOnChange}

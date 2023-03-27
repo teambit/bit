@@ -5,6 +5,7 @@ import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { TimeAgo } from '@teambit/design.ui.time-ago';
+import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 
 import styles from './lane-menu-item.module.scss';
 
@@ -75,7 +76,7 @@ export function LaneMenuItem({
             <div className={classnames(styles.laneDisplayName)}>{laneDisplayName}</div>
           </div>
           <div className={styles.bottom}>
-            {!isDefaultLane && <div className={styles.laneName}>{laneName}</div>}
+            {!isDefaultLane && <Ellipsis className={styles.laneName}>{laneName}</Ellipsis>}
 
             {formattedTimestamp && (
               <div className={styles.timeStamp}>

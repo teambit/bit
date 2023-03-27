@@ -47,6 +47,7 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    gap: 16px;
 
     .laneName {
       text-align: left;
@@ -54,16 +55,23 @@
       font-size: var(--bit-p-xxs, '12px');
       background: var(--surface-neutral-hover-color, #f7f7f7);
       border-radius: 4px;
-      width: fit-content;
       padding: 2px 4px;
+      max-width: 180px;
     }
 
     .timeStamp {
       text-align: right;
-      > span {
-        font-size: var(--bit-p-xxs, '12px');
-      }
       font-size: var(--bit-p-xxs, '12px');
+
+      > span:first-of-type {
+        font-size: var(--bit-p-xxs, '12px');
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+        max-width: 100px;
+      }
+
       // @todo replace with var
       color: #9598a1;
     }

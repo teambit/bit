@@ -1901,7 +1901,7 @@
     },
     "ui/inputs/lane-selector": {
         "scope": "teambit.lanes",
-        "version": "0.0.111",
+        "version": "001bc2d64efcf2e6f0918a5b69770a79199efbdd",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/ui/inputs/lane-selector"
     },
