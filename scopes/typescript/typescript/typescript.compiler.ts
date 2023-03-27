@@ -35,11 +35,11 @@ export class TypescriptCompiler implements Compiler, TypescriptCompilerInterface
   displayName = 'TypeScript';
   deleteDistDir = false;
 
-  generateIdeConfig(){
+  generateIdeConfig() {
     return {
       tsconfig: this.options.tsconfig,
-      globalTypesPaths: this.options.types
-    }
+      globalTypesPaths: this.options.types,
+    };
   }
 
   displayConfig() {

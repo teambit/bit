@@ -1,7 +1,13 @@
 import { sha1 } from '@teambit/legacy/dist/utils';
 import fs from 'fs-extra';
 import { ExecutionContext } from '@teambit/envs';
-import type { ConfigWriterEntry, EnvMapValue, WrittenConfigFile, ExtendingConfigFile, ConfigFile } from '@teambit/workspace-config-files';
+import type {
+  ConfigWriterEntry,
+  EnvMapValue,
+  WrittenConfigFile,
+  ExtendingConfigFile,
+  ConfigFile,
+} from '@teambit/workspace-config-files';
 import { expandIncludeExclude } from '@teambit/typescript';
 import { set } from 'lodash';
 import { Logger } from '@teambit/logger';
@@ -53,7 +59,9 @@ export class EslintConfigWriter implements ConfigWriterEntry {
     const tsConfigPath = tsConfigFile.filePath;
     const exists = await fs.pathExists(tsConfigPath);
     if (!exists) {
-      this.logger.warn(`EslintConfigWriter, tsconfig file ${tsConfigPath} was not found for post process. if it is part of --dry-run, it is ok.`);
+      this.logger.warn(
+        `EslintConfigWriter, tsconfig file ${tsConfigPath} was not found for post process. if it is part of --dry-run, it is ok.`
+      );
       return Promise.resolve();
     }
     const tsConfig = await fs.readJson(tsConfigPath);
@@ -71,7 +79,7 @@ export class EslintConfigWriter implements ConfigWriterEntry {
       extends: [eslintConfigFile.filePath],
     };
     const content = `${BIT_GENERATED_ESLINT_CONFIG_COMMENT}\n${JSON.stringify(config, null, 2)}`;
-    return { content, name: '.eslintrc.json', extendingTarget: eslintConfigFile.filePath};
+    return { content, name: '.eslintrc.json', extendingTarget: eslintConfigFile.filePath };
   }
 
   isBitGenerated(filePath: string): boolean {
