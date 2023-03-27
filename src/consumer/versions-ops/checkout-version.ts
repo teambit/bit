@@ -139,6 +139,13 @@ export function applyModifiedVersion(
     modifiedFiles.push(file.fsFile);
     filesStatus[file.filePath] = FileStatus.added;
   });
+  mergeResults.deletedConflictFiles.forEach((file) => {
+    if (!file.fsFile) return;
+    const filePath: PathOsBased = path.normalize(file.filePath);
+    if (modifiedFiles.find((m) => m.relative === filePath)) return;
+    modifiedFiles.push(file.fsFile);
+    filesStatus[file.filePath] = FileStatus.added;
+  });
   mergeResults.removeFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     filesStatus[file.filePath] = FileStatus.removed;
@@ -149,6 +156,10 @@ export function applyModifiedVersion(
     modifiedFiles = modifiedFiles.filter((f) => f.relative !== filePath);
     filesStatus[file.filePath] = FileStatus.remainDeleted;
   });
+  mergeResults.deletedConflictFiles.forEach((file) => {
+    filesStatus[file.filePath] = FileStatus.deletedConflict;
+  });
+
   mergeResults.overrideFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     const foundFile = modifiedFiles.find((componentFile) => componentFile.relative === filePath);
