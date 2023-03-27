@@ -311,7 +311,7 @@ export class TypescriptMain {
     EnvsAspect,
     WatcherAspect,
     WorkspaceConfigFilesAspect,
-    CompilerAspect
+    CompilerAspect,
   ];
   static slots = [Slot.withType<SchemaTransformer[]>()];
 

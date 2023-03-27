@@ -249,7 +249,6 @@ export class WorkspaceConfigFilesMain {
       opts
     );
     if (configWriter.postProcessExtendingConfigFiles) {
-
       await configWriter.postProcessExtendingConfigFiles({
         workspaceDir: this.workspace.path,
         configsRootDir,
@@ -299,7 +298,7 @@ export class WorkspaceConfigFilesMain {
     );
     if (configWriter.postProcessConfigFiles) {
       await configWriter.postProcessConfigFiles(writtenConfigFiles, executionContext, envMapValue, {
-        dryRun: !!opts.dryRun
+        dryRun: !!opts.dryRun,
       });
     }
     return writtenConfigFiles;

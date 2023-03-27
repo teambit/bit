@@ -64,6 +64,16 @@ describe('remove lanes', function () {
           expect(lanes).not.to.have.string('dev');
         });
       });
+      describe('removing with --force flag and the full id', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(beforeRemove);
+          output = helper.command.removeLane(`${helper.scopes.remote}/dev --force`);
+        });
+        it('should remove the lane successfully', () => {
+          expect(output).to.have.string('successfully removed the following lane(s)');
+        });
+      });
       describe('merge the lane, then remove without --force', () => {
         let output;
         before(() => {

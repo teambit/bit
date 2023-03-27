@@ -16,6 +16,8 @@ import { ComponentFsCache } from './component-fs-cache';
 import { updateDependenciesVersions } from './dependencies/dependency-resolver';
 import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
 import ComponentMap from '../bit-map/component-map';
+import { VERSION_ZERO } from '../../scope/models/model-component';
+import loader from '../../cli/loader';
 
 export type ComponentLoadOptions = {
   loadDocs?: boolean;
@@ -274,17 +276,29 @@ export default class ComponentLoader {
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(
         currentId.changeScope(component.defaultScope)
       );
-      if (modelComponent) {
-        const newId = currentId
-          .changeVersion(modelComponent.getHeadRegardlessOfLaneAsTagOrHash())
-          .changeScope(modelComponent.scope);
-        component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
-
-        component.version = newId.version;
-        component.scope = newId.scope;
-        this.consumer.bitMap.updateComponentId(newId);
-        component.componentMap = this.consumer.bitMap.getComponent(newId);
+      if (!modelComponent) {
+        return;
       }
+      const existingVersion = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
+      if (existingVersion === VERSION_ZERO) {
+        // this might happen when a component was created on another lane.
+        // we don't allow two components with the same name and different history graph.
+        loader.stop();
+        logger.console(
+          `component ${currentId.toString()} exists already in the local-scope without head.
+it was probably created on another lane and if so, consider removing this component and merge it from the lane`,
+          'warn',
+          'yellow'
+        );
+        return;
+      }
+      const newId = currentId.changeVersion(existingVersion).changeScope(modelComponent.scope);
+      component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
+
+      component.version = newId.version;
+      component.scope = newId.scope;
+      this.consumer.bitMap.updateComponentId(newId);
+      component.componentMap = this.consumer.bitMap.getComponent(newId);
     }
   }
 

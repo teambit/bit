@@ -66,7 +66,7 @@ export type LaneResults = {
 };
 
 export type CreateLaneOptions = {
-  remoteScope?: string; // default to the defaultScope in workspace.jsonc
+  scope?: string; // default to the defaultScope in workspace.jsonc
   alias?: string; // default to the remote name
 };
 
@@ -221,7 +221,7 @@ export class LanesMain {
     this.workspace?.consumer.setCurrentLane(laneId, exported);
   }
 
-  async createLane(name: string, { remoteScope, alias }: CreateLaneOptions = {}): Promise<CreateLaneResult> {
+  async createLane(name: string, { scope, alias }: CreateLaneOptions = {}): Promise<CreateLaneResult> {
     if (!this.workspace) {
       const newLane = await createLaneInScope(name, this.scope);
       return {
@@ -232,7 +232,7 @@ export class LanesMain {
     if (alias) {
       throwForInvalidLaneName(alias);
     }
-    const scope = remoteScope || this.workspace.defaultScope;
+    scope = scope || this.workspace.defaultScope;
     const laneObj = await createLane(this.workspace.consumer, name, scope);
     const laneId = LaneId.from(name, scope);
     this.setCurrentLane(laneId, alias, false);

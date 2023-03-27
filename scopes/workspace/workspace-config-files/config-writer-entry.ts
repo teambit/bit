@@ -1,5 +1,10 @@
 import { Environment, ExecutionContext } from '@teambit/envs';
-import { EnvCompsDirsMap, EnvMapValue, EnvsWrittenExtendingConfigFiles, WrittenConfigFile } from './workspace-config-files.main.runtime';
+import {
+  EnvCompsDirsMap,
+  EnvMapValue,
+  EnvsWrittenExtendingConfigFiles,
+  WrittenConfigFile,
+} from './workspace-config-files.main.runtime';
 
 export type ConfigFile = {
   /**
@@ -23,26 +28,26 @@ export type ExtendingConfigFile = ConfigFile & {
    * Name of the config file that this config file extends.
    */
   extendingTarget: string;
-}
+};
 
 export type PostProcessExtendingConfigFilesArgs = {
-  workspaceDir: string,
-  configsRootDir: string,
-  writtenExtendingConfigFiles: EnvsWrittenExtendingConfigFiles,
-  envCompsDirsMap: EnvCompsDirsMap,
-  dryRun: boolean,
-}
+  workspaceDir: string;
+  configsRootDir: string;
+  writtenExtendingConfigFiles: EnvsWrittenExtendingConfigFiles;
+  envCompsDirsMap: EnvCompsDirsMap;
+  dryRun: boolean;
+};
 
 export type PostProcessConfigFilesOptions = {
-  dryRun: boolean,
-}
+  dryRun: boolean;
+};
 
 export interface ConfigWriterEntry {
   /**
    * Name of the config writer.
    * used for outputs and logging.
    */
-  name: string
+  name: string;
 
   /**
    * Name that is used to filter the config writer by the cli when using --writers flag.
@@ -87,7 +92,6 @@ export interface ConfigWriterEntry {
    * It also reduces the risk of the user manually change the config file and then the changes will be lost.
    */
   generateExtendingFile(writtenConfigFiles: WrittenConfigFile[]): ExtendingConfigFile | undefined;
-
 
   /**
    * This enables the writer to do some post processing after the extending config files were written.
