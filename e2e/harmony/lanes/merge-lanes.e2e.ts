@@ -979,6 +979,50 @@ describe('merge lanes', function () {
       expect(() => helper.command.status()).to.not.throw();
     });
   });
+  describe('conflict when the same file exist in base, deleted on the lane and modified on main', () => {
+    const conflictedFilePath = 'comp1/foo.js';
+    let beforeMerge: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+
+      helper.fs.outputFile(conflictedFilePath);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane();
+      helper.fs.deletePath(conflictedFilePath);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.switchLocalLane('main', '-x');
+      helper.fs.outputFile(conflictedFilePath, 'console.log("hello")');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      beforeMerge = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('when the lane is merged to main, so currently on the FS the file exits', () => {
+      before(() => {
+        helper.command.mergeLane('dev', '--no-squash --no-snap -x');
+      });
+      // previously the file was removed
+      it('should not remove the file', () => {
+        expect(path.join(helper.scopes.localPath, conflictedFilePath)).to.be.a.file();
+      });
+    });
+    describe('when main is merged to the lane, so currently on the FS the file is removed', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeMerge);
+        helper.command.switchLocalLane('dev', '-x');
+        helper.command.mergeLane('main', '--no-snap -x');
+      });
+      // previously it was in "remain-deleted" state and the file was not created
+      it('should add the file', () => {
+        expect(path.join(helper.scopes.localPath, conflictedFilePath)).to.be.a.file();
+      });
+    });
+  });
   describe('merging from a lane to main when it has a long history which does not exist locally', () => {
     let beforeMerge: string;
     before(() => {
