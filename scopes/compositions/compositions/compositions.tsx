@@ -28,6 +28,7 @@ import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import type { CompositionsMenuSlot } from './compositions.ui.runtime';
+import { ComponentCompositionProps } from './ui/composition-preview';
 
 export type MenuBarWidget = {
   location: 'start' | 'end';
@@ -156,9 +157,15 @@ export type CompositionContentProps = {
   selected?: Composition;
   queryParams?: string | string[];
   emptyState?: EmptyStateSlot;
-};
+} & ComponentCompositionProps;
 
-export function CompositionContent({ component, selected, queryParams, emptyState }: CompositionContentProps) {
+export function CompositionContent({
+  component,
+  selected,
+  queryParams,
+  emptyState,
+  ...componentCompositionProps
+}: CompositionContentProps) {
   const env = component.environment?.id;
   const EmptyStateTemplate = emptyState?.get(env || ''); // || defaultTemplate;
 
@@ -219,6 +226,7 @@ export function CompositionContent({ component, selected, queryParams, emptyStat
       fullContentHeight
       pubsub={true}
       queryParams={queryParams}
+      {...componentCompositionProps}
     />
   );
 }

@@ -39,6 +39,11 @@ export default class Init implements LegacyCommand {
     ['', 'reset-new', 'reset .bitmap file as if the components were newly added and remove all model data (objects)'],
     [
       '',
+      'reset-lane-new',
+      'same as reset-new, but it only reset components belong to lanes. main components are left intact',
+    ],
+    [
+      '',
       'reset-hard',
       'delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-start using Bit from scratch',
     ],
@@ -66,6 +71,7 @@ export default class Init implements LegacyCommand {
       standalone,
       reset,
       resetNew,
+      resetLaneNew,
       resetHard,
       resetScope,
       force,
@@ -91,18 +97,26 @@ export default class Init implements LegacyCommand {
       defaultScope: defaultScope ?? getSync(CFG_INIT_DEFAULT_SCOPE),
       packageManager,
     };
-    return init(path, standalone, reset, resetNew, resetHard, resetScope, force, workspaceConfigFileProps).then(
-      ({ created, addedGitHooks, existingGitHooks }) => {
-        return {
-          created,
-          addedGitHooks,
-          existingGitHooks,
-          reset,
-          resetHard,
-          resetScope,
-        };
-      }
-    );
+    return init(
+      path,
+      standalone,
+      reset,
+      resetNew,
+      resetLaneNew,
+      resetHard,
+      resetScope,
+      force,
+      workspaceConfigFileProps
+    ).then(({ created, addedGitHooks, existingGitHooks }) => {
+      return {
+        created,
+        addedGitHooks,
+        existingGitHooks,
+        reset,
+        resetHard,
+        resetScope,
+      };
+    });
   }
 
   report({ created, bare, reset, resetHard, resetScope }: any): string {
