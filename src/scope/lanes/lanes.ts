@@ -75,13 +75,18 @@ export default class Lanes {
 
   async removeLanes(scope: Scope, lanes: string[], force: boolean, currentLaneName?: string): Promise<string[]> {
     const existingLanes = await this.listLanes();
-    const lanesToRemove: Lane[] = lanes.map((laneName) => {
-      if (laneName === DEFAULT_LANE) throw new BitError(`unable to remove the default lane "${DEFAULT_LANE}"`);
-      if (laneName === currentLaneName) throw new BitError(`unable to remove the currently used lane "${laneName}"`);
-      const existingLane = existingLanes.find((l) => l.name === laneName);
-      if (!existingLane) throw new LaneNotFound(scope.name, laneName);
-      return existingLane;
-    });
+
+    const lanesToRemove: Lane[] = await Promise.all(
+      lanes.map(async (laneName) => {
+        if (laneName === DEFAULT_LANE) throw new BitError(`unable to remove the default lane "${DEFAULT_LANE}"`);
+        if (laneName === currentLaneName) throw new BitError(`unable to remove the currently used lane "${laneName}"`);
+        const laneId = await this.parseLaneIdFromString(laneName);
+        const existingLane = existingLanes.find((l) => l.toLaneId().isEqual(laneId));
+        if (!existingLane) throw new LaneNotFound(scope.name, laneName);
+        return existingLane;
+      })
+    );
+
     if (!force) {
       await Promise.all(
         lanesToRemove.map(async (laneObj) => {
@@ -132,7 +137,7 @@ export default class Lanes {
     const allLanes = await this.listLanes();
     const foundWithSameName = allLanes.filter((lane) => lane.name === name);
     if (foundWithSameName.length === 0) {
-      throw new BitError(`unable to find a lane with the name "${name}"`);
+      throw new LaneNotFound(this.scopeJson.name, name);
     }
     if (foundWithSameName.length > 1) {
       throw new BitError(
