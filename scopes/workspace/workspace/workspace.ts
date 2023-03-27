@@ -359,6 +359,14 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * given component-ids, return the ones that are part of the workspace
+   */
+  async filterIds(ids: ComponentID[]): Promise<ComponentID[]> {
+    const workspaceIds = await this.listIds();
+    return ids.filter((id) => workspaceIds.find((wsId) => wsId.isEqual(id)));
+  }
+
+  /**
    * whether or not a workspace has a component with the given name
    */
   async hasName(name: string): Promise<boolean> {

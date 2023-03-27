@@ -254,6 +254,20 @@ export default class BitMap {
     );
   }
 
+  resetLaneComponentsToNew() {
+    this.components = this.components.map((component) => {
+      if (!component.onLanesOnly) return component;
+      return new ComponentMap({
+        id: component.id.changeVersion(undefined).changeScope(undefined),
+        mainFile: component.mainFile,
+        rootDir: component.rootDir,
+        exported: false,
+        files: component.files,
+        onLanesOnly: false,
+      });
+    });
+  }
+
   private throwForDuplicateRootDirs(componentsJson: Record<string, any>) {
     const rootDirs = compact(Object.keys(componentsJson).map((c) => componentsJson[c].rootDir));
     if (uniq(rootDirs).length === rootDirs.length) {

@@ -35,6 +35,11 @@ export type PostProcessExtendingConfigFilesArgs = {
   configsRootDir: string;
   writtenExtendingConfigFiles: EnvsWrittenExtendingConfigFiles;
   envCompsDirsMap: EnvCompsDirsMap;
+  dryRun: boolean;
+};
+
+export type PostProcessConfigFilesOptions = {
+  dryRun: boolean;
 };
 
 export interface ConfigWriterEntry {
@@ -76,7 +81,8 @@ export interface ConfigWriterEntry {
   postProcessConfigFiles?(
     writtenConfigFiles: WrittenConfigFile[],
     executionContext: ExecutionContext,
-    envMapValue: EnvMapValue
+    envMapValue: EnvMapValue,
+    options: PostProcessConfigFilesOptions
   ): Promise<void>;
 
   /**

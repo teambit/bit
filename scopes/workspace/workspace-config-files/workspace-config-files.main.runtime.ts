@@ -20,6 +20,7 @@ import { WorkspaceConfigFilesAspect } from './workspace-config-files.aspect';
 import { ConfigFile, ConfigWriterEntry, ExtendingConfigFile } from './config-writer-entry';
 import { WsConfigCleanCmd, WsConfigCmd, WsConfigListCmd, WsConfigWriteCmd } from './ws-config.cmd';
 import { DedupedPaths, dedupePaths } from './dedup-paths';
+import WriteConfigFilesFailed from './exceptions/write-failed';
 
 export type ConfigWriterSlot = SlotRegistry<ConfigWriterEntry[]>;
 
@@ -39,7 +40,6 @@ export type WriteConfigFilesOptions = {
   silent?: boolean; // no prompt
   dedupe?: boolean;
   dryRun?: boolean;
-  dryRunWithContent?: boolean;
   writers?: string[];
 };
 
@@ -125,7 +125,13 @@ export class WorkspaceConfigFilesMain {
       cleanResults = await this.clean(options);
     }
 
-    const aspectsWritersResults = await this.write(execContext, options);
+    let aspectsWritersResults;
+    try {
+      aspectsWritersResults = await this.write(execContext, options);
+    } catch (err) {
+      this.logger.info('writeConfigFiles failed', err);
+      throw new WriteConfigFilesFailed();
+    }
     const totalWrittenFiles = aspectsWritersResults.reduce((acc, curr) => {
       return acc + curr.totalWrittenFiles;
     }, 0);
@@ -248,6 +254,7 @@ export class WorkspaceConfigFilesMain {
         configsRootDir,
         writtenExtendingConfigFiles: extendingConfigFiles,
         envCompsDirsMap,
+        dryRun: !!opts.dryRun,
       });
     }
     const totalExtendingConfigFiles = extendingConfigFiles.reduce(
@@ -290,7 +297,9 @@ export class WorkspaceConfigFilesMain {
       })
     );
     if (configWriter.postProcessConfigFiles) {
-      await configWriter.postProcessConfigFiles(writtenConfigFiles, executionContext, envMapValue);
+      await configWriter.postProcessConfigFiles(writtenConfigFiles, executionContext, envMapValue, {
+        dryRun: !!opts.dryRun,
+      });
     }
     return writtenConfigFiles;
   }

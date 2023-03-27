@@ -732,6 +732,26 @@ describe('merge lanes', function () {
       expect(headVer.parents).to.have.lengthOf(2);
     });
   });
+  describe('auto-snap during merge when the snap is failing', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.switchLocalLane('main');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      // this will fail the build
+      helper.command.dependenciesSet('comp1', 'non-exist-pkg@123.123.123');
+      helper.command.mergeLane('dev', '--no-squash --ignore-config-changes');
+    });
+    // previous bug was writing the .bitmap at the end with the failed version
+    it('should not change the .bitmap with the failed-snap version', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.2');
+    });
+  });
   describe('merge from scope lane to main (squash)', () => {
     let bareMerge;
     let comp1HeadOnLane: string;

@@ -333,7 +333,7 @@ export class TypescriptMain {
   ) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
-    workspaceConfigFiles.registerConfigWriter(new TypescriptConfigWriter(compiler));
+    workspaceConfigFiles.registerConfigWriter(new TypescriptConfigWriter(compiler, logger));
 
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
     const tsconfigWriter = new TsconfigWriter(workspace, logger);

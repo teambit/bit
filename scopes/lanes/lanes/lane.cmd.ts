@@ -187,10 +187,11 @@ a lane created from another lane has all the components of the original lane.`;
   alias = '';
   options = [
     [
-      '',
-      'remote-scope <scope-name>',
+      's',
+      'scope <scope-name>',
       'remote scope where this lane will be exported to, default to the defaultScope (can be changed later with "bit lane change-scope")',
     ],
+    ['', 'remote-scope <scope-name>', 'DEPRECATED. use --scope'],
     [
       '',
       'alias <name>',
@@ -202,11 +203,12 @@ a lane created from another lane has all the components of the original lane.`;
 
   constructor(private lanes: LanesMain) {}
 
-  async report([name]: [string], createLaneOptions: CreateLaneOptions): Promise<string> {
+  async report([name]: [string], createLaneOptions: CreateLaneOptions & { remoteScope?: string }): Promise<string> {
     const currentLane = await this.lanes.getCurrentLane();
+    if (createLaneOptions.remoteScope) createLaneOptions.scope = createLaneOptions.remoteScope;
     const result = await this.lanes.createLane(name, createLaneOptions);
-    const remoteScopeOrDefaultScope = createLaneOptions.remoteScope
-      ? `the remote scope ${chalk.bold(createLaneOptions.remoteScope)}`
+    const remoteScopeOrDefaultScope = createLaneOptions.scope
+      ? `the remote scope ${chalk.bold(createLaneOptions.scope)}`
       : `the default-scope ${chalk.bold(
           result.laneId.scope
         )}. to change it, please run "bit lane change-scope" command`;
