@@ -17,7 +17,7 @@ import detectiveSass from '../detectives/detective-sass';
 import detectiveScss from '../detectives/detective-scss';
 import detectiveTypeScript from '../detectives/detective-typescript';
 
-import { BuiltinDeps, DependencyDetector, DetectorHook } from '../detector-hook';
+import { DependencyDetector, DetectorHook } from '../detector-hook';
 
 /**
  * The file info object.
@@ -41,6 +41,7 @@ type Options = {
   [lang: string]: any;
 };
 
+type BuiltinDeps = string[] | Record<string, any>;
 type Detective = (fileContent: string | object, options?: any) => BuiltinDeps;
 
 const jsExt = ['.js', '.jsx', '.cjs', '.mjs'];

@@ -46,21 +46,6 @@ export interface DependencyDetector {
   dependencyLookup?(file: DependencyContext): string;
 }
 
-export type BuiltinDeps = string[] | Record<string, any>;
-
-export interface BuiltinDependencyDetector extends DependencyDetector {
-  /**
-   * detect file dependencies. list of file dependencies of the module.
-   */
-  detect(fileContent: string): string[];
-  detect(fileContent: string | object, options?: any): BuiltinDeps;
-
-  /**
-   * determine what type of content the detector is for.
-   */
-  type: string;
-}
-
 export class DetectorHook {
   static hooks: DependencyDetector[] = [];
 
