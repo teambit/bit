@@ -459,7 +459,7 @@ needed-for: ${neededFor || '<unknown>'}`);
         return localAspect.includes(aspectId.fullName.replace('/', '.'));
       });
     });
-    
+
     const userAspectsDefs = await this.resolveUserAspects(runtimeName, withoutLocalAspects);
     const localResolved = await this.resolveLocalAspects(this.scope.localAspects, runtimeName);
     const coreAspectsDefs = await this.aspectLoader.getCoreAspectDefs(runtimeName);

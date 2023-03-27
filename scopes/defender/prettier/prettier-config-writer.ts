@@ -1,6 +1,11 @@
 import fs from 'fs-extra';
 import { ExecutionContext } from '@teambit/envs';
-import type { ConfigWriterEntry, WrittenConfigFile, ExtendingConfigFile, ConfigFile } from '@teambit/workspace-config-files';
+import type {
+  ConfigWriterEntry,
+  WrittenConfigFile,
+  ExtendingConfigFile,
+  ConfigFile,
+} from '@teambit/workspace-config-files';
 import { FormatterMain } from '@teambit/formatter';
 import { PrettierFormatterInterface } from './prettier-formatter-interface';
 
@@ -34,7 +39,7 @@ export class PrettierConfigWriter implements ConfigWriterEntry {
   ...require('${prettierConfigFile.filePath}')
 }`;
     const content = `${BIT_GENERATED_PRETTIER_CONFIG_COMMENT}\n${configContent}`;
-    return { content, name: CONFIG_NAME, extendingTarget: prettierConfigFile.filePath};
+    return { content, name: CONFIG_NAME, extendingTarget: prettierConfigFile.filePath };
   }
   calcName(hash: string): string {
     return `.prettierrc.bit.${hash}.cjs`;
