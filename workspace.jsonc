@@ -195,8 +195,17 @@
         "@teambit/lanes.ui.compare.lane-compare-drawer": "^0.0.49",
         "@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status": "^0.0.48",
         "@teambit/lanes.ui.compare.lane-compare-loader": "^0.0.1",
+        "@teambit/lanes.ui.compare.lane-compare-page": "^0.0.52",
         "@teambit/lanes.ui.compare.lane-compare-state": "^0.0.4",
+        "@teambit/lanes.ui.icons.lane-icon": "^0.0.4",
+        "@teambit/lanes.ui.inputs.lane-selector": "^0.0.112",
+        "@teambit/lanes.ui.lane-details": "^0.0.109",
+        "@teambit/lanes.ui.lane-overview": "^0.0.113",
+        "@teambit/lanes.ui.lane-readme": "^0.0.116",
+        "@teambit/lanes.ui.menus.lanes-overview-menu": "^0.0.5",
+        "@teambit/lanes.ui.menus.use-lanes-menu": "^0.0.112",
         "@teambit/lanes.ui.models.lanes-model": "^0.0.112",
+        "@teambit/lanes.ui.navigation.lane-switcher": "^0.0.112",
         "@teambit/pkg.content.packages-overview": "1.95.9",
         "@teambit/react.content.react-overview": "1.95.0",
         "@teambit/react.instructions.react-native.adding-tests": "0.0.1",
@@ -405,7 +414,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.466",
+        "@teambit/legacy": "1.0.467",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "browserslist": "4.16.3",
@@ -497,7 +506,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.466"
+            "@teambit/legacy": "1.0.467"
           }
         }
       },
@@ -758,7 +767,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.466"
+            "@teambit/legacy": "1.0.467"
           }
         }
       }
@@ -848,7 +857,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.466",
+            "@teambit/legacy": "1.0.467",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -983,7 +992,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.466"
+            "@teambit/legacy": "1.0.467"
           }
         }
       }

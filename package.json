@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.466",
+  "version": "1.0.467",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -75,6 +75,7 @@
     "full-setup:bbit": "rm -rf node_modules/.bin/bbit && rm -rf node_modules/@teambit/legacy && bbit install && npm run link-bit-legacy && husky install && bbit compile && npm run build && npm run build:types",
     "full-setup:windows": "bit install && npm run link-bit-legacy && husky install && bit compile && npm run build && npm run build:types:windows",
     "full-setup:windows:bbit": "bbit install && npm run link-bit-legacy && husky install && bbit compile && npm run build && npm run build:types:windows",
+    "husky:install": "husky install",
     "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
     "build-debian-image": "docker build ./scripts/linux/debian -t debian-deb",
     "doc-gen": "node ./scripts/doc-generator.js",

@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [[0.1.11] - 2023-03-28](https://github.com/teambit/bit/releases/tag/v0.1.11)
+
+### New Features
+
+- Introduce `--reset-lane-new` for `bit init` to only reset lane components to new (#7184)
+- Introduce **experimental** `bit ws-config` command to add tooling configs to the workspace and sync with IDE (#7171 #7197)
+- Ability to edit HTML Template from config mutator (#7144)
+
+### Changes
+
+- `Bit rename` to rename files/variables/classes by default (#7168)
+- Show component-name in bold in `snap` and `tag` outputs (#7175)
+- Refresh UI for Lane Selector (#7154 #7186)
+
+### Bug Fixes
+
+- Alias `--scope` for `--remote-scope` for consistency in various commands (#7194)
+- Improve lane merge workflow (#7208 #7149 #7192 #7092)
+- Adding guardrails when using lanes (#7185 #7190 #7178)
+- Allow removing local lanes with the full-id (#7193)
+- Improve logs when installing packages on capsule (#7202)
+- Don't crash on symlinked directories when hard linking all files of a dir (on windows) (#7182)
+- Resolving tsserver client (#7207)
+
+### Internal
+
+- Avoid ignoring components that their ComponentMap is missing (#7183)
+- Avoid compiling scope components (#7188)
+- Fix `onLoad` event for component preview (#7195)
+- Set public-hoist-pattern to `*` when shamefully-hoist is `true` (#7201)
+- Add husky:install npm script (#7205)
+- docs, fix the description of WorkspaceContext.import method (#7203)
+- Add ability to provide alternateDescriptionPrefix LongProcessLogger.end function (#7200)
+- Eject design ui contributors (#7198)
+- Remove `EXPORT_CENTRAL` feature-flag, it is the default for a while now (#7164)
+- Add sqlite3 & sqlite as dependencies (#7177)
+- Make sure to load envs first when loading a list of aspects (#7179)
+- Link dependencies before installation (#7145)
+- Update README.md (#7173)
+- Save the `flattenedEdges` as a ref inside Version object (#7181)
+
 ## [[0.1.7] - 2023-03-20](https://github.com/teambit/bit/releases/tag/v0.1.7)
 
 ### Changes

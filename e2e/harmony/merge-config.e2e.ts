@@ -506,8 +506,7 @@ describe('merge config scenarios', function () {
           // on main
           helper.scopeHelper.getClonedLocalScope(beforeMerges);
           helper.command.install(`${barPkgName}@0.0.3`);
-          // by default, it is saved as ^0.0.3 to the workspace.jsonc, change it to be an exact version
-          helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: { [barPkgName]: '0.0.3' } });
+          // by default, it is saved as ^0.0.3 to the workspace.jsonc
           helper.command.tagAllWithoutBuild();
           helper.command.export();
           afterExport = helper.scopeHelper.cloneLocalScope();
@@ -518,13 +517,14 @@ describe('merge config scenarios', function () {
           });
           it('should not change workspace.jsonc with the lane version', () => {
             const policy = helper.bitJsonc.getPolicyFromDependencyResolver();
-            expect(policy.dependencies[barPkgName]).to.equal('0.0.3');
+            expect(policy.dependencies[barPkgName]).to.equal('^0.0.3');
           });
-          it('should show the versions as conflicted in the merge-conflict file', () => {
+          it('should show the versions as a workspace conflict in the merge-conflict file', () => {
             const conflictFile = helper.general.getConfigMergePath();
             const conflictFileContent = fs.readFileSync(conflictFile).toString();
+            expect(conflictFileContent).to.have.string('WORKSPACE');
             expect(conflictFileContent).to.have.string('0.0.2');
-            expect(conflictFileContent).to.have.string('0.0.3');
+            expect(conflictFileContent).to.have.string('^0.0.3');
           });
           it('should block the tag until the conflicts are resolved', () => {
             expect(() => helper.command.snapAllComponentsWithoutBuild()).to.throw(
