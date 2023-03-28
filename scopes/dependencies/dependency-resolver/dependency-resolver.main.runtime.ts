@@ -1212,7 +1212,12 @@ export class DependencyResolverMain {
     return this;
   }
 
-  async getComponentEnvDepDetectors(extensions: ExtensionDataList) {
+  /**
+   * This function called on component load in order to calculate the custom
+   * dependency detectors from an env, which is got by extension data list.
+   * Do not use this function for other purposes.
+   */
+  async calcComponentEnvDepDetectors(extensions: ExtensionDataList) {
     const envDef = this.envs.calculateEnvFromExtensions(extensions);
     const depEnv = envDef.env as DependenciesEnv;
     if (typeof depEnv?.getDepDetectors === 'function') {
@@ -1514,7 +1519,7 @@ export class DependencyResolverMain {
       return workspacePolicy.toManifest();
     });
     DependencyResolver.registerEnvDetectorGetter(async (extensions: ExtensionDataList) => {
-      return dependencyResolver.getComponentEnvDepDetectors(extensions);
+      return dependencyResolver.calcComponentEnvDepDetectors(extensions);
     });
     DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId, files: SourceFile[]) => {
       const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id, files);
