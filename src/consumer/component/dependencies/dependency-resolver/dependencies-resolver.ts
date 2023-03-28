@@ -881,13 +881,14 @@ either, use the ignore file syntax or change the require statement to have a mod
         }
       }
     }
+    const packageNames = Object.keys(packages).concat(this.tree[originFile].missing?.packages ?? []);
+    this._addTypesPackagesForTypeScript(packageNames, originFile);
     if (!packages || R.isEmpty(packages)) return;
     if (fileType.isTestFile) {
       Object.assign(this.allPackagesDependencies.devPackageDependencies, packages);
     } else {
       Object.assign(this.allPackagesDependencies.packageDependencies, packages);
     }
-    this._addTypesPackagesForTypeScript(packages, originFile);
   }
 
   processMissing(originFile: PathLinuxRelative, fileType: FileType) {
@@ -1407,7 +1408,8 @@ either, use the ignore file syntax or change the require statement to have a mod
    * and can't be done there because the `Tree` we get from bit-javascript doesn't have this
    * distinction.
    */
-  _addTypesPackagesForTypeScript(packages: Record<string, any>, originFile: PathLinuxRelative): void {
+  _addTypesPackagesForTypeScript(packageNames: string[], originFile: PathLinuxRelative): void {
+    if (packageNames.length === 0) return;
     const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
     if (!isTypeScript) return;
     const depsHost = DependencyResolver.getWorkspacePolicy();
@@ -1433,7 +1435,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       });
     };
 
-    Object.keys(packages).forEach((packageName) => {
+    packageNames.forEach((packageName) => {
       const added = addFromConfig(packageName);
       if (!added) addFromModel(packageName);
     });
