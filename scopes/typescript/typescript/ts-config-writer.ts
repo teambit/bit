@@ -2,7 +2,7 @@ import { stringify, parse, assign } from 'comment-json';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import fs from 'fs-extra';
 import { ExecutionContext } from '@teambit/envs';
-import { basename, join } from 'path';
+import { basename, join, relative } from 'path';
 import type {
   ConfigWriterEntry,
   WrittenConfigFile,
@@ -11,6 +11,7 @@ import type {
   EnvMapValue,
   PostProcessExtendingConfigFilesArgs,
 } from '@teambit/workspace-config-files';
+import { uniq } from 'lodash';
 import { CompilerMain } from '@teambit/compiler';
 import { Logger } from '@teambit/logger';
 import { IdeConfig, TypescriptCompilerInterface } from './typescript-compiler-interface';
@@ -105,9 +106,13 @@ export class TypescriptConfigWriter implements ConfigWriterEntry {
       tsConfig = parse(content);
     }
     // @ts-ignore
-    const typeRoots = tsConfig.typeRoots || [];
-    typeRoots.push(join(configsRootDir, GLOBAL_TYPES_DIR));
-    assign(tsConfig, { typeRoots });
+    const compilerOptions = tsConfig.compilerOptions || {};
+    const typeRoots = compilerOptions.typeRoots || [];
+    const globalTypesDir = join(configsRootDir, GLOBAL_TYPES_DIR);
+    const relativeGlobalTypesDir = relative(workspaceDir, globalTypesDir);
+    typeRoots.push(relativeGlobalTypesDir);
+    assign(compilerOptions, { typeRoots: uniq(typeRoots) });
+    assign(tsConfig, { compilerOptions });
     await fs.outputFile(rootTsConfigPath, stringify(tsConfig, null, 2));
   }
 
