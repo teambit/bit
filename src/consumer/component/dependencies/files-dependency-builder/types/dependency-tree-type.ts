@@ -1,5 +1,6 @@
 import R from 'ramda';
 import { ResolvedPackageData } from '../../../../../utils/packages';
+import { DependencyDetector } from '../detector-hook';
 
 /**
  * Import Specifier data.
@@ -77,4 +78,5 @@ export type DependencyTreeParams = {
   visited?: Record<string, any>;
   cacheResolvedDependencies?: Record<string, any>;
   cacheProjectAst?: Record<string, any>;
+  envDetectors?: DependencyDetector[] | null;
 };
