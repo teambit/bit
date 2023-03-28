@@ -1,10 +1,21 @@
-import PrerenderSPAPlugin from 'prerender-spa-plugin-next';
-import { PuppeteerRenderer } from '@teambit/react.modules.prerenderer-puppeteer';
-import { ReactAppPrerenderOptions } from '../react-app-options';
+import type { RenderedRoute, PrerendererOptions } from '@prerenderer/prerenderer';
+import PrerendererWebpackPlugin from '@prerenderer/webpack-plugin';
+import JSdomPrerenderer, { JSDOMRendererOptions } from '@prerenderer/renderer-jsdom';
 
-export const prerenderPlugin = (options: ReactAppPrerenderOptions) => {
-  return new PrerenderSPAPlugin({
-    renderer: PuppeteerRenderer,
-    ...options,
+export interface WebpackPrerenderSPAOptions extends Omit<PrerendererOptions, 'staticDir'> {
+  entryPath?: string;
+  routes?: Array<string>;
+  postProcess?: (renderedRoutes: RenderedRoute) => Promise<void> | void;
+  urlModifier?(url: string): string;
+  prerenderOptions?: JSDOMRendererOptions;
+}
+
+export const prerenderPlugin = (options: WebpackPrerenderSPAOptions) => {
+  const { prerenderOptions, ...rest } = options;
+  return new PrerendererWebpackPlugin({
+    renderer: new JSdomPrerenderer({
+      ...prerenderOptions,
+    }),
+    ...rest,
   });
 };
