@@ -2,6 +2,9 @@ import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { compact } from 'lodash';
 import { MergeStrategyResult, conflictIndicator, GenericConfigOrRemoved } from './config-merger';
 
+const DEP_RESOLVER_VERSION_INDENTATION = 8;
+const CONFLICT_MARKER_INDENTATION = 7;
+
 export class ConfigMergeResult {
   constructor(
     readonly compIdStr: string,
@@ -47,11 +50,11 @@ ${this.concatenateConflicts(configMergeFormatted)}
     const conflictLines = mergedConfigSplit.map((line) => {
       if (!line.includes(conflictIndicator)) return line;
       const [, currentVal, otherVal] = line.split('::');
-      return `${'<'.repeat(7)} ${this.currentLabel}
-      "version": "${currentVal}",
+      return `${'<'.repeat(CONFLICT_MARKER_INDENTATION)} ${this.currentLabel}
+${' '.repeat(DEP_RESOLVER_VERSION_INDENTATION)}"version": "${currentVal}",
 =======
-      "version": "${otherVal}",
-${'>'.repeat(7)} ${this.otherLabel}`;
+${' '.repeat(DEP_RESOLVER_VERSION_INDENTATION)}"version": "${otherVal}",
+${'>'.repeat(CONFLICT_MARKER_INDENTATION)} ${this.otherLabel}`;
     });
     // replace the first line with line with the id
     conflictLines.shift();
@@ -63,17 +66,17 @@ ${'>'.repeat(7)} ${this.otherLabel}`;
     const { currentConfig, otherConfig } = conflictObj;
     let conflict: string;
     if (currentConfig === '-') {
-      conflict = `${'<'.repeat(7)} ${this.currentLabel}
+      conflict = `${'<'.repeat(CONFLICT_MARKER_INDENTATION)} ${this.currentLabel}
 "${id}": "-"
 =======
 "${id}": ${JSON.stringify(otherConfig, undefined, 2)}
-${'>'.repeat(7)} ${this.otherLabel}`;
+${'>'.repeat(CONFLICT_MARKER_INDENTATION)} ${this.otherLabel}`;
     } else if (otherConfig === '-') {
-      conflict = `${'<'.repeat(7)} ${this.currentLabel}
+      conflict = `${'<'.repeat(CONFLICT_MARKER_INDENTATION)} ${this.currentLabel}
 "${id}": ${JSON.stringify(currentConfig, undefined, 2)}
 =======
 "${id}": "-"
-${'>'.repeat(7)} ${this.otherLabel}`;
+${'>'.repeat(CONFLICT_MARKER_INDENTATION)} ${this.otherLabel}`;
     } else {
       const formatConfig = (conf: GenericConfigOrRemoved) => {
         const confStr = JSON.stringify(conf, undefined, 2);
@@ -83,11 +86,11 @@ ${'>'.repeat(7)} ${this.otherLabel}`;
         return confStrSplit.join('\n');
       };
       conflict = `"${id}": {
-${'<'.repeat(7)} ${this.currentLabel}
+${'<'.repeat(CONFLICT_MARKER_INDENTATION)} ${this.currentLabel}
 ${formatConfig(currentConfig)}
 =======
 ${formatConfig(otherConfig)}
-${'>'.repeat(7)} ${this.otherLabel}
+${'>'.repeat(CONFLICT_MARKER_INDENTATION)} ${this.otherLabel}
 }`;
     }
 
