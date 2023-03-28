@@ -49,7 +49,7 @@ export interface DependencyDetector {
 export class DetectorHook {
   static hooks: DependencyDetector[] = [];
 
-  isSupported(ext: string): boolean | string {
+  isSupported(ext: string): boolean {
     return !!DetectorHook.hooks.find((hook) => {
       return hook.isSupported({
         ext,
