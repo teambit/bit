@@ -1347,41 +1347,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-tab-tree"
     },
-    "ui/compare/lane-compare": {
-        "scope": "teambit.lanes",
-        "version": "0.0.67",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/compare/lane-compare"
-    },
-    "ui/compare/lane-compare-drawer": {
-        "scope": "teambit.lanes",
-        "version": "0.0.49",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/compare/lane-compare-drawer"
-    },
-    "ui/compare/lane-compare-hooks/use-lane-diff-status": {
-        "scope": "teambit.lanes",
-        "version": "0.0.48",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/compare/lane-compare-hooks/use-lane-diff-status"
-    },
-    "ui/compare/lane-compare-loader": {
-        "scope": "teambit.lanes",
-        "version": "0.0.1",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/compare/lane-compare-loader"
-    },
     "ui/compare/lane-compare-page": {
         "scope": "teambit.lanes",
         "version": "0.0.51",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/ui/compare/lane-compare-page"
-    },
-    "ui/compare/lane-compare-state": {
-        "scope": "teambit.lanes",
-        "version": "0.0.4",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/compare/lane-compare-state"
     },
     "ui/component-deprecated": {
         "scope": "teambit.component",
@@ -1784,12 +1754,6 @@
         "version": "0.0.111",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/ui/menus/use-lanes-menu"
-    },
-    "ui/models/lanes-model": {
-        "scope": "teambit.lanes",
-        "version": "0.0.111",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/models/lanes-model"
     },
     "ui/navigation/lane-switcher": {
         "scope": "teambit.lanes",
