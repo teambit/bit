@@ -25,11 +25,11 @@ export class ESLintLinter implements EslintLinterInterface, Linter {
   id = 'eslint-linter';
   displayName = 'ESlint';
 
-  generateIdeConfig(){
+  generateIdeConfig() {
     return {
       eslintConfig: this.options.config.overrideConfig || {},
       tsconfig: this.options.tsConfig,
-    }
+    };
   }
 
   displayConfig() {

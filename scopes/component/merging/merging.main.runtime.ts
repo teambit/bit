@@ -293,10 +293,12 @@ export class MergingMain {
     };
     let mergeSnapResults: ApplyVersionResults['mergeSnapResults'] = null;
     let mergeSnapError: Error | undefined;
+    const bitMapSnapshot = this.workspace.bitMap.takeSnapshot();
     try {
       mergeSnapResults = await getSnapOrTagResults();
     } catch (err: any) {
       mergeSnapError = err;
+      this.workspace.bitMap.restoreFromSnapshot(bitMapSnapshot);
     }
 
     return {
@@ -422,12 +424,16 @@ export class MergingMain {
 
       WS_DEPS_FIELDS.forEach((depField) => {
         if (!policy[depField]?.[pkgName]) return;
-        const currentVer = policy[depField][pkgName];
-        if (currentVer !== currentVal) return;
+        const currentVerInWsJson = policy[depField][pkgName];
+        if (!currentVerInWsJson) return;
         // the version is coming from the workspace.jsonc
-        workspaceJsonConflicts[depField].push({ name: pkgName, version: conflict, force: false });
+        workspaceJsonConflicts[depField].push({
+          name: pkgName,
+          version: conflict.replace(currentVal, currentVerInWsJson),
+          force: false,
+        });
         this.logger.debug(
-          `conflict workspace.jsonc: ${pkgName} current: ${currentVer}, other: ${otherVal}. Triggered by: ${conflictDepsSources[
+          `conflict workspace.jsonc: ${pkgName} current: ${currentVerInWsJson}, other: ${otherVal}. Triggered by: ${conflictDepsSources[
             pkgName
           ].join(', ')}`
         );

@@ -53,8 +53,8 @@ export class TypescriptConfigWriter implements ConfigWriterEntry {
       const name = `${GLOBAL_TYPES_DIR}/${nameWithHash}`;
       return {
         content,
-        name
-      }
+        name,
+      };
     });
     return files;
   }
@@ -70,7 +70,9 @@ export class TypescriptConfigWriter implements ConfigWriterEntry {
     const exists = await fs.pathExists(tsConfigPath);
 
     if (!exists) {
-      this.logger.warn(`TypescriptConfigWriter, tsconfig file ${tsConfigPath} was not found for post process. if it is part of --dry-run, it is ok.`);
+      this.logger.warn(
+        `TypescriptConfigWriter, tsconfig file ${tsConfigPath} was not found for post process. if it is part of --dry-run, it is ok.`
+      );
       return Promise.resolve();
     }
     const tsConfig = await fs.readJson(tsConfigPath);

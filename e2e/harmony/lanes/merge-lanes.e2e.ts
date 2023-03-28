@@ -732,6 +732,26 @@ describe('merge lanes', function () {
       expect(headVer.parents).to.have.lengthOf(2);
     });
   });
+  describe('auto-snap during merge when the snap is failing', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.switchLocalLane('main');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      // this will fail the build
+      helper.command.dependenciesSet('comp1', 'non-exist-pkg@123.123.123');
+      helper.command.mergeLane('dev', '--no-squash --ignore-config-changes');
+    });
+    // previous bug was writing the .bitmap at the end with the failed version
+    it('should not change the .bitmap with the failed-snap version', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.2');
+    });
+  });
   describe('merge from scope lane to main (squash)', () => {
     let bareMerge;
     let comp1HeadOnLane: string;
@@ -957,6 +977,50 @@ describe('merge lanes', function () {
     // id o5kaxkjd-remote/comp1@0.0.1 exists in flattenedEdges but not in flattened of o5kaxkjd-remote/comp1@6f820556b472253cd08331b20e704fe74217fd31
     it('bit status should not throw', () => {
       expect(() => helper.command.status()).to.not.throw();
+    });
+  });
+  describe('conflict when the same file exist in base, deleted on the lane and modified on main', () => {
+    const conflictedFilePath = 'comp1/foo.js';
+    let beforeMerge: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+
+      helper.fs.outputFile(conflictedFilePath);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane();
+      helper.fs.deletePath(conflictedFilePath);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.switchLocalLane('main', '-x');
+      helper.fs.outputFile(conflictedFilePath, 'console.log("hello")');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      beforeMerge = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('when the lane is merged to main, so currently on the FS the file exits', () => {
+      before(() => {
+        helper.command.mergeLane('dev', '--no-squash --no-snap -x');
+      });
+      // previously the file was removed
+      it('should not remove the file', () => {
+        expect(path.join(helper.scopes.localPath, conflictedFilePath)).to.be.a.file();
+      });
+    });
+    describe('when main is merged to the lane, so currently on the FS the file is removed', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeMerge);
+        helper.command.switchLocalLane('dev', '-x');
+        helper.command.mergeLane('main', '--no-snap -x');
+      });
+      // previously it was in "remain-deleted" state and the file was not created
+      it('should add the file', () => {
+        expect(path.join(helper.scopes.localPath, conflictedFilePath)).to.be.a.file();
+      });
     });
   });
   describe('merging from a lane to main when it has a long history which does not exist locally', () => {

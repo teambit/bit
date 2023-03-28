@@ -1,9 +1,9 @@
-import { Formatter } from "@teambit/formatter";
+import { Formatter } from '@teambit/formatter';
 
 export type IdeConfig = {
   prettierConfig: Object;
-}
+};
 
 export interface PrettierFormatterInterface extends Formatter {
-  generateIdeConfig?: () => IdeConfig
+  generateIdeConfig?: () => IdeConfig;
 }
