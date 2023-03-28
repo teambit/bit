@@ -566,13 +566,13 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
         const existingComponent = existingLane ? existingLane.components.find((c) => c.id.isEqual(component.id)) : null;
         if (!existingComponent) {
           if (isExport) {
+            if (existingLane) existingLane.addComponent(component);
             if (!sentVersionHashes?.includes(component.head.toString())) {
               // during export, the remote might got a lane when some components were not sent from the client. ignore them.
               return;
             }
             if (!versionParents) throw new Error('mergeLane, versionParents must be set during export');
             const subsetOfVersionParents = getSubsetOfVersionParents(versionParents, component.head);
-            if (existingLane) existingLane.addComponent(component);
             mergeResults.push({
               mergedComponent: modelComponent,
               mergedVersions: subsetOfVersionParents.map((h) => h.hash.toString()),

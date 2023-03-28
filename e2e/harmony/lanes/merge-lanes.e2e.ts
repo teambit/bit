@@ -1060,4 +1060,26 @@ describe('merge lanes', function () {
       });
     });
   });
+  describe('merge introduces a new component to a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.fixtures.populateComponents(2);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('lane-a', '-x');
+      helper.command.mergeLane('lane-b', '-x');
+      helper.command.export();
+    });
+    // previous bug was ignoring the new component on the remote during export because the snap was already on the remote.
+    // as a result, the lane-object on the remote didn't have this comp2 component.
+    it('should update the remote lane with the newly merged component', () => {
+      const lane = helper.command.catLane('lane-a', helper.scopes.remotePath);
+      expect(lane.components).to.have.lengthOf(2);
+    });
+  });
 });

@@ -8,7 +8,7 @@ import type { BuildTask } from '@teambit/builder';
 import type { SchemaExtractor } from '@teambit/schema';
 import type { WebpackConfigTransformer } from '@teambit/webpack';
 import type { PackageJsonProps } from '@teambit/pkg';
-import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { DependencyDetector, EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { ElementsWrapperContext } from '@teambit/elements';
 import type { Capsule } from '@teambit/isolator';
 import type { Component } from '@teambit/component';
@@ -90,6 +90,12 @@ export interface DependenciesEnv extends Environment {
    * by default bit will merge this list with the peers from the getDependencies function
    */
   getAdditionalHostDependencies?: () => string[] | Promise<string[]>;
+
+  /**
+   * Returns a list of dependency detectors
+   * this list will be used to detect all the dependencies in each file of the component
+   */
+  getDepDetectors?: () => DependencyDetector[] | null;
 }
 
 export type GetNpmIgnoreContext = {
