@@ -30,7 +30,8 @@ export interface DependencyDetector {
 
   /**
    * determine what type of content the detector is for.
-   * if no type provided, the type would be the ext.
+   * by default, the type is the extension name of the file (without the dot)
+   * if no type provided.
    */
   type?: string;
 
