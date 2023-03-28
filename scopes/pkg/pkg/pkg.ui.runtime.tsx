@@ -17,9 +17,7 @@ export class PkgUI {
 
   constructor(private compUI: ComponentUI) {}
 
-  private npmConsumeMethod: ConsumePlugin = (comp, options) => {
-    if (options?.currentLane) return undefined;
-
+  private npmConsumeMethod: ConsumePlugin = (comp) => {
     const registry = comp.packageName.split('/')[0];
 
     const packageVersion =
