@@ -74,3 +74,25 @@ test('copy symlinked files', async () => {
   expect(fs.readFileSync(path.join(dest2Dir, 'file.txt'), 'utf8')).toBe('Hello World');
   expect(fs.lstatSync(path.join(dest2Dir, 'file.txt')).isSymbolicLink()).toBeFalsy();
 });
+
+test('skip broken symlink', async () => {
+  const tempDir = globalBitTempDir();
+  const symlinkTargetDir = path.join(tempDir, 'symlink-target');
+  const srcDir = path.join(tempDir, 'source');
+  const dest1Dir = path.join(tempDir, 'dest1');
+  const dest2Dir = path.join(tempDir, 'dest2');
+
+  fs.mkdirpSync(symlinkTargetDir);
+  fs.mkdirpSync(srcDir);
+  fs.mkdirpSync(dest1Dir);
+  fs.mkdirpSync(dest2Dir);
+  const symlinkTargetFile = path.join(symlinkTargetDir, 'file.txt');
+  fs.writeFileSync(symlinkTargetFile, 'Hello World');
+  await symlinkDir(symlinkTargetFile, path.join(srcDir, 'file.txt'));
+  fs.unlinkSync(symlinkTargetFile);
+
+  await hardLinkDirectory(srcDir, [dest1Dir, dest2Dir]);
+
+  expect(fs.readdirSync(dest1Dir)).toEqual([]);
+  expect(fs.readdirSync(dest2Dir)).toEqual([]);
+});
