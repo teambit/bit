@@ -125,7 +125,7 @@ export default class Version extends BitObject {
   buildStatus?: BuildStatus;
   componentId?: BitId; // can help debugging errors when validating Version object
   bitVersion?: string;
-  modified: Log[] = [];
+  modified: Log[] = []; // currently mutation could happen as a result of either "squash" or "sign".
 
   constructor(props: VersionProps) {
     super();
@@ -691,6 +691,10 @@ export default class Version extends BitObject {
 
   setSquashed(squashData: SquashData, log: Log) {
     this.squashed = squashData;
+    this.addModifiedLog(log);
+  }
+
+  addModifiedLog(log: Log) {
     this.modified.push(log);
   }
 
