@@ -1,0 +1,18 @@
+Isomorphic link provder.  
+Sets the underlying implementation of links in the project.
+
+As simple as:
+
+```tsx
+import { link, NavLink, useLocation } from 'react-router-dom';
+
+const routingSystem = {
+  Link: ({ to, ...rest }) => <Link {...rest} to={href} />,
+  NavLink: ({ to, ...rest }) => <NavLink {...rest} to={href} />,
+  useLocation: useLocation,
+};
+
+// ...
+
+return <RoutingProvider value={{ routingSystem }}>{children}</RoutingProvider>;
+```

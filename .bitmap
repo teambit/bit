@@ -1137,6 +1137,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/variable"
     },
+    "routing/routing-provider": {
+        "scope": "teambit.base-ui",
+        "version": "1.0.0",
+        "mainFile": "index.ts",
+        "rootDir": "components/routing/routing-provider"
+    },
     "schema": {
         "scope": "teambit.semantics",
         "version": "0.0.1025",

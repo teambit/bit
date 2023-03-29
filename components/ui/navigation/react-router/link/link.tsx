@@ -15,7 +15,10 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
     state,
 
     // props we should not get, and should not pass to RR link:
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     external,
+    // props we should not get, and should not pass to RR link:
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     native,
     ...rest
   }: LinkProps,
