@@ -1,0 +1,56 @@
+---
+description: 'A standard, cross routing system Link'
+labels: ['react', 'routing', 'context']
+---
+
+import { RouterProvider } from './router-context';
+// import { Link } from '@teambit/base-react.navigation.link';
+
+Routing systems use different appraches to ease and improve routing. This might cause trouble tryign to use components across different application that are using
+different routing system.
+
+An example, could be a Card component, which uses a Link to direct people to a certain page. Bounding this component to the [NextJS Link](/) would prevent this component
+from being used in React Router apps, execpeting the [React Router Link](/) to work properly.
+
+## Basic usage
+
+When routing provider is absent, the Link will a native `a` tag. Different routing implementations can be used.
+
+```tsx
+import { Link } from '@teambit/base-react.navigation.link';
+
+function App() {
+  return (
+    <>
+      <Link></Link>
+    </>
+  );
+}
+```
+
+This way, every component can use the [Link](/) component and stay agnostic to the specific routing system in use in the host application.
+
+### Using the link with React Router
+
+For using `react-router`, use our routing implementation which can be found here.
+
+```tsx
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { RoutingProvider, Link } from '@teambit/base-react.navigation.link';
+import { reactRouterAdapter } from '@teambit/ui-foundation.ui.navigation.react-router-adapter'; // TODO: uri to rename
+
+export function App() {
+  return (
+    <BrowserRouter>
+      <RoutingProvider implementation={reactRouterAdapter}>
+        <Routes>
+        <Link href="/plugins">Click me!</Link> // this link won't refresh the entire page and will use the React Router link.
+      </RoutingProvider>
+    </BrowserRouter>
+  );
+}
+```
+
+### Using with NextJS
+
+Coming soon..
