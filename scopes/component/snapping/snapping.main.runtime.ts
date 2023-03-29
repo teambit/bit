@@ -50,7 +50,7 @@ import {
   getArtifactsFiles,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
-import Version, { DepEdge, DepEdgeType } from '@teambit/legacy/dist/scope/models/version';
+import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
@@ -745,16 +745,17 @@ there are matching among unmodified components thought. consider using --unmodif
     return { component, version };
   }
 
-  async _enrichComp(consumerComponent: ConsumerComponent) {
-    const objects = await this._getObjectsToEnrichComp(consumerComponent);
+  async _enrichComp(consumerComponent: ConsumerComponent, modifiedLog?: Log) {
+    const objects = await this._getObjectsToEnrichComp(consumerComponent, modifiedLog);
     objects.forEach((obj) => this.objectsRepo.add(obj));
     return consumerComponent;
   }
 
-  async _getObjectsToEnrichComp(consumerComponent: ConsumerComponent): Promise<BitObject[]> {
+  async _getObjectsToEnrichComp(consumerComponent: ConsumerComponent, modifiedLog?: Log): Promise<BitObject[]> {
     const component =
       consumerComponent.modelComponent || (await this.scope.legacyScope.sources.findOrAddComponent(consumerComponent));
     const version = await component.loadVersion(consumerComponent.id.version as string, this.objectsRepo, true, true);
+    if (modifiedLog) version.addModifiedLog(modifiedLog);
     const artifactFiles = getArtifactsFiles(consumerComponent.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     version.extensions = consumerComponent.extensions;

@@ -6,7 +6,7 @@ import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { isSnap } from '@teambit/component-version';
 import { Component, ComponentID } from '@teambit/component';
-import { SnappingAspect, SnappingMain } from '@teambit/snapping';
+import { getBasicLog, SnappingAspect, SnappingMain } from '@teambit/snapping';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy/dist/constants';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
@@ -14,6 +14,7 @@ import { PostSign } from '@teambit/legacy/dist/scope/actions';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { Log } from '@teambit/legacy/dist/scope/models/version';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import { LaneId } from '@teambit/lane-id';
@@ -138,18 +139,25 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
   }
 
   private async saveExtensionsDataIntoScope(components: ConsumerComponent[], buildStatus: BuildStatus) {
+    const modifiedLog = await this.getModifiedLog(buildStatus);
     await mapSeries(components, async (component) => {
       component.buildStatus = buildStatus;
-      await this.snapping._enrichComp(component);
+      await this.snapping._enrichComp(component, modifiedLog);
     });
     await this.scope.legacyScope.objects.persist();
   }
 
+  private async getModifiedLog(buildStatus: BuildStatus): Promise<Log> {
+    const log = await getBasicLog();
+    return { ...log, message: `sign. buildStatus: ${buildStatus}` };
+  }
+
   private async exportExtensionsDataIntoScopes(components: ConsumerComponent[], buildStatus: BuildStatus, lane?: Lane) {
     const objectList = new ObjectList();
+    const modifiedLog = await this.getModifiedLog(buildStatus);
     const signComponents = await mapSeries(components, async (component) => {
       component.buildStatus = buildStatus;
-      const objects = await this.snapping._getObjectsToEnrichComp(component);
+      const objects = await this.snapping._getObjectsToEnrichComp(component, modifiedLog);
       const scopeName = component.scope as string;
       const objectToMerge = await ObjectList.fromBitObjects(objects);
       objectToMerge.addScopeName(scopeName);

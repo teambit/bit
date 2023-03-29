@@ -437,9 +437,7 @@ async function addLogToComponents(
   messagePerComponent: MessagePerComponent[],
   copyLogFromPreviousSnap = false
 ) {
-  const username = await globalConfig.get(CFG_USER_NAME_KEY);
-  const bitCloudUsername = await getBitCloudUsername();
-  const email = await globalConfig.get(CFG_USER_EMAIL_KEY);
+  const basicLog = await getBasicLog();
   const getLog = (component: ConsumerComponent): Log => {
     const nextVersion = persist ? component.componentMap?.nextVersion : null;
     const msgFromEditor = messagePerComponent.find((item) => item.id.isEqualWithoutVersion(component.id))?.msg;
@@ -451,15 +449,15 @@ async function addLogToComponents(
         );
       }
       currentLog.message = msgFromEditor || message || currentLog.message;
-      currentLog.date = Date.now().toString();
+      currentLog.date = basicLog.date;
       return currentLog;
     }
 
     return {
-      username: nextVersion?.username || bitCloudUsername || username,
-      email: nextVersion?.email || email,
+      username: nextVersion?.username || basicLog.username,
+      email: nextVersion?.email || basicLog.email,
       message: nextVersion?.message || msgFromEditor || message,
-      date: Date.now().toString(),
+      date: basicLog.date,
     };
   };
 
@@ -475,6 +473,17 @@ async function addLogToComponents(
       autoTagComp.log.message = defaultMsg;
     }
   });
+}
+
+export async function getBasicLog(): Promise<Log> {
+  const username = (await getBitCloudUsername()) || (await globalConfig.get(CFG_USER_NAME_KEY));
+  const email = await globalConfig.get(CFG_USER_EMAIL_KEY);
+  return {
+    username,
+    email,
+    message: '',
+    date: Date.now().toString(),
+  };
 }
 
 export async function getBitCloudUsername(): Promise<string | undefined> {
