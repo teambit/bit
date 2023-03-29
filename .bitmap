@@ -873,6 +873,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/multi-tester"
     },
+    "navigation/routing-provider": {
+        "scope": "teambit.base-react",
+        "version": "1.80.9",
+        "mainFile": "index.ts",
+        "rootDir": "components/navigation/routing-provider",
+        "config": {
+            "teambit.community/envs/community-react@2.1.14": {},
+            "teambit.envs/envs": {
+                "env": "teambit.community/envs/community-react"
+            }
+        }
+    },
     "network/agent": {
         "scope": "teambit.toolbox",
         "version": "0.0.551",
@@ -1136,12 +1148,6 @@
         "version": "0.0.16",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/variable"
-    },
-    "routing/routing-provider": {
-        "scope": "teambit.base-ui",
-        "version": "1.0.0",
-        "mainFile": "index.ts",
-        "rootDir": "components/routing/routing-provider"
     },
     "schema": {
         "scope": "teambit.semantics",
