@@ -879,9 +879,9 @@
         "mainFile": "index.ts",
         "rootDir": "components/navigation/routing-provider",
         "config": {
-            "teambit.community/envs/community-react@2.1.14": {},
+            "teambit.react/react": {},
             "teambit.envs/envs": {
-                "env": "teambit.community/envs/community-react"
+                "env": "teambit.react/react"
             }
         }
     },
@@ -1695,9 +1695,9 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/navigation/react-router/link",
         "config": {
-            "teambit.community/envs/community-react@2.1.14": {},
+            "teambit.react/react": {},
             "teambit.envs/envs": {
-                "env": "teambit.community/envs/community-react"
+                "env": "teambit.react/react"
             }
         }
     },
