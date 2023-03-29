@@ -1677,6 +1677,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/menu-widget-icon"
     },
+    "ui/navigation/react-router/link": {
+        "scope": "teambit.ui-foundation",
+        "version": "1.80.9",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/navigation/react-router/link",
+        "config": {
+            "teambit.community/envs/community-react@2.1.14": {},
+            "teambit.envs/envs": {
+                "env": "teambit.community/envs/community-react"
+            }
+        }
+    },
     "ui/notifications/notification": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.509",
