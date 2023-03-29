@@ -33,7 +33,15 @@ export async function hardLinkDirectory(src: string, destDirs: string[]) {
       }
       if (file.isSymbolicLink()) {
         srcFile = await resolveLinkTarget(srcFile);
-        if ((await fs.stat(srcFile)).isDirectory()) {
+        let srcStats: fs.Stats;
+        try {
+          srcStats = await fs.stat(srcFile);
+        } catch (err: any) {
+          // if the link is broken, ignore it
+          if (err.code === 'ENOENT') return;
+          throw err;
+        }
+        if (srcStats.isDirectory()) {
           await Promise.all(
             destDirs.map(async (destDir) => {
               const destSubdir = path.join(destDir, file.name);
