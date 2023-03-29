@@ -338,7 +338,7 @@
         "jsx-to-string": "1.4.0",
         "junit-report-builder": "3.0.0",
         "less": "^4.1.1",
-        "loader-utils": "2.0.0",
+        "loader-utils": "2.0.4",
         "lodash": "4.17.20",
         "lodash.compact": "3.0.1",
         "lodash.head": "4.0.1",
