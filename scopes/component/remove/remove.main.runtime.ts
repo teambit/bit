@@ -105,53 +105,56 @@ export class RemoveMain {
    * 2. soft-removed and then snapped. It's not in .bitmap now.
    * 3. soft-removed, snapped, exported. it's not in .bitmap now.
    * 4. a soft-removed components was imported, so it's now in .bitmap without the "removed" aspect entry.
+   * 5. workspace is empty. the soft-removed component is on the remote.
+   * returns `true` if it was recovered. `false` if the component wasn't soft-removed, so nothing to recover from.
    */
   async recover(compIdStr: string, options: RecoverOptions): Promise<boolean> {
     if (!this.workspace) throw new ConsumerNotFound();
     const bitMapEntry = this.workspace.consumer.bitMap.components.find((compMap) => {
       return compMap.id.name === compIdStr || compMap.id.toStringWithoutVersion() === compIdStr;
     });
+    const importComp = async (idStr: string) => {
+      await this.importer.import({
+        ids: [idStr],
+        installNpmPackages: !options.skipDependencyInstallation,
+        override: true,
+      });
+    };
+    const setAsRemovedFalse = async (compId: ComponentID) => {
+      await this.workspace.addSpecificComponentConfig(compId, RemoveAspect.id, { removed: false });
+      await this.workspace.bitMap.write();
+    };
     if (bitMapEntry) {
       if (bitMapEntry.config?.[RemoveAspect.id]) {
+        // case #1
         delete bitMapEntry.config?.[RemoveAspect.id];
-        await this.importer.import({
-          ids: [bitMapEntry.id.toString()],
-          installNpmPackages: !options.skipDependencyInstallation,
-          override: true,
-        });
+        await importComp(bitMapEntry.id.toString());
         return true;
       }
+      // case #4
       const compId = await this.workspace.resolveComponentId(bitMapEntry.id);
       const comp = await this.workspace.get(compId);
       if (!this.isRemoved(comp)) {
-        throw new BitError(`component ${compId.toString()} was not soft-removed, nothing to recover from`);
+        return false;
       }
-      await this.workspace.addSpecificComponentConfig(compId, RemoveAspect.id, { removed: false });
-      await this.workspace.bitMap.write();
+      await setAsRemovedFalse(compId);
       return true;
     }
     const compId = await this.workspace.scope.resolveComponentId(compIdStr);
     const compFromScope = await this.workspace.scope.get(compId);
     if (compFromScope && this.isRemoved(compFromScope)) {
-      await this.importer.import({
-        ids: [compId._legacy.toString()],
-        installNpmPackages: !options.skipDependencyInstallation,
-        override: true,
-      });
-      await this.workspace.addSpecificComponentConfig(compId, RemoveAspect.id, { removed: false });
-      await this.workspace.bitMap.write();
+      // case #2 and #3
+      await importComp(compId._legacy.toString());
+      await setAsRemovedFalse(compId);
       return true;
     }
+    // case #5
     const comp = await this.workspace.scope.getRemoteComponent(compId);
     if (!this.isRemoved(comp)) {
-      throw new BitError(`component ${compId.toString()} was not soft-removed, nothing to recover from`);
+      return false;
     }
-    await this.importer.import({
-      ids: [compId._legacy.toString()],
-      installNpmPackages: !options.skipDependencyInstallation,
-      override: true,
-    });
-    await this.workspace.addSpecificComponentConfig(compId, RemoveAspect.id, { removed: false });
+    await importComp(compId._legacy.toString());
+    await setAsRemovedFalse(compId);
 
     return true;
   }

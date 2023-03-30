@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { BitError } from '@teambit/bit-error';
 import { Command, CommandOptions } from '@teambit/cli';
 import { RemoveMain } from './remove.main.runtime';
 
@@ -19,7 +20,10 @@ export class RecoverCmd implements Command {
   constructor(private remove: RemoveMain) {}
 
   async report([componentName]: [string], options: RecoverOptions) {
-    await this.remove.recover(componentName, options);
+    const hasRecovered = await this.remove.recover(componentName, options);
+    if (!hasRecovered) {
+      throw new BitError(`component ${componentName} was not soft-removed, nothing to recover from`);
+    }
     return chalk.green(`successfully recovered ${componentName}`);
   }
 }
