@@ -1023,6 +1023,43 @@ describe('merge lanes', function () {
       });
     });
   });
+  describe('merging from a lane to main when it changed Version object with squashed property and then re-imported it', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild(
+        `"${helper.scopes.remote}/comp1, ${helper.scopes.remote}/comp2"`,
+        '--unmodified'
+      );
+      helper.command.snapComponentWithoutBuild(
+        `"${helper.scopes.remote}/comp1, ${helper.scopes.remote}/comp2"`,
+        '--unmodified'
+      );
+      helper.command.snapComponentWithoutBuild(
+        `"${helper.scopes.remote}/comp1, ${helper.scopes.remote}/comp2"`,
+        '--unmodified'
+      );
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.mergeLane(`${helper.scopes.remote}/dev`, `-x`);
+      const head = helper.command.getHead(`${helper.scopes.remote}/comp1`);
+      // because comp3 is missing, this will re-fetch comp1 with all its dependencies, which could potentially override the version objects
+      helper.command.import(`${helper.scopes.remote}/comp1@${head} --objects --fetch-deps`);
+    });
+    it('should not override the squashed property', () => {
+      const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
+      expect(comp).to.have.property('squashed');
+      expect(comp.modified).to.have.lengthOf(1);
+    });
+    it('bit export should not throw', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+  });
   describe('merging from a lane to main when it has a long history which does not exist locally', () => {
     let beforeMerge: string;
     before(() => {
