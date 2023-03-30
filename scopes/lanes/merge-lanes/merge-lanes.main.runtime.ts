@@ -10,7 +10,9 @@ import MergingAspect, {
 } from '@teambit/merging';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
+import { getBasicLog } from '@teambit/snapping';
 import { BitId } from '@teambit/legacy-bit-id';
+import { Log } from '@teambit/legacy/dist/scope/models/version';
 import pMapSeries from 'p-map-series';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
@@ -306,6 +308,7 @@ export class MergeLanesMain {
     const mergedPreviously: BitId[] = [];
     const mergedNow: BitId[] = [];
     const shouldSquash = !toLaneObj && !options.noSquash; // only when merging to main we squash.
+    const log = await getLogForSquash(fromLaneId);
     const bitObjectsPerComp = await pMapSeries(idsToMerge, async (id) => {
       const modelComponent = await this.scope.legacyScope.getModelComponent(id);
       const fromVersionObj = await modelComponent.loadVersion(id.version as string, repo);
@@ -327,7 +330,7 @@ export class MergeLanesMain {
         targetHead: fromLaneHead,
       });
       const modifiedVersion = shouldSquash
-        ? squashOneComp(DEFAULT_LANE, fromLaneId, id, divergeData, fromVersionObj)
+        ? squashOneComp(DEFAULT_LANE, fromLaneId, id, divergeData, log, fromVersionObj)
         : undefined;
       const objects: BitObject[] = [];
       if (modifiedVersion) objects.push(modifiedVersion);
@@ -499,15 +502,27 @@ ${depsOnLane.map((d) => d.toString()).join('\n')}`);
   return filteredComponentStatus;
 }
 
+async function getLogForSquash(otherLaneId: LaneId) {
+  const basicLog = await getBasicLog();
+  const log = {
+    ...basicLog,
+    message: `squashed during merge from ${otherLaneId.toString()}`,
+  };
+  return log;
+}
+
 async function squashSnaps(allComponentsStatus: ComponentMergeStatus[], otherLaneId: LaneId, consumer: Consumer) {
   const currentLaneName = consumer.getCurrentLaneId().name;
   const succeededComponents = allComponentsStatus.filter((c) => !c.unmergedMessage);
+  const log = await getLogForSquash(otherLaneId);
+
   await Promise.all(
     succeededComponents.map(async ({ id, divergeData, componentFromModel }) => {
       if (!divergeData) {
         throw new Error(`unable to squash. divergeData is missing from ${id.toString()}`);
       }
-      const modifiedComp = squashOneComp(currentLaneName, otherLaneId, id, divergeData, componentFromModel);
+
+      const modifiedComp = squashOneComp(currentLaneName, otherLaneId, id, divergeData, log, componentFromModel);
       if (modifiedComp) {
         consumer.scope.objects.add(modifiedComp);
         const modelComponent = await consumer.scope.getModelComponent(id);
@@ -526,6 +541,7 @@ function squashOneComp(
   otherLaneId: LaneId,
   id: BitId,
   divergeData: SnapsDistance,
+  log: Log,
   componentFromModel?: Version
 ): Version | undefined {
   if (divergeData.isDiverged()) {
@@ -569,7 +585,7 @@ alternatively, use "--no-squash" flag to keep the entire history of "${otherLane
     // there is no commonSnapBeforeDiverge. the local has no snaps, all are remote, no need for parents. keep only head.
     componentFromModel.parents.forEach((ref) => componentFromModel.removeParent(ref));
   }
-  componentFromModel.setSquashed({ previousParents: currentParents, laneId: otherLaneId });
+  componentFromModel.setSquashed({ previousParents: currentParents, laneId: otherLaneId }, log);
   return componentFromModel;
 }
 
