@@ -879,18 +879,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/navigation/link"
     },
-    "navigation/routing-provider": {
-        "scope": "teambit.base-react",
-        "version": "1.80.9",
-        "mainFile": "index.ts",
-        "rootDir": "components/navigation/routing-provider",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
-    },
     "network/agent": {
         "scope": "teambit.toolbox",
         "version": "0.0.551",

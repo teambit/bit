@@ -1,0 +1,19 @@
+```tsx
+import React from 'react';
+import { NavigationProvider, Link } from '@teambit/base-react.navigation.link';
+import { myRouterAdapter } from './my-router-adapter';
+import { routes } from './my-routes';
+
+
+export const App = () => {
+  return (
+    <>
+      <NavigationProvider implementation={myRouterAdapter}>
+        <Link href="/">Home</Link>
+        <Link href="/about">About</Link>
+        <Link href="/contact">Contact Us</Link>
+        <MyRouter routes={routes} />
+      </NavigationProvider>
+    </>
+  );
+```
