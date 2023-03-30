@@ -25,15 +25,28 @@ export type ConfigFile = {
 
 export type ExtendingConfigFile = ConfigFile & {
   /**
-   * Name of the config file that this config file extends.
+   * the config file that this config file extends.
    */
-  extendingTarget: string;
+  extendingTarget: WrittenConfigFile;
+
+  /**
+   * When replacing the config file name with the actual path of the config file, use absolute paths.
+   */
+  useAbsPaths?: boolean;
 };
 
 export type PostProcessExtendingConfigFilesArgs = {
   workspaceDir: string;
   configsRootDir: string;
   writtenExtendingConfigFiles: EnvsWrittenExtendingConfigFiles;
+  envCompsDirsMap: EnvCompsDirsMap;
+  dryRun: boolean;
+};
+
+export type GenerateExtendingConfigFilesArgs = {
+  workspaceDir: string;
+  configsRootDir: string;
+  writtenConfigFiles: WrittenConfigFile[];
   envCompsDirsMap: EnvCompsDirsMap;
   dryRun: boolean;
 };
@@ -90,8 +103,13 @@ export interface ConfigWriterEntry {
    * For example, the tsconfig.json file will extend the real tsconfig.{hash}.json file (that were coming from the env).
    * That way we can avoid writing the same config file multiple times.
    * It also reduces the risk of the user manually change the config file and then the changes will be lost.
+   * This function support returning a file with content with a dsl using `{}` to replace the config file name.
+   * for example:
+   * content = `{
+   *   "extends": {configFile.name},
+   * }`
    */
-  generateExtendingFile(writtenConfigFiles: WrittenConfigFile[]): ExtendingConfigFile | undefined;
+  generateExtendingFile(args: GenerateExtendingConfigFilesArgs): ExtendingConfigFile | undefined;
 
   /**
    * This enables the writer to do some post processing after the extending config files were written.
