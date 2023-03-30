@@ -6,7 +6,7 @@ import { IssuesList } from '@teambit/component-issues';
 import BitId from '../../bit-id/bit-id';
 import BitIds from '../../bit-id/bit-ids';
 import {
-  BASE_WEB_DOMAIN,
+  getCloudDomain,
   BIT_WORKSPACE_TMP_DIRNAME,
   BuildStatus,
   DEFAULT_BINDINGS_PREFIX,
@@ -281,7 +281,9 @@ export default class Component {
 
   _getHomepage() {
     // TODO: Validate somehow that this scope is really on bitsrc (maybe check if it contains . ?)
-    const homepage = this.scope ? `https://${BASE_WEB_DOMAIN}/${this.scope.replace('.', '/')}/${this.name}` : undefined;
+    const homepage = this.scope
+      ? `https://${getCloudDomain()}/${this.scope.replace('.', '/')}/${this.name}`
+      : undefined;
     return homepage;
   }
 

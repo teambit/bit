@@ -7,6 +7,7 @@ import type {
   WrittenConfigFile,
   ExtendingConfigFile,
   ConfigFile,
+  GenerateExtendingConfigFilesArgs,
 } from '@teambit/workspace-config-files';
 import { expandIncludeExclude } from '@teambit/typescript';
 import { set } from 'lodash';
@@ -72,14 +73,16 @@ export class EslintConfigWriter implements ConfigWriterEntry {
     return Promise.resolve();
   }
 
-  generateExtendingFile(writtenConfigFiles: WrittenConfigFile[]): ExtendingConfigFile | undefined {
+  generateExtendingFile(args: GenerateExtendingConfigFilesArgs): ExtendingConfigFile | undefined {
+    const { writtenConfigFiles } = args;
     const eslintConfigFile = writtenConfigFiles.find((file) => file.name.includes('.eslintrc.bit'));
     if (!eslintConfigFile) return undefined;
     const config = {
-      extends: [eslintConfigFile.filePath],
+      // Using DSL to make sure it will be replaced with relative path
+      extends: [`{${eslintConfigFile.name}}`],
     };
     const content = `${BIT_GENERATED_ESLINT_CONFIG_COMMENT}\n${JSON.stringify(config, null, 2)}`;
-    return { content, name: '.eslintrc.json', extendingTarget: eslintConfigFile.filePath };
+    return { content, name: '.eslintrc.json', extendingTarget: eslintConfigFile, useAbsPaths: false };
   }
 
   isBitGenerated(filePath: string): boolean {
