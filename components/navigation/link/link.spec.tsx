@@ -1,5 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { BasicLink, ExternalLink } from './link.composition';
 import { Link } from './link';
 
