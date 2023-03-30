@@ -873,12 +873,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/multi-tester"
     },
-    "navigation/link": {
-        "scope": "teambit.base-react",
-        "version": "2.0.29",
-        "mainFile": "index.ts",
-        "rootDir": "components/navigation/link"
-    },
     "network/agent": {
         "scope": "teambit.toolbox",
         "version": "0.0.551",
