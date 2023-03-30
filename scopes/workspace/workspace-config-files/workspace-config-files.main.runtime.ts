@@ -1,7 +1,7 @@
 import format from 'string-format';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import fs from 'fs-extra';
-import { join } from 'path';
+import { dirname, join, relative } from 'path';
 import globby from 'globby';
 import chalk from 'chalk';
 import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
@@ -228,7 +228,15 @@ export class WorkspaceConfigFilesMain {
         opts
       );
       if (writtenConfigFiles) {
-        this.buildExtendingConfigFilesMap(configWriter, writtenConfigFiles, envId, extendingConfigFilesMap);
+        this.buildExtendingConfigFilesMap(
+          configWriter,
+          writtenConfigFiles,
+          envId,
+          extendingConfigFilesMap,
+          envCompsDirsMap,
+          configsRootDir,
+          opts
+        );
       }
     });
     if (!writtenConfigFilesMap || Object.keys(writtenConfigFilesMap).length === 0) {
@@ -341,8 +349,12 @@ export class WorkspaceConfigFilesMain {
         const writtenPaths = await Promise.all(
           paths.map(async (path) => {
             const filePath = join(this.workspace.path, path, name);
+            const targetPath = configFile.useAbsPaths
+              ? configFile.extendingTarget.filePath
+              : relative(dirname(filePath), configFile.extendingTarget.filePath);
+            const content = configFile.content.replace(`{${configFile.extendingTarget.name}}`, targetPath);
             if (!opts.dryRun) {
-              await fs.outputFile(filePath, configFile.content);
+              await fs.outputFile(filePath, content);
             }
             return filePath;
           })
@@ -367,9 +379,18 @@ export class WorkspaceConfigFilesMain {
     configWriter: ConfigWriterEntry,
     writtenConfigFiles: WrittenConfigFile[],
     envId: string,
-    extendingConfigFilesMap: ExtendingConfigFilesMap
+    extendingConfigFilesMap: ExtendingConfigFilesMap,
+    envCompsDirsMap: EnvCompsDirsMap,
+    configsRootDir: string,
+    opts: WriteConfigFilesOptions
   ) {
-    const extendingConfigFile = this.generateExtendingFile(configWriter, writtenConfigFiles);
+    const extendingConfigFile = this.generateExtendingFile(
+      configWriter,
+      writtenConfigFiles,
+      envCompsDirsMap,
+      configsRootDir,
+      opts
+    );
     if (!extendingConfigFile) return;
     if (!extendingConfigFilesMap[extendingConfigFile.hash]) {
       extendingConfigFilesMap[extendingConfigFile.hash] = { extendingConfigFile, envIds: [] };
@@ -379,13 +400,24 @@ export class WorkspaceConfigFilesMain {
 
   private generateExtendingFile(
     configWriter: ConfigWriterEntry,
-    writtenConfigFiles
+    writtenConfigFiles,
+    envCompsDirsMap: EnvCompsDirsMap,
+    configsRootDir: string,
+    opts: WriteConfigFilesOptions
   ): Required<ExtendingConfigFile> | undefined {
-    const extendingConfigFile = configWriter.generateExtendingFile(writtenConfigFiles);
+    const args = {
+      workspaceDir: this.workspace.path,
+      configsRootDir,
+      writtenConfigFiles,
+      envCompsDirsMap,
+      dryRun: !!opts.dryRun,
+    };
+    const extendingConfigFile = configWriter.generateExtendingFile(args);
     if (!extendingConfigFile) return undefined;
     const hash = extendingConfigFile.hash || sha1(extendingConfigFile.content);
     return {
       ...extendingConfigFile,
+      useAbsPaths: !!extendingConfigFile.useAbsPaths,
       hash,
     };
   }
