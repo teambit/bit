@@ -9,7 +9,7 @@ export type RecoverOptions = {
 
 export class RecoverCmd implements Command {
   name = 'recover <component-name>';
-  description = 'recover soft-removed component(s) from the workspace, or a remote scope';
+  description = 'EXPERIMENTAL. recover soft-removed component(s) from the workspace, or a remote scope';
   group = 'collaborate';
   options = [
     ['x', 'skip-dependency-installation', 'do not install packages in case of importing components'],
