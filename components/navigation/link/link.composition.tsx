@@ -46,19 +46,23 @@ export const ActiveLink = () => (
 );
 
 const navA: RouterContextType = {
-  Link: ({ children, ...props }: any) => (
-    <a {...props} role="img">
-      {children} 🔗
-    </a>
-  ),
+  Link: function _Link({ children, ...props }: any) {
+    return (
+      <a {...props} role="img">
+        {children} 🔗
+      </a>
+    );
+  },
 };
 
 const navB: RouterContextType = {
-  Link: ({ style, ...props }: any) => (
-    <a {...props} style={{ textDecoration: 'none', fontWeight: 'bolder', ...style }}>
-      {props.children}
-    </a>
-  ),
+  Link: function _Link({ style, ...props }: any) {
+    return (
+      <a {...props} style={{ textDecoration: 'none', fontWeight: 'bolder', ...style }}>
+        {props.children}
+      </a>
+    );
+  },
 };
 
 export const MultipleRoutingSystems = () => (

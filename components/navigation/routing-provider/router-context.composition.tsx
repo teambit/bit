@@ -1,6 +1,6 @@
 import React from 'react';
 // import { Link } from '@teambit/base-react.navigation.link';
-import { RouterProvider } from './router-context';
+// import { RouterProvider } from './router-context';
 
 export const Preview = () => (
   <div>
