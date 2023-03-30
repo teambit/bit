@@ -1,8 +1,8 @@
-import { ComponentType, RefAttributes, AnchorHTMLAttributes } from 'react';
+import React, { ComponentType, RefAttributes, AnchorHTMLAttributes } from 'react';
 
 export interface LinkProps extends RefAttributes<HTMLAnchorElement>, AnchorHTMLAttributes<HTMLAnchorElement> {
   /**
-   * key-value state for stateful routing systems. (Has to be supported by the speicifc link implementation)
+   * key-value state for stateful routing systems. (Has to be supported by the specific link implementation)
    */
   state?: Record<string, any>;
 

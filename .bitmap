@@ -873,6 +873,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/multi-tester"
     },
+    "navigation/link": {
+        "scope": "teambit.base-react",
+        "version": "2.0.29",
+        "mainFile": "index.ts",
+        "rootDir": "components/navigation/link"
+    },
     "navigation/routing-provider": {
         "scope": "teambit.base-react",
         "version": "1.80.9",
@@ -1688,18 +1694,6 @@
         "version": "0.0.497",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/menu-widget-icon"
-    },
-    "ui/navigation/react-router/link": {
-        "scope": "teambit.ui-foundation",
-        "version": "1.80.9",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/navigation/react-router/link",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
     },
     "ui/notifications/notification": {
         "scope": "teambit.ui-foundation",
