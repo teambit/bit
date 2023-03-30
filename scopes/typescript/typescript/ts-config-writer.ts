@@ -10,6 +10,7 @@ import type {
   ConfigFile,
   EnvMapValue,
   PostProcessExtendingConfigFilesArgs,
+  GenerateExtendingConfigFilesArgs,
 } from '@teambit/workspace-config-files';
 import { uniq } from 'lodash';
 import { CompilerMain } from '@teambit/compiler';
@@ -85,14 +86,16 @@ export class TypescriptConfigWriter implements ConfigWriterEntry {
     return Promise.resolve();
   }
 
-  generateExtendingFile(writtenConfigFiles: WrittenConfigFile[]): ExtendingConfigFile | undefined {
+  generateExtendingFile(args: GenerateExtendingConfigFilesArgs): ExtendingConfigFile | undefined {
+    const { writtenConfigFiles } = args;
     const tsconfigFile = writtenConfigFiles.find((file) => file.name.includes('tsconfig.bit'));
     if (!tsconfigFile) return undefined;
     const config = {
-      extends: tsconfigFile.filePath,
+      // Using DSL to make sure it will be replaced with relative path
+      extends: `{${tsconfigFile.name}}`,
     };
     const content = `${BIT_GENERATED_TS_CONFIG_COMMENT}\n\n${JSON.stringify(config, null, 2)}`;
-    return { content, name: 'tsconfig.json', extendingTarget: tsconfigFile.filePath };
+    return { content, name: 'tsconfig.json', extendingTarget: tsconfigFile, useAbsPaths: false };
   }
 
   async postProcessExtendingConfigFiles?(args: PostProcessExtendingConfigFilesArgs): Promise<void> {

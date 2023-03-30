@@ -107,7 +107,7 @@ function getEnvGroupExtendingConfigFilesOutput(
   )}`;
   const extendingConfigFile = envsWrittenExtendingConfigFile.extendingConfigFile;
   const paths = extendingConfigFile.filePaths
-    .map((p) => `  ${relative(wsDir, p)} --> ${relative(wsDir, extendingConfigFile.extendingTarget)}`)
+    .map((p) => `  ${relative(wsDir, p)} --> ${relative(wsDir, extendingConfigFile.extendingTarget.filePath)}`)
     .join('\n    ');
   return `${title}\n    ${paths}`;
 }
