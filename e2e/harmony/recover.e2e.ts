@@ -59,5 +59,75 @@ describe('bit recover command', function () {
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(2);
     });
+    it('bit status should show the component as modified because the RemoveAspect has changed', () => {
+      const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2@0.0.2`);
+      expect(isModified).to.be.true;
+    });
+  });
+  describe('export the soft-remove component, start a new workspace and recover from there', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+
+      helper.command.softRemoveComponent('comp2');
+      helper.fs.outputFile('comp1/index.js', '');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.recover(`${helper.scopes.remote}/comp2`);
+    });
+    it('should import the component', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
+
+      helper.bitMap.expectToHaveId('comp2');
+    });
+    it('bit status should show the component as modified because the RemoveAspect has changed', () => {
+      const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2@0.0.2`);
+      expect(isModified).to.be.true;
+    });
+  });
+
+  describe('import soft-removed component', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+
+      helper.command.softRemoveComponent('comp2');
+      helper.fs.outputFile('comp1/index.js', '');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp2', '-x');
+    });
+    it('bit status should show the component as soft-removed', () => {
+      const status = helper.command.statusJson();
+      expect(status.remotelySoftRemoved).to.have.lengthOf(1);
+    });
+    it('bit status should not show the component as modified', () => {
+      const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2@0.0.2`);
+      expect(isModified).to.be.false;
+    });
+    describe('recover the component', () => {
+      before(() => {
+        helper.command.recover(`comp2`);
+      });
+      it('should make the component modified', () => {
+        const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2@0.0.2`);
+        expect(isModified).to.be.true;
+      });
+      it('bit status should not show the component as soft-removed anymore', () => {
+        const status = helper.command.statusJson();
+        expect(status.remotelySoftRemoved).to.have.lengthOf(0);
+      });
+    });
   });
 });
