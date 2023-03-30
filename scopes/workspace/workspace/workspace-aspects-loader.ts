@@ -599,7 +599,10 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       return id.toString();
     });
     const extensionsIds: string[] = await Promise.all(extensionsIdsP);
-    const loadedExtensions = this.harmony.extensionsIds;
+    const harmonyExtensions = this.harmony.extensionsIds;
+    const loadedExtensions = harmonyExtensions.filter((extId) => {
+      return this.harmony.extensions.get(extId)?.loaded;
+    });
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
     await this.loadAspects(extensionsToLoad, throwOnError, originatedFrom?.toString(), {
