@@ -34252,7 +34252,7 @@ packages:
       '@typescript-eslint/visitor-keys': 3.10.1
       debug: 4.3.2
       glob: 7.1.6
-      is-glob: 4.0.3
+      is-glob: 4.0.1
       lodash: 4.17.21
       semver: 7.3.4
       tsutils: 3.21.0_typescript@3.9.10
@@ -37493,7 +37493,7 @@ packages:
       braces: 3.0.2
       glob-parent: 5.1.2
       is-binary-path: 2.1.0
-      is-glob: 4.0.3
+      is-glob: 4.0.1
       normalize-path: 3.0.0
       readdirp: 3.6.0
     optionalDependencies:
@@ -40410,7 +40410,7 @@ packages:
       import-fresh: 3.3.0
       imurmurhash: 0.1.4
       inquirer: 7.3.3
-      is-glob: 4.0.3
+      is-glob: 4.0.1
       js-yaml: 3.14.1
       json-stable-stringify-without-jsonify: 1.0.1
       levn: 0.3.0
@@ -41780,7 +41780,7 @@ packages:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
     engines: {node: '>= 6'}
     dependencies:
-      is-glob: 4.0.3
+      is-glob: 4.0.1
 
   /glob-to-regexp/0.3.0:
     resolution: {integrity: sha512-Iozmtbqv0noj0uDDqoL0zNq0VBEfK2YFoMAZoxJe4cwphvLR+JskfF30QhXHOR4m3KrE6NLRYw+U9MRXvifyig==}
@@ -42683,7 +42683,7 @@ packages:
     dependencies:
       '@types/http-proxy': 1.17.9
       http-proxy: 1.18.1_debug@4.3.2
-      is-glob: 4.0.3
+      is-glob: 4.0.1
       is-plain-obj: 3.0.0
       micromatch: 4.0.5
     transitivePeerDependencies:
@@ -43445,13 +43445,13 @@ packages:
     engines: {node: '>=0.10.0'}
     dependencies:
       is-extglob: 2.1.1
-    dev: false
 
   /is-glob/4.0.3:
     resolution: {integrity: sha512-xelSayHH36ZgE7ZWhli7pW34hNbNl8Ojv5KVmkJD4hBdD3th8Tfk9vYasLM+mXWOZhFkgZfxhLSnrwRr4elSSg==}
     engines: {node: '>=0.10.0'}
     dependencies:
       is-extglob: 2.1.1
+    dev: false
 
   /is-gzip/1.0.0:
     resolution: {integrity: sha512-rcfALRIb1YewtnksfRIHGcIY93QnK8BIQ/2c9yDYcG/Y6+vRoJuTWBmmSEbyLLYtXm7q35pHOHbZFQBaLrhlWQ==}
