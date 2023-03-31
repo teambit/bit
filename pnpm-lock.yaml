@@ -26786,7 +26786,7 @@ packages:
     dev: false
 
   /@pnpm/network.ca-file/1.0.1:
-    resolution: {integrity: sha1-6O8TBzfQYCe8rNSKZc9Vk/Y50g0=, tarball: tarballs/pnpm.network/ca-file@1.0.1.tgz}
+    resolution: {integrity: sha1-6O8TBzfQYCe8rNSKZc9Vk/Y50g0=, tarball: '@pnpm/network.ca-file/-/pnpm-network.ca-file-1.0.1.tgz'}
     engines: {node: '>=12.22.0'}
     dependencies:
       graceful-fs: 4.2.10
@@ -30935,7 +30935,7 @@ packages:
     dev: false
 
   /@teambit/documenter.ui.linked-heading/4.1.8_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha1-LGpmPIXZSWsXbYgkS/WR1VxJcCg=, tarball: '@teambit/documenter.ui.linked-heading/-/teambit-documenter.ui.linked-heading-4.1.8.tgz'}
+    resolution: {integrity: sha1-LGpmPIXZSWsXbYgkS/WR1VxJcCg=, tarball: tarballs/teambit.documenter/ui/linked-heading@4.1.8.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -39047,7 +39047,7 @@ packages:
     dependencies:
       globby: 11.0.1
       graceful-fs: 4.2.10
-      is-glob: 4.0.1
+      is-glob: 4.0.3
       is-path-cwd: 2.2.0
       is-path-inside: 3.0.3
       p-map: 4.0.0
