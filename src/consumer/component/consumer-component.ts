@@ -11,6 +11,7 @@ import {
   BuildStatus,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_LANGUAGE,
+  Extensions,
 } from '../../constants';
 import GeneralError from '../../error/general-error';
 import docsParser from '../../jsdoc/parser';
@@ -269,6 +270,13 @@ export default class Component {
       default:
         return 'js';
     }
+  }
+
+  /**
+   * whether the component is soft removed
+   */
+  isRemoved() {
+    return this.extensions.findCoreExtension(Extensions.remove)?.config?.removed || this.removed;
   }
 
   _getHomepage() {
