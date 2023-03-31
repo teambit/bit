@@ -3,7 +3,7 @@ import detectFrontmatter from 'remark-frontmatter';
 import visit from 'unist-util-visit';
 import remove from 'unist-util-remove';
 import remarkNotes from 'remark-admonitions';
-import detectiveEs6 from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detectives/detective-es6';
+import detectiveEs6 from '@teambit/node.deps-detectors.detective-es6';
 import yaml from 'yaml';
 import vfile from 'vfile';
 import { CompileOutput } from './compile-output';
