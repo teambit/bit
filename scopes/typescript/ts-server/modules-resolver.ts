@@ -13,6 +13,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 export function findPathToModule(dir: string, moduleName: string): string | undefined {
+  console.log('🚀 ~ file: modules-resolver.ts:16 ~ findPathToModule ~ dir:', dir);
+  console.log('🚀 ~ file: modules-resolver.ts:16 ~ findPathToModule ~ moduleName:', moduleName);
   try {
     return require.resolve(moduleName, { paths: [dir] });
   } catch {
