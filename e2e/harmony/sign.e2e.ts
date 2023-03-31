@@ -39,6 +39,7 @@ describe('sign command', function () {
     it('should save updated versions on the remotes', () => {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, helper.scopes.remotePath);
       expect(comp1.buildStatus).to.equal('succeed');
+      expect(comp1.modified).to.have.lengthOf(1);
     });
     describe('running bit import on the workspace', () => {
       before(() => {

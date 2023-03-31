@@ -226,13 +226,14 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       invalidComponents.length ? chalk.underline.white(statusInvalidComponentsMsg) + invalidDesc : ''
     ).join('\n');
 
-    const locallySoftRemovedDesc = '\n(tag/snap and export them to update the remote)\n';
+    const locallySoftRemovedDesc = '\n(tag/snap and export them to update the remote. to undo, run "bit recover")\n';
     const locallySoftRemovedOutput = immutableUnshift(
       locallySoftRemoved.map((c) => format(c)).sort(),
       locallySoftRemoved.length ? chalk.underline.white('soft-removed components locally') + locallySoftRemovedDesc : ''
     ).join('\n');
 
-    const remotelySoftRemovedDesc = '\n(use "bit remove" to remove them from the workspace)\n';
+    const remotelySoftRemovedDesc =
+      '\n(use "bit remove" to remove them from the workspace. use "bit recover" to undo the soft-remove)\n';
     const remotelySoftRemovedOutput = immutableUnshift(
       remotelySoftRemoved.map((c) => format(c)).sort(),
       remotelySoftRemoved.length

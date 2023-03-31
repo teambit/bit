@@ -37,7 +37,7 @@ export class ImporterMain {
     private logger: Logger
   ) {}
 
-  async import(importOptions: ImportOptions, packageManagerArgs: string[]): Promise<ImportResult> {
+  async import(importOptions: ImportOptions, packageManagerArgs: string[] = []): Promise<ImportResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     consumer.packageManagerArgs = packageManagerArgs;

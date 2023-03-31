@@ -10,12 +10,12 @@ import Walker from 'node-source-walk';
 import detectiveAmd from 'detective-amd';
 import detectiveStylus from 'detective-stylus';
 
-import detectiveCss from '../detectives/detective-css';
-import detectiveEs6 from '../detectives/detective-es6';
-import detectiveLess from '../detectives/detective-less';
-import detectiveSass from '../detectives/detective-sass';
-import detectiveScss from '../detectives/detective-scss';
-import detectiveTypeScript from '../detectives/detective-typescript';
+import detectiveEs6 from '@teambit/node.deps-detectors.detective-es6';
+import detectiveCss from '@teambit/styling.deps-detectors.detective-css';
+import detectiveLess from '@teambit/styling.deps-detectors.detective-less';
+import detectiveSass from '@teambit/styling.deps-detectors.detective-sass';
+import detectiveScss from '@teambit/styling.deps-detectors.detective-scss';
+import detectiveTypeScript from '@teambit/typescript.deps-detectors.detective-typescript';
 
 import { DependencyDetector, DetectorHook } from '../detector-hook';
 

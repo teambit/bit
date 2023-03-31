@@ -79,6 +79,7 @@ export type VersionProps = {
   buildStatus?: BuildStatus;
   componentId?: BitId;
   bitVersion?: string;
+  modified?: Log[];
 };
 
 /**
@@ -124,6 +125,7 @@ export default class Version extends BitObject {
   buildStatus?: BuildStatus;
   componentId?: BitId; // can help debugging errors when validating Version object
   bitVersion?: string;
+  modified: Log[] = []; // currently mutation could happen as a result of either "squash" or "sign".
 
   constructor(props: VersionProps) {
     super();
@@ -152,6 +154,7 @@ export default class Version extends BitObject {
     this.buildStatus = props.buildStatus;
     this.componentId = props.componentId;
     this.bitVersion = props.bitVersion;
+    this.modified = props.modified || [];
     this.validateVersion();
   }
 
@@ -272,6 +275,11 @@ export default class Version extends BitObject {
 
   get extensionDependencies() {
     return new Dependencies(this.extensions.extensionsBitIds.map((id) => new Dependency(id, [])));
+  }
+
+  lastModified(): string {
+    if (!this.modified || !this.modified.length) return this.log.date;
+    return this.modified[this.modified.length - 1].date;
   }
 
   getAllFlattenedDependencies(): BitIds {
@@ -423,6 +431,7 @@ export default class Version extends BitObject {
           ? { head: this.unrelated.head.toString(), laneId: this.unrelated.laneId.toObject() }
           : undefined,
         bitVersion: this.bitVersion,
+        modified: this.modified,
       },
       (val) => !!val
     );
@@ -470,6 +479,7 @@ export default class Version extends BitObject {
       squashed,
       unrelated,
       bitVersion,
+      modified,
     } = contentParsed;
 
     const _getDependencies = (deps = []): Dependency[] => {
@@ -576,6 +586,7 @@ export default class Version extends BitObject {
       extensions: _getExtensions(extensions),
       buildStatus,
       bitVersion,
+      modified,
     });
   }
 
@@ -678,8 +689,13 @@ export default class Version extends BitObject {
     this.parents.push(ref);
   }
 
-  setSquashed(squashData: SquashData) {
+  setSquashed(squashData: SquashData, log: Log) {
     this.squashed = squashData;
+    this.addModifiedLog(log);
+  }
+
+  addModifiedLog(log: Log) {
+    this.modified.push(log);
   }
 
   addAsOnlyParent(ref: Ref) {

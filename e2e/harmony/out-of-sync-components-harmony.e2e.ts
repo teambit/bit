@@ -83,4 +83,24 @@ describe('components that are not synced between the scope and the consumer', fu
       });
     });
   });
+  describe('consumer with a tagged exported component and scope with no components', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.2
+      helper.fs.deletePath('.bit');
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('bit import should not throw', () => {
+      expect(() => helper.command.import()).to.not.throw();
+    });
+    it('bit import followed by bit status should sync .bitmap', () => {
+      helper.command.import();
+      helper.command.status();
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.1');
+    });
+  });
 });
