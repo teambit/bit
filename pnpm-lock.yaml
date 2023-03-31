@@ -244,10 +244,10 @@ importers:
       '@teambit/react.ui.component-highlighter': 0.2.1
       '@teambit/scope.content.scope-overview': 1.95.0
       '@teambit/scope.ui.scope-icon': 0.0.91
-      '@teambit/styling.deps-detectors.detective-css': ^0.0.1
-      '@teambit/styling.deps-detectors.detective-less': ^0.0.1
-      '@teambit/styling.deps-detectors.detective-sass': ^0.0.1
-      '@teambit/styling.deps-detectors.detective-scss': ^0.0.1
+      '@teambit/styling.deps-detectors.detective-css': ^0.0.2
+      '@teambit/styling.deps-detectors.detective-less': ^0.0.2
+      '@teambit/styling.deps-detectors.detective-sass': ^0.0.2
+      '@teambit/styling.deps-detectors.detective-scss': ^0.0.2
       '@teambit/toolbox.network.agent': 0.0.116
       '@teambit/typescript.deps-detectors.detective-typescript': ^0.0.1
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.1
@@ -868,10 +868,10 @@ importers:
       '@teambit/react.rendering.ssr': 0.0.3_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/react.ui.component-highlighter': 0.2.1_foy4f5uudmzx6x46zk2kggw6ni
       '@teambit/scope.ui.scope-icon': 0.0.91_cuf6fvcrkey6ktqfghqvi47tva
-      '@teambit/styling.deps-detectors.detective-css': 0.0.1
-      '@teambit/styling.deps-detectors.detective-less': 0.0.1
-      '@teambit/styling.deps-detectors.detective-sass': 0.0.1
-      '@teambit/styling.deps-detectors.detective-scss': 0.0.1
+      '@teambit/styling.deps-detectors.detective-css': 0.0.2
+      '@teambit/styling.deps-detectors.detective-less': 0.0.2
+      '@teambit/styling.deps-detectors.detective-sass': 0.0.2
+      '@teambit/styling.deps-detectors.detective-scss': 0.0.2
       '@teambit/toolbox.network.agent': registry.npmjs.org/@teambit/toolbox.network.agent/0.0.116
       '@teambit/typescript.deps-detectors.detective-typescript': 0.0.1_typescript@4.7.4
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.1_aglxfttm42xkl6otq2xcl4uoua
@@ -17169,6 +17169,7 @@ importers:
       '@babel/runtime': 7.20.0
       '@mdx-js/mdx': 1.6.21
       '@teambit/documenter.theme.theme-compositions': 4.1.1
+      '@teambit/node.deps-detectors.detective-es6': ^0.0.1
       '@types/chai': 4.2.15
       '@types/jest': 26.0.20
       '@types/mocha': 9.1.0
@@ -17185,6 +17186,7 @@ importers:
       yaml: 1.10.2
     dependencies:
       '@mdx-js/mdx': 1.6.21
+      '@teambit/node.deps-detectors.detective-es6': 0.0.1
       react: 17.0.2
       remark-admonitions: 1.2.1
       remark-frontmatter: 2.0.0
@@ -32529,46 +32531,35 @@ packages:
       '@emotion/hash': 0.8.0
     dev: true
 
-  /@teambit/styling.deps-detectors.detective-css-and-preprocessors/0.0.0-70815886e93b9ef8a07d2e1adcc8b732ff8aa050:
-    resolution: {integrity: sha1-gFeqD6XORG4rUbHjYpZDiyeyDDA=, tarball: '@teambit/styling.deps-detectors.detective-css-and-preprocessors/-/teambit-styling.deps-detectors.detective-css-and-preprocessors-0.0.0-70815886e93b9ef8a07d2e1adcc8b732ff8aa050.tgz'}
+  /@teambit/styling.deps-detectors.detective-css-and-preprocessors/0.0.2:
+    resolution: {integrity: sha1-qjsgSK3HhK1n24q5HSQ0Y6jegD8=, tarball: '@teambit/styling.deps-detectors.detective-css-and-preprocessors/-/teambit-styling.deps-detectors.detective-css-and-preprocessors-0.0.2.tgz'}
     dependencies:
       css-tree: 2.3.1
-      debug: 4.3.4_supports-color@9.3.1
       is-url: 1.2.4
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
-  /@teambit/styling.deps-detectors.detective-css/0.0.1:
-    resolution: {integrity: sha1-/FwCOOSRpysVw79WU9yn79EyJd8=, tarball: '@teambit/styling.deps-detectors.detective-css/-/teambit-styling.deps-detectors.detective-css-0.0.1.tgz'}
+  /@teambit/styling.deps-detectors.detective-css/0.0.2:
+    resolution: {integrity: sha1-ImrQQr9pOJneNv1oG1FK2g3lR1c=, tarball: '@teambit/styling.deps-detectors.detective-css/-/teambit-styling.deps-detectors.detective-css-0.0.2.tgz'}
     dependencies:
-      '@teambit/styling.deps-detectors.detective-css-and-preprocessors': 0.0.0-70815886e93b9ef8a07d2e1adcc8b732ff8aa050
-    transitivePeerDependencies:
-      - supports-color
+      '@teambit/styling.deps-detectors.detective-css-and-preprocessors': 0.0.2
     dev: false
 
-  /@teambit/styling.deps-detectors.detective-less/0.0.1:
-    resolution: {integrity: sha1-4B0iaWt1+aZYLinwkeAULIaHaPc=, tarball: '@teambit/styling.deps-detectors.detective-less/-/teambit-styling.deps-detectors.detective-less-0.0.1.tgz'}
+  /@teambit/styling.deps-detectors.detective-less/0.0.2:
+    resolution: {integrity: sha1-zcmQ/kox2mUI7FvhyV9vzbfPxuU=, tarball: '@teambit/styling.deps-detectors.detective-less/-/teambit-styling.deps-detectors.detective-less-0.0.2.tgz'}
     dependencies:
-      '@teambit/styling.deps-detectors.detective-css-and-preprocessors': 0.0.0-70815886e93b9ef8a07d2e1adcc8b732ff8aa050
-    transitivePeerDependencies:
-      - supports-color
+      '@teambit/styling.deps-detectors.detective-css-and-preprocessors': 0.0.2
     dev: false
 
-  /@teambit/styling.deps-detectors.detective-sass/0.0.1:
-    resolution: {integrity: sha1-RwhZ+1OrhuM5S7Fk8+lmd/+6czY=, tarball: '@teambit/styling.deps-detectors.detective-sass/-/teambit-styling.deps-detectors.detective-sass-0.0.1.tgz'}
+  /@teambit/styling.deps-detectors.detective-sass/0.0.2:
+    resolution: {integrity: sha1-LhLQRl14MRng4lXnJZwfbEBehWQ=, tarball: '@teambit/styling.deps-detectors.detective-sass/-/teambit-styling.deps-detectors.detective-sass-0.0.2.tgz'}
     dependencies:
-      '@teambit/styling.deps-detectors.detective-css-and-preprocessors': 0.0.0-70815886e93b9ef8a07d2e1adcc8b732ff8aa050
-    transitivePeerDependencies:
-      - supports-color
+      '@teambit/styling.deps-detectors.detective-css-and-preprocessors': 0.0.2
     dev: false
 
-  /@teambit/styling.deps-detectors.detective-scss/0.0.1:
-    resolution: {integrity: sha1-RzEr//uNYQfjXRpUMCC4zoSLAyw=, tarball: '@teambit/styling.deps-detectors.detective-scss/-/teambit-styling.deps-detectors.detective-scss-0.0.1.tgz'}
+  /@teambit/styling.deps-detectors.detective-scss/0.0.2:
+    resolution: {integrity: sha1-jnWWyrqLwDsojseYpIhsnQTee70=, tarball: '@teambit/styling.deps-detectors.detective-scss/-/teambit-styling.deps-detectors.detective-scss-0.0.2.tgz'}
     dependencies:
-      '@teambit/styling.deps-detectors.detective-css-and-preprocessors': 0.0.0-70815886e93b9ef8a07d2e1adcc8b732ff8aa050
-    transitivePeerDependencies:
-      - supports-color
+      '@teambit/styling.deps-detectors.detective-css-and-preprocessors': 0.0.2
     dev: false
 
   /@teambit/toolbox.network.agent/0.0.540:
@@ -58273,6 +58264,7 @@ packages:
       react: 17.0.2
     dependencies:
       '@mdx-js/mdx': 1.6.21
+      '@teambit/node.deps-detectors.detective-es6': 0.0.1
       react: 17.0.2
       remark-admonitions: 1.2.1
       remark-frontmatter: 2.0.0
