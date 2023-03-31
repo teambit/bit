@@ -6,7 +6,7 @@ import protocol from 'typescript/lib/protocol';
 import { CheckTypes } from '@teambit/watcher';
 import type { Position } from 'vscode-languageserver-types';
 import commandExists from 'command-exists';
-import { findPathToModule, findPathToYarnSdk } from './modules-resolver';
+import { findPathToModule } from './modules-resolver';
 import { ProcessBasedTsServer } from './process-based-tsserver';
 import { CommandTypes, EventName } from './tsp-command-types';
 import { getTsserverExecutable } from './utils';
@@ -291,6 +291,7 @@ export class TsserverClient {
      * (1) find it in the bit directory
      */
     const bundled = findPathToModule(__dirname, tsServerPath);
+
     if (bundled) {
       return bundled;
     }
