@@ -351,7 +351,7 @@ export class WorkspaceConfigFilesMain {
             const filePath = join(this.workspace.path, path, name);
             const targetPath = configFile.useAbsPaths
               ? configFile.extendingTarget.filePath
-              : relative(dirname(filePath), configFile.extendingTarget.filePath);
+              : `./${relative(dirname(filePath), configFile.extendingTarget.filePath)}`;
             const content = configFile.content.replace(`{${configFile.extendingTarget.name}}`, targetPath);
             if (!opts.dryRun) {
               await fs.outputFile(filePath, content);
