@@ -68,7 +68,6 @@ describe('policies order', function () {
       helper.scopeHelper.destroy();
     });
     it('should install react specified in env itself', () => {
-      helper.command.clearCache();
       helper.command.showComponent('custom-react/env1'); // We need to run bit show twice due to a bug in bit
       const showOutput = helper.command.showComponent('custom-react/env1');
       expect(showOutput).to.have.string('react@16.0.0');

@@ -261,6 +261,7 @@ export class InstallMain {
       current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
       installCycle += 1;
     } while ((!prevManifests.has(hash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
+    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
   }
@@ -418,10 +419,6 @@ export class InstallMain {
         )
       )
     );
-  }
-
-  private async _getAllUsedApps(): Promise<Component[]> {
-    return this.app.listAppsFromComponents();
   }
 
   private async _getAllUsedEnvIds(): Promise<string[]> {
