@@ -6,7 +6,7 @@ import protocol from 'typescript/lib/protocol';
 import { CheckTypes } from '@teambit/watcher';
 import type { Position } from 'vscode-languageserver-types';
 import commandExists from 'command-exists';
-import { findPathToModule, findPathToYarnSdk } from './modules-resolver';
+import { findPathToModule } from './modules-resolver';
 import { ProcessBasedTsServer } from './process-based-tsserver';
 import { CommandTypes, EventName } from './tsp-command-types';
 import { getTsserverExecutable } from './utils';
@@ -284,26 +284,23 @@ export class TsserverClient {
     if (this.options.tsServerPath) {
       return this.options.tsServerPath;
     }
+
     const tsServerPath = path.join('typescript', 'lib', 'tsserver.js');
-    // 1) look into node_modules of workspace root
-    const executable = findPathToModule(this.projectPath, tsServerPath);
-    if (executable) {
-      return executable;
-    }
-    // 2) look into .yarn/sdks of workspace root
-    const sdk = findPathToYarnSdk(this.projectPath, tsServerPath);
-    if (sdk) {
-      return sdk;
-    }
-    // 3) use globally installed tsserver
-    if (commandExists.sync(getTsserverExecutable())) {
-      return getTsserverExecutable();
-    }
-    // 4) look into node_modules of typescript-language-server
+
+    /**
+     * (1) find it in the bit directory
+     */
     const bundled = findPathToModule(__dirname, tsServerPath);
+
     if (bundled) {
       return bundled;
     }
+
+    // (2) use globally installed tsserver
+    if (commandExists.sync(getTsserverExecutable())) {
+      return getTsserverExecutable();
+    }
+
     throw new Error(`Couldn't find '${getTsserverExecutable()}' executable or 'tsserver.js' module`);
   }
 }

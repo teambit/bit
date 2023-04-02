@@ -11,6 +11,7 @@ export type {
   ExtendingConfigFile,
   ConfigFile,
   PostProcessExtendingConfigFilesArgs,
+  GenerateExtendingConfigFilesArgs,
 } from './config-writer-entry';
 export default WorkspaceConfigFilesAspect;
 export { WorkspaceConfigFilesAspect };

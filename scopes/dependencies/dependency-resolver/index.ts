@@ -71,3 +71,4 @@ export { DependencySource, VariantPolicyEntry } from './policy/variant-policy/va
 export { OutdatedPkg } from './get-all-policy-pkgs';
 export { extendWithComponentsFromDir } from './extend-with-components-from-dir';
 export { isRange } from './manifest/deduping/hoist-dependencies';
+export { DependencyEnv } from './dependency-env';

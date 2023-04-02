@@ -493,7 +493,8 @@ export default class ComponentsList {
    */
   async listRemotelySoftRemoved(): Promise<Component[]> {
     const fromFs = await this.getFromFileSystem();
-    return fromFs.filter((comp) => comp.componentFromModel?.removed);
+
+    return fromFs.filter((comp) => comp.isRemoved());
   }
 
   /**

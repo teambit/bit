@@ -19,5 +19,5 @@ export default async function writeFile(
     chown = { uid: options.uid || user.uid, gid: options.gid || user.gid };
   }
   await fs.ensureDir(pathLib.dirname(path));
-  await writeFileAtomic(path, contents, { chown });
+  await writeFileAtomic(path, contents, { chown, fsync: false });
 }

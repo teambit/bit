@@ -8,7 +8,7 @@ import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-route
 import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
 import ScopeAspect, { ScopeContext, ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
-import ComponentAspect, { ComponentID, ComponentUI, useIdFromLocation } from '@teambit/component';
+import ComponentAspect, { ComponentUI, useIdFromLocation, ComponentID } from '@teambit/component';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { LaneOverview, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.lane-overview';
 import {

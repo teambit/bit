@@ -231,7 +231,10 @@ export class AspectLoaderMain {
   }
   getNotLoadedConfiguredExtensions() {
     const configuredAspects = this.getConfiguredAspects();
-    const loadedExtensions = this.harmony.extensionsIds;
+    const harmonyExtensions = this.harmony.extensionsIds;
+    const loadedExtensions = harmonyExtensions.filter((extId) => {
+      return this.harmony.extensions.get(extId)?.loaded;
+    });
     const extensionsToLoad = difference(configuredAspects, loadedExtensions);
     return extensionsToLoad;
   }

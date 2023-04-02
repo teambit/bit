@@ -165,13 +165,13 @@ ${WILDCARD_HELP('import')}`;
       trackOnly,
     };
     const importResults = await this.importer.import(importOptions, this._packageManagerArgs);
-    const { importDetails, importedIds, importedDeps, installationError, compilationError } = importResults;
+    const { importDetails, importedIds, importedDeps, installationError, compilationError, missingIds } = importResults;
 
     if (json) {
       return JSON.stringify({ importDetails, installationError }, null, 4);
     }
 
-    if (!importedIds.length) {
+    if (!importedIds.length && !missingIds?.length) {
       return chalk.yellow(importResults.cancellationMessage || 'nothing to import');
     }
 
@@ -203,11 +203,21 @@ ${WILDCARD_HELP('import')}`;
     const output =
       importOutput +
       importedDepsOutput +
+      formatMissingComponents(missingIds) +
       installationErrorOutput(installationError) +
       compilationErrorOutput(compilationError);
 
     return output;
   }
+}
+
+function formatMissingComponents(missing?: string[]) {
+  if (!missing?.length) return '';
+  const title = chalk.underline('Missing Components');
+  const subTitle =
+    'The following components are missing from the remote in the requested version, try running "bit status" to re-sync your .bitmap file';
+  const body = chalk.red(missing.join('\n'));
+  return `\n\n${title}\n${subTitle}\n${body}`;
 }
 
 function formatPlainComponentItemWithVersions(bitId: BitId, importDetails: ImportDetails) {

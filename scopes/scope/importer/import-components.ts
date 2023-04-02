@@ -84,6 +84,7 @@ export type ImportResult = {
   cancellationMessage?: string;
   installationError?: Error;
   compilationError?: Error;
+  missingIds?: string[]; // in case the import is configured to not throw when missing
 };
 
 export default class ImportComponents {
@@ -139,11 +140,33 @@ export default class ImportComponents {
     const mergedLanes = mergeAllLanesResults.map((result) => result.mergeLane);
     await Promise.all(mergedLanes.map((mergedLane) => this.scope.lanes.saveLane(mergedLane)));
 
+    return this.returnCompleteResults(beforeImportVersions, versionDependenciesArr);
+  }
+
+  private async returnCompleteResults(
+    beforeImportVersions: ImportedVersions,
+    versionDependenciesArr: VersionDependencies[],
+    writtenComponents?: Component[],
+    componentWriterResults?: ComponentWriterResults
+  ): Promise<ImportResult> {
     const importDetails = await this._getImportDetails(beforeImportVersions, versionDependenciesArr);
+    const missingIds: string[] = [];
+    if (Object.keys(beforeImportVersions).length > versionDependenciesArr.length) {
+      const importedComps = versionDependenciesArr.map((c) => c.component.id.toStringWithoutVersion());
+      Object.keys(beforeImportVersions).forEach((compIdStr) => {
+        const found = importedComps.includes(compIdStr);
+        if (!found) missingIds.push(compIdStr);
+      });
+    }
+
     return {
       importedIds: versionDependenciesArr.map((v) => v.component.id).flat(),
       importedDeps: versionDependenciesArr.map((v) => v.allDependenciesIds).flat(),
+      writtenComponents,
       importDetails,
+      installationError: componentWriterResults?.installationError,
+      compilationError: componentWriterResults?.compilationError,
+      missingIds,
     };
   }
 
@@ -174,15 +197,12 @@ export default class ImportComponents {
       writtenComponents = components;
     }
 
-    const importDetails = await this._getImportDetails(beforeImportVersions, versionDependenciesArr);
-    return {
-      importedIds: versionDependenciesArr.map((v) => v.component.id).flat(),
-      importedDeps: versionDependenciesArr.map((v) => v.allDependenciesIds).flat(),
+    return this.returnCompleteResults(
+      beforeImportVersions,
+      versionDependenciesArr,
       writtenComponents,
-      importDetails,
-      installationError: componentWriterResults?.installationError,
-      compilationError: componentWriterResults?.compilationError,
-    };
+      componentWriterResults
+    );
   }
 
   async _fetchDivergeData(components: Component[]) {
@@ -245,7 +265,11 @@ export default class ImportComponents {
           ignoreMissingHead,
           lanes: lane ? [lane] : undefined,
           preferDependencyGraph: !this.options.fetchDeps,
-          reFetchUnBuiltVersion: true, // when user is running "bit import", we want to re-fetch if it wasn't built. todo: check if this can be disabled when not needed
+          // when user is running "bit import", we want to re-fetch if it wasn't built. todo: check if this can be disabled when not needed
+          reFetchUnBuiltVersion: true,
+          // it's possible that .bitmap is not in sync and has local tags that don't exist on the remote. later, we
+          // add them to "missingIds" of "importResult" and show them to the user
+          throwForSeederNotFound: false,
         });
 
     return results;
@@ -403,16 +427,12 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       writtenComponents = components;
     }
 
-    const importDetails = await this._getImportDetails(beforeImportVersions, versionDependenciesArr);
-
-    return {
-      importedIds: versionDependenciesArr.map((v) => v.component.id).flat(),
-      importedDeps: versionDependenciesArr.map((v) => v.allDependenciesIds).flat(),
+    return this.returnCompleteResults(
+      beforeImportVersions,
+      versionDependenciesArr,
       writtenComponents,
-      importDetails,
-      installationError: componentWriterResults?.installationError,
-      compilationError: componentWriterResults?.compilationError,
-    };
+      componentWriterResults
+    );
   }
 
   private getIdsToImportFromBitmap() {
@@ -473,7 +493,9 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
         removed,
       };
     });
-    return Promise.all(detailsP);
+    const importDetails: ImportDetails[] = await Promise.all(detailsP);
+
+    return importDetails;
   }
 
   async _throwForPotentialIssues(ids: BitIds): Promise<void> {

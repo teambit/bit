@@ -2,7 +2,7 @@ import { stringify, parse, assign } from 'comment-json';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import fs from 'fs-extra';
 import { ExecutionContext } from '@teambit/envs';
-import { basename, join } from 'path';
+import { basename, join, relative } from 'path';
 import type {
   ConfigWriterEntry,
   WrittenConfigFile,
@@ -10,7 +10,9 @@ import type {
   ConfigFile,
   EnvMapValue,
   PostProcessExtendingConfigFilesArgs,
+  GenerateExtendingConfigFilesArgs,
 } from '@teambit/workspace-config-files';
+import { uniq } from 'lodash';
 import { CompilerMain } from '@teambit/compiler';
 import { Logger } from '@teambit/logger';
 import { IdeConfig, TypescriptCompilerInterface } from './typescript-compiler-interface';
@@ -84,14 +86,16 @@ export class TypescriptConfigWriter implements ConfigWriterEntry {
     return Promise.resolve();
   }
 
-  generateExtendingFile(writtenConfigFiles: WrittenConfigFile[]): ExtendingConfigFile | undefined {
+  generateExtendingFile(args: GenerateExtendingConfigFilesArgs): ExtendingConfigFile | undefined {
+    const { writtenConfigFiles } = args;
     const tsconfigFile = writtenConfigFiles.find((file) => file.name.includes('tsconfig.bit'));
     if (!tsconfigFile) return undefined;
     const config = {
-      extends: tsconfigFile.filePath,
+      // Using DSL to make sure it will be replaced with relative path
+      extends: `{${tsconfigFile.name}}`,
     };
     const content = `${BIT_GENERATED_TS_CONFIG_COMMENT}\n\n${JSON.stringify(config, null, 2)}`;
-    return { content, name: 'tsconfig.json', extendingTarget: tsconfigFile.filePath };
+    return { content, name: 'tsconfig.json', extendingTarget: tsconfigFile, useAbsPaths: false };
   }
 
   async postProcessExtendingConfigFiles?(args: PostProcessExtendingConfigFilesArgs): Promise<void> {
@@ -105,9 +109,13 @@ export class TypescriptConfigWriter implements ConfigWriterEntry {
       tsConfig = parse(content);
     }
     // @ts-ignore
-    const typeRoots = tsConfig.typeRoots || [];
-    typeRoots.push(join(configsRootDir, GLOBAL_TYPES_DIR));
-    assign(tsConfig, { typeRoots });
+    const compilerOptions = tsConfig.compilerOptions || {};
+    const typeRoots = compilerOptions.typeRoots || [];
+    const globalTypesDir = join(configsRootDir, GLOBAL_TYPES_DIR);
+    const relativeGlobalTypesDir = relative(workspaceDir, globalTypesDir);
+    typeRoots.push(relativeGlobalTypesDir);
+    assign(compilerOptions, { typeRoots: uniq(typeRoots) });
+    assign(tsConfig, { compilerOptions });
     await fs.outputFile(rootTsConfigPath, stringify(tsConfig, null, 2));
   }
 

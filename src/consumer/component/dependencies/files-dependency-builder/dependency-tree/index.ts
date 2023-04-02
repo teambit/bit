@@ -31,7 +31,6 @@ export default function (options) {
     debug(`file ${config.filename} does not exist`);
     return {};
   }
-
   return traverse(config);
 }
 
@@ -65,6 +64,7 @@ module.exports._getDependencies = function (config) {
   let dependenciesRaw; // from some detectives it comes as an array, from some it is an object
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
+  precinctOptions.envDetectors = config.envDetectors;
   // @ts-ignore
   delete precinct.ast;
 
