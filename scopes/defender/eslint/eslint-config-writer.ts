@@ -9,7 +9,7 @@ import type {
   ConfigFile,
   GenerateExtendingConfigFilesArgs,
 } from '@teambit/workspace-config-files';
-import { expandIncludeExclude } from '@teambit/typescript';
+import { GLOBAL_TYPES_DIR, expandIncludeExclude } from '@teambit/typescript';
 import { set } from 'lodash';
 import { Logger } from '@teambit/logger';
 import { LinterMain } from '@teambit/linter';
@@ -67,7 +67,7 @@ export class EslintConfigWriter implements ConfigWriterEntry {
     }
     const tsConfig = await fs.readJson(tsConfigPath);
     const compDirs: string[] = envMapValue.paths;
-    const newTsConfig = expandIncludeExclude(tsConfigPath, tsConfig, compDirs);
+    const newTsConfig = expandIncludeExclude(tsConfigPath, tsConfig, compDirs, GLOBAL_TYPES_DIR);
 
     fs.outputJSONSync(tsConfigPath, newTsConfig, { spaces: 2 });
     return Promise.resolve();
