@@ -1481,7 +1481,7 @@
     },
     "ui/docs/link": {
         "scope": "teambit.mdx",
-        "version": "0.0.500",
+        "version": "0.0.501",
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/link"
     },
