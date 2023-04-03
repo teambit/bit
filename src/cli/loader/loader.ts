@@ -2,7 +2,7 @@ import Spinnies from 'dreidels';
 
 import { SPINNER_TYPE } from '../../constants';
 
-const DEFAULT_SPINNER = 'default';
+export const DEFAULT_SPINNER = 'default';
 
 /**
  * previous loader was "ora" (which doesn't support multi spinners)
@@ -25,11 +25,21 @@ export class Loader {
   }
 
   off(): Loader {
-    Object.keys(this.spinner?.spinners || {}).forEach((spinner) => {
-      this.spinner?.spinners[spinner].remove();
-    });
+    if (!this.spinner) return this;
+    this.removeAll();
     this.spinner = null;
     return this;
+  }
+
+  private removeAll() {
+    if (!this.spinner) return;
+    const spinners = this.spinner;
+    Object.keys(spinners.spinners).forEach((name) => {
+      spinners.spinners[name].removeAllListeners();
+      delete spinners.spinners[name];
+    });
+    spinners.checkIfActiveSpinners();
+    spinners.updateSpinnerState();
   }
 
   /**
