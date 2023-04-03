@@ -131,6 +131,7 @@
     "detective-amd": "3.0.1",
     "detective-stylus": "1.0.0",
     "doctrine": "2.1.0",
+    "dreidels": "0.6.1",
     "enhanced-resolve": "4.5.0",
     "execa": "2.1.0",
     "find-up": "5.0.0",
