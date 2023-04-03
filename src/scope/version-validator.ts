@@ -220,6 +220,7 @@ ${duplicationStr}`);
   }
   if (!version.log) throw new VersionInvalid(`${message}, the log object is missing`);
   validateType(message, version.log, 'log', 'object');
+  validateType(message, version.log.message, 'log.message', 'string');
   if (version.bindingPrefix) {
     validateType(message, version.bindingPrefix, 'bindingPrefix', 'string');
   }
