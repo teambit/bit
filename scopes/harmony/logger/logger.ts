@@ -62,7 +62,7 @@ export class Logger implements IBitLogger {
       // eslint-disable-next-line no-console
       console.log(message, ...meta);
     } else {
-      loader.stopAndPersist({ text: message });
+      loader.stopAndPersist(message);
     }
   }
 
@@ -72,7 +72,7 @@ export class Logger implements IBitLogger {
       // eslint-disable-next-line no-console
       console.warn(message, ...meta);
     } else {
-      loader.stopAndPersist({ text: message });
+      loader.stopAndPersist(message);
     }
   }
 
@@ -82,7 +82,7 @@ export class Logger implements IBitLogger {
       // eslint-disable-next-line no-console
       console.error(message, ...meta);
     } else {
-      loader.stopAndPersist({ text: message });
+      loader.stopAndPersist(message);
     }
   }
 
@@ -91,7 +91,7 @@ export class Logger implements IBitLogger {
    */
   consoleTitle(message: string) {
     this.info(message);
-    loader.stopAndPersist({ text: chalk.bold(message) });
+    loader.stopAndPersist(message);
   }
   /**
    * print to the screen with a green `✔` prefix. if message is empty, print the last logged message.
