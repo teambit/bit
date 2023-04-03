@@ -78,6 +78,7 @@ export function GroupedSchemaNodesSummary({
               }
 
               return (
+                // @todo refactor this the member type should not be any
                 <VariableNodeSummary
                   key={`${member.__schema}-${member.name}`}
                   node={member}
@@ -86,6 +87,7 @@ export function GroupedSchemaNodesSummary({
                   apiNodeRendererProps={apiNodeRendererProps}
                   name={(member as any).name}
                   type={(member as any).type}
+                  isOptional={(member as any).isOptional}
                 />
               );
             })}
