@@ -11,7 +11,12 @@ import { dirname, relative } from 'path';
  * @returns the tsConfig object.
  */
 
-export function expandIncludeExclude(tsConfigPath: string, tsConfig: TsConfigJson, compDirs: string[]) {
+export function expandIncludeExclude(
+  tsConfigPath: string,
+  tsConfig: TsConfigJson,
+  compDirs: string[],
+  globalTypesDir?: string
+) {
   const tsConfigDir = dirname(tsConfigPath);
 
   if (tsConfig.include) {
@@ -23,6 +28,10 @@ export function expandIncludeExclude(tsConfigPath: string, tsConfig: TsConfigJso
         });
       })
     );
+  }
+  if (globalTypesDir) {
+    tsConfig.include = tsConfig.include || [];
+    tsConfig.include.push(`./${globalTypesDir}/**/*`);
   }
   if (tsConfig.exclude) {
     tsConfig.exclude = flatten(

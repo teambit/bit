@@ -20,7 +20,7 @@ import { expandIncludeExclude } from './expand-include-exclude';
 
 const CONFIG_NAME = 'tsconfig.json';
 const BIT_GENERATED_TS_CONFIG_COMMENT = '// bit-generated-typescript-config';
-const GLOBAL_TYPES_DIR = 'global-types';
+export const GLOBAL_TYPES_DIR = 'global-types';
 
 export class TypescriptConfigWriter implements ConfigWriterEntry {
   name = 'TypescriptConfigWriter';
@@ -80,7 +80,7 @@ export class TypescriptConfigWriter implements ConfigWriterEntry {
     const tsConfig = await fs.readJson(tsConfigPath);
     const compDirs: string[] = envMapValue.paths;
 
-    const newTsConfig = expandIncludeExclude(tsConfigPath, tsConfig, compDirs);
+    const newTsConfig = expandIncludeExclude(tsConfigPath, tsConfig, compDirs, GLOBAL_TYPES_DIR);
 
     fs.outputJSONSync(tsConfigPath, newTsConfig, { spaces: 2 });
     return Promise.resolve();
@@ -112,8 +112,9 @@ export class TypescriptConfigWriter implements ConfigWriterEntry {
     const compilerOptions = tsConfig.compilerOptions || {};
     const typeRoots = compilerOptions.typeRoots || [];
     const globalTypesDir = join(configsRootDir, GLOBAL_TYPES_DIR);
-    const relativeGlobalTypesDir = relative(workspaceDir, globalTypesDir);
+    const relativeGlobalTypesDir = `./${relative(workspaceDir, globalTypesDir)}`;
     typeRoots.push(relativeGlobalTypesDir);
+    typeRoots.push('./node_modules/@types');
     assign(compilerOptions, { typeRoots: uniq(typeRoots) });
     assign(tsConfig, { compilerOptions });
     await fs.outputFile(rootTsConfigPath, stringify(tsConfig, null, 2));
