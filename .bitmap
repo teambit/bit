@@ -1479,12 +1479,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/docs/docs-content"
     },
-    "ui/docs/link": {
-        "scope": "teambit.mdx",
-        "version": "0.0.501",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/ui/link"
-    },
     "ui/docs/properties-table": {
         "scope": "teambit.react",
         "version": "0.0.12",
