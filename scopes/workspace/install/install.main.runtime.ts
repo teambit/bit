@@ -235,8 +235,6 @@ export class InstallMain {
       // are not added to the manifests.
       // This is an issue when installation is done using root components.
       hasMissingLocalComponents = hasRootComponents && hasComponentsFromWorkspaceInMissingDeps(current);
-      this.workspace.consumer.componentLoader.clearComponentsCache();
-      this.workspace.clearCache();
       await installer.installComponents(
         this.workspace.path,
         current.manifests,
@@ -257,9 +255,13 @@ export class InstallMain {
       }
       await this.link(linkOpts);
       prevManifests.add(hash(current.manifests));
+      // We need to clear cache before creating the new component manifests.
+      this.workspace.consumer.componentLoader.clearComponentsCache();
+      this.workspace.clearCache();
       current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
       installCycle += 1;
     } while ((!prevManifests.has(hash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
+    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
   }
@@ -417,10 +419,6 @@ export class InstallMain {
         )
       )
     );
-  }
-
-  private async _getAllUsedApps(): Promise<Component[]> {
-    return this.app.listAppsFromComponents();
   }
 
   private async _getAllUsedEnvIds(): Promise<string[]> {
