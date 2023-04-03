@@ -57,7 +57,7 @@ importers:
       '@svgr/webpack': 5.5.0
       '@teambit/any-fs': 0.0.5
       '@teambit/base-react.layout.row': 0.0.3
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/base-ui.constants.storage': 1.0.0
       '@teambit/base-ui.graph.tree.collapsable-tree-node': 0.0.4
       '@teambit/base-ui.graph.tree.indent': 1.0.0
@@ -699,7 +699,7 @@ importers:
       '@svgr/webpack': 5.5.0
       '@teambit/any-fs': 0.0.5
       '@teambit/base-react.layout.row': 0.0.3_cuf6fvcrkey6ktqfghqvi47tva
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.constants.storage': registry.npmjs.org/@teambit/base-ui.constants.storage/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.graph.tree.collapsable-tree-node': 0.0.4_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.graph.tree.indent': registry.npmjs.org/@teambit/base-ui.graph.tree.indent/1.0.0_sfoxds7t5ydpegc3knd667wn6m
@@ -10786,7 +10786,7 @@ importers:
   scopes/api-reference/hooks/use-api-ref-url:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@types/jest': ^26.0.0
       '@types/mocha': 9.1.0
       '@types/node': 12.20.4
@@ -10797,7 +10797,7 @@ importers:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
@@ -10893,7 +10893,7 @@ importers:
     specifiers:
       '@babel/runtime': 7.20.0
       '@monaco-editor/react': 4.4.6
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/documenter.ui.heading': 4.1.1
       '@types/classnames': 2.2.11
       '@types/jest': ^26.0.0
@@ -10909,7 +10909,7 @@ importers:
       react-router-dom: ^6.0.0
     dependencies:
       '@monaco-editor/react': 4.4.6_m23risk2t2ktwbmyoufat5z4ue
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/documenter.ui.heading': registry.npmjs.org/@teambit/documenter.ui.heading/4.1.1_sfoxds7t5ydpegc3knd667wn6m
       classnames: 2.2.6
       core-js: 3.13.0
@@ -11151,7 +11151,7 @@ importers:
   scopes/api-reference/renderers/schema-nodes-index:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/design.ui.surfaces.menu.item': 0.0.354
       '@teambit/docs.ui.hooks.use-element-on-fold': 1.96.5
       '@types/classnames': 2.2.11
@@ -11168,7 +11168,7 @@ importers:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/design.ui.surfaces.menu.item': 0.0.354_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/docs.ui.hooks.use-element-on-fold': 1.96.5_react@17.0.2
       classnames: 2.2.6
@@ -11294,7 +11294,7 @@ importers:
   scopes/api-reference/renderers/type-ref:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/component-id': ^0.0.427
       '@types/classnames': 2.2.11
       '@types/jest': ^26.0.0
@@ -11308,7 +11308,7 @@ importers:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/component-id': 0.0.427
       classnames: 2.2.6
       core-js: 3.13.0
@@ -11406,7 +11406,7 @@ importers:
   scopes/api-reference/sections/api-reference-page:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.0
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0
       '@teambit/design.ui.empty-box': ^0.0.363
@@ -11427,7 +11427,7 @@ importers:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.surfaces.split-pane.split-pane': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.split-pane/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.ui.empty-box': 0.0.363_sfoxds7t5ydpegc3knd667wn6m
@@ -11574,7 +11574,7 @@ importers:
     specifiers:
       '@babel/runtime': 7.20.0
       '@monaco-editor/react': 4.4.6
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/base-ui.graph.tree.tree-context': 1.0.0
       '@teambit/base-ui.loaders.skeleton': 1.0.1
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.0
@@ -11610,7 +11610,7 @@ importers:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@monaco-editor/react': 4.4.6_m23risk2t2ktwbmyoufat5z4ue
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.graph.tree.tree-context': registry.npmjs.org/@teambit/base-ui.graph.tree.tree-context/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.loaders.skeleton': 1.0.1_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/1.0.0_sfoxds7t5ydpegc3knd667wn6m
@@ -12188,7 +12188,7 @@ importers:
       '@apollo/client': ^3.6.0
       '@babel/runtime': 7.20.0
       '@teambit/any-fs': 0.0.5
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/base-ui.layout.breakpoints': 1.0.0
       '@teambit/component-id': ^0.0.427
       '@teambit/component.content.component-overview': 1.95.0
@@ -12232,7 +12232,7 @@ importers:
       '@apollo/client': 3.6.9_cm7dmat4tatiymdnjnpg7tvksm
       '@babel/runtime': 7.20.0
       '@teambit/any-fs': 0.0.5
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.layout.breakpoints': registry.npmjs.org/@teambit/base-ui.layout.breakpoints/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/component-id': 0.0.427
       '@teambit/design.navigation.responsive-navbar': 0.0.5_676cxok7chrvapczunc5qatg6m
@@ -12460,7 +12460,7 @@ importers:
   scopes/component/component-filters/env-filter:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/design.inputs.selectors.multi-select': 0.0.20
       '@teambit/design.ui.styles.ellipsis': ^0.0.357
       '@teambit/design.ui.tooltip': ^0.0.361
@@ -12476,7 +12476,7 @@ importers:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/design.inputs.selectors.multi-select': 0.0.20_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.ui.styles.ellipsis': 0.0.357_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.ui.tooltip': 0.0.361_sfoxds7t5ydpegc3knd667wn6m
@@ -13598,7 +13598,7 @@ importers:
   scopes/component/ui/component-deprecated:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/component-id': ^0.0.427
       '@teambit/design.ui.pill-label': 0.0.356
       '@teambit/design.ui.tooltip': ^0.0.361
@@ -13615,7 +13615,7 @@ importers:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/component-id': 0.0.427
       '@teambit/design.ui.pill-label': 0.0.356_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.ui.tooltip': 0.0.361_sfoxds7t5ydpegc3knd667wn6m
@@ -13933,7 +13933,7 @@ importers:
   scopes/component/ui/version-block:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/design.ui.avatar': 1.0.16
       '@teambit/design.ui.contributors': ^0.0.514
       '@teambit/design.ui.tooltip': ^0.0.361
@@ -13951,7 +13951,7 @@ importers:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/design.ui.avatar': 1.0.16_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.ui.contributors': 0.0.514_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/design.ui.tooltip': 0.0.361_sfoxds7t5ydpegc3knd667wn6m
@@ -14150,7 +14150,7 @@ importers:
   scopes/compositions/compositions:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.0
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0
       '@teambit/component-id': ^0.0.427
@@ -14184,7 +14184,7 @@ importers:
       react-router-dom: ^6.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.surfaces.split-pane.split-pane': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.split-pane/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/component-id': 0.0.427
@@ -14257,7 +14257,7 @@ importers:
   scopes/compositions/panels/composition-gallery:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/base-ui.loaders.skeleton': 1.0.1
       '@teambit/design.elements.icon': 1.0.5
       '@teambit/documenter.ui.linked-heading': 4.1.6
@@ -14269,7 +14269,7 @@ importers:
       classnames: 2.2.6
       react: 17.0.2
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.loaders.skeleton': 1.0.1_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.elements.icon': 1.0.5_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.ui.linked-heading': 4.1.6_sfoxds7t5ydpegc3knd667wn6m
@@ -15770,7 +15770,7 @@ importers:
   scopes/explorer/ui/component-card:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/explorer.ui.gallery.base-component-card': ^0.0.503
       '@types/jest': ^26.0.0
       '@types/mocha': 9.1.0
@@ -15782,7 +15782,7 @@ importers:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/explorer.ui.gallery.base-component-card': 0.0.503_sfoxds7t5ydpegc3knd667wn6m
       core-js: 3.13.0
       react: 17.0.2
@@ -16902,7 +16902,7 @@ importers:
     specifiers:
       '@apollo/client': ^3.6.0
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/lanes.ui.models.lanes-model': ^0.0.112
       '@types/jest': ^26.0.0
       '@types/mocha': 9.1.0
@@ -16915,7 +16915,7 @@ importers:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@apollo/client': 3.6.9_cm7dmat4tatiymdnjnpg7tvksm
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/lanes.ui.models.lanes-model': 0.0.112_sfoxds7t5ydpegc3knd667wn6m
       core-js: 3.13.0
       react: 17.0.2
@@ -16932,13 +16932,13 @@ importers:
   scopes/lanes/hooks/use-viewed-lane-from-url:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/lanes.ui.models.lanes-model': ^0.0.112
       '@types/jest': 26.0.20
       '@types/mocha': 9.1.0
       '@types/node': 12.20.4
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/lanes.ui.models.lanes-model': 0.0.112_sfoxds7t5ydpegc3knd667wn6m
     devDependencies:
       '@babel/runtime': 7.20.0
@@ -18975,7 +18975,7 @@ importers:
   scopes/semantics/schema:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/component-id': ^0.0.427
       '@teambit/harmony': 0.4.6
       '@types/chai': 4.2.15
@@ -18997,7 +18997,7 @@ importers:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/harmony': 0.4.6
       core-js: 3.13.0
       fs-extra: 10.0.0
@@ -19473,7 +19473,7 @@ importers:
   scopes/ui-foundation/empty-component-gallery:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/base-ui.text.text-sizes': 1.0.0
       '@teambit/community.constants.links': 0.0.2
       '@teambit/documenter.theme.theme-compositions': 4.1.1
@@ -19490,7 +19490,7 @@ importers:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.text.text-sizes': registry.npmjs.org/@teambit/base-ui.text.text-sizes/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/community.constants.links': 0.0.2
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon/1.0.2_sfoxds7t5ydpegc3knd667wn6m
@@ -19828,7 +19828,7 @@ importers:
   scopes/ui-foundation/react-router/react-router:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/harmony': 0.4.6
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.1
       '@types/jest': ^26.0.0
@@ -19843,7 +19843,7 @@ importers:
       react-router-dom: ^6.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/harmony': 0.4.6
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.1_aglxfttm42xkl6otq2xcl4uoua
       core-js: 3.13.0
@@ -19861,7 +19861,7 @@ importers:
   scopes/ui-foundation/react-router/ui/slot-router:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/harmony': 0.4.6
       '@types/jest': ^26.0.0
       '@types/lodash': 4.14.165
@@ -19876,7 +19876,7 @@ importers:
       react-dom: ^16.8.0 || ^17.0.0
       react-router-dom: ^6.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/harmony': 0.4.6
       core-js: 3.13.0
       lodash: 4.17.21
@@ -19896,7 +19896,7 @@ importers:
   scopes/ui-foundation/react-router/ui/use-query:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@types/jest': ^26.0.0
       '@types/mocha': 9.1.0
       '@types/node': 12.20.4
@@ -19907,7 +19907,7 @@ importers:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
@@ -20075,7 +20075,7 @@ importers:
   scopes/ui-foundation/tree/tree-node:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/base-ui.graph.tree.indent': 1.0.0
       '@teambit/base-ui.graph.tree.recursive-tree': 1.0.0
       '@teambit/base-ui.theme.colors': 1.0.0
@@ -20091,7 +20091,7 @@ importers:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.graph.tree.indent': registry.npmjs.org/@teambit/base-ui.graph.tree.indent/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.graph.tree.recursive-tree': registry.npmjs.org/@teambit/base-ui.graph.tree.recursive-tree/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.theme.colors': registry.npmjs.org/@teambit/base-ui.theme.colors/1.0.0_sfoxds7t5ydpegc3knd667wn6m
@@ -20664,7 +20664,7 @@ importers:
   scopes/ui-foundation/uis/side-bar:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/base-ui.graph.tree.indent': 1.0.0
       '@teambit/base-ui.graph.tree.inflate-paths': 1.0.0
       '@teambit/base-ui.graph.tree.recursive-tree': 1.0.0
@@ -20687,7 +20687,7 @@ importers:
       react-animate-height: 2.0.23
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.graph.tree.indent': registry.npmjs.org/@teambit/base-ui.graph.tree.indent/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.graph.tree.inflate-paths': registry.npmjs.org/@teambit/base-ui.graph.tree.inflate-paths/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.graph.tree.recursive-tree': registry.npmjs.org/@teambit/base-ui.graph.tree.recursive-tree/1.0.0_sfoxds7t5ydpegc3knd667wn6m
@@ -20775,7 +20775,7 @@ importers:
   scopes/ui-foundation/use-box/bit-info:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/documenter.content.documentation-links': 4.1.3
       '@teambit/documenter.ui.copy-box': 4.1.6
       '@teambit/evangelist.elements.icon': 1.0.2
@@ -20789,7 +20789,7 @@ importers:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/documenter.content.documentation-links': 4.1.3_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.ui.copy-box': 4.1.6_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon/1.0.2_sfoxds7t5ydpegc3knd667wn6m
@@ -20870,7 +20870,7 @@ importers:
   scopes/ui-foundation/use-box/menu:
     specifiers:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27
+      '@teambit/base-react.navigation.link': 2.0.30
       '@teambit/design.ui.tooltip': ^0.0.361
       '@teambit/documenter.content.documentation-links': 4.1.3
       '@teambit/documenter.ui.copy-box': 4.1.6
@@ -20892,7 +20892,7 @@ importers:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/design.ui.tooltip': 0.0.361_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.content.documentation-links': 4.1.3_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.ui.copy-box': 4.1.6_sfoxds7t5ydpegc3knd667wn6m
@@ -27972,13 +27972,8 @@ packages:
   /@teambit/base-ui.loaders.skeleton/1.0.1_sfoxds7t5ydpegc3knd667wn6m:
     resolution: {integrity: sha1-4LCHFJkcWhYqauzTcaENE6eznCw=, tarball: tarballs/teambit.base-ui/loaders/skeleton@1.0.1.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -28001,13 +27996,8 @@ packages:
   /@teambit/base-ui.surfaces.abs-container/1.0.1_sfoxds7t5ydpegc3knd667wn6m:
     resolution: {integrity: sha1-51b87xnd65dXa3utstNjz7HXmtM=, tarball: tarballs/teambit.base-ui/surfaces/abs-container@1.0.1.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -28060,13 +28050,8 @@ packages:
   /@teambit/base-ui.surfaces.drawer/1.1.3_sfoxds7t5ydpegc3knd667wn6m:
     resolution: {integrity: sha1-EmfvFFxPhsVm6B9oBq1W7S4wzLA=, tarball: tarballs/teambit.base-ui/surfaces/drawer@1.1.3.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.hook.use-click-outside': 1.0.1_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.surfaces.abs-container': 1.0.1_sfoxds7t5ydpegc3knd667wn6m
@@ -54201,7 +54186,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
@@ -54282,7 +54267,7 @@ packages:
       react-router-dom: ^6.0.0
     dependencies:
       '@monaco-editor/react': 4.4.6_m23risk2t2ktwbmyoufat5z4ue
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/documenter.ui.heading': registry.npmjs.org/@teambit/documenter.ui.heading/4.1.1_sfoxds7t5ydpegc3knd667wn6m
       classnames: 2.2.6
       core-js: 3.13.0
@@ -54306,7 +54291,7 @@ packages:
       react-router-dom: ^6.0.0
     dependencies:
       '@monaco-editor/react': 4.4.6_m23risk2t2ktwbmyoufat5z4ue
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/documenter.ui.heading': registry.npmjs.org/@teambit/documenter.ui.heading/4.1.1_sfoxds7t5ydpegc3knd667wn6m
       classnames: 2.2.6
       core-js: 3.13.0
@@ -54448,7 +54433,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/design.ui.surfaces.menu.item': 0.0.354_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/docs.ui.hooks.use-element-on-fold': 1.96.5_react@17.0.2
       classnames: 2.2.6
@@ -54514,7 +54499,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/component-id': 0.0.427
       classnames: 2.2.6
       core-js: 3.13.0
@@ -54591,7 +54576,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.surfaces.split-pane.split-pane': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.split-pane/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.ui.empty-box': 0.0.363_sfoxds7t5ydpegc3knd667wn6m
@@ -54682,7 +54667,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@monaco-editor/react': 4.4.6_m23risk2t2ktwbmyoufat5z4ue
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.graph.tree.tree-context': registry.npmjs.org/@teambit/base-ui.graph.tree.tree-context/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.loaders.skeleton': 1.0.1_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/1.0.0_sfoxds7t5ydpegc3knd667wn6m
@@ -55231,7 +55216,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/design.inputs.selectors.multi-select': 0.0.20_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.ui.styles.ellipsis': 0.0.357_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.ui.tooltip': 0.0.361_sfoxds7t5ydpegc3knd667wn6m
@@ -55389,7 +55374,7 @@ packages:
       '@apollo/client': 3.6.9_cm7dmat4tatiymdnjnpg7tvksm
       '@babel/runtime': 7.20.0
       '@teambit/any-fs': 0.0.5
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.layout.breakpoints': registry.npmjs.org/@teambit/base-ui.layout.breakpoints/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/component-id': 0.0.427
       '@teambit/design.navigation.responsive-navbar': 0.0.5_676cxok7chrvapczunc5qatg6m
@@ -55438,7 +55423,7 @@ packages:
       '@apollo/client': 3.6.9_rzpomlatuyfxwlgxrsehlwhq3u
       '@babel/runtime': 7.20.0
       '@teambit/any-fs': 0.0.5
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.layout.breakpoints': registry.npmjs.org/@teambit/base-ui.layout.breakpoints/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/component-id': 0.0.427
       '@teambit/design.navigation.responsive-navbar': 0.0.5_676cxok7chrvapczunc5qatg6m
@@ -56028,7 +56013,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/component-id': 0.0.427
       '@teambit/design.ui.pill-label': 0.0.356_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.ui.tooltip': 0.0.361_sfoxds7t5ydpegc3knd667wn6m
@@ -56200,7 +56185,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/design.ui.avatar': 1.0.16_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.ui.contributors': 0.0.514_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/design.ui.tooltip': 0.0.361_sfoxds7t5ydpegc3knd667wn6m
@@ -56337,7 +56322,7 @@ packages:
       react-router-dom: ^6.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.surfaces.split-pane.split-pane': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.split-pane/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/component-id': 0.0.427
@@ -56378,7 +56363,7 @@ packages:
       react-router-dom: ^6.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.surfaces.split-pane.split-pane': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.split-pane/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/component-id': 0.0.427
@@ -56435,7 +56420,7 @@ packages:
     peerDependencies:
       react: 17.0.2
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.loaders.skeleton': 1.0.1_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.elements.icon': 1.0.5_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.ui.linked-heading': 4.1.6_sfoxds7t5ydpegc3knd667wn6m
@@ -57375,7 +57360,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/explorer.ui.gallery.base-component-card': 0.0.503_sfoxds7t5ydpegc3knd667wn6m
       core-js: 3.13.0
       react: 17.0.2
@@ -58055,7 +58040,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@apollo/client': 3.6.9_rzpomlatuyfxwlgxrsehlwhq3u
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/lanes.ui.models.lanes-model': 0.0.112_sfoxds7t5ydpegc3knd667wn6m
       core-js: 3.13.0
       react: 17.0.2
@@ -58072,7 +58057,7 @@ packages:
     name: '@teambit/lanes.hooks.use-viewed-lane-from-url'
     version: 0.0.117
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/lanes.ui.models.lanes-model': 0.0.112_sfoxds7t5ydpegc3knd667wn6m
     transitivePeerDependencies:
       - '@teambit/legacy'
@@ -59318,7 +59303,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/harmony': 0.4.6
       core-js: 3.13.0
       fs-extra: 10.0.0
@@ -59575,7 +59560,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.text.text-sizes': registry.npmjs.org/@teambit/base-ui.text.text-sizes/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/community.constants.links': 0.0.2
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon/1.0.2_sfoxds7t5ydpegc3knd667wn6m
@@ -59767,7 +59752,7 @@ packages:
       react-router-dom: ^6.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/harmony': 0.4.6
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.1_45ue2dk2vbbevokswenu67mvxu
       core-js: 3.13.0
@@ -59790,7 +59775,7 @@ packages:
       react-router-dom: ^6.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/harmony': 0.4.6
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.1_aglxfttm42xkl6otq2xcl4uoua
       core-js: 3.13.0
@@ -59812,7 +59797,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
       react-router-dom: ^6.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/harmony': 0.4.6
       core-js: 3.13.0
       lodash: 4.17.21
@@ -59834,7 +59819,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
       react-router-dom: ^6.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/harmony': 0.4.6
       core-js: 3.13.0
       lodash: 4.17.21
@@ -59855,7 +59840,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
@@ -59948,7 +59933,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.graph.tree.indent': registry.npmjs.org/@teambit/base-ui.graph.tree.indent/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.graph.tree.recursive-tree': registry.npmjs.org/@teambit/base-ui.graph.tree.recursive-tree/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.theme.colors': registry.npmjs.org/@teambit/base-ui.theme.colors/1.0.0_sfoxds7t5ydpegc3knd667wn6m
@@ -60399,7 +60384,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/base-ui.graph.tree.indent': registry.npmjs.org/@teambit/base-ui.graph.tree.indent/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.graph.tree.inflate-paths': registry.npmjs.org/@teambit/base-ui.graph.tree.inflate-paths/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.graph.tree.recursive-tree': registry.npmjs.org/@teambit/base-ui.graph.tree.recursive-tree/1.0.0_sfoxds7t5ydpegc3knd667wn6m
@@ -60460,7 +60445,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/documenter.content.documentation-links': 4.1.3_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.ui.copy-box': 4.1.6_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon/1.0.2_sfoxds7t5ydpegc3knd667wn6m
@@ -60513,7 +60498,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
+      '@teambit/base-react.navigation.link': 2.0.30_676cxok7chrvapczunc5qatg6m
       '@teambit/design.ui.tooltip': 0.0.361_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.content.documentation-links': 4.1.3_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.ui.copy-box': 4.1.6_sfoxds7t5ydpegc3knd667wn6m
@@ -61428,13 +61413,8 @@ packages:
     name: '@teambit/base-ui.routing.native-nav-link'
     version: 1.0.0
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.routing.compare-url': registry.npmjs.org/@teambit/base-ui.routing.compare-url/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.routing.native-link': registry.npmjs.org/@teambit/base-ui.routing.native-link/1.0.0_sfoxds7t5ydpegc3knd667wn6m
@@ -61562,13 +61542,8 @@ packages:
     name: '@teambit/base-ui.surfaces.split-pane.hover-splitter'
     version: 1.0.0
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.surfaces.split-pane.splitter': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.splitter/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       classnames: 2.2.6
@@ -61613,13 +61588,8 @@ packages:
     name: '@teambit/base-ui.surfaces.split-pane.split-pane'
     version: 1.0.0
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.surfaces.split-pane.layout': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.layout/1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/base-ui.surfaces.split-pane.pane': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.pane/1.0.0_sfoxds7t5ydpegc3knd667wn6m
@@ -61636,13 +61606,8 @@ packages:
     name: '@teambit/base-ui.surfaces.split-pane.splitter'
     version: 1.0.0
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: 2.2.6
       core-js: 3.13.0
@@ -61926,13 +61891,8 @@ packages:
     name: '@teambit/base-ui.utils.string.affix'
     version: 1.0.0
     peerDependencies:
-      react: '*'
-      react-dom: '*'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       core-js: 3.13.0
       react: 17.0.2
