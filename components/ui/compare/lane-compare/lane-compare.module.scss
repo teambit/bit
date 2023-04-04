@@ -25,12 +25,10 @@
   }
 }
 
-.componentCompareDrawer.hasFullScreen ~ .componentCompareDrawer:not(.fullScreen) {
-  display: none;
-}
-
-.componentCompareDrawer.hasFullScreen + .componentCompareDrawer:not(.fullScreen) {
-  display: none;
+.componentCompareDrawer.hasFullScreen {
+  &:not(.fullScreen) {
+    display: none;
+  }
 }
 
 .versionPicker {

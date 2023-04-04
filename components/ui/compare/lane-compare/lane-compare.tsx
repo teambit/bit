@@ -248,8 +248,8 @@ export function LaneCompare({
         const key = computeStateKey(_base, _compare);
         const value = defaultLaneState(key);
         compareState.set(key, value);
-        const drawerKey = _compare?.toStringWithoutVersion() ?? _base?.toStringWithoutVersion();
-        if (drawerKey) drawerKeys.push(drawerKey);
+        // const drawerKey = _compare?.toStringWithoutVersion() ?? _base?.toStringWithoutVersion();
+        // if (drawerKey) drawerKeys.push(drawerKey);
       });
 
       setLaneCompareState(compareState);
