@@ -658,7 +658,7 @@ please create a new lane instead, which will include all components of this lane
               (sourceLaneComponents || []).map(async ({ id }) => {
                 const componentId = await host.resolveComponentId(id);
                 const headOnMain = await this.getHeadOnMain(componentId);
-                return id.changeVersion(headOnMain).toString();
+                return headOnMain ? id.changeVersion(headOnMain).toString() : undefined;
               })
             )
           )
