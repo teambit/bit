@@ -650,20 +650,43 @@ please create a new lane instead, which will include all components of this lane
     const targetLane = targetLaneId ? await this.loadLane(targetLaneId) : undefined;
     const targetLaneIds = targetLane?.toBitIds();
     const host = this.componentAspect.getHost();
+
+    const targetMainHeads =
+      !targetLaneId || targetLaneId?.isDefault()
+        ? compact(
+            await Promise.all(
+              (sourceLaneComponents || []).map(async ({ id }) => {
+                const componentId = await host.resolveComponentId(id);
+                const headOnMain = await this.getHeadOnMain(componentId);
+                return id.changeVersion(headOnMain).toString();
+              })
+            )
+          )
+        : [];
+
+    // import missing objects from main
+    await this.importer.importObjects({ ids: targetMainHeads });
+
     const diffProps = compact(
       await Promise.all(
         (sourceLaneComponents || []).map(async ({ id, head }) => {
           const componentId = await host.resolveComponentId(id);
-          const sourceVersionObj = (await this.scope.legacyScope.objects.load(head)) as Version;
-          if (sourceVersionObj?.isRemoved()) {
+          const sourceVersionObj = (await this.scope.legacyScope.objects.load(head, true)) as Version;
+
+          if (sourceVersionObj.isRemoved()) {
             return null;
           }
+
           const headOnTargetLane = targetLaneIds
             ? targetLaneIds.searchWithoutVersion(id)?.version
             : await this.getHeadOnMain(componentId);
 
           if (headOnTargetLane) {
-            const targetVersionObj = (await this.scope.legacyScope.objects.load(Ref.from(headOnTargetLane))) as Version;
+            const targetVersionObj = (await this.scope.legacyScope.objects.load(
+              Ref.from(headOnTargetLane),
+              true
+            )) as Version;
+
             if (targetVersionObj.isRemoved()) {
               return null;
             }

@@ -1329,6 +1329,24 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-tab-tree"
     },
+    "ui/compare/lane-compare": {
+        "scope": "teambit.lanes",
+        "version": "0.0.68",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/compare/lane-compare"
+    },
+    "ui/compare/lane-compare-drawer": {
+        "scope": "teambit.lanes",
+        "version": "0.0.50",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/compare/lane-compare-drawer"
+    },
+    "ui/compare/lane-compare-page": {
+        "scope": "teambit.lanes",
+        "version": "0.0.52",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/compare/lane-compare-page"
+    },
     "ui/component-deprecated": {
         "scope": "teambit.component",
         "version": "0.0.34",
@@ -1623,6 +1641,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-user-agent"
     },
+    "ui/inputs/lane-selector": {
+        "scope": "teambit.lanes",
+        "version": "0.0.112",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/inputs/lane-selector"
+    },
     "ui/is-browser": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.495",
@@ -1676,6 +1700,12 @@
         "version": "0.0.497",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/menu-widget-icon"
+    },
+    "ui/navigation/lane-switcher": {
+        "scope": "teambit.lanes",
+        "version": "0.0.112",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/navigation/lane-switcher"
     },
     "ui/notifications/notification": {
         "scope": "teambit.ui-foundation",
