@@ -218,7 +218,7 @@ export default async function provideWorkspace(
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
-  const capsuleCmd = new CapsuleCmd();
+  const capsuleCmd = new CapsuleCmd(isolator, workspace);
   capsuleCmd.commands = [
     new CapsuleListCmd(isolator, workspace),
     new CapsuleCreateCmd(workspace, isolator),
