@@ -55,6 +55,8 @@ export type PackageManagerInstallOptions = {
   hidePackageManagerOutput?: boolean;
 
   pruneNodeModules?: boolean;
+
+  hasRootComponents?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

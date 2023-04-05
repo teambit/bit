@@ -269,6 +269,11 @@ export interface DependencyResolverWorkspaceConfig {
    * It only makes sense to set this to "false" in a workspace in which core aspects are actually developed.
    */
   linkCoreAspects?: boolean;
+
+  /**
+   * When false, Bit will create a shared node_modules directory for all components in a capsule.
+   */
+  isolatedCapsules?: boolean;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -373,11 +378,15 @@ export class DependencyResolverMain {
    */
   supportsDedupingOnExistingRoot(): boolean {
     const packageManager = this.getPackageManager();
-    return packageManager?.supportsDedupingOnExistingRoot?.() === true && !this.hasRootComponents();
+    return packageManager?.supportsDedupingOnExistingRoot?.() === true && !this.isolatedCapsules();
   }
 
   hasRootComponents(): boolean {
     return Boolean(this.config.rootComponents);
+  }
+
+  isolatedCapsules(): boolean {
+    return this.config.isolatedCapsules ?? true;
   }
 
   nodeLinker(): 'hoisted' | 'isolated' {

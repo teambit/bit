@@ -57,7 +57,9 @@ chai.use(require('chai-string'));
       });
       it('packageExtensions is taken into account when running install in the capsule', () => {
         const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-        expect(path.join(scopeAspectsCapsulesRootDir, 'node_modules/is-positive')).to.be.a.path();
+        expect(
+          path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-1@0.0.1/node_modules/is-positive`)
+        ).to.be.a.path();
       });
     });
     describe('using pnpm', () => {
@@ -77,7 +79,9 @@ chai.use(require('chai-string'));
       });
       it('workspace .npmrc is taken into account when running install in the capsule', async () => {
         const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-        const modulesState = await readModulesManifest(path.join(scopeAspectsCapsulesRootDir, 'node_modules'));
+        const modulesState = await readModulesManifest(
+          path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-1@0.0.1/node_modules`)
+        );
         expect(modulesState?.hoistPattern?.[0]).to.eq('foo');
       });
     });
