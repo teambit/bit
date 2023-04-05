@@ -2,11 +2,13 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import fs from 'fs-extra';
 import path from 'path';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
@@ -32,7 +34,9 @@ export class RenamingMain {
     private deprecation: DeprecationMain,
     private refactoring: RefactoringMain,
     private config: ConfigMain,
-    private componentWriter: ComponentWriterMain
+    private componentWriter: ComponentWriterMain,
+    private compiler: CompilerMain,
+    private logger: Logger
   ) {}
 
   async rename(sourceIdStr: string, targetName: string, options: RenameOptions): Promise<RenameDependencyNameResult> {
@@ -84,6 +88,12 @@ make sure this argument is the name only, without the scope-name. to change the 
 
     // link the new-name to node-modules
     await linkToNodeModulesByComponents([targetComp], this.workspace);
+
+    try {
+      await this.compiler.compileOnWorkspace([targetComp.id]);
+    } catch (err: any) {
+      this.logger.consoleFailure(`failed compiling the component ${targetComp.id.toString()}. error: ${err.message}`);
+    }
 
     return {
       sourceId,
@@ -276,6 +286,8 @@ make sure this argument is the name only, without the scope-name. to change the 
     InstallAspect,
     ConfigAspect,
     ComponentWriterAspect,
+    CompilerAspect,
+    LoggerAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -289,6 +301,8 @@ make sure this argument is the name only, without the scope-name. to change the 
     install,
     config,
     componentWriter,
+    compiler,
+    loggerMain,
   ]: [
     CLIMain,
     Workspace,
@@ -299,8 +313,11 @@ make sure this argument is the name only, without the scope-name. to change the 
     RefactoringMain,
     InstallMain,
     ConfigMain,
-    ComponentWriterMain
+    ComponentWriterMain,
+    CompilerMain,
+    LoggerMain
   ]) {
+    const logger = loggerMain.createLogger(RenamingAspect.id);
     const renaming = new RenamingMain(
       workspace,
       install,
@@ -308,7 +325,9 @@ make sure this argument is the name only, without the scope-name. to change the 
       deprecation,
       refactoring,
       config,
-      componentWriter
+      componentWriter,
+      compiler,
+      logger
     );
     cli.register(new RenameCmd(renaming));
 

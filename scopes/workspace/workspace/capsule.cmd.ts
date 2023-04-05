@@ -139,7 +139,7 @@ export class CapsuleDeleteCmd implements Command {
 }
 
 export class CapsuleCmd implements Command {
-  name = 'capsule <sub-command>';
+  name = 'capsule';
   description = 'manage capsules';
   extendedDescription = `a capsule is a directory containing the component code, isolated from the workspace.
 normally, capsules are created during the build process, the component files are copied and the packages are installed
@@ -148,11 +148,12 @@ other users after publishing/exporting them.`;
   alias = '';
   group = 'capsules';
   commands: Command[] = [];
-  options = [] as CommandOptions;
+  options = [['j', 'json', 'json format']] as CommandOptions;
+
+  constructor(private isolator: IsolatorMain, private workspace: Workspace) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async report(args: [string]) {
-    // it should never be here. Yargs throws an error before reaching this method.
-    return `Please specify a sub-command`;
+    return new CapsuleListCmd(this.isolator, this.workspace).report();
   }
 }
