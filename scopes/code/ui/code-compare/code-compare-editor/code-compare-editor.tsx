@@ -41,7 +41,7 @@ export function CodeCompareEditor({
         readOnly: true,
         renderSideBySide: editorViewMode === 'split',
         minimap: { enabled: false },
-        scrollbar: { alwaysConsumeMouseWheel: true },
+        scrollbar: { alwaysConsumeMouseWheel: !wordWrap, vertical: 'auto' },
         scrollBeyondLastLine: false,
         folding: false,
         overviewRulerLanes: 0,
@@ -50,8 +50,10 @@ export function CodeCompareEditor({
         wrappingStrategy: (wordWrap && 'advanced') || undefined,
         fixedOverflowWidgets: true,
         renderLineHighlight: 'none',
-        lineHeight: 18,
+        lineHeight: 20,
         padding: { top: 8 },
+        hover: { enabled: false },
+        cursorBlinking: 'smooth',
       }}
       loading={Loader}
     />
