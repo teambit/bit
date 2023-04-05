@@ -183,7 +183,7 @@ export class ComponentModel {
       size,
       latest,
       preview,
-      logs
+      logs?.filter((log) => log)
     );
   }
 
