@@ -1119,4 +1119,40 @@ describe('merge lanes', function () {
       expect(lane.components).to.have.lengthOf(2);
     });
   });
+  describe('merge from main when on a forked-new-lane from another scope', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      const anotherRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      const mainWs = helper.scopeHelper.cloneLocalScope();
+
+      helper.bitJsonc.addDefaultScope(anotherRemote);
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      const laneBWs = helper.scopeHelper.cloneLocalScope();
+
+      helper.scopeHelper.getClonedLocalScope(mainWs);
+      helper.command.mergeLane(`${anotherRemote}/lane-a`, '-x');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(laneBWs);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.mergeLane(`main ${helper.scopes.remote}/comp1`, '-x');
+    });
+    it('should not throw ComponentNotFound on export', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+  });
 });
