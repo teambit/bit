@@ -664,7 +664,7 @@ please create a new lane instead, which will include all components of this lane
           )
         : [];
 
-    await this.scope.legacyScope.scopeImporter.importWithoutDeps(BitIds.fromArray(targetMainHeads), {});
+    await this.importer.importObjectsFromMainIfExist(targetMainHeads);
 
     const diffProps = compact(
       await Promise.all(
