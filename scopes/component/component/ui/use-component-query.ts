@@ -262,7 +262,7 @@ export function useComponentQuery(componentId: string, host: string, filters?: F
     return {
       componentDescriptor: id ? ComponentDescriptor.fromObject({ id: id.toString(), aspectList }) : undefined,
       component: rawComponent ? ComponentModel.from({ ...rawComponent, host }) : undefined,
-      error: componentError || undefined,
+      error: componentError,
       loading,
       ...rest,
     };
