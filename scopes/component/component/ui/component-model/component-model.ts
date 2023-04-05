@@ -183,7 +183,7 @@ export class ComponentModel {
       size,
       latest,
       preview,
-      logs?.map((log) => log ?? { hash: '[error]', tag: '[error]' })
+      logs?.map((log) => log ?? { hash: '[error]', tag: '[error]', message: '', parents: [] })
     );
   }
 
