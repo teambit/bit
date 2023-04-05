@@ -658,14 +658,13 @@ please create a new lane instead, which will include all components of this lane
               (sourceLaneComponents || []).map(async ({ id }) => {
                 const componentId = await host.resolveComponentId(id);
                 const headOnMain = await this.getHeadOnMain(componentId);
-                return headOnMain ? id.changeVersion(headOnMain).toString() : undefined;
+                return headOnMain ? id.changeVersion(headOnMain) : undefined;
               })
             )
           )
         : [];
 
-    // import missing objects from main
-    await this.importer.importObjects({ ids: targetMainHeads });
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(BitIds.fromArray(targetMainHeads), {});
 
     const diffProps = compact(
       await Promise.all(
