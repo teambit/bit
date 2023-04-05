@@ -257,6 +257,7 @@ export function useComponentQuery(componentId: string, host: string, filters?: F
       }),
     };
     const id = rawComponent && ComponentID.fromObject(rawComponent.id);
+
     return {
       componentDescriptor: id ? ComponentDescriptor.fromObject({ id: id.toString(), aspectList }) : undefined,
       component: rawComponent ? ComponentModel.from({ ...rawComponent, host }) : undefined,
