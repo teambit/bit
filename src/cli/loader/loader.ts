@@ -1,4 +1,5 @@
 import Spinnies from 'dreidels';
+import { stdout } from 'process';
 
 import { SPINNER_TYPE } from '../../constants';
 
@@ -104,7 +105,7 @@ export class Loader {
   }
 
   private createNewSpinner(): Spinnies {
-    const spinnies = new Spinnies({ spinner: SPINNER_TYPE });
+    const spinnies = new Spinnies({ spinner: SPINNER_TYPE, stream: stdout });
     return spinnies;
   }
 }
