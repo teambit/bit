@@ -1506,4 +1506,34 @@ describe('bit lane command', function () {
       expect(() => helper.command.status()).to.not.throw();
     });
   });
+  describe('import from one lane to another directly', () => {
+    let headOnLaneA: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.fixtures.populateComponents(1, false, 'from-lane-b');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      const headOnLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
+      helper.command.switchLocalLane('lane-a', '-x');
+      helper.fixtures.populateComponents(1, false, 'from-lane-a');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      headOnLaneA = helper.command.getHeadOfLane('lane-a', 'comp1');
+      helper.command.importComponent(`comp1@${headOnLaneB}`);
+    });
+    it('should not change the head on lane-a according to lane-b head', () => {
+      const headAfterImport = helper.command.getHeadOfLane('lane-a', 'comp1');
+      expect(headAfterImport).to.equal(headOnLaneA);
+    });
+    it('should not change the .bitmap version according to lane-b head', () => {
+      const bitMap = helper.bitMap.read();
+      const bitMapVer = bitMap.comp1.version;
+      expect(bitMapVer).to.equal(headOnLaneA);
+    });
+  });
 });
