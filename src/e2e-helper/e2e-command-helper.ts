@@ -204,6 +204,9 @@ export default class CommandHelper {
   softRemoveComponent(id: string, flags = '') {
     return this.runCmd(`bit remove ${id} --silent --soft ${flags}`);
   }
+  removeComponentFromRemote(id: string, flags = '') {
+    return this.runCmd(`bit remove ${id} --silent --remote ${flags}`);
+  }
   recover(id: string, flags = '') {
     return this.runCmd(`bit recover ${id} ${flags}`);
   }

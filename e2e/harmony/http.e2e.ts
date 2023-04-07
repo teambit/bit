@@ -68,7 +68,7 @@ import { HttpHelper } from '../http-helper';
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.command.removeComponent('comp2', '--soft');
+      helper.command.softRemoveComponent('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -129,12 +129,12 @@ import { HttpHelper } from '../http-helper';
         helper.scopeHelper.getClonedLocalScope(scopeAfterExport);
       });
       it('should show descriptive error when removing component that has dependents', () => {
-        const output = helper.command.removeComponent(`${helper.scopes.remote}/comp2`, '--remote');
+        const output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/comp2`);
         expect(output).to.have.string(`error: unable to delete ${helper.scopes.remote}/comp2`);
         expect(output).to.have.string(`${helper.scopes.remote}/comp1`);
       });
       it('should remove successfully components that has no dependents', () => {
-        const output = helper.command.removeComponent(`${helper.scopes.remote}/comp1`, '--remote');
+        const output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/comp1`);
         expect(output).to.have.string('successfully removed components');
         expect(output).to.have.string('comp1');
       });
