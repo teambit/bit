@@ -495,6 +495,17 @@ please create a new lane instead, which will include all components of this lane
    */
   async restoreLane(laneHash: string) {
     const ref = Ref.from(laneHash);
+    const objectsFromTrash = (await this.scope.legacyScope.objects.getFromTrash([ref])) as Lane[];
+    const laneIdFromTrash = objectsFromTrash[0].toLaneId();
+    const existingWithSameId = await this.loadLane(laneIdFromTrash);
+    if (existingWithSameId) {
+      if (existingWithSameId.hash().isEqual(ref)) {
+        throw new BitError(`unable to restore lane ${laneIdFromTrash.toString()}, as it already exists`);
+      }
+      throw new BitError(
+        `unable to restore lane ${laneIdFromTrash.toString()}, as a lane with the same id already exists`
+      );
+    }
     await this.scope.legacyScope.objects.restoreFromTrash([ref]);
   }
 
