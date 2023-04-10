@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import { Mutex } from 'async-mutex';
 import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
+import { BitError } from '@teambit/bit-error';
 import { isHash } from '@teambit/component-version';
 import * as path from 'path';
 import pMap from 'p-map';
@@ -490,15 +491,28 @@ export default class Repository {
     if (removed) await this.scopeIndex.write();
   }
 
-  async restoreFromTrash(refs: Ref[]) {
-    logger.debug(`Repository.restoreFromTrash: ${refs.length} objects`);
+  async getFromTrash(refs: Ref[]): Promise<BitObject[]> {
     const objectsFromTrash = await Promise.all(
       refs.map(async (ref) => {
         const trashObjPath = path.join(this.getTrashDir(), this.hashPath(ref));
-        const buffer = await fs.readFile(trashObjPath);
+        let buffer: Buffer;
+        try {
+          buffer = await fs.readFile(trashObjPath);
+        } catch (err: any) {
+          if (err.code === 'ENOENT') {
+            throw new BitError(`unable to find the object ${ref.toString()} in the trash`);
+          }
+          throw err;
+        }
         return BitObject.parseObject(buffer, trashObjPath);
       })
     );
+    return objectsFromTrash;
+  }
+
+  async restoreFromTrash(refs: Ref[]) {
+    logger.debug(`Repository.restoreFromTrash: ${refs.length} objects`);
+    const objectsFromTrash = await this.getFromTrash(refs);
     await this.writeObjectsToTheFS(objectsFromTrash);
   }
 
