@@ -1536,4 +1536,21 @@ describe('bit lane command', function () {
       expect(bitMapVer).to.equal(headOnLaneA);
     });
   });
+  describe('exporting a lane after snapping and then removing a component', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(2);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.removeComponent('comp1');
+      helper.command.export();
+    });
+    // previously in older bit versions, it used to leave the removed-component with the snapped version in the lane-object.
+    // the export was pushing this object to the remote, and then when importing, the snapped-version was missing.
+    it('should be able to import the lane with no errors', () => {
+      expect(() => helper.command.importLane('dev')).to.not.throw();
+    });
+  });
 });
