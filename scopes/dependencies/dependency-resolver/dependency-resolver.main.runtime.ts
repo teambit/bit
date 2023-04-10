@@ -40,10 +40,15 @@ import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { Registries, Registry } from './registry';
 import { applyUpdates } from './apply-updates';
 import { ROOT_NAME } from './dependencies/constants';
-import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberList } from './dependency-installer';
+import {
+  DependencyInstaller,
+  PreInstallSubscriberList,
+  PostInstallSubscriberList,
+  DepInstallerContext,
+} from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
-import { DependencyLinker, LinkingOptions } from './dependency-linker';
+import { DependencyLinker, DepLinerContext, LinkingOptions } from './dependency-linker';
 import { ComponentModelVersion, getAllPolicyPkgs, OutdatedPkg } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
@@ -283,11 +288,13 @@ export type GetInstallerOptions = {
   rootDir?: string;
   packageManager?: string;
   cacheRootDirectory?: string;
+  installingContext?: DepInstallerContext;
 };
 
 export type GetLinkerOptions = {
   rootDir?: string;
   linkingOptions?: LinkingOptions;
+  linkingContext?: DepLinerContext;
 };
 
 export type GetDependenciesOptions = {
@@ -564,9 +571,15 @@ export class DependencyResolverMain {
     rootPolicy: WorkspacePolicy,
     rootDir: string,
     components: Component[],
-    options: CreateFromComponentsOptions = defaultCreateFromComponentsOptions
+    options: CreateFromComponentsOptions = defaultCreateFromComponentsOptions,
+    context: DepInstallerContext = {}
   ): Promise<WorkspaceManifest> {
-    this.logger.setStatusLine('deduping dependencies for installation');
+    const statusMessage = context?.inCapsule
+      ? `(capsule) deduping dependencies for installation in root dir ${rootDir}`
+      : 'deduping dependencies for installation';
+    if (!context?.inCapsule) {
+      this.logger.setStatusLine(statusMessage);
+    }
     const concreteOpts = {
       ...defaultCreateFromComponentsOptions,
       ...options,
@@ -580,7 +593,9 @@ export class DependencyResolverMain {
       components,
       concreteOpts
     );
-    this.logger.consoleSuccess();
+    if (!context?.inCapsule) {
+      this.logger.consoleSuccess();
+    }
     return res;
   }
 
@@ -656,7 +671,8 @@ export class DependencyResolverMain {
       this.config.sideEffectsCache,
       this.config.nodeVersion,
       this.config.engineStrict,
-      this.config.peerDependencyRules
+      this.config.peerDependencyRules,
+      options.installingContext
     );
   }
 
@@ -681,7 +697,8 @@ export class DependencyResolverMain {
       this.envs,
       this.logger,
       options.rootDir,
-      linkingOptions
+      linkingOptions,
+      options.linkingContext
     );
   }
 

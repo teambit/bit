@@ -1,5 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
 import semver from 'semver';
+import chalk from 'chalk';
 import { compact, flatten, pick } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
@@ -54,6 +55,21 @@ import { Network } from './network';
 export type ListResults = {
   workspace: string;
   capsules: string[];
+};
+
+/**
+ * Context for the isolation process
+ */
+export type IsolationContext = {
+  /**
+   * Whether the isolation done for aspets (as opposed to regular components)
+   */
+  aspects?: boolean;
+
+  /**
+   * Workspace name where the isolation starts from
+   */
+  workspaceName?: string;
 };
 
 export type IsolateComponentsInstallOptions = {
@@ -147,6 +163,8 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   host?: ComponentFactory;
 
   packageManagerConfigRootDir?: string;
+
+  context?: IsolationContext;
 };
 
 type CapsulePackageJsonData = {
@@ -288,6 +306,18 @@ export class IsolatorMain {
     legacyScope?: Scope
   ): Promise<CapsuleList> {
     this.logger.debug(`createCapsules, ${components.length} components`);
+    const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir);
+
+    let longProcessLogger;
+    if (opts.context?.aspects) {
+      // const wsPath = opts.host?.path || 'unknown';
+      const wsPath = opts.context.workspaceName || opts.host?.path || 'unknown';
+      longProcessLogger = this.logger.createLongProcessLogger(
+        `ensuring ${chalk.cyan(components.length)} capsule(s) for all envs and aspects for ${chalk.bold(
+          wsPath
+        )} at ${chalk.bold(capsulesDir)}`
+      );
+    }
     const installOptions = {
       ...DEFAULT_ISOLATE_INSTALL_OPTIONS,
       ...opts.installOptions,
@@ -297,7 +327,6 @@ export class IsolatorMain {
       installOptions.dedupe = installOptions.dedupe && this.dependencyResolver.supportsDedupingOnExistingRoot();
     }
     const config = { installPackages: true, ...opts };
-    const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir);
     if (opts.emptyRootDir) {
       await fs.emptyDir(capsulesDir);
     }
@@ -327,10 +356,10 @@ export class IsolatorMain {
     if (installOptions.installPackages) {
       const cachePackagesOnCapsulesRoot = opts.cachePackagesOnCapsulesRoot ?? false;
       const linkingOptions = opts.linkingOptions ?? {};
-      let longProcessLogger;
+      let installLongProcessLogger;
       // Only show the log message in case we are going to install something
-      if (capsuleList && capsuleList.length){
-        longProcessLogger = this.logger.createLongProcessLogger('install packages in capsules');
+      if (capsuleList && capsuleList.length && !opts.context?.aspects) {
+        installLongProcessLogger = this.logger.createLongProcessLogger('install packages in capsules');
       }
       if (installOptions.useNesting) {
         await Promise.all(
@@ -364,8 +393,8 @@ export class IsolatorMain {
           linkedDependencies,
         });
       }
-      if (longProcessLogger){
-        longProcessLogger.end();
+      if (installLongProcessLogger) {
+        installLongProcessLogger.end();
         this.logger.consoleSuccess('installed packages in capsules');
       }
     }
@@ -381,6 +410,12 @@ export class IsolatorMain {
         );
       capsuleWithPackageData.capsule.fs.writeFileSync(PACKAGE_JSON, JSON.stringify(currentPackageJson, null, 2));
     });
+    if (longProcessLogger) {
+      longProcessLogger.end();
+      // this.logger.consoleSuccess();
+      const capsuleListOutput = allCapsuleList.map((capsule) => capsule.component.id.toString()).join(', ');
+      this.logger.consoleSuccess(`the following capsule(s) were ensured ${chalk.cyan(capsuleListOutput)}`);
+    }
 
     return allCapsuleList;
   }
@@ -397,6 +432,7 @@ export class IsolatorMain {
     const installer = this.dependencyResolver.getInstaller({
       rootDir: capsulesDir,
       cacheRootDirectory: opts.cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
+      installingContext: { inCapsule: true },
     });
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace
@@ -437,6 +473,7 @@ export class IsolatorMain {
     const linker = this.dependencyResolver.getLinker({
       rootDir: capsulesDir,
       linkingOptions,
+      linkingContext: { inCapsule: true },
     });
     const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
     const linkResults = await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), {
