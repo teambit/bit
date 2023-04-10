@@ -1271,7 +1271,7 @@ describe('bit lane command', function () {
       helper.fixtures.populateComponents(3);
       helper.command.tagWithoutBuild();
       helper.command.export();
-      helper.command.removeComponent(`${helper.scopes.remote}/comp3`, '--remote --force');
+      helper.command.removeComponentFromRemote(`${helper.scopes.remote}/comp3`, '--force');
       helper.command.removeComponent('comp3', '--force');
       helper.fs.outputFile('comp2/index.js', ''); // remove the dependency from the code
       helper.command.tagWithoutBuild();
@@ -1374,7 +1374,7 @@ describe('bit lane command', function () {
       let beforeCheckout: string;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(firstWorkspaceAfterExport);
-        helper.command.removeComponent('comp2', '--soft');
+        helper.command.softRemoveComponent('comp2');
         helper.fs.writeFile('comp1/index.js', ''); // remove the comp2 dependency from the code
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
