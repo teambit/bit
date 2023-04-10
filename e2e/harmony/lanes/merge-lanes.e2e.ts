@@ -688,7 +688,7 @@ describe('merge lanes', function () {
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
       helper.command.switchLocalLane('dev');
-      helper.command.softRemoveComponent('comp');
+      helper.command.softRemoveComponent('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
