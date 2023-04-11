@@ -101,7 +101,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.command.removeComponent('comp2', '--soft');
+      helper.command.softRemoveComponent('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -182,7 +182,7 @@ describe('bit lane command', function () {
       helper.command.export();
     });
     it('should throw an error', () => {
-      expect(() => helper.command.removeComponent('comp2', '--soft')).to.throw(
+      expect(() => helper.command.softRemoveComponent('comp2')).to.throw(
         'the following components belong to main, they cannot be soft-removed when on a lane'
       );
     });

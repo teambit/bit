@@ -1271,7 +1271,7 @@ describe('bit lane command', function () {
       helper.fixtures.populateComponents(3);
       helper.command.tagWithoutBuild();
       helper.command.export();
-      helper.command.removeComponent(`${helper.scopes.remote}/comp3`, '--remote --force');
+      helper.command.removeComponentFromRemote(`${helper.scopes.remote}/comp3`, '--force');
       helper.command.removeComponent('comp3', '--force');
       helper.fs.outputFile('comp2/index.js', ''); // remove the dependency from the code
       helper.command.tagWithoutBuild();
@@ -1374,7 +1374,7 @@ describe('bit lane command', function () {
       let beforeCheckout: string;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(firstWorkspaceAfterExport);
-        helper.command.removeComponent('comp2', '--soft');
+        helper.command.softRemoveComponent('comp2');
         helper.fs.writeFile('comp1/index.js', ''); // remove the comp2 dependency from the code
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
@@ -1534,6 +1534,23 @@ describe('bit lane command', function () {
       const bitMap = helper.bitMap.read();
       const bitMapVer = bitMap.comp1.version;
       expect(bitMapVer).to.equal(headOnLaneA);
+    });
+  });
+  describe('exporting a lane after snapping and then removing a component', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(2);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.removeComponent('comp1');
+      helper.command.export();
+    });
+    // previously in older bit versions, it used to leave the removed-component with the snapped version in the lane-object.
+    // the export was pushing this object to the remote, and then when importing, the snapped-version was missing.
+    it('should be able to import the lane with no errors', () => {
+      expect(() => helper.command.importLane('dev')).to.not.throw();
     });
   });
 });
