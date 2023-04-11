@@ -245,6 +245,7 @@ export class LanesUI {
       <LaneSwitcher
         groupByScope={this.lanesHost === 'workspace'}
         mainIcon={this.lanesHost === 'scope' ? mainIcon : undefined}
+        useLanes={this.getUseLanes()}
       />
     );
 
