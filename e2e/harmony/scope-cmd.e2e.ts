@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import path from 'path';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -34,6 +35,30 @@ describe('bit scope command', function () {
       expect(showFork.config).to.have.property('forkedFrom');
       expect(showFork.config.forkedFrom.scope).to.equal(helper.scopes.remote);
       expect(showFork.config.forkedFrom.name).to.equal('comp1');
+    });
+  });
+  describe('bit scope rename', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.renameScope(helper.scopes.remote, 'new-scope');
+    });
+    it('should rename the scope', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
+      expect(list[0].id).to.equal('new-scope/comp1');
+    });
+    it('should delete the old link to node_modules', () => {
+      const linkPath = path.join(helper.scopes.localPath, 'node_modules', `@${helper.scopes.remote}`, 'comp1');
+      expect(linkPath).to.not.be.a.path();
+    });
+    it('should create a new link to node_modules', () => {
+      const linkPath = path.join(helper.scopes.localPath, 'node_modules', '@new-scope', 'comp1');
+      expect(linkPath).to.be.a.directory();
+    });
+    it('should compile the renamed components', () => {
+      const linkPath = path.join(helper.scopes.localPath, 'node_modules', '@new-scope', 'comp1', 'dist');
+      expect(linkPath).to.be.a.directory();
     });
   });
   describe('bit scope rename --refactor', () => {

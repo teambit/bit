@@ -62,7 +62,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     } else {
       this.workspace.bitMap.renameNewComponent(sourceId, targetId);
       await this.workspace.bitMap.write();
-      await fs.remove(path.join(this.workspace.path, 'node_modules', sourcePackageName));
+      await this.deleteLinkFromNodeModules(sourcePackageName);
     }
     this.workspace.clearComponentCache(sourceId);
     const targetComp = await this.workspace.get(targetId);
@@ -86,14 +86,8 @@ make sure this argument is the name only, without the scope-name. to change the 
       });
     }
 
-    // link the new-name to node-modules
-    await linkToNodeModulesByComponents([targetComp], this.workspace);
-
-    try {
-      await this.compiler.compileOnWorkspace([targetComp.id]);
-    } catch (err: any) {
-      this.logger.consoleFailure(`failed compiling the component ${targetComp.id.toString()}. error: ${err.message}`);
-    }
+    await linkToNodeModulesByComponents([targetComp], this.workspace); // link the new-name to node-modules
+    await this.compileGracefully([targetComp.id]);
 
     return {
       sourceId,
@@ -161,6 +155,22 @@ make sure this argument is the name only, without the scope-name. to change the 
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
       refactoredIds.push(...changedComponents.map((c) => c.id));
     }
+
+    // re-link and compile
+    this.logger.debug(`the scope has been renamed from ${oldScope} to ${newScope}, re-linking to node-modules`);
+    await Promise.all(
+      componentsUsingOldScope.map(async (comp) => {
+        const pkgName = this.workspace.componentPackageName(comp);
+        await this.deleteLinkFromNodeModules(pkgName);
+      })
+    );
+    this.workspace.clearCache();
+    await this.workspace._reloadConsumer();
+
+    const newIds = componentsUsingOldScope.map((comp) => new ComponentID(comp.id._legacy, newScope));
+    const newComps = await this.workspace.getMany(newIds);
+    await linkToNodeModulesByComponents(newComps, this.workspace); // link the new-name to node-modules
+    await this.compileGracefully(newIds);
 
     return { scopeRenamedComponentIds: componentsUsingOldScope.map((comp) => comp.id), refactoredIds };
   }
@@ -258,6 +268,18 @@ make sure this argument is the name only, without the scope-name. to change the 
       if (changed) hasChanged = true;
     });
     if (hasChanged) await config.write();
+  }
+
+  private async deleteLinkFromNodeModules(packageName: string) {
+    await fs.remove(path.join(this.workspace.path, 'node_modules', packageName));
+  }
+  private async compileGracefully(ids: ComponentID[]) {
+    try {
+      await this.compiler.compileOnWorkspace(ids);
+    } catch (err: any) {
+      const idsStr = ids.map((id) => id.toString()).join(', ');
+      this.logger.consoleFailure(`failed compiling the component(s) ${idsStr}. error: ${err.message}`);
+    }
   }
 
   private renameOwnerInScopeName(scopeName: string, oldOwner: string, newOwner: string): string {
