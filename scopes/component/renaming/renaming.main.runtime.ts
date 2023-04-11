@@ -156,23 +156,27 @@ make sure this argument is the name only, without the scope-name. to change the 
       refactoredIds.push(...changedComponents.map((c) => c.id));
     }
 
-    // re-link and compile
-    this.logger.debug(`the scope has been renamed from ${oldScope} to ${newScope}, re-linking to node-modules`);
+    const newIds = componentsUsingOldScope.map((comp) => new ComponentID(comp.id._legacy, newScope));
+    await this.relinkAndCompile(componentsUsingOldScope, newIds);
+
+    return { scopeRenamedComponentIds: componentsUsingOldScope.map((comp) => comp.id), refactoredIds };
+  }
+
+  private async relinkAndCompile(componentsUsingOldScope: Component[], newIds: ComponentID[]) {
+    this.logger.debug(`the scope has been renamed, re-linking to node-modules`);
     await Promise.all(
       componentsUsingOldScope.map(async (comp) => {
         const pkgName = this.workspace.componentPackageName(comp);
         await this.deleteLinkFromNodeModules(pkgName);
       })
     );
+
     this.workspace.clearCache();
     await this.workspace._reloadConsumer();
 
-    const newIds = componentsUsingOldScope.map((comp) => new ComponentID(comp.id._legacy, newScope));
     const newComps = await this.workspace.getMany(newIds);
     await linkToNodeModulesByComponents(newComps, this.workspace); // link the new-name to node-modules
     await this.compileGracefully(newIds);
-
-    return { scopeRenamedComponentIds: componentsUsingOldScope.map((comp) => comp.id), refactoredIds };
   }
 
   /**
@@ -200,17 +204,20 @@ make sure this argument is the name only, without the scope-name. to change the 
       throw new OldScopeTagged(idsStr);
     }
     const oldWorkspaceDefaultScope = this.workspace.defaultScope;
-    if (isScopeUsesOldOwner(this.workspace.defaultScope)) {
-      const newDefaultScope = this.renameOwnerInScopeName(this.workspace.defaultScope, oldOwner, newOwner);
-      await this.workspace.setDefaultScope(newDefaultScope);
-      componentsUsingOldScope.forEach((comp) => {
-        if (comp.id.scope === oldWorkspaceDefaultScope) this.workspace.bitMap.removeDefaultScope(comp.id);
-      });
+    const newWorkspaceDefaultScope = isScopeUsesOldOwner(oldWorkspaceDefaultScope)
+      ? this.renameOwnerInScopeName(oldWorkspaceDefaultScope, oldOwner, newOwner)
+      : undefined;
+    if (newWorkspaceDefaultScope) {
+      await this.workspace.setDefaultScope(newWorkspaceDefaultScope);
     }
-    componentsUsingOldScope.forEach((comp) => {
-      if (comp.id.scope === oldWorkspaceDefaultScope) return;
+    const newIds = componentsUsingOldScope.map((comp) => {
+      if (newWorkspaceDefaultScope && comp.id.scope === oldWorkspaceDefaultScope) {
+        this.workspace.bitMap.removeDefaultScope(comp.id);
+        return new ComponentID(comp.id._legacy, newWorkspaceDefaultScope);
+      }
       const newCompScope = this.renameOwnerInScopeName(comp.id.scope, oldOwner, newOwner);
       this.workspace.bitMap.setDefaultScope(comp.id, newCompScope);
+      return new ComponentID(comp.id._legacy, newCompScope);
     });
     await this.workspace.bitMap.write();
     const refactoredIds: ComponentID[] = [];
@@ -237,6 +244,8 @@ make sure this argument is the name only, without the scope-name. to change the 
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
       refactoredIds.push(...changedComponents.map((c) => c.id));
     }
+
+    await this.relinkAndCompile(componentsUsingOldScope, newIds);
 
     return { scopeRenamedComponentIds: componentsUsingOldScope.map((comp) => comp.id), refactoredIds };
   }

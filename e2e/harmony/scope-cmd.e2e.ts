@@ -86,6 +86,7 @@ describe('bit scope command', function () {
       helper.fixtures.populateComponents(2);
       helper.command.setScope('old-org.my-scope1', 'comp1');
       helper.command.setScope('old-org.my-scope2', 'comp2');
+
       helper.command.renameScopeOwner('old-org', 'new-org');
     });
     it('should rename the default-scope in workspace.jsonc', () => {
@@ -95,6 +96,22 @@ describe('bit scope command', function () {
       const list = helper.command.listParsed();
       const ids = list.map((c) => c.id);
       expect(ids).to.have.members(['new-org.my-scope1/comp1', 'new-org.my-scope2/comp2']);
+    });
+    it('should delete the old link to node_modules', () => {
+      const linkPath1 = path.join(helper.scopes.localPath, 'node_modules', '@old-org/my-scope1.comp1');
+      expect(linkPath1).to.not.be.a.path();
+      const linkPath2 = path.join(helper.scopes.localPath, 'node_modules', '@old-org/my-scope2.comp2');
+      expect(linkPath2).to.not.be.a.path();
+    });
+    it('should create a new link to node_modules', () => {
+      const linkPath1 = path.join(helper.scopes.localPath, 'node_modules', '@new-org/my-scope1.comp1');
+      expect(linkPath1).to.be.a.directory();
+      const linkPath2 = path.join(helper.scopes.localPath, 'node_modules', '@new-org/my-scope2.comp2');
+      expect(linkPath2).to.be.a.directory();
+    });
+    it('should compile the renamed components', () => {
+      const linkPath = path.join(helper.scopes.localPath, 'node_modules', '@new-org/my-scope1.comp1/dist');
+      expect(linkPath).to.be.a.directory();
     });
   });
 });
