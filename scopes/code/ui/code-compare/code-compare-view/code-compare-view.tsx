@@ -120,7 +120,7 @@ export function CodeCompareView({
   const updateChangedLines = () => {
     if (!monacoRef.current) return;
 
-    const modifiedEditor = monacoRef.current.editor.getOriginalEditor();
+    const modifiedEditor = monacoRef.current.editor.getModifiedEditor();
     const modifiedModel = modifiedEditor.getModel();
     const modifiedModelValue = modifiedModel.getValue();
 
@@ -141,7 +141,6 @@ export function CodeCompareView({
         adjustedLines += removedLines;
       }
     });
-    console.log('🚀 ~ file: code-compare-view.tsx:146 ~ diffResult.forEach ~ addedLines:', adjustedLines);
 
     changedLinesRef.current = adjustedLines;
   };
