@@ -1671,6 +1671,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/menu-widget-icon"
     },
+    "ui/navigation/lane-switcher": {
+        "scope": "teambit.lanes",
+        "version": "0.0.113",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/navigation/lane-switcher"
+    },
     "ui/notifications/notification": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.509",

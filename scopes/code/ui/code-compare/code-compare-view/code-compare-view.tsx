@@ -46,6 +46,11 @@ export function CodeCompareView({
   fileIconSlot,
   widgets,
 }: CodeCompareViewProps) {
+  const monacoRef = useRef<{
+    editor: any;
+    monaco: Monaco;
+  }>();
+
   const { baseId, compareId, modifiedFileContent, originalFileContent, modifiedPath, originalPath, loading } =
     useCodeCompare({
       fileName,
@@ -85,13 +90,7 @@ export function CodeCompareView({
 
   const [containerHeight, setContainerHeight] = useState<string | undefined>(isFullScreen ? '100%' : undefined);
 
-  const monacoRef = useRef<{
-    editor: any;
-    monaco: Monaco;
-  }>();
-  const changedLinesRef = useRef(0);
-
-  const getDisplayedLineCount = (editorInstance, containerWidth) => {
+  const getDisplayedLineCount = (editorInstance, containerWidth, changedLines = 0) => {
     if (!monacoRef.current?.monaco) return 0;
 
     const model = editorInstance.getModel();
@@ -102,7 +101,7 @@ export function CodeCompareView({
 
     const lineCount = model.getLineCount();
 
-    let displayedLines = view === 'inline' ? 0 : changedLinesRef.current * 1;
+    let displayedLines = view === 'inline' ? 0 : changedLines * 1;
 
     const lineWidth = editorInstance.getOption(monacoRef.current.monaco.editor.EditorOption.wordWrapColumn);
     const fontWidthApproximation = 8;
@@ -117,28 +116,33 @@ export function CodeCompareView({
 
     return displayedLines;
   };
-  const updateAddedLines = () => {
+  const changedLinesRef = useRef(0);
+  const updateChangedLines = () => {
     if (!monacoRef.current) return;
 
     const modifiedEditor = monacoRef.current.editor.getModifiedEditor();
     const modifiedModel = modifiedEditor.getModel();
-    const modifiedValue = modifiedModel.getValue();
+    const modifiedModelValue = modifiedModel.getValue();
 
-    if (!modifiedValue) {
+    if (!modifiedModelValue) {
       changedLinesRef.current = 0;
       return;
     }
 
     const diffResult = monacoRef.current.editor.getLineChanges() ?? [];
 
-    let addedLines = 0;
+    let adjustedLines = 0;
     diffResult.forEach((change) => {
-      if (change.modifiedEndLineNumber !== 0) {
-        addedLines += change.modifiedEndLineNumber - change.modifiedStartLineNumber;
+      if (change.originalEndLineNumber !== 0) {
+        const removedLines =
+          change.originalEndLineNumber > change.originalStartLineNumber
+            ? change.originalEndLineNumber - change.originalStartLineNumber
+            : 0;
+        adjustedLines += removedLines;
       }
     });
 
-    changedLinesRef.current = addedLines * 2;
+    changedLinesRef.current = adjustedLines;
   };
 
   const updateEditorHeight = () => {
@@ -157,7 +161,7 @@ export function CodeCompareView({
       return undefined;
     }
 
-    updateAddedLines();
+    updateChangedLines();
 
     const paddingTop = originalEditor.getOption(monacoRef.current.monaco.editor.EditorOption.padding)?.top || 0;
     const paddingBottom = originalEditor.getOption(monacoRef.current.monaco.editor.EditorOption.padding)?.bottom || 0;
@@ -171,7 +175,11 @@ export function CodeCompareView({
     const modifiedContainerWidth = modifiedEditor.getLayoutInfo().contentWidth;
 
     const originalDisplayedLines = getDisplayedLineCount(originalEditor, originalContainerWidth);
-    const modifiedDisplayedLines = getDisplayedLineCount(modifiedEditor, modifiedContainerWidth);
+    const modifiedDisplayedLines = getDisplayedLineCount(
+      modifiedEditor,
+      modifiedContainerWidth,
+      changedLinesRef.current
+    );
 
     const originalContentHeight =
       originalDisplayedLines * lineHeight + paddingTop + paddingBottom + glyphMarginHeight + lineNumbersHeight;
@@ -209,7 +217,7 @@ export function CodeCompareView({
      */
     monacoRef.current = { monaco, editor };
     if (monacoRef.current) {
-      monacoRef.current.monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+      monacoRef.current.monaco.languages?.typescript?.typescriptDefaults?.setDiagnosticsOptions({
         noSemanticValidation: true,
         noSyntaxValidation: true,
       });
