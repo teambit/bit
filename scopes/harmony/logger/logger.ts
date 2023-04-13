@@ -1,4 +1,4 @@
-import loader from '@teambit/legacy/dist/cli/loader';
+import loader, { DEFAULT_SPINNER } from '@teambit/legacy/dist/cli/loader/loader';
 import logger, { IBitLogger } from '@teambit/legacy/dist/logger/logger';
 import chalk from 'chalk';
 
@@ -44,14 +44,14 @@ export class Logger implements IBitLogger {
    * single status-line on the bottom of the screen.
    * the text is replaced every time this method is called.
    */
-  setStatusLine(text: string) {
-    loader.setTextAndRestart(text);
+  setStatusLine(text: string, spinner = DEFAULT_SPINNER) {
+    loader.setTextAndRestart(text, spinner);
   }
   /**
    * remove the text from the last line on the screen.
    */
-  clearStatusLine() {
-    loader.stop();
+  clearStatusLine(spinner = DEFAULT_SPINNER) {
+    loader.stop(spinner);
   }
   /**
    * print to the screen. if message is empty, print the last logged message.
@@ -62,43 +62,40 @@ export class Logger implements IBitLogger {
       // eslint-disable-next-line no-console
       console.log(message, ...meta);
     } else {
-      loader.stopAndPersist({ text: message });
-    }
-  }
-
-  consoleWarn(message?: string, ...meta: any[]) {
-    if (message) this.warn(message, ...meta);
-    if (!loader.isStarted && logger.shouldWriteToConsole) {
-      // eslint-disable-next-line no-console
-      console.warn(message, ...meta);
-    } else {
-      loader.stopAndPersist({ text: message });
-    }
-  }
-
-  consoleError(message?: string, ...meta: any[]) {
-    if (message) this.error(message, ...meta);
-    if (!loader.isStarted && logger.shouldWriteToConsole) {
-      // eslint-disable-next-line no-console
-      console.error(message, ...meta);
-    } else {
-      loader.stopAndPersist({ text: message });
+      loader.stopAndPersist(message);
     }
   }
 
   /**
    * print to the screen as a title, with bold text.
    */
-  consoleTitle(message: string) {
+  consoleTitle(message: string, spinner = DEFAULT_SPINNER) {
     this.info(message);
-    loader.stopAndPersist({ text: chalk.bold(message) });
+    loader.stopAndPersist(message, spinner);
   }
   /**
    * print to the screen with a green `✔` prefix. if message is empty, print the last logged message.
    */
-  consoleSuccess(message?: string) {
+  consoleSuccess(message?: string, spinner = DEFAULT_SPINNER) {
     if (message) this.info(message);
-    loader.succeed(message);
+    loader.succeed(message, spinner);
+  }
+  /**
+   * print to the screen with a red `✖` prefix. if message is empty, print the last logged message.
+   */
+  consoleFailure(message?: string, spinner = DEFAULT_SPINNER) {
+    if (message) this.error(message);
+    loader.fail(message, spinner);
+  }
+  /**
+   * print to the screen with a red `⚠` prefix. if message is empty, print the last logged message.
+   */
+  consoleWarning(message?: string, spinner = DEFAULT_SPINNER) {
+    if (message) {
+      this.warn(message);
+      message = chalk.yellow(message);
+    }
+    loader.warn(message, spinner);
   }
 
   /**
@@ -117,21 +114,31 @@ export class Logger implements IBitLogger {
   }
 
   /**
-   * print to the screen with a red `✖` prefix. if message is empty, print the last logged message.
+   * @deprecated
+   * try using consoleWarning. if not possible, rename this method to a clearer one
    */
-  consoleFailure(message?: string) {
-    if (message) this.error(message);
-    loader.fail(message);
-  }
-  /**
-   * print to the screen with a red `⚠` prefix. if message is empty, print the last logged message.
-   */
-  consoleWarning(message?: string) {
-    if (message) {
-      this.warn(message);
-      message = chalk.yellow(message);
+  consoleWarn(message?: string, ...meta: any[]) {
+    if (message) this.warn(message, ...meta);
+    if (!loader.isStarted && logger.shouldWriteToConsole) {
+      // eslint-disable-next-line no-console
+      console.warn(message, ...meta);
+    } else {
+      loader.stopAndPersist(message);
     }
-    loader.warn(message);
+  }
+
+  /**
+   * @deprecated
+   * try using consoleFailure. if not possible, rename this method to a clearer one
+   */
+  consoleError(message?: string, ...meta: any[]) {
+    if (message) this.error(message, ...meta);
+    if (!loader.isStarted && logger.shouldWriteToConsole) {
+      // eslint-disable-next-line no-console
+      console.error(message, ...meta);
+    } else {
+      loader.stopAndPersist(message);
+    }
   }
 
   private colorMessage(message: string) {

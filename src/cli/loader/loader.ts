@@ -1,9 +1,18 @@
-import ora, { Ora, PersistOptions } from 'ora';
+import Spinnies from 'dreidels';
+import { stdout } from 'process';
 
 import { SPINNER_TYPE } from '../../constants';
 
+export const DEFAULT_SPINNER = 'default';
+
+/**
+ * previous loader was "ora" (which doesn't support multi spinners)
+ * some differences:
+ * 1) when starting a new spinner, it immediately shows a loader that can't be easily "inactive".
+ * 2) when calling "stop()", it doesn't only stop the loader, but also persist the previous text.
+ */
 export class Loader {
-  private spinner: Ora | null;
+  private spinner: Spinnies | null;
 
   get isStarted() {
     return !!this.spinner;
@@ -17,69 +26,87 @@ export class Loader {
   }
 
   off(): Loader {
-    this.stop();
+    if (!this.spinner) return this;
+    this.removeAll();
     this.spinner = null;
     return this;
   }
 
-  start(text?: string): Loader {
-    if (this.spinner) {
-      this.spinner.start(text);
-    }
-    return this;
+  private removeAll() {
+    if (!this.spinner) return;
+    const spinners = this.spinner;
+    Object.keys(spinners.spinners).forEach((name) => {
+      spinners.spinners[name].removeAllListeners();
+      delete spinners.spinners[name];
+    });
+    spinners.checkIfActiveSpinners();
+    spinners.updateSpinnerState();
   }
 
-  setText(text: string): Loader {
-    if (this.spinner) this.spinner.text = text;
-    return this;
+  /**
+   * @deprecated
+   * no need to start a spinner. just log/spin whenever needed
+   */
+  start(text?: string, spinnerName = DEFAULT_SPINNER) {
+    this.spin(text || ' ', spinnerName);
   }
 
-  setTextAndRestart(text: string): Loader {
-    if (this.spinner) {
-      this.spinner.stop();
-      this.spinner.text = text;
-      this.spinner.start();
-    }
-    return this;
+  private spin(text: string, spinnerName = DEFAULT_SPINNER) {
+    if (!this.spinner) return;
+    if (this.getSpinner(spinnerName)) this.getSpinner(spinnerName)?.text(text);
+    else this.spinner.add(spinnerName, { text });
   }
 
-  get(): Ora | null {
+  setText(text: string, spinnerName = DEFAULT_SPINNER) {
+    this.spin(text, spinnerName);
+  }
+
+  setTextAndRestart(text: string, spinnerName = DEFAULT_SPINNER) {
+    this.spin(text, spinnerName);
+  }
+
+  get(): Spinnies | null {
     return this.spinner;
   }
 
-  stop(): Loader {
-    if (this.spinner) this.spinner.stop();
-    return this;
+  /**
+   * avoid using `this.spinner?.spinners.get()` method. it throws when the spinner was removed.
+   * (which automatically happens when calling fail/stop/succeed/warn/info)
+   */
+  getSpinner(spinnerName = DEFAULT_SPINNER): ReturnType<Spinnies['get']> | undefined {
+    return this.spinner?.spinners[spinnerName];
   }
 
-  succeed(text?: string): Loader {
-    if (this.spinner) this.spinner.succeed(text);
-    return this;
+  /**
+   * avoid calling `.stop()`, it persists the last message.
+   */
+  stop(spinnerName = DEFAULT_SPINNER) {
+    this.getSpinner(spinnerName)?.remove();
   }
 
-  fail(text?: string): Loader {
-    if (this.spinner) this.spinner.fail(text);
-    return this;
+  succeed(text?: string, spinnerName = DEFAULT_SPINNER) {
+    this.getSpinner(spinnerName)?.succeed({ text });
   }
 
-  warn(text?: string): Loader {
-    if (this.spinner) this.spinner.warn(text);
-    return this;
+  fail(text?: string, spinnerName = DEFAULT_SPINNER) {
+    this.getSpinner(spinnerName)?.fail({ text });
   }
 
-  info(text?: string): Loader {
-    if (this.spinner) this.spinner.info(text);
-    return this;
+  warn(text?: string, spinnerName = DEFAULT_SPINNER) {
+    this.getSpinner(spinnerName)?.warn({ text });
   }
 
-  stopAndPersist(options?: PersistOptions): Loader {
-    if (this.spinner) this.spinner.stopAndPersist(options);
-    return this;
+  info(text?: string, spinnerName = DEFAULT_SPINNER) {
+    this.getSpinner(spinnerName)?.info({ text });
   }
 
-  private createNewSpinner(): Ora {
-    // for some reason the stream defaults to stderr.
-    return ora({ spinner: SPINNER_TYPE, text: '', stream: process.stdout, discardStdin: false, hideCursor: false });
+  stopAndPersist(text?: string, spinnerName = DEFAULT_SPINNER) {
+    this.getSpinner(spinnerName)?.static({ text });
+  }
+
+  private createNewSpinner(): Spinnies {
+    const spinnies = new Spinnies({ spinner: SPINNER_TYPE, stream: stdout });
+    return spinnies;
   }
 }
 
