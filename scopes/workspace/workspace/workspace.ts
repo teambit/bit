@@ -931,7 +931,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   componentPackageName(component: Component): string {
-    return componentIdToPackageName(component.state._consumer);
+    return this.dependencyResolver.getPackageName(component);
   }
 
   private componentDirFromLegacyId(
