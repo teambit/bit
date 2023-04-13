@@ -48,7 +48,7 @@ import {
 } from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
-import { DependencyLinker, DepLinerContext, LinkingOptions } from './dependency-linker';
+import { DepLinkerContext, DependencyLinker, LinkingOptions } from './dependency-linker';
 import { ComponentModelVersion, getAllPolicyPkgs, OutdatedPkg } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
@@ -294,7 +294,7 @@ export type GetInstallerOptions = {
 export type GetLinkerOptions = {
   rootDir?: string;
   linkingOptions?: LinkingOptions;
-  linkingContext?: DepLinerContext;
+  linkingContext?: DepLinkerContext;
 };
 
 export type GetDependenciesOptions = {
