@@ -38,7 +38,6 @@ import ComponentsList from '@teambit/legacy/dist/consumer/component/components-l
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import {
   PathOsBased,
   PathOsBasedRelative,
@@ -931,7 +930,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   componentPackageName(component: Component): string {
-    return componentIdToPackageName(component.state._consumer);
+    return this.dependencyResolver.getPackageName(component);
   }
 
   private componentDirFromLegacyId(
