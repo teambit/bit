@@ -1,3 +1,4 @@
+import prettyTime from 'pretty-time';
 import loader from '@teambit/legacy/dist/cli/loader';
 import logger, { IBitLogger } from '@teambit/legacy/dist/logger/logger';
 import chalk from 'chalk';
@@ -96,9 +97,9 @@ export class Logger implements IBitLogger {
   /**
    * print to the screen with a green `✔` prefix. if message is empty, print the last logged message.
    */
-  consoleSuccess(message?: string) {
+  consoleSuccess(message?: string, startTime?: [number, number]) {
     if (message) this.info(message);
-    loader.succeed(message);
+    loader.succeed(message, startTime);
   }
 
   /**
