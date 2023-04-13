@@ -37,8 +37,9 @@ export class PnpmPackageManager implements PackageManager {
     this.logger.debug(`running installation in root dir ${rootDir}`);
     this.logger.debug('components manifests for installation', manifests);
     if (!installOptions.hidePackageManagerOutput) {
-      this.logger.setStatusLine('installing dependencies using pnpm');
+      // this.logger.setStatusLine('installing dependencies using pnpm');
       // turn off the logger because it interrupts the pnpm output
+      this.logger.console('-------------------------PNPM OUTPUT-------------------------');
       this.logger.off();
     }
     const registries = await this.depResolver.getRegistries();
@@ -81,8 +82,8 @@ export class PnpmPackageManager implements PackageManager {
     if (!installOptions.hidePackageManagerOutput) {
       this.logger.on();
       // Make a divider row to improve output
-      this.logger.console('-------------------------');
-      this.logger.consoleSuccess('installing dependencies using pnpm');
+      this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
+      // this.logger.consoleSuccess('installing dependencies using pnpm');
     }
   }
 
