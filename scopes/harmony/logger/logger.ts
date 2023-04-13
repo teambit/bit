@@ -1,4 +1,3 @@
-import prettyTime from 'pretty-time';
 import loader from '@teambit/legacy/dist/cli/loader';
 import logger, { IBitLogger } from '@teambit/legacy/dist/logger/logger';
 import chalk from 'chalk';
