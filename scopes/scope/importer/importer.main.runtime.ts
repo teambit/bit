@@ -281,7 +281,7 @@ export class ImporterMain {
       if (!opts?.import) return;
       logger.setStatusLine('importing missing objects');
       await importerMain.importCurrentObjects();
-      logger.consoleSuccess();
+      // logger.consoleSuccess();
     });
     install.registerPreLink(async (opts) => {
       if (opts?.fetchObject) await importerMain.importCurrentObjects();

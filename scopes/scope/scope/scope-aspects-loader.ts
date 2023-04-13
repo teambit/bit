@@ -247,6 +247,9 @@ needed-for: ${neededFor || '<unknown>'}`);
           copyPeerToRuntimeOnComponents: true,
           installPeersFromEnvs: true,
         },
+        context: {
+          aspects: true,
+        },
       },
       this.scope.legacyScope
     );
@@ -381,7 +384,11 @@ needed-for: ${neededFor || '<unknown>'}`);
     return `${this.scope.path}-aspects`;
   }
 
-  private async resolveUserAspects(runtimeName?: string, userAspectsIds?: ComponentID[]): Promise<AspectDefinition[]> {
+  private async resolveUserAspects(
+    runtimeName?: string,
+    userAspectsIds?: ComponentID[],
+    opts?: ResolveAspectsOptions
+  ): Promise<AspectDefinition[]> {
     if (!userAspectsIds || !userAspectsIds.length) return [];
     const components = await this.scope.getMany(userAspectsIds);
     const network = await this.isolator.isolateComponents(
@@ -401,6 +408,10 @@ needed-for: ${neededFor || '<unknown>'}`);
           installPeersFromEnvs: true,
         },
         host: this.scope,
+        context: {
+          aspects: true,
+          workspaceName: opts?.workspaceName,
+        },
       },
       this.scope.legacyScope
     );
@@ -460,7 +471,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       });
     });
 
-    const userAspectsDefs = await this.resolveUserAspects(runtimeName, withoutLocalAspects);
+    const userAspectsDefs = await this.resolveUserAspects(runtimeName, withoutLocalAspects, opts);
     const localResolved = await this.resolveLocalAspects(this.scope.localAspects, runtimeName);
     const coreAspectsDefs = await this.aspectLoader.getCoreAspectDefs(runtimeName);
 

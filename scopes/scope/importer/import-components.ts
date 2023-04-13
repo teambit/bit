@@ -104,16 +104,24 @@ export default class ImportComponents {
     this.laneObjects = this.options.lanes ? (this.options.lanes.lanes as Lane[]) : [];
   }
 
-  importComponents(): Promise<ImportResult> {
+  async importComponents(): Promise<ImportResult> {
+    let result;
     loader.start(BEFORE_IMPORT_ACTION);
+    const startTime = process.hrtime();
     this.options.saveDependenciesAsComponents = this.consumer.config._saveDependenciesAsComponents;
     if (this.options.lanes && !this.options.ids.length) {
-      return this.importObjectsOnLane();
+      result = await this.importObjectsOnLane();
+      loader.succeed(BEFORE_IMPORT_ACTION, startTime);
+      return result;
     }
     if (this.options.ids.length) {
-      return this.importSpecificComponents();
+      result = await this.importSpecificComponents();
+      loader.succeed(BEFORE_IMPORT_ACTION, startTime);
+      return result;
     }
-    return this.importAccordingToBitMap();
+    result = await this.importAccordingToBitMap();
+    loader.succeed(BEFORE_IMPORT_ACTION, startTime);
+    return result;
   }
 
   async importObjectsOnLane(): Promise<ImportResult> {

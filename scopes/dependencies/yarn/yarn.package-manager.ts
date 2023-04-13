@@ -46,6 +46,8 @@ type BackupJsons = {
 };
 
 export class YarnPackageManager implements PackageManager {
+  readonly name = 'yarn';
+
   constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
 
   async install(
