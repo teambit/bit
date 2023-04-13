@@ -166,7 +166,7 @@ export class DependencyInstaller {
         manifests[dir].dependencies = Object.assign({}, manifests[dir].dependencies, linkedDeps);
       });
     }
-    const hidePackageManagerOutput = this.installingContext.inCapsule && process.env.VERBOSE_PM_OUTPUT !== 'true';
+    const hidePackageManagerOutput = !!(this.installingContext.inCapsule && process.env.VERBOSE_PM_OUTPUT !== 'true');
 
     // Make sure to take other default if passed options with only one option
     const calculatedPmOpts = {
@@ -209,10 +209,11 @@ export class DependencyInstaller {
     const messageSuffix = `using ${this.packageManager.name}`;
     const message = this.installingContext?.inCapsule
       ? `(capsule) ${messagePrefix} in root dir ${this.rootDir} ${messageSuffix}`
-      : `${messagePrefix} ${messageSuffix}}`;
+      : `${messagePrefix} ${messageSuffix}`;
     if (!hidePackageManagerOutput) {
       this.logger.setStatusLine(message);
     }
+    const startTime = process.hrtime();
 
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
     await this.packageManager.install(
@@ -224,7 +225,7 @@ export class DependencyInstaller {
       calculatedPmOpts
     );
     if (!hidePackageManagerOutput) {
-      this.logger.consoleSuccess();
+      this.logger.consoleSuccess(`done ${message}`, startTime);
     }
     await this.runPrePostSubscribers(this.postInstallSubscriberList, 'post', args);
     return componentDirectoryMap;
