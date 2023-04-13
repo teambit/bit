@@ -372,7 +372,7 @@ export class DependencyResolverMain {
    * Here is the PR where initially dedupe was turned off for pnpm: https://github.com/teambit/bit/pull/5410
    */
   supportsDedupingOnExistingRoot(): boolean {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     return packageManager?.supportsDedupingOnExistingRoot?.() === true && !this.hasRootComponents();
   }
 
@@ -702,12 +702,21 @@ export class DependencyResolverMain {
     );
   }
 
+  /**
+   * This function returns the package manager if it exists, otherwise it returns undefined.
+   * @returns The `getPackageManager()` function returns a `PackageManager` object or `undefined`.
+   */
+  getPackageManager(): PackageManager | undefined {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    return packageManager;
+  }
+
   getPackageManagerName() {
     return this.config.packageManager;
   }
 
   async getVersionResolver(options: GetVersionResolverOptions = {}) {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     const cacheRootDir = options.cacheRootDirectory || this.globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
@@ -835,7 +844,7 @@ export class DependencyResolverMain {
   }
 
   private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     let networkConfigFromPackageManager: NetworkConfig = {};
     if (typeof packageManager?.getNetworkConfig === 'function') {
       networkConfigFromPackageManager = await packageManager?.getNetworkConfig();
@@ -848,7 +857,7 @@ export class DependencyResolverMain {
   }
 
   private async getProxyConfigFromPackageManager(): Promise<ProxyConfig> {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     let proxyConfigFromPackageManager: ProxyConfig = {};
     if (packageManager?.getProxyConfig && typeof packageManager?.getProxyConfig === 'function') {
       proxyConfigFromPackageManager = await packageManager?.getProxyConfig();
@@ -875,7 +884,7 @@ export class DependencyResolverMain {
     options: PackageManagerGetPeerDependencyIssuesOptions
   ): Promise<Record<string, string>> {
     this.logger.setStatusLine('finding missing peer dependencies');
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     let peerDependencyIssues!: PeerDependencyIssuesByProjects;
     const installer = this.getInstaller();
     const manifests = await installer.getComponentManifests({
@@ -897,7 +906,7 @@ export class DependencyResolverMain {
   }
 
   async getRegistries(): Promise<Registries> {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     let registries;
     if (packageManager?.getRegistries && typeof packageManager?.getRegistries === 'function') {
       registries = await packageManager?.getRegistries();
@@ -1570,7 +1579,7 @@ export class DependencyResolverMain {
    * @param packageName - The injected component's packageName
    */
   async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     if (typeof packageManager?.getInjectedDirs === 'function') {
       return packageManager.getInjectedDirs(rootDir, componentDir, packageName);
     }
@@ -1578,7 +1587,7 @@ export class DependencyResolverMain {
   }
 
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     if (!packageManager) {
       throw new PackageManagerNotFound(this.config.packageManager);
     }
