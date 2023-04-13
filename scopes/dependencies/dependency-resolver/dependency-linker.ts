@@ -137,6 +137,8 @@ export class DependencyLinker {
       this.logger.setStatusLine(outputMessage);
     }
     this.logger.debug('linking components with options', omit(options, ['consumer']));
+    const startTime = process.hrtime();
+
     let result: LinkResults = {};
     const finalRootDir = rootDir || this.rootDir;
     const linkingOpts = Object.assign({}, DEFAULT_LINKING_OPTIONS, this.linkingOptions || {}, options || {});
@@ -172,7 +174,7 @@ export class DependencyLinker {
       ...(await this.linkCoreAspectsAndLegacy(rootDir, componentIds, rootPolicy, linkingOpts)),
     };
     if (!this.linkingContext?.inCapsule) {
-      this.logger.consoleSuccess(outputMessage);
+      this.logger.consoleSuccess(outputMessage, startTime);
     }
     return result;
   }
