@@ -90,7 +90,7 @@ describe('bit remove command', function () {
     describe('with --remote flag', () => {
       let output;
       before(() => {
-        output = helper.command.removeComponent(`${helper.scopes.remote}/bar/foo --remote`);
+        output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/bar/foo`);
       });
       it('should show a successful message', () => {
         expect(output).to.have.string(`removed components from the remote scope: ${helper.scopes.remote}/bar/foo`);
@@ -110,13 +110,13 @@ describe('bit remove command', function () {
       helper.command.export();
     });
     it('should not remove component with dependencies when -f flag is false', () => {
-      const output = helper.command.removeComponent(`${helper.scopes.remote}/${componentName}`, '--remote');
+      const output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/${componentName}`);
       expect(output).to.have.string(
         `error: unable to delete ${helper.scopes.remote}/${componentName}, because the following components depend on it:`
       );
     });
     it('should remove component with dependencies when -f flag is true', () => {
-      const output = helper.command.removeComponent(`${helper.scopes.remote}/${componentName}`, '--remote -f');
+      const output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/${componentName}`, '-f');
       expect(output).to.have.string('removed components');
       expect(output).to.have.string(`${helper.scopes.remote}/${componentName}`);
     });
@@ -383,7 +383,7 @@ describe('bit remove command', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponentsWithoutBuild();
-      helper.command.removeComponent('comp1', '--soft');
+      helper.command.softRemoveComponent('comp1');
       helper.command.snapAllComponentsWithoutBuild('--ignore-issues="*"');
     });
     it('should show it as removed', () => {

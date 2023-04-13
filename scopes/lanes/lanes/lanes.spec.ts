@@ -165,4 +165,40 @@ describe('LanesAspect', function () {
       });
     });
   });
+
+  describe('restore lane when an existing lane has the same id', () => {
+    let lanes: LanesMain;
+    let workspaceData: WorkspaceData;
+    let laneHash: string;
+    before(async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath);
+      lanes = await loadAspect(LanesAspect, workspacePath);
+      await lanes.createLane('stage');
+
+      // as an intermediate step, make sure the lane was created
+      const currentLanes = await lanes.getLanes({});
+      expect(currentLanes).to.have.lengthOf(1);
+
+      await lanes.switchLanes('main', { skipDependencyInstallation: true });
+      await lanes.removeLanes(['stage']);
+
+      await lanes.createLane('stage');
+      laneHash = currentLanes[0].hash;
+    });
+    after(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+    it('should throw when restoring the lane', async () => {
+      let error: Error | undefined;
+      try {
+        await lanes.restoreLane(laneHash);
+      } catch (err: any) {
+        error = err;
+      }
+      expect(error).to.be.instanceOf(Error);
+      expect(error?.message).to.include('unable to restore lane');
+    });
+  });
 });
