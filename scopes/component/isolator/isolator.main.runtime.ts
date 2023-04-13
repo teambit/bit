@@ -410,11 +410,12 @@ export class IsolatorMain {
         );
       capsuleWithPackageData.capsule.fs.writeFileSync(PACKAGE_JSON, JSON.stringify(currentPackageJson, null, 2));
     });
-    if (longProcessLogger) {
+    // Only show this message if at least one new capsule created
+    if (longProcessLogger && capsuleList.length) {
       longProcessLogger.end();
       // this.logger.consoleSuccess();
       const capsuleListOutput = allCapsuleList.map((capsule) => capsule.component.id.toString()).join(', ');
-      this.logger.consoleSuccess(`the following capsule(s) were ensured ${chalk.cyan(capsuleListOutput)}`);
+      this.logger.consoleSuccess(`following capsule(s) ensured ${chalk.cyan(capsuleListOutput)}`);
     }
 
     return allCapsuleList;
