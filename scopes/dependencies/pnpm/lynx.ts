@@ -216,6 +216,7 @@ export async function install(
   });
   const opts: InstallOptions = {
     allProjects,
+    autoInstallPeers: false,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
     dir: rootDir,
@@ -226,6 +227,7 @@ export async function install(
     modulesCacheMaxAge: 0,
     neverBuiltDependencies: ['core-js'],
     registries: registriesMap,
+    resolutionMode: 'highest',
     rawConfig: authConfig,
     hooks: { readPackage },
     externalDependencies,
