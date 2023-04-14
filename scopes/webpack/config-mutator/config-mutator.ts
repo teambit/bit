@@ -3,7 +3,7 @@ import { Configuration, ResolveOptions, RuleSetRule } from 'webpack';
 import { merge, mergeWithCustomize, mergeWithRules, CustomizeRule } from 'webpack-merge';
 import { ICustomizeOptions } from 'webpack-merge/dist/types';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import { inject } from '@teambit/html.modules.inject-html-element';
+import { inject, InjectedHtmlElement as CustomHtmlElement } from '@teambit/html.modules.inject-html-element';
 
 export * from 'webpack-merge';
 
@@ -24,14 +24,6 @@ type MergeOpts = {
 
 type Rules = {
   [s: string]: CustomizeRule | Rules;
-};
-
-type CustomHtmlElement = {
-  parent: 'head' | 'body';
-  position: 'prepend' | 'append';
-  tag: string;
-  content?: string;
-  attributes?: { [key: string]: string };
 };
 
 const defaultAddToArrayOpts: AddToArrayOpts = {
