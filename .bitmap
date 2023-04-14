@@ -1527,12 +1527,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/snippet"
     },
-    "ui/drawer": {
-        "scope": "teambit.lanes",
-        "version": "0.0.37",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/drawer"
-    },
     "ui/empty-component-gallery": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.502",
@@ -1700,12 +1694,6 @@
         "version": "0.0.113",
         "mainFile": "index.ts",
         "rootDir": "components/ui/lane-overview"
-    },
-    "ui/lane-readme": {
-        "scope": "teambit.lanes",
-        "version": "0.0.116",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/lane-readme"
     },
     "ui/load-preview": {
         "scope": "teambit.workspace",
@@ -2024,12 +2012,6 @@
         "version": "0.0.504",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/version-label"
-    },
-    "ui/viewed-lane": {
-        "scope": "teambit.lanes",
-        "version": "0.0.37",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/viewed-lane"
     },
     "ui/workspace-component-card": {
         "scope": "teambit.workspace",

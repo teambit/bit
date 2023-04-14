@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { LaneModel, LanesModel } from '@teambit/lanes.ui.models';
 import { LanesProvider } from '@teambit/lanes.hooks.use-lanes';
+import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { useLaneReadme } from '@teambit/lanes.hooks.use-lane-readme';
 import { LaneDetails, LaneOverviewLineSlot } from '@teambit/lanes.ui.gallery';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
@@ -18,7 +18,7 @@ export type LaneReadmeProps = {
 };
 
 export function LaneReadme({ viewedLane, overviewSlot, routeSlot }: LaneReadmeProps) {
-  const { component, loading } = useLaneReadme(viewedLane);
+  const { component, loading } = useLaneReadme(viewedLane.id);
   const laneComponents = viewedLane.components;
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
@@ -29,7 +29,7 @@ export function LaneReadme({ viewedLane, overviewSlot, routeSlot }: LaneReadmePr
       <div className={styles.readmeContainer}>
         <LaneDetails
           className={styles.laneId}
-          laneName={viewedLane.id}
+          laneName={viewedLane.id.name}
           componentCount={laneComponents.length || undefined}
         ></LaneDetails>
         <div className={styles.laneReadmePreviewContainer}>

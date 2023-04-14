@@ -1,11 +1,11 @@
 import React, { useMemo, ComponentType } from 'react';
-import { LaneModel, LanesModel, LanesHost } from '@teambit/lanes.ui.models';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
 import flatten from 'lodash.flatten';
+import { LaneModel, LanesHost, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { SlotRegistry } from '@teambit/harmony';
 import { ScopeComponentCard } from '@teambit/scope';
 import { EmptyLane } from './empty-lane-overview';
@@ -28,7 +28,7 @@ export function LaneGallery({ routeSlot, overviewSlot, host }: LaneGalleryProps)
   const currentLane = lanesModel?.viewedLane;
 
   if (!currentLane || !currentLane.id) return null;
-  if (currentLane.components.length === 0) return <EmptyLane name={currentLane.name} />;
+  if (currentLane.components.length === 0) return <EmptyLane name={currentLane.id.name} />;
 
   return (
     <LaneGalleryWithPreview host={host} currentLane={currentLane} overviewItems={overviewItems} routeSlot={routeSlot} />
@@ -43,7 +43,7 @@ type LaneGalleryWithPreviewProps = {
 };
 
 function LaneGalleryWithPreview({ currentLane, overviewItems, routeSlot, host }: LaneGalleryWithPreviewProps) {
-  const { loading, components } = useLaneComponents(currentLane);
+  const { loading, components } = useLaneComponents(currentLane.id);
 
   if (loading) return null;
 
@@ -66,7 +66,7 @@ function LaneGalleryWithPreview({ currentLane, overviewItems, routeSlot, host }:
     <div className={styles.container}>
       <LaneDetails
         className={styles.laneDetails}
-        laneName={currentLane.id}
+        laneName={currentLane.id.name}
         description={''}
         componentCount={currentLane.components.length}
       ></LaneDetails>
