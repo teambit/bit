@@ -64,6 +64,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       await this.workspace.bitMap.write();
       await this.deleteLinkFromNodeModules(sourcePackageName);
     }
+    await this.renameAspectIdInWorkspaceConfig(sourceId, targetId);
     this.workspace.clearComponentCache(sourceId);
     const targetComp = await this.workspace.get(targetId);
     if (options.refactor) {
@@ -85,6 +86,8 @@ make sure this argument is the name only, without the scope-name. to change the 
         writeToPath: this.newComponentHelper.getNewComponentPath(targetId),
       });
     }
+    this.workspace.bitMap.renameAspectInConfig(sourceId, targetId);
+    await this.workspace.bitMap.write();
 
     await linkToNodeModulesByComponents([targetComp], this.workspace); // link the new-name to node-modules
     await this.compileGracefully([targetComp.id]);
@@ -248,6 +251,16 @@ make sure this argument is the name only, without the scope-name. to change the 
     await this.relinkAndCompile(componentsUsingOldScope, newIds);
 
     return { scopeRenamedComponentIds: componentsUsingOldScope.map((comp) => comp.id), refactoredIds };
+  }
+
+  private async renameAspectIdInWorkspaceConfig(sourceId: ComponentID, targetId: ComponentID) {
+    const config = this.config.workspaceConfig;
+    if (!config) throw new Error('unable to get workspace config');
+    const hasChanged = config.renameExtensionInRaw(
+      sourceId.toStringWithoutVersion(),
+      targetId.toStringWithoutVersion()
+    );
+    if (hasChanged) await config.write();
   }
 
   private async renameScopeOfAspectIdsInWorkspaceConfig(ids: ComponentID[], newScope: string) {
