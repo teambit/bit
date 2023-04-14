@@ -368,7 +368,6 @@
         "postcss-preset-env": "7.8.2",
         "prerender-spa-plugin-next": "4.2.0",
         "pretty-bytes": "5.6.0",
-        "pretty-time": "1.1.0",
         "process": "0.11.10",
         "puppeteer": "13.7.0",
         "query-string": "7.0.0",

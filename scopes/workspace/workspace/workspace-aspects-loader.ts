@@ -200,6 +200,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       requestedOnly: false,
       filterByRuntime: true,
       useScopeAspectsCapsule: false,
+      workspaceName: this.workspace.name,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;

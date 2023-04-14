@@ -40,10 +40,15 @@ import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { Registries, Registry } from './registry';
 import { applyUpdates } from './apply-updates';
 import { ROOT_NAME } from './dependencies/constants';
-import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberList } from './dependency-installer';
+import {
+  DependencyInstaller,
+  PreInstallSubscriberList,
+  PostInstallSubscriberList,
+  DepInstallerContext,
+} from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
-import { DependencyLinker, LinkingOptions } from './dependency-linker';
+import { DepLinkerContext, DependencyLinker, LinkingOptions } from './dependency-linker';
 import { ComponentModelVersion, getAllPolicyPkgs, OutdatedPkg } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
@@ -283,11 +288,13 @@ export type GetInstallerOptions = {
   rootDir?: string;
   packageManager?: string;
   cacheRootDirectory?: string;
+  installingContext?: DepInstallerContext;
 };
 
 export type GetLinkerOptions = {
   rootDir?: string;
   linkingOptions?: LinkingOptions;
+  linkingContext?: DepLinkerContext;
 };
 
 export type GetDependenciesOptions = {
@@ -365,7 +372,7 @@ export class DependencyResolverMain {
    * Here is the PR where initially dedupe was turned off for pnpm: https://github.com/teambit/bit/pull/5410
    */
   supportsDedupingOnExistingRoot(): boolean {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     return packageManager?.supportsDedupingOnExistingRoot?.() === true && !this.hasRootComponents();
   }
 
@@ -564,9 +571,15 @@ export class DependencyResolverMain {
     rootPolicy: WorkspacePolicy,
     rootDir: string,
     components: Component[],
-    options: CreateFromComponentsOptions = defaultCreateFromComponentsOptions
+    options: CreateFromComponentsOptions = defaultCreateFromComponentsOptions,
+    context: DepInstallerContext = {}
   ): Promise<WorkspaceManifest> {
-    this.logger.setStatusLine('deduping dependencies for installation');
+    const statusMessage = context?.inCapsule
+      ? `(capsule) deduping dependencies for installation in root dir ${rootDir}`
+      : 'deduping dependencies for installation';
+    if (!context?.inCapsule) {
+      this.logger.setStatusLine(statusMessage);
+    }
     const concreteOpts = {
       ...defaultCreateFromComponentsOptions,
       ...options,
@@ -580,7 +593,9 @@ export class DependencyResolverMain {
       components,
       concreteOpts
     );
-    this.logger.consoleSuccess();
+    if (!context?.inCapsule) {
+      this.logger.consoleSuccess();
+    }
     return res;
   }
 
@@ -656,7 +671,8 @@ export class DependencyResolverMain {
       this.config.sideEffectsCache,
       this.config.nodeVersion,
       this.config.engineStrict,
-      this.config.peerDependencyRules
+      this.config.peerDependencyRules,
+      options.installingContext
     );
   }
 
@@ -681,8 +697,18 @@ export class DependencyResolverMain {
       this.envs,
       this.logger,
       options.rootDir,
-      linkingOptions
+      linkingOptions,
+      options.linkingContext
     );
+  }
+
+  /**
+   * This function returns the package manager if it exists, otherwise it returns undefined.
+   * @returns The `getPackageManager()` function returns a `PackageManager` object or `undefined`.
+   */
+  getPackageManager(): PackageManager | undefined {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    return packageManager;
   }
 
   getPackageManagerName() {
@@ -690,7 +716,7 @@ export class DependencyResolverMain {
   }
 
   async getVersionResolver(options: GetVersionResolverOptions = {}) {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     const cacheRootDir = options.cacheRootDirectory || this.globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
@@ -818,7 +844,7 @@ export class DependencyResolverMain {
   }
 
   private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     let networkConfigFromPackageManager: NetworkConfig = {};
     if (typeof packageManager?.getNetworkConfig === 'function') {
       networkConfigFromPackageManager = await packageManager?.getNetworkConfig();
@@ -831,7 +857,7 @@ export class DependencyResolverMain {
   }
 
   private async getProxyConfigFromPackageManager(): Promise<ProxyConfig> {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     let proxyConfigFromPackageManager: ProxyConfig = {};
     if (packageManager?.getProxyConfig && typeof packageManager?.getProxyConfig === 'function') {
       proxyConfigFromPackageManager = await packageManager?.getProxyConfig();
@@ -858,7 +884,7 @@ export class DependencyResolverMain {
     options: PackageManagerGetPeerDependencyIssuesOptions
   ): Promise<Record<string, string>> {
     this.logger.setStatusLine('finding missing peer dependencies');
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     let peerDependencyIssues!: PeerDependencyIssuesByProjects;
     const installer = this.getInstaller();
     const manifests = await installer.getComponentManifests({
@@ -880,7 +906,7 @@ export class DependencyResolverMain {
   }
 
   async getRegistries(): Promise<Registries> {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     let registries;
     if (packageManager?.getRegistries && typeof packageManager?.getRegistries === 'function') {
       registries = await packageManager?.getRegistries();
@@ -1553,7 +1579,7 @@ export class DependencyResolverMain {
    * @param packageName - The injected component's packageName
    */
   async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     if (typeof packageManager?.getInjectedDirs === 'function') {
       return packageManager.getInjectedDirs(rootDir, componentDir, packageName);
     }
@@ -1561,7 +1587,7 @@ export class DependencyResolverMain {
   }
 
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.getPackageManager();
     if (!packageManager) {
       throw new PackageManagerNotFound(this.config.packageManager);
     }
