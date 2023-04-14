@@ -198,6 +198,8 @@
         "@teambit/harmony": "0.4.6",
         "@teambit/html.modules.inject-html-element": "^0.0.2",
         "@teambit/html.modules.render-template": "0.0.104",
+        "@teambit/lanes.ui.lanes": "^0.0.116",
+        "@teambit/lanes.ui.menus": "^0.0.36",
         "@teambit/mdx.ui.docs.link": "0.0.500",
         "@teambit/pkg.content.packages-overview": "1.95.9",
         "@teambit/react.content.react-overview": "1.95.0",

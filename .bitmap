@@ -1707,12 +1707,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/lane-readme"
     },
-    "ui/lanes": {
-        "scope": "teambit.lanes",
-        "version": "0.0.116",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/lanes"
-    },
     "ui/load-preview": {
         "scope": "teambit.workspace",
         "version": "0.0.499",
@@ -1754,12 +1748,6 @@
         "version": "0.0.497",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/menu-widget-icon"
-    },
-    "ui/menus": {
-        "scope": "teambit.lanes",
-        "version": "0.0.36",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/menus_1"
     },
     "ui/menus/lanes-overview-menu": {
         "scope": "teambit.lanes",
