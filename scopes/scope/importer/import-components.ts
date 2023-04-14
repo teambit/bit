@@ -200,6 +200,7 @@ export default class ImportComponents {
       const components = await multipleVersionDependenciesToConsumer(versionDependenciesArr, this.scope.objects);
       await this._fetchDivergeData(components);
       this._throwForDivergedHistory();
+      await this.throwForComponentsFromAnotherLane(bitIds);
       componentWriterResults = await this._writeToFileSystem(components);
       await this._saveLaneDataIfNeeded(components);
       writtenComponents = components;
@@ -240,6 +241,35 @@ export default class ImportComponents {
         snapsRemote: modelComponent.getDivergeData().snapsOnTargetOnly.length,
       }));
       throw new ComponentsPendingMerge(divergeData);
+    }
+  }
+
+  private async throwForComponentsFromAnotherLane(bitIds: BitIds) {
+    if (this.options.objectsOnly) return;
+    const currentLane = await this.workspace.getCurrentLaneObject();
+    const idsFromAnotherLane: BitId[] = [];
+    if (currentLane) {
+      await Promise.all(
+        bitIds.map(async (bitId) => {
+          const isOnCurrentLane = await this.scope.isPartOfLaneHistory(bitId, currentLane);
+          if (!isOnCurrentLane) idsFromAnotherLane.push(bitId);
+        })
+      );
+    } else {
+      await Promise.all(
+        bitIds.map(async (bitId) => {
+          const isIdOnMain = await this.scope.isPartOfMainHistory(bitId);
+          if (!isIdOnMain) idsFromAnotherLane.push(bitId);
+        })
+      );
+    }
+    if (idsFromAnotherLane.length) {
+      throw new BitError(`unable to import the following components as they don't belong to ${
+        currentLane ? 'the current lane' : 'main'
+      }:
+${idsFromAnotherLane.map((id) => id.toString()).join(', ')}
+if you need this specific snap, find the lane this snap is belong to, then run "bit lane merge <lane-id> [component-id]" to merge this component from the lane.
+`);
     }
   }
 
