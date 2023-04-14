@@ -1,0 +1,178 @@
+.topBarLink {
+  position: relative;
+  padding: 0 8px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+
+  color: inherit;
+  text-decoration: none;
+
+  transition: color 300ms;
+  margin: 0 5px;
+
+  &:hover:not(.active) {
+    > div {
+      background-color: var(--bit-bg-heavy);
+    }
+  }
+
+  &.active {
+    color: var(--bit-accent-color, #6c5ce7);
+
+    &:after {
+      background-color: var(--bit-accent-color, #6c5ce7);
+      height: 4px;
+    }
+  }
+
+  &:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: transparent;
+    height: 0;
+    border-top-right-radius: 2px;
+    border-top-left-radius: 2px;
+    transition: background-color 300ms, height 300ms;
+  }
+
+  > div {
+    border-radius: 8px;
+    padding: 0 8px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    transition: background-color 300ms ease-in-out;
+  }
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.leftSide {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.navigation {
+  display: flex;
+  list-style: none;
+  height: 100%;
+  padding-left: 28px;
+  @media screen and (max-width: 768px) {
+    padding-left: 6px;
+  }
+
+  > li {
+    display: block;
+    margin-right: 16px;
+    height: 100%;
+  }
+}
+
+.rightSide {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  > * {
+    margin-right: 12px;
+    &:last-child {
+      margin-right: 16px;
+    }
+  }
+  .widgets {
+    height: 100%;
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+    > nav {
+      > a {
+        padding: 0;
+        &:last-child {
+          margin-right: 0;
+        }
+      }
+    }
+  }
+  .widget {
+    font-size: 17px;
+  }
+}
+
+.useBox {
+  --bit-drawer-margin: 14px;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.leftSide {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.navigation {
+  display: flex;
+  list-style: none;
+  height: 100%;
+  padding-left: 28px;
+  @media screen and (max-width: 768px) {
+    padding-left: 6px;
+  }
+
+  > li {
+    display: block;
+    margin-right: 16px;
+    height: 100%;
+  }
+}
+
+.rightSide {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  > * {
+    margin-right: 12px;
+    &:last-child {
+      margin-right: 16px;
+    }
+  }
+  .widgets {
+    height: 100%;
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+    > nav {
+      > a {
+        padding: 0;
+        &:last-child {
+          margin-right: 0;
+        }
+      }
+    }
+  }
+  .widget {
+    font-size: 17px;
+  }
+}
+
+.useBox {
+  --bit-drawer-margin: 14px;
+}
