@@ -325,6 +325,20 @@ describe('custom env', function () {
       expect(() => helper.command.status()).to.not.throw();
     });
   });
+  describe('rename custom env', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      const envName = helper.env.setCustomEnv();
+      const envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
+      helper.command.rename(envName, 'new-env');
+    });
+    it('should update components using the custom-env with the new name', () => {
+      const env = helper.env.getComponentEnv('comp1');
+      expect(env).to.include('new-env');
+    });
+  });
 });
 
 function getEnvIdFromModel(compModel: any): string {
