@@ -2085,10 +2085,10 @@ workflows:
           requires:
             - checkout_code
             - harmony_publish_to_gcloud
-      - docker_non_root_build:
-          requires:
-            - checkout_code
-            - harmony_publish_to_gcloud
+      # - docker_non_root_build:
+      #     requires:
+      #       - checkout_code
+      #       - harmony_publish_to_gcloud
       - docker_non_root_build_node_14:
           requires:
             - checkout_code
