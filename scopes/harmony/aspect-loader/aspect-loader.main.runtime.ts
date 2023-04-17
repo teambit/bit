@@ -495,7 +495,7 @@ export class AspectLoaderMain {
     const ids = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
     const hasVersions = ids.every((id) => id.hasVersion());
     const useCache = hasVersions; // if all components has versions, try to use the cached aspects
-    const components = await scope.import(ids, { useCache, throwIfNotExist: true });
+    const components = await scope.import(ids, { useCache, throwIfNotExist: true, preferDependencyGraph: true });
 
     // don't use `await scope.loadAspectsFromCapsules(components, true);`
     // it won't work for globalScope because `this !== scope.aspectLoader` (this instance
