@@ -182,6 +182,10 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     if (releaseFlags.length > 1) {
       throw new BitError('you can use only one of the following - patch, minor, major, pre-release');
     }
+    // @ts-ignore this happens when running `bit tag -m ""`.
+    if (message === true) {
+      message = '';
+    }
 
     const getReleaseType = (): ReleaseType => {
       if (increment) {
