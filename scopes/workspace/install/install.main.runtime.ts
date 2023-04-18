@@ -187,8 +187,11 @@ export class InstallMain {
   }
 
   private async _installModules(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
+    const pm = this.dependencyResolver.getPackageManager();
     this.logger.console(
-      `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
+      `installing dependencies in workspace using ${pm?.name} (${chalk.cyan(
+        this.dependencyResolver.getPackageManagerName()
+      )})`
     );
     this.logger.debug(`installing dependencies in workspace with options`, options);
     const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
@@ -251,7 +254,11 @@ export class InstallMain {
         rootPolicy: mergedRootPolicy,
       });
       if (options?.compile) {
+        const compileStartTime = process.hrtime();
+        const compileOutputMessage = `compiling components`;
+        this.logger.setStatusLine(compileOutputMessage);
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
+        this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
       await this.link(linkOpts);
       prevManifests.add(hash(current.manifests));

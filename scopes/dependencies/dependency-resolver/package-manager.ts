@@ -51,6 +51,8 @@ export type PackageManagerInstallOptions = {
   includeOptionalDeps?: boolean;
 
   updateAll?: boolean;
+
+  hidePackageManagerOutput?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -78,6 +80,10 @@ export interface InstallationContext {
 }
 
 export interface PackageManager {
+  /**
+   * Name of the package manager
+   */
+  name: string;
   /**
    * install dependencies
    * @param componentDirectoryMap
