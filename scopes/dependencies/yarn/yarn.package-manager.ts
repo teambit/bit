@@ -377,12 +377,13 @@ export class YarnPackageManager implements PackageManager {
     const defaultAuthProp = this.getAuthProp(defaultRegistry);
 
     const globalFolder = this.getGlobalFolder(options.cacheRootDir);
+    const cacheFolder = join(globalFolder, 'cache');
     const data = {
       enableGlobalCache: true,
       nodeLinker: options.nodeLinker === 'isolated' ? 'pnpm' : 'node-modules',
       installStatePath: `${rootDirPath}/.yarn/install-state.gz`,
       pnpUnpluggedFolder: `${rootDirPath}/.yarn/unplugged`,
-      cacheFolder: join(globalFolder, 'cache'),
+      cacheFolder,
       npmScopes: scopedRegistries,
       virtualFolder: `${rootDirPath}/.yarn/__virtual__`,
       npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
@@ -413,7 +414,7 @@ export class YarnPackageManager implements PackageManager {
 
     // Yarn  v4 stopped automatically creating the cache folder.
     // If we don't do it ourselves, Yarn will fail with: "ENOENT: no such file or directory, copyfile..."
-    await fs.mkdir(config.values.get('cacheFolder'), { recursive: true });
+    await fs.mkdir(cacheFolder, { recursive: true });
 
     return config;
   }
