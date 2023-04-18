@@ -38,7 +38,6 @@ import ComponentsList from '@teambit/legacy/dist/consumer/component/components-l
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import {
   PathOsBased,
   PathOsBasedRelative,
@@ -135,6 +134,7 @@ export class Workspace implements ComponentFactory {
   private _cachedListIds?: ComponentID[];
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
+  private componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized;
   constructor(
     /**
      * private pubsub.
@@ -205,7 +205,7 @@ export class Workspace implements ComponentFactory {
     this.validateConfig();
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     // memoize this method to improve performance.
-    this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile = memoize(
+    this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized = memoize(
       this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile.bind(this),
       {
         primitive: true,
@@ -597,6 +597,7 @@ export class Workspace implements ComponentFactory {
     this.componentLoader.clearCache();
     this.scope.clearCache();
     this.componentList = new ComponentsList(this.consumer);
+    this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized.clear();
   }
 
   clearComponentCache(id: ComponentID) {
@@ -931,7 +932,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   componentPackageName(component: Component): string {
-    return componentIdToPackageName(component.state._consumer);
+    return this.dependencyResolver.getPackageName(component);
   }
 
   private componentDirFromLegacyId(
@@ -973,7 +974,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (bitMapEntry && bitMapEntry.defaultScope) {
       return bitMapEntry.defaultScope;
     }
-    return this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(relativeComponentDir, name);
+    return this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized(relativeComponentDir, name);
   }
 
   get defaultScope() {
@@ -1111,6 +1112,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       { defaultScope: scopeName },
       { mergeIntoExisting: true, ignoreVersion: true }
     );
+    this.config.defaultScope = scopeName;
     await config.workspaceConfig?.write({ dir: path.dirname(config.workspaceConfig.path) });
   }
 
@@ -1210,10 +1212,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     let componentConfigFile;
     if (relativeComponentDir) {
       const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
-      const defaultScopeFromVariantsOrWs = await this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(
-        relativeComponentDir,
-        name
-      );
+      const defaultScopeFromVariantsOrWs =
+        await this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized(relativeComponentDir, name);
       componentConfigFile = await ComponentConfigFile.load(
         absComponentDir,
         this.createAspectList.bind(this),

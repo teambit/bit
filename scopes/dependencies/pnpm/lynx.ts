@@ -169,6 +169,7 @@ export async function install(
     rootComponents?: boolean;
     rootComponentsForCapsules?: boolean;
     includeOptionalDeps?: boolean;
+    hidePackageManagerOutput?: boolean;
   } & Pick<
     InstallOptions,
     'publicHoistPattern' | 'hoistPattern' | 'nodeVersion' | 'engineStrict' | 'peerDependencyRules'
@@ -216,6 +217,7 @@ export async function install(
   });
   const opts: InstallOptions = {
     allProjects,
+    autoInstallPeers: false,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
     dir: rootDir,
@@ -226,6 +228,7 @@ export async function install(
     modulesCacheMaxAge: 0,
     neverBuiltDependencies: ['core-js'],
     registries: registriesMap,
+    resolutionMode: 'highest',
     rawConfig: authConfig,
     hooks: { readPackage },
     externalDependencies,
@@ -247,16 +250,19 @@ export async function install(
     depth: options.updateAll ? Infinity : 0,
   };
 
-  const stopReporting = initDefaultReporter({
-    context: {
-      argv: [],
-    },
-    reportingOptions: {
-      appendOnly: false,
-      throttleProgress: 200,
-    },
-    streamParser,
-  });
+  let stopReporting;
+  if (!options.hidePackageManagerOutput) {
+    stopReporting = initDefaultReporter({
+      context: {
+        argv: [],
+      },
+      reportingOptions: {
+        appendOnly: false,
+        throttleProgress: 200,
+      },
+      streamParser,
+    });
+  }
   try {
     await installsRunning[rootDir];
     installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
@@ -265,7 +271,9 @@ export async function install(
   } catch (err: any) {
     throw pnpmErrorToBitError(err);
   } finally {
-    stopReporting();
+    if (stopReporting) {
+      stopReporting();
+    }
   }
   if (options.rootComponents) {
     const modulesState = await readModulesManifest(path.join(rootDir, 'node_modules'));

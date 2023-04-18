@@ -112,7 +112,7 @@ export default class NodeModuleLinker {
       bindingPrefix: legacyComponent.bindingPrefix,
       id: componentId,
       allowNonScope: true,
-      defaultScope: this._getDefaultScope(legacyComponent),
+      defaultScope: component.id.scope,
       extensions: legacyComponent.extensions,
     });
 

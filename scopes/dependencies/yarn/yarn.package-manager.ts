@@ -46,6 +46,8 @@ type BackupJsons = {
 };
 
 export class YarnPackageManager implements PackageManager {
+  readonly name = 'yarn';
+
   constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
 
   async install(
@@ -381,7 +383,6 @@ export class YarnPackageManager implements PackageManager {
       installStatePath: `${rootDirPath}/.yarn/install-state.gz`,
       pnpUnpluggedFolder: `${rootDirPath}/.yarn/unplugged`,
       cacheFolder: join(globalFolder, 'cache'),
-      pnpDataPath: `${rootDirPath}/.pnp.meta.json`,
       npmScopes: scopedRegistries,
       virtualFolder: `${rootDirPath}/.yarn/__virtual__`,
       npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
@@ -409,6 +410,10 @@ export class YarnPackageManager implements PackageManager {
     }
     // TODO: node-modules is hardcoded now until adding support for pnp.
     config.use('<bit>', data, rootDirPath, { overwrite: true });
+
+    // Yarn  v4 stopped automatically creating the cache folder.
+    // If we don't do it ourselves, Yarn will fail with: "ENOENT: no such file or directory, copyfile..."
+    await fs.mkdir(config.values.get('cacheFolder'), { recursive: true });
 
     return config;
   }
@@ -473,7 +478,7 @@ export class YarnPackageManager implements PackageManager {
       report,
     };
     // const candidates = await resolver.getCandidates(descriptor, new Map(), resolveOptions);
-    const candidates = await resolver.getCandidates(descriptor, new Map(), resolveOptions);
+    const candidates = await resolver.getCandidates(descriptor, {}, resolveOptions);
     const parsedRange = structUtils.parseRange(candidates[0].reference);
     const version = parsedRange.selector;
     return {

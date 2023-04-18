@@ -81,7 +81,7 @@ export class RemoveCmd implements Command {
       return `${chalk.green('successfully soft-removed the following components:')}
 ${removedCompIds.join('\n')}
 
-${chalk.bold('to update the remote, please tag/snap and then export')}`;
+${chalk.bold('to update the remote, please tag/snap and then export. to revert, please use "bit recover"')}`;
     }
 
     if (deleteFiles) {

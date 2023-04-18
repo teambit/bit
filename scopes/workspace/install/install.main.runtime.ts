@@ -187,8 +187,11 @@ export class InstallMain {
   }
 
   private async _installModules(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
+    const pm = this.dependencyResolver.getPackageManager();
     this.logger.console(
-      `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
+      `installing dependencies in workspace using ${pm?.name} (${chalk.cyan(
+        this.dependencyResolver.getPackageManagerName()
+      )})`
     );
     this.logger.debug(`installing dependencies in workspace with options`, options);
     const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
@@ -235,8 +238,6 @@ export class InstallMain {
       // are not added to the manifests.
       // This is an issue when installation is done using root components.
       hasMissingLocalComponents = hasRootComponents && hasComponentsFromWorkspaceInMissingDeps(current);
-      this.workspace.consumer.componentLoader.clearComponentsCache();
-      this.workspace.clearCache();
       await installer.installComponents(
         this.workspace.path,
         current.manifests,
@@ -253,13 +254,21 @@ export class InstallMain {
         rootPolicy: mergedRootPolicy,
       });
       if (options?.compile) {
+        const compileStartTime = process.hrtime();
+        const compileOutputMessage = `compiling components`;
+        this.logger.setStatusLine(compileOutputMessage);
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
+        this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
       await this.link(linkOpts);
       prevManifests.add(hash(current.manifests));
+      // We need to clear cache before creating the new component manifests.
+      this.workspace.consumer.componentLoader.clearComponentsCache();
+      this.workspace.clearCache();
       current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
       installCycle += 1;
     } while ((!prevManifests.has(hash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
+    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
   }
@@ -417,10 +426,6 @@ export class InstallMain {
         )
       )
     );
-  }
-
-  private async _getAllUsedApps(): Promise<Component[]> {
-    return this.app.listAppsFromComponents();
   }
 
   private async _getAllUsedEnvIds(): Promise<string[]> {

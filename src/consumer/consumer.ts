@@ -737,8 +737,9 @@ export default class Consumer {
       await fs.ensureDir(baseDir);
       const backupPath = path.join(baseDir, `.bitmap-${this.currentDateAndTimeToFileName()}`);
       await fs.copyFile(this.bitMap.mapPath, backupPath);
-    } catch (err) {
-      // it's nice to have. don't kill the process if something goes wrong.
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return; // no such file or directory, meaning the .bitmap file doesn't exist (yet)
+      // it's a nice to have feature. don't kill the process if something goes wrong.
       logger.error(`failed to backup bitmap`, err);
     }
   }

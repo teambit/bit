@@ -17,6 +17,11 @@ export function replacePlaceHolderForPackageValue(
 ): string {
   if (typeof template !== 'string') return template;
 
+  // kind of a hack, but couldn't find a better way to do it. for types components, seems like the mainFile is empty
+  if (template.includes('{main}.js') && mainFile?.endsWith('.d.ts')) {
+    return '';
+  }
+
   const values = {
     main: () => (mainFile ? getMainFileWithoutExtension(mainFile) : mainFile),
     name: () => replaceSlashesWithDots(name),
