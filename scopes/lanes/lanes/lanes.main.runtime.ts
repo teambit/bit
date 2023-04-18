@@ -170,8 +170,13 @@ export class LanesMain {
             (
               await this.getLaneComponentIds(lane)
             ).map(async (laneCompId) => {
-              if (await this.scope.isComponentRemoved(laneCompId)) return undefined;
-              return { id: laneCompId._legacy, head: laneCompId.version as string };
+              try {
+                if (await this.scope.isComponentRemoved(laneCompId)) return undefined;
+                return { id: laneCompId._legacy, head: laneCompId.version as string };
+              } catch (e: any) {
+                this.logger.warn(`failed to get component ${laneCompId.toString()} from scope. error: ${e.message}`);
+                return undefined;
+              }
             })
           )
         );
