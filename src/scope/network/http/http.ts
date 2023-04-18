@@ -276,7 +276,11 @@ export class Http implements Network {
     const opts = this.addAgentIfExist({
       method: 'post',
       body: JSON.stringify(idsPerType),
-      headers: this.getHeaders({ 'delete-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
+      headers: this.getHeaders({
+        'Content-Type': 'application/json',
+        'delete-options': JSON.stringify(options),
+        'x-verb': Verb.WRITE,
+      }),
     });
     const res = await fetch(`${this.url}/${route}`, opts);
     logger.debug(
@@ -289,7 +293,7 @@ export class Http implements Network {
       throw new UnexpectedNetworkError(results.message);
     }
     await this.throwForNonOkStatus(res);
-    return results.data;
+    return [RemovedObjects.fromObjects(results.data)];
   }
 
   async action<Options, Result>(name: string, options: Options): Promise<Result> {
