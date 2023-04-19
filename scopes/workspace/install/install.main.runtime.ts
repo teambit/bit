@@ -107,6 +107,8 @@ export class InstallMain {
    * @memberof Workspace
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions): Promise<ComponentMap<string>> {
+    // set workspace in install context
+    this.workspace.inInstallContext = true;
     if (packages && packages.length) {
       await this._addPackages(packages, options);
     }
@@ -136,7 +138,9 @@ export class InstallMain {
       }
     }
     await pMapSeries(this.preInstallSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
-    return this._installModules(options);
+    const res = await this._installModules(options);
+    this.workspace.inInstallContext = false;
+    return res;
   }
 
   registerPreLink(fn: PreLink) {
