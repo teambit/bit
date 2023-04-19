@@ -17,7 +17,7 @@ import { CliCmd, CliGenerateCmd } from './cli.cmd';
 import { HelpCmd } from './help.cmd';
 
 export type CommandList = Array<Command>;
-export type OnStart = (hasWorkspace: boolean) => Promise<void>;
+export type OnStart = (hasWorkspace: boolean, currentCommand: string) => Promise<void>;
 
 export type OnStartSlot = SlotRegistry<OnStart>;
 export type CommandsSlot = SlotRegistry<CommandList>;
@@ -100,7 +100,8 @@ export class CLIMain {
 
   private async invokeOnStart(hasWorkspace: boolean) {
     const onStartFns = this.onStartSlot.values();
-    await pMapSeries(onStartFns, (onStart) => onStart(hasWorkspace));
+    const currentCommand = process.argv[2];
+    await pMapSeries(onStartFns, (onStart) => onStart(hasWorkspace, currentCommand));
   }
 
   private setDefaults(command: Command) {

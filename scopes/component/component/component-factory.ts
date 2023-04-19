@@ -16,6 +16,23 @@ export type ResolveAspectsOptions = FilterAspectsOptions & {
 };
 
 export type LoadAspectsOptions = {
+  /* `throwOnError` is an optional parameter that can be passed to the loadAspects method in the `ComponentFactory` interface. If
+  set to `true`, it will cause the method to throw an error if an error occurs during its execution. If set to `false`
+  or not provided, the method will print a warning instead of throwing it. */
+  throwOnError?: boolean;
+  /* `hideMissingModuleError` is an optional parameter that can be passed to the `loadAspects` method in the
+  `ComponentFactory` interface. If set to `true`, it will prevent the method from throwing/printing an error if a required module
+  is missing during the loading of an aspect. Instead, it will continue loading the other
+  aspects. If set to `false` or not provided, the method will print/throw an error if a required module is missing.
+  (considering throwOnError as well) */
+  hideMissingModuleError?: boolean;
+
+  /* The `ignoreErrors` property is an optional boolean parameter that can be passed to the `LoadAspectsOptions` object in
+  the `ComponentFactory` interface. If set to `true`, it will cause the `loadAspects` method to ignore any errors that
+  occur during the loading of aspects and continue loading the other aspects. If set to `false` or not provided, the
+  method will print/throw an error if a required module is missing or if any other error occurs during the loading of
+  aspects. */
+  ignoreErrors?: boolean;
   [key: string]: any;
 };
 

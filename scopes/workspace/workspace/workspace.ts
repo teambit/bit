@@ -131,6 +131,11 @@ export class Workspace implements ComponentFactory {
   componentsScopeDirsMap: ComponentScopeDirMap;
   componentLoader: WorkspaceComponentLoader;
   bitMap: BitMap;
+  /**
+   * Indicate that we are now running installaion process
+   * This is important to know to ignore missing modules across different places
+   */
+  inInstallContext = false;
   private _cachedListIds?: ComponentID[];
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
@@ -568,7 +573,10 @@ export class Workspace implements ComponentFactory {
       try {
         this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
         this.logger.debug(`trying to load self as aspect with id ${component.id.toString()}`);
-        await this.loadAspects([component.id.toString()], undefined, component.id.toString());
+        // ignore missing modules when loading self
+        await this.loadAspects([component.id.toString()], undefined, component.id.toString(), {
+          hideMissingModuleError: true,
+        });
         // In most cases if the load self as aspect failed we don't care about it.
         // we only need it in specific cases to work, but this workspace.get runs on different
         // cases where it might fail (like when importing aspect, after the import objects

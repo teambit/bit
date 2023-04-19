@@ -10,16 +10,17 @@ import { compact, uniq, difference, groupBy } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { ExtensionManifest, Aspect } from '@teambit/harmony';
-import { Component, ComponentID, ResolveAspectsOptions } from '@teambit/component';
+import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
 import { Logger } from '@teambit/logger';
 import { EnvsMain } from '@teambit/envs';
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
 
-export type ScopeLoadAspectsOptions = {
+export type ScopeLoadAspectsOptions = LoadAspectsOptions & {
   useScopeAspectsCapsule?: boolean;
   packageManagerConfigRootDir?: string;
+  workspaceName?: string;
 };
 
 export class ScopeAspectsLoader {
@@ -64,7 +65,7 @@ export class ScopeAspectsLoader {
       return module.default || module;
     });
 
-    await this.aspectLoader.loadExtensionsByManifests(manifests, true);
+    await this.aspectLoader.loadExtensionsByManifests(manifests, undefined, { throwOnError: true });
   }
 
   private localAspects: string[] = [];
@@ -145,6 +146,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     lane?: Lane,
     opts: {
       packageManagerConfigRootDir?: string;
+      workspaceName?: string;
     } = {}
   ): Promise<{ manifests: ManifestOrAspect[]; potentialPluginsIds: string[] }> {
     ids = uniq(ids);
@@ -229,7 +231,7 @@ needed-for: ${neededFor || '<unknown>'}`);
 
   async getResolvedAspects(
     components: Component[],
-    opts?: { skipIfExists?: boolean; packageManagerConfigRootDir?: string }
+    opts?: { skipIfExists?: boolean; packageManagerConfigRootDir?: string; workspaceName?: string }
   ): Promise<RequireableComponent[]> {
     if (!components || !components.length) return [];
     const network = await this.isolator.isolateComponents(
@@ -249,6 +251,7 @@ needed-for: ${neededFor || '<unknown>'}`);
         },
         context: {
           aspects: true,
+          workspaceName: opts?.workspaceName,
         },
       },
       this.scope.legacyScope
@@ -324,7 +327,7 @@ needed-for: ${neededFor || '<unknown>'}`);
   async requireAspects(
     components: Component[],
     throwOnError = false,
-    opts: { packageManagerConfigRootDir?: string } = {}
+    opts: { packageManagerConfigRootDir?: string; workspaceName?: string } = {}
   ): Promise<Array<ExtensionManifest | Aspect>> {
     const requireableExtensions = await this.getResolvedAspects(components, opts);
     if (!requireableExtensions) {
