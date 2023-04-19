@@ -10,6 +10,7 @@ import { partition, mergeWith, merge } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';
 import { MergeConflictFile } from './merge-conflict-file';
+import { WorkspaceLoadAspectsOptions } from './workspace-aspects-loader';
 
 export class AspectsMerger {
   private consumer: Consumer;
@@ -319,10 +320,10 @@ export class AspectsMerger {
   private async loadExtensions(
     extensions: ExtensionDataList,
     originatedFrom?: ComponentID,
-    throwOnError = false
+    opts: WorkspaceLoadAspectsOptions = {}
   ): Promise<void> {
     const workspaceAspectsLoader = this.workspace.getWorkspaceAspectsLoader();
-    return workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, throwOnError);
+    return workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, opts);
   }
 
   /**
