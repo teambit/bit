@@ -65,7 +65,7 @@ export class ScopeAspectsLoader {
       return module.default || module;
     });
 
-    await this.aspectLoader.loadExtensionsByManifests(manifests, true);
+    await this.aspectLoader.loadExtensionsByManifests(manifests, undefined, { throwOnError: true });
   }
 
   private localAspects: string[] = [];

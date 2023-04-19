@@ -5,6 +5,7 @@ import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { GLOBAL_SCOPE, DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { MainRuntime } from '@teambit/cli';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
+import { BitError } from '@teambit/bit-error';
 import type { LoggerMain } from '@teambit/logger';
 import { ComponentID, Component, FilterAspectsOptions } from '@teambit/component';
 import { Logger, LoggerAspect } from '@teambit/logger';
@@ -14,7 +15,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { loadBit } from '@teambit/bit';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
-import { difference, compact, flatten, intersection, uniqBy } from 'lodash';
+import { difference, compact, flatten, intersection, uniqBy, some } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
@@ -43,6 +44,22 @@ export type ResolvedAspect = {
   aspectPath: string;
   runtimePath: string | null;
   aspectFilePath: string | null;
+};
+
+export type LoadExtByManifestContext = {
+  seeders?: string[];
+  neededFor?: string;
+};
+
+export type LoadExtByManifestOptions = {
+  throwOnError?: boolean;
+  hideMissingModuleError?: boolean;
+  ignoreErrors?: boolean;
+  /**
+   * If this is enabled then we will show loading error only once for a given extension
+   * (even if it was actually try to load it few times by different components for example)
+   */
+  unifyErrorsByExtId?: boolean;
 };
 
 type OnAspectLoadError = (err: Error, id: ComponentID) => Promise<boolean>;
@@ -93,6 +110,7 @@ export type MainAspect = {
 
 export class AspectLoaderMain {
   private inMemoryConfiguredAspects: string[] = [];
+  private failedToLoadExt = new Set<string>();
 
   constructor(
     private logger: Logger,
@@ -384,7 +402,7 @@ export class AspectLoaderMain {
    */
   async loadRequireableExtensions(requireableExtensions: RequireableComponent[], throwOnError = false): Promise<void> {
     const manifests = await this.getManifestsFromRequireableExtensions(requireableExtensions, throwOnError);
-    return this.loadExtensionsByManifests(manifests, throwOnError);
+    return this.loadExtensionsByManifests(manifests, undefined, { throwOnError });
   }
 
   async getManifestsFromRequireableExtensions(
@@ -574,9 +592,25 @@ export class AspectLoaderMain {
 
   async loadExtensionsByManifests(
     extensionsManifests: Array<ExtensionManifest | Aspect>,
-    throwOnError = true,
-    seeders: string[] = []
+    context: LoadExtByManifestContext = {
+      seeders: [],
+    },
+    options: LoadExtByManifestOptions = {
+      throwOnError: true,
+      hideMissingModuleError: false,
+      ignoreErrors: false,
+      unifyErrorsByExtId: true,
+    }
   ) {
+    const neededFor = context.neededFor;
+    const seeders = context.seeders || [];
+    const defaultLoadExtByManifestOptions = {
+      throwOnError: true,
+      hideMissingModuleError: false,
+      ignoreErrors: false,
+      unifyErrorsByExtId: true,
+    };
+    const mergedOptions = { ...defaultLoadExtByManifestOptions, ...options };
     try {
       const manifests = extensionsManifests.filter((manifest) => {
         const isValid = this.isValidAspect(manifest);
@@ -604,15 +638,31 @@ export class AspectLoaderMain {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts
       const errorMsg = e.message.split('\n')[0];
-      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg);
+      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg, neededFor, e);
       this.logger.error(warning, e);
+      if (mergedOptions.ignoreErrors) return;
+      if (e.code === 'MODULE_NOT_FOUND' && mergedOptions.hideMissingModuleError) return;
+      if (mergedOptions.unifyErrorsByExtId) {
+        const needToPrint = some(ids, (id) => !this.failedToLoadExt.has(id));
+        if (!needToPrint) return;
+        ids.forEach((id) => {
+          this.failedToLoadExt.add(id);
+          this.envs.addFailedToLoadExtension(id);
+          const parsedId = ComponentID.tryFromString(id);
+          if (parsedId) {
+            this.failedToLoadExt.add(parsedId.fullName);
+            this.envs.addFailedToLoadExtension(parsedId.fullName);
+          }
+        });
+      }
       if (this.logger.isLoaderStarted) {
+        if (mergedOptions.throwOnError) throw new BitError(warning);
         this.logger.consoleFailure(warning);
       } else {
         this.logger.consoleWarning(warning);
         this.logger.consoleWarning(e);
       }
-      if (throwOnError) {
+      if (mergedOptions.throwOnError) {
         throw e;
       }
     }
