@@ -343,6 +343,7 @@ once done, to continue working, please run "bit cc"`
 
   /**
    * returns null if we can't determine whether it's on the lane or not.
+   * if throwForDivergeDataErr is false, it also returns null when divergeData wasn't able to get Version objects or failed for whatever reason.
    *
    * sadly, there are not good tests for this. it pretty complex to create them as it involves multiple scopes and
    * packages installations. be careful when changing this.
@@ -350,7 +351,7 @@ once done, to continue working, please run "bit cc"`
    * it's needed for importing artifacts to know whether the artifact could be found on the origin scope or on the
    * lane-scope
    */
-  async isIdOnLane(id: BitId, lane?: Lane | null): Promise<boolean | null> {
+  async isIdOnLane(id: BitId, lane?: Lane | null, throwForDivergeDataErr = true): Promise<boolean | null> {
     if (!lane) return false;
 
     // it's possible that main was merged to the lane, so the ref in the lane object is actually a tag.
@@ -373,6 +374,7 @@ once done, to continue working, please run "bit cc"`
     const divergeData = await getDivergeData({
       repo: this.objects,
       modelComponent: component,
+      throws: throwForDivergeDataErr,
       targetHead: component.head, // target is main
       sourceHead: Ref.from(laneIdWithDifferentVersion.version as string), // source is lane
     });

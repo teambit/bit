@@ -870,7 +870,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   async importAndGetMany(ids: Array<ComponentID>): Promise<Component[]> {
     await this.importCurrentLaneIfMissing();
-    await this.scope.import(ids, { reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion() });
+    await this.scope.import(ids, { reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(), preferDependencyGraph: true });
     return this.componentLoader.getMany(ids);
   }
 
