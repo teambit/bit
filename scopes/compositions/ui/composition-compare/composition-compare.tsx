@@ -6,7 +6,6 @@ import {
   useCompareQueryParam,
   useUpdatedUrlFromQuery,
 } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
-import { ComponentModel } from '@teambit/component';
 import { CompareSplitLayoutPreset } from '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import queryString from 'query-string';
@@ -122,6 +121,8 @@ export function CompositionCompare(props: CompositionCompareProps) {
             component={baseCompModel}
             selected={selectedBaseComp}
             queryParams={baseCompQueryParams}
+            forceHeight={undefined}
+            innerBottomPadding={50}
           />
         </CompositionContextProvider>
       </div>
@@ -142,6 +143,8 @@ export function CompositionCompare(props: CompositionCompareProps) {
             component={compareCompModel}
             selected={selectedCompareComp}
             queryParams={compareCompQueryParams}
+            forceHeight={undefined}
+            innerBottomPadding={50}
           />
         </CompositionContextProvider>
       </div>
