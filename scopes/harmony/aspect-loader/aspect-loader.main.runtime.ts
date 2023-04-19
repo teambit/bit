@@ -638,7 +638,7 @@ export class AspectLoaderMain {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts
       const errorMsg = e.message.split('\n')[0];
-      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg, neededFor, e);
+      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg, neededFor);
       this.logger.error(warning, e);
       if (mergedOptions.ignoreErrors) return;
       if (e.code === 'MODULE_NOT_FOUND' && mergedOptions.hideMissingModuleError) return;
