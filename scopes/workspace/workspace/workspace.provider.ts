@@ -230,7 +230,10 @@ export default async function provideWorkspace(
   cli.register(...commands);
   component.registerHost(workspace);
 
-  cli.registerOnStart(async () => {
+  cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string) => {
+    if (currentCommand === 'install') {
+      workspace.inInstallContext = true;
+    }
     await workspace.importCurrentLaneIfMissing();
     const aspects = await workspace.loadAspects(
       aspectLoader.getNotLoadedConfiguredExtensions(),
