@@ -33,7 +33,7 @@ export class ScopeComponentLoader {
       id._legacy.hasScope() &&
       !this.importedComponentsCache.get(id.toString())
     ) {
-      await this.scope.import([id]);
+      await this.scope.import([id], { preferDependencyGraph: true });
       this.importedComponentsCache.set(id.toString(), true);
       modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
     }

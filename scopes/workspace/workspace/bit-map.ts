@@ -7,6 +7,7 @@ import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
+import EnvsAspect from '@teambit/envs';
 /**
  * consider extracting to a new component.
  * (pro: making Workspace aspect smaller. con: it's an implementation details of the workspace)
@@ -49,6 +50,10 @@ export class BitMap {
     this.legacyBitMap.markAsChanged();
 
     return true; // changes have been made
+  }
+
+  markAsChanged() {
+    this.legacyBitMap.markAsChanged();
   }
 
   removeComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist: boolean): boolean {
@@ -160,6 +165,31 @@ export class BitMap {
     if (sourceId.scope !== targetId.scope) {
       this.setDefaultScope(targetId, targetId.scope);
     }
+  }
+
+  /**
+   * helpful when reaming an aspect and this aspect is used in the config of other components.
+   */
+  renameAspectInConfig(sourceId: ComponentID, targetId: ComponentID) {
+    this.legacyBitMap.components.forEach((componentMap) => {
+      const config = componentMap.config;
+      if (!config) return;
+      Object.keys(config).forEach((aspectId) => {
+        if (aspectId === sourceId.toString()) {
+          config[targetId.toString()] = config[aspectId];
+          delete config[aspectId];
+          this.markAsChanged();
+        }
+        if (aspectId === EnvsAspect.id) {
+          const envConfig = config[aspectId];
+          if (envConfig !== REMOVE_EXTENSION_SPECIAL_SIGN && envConfig.env === sourceId.toString()) {
+            envConfig.env = targetId.toString();
+            this.markAsChanged();
+          }
+        }
+      });
+      componentMap.config = config;
+    });
   }
 
   removeComponent(id: ComponentID) {

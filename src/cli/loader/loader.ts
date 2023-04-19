@@ -1,4 +1,5 @@
 import ora, { Ora, PersistOptions } from 'ora';
+import prettyTime from 'pretty-time';
 
 import { SPINNER_TYPE } from '../../constants';
 
@@ -52,7 +53,11 @@ export class Loader {
     return this;
   }
 
-  succeed(text?: string): Loader {
+  succeed(text?: string, startTime?: [number, number]): Loader {
+    if (text && startTime) {
+      const duration = process.hrtime(startTime);
+      text = `${text} (completed in ${prettyTime(duration)})`;
+    }
     if (this.spinner) this.spinner.succeed(text);
     return this;
   }

@@ -14,7 +14,7 @@ import { PostSign } from '@teambit/legacy/dist/scope/actions';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { Log } from '@teambit/legacy/dist/scope/models/version';
+import Version, { Log } from '@teambit/legacy/dist/scope/models/version';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import { LaneId } from '@teambit/lane-id';
@@ -155,9 +155,16 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
   private async exportExtensionsDataIntoScopes(components: ConsumerComponent[], buildStatus: BuildStatus, lane?: Lane) {
     const objectList = new ObjectList();
     const modifiedLog = await this.getModifiedLog(buildStatus);
+    const idsHashMaps = {};
     const signComponents = await mapSeries(components, async (component) => {
       component.buildStatus = buildStatus;
       const objects = await this.snapping._getObjectsToEnrichComp(component, modifiedLog);
+      const versionHash = objects
+        .find((obj) => obj instanceof Version)
+        ?.hash()
+        .toString();
+      if (!versionHash) throw new Error(`Version object is missing for ${component.id.toString()}`);
+      idsHashMaps[versionHash] = component.id.toString();
       const scopeName = component.scope as string;
       const objectToMerge = await ObjectList.fromBitObjects(objects);
       objectToMerge.addScopeName(scopeName);
@@ -173,6 +180,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       persist: true,
       sign: true,
       signComponents: signComponents.map((id) => id.toString()),
+      idsHashMaps,
     });
   }
 

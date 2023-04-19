@@ -21,6 +21,8 @@ import { join } from 'path';
 import { readConfig } from './read-config';
 
 export class PnpmPackageManager implements PackageManager {
+  readonly name = 'pnpm';
+
   private readConfig = memoize(readConfig);
   constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
 
@@ -34,9 +36,12 @@ export class PnpmPackageManager implements PackageManager {
 
     this.logger.debug(`running installation in root dir ${rootDir}`);
     this.logger.debug('components manifests for installation', manifests);
-    this.logger.setStatusLine('installing dependencies using pnpm');
-    // turn off the logger because it interrupts the pnpm output
-    this.logger.off();
+    if (!installOptions.hidePackageManagerOutput) {
+      // this.logger.setStatusLine('installing dependencies using pnpm');
+      // turn off the logger because it interrupts the pnpm output
+      this.logger.console('-------------------------PNPM OUTPUT-------------------------');
+      this.logger.off();
+    }
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
@@ -70,13 +75,16 @@ export class PnpmPackageManager implements PackageManager {
         sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
         pnpmHomeDir: config.pnpmHomeDir,
         updateAll: installOptions.updateAll,
+        hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
       },
       this.logger
     );
-    this.logger.on();
-    // Make a divider row to improve output
-    this.logger.console('-------------------------');
-    this.logger.consoleSuccess('installing dependencies using pnpm');
+    if (!installOptions.hidePackageManagerOutput) {
+      this.logger.on();
+      // Make a divider row to improve output
+      this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
+      // this.logger.consoleSuccess('installing dependencies using pnpm');
+    }
   }
 
   async getPeerDependencyIssues(

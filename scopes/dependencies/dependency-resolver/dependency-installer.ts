@@ -23,6 +23,10 @@ const DEFAULT_INSTALL_OPTIONS: InstallOptions = {
   installTeambitBit: false,
 };
 
+export type DepInstallerContext = {
+  inCapsule?: boolean;
+};
+
 export type InstallArgs = {
   rootDir: string | undefined;
   rootPolicy: WorkspacePolicy;
@@ -86,7 +90,9 @@ export class DependencyInstaller {
 
     private engineStrict?: boolean,
 
-    private peerDependencyRules?: PeerDependencyRules
+    private peerDependencyRules?: PeerDependencyRules,
+
+    private installingContext: DepInstallerContext = {}
   ) {}
 
   async install(
@@ -160,6 +166,8 @@ export class DependencyInstaller {
         manifests[dir].dependencies = Object.assign({}, manifests[dir].dependencies, linkedDeps);
       });
     }
+    const hidePackageManagerOutput = !!(this.installingContext.inCapsule && process.env.VERBOSE_PM_OUTPUT !== 'true');
+
     // Make sure to take other default if passed options with only one option
     const calculatedPmOpts = {
       ...DEFAULT_PM_INSTALL_OPTIONS,
@@ -171,6 +179,7 @@ export class DependencyInstaller {
       engineStrict: this.engineStrict,
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
       peerDependencyRules: this.peerDependencyRules,
+      hidePackageManagerOutput,
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {
@@ -196,6 +205,16 @@ export class DependencyInstaller {
       await this.cleanCompsNodeModules(componentDirectoryMap);
     }
 
+    const messagePrefix = 'running package installation';
+    const messageSuffix = `using ${this.packageManager.name}`;
+    const message = this.installingContext?.inCapsule
+      ? `(capsule) ${messagePrefix} in root dir ${this.rootDir} ${messageSuffix}`
+      : `${messagePrefix} ${messageSuffix}`;
+    if (!hidePackageManagerOutput) {
+      this.logger.setStatusLine(message);
+    }
+    const startTime = process.hrtime();
+
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
     await this.packageManager.install(
       {
@@ -205,6 +224,9 @@ export class DependencyInstaller {
       },
       calculatedPmOpts
     );
+    if (!hidePackageManagerOutput) {
+      this.logger.consoleSuccess(`done ${message}`, startTime);
+    }
     await this.runPrePostSubscribers(this.postInstallSubscriberList, 'post', args);
     return componentDirectoryMap;
   }
@@ -239,7 +261,8 @@ export class DependencyInstaller {
       rootPolicy,
       rootDir,
       componentDirectoryMap.components,
-      options
+      options,
+      this.installingContext
     );
     const manifests: Record<string, ProjectManifest> = componentDirectoryMap
       .toArray()
@@ -274,14 +297,17 @@ export class DependencyInstaller {
     type: 'pre' | 'post',
     args: InstallArgs
   ): Promise<void> {
-    let message = 'running pre install subscribers';
-    if (type === 'post') {
-      message = 'running post install subscribers';
+    const message = this.installingContext?.inCapsule
+      ? `(capsule) running ${type} install subscribers in root dir ${this.rootDir}`
+      : `running ${type} install subscribers`;
+    if (!this.installingContext?.inCapsule) {
+      this.logger.setStatusLine(message);
     }
-    this.logger.setStatusLine(message);
     await mapSeries(subscribers, async (subscriber) => {
       return subscriber(this, args);
     });
-    this.logger.consoleSuccess(message);
+    if (!this.installingContext?.inCapsule) {
+      this.logger.consoleSuccess(message);
+    }
   }
 }

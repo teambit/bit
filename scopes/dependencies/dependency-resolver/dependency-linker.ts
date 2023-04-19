@@ -22,6 +22,13 @@ import {
 import { WorkspacePolicy } from './policy';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
+/**
+ * context of the linking process.
+ */
+export type DepLinkerContext = {
+  inCapsule?: boolean;
+};
+
 export type LinkingOptions = {
   rewire?: boolean;
   /**
@@ -112,7 +119,9 @@ export class DependencyLinker {
 
     private rootDir?: string | PathAbsolute,
 
-    private linkingOptions?: LinkingOptions
+    private linkingOptions?: LinkingOptions,
+
+    private linkingContext: DepLinkerContext = {}
   ) {}
 
   async link(
@@ -121,8 +130,15 @@ export class DependencyLinker {
     componentDirectoryMap: ComponentMap<string>,
     options: LinkingOptions = {}
   ): Promise<LinkResults> {
-    this.logger.setStatusLine('linking components');
+    const outputMessage = this.linkingContext?.inCapsule
+      ? `(capsule) linking components in root dir: ${rootDir || this.rootDir}`
+      : 'linking components';
+    if (!this.linkingContext?.inCapsule) {
+      this.logger.setStatusLine(outputMessage);
+    }
     this.logger.debug('linking components with options', omit(options, ['consumer']));
+    const startTime = process.hrtime();
+
     let result: LinkResults = {};
     const finalRootDir = rootDir || this.rootDir;
     const linkingOpts = Object.assign({}, DEFAULT_LINKING_OPTIONS, this.linkingOptions || {}, options || {});
@@ -157,7 +173,9 @@ export class DependencyLinker {
       ...result,
       ...(await this.linkCoreAspectsAndLegacy(rootDir, componentIds, rootPolicy, linkingOpts)),
     };
-    this.logger.consoleSuccess('linking components');
+    if (!this.linkingContext?.inCapsule) {
+      this.logger.consoleSuccess(outputMessage, startTime);
+    }
     return result;
   }
 

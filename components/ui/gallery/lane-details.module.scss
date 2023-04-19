@@ -1,0 +1,33 @@
+.laneTitle {
+  max-width: 700px;
+
+  > p {
+    margin-bottom: 24px;
+  }
+  .titleRow {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .avatar {
+    margin-right: 4px;
+  }
+}
+.laneIcon {
+  border: 0;
+}
+
+.pillsContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  > div {
+    margin-right: 10px;
+    padding: 4px 8px;
+  }
+}
+.pillIcon {
+  margin-right: 6px;
+  font-size: var(--bit-p-md, 16px);
+}

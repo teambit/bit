@@ -1,8 +1,9 @@
 import React, { HTMLAttributes, useEffect, useState, useRef } from 'react';
-import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSelector, LaneSelectorSortBy } from '@teambit/lanes.ui.inputs.lane-selector';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
+import { LaneId } from '@teambit/lane-id';
 import classnames from 'classnames';
 
 import styles from './lane-switcher.module.scss';
@@ -13,6 +14,8 @@ export type LaneSwitcherProps = {
   sortOptions?: LaneSelectorSortBy[];
   mainIcon?: () => React.ReactNode;
   scopeIcon?: (scopeName: string) => React.ReactNode;
+  useLanes?: () => { loading?: boolean; lanesModel?: LanesModel };
+  getHref?: (lane: LaneId) => string;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LaneSwitcher({
@@ -22,6 +25,8 @@ export function LaneSwitcher({
   scopeIcon,
   sortBy,
   sortOptions,
+  useLanes = defaultUseLanes,
+  getHref = LanesModel.getLaneUrl,
   ...rest
 }: LaneSwitcherProps) {
   const { lanesModel } = useLanes();
@@ -47,7 +52,7 @@ export function LaneSwitcher({
   }, [lanesModel?.viewedLane?.id.toString()]);
 
   const selectedLane = viewedLane || mainLane;
-  const selectedLaneGalleryHref = selectedLane && LanesModel.getLaneUrl(selectedLane.id);
+  const selectedLaneGalleryHref = selectedLane && getHref(selectedLane.id);
 
   return (
     <div className={classnames(styles.laneSwitcherContainer, className)} ref={containerRef}>
@@ -62,6 +67,7 @@ export function LaneSwitcher({
           sortBy={sortBy}
           sortOptions={sortOptions}
           scopeIconLookup={scopeIconLookup}
+          getHref={getHref}
           {...rest}
         />
       </div>
