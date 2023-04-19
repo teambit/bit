@@ -47,7 +47,7 @@ const defaultMergeOpts: MergeOpts = {
 };
 
 export class WebpackConfigMutator {
-  constructor(public raw: Configuration) {}
+  constructor(public raw: Configuration | any) {}
 
   clone(): WebpackConfigMutator {
     return new WebpackConfigMutator(merge({}, this.raw));
@@ -233,7 +233,7 @@ export class WebpackConfigMutator {
    * @param externalDeps
    * @returns
    */
-  addExternals(externalDeps: Configuration['externals']): WebpackConfigMutator {
+  addExternals(externalDeps: Configuration['externals'] | any): WebpackConfigMutator {
     if (!externalDeps) return this;
     let externals = this.raw.externals;
     if (!externals) {
@@ -263,7 +263,7 @@ export class WebpackConfigMutator {
    * @param configs
    * @param opts
    */
-  merge(config: Configuration | Configuration[], opts?: MergeOpts): WebpackConfigMutator {
+  merge(config: Configuration | Configuration[] | any, opts?: MergeOpts): WebpackConfigMutator {
     const configs = Array.isArray(config) ? config : [config];
     const concreteOpts = Object.assign({}, defaultMergeOpts, opts || {});
     const { firstConfig, configs: otherConfigs } = getConfigsToMerge(this.raw, configs, concreteOpts.rawConfigPosition);
@@ -279,7 +279,11 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  mergeWithCustomize(configs: Configuration[], customizes: ICustomizeOptions, opts: MergeOpts): WebpackConfigMutator {
+  mergeWithCustomize(
+    configs: Configuration[] | any,
+    customizes: ICustomizeOptions,
+    opts: MergeOpts
+  ): WebpackConfigMutator {
     const concreteOpts = Object.assign({}, defaultMergeOpts, opts);
     const { firstConfig, configs: otherConfigs } = getConfigsToMerge(this.raw, configs, concreteOpts.rawConfigPosition);
     const merged = mergeWithCustomize(customizes)(firstConfig, ...otherConfigs);
@@ -294,7 +298,7 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  mergeWithRules(configs: Configuration[], rules: Rules, opts: MergeOpts): WebpackConfigMutator {
+  mergeWithRules(configs: Configuration[] | any, rules: Rules, opts: MergeOpts): WebpackConfigMutator | any {
     const concreteOpts = Object.assign({}, defaultMergeOpts, opts);
     const { firstConfig, configs: otherConfigs } = getConfigsToMerge(this.raw, configs, concreteOpts.rawConfigPosition);
     const merged = mergeWithRules(rules)(firstConfig, ...otherConfigs);
@@ -401,10 +405,10 @@ function processUseArray(useArray: any[], plugins: any[]) {
 }
 
 function getConfigsToMerge(
-  originalConfig: Configuration,
-  configs: Configuration[],
+  originalConfig: Configuration | any,
+  configs: Configuration[] | any,
   originalPosition: ArrayPosition
-): { firstConfig: Configuration; configs: Configuration[] } {
+): { firstConfig: Configuration | any; configs: Configuration[] | any } {
   let firstConfig = originalConfig;
   if (originalPosition === 'append') {
     firstConfig = configs.shift() || {};
