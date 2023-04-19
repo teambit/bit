@@ -83,8 +83,7 @@ export default class InstallCmd implements Command {
     const executionTime = calculateTime(startTime, endTime);
     return `Successfully installed dependencies and compiled ${chalk.cyan(
       components.toArray().length.toString()
-    )} component(s) in ${chalk.cyan(executionTime.toString())} seconds
-Your workspace is ready to use 😃`;
+    )} component(s) in ${chalk.cyan(executionTime.toString())} seconds`;
   }
 }
 
