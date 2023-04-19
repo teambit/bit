@@ -11,5 +11,6 @@ export const UNABLE_TO_LOAD_EXTENSION_FROM_LIST = (ids: string[], errMsg?: strin
 "${errMsg || '<unknown-error>'}".
 This is required for the component: ${chalk.cyan(neededFor || 'unknown')}
 Please use the ${chalk.cyan("'--log=error'")} flag for the full error.
-${installOutput}`;
+${installOutput}
+`;
 };
