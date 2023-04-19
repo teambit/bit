@@ -29,11 +29,11 @@ export class CodeUI {
   ) {}
 
   getCodePage = (props?: CodePageProps) => {
-    return <CodePage {...props} fileIconSlot={this.fileIconSlot} host={this.host} />;
+    return <CodePage {...(props || {})} fileIconSlot={this.fileIconSlot} host={this.host} />;
   };
 
   getCodeCompare = (props?: CodeCompareProps) => {
-    return <CodeCompare {...props} fileIconSlot={this.fileIconSlot} />;
+    return <CodeCompare {...(props || {})} fileIconSlot={this.fileIconSlot} />;
   };
 
   registerEnvFileIcon(icons: FileIconMatch[]) {
