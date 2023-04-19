@@ -5,6 +5,8 @@ import { Consumer } from '..';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import { Remotes } from '../../remotes';
 import { getScopeRemotes } from '../../scope/scope-remotes';
+import { Http } from '../../scope/network/http';
+import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL } from '../../constants';
 
 export default async function removeLanes(
   consumer: Consumer | undefined,
@@ -27,6 +29,14 @@ export default async function removeLanes(
 async function removeRemoteLanes(consumer: Consumer | undefined, lanes: LaneId[], force: boolean) {
   const groupedLanesByScope = groupArray(lanes, 'scope');
   const remotes = consumer ? await getScopeRemotes(consumer.scope) : await Remotes.getGlobalRemotes();
+  const shouldGoToCentralHub = remotes.shouldGoToCentralHub(lanes.map((lane) => lane.scope));
+  if (shouldGoToCentralHub) {
+    const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
+    return http.deleteViaCentralHub(
+      lanes.map((lane) => lane.toString()),
+      { force, idsAreLanes: true }
+    );
+  }
   const context = {};
   enrichContextFromGlobal(context);
   const removeP = Object.keys(groupedLanesByScope).map(async (key) => {
