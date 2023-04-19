@@ -1,11 +1,11 @@
 import React from 'react';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
-import { CodeCompare } from '@teambit/code.ui.code-compare';
+import { CodeCompare, CodeCompareProps } from '@teambit/code.ui.code-compare';
 import { Harmony, SlotRegistry, Slot } from '@teambit/harmony';
 import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
-import { CodePage } from '@teambit/code.ui.code-tab-page';
+import { CodePage, CodePageProps } from '@teambit/code.ui.code-tab-page';
 import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-compare';
 import { CodeCompareSection } from '@teambit/code.ui.code-compare-section';
 import { CodeAspect } from './code.aspect';
@@ -28,12 +28,12 @@ export class CodeUI {
     private fileIconSlot?: FileIconSlot
   ) {}
 
-  getCodePage = () => {
-    return <CodePage fileIconSlot={this.fileIconSlot} host={this.host} />;
+  getCodePage = (props: CodePageProps) => {
+    return <CodePage {...props} fileIconSlot={this.fileIconSlot} host={this.host} />;
   };
 
-  getCodeCompare = () => {
-    return <CodeCompare fileIconSlot={this.fileIconSlot} />;
+  getCodeCompare = (props: CodeCompareProps) => {
+    return <CodeCompare {...props} fileIconSlot={this.fileIconSlot} />;
   };
 
   registerEnvFileIcon(icons: FileIconMatch[]) {
