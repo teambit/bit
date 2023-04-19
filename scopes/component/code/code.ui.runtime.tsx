@@ -28,11 +28,11 @@ export class CodeUI {
     private fileIconSlot?: FileIconSlot
   ) {}
 
-  getCodePage = (props: CodePageProps) => {
+  getCodePage = (props?: CodePageProps) => {
     return <CodePage {...props} fileIconSlot={this.fileIconSlot} host={this.host} />;
   };
 
-  getCodeCompare = (props: CodeCompareProps) => {
+  getCodeCompare = (props?: CodeCompareProps) => {
     return <CodeCompare {...props} fileIconSlot={this.fileIconSlot} />;
   };
 
