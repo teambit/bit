@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
-import { BitId, BitIds } from '../../../bit-id';
+import { BitId } from '../../../bit-id';
 import ShowDoctorError from '../../../error/show-doctor-error';
 import logger from '../../../logger/logger';
 import { Scope } from '../../../scope';
@@ -162,31 +162,12 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
   const extensionsNamesForDistArtifacts = 'teambit.compilation/compiler';
   const lane = await scope.getCurrentLaneObject();
   const scopeComponentsImporter = scope.scopeImporter;
-  if (lane) {
-    // when on lane, locally, it's possible that not all components have their entire history (e.g. during "bit sign").
-    // as a result, the following "scope.isIdOnLane" fails to traverse the history.
-    // in terms of performance it's not ideal. once we have the lane-history, it'll be faster to get this data.
-    const compsIds = BitIds.fromArray(components.map((c) => c.id));
-    const compsToImport = BitIds.uniqFromArray(lane.toBitIds().filter((id) => compsIds.hasWithoutVersion(id)));
-    await scopeComponentsImporter.importManyDeltaWithoutDeps({
-      ids: compsToImport,
-      fromHead: true,
-      lane,
-      ignoreMissingHead: true,
-    });
-    // fetch also the components from main, otherwise, in some cases, you'll get an error: "error: version "some-snap" of component some-comp was not found on the filesystem."
-    await scopeComponentsImporter.importManyDeltaWithoutDeps({
-      ids: compsToImport.toVersionLatest(),
-      fromHead: true,
-      ignoreMissingHead: true,
-    });
-  }
   const groupedHashes: { [scopeName: string]: string[] } = {};
   const debugHashesOrigin = {};
   await Promise.all(
     components.map(async (component) => {
       const artifactsFiles = getArtifactFilesByExtension(component.extensions, extensionsNamesForDistArtifacts);
-      const isIdOnLane = await scope.isIdOnLane(component.id, lane);
+      const isIdOnLane = await scope.isIdOnLane(component.id, lane, false);
       const getScopes = () => {
         if (isIdOnLane === null) {
           // we're not sure wether it's on the lane or not. try to fetch from both.
@@ -216,7 +197,6 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
     logger.error('failed fetching the following hashes', { groupedHashes, debugHashesOrigin });
     throw err;
   }
-
   logger.debug(`importMultipleDistsArtifacts: ${components.length} components. completed successfully`);
 }
 

@@ -1,5 +1,6 @@
 import { groupBy, prop } from 'ramda';
 import { forEach } from 'lodash';
+import { BitError } from '@teambit/bit-error';
 import pMap from 'p-map';
 import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '../api/scope/lib/fetch';
 import { BitId } from '../bit-id';
@@ -151,6 +152,15 @@ ${failedScopesErr.join('\n')}`);
     });
 
     return object;
+  }
+
+  shouldGoToCentralHub(scopes: string[]): boolean {
+    const hubRemotes = scopes.filter((scopeName) => this.isHub(scopeName));
+    if (!hubRemotes.length) return false;
+    if (hubRemotes.length === scopes.length) return true; // all are hub
+    throw new BitError(
+      `some of your components are configured to work with a local scope and some to the bit.cloud hub. this is not supported`
+    );
   }
 
   static async getScopeRemote(scopeName: string): Promise<Remote> {
