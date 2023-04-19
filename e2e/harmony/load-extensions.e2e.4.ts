@@ -1,3 +1,4 @@
+import stripAnsi from 'strip-ansi';
 import chai, { expect } from 'chai';
 import path from 'path';
 
@@ -100,7 +101,13 @@ describe('load extensions', function () {
         });
         it('should show a warning about the problematic extension', () => {
           expect(output).to.have.string(
-            UNABLE_TO_LOAD_EXTENSION_FROM_LIST(['my-scope/extension-provider-error'], 'error in provider')
+            stripAnsi(
+              UNABLE_TO_LOAD_EXTENSION_FROM_LIST(
+                ['my-scope/extension-provider-error'],
+                'error in provider',
+                'teambit.workspace/workspace (cli.registerOnStart)'
+              )
+            )
           );
         });
       });

@@ -238,7 +238,7 @@ export default async function provideWorkspace(
     const aspects = await workspace.loadAspects(
       aspectLoader.getNotLoadedConfiguredExtensions(),
       undefined,
-      'workspace.cli.registerOnStart'
+      'teambit.workspace/workspace (cli.registerOnStart)'
     );
     // clear aspect cache.
     const componentIds = await workspace.resolveMultipleComponentIds(aspects);
