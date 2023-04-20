@@ -317,8 +317,9 @@ export class EnvsMain {
   /**
    * get an environment Descriptor.
    */
-  getDescriptor(component: Component): Descriptor | null {
+  getDescriptor(component: Component): Descriptor | undefined {
     const envsData = this.getEnvData(component);
+    envsData.id = this.resolveEnv(component, envsData.id)?.toString() || envsData.id;
     return envsData;
   }
 
