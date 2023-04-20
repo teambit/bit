@@ -3,10 +3,11 @@ import partition from 'lodash.partition';
 import R from 'ramda';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import BitIds from '@teambit/legacy/dist/bit-id/bit-ids';
-import { LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
+import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import enrichContextFromGlobal from '@teambit/legacy/dist/hooks/utils/enrich-context-from-global';
 import logger from '@teambit/legacy/dist/logger/logger';
+import { Http } from '@teambit/legacy/dist/scope/network/http';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import RemovedLocalObjects from '@teambit/legacy/dist/scope/removed-local-objects';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
@@ -72,6 +73,14 @@ export async function removeComponents({
 async function removeRemote(consumer: Consumer | null | undefined, bitIds: BitIds, force: boolean) {
   const groupedBitsByScope = groupArray(bitIds, 'scope');
   const remotes = consumer ? await getScopeRemotes(consumer.scope) : await Remotes.getGlobalRemotes();
+  const shouldGoToCentralHub = remotes.shouldGoToCentralHub(Object.keys(groupedBitsByScope));
+  if (shouldGoToCentralHub) {
+    const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
+    return http.deleteViaCentralHub(
+      bitIds.map((id) => id.toString()),
+      { force, idsAreLanes: false }
+    );
+  }
   const context = {};
   enrichContextFromGlobal(context);
   const removeP = Object.keys(groupedBitsByScope).map(async (key) => {

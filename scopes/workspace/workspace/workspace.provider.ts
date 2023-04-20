@@ -230,12 +230,15 @@ export default async function provideWorkspace(
   cli.register(...commands);
   component.registerHost(workspace);
 
-  cli.registerOnStart(async () => {
+  cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string) => {
+    if (currentCommand === 'install') {
+      workspace.inInstallContext = true;
+    }
     await workspace.importCurrentLaneIfMissing();
     const aspects = await workspace.loadAspects(
       aspectLoader.getNotLoadedConfiguredExtensions(),
       undefined,
-      'workspace.cli.registerOnStart'
+      'teambit.workspace/workspace (cli.registerOnStart)'
     );
     // clear aspect cache.
     const componentIds = await workspace.resolveMultipleComponentIds(aspects);

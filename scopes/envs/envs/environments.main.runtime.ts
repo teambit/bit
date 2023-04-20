@@ -68,6 +68,8 @@ export type Descriptor = RegularCompDescriptor | EnvCompDescriptor;
 export const DEFAULT_ENV = 'teambit.harmony/node';
 
 export class EnvsMain {
+  private failedToLoadExt = new Set<string>();
+
   static runtime = MainRuntime;
 
   private alreadyShownWarning = {};
@@ -113,6 +115,22 @@ export class EnvsMain {
    */
   async createEnvironment(components: Component[]): Promise<Runtime> {
     return this.createRuntime(components);
+  }
+
+  /**
+   *
+   * @param id
+   */
+  /**
+   * This function adds an extension ID to a set of failed to load extensions.
+   * This mostly used by the aspect loader to add such issues
+   * Then it is used to hide different errors that are caused by the same issue.
+   * @param {string} id - string - represents the unique identifier of an extension that failed to load.
+   */
+  addFailedToLoadExtension(id: string) {
+    if (!this.failedToLoadExt.has(id)) {
+      this.failedToLoadExt.add(id);
+    }
   }
 
   /**
@@ -617,7 +635,7 @@ export class EnvsMain {
   }
 
   private printWarningIfFirstTime(envId: string, message: string) {
-    if (!this.alreadyShownWarning[envId]) {
+    if (!this.alreadyShownWarning[envId] && !this.failedToLoadExt.has(envId)) {
       this.alreadyShownWarning[envId] = true;
       this.logger.consoleWarning(message);
     }
