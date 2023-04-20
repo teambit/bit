@@ -40,6 +40,9 @@
         "@pnpm/store-connection-manager": "6.0.5",
         "@pnpm/types": "9.0.0",
         "@pnpm/workspace.pkgs-graph": "2.0.3",
+        "@prerenderer/prerenderer": "^1.2.0",
+        "@prerenderer/renderer-jsdom": "^1.1.2",
+        "@prerenderer/webpack-plugin": "^5.2.0",
         "@react-hook/latest": "1.0.3",
         "@stencil/core": "1.17.4",
         "@stencil/webpack": "0.0.6",
@@ -357,7 +360,6 @@
         "postcss-flexbugs-fixes": "5.0.2",
         "postcss-loader": "7.0.1",
         "postcss-preset-env": "7.8.2",
-        "prerender-spa-plugin-next": "4.2.0",
         "pretty-bytes": "5.6.0",
         "process": "0.11.10",
         "puppeteer": "13.7.0",
@@ -411,7 +413,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.477",
+        "@teambit/legacy": "1.0.479",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "browserslist": "4.16.3",
@@ -503,7 +505,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.477"
+            "@teambit/legacy": "1.0.479"
           }
         }
       },
@@ -764,7 +766,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.477"
+            "@teambit/legacy": "1.0.479"
           }
         }
       }
@@ -854,7 +856,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.477",
+            "@teambit/legacy": "1.0.479",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -989,7 +991,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.477"
+            "@teambit/legacy": "1.0.479"
           }
         }
       }
