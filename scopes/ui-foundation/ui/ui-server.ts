@@ -1,4 +1,5 @@
 import { flatten } from 'lodash';
+import { existsSync } from 'fs-extra';
 import { ExpressMain } from '@teambit/express';
 import { GraphqlMain } from '@teambit/graphql';
 import { Logger } from '@teambit/logger';
@@ -10,10 +11,12 @@ import httpProxy from 'http-proxy';
 import { join } from 'path';
 import webpack from 'webpack';
 import WebpackDevServer, { Configuration as WdsConfiguration } from 'webpack-dev-server';
+import { getAspectDirFromBvm } from '@teambit/aspect-loader';
+import { getArtifactDirectory } from '@teambit/preview';
 import { createSsrMiddleware } from './ssr-middleware';
 import { StartPlugin } from './start-plugin';
 import { ProxyEntry, UIRoot } from './ui-root';
-import { UIRuntime } from './ui.aspect';
+import { UIAspect, UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
 
 import { devConfig } from './webpack/webpack.dev.config';
@@ -94,7 +97,16 @@ export class UIServer {
   async start({ portRange }: StartOptions = {}) {
     const app = this.expressExtension.createApp();
     const publicDir = `/${this.publicDir}`;
-    const root = join(this.uiRoot.path, publicDir);
+    const defaultRoot = join(this.uiRoot.path, publicDir);
+
+    // const root =
+    //   '/Users/leimonio/.bvm/versions/0.1.23/bit-0.1.23/node_modules/@teambit/ui/dist/artifacts/ui-build/public/bit';
+    const uiPreBundleDirFromBvm = getAspectDirFromBvm(UIAspect.id);
+    const uiPreBundlePublicDirFromBvm = join(uiPreBundleDirFromBvm, getArtifactDirectory(), publicDir);
+
+    // TODO: if uiPreBundlePublicDirFromBvm exists check the hash is same with the one generated in the build process
+    const root = uiPreBundlePublicDirFromBvm || defaultRoot;
+
     const server = await this.graphql.createServer({ app });
 
     // set up proxy, for things like preview, e.g. '/preview/teambit.react/react'
