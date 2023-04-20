@@ -1,4 +1,5 @@
 import React, { useEffect, ReactNode, useMemo } from 'react';
+import { RouteProps } from 'react-router-dom';
 import flatten from 'lodash.flatten';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SlotRegistry } from '@teambit/harmony';
@@ -20,6 +21,7 @@ export type ComponentPageElement = {
 export type ComponentProps = {
   containerSlot?: ComponentPageSlot;
   routeSlot: RouteSlot;
+  overriddenRoutes?: RouteProps[];
   host: string;
   onComponentChange?: (activeComponent?: ComponentModel) => void;
   useComponent?: UseComponentType;
@@ -38,6 +40,7 @@ function getComponentIdStr(componentIdStr?: string | (() => string | undefined))
  */
 export function Component({
   routeSlot,
+  overriddenRoutes,
   containerSlot,
   host,
   onComponentChange,
@@ -77,7 +80,9 @@ export function Component({
       <ComponentProvider component={component}>
         {before}
         <div className={styles.container}>
-          {routeSlot && <SlotRouter parentPath={`${resolvedComponentIdStr}/*`} slot={routeSlot} />}
+          {routeSlot && (
+            <SlotRouter parentPath={`${resolvedComponentIdStr}/*`} slot={routeSlot} routes={overriddenRoutes} />
+          )}
         </div>
         {after}
       </ComponentProvider>

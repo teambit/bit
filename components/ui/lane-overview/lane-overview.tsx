@@ -3,7 +3,7 @@ import { LaneModel, LanesModel, LanesHost } from '@teambit/lanes.ui.models.lanes
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
-import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
 import flatten from 'lodash.flatten';
 import { SlotRegistry } from '@teambit/harmony';
@@ -20,9 +20,16 @@ export type LaneOverviewProps = {
   routeSlot: RouteSlot;
   overviewSlot?: LaneOverviewLineSlot;
   host: LanesHost;
+  useLanes?: () => { lanesModel?: LanesModel; loading?: boolean };
 };
-export function LaneOverview({ routeSlot, overviewSlot, host }: LaneOverviewProps) {
-  const { lanesModel } = useLanes();
+
+export function LaneOverview({
+  routeSlot,
+  overviewSlot,
+  host,
+  useLanes: useLanesFromProps = defaultUseLanes,
+}: LaneOverviewProps) {
+  const { lanesModel } = useLanesFromProps();
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
   const currentLane = lanesModel?.viewedLane;

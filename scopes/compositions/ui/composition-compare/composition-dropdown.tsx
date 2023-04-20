@@ -1,10 +1,11 @@
+import React, { useEffect, useRef } from 'react';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
-import React, { useEffect, useRef } from 'react';
+
 import styles from './composition-dropdown.module.scss';
 
-export type DropdownItem = { id: string; label: string; value: string };
+export type DropdownItem = { id: string; label: string; href?: string; onClick?: (id: string, e) => void };
 
 export type CompositionDropdownProps = {
   selected?: Omit<DropdownItem, 'value'>;
@@ -13,6 +14,7 @@ export type CompositionDropdownProps = {
 
 export function CompositionDropdown(props: CompositionDropdownProps) {
   const { selected, dropdownItems: data } = props;
+  const key = (item: DropdownItem) => `${item.id}-${item.href}`;
 
   return (
     <Dropdown
@@ -25,7 +27,7 @@ export function CompositionDropdown(props: CompositionDropdownProps) {
       }
     >
       {data.map((item) => {
-        return <MenuItem key={item.id} current={item} selected={selected} />;
+        return <MenuItem key={key(item)} current={item} selected={selected} />;
       })}
     </Dropdown>
   );
@@ -41,15 +43,18 @@ function MenuItem(props: MenuItemProps) {
 
   const isCurrent = selected?.id === current.id;
   const currentVersionRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (isCurrent) {
       currentVersionRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }, [isCurrent]);
 
+  const onClick = (!!current.onClick && ((e) => current.onClick?.(current.id, e))) || undefined;
+
   return (
-    <div ref={currentVersionRef}>
-      <MenuLinkItem active={current.id === selected?.id} href={current.value}>
+    <div ref={currentVersionRef} key={`${current.href}-container`}>
+      <MenuLinkItem key={current.href} active={current.id === selected?.id} href={current.href} onClick={onClick}>
         <div>{current.label}</div>
       </MenuLinkItem>
     </div>

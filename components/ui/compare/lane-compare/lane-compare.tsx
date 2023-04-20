@@ -429,6 +429,7 @@ export function LaneCompare({
                 },
                 customUseComponent,
                 Loader: ComponentCompareLoader,
+                isFullScreen,
               };
 
               // eslint-disable-next-line react/prop-types

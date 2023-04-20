@@ -85,7 +85,7 @@ export function Overview({ titleBadges }: OverviewProps) {
           queryParams={[iframeQueryParams]}
           viewport={null}
           fullContentHeight
-          scrolling="no"
+          disableScroll={true}
         />
         {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
         {component.preview?.skipIncludes && (
