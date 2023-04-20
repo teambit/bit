@@ -335,7 +335,8 @@ export class AspectsMerger {
     const promises = extensionList.map(async (entry) => {
       if (entry.extensionId) {
         const id = await this.workspace.resolveComponentId(entry.extensionId);
-        entry.extensionId = id._legacy;
+        const idFromWorkspace = this.workspace.getIdIfExist(id);
+        entry.extensionId = (idFromWorkspace || id)._legacy;
       }
 
       return entry;
