@@ -518,12 +518,15 @@ export class AspectLoaderMain {
     // don't use `await scope.loadAspectsFromCapsules(components, true);`
     // it won't work for globalScope because `this !== scope.aspectLoader` (this instance
     // is not the same as the aspectLoader instance Scope has)
-    const resolvedAspects = await scope.getResolvedAspects(components);
+    const resolvedAspects = await scope.getResolvedAspects(components, { workspaceName: 'global-scope' });
     try {
       await aspectLoader.loadRequireableExtensions(resolvedAspects, true);
     } catch (err: any) {
       if (err?.error?.code === 'MODULE_NOT_FOUND') {
-        const resolvedAspectsAgain = await scope.getResolvedAspects(components, { skipIfExists: false });
+        const resolvedAspectsAgain = await scope.getResolvedAspects(components, {
+          skipIfExists: false,
+          workspaceName: 'global-scope',
+        });
         await aspectLoader.loadRequireableExtensions(resolvedAspectsAgain, true);
       } else {
         throw err;
