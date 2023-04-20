@@ -1155,4 +1155,31 @@ describe('merge lanes', function () {
       expect(() => helper.command.export()).to.not.throw();
     });
   });
+  describe('merge an out-of-date component from another lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      const mainScope = helper.scopeHelper.cloneLocalScope();
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(mainScope);
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.createLane('lane-b');
+      helper.command.mergeLane(`${helper.scopes.remote}/lane-a`, '-x');
+
+      // @todo: fix. currently, it throws an error about missing version
+      helper.command.importComponent('comp1', '--all-history --objects');
+    });
+    it('should not show the component as pending-merge', () => {
+      const status = helper.command.statusJson();
+      expect(status.mergePendingComponents).to.have.lengthOf(0);
+    });
+  });
 });
