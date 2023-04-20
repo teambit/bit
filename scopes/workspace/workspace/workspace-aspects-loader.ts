@@ -53,7 +53,8 @@ export class WorkspaceAspectsLoader {
     private logger: Logger,
     private harmony: Harmony,
     private onAspectsResolveSlot: OnAspectsResolveSlot,
-    private onRootAspectAddedSlot: OnRootAspectAddedSlot
+    private onRootAspectAddedSlot: OnRootAspectAddedSlot,
+    private resolveAspectsFromNodeModules = false
   ) {
     this.consumer = this.workspace.consumer;
     this.resolvedInstalledAspects = new Map();
@@ -98,7 +99,11 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     // This is because right now loading from the ws node_modules causes issues in some cases
     // like for the cloud app
     // it should be removed once we fix the issues
-    mergedOpts.useScopeAspectsCapsule = true;
+    if (!this.resolveAspectsFromNodeModules) {
+      if (!this.resolveAspectsFromNodeModules) {
+        mergedOpts.useScopeAspectsCapsule = true;
+      }
+    }
 
     if (mergedOpts.useScopeAspectsCapsule) {
       idsToLoadFromWs = workspaceIds;
@@ -256,7 +261,9 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     // This is because right now loading from the ws node_modules causes issues in some cases
     // like for the cloud app
     // it should be removed once we fix the issues
-    mergedOpts.useScopeAspectsCapsule = true;
+    if (!this.resolveAspectsFromNodeModules) {
+      mergedOpts.useScopeAspectsCapsule = true;
+    }
 
     let componentsToResolveFromScope = nonWorkspaceComps;
     let componentsToResolveFromInstalled: Component[] = [];
