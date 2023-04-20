@@ -60,6 +60,7 @@ import { ComponentPreviewRoute } from './component-preview.route';
 import { previewSchema } from './preview.graphql';
 import { PreviewAssetsRoute } from './preview-assets.route';
 import { PreviewService } from './preview.service';
+import { UiPreBundleTask } from './ui-pre-bundle.task';
 
 const noopResult = {
   results: [],
@@ -878,6 +879,7 @@ export class PreviewMain {
       builder.registerBuildTasks([
         new EnvPreviewTemplateTask(preview, envs, aspectLoader, dependencyResolver, logger),
         new PreviewTask(bundler, preview, dependencyResolver, logger),
+        new UiPreBundleTask(uiMain, logger),
       ]);
 
     if (workspace) {

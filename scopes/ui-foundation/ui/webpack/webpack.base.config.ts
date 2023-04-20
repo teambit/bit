@@ -42,7 +42,7 @@ const isEnvProduction = true;
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
 export default function createWebpackConfig(
-  workspaceDir: string,
+  outputDir: string,
   entryFiles: string[],
   publicDir = 'public'
 ): Configuration {
@@ -68,7 +68,7 @@ export default function createWebpackConfig(
 
     output: {
       // The build folder.
-      path: path.join(workspaceDir, publicDir), // default value
+      path: path.join(outputDir, publicDir), // default value
 
       filename: 'static/js/[name].[contenthash:8].js',
       // TODO: remove this when upgrading to webpack 5

@@ -209,7 +209,7 @@ export class UiMain {
   /**
    * create a build of the given UI root.
    */
-  async build(uiRootName?: string): Promise<webpack.MultiStats | undefined> {
+  async build(uiRootName?: string, customOutputPath?: string): Promise<webpack.MultiStats | undefined> {
     // TODO: change to MultiStats from webpack once they export it in their types
     this.logger.debug(`build, uiRootName: "${uiRootName}"`);
     const maybeUiRoot = this.getUi(uiRootName);
@@ -220,9 +220,10 @@ export class UiMain {
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
     const ssr = uiRoot.buildOptions?.ssr || false;
     const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name);
+    const outputPath = customOutputPath || uiRoot.path;
 
-    const browserConfig = createWebpackConfig(uiRoot.path, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
-    const ssrConfig = ssr && createSsrWebpackConfig(uiRoot.path, [mainEntry], await this.publicDir(uiRoot));
+    const browserConfig = createWebpackConfig(outputPath, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
+    const ssrConfig = ssr && createSsrWebpackConfig(outputPath, [mainEntry], await this.publicDir(uiRoot));
 
     const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
     const compiler = webpack(config);
@@ -573,7 +574,9 @@ export class UiMain {
       harmony,
       proxyGetterSlot
     );
+
     cli.register(new StartCmd(ui, logger), new UIBuildCmd(ui));
+
     return ui;
   }
 }

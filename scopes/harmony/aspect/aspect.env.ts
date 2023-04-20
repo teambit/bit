@@ -75,6 +75,7 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
     // we want to make sure to add it for the core envs
     if (context && this.aspectLoader.isCoreEnv(context.component.id.toStringWithoutVersion())) {
       patterns.push(`!${CAPSULE_ARTIFACTS_DIR}/env-template`);
+      patterns.push(`!${CAPSULE_ARTIFACTS_DIR}/ui-build`);
     }
     return patterns;
   }
