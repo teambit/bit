@@ -10,6 +10,7 @@ import { partition, mergeWith, merge } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';
 import { MergeConflictFile } from './merge-conflict-file';
+import { WorkspaceLoadAspectsOptions } from './workspace-aspects-loader';
 
 export class AspectsMerger {
   private consumer: Consumer;
@@ -135,8 +136,14 @@ export class AspectsMerger {
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
         ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
         : extsWithoutRemoved;
+      const preferWorkspaceVersion = origin !== 'BitmapFile' && origin !== 'ComponentJsonFile';
+      // it's important to do this resolution before the merge, otherwise we have issues with extensions
+      // coming from scope with local scope name, as opposed to the same extension comes from the workspace with default scope name
+      // also, it's important to do it before filtering the env, because when the env was not exported, it's saved with scope-name
+      // inside the "env" prop of teambit.envs/env, but without scope-name in the root.
+      const extsWithUpdatedIds = await this.resolveExtensionListIds(extsWithoutSelf, preferWorkspaceVersion);
       const { extensionDataListFiltered, envIsCurrentlySet } = await this.filterEnvsFromExtensionsIfNeeded(
-        extsWithoutSelf,
+        extsWithUpdatedIds,
         envWasFoundPreviously,
         origin
       );
@@ -188,9 +195,6 @@ export class AspectsMerger {
       await addExtensionsToMerge(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
 
-    // It's important to do this resolution before the merge, otherwise we have issues with extensions
-    // coming from scope with local scope name, as opposed to the same extension comes from the workspace with default scope name
-    await Promise.all(extensionsToMerge.map((list) => this.resolveExtensionListIds(list.extensions)));
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
     await this.loadExtensions(afterMerge, componentId);
     const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
@@ -319,10 +323,10 @@ export class AspectsMerger {
   private async loadExtensions(
     extensions: ExtensionDataList,
     originatedFrom?: ComponentID,
-    throwOnError = false
+    opts: WorkspaceLoadAspectsOptions = {}
   ): Promise<void> {
     const workspaceAspectsLoader = this.workspace.getWorkspaceAspectsLoader();
-    return workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, throwOnError);
+    return workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, opts);
   }
 
   /**
@@ -330,11 +334,15 @@ export class AspectsMerger {
    * This should be worked on the extension data list not the new aspect list
    * @param extensionList
    */
-  private async resolveExtensionListIds(extensionList: ExtensionDataList): Promise<ExtensionDataList> {
+  private async resolveExtensionListIds(
+    extensionList: ExtensionDataList,
+    preferWorkspaceVersion = false
+  ): Promise<ExtensionDataList> {
     const promises = extensionList.map(async (entry) => {
       if (entry.extensionId) {
         const id = await this.workspace.resolveComponentId(entry.extensionId);
-        entry.extensionId = id._legacy;
+        const idFromWorkspace = preferWorkspaceVersion ? this.workspace.getIdIfExist(id) : undefined;
+        entry.extensionId = (idFromWorkspace || id)._legacy;
       }
 
       return entry;

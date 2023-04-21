@@ -131,6 +131,11 @@ export class Workspace implements ComponentFactory {
   componentsScopeDirsMap: ComponentScopeDirMap;
   componentLoader: WorkspaceComponentLoader;
   bitMap: BitMap;
+  /**
+   * Indicate that we are now running installaion process
+   * This is important to know to ignore missing modules across different places
+   */
+  inInstallContext = false;
   private _cachedListIds?: ComponentID[];
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
@@ -568,7 +573,10 @@ export class Workspace implements ComponentFactory {
       try {
         this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
         this.logger.debug(`trying to load self as aspect with id ${component.id.toString()}`);
-        await this.loadAspects([component.id.toString()], undefined, component.id.toString());
+        // ignore missing modules when loading self
+        await this.loadAspects([component.id.toString()], undefined, component.id.toString(), {
+          hideMissingModuleError: true,
+        });
         // In most cases if the load self as aspect failed we don't care about it.
         // we only need it in specific cases to work, but this workspace.get runs on different
         // cases where it might fail (like when importing aspect, after the import objects
@@ -861,6 +869,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return Boolean(this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId._legacy)));
   }
 
+  getIdIfExist(componentId: ComponentID): ComponentID | undefined {
+    const id = this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId._legacy));
+    if (!id) return undefined;
+    return componentId.changeVersion(id.version);
+  }
+
   /**
    * This will make sure to fetch the objects prior to load them
    * do not use it if you are not sure you need it.
@@ -870,7 +884,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   async importAndGetMany(ids: Array<ComponentID>): Promise<Component[]> {
     await this.importCurrentLaneIfMissing();
-    await this.scope.import(ids, { reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion() });
+    await this.scope.import(ids, {
+      reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(),
+      // @todo: when this is set to true, in some cases, "bit lane merge" tries to fetch older versions of
+      // lane-components from main for some reason. it needs to be debugged further to understand why.
+      preferDependencyGraph: false,
+    });
     return this.componentLoader.getMany(ids);
   }
 
@@ -1299,7 +1318,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.logger,
       this.harmony,
       this.onAspectsResolveSlot,
-      this.onRootAspectAddedSlot
+      this.onRootAspectAddedSlot,
+      this.config.resolveAspectsFromNodeModules
     );
     return workspaceAspectsLoader;
   }

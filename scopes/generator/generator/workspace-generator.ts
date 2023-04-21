@@ -61,6 +61,7 @@ export class WorkspaceGenerator {
       });
       // await this.buildUI(); // disabled for now. it takes too long
     } catch (err: any) {
+      this.logger.error(`failed generating a new workspace, will delete the dir ${this.workspacePath}`, err);
       await fs.remove(this.workspacePath);
       throw err;
     }

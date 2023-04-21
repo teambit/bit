@@ -184,7 +184,12 @@ export class Http implements Network {
     };
   }
 
-  async deleteMany(ids: string[], force: boolean, context: Record<string, any>, idsAreLanes: boolean) {
+  async deleteMany(
+    ids: string[],
+    force: boolean,
+    context: Record<string, any>,
+    idsAreLanes: boolean
+  ): Promise<RemovedObjects> {
     const route = 'api/scope/delete';
     logger.debug(`Http.delete, url: ${this.url}/${route}`);
     const body = JSON.stringify({
@@ -250,6 +255,45 @@ export class Http implements Network {
     }
     await this.throwForNonOkStatus(res);
     return results.data;
+  }
+
+  async deleteViaCentralHub(
+    ids: string[],
+    options: { force?: boolean; idsAreLanes?: boolean } = {}
+  ): Promise<RemovedObjects[]> {
+    const route = 'api/delete';
+    logger.debug(
+      `Http.deleteViaCentralHub, started. url: ${this.url}/${route}. total ids ${ids.length}. options ${JSON.stringify(
+        options,
+        null,
+        2
+      )}`
+    );
+    const idsPerType = {
+      componentIds: options.idsAreLanes ? undefined : ids,
+      laneIds: options.idsAreLanes ? ids : undefined,
+    };
+    const opts = this.addAgentIfExist({
+      method: 'post',
+      body: JSON.stringify(idsPerType),
+      headers: this.getHeaders({
+        'Content-Type': 'application/json',
+        'delete-options': JSON.stringify(options),
+        'x-verb': Verb.WRITE,
+      }),
+    });
+    const res = await fetch(`${this.url}/${route}`, opts);
+    logger.debug(
+      `Http.deleteViaCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
+    );
+
+    const results = await this.readPutCentralStream(res.body);
+    if (!results.data) throw new Error(`HTTP results are missing "data" property`);
+    if (results.data.isError) {
+      throw new UnexpectedNetworkError(results.message);
+    }
+    await this.throwForNonOkStatus(res);
+    return [RemovedObjects.fromObjects(results.data)];
   }
 
   async action<Options, Result>(name: string, options: Options): Promise<Result> {

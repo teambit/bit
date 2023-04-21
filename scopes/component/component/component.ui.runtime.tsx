@@ -74,6 +74,12 @@ export class ComponentUI {
     if (isBrowser) this.registerPubSub();
   }
 
+  get routes() {
+    return this.routeSlot
+      .toArray()
+      .map(([key, routes]) => [key, Array.isArray(routes) ? [...flatten(routes)] : [routes]] as [string, RouteProps[]]);
+  }
+
   /**
    * the current visible component
    */
@@ -187,6 +193,7 @@ export class ComponentUI {
         useComponent={options.useComponent}
         componentIdStr={options.componentId}
         useComponentFilters={options.useComponentFilters}
+        overriddenRoutes={options.routes}
       />
     );
   }
