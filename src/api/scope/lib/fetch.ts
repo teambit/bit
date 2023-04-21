@@ -63,6 +63,7 @@ export default async function fetch(
   fetchCounter += 1;
   const currentFetch = fetchCounter;
   openConnections.push(currentFetch);
+  const startTime = new Date().getTime();
   logger.debug(
     `scope.fetch [${currentFetch}] started.
 path ${path}.
@@ -91,10 +92,12 @@ fetchOptions`,
   const scope: Scope = await loadScope(path, useCachedScope);
   const objectList = new ObjectList();
   const finishLog = () => {
+    const duration = new Date().getTime() - startTime;
     openConnections.splice(openConnections.indexOf(currentFetch), 1);
     logger.debug(`scope.fetch [${currentFetch}] completed.
 open connections: [${openConnections.join(', ')}]. (total ${openConnections.length}).
-memory usage: ${getMemoryUsageInMB()} MB.`);
+memory usage: ${getMemoryUsageInMB()} MB.
+took: ${duration} ms.`);
   };
   const objectsReadableGenerator = new ObjectsReadableGenerator(scope.objects, finishLog);
   const shouldFetchDependencies = () => {
