@@ -292,11 +292,11 @@ export class AspectsMerger {
     if (envWasFoundPreviously && (envAspect || aspectsRegisteredAsEnvs.length)) {
       const nonEnvs = extensionDataList.filter((e) => {
         // normally the env-id inside the envs aspect doesn't have a version, but the aspect itself has a version.
+        // also, the env-id inside the envs aspect includes the default-scope, but the aspect itself doesn't.
         if (
           (envFromEnvsAspect && e.stringId === envFromEnvsAspect) ||
           (envFromEnvsAspect && e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect) ||
           (envFromEnvsAspect && e.newExtensionId?.toStringWithoutVersion() === envFromEnvsAspect) ||
-          (e.newExtensionId && aspectsRegisteredAsEnvs.includes(e.newExtensionId.toString())) ||
           aspectsRegisteredAsEnvs.includes(e.stringId)
         ) {
           return false;
