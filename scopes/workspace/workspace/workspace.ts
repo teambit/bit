@@ -869,6 +869,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return Boolean(this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId._legacy)));
   }
 
+  getIdIfExist(componentId: ComponentID): ComponentID | undefined {
+    const id = this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId._legacy));
+    if (!id) return undefined;
+    return componentId.changeVersion(id.version);
+  }
+
   /**
    * This will make sure to fetch the objects prior to load them
    * do not use it if you are not sure you need it.
