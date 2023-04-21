@@ -316,12 +316,14 @@ describe('custom env', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.2
     });
-    // @gilad todo: currently, this is failing with ComponentNotFound error.
+    // previously, this was failing with ComponentNotFound error.
     // it's happening during the load of comp1, we have the onLoad, where the workspace calculate extensions.
     // Once it has all extensions it's loading them. in this case, comp1 has the custom-env with 0.0.1 in the envs/envs
     // it's unable to find it in the workspace and asks the scope, which can't find it because it's the full-id include
     // scope-name.
-    it.skip('any bit command should not throw', () => {
+    // now, during the extension calculation, it checks whether the component is in the workspace, and if so, it sets
+    // the version according to the workspace.
+    it('any bit command should not throw', () => {
       expect(() => helper.command.status()).to.not.throw();
     });
   });
