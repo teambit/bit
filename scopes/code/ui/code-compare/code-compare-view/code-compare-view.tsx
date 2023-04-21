@@ -14,7 +14,6 @@ import {
 } from '@teambit/code.ui.code-compare';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
-import { useLaneCompareDrawer } from '@teambit/lanes.ui.compare.lane-compare-drawer';
 
 import styles from './code-compare-view.module.scss';
 
@@ -80,8 +79,7 @@ export function CodeCompareView({
     return languageOverrides[fileEnding || ''] || fileEnding;
   }, [fileName]);
   const containerRef = useRef(null);
-  const laneCompareDrawerContext = useLaneCompareDrawer();
-  const isFullScreen = laneCompareDrawerContext.isFullScreen;
+  const isFullScreen = !!componentCompareContext?.isFullScreen;
 
   useEffect(() => {
     const updatedView = getDefaultView();
@@ -208,7 +206,7 @@ export function CodeCompareView({
     if (!isFullScreen && containerHeight === '100%') {
       updateEditorHeight();
     }
-  }, [isFullScreen, laneCompareDrawerContext]);
+  }, [isFullScreen, componentCompareContext]);
 
   const handleEditorDidMount: DiffOnMount = (editor, monaco) => {
     /**
