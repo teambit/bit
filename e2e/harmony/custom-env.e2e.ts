@@ -306,12 +306,13 @@ describe('custom env', function () {
       expect(() => helper.command.setEnv('comp1', envId));
     });
   });
-  describe('custom-env is 0.0.2 on the workspace, but comp1 is using it with 0.0.1', () => {
+  describe('custom-env is 0.0.2 on the workspace, but comp1 is using it in the model with 0.0.1', () => {
+    let envId: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       const envName = helper.env.setCustomEnv();
-      const envId = `${helper.scopes.remote}/${envName}`;
+      envId = `${helper.scopes.remote}/${envName}`;
       helper.command.setEnv('comp1', envId);
       helper.command.tagAllWithoutBuild();
       helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.2
@@ -325,6 +326,14 @@ describe('custom env', function () {
     // the version according to the workspace.
     it('any bit command should not throw', () => {
       expect(() => helper.command.status()).to.not.throw();
+    });
+    it('bit show should show the correct env', () => {
+      const env = helper.env.getComponentEnv('comp1');
+      expect(env).to.equal(`${envId}@0.0.2`);
+    });
+    it('bit show should not show the previous version of the env', () => {
+      const show = helper.command.showComponent('comp1');
+      expect(show).to.not.have.string(`${envId}@0.0.1`);
     });
   });
   describe('rename custom env', () => {
