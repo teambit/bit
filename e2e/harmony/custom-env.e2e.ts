@@ -350,6 +350,21 @@ describe('custom env', function () {
       expect(env).to.include('new-env');
     });
   });
+  describe('tag custom env then env-set the comp uses it to another non-core env', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      const envName = helper.env.setCustomEnv();
+      const envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
+      helper.command.tagAllWithoutBuild();
+      helper.command.setEnv('comp1', 'teambit.react/react-env@0.0.56');
+    });
+    // previously, it didn't remove the custom-env due to mismatch between the legacy-id and harmony-id.
+    it('bit status should not show it as an issue because the previous env was removed', () => {
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.MultipleEnvs.name);
+    });
+  });
 });
 
 function getEnvIdFromModel(compModel: any): string {

@@ -285,7 +285,9 @@ export class AspectsMerger {
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
     const envFromEnvsAspect: string | undefined = envAspect?.config.env || envAspect?.data.id;
     const aspectsRegisteredAsEnvs = extensionDataList
-      .filter((aspect) => this.workspace.envs.getEnvDefinitionByStringId(aspect.stringId))
+      .filter((aspect) =>
+        this.workspace.envs.getEnvDefinitionByStringId(aspect.newExtensionId?.toString() || aspect.stringId)
+      )
       .map((aspect) => aspect.stringId);
     if (envWasFoundPreviously && (envAspect || aspectsRegisteredAsEnvs.length)) {
       const nonEnvs = extensionDataList.filter((e) => {
@@ -293,6 +295,8 @@ export class AspectsMerger {
         if (
           (envFromEnvsAspect && e.stringId === envFromEnvsAspect) ||
           (envFromEnvsAspect && e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect) ||
+          (envFromEnvsAspect && e.newExtensionId?.toStringWithoutVersion() === envFromEnvsAspect) ||
+          (e.newExtensionId && aspectsRegisteredAsEnvs.includes(e.newExtensionId.toString())) ||
           aspectsRegisteredAsEnvs.includes(e.stringId)
         ) {
           return false;
@@ -340,9 +344,11 @@ export class AspectsMerger {
   ): Promise<ExtensionDataList> {
     const promises = extensionList.map(async (entry) => {
       if (entry.extensionId) {
-        const id = await this.workspace.resolveComponentId(entry.extensionId);
-        const idFromWorkspace = preferWorkspaceVersion ? this.workspace.getIdIfExist(id) : undefined;
-        entry.extensionId = (idFromWorkspace || id)._legacy;
+        const componentId = await this.workspace.resolveComponentId(entry.extensionId);
+        const idFromWorkspace = preferWorkspaceVersion ? this.workspace.getIdIfExist(componentId) : undefined;
+        const id = idFromWorkspace || componentId;
+        entry.extensionId = id._legacy;
+        entry.newExtensionId = id;
       }
 
       return entry;
