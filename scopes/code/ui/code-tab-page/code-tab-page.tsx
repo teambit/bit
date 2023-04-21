@@ -26,7 +26,7 @@ import { FILE_SIZE_THRESHOLD } from '@teambit/component.ui.artifacts.artifacts-t
 
 import styles from './code-tab-page.module.scss';
 
-type CodePageProps = {
+export type CodePageProps = {
   fileIconSlot?: FileIconSlot;
   host: string;
 } & HTMLAttributes<HTMLDivElement>;

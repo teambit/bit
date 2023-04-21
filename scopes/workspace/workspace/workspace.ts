@@ -884,7 +884,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   async importAndGetMany(ids: Array<ComponentID>): Promise<Component[]> {
     await this.importCurrentLaneIfMissing();
-    await this.scope.import(ids, { reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(), preferDependencyGraph: true });
+    await this.scope.import(ids, {
+      reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(),
+      // @todo: when this is set to true, in some cases, "bit lane merge" tries to fetch older versions of
+      // lane-components from main for some reason. it needs to be debugged further to understand why.
+      preferDependencyGraph: false,
+    });
     return this.componentLoader.getMany(ids);
   }
 
@@ -1313,7 +1318,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.logger,
       this.harmony,
       this.onAspectsResolveSlot,
-      this.onRootAspectAddedSlot
+      this.onRootAspectAddedSlot,
+      this.config.resolveAspectsFromNodeModules
     );
     return workspaceAspectsLoader;
   }
