@@ -21,7 +21,7 @@ export type ComponentWithCollectOptions = {
 export class ObjectsReadableGenerator {
   public readable: Readable;
   private pushed: string[] = [];
-  constructor(private repo: Repository) {
+  constructor(private repo: Repository, private callbackOnceDone: Function) {
     this.readable = new Readable({ objectMode: true, read() {} });
   }
   async pushObjectsToReadable(componentsWithOptions: ComponentWithCollectOptions[]) {
@@ -31,6 +31,7 @@ export class ObjectsReadableGenerator {
         this.pushComponentObjects(componentWithOptions)
       );
       logger.debug(`pushObjectsToReadable, pushed ${this.pushed.length} objects`);
+      this.callbackOnceDone();
       this.readable.push(null);
     } catch (err: any) {
       this.readable.destroy(err);
