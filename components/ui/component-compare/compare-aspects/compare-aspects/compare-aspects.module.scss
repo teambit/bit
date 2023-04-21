@@ -1,0 +1,64 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
+.componentCompareAspectContainer {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.left {
+  min-width: 200px;
+  //cannot assign max-width directly to right side
+  max-width: calc(100% - 200px);
+  display: flex;
+  background: var(--on-surface-neutral-low-color, #282828);
+}
+
+.right {
+  position: relative;
+  overflow-y: auto;
+  // this is to fix the right panel when it gets too big or too small
+  min-width: 200px;
+  max-width: calc(100% - 200px);
+}
+
+.splitter {
+  position: relative;
+  background: var(--on-surface-neutral-low-color, #282828);
+
+  > :first-child {
+    z-index: $pane-splitter-zIndex;
+    position: absolute;
+  }
+}
+
+.collapser {
+  right: 1px;
+}
+
+.depNode {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 8px;
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  height: 100%;
+  width: 100%;
+  color: var(--on-surface-neutral-low-color, #282828);
+}
+
+.themeContainer {
+  min-height: calc(100% - 56px);
+  display: flex;
+  width: 100%;
+  > div {
+    width: 100%;
+    display: flex;
+    min-height: calc(100% - 56px);
+  }
+}

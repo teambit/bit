@@ -37,4 +37,12 @@ export interface WorkspaceExtConfig {
    * All component extensions applied by default on all components in the workspace (except vendor components)
    */
   extensions: { [extensionsId: string]: string };
+
+  /**
+   * If set to
+   * `true`, it allows the workspace to resolve scope's aspects from node modules
+   * installed in the workspace's `node_modules` directory. If not set or set to `false`, aspects will only be resolved
+   * from the scope aspects capsule.
+   */
+  resolveAspectsFromNodeModules?: boolean;
 }

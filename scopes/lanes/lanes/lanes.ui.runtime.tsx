@@ -152,7 +152,14 @@ export class LanesUI {
   }
 
   getLaneOverview() {
-    return <LaneOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />;
+    return (
+      <LaneOverview
+        routeSlot={this.routeSlot}
+        overviewSlot={this.overviewSlot}
+        host={this.lanesHost}
+        useLanes={useLanes}
+      />
+    );
   }
 
   getLanesComparePage() {
