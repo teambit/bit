@@ -437,6 +437,10 @@ async function addLogToComponents(
   messagePerComponent: MessagePerComponent[],
   copyLogFromPreviousSnap = false
 ) {
+  // @ts-ignore this happens when running `bit tag -m ""`.
+  if (message === true) {
+    message = '';
+  }
   const basicLog = await getBasicLog();
   const getLog = (component: ConsumerComponent): Log => {
     const nextVersion = persist ? component.componentMap?.nextVersion : null;
