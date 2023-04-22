@@ -883,12 +883,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * @param ids
    */
   async importAndGetMany(ids: Array<ComponentID>): Promise<Component[]> {
+    if (!ids.length) return [];
     await this.importCurrentLaneIfMissing();
     await this.scope.import(ids, {
       reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(),
-      // @todo: when this is set to true, in some cases, "bit lane merge" tries to fetch older versions of
-      // lane-components from main for some reason. it needs to be debugged further to understand why.
-      preferDependencyGraph: false,
+      preferDependencyGraph: true,
     });
     return this.componentLoader.getMany(ids);
   }
