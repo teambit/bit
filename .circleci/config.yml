@@ -2044,36 +2044,36 @@ workflows:
   #           branches:
   #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  bvm_bundle_debug:
-    jobs:
-      - checkout_code:
-          filters:
-            branches:
-              only: circle-use-new-registry-bundle
-      - get_linux_arm64_packages:
-          filters:
-            branches:
-              only: circle-use-new-registry-bundle
-      - bundle_version_linux:
-          filters:
-            branches:
-              only: circle-use-new-registry-bundle
-          requires:
-            - get_linux_arm64_packages
-      - bundle_version_windows:
-          filters:
-            branches:
-              only: circle-use-new-registry-bundle
-      - get_darwin_arm64_packages:
-          filters:
-            branches:
-              only: circle-use-new-registry-bundle
-      - bundle_version_macos:
-          filters:
-            branches:
-              only: circle-use-new-registry-bundle
-          requires:
-            - get_darwin_arm64_packages
+  # bvm_bundle_debug:
+  #   jobs:
+  #     - checkout_code:
+  #         filters:
+  #           branches:
+  #             only: circle-use-new-registry-bundle
+  #     - get_linux_arm64_packages:
+  #         filters:
+  #           branches:
+  #             only: circle-use-new-registry-bundle
+  #     - bundle_version_linux:
+  #         filters:
+  #           branches:
+  #             only: circle-use-new-registry-bundle
+  #         requires:
+  #           - get_linux_arm64_packages
+  #     - bundle_version_windows:
+  #         filters:
+  #           branches:
+  #             only: circle-use-new-registry-bundle
+  #     - get_darwin_arm64_packages:
+  #         filters:
+  #           branches:
+  #             only: circle-use-new-registry-bundle
+  #     - bundle_version_macos:
+  #         filters:
+  #           branches:
+  #             only: circle-use-new-registry-bundle
+  #         requires:
+  #           - get_darwin_arm64_packages
   #     - harmony_publish_to_gcloud:
   #         filters:
   #           branches:
