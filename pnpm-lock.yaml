@@ -40473,7 +40473,7 @@ packages:
     dev: true
 
   /@teambit/design.ui.styles.ellipsis@0.0.347(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-LjDi1VsjWOmDi1kN1l+C+Ef0ArQ=, tarball: https://node-registry.bit.cloud/@teambit/design.ui.styles.ellipsis/-/teambit-design.ui.styles.ellipsis-0.0.347.tgz}
+    resolution: {integrity: sha1-LjDi1VsjWOmDi1kN1l+C+Ef0ArQ=, tarball: https://node-registry.bit.cloud/@teambit/design.ui.styles.ellipsis/-/@teambit-design.ui.styles.ellipsis-0.0.347.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -42825,7 +42825,7 @@ packages:
       vscode-icons-js: 11.0.0
 
   /@teambit/ui-foundation.ui.global-loader@0.0.474(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-X0qIYDhNlRZ4MO7VVb0hw8pkBt4dpddUSFgW3uzWA8ExSVzOcTGdicrASMxFmTxBSyzPb5pO9pcbJJCwRzehLQ==}
+    resolution: {integrity: sha1-7X0x1qLPQV7ySEUh5Rs1iXt+AX4=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.474.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@teambit/legacy': 1.0.183
@@ -42839,7 +42839,7 @@ packages:
     dev: true
 
   /@teambit/ui-foundation.ui.global-loader@0.0.487(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-0Mz9fNznJIlre7UY1Y9/A66Jr1mj20aqYZ7fyAqmGl1tFaDe+qJ3j8tFHz38Oh95Frxd5XoQ2Lx/u2NuXWfidA==}
+    resolution: {integrity: sha1-t9IdwYuJBCHPUYK73ELRUHQHPVs=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.487.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -42852,7 +42852,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.global-loader@0.0.493(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-qMxudHxaNTN0w6GnDiwx0Tts5QW3Yi6FchaW/VQTfUR/ojW8S4ike/5t3VdBma8WSf3GxFOOK7Yeeb7/pzt+kg==}
+    resolution: {integrity: sha1-0DiiKiGSijunFyRRRSMD4R2iQMk=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.493.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -42865,7 +42865,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.global-loader@0.0.497(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-gz60JTc2A7bBOaesO2yyyvnlixV77mUT4c56JeD5aM2NHGMszlsC1vJXcSxWtJ59Z70EhfDPHMt1KyzXcGXscA==}
+    resolution: {integrity: sha1-5fU/29iOW7vvZBaoyaRiSUCyl2I=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.497.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
