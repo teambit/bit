@@ -1812,14 +1812,17 @@ workflows:
           <<: *master_only_filter
           requires:
             - bit_tag
+            - bit_export
             - get_linux_arm64_packages
       - bundle_version_windows:
           <<: *master_only_filter
           requires:
+            - bit_export
             - bit_tag
       - bundle_version_macos:
           <<: *master_only_filter
           requires:
+            - bit_export
             - bit_tag
             - get_darwin_arm64_packages
       - harmony_publish_to_gcloud:
@@ -1835,6 +1838,7 @@ workflows:
             - bit_tag
       - symphony_docker_build:
           requires:
+            - bit_export
             - bit_tag
       # - docker_build:
       #     requires:
@@ -1950,16 +1954,19 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
+            - bit_export
             - get_linux_arm64_packages
       - bundle_version_windows:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
+            - bit_export
             - bit_tag
       - bundle_version_macos:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
+            - bit_export
             - bit_tag
             - get_darwin_arm64_packages
       - harmony_publish_to_gcloud:
@@ -1979,6 +1986,7 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
+            - bit_export
       # - docker_build:
       #     requires:
       #       - harmony_deploy_approval_job
