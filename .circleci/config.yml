@@ -364,8 +364,9 @@ jobs:
       #     command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       # - run: npm whoami
       # prod registry
-      - run: npm config set @bit:registry https://node.bit.dev
-      - run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
+      # - run: npm config set @bit:registry https://node.bit.dev
+      - run: npm config set @bit:registry https://node-registry.bit.cloud
+      # - run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
       - run: echo "//node-registry.bit.cloud/:_authToken=$registryProdToken" >> ~/.npmrc
       # - run: echo "always-auth=true" >> ~/.npmrc
       # stage registry
@@ -1308,7 +1309,8 @@ jobs:
       # prod registry
       # -
       # run: npm config set @bit:registry https://node.bit.dev
-      - run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node.bit.dev'
+      # - run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node.bit.dev'
+      - run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node-registry.bit.cloud'
       # -
       #   run: Get-Content -Path C:\Users\circleci\.npmrc
       # -
