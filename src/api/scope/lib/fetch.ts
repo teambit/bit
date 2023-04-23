@@ -51,13 +51,29 @@ export const CURRENT_FETCH_SCHEMA = '0.0.2';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
+const openConnections: number[] = [];
+let fetchCounter = 0;
+
 export default async function fetch(
   path: string,
   ids: string[], // ids type are determined by the fetchOptions.type
   fetchOptions: FETCH_OPTIONS,
   headers?: Record<string, any> | null | undefined
 ): Promise<Readable> {
-  logger.debug(`scope.fetch started, path ${path}, fetchOptions`, fetchOptions);
+  fetchCounter += 1;
+  const currentFetch = fetchCounter;
+  openConnections.push(currentFetch);
+  const startTime = new Date().getTime();
+  logger.debug(
+    `scope.fetch [${currentFetch}] started.
+path ${path}.
+open connections: [${openConnections.join(', ')}]. (total ${openConnections.length}).
+memory usage: ${getMemoryUsageInMB()} MB.
+total ids: ${ids.length}.
+fetchOptions`,
+    fetchOptions
+  );
+
   if (!fetchOptions.type) fetchOptions.type = 'component'; // for backward compatibility
   const args = { path, ids, ...fetchOptions };
   // This might be undefined in case of fork process like during bit test command
@@ -75,7 +91,15 @@ export default async function fetch(
   const useCachedScope = true;
   const scope: Scope = await loadScope(path, useCachedScope);
   const objectList = new ObjectList();
-  const objectsReadableGenerator = new ObjectsReadableGenerator(scope.objects);
+  const finishLog = () => {
+    const duration = new Date().getTime() - startTime;
+    openConnections.splice(openConnections.indexOf(currentFetch), 1);
+    logger.debug(`scope.fetch [${currentFetch}] completed.
+open connections: [${openConnections.join(', ')}]. (total ${openConnections.length}).
+memory usage: ${getMemoryUsageInMB()} MB.
+took: ${duration} ms.`);
+  };
+  const objectsReadableGenerator = new ObjectsReadableGenerator(scope.objects, finishLog);
   const shouldFetchDependencies = () => {
     if (fetchOptions.includeDependencies) return true;
     // backward compatible before 0.0.900
@@ -256,4 +280,9 @@ function bitIdsToLatest(bitIds: BitIds, lane: Lane | null) {
       return inLane || bitId.changeVersion(LATEST_BIT_VERSION);
     })
   );
+}
+
+function getMemoryUsageInMB(): number {
+  const used = process.memoryUsage().heapUsed / (1024 * 1024);
+  return Math.round(used * 100) / 100;
 }

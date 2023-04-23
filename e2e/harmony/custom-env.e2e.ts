@@ -306,23 +306,34 @@ describe('custom env', function () {
       expect(() => helper.command.setEnv('comp1', envId));
     });
   });
-  describe('custom-env is 0.0.2 on the workspace, but comp1 is using it with 0.0.1', () => {
+  describe('custom-env is 0.0.2 on the workspace, but comp1 is using it in the model with 0.0.1', () => {
+    let envId: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       const envName = helper.env.setCustomEnv();
-      const envId = `${helper.scopes.remote}/${envName}`;
+      envId = `${helper.scopes.remote}/${envName}`;
       helper.command.setEnv('comp1', envId);
       helper.command.tagAllWithoutBuild();
       helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.2
     });
-    // @gilad todo: currently, this is failing with ComponentNotFound error.
+    // previously, this was failing with ComponentNotFound error.
     // it's happening during the load of comp1, we have the onLoad, where the workspace calculate extensions.
     // Once it has all extensions it's loading them. in this case, comp1 has the custom-env with 0.0.1 in the envs/envs
     // it's unable to find it in the workspace and asks the scope, which can't find it because it's the full-id include
     // scope-name.
-    it.skip('any bit command should not throw', () => {
+    // now, during the extension calculation, it checks whether the component is in the workspace, and if so, it sets
+    // the version according to the workspace.
+    it('any bit command should not throw', () => {
       expect(() => helper.command.status()).to.not.throw();
+    });
+    it('bit show should show the correct env', () => {
+      const env = helper.env.getComponentEnv('comp1');
+      expect(env).to.equal(`${envId}@0.0.2`);
+    });
+    it('bit show should not show the previous version of the env', () => {
+      const show = helper.command.showComponent('comp1');
+      expect(show).to.not.have.string(`${envId}@0.0.1`);
     });
   });
   describe('rename custom env', () => {
@@ -337,6 +348,21 @@ describe('custom env', function () {
     it('should update components using the custom-env with the new name', () => {
       const env = helper.env.getComponentEnv('comp1');
       expect(env).to.include('new-env');
+    });
+  });
+  describe('tag custom env then env-set the comp uses it to another non-core env', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      const envName = helper.env.setCustomEnv();
+      const envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
+      helper.command.tagAllWithoutBuild();
+      helper.command.setEnv('comp1', 'teambit.react/react-env@0.0.56');
+    });
+    // previously, it didn't remove the custom-env due to mismatch between the legacy-id and harmony-id.
+    it('bit status should not show it as an issue because the previous env was removed', () => {
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.MultipleEnvs.name);
     });
   });
 });

@@ -228,7 +228,7 @@ export class ScopeMain implements ComponentFactory {
 
   async getResolvedAspects(
     components: Component[],
-    opts?: { skipIfExists?: boolean; packageManagerConfigRootDir?: string }
+    opts?: { skipIfExists?: boolean; packageManagerConfigRootDir?: string; workspaceName?: string }
   ): Promise<RequireableComponent[]> {
     const scopeAspectsLoader = this.getScopeAspectsLoader();
     return scopeAspectsLoader.getResolvedAspects(components, opts);

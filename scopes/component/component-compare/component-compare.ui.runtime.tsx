@@ -17,7 +17,12 @@ import { CompareChangelogSection } from './component-compare-changelog.section';
 export type ComponentCompareNav = Array<TabItem>;
 export type ComponentCompareNavSlot = SlotRegistry<ComponentCompareNav>;
 export class ComponentCompareUI {
-  constructor(private host: string, private navSlot: ComponentCompareNavSlot, private routeSlot: RouteSlot) {}
+  constructor(
+    private host: string,
+    private navSlot: ComponentCompareNavSlot,
+    private routeSlot: RouteSlot,
+    private compUI: ComponentUI
+  ) {}
 
   static runtime = UIRuntime;
 
@@ -78,7 +83,7 @@ export class ComponentCompareUI {
 
         return navProps.map((navProp) => ({
           ...navProp,
-          id: `${id}-${navProp?.id}`,
+          id: navProp?.id || id,
           element: getElement(routesForId, navProp?.props?.href),
         }));
       })
@@ -93,7 +98,7 @@ export class ComponentCompareUI {
   ) {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
-    const componentCompareUI = new ComponentCompareUI(host, navSlot, routeSlot);
+    const componentCompareUI = new ComponentCompareUI(host, navSlot, routeSlot, componentUi);
     const componentCompareSection = new ComponentCompareSection(componentCompareUI);
     componentUi.registerRoute([componentCompareSection.route]);
     componentUi.registerWidget(componentCompareSection.navigationLink, componentCompareSection.order);

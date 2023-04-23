@@ -869,6 +869,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return Boolean(this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId._legacy)));
   }
 
+  getIdIfExist(componentId: ComponentID): ComponentID | undefined {
+    const id = this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId._legacy));
+    if (!id) return undefined;
+    return componentId.changeVersion(id.version);
+  }
+
   /**
    * This will make sure to fetch the objects prior to load them
    * do not use it if you are not sure you need it.
@@ -877,8 +883,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * @param ids
    */
   async importAndGetMany(ids: Array<ComponentID>): Promise<Component[]> {
+    if (!ids.length) return [];
     await this.importCurrentLaneIfMissing();
-    await this.scope.import(ids, { reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(), preferDependencyGraph: true });
+    await this.scope.import(ids, {
+      reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(),
+      preferDependencyGraph: true,
+    });
     return this.componentLoader.getMany(ids);
   }
 
@@ -1307,7 +1317,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.logger,
       this.harmony,
       this.onAspectsResolveSlot,
-      this.onRootAspectAddedSlot
+      this.onRootAspectAddedSlot,
+      this.config.resolveAspectsFromNodeModules
     );
     return workspaceAspectsLoader;
   }
