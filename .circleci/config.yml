@@ -188,7 +188,7 @@ commands: # reusable commands
     steps:
       - run:
           name: set bit cloud registry in npm config
-          command: npm config set @teambit:registry=https://node.bit.cloud
+          command: npm config set @teambit:registry=https://node-registry.bit.cloud
 
   set_git_credentials:
     steps:
