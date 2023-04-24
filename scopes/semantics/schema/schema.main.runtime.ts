@@ -94,6 +94,7 @@ export class SchemaMain {
     // if on workspace get schema from ts server
     if (this.workspace) {
       const env = this.envs.getEnv(component).env;
+      const devPatterns = env.getDevPatterns?.(component);
       // types need to be fixed
       const formatter: Formatter | undefined = env.getFormatter?.(null, [
         (config: PrettierConfigMutator) => {
@@ -106,7 +107,7 @@ export class SchemaMain {
       }
       const schemaExtractor: SchemaExtractor = env.getSchemaExtractor();
 
-      const result = await schemaExtractor.extract(component, formatter);
+      const result = await schemaExtractor.extract(component, formatter, devPatterns);
       if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();
 
       return result;
@@ -186,7 +187,8 @@ export class SchemaMain {
     const logger = loggerMain.createLogger(SchemaAspect.id);
     const schema = new SchemaMain(parserSlot, envs, config, builder, workspace, logger);
     const schemaTask = new SchemaTask(SchemaAspect.id, schema, logger);
-    builder.registerBuildTasks([schemaTask]);
+    builder.registerTagTasks([schemaTask]);
+    builder.registerSnapTasks([schemaTask]);
     cli.register(new SchemaCommand(schema, component, logger));
     graphql.register(schemaSchema(schema));
     envs.registerService(new SchemaService());
