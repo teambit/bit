@@ -3,6 +3,8 @@ import { getTsconfig } from 'get-tsconfig';
 import { SchemaExtractor } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
 import type { Workspace } from '@teambit/workspace';
+import { relative } from 'path';
+import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { SchemaNode, APISchema, ModuleSchema, UnImplementedSchema } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
@@ -49,17 +51,15 @@ export class TypeScriptExtractor implements SchemaExtractor {
   /**
    * extract a component schema.
    */
-  async extract(component: Component, formatter?: Formatter, devPatterns?: string[]): Promise<APISchema> {
+  async extract(component: Component, formatter?: Formatter, excludedFiles?: string[]): Promise<APISchema> {
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
     const compatibleExts = ['.tsx', '.jsx', '.ts', '.js'];
-    const incompatibleExts = devPatterns;
-    const internalFiles = component.filesystem.files.filter(
-      (file) =>
-        !incompatibleExts?.includes(file.extname) &&
-        compatibleExts.includes(file.extname) &&
-        file.path !== mainFile.path
-    );
+    const internalFiles = component.filesystem.files.filter((file) => {
+      const path = relative(file.base, pathNormalizeToLinux(file.path));
+      return !excludedFiles?.includes(path) && compatibleExts.includes(file.extname) && file.path !== mainFile.path;
+    });
+
     const allFiles = [mainFile, ...internalFiles];
 
     const context = await this.createContext(tsserver, component, formatter);

@@ -9,6 +9,7 @@ import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Formatter } from '@teambit/formatter';
+import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import { SchemaExtractor } from './schema-extractor';
@@ -44,7 +45,9 @@ export class SchemaMain {
 
     private workspace: Workspace,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private devFiles: DevFilesMain
   ) {}
 
   /**
@@ -94,7 +97,7 @@ export class SchemaMain {
     // if on workspace get schema from ts server
     if (this.workspace) {
       const env = this.envs.getEnv(component).env;
-      const devPatterns = env.getDevPatterns?.(component);
+      const devPatterns = this.devFiles.getDevFiles(component).list();
       // types need to be fixed
       const formatter: Formatter | undefined = env.getFormatter?.(null, [
         (config: PrettierConfigMutator) => {
@@ -164,6 +167,7 @@ export class SchemaMain {
     LoggerAspect,
     BuilderAspect,
     WorkspaceAspect,
+    DevFilesAspect,
   ];
   static slots = [Slot.withType<Parser>()];
 
@@ -172,20 +176,21 @@ export class SchemaMain {
   };
 
   static async provider(
-    [envs, cli, component, graphql, loggerMain, builder, workspace]: [
+    [envs, cli, component, graphql, loggerMain, builder, workspace, devFiles]: [
       EnvsMain,
       CLIMain,
       ComponentMain,
       GraphqlMain,
       LoggerMain,
       BuilderMain,
-      Workspace
+      Workspace,
+      DevFilesMain
     ],
     config: SchemaConfig,
     [parserSlot]: [ParserSlot]
   ) {
     const logger = loggerMain.createLogger(SchemaAspect.id);
-    const schema = new SchemaMain(parserSlot, envs, config, builder, workspace, logger);
+    const schema = new SchemaMain(parserSlot, envs, config, builder, workspace, logger, devFiles);
     const schemaTask = new SchemaTask(SchemaAspect.id, schema, logger);
     builder.registerTagTasks([schemaTask]);
     builder.registerSnapTasks([schemaTask]);
