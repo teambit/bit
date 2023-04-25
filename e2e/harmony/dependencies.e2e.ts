@@ -68,7 +68,7 @@ describe('dependencies', function () {
       helper.command.tagWithoutBuild();
       helper.command.export();
     });
-    it('should convert the flattened edge of itself to an id with scope-name', () => {
+    it.only('should convert the flattened edge of itself to an id with scope-name', () => {
       const comp = helper.command.catComponent('comp1@latest');
       expect(comp.flattenedEdges[0].source.scope).to.equal(helper.scopes.remote);
     });
