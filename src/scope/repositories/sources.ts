@@ -97,17 +97,7 @@ export default class SourceRepository {
     const concurrency = concurrentComponentsLimit();
     logger.trace(`sources.getMany, Ids: ${ids.join(', ')}`);
     logger.debug(`sources.getMany, ${ids.length} Ids`);
-    return pMapPool(
-      ids,
-      async (id) => {
-        const component = await this.exists(id);
-        return {
-          id,
-          component,
-        };
-      },
-      { concurrency }
-    );
+    return pMapPool(ids, async (id) => this.exists(id), { concurrency });
   }
 
   /**
