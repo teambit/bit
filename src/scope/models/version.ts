@@ -108,7 +108,7 @@ export default class Version extends BitObject {
    * so it'll be best to delete this prop as soon as all scopes are deployed with the new version.
    * (around August 2023 should be safe)
    */
-  flattenedEdges: DepEdge[];
+  private flattenedEdges: DepEdge[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies: { [key: string]: string };
   devPackageDependencies: { [key: string]: string };
@@ -411,7 +411,7 @@ export default class Version extends BitObject {
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
         flattenedDependencies: this.flattenedDependencies.map((dep) => dep.serialize()),
-        flattenedEdges: this.flattenedEdges.map((f) => Version.depEdgeToObject(f)),
+        flattenedEdges: this.flattenedEdgesRef ? undefined : this.flattenedEdges.map((f) => Version.depEdgeToObject(f)),
         flattenedEdgesRef: this.flattenedEdgesRef?.toString(),
         extensions: this.extensions.toModelObjects(),
         packageDependencies: this.packageDependencies,
@@ -572,7 +572,8 @@ export default class Version extends BitObject {
       dependencies: _getDependencies(dependencies),
       devDependencies: _getDependencies(devDependencies),
       flattenedDependencies: _groupFlattenedDependencies(),
-      flattenedEdges: flattenedEdges?.map((f) => Version.depEdgeFromObject(f)) || [],
+      // backward compatibility. before introducing `flattenedEdgesRef`, we only had `flattenedEdges`. see getFlattenedEdges() for more info.
+      flattenedEdges: flattenedEdgesRef ? [] : flattenedEdges?.map((f) => Version.depEdgeFromObject(f)) || [],
       flattenedEdgesRef: flattenedEdgesRef ? Ref.from(flattenedEdgesRef) : undefined,
       devPackageDependencies,
       peerPackageDependencies,
