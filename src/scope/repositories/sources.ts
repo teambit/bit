@@ -44,6 +44,11 @@ export type ComponentDef = {
   component: ModelComponent | null | undefined;
 };
 
+export type ComponentExistence = {
+  id: BitId;
+  exists: Boolean;
+};
+
 export type MergeResult = {
   mergedComponent: ModelComponent;
   mergedVersions: string[];
@@ -78,6 +83,24 @@ export default class SourceRepository {
       ids,
       async (id) => {
         const component = await this.get(id, versionShouldBeBuilt);
+        return {
+          id,
+          component,
+        };
+      },
+      { concurrency }
+    );
+  }
+
+  async existMany(ids: BitId[] | BitIds): Promise<ComponentExistence[]> {
+    if (!ids.length) return [];
+    const concurrency = concurrentComponentsLimit();
+    logger.trace(`sources.getMany, Ids: ${ids.join(', ')}`);
+    logger.debug(`sources.getMany, ${ids.length} Ids`);
+    return pMapPool(
+      ids,
+      async (id) => {
+        const component = await this.exists(id);
         return {
           id,
           component,
@@ -159,6 +182,33 @@ export default class SourceRepository {
     version.dependencies = version.dependencies.filter((d) => !d.id.isEqualWithoutVersion(component.toBitId()));
 
     return returnComponent(version as Version);
+  }
+
+  /**
+   * if the id has a version and the Version object doesn't exist, it returns false.
+   */
+  async exists(bitId: BitId): Promise<ComponentExistence> {
+    const emptyComponent = ModelComponent.fromBitId(bitId);
+    const component: ModelComponent | undefined = await this._findComponent(emptyComponent);
+    const isExists = async () => {
+      if (!component) return false;
+      if (!bitId.hasVersion()) return true;
+      const ver = bitId.version as string;
+      const isSnap = isHash(ver);
+      if (isSnap) {
+        return this.objects().has(new Ref(ver));
+      }
+      const versionHash = component.versionsIncludeOrphaned[ver];
+      if (!versionHash) {
+        return false;
+      }
+      return this.objects().has(new Ref(ver));
+    };
+    const exists = await isExists();
+    return {
+      id: bitId,
+      exists,
+    };
   }
 
   isUnBuiltInCache(bitId: BitId): boolean {
