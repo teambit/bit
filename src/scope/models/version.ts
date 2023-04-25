@@ -561,7 +561,9 @@ export default class Version extends BitObject {
       bindingPrefix: bindingPrefix || null,
       schema: schema || undefined,
       log: {
-        message: log.message,
+        // workaround for a bug where the log.message was saved as boolean when running `bit tag -m ""`
+        // the bug was fixed since v0.1.27, but old objects might still have this bug
+        message: typeof log.message !== 'string' ? '' : log.message,
         date: log.date,
         username: log.username,
         email: log.email,
