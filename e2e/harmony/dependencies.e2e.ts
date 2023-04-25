@@ -68,9 +68,13 @@ describe('dependencies', function () {
       helper.command.tagWithoutBuild();
       helper.command.export();
     });
-    it.only('should convert the flattened edge of itself to an id with scope-name', () => {
+    it('should convert the flattened edge of itself to an id with scope-name', () => {
       const comp = helper.command.catComponent('comp1@latest');
-      expect(comp.flattenedEdges[0].source.scope).to.equal(helper.scopes.remote);
+      const ref = comp.flattenedEdgesRef;
+      const content = helper.command.catObject(ref);
+      const json = JSON.parse(content);
+
+      expect(json[0].source.scope).to.equal(helper.scopes.remote);
     });
   });
   describe('ignoring a dependency using // @bit-ignore', () => {
