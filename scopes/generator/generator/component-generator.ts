@@ -112,7 +112,7 @@ export class ComponentGenerator {
     }
 
     if (!config && this.envId) {
-      const isInWorkspace = this.workspace.exists(componentId);
+      const isInWorkspace = this.workspace.exists(this.envId);
       config = {
         [isInWorkspace ? this.envId.toStringWithoutVersion() : this.envId.toString()]: {},
         'teambit.envs/envs': {
