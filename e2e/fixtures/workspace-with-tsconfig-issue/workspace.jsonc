@@ -39,13 +39,7 @@
     "packageManager": "teambit.dependencies/pnpm",
     "policy": {
       "dependencies": {
-        "@teambit/defender.eslint-linter": "0.0.8",
-        "@teambit/defender.jest-tester": "0.0.8",
-        "@teambit/defender.prettier-formatter": "0.0.5",
-        "@teambit/dependencies.modules.packages-excluder": "0.0.70",
         "@teambit/mdx.ui.mdx-scope-context": "0.0.496",
-        "@teambit/preview.react-preview": "0.0.31",
-        "@teambit/react.mounter": "0.0.8",
         "@teambit/react.react-env": "0.0.55",
         "@teambit/typescript.typescript-compiler": "0.0.7"
       },
