@@ -247,7 +247,12 @@ export class InstallMain {
         current.manifests,
         mergedRootPolicy,
         current.componentDirectoryMap,
-        { installTeambitBit: false },
+        {
+          installTeambitBit: false,
+          // We clean node_modules only on the first install.
+          // Otherwise, we might load an env from a location that we later remove.
+          pruneNodeModules: installCycle === 0,
+        },
         pmInstallOptions
       );
       // Core aspects should be relinked after installation because Yarn removes all symlinks created not by Yarn.
