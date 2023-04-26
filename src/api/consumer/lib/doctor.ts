@@ -57,7 +57,7 @@ export default async function runAll({
   const examineP = doctorRegistrar.diagnoses.map((diagnosis) => diagnosis.examine());
   const examineResults = await Promise.all(examineP);
   const envMeta = await _getEnvMeta();
-  const savedFilePath = await _saveExamineResultsToFile(examineResults, envMeta, filePath);
+  const savedFilePath = await _saveExamineResultsToFile(examineResults, envMeta, filePath, archiveWorkspace);
   return { examineResults, savedFilePath, metaData: envMeta };
 }
 
