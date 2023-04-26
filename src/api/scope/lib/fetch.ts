@@ -64,12 +64,14 @@ export default async function fetch(
   const currentFetch = fetchCounter;
   openConnections.push(currentFetch);
   const startTime = new Date().getTime();
+
+  const logIds = ids.length < 10 ? `\nids: ${ids.join(', ')}` : '';
   logger.debug(
     `scope.fetch [${currentFetch}] started.
 path ${path}.
 open connections: [${openConnections.join(', ')}]. (total ${openConnections.length}).
 memory usage: ${getMemoryUsageInMB()} MB.
-total ids: ${ids.length}.
+total ids: ${ids.length}.${logIds}
 fetchOptions`,
     fetchOptions
   );

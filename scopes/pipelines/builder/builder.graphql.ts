@@ -73,7 +73,7 @@ export function builderSchema(builder: BuilderMain, logger: Logger) {
         path: String!
         # artifact file content (only for text files). Use /api/<component-id>/~aspect/builder/<extension-id>/~<path> to fetch binary file data
         content: String
-        # REST endpoint to fetch artifact data from. /api/<component-id>/~aspect/builder/<extension-id>/~<pat
+        # REST endpoint to fetch artifact data from. /api/<component-id>/~aspect/builder/<extension-id>/~<path>
         downloadUrl: String
         # Remote storage url to resolve artifact file from
         externalUrl: String
@@ -148,12 +148,15 @@ export function builderSchema(builder: BuilderMain, logger: Logger) {
               })
             );
 
-            const result = pipeline.map((task) => ({
-              ...task,
-              artifact: artifactsWithVinyl.find(
-                (data) => data.task.aspectId === task.taskId && data.task.name === task.taskName
-              ),
-            }));
+            const result = pipeline
+              .filter((task) => !taskId || task.taskId === taskId)
+              .map((task) => ({
+                ...task,
+                id: `filter-${taskId || ''}`,
+                artifact: artifactsWithVinyl.find(
+                  (data) => data.task.aspectId === task.taskId && data.task.name === task.taskName
+                ),
+              }));
 
             return result;
           } catch (e: any) {
@@ -163,14 +166,15 @@ export function builderSchema(builder: BuilderMain, logger: Logger) {
         },
       },
       TaskReport: {
-        id: (taskReport: TaskReport) => `${taskReport.taskId}-${taskReport.taskName}`,
+        id: (taskReport: TaskReport & { id?: string }) =>
+          `${(taskReport.id && `${taskReport.id}-`) || ''}${taskReport.taskId}-${taskReport.taskName}`,
         description: (taskReport: TaskReport) => taskReport.taskDescription,
         errors: (taskReport: TaskReport) => taskReport.errors?.map((e) => e.toString()) || [],
         warnings: (taskReport: TaskReport) => taskReport.warnings || [],
         artifact: async (taskReport: TaskReport, { path: pathFilter }: { path?: string }) => {
           if (!taskReport.artifact) return undefined;
           return {
-            id: `${taskReport.taskId}-${taskReport.taskName}-${taskReport.artifact?.name}`,
+            id: `${taskReport.taskId}-${taskReport.taskName}-${taskReport.artifact?.name}-${pathFilter || ''}`,
             ...taskReport.artifact,
             files: taskReport.artifact.files.filter((file) => !pathFilter || file.path === pathFilter),
           };
