@@ -246,13 +246,17 @@ export default class ImportComponents {
 
   private async throwForComponentsFromAnotherLane(bitIds: BitIds) {
     if (this.options.objectsOnly) return;
-    const currentLane = await this.workspace.getCurrentLaneObject();
+    const currentLaneId = this.workspace.getCurrentLaneId();
+    const currentRemoteLane = currentLaneId
+      ? this.options.lanes?.lanes.find((l) => l.toLaneId().isEqual(currentLaneId))
+      : undefined;
     const idsFromAnotherLane: BitId[] = [];
-    if (currentLane) {
+    if (currentRemoteLane) {
       await Promise.all(
         bitIds.map(async (bitId) => {
           const isOnCurrentLane =
-            (await this.scope.isPartOfLaneHistory(bitId, currentLane)) || (await this.scope.isPartOfMainHistory(bitId));
+            (await this.scope.isPartOfLaneHistory(bitId, currentRemoteLane)) ||
+            (await this.scope.isPartOfMainHistory(bitId));
           if (!isOnCurrentLane) idsFromAnotherLane.push(bitId);
         })
       );
@@ -266,7 +270,7 @@ export default class ImportComponents {
     }
     if (idsFromAnotherLane.length) {
       throw new BitError(`unable to import the following components as they don't belong to ${
-        currentLane ? 'the current lane' : 'main'
+        currentRemoteLane ? 'the current lane' : 'main'
       }:
 ${idsFromAnotherLane.map((id) => id.toString()).join(', ')}
 if you need this specific snap, find the lane this snap is belong to, then run "bit lane merge <lane-id> [component-id]" to merge this component from the lane.
