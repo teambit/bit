@@ -62,6 +62,7 @@ export {
   LinkDetail,
   LinkResults,
   LinkingOptions,
+  DependencyLinker,
   DepsLinkedToEnvResult,
   NestedNMDepsLinksResult,
   LinkToDirResult,

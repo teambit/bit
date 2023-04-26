@@ -146,24 +146,31 @@ export class DependencyInstaller {
       throw new RootDirNotDefined();
     }
     if (options.linkedDependencies) {
-      const directDeps = new Set<string>();
-      Object.values(manifests).forEach((manifest) => {
-        for (const depName of Object.keys({ ...manifest.dependencies, ...manifest.devDependencies })) {
-          directDeps.add(depName);
-        }
-      });
-      if (options.linkedDependencies[finalRootDir]) {
+      manifests = JSON.parse(JSON.stringify(manifests));
+      const linkedDependencies = JSON.parse(
+        JSON.stringify(options.linkedDependencies)
+      ) as typeof options.linkedDependencies;
+      if (linkedDependencies[finalRootDir]) {
+        const directDeps = new Set<string>();
+        Object.values(manifests).forEach((manifest) => {
+          for (const depName of Object.keys({ ...manifest.dependencies, ...manifest.devDependencies })) {
+            directDeps.add(depName);
+          }
+        });
         for (const manifest of Object.values(manifests)) {
           if (manifest.name && directDeps.has(manifest.name)) {
-            delete options.linkedDependencies[finalRootDir][manifest.name];
+            delete linkedDependencies[finalRootDir][manifest.name];
           }
         }
       }
-      Object.entries(options.linkedDependencies).forEach(([dir, linkedDeps]) => {
+      Object.entries(linkedDependencies).forEach(([dir, linkedDeps]) => {
         if (!manifests[dir]) {
           manifests[dir] = {};
         }
-        manifests[dir].dependencies = Object.assign({}, manifests[dir].dependencies, linkedDeps);
+        manifests[dir].dependencies = {
+          ...linkedDeps,
+          ...manifests[dir].dependencies,
+        };
       });
     }
     const hidePackageManagerOutput = !!(this.installingContext.inCapsule && process.env.VERBOSE_PM_OUTPUT !== 'true');
