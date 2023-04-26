@@ -211,6 +211,7 @@
     "stringify-package": "1.0.1",
     "stylus-lookup": "3.0.2",
     "table": "5.4.6",
+    "tar-fs": "2.1.1",
     "tar-stream": "2.2.0",
     "cli-table": "0.3.6",
     "uid-number": "0.0.6",

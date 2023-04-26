@@ -2,7 +2,9 @@ import fs from 'fs-extra';
 import os from 'os';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import Stream from 'stream';
+import path from 'path';
 import tar from 'tar-stream';
+import tarFS from 'tar-fs';
 import { getHarmonyVersion } from '../../../bootstrap';
 
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '../../../constants';
@@ -42,23 +44,31 @@ export type DoctorRunOneResult = {
 
 let runningTimeStamp;
 
-export default async function runAll({ filePath }: { filePath?: string }): Promise<DoctorRunAllResults> {
+export default async function runAll({
+  filePath,
+  archiveWorkspace,
+}: {
+  filePath?: string;
+  archiveWorkspace?: boolean;
+}): Promise<DoctorRunAllResults> {
   registerCoreAndExtensionsDiagnoses();
   runningTimeStamp = _getTimeStamp();
   const doctorRegistrar = DoctorRegistrar.getInstance();
   const examineP = doctorRegistrar.diagnoses.map((diagnosis) => diagnosis.examine());
   const examineResults = await Promise.all(examineP);
   const envMeta = await _getEnvMeta();
-  const savedFilePath = await _saveExamineResultsToFile(examineResults, envMeta, filePath);
+  const savedFilePath = await _saveExamineResultsToFile(examineResults, envMeta, filePath, archiveWorkspace);
   return { examineResults, savedFilePath, metaData: envMeta };
 }
 
 export async function runOne({
   diagnosisName,
   filePath,
+  archiveWorkspace = false,
 }: {
   diagnosisName: string;
   filePath?: string;
+  archiveWorkspace?: boolean;
 }): Promise<DoctorRunOneResult> {
   if (!diagnosisName) {
     throw new MissingDiagnosisName();
@@ -72,7 +82,7 @@ export async function runOne({
   }
   const examineResult = await diagnosis.examine();
   const envMeta = await _getEnvMeta();
-  const savedFilePath = await _saveExamineResultsToFile([examineResult], envMeta, filePath);
+  const savedFilePath = await _saveExamineResultsToFile([examineResult], envMeta, filePath, archiveWorkspace);
   return { examineResult, savedFilePath, metaData: envMeta };
 }
 
@@ -85,13 +95,14 @@ export async function listDiagnoses(): Promise<Diagnosis[]> {
 async function _saveExamineResultsToFile(
   examineResults: ExamineResult[],
   envMeta: DoctorMetaData,
-  filePath: string | null | undefined
+  filePath: string | null | undefined,
+  archiveWorkspace = false
 ): Promise<string | null | undefined> {
   if (!filePath) {
     return Promise.resolve(undefined);
   }
   const finalFilePath = _calculateFinalFileName(filePath);
-  const packStream = await _generateExamineResultsTarFile(examineResults, envMeta);
+  const packStream = await _generateExamineResultsTarFile(examineResults, envMeta, archiveWorkspace, finalFilePath);
 
   const yourTarball = fs.createWriteStream(finalFilePath);
 
@@ -135,35 +146,54 @@ function _getTimeStamp() {
 
 async function _generateExamineResultsTarFile(
   examineResults: ExamineResult[],
-  envMeta: DoctorMetaData
+  envMeta: DoctorMetaData,
+  archiveWorkspace = false,
+  tarFilePath: string
 ): Promise<Stream.Readable> {
-  const pack = tar.pack(); // pack is a streams2 stream
   const debugLog = await _getDebugLogAsBuffer();
   const consumerInfo = await _getConsumerInfo();
   let bitmap;
   if (consumerInfo && consumerInfo.path) {
     bitmap = _getBitMap(consumerInfo.path);
   }
-  pack.entry({ name: 'env-meta.json' }, JSON.stringify(envMeta, null, 2));
-  pack.entry({ name: 'doc-results.json' }, JSON.stringify(examineResults, null, 2));
-  if (debugLog) {
-    pack.entry({ name: 'debug.log' }, debugLog);
-  }
-  if (bitmap) {
-    pack.entry({ name: '.bitmap' }, bitmap);
-  }
-  if (consumerInfo && consumerInfo.hasConsumerConfig) {
-    // TODO: support new config as well
-    const config = await WorkspaceConfig.loadIfExist(consumerInfo.path);
-    const legacyPlainConfig = config?._legacyPlainObject();
-    if (legacyPlainConfig) {
-      pack.entry({ name: 'config.json' }, JSON.stringify(legacyPlainConfig, null, 4));
+
+  const packExamineResults = async (pack) => {
+    pack.entry({ name: 'env-meta.json' }, JSON.stringify(envMeta, null, 2));
+    pack.entry({ name: 'doc-results.json' }, JSON.stringify(examineResults, null, 2));
+    if (debugLog) {
+      pack.entry({ name: 'debug.log' }, debugLog);
     }
+    if (!archiveWorkspace && bitmap) {
+      pack.entry({ name: '.bitmap' }, bitmap);
+    }
+    if (consumerInfo && consumerInfo.hasConsumerConfig) {
+      // TODO: support new config as well
+      const config = await WorkspaceConfig.loadIfExist(consumerInfo.path);
+      const legacyPlainConfig = config?._legacyPlainObject();
+      if (legacyPlainConfig) {
+        pack.entry({ name: 'config.json' }, JSON.stringify(legacyPlainConfig, null, 4));
+      }
+    }
+
+    pack.finalize();
+
+    return pack;
+  };
+
+  if (!archiveWorkspace) {
+    const pack = tar.pack(); // pack is a streams2 stream
+    return packExamineResults(pack);
   }
 
-  pack.finalize();
+  const myPack = tarFS.pack('.', {
+    ignore: (name) => {
+      return name.startsWith(`node_modules${path.sep}`) || name === tarFilePath;
+    },
+    finalize: false,
+    finish: packExamineResults,
+  });
 
-  return pack;
+  return myPack;
 }
 
 async function _getEnvMeta(): Promise<DoctorMetaData> {
