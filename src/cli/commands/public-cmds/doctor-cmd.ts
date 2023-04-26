@@ -19,6 +19,7 @@ export default class Doctor implements LegacyCommand {
     ['j', 'json', 'return diagnoses in json format'],
     ['', 'list', 'list all available diagnoses'],
     ['s', 'save [filePath]', 'save diagnoses to a file'],
+    ['a', 'archive [filePath]', 'archive the workspace including diagnosis info'],
   ] as CommandOptions;
   migration = false;
 
@@ -27,9 +28,11 @@ export default class Doctor implements LegacyCommand {
     {
       list = false,
       save,
+      archive,
     }: {
       list?: boolean;
       save?: string;
+      archive?: string;
     }
   ): Promise<DoctorRunAllResults | Diagnosis[] | DoctorRunOneResult> {
     if (list) {
