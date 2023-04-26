@@ -53,7 +53,8 @@ export class WorkspaceAspectsLoader {
     private logger: Logger,
     private harmony: Harmony,
     private onAspectsResolveSlot: OnAspectsResolveSlot,
-    private onRootAspectAddedSlot: OnRootAspectAddedSlot
+    private onRootAspectAddedSlot: OnRootAspectAddedSlot,
+    private resolveAspectsFromNodeModules = false
   ) {
     this.consumer = this.workspace.consumer;
     this.resolvedInstalledAspects = new Map();
@@ -91,6 +92,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     const componentIds = await this.workspace.resolveMultipleComponentIds(idsWithoutCore);
     const { workspaceIds, nonWorkspaceIds } = await this.groupIdsByWorkspaceExistence(componentIds);
+    this.logFoundWorkspaceVsScope(loggerPrefix, workspaceIds, nonWorkspaceIds);
     let idsToLoadFromWs = componentIds;
     let scopeAspectIds: string[] = [];
 
@@ -98,7 +100,11 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     // This is because right now loading from the ws node_modules causes issues in some cases
     // like for the cloud app
     // it should be removed once we fix the issues
-    mergedOpts.useScopeAspectsCapsule = true;
+    if (!this.resolveAspectsFromNodeModules) {
+      if (!this.resolveAspectsFromNodeModules) {
+        mergedOpts.useScopeAspectsCapsule = true;
+      }
+    }
 
     if (mergedOpts.useScopeAspectsCapsule) {
       idsToLoadFromWs = workspaceIds;
@@ -231,18 +237,8 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     this.logger.debug(`${loggerPrefix} found ${aspects.length} aspects in the aspects-graph`);
     const { workspaceComps, nonWorkspaceComps } = await this.groupComponentsByWorkspaceExistence(aspects);
     const workspaceCompsIds = workspaceComps.map((c) => c.id);
-    this.logger.debug(
-      `${loggerPrefix} found ${workspaceComps.length} components in the workspace:\n${workspaceComps
-        .map((c) => c.id.toString())
-        .join('\n')}`
-    );
-    this.logger.debug(
-      `${loggerPrefix} ${
-        nonWorkspaceComps.length
-      } components are not in the workspace and are loaded from the scope capsules or from the node_modules:\n${nonWorkspaceComps
-        .map((c) => c.id.toString())
-        .join('\n')}`
-    );
+    const nonWorkspaceCompsIds = workspaceComps.map((c) => c.id);
+    this.logFoundWorkspaceVsScope(loggerPrefix, workspaceCompsIds, nonWorkspaceCompsIds);
 
     const stringIds: string[] = [];
     const wsAspectDefs = await this.aspectLoader.resolveAspects(
@@ -256,7 +252,9 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     // This is because right now loading from the ws node_modules causes issues in some cases
     // like for the cloud app
     // it should be removed once we fix the issues
-    mergedOpts.useScopeAspectsCapsule = true;
+    if (!this.resolveAspectsFromNodeModules) {
+      mergedOpts.useScopeAspectsCapsule = true;
+    }
 
     let componentsToResolveFromScope = nonWorkspaceComps;
     let componentsToResolveFromInstalled: Component[] = [];
@@ -311,6 +309,19 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
     const filteredDefs = this.aspectLoader.filterAspectDefs(allDefs, idsToFilter, runtimeName, mergedOpts);
     return filteredDefs;
+  }
+
+  private logFoundWorkspaceVsScope(loggerPrefix: string, workspaceIds: ComponentID[], nonWorkspaceIds: ComponentID[]) {
+    const workspaceIdsStr = workspaceIds.length ? workspaceIds.map((id) => id.toString()).join('\n') : '';
+    const nonWorkspaceIdsStr = nonWorkspaceIds.length ? nonWorkspaceIds.map((id) => id.toString()).join('\n') : '';
+    this.logger.debug(
+      `${loggerPrefix} found ${workspaceIds.length} components in the workspace, ${nonWorkspaceIds.length} not in the workspace`
+    );
+    if (workspaceIdsStr) this.logger.debug(`${loggerPrefix} workspace components:\n${workspaceIdsStr}`);
+    if (nonWorkspaceIdsStr)
+      this.logger.debug(
+        `${loggerPrefix} non workspace components (loaded from the scope capsules or from the node_modules):\n${nonWorkspaceIdsStr}`
+      );
   }
 
   async use(aspectIdStr: string): Promise<string> {

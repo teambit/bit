@@ -168,4 +168,14 @@ describe('bit tag command', function () {
       expect(output).to.have.string('this dependency was not included in the tag command');
     });
   });
+  describe('tag with an empty string', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(1, false);
+    });
+    // previously it was throwing `expected log.message to be string, got boolean`.
+    it('should not throw an error', () => {
+      expect(() => helper.command.tagAllWithoutBuild('-m ""')).to.not.throw();
+    });
+  });
 });

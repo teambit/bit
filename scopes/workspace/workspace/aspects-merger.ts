@@ -136,8 +136,14 @@ export class AspectsMerger {
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
         ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
         : extsWithoutRemoved;
+      const preferWorkspaceVersion = origin !== 'BitmapFile' && origin !== 'ComponentJsonFile';
+      // it's important to do this resolution before the merge, otherwise we have issues with extensions
+      // coming from scope with local scope name, as opposed to the same extension comes from the workspace with default scope name
+      // also, it's important to do it before filtering the env, because when the env was not exported, it's saved with scope-name
+      // inside the "env" prop of teambit.envs/env, but without scope-name in the root.
+      const extsWithUpdatedIds = await this.resolveExtensionListIds(extsWithoutSelf, preferWorkspaceVersion);
       const { extensionDataListFiltered, envIsCurrentlySet } = await this.filterEnvsFromExtensionsIfNeeded(
-        extsWithoutSelf,
+        extsWithUpdatedIds,
         envWasFoundPreviously,
         origin
       );
@@ -189,9 +195,6 @@ export class AspectsMerger {
       await addExtensionsToMerge(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
 
-    // It's important to do this resolution before the merge, otherwise we have issues with extensions
-    // coming from scope with local scope name, as opposed to the same extension comes from the workspace with default scope name
-    await Promise.all(extensionsToMerge.map((list) => this.resolveExtensionListIds(list.extensions)));
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
     await this.loadExtensions(afterMerge, componentId);
     const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
@@ -282,14 +285,18 @@ export class AspectsMerger {
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
     const envFromEnvsAspect: string | undefined = envAspect?.config.env || envAspect?.data.id;
     const aspectsRegisteredAsEnvs = extensionDataList
-      .filter((aspect) => this.workspace.envs.getEnvDefinitionByStringId(aspect.stringId))
+      .filter((aspect) =>
+        this.workspace.envs.getEnvDefinitionByStringId(aspect.newExtensionId?.toString() || aspect.stringId)
+      )
       .map((aspect) => aspect.stringId);
     if (envWasFoundPreviously && (envAspect || aspectsRegisteredAsEnvs.length)) {
       const nonEnvs = extensionDataList.filter((e) => {
         // normally the env-id inside the envs aspect doesn't have a version, but the aspect itself has a version.
+        // also, the env-id inside the envs aspect includes the default-scope, but the aspect itself doesn't.
         if (
           (envFromEnvsAspect && e.stringId === envFromEnvsAspect) ||
           (envFromEnvsAspect && e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect) ||
+          (envFromEnvsAspect && e.newExtensionId?.toStringWithoutVersion() === envFromEnvsAspect) ||
           aspectsRegisteredAsEnvs.includes(e.stringId)
         ) {
           return false;
@@ -331,11 +338,17 @@ export class AspectsMerger {
    * This should be worked on the extension data list not the new aspect list
    * @param extensionList
    */
-  private async resolveExtensionListIds(extensionList: ExtensionDataList): Promise<ExtensionDataList> {
+  private async resolveExtensionListIds(
+    extensionList: ExtensionDataList,
+    preferWorkspaceVersion = false
+  ): Promise<ExtensionDataList> {
     const promises = extensionList.map(async (entry) => {
       if (entry.extensionId) {
-        const id = await this.workspace.resolveComponentId(entry.extensionId);
+        const componentId = await this.workspace.resolveComponentId(entry.extensionId);
+        const idFromWorkspace = preferWorkspaceVersion ? this.workspace.getIdIfExist(componentId) : undefined;
+        const id = idFromWorkspace || componentId;
         entry.extensionId = id._legacy;
+        entry.newExtensionId = id;
       }
 
       return entry;
