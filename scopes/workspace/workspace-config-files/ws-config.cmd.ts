@@ -4,7 +4,7 @@ import { omit } from 'lodash';
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceConfigFilesMain, WriteConfigFilesResult } from './workspace-config-files.main.runtime';
-import { formatCleanOutput, formatListOutput, formatWriteOutput } from './format-outputs';
+import { formatCleanOutput, formatListOutput, formatWriteOutput, verboseFormatWriteOutput } from './outputs';
 
 export type CleanConfigCmdFlags = {
   dryRun?: boolean;
@@ -18,6 +18,7 @@ export type WriteConfigCmdFlags = {
   dryRunWithContent?: boolean;
   clean?: boolean;
   silent?: boolean;
+  verbose?: boolean;
 };
 
 const COMMAND_NAME = 'ws-config';
@@ -62,6 +63,7 @@ export class WsConfigWriteCmd implements Command {
       'dry-run-with-content',
       'use with --json flag. show the config content and the paths it will be written per env',
     ],
+    ['v', 'verbose', 'showing verbose output for writing'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
 
@@ -72,6 +74,7 @@ export class WsConfigWriteCmd implements Command {
     if (flags.dryRunWithContent) {
       throw new Error(`use --json flag along with --dry-run-with-content`);
     }
+    if (flags.verbose) return verboseFormatWriteOutput(results, flags);
     return formatWriteOutput(results, flags);
   }
 

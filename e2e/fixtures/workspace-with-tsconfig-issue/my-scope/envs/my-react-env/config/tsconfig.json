@@ -1,0 +1,7 @@
+/**
+ * @see https://bit.dev/reference/typescript/typescript-config
+ */
+{
+  "extends": "@teambit/react.react-env/config/tsconfig.json",
+  "include": ["**/*", "**/*.json"]
+}

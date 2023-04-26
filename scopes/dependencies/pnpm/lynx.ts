@@ -166,6 +166,7 @@ export async function install(
     updateAll?: boolean;
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
+    pruneNodeModules?: boolean;
     rootComponents?: boolean;
     rootComponentsForCapsules?: boolean;
     includeOptionalDeps?: boolean;
@@ -225,7 +226,7 @@ export async function install(
     workspacePackages,
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
-    modulesCacheMaxAge: 0,
+    modulesCacheMaxAge: options.pruneNodeModules ? 0 : undefined,
     neverBuiltDependencies: ['core-js'],
     registries: registriesMap,
     resolutionMode: 'highest',

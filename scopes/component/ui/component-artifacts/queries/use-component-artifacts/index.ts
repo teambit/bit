@@ -1,1 +1,1 @@
-export { useComponentArtifacts } from './use-component-artifacts';
+export { useComponentArtifacts, useComponentArtifactFileContent } from './use-component-artifacts';

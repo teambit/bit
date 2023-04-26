@@ -1,58 +1,36 @@
-import Table from 'cli-table';
 import chalk from 'chalk';
 import { relative } from 'path';
 import {
   AspectWritersResults,
-  ConfigWritersList,
   EnvsWrittenConfigFile,
   EnvsWrittenConfigFiles,
   EnvsWrittenExtendingConfigFile,
   EnvsWrittenExtendingConfigFiles,
   OneConfigFileWriterResult,
   WriteConfigFilesResult,
-} from './workspace-config-files.main.runtime';
-import type { CleanConfigCmdFlags, WriteConfigCmdFlags } from './ws-config.cmd';
+} from '../workspace-config-files.main.runtime';
+import type { WriteConfigCmdFlags } from '../ws-config.cmd';
+import { formatCleanOutput } from './format-clean-output';
+import { SUMMARY, WRITE_TITLE } from './write-outputs-texts';
 
-export function formatListOutput(result: ConfigWritersList): string {
-  const head = ['Aspect ID', 'name', 'CLI name'];
-
-  const rows = result.map((entry) => {
-    return [entry.aspectId, entry.configWriter.name, entry.configWriter.cliName];
-  });
-  const table = new Table({ head, style: { head: ['cyan'] } });
-  table.push(...rows);
-  return table.toString();
-}
-export function formatWriteOutput(writeConfigFilesResult: WriteConfigFilesResult, flags: WriteConfigCmdFlags): string {
+export function verboseFormatWriteOutput(
+  writeConfigFilesResult: WriteConfigFilesResult,
+  flags: WriteConfigCmdFlags
+): string {
   const { cleanResults, writeResults, wsDir } = writeConfigFilesResult;
   const isDryRun = !!(flags.dryRun || flags.dryRunWithContent);
-  const cleanResultsOutput = getCleanResultsOutput(cleanResults, isDryRun);
+  const cleanResultsOutput = formatCleanOutput(cleanResults, { dryRun: isDryRun });
   const writeResultsOutput = getWriteResultsOutput(writeResults, wsDir, isDryRun);
 
-  return `${cleanResultsOutput}${writeResultsOutput}`;
+  return `${cleanResultsOutput}\n${writeResultsOutput}\n\n${SUMMARY}`;
 }
 
-export function formatCleanOutput(cleanResults: string[] = [], flags: CleanConfigCmdFlags): string {
-  const isDryRun = !!flags.dryRun;
-  const cleanResultsOutput = getCleanResultsOutput(cleanResults, isDryRun);
-
-  return `${cleanResultsOutput}`;
-}
-
-function getCleanResultsOutput(cleanResults: string[] | undefined, isDryRun: boolean) {
-  const cleanResultsOutput = cleanResults
-    ? `${chalk.green(
-        `the following ${cleanResults.length} paths ${isDryRun ? 'will be' : 'were'} deleted:`
-      )}\n  ${cleanResults.join('\n  ')}\n`
-    : '';
-  return cleanResultsOutput;
-}
 function getWriteResultsOutput(writeResults: WriteConfigFilesResult['writeResults'], wsDir: string, isDryRun: boolean) {
   const totalFiles = writeResults.totalWrittenFiles;
 
   const writeTitle = isDryRun
     ? chalk.green(`${totalFiles} files will be written`)
-    : chalk.green(`${totalFiles} files have been written successfully`);
+    : chalk.green(WRITE_TITLE(totalFiles));
   const writeOutput = writeResults.aspectsWritersResults
     .map((aspectWritersResults) => getOneAspectOutput(aspectWritersResults, wsDir))
     .join('\n\n');

@@ -1,7 +1,8 @@
 import { AspectLoaderMain } from '@teambit/aspect-loader';
+import { IssuesClasses } from '@teambit/component-issues';
 import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { pickBy, mapValues } from 'lodash';
+import { pickBy, pick, mapValues, uniq } from 'lodash';
 import { SemVer } from 'semver';
 import pMapSeries from 'p-map-series';
 import { snapToSemver } from '@teambit/component-package-version';
@@ -51,13 +52,13 @@ export class WorkspaceManifestFactory {
     // Make sure to take other default if passed options with only one option
     const optsWithDefaults = Object.assign({}, DEFAULT_CREATE_OPTIONS, options);
     const hasRootComponents = this.dependencyResolver.hasRootComponents();
-    const componentDependenciesMap: ComponentDependenciesMap = await this.buildComponentDependenciesMap(
-      components,
-      optsWithDefaults.filterComponentsFromManifests,
-      optsWithDefaults.resolveVersionsFromDependenciesOnly ? undefined : rootPolicy,
-      optsWithDefaults.dependencyFilterFn,
-      optsWithDefaults.referenceLocalPackages && hasRootComponents
-    );
+    const componentDependenciesMap: ComponentDependenciesMap = await this.buildComponentDependenciesMap(components, {
+      filterComponentsFromManifests: optsWithDefaults.filterComponentsFromManifests,
+      rootPolicy: optsWithDefaults.resolveVersionsFromDependenciesOnly ? undefined : rootPolicy,
+      dependencyFilterFn: optsWithDefaults.dependencyFilterFn,
+      referenceLocalPackages: optsWithDefaults.referenceLocalPackages && hasRootComponents,
+      rootDependencies: hasRootComponents ? rootPolicy.toManifest().dependencies : undefined,
+    });
     let dedupedDependencies = getEmptyDedupedDependencies();
     rootPolicy = rootPolicy.filter((dep) => dep.dependencyId !== '@teambit/legacy');
     if (hasRootComponents) {
@@ -114,10 +115,19 @@ export class WorkspaceManifestFactory {
    */
   private async buildComponentDependenciesMap(
     components: Component[],
-    filterComponentsFromManifests = true,
-    rootPolicy?: WorkspacePolicy,
-    dependencyFilterFn?: DepsFilterFn | undefined,
-    referenceLocalPackages = false
+    {
+      dependencyFilterFn,
+      filterComponentsFromManifests,
+      referenceLocalPackages,
+      rootDependencies,
+      rootPolicy,
+    }: {
+      dependencyFilterFn?: DepsFilterFn;
+      filterComponentsFromManifests?: boolean;
+      referenceLocalPackages?: boolean;
+      rootDependencies?: Record<string, string>;
+      rootPolicy?: WorkspacePolicy;
+    }
   ): Promise<ComponentDependenciesMap> {
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
@@ -140,7 +150,7 @@ export class WorkspaceManifestFactory {
           }
         }
       }
-      if (filterComponentsFromManifests) {
+      if (filterComponentsFromManifests ?? true) {
         depList = filterComponents(depList, components);
       }
       depList = filterResolvedFromEnv(depList, componentPolicy);
@@ -151,7 +161,9 @@ export class WorkspaceManifestFactory {
       }
       await this.updateDependenciesVersions(component, rootPolicy, depList);
       const depManifest = depList.toDependenciesManifest();
+      const missingRootDeps = rootDependencies ? pick(rootDependencies, getMissingPackages(component)) : {};
       depManifest.dependencies = {
+        ...missingRootDeps,
         ...additionalDeps,
         ...depManifest.dependencies,
       };
@@ -284,4 +296,10 @@ function filterResolvedFromEnv(dependencyList: DependencyList, componentPolicy: 
 
 function excludeWorkspaceDependencies(deps: DepObjectValue): DepObjectValue {
   return pickBy(deps, (versionSpec) => !versionSpec.startsWith('file:') && !versionSpec.startsWith('workspace:'));
+}
+
+function getMissingPackages(component: Component): string[] {
+  return uniq(
+    Object.values(component.state.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data).flat()
+  );
 }
