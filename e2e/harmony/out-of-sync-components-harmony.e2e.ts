@@ -103,4 +103,17 @@ describe('components that are not synced between the scope and the consumer', fu
       expect(bitmap.comp1.version).to.equal('0.0.1');
     });
   });
+  describe('new lane got deleted', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.fs.deletePath('.bit');
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('should recrate the lane', () => {
+      expect(() => helper.command.showOneLane('dev')).to.not.throw();
+    });
+  });
 });

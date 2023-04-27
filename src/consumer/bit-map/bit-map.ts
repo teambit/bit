@@ -152,15 +152,8 @@ export default class BitMap {
     let isLaneExported = false;
     let laneId: LaneId | undefined;
     if (componentsJson[LANE_KEY]) {
-      if (componentsJson[LANE_KEY].name) {
-        // backward compatibility
-        throw new Error(
-          `enable to migrate to the new Lane format of .bitmap. change to the previous Bit version, switch to main, then upgrade again`
-        );
-      } else {
-        laneId = new LaneId(componentsJson[LANE_KEY].id);
-        isLaneExported = componentsJson[LANE_KEY].exported;
-      }
+      laneId = new LaneId(componentsJson[LANE_KEY].id);
+      isLaneExported = componentsJson[LANE_KEY].exported;
     }
     BitMap.removeNonComponentFields(componentsJson);
 
@@ -228,7 +221,6 @@ export default class BitMap {
     };
     if (resetHard) {
       deleteBitMapFile();
-      // @todo: delete workspace lanes as well? maybe they're already taken care of within scope.reset
       return;
     }
     try {
