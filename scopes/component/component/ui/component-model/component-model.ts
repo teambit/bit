@@ -46,7 +46,7 @@ export type ComponentServer = {
   /**
    * Full dev server url.
    */
-  url: string;
+  url?: string;
 
   /**
    * host of the component server (used mostly by cloud providers for remote scopes)
