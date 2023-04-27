@@ -43,7 +43,20 @@ export type ComponentPreview = {
 
 export type ComponentServer = {
   env: string;
-  url: string;
+  /**
+   * Full dev server url.
+   */
+  url?: string;
+
+  /**
+   * host of the component server (used mostly by cloud providers for remote scopes)
+   */
+  host?: string;
+
+  /**
+   * This is used mostly by cloud to proxy requests to the correct scope.
+   */
+  basePath?: string;
 };
 
 export class ComponentModel {
