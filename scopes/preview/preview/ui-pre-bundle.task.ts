@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { CAPSULE_ARTIFACTS_DIR, BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
+import { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
 import { Logger } from '@teambit/logger';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { Capsule } from '@teambit/isolator';
@@ -17,13 +17,10 @@ export class UiPreBundleTask implements BuildTask {
     const capsule: Capsule | undefined = context.capsuleNetwork.seedersCapsules.find(
       (c) => c.component.id.toStringWithoutVersion() === UIAspect.id
     );
-
     if (!capsule) {
       return { componentsResults: [] };
     }
-
     const outputPath = join(capsule.path, getArtifactDirectory());
-
     this.logger.info(`Generating UI pre-bundle at ${outputPath}...`);
     try {
       await this.ui.build(undefined, outputPath);
@@ -33,9 +30,7 @@ export class UiPreBundleTask implements BuildTask {
         componentsResults: [],
       };
     }
-
     const artifacts = getArtifactDef();
-
     return {
       componentsResults: [],
       artifacts,
@@ -44,7 +39,7 @@ export class UiPreBundleTask implements BuildTask {
 }
 
 export function getArtifactDirectory() {
-  return join(CAPSULE_ARTIFACTS_DIR, 'ui-build');
+  return join('artifacts', 'ui-build');
 }
 
 export function getArtifactDef() {
