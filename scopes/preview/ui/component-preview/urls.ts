@@ -23,7 +23,10 @@ export function toPreviewUrl(
 export function toPreviewServer(component: ComponentModel, previewName?: string) {
   // explicit url is especially important for local workspace, because it's the url of the dev server.
   const explicitUrl = component.server?.url;
-  if (explicitUrl) return explicitUrl;
+  // We use the explicit server url only if there is no host
+  // we prefer host over url, because host is the host of the component server, and url is the dev server url.
+  // this is required for backward compatibility with the cloud.
+  if (explicitUrl && !component.server.host) return explicitUrl;
 
   // Checking specifically with === false, to make sure we fallback to the old url
   if (component.preview?.includesEnvTemplate === false) {
