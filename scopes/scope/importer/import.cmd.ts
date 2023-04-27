@@ -3,7 +3,6 @@ import chalk from 'chalk';
 import { compact } from 'lodash';
 import R from 'ramda';
 import { installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
-import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import {
   FileStatus,
   MergeOptions,
