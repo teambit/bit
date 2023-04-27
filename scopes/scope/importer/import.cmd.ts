@@ -73,10 +73,7 @@ export class ImportCmd implements Command {
   remoteOp = true;
   _packageManagerArgs: string[]; // gets populated by yargs-adapter.handler().
 
-  constructor(private importer: ImporterMain, private docsDomain: string) {
-    this.extendedDescription = `https://${docsDomain}/components/importing-components
-${WILDCARD_HELP('import')}`;
-  }
+  constructor(private importer: ImporterMain) {}
 
   async report(
     [ids = []]: [string[]],

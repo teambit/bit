@@ -47,12 +47,8 @@ export class LinkCommand implements Command {
     /**
      * logger extension.
      */
-    private logger: Logger,
-
-    private docsDomain: string
-  ) {
-    this.extendedDescription = `https://${this.docsDomain}/workspace/component-links`;
-  }
+    private logger: Logger
+  ) {}
 
   async report([ids]: [string[]], opts: LinkCommandOpts) {
     const startTime = Date.now();

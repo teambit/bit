@@ -3,10 +3,8 @@ import { BitId } from '@teambit/legacy-bit-id';
 import moment from 'moment';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import pMapSeries from 'p-map-series';
-import { CommunityAspect } from '@teambit/community';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
 import { getFilesDiff } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import type { CommunityMain } from '@teambit/community';
 import chalk from 'chalk';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { ComponentLogAspect } from './component-log.aspect';
@@ -109,11 +107,11 @@ export class ComponentLogMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, CommunityAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, community]: [CLIMain, Workspace, CommunityMain]) {
+  static async provider([cli, workspace]: [CLIMain, Workspace]) {
     const componentLog = new ComponentLogMain(workspace);
-    cli.register(new LogCmd(componentLog, community.getDocsDomain()), new LogFileCmd(componentLog));
+    cli.register(new LogCmd(componentLog), new LogFileCmd(componentLog));
     return componentLog;
   }
 }
