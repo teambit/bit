@@ -105,7 +105,7 @@ export class UIServer {
     const uiPreBundlePublicDirFromBvm = join(uiPreBundleDirFromBvm, getArtifactDirectory(), publicDir);
 
     // TODO: if uiPreBundlePublicDirFromBvm exists check the hash is same with the one generated in the build process
-    const root = uiPreBundlePublicDirFromBvm || defaultRoot;
+    const root = existsSync(uiPreBundlePublicDirFromBvm) ? uiPreBundlePublicDirFromBvm : defaultRoot;
 
     const server = await this.graphql.createServer({ app });
 
