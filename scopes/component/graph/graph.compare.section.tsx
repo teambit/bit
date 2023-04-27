@@ -19,5 +19,5 @@ export class GraphCompareSection implements Section, TabItem {
 
   order = 25;
   changeType = ChangeType.DEPENDENCY;
-  id = 'dependency';
+  id = '';
 }

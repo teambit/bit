@@ -33,7 +33,7 @@ export function mapToArtifacts(gqlResponse: ComponentArtifactsGQLResponse): Arti
 export function getArtifactFileDetailsFromUrl(
   artifacts: Array<Artifact>,
   fileFromUrl?: string
-): { taskName: string; artifactName: string; artifactFile: ArtifactFile } | undefined {
+): { taskName: string; artifactName: string; artifactFile: ArtifactFile; taskId: string } | undefined {
   if (!fileFromUrl || !fileFromUrl.startsWith('~artifact/')) return undefined;
   const [, fileFromUrlParsed] = fileFromUrl.split('~artifact/');
   const [taskName, ...artifactNameAndPath] = fileFromUrlParsed.split('/');
@@ -44,11 +44,12 @@ export function getArtifactFileDetailsFromUrl(
   );
   const matchingArtifactFile = matchingArtifact?.files.find((artifactFile) => artifactFile.path === filePath);
 
-  if (!matchingArtifactFile) return undefined;
+  if (!matchingArtifact || !matchingArtifactFile) return undefined;
 
   return {
     taskName,
     artifactName,
     artifactFile: { ...matchingArtifactFile },
+    taskId: matchingArtifact.taskId,
   };
 }
