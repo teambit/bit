@@ -39,7 +39,7 @@ export class PnpmPackageManager implements PackageManager {
     if (!installOptions.hidePackageManagerOutput) {
       // this.logger.setStatusLine('installing dependencies using pnpm');
       // turn off the logger because it interrupts the pnpm output
-      this.logger.console('-------------------------PNPM OUTPUT-------------------------');
+      // this.logger.console('-------------------------PNPM OUTPUT-------------------------');
       this.logger.off();
     }
     const registries = await this.depResolver.getRegistries();
@@ -74,6 +74,7 @@ export class PnpmPackageManager implements PackageManager {
         sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
         sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
         pnpmHomeDir: config.pnpmHomeDir,
+        pruneNodeModules: installOptions.pruneNodeModules,
         updateAll: installOptions.updateAll,
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
       },
@@ -82,7 +83,7 @@ export class PnpmPackageManager implements PackageManager {
     if (!installOptions.hidePackageManagerOutput) {
       this.logger.on();
       // Make a divider row to improve output
-      this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
+      // this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
       // this.logger.consoleSuccess('installing dependencies using pnpm');
     }
   }

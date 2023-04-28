@@ -24,7 +24,6 @@ const ARTIFACTS_QUERY = gql`
               id
               name
               path
-              content
               downloadUrl
               size
             }
@@ -43,6 +42,60 @@ export function useComponentArtifacts(
   const { data, ...rest } = useDataQuery(ARTIFACTS_QUERY, {
     variables: { id: componentId, extensionId: host },
     skip,
+    fetchPolicy: 'no-cache',
+  });
+
+  const artifacts = mapToArtifacts(data?.getHost?.get?.pipelineReport || []);
+
+  return {
+    ...rest,
+    data: artifacts,
+  };
+}
+
+const ARTIFACTS_QUERY_WITH_FILE_CONTENT = gql`
+  query ComponentArtifactsWithFileContent($id: String!, $extensionId: String!, $taskId: String, $path: String) {
+    getHost(id: $extensionId) {
+      id # used for GQL caching
+      get(id: $id) {
+        id {
+          name
+          version
+          scope
+        }
+        pipelineReport(taskId: $taskId) {
+          id
+          taskId
+          taskName
+          artifact(path: $path) {
+            id
+            name
+            description
+            files {
+              id
+              name
+              path
+              content
+              downloadUrl
+              size
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export function useComponentArtifactFileContent(
+  host: string,
+  options: { componentId: string; taskId?: string; filePath?: string },
+  skip?: boolean
+): { data: Artifact[]; loading?: boolean } {
+  const { componentId, taskId, filePath } = options;
+  const { data, ...rest } = useDataQuery(ARTIFACTS_QUERY_WITH_FILE_CONTENT, {
+    variables: { id: componentId, extensionId: host, taskId, path: filePath },
+    skip,
+    fetchPolicy: 'no-cache',
   });
 
   const artifacts = mapToArtifacts(data?.getHost?.get?.pipelineReport || []);

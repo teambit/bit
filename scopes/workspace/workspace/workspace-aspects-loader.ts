@@ -19,7 +19,7 @@ import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import pMapSeries from 'p-map-series';
 import { difference, compact, groupBy } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { Component, ComponentID, ResolveAspectsOptions } from '@teambit/component';
+import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
 import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
@@ -34,7 +34,7 @@ export type GetConfiguredUserAspectsPackagesOptions = {
   externalsOnly?: boolean;
 };
 
-export type WorkspaceLoadAspectsOptions = {
+export type WorkspaceLoadAspectsOptions = LoadAspectsOptions & {
   useScopeAspectsCapsule?: boolean;
 };
 
@@ -53,7 +53,8 @@ export class WorkspaceAspectsLoader {
     private logger: Logger,
     private harmony: Harmony,
     private onAspectsResolveSlot: OnAspectsResolveSlot,
-    private onRootAspectAddedSlot: OnRootAspectAddedSlot
+    private onRootAspectAddedSlot: OnRootAspectAddedSlot,
+    private resolveAspectsFromNodeModules = false
   ) {
     this.consumer = this.workspace.consumer;
     this.resolvedInstalledAspects = new Map();
@@ -65,14 +66,18 @@ export class WorkspaceAspectsLoader {
    */
   async loadAspects(
     ids: string[] = [],
-    throwOnError = false,
+    throwOnError?: boolean,
     neededFor?: string,
     opts: WorkspaceLoadAspectsOptions = {}
   ): Promise<string[]> {
-    const defaultOpts: WorkspaceLoadAspectsOptions = {
+    const calculatedThrowOnError: boolean = throwOnError ?? false;
+    const defaultOpts: Required<WorkspaceLoadAspectsOptions> = {
       useScopeAspectsCapsule: false,
+      throwOnError: calculatedThrowOnError,
+      hideMissingModuleError: !!this.workspace.inInstallContext,
+      ignoreErrors: false,
     };
-    const mergedOpts = { ...defaultOpts, ...opts };
+    const mergedOpts: Required<WorkspaceLoadAspectsOptions> = { ...defaultOpts, ...opts };
 
     // generate a random callId to be able to identify the call from the logs
     const callId = Math.floor(Math.random() * 1000);
@@ -87,6 +92,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     const componentIds = await this.workspace.resolveMultipleComponentIds(idsWithoutCore);
     const { workspaceIds, nonWorkspaceIds } = await this.groupIdsByWorkspaceExistence(componentIds);
+    this.logFoundWorkspaceVsScope(loggerPrefix, workspaceIds, nonWorkspaceIds);
     let idsToLoadFromWs = componentIds;
     let scopeAspectIds: string[] = [];
 
@@ -94,7 +100,11 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     // This is because right now loading from the ws node_modules causes issues in some cases
     // like for the cloud app
     // it should be removed once we fix the issues
-    mergedOpts.useScopeAspectsCapsule = true;
+    if (!this.resolveAspectsFromNodeModules) {
+      if (!this.resolveAspectsFromNodeModules) {
+        mergedOpts.useScopeAspectsCapsule = true;
+      }
+    }
 
     if (mergedOpts.useScopeAspectsCapsule) {
       idsToLoadFromWs = workspaceIds;
@@ -109,6 +119,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
           currentLane || undefined,
           {
             packageManagerConfigRootDir: this.workspace.path,
+            workspaceName: this.workspace.name,
           }
         );
       } catch (err: any) {
@@ -128,14 +139,15 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const aspectsDefs = await this.resolveAspects(undefined, idsToLoadFromWs, {
       excludeCore: true,
       requestedOnly: false,
-      throwOnError,
       ...mergedOpts,
     });
 
     const { manifests, requireableComponents } = await this.loadAspectDefsByOrder(
       aspectsDefs,
       idsWithoutCore,
-      throwOnError
+      mergedOpts.throwOnError,
+      mergedOpts.hideMissingModuleError,
+      neededFor
     );
 
     const potentialPluginsIndexes = compact(
@@ -154,7 +166,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       pluginsRequireableComponents,
       throwOnError
     );
-    await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, throwOnError);
+    await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, { throwOnError });
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
     const manifestIds = manifests.map((manifest) => manifest.id);
     return compact(manifestIds.concat(scopeAspectIds));
@@ -163,7 +175,9 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
   private async loadAspectDefsByOrder(
     aspectsDefs: AspectDefinition[],
     seeders: string[],
-    throwOnError: boolean
+    throwOnError: boolean,
+    hideMissingModuleError: boolean,
+    neededFor?: string
   ): Promise<{ manifests: Array<Aspect | ExtensionManifest>; requireableComponents: RequireableComponent[] }> {
     const { nonWorkspaceDefs } = await this.groupAspectDefsByWorkspaceExistence(aspectsDefs);
     const scopeAspectsLoader = this.scope.getScopeAspectsLoader();
@@ -180,7 +194,11 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       requireableComponents,
       throwOnError
     );
-    await this.aspectLoader.loadExtensionsByManifests(manifests, throwOnError, seeders);
+    await this.aspectLoader.loadExtensionsByManifests(
+      manifests,
+      { seeders, neededFor },
+      { throwOnError, hideMissingModuleError }
+    );
     return { manifests, requireableComponents };
   }
 
@@ -219,18 +237,8 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     this.logger.debug(`${loggerPrefix} found ${aspects.length} aspects in the aspects-graph`);
     const { workspaceComps, nonWorkspaceComps } = await this.groupComponentsByWorkspaceExistence(aspects);
     const workspaceCompsIds = workspaceComps.map((c) => c.id);
-    this.logger.debug(
-      `${loggerPrefix} found ${workspaceComps.length} components in the workspace:\n${workspaceComps
-        .map((c) => c.id.toString())
-        .join('\n')}`
-    );
-    this.logger.debug(
-      `${loggerPrefix} ${
-        nonWorkspaceComps.length
-      } components are not in the workspace and are loaded from the scope capsules or from the node_modules:\n${nonWorkspaceComps
-        .map((c) => c.id.toString())
-        .join('\n')}`
-    );
+    const nonWorkspaceCompsIds = workspaceComps.map((c) => c.id);
+    this.logFoundWorkspaceVsScope(loggerPrefix, workspaceCompsIds, nonWorkspaceCompsIds);
 
     const stringIds: string[] = [];
     const wsAspectDefs = await this.aspectLoader.resolveAspects(
@@ -244,7 +252,9 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     // This is because right now loading from the ws node_modules causes issues in some cases
     // like for the cloud app
     // it should be removed once we fix the issues
-    mergedOpts.useScopeAspectsCapsule = true;
+    if (!this.resolveAspectsFromNodeModules) {
+      mergedOpts.useScopeAspectsCapsule = true;
+    }
 
     let componentsToResolveFromScope = nonWorkspaceComps;
     let componentsToResolveFromInstalled: Component[] = [];
@@ -299,6 +309,19 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
     const filteredDefs = this.aspectLoader.filterAspectDefs(allDefs, idsToFilter, runtimeName, mergedOpts);
     return filteredDefs;
+  }
+
+  private logFoundWorkspaceVsScope(loggerPrefix: string, workspaceIds: ComponentID[], nonWorkspaceIds: ComponentID[]) {
+    const workspaceIdsStr = workspaceIds.length ? workspaceIds.map((id) => id.toString()).join('\n') : '';
+    const nonWorkspaceIdsStr = nonWorkspaceIds.length ? nonWorkspaceIds.map((id) => id.toString()).join('\n') : '';
+    this.logger.debug(
+      `${loggerPrefix} found ${workspaceIds.length} components in the workspace, ${nonWorkspaceIds.length} not in the workspace`
+    );
+    if (workspaceIdsStr) this.logger.debug(`${loggerPrefix} workspace components:\n${workspaceIdsStr}`);
+    if (nonWorkspaceIdsStr)
+      this.logger.debug(
+        `${loggerPrefix} non workspace components (loaded from the scope capsules or from the node_modules):\n${nonWorkspaceIdsStr}`
+      );
   }
 
   async use(aspectIdStr: string): Promise<string> {
@@ -587,8 +610,14 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
   async loadComponentsExtensions(
     extensions: ExtensionDataList,
     originatedFrom?: ComponentID,
-    throwOnError = false
+    opts: WorkspaceLoadAspectsOptions = {}
   ): Promise<void> {
+    const defaultOpts: WorkspaceLoadAspectsOptions = {
+      useScopeAspectsCapsule: true,
+      throwOnError: false,
+      hideMissingModuleError: !!this.workspace.inInstallContext,
+    };
+    const mergedOpts = { ...defaultOpts, ...opts };
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {
@@ -606,9 +635,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     });
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-    await this.loadAspects(extensionsToLoad, throwOnError, originatedFrom?.toString(), {
-      useScopeAspectsCapsule: true,
-    });
+    await this.loadAspects(extensionsToLoad, undefined, originatedFrom?.toString(), mergedOpts);
   }
 
   private async isAspect(id: ComponentID) {

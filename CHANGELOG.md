@@ -5,6 +5,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [[0.1.27] - 2023-04-24](https://github.com/teambit/bit/releases/tag/v0.1.27)
+
+### New Features
+
+- Introduce a new command `recover` to recover soft-removed components (#7225)
+- Ability to build type-components (#7252)
+- Allow environments to include custom dependency detectors (#7199)
+- Introduce a new command `bit system log` to print `debug.log` (#7300)
+
+### Changes
+
+- Compile renamed components gracefully upon `bit rename` (#7250)
+- Default to show capsule-list when no sub-command was entered for `bit capsule` (#7249)
+- Improved UI for Lane & Component Compare (#7243 #7262 #7233 #7254 #7279)
+- `scope rename` defaults to remove old links, create new links and compile (#7261)
+- Control abs/relative path for generated `ws-config` file.
+- Automated API Reference support `isOptional` (#7238)
+
+### Performance
+
+- Improve writing files performance by disabling fsync (#7226)
+- Avoid importing-delta when isolating non-modified comps (#7284)
+- Improve import performance when using `--aspect` (#7280)
+
+### Bug Fixes
+
+- Fixes for `ws-config` command (#7234 #7212)
+- Handle cases where `bit install` wanted to run more then once (#7210 #7209)
+- Better error handling and improved messages (#7248 #7223 #7244 #7286 #7281 #7302)
+- Protect from various edge cases in Lanes (#7258 #7211 #7242 #7285)
+- `tag`/`snap` - validate message type to be string (#7239, #7278)
+- Clear workspace cache before calculating component manifests (#7224)
+- Resolve ts-server from bit bundle (#7232)
+- Load (missing) non loaded aspects from components (#7222)
+- Fix homepage in `package.json` (#7220)
+- Avoid overriding mutated Version objects (#7216)
+- Skip broken symlinks when copying components to `.bit_roots` (#7214)
+- `rename` - in case of renaming aspect, update `.bitmap` config records accordingly (#7272)
+- Better support for yarn global cache creation on Windows (#7283)
+
+### Internal
+
+- Dependency audit fixes (#7218 #7215 #7236)
+- Add additional e2e tests for various found edge cases (#7259 #7253 #7247)
+- Add a map of `hash:component-id` for signed components (#7270)
+- Improve outputs for capsule creation and install command (#7267 #7291)
+- Use deps resolver to calculate component package name (#7266)
+- Update pnpm to v8 (#7263)
+- Dedicate a helper method for remote-remove (#7257)
+- Update Yarn (#6762)
+- Revert legacy detective entries (#7237)
+- Move detectors to `package.json` to make them available by Bit-legacy
+- Revamp: replace detectives with bit components (#7228)
+- Eject UI Comps (#7206)
+- Better control over setting dependencies for aspects (#7294 #7295)
+- Improve logging for various actions (#7303 #7299)
+- Make webpack configs type more relaxed (#7287)
+- Upgrade node to v16.16 on windows for circle ci (#7277)
+- Resolve env version when returning env descriptor from component graphql (#7290)
+
 ## [[0.1.11] - 2023-03-28](https://github.com/teambit/bit/releases/tag/v0.1.11)
 
 ### New Features

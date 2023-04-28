@@ -399,8 +399,8 @@ export default class ScopeComponentsImporter {
     const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
     if (R.isEmpty(idsWithoutNils)) return;
     const idsToImport = fromHead ? idsWithoutNils.toVersionLatest() : idsWithoutNils;
-    const compDef = await this.sources.getMany(idsToImport);
-    const idsToFetch = compDef.filter((c) => !c.component).map((c) => c.id);
+    const compExistence = await this.sources.existMany(idsToImport);
+    const idsToFetch = compExistence.filter((c) => !c.exists).map((c) => c.id);
     const groupedIds = lane ? groupByLanes(idsToFetch, [lane]) : groupByScopeName(idsToFetch);
     const remotesCount = Object.keys(groupedIds).length;
     const statusMsg = `fetching ${idsToFetch.length} components from ${remotesCount} remotes.`;

@@ -415,7 +415,7 @@ export class IsolatorMain {
       longProcessLogger.end();
       // this.logger.consoleSuccess();
       const capsuleListOutput = allCapsuleList.map((capsule) => capsule.component.id.toString()).join(', ');
-      this.logger.consoleSuccess(`following capsule(s) ensured ${chalk.cyan(capsuleListOutput)}`);
+      this.logger.consoleSuccess(`resolved aspect(s): ${chalk.cyan(capsuleListOutput)}`);
     }
 
     return allCapsuleList;

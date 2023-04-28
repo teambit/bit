@@ -131,6 +131,11 @@ export class Workspace implements ComponentFactory {
   componentsScopeDirsMap: ComponentScopeDirMap;
   componentLoader: WorkspaceComponentLoader;
   bitMap: BitMap;
+  /**
+   * Indicate that we are now running installaion process
+   * This is important to know to ignore missing modules across different places
+   */
+  inInstallContext = false;
   private _cachedListIds?: ComponentID[];
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
@@ -568,7 +573,10 @@ export class Workspace implements ComponentFactory {
       try {
         this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
         this.logger.debug(`trying to load self as aspect with id ${component.id.toString()}`);
-        await this.loadAspects([component.id.toString()], undefined, component.id.toString());
+        // ignore missing modules when loading self
+        await this.loadAspects([component.id.toString()], undefined, component.id.toString(), {
+          hideMissingModuleError: true,
+        });
         // In most cases if the load self as aspect failed we don't care about it.
         // we only need it in specific cases to work, but this workspace.get runs on different
         // cases where it might fail (like when importing aspect, after the import objects
@@ -861,6 +869,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return Boolean(this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId._legacy)));
   }
 
+  getIdIfExist(componentId: ComponentID): ComponentID | undefined {
+    const id = this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId._legacy));
+    if (!id) return undefined;
+    return componentId.changeVersion(id.version);
+  }
+
   /**
    * This will make sure to fetch the objects prior to load them
    * do not use it if you are not sure you need it.
@@ -869,8 +883,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * @param ids
    */
   async importAndGetMany(ids: Array<ComponentID>): Promise<Component[]> {
+    if (!ids.length) return [];
     await this.importCurrentLaneIfMissing();
-    await this.scope.import(ids, { reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(), preferDependencyGraph: true });
+    await this.scope.import(ids, {
+      reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(),
+      preferDependencyGraph: true,
+    });
     return this.componentLoader.getMany(ids);
   }
 
@@ -1299,7 +1317,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.logger,
       this.harmony,
       this.onAspectsResolveSlot,
-      this.onRootAspectAddedSlot
+      this.onRootAspectAddedSlot,
+      this.config.resolveAspectsFromNodeModules
     );
     return workspaceAspectsLoader;
   }
@@ -1578,6 +1597,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const allEnvs = await this.envs.createEnvironment(allWsComps);
     const getEnvWithVersion = async (envId: ComponentID) => {
       if (envId.hasVersion()) return envId;
+      if (isInWs(envId)) return envId;
       try {
         const fromRemote = await this.scope.getRemoteComponent(envId);
         return envId.changeVersion(fromRemote.id.version);
@@ -1588,27 +1608,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const getEnvs = async (): Promise<ComponentID[]> => {
       if (envIdStr) {
         const envCompId = await this.resolveComponentId(envIdStr);
-        if (isInWs(envCompId)) {
-          throw new BitError(
-            `error: unable to update the env ${envCompId.toString()}, it's already part of the workspace, as such, it's always using the workspace version`
-          );
-        }
         const envWithVer = await getEnvWithVersion(envCompId);
         return [envWithVer];
       }
-      // get all non-local envs.
       const allEnvsIds = allEnvs.runtimeEnvs.map((env) => env.id);
       const allEnvsCompIds = await this.resolveMultipleComponentIds(allEnvsIds);
-      // also check the envId has version, otherwise, it's a core env.
-      const nonLocalEnvs = allEnvsCompIds.filter((envId) => !isInWs(envId) && envId.hasVersion());
-      if (!nonLocalEnvs.length) {
-        throw new BitError(
-          `error: unable to update envs ${allEnvsIds
-            .map((e) => e.toString())
-            .join(', ')}, they're already part of the workspace`
-        );
-      }
-      const envsWithVersions = await mapSeries(nonLocalEnvs, (envId) =>
+      // check whether the envId has version, otherwise, it's a core env.
+      const nonCoreEnvs = allEnvsCompIds.filter((envId) => envId.hasVersion());
+      const envsWithVersions = await mapSeries(nonCoreEnvs, (envId) =>
         getEnvWithVersion(envId.changeVersion(undefined))
       );
       return envsWithVersions;
@@ -1628,15 +1635,27 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         const compEnv = compEnvs[0]; // should not be more than one
         const envToUpdate = envsWithVerToUpdate.find((e) => e.isEqual(compEnv.id, { ignoreVersion: true }));
         if (!envToUpdate) throw new Error(`unable to find ${compEnv.id.toString()} in the envs to update`);
-        if (compEnv.id.version === envToUpdate.version) {
+        const envIsInWs = isInWs(envToUpdate);
+
+        if (!envIsInWs && compEnv.id.version === envToUpdate.version) {
           // nothing to update
+          alreadyUpToDate.push(comp.id);
+          return;
+        }
+        if (envIsInWs && !(await this.getSpecificComponentConfig(comp.id, compEnv.id.toString()))) {
+          // compEnv has version. If this id with version doesn't exist in .bitmap, either, it's not saved in .bitmap
+          // (probably it's in the model) or it's in .bitmap without version (as expected). either way, nothing to update.
           alreadyUpToDate.push(comp.id);
           return;
         }
         // don't mark with minus if not exist in .bitmap. it's not needed. when the component is loaded, the
         // merge-operation of the aspects removes duplicate aspect-id with different versions.
         await this.removeSpecificComponentConfig(comp.id, compEnv.id.toString(), false);
-        await this.addSpecificComponentConfig(comp.id, envToUpdate.toString(), compEnv.config);
+        await this.addSpecificComponentConfig(
+          comp.id,
+          envIsInWs ? envToUpdate.toStringWithoutVersion() : envToUpdate.toString(),
+          compEnv.config
+        );
         (updated[envToUpdate.toString()] ||= []).push(comp.id);
       })
     );
