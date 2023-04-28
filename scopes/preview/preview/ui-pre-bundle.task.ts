@@ -1,5 +1,6 @@
 import { join } from 'path';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { getAspectDirFromBvm } from '@teambit/aspect-loader';
 import { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
 import { Logger } from '@teambit/logger';
 import { UIAspect, UiMain } from '@teambit/ui';
@@ -64,4 +65,17 @@ export function getArtifactDef() {
       rootDir: getArtifactDirectory(),
     },
   ];
+}
+
+export function getPreBundleHash() {
+  const uiPreBundlePathFromBvm = getPreBundlePath();
+  if (existsSync(uiPreBundlePathFromBvm)) {
+    return readFileSync(join(uiPreBundlePathFromBvm, '.hash')).toString();
+  }
+  return '';
+}
+
+export function getPreBundlePath() {
+  const uiPathFromBvm = getAspectDirFromBvm(UIAspect.id);
+  return join(uiPathFromBvm, getArtifactDirectory());
 }
