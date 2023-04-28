@@ -1360,7 +1360,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
-    if (id instanceof BitId && id.hasScope()) {
+    if (id instanceof BitId && id.hasScope() && id.hasVersion()) {
       // an optimization to make it faster when BitId is passed
       return ComponentID.fromLegacy(id);
     }
