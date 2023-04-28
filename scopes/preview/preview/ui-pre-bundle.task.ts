@@ -6,6 +6,8 @@ import { UIAspect, UiMain } from '@teambit/ui';
 import { Capsule } from '@teambit/isolator';
 
 export const UI_PRE_BUNDLE_TASK_NAME = 'GenerateUiPreBundle';
+export const UI_PRE_BUNDLE_DIR = 'ui-build';
+export const UI_PRE_BUNDLE_HASH_FILENAME = '.hash';
 
 export class UiPreBundleTask implements BuildTask {
   aspectId = 'teambit.ui-foundation/ui';
@@ -46,18 +48,18 @@ export class UiPreBundleTask implements BuildTask {
     const hash = await this.ui.buildUiHash(uiRoot);
 
     if (!existsSync(outputPath)) mkdirSync(outputPath);
-    writeFileSync(join(outputPath, '.hash'), hash);
+    writeFileSync(join(outputPath, UI_PRE_BUNDLE_HASH_FILENAME), hash);
   }
 }
 
 export function getArtifactDirectory() {
-  return join('artifacts', 'ui-build');
+  return join('artifacts', UI_PRE_BUNDLE_DIR);
 }
 
 export function getArtifactDef() {
   return [
     {
-      name: 'ui-build',
+      name: UI_PRE_BUNDLE_DIR,
       globPatterns: ['**'],
       rootDir: getArtifactDirectory(),
     },
