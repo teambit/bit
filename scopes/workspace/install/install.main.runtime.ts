@@ -242,7 +242,7 @@ export class InstallMain {
       // are not added to the manifests.
       // This is an issue when installation is done using root components.
       hasMissingLocalComponents = hasRootComponents && hasComponentsFromWorkspaceInMissingDeps(current);
-      await installer.installComponents(
+      const { dependenciesChanged } = await installer.installComponents(
         this.workspace.path,
         current.manifests,
         mergedRootPolicy,
@@ -270,6 +270,7 @@ export class InstallMain {
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
       await this.link(linkOpts);
+      if (!dependenciesChanged) break;
       prevManifests.add(manifestsHash(current.manifests));
       // We need to clear cache before creating the new component manifests.
       this.workspace.consumer.componentLoader.clearComponentsCache();
