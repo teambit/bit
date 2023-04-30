@@ -627,8 +627,6 @@ export class ExportMain {
         };
       });
       if (hasFlattenedEdgesChanged) {
-        // safe to remove the next line once `version.flattenedEdges` is deleted
-        if (version.flattenedEdges) version.flattenedEdges = updatedFlattenedEdges;
         const source = Version.flattenedEdgeToSource(updatedFlattenedEdges);
         version.flattenedEdgesRef = source?.hash();
         if (source) componentsObjects.objects.push(source);

@@ -1,5 +1,5 @@
 import mapSeries from 'p-map-series';
-import { SlotRegistry, Slot } from '@teambit/harmony';
+import { SlotRegistry, Slot, Harmony } from '@teambit/harmony';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
@@ -38,7 +38,8 @@ export class SignMain {
     private builder: BuilderMain,
     private onPostSignSlot: OnPostSignSlot,
     private lanes: LanesMain,
-    private snapping: SnappingMain
+    private snapping: SnappingMain,
+    private harmony: Harmony
   ) {}
 
   /**
@@ -57,6 +58,7 @@ export class SignMain {
     laneIdStr?: string,
     rebuild?: boolean
   ): Promise<SignResult | null> {
+    this.throwIfOnWorkspace();
     let lane: Lane | undefined;
     if (isMultiple) {
       const longProcessLogger = this.logger.createLongProcessLogger('import objects');
@@ -114,6 +116,28 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       publishedPackages,
       error: pipeWithError ? pipeWithError.getErrorMessageFormatted() : null,
     };
+  }
+
+  /**
+   * this command intended to be used from a bare-scope, where it imports the components to be signed and sign them.
+   * if running from the workspace, it can lead to unexpected results. for example, the lane object is imported without
+   * its components, which fails "bit lane list" with a ComponentNotFound error.
+   */
+  private throwIfOnWorkspace() {
+    if (this.isOnWorkspace()) {
+      throw new Error(
+        'sign command is not available from a workspace, please create a new bare-scope and run it from there'
+      );
+    }
+  }
+
+  private isOnWorkspace(): boolean {
+    try {
+      this.harmony.get('teambit.workspace/workspace');
+      return true;
+    } catch (err: any) {
+      return false;
+    }
   }
 
   public registerOnPostSign(fn: OnPostSign) {
@@ -225,10 +249,11 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       SnappingMain
     ],
     _,
-    [onPostSignSlot]: [OnPostSignSlot]
+    [onPostSignSlot]: [OnPostSignSlot],
+    harmony
   ) {
     const logger = loggerMain.createLogger(SignAspect.id);
-    const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes, snapping);
+    const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes, snapping, harmony);
     cli.register(new SignCmd(signMain));
     return signMain;
   }
