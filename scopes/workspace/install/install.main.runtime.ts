@@ -6,7 +6,7 @@ import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/com
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { compact, omit, pick } from 'lodash';
+import { compact, mapValues, omit, pick } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import { BitError } from '@teambit/bit-error';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -270,13 +270,13 @@ export class InstallMain {
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
       await this.link(linkOpts);
-      prevManifests.add(hash(current.manifests));
+      prevManifests.add(manifestsHash(current.manifests));
       // We need to clear cache before creating the new component manifests.
       this.workspace.consumer.componentLoader.clearComponentsCache();
       this.workspace.clearCache();
       current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
       installCycle += 1;
-    } while ((!prevManifests.has(hash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
+    } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
@@ -756,3 +756,12 @@ function hasComponentsFromWorkspaceInMissingDeps({
 InstallAspect.addRuntime(InstallMain);
 
 export default InstallMain;
+
+function manifestsHash(manifests: Record<string, ProjectManifest>): string {
+  // We don't care if the type of the dependency changes as it doesn't change the node_modules structure
+  const depsByProjectPaths = mapValues(manifests, (manifest) => ({
+    ...manifest.devDependencies,
+    ...manifest.dependencies,
+  }));
+  return hash(depsByProjectPaths);
+}
