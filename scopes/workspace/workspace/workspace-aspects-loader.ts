@@ -222,9 +222,14 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
+    // it's possible that componentIds are core-aspects that got version for some reason, remove the version to
+    // correctly filter them out later.
+    const idsToResolveWithoutVersion = componentIds
+      ? componentIds.map((id) => id.toStringWithoutVersion())
+      : this.harmony.extensionsIds;
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const configuredAspects = this.aspectLoader.getConfiguredAspects();
-    const userAspectsIds: string[] = difference(idsToResolve, coreAspectsIds);
+    const userAspectsIds: string[] = difference(idsToResolveWithoutVersion, coreAspectsIds);
     const rootAspectsIds: string[] = difference(configuredAspects, coreAspectsIds);
     const componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(userAspectsIds);
     const components = await this.importAndGetAspects(componentIdsToResolve);
