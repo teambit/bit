@@ -4,9 +4,11 @@ import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import { ChangeLogPage } from './ui/change-log-page';
 
 export class ChangelogSection implements Section {
+  constructor(private host: string) {}
+
   route = {
     path: '~changelog',
-    element: <ChangeLogPage />,
+    element: <ChangeLogPage host={this.host} />,
   };
   navigationLink = {
     href: '~changelog',

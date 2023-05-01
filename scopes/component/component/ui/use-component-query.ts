@@ -1,8 +1,9 @@
-import { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { gql } from '@apollo/client';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
@@ -151,15 +152,95 @@ const SUB_COMPONENT_REMOVED = gql`
 export type Filters = {
   log?: { logType?: string; logOffset?: number; logLimit?: number; logHead?: string; logSort?: string };
 };
+
+export type ComponentQueryResult = {
+  component?: ComponentModel;
+  error?: ComponentError;
+  componentDescriptor?: ComponentDescriptor;
+  loading?: boolean;
+  loadMoreLogs?: () => void;
+  hasMoreLogs?: boolean;
+  componentLogs?: LegacyComponentLog[];
+};
+
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
-export function useComponentQuery(componentId: string, host: string, filters?: Filters, skip?: boolean) {
+export function useComponentQuery(
+  componentId: string,
+  host: string,
+  filtersFromProps?: Filters,
+  skip?: boolean
+): ComponentQueryResult {
   const idRef = useRef(componentId);
   idRef.current = componentId;
-  const { data, error, loading, subscribeToMore, ...rest } = useDataQuery(GET_COMPONENT, {
-    variables: { id: componentId, extensionId: host, ...(filters?.log || {}) },
+  const filters = useMemo(() => filtersFromProps?.log || {}, [filtersFromProps]);
+  const { logOffset, logLimit } = filters;
+
+  const logsRef = React.useRef<LegacyComponentLog[]>([]);
+  const { data, error, loading, subscribeToMore, fetchMore, ...rest } = useDataQuery(GET_COMPONENT, {
+    variables: { id: componentId, extensionId: host, ...filters },
     skip,
     errorPolicy: 'all',
   });
+
+  const rawComponent = data?.getHost?.get;
+
+  logsRef.current = useMemo(() => {
+    if (!logOffset) return rawComponent?.logs;
+
+    if (logsRef.current.length !== (logOffset ?? 0) + (logLimit ?? 0)) {
+      const allLogs = logsRef.current || [];
+      const newLogs = rawComponent?.logs || [];
+      newLogs.forEach((log) => allLogs.push(log));
+      return allLogs;
+    }
+    if (rawComponent?.logs?.length > 0 && logsRef.current?.length === 0) {
+      return rawComponent?.logs;
+    }
+    return logsRef.current;
+  }, [rawComponent?.logs]);
+
+  const hasMoreLogs = React.useRef<boolean | undefined>(undefined);
+
+  hasMoreLogs.current = useMemo(() => {
+    if (!logLimit) return false;
+    if (rawComponent === undefined) return undefined;
+    if (hasMoreLogs.current === undefined) return rawComponent?.logs.length === logLimit;
+    return hasMoreLogs.current;
+  }, [rawComponent?.logs]);
+
+  const loadMoreLogs = React.useCallback(async () => {
+    if (logLimit) {
+      await fetchMore({
+        variables: {
+          logOffset: logsRef.current.length,
+        },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev;
+
+          const prevComponent = prev.getHost.get;
+          const fetchedComponent = fetchMoreResult.getHost.get;
+
+          if (fetchedComponent && ComponentID.isEqualObj(prevComponent.id, fetchedComponent.id)) {
+            const updatedLogs = [...prevComponent.logs, ...fetchedComponent.logs];
+            hasMoreLogs.current = fetchedComponent.logs.length === logLimit;
+            return {
+              ...prev,
+              hasMoreLogs: false,
+              getHost: {
+                ...prev.getHost,
+                get: {
+                  ...prevComponent,
+                  logs: updatedLogs,
+                },
+              },
+            };
+          }
+
+          return prev;
+        },
+      });
+    }
+  }, [logLimit, fetchMore]);
 
   useEffect(() => {
     // @TODO @Kutner fix subscription for scope
@@ -242,11 +323,28 @@ export function useComponentQuery(componentId: string, host: string, filters?: F
       unsubChanges();
       unsubAddition();
       unsubRemoval();
+      logsRef.current = [];
     };
   }, []);
 
-  const rawComponent = data?.getHost?.get;
-  return useMemo(() => {
+  const idDepKey = rawComponent?.id
+    ? `${rawComponent?.id?.scope}/${rawComponent?.id?.name}@${rawComponent?.id?.version}}`
+    : undefined;
+
+  const id: ComponentID | undefined = useMemo(
+    () => (rawComponent ? ComponentID.fromObject(rawComponent.id) : undefined),
+    [idDepKey]
+  );
+
+  const componentError =
+    error && !data ? new ComponentError(500, error.message) : !rawComponent && !loading && new ComponentError(404);
+
+  const component = useMemo(
+    () => (rawComponent ? ComponentModel.from({ ...rawComponent, host }) : undefined),
+    [id?.toString(), logsRef.current]
+  );
+
+  const componentDescriptor = useMemo(() => {
     const aspectList = {
       entries: rawComponent?.aspects.map((aspectObject) => {
         return {
@@ -256,15 +354,20 @@ export function useComponentQuery(componentId: string, host: string, filters?: F
         };
       }),
     };
-    const id = rawComponent && ComponentID.fromObject(rawComponent.id);
-    const componentError =
-      error && !data ? new ComponentError(500, error.message) : !rawComponent && !loading && new ComponentError(404);
+
+    return id ? ComponentDescriptor.fromObject({ id: id.toString(), aspectList }) : undefined;
+  }, [id?.toString()]);
+
+  return useMemo(() => {
     return {
-      componentDescriptor: id ? ComponentDescriptor.fromObject({ id: id.toString(), aspectList }) : undefined,
-      component: rawComponent ? ComponentModel.from({ ...rawComponent, host }) : undefined,
+      componentDescriptor,
+      component,
       error: componentError || undefined,
       loading,
+      loadMoreLogs,
+      hasMoreLogs: hasMoreLogs.current,
+      componentLogs: logsRef.current,
       ...rest,
     };
-  }, [rawComponent, host, error]);
+  }, [host, component, componentDescriptor, componentError, hasMoreLogs]);
 }
