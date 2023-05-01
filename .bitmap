@@ -2145,18 +2145,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/version-block"
     },
-    "ui/version-dropdown": {
-        "scope": "teambit.component",
-        "version": "0.0.760",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/version-dropdown",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
-    },
     "ui/version-label": {
         "scope": "teambit.component",
         "version": "0.0.504",
