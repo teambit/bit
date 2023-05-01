@@ -1501,7 +1501,13 @@
         "scope": "teambit.component",
         "version": "0.0.76",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/version-picker"
+        "rootDir": "components/ui/component-compare/version-picker",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "ui/component-deprecated": {
         "scope": "teambit.component",
@@ -2143,7 +2149,13 @@
         "scope": "teambit.component",
         "version": "0.0.760",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/version-dropdown"
+        "rootDir": "scopes/component/ui/version-dropdown",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "ui/version-label": {
         "scope": "teambit.component",
