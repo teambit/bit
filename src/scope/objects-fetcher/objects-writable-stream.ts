@@ -32,9 +32,9 @@ export class ObjectsWritable extends Writable {
   ) {
     super({ objectMode: true });
     this.timeoutId = setTimeout(() => {
-      logger.console(
-        `fetching from ${remoteName} takes more than ${TIMEOUT_MINUTES} minutes. make sure the remote is not too busy`
-      );
+      const msg = `fetching from ${remoteName} takes more than ${TIMEOUT_MINUTES} minutes. make sure the remote is responsive`;
+      logger.warn(msg);
+      logger.console(`\n${msg}`, 'warn', 'yellow');
     }, TIMEOUT_MINUTES * 60 * 1000);
   }
   async _write(obj: ObjectItem, _, callback: Function) {
