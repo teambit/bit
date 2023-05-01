@@ -729,6 +729,7 @@ jobs:
       - run:
           name: 'bit build'
           command: 'cd bit && bit build'
+          no_output_timeout: 30m
           environment:
             NODE_OPTIONS: --max_old_space_size=12000
       - store_artifacts:
