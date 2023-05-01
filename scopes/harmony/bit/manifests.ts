@@ -33,8 +33,6 @@ import { ComponentSizerAspect } from '@teambit/component-sizer';
 import { ReactAspect } from '@teambit/react';
 import { ReactNativeAspect } from '@teambit/react-native';
 import { ReactRouterAspect } from '@teambit/react-router';
-import { ReactElementsAspect } from '@teambit/react-elements';
-import { ElementsAspect } from '@teambit/elements';
 import { SchemaAspect } from '@teambit/schema';
 import { PubsubAspect } from '@teambit/pubsub';
 import { ScopeAspect } from '@teambit/scope';
@@ -139,8 +137,6 @@ export const manifestsMap = {
   [PkgAspect.id]: PkgAspect,
   [ReactAspect.id]: ReactAspect,
   [ReactNativeAspect.id]: ReactNativeAspect,
-  [ReactElementsAspect.id]: ReactElementsAspect,
-  [ElementsAspect.id]: ElementsAspect,
   [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,

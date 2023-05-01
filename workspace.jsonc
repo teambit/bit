@@ -710,44 +710,6 @@
         }
       }
     },
-    "scopes/react/react-elements": {
-      "teambit.dependencies/dependency-resolver": {
-        "policy": {
-          "dependencies": {
-            "react": "-",
-            "react-dom": "-",
-            "css-loader": "6.2.0",
-            "postcss": "8.4.18",
-            "postcss-loader": "7.0.1",
-            "babel-loader": "8.2.2",
-            "@babel/preset-react": "7.18.6",
-            "@babel/preset-env": "7.19.4",
-            "resolve-url-loader": "5.0.0",
-            "sass-loader": "12.1.0",
-            "@svgr/webpack": "5.5.0",
-            "new-url-loader": "0.1.1",
-            "less": "^4.1.1",
-            "@mdx-js/react": "1.6.22",
-            "less-loader": "10.0.0",
-            "babel-preset-react-app": "^10.0.0",
-            "postcss-normalize": "10.0.0",
-            "postcss-preset-env": "7.8.2",
-            "postcss-flexbugs-fixes": "5.0.2"
-          },
-          "devDependencies": {
-            "react": "-",
-            "react-dom": "-",
-            "@types/mocha": "9.1.0",
-            "@types/postcss-normalize": "9.0.1"
-          },
-          "peerDependencies": {
-            "react": "^16.8.0 || ^17.0.0",
-            "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.482"
-          }
-        }
-      }
-    },
     "scopes/mdx/modules/loader": {
       "teambit.dependencies/dependency-resolver": {
         "policy": {
