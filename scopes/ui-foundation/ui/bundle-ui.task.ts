@@ -14,7 +14,8 @@ export class BundleUiTask implements BuildTask {
   name = BUNDLE_UI_TASK_NAME;
   location: TaskLocation = 'end';
 
-  constructor(private ui: UiMain, private logger: Logger) {}
+  // constructor(private ui: UiMain, private logger: Logger) {}
+  constructor(private ui: UiMain) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const capsule: Capsule | undefined = context.capsuleNetwork.seedersCapsules.find(
@@ -25,12 +26,12 @@ export class BundleUiTask implements BuildTask {
     }
 
     const outputPath = join(capsule.path, getArtifactDirectory());
-    this.logger.info(`Generating UI bundle at ${outputPath}...`);
+    // this.logger.info(`Generating UI bundle at ${outputPath}...`);
     try {
       await this.ui.build(undefined, outputPath);
       await this.generateHash(outputPath);
     } catch (error) {
-      this.logger.error('Generating UI bundle failed');
+      // this.logger.error('Generating UI bundle failed');
       throw new Error('Generating UI bundle failed');
     }
     const artifacts = getArtifactDef();
