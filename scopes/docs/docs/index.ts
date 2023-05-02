@@ -13,7 +13,7 @@ export type { DocReader } from './doc-reader';
 export type { Docs, Example } from './docs';
 export { defaultDocs } from './docs';
 
-export type { TitleBadgeSlot, TitleBadge } from './overview';
+export type { TitleBadgeSlot, TitleBadge, OverviewOptionsSlot, OverviewOptions } from './overview';
 export { Overview, BadgePosition } from './overview';
 
 export { DocsAspect };
