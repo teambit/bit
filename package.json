@@ -216,7 +216,6 @@
     "cli-table": "0.3.6",
     "uid-number": "0.0.6",
     "uniqid": "5.3.0",
-    "user-home": "2.0.0",
     "uuid": "8.3.2",
     "validate-npm-package-name": "3.0.0",
     "vinyl": "2.2.1",
