@@ -89,11 +89,16 @@ export type AspectWritersResults = {
   aspectId: string;
   writersResult: OneConfigFileWriterResult[];
   totalWrittenFiles: number;
+  totalExtendingConfigFiles: number;
 };
 
 export type WriteConfigFilesResult = {
   cleanResults?: string[];
-  writeResults: { totalWrittenFiles: number; aspectsWritersResults: AspectWritersResults[] };
+  writeResults: {
+    totalWrittenFiles: number;
+    totalExtendingConfigFiles: number;
+    aspectsWritersResults: AspectWritersResults[];
+  };
   wsDir: string;
 };
 
@@ -135,7 +140,10 @@ export class WorkspaceConfigFilesMain {
     const totalWrittenFiles = aspectsWritersResults.reduce((acc, curr) => {
       return acc + curr.totalWrittenFiles;
     }, 0);
-    const writeResults = { aspectsWritersResults, totalWrittenFiles };
+    const totalExtendingConfigFiles = aspectsWritersResults.reduce((acc, curr) => {
+      return acc + curr.totalExtendingConfigFiles;
+    }, 0);
+    const writeResults = { aspectsWritersResults, totalWrittenFiles, totalExtendingConfigFiles };
 
     return { writeResults, cleanResults, wsDir: this.workspace.path };
   }
@@ -203,7 +211,10 @@ export class WorkspaceConfigFilesMain {
     const totalWrittenFiles = compactResults.reduce((acc, curr) => {
       return acc + curr.totalWrittenFiles;
     }, 0);
-    return { aspectId, writersResult: compactResults, totalWrittenFiles };
+    const totalExtendingConfigFiles = compactResults.reduce((acc, curr) => {
+      return acc + curr.totalExtendingConfigFiles;
+    }, 0);
+    return { aspectId, writersResult: compactResults, totalWrittenFiles, totalExtendingConfigFiles };
   }
 
   private async handleOneConfigFileWriter(
@@ -501,7 +512,7 @@ export class WorkspaceConfigFilesMain {
   private async promptForCleaning(paths: string[]) {
     this.logger.clearStatusLine();
     const ok = await yesno({
-      question: `${chalk.underline('The following paths will be deleted:')}
+      question: `${chalk.underline('The following files will be deleted:')}
 ${paths.join('\n')}
 ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
     });

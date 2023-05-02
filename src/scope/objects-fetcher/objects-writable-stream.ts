@@ -9,6 +9,8 @@ import { ObjectItem } from '../objects/object-list';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { WriteComponentsQueue } from './write-components-queue';
 
+const TIMEOUT_MINUTES = 5;
+
 /**
  * first, write all immutable objects, such as files/sources/versions into the filesystem, as they arrive.
  * even if the process will crush later and the component-object won't be written, there is no
@@ -19,6 +21,8 @@ import { WriteComponentsQueue } from './write-components-queue';
  * remotes are processed. see @writeManyObjectListToModel.
  */
 export class ObjectsWritable extends Writable {
+  private componentObjectsPendingWrite: ModelComponent[] = [];
+  private timeoutId: NodeJS.Timeout;
   constructor(
     private repo: Repository,
     private sources: SourceRepository,
@@ -27,6 +31,11 @@ export class ObjectsWritable extends Writable {
     private componentsQueue: WriteComponentsQueue
   ) {
     super({ objectMode: true });
+    this.timeoutId = setTimeout(() => {
+      const msg = `fetching from ${remoteName} takes more than ${TIMEOUT_MINUTES} minutes. make sure the remote is responsive`;
+      logger.warn(msg);
+      logger.console(`\n${msg}`, 'warn', 'yellow');
+    }, TIMEOUT_MINUTES * 60 * 1000);
   }
   async _write(obj: ObjectItem, _, callback: Function) {
     logger.trace('ObjectsWritable.write', obj.ref);
@@ -42,13 +51,18 @@ export class ObjectsWritable extends Writable {
     }
   }
 
+  async _final() {
+    await this.writePendingComponentObjects();
+    clearTimeout(this.timeoutId);
+  }
+
   private async writeObjectToFs(obj: ObjectItem) {
     const bitObject = await BitObject.parseObject(obj.buffer);
     if (bitObject instanceof Lane) {
       throw new Error('ObjectsWritable does not support lanes');
     }
     if (bitObject instanceof ModelComponent) {
-      await this.componentsQueue.addComponent(bitObject.id(), () => this.writeComponentObject(bitObject));
+      await this.componentsQueue.addComponent(bitObject.id(), () => this.addComponentObjectToPending(bitObject));
     } else if (bitObject instanceof VersionHistory) {
       // technically it's mutable, but it's ok to have it in the same queue with high concurrency because the merge is
       // simple enough and can't interrupt others
@@ -66,7 +80,7 @@ export class ObjectsWritable extends Writable {
     await this.repo.writeObjectsToTheFS([bitObject]);
   }
 
-  private async writeComponentObject(modelComponent: ModelComponent) {
+  private async addComponentObjectToPending(modelComponent: ModelComponent) {
     const component = await this.mergeModelComponent(modelComponent, this.remoteName);
     const componentIsPersistPendingAlready = this.repo.objects[component.hash().toString()];
     if (componentIsPersistPendingAlready) {
@@ -75,8 +89,16 @@ export class ObjectsWritable extends Writable {
       // components objects during the tag/snap.
       return;
     }
-    await this.repo.writeObjectsToTheFS([component]);
-    await this.repo.remoteLanes.addEntriesFromModelComponents(LaneId.from(DEFAULT_LANE, this.remoteName), [component]);
+    this.componentObjectsPendingWrite.push(component);
+  }
+
+  private async writePendingComponentObjects() {
+    if (!this.componentObjectsPendingWrite.length) return;
+    await this.repo.writeObjectsToTheFS(this.componentObjectsPendingWrite);
+    await this.repo.remoteLanes.addEntriesFromModelComponents(
+      LaneId.from(DEFAULT_LANE, this.remoteName),
+      this.componentObjectsPendingWrite
+    );
   }
 
   /**
