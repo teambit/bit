@@ -4,7 +4,7 @@ import { useComponentCompare } from '@teambit/component.ui.component-compare.con
 import { Toggle } from '@teambit/design.inputs.toggle-switch';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { Overview } from '@teambit/docs';
-import type { TitleBadgeSlot } from '@teambit/docs';
+import type { TitleBadgeSlot, OverviewOptionsSlot } from '@teambit/docs';
 import React, { UIEvent, useMemo, useRef, useState } from 'react';
 import { useLanes, LanesContext, LanesContextModel } from '@teambit/lanes.hooks.use-lanes';
 
@@ -12,10 +12,11 @@ import styles from './overview-compare.module.scss';
 
 export type OverviewCompareProps = {
   titleBadges: TitleBadgeSlot;
+  overviewOptions: OverviewOptionsSlot;
 };
 
 export function OverviewCompare(props: OverviewCompareProps) {
-  const { titleBadges } = props;
+  const { titleBadges, overviewOptions } = props;
   const componentCompare = useComponentCompare();
   const [isScrollingSynced, setIsScrollingSynced] = useState<boolean>(true);
 
@@ -58,7 +59,7 @@ export function OverviewCompare(props: OverviewCompareProps) {
       <div className={styles.subView} ref={leftPanelRef} onScroll={handleLeftPanelScroll}>
         <LanesContext.Provider value={lanesContext}>
           <ComponentProvider component={componentCompare.base.model}>
-            <Overview titleBadges={titleBadges} />
+            <Overview titleBadges={titleBadges} overviewOptions={overviewOptions} />
           </ComponentProvider>
         </LanesContext.Provider>
       </div>
@@ -80,7 +81,7 @@ export function OverviewCompare(props: OverviewCompareProps) {
       <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}>
         <LanesContext.Provider value={lanesContext}>
           <ComponentProvider component={componentCompare.compare.model}>
-            <Overview titleBadges={titleBadges} />
+            <Overview titleBadges={titleBadges} overviewOptions={overviewOptions} />
           </ComponentProvider>
         </LanesContext.Provider>
       </div>

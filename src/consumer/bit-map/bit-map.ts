@@ -27,7 +27,7 @@ import ComponentMap, {
   getFilesByDir,
   getGitIgnoreHarmony,
 } from './component-map';
-import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
+import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 import GeneralError from '../../error/general-error';
 import { Lane } from '../../scope/models';
@@ -51,6 +51,10 @@ export default class BitMap {
   markAsChangedBinded: Function;
   _cacheIdsAll: BitIds | undefined;
   _cacheIdsLane: BitIds | undefined;
+  _cacheIdsAllStr: { [idStr: string]: BitId } | undefined;
+  _cacheIdsAllStrWithoutScope: { [idStr: string]: BitId } | undefined;
+  _cacheIdsAllStrWithoutVersion: { [idStr: string]: BitId } | undefined;
+  _cacheIdsAllStrWithoutScopeAndVersion: { [idStr: string]: BitId } | undefined;
   allTrackDirs: { [trackDir: string]: BitId } | null | undefined;
   private updatedIds: { [oldIdStr: string]: ComponentMap } = {}; // needed for out-of-sync where the id is changed during the process
   constructor(
@@ -348,6 +352,47 @@ export default class BitMap {
     return componentIds;
   }
 
+  getAllIdsStr(): Record<string, BitId> {
+    if (!this._cacheIdsAllStr) {
+      const allIds = this.getAllBitIdsFromAllLanes();
+      this._cacheIdsAllStr = allIds.reduce((acc, id) => {
+        acc[id.toString()] = id;
+        return acc;
+      }, {});
+    }
+    return this._cacheIdsAllStr;
+  }
+  getAllIdsStrWithoutScope(): Record<string, BitId> {
+    if (!this._cacheIdsAllStrWithoutScope) {
+      const allIds = this.getAllBitIdsFromAllLanes();
+      this._cacheIdsAllStrWithoutScope = allIds.reduce((acc, id) => {
+        acc[id.toStringWithoutScope()] = id;
+        return acc;
+      }, {});
+    }
+    return this._cacheIdsAllStrWithoutScope;
+  }
+  getAllIdsStrWithoutVersion(): Record<string, BitId> {
+    if (!this._cacheIdsAllStrWithoutVersion) {
+      const allIds = this.getAllBitIdsFromAllLanes();
+      this._cacheIdsAllStrWithoutVersion = allIds.reduce((acc, id) => {
+        acc[id.toStringWithoutVersion()] = id;
+        return acc;
+      }, {});
+    }
+    return this._cacheIdsAllStrWithoutVersion;
+  }
+  getAllIdsStrWithoutScopeAndVersion(): Record<string, BitId> {
+    if (!this._cacheIdsAllStrWithoutScopeAndVersion) {
+      const allIds = this.getAllBitIdsFromAllLanes();
+      this._cacheIdsAllStrWithoutScopeAndVersion = allIds.reduce((acc, id) => {
+        acc[id.toStringWithoutScopeAndVersion()] = id;
+        return acc;
+      }, {});
+    }
+    return this._cacheIdsAllStrWithoutScopeAndVersion;
+  }
+
   getAllIdsAvailableOnLane(): BitIds {
     if (!this._cacheIdsLane) {
       const components = this.components
@@ -515,39 +560,30 @@ export default class BitMap {
     if (!R.is(String, id)) {
       throw new TypeError(`BitMap.getExistingBitId expects id to be a string, instead, got ${typeof id}`);
     }
+
+    const allIdsStr = this.getAllIdsStr();
+    const allIdsStrWithoutScope = this.getAllIdsStrWithoutScope();
+    const allIdsStrWithoutVersion = this.getAllIdsStrWithoutVersion();
+    const allIdsStrWithoutScopeAndVersion = this.getAllIdsStrWithoutScopeAndVersion();
+
     const idHasVersion = id.includes(VERSION_DELIMITER);
 
     // start with a more strict comparison. assume the id from the user has a scope name
-    const componentWithScope = this.components.find((componentMap: ComponentMap) => {
-      return idHasVersion ? componentMap.id.toString() === id : componentMap.id.toStringWithoutVersion() === id;
-    });
-    if (componentWithScope) return componentWithScope.id;
-
+    const componentWithScope = idHasVersion ? allIdsStr[id] : allIdsStrWithoutVersion[id];
+    if (componentWithScope) return componentWithScope;
     // continue with searching without the scope name (in the bitmap)
     const idWithoutVersion = BitId.getStringWithoutVersion(id);
-    const componentWithoutScope = this.components.find((componentMap: ComponentMap) => {
-      return idHasVersion
-        ? componentMap.id.toStringWithoutScope() === id
-        : componentMap.id.toStringWithoutScopeAndVersion() === idWithoutVersion;
-    });
-    if (componentWithoutScope) return componentWithoutScope.id;
-
+    const componentWithoutScope = idHasVersion
+      ? allIdsStrWithoutScope[id]
+      : allIdsStrWithoutScopeAndVersion[idWithoutVersion];
+    if (componentWithoutScope) return componentWithoutScope;
     if (searchWithoutScopeInProvidedId) {
       // continue with searching without the scope name (in the provided id)
       const delimiterIndex = id.indexOf('/');
       if (delimiterIndex !== -1) {
         const idWithoutScope = BitId.getScopeAndName(id).name;
-        const matches = this.components.filter((componentMap: ComponentMap) => {
-          return idHasVersion
-            ? componentMap.id.toString() === idWithoutScope
-            : componentMap.id.toStringWithoutVersion() === idWithoutScope;
-        });
-        if (matches && matches.length > 1) {
-          throw new MultipleMatches(id);
-        }
-        if (matches && matches.length === 1) {
-          return matches[0].id;
-        }
+        const matchedName = idHasVersion ? allIdsStr[idWithoutScope] : allIdsStrWithoutVersion[idWithoutScope];
+        if (matchedName) return matchedName;
         if (this.updatedIds[idWithoutScope]) {
           return this.updatedIds[idWithoutScope].id;
         }
@@ -688,6 +724,10 @@ export default class BitMap {
     this._cacheIdsAll = undefined;
     this._cacheIdsLane = undefined;
     this.allTrackDirs = undefined;
+    this._cacheIdsAllStr = undefined;
+    this._cacheIdsAllStrWithoutScope = undefined;
+    this._cacheIdsAllStrWithoutVersion = undefined;
+    this._cacheIdsAllStrWithoutScopeAndVersion = undefined;
   };
 
   _removeFromComponentsArray(componentId: BitId) {
