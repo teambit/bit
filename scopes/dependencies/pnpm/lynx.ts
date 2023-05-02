@@ -34,7 +34,7 @@ import toNerfDart from 'nerf-dart';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
-const installsRunning: Record<string, Promise<{ dependenciesChanged: boolean }>> = {};
+const installsRunning: Record<string, Promise<any>> = {};
 
 type RegistriesMap = {
   default: string;
@@ -268,7 +268,8 @@ export async function install(
   try {
     await installsRunning[rootDir];
     installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
-    dependenciesChanged = (await installsRunning[rootDir]).dependenciesChanged;
+    const { stats } = await installsRunning[rootDir];
+    dependenciesChanged = stats.added + stats.removed + stats.linkedToRoot > 0;
     delete installsRunning[rootDir];
   } catch (err: any) {
     throw pnpmErrorToBitError(err);

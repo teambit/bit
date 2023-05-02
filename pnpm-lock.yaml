@@ -67147,6 +67147,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
+      chai: 4.3.0
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -67164,6 +67165,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
+      chai: 4.3.0
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -67182,6 +67184,7 @@ packages:
     dependencies:
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
+      chai: 4.3.0
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -67202,6 +67205,7 @@ packages:
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
+      chai: 4.3.0
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -67283,6 +67287,7 @@ packages:
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/evangelist.surfaces.dropdown': registry.npmjs.org/@teambit/evangelist.surfaces.dropdown@1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
+      chai: 4.3.0
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -67310,6 +67315,7 @@ packages:
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/evangelist.surfaces.dropdown': registry.npmjs.org/@teambit/evangelist.surfaces.dropdown@1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
+      chai: 4.3.0
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -67331,6 +67337,7 @@ packages:
     dependencies:
       '@teambit/design.ui.pill-label': 0.0.356(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
+      chai: 4.3.0
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -69201,6 +69208,7 @@ packages:
     dependencies:
       '@mdx-js/mdx': 1.6.21
       '@teambit/node.deps-detectors.detective-es6': 0.0.1
+      chai: 4.3.0
       react: 17.0.2
       remark-admonitions: 1.2.1
       remark-frontmatter: 2.0.0
@@ -71900,6 +71908,7 @@ packages:
     dependencies:
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
+      chai: 4.3.0
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -71917,6 +71926,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
+      chai: 4.3.0
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
