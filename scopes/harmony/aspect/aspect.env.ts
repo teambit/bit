@@ -10,6 +10,7 @@ import { Bundler, BundlerContext } from '@teambit/bundler';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { Tester } from '@teambit/tester';
 import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
+import { BUNDLE_UI_DIR } from '@teambit/ui';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -75,7 +76,7 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
     // we want to make sure to add it for the core envs
     if (context && this.aspectLoader.isCoreEnv(context.component.id.toStringWithoutVersion())) {
       patterns.push(`!${CAPSULE_ARTIFACTS_DIR}/env-template`);
-      patterns.push(`!${CAPSULE_ARTIFACTS_DIR}/ui-bundle`);
+      patterns.push(`!${CAPSULE_ARTIFACTS_DIR}/${BUNDLE_UI_DIR}`);
     }
     return patterns;
   }
