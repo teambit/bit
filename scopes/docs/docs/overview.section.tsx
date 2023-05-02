@@ -1,13 +1,14 @@
 import React from 'react';
 import { Section } from '@teambit/component';
-import { Overview, TitleBadgeSlot } from './overview';
+import { Overview, TitleBadgeSlot, OverviewOptionsSlot } from './overview';
 
 export class OverviewSection implements Section {
   constructor(
     /**
      * title badge slot.
      */
-    private titleBadgeSlot: TitleBadgeSlot
+    private titleBadgeSlot: TitleBadgeSlot,
+    private overviewOptionsSlot: OverviewOptionsSlot
   ) {}
 
   navigationLink = {
@@ -18,7 +19,7 @@ export class OverviewSection implements Section {
 
   route = {
     index: true,
-    element: <Overview titleBadges={this.titleBadgeSlot} />,
+    element: <Overview titleBadges={this.titleBadgeSlot} overviewOptions={this.overviewOptionsSlot} />,
   };
 
   order = 10;
