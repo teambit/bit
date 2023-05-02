@@ -45,7 +45,7 @@ export class BundleUiTask implements BuildTask {
     if (!maybeUiRoot) throw new Error('no uiRoot found');
 
     const [, uiRoot] = maybeUiRoot;
-    const hash = await this.ui.buildUiHash(uiRoot);
+    const hash = await this.ui.getBundleUiHash(uiRoot);
 
     if (!existsSync(outputPath)) mkdirSync(outputPath);
     writeFileSync(join(outputPath, BUNDLE_UI_HASH_FILENAME), hash);
