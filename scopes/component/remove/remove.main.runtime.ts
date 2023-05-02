@@ -25,7 +25,7 @@ export type RemoveInfo = {
 };
 
 export class RemoveMain {
-  constructor(private workspace: Workspace, private logger: Logger, private importer: ImporterMain) {}
+  constructor(private workspace: Workspace, public logger: Logger, private importer: ImporterMain) {}
 
   async remove({
     componentsPattern,
