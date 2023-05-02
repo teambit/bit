@@ -8,9 +8,11 @@ type Flags = { dryRun?: boolean; noDedupe?: boolean; dryRunWithTsconfig?: boolea
 
 export default class WriteTsconfigCmd implements Command {
   name = 'write-tsconfig';
-  description = 'EXPERIMENTAL. write tsconfig.json files in the component directories';
+  // description = 'EXPERIMENTAL. write tsconfig.json files in the component directories';
+  description = 'DEPRECATED. use bit ws-config write instead';
   alias = '';
   group = 'development';
+  private = true;
   options = [
     ['c', 'clean', 'delete tsconfig files from the workspace. highly recommended to run it with "--dry-run" first'],
     ['s', 'silent', 'do not prompt for confirmation'],
