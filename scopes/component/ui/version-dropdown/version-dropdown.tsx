@@ -113,22 +113,6 @@ export type VersionDropdownProps = {
   tabs: Array<{ name: string; payload: Array<any> }>;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-/**
- * 
- * @param param0 
-  const getActiveTabIndex = () => {
-    if (currentLane?.components.some((c) => c.version === currentVersion))
-      return tabs.findIndex((tab) => tab.name === 'LANE');
-    if ((snaps || []).some((snap) => snap.version === currentVersion))
-      return tabs.findIndex((tab) => tab.name === 'SNAP');
-    return 0;
-  };
-
-  const [activeTabIndex, setActiveTab] = useState<number>(getActiveTabIndex());
-
- * @returns 
- */
-
 export const VersionDropdown = React.memo(React.forwardRef<HTMLDivElement, VersionDropdownProps>(_VersionDropdown));
 
 function _VersionDropdown(
