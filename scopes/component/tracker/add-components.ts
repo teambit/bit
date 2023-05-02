@@ -77,6 +77,7 @@ export type AddProps = {
   defaultScope?: string;
   config?: Config;
   shouldHandleOutOfSync?: boolean;
+  env?: string;
 };
 // This is the contxt of the add operation. By default, the add is executed in the same folder in which the consumer is located and it is the process.cwd().
 // In that case , give the value false to overridenConsumer .
