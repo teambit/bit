@@ -58,40 +58,39 @@ export class EnvPreviewTemplateTask implements BuildTask {
     const htmlConfig = previewDefs.map((previewModule) => generateHtmlConfig(previewModule, { dev: context.dev }));
     const originalSeedersIds = context.capsuleNetwork.originalSeedersCapsules.map((c) => c.component.id.toString());
     const grouped: TargetsGroupMap = {};
-    await Promise.all(
-      context.components.map(async (component) => {
-        // Do not run over other components in the graph. it make the process much longer with no need
-        if (originalSeedersIds && originalSeedersIds.length && !originalSeedersIds.includes(component.id.toString())) {
-          return undefined;
-        }
-        const envDef = this.envs.getEnvFromComponent(component);
-        if (!envDef) return undefined;
-        const env = envDef.env;
-        const bundlingStrategy = this.preview.getBundlingStrategy(envDef.env);
-        if (bundlingStrategy.name === 'env') {
-          return undefined;
-        }
-        const target = await this.getEnvTargetFromComponent(context, component, envDef, htmlConfig);
-        if (!target) return undefined;
-        const shouldUseDefaultBundler = this.shouldUseDefaultBundler(envDef);
-        let envToGetBundler = this.envs.getEnvsEnvDefinition().env;
-        let groupEnvId = 'default';
-        if (!shouldUseDefaultBundler) {
-          envToGetBundler = env;
-          groupEnvId = envDef.id;
-        }
-        if (!grouped[groupEnvId]) {
-          grouped[groupEnvId] = {
-            env,
-            envToGetBundler,
-            targets: [target],
-          };
-        } else {
-          grouped[groupEnvId].targets.push(target);
-        }
+    // avoid running them with `Promise.all` because getEnv methods do import/isolate which can't be in parallel.
+    await mapSeries(context.components, async (component) => {
+      // Do not run over other components in the graph. it make the process much longer with no need
+      if (originalSeedersIds && originalSeedersIds.length && !originalSeedersIds.includes(component.id.toString())) {
         return undefined;
-      })
-    );
+      }
+      const envDef = this.envs.getEnvFromComponent(component);
+      if (!envDef) return undefined;
+      const env = envDef.env;
+      const bundlingStrategy = this.preview.getBundlingStrategy(envDef.env);
+      if (bundlingStrategy.name === 'env') {
+        return undefined;
+      }
+      const target = await this.getEnvTargetFromComponent(context, component, envDef, htmlConfig);
+      if (!target) return undefined;
+      const shouldUseDefaultBundler = this.shouldUseDefaultBundler(envDef);
+      let envToGetBundler = this.envs.getEnvsEnvDefinition().env;
+      let groupEnvId = 'default';
+      if (!shouldUseDefaultBundler) {
+        envToGetBundler = env;
+        groupEnvId = envDef.id;
+      }
+      if (!grouped[groupEnvId]) {
+        grouped[groupEnvId] = {
+          env,
+          envToGetBundler,
+          targets: [target],
+        };
+      } else {
+        grouped[groupEnvId].targets.push(target);
+      }
+      return undefined;
+    });
     if (isEmpty(grouped)) {
       return { componentsResults: [] };
     }
