@@ -4,12 +4,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-
 import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
-import {
-  WILDCARD_HELP,
-  NOTHING_TO_SNAP_MSG,
-  AUTO_SNAPPED_MSG,
-  COMPONENT_PATTERN_HELP,
-} from '@teambit/legacy/dist/constants';
+import { NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG, COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { SnappingMain, SnapResults } from './snapping.main.runtime';
@@ -25,6 +20,7 @@ export class SnapCmd implements Command {
       description: `${COMPONENT_PATTERN_HELP}. By default, all new and modified components are snapped.`,
     },
   ];
+  helpUrl = 'docs/components/snaps';
   alias = '';
   options = [
     ['m', 'message <message>', 'log message describing the latest changes'],
@@ -61,10 +57,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   loader = true;
   migration = true;
 
-  constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {
-    this.extendedDescription = `https://${docsDomain}/components/snaps
-${WILDCARD_HELP('snap')}`;
-  }
+  constructor(private snapping: SnappingMain, private logger: Logger) {}
 
   async report(
     [pattern]: string[],
