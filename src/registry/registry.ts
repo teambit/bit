@@ -2,13 +2,13 @@
 import fs from 'fs';
 import iniBuilder from 'ini-builder';
 import path from 'path';
-import userHome from 'user-home';
+import { homedir } from 'os';
 
 import { DEFAULT_BINDINGS_PREFIX } from '../constants';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from './exceptions';
 
 function findrc(pathToNpmrc: string) {
-  let userNpmrc = path.join(userHome, '.npmrc');
+  let userNpmrc = path.join(homedir(), '.npmrc');
   if (pathToNpmrc) {
     if (!fs.existsSync(pathToNpmrc)) throw new PathToNpmrcNotExist(pathToNpmrc);
     const stats = fs.statSync(pathToNpmrc);
