@@ -3,8 +3,6 @@ import { gql } from '@apollo/client';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
-
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 
@@ -162,7 +160,6 @@ export type ComponentQueryResult = {
   loading?: boolean;
   loadMoreLogs?: () => void;
   hasMoreLogs?: boolean;
-  componentLogs?: LegacyComponentLog[];
 };
 
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
@@ -175,9 +172,8 @@ export function useComponentQuery(
   const idRef = useRef(componentId);
   idRef.current = componentId;
   const filters = useMemo(() => filtersFromProps?.log || {}, [filtersFromProps]);
-  const { logOffset, logLimit } = filters;
-
-  const logsRef = React.useRef<LegacyComponentLog[]>([]);
+  const { logLimit } = filters;
+  const offsetRef = useRef(filters.logOffset);
   const { data, error, loading, subscribeToMore, fetchMore, ...rest } = useDataQuery(GET_COMPONENT, {
     variables: { id: componentId, extensionId: host, ...filters },
     skip,
@@ -185,21 +181,16 @@ export function useComponentQuery(
   });
 
   const rawComponent = data?.getHost?.get;
+  const rawCompLogs = rawComponent?.logs ?? [];
 
-  logsRef.current = useMemo(() => {
-    if (!logOffset) return rawComponent?.logs;
-
-    if (logsRef.current.length !== (logOffset ?? 0) + (logLimit ?? 0)) {
-      const allLogs = logsRef.current || [];
-      const newLogs = rawComponent?.logs || [];
-      newLogs.forEach((log) => allLogs.push(log));
-      return allLogs;
+  offsetRef.current = useMemo(() => {
+    const currentOffset = offsetRef.current;
+    if (!currentOffset) return rawCompLogs.length;
+    if (currentOffset < rawCompLogs?.length) {
+      return rawCompLogs?.length;
     }
-    if (rawComponent?.logs?.length > 0 && logsRef.current?.length === 0) {
-      return rawComponent?.logs;
-    }
-    return logsRef.current;
-  }, [rawComponent?.logs]);
+    return offsetRef.current;
+  }, [rawCompLogs]);
 
   const hasMoreLogs = React.useRef<boolean | undefined>(undefined);
 
@@ -214,7 +205,7 @@ export function useComponentQuery(
     if (logLimit) {
       await fetchMore({
         variables: {
-          logOffset: logsRef.current.length,
+          logOffset: offsetRef.current,
         },
         updateQuery: (prev, { fetchMoreResult }) => {
           if (!fetchMoreResult) return prev;
@@ -225,6 +216,7 @@ export function useComponentQuery(
           if (fetchedComponent && ComponentID.isEqualObj(prevComponent.id, fetchedComponent.id)) {
             const updatedLogs = [...prevComponent.logs, ...fetchedComponent.logs];
             hasMoreLogs.current = fetchedComponent.logs.length === logLimit;
+
             return {
               ...prev,
               hasMoreLogs: false,
@@ -325,7 +317,7 @@ export function useComponentQuery(
       unsubChanges();
       unsubAddition();
       unsubRemoval();
-      logsRef.current = [];
+      offsetRef.current = undefined;
     };
   }, []);
 
@@ -343,7 +335,7 @@ export function useComponentQuery(
 
   const component = useMemo(
     () => (rawComponent ? ComponentModel.from({ ...rawComponent, host }) : undefined),
-    [id?.toString(), logsRef.current]
+    [id?.toString(), rawComponent?.logs.length]
   );
 
   const componentDescriptor = useMemo(() => {
@@ -368,7 +360,6 @@ export function useComponentQuery(
       loading,
       loadMoreLogs,
       hasMoreLogs: hasMoreLogs.current,
-      componentLogs: logsRef.current,
       ...rest,
     };
   }, [host, component, componentDescriptor, componentError, hasMoreLogs]);

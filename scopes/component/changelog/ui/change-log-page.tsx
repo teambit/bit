@@ -17,7 +17,6 @@ type ChangeLogPageProps = {
 export function ChangeLogPage({ className, host }: ChangeLogPageProps) {
   const componentContext = React.useContext(ComponentContext);
   const {
-    componentLogs: logs = [],
     component,
     loading,
     loadMoreLogs,
@@ -29,6 +28,8 @@ export function ChangeLogPage({ className, host }: ChangeLogPageProps) {
       },
     },
   });
+
+  const logs = component?.logs ?? [];
 
   const observer = React.useRef<IntersectionObserver>();
   const handleLoadMore = () => {

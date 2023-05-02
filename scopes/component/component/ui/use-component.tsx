@@ -1,6 +1,5 @@
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 import { Filters, useComponentQuery } from './use-component-query';
@@ -12,7 +11,6 @@ export type Component = {
   loading?: boolean;
   loadMoreLogs?: () => void;
   hasMoreLogs?: boolean;
-  componentLogs?: LegacyComponentLog[];
 };
 export type UseComponentOptions = {
   version?: string;
