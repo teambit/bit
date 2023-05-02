@@ -269,9 +269,7 @@ export default class ImportComponents {
       );
     }
     if (idsFromAnotherLane.length) {
-      throw new BitError(`unable to import the following components as they don't belong to ${
-        currentRemoteLane ? 'the current lane' : 'main'
-      }:
+      throw new BitError(`unable to import the following component(s) as they belong to other lane(s):
 ${idsFromAnotherLane.map((id) => id.toString()).join(', ')}
 if you need this specific snap, find the lane this snap is belong to, then run "bit lane merge <lane-id> [component-id]" to merge this component from the lane.
 `);

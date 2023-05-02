@@ -1550,7 +1550,7 @@ describe('bit lane command', function () {
     });
     it('should block the import', () => {
       expect(() => helper.command.importComponent(`comp1@${headOnLaneA}`)).to.throw(
-        `unable to import the following components as they don't belong to main`
+        `unable to import the following component(s) as they belong to other lane(s)`
       );
     });
   });
@@ -1569,7 +1569,7 @@ describe('bit lane command', function () {
     });
     it('should block the import', () => {
       expect(() => helper.command.importComponent(`comp1@${headOnLaneA}`)).to.throw(
-        `unable to import the following components as they don't belong to the current lane`
+        `unable to import the following component(s) as they belong to other lane(s)`
       );
     });
   });
