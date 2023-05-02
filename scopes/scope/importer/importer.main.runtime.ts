@@ -1,8 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { CommunityAspect } from '@teambit/community';
-import type { CommunityMain } from '@teambit/community';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -256,7 +254,6 @@ export class ImporterMain {
     CLIAspect,
     WorkspaceAspect,
     DependencyResolverAspect,
-    CommunityAspect,
     GraphAspect,
     ScopeAspect,
     ComponentWriterAspect,
@@ -264,11 +261,10 @@ export class ImporterMain {
     LoggerAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, depResolver, community, graph, scope, componentWriter, install, loggerMain]: [
+  static async provider([cli, workspace, depResolver, graph, scope, componentWriter, install, loggerMain]: [
     CLIMain,
     Workspace,
     DependencyResolverMain,
-    CommunityMain,
     GraphMain,
     ScopeMain,
     ComponentWriterMain,
@@ -286,7 +282,7 @@ export class ImporterMain {
     install.registerPreLink(async (opts) => {
       if (opts?.fetchObject) await importerMain.importCurrentObjects();
     });
-    cli.register(new ImportCmd(importerMain, community.getDocsDomain()), new FetchCmd(importerMain));
+    cli.register(new ImportCmd(importerMain), new FetchCmd(importerMain));
     return importerMain;
   }
 }

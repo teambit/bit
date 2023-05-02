@@ -3,7 +3,6 @@ import chalk from 'chalk';
 import { compact } from 'lodash';
 import R from 'ramda';
 import { installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
-import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import {
   FileStatus,
   MergeOptions,
@@ -73,10 +72,7 @@ export class ImportCmd implements Command {
   remoteOp = true;
   _packageManagerArgs: string[]; // gets populated by yargs-adapter.handler().
 
-  constructor(private importer: ImporterMain, private docsDomain: string) {
-    this.extendedDescription = `https://${docsDomain}/components/importing-components
-${WILDCARD_HELP('import')}`;
-  }
+  constructor(private importer: ImporterMain) {}
 
   async report(
     [ids = []]: [string[]],
