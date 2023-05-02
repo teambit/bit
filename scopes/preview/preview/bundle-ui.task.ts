@@ -5,13 +5,13 @@ import { Logger } from '@teambit/logger';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { Capsule } from '@teambit/isolator';
 
-export const UI_PRE_BUNDLE_TASK_NAME = 'GenerateUiPreBundle';
-export const UI_PRE_BUNDLE_DIR = 'ui-build';
-export const UI_PRE_BUNDLE_HASH_FILENAME = '.hash';
+export const BUNDLE_UI_TASK_NAME = 'BundleUI';
+export const BUNDLE_UI_DIR = 'ui-bundle';
+export const BUNDLE_UI_HASH_FILENAME = '.hash';
 
-export class UiPreBundleTask implements BuildTask {
+export class BundleUiTask implements BuildTask {
   aspectId = 'teambit.ui-foundation/ui';
-  name = UI_PRE_BUNDLE_TASK_NAME;
+  name = BUNDLE_UI_TASK_NAME;
   location: TaskLocation = 'end';
 
   constructor(private ui: UiMain, private logger: Logger) {}
@@ -25,13 +25,13 @@ export class UiPreBundleTask implements BuildTask {
     }
 
     const outputPath = join(capsule.path, getArtifactDirectory());
-    this.logger.info(`Generating prebundled ui-build at ${outputPath}...`);
+    this.logger.info(`Generating UI bundle at ${outputPath}...`);
     try {
       await this.ui.build(undefined, outputPath);
       await this.generateHash(outputPath);
     } catch (error) {
-      this.logger.error('Generating prebundled ui-build failed');
-      throw new Error('Generating prebundled ui-build failed');
+      this.logger.error('Generating UI bundle failed');
+      throw new Error('Generating UI bundle failed');
     }
     const artifacts = getArtifactDef();
     return {
@@ -48,18 +48,18 @@ export class UiPreBundleTask implements BuildTask {
     const hash = await this.ui.buildUiHash(uiRoot);
 
     if (!existsSync(outputPath)) mkdirSync(outputPath);
-    writeFileSync(join(outputPath, UI_PRE_BUNDLE_HASH_FILENAME), hash);
+    writeFileSync(join(outputPath, BUNDLE_UI_HASH_FILENAME), hash);
   }
 }
 
 export function getArtifactDirectory() {
-  return join('artifacts', UI_PRE_BUNDLE_DIR);
+  return join('artifacts', BUNDLE_UI_DIR);
 }
 
 export function getArtifactDef() {
   return [
     {
-      name: UI_PRE_BUNDLE_DIR,
+      name: BUNDLE_UI_DIR,
       globPatterns: ['**'],
       rootDir: getArtifactDirectory(),
     },
