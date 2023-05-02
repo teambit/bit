@@ -54,7 +54,7 @@ export class CliCmd implements Command {
       completer: (line, cb) => completer(line, cb, this.cliMain),
     });
 
-    const cliParser = new CLIParser(this.cliMain.commands, this.cliMain.groups, undefined, this.docsDomain);
+    const cliParser = new CLIParser(this.cliMain.commands, this.cliMain.groups, this.docsDomain);
 
     rl.prompt();
 
