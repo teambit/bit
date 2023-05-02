@@ -39,6 +39,8 @@ export const componentOverviewFields = gql`
     server {
       env
       url
+      host
+      basePath
     }
     buildStatus
     env {
