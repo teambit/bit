@@ -85,20 +85,74 @@ export function ComponentMenu({
   const resolvedComponentIdStr = path || idFromLocation;
 
   const useComponentOptions = {
-    logFilters: useComponentFilters?.(),
+    logFilters: useComponentFilters?.() || {
+      log: {
+        logLimit: 20,
+      },
+    },
     customUseComponent: useComponent,
   };
 
-  const { component } = useComponentQuery(host, componentId?.toString() || idFromLocation, useComponentOptions);
+  const snapLogOptions = {
+    ...useComponentOptions,
+    logFilters: {
+      ...useComponentOptions.logFilters,
+      log: {
+        ...useComponentOptions.logFilters.log,
+        type: 'snap',
+      },
+    },
+  };
+  const tagLogOptions = {
+    ...useComponentOptions,
+    logFilters: {
+      ...useComponentOptions.logFilters,
+      log: {
+        ...useComponentOptions.logFilters.log,
+        type: 'tag',
+      },
+    },
+  };
+
+  const {
+    component: componentTags,
+    loadMoreLogs: loadMoreTags,
+    hasMoreLogs: hasMoreTags,
+    loading: loadingTags,
+  } = useComponentQuery(host, componentId?.toString() || idFromLocation, tagLogOptions);
+
+  const {
+    component: componentSnaps,
+    loadMoreLogs: loadMoreSnaps,
+    hasMoreLogs: hasMoreSnaps,
+    loading: loadingSnaps,
+  } = useComponentQuery(host, componentId?.toString() || idFromLocation, snapLogOptions);
+
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
 
-  if (!component) return <FullLoader />;
+  if (loadingTags || loadingSnaps) return <FullLoader />;
+  if (!componentSnaps || !componentTags) {
+    // eslint-disable-next-line no-console
+    console.error(`failed loading component tags/snaps for ${idFromLocation}`);
+    return null;
+  }
 
   const RightSide = (
     <div className={styles.rightSide}>
       {RightNode || (
         <>
-          <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
+          <VersionRelatedDropdowns
+            componentSnaps={componentSnaps}
+            componentTags={componentTags}
+            loadMoreSnaps={loadMoreSnaps}
+            loadMoreTags={loadMoreTags}
+            hasMoreSnaps={hasMoreSnaps}
+            hasMoreTags={hasMoreTags}
+            loadingSnaps={loadingSnaps}
+            loadingTags={loadingTags}
+            consumeMethods={consumeMethodSlot}
+            host={host}
+          />
           <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
         </>
       )}
@@ -123,42 +177,46 @@ export function ComponentMenu({
 }
 
 export function VersionRelatedDropdowns({
-  component,
+  componentTags,
+  componentSnaps,
   consumeMethods,
+  loadMoreSnaps,
+  loadMoreTags,
+  hasMoreSnaps,
+  hasMoreTags,
+  loadingSnaps,
+  loadingTags,
   className,
   host,
 }: {
-  component: ComponentModel;
+  componentTags: ComponentModel;
+  componentSnaps: ComponentModel;
+  loadMoreTags?: () => void;
+  loadMoreSnaps?: () => void;
+  loadingSnaps?: boolean;
+  loadingTags?: boolean;
+  hasMoreTags?: boolean;
+  hasMoreSnaps?: boolean;
   consumeMethods?: ConsumeMethodSlot;
   className?: string;
   host: string;
 }) {
   const location = useLocation();
+  const loading = loadingSnaps || loadingTags;
   const { lanesModel } = useLanes();
+  const component = componentTags || componentSnaps;
   const viewedLane =
     lanesModel?.viewedLane?.id && !lanesModel?.viewedLane?.id.isDefault() ? lanesModel.viewedLane : undefined;
-
-  const { logs } = component;
+  // const { logs } = component;
   const isWorkspace = host === 'teambit.workspace/workspace';
 
   const snaps = useMemo(() => {
-    return (logs || []).filter((log) => !log.tag).map((snap) => ({ ...snap, version: snap.hash }));
-  }, [logs]);
+    return (componentSnaps.logs || []).filter((log) => !log.tag).map((snap) => ({ ...snap, version: snap.hash }));
+  }, [componentSnaps.logs]);
 
   const tags = useMemo(() => {
-    const tagLookup = new Map<string, LegacyComponentLog>();
-    (logs || [])
-      .filter((log) => log.tag)
-      .forEach((tag) => {
-        tagLookup.set(tag?.tag as string, tag);
-      });
-    return compact(
-      component.tags
-        ?.toArray()
-        .reverse()
-        .map((tag) => tagLookup.get(tag.version.version))
-    ).map((tag) => ({ ...tag, version: tag.tag as string }));
-  }, [logs]);
+    return (componentTags.logs || []).map((tag) => ({ ...tag, version: tag.tag as string }));
+  }, [componentTags.logs]);
 
   const isNew = snaps.length === 0 && tags.length === 0;
 
@@ -167,8 +225,52 @@ export function VersionRelatedDropdowns({
 
   const currentVersion =
     isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.version;
+  const VERSION_TAB_NAMES = ['TAG', 'SNAP', 'LANE'] as const;
+  const tabs = VERSION_TAB_NAMES.map((name) => {
+    switch (name) {
+      case 'SNAP':
+        return { name, payload: snaps || [] };
+      case 'LANE':
+        return { name, payload: lanes || [] };
+      default:
+        return { name, payload: tags || [] };
+    }
+  }).filter((tab) => tab.payload.length > 0);
 
   const methods = useConsumeMethods(component, consumeMethods, viewedLane);
+
+  const getActiveTabIndex = () => {
+    if (viewedLane?.components.some((c) => c.version === currentVersion))
+      return tabs.findIndex((tab) => tab.name === 'LANE');
+    if ((snaps || []).some((snap) => snap.version === currentVersion))
+      return tabs.findIndex((tab) => tab.name === 'SNAP');
+    return 0;
+  };
+
+  const [activeTabIndex, setActiveTab] = React.useState<number>(getActiveTabIndex());
+  const activeTabOrSnap: 'SNAP' | 'TAG' | 'LANE' = tabs[activeTabIndex]?.name || tabs[0].name;
+  const hasMore = activeTabOrSnap === 'SNAP' ? hasMoreSnaps : hasMoreTags;
+  const observer = React.useRef<IntersectionObserver>();
+
+  const handleLoadMore = React.useCallback(() => {
+    if (activeTabOrSnap === 'SNAP') loadMoreSnaps?.();
+    if (activeTabOrSnap === 'TAG') loadMoreTags?.();
+  }, [activeTabIndex, tabs.length]);
+
+  const lastLogRef = React.useCallback(
+    (node) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          handleLoadMore();
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMoreSnaps, hasMoreTags, activeTabIndex]
+  );
+
   return (
     <>
       {consumeMethods && tags.length > 0 && (
@@ -179,9 +281,12 @@ export function VersionRelatedDropdowns({
         />
       )}
       <VersionDropdown
+        ref={lastLogRef}
         tags={tags}
         snaps={snaps}
-        lanes={lanes}
+        tabs={tabs}
+        activeTabIndex={activeTabIndex}
+        setActiveTabIndex={setActiveTab}
         localVersion={localVersion}
         currentVersion={currentVersion}
         latestVersion={component.latest}

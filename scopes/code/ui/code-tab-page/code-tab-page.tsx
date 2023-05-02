@@ -32,9 +32,10 @@ import styles from './code-tab-page.module.scss';
 export type CodePageProps = {
   fileIconSlot?: FileIconSlot;
   host: string;
+  codeViewClassName?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
+export function CodePage({ className, fileIconSlot, host, codeViewClassName }: CodePageProps) {
   const urlParams = useCodeParams();
   const component = useContext(ComponentContext);
   const { mainFile, fileTree = [], dependencies, devFiles } = useCode(component.id);
@@ -67,6 +68,7 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
       <Pane className={styles.left}>
         <CodeView
+          codeSnippetClassName={codeViewClassName}
           componentId={component.id}
           currentFile={currentFile}
           icon={icon}

@@ -17,142 +17,23 @@ export const LOCAL_VERSION = 'workspace';
 
 export type DropdownComponentVersion = Partial<LegacyComponentLog> & { version: string };
 
-export type VersionDropdownProps = {
-  tags: DropdownComponentVersion[];
-  snaps?: DropdownComponentVersion[];
-  lanes?: LaneModel[];
-  localVersion?: boolean;
-  currentVersion: string;
-  currentLane?: LaneModel;
-  latestVersion?: string;
-  loading?: boolean;
-  overrideVersionHref?: (version: string) => string;
-  placeholderClassName?: string;
-  dropdownClassName?: string;
-  menuClassName?: string;
-  showVersionDetails?: boolean;
-  disabled?: boolean;
-  placeholderComponent?: ReactNode;
-} & React.HTMLAttributes<HTMLDivElement>;
+const VersionMenu = React.memo(React.forwardRef<HTMLDivElement, VersionMenuProps>(_VersionMenu));
 
-export function VersionDropdown({
-  snaps,
-  tags,
-  lanes,
-  currentVersion,
-  latestVersion,
-  localVersion,
-  loading,
-  currentLane,
-  overrideVersionHref,
-  className,
-  placeholderClassName,
-  dropdownClassName,
-  menuClassName,
-  showVersionDetails,
-  disabled,
-  placeholderComponent = (
-    <SimpleVersion
-      disabled={disabled}
-      snaps={snaps}
-      tags={tags}
-      className={placeholderClassName}
-      currentVersion={currentVersion}
-    />
-  ),
-  ...rest
-}: VersionDropdownProps) {
-  const [key, setKey] = useState(0);
-
-  const singleVersion = (snaps || []).concat(tags).length < 2 && !localVersion;
-
-  if (disabled || (singleVersion && !loading)) {
-    return <div className={classNames(styles.noVersions, className)}>{placeholderComponent}</div>;
-  }
-
-  return (
-    <div {...rest} className={classNames(styles.versionDropdown, className)}>
-      <Dropdown
-        className={classNames(styles.dropdown, dropdownClassName)}
-        dropClass={classNames(styles.menu, menuClassName)}
-        clickToggles={false}
-        clickPlaceholderToggles={true}
-        onChange={(_e, open) => open && setKey((x) => x + 1)} // to reset menu to initial state when toggling
-        PlaceholderComponent={({ children, ...other }) => (
-          <div {...other} className={placeholderClassName}>
-            {children}
-          </div>
-        )}
-        placeholder={placeholderComponent}
-      >
-        {loading && <LineSkeleton className={styles.loading} count={6} />}
-        {loading || (
-          <VersionMenu
-            className={menuClassName}
-            key={key}
-            tags={tags}
-            snaps={snaps}
-            lanes={lanes}
-            currentVersion={currentVersion}
-            latestVersion={latestVersion}
-            localVersion={localVersion}
-            currentLane={currentLane}
-            overrideVersionHref={overrideVersionHref}
-            showVersionDetails={showVersionDetails}
-          />
-        )}
-      </Dropdown>
-    </div>
-  );
-}
-
-type VersionMenuProps = {
-  tags?: DropdownComponentVersion[];
-  snaps?: DropdownComponentVersion[];
-  lanes?: LaneModel[];
-  localVersion?: boolean;
-  currentVersion?: string;
-  latestVersion?: string;
-  currentLane?: LaneModel;
-  overrideVersionHref?: (version: string) => string;
-  showVersionDetails?: boolean;
-} & React.HTMLAttributes<HTMLDivElement>;
-
-const VERSION_TAB_NAMES = ['TAG', 'SNAP', 'LANE'] as const;
-
-function VersionMenu({
-  tags,
-  snaps,
-  lanes,
-  currentVersion,
-  localVersion,
-  latestVersion,
-  currentLane,
-  overrideVersionHref,
-  showVersionDetails,
-  ...rest
-}: VersionMenuProps) {
-  const tabs = VERSION_TAB_NAMES.map((name) => {
-    switch (name) {
-      case 'SNAP':
-        return { name, payload: snaps || [] };
-      case 'LANE':
-        return { name, payload: lanes || [] };
-      default:
-        return { name, payload: tags || [] };
-    }
-  }).filter((tab) => tab.payload.length > 0);
-
-  const getActiveTabIndex = () => {
-    if (currentLane?.components.some((c) => c.version === currentVersion))
-      return tabs.findIndex((tab) => tab.name === 'LANE');
-    if ((snaps || []).some((snap) => snap.version === currentVersion))
-      return tabs.findIndex((tab) => tab.name === 'SNAP');
-    return 0;
-  };
-
-  const [activeTabIndex, setActiveTab] = useState<number>(getActiveTabIndex());
-
+function _VersionMenu(
+  {
+    currentVersion,
+    localVersion,
+    latestVersion,
+    currentLane,
+    overrideVersionHref,
+    showVersionDetails,
+    activeTabIndex,
+    setActiveTab,
+    tabs,
+    ...rest
+  }: VersionMenuProps,
+  ref?: React.ForwardedRef<HTMLDivElement>
+) {
   const multipleTabs = tabs.length > 1;
   const message = multipleTabs
     ? 'Switch to view tags, snaps, or lanes'
@@ -196,8 +77,9 @@ function VersionMenu({
             <LaneInfo key={payload.id} currentLane={currentLane} {...payload}></LaneInfo>
           ))}
         {tabs[activeTabIndex].name !== 'LANE' &&
-          tabs[activeTabIndex].payload.map((payload) => (
+          tabs[activeTabIndex].payload.map((payload, index) => (
             <VersionInfo
+              ref={index === tabs[activeTabIndex].payload.length - 1 ? ref : null}
               key={payload.version}
               currentVersion={currentVersion}
               latestVersion={latestVersion}
@@ -210,3 +92,130 @@ function VersionMenu({
     </div>
   );
 }
+
+export type VersionDropdownProps = {
+  tags: DropdownComponentVersion[];
+  snaps?: DropdownComponentVersion[];
+  localVersion?: boolean;
+  currentVersion: string;
+  currentLane?: LaneModel;
+  latestVersion?: string;
+  loading?: boolean;
+  overrideVersionHref?: (version: string) => string;
+  placeholderClassName?: string;
+  dropdownClassName?: string;
+  menuClassName?: string;
+  showVersionDetails?: boolean;
+  disabled?: boolean;
+  placeholderComponent?: ReactNode;
+  activeTabIndex?: number;
+  setActiveTabIndex: (index: number) => void;
+  tabs: Array<{ name: string; payload: Array<any> }>;
+} & React.HTMLAttributes<HTMLDivElement>;
+
+/**
+ * 
+ * @param param0 
+  const getActiveTabIndex = () => {
+    if (currentLane?.components.some((c) => c.version === currentVersion))
+      return tabs.findIndex((tab) => tab.name === 'LANE');
+    if ((snaps || []).some((snap) => snap.version === currentVersion))
+      return tabs.findIndex((tab) => tab.name === 'SNAP');
+    return 0;
+  };
+
+  const [activeTabIndex, setActiveTab] = useState<number>(getActiveTabIndex());
+
+ * @returns 
+ */
+
+export const VersionDropdown = React.memo(React.forwardRef<HTMLDivElement, VersionDropdownProps>(_VersionDropdown));
+
+function _VersionDropdown(
+  {
+    snaps,
+    tags,
+    currentVersion,
+    latestVersion,
+    localVersion,
+    loading,
+    currentLane,
+    overrideVersionHref,
+    className,
+    placeholderClassName,
+    dropdownClassName,
+    menuClassName,
+    showVersionDetails,
+    disabled,
+    activeTabIndex = 0,
+    setActiveTabIndex,
+    tabs,
+    placeholderComponent = (
+      <SimpleVersion
+        disabled={disabled}
+        snaps={snaps}
+        tags={tags}
+        className={placeholderClassName}
+        currentVersion={currentVersion}
+      />
+    ),
+    ...rest
+  }: VersionDropdownProps,
+  ref?: React.ForwardedRef<HTMLDivElement>
+) {
+  const [key, setKey] = useState(0);
+
+  const singleVersion = (snaps || []).concat(tags).length < 2 && !localVersion;
+
+  if (disabled || (singleVersion && !loading)) {
+    return <div className={classNames(styles.noVersions, className)}>{placeholderComponent}</div>;
+  }
+
+  return (
+    <div {...rest} className={classNames(styles.versionDropdown, className)}>
+      <Dropdown
+        className={classNames(styles.dropdown, dropdownClassName)}
+        dropClass={classNames(styles.menu, menuClassName)}
+        clickToggles={false}
+        clickPlaceholderToggles={true}
+        onChange={(_e, open) => open && setKey((x) => x + 1)} // to reset menu to initial state when toggling
+        PlaceholderComponent={({ children, ...other }) => (
+          <div {...other} className={placeholderClassName}>
+            {children}
+          </div>
+        )}
+        placeholder={placeholderComponent}
+      >
+        {loading && <LineSkeleton className={styles.loading} count={6} />}
+        {loading || (
+          <VersionMenu
+            ref={ref}
+            className={menuClassName}
+            tabs={tabs}
+            key={key}
+            activeTabIndex={activeTabIndex}
+            setActiveTab={setActiveTabIndex}
+            currentVersion={currentVersion}
+            latestVersion={latestVersion}
+            localVersion={localVersion}
+            currentLane={currentLane}
+            overrideVersionHref={overrideVersionHref}
+            showVersionDetails={showVersionDetails}
+          />
+        )}
+      </Dropdown>
+    </div>
+  );
+}
+
+type VersionMenuProps = {
+  localVersion?: boolean;
+  currentVersion?: string;
+  latestVersion?: string;
+  currentLane?: LaneModel;
+  overrideVersionHref?: (version: string) => string;
+  showVersionDetails?: boolean;
+  activeTabIndex: number;
+  setActiveTab: (index: number) => void;
+  tabs: Array<{ name: string; payload: Array<any> }>;
+} & React.HTMLAttributes<HTMLDivElement>;

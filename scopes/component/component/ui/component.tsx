@@ -54,7 +54,7 @@ export function Component({
   const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
   const resolvedComponentIdStr = path || idFromLocation;
   const useComponentOptions = {
-    logFilters: useComponentFilters?.(),
+    logFilters: useComponentFilters?.() || { log: { logOffset: 0, logLimit: 2 } },
     customUseComponent: useComponent,
   };
 
