@@ -34,7 +34,7 @@ import toNerfDart from 'nerf-dart';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
-const installsRunning: Record<string, Promise<any>> = {};
+const installsRunning: Record<string, Promise<{ dependenciesChanged: boolean }>> = {};
 
 type RegistriesMap = {
   default: string;
@@ -178,7 +178,7 @@ export async function install(
     Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
-) {
+): Promise<{ dependenciesChanged: boolean }> {
   let externalDependencies: Set<string> | undefined;
   const readPackage: ReadPackageHook[] = [];
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
@@ -264,10 +264,11 @@ export async function install(
       streamParser,
     });
   }
+  let dependenciesChanged = false;
   try {
     await installsRunning[rootDir];
     installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
-    await installsRunning[rootDir];
+    dependenciesChanged = (await installsRunning[rootDir]).dependenciesChanged;
     delete installsRunning[rootDir];
   } catch (err: any) {
     throw pnpmErrorToBitError(err);
@@ -286,6 +287,7 @@ export async function install(
       });
     }
   }
+  return { dependenciesChanged };
 }
 
 /*
