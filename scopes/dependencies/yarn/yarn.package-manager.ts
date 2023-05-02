@@ -35,7 +35,7 @@ import npmPlugin from '@yarnpkg/plugin-npm';
 import { parseOverrides } from '@pnpm/parse-overrides';
 import { ProjectManifest } from '@pnpm/types';
 import { omit, mapValues } from 'lodash';
-import userHome from 'user-home';
+import { homedir } from 'os';
 import { Logger } from '@teambit/logger';
 import versionSelectorType from 'version-selector-type';
 import YAML from 'yaml';
@@ -341,7 +341,7 @@ export class YarnPackageManager implements PackageManager {
     return undefined;
   }
 
-  private getGlobalFolder(baseDir: string = userHome) {
+  private getGlobalFolder(baseDir: string = homedir()) {
     return `${baseDir}/.yarn/global`;
   }
 

@@ -8,10 +8,10 @@ import { OverviewCompare } from '@teambit/docs.ui.overview-compare';
 import { OverviewCompareSection } from '@teambit/docs.ui.overview-compare-section';
 import { DocsAspect } from './docs.aspect';
 import { OverviewSection } from './overview.section';
-import type { TitleBadgeSlot, TitleBadge } from './overview';
+import type { TitleBadgeSlot, TitleBadge, OverviewOptionsSlot, OverviewOptions } from './overview';
 
 export class DocsUI {
-  constructor(readonly titleBadgeSlot: TitleBadgeSlot) {}
+  constructor(readonly titleBadgeSlot: TitleBadgeSlot, readonly overviewOptionsSlot: OverviewOptionsSlot) {}
 
   /**
    * register a new title badge into the overview section of a component.
@@ -30,22 +30,26 @@ export class DocsUI {
   }
 
   getDocsCompare() {
-    return <OverviewCompare titleBadges={this.titleBadgeSlot} />;
+    return <OverviewCompare titleBadges={this.titleBadgeSlot} overviewOptions={this.overviewOptionsSlot} />;
+  }
+
+  registerOverviewOptions(options: OverviewOptions) {
+    this.overviewOptionsSlot.register(options);
   }
 
   static dependencies = [ComponentAspect, ComponentCompareAspect];
 
   static runtime = UIRuntime;
 
-  static slots = [Slot.withType<TitleBadge>()];
+  static slots = [Slot.withType<TitleBadge>(), Slot.withType<OverviewOptions>()];
 
   static async provider(
     [component, componentCompare]: [ComponentUI, ComponentCompareUI],
     config,
-    [titleBadgeSlot]: [TitleBadgeSlot]
+    [titleBadgeSlot, overviewOptionsSlot]: [TitleBadgeSlot, OverviewOptionsSlot]
   ) {
-    const docs = new DocsUI(titleBadgeSlot);
-    const section = new OverviewSection(titleBadgeSlot);
+    const docs = new DocsUI(titleBadgeSlot, overviewOptionsSlot);
+    const section = new OverviewSection(titleBadgeSlot, overviewOptionsSlot);
     const compareSection = new OverviewCompareSection(docs);
 
     component.registerRoute(section.route);
