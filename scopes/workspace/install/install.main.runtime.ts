@@ -1,7 +1,6 @@
 import fs, { pathExists } from 'fs-extra';
 import path from 'path';
 import { getRootComponentDir, getBitRootsDir, linkPkgsToBitRoots } from '@teambit/bit-roots';
-import { CommunityMain, CommunityAspect } from '@teambit/community';
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
@@ -675,7 +674,6 @@ export class InstallMain {
     LoggerAspect,
     VariantsAspect,
     CLIAspect,
-    CommunityAspect,
     CompilerAspect,
     IssuesAspect,
     EnvsAspect,
@@ -685,13 +683,12 @@ export class InstallMain {
   static runtime = MainRuntime;
 
   static async provider(
-    [dependencyResolver, workspace, loggerExt, variants, cli, community, compiler, issues, envs, app]: [
+    [dependencyResolver, workspace, loggerExt, variants, cli, compiler, issues, envs, app]: [
       DependencyResolverMain,
       Workspace,
       LoggerMain,
       VariantsMain,
       CLIMain,
-      CommunityMain,
       CompilerMain,
       IssuesMain,
       EnvsMain,
@@ -719,7 +716,7 @@ export class InstallMain {
       new InstallCmd(installExt, workspace, logger),
       new UninstallCmd(installExt),
       new UpdateCmd(installExt),
-      new LinkCommand(installExt, workspace, logger, community.getDocsDomain()),
+      new LinkCommand(installExt, workspace, logger),
     ];
     // For now do not automate installation during aspect resolving
     // workspace.registerOnAspectsResolve(installExt.onAspectsResolveSubscriber.bind(installExt));
