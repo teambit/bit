@@ -178,7 +178,7 @@ export async function install(
     Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
-) {
+): Promise<{ dependenciesChanged: boolean }> {
   let externalDependencies: Set<string> | undefined;
   const readPackage: ReadPackageHook[] = [];
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
@@ -264,10 +264,12 @@ export async function install(
       streamParser,
     });
   }
+  let dependenciesChanged = false;
   try {
     await installsRunning[rootDir];
     installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
-    await installsRunning[rootDir];
+    const { stats } = await installsRunning[rootDir];
+    dependenciesChanged = stats.added + stats.removed + stats.linkedToRoot > 0;
     delete installsRunning[rootDir];
   } catch (err: any) {
     throw pnpmErrorToBitError(err);
@@ -286,6 +288,7 @@ export async function install(
       });
     }
   }
+  return { dependenciesChanged };
 }
 
 /*
