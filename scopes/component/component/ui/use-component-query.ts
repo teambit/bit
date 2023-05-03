@@ -3,6 +3,7 @@ import { gql } from '@apollo/client';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 
@@ -77,7 +78,46 @@ export const componentFields = gql`
     tags {
       version
     }
-    logs(type: $logType, offset: $logOffset, limit: $logLimit, head: $logHead, sort: $logSort) {
+    logs(
+      type: $logType
+      offset: $logOffset
+      limit: $logLimit
+      sort: $logSort
+      takeHeadFromComponent: $takeHeadFromComponent
+      head: $logHead
+    ) @skip(if: $fetchLogsByTypeSeparately) {
+      id
+      message
+      username
+      email
+      date
+      hash
+      tag
+    }
+    tagLogs: logs(
+      type: "tag"
+      offset: $tagLogOffset
+      limit: $tagLogLimit
+      sort: $tagLogSort
+      takeHeadFromComponent: $tagTakeHeadFromComponent
+      head: $tagLogHead
+    ) @include(if: $fetchLogsByTypeSeparately) {
+      id
+      message
+      username
+      email
+      date
+      hash
+      tag
+    }
+    snapLogs: logs(
+      type: "snap"
+      offset: $snapLogOffset
+      limit: $snapLogLimit
+      sort: $snapLogSort
+      takeHeadFromComponent: $snapTakeHeadFromComponent
+      head: $snapLogHead
+    ) @include(if: $fetchLogsByTypeSeparately) {
       id
       message
       username
@@ -91,16 +131,31 @@ export const componentFields = gql`
   ${componentOverviewFields}
 `;
 
-const GET_COMPONENT = gql`
-  query Component(
-    $id: String!
-    $extensionId: String!
-    $logType: String
+const COMPONENT_QUERY_FIELDS = `
     $logOffset: Int
     $logLimit: Int
+    $logType: String
     $logHead: String
     $logSort: String
-  ) {
+    $tagLogOffset: Int
+    $tagLogLimit: Int
+    $tagLogHead: String
+    $tagLogSort: String
+    $snapLogOffset: Int
+    $snapLogLimit: Int
+    $snapLogHead: String
+    $snapLogSort: String
+    $takeHeadFromComponent: Boolean
+    $tagTakeHeadFromComponent: Boolean
+    $snapTakeHeadFromComponent: Boolean
+    $fetchLogsByTypeSeparately: Boolean!`;
+
+const GET_COMPONENT = gql`
+  query Component(
+    ${COMPONENT_QUERY_FIELDS} 
+    $extensionId: String!
+    $id: String!
+    ) {
     getHost(id: $extensionId) {
       id # used for GQL caching
       get(id: $id) {
@@ -112,7 +167,7 @@ const GET_COMPONENT = gql`
 `;
 
 const SUB_SUBSCRIPTION_ADDED = gql`
-  subscription OnComponentAdded($logType: String, $logOffset: Int, $logLimit: Int, $logHead: String, $logSort: String) {
+  subscription OnComponentAdded(${COMPONENT_QUERY_FIELDS}) {
     componentAdded {
       component {
         ...componentFields
@@ -123,13 +178,7 @@ const SUB_SUBSCRIPTION_ADDED = gql`
 `;
 
 const SUB_COMPONENT_CHANGED = gql`
-  subscription OnComponentChanged(
-    $logType: String
-    $logOffset: Int
-    $logLimit: Int
-    $logHead: String
-    $logSort: String
-  ) {
+  subscription OnComponentChanged(${COMPONENT_QUERY_FIELDS}) {
     componentChanged {
       component {
         ...componentFields
@@ -149,57 +198,141 @@ const SUB_COMPONENT_REMOVED = gql`
   }
   ${componentIdFields}
 `;
+
+export type LogFilter = {
+  logOffset?: number;
+  logLimit?: number;
+  logHead?: string;
+  logSort?: string;
+  takeHeadFromComponent?: boolean;
+};
+
 export type Filters = {
-  log?: { logType?: string; logOffset?: number; logLimit?: number; logHead?: string; logSort?: string };
+  log?: LogFilter & { logType?: string };
+  tagLog?: LogFilter;
+  snapLog?: LogFilter;
+  fetchLogsByTypeSeparately?: boolean;
 };
 
 export type ComponentQueryResult = {
   component?: ComponentModel;
-  error?: ComponentError;
   componentDescriptor?: ComponentDescriptor;
-  loading?: boolean;
-  loadMoreLogs?: () => void;
   hasMoreLogs?: boolean;
+  hasMoreSnaps?: boolean;
+  hasMoreTags?: boolean;
+  loadMoreLogs?: () => void;
+  loadMoreTags?: () => void;
+  loadMoreSnaps?: () => void;
+  snaps?: LegacyComponentLog[];
+  tags?: LegacyComponentLog[];
+  loading?: boolean;
+  error?: ComponentError;
 };
 
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
 export function useComponentQuery(
   componentId: string,
   host: string,
-  filtersFromProps?: Filters,
+  filters?: Filters,
   skip?: boolean
 ): ComponentQueryResult {
   const idRef = useRef(componentId);
   idRef.current = componentId;
-  const filters = useMemo(() => filtersFromProps?.log || {}, [filtersFromProps]);
-  const { logLimit } = filters;
-  const offsetRef = useRef(filters.logOffset);
+
+  const { fetchLogsByTypeSeparately = false, log, tagLog, snapLog } = filters || {};
+  const {
+    logHead: tagLogHead,
+    logOffset: tagLogOffset,
+    logSort: tagLogSort,
+    logLimit: tagLogLimit,
+    takeHeadFromComponent: tagLogTakeHeadFromComponent,
+  } = tagLog || {};
+
+  const { logHead, logOffset, logSort, logLimit, takeHeadFromComponent, logType } = log || {};
+  const {
+    logHead: snapLogHead,
+    logOffset: snapLogOffset,
+    logSort: snapLogSort,
+    logLimit: snapLogLimit,
+    takeHeadFromComponent: snapLogTakeHeadFromComponent,
+  } = snapLog || {};
+  const variables = {
+    id: componentId,
+    extensionId: host,
+    fetchLogsByTypeSeparately,
+    snapLogOffset: snapLogOffset ?? snapLogLimit ? 0 : undefined,
+    tagLogOffset: tagLogOffset ?? tagLogLimit ? 0 : undefined,
+    logOffset: logOffset ?? logLimit ? 0 : undefined,
+    logLimit,
+    snapLogLimit,
+    tagLogLimit,
+    logType,
+    logHead,
+    snapLogHead,
+    tagLogHead,
+    logSort,
+    snapLogSort,
+    tagLogSort,
+    takeHeadFromComponent,
+    snapLogTakeHeadFromComponent,
+    tagLogTakeHeadFromComponent,
+  };
+  const offsetRef = useRef(logOffset);
+  const tagOffsetRef = useRef(tagLogOffset);
+  const snapOffsetRef = useRef(snapLogOffset);
+  const hasMoreLogs = useRef<boolean | undefined>(undefined);
+  const hasMoreTagLogs = useRef<boolean | undefined>(undefined);
+  const hasMoreSnapLogs = useRef<boolean | undefined>(undefined);
   const { data, error, loading, subscribeToMore, fetchMore, ...rest } = useDataQuery(GET_COMPONENT, {
-    variables: { id: componentId, extensionId: host, ...filters },
+    variables,
     skip,
     errorPolicy: 'all',
   });
 
   const rawComponent = data?.getHost?.get;
-  const rawCompLogs = rawComponent?.logs ?? [];
-
+  const rawTags = rawComponent?.tagLogs ?? [];
+  const rawSnaps = rawComponent?.snapLogs ?? [];
+  const rawCompLogs = rawComponent?.logs ?? mergeLogs(rawTags, rawSnaps);
   offsetRef.current = useMemo(() => {
     const currentOffset = offsetRef.current;
     if (!currentOffset) return rawCompLogs.length;
-    if (currentOffset < rawCompLogs?.length) {
-      return rawCompLogs?.length;
-    }
     return offsetRef.current;
   }, [rawCompLogs]);
 
-  const hasMoreLogs = React.useRef<boolean | undefined>(undefined);
+  tagOffsetRef.current = useMemo(() => {
+    if (!fetchLogsByTypeSeparately) return offsetRef.current;
+    const currentOffset = tagOffsetRef.current;
+    if (!currentOffset) return rawTags.length;
+    return tagOffsetRef.current;
+  }, [rawCompLogs]);
+
+  snapOffsetRef.current = useMemo(() => {
+    if (!fetchLogsByTypeSeparately) return offsetRef.current;
+    const currentOffset = snapOffsetRef.current;
+    if (!currentOffset) return rawSnaps.length;
+    return snapOffsetRef.current;
+  }, [rawSnaps]);
 
   hasMoreLogs.current = useMemo(() => {
     if (!logLimit) return false;
     if (rawComponent === undefined) return undefined;
-    if (hasMoreLogs.current === undefined) return rawComponent?.logs.length === logLimit;
+    if (hasMoreLogs.current === undefined) return rawComponent?.logs.length >= logLimit;
     return hasMoreLogs.current;
-  }, [rawComponent?.logs]);
+  }, [rawCompLogs]);
+
+  hasMoreTagLogs.current = useMemo(() => {
+    if (!tagLogLimit) return false;
+    if (rawComponent === undefined) return undefined;
+    if (hasMoreTagLogs.current === undefined) return rawComponent?.tagLogs.length >= tagLogLimit;
+    return hasMoreTagLogs.current;
+  }, [rawTags]);
+
+  hasMoreSnapLogs.current = useMemo(() => {
+    if (!snapLogLimit) return false;
+    if (rawComponent === undefined) return undefined;
+    if (hasMoreSnapLogs.current === undefined) return rawComponent?.snapLogs.length === snapLogLimit;
+    return hasMoreSnapLogs.current;
+  }, [rawSnaps]);
 
   const loadMoreLogs = React.useCallback(async () => {
     if (logLimit) {
@@ -212,14 +345,15 @@ export function useComponentQuery(
 
           const prevComponent = prev.getHost.get;
           const fetchedComponent = fetchMoreResult.getHost.get;
-
           if (fetchedComponent && ComponentID.isEqualObj(prevComponent.id, fetchedComponent.id)) {
-            const updatedLogs = [...prevComponent.logs, ...fetchedComponent.logs];
-            hasMoreLogs.current = fetchedComponent.logs.length === logLimit;
+            const updatedLogs = mergeLogs(prevComponent.logs, fetchedComponent.logs);
+            hasMoreLogs.current = fetchedComponent.logs.length >= logLimit;
+            if (updatedLogs.length > prevComponent.logs.length) {
+              offsetRef.current = updatedLogs.length;
+            }
 
             return {
               ...prev,
-              hasMoreLogs: false,
               getHost: {
                 ...prev.getHost,
                 get: {
@@ -236,6 +370,81 @@ export function useComponentQuery(
     }
   }, [logLimit, fetchMore]);
 
+  const loadMoreTags = React.useCallback(async () => {
+    if (tagLogLimit) {
+      await fetchMore({
+        variables: {
+          tagLogOffset: tagOffsetRef.current,
+          tagLogLimit,
+        },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev;
+
+          const prevComponent = prev.getHost.get;
+          const fetchedComponent = fetchMoreResult.getHost.get;
+          const prevCompLogs = prevComponent.tagLogs;
+          if (fetchedComponent && ComponentID.isEqualObj(prevComponent.id, fetchedComponent.id)) {
+            const updatedTags = mergeLogs(prevCompLogs, fetchedComponent.tagLogs);
+            if (updatedTags.length > prevCompLogs.length) {
+              tagOffsetRef.current = updatedTags.length;
+            }
+            hasMoreTagLogs.current = fetchedComponent.tagLogs.length >= tagLogLimit;
+            return {
+              ...prev,
+              getHost: {
+                ...prev.getHost,
+                get: {
+                  ...prevComponent,
+                  tagLogs: updatedTags,
+                },
+              },
+            };
+          }
+
+          return prev;
+        },
+      });
+    }
+  }, [tagLogLimit, fetchMore]);
+
+  const loadMoreSnaps = React.useCallback(async () => {
+    if (snapLogLimit) {
+      await fetchMore({
+        variables: {
+          snapLogOffset: snapOffsetRef.current,
+          snapLogLimit,
+        },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev;
+
+          const prevComponent = prev.getHost.get;
+          const prevCompLogs = prevComponent.snapLogs ?? [];
+
+          const fetchedComponent = fetchMoreResult.getHost.get;
+          if (fetchedComponent && ComponentID.isEqualObj(prevComponent.id, fetchedComponent.id)) {
+            const updatedSnaps = mergeLogs(prevCompLogs, fetchedComponent.snapLogs);
+            if (updatedSnaps.length > prevCompLogs.length) {
+              snapOffsetRef.current = updatedSnaps.length;
+            }
+            hasMoreSnapLogs.current = fetchedComponent.snapLogs.length >= snapLogLimit;
+            return {
+              ...prev,
+              getHost: {
+                ...prev.getHost,
+                get: {
+                  ...prevComponent,
+                  snapLogs: updatedSnaps,
+                },
+              },
+            };
+          }
+
+          return prev;
+        },
+      });
+    }
+  }, [snapLogLimit, fetchMore]);
+
   useEffect(() => {
     // @TODO @Kutner fix subscription for scope
     if (host !== 'teambit.workspace/workspace') {
@@ -244,6 +453,9 @@ export function useComponentQuery(
 
     const unsubAddition = subscribeToMore({
       document: SUB_SUBSCRIPTION_ADDED,
+      variables: {
+        fetchLogsByTypeSeparately,
+      },
       updateQuery: (prev, { subscriptionData }) => {
         const prevComponent = prev?.getHost?.get;
         const addedComponent = subscriptionData?.data?.componentAdded?.component;
@@ -266,6 +478,9 @@ export function useComponentQuery(
 
     const unsubChanges = subscribeToMore({
       document: SUB_COMPONENT_CHANGED,
+      variables: {
+        fetchLogsByTypeSeparately,
+      },
       updateQuery: (prev, { subscriptionData }) => {
         if (!subscriptionData.data) return prev;
 
@@ -290,6 +505,9 @@ export function useComponentQuery(
 
     const unsubRemoval = subscribeToMore({
       document: SUB_COMPONENT_REMOVED,
+      variables: {
+        fetchLogsByTypeSeparately,
+      },
       updateQuery: (prev, { subscriptionData }) => {
         if (!subscriptionData.data) return prev;
 
@@ -334,8 +552,8 @@ export function useComponentQuery(
     error && !data ? new ComponentError(500, error.message) : !rawComponent && !loading && new ComponentError(404);
 
   const component = useMemo(
-    () => (rawComponent ? ComponentModel.from({ ...rawComponent, host }) : undefined),
-    [id?.toString(), rawComponent?.logs.length]
+    () => (rawComponent ? ComponentModel.from({ ...rawComponent, host, logs: rawCompLogs }) : undefined),
+    [id?.toString(), rawCompLogs]
   );
 
   const componentDescriptor = useMemo(() => {
@@ -352,6 +570,14 @@ export function useComponentQuery(
     return id ? ComponentDescriptor.fromObject({ id: id.toString(), aspectList }) : undefined;
   }, [id?.toString()]);
 
+  const snaps = useMemo(() => {
+    return rawComponent?.snapLogs;
+  }, [rawComponent?.snapLogs]);
+
+  const tags = useMemo(() => {
+    return rawComponent?.tagLogs;
+  }, [rawComponent?.tagLogs]);
+
   return useMemo(() => {
     return {
       componentDescriptor,
@@ -359,8 +585,26 @@ export function useComponentQuery(
       error: componentError || undefined,
       loading,
       loadMoreLogs,
+      loadMoreSnaps,
+      loadMoreTags,
+      hasMoreSnaps: hasMoreSnapLogs.current,
+      hasMoreTags: hasMoreTagLogs.current,
       hasMoreLogs: hasMoreLogs.current,
+      snaps,
+      tags,
       ...rest,
     };
-  }, [host, component, componentDescriptor, componentError, hasMoreLogs]);
+  }, [host, component, componentDescriptor, componentError, hasMoreLogs, hasMoreSnapLogs, hasMoreTagLogs, snaps, tags]);
+}
+
+interface Log {
+  id: string;
+  date: string;
+}
+
+function mergeLogs(logs1: Log[] = [], logs2: Log[] = []): Log[] {
+  const mergedLogs: Log[] = [];
+  logs1.forEach((log) => mergedLogs.push(log));
+  logs2.forEach((log) => mergedLogs.push(log));
+  return mergedLogs;
 }

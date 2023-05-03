@@ -72,14 +72,14 @@ function _VersionMenu(
           })}
       </div>
       <div className={styles.versionContainer}>
-        {tabs[activeTabIndex].name === 'LANE' &&
-          tabs[activeTabIndex].payload.map((payload) => (
+        {tabs[activeTabIndex]?.name === 'LANE' &&
+          tabs[activeTabIndex]?.payload.map((payload) => (
             <LaneInfo key={payload.id} currentLane={currentLane} {...payload}></LaneInfo>
           ))}
-        {tabs[activeTabIndex].name !== 'LANE' &&
-          tabs[activeTabIndex].payload.map((payload, index) => (
+        {tabs[activeTabIndex]?.name !== 'LANE' &&
+          tabs[activeTabIndex]?.payload.map((payload, index) => (
             <VersionInfo
-              ref={index === tabs[activeTabIndex].payload.length - 1 ? ref : null}
+              ref={index === tabs[activeTabIndex]?.payload.length - 1 ? ref : null}
               key={payload.version}
               currentVersion={currentVersion}
               latestVersion={latestVersion}
@@ -96,6 +96,11 @@ function _VersionMenu(
 export type VersionDropdownProps = {
   tags: DropdownComponentVersion[];
   snaps?: DropdownComponentVersion[];
+  lanes?: LaneModel[];
+  loadMoreTags?: () => void;
+  loadMoreSnaps?: () => void;
+  hasMoreTags?: boolean;
+  hasMoreSnaps?: boolean;
   localVersion?: boolean;
   currentVersion: string;
   currentLane?: LaneModel;
@@ -108,9 +113,6 @@ export type VersionDropdownProps = {
   showVersionDetails?: boolean;
   disabled?: boolean;
   placeholderComponent?: ReactNode;
-  activeTabIndex?: number;
-  setActiveTabIndex: (index: number) => void;
-  tabs: Array<{ name: string; payload: Array<any> }>;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export const VersionDropdown = React.memo(React.forwardRef<HTMLDivElement, VersionDropdownProps>(_VersionDropdown));
@@ -119,6 +121,7 @@ function _VersionDropdown(
   {
     snaps,
     tags,
+    lanes,
     currentVersion,
     latestVersion,
     localVersion,
@@ -131,9 +134,10 @@ function _VersionDropdown(
     menuClassName,
     showVersionDetails,
     disabled,
-    activeTabIndex = 0,
-    setActiveTabIndex,
-    tabs,
+    loadMoreSnaps,
+    loadMoreTags,
+    hasMoreSnaps,
+    hasMoreTags,
     placeholderComponent = (
       <SimpleVersion
         disabled={disabled}
@@ -147,6 +151,58 @@ function _VersionDropdown(
   }: VersionDropdownProps,
   ref?: React.ForwardedRef<HTMLDivElement>
 ) {
+  const VERSION_TAB_NAMES = ['TAG', 'SNAP', 'LANE'] as const;
+
+  const tabs = VERSION_TAB_NAMES.map((name) => {
+    switch (name) {
+      case 'SNAP':
+        return { name, payload: snaps || [] };
+      case 'LANE':
+        return { name, payload: lanes || [] };
+      default:
+        return { name, payload: tags || [] };
+    }
+  }).filter((tab) => tab.payload.length > 0);
+
+  const getActiveTabIndex = () => {
+    if (currentLane?.components.some((c) => c.version === currentVersion))
+      return tabs.findIndex((tab) => tab.name === 'LANE');
+    if ((snaps || []).some((snap) => snap.version === currentVersion))
+      return tabs.findIndex((tab) => tab.name === 'SNAP');
+    return 0;
+  };
+
+  const [activeTabIndex, setActiveTabIndex] = React.useState<number>(getActiveTabIndex());
+
+  const activeTabOrSnap: 'SNAP' | 'TAG' | 'LANE' | undefined = tabs[activeTabIndex]?.name;
+  const hasMore = activeTabOrSnap === 'SNAP' ? !!hasMoreSnaps : activeTabOrSnap === 'TAG' && !!hasMoreTags;
+  const observer = React.useRef<IntersectionObserver>();
+
+  const handleLoadMore = React.useCallback(() => {
+    if (activeTabOrSnap === 'SNAP') loadMoreSnaps?.();
+    if (activeTabOrSnap === 'TAG') loadMoreTags?.();
+  }, [activeTabOrSnap, tabs.length]);
+
+  const lastLogRef = React.useCallback(
+    (node) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && hasMore) {
+            handleLoadMore();
+          }
+        },
+        {
+          threshold: 0.1,
+          rootMargin: '100px',
+        }
+      );
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMoreSnaps, hasMoreTags, handleLoadMore]
+  );
+
   const [key, setKey] = useState(0);
 
   const singleVersion = (snaps || []).concat(tags).length < 2 && !localVersion;
@@ -173,7 +229,7 @@ function _VersionDropdown(
         {loading && <LineSkeleton className={styles.loading} count={6} />}
         {loading || (
           <VersionMenu
-            ref={ref}
+            ref={ref || lastLogRef}
             className={menuClassName}
             tabs={tabs}
             key={key}
