@@ -335,19 +335,6 @@ export default class Consumer {
     return this.componentLoader.loadMany(ids, throwOnFailure, loadOpts);
   }
 
-  async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
-    if (saveDependenciesAsComponents === undefined) {
-      saveDependenciesAsComponents = this.config._saveDependenciesAsComponents;
-    }
-    const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
-      return {
-        id: bitId, // if it doesn't go to the hub, it can't import dependencies as packages
-        saveDependenciesAsComponents: false,
-      };
-    });
-    return shouldDependenciesSavedAsComponents;
-  }
-
   async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<Component[]> {
     return getAutoTagPending(this, modifiedComponents);
   }
