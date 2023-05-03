@@ -801,6 +801,19 @@ please create a new lane instead, which will include all components of this lane
     };
   }
 
+  private async recreateNewLaneIfDeleted() {
+    if (!this.workspace) return;
+    const laneId = this.getCurrentLaneId();
+    if (!laneId || laneId.isDefault() || this.workspace.consumer.bitMap.isLaneExported) {
+      return;
+    }
+    const laneObj = await this.scope.legacyScope.getCurrentLaneObject();
+    if (laneObj) {
+      return;
+    }
+    await this.createLane(laneId.name, { scope: laneId.scope });
+  }
+
   async addLaneReadme(readmeComponentIdStr: string, laneName?: string): Promise<{ result: boolean; message?: string }> {
     if (!this.workspace) {
       throw new BitError(`unable to track a lane readme component outside of Bit workspace`);
@@ -951,6 +964,9 @@ please create a new lane instead, which will include all components of this lane
       new LaneImportCmd(switchCmd),
     ];
     cli.register(laneCmd, switchCmd);
+    cli.registerOnStart(async () => {
+      await lanesMain.recreateNewLaneIfDeleted();
+    });
     graphql.register(lanesSchema(lanesMain));
     express.register([
       new LanesCreateRoute(lanesMain, logger),
