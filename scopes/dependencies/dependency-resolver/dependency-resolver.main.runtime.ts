@@ -1079,6 +1079,21 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env);
   }
 
+
+  getEnvManifest(envComponent: Component): EnvPolicy|undefined {
+    const envJson = envComponent.filesystem.files.find((file) => {
+      return file.relative === 'env.jsonc' || file.relative === 'env.json';
+    });
+
+    if (!envJson) return undefined;
+
+    const object = parse(envJson.contents.toString('utf8'));
+    const policy = object?.policy;
+    if (!policy) return undefined;
+    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy);
+    return allPoliciesFromEnv;
+  }
+
   private async getEnvPolicyFromFile(envId: string, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;

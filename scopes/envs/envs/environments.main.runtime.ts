@@ -395,6 +395,56 @@ export class EnvsMain {
    * Do not use it to get the env (use getEnv instead)
    * This should be used only during on load
    */
+  calculateEnvId(component: Component): ComponentID {
+    // Search first for env configured via envs aspect itself
+    const envIdFromEnvsConfig = this.getEnvIdFromEnvsConfig(component);
+    // if (!envIdFromEnvsConfig) return this.getDefaultEnv();
+    const envIdFromEnvsConfigWithoutVersion = envIdFromEnvsConfig 
+      ? ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion()
+      : undefined;
+    // if (envIdFromEnvsConfig) {
+    //   const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
+    //   if (envDef) {
+    //     return envDef;
+    //   }
+    // }
+
+    // in some cases we have the id configured in the teambit.envs/envs but without the version
+    // in such cases we won't find it in the slot
+    // we search in the component aspect list a matching aspect which is match the id from the teambit.envs/envs
+    if (envIdFromEnvsConfigWithoutVersion) {
+      const matchedEntry = component.state.aspects.entries.find((aspectEntry) => {
+        return (
+          envIdFromEnvsConfigWithoutVersion === aspectEntry.id.toString() ||
+          envIdFromEnvsConfigWithoutVersion === aspectEntry.id.toString({ ignoreVersion: true })
+        );
+      });
+
+      if (matchedEntry?.id) return matchedEntry?.id;
+    }
+
+    // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
+    let envDefFromList;
+    component.state.aspects.entries.find((aspectEntry) => {
+      const envDef = this.getEnvDefinitionById(aspectEntry.id);
+      if (envDef) {
+        envDefFromList = envDef;
+      }
+      return !!envDef;
+    });
+
+    if (envDefFromList) {
+      return envDefFromList.id;
+    }
+    const defaultEnvId = this.getDefaultEnv().id;
+    return ComponentID.fromString(defaultEnvId);
+  }
+
+  /**
+   * This used to calculate the actual env during the component load.
+   * Do not use it to get the env (use getEnv instead)
+   * This should be used only during on load
+   */
   calculateEnv(component: Component): EnvDefinition {
     // Search first for env configured via envs aspect itself
     const envIdFromEnvsConfig = this.getEnvIdFromEnvsConfig(component);
@@ -587,7 +637,7 @@ export class EnvsMain {
     return this.getDefaultEnv();
   }
 
-  private getEnvIdFromEnvsConfig(component: Component): string | undefined {
+  getEnvIdFromEnvsConfig(component: Component): string | undefined {
     const envsAspect = component.state.aspects.get(EnvsAspect.id);
     return envsAspect?.config.env;
   }

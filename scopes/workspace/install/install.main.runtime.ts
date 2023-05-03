@@ -31,6 +31,7 @@ import {
   DependencyList,
   OutdatedPkg,
   WorkspacePolicy,
+  EnvPolicy,
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
@@ -187,6 +188,28 @@ export class InstallMain {
       // TODO: implement
     }
     await this.dependencyResolver.persistConfig(this.workspace.path);
+  }
+
+  private async getEnvPolicies(ids?: ComponentID[]): Promise<EnvPolicy[]> {
+    const components = ids?.length ? await this.workspace.getMany(ids) : await this.workspace.list();
+    const envIds = components.map((component) => {
+      return this.envs.calculateEnvId(component);
+    });
+    const withoutCoreEnvs = envIds.filter((id) => {
+      return this.envs.isCoreEnv(id.toStringWithoutVersion());
+    });
+    const envComponents = await this.workspace.getMany(withoutCoreEnvs);
+
+    const envManifests = envComponents.map((envComponent) => {
+      const fromEnvJson = this.dependencyResolver.getEnvManifest(envComponent);
+      if (!fromEnvJson) return fromEnvJson
+
+      // load aspects.
+      // compute policy.
+      // handle core aspects from slots.
+    });
+
+    return envManifests;
   }
 
   private async _installModules(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {

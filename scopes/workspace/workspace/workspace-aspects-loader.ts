@@ -106,7 +106,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       }
     }
 
-    if (mergedOpts.useScopeAspectsCapsule) {
+    if (true) {
       idsToLoadFromWs = workspaceIds;
       const currentLane = await this.consumer.getCurrentLaneObject();
 
@@ -186,9 +186,9 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     // Make sure to first load envs from the list otherwise it will fail when trying to load other aspects
     // as their envs might not be loaded yet
-    if (scopeIdsGrouped.envs && scopeIdsGrouped.envs.length) {
-      await this.scope.loadAspects(scopeIdsGrouped.envs, throwOnError, 'workspace.loadAspects loading scope aspects');
-    }
+    // if (scopeIdsGrouped.envs && scopeIdsGrouped.envs.length) {
+    //   await this.scope.loadAspects(scopeIdsGrouped.envs, throwOnError, 'workspace.loadAspects loading scope aspects');
+    // }
     const requireableComponents = this.aspectDefsToRequireableComponents(aspectsDefs);
     const manifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
       requireableComponents,
