@@ -77,9 +77,9 @@ export class ComponentDependencyFactory implements DependencyFactory {
     if (!packageName) {
       const host = this.componentAspect.getHost();
       const id = await host.resolveComponentId(legacyDep.id);
-      const depComponent = await host.get(id);
+      const depComponent = await host.getLegacy(id);
       if (depComponent) {
-        packageName = componentIdToPackageName(depComponent.state._consumer);
+        packageName = componentIdToPackageName(depComponent);
       }
     }
 

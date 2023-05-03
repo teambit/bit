@@ -80,6 +80,11 @@ export interface ComponentFactory {
   get(id: ComponentID): Promise<Component | undefined>;
 
   /**
+   * returns the legacy representation of a component.
+   */
+  getLegacy(id: ComponentID): Promise<ConsumerComponent | undefined>;
+
+  /**
    * returns many components by ids.
    */
   getMany(ids: ComponentID[]): Promise<Component[]>;

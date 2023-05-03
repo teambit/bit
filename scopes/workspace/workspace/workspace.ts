@@ -541,6 +541,19 @@ export class Workspace implements ComponentFactory {
     return new AspectEntry(await this.resolveComponentId(dataEntry.id), dataEntry);
   }
 
+  async getLegacy(id: ComponentID): Promise<ConsumerComponent | undefined> {
+    try {
+      const componentMap = this.consumer.bitMap.getComponent(id._legacy);
+      return await ConsumerComponent.loadFromFileSystem({
+        componentMap,
+        id: id._legacy,
+        consumer: this.consumer,
+      });
+    } catch (err) {
+      return undefined;
+    }
+  }
+
   /**
    * get a component from workspace
    * @param id component ID

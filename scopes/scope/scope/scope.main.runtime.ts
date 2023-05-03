@@ -778,6 +778,12 @@ export class ScopeMain implements ComponentFactory {
     return results.map(({ id }) => ComponentID.fromLegacy(id));
   }
 
+  async getLegacy(id: ComponentID): Promise<ConsumerComponent | undefined> {
+    // loading directly the consumerComponent from the legacy scope won't save much, and will need to deal with
+    // importing if not exist and ignoring ComponentNotFound errors.
+    return (await this.get(id))?.state._consumer;
+  }
+
   /**
    * get a component and load its aspect
    */
