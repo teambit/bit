@@ -176,11 +176,8 @@ export class ComponentGenerator {
       // the component template has an env and the user wants a different env.
       delete config[templateEnv];
     }
-    const userEnvId = await this.workspace.resolveComponentId(userEnv);
-    const userEnvIdWithPotentialVersion = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(userEnvId);
-    config[userEnvIdWithPotentialVersion] = {};
-    config[EnvsAspect.id] = config[EnvsAspect.id] || {};
-    config[EnvsAspect.id].env = userEnvId.toStringWithoutVersion();
+    await this.tracker.addEnvToConfig(userEnv, config);
+
     return config;
   }
 

@@ -22,9 +22,7 @@ export default class LogCmd implements Command {
   skipWorkspace = true;
   arguments = [{ name: 'id', description: 'component-id or component-name' }];
 
-  constructor(private componentLog: ComponentLogMain, docsDomain: string) {
-    this.extendedDescription = `https://${docsDomain}/reference/cli-reference#log`;
-  }
+  constructor(private componentLog: ComponentLogMain) {}
 
   async report(
     [id]: [string],
