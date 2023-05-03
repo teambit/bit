@@ -406,10 +406,10 @@ once done, to continue working, please run "bit cc"`
 
   async isPartOfMainHistory(id: BitId) {
     if (!id.version) throw new Error(`isIdOnMain expects id with version, got ${id.toString()}`);
+    if (isTag(id.version)) return true; // tags can be on main only
     const component = await this.getModelComponent(id);
     if (!component.head) return false; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
     if (component.head.toString() === id.version) return true; // it's on main
-    if (isTag(id.version)) return true; // tags can be on main only
 
     const verHistory = await component.getAndPopulateVersionHistory(this.objects, component.head);
     const verRef = Ref.from(id.version);
