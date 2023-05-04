@@ -17,7 +17,6 @@ import { sha1 } from '@teambit/legacy/dist/utils';
 import pMapSeries from 'p-map-series';
 import fs from 'fs-extra';
 import { Port } from '@teambit/toolbox.network.get-port';
-import { getPreBundleHash, getPreBundlePath } from '@teambit/preview';
 import { join, resolve } from 'path';
 import { promisify } from 'util';
 import webpack from 'webpack';
@@ -32,6 +31,7 @@ import { UIAspect, UIRuntime } from './ui.aspect';
 import createWebpackConfig from './webpack/webpack.browser.config';
 import createSsrWebpackConfig from './webpack/webpack.ssr.config';
 import { StartPlugin, StartPluginOptions } from './start-plugin';
+import { getBundleUiHash, getBundleUiPath } from './bundle-ui.task';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
 
@@ -121,7 +121,7 @@ export type RuntimeOptions = {
 };
 
 export class UiMain {
-  private _isUiPreBundleServed = false;
+  private _isBundleUiServed = false;
 
   constructor(
     /**
@@ -289,11 +289,9 @@ export class UiMain {
       await uiServer.dev({ portRange: port || this.config.portRange });
     } else {
       if (!skipUiBuild) await this.buildUI(name, uiRoot, rebuild);
-      const preBundlePublicPath = join(getPreBundlePath(), publicDir);
-      const preBundleRoot =
-        this._isUiPreBundleServed && existsSync(preBundlePublicPath) ? preBundlePublicPath : undefined;
-      await uiServer.start({ portRange: port || this.config.portRange, preBundleRoot });
-      await uiServer.start({ portRange: port || this.config.portRange });
+      const bundleUiPublicPath = join(getBundleUiPath(), publicDir);
+      const bundleUiRoot = this._isBundleUiServed && existsSync(bundleUiPublicPath) ? bundleUiPublicPath : undefined;
+      await uiServer.start({ portRange: port || this.config.portRange, bundleUiRoot });
     }
 
     this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, uiServer.port, uiRoot));
@@ -477,7 +475,7 @@ export class UiMain {
     return sha1(aspectPathStrings.join(''));
   }
 
-  async getBundleUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
+  async createBundleUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
     const aspects = await uiRoot.resolveAspects(runtime);
     aspects.sort((a, b) => ((a.getId || a.aspectPath) > (b.getId || b.aspectPath) ? 1 : -1));
     const aspectIds = aspects.map((aspect) => aspect.getId || aspect.aspectPath);
@@ -488,9 +486,9 @@ export class UiMain {
     this.logger.debug(`buildIfChanged, name ${name}`);
     const hash = await this.buildUiHash(uiRoot);
 
-    const preBundleHash = getPreBundleHash();
+    const preBundleHash = getBundleUiHash();
     if (hash === preBundleHash && !force) {
-      this._isUiPreBundleServed = true;
+      this._isBundleUiServed = true;
       this.logger.debug(`buildIfChanged, name ${name}, returned from pre-bundle`);
       return hash;
     }

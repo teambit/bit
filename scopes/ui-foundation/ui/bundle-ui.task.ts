@@ -1,9 +1,10 @@
 import { join } from 'path';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { getAspectDirFromBvm } from '@teambit/aspect-loader';
 import { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
+import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { UIAspect, UiMain } from '@teambit/ui';
-import { Capsule } from '@teambit/isolator';
 
 export const BUNDLE_UI_TASK_NAME = 'BundleUI';
 export const BUNDLE_UI_DIR = 'ui-bundle';
@@ -45,7 +46,7 @@ export class BundleUiTask implements BuildTask {
     if (!maybeUiRoot) throw new Error('no uiRoot found');
 
     const [, uiRoot] = maybeUiRoot;
-    const hash = await this.ui.getBundleUiHash(uiRoot);
+    const hash = await this.ui.createBundleUiHash(uiRoot);
 
     if (!existsSync(outputPath)) mkdirSync(outputPath);
     writeFileSync(join(outputPath, BUNDLE_UI_HASH_FILENAME), hash);
@@ -64,4 +65,17 @@ export function getArtifactDef() {
       rootDir: getArtifactDirectory(),
     },
   ];
+}
+
+export function getBundleUiHash() {
+  const bundleUiPathFromBvm = getBundleUiPath();
+  if (existsSync(bundleUiPathFromBvm)) {
+    return readFileSync(join(bundleUiPathFromBvm, '.hash')).toString();
+  }
+  return '';
+}
+
+export function getBundleUiPath() {
+  const uiPathFromBvm = getAspectDirFromBvm(UIAspect.id);
+  return join(uiPathFromBvm, getArtifactDirectory());
 }

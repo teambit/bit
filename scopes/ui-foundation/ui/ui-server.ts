@@ -31,10 +31,13 @@ export type UIServerProps = {
 
 export type StartOptions = {
   /**
+   * Absolute path to the ui bundle (generated during the bit build).
+   */
+  bundleUiRoot?: string;
+  /**
    * port range for the UI server to bind. default is a port range of 4000-4200.
    */
   portRange?: number[] | number;
-  preBundleRoot?: string;
 };
 
 export class UIServer {
@@ -92,11 +95,11 @@ export class UIServer {
   /**
    * start a UI server.
    */
-  async start({ portRange, preBundleRoot }: StartOptions = {}) {
+  async start({ bundleUiRoot, portRange }: StartOptions = {}) {
     const app = this.expressExtension.createApp();
     const publicDir = `/${this.publicDir}`;
     const defaultRoot = join(this.uiRoot.path, publicDir);
-    const root = preBundleRoot || defaultRoot;
+    const root = bundleUiRoot || defaultRoot;
     const server = await this.graphql.createServer({ app });
 
     // set up proxy, for things like preview, e.g. '/preview/teambit.react/react'
