@@ -80,9 +80,12 @@ export interface ComponentFactory {
   get(id: ComponentID): Promise<Component | undefined>;
 
   /**
-   * returns the legacy representation of a component.
+   * returns the legacy representation of a component with minimal loading.
+   * when loaded from the workspace, it won't run any Harmony hooks and even won't load dependencies.
+   * it's good to get raw aspects data or some basic properties.
+   * use carefully. prefer using `get()` instead.
    */
-  getLegacy(id: ComponentID): Promise<ConsumerComponent | undefined>;
+  getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined>;
 
   /**
    * returns many components by ids.

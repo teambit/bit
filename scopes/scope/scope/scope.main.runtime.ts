@@ -778,10 +778,13 @@ export class ScopeMain implements ComponentFactory {
     return results.map(({ id }) => ComponentID.fromLegacy(id));
   }
 
-  async getLegacy(id: ComponentID): Promise<ConsumerComponent | undefined> {
-    // loading directly the consumerComponent from the legacy scope won't save much, and will need to deal with
-    // importing if not exist and ignoring ComponentNotFound errors.
-    return (await this.get(id))?.state._consumer;
+  async getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined> {
+    try {
+      return await this.legacyScope.getConsumerComponent(id._legacy);
+    } catch (err) {
+      // in case the component is missing locally, this.get imports it.
+      return (await this.get(id))?.state._consumer;
+    }
   }
 
   /**

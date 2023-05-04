@@ -541,7 +541,11 @@ export class Workspace implements ComponentFactory {
     return new AspectEntry(await this.resolveComponentId(dataEntry.id), dataEntry);
   }
 
-  async getLegacy(id: ComponentID): Promise<ConsumerComponent | undefined> {
+  /**
+   * this is not the complete legacy component (ConsumerComponent), it's missing dependencies and hooks from Harmony
+   * are skipped. do not trust the data you get from this method unless you know what you're doing.
+   */
+  async getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined> {
     try {
       const componentMap = this.consumer.bitMap.getComponent(id._legacy);
       return await ConsumerComponent.loadFromFileSystem({
