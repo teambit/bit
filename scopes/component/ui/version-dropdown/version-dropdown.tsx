@@ -24,20 +24,81 @@ function _VersionMenu(
     currentVersion,
     localVersion,
     latestVersion,
-    currentLane,
     overrideVersionHref,
     showVersionDetails,
-    activeTabIndex,
-    setActiveTab,
-    tabs,
+    useVersions,
+    currentLane,
+    lanes,
+    loading: loadingFromProps,
     ...rest
   }: VersionMenuProps,
   ref?: React.ForwardedRef<HTMLDivElement>
 ) {
+  const {
+    snaps,
+    tags,
+    hasMoreSnaps,
+    hasMoreTags,
+    loadMoreSnaps,
+    loadMoreTags,
+    loading: loadingVersions,
+  } = useVersions?.() || {};
+  const VERSION_TAB_NAMES = ['TAG', 'SNAP', 'LANE'] as const;
+  const loading = loadingFromProps || loadingVersions;
+
+  const tabs = VERSION_TAB_NAMES.map((name) => {
+    switch (name) {
+      case 'SNAP':
+        return { name, payload: snaps || [] };
+      case 'LANE':
+        return { name, payload: lanes || [] };
+      default:
+        return { name, payload: tags || [] };
+    }
+  }).filter((tab) => tab.payload.length > 0);
+
+  const getActiveTabIndex = () => {
+    if (currentLane?.components.some((c) => c.version === currentVersion))
+      return tabs.findIndex((tab) => tab.name === 'LANE');
+    if ((snaps || []).some((snap) => snap.version === currentVersion))
+      return tabs.findIndex((tab) => tab.name === 'SNAP');
+    return 0;
+  };
+
+  const [activeTabIndex, setActiveTab] = React.useState<number>(getActiveTabIndex());
+
+  const activeTabOrSnap: 'SNAP' | 'TAG' | 'LANE' | undefined = tabs[activeTabIndex]?.name;
+  const hasMore = activeTabOrSnap === 'SNAP' ? !!hasMoreSnaps : activeTabOrSnap === 'TAG' && !!hasMoreTags;
+  const observer = React.useRef<IntersectionObserver>();
+
+  const handleLoadMore = React.useCallback(() => {
+    if (activeTabOrSnap === 'SNAP') loadMoreSnaps?.();
+    if (activeTabOrSnap === 'TAG') loadMoreTags?.();
+  }, [activeTabOrSnap, tabs.length]);
+
+  const lastLogRef = React.useCallback(
+    (node) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && hasMore) {
+            handleLoadMore();
+          }
+        },
+        {
+          threshold: 0.1,
+          rootMargin: '100px',
+        }
+      );
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMoreSnaps, hasMoreTags, handleLoadMore]
+  );
   const multipleTabs = tabs.length > 1;
   const message = multipleTabs
     ? 'Switch to view tags, snaps, or lanes'
-    : `Switch between ${tabs[0].name.toLocaleLowerCase()}s`;
+    : `Switch between ${tabs[0]?.name.toLocaleLowerCase()}s`;
 
   return (
     <div {...rest}>
@@ -79,7 +140,7 @@ function _VersionMenu(
         {tabs[activeTabIndex]?.name !== 'LANE' &&
           tabs[activeTabIndex]?.payload.map((payload, index) => (
             <VersionInfo
-              ref={index === tabs[activeTabIndex]?.payload.length - 1 ? ref : null}
+              ref={index === tabs[activeTabIndex]?.payload.length - 1 ? ref || lastLogRef : null}
               key={payload.version}
               currentVersion={currentVersion}
               latestVersion={latestVersion}
@@ -93,19 +154,36 @@ function _VersionMenu(
   );
 }
 
-export type VersionDropdownProps = {
-  tags: DropdownComponentVersion[];
+export type UseComponentVersionsResult = {
+  tags?: DropdownComponentVersion[];
   snaps?: DropdownComponentVersion[];
-  lanes?: LaneModel[];
   loadMoreTags?: () => void;
   loadMoreSnaps?: () => void;
   hasMoreTags?: boolean;
   hasMoreSnaps?: boolean;
-  localVersion?: boolean;
-  currentVersion: string;
-  currentLane?: LaneModel;
-  latestVersion?: string;
   loading?: boolean;
+};
+
+export type UseComponentVersions = () => UseComponentVersionsResult;
+
+export type VersionDropdownProps = {
+  localVersion?: boolean;
+  latestVersion?: string;
+  currentVersion: string;
+  currentVersionLog?: {
+    timestamp?: string | number;
+    author?: {
+      displayName?: string;
+      email?: string;
+    };
+    message?: string;
+  };
+  hasMoreVersions?: boolean;
+  // currentLane?: LaneModel;
+  loading?: boolean;
+  useComponentVersions?: UseComponentVersions;
+  currentLane?: LaneModel;
+  lanes?: LaneModel[];
   overrideVersionHref?: (version: string) => string;
   placeholderClassName?: string;
   dropdownClassName?: string;
@@ -119,14 +197,12 @@ export const VersionDropdown = React.memo(React.forwardRef<HTMLDivElement, Versi
 
 function _VersionDropdown(
   {
-    snaps,
-    tags,
-    lanes,
     currentVersion,
     latestVersion,
     localVersion,
+    currentVersionLog = {},
+    hasMoreVersions,
     loading,
-    currentLane,
     overrideVersionHref,
     className,
     placeholderClassName,
@@ -134,113 +210,71 @@ function _VersionDropdown(
     menuClassName,
     showVersionDetails,
     disabled,
-    loadMoreSnaps,
-    loadMoreTags,
-    hasMoreSnaps,
-    hasMoreTags,
-    placeholderComponent = (
-      <SimpleVersion
-        disabled={disabled}
-        snaps={snaps}
-        tags={tags}
-        className={placeholderClassName}
-        currentVersion={currentVersion}
-      />
-    ),
+    placeholderComponent,
+    currentLane,
+    useComponentVersions,
+    lanes,
     ...rest
   }: VersionDropdownProps,
   ref?: React.ForwardedRef<HTMLDivElement>
 ) {
-  const VERSION_TAB_NAMES = ['TAG', 'SNAP', 'LANE'] as const;
-
-  const tabs = VERSION_TAB_NAMES.map((name) => {
-    switch (name) {
-      case 'SNAP':
-        return { name, payload: snaps || [] };
-      case 'LANE':
-        return { name, payload: lanes || [] };
-      default:
-        return { name, payload: tags || [] };
-    }
-  }).filter((tab) => tab.payload.length > 0);
-
-  const getActiveTabIndex = () => {
-    if (currentLane?.components.some((c) => c.version === currentVersion))
-      return tabs.findIndex((tab) => tab.name === 'LANE');
-    if ((snaps || []).some((snap) => snap.version === currentVersion))
-      return tabs.findIndex((tab) => tab.name === 'SNAP');
-    return 0;
-  };
-
-  const [activeTabIndex, setActiveTabIndex] = React.useState<number>(getActiveTabIndex());
-
-  const activeTabOrSnap: 'SNAP' | 'TAG' | 'LANE' | undefined = tabs[activeTabIndex]?.name;
-  const hasMore = activeTabOrSnap === 'SNAP' ? !!hasMoreSnaps : activeTabOrSnap === 'TAG' && !!hasMoreTags;
-  const observer = React.useRef<IntersectionObserver>();
-
-  const handleLoadMore = React.useCallback(() => {
-    if (activeTabOrSnap === 'SNAP') loadMoreSnaps?.();
-    if (activeTabOrSnap === 'TAG') loadMoreTags?.();
-  }, [activeTabOrSnap, tabs.length]);
-
-  const lastLogRef = React.useCallback(
-    (node) => {
-      if (loading) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting && hasMore) {
-            handleLoadMore();
-          }
-        },
-        {
-          threshold: 0.1,
-          rootMargin: '100px',
-        }
-      );
-      if (node) observer.current.observe(node);
-    },
-    [loading, hasMoreSnaps, hasMoreTags, handleLoadMore]
-  );
-
   const [key, setKey] = useState(0);
-
-  const singleVersion = (snaps || []).concat(tags).length < 2 && !localVersion;
-
+  const singleVersion = hasMoreVersions && !localVersion;
+  const [open, setOpen] = useState(false);
+  const { author, message, timestamp } = currentVersionLog;
   if (disabled || (singleVersion && !loading)) {
     return <div className={classNames(styles.noVersions, className)}>{placeholderComponent}</div>;
   }
+
+  const handlePlaceholderClicked = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      setOpen((o) => !o);
+    }
+  };
+
+  const defaultPlaceholder = (
+    <SimpleVersion
+      author={author}
+      message={message}
+      timestamp={timestamp}
+      disabled={disabled}
+      className={placeholderClassName}
+      currentVersion={currentVersion}
+      onClick={handlePlaceholderClicked}
+      hasMoreVersions={hasMoreVersions}
+    />
+  );
 
   return (
     <div {...rest} className={classNames(styles.versionDropdown, className)}>
       <Dropdown
         className={classNames(styles.dropdown, dropdownClassName)}
         dropClass={classNames(styles.menu, menuClassName)}
-        clickToggles={false}
-        clickPlaceholderToggles={true}
-        onChange={(_e, open) => open && setKey((x) => x + 1)} // to reset menu to initial state when toggling
+        open={open}
+        onClick={handlePlaceholderClicked}
+        onClickOutside={() => setOpen(false)}
+        onChange={(_e, _open) => _open && setKey((x) => x + 1)} // to reset menu to initial state when toggling
         PlaceholderComponent={({ children, ...other }) => (
-          <div {...other} className={placeholderClassName}>
+          <div {...other} className={placeholderClassName} onClick={handlePlaceholderClicked}>
             {children}
           </div>
         )}
-        placeholder={placeholderComponent}
+        placeholder={placeholderComponent || defaultPlaceholder}
       >
         {loading && <LineSkeleton className={styles.loading} count={6} />}
-        {loading || (
+        {!loading && open && (
           <VersionMenu
-            ref={ref || lastLogRef}
+            ref={ref}
             className={menuClassName}
-            tabs={tabs}
             key={key}
-            activeTabIndex={activeTabIndex}
-            setActiveTab={setActiveTabIndex}
             currentVersion={currentVersion}
             latestVersion={latestVersion}
             localVersion={localVersion}
-            currentLane={currentLane}
             overrideVersionHref={overrideVersionHref}
             showVersionDetails={showVersionDetails}
+            currentLane={currentLane}
+            lanes={lanes}
+            useVersions={useComponentVersions}
           />
         )}
       </Dropdown>
@@ -252,10 +286,10 @@ type VersionMenuProps = {
   localVersion?: boolean;
   currentVersion?: string;
   latestVersion?: string;
+  useVersions?: UseComponentVersions;
   currentLane?: LaneModel;
+  lanes?: LaneModel[];
   overrideVersionHref?: (version: string) => string;
   showVersionDetails?: boolean;
-  activeTabIndex: number;
-  setActiveTab: (index: number) => void;
-  tabs: Array<{ name: string; payload: Array<any> }>;
+  loading?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;

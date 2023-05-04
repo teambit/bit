@@ -217,14 +217,17 @@ export type Filters = {
 export type ComponentQueryResult = {
   component?: ComponentModel;
   componentDescriptor?: ComponentDescriptor;
-  hasMoreLogs?: boolean;
-  hasMoreSnaps?: boolean;
-  hasMoreTags?: boolean;
-  loadMoreLogs?: () => void;
-  loadMoreTags?: () => void;
-  loadMoreSnaps?: () => void;
-  snaps?: LegacyComponentLog[];
-  tags?: LegacyComponentLog[];
+  // @todo refactor to useComponentLogs
+  componentLogs?: {
+    hasMoreLogs?: boolean;
+    hasMoreSnaps?: boolean;
+    hasMoreTags?: boolean;
+    loadMoreLogs?: () => void;
+    loadMoreTags?: () => void;
+    loadMoreSnaps?: () => void;
+    snaps?: LegacyComponentLog[];
+    tags?: LegacyComponentLog[];
+  };
   loading?: boolean;
   error?: ComponentError;
 };
@@ -238,7 +241,6 @@ export function useComponentQuery(
 ): ComponentQueryResult {
   const idRef = useRef(componentId);
   idRef.current = componentId;
-
   const { fetchLogsByTypeSeparately = false, log, tagLog, snapLog } = filters || {};
   const {
     logHead: tagLogHead,
@@ -247,7 +249,6 @@ export function useComponentQuery(
     logLimit: tagLogLimit,
     takeHeadFromComponent: tagLogTakeHeadFromComponent,
   } = tagLog || {};
-
   const { logHead, logOffset, logSort, logLimit, takeHeadFromComponent, logType } = log || {};
   const {
     logHead: snapLogHead,
@@ -582,16 +583,18 @@ export function useComponentQuery(
     return {
       componentDescriptor,
       component,
+      componentLogs: {
+        loadMoreLogs,
+        loadMoreSnaps,
+        loadMoreTags,
+        hasMoreSnaps: hasMoreSnapLogs.current,
+        hasMoreTags: hasMoreTagLogs.current,
+        hasMoreLogs: hasMoreLogs.current,
+        snaps,
+        tags,
+      },
       error: componentError || undefined,
       loading,
-      loadMoreLogs,
-      loadMoreSnaps,
-      loadMoreTags,
-      hasMoreSnaps: hasMoreSnapLogs.current,
-      hasMoreTags: hasMoreTagLogs.current,
-      hasMoreLogs: hasMoreLogs.current,
-      snaps,
-      tags,
       ...rest,
     };
   }, [host, component, componentDescriptor, componentError, hasMoreLogs, hasMoreSnapLogs, hasMoreTagLogs, snaps, tags]);

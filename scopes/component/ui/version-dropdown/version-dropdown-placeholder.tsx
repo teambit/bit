@@ -1,80 +1,79 @@
-import React, { HTMLAttributes, useMemo } from 'react';
+import React, { HTMLAttributes } from 'react';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import classNames from 'classnames';
+import * as semver from 'semver';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { TimeAgo } from '@teambit/design.ui.time-ago';
 import { UserAvatar } from '@teambit/design.ui.avatar';
-import { DropdownComponentVersion } from './version-dropdown';
 
 import styles from './version-dropdown-placeholder.module.scss';
 
 export type VersionProps = {
-  tags: DropdownComponentVersion[];
-  snaps?: DropdownComponentVersion[];
-  currentVersion: string;
+  currentVersion?: string;
+  timestamp?: string | number;
+  author?: {
+    displayName?: string;
+    email?: string;
+  };
+  message?: string;
   disabled?: boolean;
+  hasMoreVersions?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 
-const getVersionDetailFromTags = (version, tags) => tags.find((tag) => tag.tag === version);
-const getVersionDetailFromSnaps = (version, snaps) => (snaps || []).find((snap) => snap.hash === version);
-const getVersionDetails = (version, tags, snaps) => {
-  if (version === 'workspace' || version === 'new') return { version };
-  return getVersionDetailFromTags(version, tags) || getVersionDetailFromSnaps(version, snaps);
-};
-
-export function SimpleVersion({ currentVersion, className, disabled, tags, snaps }: VersionProps) {
-  const showArrowDown = useMemo(() => (snaps || []).concat(tags).length > 1, [tags, snaps]);
-  const versionDetails = useMemo(() => getVersionDetails(currentVersion, tags, snaps), [currentVersion, tags, snaps]);
+export function SimpleVersion({
+  currentVersion,
+  className,
+  disabled,
+  hasMoreVersions,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  author,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  message,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  timestamp,
+  ...rest
+}: VersionProps) {
+  const isTag = semver.valid(currentVersion);
 
   return (
-    <div className={classNames(styles.simple, className, disabled && styles.disabled)}>
+    <div {...rest} className={classNames(styles.simple, className, disabled && styles.disabled)}>
       <Ellipsis
-        className={classNames(
-          styles.versionName,
-          versionDetails?.tag && styles.tag,
-          !versionDetails?.tag && styles.snap
-        )}
+        className={classNames(styles.versionName, isTag && styles.tag, !isTag && styles.snap)}
+        onClick={rest.onClick}
       >
         {currentVersion}
       </Ellipsis>
-      {showArrowDown && <Icon of="fat-arrow-down" />}
+      {hasMoreVersions && <Icon of="fat-arrow-down" onClick={rest.onClick} />}
     </div>
   );
 }
 
-export function DetailedVersion({ currentVersion, className, disabled, snaps, tags }: VersionProps) {
-  const showArrowDown = useMemo(() => (snaps || []).concat(tags).length > 1, [tags, snaps]);
-  const versionDetails = useMemo(() => getVersionDetails(currentVersion, tags, snaps), [currentVersion, tags, snaps]);
-
-  const timestamp = useMemo(
-    () => (versionDetails?.date ? new Date(parseInt(versionDetails.date)).toString() : new Date().toString()),
-    [versionDetails?.date]
-  );
-
-  const author = useMemo(() => {
-    return {
-      displayName: versionDetails?.username,
-      email: versionDetails?.email,
-    };
-  }, [versionDetails]);
+export function DetailedVersion({
+  currentVersion,
+  className,
+  disabled,
+  hasMoreVersions,
+  timestamp,
+  author,
+  message,
+  ...rest
+}: VersionProps) {
+  const isTag = semver.valid(currentVersion);
 
   return (
-    <div className={classNames(styles.detailed, className, disabled && styles.disabled)}>
-      <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />
+    <div {...rest} className={classNames(styles.detailed, className, disabled && styles.disabled)}>
+      <UserAvatar size={24} account={author ?? {}} className={styles.versionUserAvatar} showTooltip={true} />
       <Ellipsis
-        className={classNames(
-          styles.versionName,
-          versionDetails?.tag && styles.tag,
-          !versionDetails?.tag && styles.snap
-        )}
+        className={classNames(styles.versionName, isTag && styles.tag, !isTag && styles.snap)}
+        onClick={rest.onClick}
       >
         {currentVersion}
       </Ellipsis>
-      {commitMessage(versionDetails?.message)}
-      <Ellipsis className={styles.versionTimestamp}>
-        <TimeAgo date={timestamp} />
+      {commitMessage(message)}
+      <Ellipsis className={styles.versionTimestamp} onClick={rest.onClick}>
+        <TimeAgo date={timestamp ?? ''} onClick={rest.onClick} />
       </Ellipsis>
-      {showArrowDown && <Icon of="fat-arrow-down" />}
+      {hasMoreVersions && <Icon of="fat-arrow-down" onClick={rest.onClick} />}
     </div>
   );
 }

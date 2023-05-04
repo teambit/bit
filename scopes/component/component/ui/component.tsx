@@ -53,8 +53,13 @@ export function Component({
   const _componentIdStr = getComponentIdStr(componentIdStr);
   const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
   const resolvedComponentIdStr = path || idFromLocation;
+  const componentFiltersFromProps = useComponentFilters?.() || {};
+
   const useComponentOptions = {
-    logFilters: useComponentFilters?.() || { log: { logOffset: 0, logLimit: 10 } },
+    logFilters: {
+      log: { logLimit: 1 },
+      ...componentFiltersFromProps,
+    },
     customUseComponent: useComponent,
   };
 
