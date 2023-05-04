@@ -5,7 +5,6 @@ import { BitError } from '@teambit/bit-error';
 import { removePrompt } from '@teambit/legacy/dist/prompts';
 import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 import RemovedLocalObjects from '@teambit/legacy/dist/scope/removed-local-objects';
-import loader from '@teambit/legacy/dist/cli/loader';
 import paintRemoved from '@teambit/legacy/dist/cli/templates/remove-template';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { RemoveMain } from './remove.main.runtime';
@@ -24,15 +23,16 @@ export class RemoveCmd implements Command {
   skipWorkspace = true;
   alias = 'rm';
   options = [
-    ['', 'soft', 'EXPERIMENTAL. mark the component as deleted. after tag/snap and export the remote will be updated'],
+    ['', 'soft', 'DEPRECATED. use --delete instead'],
+    ['', 'delete', 'mark the component as deleted. after tag/snap and export the remote will be updated'],
+    ['', 'remote', 'DEPRECATED. use --hard instead'],
     [
-      'r',
-      'remote',
-      'remove a component completely from a remote scope (Careful! this is a permanent change. prefer --soft and tag+export)',
+      '',
+      'hard',
+      'remove a component completely from a remote scope. careful! this is a permanent change that could corrupt dependents. prefer --delete',
     ],
     ['', 'from-lane', 'revert to main if exists on currently checked out lane, otherwise, remove it'],
     ['t', 'track', 'keep tracking component in .bitmap (default = false), helps transform a tagged-component to new'],
-    ['d', 'delete-files', 'DEPRECATED (this is now the default). delete local component files'],
     ['', 'keep-files', 'keep component files (just untrack the component)'],
     [
       'f',
@@ -50,29 +50,40 @@ export class RemoveCmd implements Command {
   async report(
     [componentsPattern]: [string],
     {
-      soft = false,
+      soft,
+      delete: softDelete = false,
       force = false,
-      remote = false,
+      remote,
+      hard = false,
       fromLane = false,
       track = false,
-      deleteFiles = false,
       silent = false,
       keepFiles = false,
     }: {
+      soft?: boolean;
+      delete: boolean;
       force: boolean;
-      remote: boolean;
+      remote?: boolean;
+      hard: boolean;
       track: boolean;
       fromLane: boolean;
-      deleteFiles: boolean;
       silent: boolean;
       keepFiles: boolean;
-      soft: boolean;
     }
   ) {
     if (soft) {
-      if (remote)
+      this.remove.logger.consoleWarning('--soft flag is deprecated. please use --delete instead');
+      softDelete = true;
+    }
+    if (remote) {
+      this.remove.logger.consoleWarning('--remote flag is deprecated. please use --hard instead');
+      hard = true;
+    }
+
+    if (softDelete) {
+      if (hard)
         throw new BitError(
-          `error: --remote and --soft cannot be used together. soft delete can only be done locally, after tag/snap and export it updates the remote`
+          `error: --hard and --delete cannot be used together. soft delete can only be done locally, after tag/snap and export it updates the remote`
         );
       if (track) throw new BitError(`error: please use either --soft or --track, not both`);
       if (keepFiles) throw new BitError(`error: please use either --soft or --keep-files, not both`);
@@ -84,18 +95,9 @@ ${removedCompIds.join('\n')}
 ${chalk.bold('to update the remote, please tag/snap and then export. to revert, please use "bit recover"')}`;
     }
 
-    if (deleteFiles) {
-      loader.stop();
-      // eslint-disable-next-line no-console
-      console.warn(
-        chalk.yellow(
-          '--delete-files flag is deprecated. by default the files are deleted, unless --keep-files was provided'
-        )
-      );
-    }
     if (!silent) {
-      const willDeleteFiles = !remote && !keepFiles;
-      const removePromptResult = await removePrompt(willDeleteFiles, remote)();
+      const willDeleteFiles = !hard && !keepFiles;
+      const removePromptResult = await removePrompt(willDeleteFiles, hard)();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (!yn(removePromptResult.shouldRemove)) {
         throw new BitError('the operation has been canceled');
@@ -107,7 +109,7 @@ ${chalk.bold('to update the remote, please tag/snap and then export. to revert, 
     }: {
       localResult: RemovedLocalObjects;
       remoteResult: RemovedObjects[];
-    } = await this.remove.remove({ componentsPattern, remote, force, track, deleteFiles: !keepFiles, fromLane });
+    } = await this.remove.remove({ componentsPattern, remote: hard, force, track, deleteFiles: !keepFiles, fromLane });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return paintRemoved(localResult, false) + this.paintArray(remoteResult);
   }

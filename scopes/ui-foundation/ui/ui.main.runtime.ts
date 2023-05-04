@@ -477,6 +477,13 @@ export class UiMain {
     return sha1(aspectPathStrings.join(''));
   }
 
+  async getBundleUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
+    const aspects = await uiRoot.resolveAspects(runtime);
+    aspects.sort((a, b) => ((a.getId || a.aspectPath) > (b.getId || b.aspectPath) ? 1 : -1));
+    const aspectIds = aspects.map((aspect) => aspect.getId || aspect.aspectPath);
+    return sha1(aspectIds.join(''));
+  }
+
   async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined): Promise<string> {
     this.logger.debug(`buildIfChanged, name ${name}`);
     const hash = await this.buildUiHash(uiRoot);

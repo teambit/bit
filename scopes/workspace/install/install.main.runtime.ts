@@ -1,12 +1,11 @@
 import fs, { pathExists } from 'fs-extra';
 import path from 'path';
 import { getRootComponentDir, getBitRootsDir, linkPkgsToBitRoots } from '@teambit/bit-roots';
-import { CommunityMain, CommunityAspect } from '@teambit/community';
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { compact, omit, pick } from 'lodash';
+import { compact, mapValues, omit, pick } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import { BitError } from '@teambit/bit-error';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -242,7 +241,7 @@ export class InstallMain {
       // are not added to the manifests.
       // This is an issue when installation is done using root components.
       hasMissingLocalComponents = hasRootComponents && hasComponentsFromWorkspaceInMissingDeps(current);
-      await installer.installComponents(
+      const { dependenciesChanged } = await installer.installComponents(
         this.workspace.path,
         current.manifests,
         mergedRootPolicy,
@@ -270,13 +269,14 @@ export class InstallMain {
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
       await this.link(linkOpts);
-      prevManifests.add(hash(current.manifests));
+      if (!dependenciesChanged) break;
+      prevManifests.add(manifestsHash(current.manifests));
       // We need to clear cache before creating the new component manifests.
       this.workspace.consumer.componentLoader.clearComponentsCache();
       this.workspace.clearCache();
       current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
       installCycle += 1;
-    } while ((!prevManifests.has(hash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
+    } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
@@ -675,7 +675,6 @@ export class InstallMain {
     LoggerAspect,
     VariantsAspect,
     CLIAspect,
-    CommunityAspect,
     CompilerAspect,
     IssuesAspect,
     EnvsAspect,
@@ -685,13 +684,12 @@ export class InstallMain {
   static runtime = MainRuntime;
 
   static async provider(
-    [dependencyResolver, workspace, loggerExt, variants, cli, community, compiler, issues, envs, app]: [
+    [dependencyResolver, workspace, loggerExt, variants, cli, compiler, issues, envs, app]: [
       DependencyResolverMain,
       Workspace,
       LoggerMain,
       VariantsMain,
       CLIMain,
-      CommunityMain,
       CompilerMain,
       IssuesMain,
       EnvsMain,
@@ -719,7 +717,7 @@ export class InstallMain {
       new InstallCmd(installExt, workspace, logger),
       new UninstallCmd(installExt),
       new UpdateCmd(installExt),
-      new LinkCommand(installExt, workspace, logger, community.getDocsDomain()),
+      new LinkCommand(installExt, workspace, logger),
     ];
     // For now do not automate installation during aspect resolving
     // workspace.registerOnAspectsResolve(installExt.onAspectsResolveSubscriber.bind(installExt));
@@ -756,3 +754,12 @@ function hasComponentsFromWorkspaceInMissingDeps({
 InstallAspect.addRuntime(InstallMain);
 
 export default InstallMain;
+
+function manifestsHash(manifests: Record<string, ProjectManifest>): string {
+  // We don't care if the type of the dependency changes as it doesn't change the node_modules structure
+  const depsByProjectPaths = mapValues(manifests, (manifest) => ({
+    ...manifest.devDependencies,
+    ...manifest.dependencies,
+  }));
+  return hash(depsByProjectPaths);
+}

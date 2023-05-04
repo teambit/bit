@@ -29,6 +29,7 @@ import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-w
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
+import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -170,7 +171,15 @@ export class LanesMain {
             (
               await this.getLaneComponentIds(lane)
             ).map(async (laneCompId) => {
-              if (await this.scope.isComponentRemoved(laneCompId)) return undefined;
+              try {
+                if (await this.scope.isComponentRemoved(laneCompId)) return undefined;
+              } catch (err) {
+                if (err instanceof ComponentNotFound)
+                  throw new Error(
+                    `component "${laneCompId.toString()}" from the lane "${lane.id.toString()}" not found`
+                  );
+                throw err;
+              }
               return { id: laneCompId._legacy, head: laneCompId.version as string };
             })
           )
@@ -792,6 +801,19 @@ please create a new lane instead, which will include all components of this lane
     };
   }
 
+  private async recreateNewLaneIfDeleted() {
+    if (!this.workspace) return;
+    const laneId = this.getCurrentLaneId();
+    if (!laneId || laneId.isDefault() || this.workspace.consumer.bitMap.isLaneExported) {
+      return;
+    }
+    const laneObj = await this.scope.legacyScope.getCurrentLaneObject();
+    if (laneObj) {
+      return;
+    }
+    await this.createLane(laneId.name, { scope: laneId.scope });
+  }
+
   async addLaneReadme(readmeComponentIdStr: string, laneName?: string): Promise<{ result: boolean; message?: string }> {
     if (!this.workspace) {
       throw new BitError(`unable to track a lane readme component outside of Bit workspace`);
@@ -942,6 +964,9 @@ please create a new lane instead, which will include all components of this lane
       new LaneImportCmd(switchCmd),
     ];
     cli.register(laneCmd, switchCmd);
+    cli.registerOnStart(async () => {
+      await lanesMain.recreateNewLaneIfDeleted();
+    });
     graphql.register(lanesSchema(lanesMain));
     express.register([
       new LanesCreateRoute(lanesMain, logger),

@@ -55,11 +55,19 @@ function getEnvIdQueryParam(component: ComponentModel, includeEnvId = true): str
  * @returns
  */
 function toComponentPreviewUrl(component: ComponentModel) {
-  const basePath = component.server?.basePath || '/api';
-  const prefix = component.server?.host ? `${component.server.host}/${basePath}` : basePath;
+  const prefix = createPrefix(component.server?.basePath, component.server?.host);
 
   const componentBasedUrl = `${prefix}/${component.id.toString()}/~aspect/preview/`;
   return componentBasedUrl;
+}
+
+function createPrefix(basePath?: string, host?: string) {
+  const actualBasePath = basePath || '/api';
+  const basePathWithSlash = actualBasePath.startsWith('/') ? actualBasePath : `/${actualBasePath}`;
+  const hostWithoutSlash = host?.endsWith('/') ? host.slice(0, -1) : host;
+  const prefix = hostWithoutSlash ? `${hostWithoutSlash}${basePathWithSlash}` : basePathWithSlash;
+  const prefixWithoutSlash = prefix.endsWith('/') ? prefix.slice(0, -1) : prefix;
+  return prefixWithoutSlash;
 }
 
 /**
@@ -70,13 +78,14 @@ function toComponentPreviewUrl(component: ComponentModel) {
  * @returns
  */
 function toEnvTemplatePreviewUrl(component: ComponentModel, previewName?: string) {
+  const envId = component.environment?.id;
   // add component id for cache busting,
   // otherwise might have leftovers when switching between components of the same env.
   // This query param is currently not used yet.
   const search = `compId=${component.id.toString()}`;
-  const basePath = component.server?.basePath || '/api';
-  const prefix = component.server?.host ? `${component.server.host}/${basePath}` : basePath;
-  const envBasedUrl = `${prefix}/~aspect/env-template/${previewName}/?${search}`;
+  const prefix = createPrefix(component.server?.basePath, component.server?.host);
+
+  const envBasedUrl = `${prefix}/${envId}/~aspect/env-template/${previewName}/?${search}`;
   return envBasedUrl;
 }
 

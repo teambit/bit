@@ -4,7 +4,6 @@ import { Logger } from '@teambit/logger';
 import { isHash } from '@teambit/component-version';
 import {
   DependencyResolverAspect,
-  isRange,
   SerializedDependency,
   VariantPolicy,
   VariantPolicyEntry,
@@ -479,12 +478,7 @@ export class ConfigMerger {
         return;
       }
 
-      if (
-        currentDep.policy &&
-        otherDep.policy &&
-        isRange(currentDep.policy, currentDep.id) &&
-        isRange(otherDep.policy, otherDep.id)
-      ) {
+      if (currentDep.policy && otherDep.policy) {
         if (semver.satisfies(currentDep.version, otherDep.policy)) {
           return;
         }

@@ -90,7 +90,10 @@ export interface PackageManager {
    * install dependencies
    * @param componentDirectoryMap
    */
-  install(context: InstallationContext, options: PackageManagerInstallOptions): Promise<void>;
+  install(
+    context: InstallationContext,
+    options: PackageManagerInstallOptions
+  ): Promise<{ dependenciesChanged: boolean }>;
 
   resolveRemoteVersion(
     packageName: string,

@@ -18,7 +18,7 @@ import { Remotes } from '../../remotes';
 import ComponentVersion from '../component-version';
 import { ComponentNotFound, HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { Lane, ModelComponent, Version } from '../models';
-import { BitObject, Ref, Repository } from '../objects';
+import { Ref, Repository } from '../objects';
 import { ObjectItemsStream, ObjectList } from '../objects/object-list';
 import SourcesRepository, { ComponentDef } from '../repositories/sources';
 import { getScopeRemotes } from '../scope-remotes';
@@ -368,7 +368,6 @@ export default class ScopeComponentsImporter {
       remotes,
       {
         type: 'component-delta',
-        withoutDependencies: true, // backward compatibility. not needed for remotes > 0.0.900
         laneId: lane ? lane.id() : undefined,
         ignoreMissingHead,
         includeVersionHistory: true,
@@ -413,7 +412,6 @@ export default class ScopeComponentsImporter {
       remotes,
       {
         type: 'component',
-        withoutDependencies: true, // backward compatibility. not needed for remotes > 0.0.900
         laneId: lane ? lane.id() : undefined,
         ignoreMissingHead,
       },
@@ -451,11 +449,21 @@ export default class ScopeComponentsImporter {
         })
       );
       if (R.isEmpty(groupedHashedMissing)) return;
+
       const remotes = await getScopeRemotes(this.scope);
-      const multipleStreams = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
-      const bitObjectsList = await this.multipleStreamsToBitObjects(multipleStreams);
-      const allObjects = bitObjectsList.getAll();
-      await this.repo.writeObjectsToTheFS(allObjects);
+      const allObjects = await new ObjectFetcher(
+        this.repo,
+        this.scope,
+        remotes,
+        {
+          type: 'object',
+        },
+        [],
+        undefined,
+        undefined,
+        undefined,
+        groupedHashedMissing
+      ).fetchFromRemoteAndWrite();
       this.throwForMissingObjects(groupedHashedMissing, allObjects);
     });
   }
@@ -472,9 +480,9 @@ export default class ScopeComponentsImporter {
     return existing;
   }
 
-  private throwForMissingObjects(groupedHashes: HashesPerRemote, receivedObjects: BitObject[]) {
+  private throwForMissingObjects(groupedHashes: HashesPerRemote, receivedObjects: string[]) {
     const allRequestedHashes = uniq(Object.values(groupedHashes).flat());
-    const allReceivedHashes = uniq(receivedObjects.map((o) => o.hash().toString()));
+    const allReceivedHashes = uniq(receivedObjects);
     const missingHashes = allRequestedHashes.filter((hash) => !allReceivedHashes.includes(hash));
     if (!missingHashes.length) {
       return; // all good, nothing is missing
@@ -796,7 +804,6 @@ export default class ScopeComponentsImporter {
       this.scope,
       remotes,
       {
-        withoutDependencies: true, // backward compatibility. not needed for remotes > 0.0.900
         includeVersionHistory,
         ignoreMissingHead,
       },

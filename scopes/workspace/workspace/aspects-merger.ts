@@ -344,7 +344,11 @@ export class AspectsMerger {
   ): Promise<ExtensionDataList> {
     const promises = extensionList.map(async (entry) => {
       if (entry.extensionId) {
-        const componentId = await this.workspace.resolveComponentId(entry.extensionId);
+        // don't pass `entry.extensionId` (as BitId) to `resolveComponentId` because then it'll use the optimization
+        // of parsing it to ComponentID without checking the workspace. Normally, this optimization is good, but here
+        // in case the extension wasn't exported, the BitId is wrong, it has the scope-name due to incorrect BitId.parse
+        // in configEntryToDataEntry() function. It'd be ideal to fix it from there but it's not easy.
+        const componentId = await this.workspace.resolveComponentId(entry.extensionId.toString());
         const idFromWorkspace = preferWorkspaceVersion ? this.workspace.getIdIfExist(componentId) : undefined;
         const id = idFromWorkspace || componentId;
         entry.extensionId = id._legacy;
