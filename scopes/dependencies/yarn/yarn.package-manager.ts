@@ -53,7 +53,7 @@ export class YarnPackageManager implements PackageManager {
   async install(
     { rootDir, manifests, componentDirectoryMap }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
-  ): Promise<void> {
+  ): Promise<{ dependenciesChanged: boolean }> {
     this.logger.setStatusLine('installing dependencies');
 
     const rootDirPath = npath.toPortablePath(rootDir);
@@ -170,6 +170,7 @@ export class YarnPackageManager implements PackageManager {
     if (installReport.hasErrors()) process.exit(installReport.exitCode());
 
     this.logger.consoleSuccess('installing dependencies');
+    return { dependenciesChanged: true };
   }
 
   /**
