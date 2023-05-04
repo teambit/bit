@@ -485,7 +485,7 @@ export class SnappingMain {
 
     snapResults.newComponents = newComponents;
     const currentLane = consumer.getCurrentLaneId();
-    snapResults.laneName = currentLane.isDefault() ? null : currentLane.name;
+    snapResults.laneName = currentLane.isDefault() ? null : currentLane.toString();
     await consumer.onDestroy();
     await stagedConfig?.write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
