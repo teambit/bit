@@ -93,15 +93,48 @@ fetchOptions`,
   const useCachedScope = true;
   const scope: Scope = await loadScope(path, useCachedScope);
   const objectList = new ObjectList();
-  const finishLog = () => {
+  const finishLog = (err?: Error) => {
     const duration = new Date().getTime() - startTime;
     openConnections.splice(openConnections.indexOf(currentFetch), 1);
-    logger.debug(`scope.fetch [${currentFetch}] completed.
+    const successOrErr = `${err ? 'with errors' : 'successfully'}`;
+    logger.debug(`scope.fetch [${currentFetch}] completed ${successOrErr}.
 open connections: [${openConnections.join(', ')}]. (total ${openConnections.length}).
 memory usage: ${getMemoryUsageInMB()} MB.
 took: ${duration} ms.`);
   };
   const objectsReadableGenerator = new ObjectsReadableGenerator(scope.objects, finishLog);
+
+  try {
+    await fetchByType(fetchOptions, ids, clientSupportsVersionHistory, scope, objectsReadableGenerator);
+  } catch (err: any) {
+    finishLog(err);
+    throw err;
+  }
+
+  if (HooksManagerInstance) {
+    await HooksManagerInstance?.triggerHook(
+      POST_SEND_OBJECTS,
+      {
+        objectList,
+        scopePath: path,
+        ids,
+        scopeName: scope.scopeJson.name,
+      },
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      headers
+    );
+  }
+  logger.debug('scope.fetch returns readable');
+  return objectsReadableGenerator.readable;
+}
+
+async function fetchByType(
+  fetchOptions: FETCH_OPTIONS,
+  ids: string[],
+  clientSupportsVersionHistory: boolean,
+  scope: Scope,
+  objectsReadableGenerator: ObjectsReadableGenerator
+): Promise<void> {
   const shouldFetchDependencies = () => {
     if (fetchOptions.includeDependencies) return true;
     // backward compatible before 0.0.900
@@ -253,22 +286,6 @@ took: ${duration} ms.`);
     default:
       throw new Error(`type ${fetchOptions.type} was not implemented`);
   }
-
-  if (HooksManagerInstance) {
-    await HooksManagerInstance?.triggerHook(
-      POST_SEND_OBJECTS,
-      {
-        objectList,
-        scopePath: path,
-        ids,
-        scopeName: scope.scopeJson.name,
-      },
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      headers
-    );
-  }
-  logger.debug('scope.fetch returns readable');
-  return objectsReadableGenerator.readable;
 }
 
 function bitIdsToLatest(bitIds: BitIds, lane: Lane | null) {
