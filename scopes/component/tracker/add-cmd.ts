@@ -20,6 +20,7 @@ export class AddCmd implements Command {
     ['n', 'namespace <namespace>', 'organize component in a namespace'],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)'],
     ['s', 'scope <string>', `sets the component's scope-name. if not entered, the default-scope will be used`],
+    ['e', 'env <string>', "set the component's environment. (overrides the env from variants if exists)"],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -33,12 +34,14 @@ export class AddCmd implements Command {
       main,
       namespace,
       scope,
+      env,
       override = false,
     }: {
       id: string | null | undefined;
       main: string | null | undefined;
       namespace: string | null | undefined;
       scope?: string;
+      env?: string;
       override: boolean;
     }
   ) {
@@ -56,6 +59,7 @@ export class AddCmd implements Command {
       namespace,
       defaultScope: scope,
       override,
+      env,
     });
 
     const paintWarning = () => {

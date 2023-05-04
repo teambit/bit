@@ -24,7 +24,7 @@ export class EslintConfigWriter implements ConfigWriterEntry {
   constructor(private linter: LinterMain, private logger: Logger) {}
   patterns: string[] = ['**/.eslintrc.json'];
 
-  calcConfigFiles(executionContext: ExecutionContext): ConfigFile[] | undefined {
+  calcConfigFiles(executionContext: ExecutionContext, _env, configsRootDir: string): ConfigFile[] | undefined {
     const linter = this.linter.getLinter(executionContext, {}) as EslintLinterInterface;
     if (!linter) return undefined;
     if (!linter.id.toLowerCase().includes('eslint')) return undefined;
@@ -40,17 +40,28 @@ export class EslintConfigWriter implements ConfigWriterEntry {
     const tsConfigContent = JSON.stringify(config.tsconfig, null, 2);
     const tsConfigHash = sha1(tsConfigContent);
     const tsConfigName = `tsconfig.bit.eslint.${tsConfigHash}.json`;
+    const tsConfigFullPath = `${configsRootDir}/${tsConfigName}`;
     const tsConfigFile = {
       content: tsConfigContent,
       hash: tsConfigHash,
       name: tsConfigName,
     };
-    set(config.eslintConfig, 'parserOptions.project', tsConfigName);
+    // This must use abs path, as otherwise eslint will not find the tsconfig file
+    // because it will search for it relative to the workspace root
+    set(config.eslintConfig, 'parserOptions.project', tsConfigFullPath);
     eslintConfigFile.content = JSON.stringify(config.eslintConfig, null, 2);
     return [eslintConfigFile, tsConfigFile];
   }
 
   async postProcessConfigFiles(
+    writtenConfigFiles: WrittenConfigFile[],
+    executionContext: ExecutionContext,
+    envMapValue: EnvMapValue
+  ): Promise<void> {
+    await this.postProcessTSConfig(writtenConfigFiles, executionContext, envMapValue);
+  }
+
+  private async postProcessTSConfig(
     writtenConfigFiles: WrittenConfigFile[],
     executionContext: ExecutionContext,
     envMapValue: EnvMapValue

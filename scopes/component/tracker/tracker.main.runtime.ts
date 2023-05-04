@@ -1,4 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import EnvsAspect from '@teambit/envs';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AddCmd } from './add-cmd';
@@ -50,11 +51,24 @@ export class TrackerMain {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const addContext: AddContext = { workspace: this.workspace };
     addProps.shouldHandleOutOfSync = true;
+    if (addProps.env) {
+      const config = {};
+      await this.addEnvToConfig(addProps.env, config);
+      addProps.config = config;
+    }
     const addComponents = new AddComponents(addContext, addProps);
     const addResults = await addComponents.add();
     await this.workspace.consumer.onDestroy();
 
     return addResults;
+  }
+
+  async addEnvToConfig(env: string, config: { [aspectName: string]: any }) {
+    const userEnvId = await this.workspace.resolveComponentId(env);
+    const userEnvIdWithPotentialVersion = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(userEnvId);
+    config[userEnvIdWithPotentialVersion] = {};
+    config[EnvsAspect.id] = config[EnvsAspect.id] || {};
+    config[EnvsAspect.id].env = userEnvId.toStringWithoutVersion();
   }
 
   /**

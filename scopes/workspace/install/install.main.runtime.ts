@@ -1,7 +1,6 @@
 import fs, { pathExists } from 'fs-extra';
 import path from 'path';
 import { getRootComponentDir, getBitRootsDir, linkPkgsToBitRoots } from '@teambit/bit-roots';
-import { CommunityMain, CommunityAspect } from '@teambit/community';
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
@@ -242,7 +241,7 @@ export class InstallMain {
       // are not added to the manifests.
       // This is an issue when installation is done using root components.
       hasMissingLocalComponents = hasRootComponents && hasComponentsFromWorkspaceInMissingDeps(current);
-      await installer.installComponents(
+      const { dependenciesChanged } = await installer.installComponents(
         this.workspace.path,
         current.manifests,
         mergedRootPolicy,
@@ -270,6 +269,7 @@ export class InstallMain {
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
       await this.link(linkOpts);
+      if (!dependenciesChanged) break;
       prevManifests.add(manifestsHash(current.manifests));
       // We need to clear cache before creating the new component manifests.
       this.workspace.consumer.componentLoader.clearComponentsCache();
@@ -675,7 +675,6 @@ export class InstallMain {
     LoggerAspect,
     VariantsAspect,
     CLIAspect,
-    CommunityAspect,
     CompilerAspect,
     IssuesAspect,
     EnvsAspect,
@@ -685,13 +684,12 @@ export class InstallMain {
   static runtime = MainRuntime;
 
   static async provider(
-    [dependencyResolver, workspace, loggerExt, variants, cli, community, compiler, issues, envs, app]: [
+    [dependencyResolver, workspace, loggerExt, variants, cli, compiler, issues, envs, app]: [
       DependencyResolverMain,
       Workspace,
       LoggerMain,
       VariantsMain,
       CLIMain,
-      CommunityMain,
       CompilerMain,
       IssuesMain,
       EnvsMain,
@@ -719,7 +717,7 @@ export class InstallMain {
       new InstallCmd(installExt, workspace, logger),
       new UninstallCmd(installExt),
       new UpdateCmd(installExt),
-      new LinkCommand(installExt, workspace, logger, community.getDocsDomain()),
+      new LinkCommand(installExt, workspace, logger),
     ];
     // For now do not automate installation during aspect resolving
     // workspace.registerOnAspectsResolve(installExt.onAspectsResolveSubscriber.bind(installExt));

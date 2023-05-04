@@ -2,7 +2,6 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
-import CommunityAspect, { CommunityMain } from '@teambit/community';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import R from 'ramda';
 import semver, { ReleaseType } from 'semver';
@@ -958,7 +957,6 @@ there are matching among unmodified components thought. consider using --unmodif
   static dependencies = [
     WorkspaceAspect,
     CLIAspect,
-    CommunityAspect,
     LoggerAspect,
     IssuesAspect,
     InsightsAspect,
@@ -972,7 +970,6 @@ there are matching among unmodified components thought. consider using --unmodif
   static async provider([
     workspace,
     cli,
-    community,
     loggerMain,
     issues,
     insights,
@@ -984,7 +981,6 @@ there are matching among unmodified components thought. consider using --unmodif
   ]: [
     Workspace,
     CLIMain,
-    CommunityMain,
     LoggerMain,
     IssuesMain,
     InsightsMain,
@@ -1006,7 +1002,7 @@ there are matching among unmodified components thought. consider using --unmodif
       builder,
       importer
     );
-    const snapCmd = new SnapCmd(community.getBaseDomain(), snapping, logger);
+    const snapCmd = new SnapCmd(snapping, logger);
     const tagCmd = new TagCmd(snapping, logger);
     const tagFromScopeCmd = new TagFromScopeCmd(snapping, logger);
     const snapFromScopeCmd = new SnapFromScopeCmd(snapping, logger);

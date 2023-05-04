@@ -16,6 +16,7 @@ import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import TrackerAspect, { TrackerMain } from '@teambit/tracker';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { compact } from 'lodash';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
@@ -78,7 +79,8 @@ export class GeneratorMain {
     private aspectLoader: AspectLoaderMain,
     private newComponentHelper: NewComponentHelperMain,
     private componentAspect: ComponentMain,
-    private tracker: TrackerMain
+    private tracker: TrackerMain,
+    private logger: Logger
   ) {}
 
   /**
@@ -299,6 +301,7 @@ export class GeneratorMain {
       this.envs,
       this.newComponentHelper,
       this.tracker,
+      this.logger,
       templateWithId.id,
       templateWithId.envName ? ComponentID.fromString(templateWithId.id) : undefined
     );
@@ -472,12 +475,24 @@ export class GeneratorMain {
     CommunityAspect,
     ComponentAspect,
     TrackerAspect,
+    LoggerAspect,
   ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper, community, componentAspect, tracker]: [
+    [
+      workspace,
+      cli,
+      graphql,
+      envs,
+      aspectLoader,
+      newComponentHelper,
+      community,
+      componentAspect,
+      tracker,
+      loggerMain,
+    ]: [
       Workspace,
       CLIMain,
       GraphqlMain,
@@ -486,11 +501,13 @@ export class GeneratorMain {
       NewComponentHelperMain,
       CommunityMain,
       ComponentMain,
-      TrackerMain
+      TrackerMain,
+      LoggerMain
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
   ) {
+    const logger = loggerMain.createLogger(GeneratorAspect.id);
     const generator = new GeneratorMain(
       componentTemplateSlot,
       workspaceTemplateSlot,
@@ -500,7 +517,8 @@ export class GeneratorMain {
       aspectLoader,
       newComponentHelper,
       componentAspect,
-      tracker
+      tracker,
+      logger
     );
     const commands = [
       new CreateCmd(generator, community.getDocsDomain()),
