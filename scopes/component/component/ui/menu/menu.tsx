@@ -52,9 +52,8 @@ export type MenuProps = {
 
   useComponent?: UseComponentType;
 
-  path?: string;
-
   useComponentFilters?: () => Filters;
+  path?: string;
 };
 function getComponentIdStr(componentIdStr?: string | (() => string | undefined)): string | undefined {
   if (isFunction(componentIdStr)) return componentIdStr();
@@ -153,7 +152,7 @@ export function VersionRelatedDropdowns({
   const initialFetchOptions = {
     logFilters: {
       log: {
-        logLimit: 1,
+        logLimit: 3,
       },
       ...componentFiltersFromProps,
     },

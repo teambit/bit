@@ -179,7 +179,6 @@ export type VersionDropdownProps = {
     message?: string;
   };
   hasMoreVersions?: boolean;
-  // currentLane?: LaneModel;
   loading?: boolean;
   useComponentVersions?: UseComponentVersions;
   currentLane?: LaneModel;
@@ -219,13 +218,10 @@ function _VersionDropdown(
   ref?: React.ForwardedRef<HTMLDivElement>
 ) {
   const [key, setKey] = useState(0);
-  const singleVersion = hasMoreVersions && !localVersion;
+  const singleVersion = !hasMoreVersions;
   const [open, setOpen] = useState(false);
-  const { author, message, timestamp } = currentVersionLog;
-  if (disabled || (singleVersion && !loading)) {
-    return <div className={classNames(styles.noVersions, className)}>{placeholderComponent}</div>;
-  }
 
+  const { author, message, timestamp } = currentVersionLog;
   const handlePlaceholderClicked = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       setOpen((o) => !o);
@@ -245,6 +241,11 @@ function _VersionDropdown(
     />
   );
 
+  const PlaceholderComponent = placeholderComponent || defaultPlaceholder;
+  if (disabled || (singleVersion && !loading)) {
+    return <div className={classNames(styles.noVersions, className)}>{PlaceholderComponent}</div>;
+  }
+
   return (
     <div {...rest} className={classNames(styles.versionDropdown, className)}>
       <Dropdown
@@ -259,7 +260,7 @@ function _VersionDropdown(
             {children}
           </div>
         )}
-        placeholder={placeholderComponent || defaultPlaceholder}
+        placeholder={PlaceholderComponent}
       >
         {loading && <LineSkeleton className={styles.loading} count={6} />}
         {!loading && open && (
