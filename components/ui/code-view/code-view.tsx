@@ -2,14 +2,11 @@ import { H1 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useMemo } from 'react';
 import { OnMount, Monaco } from '@monaco-editor/react';
-// import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import { CodeEditor } from '@teambit/code.ui.code-editor';
 import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
 import { DarkTheme } from '@teambit/design.themes.dark-theme';
-// import markDownSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
-// import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { ComponentID } from '@teambit/component';
 import styles from './code-view.module.scss';
@@ -22,8 +19,6 @@ export type CodeViewProps = {
   loading?: boolean;
   codeSnippetClassName?: string;
 } & HTMLAttributes<HTMLDivElement>;
-
-// SyntaxHighlighter.registerLanguage('md', markDownSyntax);
 
 // a translation list of specific monaco languages that are not the same as their file ending.
 const languageOverrides = {
@@ -108,50 +103,15 @@ export function CodeView({
 
   if (!fileContent && !loading && currentFile) return <EmptyCodeView />;
 
-  // return (
-  //   <div className={classNames(styles.codeView, className)}>
-  //     <H1 size="sm" className={styles.fileName}>
-  //       {currentFile && <img className={styles.img} src={icon} />}
-  //       <span>{title}</span>
-  //     </H1>
-  //     <CodeSnippet
-  //       className={styles.codeSnippetWrapper}
-  //       frameClass={classNames(styles.codeSnippet, codeSnippetClassName)}
-  //       showLineNumbers
-  //       language={language}
-  //     >
-  //       {fileContent || ''}
-  //     </CodeSnippet>
-  //   </div>
-  // );
-
   return (
-    <div
-      style={
-        {
-          // minHeight: '100%',
-          // maxHeight: '100%',
-          // height: '100%',
-        }
-      }
-      className={classNames(styles.componentCodeViewContainer, className, loading && styles.loading)}
-    >
+    <div className={classNames(styles.componentCodeViewContainer, className, loading && styles.loading)}>
       <div className={styles.codeViewTitle}>
         <H1 size="sm" className={styles.fileName}>
           {currentFile && <img className={styles.img} src={icon} />}
           <span>{title}</span>
         </H1>
       </div>
-      <div
-        style={
-          {
-            // minHeight: '100%',
-            // maxHeight: '100%',
-            // height: '100%',
-          }
-        }
-        className={classNames(styles.componentCodeEditorContainer, loading && styles.loading)}
-      >
+      <div className={classNames(styles.componentCodeEditorContainer, loading && styles.loading)}>
         <ThemeSwitcher themes={[DarkTheme]} className={classNames(styles.themeContainer, className)}>
           <CodeViewLoader className={classNames(!loading && styles.hideLoader)} />
           {loading ? null : codeEditor}
