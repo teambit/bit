@@ -6,6 +6,7 @@ import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { ApplyVersionResults } from '@teambit/merging';
+import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import {
@@ -60,13 +61,18 @@ export type ComponentStatusBeforeMergeAttempt = {
 type CheckoutTo = 'head' | 'reset' | string;
 
 export class CheckoutMain {
-  constructor(private workspace: Workspace, private logger: Logger, private componentWriter: ComponentWriterMain) {}
+  constructor(
+    private workspace: Workspace,
+    private logger: Logger,
+    private componentWriter: ComponentWriterMain,
+    private importer: ImporterMain
+  ) {}
 
   async checkout(checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
     const consumer = this.workspace.consumer;
     const { version, ids, promptMergeOptions } = checkoutProps;
     await this.syncNewComponents(checkoutProps);
-    await this.workspace.scope.import(ids || [], { useCache: false, preferDependencyGraph: true });
+    await this.importer.importCurrentObjects(); // important. among others, it fetches the remote lane object and its new components.
     const bitIds = BitIds.fromArray(ids?.map((id) => id._legacy) || []);
     const { components } = await consumer.loadComponents(bitIds);
 
@@ -202,7 +208,7 @@ export class CheckoutMain {
       });
     } catch (err) {
       // don't stop the process. it's possible that the scope doesn't exist yet because these are new components
-      this.logger.error(`unable to sync new components due to an error`, err);
+      this.logger.error(`unable to sync new components, if these components are really new, ignore the error`, err);
     }
   }
 
@@ -253,6 +259,7 @@ export class CheckoutMain {
   }
 
   private async getNewComponentsFromLane(ids: ComponentID[]): Promise<ComponentID[]> {
+    // current lane object is up to date due to the previous `importCurrentObjects()` call
     const lane = await this.workspace.consumer.getCurrentLaneObject();
     if (!lane) {
       return [];
@@ -384,18 +391,19 @@ export class CheckoutMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ComponentWriterAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ComponentWriterAspect, ImporterAspect];
 
   static runtime = MainRuntime;
 
-  static async provider([cli, workspace, loggerMain, compWriter]: [
+  static async provider([cli, workspace, loggerMain, compWriter, importer]: [
     CLIMain,
     Workspace,
     LoggerMain,
-    ComponentWriterMain
+    ComponentWriterMain,
+    ImporterMain
   ]) {
     const logger = loggerMain.createLogger(CheckoutAspect.id);
-    const checkoutMain = new CheckoutMain(workspace, logger, compWriter);
+    const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer);
     cli.register(new CheckoutCmd(checkoutMain));
     return checkoutMain;
   }
