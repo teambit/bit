@@ -387,6 +387,17 @@ export class PreviewMain {
     // Support case when we have the dev server for the env, in that case we calc the data of the env as we can't rely on the env data from the scope
     // since we bundle it for the dev server again
     if (inWorkspace) {
+      // if it's a core env and the env template is apart from the component it means the template bundle already contain the scaling functionality
+      if (this.envs.isUsingCoreEnv(component)) {
+        const isBundledWithEnv = await this.isBundledWithEnv(component);
+        // If the component is new, no point to check the is bundle with env (there is no artifacts so it will for sure return false)
+        // If it's new, and we are here, it means that we already use a version of the env that support scaling
+        const isNew = await component.isNew();
+        if (isNew) {
+          return true;
+        }
+        return isBundledWithEnv === false;
+      }
       const envComponent = await this.envs.getEnvComponent(component);
       const envSupportScaling = await this.calculateIsEnvSupportScaling(envComponent);
       return envSupportScaling ?? true;

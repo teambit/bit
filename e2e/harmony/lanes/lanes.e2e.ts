@@ -1357,7 +1357,6 @@ describe('bit lane command', function () {
       helper.command.export();
       firstWorkspaceAfterExport = helper.scopeHelper.cloneLocalScope();
       helper.scopeHelper.getClonedLocalScope(secondWorkspace);
-      helper.command.import();
     });
     it('bit checkout with --workspace-only flag should not add the component and should suggest omitting --workspace-only flag', () => {
       const output = helper.command.checkoutHead('--skip-dependency-installation --workspace-only');
