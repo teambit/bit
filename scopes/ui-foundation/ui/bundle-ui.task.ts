@@ -1,6 +1,5 @@
 import { join } from 'path';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { getAspectDirFromBvm } from '@teambit/aspect-loader';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
 import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
@@ -25,7 +24,7 @@ export class BundleUiTask implements BuildTask {
       return { componentsResults: [] };
     }
 
-    const outputPath = join(capsule.path, getArtifactDirectory());
+    const outputPath = join(capsule.path, BundleUiTask.getArtifactDirectory());
     this.logger.info(`Generating UI bundle at ${outputPath}...`);
     try {
       await this.ui.build(undefined, outputPath);
@@ -34,7 +33,7 @@ export class BundleUiTask implements BuildTask {
       this.logger.error('Generating UI bundle failed');
       throw new Error('Generating UI bundle failed');
     }
-    const artifacts = getArtifactDef();
+    const artifacts = BundleUiTask.getArtifactDef();
     return {
       componentsResults: [],
       artifacts,
@@ -51,31 +50,18 @@ export class BundleUiTask implements BuildTask {
     if (!existsSync(outputPath)) mkdirSync(outputPath);
     writeFileSync(join(outputPath, BUNDLE_UI_HASH_FILENAME), hash);
   }
-}
 
-export function getArtifactDirectory() {
-  return join('artifacts', BUNDLE_UI_DIR);
-}
-
-export function getArtifactDef() {
-  return [
-    {
-      name: BUNDLE_UI_DIR,
-      globPatterns: ['**'],
-      rootDir: getArtifactDirectory(),
-    },
-  ];
-}
-
-export function getBundleUiHash() {
-  const bundleUiPathFromBvm = getBundleUiPath();
-  if (existsSync(bundleUiPathFromBvm)) {
-    return readFileSync(join(bundleUiPathFromBvm, '.hash')).toString();
+  static getArtifactDirectory() {
+    return join('artifacts', BUNDLE_UI_DIR);
   }
-  return '';
-}
 
-export function getBundleUiPath() {
-  const uiPathFromBvm = getAspectDirFromBvm(UIAspect.id);
-  return join(uiPathFromBvm, getArtifactDirectory());
+  static getArtifactDef() {
+    return [
+      {
+        name: BUNDLE_UI_DIR,
+        globPatterns: ['**'],
+        rootDir: BundleUiTask.getArtifactDirectory(),
+      },
+    ];
+  }
 }

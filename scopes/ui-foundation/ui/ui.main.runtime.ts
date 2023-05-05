@@ -1,7 +1,7 @@
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { ComponentType } from 'react';
 import type { AspectMain } from '@teambit/aspect';
-import { AspectDefinition } from '@teambit/aspect-loader';
+import { AspectDefinition, getAspectDirFromBvm } from '@teambit/aspect-loader';
 import { CacheAspect, CacheMain } from '@teambit/cache';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
@@ -31,7 +31,7 @@ import { UIAspect, UIRuntime } from './ui.aspect';
 import createWebpackConfig from './webpack/webpack.browser.config';
 import createSsrWebpackConfig from './webpack/webpack.ssr.config';
 import { StartPlugin, StartPluginOptions } from './start-plugin';
-import { getBundleUiHash, getBundleUiPath } from './bundle-ui.task';
+import { BundleUiTask, BUNDLE_UI_HASH_FILENAME } from './bundle-ui.task';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
 
@@ -289,7 +289,7 @@ export class UiMain {
       await uiServer.dev({ portRange: port || this.config.portRange });
     } else {
       if (!skipUiBuild) await this.buildUI(name, uiRoot, rebuild);
-      const bundleUiPublicPath = join(getBundleUiPath(), publicDir);
+      const bundleUiPublicPath = join(this.getBundleUiPath(), publicDir);
       const bundleUiRoot = this._isBundleUiServed && existsSync(bundleUiPublicPath) ? bundleUiPublicPath : undefined;
       await uiServer.start({ portRange: port || this.config.portRange, bundleUiRoot });
     }
@@ -459,14 +459,59 @@ export class UiMain {
 
   private async buildUI(name: string, uiRoot: UIRoot, rebuild?: boolean): Promise<string> {
     this.logger.debug(`buildUI, name ${name}`);
+
     const overwrite = this.getOverwriteBuildFn();
     if (overwrite) return overwrite(name, uiRoot, rebuild);
-    const hash = await this.buildIfChanged(name, uiRoot, rebuild);
+
+    this._isBundleUiServed = await this.shouldServeBundleUi(uiRoot, rebuild);
+    await this.buildIfChanged(name, uiRoot, rebuild);
     await this.buildIfNoBundle(name, uiRoot);
-    return hash;
+    return '';
   }
 
-  async buildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
+  private async shouldServeBundleUi(uiRoot: UIRoot, force: boolean | undefined): Promise<boolean> {
+    const currentBundleUiHash = await this.createBundleUiHash(uiRoot);
+    const cachedBundleUiHash = this.readBundleUiHash();
+    const isLocalBuildAvailable = existsSync(join(uiRoot.path, await this.publicDir(uiRoot)));
+
+    return currentBundleUiHash === cachedBundleUiHash && !isLocalBuildAvailable && !force;
+  }
+
+  private async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined): Promise<boolean> {
+    this.logger.debug(`buildIfChanged, name ${name}`);
+
+    if (this._isBundleUiServed) {
+      this.logger.debug(`buildIfChanged, name ${name}, returned from ui bundle cache`);
+      return false;
+    }
+
+    const currentBuildUiHash = await this.createBuildUiHash(uiRoot);
+    const cachedBuildUiHash = await this.cache.get(uiRoot.path);
+    if (currentBuildUiHash === cachedBuildUiHash && !force) {
+      this.logger.debug(`buildIfChanged, name ${name}, returned from ui build cache`);
+      return false;
+    }
+
+    if (!cachedBuildUiHash) {
+      this.logger.console(
+        `Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
+          await this.publicDir(uiRoot)
+        )}. The first time we build the UI it may take a few minutes.`
+      );
+    } else {
+      this.logger.console(
+        `Rebuilding UI assets for '${chalk.cyan(uiRoot.name)} in target directory: ${chalk.cyan(
+          await this.publicDir(uiRoot)
+        )}' as ${uiRoot.configFile} has been changed.`
+      );
+    }
+
+    await this.build(name);
+    await this.cache.set(uiRoot.path, currentBuildUiHash);
+    return true;
+  }
+
+  private async createBuildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
     const aspects = await uiRoot.resolveAspects(runtime);
     aspects.sort((a, b) => (a.aspectPath > b.aspectPath ? 1 : -1));
     const aspectPathStrings = aspects.map((aspect) => {
@@ -482,56 +527,38 @@ export class UiMain {
     return sha1(aspectIds.join(''));
   }
 
-  async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined): Promise<string> {
-    this.logger.debug(`buildIfChanged, name ${name}`);
-    const hash = await this.buildUiHash(uiRoot);
-
-    const preBundleHash = getBundleUiHash();
-    if (hash === preBundleHash && !force) {
-      this._isBundleUiServed = true;
-      this.logger.debug(`buildIfChanged, name ${name}, returned from pre-bundle`);
-      return hash;
+  private readBundleUiHash() {
+    const bundleUiPathFromBvm = this.getBundleUiPath();
+    const hashFilePath = join(bundleUiPathFromBvm, BUNDLE_UI_HASH_FILENAME);
+    if (existsSync(hashFilePath)) {
+      return readFileSync(hashFilePath).toString();
     }
-
-    const hashed = await this.cache.get(uiRoot.path);
-    if (hash === hashed && !force) {
-      this.logger.debug(`buildIfChanged, name ${name}, returned from cache`);
-      return hash;
-    }
-    if (!hashed) {
-      this.logger.console(
-        `Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
-          await this.publicDir(uiRoot)
-        )}. The first time we build the UI it may take a few minutes.`
-      );
-    } else {
-      this.logger.console(
-        `Rebuilding UI assets for '${chalk.cyan(uiRoot.name)} in target directory: ${chalk.cyan(
-          await this.publicDir(uiRoot)
-        )}' as ${uiRoot.configFile} has been changed.`
-      );
-    }
-
-    await this.build(name);
-    await this.cache.set(uiRoot.path, hash);
-    return hash;
+    return '';
   }
 
-  clearConsole() {
-    process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
+  private getBundleUiPath() {
+    const uiPathFromBvm = getAspectDirFromBvm(UIAspect.id);
+    return join(uiPathFromBvm, BundleUiTask.getArtifactDirectory());
   }
 
-  async buildIfNoBundle(name: string, uiRoot: UIRoot) {
+  private async buildIfNoBundle(name: string, uiRoot: UIRoot): Promise<boolean> {
+    if (this._isBundleUiServed) return false;
+
     const config = createWebpackConfig(
       uiRoot.path,
       [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
       uiRoot.name,
       await this.publicDir(uiRoot)
     );
-    if (config.output?.path && fs.pathExistsSync(config.output.path)) return;
-    const hash = await this.buildUiHash(uiRoot);
+    if (config.output?.path && fs.pathExistsSync(config.output.path)) return false;
+    const hash = await this.createBuildUiHash(uiRoot);
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);
+    return true;
+  }
+
+  clearConsole() {
+    process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
   }
 
   get publicUrl() {
