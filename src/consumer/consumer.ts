@@ -304,16 +304,13 @@ export default class Consumer {
     return Promise.all(componentsP);
   }
 
-  /**
-   * For legacy, it loads all the dependencies. For Harmony, it's not needed.
-   */
   async loadComponentFromModelImportIfNeeded(id: BitId, throwIfNotExist = true): Promise<Component> {
     const scopeComponentsImporter = this.scope.scopeImporter;
     const getModelComponent = async (): Promise<ModelComponent> => {
       if (throwIfNotExist) return this.scope.getModelComponent(id);
       const modelComponent = await this.scope.getModelComponentIfExist(id);
       if (modelComponent) return modelComponent;
-      await scopeComponentsImporter.importMany({ ids: new BitIds(id) });
+      await scopeComponentsImporter.importMany({ ids: new BitIds(id), preferDependencyGraph: true });
       return this.scope.getModelComponent(id);
     };
     const modelComponent = await getModelComponent();
