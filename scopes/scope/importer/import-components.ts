@@ -200,7 +200,7 @@ export default class ImportComponents {
       const components = await multipleVersionDependenciesToConsumer(versionDependenciesArr, this.scope.objects);
       await this._fetchDivergeData(components);
       this._throwForDivergedHistory();
-      await this.throwForComponentsFromAnotherLane(bitIds);
+      await this.throwForComponentsFromAnotherLane(components.map((c) => c.id));
       componentWriterResults = await this._writeToFileSystem(components);
       await this._saveLaneDataIfNeeded(components);
       writtenComponents = components;
@@ -244,7 +244,7 @@ export default class ImportComponents {
     }
   }
 
-  private async throwForComponentsFromAnotherLane(bitIds: BitIds) {
+  private async throwForComponentsFromAnotherLane(bitIds: BitId[]) {
     if (this.options.objectsOnly) return;
     const currentLaneId = this.workspace.getCurrentLaneId();
     const currentRemoteLane = currentLaneId
@@ -345,7 +345,7 @@ if you need this specific snap, find the lane this snap is belong to, then run "
     const idsWithoutWildcardPreferFromLane = idsWithoutWildcard.map((idStr) => {
       const id = BitId.parse(idStr, true);
       const fromLane = bitIdsFromLane.searchWithoutVersion(id);
-      return fromLane || id;
+      return fromLane ? fromLane.changeVersion(id.version) : id;
     });
 
     const bitIds: BitId[] = [...idsWithoutWildcardPreferFromLane];

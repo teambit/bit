@@ -1572,6 +1572,39 @@ describe('bit lane command', function () {
       );
     });
   });
+  describe('import from one lane to another directly when current lane does have the component', () => {
+    let headOnLaneA: string;
+    let headOnLaneB: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      const laneAWs = helper.scopeHelper.cloneLocalScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.createLane('lane-b');
+      helper.command.mergeLane(`${helper.scopes.remote}/lane-a`, '-x');
+      helper.command.export();
+      headOnLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
+      const laneBWs = helper.scopeHelper.cloneLocalScope();
+      helper.scopeHelper.getClonedLocalScope(laneAWs);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      headOnLaneA = helper.command.getHeadOfLane('lane-a', 'comp1');
+      helper.scopeHelper.getClonedLocalScope(laneBWs);
+    });
+    // previously, it was quietly importing the component from the current lane and ignores the provded version.
+    it('should not bring that snap', () => {
+      const output = helper.command.importComponent(`comp1@${headOnLaneA}`, '--override');
+      expect(output).to.have.string('Missing Components');
+    });
+    it('should not not change .bitmap', () => {
+      const bitMap = helper.bitMap.read();
+      const bitMapVer = bitMap.comp1.version;
+      expect(bitMapVer).to.equal(headOnLaneB);
+    });
+  });
   describe('exporting a lane after snapping and then removing a component', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
