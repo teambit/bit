@@ -30,7 +30,7 @@ export function CodeEditor({ fileContent, filePath, language, handleEditorDidMou
         overviewRulerLanes: 0,
         overviewRulerBorder: false,
         wordWrap: 'off',
-        wrappingStrategy: 'undefined',
+        wrappingStrategy: undefined,
         fixedOverflowWidgets: true,
         renderLineHighlight: 'none',
         lineHeight: 20,
