@@ -1317,6 +1317,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-compare"
     },
+    "ui/code-editor": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/code/ui/code-editor"
+    },
     "ui/code-tab-page": {
         "scope": "teambit.code",
         "version": "0.0.614",
@@ -1328,6 +1335,12 @@
         "version": "0.0.604",
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-tab-tree"
+    },
+    "ui/code-view": {
+        "scope": "teambit.code",
+        "version": "5e2b49420c500d4d88e1b05aa232061abc0fa0a7",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/code-view"
     },
     "ui/compare/lane-compare": {
         "scope": "teambit.lanes",

@@ -49,11 +49,12 @@ export function CodeCompareView({
     editor: any;
     monaco: Monaco;
   }>();
-
+  const changedLinesRef = useRef(0);
   const { baseId, compareId, modifiedFileContent, originalFileContent, modifiedPath, originalPath, loading } =
     useCodeCompare({
       fileName,
     });
+  const containerRef = useRef(null);
   const componentCompareContext = useComponentCompare();
 
   const getDefaultView: () => EditorViewMode = () => {
@@ -78,7 +79,6 @@ export function CodeCompareView({
     const fileEnding = fileName?.split('.').pop();
     return languageOverrides[fileEnding || ''] || fileEnding;
   }, [fileName]);
-  const containerRef = useRef(null);
   const isFullScreen = !!componentCompareContext?.isFullScreen;
 
   useEffect(() => {
@@ -114,7 +114,7 @@ export function CodeCompareView({
 
     return displayedLines;
   };
-  const changedLinesRef = useRef(0);
+
   const updateChangedLines = () => {
     if (!monacoRef.current) return;
 
