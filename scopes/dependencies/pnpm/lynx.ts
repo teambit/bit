@@ -166,7 +166,6 @@ export async function install(
     updateAll?: boolean;
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
-    pruneNodeModules?: boolean;
     rootComponents?: boolean;
     rootComponentsForCapsules?: boolean;
     includeOptionalDeps?: boolean;
@@ -226,7 +225,7 @@ export async function install(
     workspacePackages,
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
-    modulesCacheMaxAge: options.pruneNodeModules ? 0 : undefined,
+    modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
     neverBuiltDependencies: ['core-js'],
     registries: registriesMap,
     resolutionMode: 'highest',

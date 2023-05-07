@@ -19,6 +19,7 @@ import { readModulesManifest } from '@pnpm/modules-yaml';
 import { ProjectManifest } from '@pnpm/types';
 import { join } from 'path';
 import { readConfig } from './read-config';
+import { pnpmPruneModules } from './pnpm-prune-modules';
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
@@ -74,7 +75,6 @@ export class PnpmPackageManager implements PackageManager {
         sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
         sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
         pnpmHomeDir: config.pnpmHomeDir,
-        pruneNodeModules: installOptions.pruneNodeModules,
         updateAll: installOptions.updateAll,
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
       },
@@ -197,5 +197,9 @@ export class PnpmPackageManager implements PackageManager {
 
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
     return Object.fromEntries(manifests.map((manifest) => [manifest.name, 'workspace:*']));
+  }
+
+  async pruneModules(rootDir: string): Promise<void> {
+    return pnpmPruneModules(rootDir);
   }
 }
