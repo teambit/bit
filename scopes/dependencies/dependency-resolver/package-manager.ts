@@ -53,8 +53,6 @@ export type PackageManagerInstallOptions = {
   updateAll?: boolean;
 
   hidePackageManagerOutput?: boolean;
-
-  pruneNodeModules?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

@@ -40,7 +40,6 @@ export type InstallOptions = {
   packageManagerConfigRootDir?: string;
   resolveVersionsFromDependenciesOnly?: boolean;
   linkedDependencies?: Record<string, Record<string, string>>;
-  pruneNodeModules?: boolean;
 };
 
 export type GetComponentManifestsOptions = {
@@ -180,7 +179,6 @@ export class DependencyInstaller {
       engineStrict: this.engineStrict,
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
       peerDependencyRules: this.peerDependencyRules,
-      pruneNodeModules: options.pruneNodeModules,
       hidePackageManagerOutput,
       ...packageManagerOptions,
     };

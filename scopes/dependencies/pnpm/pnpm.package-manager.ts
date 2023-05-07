@@ -75,7 +75,6 @@ export class PnpmPackageManager implements PackageManager {
         sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
         sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
         pnpmHomeDir: config.pnpmHomeDir,
-        pruneNodeModules: installOptions.pruneNodeModules,
         updateAll: installOptions.updateAll,
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
       },
