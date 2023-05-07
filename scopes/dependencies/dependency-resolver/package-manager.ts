@@ -95,6 +95,8 @@ export interface PackageManager {
     options: PackageManagerInstallOptions
   ): Promise<{ dependenciesChanged: boolean }>;
 
+  pruneModules(rootDir: string): Promise<void>;
+
   resolveRemoteVersion(
     packageName: string,
     options: PackageManagerResolveRemoteVersionOptions

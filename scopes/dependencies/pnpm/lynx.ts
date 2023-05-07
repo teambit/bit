@@ -226,7 +226,7 @@ export async function install(
     workspacePackages,
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
-    modulesCacheMaxAge: options.pruneNodeModules ? 0 : undefined,
+    modulesCacheMaxAge: options.pruneNodeModules ? 0 : Infinity,
     neverBuiltDependencies: ['core-js'],
     registries: registriesMap,
     resolutionMode: 'highest',

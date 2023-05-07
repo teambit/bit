@@ -233,6 +233,13 @@ export class DependencyInstaller {
     return installResult;
   }
 
+  public async pruneModules(rootDir: string): Promise<void> {
+    if (!this.packageManager.pruneModules) {
+      return;
+    }
+    return this.packageManager.pruneModules(rootDir);
+  }
+
   /**
    * Compute all the component manifests (a.k.a. package.json files) that should be passed to the package manager
    * in order to install the dependencies.
