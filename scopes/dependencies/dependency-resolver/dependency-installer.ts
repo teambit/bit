@@ -235,7 +235,7 @@ export class DependencyInstaller {
     if (!this.packageManager.pruneModules) {
       return;
     }
-    return this.packageManager.pruneModules(rootDir);
+    await this.packageManager.pruneModules(rootDir);
   }
 
   /**
