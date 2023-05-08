@@ -12,12 +12,12 @@ export type AspectDefinitionProps = {
 export class AspectDefinition {
   constructor(
     /**
-     * path the the root directory of the aspect module.
+     * path to the root directory of the aspect module.
      */
     readonly aspectPath: string,
 
     /**
-     * path the the aspect file (.aspect).
+     * path to the aspect file (.aspect).
      */
     readonly aspectFilePath: string | null,
 

@@ -11,6 +11,7 @@ export type { SSR };
 
 export type { UIRootUI, UIRootFactory } from './ui-root.ui';
 export type { UIServer } from './ui-server';
+export { BUNDLE_UI_DIR, BundleUiTask, getArtifactDirectory } from './bundle-ui.task';
 
 // using `useDataQuery` from this package is deprecated, use `@teambit/ui-foundation.ui.hooks.use-data-query` directly
 export { DataQueryResult, useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';

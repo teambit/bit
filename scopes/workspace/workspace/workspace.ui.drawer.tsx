@@ -66,7 +66,7 @@ export const workspaceDrawer = ({
         !isViewingWorkspaceVersions ? viewedLaneId : undefined
       );
       const { components: mainComponents = [], loading: mainCompsLoading } = useLaneComponents(
-        !isViewingDefaultLane ? defaultLane?.id : undefined
+        isViewingDefaultLane ? defaultLane?.id : undefined
       );
 
       const workspace = useContext(WorkspaceContext);

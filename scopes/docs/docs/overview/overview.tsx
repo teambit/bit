@@ -86,7 +86,7 @@ export function Overview({ titleBadges, overviewOptions }: OverviewProps) {
         <ComponentPreview
           onLoad={() => setLoading(false)}
           component={component}
-          style={{ width: '100%', height: '100%' }}
+          style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
           previewName="overview"
           pubsub={true}
           queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}

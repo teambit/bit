@@ -684,7 +684,7 @@ export class Workspace implements ComponentFactory {
 
   /**
    * if checked out to a lane and the lane exists in the remote,
-   * return the remote lane id (name+scope). otherwise, return null.
+   * return the remote lane. otherwise, return null.
    */
   async getCurrentRemoteLane(): Promise<Lane | null> {
     const currentLaneId = this.getCurrentLaneId();
