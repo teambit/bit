@@ -227,7 +227,6 @@ export class ApplicationMain {
     return this.appSlot.toArray().find(([, apps]) => apps.find((app) => app.name === appName))?.[0];
   }
 
-
   /**
    * get app to throw.
    */
