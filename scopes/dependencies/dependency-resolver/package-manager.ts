@@ -53,8 +53,6 @@ export type PackageManagerInstallOptions = {
   updateAll?: boolean;
 
   hidePackageManagerOutput?: boolean;
-
-  pruneNodeModules?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -94,6 +92,8 @@ export interface PackageManager {
     context: InstallationContext,
     options: PackageManagerInstallOptions
   ): Promise<{ dependenciesChanged: boolean }>;
+
+  pruneModules?(rootDir: string): Promise<void>;
 
   resolveRemoteVersion(
     packageName: string,
