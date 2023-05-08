@@ -95,3 +95,10 @@
     flex: none;
   }
 }
+
+.loader {
+  color: var(--bit-bg-dent, #f6f6f6);
+  > span {
+    padding: 4px;
+  }
+}

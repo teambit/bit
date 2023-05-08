@@ -4,7 +4,7 @@ import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { UserAvatar } from '@teambit/design.ui.avatar';
-import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
+import { LineSkeleton, WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import classNames from 'classnames';
 
@@ -103,7 +103,8 @@ function _VersionMenu(
   return (
     <div {...rest}>
       <div className={styles.top}>
-        <div className={classNames(styles.titleContainer, styles.title)}>{message}</div>
+        {loading && <LineSkeleton count={6} className={styles.loader} />}
+        {!loading && <div className={classNames(styles.titleContainer, styles.title)}>{message}</div>}
         {localVersion && (
           <MenuLinkItem
             href={'?'}
@@ -223,6 +224,7 @@ function _VersionDropdown(
 
   const { author, message, timestamp } = currentVersionLog;
   const handlePlaceholderClicked = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (loading) return;
     if (e.target === e.currentTarget) {
       setOpen((o) => !o);
     }
@@ -238,10 +240,12 @@ function _VersionDropdown(
       currentVersion={currentVersion}
       onClick={handlePlaceholderClicked}
       hasMoreVersions={hasMoreVersions}
+      loading={loading}
     />
   );
 
   const PlaceholderComponent = placeholderComponent || defaultPlaceholder;
+
   if (disabled || (singleVersion && !loading)) {
     return <div className={classNames(styles.noVersions, className)}>{PlaceholderComponent}</div>;
   }
@@ -262,8 +266,7 @@ function _VersionDropdown(
         )}
         placeholder={PlaceholderComponent}
       >
-        {loading && <LineSkeleton className={styles.loading} count={6} />}
-        {!loading && open && (
+        {open && (
           <VersionMenu
             ref={ref}
             className={menuClassName}

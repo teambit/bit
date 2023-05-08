@@ -5,6 +5,7 @@ import * as semver from 'semver';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { TimeAgo } from '@teambit/design.ui.time-ago';
 import { UserAvatar } from '@teambit/design.ui.avatar';
+import { WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
 
 import styles from './version-dropdown-placeholder.module.scss';
 
@@ -18,6 +19,7 @@ export type VersionProps = {
   message?: string;
   disabled?: boolean;
   hasMoreVersions?: boolean;
+  loading?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function SimpleVersion({
@@ -31,8 +33,11 @@ export function SimpleVersion({
   message,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   timestamp,
+  loading,
   ...rest
 }: VersionProps) {
+  if (loading) return <WordSkeleton className={styles.loader} length={9} />;
+
   const isTag = semver.valid(currentVersion);
 
   return (
@@ -56,8 +61,10 @@ export function DetailedVersion({
   timestamp,
   author,
   message,
+  loading,
   ...rest
 }: VersionProps) {
+  if (loading) return <WordSkeleton className={styles.loader} length={9} />;
   const isTag = semver.valid(currentVersion);
 
   return (
