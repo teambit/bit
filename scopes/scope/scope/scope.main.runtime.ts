@@ -615,7 +615,8 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
-   * load components from a scope and load their aspects
+   * important! you probably want to use `getMany`, which returns the components from the scope.
+   * this method loads all aspects of the loaded components. (which hurts performance)
    */
   async loadMany(ids: ComponentID[], lane?: Lane): Promise<Component[]> {
     const components = await mapSeries(ids, (id) => this.load(id, lane));

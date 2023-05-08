@@ -61,8 +61,9 @@ function toComponentPreviewUrl(component: ComponentModel) {
   return componentBasedUrl;
 }
 
-function createPrefix(basePath = '/api', host?: string) {
-  const basePathWithSlash = basePath.startsWith('/') ? basePath : `/${basePath}`;
+function createPrefix(basePath?: string, host?: string) {
+  const actualBasePath = basePath || '/api';
+  const basePathWithSlash = actualBasePath.startsWith('/') ? actualBasePath : `/${actualBasePath}`;
   const hostWithoutSlash = host?.endsWith('/') ? host.slice(0, -1) : host;
   const prefix = hostWithoutSlash ? `${hostWithoutSlash}${basePathWithSlash}` : basePathWithSlash;
   const prefixWithoutSlash = prefix.endsWith('/') ? prefix.slice(0, -1) : prefix;

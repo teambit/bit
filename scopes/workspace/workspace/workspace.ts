@@ -684,7 +684,7 @@ export class Workspace implements ComponentFactory {
 
   /**
    * if checked out to a lane and the lane exists in the remote,
-   * return the remote lane id (name+scope). otherwise, return null.
+   * return the remote lane. otherwise, return null.
    */
   async getCurrentRemoteLane(): Promise<Lane | null> {
     const currentLaneId = this.getCurrentLaneId();
@@ -1360,6 +1360,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
+    if (id instanceof BitId && id.hasScope() && id.hasVersion()) {
+      // an optimization to make it faster when BitId is passed
+      return ComponentID.fromLegacy(id);
+    }
     const getDefaultScope = async (bitId: BitId, bitMapOptions?: GetBitMapComponentOptions) => {
       if (bitId.scope) {
         return bitId.scope;

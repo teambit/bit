@@ -41,10 +41,11 @@ export class ObjectFetcher {
     private ids: BitId[],
     private lanes: Lane[] = [],
     private context = {},
-    private throwOnUnavailableScope = true
+    private throwOnUnavailableScope = true,
+    private groupedHashes?: { [scopeName: string]: string[] }
   ) {}
 
-  public async fetchFromRemoteAndWrite() {
+  public async fetchFromRemoteAndWrite(): Promise<string[]> {
     this.fetchOptions = {
       type: 'component',
       withoutDependencies: true, // backward compatibility. not needed for remotes > 0.0.900
@@ -52,7 +53,8 @@ export class ObjectFetcher {
       allowExternal: Boolean(this.lanes.length),
       ...this.fetchOptions,
     };
-    const idsGrouped = this.lanes.length ? groupByLanes(this.ids, this.lanes) : groupByScopeName(this.ids);
+    const idsGrouped =
+      this.groupedHashes || (this.lanes.length ? groupByLanes(this.ids, this.lanes) : groupByScopeName(this.ids));
     const scopes = Object.keys(idsGrouped);
     logger.debug(
       `[-] Running fetch on ${scopes.length} remote(s), to get ${this.ids.length} id(s), lanes: ${this.lanes.length}, with the following options`,
@@ -84,6 +86,7 @@ ${failedScopesErr.join('\n')}`);
     logger.debug(`[-] fetchFromRemoteAndWrite, completed writing ${objectsQueue.added} objects`);
     loader.start('all objects were processed and written to the filesystem successfully');
     await this.repo.writeRemoteLanes();
+    return objectsQueue.addedHashes;
   }
 
   private async fetchFromSingleRemote(scopeName: string, ids: string[]): Promise<ObjectItemsStream | null> {
@@ -149,30 +152,17 @@ the remote scope "${scopeName}" was not found`);
       return; // don't show progress on CI.
     }
     let objectsAdded = 0;
-    let objectsCompleted = 0;
     let componentsAdded = 0;
-    let componentsCompleted = 0;
+    const showComponents = this.fetchOptions.type === 'component' || this.fetchOptions.type === 'component-delta';
     objectsQueue.getQueue().on('add', () => {
       objectsAdded += 1;
       if (objectsAdded % 100 === 0) {
-        loader.start(
-          `Downloaded ${objectsAdded} objects, ${componentsAdded} components. Processed successfully ${objectsCompleted} objects, ${componentsCompleted} components`
-        );
-      }
-    });
-    objectsQueue.getQueue().on('next', () => {
-      objectsCompleted += 1;
-      if (objectsAdded % 100 === 0) {
-        loader.start(
-          `Downloaded ${objectsAdded} objects, ${componentsAdded} components. Processed successfully ${objectsCompleted} objects, ${componentsCompleted} components`
-        );
+        const compStr = showComponents ? `, ${componentsAdded} components` : '';
+        loader.start(`Downloaded ${objectsAdded} objects${compStr}`);
       }
     });
     componentsQueue.getQueue().on('add', () => {
       componentsAdded += 1;
-    });
-    componentsQueue.getQueue().on('next', () => {
-      componentsCompleted += 1;
     });
   }
 }

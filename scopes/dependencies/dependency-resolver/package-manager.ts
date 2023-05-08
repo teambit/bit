@@ -53,8 +53,6 @@ export type PackageManagerInstallOptions = {
   updateAll?: boolean;
 
   hidePackageManagerOutput?: boolean;
-
-  pruneNodeModules?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -90,7 +88,12 @@ export interface PackageManager {
    * install dependencies
    * @param componentDirectoryMap
    */
-  install(context: InstallationContext, options: PackageManagerInstallOptions): Promise<void>;
+  install(
+    context: InstallationContext,
+    options: PackageManagerInstallOptions
+  ): Promise<{ dependenciesChanged: boolean }>;
+
+  pruneModules?(rootDir: string): Promise<void>;
 
   resolveRemoteVersion(
     packageName: string,

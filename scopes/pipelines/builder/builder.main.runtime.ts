@@ -15,6 +15,7 @@ import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
+import { UIAspect, UiMain, BundleUiTask } from '@teambit/ui';
 import { Artifact, ArtifactList, FsArtifact } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
@@ -379,10 +380,11 @@ export class BuilderMain {
     GraphqlAspect,
     GeneratorAspect,
     ComponentAspect,
+    UIAspect,
   ];
 
   static async provider(
-    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator, component]: [
+    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator, component, ui]: [
       CLIMain,
       EnvsMain,
       Workspace,
@@ -392,7 +394,8 @@ export class BuilderMain {
       AspectLoaderMain,
       GraphqlMain,
       GeneratorMain,
-      ComponentMain
+      ComponentMain,
+      UiMain
     ],
     config,
     [buildTaskSlot, tagTaskSlot, snapTaskSlot]: [TaskSlot, TaskSlot, TaskSlot]
@@ -433,6 +436,7 @@ export class BuilderMain {
       tagTaskSlot,
       snapTaskSlot
     );
+    builder.registerBuildTasks([new BundleUiTask(ui, logger)]);
     component.registerRoute([new BuilderRoute(builder, scope, logger)]);
     graphql.register(builderSchema(builder, logger));
     if (generator) generator.registerComponentTemplate([buildTaskTemplate]);
