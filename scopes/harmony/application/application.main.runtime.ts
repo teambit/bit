@@ -227,6 +227,13 @@ export class ApplicationMain {
     return this.appSlot.toArray().find(([, apps]) => apps.find((app) => app.name === appName))?.[0];
   }
 
+  getAppIdByName(appName: string) {
+    return this.appSlot.toArray().find(([aspectId, apps]) => {
+      const app = !!apps.find((appInstance) => appInstance.name === appName);
+      return app ? aspectId : undefined;
+    });
+  }
+
   /**
    * get app to throw.
    */
@@ -296,9 +303,10 @@ export class ApplicationMain {
 
   private async createAppContext(appName: string): Promise<AppContext> {
     const host = this.componentAspect.getHost();
-    const components = await host.list();
+    // const components = await host.list();
     const id = this.getAppIdOrThrow(appName);
-    const component = components.find((c) => c.id.isEqual(id));
+    // const component = components.find((c) => c.id.isEqual(id));
+    const component = await host.get(id);
     if (!component) throw new AppNotFound(appName);
 
     const env = await this.envs.createEnvironment([component]);
