@@ -227,12 +227,6 @@ export class ApplicationMain {
     return this.appSlot.toArray().find(([, apps]) => apps.find((app) => app.name === appName))?.[0];
   }
 
-  getAppIdByName(appName: string) {
-    return this.appSlot.toArray().find(([aspectId, apps]) => {
-      const app = !!apps.find((appInstance) => appInstance.name === appName);
-      return app ? aspectId : undefined;
-    });
-  }
 
   /**
    * get app to throw.
