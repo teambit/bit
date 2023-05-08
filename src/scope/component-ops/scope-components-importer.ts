@@ -524,6 +524,24 @@ export default class ScopeComponentsImporter {
       options: fetchOptions,
     });
     if (!allowExternal) this.throwIfExternalFound(ids);
+
+    // in case `preferDependencyGraph` is true, we normally don't import anything, so no need for the mutex.
+    // an exception is when fetching an old component that doesn't have the dependency graph saved on the model, but
+    // looking at the traffic on the remote scope, this is rare.
+    const shouldUseMutex = !preferDependencyGraph;
+
+    if (!shouldUseMutex) {
+      logger.debug('fetchWithDeps, skipping the mutex');
+      const localDefs: ComponentDef[] = await this.sources.getMany(ids);
+      const versionDeps = await this.multipleCompsDefsToVersionDeps(
+        localDefs,
+        undefined,
+        onlyIfBuilt,
+        preferDependencyGraph
+      );
+      return versionDeps;
+    }
+
     logger.debug(`fetchWithDeps, is locked? ${this.fetchWithDepsMutex.isLocked()}`);
     // avoid race condition of getting multiple "fetch" requests, which later translates into
     // multiple getExternalMany calls, which saves objects and write refs files at the same time
@@ -672,11 +690,13 @@ export default class ScopeComponentsImporter {
     await Promise.all(
       componentsWithVersion.map(async (compWithVer) => {
         const flattenedEdges = await compWithVer.versionObj.getFlattenedEdges(this.repo);
-        if (skipComponentsWithDepsGraph && flattenedEdges.length) return;
-        if (skipComponentsWithDepsGraph)
+        if (skipComponentsWithDepsGraph) {
+          if (flattenedEdges.length) return;
+          if (!compWithVer.versionObj.flattenedDependencies.length) return;
           logger.debug(
             `scopeComponentImporter, unable to get dependencies graph from ${compWithVer.componentVersion.id.toString()}, will import all its deps`
           );
+        }
         flattenedDepsToFetch.add(compWithVer.versionObj.flattenedDependencies);
       })
     );
