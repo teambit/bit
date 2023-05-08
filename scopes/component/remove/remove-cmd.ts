@@ -12,6 +12,12 @@ import { RemoveMain } from './remove.main.runtime';
 export class RemoveCmd implements Command {
   name = 'remove <component-pattern>';
   description = 'remove component(s) from the workspace, or a remote scope';
+  extendedDescription = `to remove components from your local workspace only, use "bit remove" (with no flags).
+
+to remove a component from the remote scope, use "bit remove --delete", to mark the components as deleted.
+once tagged/snapped and exported, the remote scope will be updated and it'll be marked as deleted there as well.
+in case this is running on a lane, it'll mark the component as deleted on the lane only, which tells bit not to merge them. the main will not be affected.
+`;
   arguments = [
     {
       name: 'component-pattern',

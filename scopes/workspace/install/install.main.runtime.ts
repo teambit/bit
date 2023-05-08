@@ -271,9 +271,6 @@ export class InstallMain {
         current.componentDirectoryMap,
         {
           installTeambitBit: false,
-          // We clean node_modules only on the first install.
-          // Otherwise, we might load an env from a location that we later remove.
-          pruneNodeModules: installCycle === 0,
         },
         pmInstallOptions
       );
@@ -300,6 +297,9 @@ export class InstallMain {
       current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
+    // We clean node_modules only after the last install.
+    // Otherwise, we might load an env from a location that we later remove.
+    await installer.pruneModules(this.workspace.path);
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
