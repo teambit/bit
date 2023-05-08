@@ -235,14 +235,15 @@ export default async function provideWorkspace(
       workspace.inInstallContext = true;
     }
     await workspace.importCurrentLaneIfMissing();
+    const loadAspectsOpts = {
+      runSubscribers: false,
+      skipDeps: !config.autoLoadAspectsDeps,
+    };
     const aspects = await workspace.loadAspects(
       aspectLoader.getNotLoadedConfiguredExtensions(),
       undefined,
       'teambit.workspace/workspace (cli.registerOnStart)',
-      {
-        runSubscribers: false,
-        skipDeps: true
-      }
+      loadAspectsOpts
     );
     // clear aspect cache.
     const componentIds = await workspace.resolveMultipleComponentIds(aspects);
