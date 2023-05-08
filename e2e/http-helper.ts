@@ -27,16 +27,15 @@ export class HttpHelper {
           resolve();
         }
       });
+      let stderrData = '';
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.httpProcess.stderr.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
-        if (!this.shouldIgnoreHttpError(data.toString())) {
-          reject(new Error(`http failed with the following stderr ${data}`));
-        }
+        stderrData += data.toString();
       });
       this.httpProcess.on('close', (code) => {
         if (this.helper.debugMode) console.log(`child process exited with code ${code}`);
-        reject(new Error(`http exited with code ${code}`));
+        reject(new Error(`http exited with code ${code}\n${stderrData}`));
       });
     });
   }
