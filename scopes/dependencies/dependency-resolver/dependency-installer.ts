@@ -40,7 +40,6 @@ export type InstallOptions = {
   packageManagerConfigRootDir?: string;
   resolveVersionsFromDependenciesOnly?: boolean;
   linkedDependencies?: Record<string, Record<string, string>>;
-  pruneNodeModules?: boolean;
 };
 
 export type GetComponentManifestsOptions = {
@@ -180,7 +179,6 @@ export class DependencyInstaller {
       engineStrict: this.engineStrict,
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
       peerDependencyRules: this.peerDependencyRules,
-      pruneNodeModules: options.pruneNodeModules,
       hidePackageManagerOutput,
       ...packageManagerOptions,
     };
@@ -231,6 +229,13 @@ export class DependencyInstaller {
     }
     await this.runPrePostSubscribers(this.postInstallSubscriberList, 'post', args);
     return installResult;
+  }
+
+  public async pruneModules(rootDir: string): Promise<void> {
+    if (!this.packageManager.pruneModules) {
+      return;
+    }
+    await this.packageManager.pruneModules(rootDir);
   }
 
   /**
