@@ -369,15 +369,18 @@ export class AspectLoaderMain {
   /**
    * run "require" of the component code to get the manifest
    */
-  async doRequire(requireableExtension: RequireableComponent): Promise<ExtensionManifest | Aspect> {
+  async doRequire(
+    requireableExtension: RequireableComponent,
+    runSubscribers = true
+  ): Promise<ExtensionManifest | Aspect> {
     const idStr = requireableExtension.component.id.toString();
     const aspect = await requireableExtension.require();
     const manifest = aspect.default || aspect;
     manifest.id = idStr;
     // It's important to clone deep the manifest here to prevent mutate dependencies of other manifests as they point to the same location in memory
     const cloned = this.cloneManifest(manifest);
-    const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, cloned);
-    return newManifest;
+    if (runSubscribers) return this.runOnLoadRequireableExtensionSubscribers(requireableExtension, cloned);
+    return cloned;
   }
 
   /**
@@ -407,13 +410,14 @@ export class AspectLoaderMain {
 
   async getManifestsFromRequireableExtensions(
     requireableExtensions: RequireableComponent[],
-    throwOnError = false
+    throwOnError = false,
+    runSubscribers = true
   ): Promise<Array<ExtensionManifest | Aspect>> {
     const manifestsP = mapSeries(requireableExtensions, async (requireableExtension) => {
       if (!requireableExtensions) return undefined;
       const idStr = requireableExtension.component.id.toString();
       try {
-        return await this.doRequire(requireableExtension);
+        return await this.doRequire(requireableExtension, runSubscribers);
       } catch (firstErr: any) {
         this.addFailure(idStr);
         this.logger.warn(`failed loading an aspect "${idStr}", will try to fix and reload`, firstErr);
