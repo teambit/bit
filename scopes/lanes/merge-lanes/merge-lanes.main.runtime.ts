@@ -105,6 +105,7 @@ export class MergeLanesMain {
     }
     const currentLane = currentLaneId.isDefault() ? null : await consumer.scope.loadLane(currentLaneId);
     const isDefaultLane = otherLaneId.isDefault();
+    let laneToFetchArtifactsFrom: Lane | undefined;
     const getOtherLane = async () => {
       if (isDefaultLane) {
         if (!skipFetch) {
@@ -117,9 +118,7 @@ export class MergeLanesMain {
       if (shouldFetch) {
         // don't assign `lane` to the result of this command. otherwise, if you have local snaps, it'll ignore them and use the remote-lane.
         const otherLane = await this.lanes.fetchLaneWithItsComponents(otherLaneId);
-
-        await this.importer.importHeadArtifactsFromLane(otherLane, pattern, true);
-
+        laneToFetchArtifactsFrom = otherLane;
         lane = await consumer.scope.loadLane(otherLaneId);
       }
       return lane;
@@ -185,6 +184,11 @@ export class MergeLanesMain {
 
     if (shouldSquash) {
       await squashSnaps(allComponentsStatus, otherLaneId, consumer);
+    }
+
+    if (laneToFetchArtifactsFrom) {
+      const idsToMerge = allComponentsStatus.map((c) => c.id);
+      await this.importer.importHeadArtifactsFromLane(laneToFetchArtifactsFrom, idsToMerge, true);
     }
 
     const mergeResults = await this.merging.mergeSnaps({
