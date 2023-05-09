@@ -470,6 +470,10 @@ export class UiMain {
   }
 
   private async shouldServeBundleUi(uiRoot: UIRoot, force: boolean | undefined): Promise<boolean> {
+    if (!uiRoot.buildOptions?.prebundle) {
+      return false;
+    }
+
     const currentBundleUiHash = await this.createBundleUiHash(uiRoot);
     const cachedBundleUiHash = this.readBundleUiHash();
     const isLocalBuildAvailable = existsSync(join(uiRoot.path, await this.publicDir(uiRoot)));
