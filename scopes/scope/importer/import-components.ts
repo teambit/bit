@@ -347,7 +347,7 @@ if you need this specific snap, find the lane this snap is belong to, then run "
     const idsWithoutWildcardPreferFromLane = idsWithoutWildcard.map((idStr) => {
       const id = BitId.parse(idStr, true);
       const fromLane = bitIdsFromLane.searchWithoutVersion(id);
-      return fromLane ? fromLane.changeVersion(id.version) : id;
+      return fromLane && !id.hasVersion() ? fromLane : id;
     });
 
     const bitIds: BitId[] = [...idsWithoutWildcardPreferFromLane];
