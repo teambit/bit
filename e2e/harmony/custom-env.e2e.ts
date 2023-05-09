@@ -274,9 +274,8 @@ describe('custom env', function () {
   });
   describe('when the env is tagged and set in workspace.jsonc without exporting it', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
       // important! don't disable the preview.
-      helper.bitJsonc.addDefaultScope();
+      helper.scopeHelper.setNewLocalAndRemoteScopes({ disablePreview: false });
       const envName = helper.env.setCustomEnv();
       const envId = `${helper.scopes.remote}/${envName}`;
       helper.extensions.addExtensionToWorkspace(envId);
@@ -363,6 +362,22 @@ describe('custom env', function () {
     // previously, it didn't remove the custom-env due to mismatch between the legacy-id and harmony-id.
     it('bit status should not show it as an issue because the previous env was removed', () => {
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MultipleEnvs.name);
+    });
+  });
+  // @todo: fix this. currently, it's failing because when loading the env, it runs workspace.loadAspects, which builds
+  // the component's graph. It loads the comp1 to check whether isAspect, it returns false, but loading comp1 loads also
+  // all its aspects, including the env.
+  describe.skip('circular dependencies between an env and a component', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.env.setCustomEnv();
+      // const envName = helper.env.setCustomEnv();
+      // const envId = `${helper.scopes.remote}/${envName}`;
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile('node-env/foo.ts', `import "@${helper.scopes.remote}/comp1'";`);
+    });
+    it('should not enter into an infinite loop on any command', () => {
+      helper.command.status();
     });
   });
 });
