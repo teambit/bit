@@ -1506,7 +1506,7 @@ describe('bit lane command', function () {
     });
   });
   describe('import from one lane to another directly', () => {
-    let headOnLaneA: string;
+    let headOnLaneB: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.command.createLane('lane-a');
@@ -1517,22 +1517,16 @@ describe('bit lane command', function () {
       helper.fixtures.populateComponents(1, false, 'from-lane-b');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      const headOnLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
+      headOnLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
       helper.command.switchLocalLane('lane-a', '-x');
       helper.fixtures.populateComponents(1, false, 'from-lane-a');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      headOnLaneA = helper.command.getHeadOfLane('lane-a', 'comp1');
-      helper.command.importComponent(`comp1@${headOnLaneB}`);
     });
-    it('should not change the head on lane-a according to lane-b head', () => {
-      const headAfterImport = helper.command.getHeadOfLane('lane-a', 'comp1');
-      expect(headAfterImport).to.equal(headOnLaneA);
-    });
-    it('should not change the .bitmap version according to lane-b head', () => {
-      const bitMap = helper.bitMap.read();
-      const bitMapVer = bitMap.comp1.version;
-      expect(bitMapVer).to.equal(headOnLaneA);
+    it('should block the import', () => {
+      expect(() => helper.command.importComponent(`comp1@${headOnLaneB}`)).to.throw(
+        `unable to import the following component(s) as they belong to other lane(s)`
+      );
     });
   });
   describe('import from a lane to main', () => {
@@ -1594,7 +1588,7 @@ describe('bit lane command', function () {
       headOnLaneA = helper.command.getHeadOfLane('lane-a', 'comp1');
       helper.scopeHelper.getClonedLocalScope(laneBWs);
     });
-    // previously, it was quietly importing the component from the current lane and ignores the provded version.
+    // previously, it was quietly importing the component from the current lane and ignores the provided version.
     it('should not bring that snap', () => {
       const output = helper.command.importComponent(`comp1@${headOnLaneA}`, '--override');
       expect(output).to.have.string('Missing Components');
