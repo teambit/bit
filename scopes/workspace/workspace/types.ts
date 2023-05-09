@@ -45,4 +45,22 @@ export interface WorkspaceExtConfig {
    * from the scope aspects capsule.
    */
   resolveAspectsFromNodeModules?: boolean;
+
+  /**
+   * If set to `true`, bit will try to load aspects dependencies automatically.
+   * even if the aspects dependencies are not configured in the workspace.jsonc root config.
+   * for example having the aspect
+   * main aspect
+   * export class MainAspectMain {
+   *  ...
+   *   static dependencies = [MyDepAspect];
+   * }
+   * and the in the workspace.jsonc file:
+   * {
+   *  ...
+   *   main-aspect: {}
+   * }
+   * when set to true, bit will try to load MyDepAspect automatically.
+   */
+  autoLoadAspectsDeps?: boolean;
 }

@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [[0.1.36] - 2023-05-07](https://github.com/teambit/bit/releases/tag/v0.1.36)
+
+### New Features
+
+- `bit add` support `--env` for setting up environment on component tracking (#7330)
+- Ability to pass `OverviewOptions` to component overview for more flexible component documentation (#7292)
+- `bit doctor` now supports `--archive` to tar an entire workspace to help reproduce issues (#7324)
+
+### Changes
+
+- Improved outputs for various commands and help outputs (#7358, #7362, #7313, #7306, #7349, #7366, #7353)
+- `bit remove` - improve syntax for `--soft` and `--remote` delete by moving to `--delete` and `--hard` (#7333)
+- When running `bit env update`, ensure components resolve env from workspace, if env is local (#7319)
+
+### Performance
+
+- Improvements for dependency installation performance (#7339, #7338)
+- Improve performance for fetching component data from server (#7352, #7360, #7335, #7334, #7325, #7317)
+- Lazy load artifact contents (#7316)
+- Filter core-aspects from aspect loading (#7344)
+
+### Bug Fixes
+
+- Solved an issue where `ws-config` didn't pass absolute path to `tsconfig` for `eslint` (#7348)
+- Fix several cases where component preview URL was not aligned, causing no documentation after export (#7357, #7342, #7341, #7326)
+- Fix error of log.message being `boolean` upon `bit import` (#7311)
+- Support additional "out of sync" case for Bit and Git, where need to recreate lane if local scope is new (#7329)
+- Avoid showing workspace conflicts when it Semver satisfied (#7351)
+- Block bit-sign to be running from the workspace (#7328)
+- Save env-id in `.bitmap` without a version when the env exists in the workspace (#7314)
+- only clean `node_modules` on the first install (#7310)
+- Add missing deps that are present in root policies to component manifests (#7307)
+- `bit create` gracefully link component to `node_modules` (#7251)
+
+### Internal
+
+- Generate UI pre-bundle for `bit start` (#7293)
+- Removing irrelevant dependencies (#7327, #7331, #7312)
+- Fetch current lane object first to find new comps (#7361)
+- Change the object cache default limit from 10K to 5K (#7315)
+- Exclude `ui-bundle` folder from `.npmignore` for core aspect (#7364)
+- Remove open-connections from the log on failure (#7359)
+- Log IDs to fetch if they are less than 10 (#7320)
+- Stop saving `flattenedEdges` inside the Version object (#7318)
+- Show a warning when operating against a very slow remote scope (#7345)
+- Remove experimental `write-tsconfig` command (moved to `ws-config`) (#7350)
+
 ## [[0.1.27] - 2023-04-24](https://github.com/teambit/bit/releases/tag/v0.1.27)
 
 ### New Features
