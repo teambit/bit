@@ -679,10 +679,10 @@ jobs:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
-      - save_cache:
-          key: v1-linux-bvm-config
-          paths:
-            - /home/circleci/.bvm/config
+      # - save_cache:
+      #     key: v1-linux-bvm-config
+      #     paths:
+      #       - /home/circleci/.bvm/config
       - run: cd bit && bbit install
       - run: cd bit && npm run link-bit-legacy
       - run: cd bit && bbit compile
@@ -1169,7 +1169,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: v1-linux-bvm-config
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
       # - run: 'chmod 400 ~/.ssh/id_rsa'
       # - run: 'ssh-add ~/.ssh/id_rsa'
