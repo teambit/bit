@@ -13,6 +13,7 @@ export type ResolveAspectsOptions = FilterAspectsOptions & {
   throwOnError?: boolean;
   useScopeAspectsCapsule?: boolean;
   workspaceName?: string;
+  skipDeps?: boolean;
 };
 
 export type LoadAspectsOptions = {
