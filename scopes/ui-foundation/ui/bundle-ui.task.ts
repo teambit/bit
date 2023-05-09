@@ -1,9 +1,9 @@
 import { join } from 'path';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
+import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { UIAspect, UiMain } from '@teambit/ui';
-import { Capsule } from '@teambit/isolator';
 
 export const BUNDLE_UI_TASK_NAME = 'BundleUI';
 export const BUNDLE_UI_DIR = 'ui-bundle';
@@ -24,7 +24,7 @@ export class BundleUiTask implements BuildTask {
       return { componentsResults: [] };
     }
 
-    const outputPath = join(capsule.path, getArtifactDirectory());
+    const outputPath = join(capsule.path, BundleUiTask.getArtifactDirectory());
     this.logger.info(`Generating UI bundle at ${outputPath}...`);
     try {
       await this.ui.build(undefined, outputPath);
@@ -33,7 +33,7 @@ export class BundleUiTask implements BuildTask {
       this.logger.error('Generating UI bundle failed');
       throw new Error('Generating UI bundle failed');
     }
-    const artifacts = getArtifactDef();
+    const artifacts = BundleUiTask.getArtifactDef();
     return {
       componentsResults: [],
       artifacts,
@@ -45,23 +45,23 @@ export class BundleUiTask implements BuildTask {
     if (!maybeUiRoot) throw new Error('no uiRoot found');
 
     const [, uiRoot] = maybeUiRoot;
-    const hash = await this.ui.getBundleUiHash(uiRoot);
+    const hash = await this.ui.createBundleUiHash(uiRoot);
 
     if (!existsSync(outputPath)) mkdirSync(outputPath);
     writeFileSync(join(outputPath, BUNDLE_UI_HASH_FILENAME), hash);
   }
-}
 
-export function getArtifactDirectory() {
-  return join('artifacts', BUNDLE_UI_DIR);
-}
+  static getArtifactDirectory() {
+    return join('artifacts', BUNDLE_UI_DIR);
+  }
 
-export function getArtifactDef() {
-  return [
-    {
-      name: BUNDLE_UI_DIR,
-      globPatterns: ['**'],
-      rootDir: getArtifactDirectory(),
-    },
-  ];
+  static getArtifactDef() {
+    return [
+      {
+        name: BUNDLE_UI_DIR,
+        globPatterns: ['**'],
+        rootDir: BundleUiTask.getArtifactDirectory(),
+      },
+    ];
+  }
 }
