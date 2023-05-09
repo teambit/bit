@@ -679,6 +679,10 @@ jobs:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
+      - save_cache:
+          key: v1-linux-bvm-config
+          paths:
+            - /home/circleci/.bvm/config
       - run: cd bit && bbit install
       - run: cd bit && npm run link-bit-legacy
       - run: cd bit && bbit compile
@@ -1164,6 +1168,8 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
+      - restore_cache:
+          key: v1-linux-bvm-config
       # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
       # - run: 'chmod 400 ~/.ssh/id_rsa'
       # - run: 'ssh-add ~/.ssh/id_rsa'
@@ -1396,6 +1402,10 @@ jobs:
           key: v2-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - C:\Users\circleci\AppData\Local\.bvm
+      - save_cache:
+          key: v1-windows-bvm-config
+          paths:
+            - C:\Users\circleci\AppData\Local\.bvm\config
       - persist_to_workspace:
           root: .
           paths:
@@ -1480,6 +1490,8 @@ jobs:
       #     key: bvm-folder-v1
       - restore_cache:
           key: v2-bvm-folder-{{ checksum "version.txt" }}
+      - restore_cache:
+          key: v1-windows-bvm-config
       # - run: bit -v
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: bit -v
