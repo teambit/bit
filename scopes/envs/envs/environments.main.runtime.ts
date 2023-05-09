@@ -399,15 +399,9 @@ export class EnvsMain {
     // Search first for env configured via envs aspect itself
     const envIdFromEnvsConfig = this.getEnvIdFromEnvsConfig(component);
     // if (!envIdFromEnvsConfig) return this.getDefaultEnv();
-    const envIdFromEnvsConfigWithoutVersion = envIdFromEnvsConfig 
+    const envIdFromEnvsConfigWithoutVersion = envIdFromEnvsConfig
       ? ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion()
       : undefined;
-    // if (envIdFromEnvsConfig) {
-    //   const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
-    //   if (envDef) {
-    //     return envDef;
-    //   }
-    // }
 
     // in some cases we have the id configured in the teambit.envs/envs but without the version
     // in such cases we won't find it in the slot
@@ -567,6 +561,51 @@ export class EnvsMain {
   }
 
   /**
+   * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .calculateEnvId() instead!)
+   */
+  calculateEnvIdFromExtensions(extensions: ExtensionDataList): string {
+    // Search first for env configured via envs aspect itself
+    const envsAspect = extensions.findCoreExtension(EnvsAspect.id);
+    const envIdFromEnvsConfig = envsAspect?.config.env;
+
+    const envIdFromEnvsConfigWithoutVersion = envIdFromEnvsConfig
+      ? ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion()
+      : undefined;
+
+    // in some cases we have the id configured in the teambit.envs/envs but without the version
+    // in such cases we won't find it in the slot
+    // we search in the component aspect list a matching aspect which is match the id from the teambit.envs/envs
+    if (envIdFromEnvsConfigWithoutVersion) {
+      const matchedEntry = extensions.find((extension) => {
+        if (extension.newExtensionId) {
+          return (
+            envIdFromEnvsConfigWithoutVersion === extension.newExtensionId.toString() ||
+            envIdFromEnvsConfigWithoutVersion === extension.newExtensionId.toString({ ignoreVersion: true })
+          );
+        }
+        return envIdFromEnvsConfigWithoutVersion === extension.stringId;
+      });
+      if (matchedEntry?.id) return matchedEntry?.stringId;
+    }
+
+    // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
+    let envEntryFromList: ExtensionDataEntry | undefined;
+    extensions.find((extension: ExtensionDataEntry) => {
+      const envDef = this.getEnvDefinitionByLegacyExtension(extension);
+      if (envDef) {
+        envEntryFromList = extension;
+      }
+      return !!envDef;
+    });
+
+    if (envEntryFromList) {
+      return envEntryFromList.stringId;
+    }
+    const defaultEnvId = this.getDefaultEnv().id;
+    return defaultEnvId;
+  }
+
+  /**
    * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .calculateEnv() instead!)
    */
   calculateEnvFromExtensions(extensions: ExtensionDataList): EnvDefinition {
@@ -582,13 +621,6 @@ export class EnvsMain {
         return envDef;
       }
     }
-
-    const getEnvDefinitionByLegacyExtension = (extension: ExtensionDataEntry): EnvDefinition | undefined => {
-      const envDef = extension.newExtensionId
-        ? this.getEnvDefinitionById(extension.newExtensionId)
-        : this.getEnvDefinitionByStringId(extension.stringId);
-      return envDef;
-    };
 
     // in some cases we have the id configured in the teambit.envs/envs but without the version
     // in such cases we won't find it in the slot
@@ -606,7 +638,7 @@ export class EnvsMain {
       if (matchedEntry) {
         // during the tag process, the version in the aspect-entry-id is changed and is not the
         // same as it was when it registered to the slot.
-        const envDef = getEnvDefinitionByLegacyExtension(matchedEntry);
+        const envDef = this.getEnvDefinitionByLegacyExtension(matchedEntry);
         if (envDef) {
           return envDef;
         }
@@ -624,7 +656,7 @@ export class EnvsMain {
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
     let envDefFromList;
     extensions.find((extension: ExtensionDataEntry) => {
-      const envDef = getEnvDefinitionByLegacyExtension(extension);
+      const envDef = this.getEnvDefinitionByLegacyExtension(extension);
       if (envDef) {
         envDefFromList = envDef;
       }
@@ -635,6 +667,13 @@ export class EnvsMain {
       return envDefFromList;
     }
     return this.getDefaultEnv();
+  }
+
+  private getEnvDefinitionByLegacyExtension(extension: ExtensionDataEntry): EnvDefinition | undefined {
+    const envDef = extension.newExtensionId
+      ? this.getEnvDefinitionById(extension.newExtensionId)
+      : this.getEnvDefinitionByStringId(extension.stringId);
+    return envDef;
   }
 
   getEnvIdFromEnvsConfig(component: Component): string | undefined {

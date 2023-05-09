@@ -1051,10 +1051,23 @@ export class DependencyResolverMain {
     return this.rootPolicyRegistry.register(policy);
   }
 
+  // async getComponentEnvPolicyFromExtension(configuredExtensions: ExtensionDataList): Promise<EnvPolicy> {
+  //   const env = this.envs.calculateEnvFromExtensions(configuredExtensions);
+  //   const fromFile = await this.getEnvPolicyFromFile(env.id);
+  //   if (fromFile) return fromFile;
+  //   return this.getComponentEnvPolicyFromEnv(env.env);
+  // }
+
   async getComponentEnvPolicyFromExtension(configuredExtensions: ExtensionDataList): Promise<EnvPolicy> {
-    const env = this.envs.calculateEnvFromExtensions(configuredExtensions);
-    const fromFile = await this.getEnvPolicyFromFile(env.id);
+    const envId = this.envs.calculateEnvIdFromExtensions(configuredExtensions);
+    if (this.envs.isCoreEnv(envId)) {
+      const env = this.envs.calculateEnvFromExtensions(configuredExtensions);
+      return this.getComponentEnvPolicyFromEnv(env.env);
+    }
+
+    const fromFile = await this.getEnvPolicyFromFile(envId);
     if (fromFile) return fromFile;
+    const env = this.envs.calculateEnvFromExtensions(configuredExtensions);
     return this.getComponentEnvPolicyFromEnv(env.env);
   }
 
@@ -1073,15 +1086,23 @@ export class DependencyResolverMain {
 
   async getComponentEnvPolicy(component: Component): Promise<EnvPolicy> {
     // const envComponent = await this.envs.getEnvComponent(component);
-    const fromFile = await this.getEnvPolicyFromFile(this.envs.getEnvId(component));
+    const envId = this.envs.calculateEnvId(component);
+    if (this.envs.isCoreEnv(envId.toStringWithoutVersion())) {
+      const env = this.envs.getEnv(component).env;
+      return this.getComponentEnvPolicyFromEnv(env);
+    }
+    const fromFile = await this.getEnvPolicyFromFile(envId.toString());
     if (fromFile) return fromFile;
     const env = this.envs.getEnv(component).env;
     return this.getComponentEnvPolicyFromEnv(env);
   }
 
-
-  getEnvManifest(envComponent: Component): EnvPolicy|undefined {
-    const envJson = envComponent.filesystem.files.find((file) => {
+  getEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): EnvPolicy | undefined {
+    // TODO: maybe throw an error here?
+    if (!envComponent && !legacyFiles) return undefined;
+    // @ts-ignore
+    const files = legacyFiles || envComponent.filesystem.files;
+    const envJson = files.find((file) => {
       return file.relative === 'env.jsonc' || file.relative === 'env.json';
     });
 
@@ -1097,24 +1118,11 @@ export class DependencyResolverMain {
   private async getEnvPolicyFromFile(envId: string, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;
-    let envJson;
     if (legacyFiles) {
-      envJson = legacyFiles.find((file) => {
-        return file.relative === 'env.jsonc' || file.relative === 'env.json';
-      });
-    } else {
-      const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
-      envJson = envComponent.filesystem.files.find((file) => {
-        return file.relative === 'env.jsonc' || file.relative === 'env.json';
-      });
+      return this.getEnvManifest(undefined, legacyFiles);
     }
-    if (!envJson) return undefined;
-
-    const object = parse(envJson.contents.toString('utf8'));
-    const policy = object?.policy;
-    if (!policy) return undefined;
-    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy);
-    return allPoliciesFromEnv;
+    const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
+    return this.getEnvManifest(envComponent);
   }
 
   async getComponentEnvPolicyFromEnv(env: DependenciesEnv): Promise<EnvPolicy> {
