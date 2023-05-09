@@ -320,7 +320,9 @@ export default class Component extends BitObject {
 
     const calculateRemote = async () => {
       if (this.laneHeadRemote) return this.laneHeadRemote;
-      if (lane.isNew && lane.forkedFrom) {
+      if (lane.isNew && lane.forkedFrom && lane.forkedFrom.scope === lane.scope) {
+        // the last check is to make sure that if this lane will be exported to a different scope than the original
+        // lane, all snaps of the original lane will be considered as local and will be exported later on.
         const headFromFork = await repo.remoteLanes.getRef(lane.forkedFrom, this.toBitId());
         if (headFromFork) return headFromFork;
       }
