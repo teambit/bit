@@ -250,12 +250,14 @@ export default class ImportComponents {
     const currentRemoteLane = currentLaneId
       ? this.options.lanes?.lanes.find((l) => l.toLaneId().isEqual(currentLaneId))
       : undefined;
+    const currentLane = await this.workspace.getCurrentLaneObject();
     const idsFromAnotherLane: BitId[] = [];
     if (currentRemoteLane) {
       await Promise.all(
         bitIds.map(async (bitId) => {
           const isOnCurrentLane =
             (await this.scope.isPartOfLaneHistory(bitId, currentRemoteLane)) ||
+            (await this.scope.isPartOfLaneHistory(bitId, currentLane)) ||
             (await this.scope.isPartOfMainHistory(bitId));
           if (!isOnCurrentLane) idsFromAnotherLane.push(bitId);
         })
