@@ -257,7 +257,7 @@ export default class ImportComponents {
         bitIds.map(async (bitId) => {
           const isOnCurrentLane =
             (await this.scope.isPartOfLaneHistory(bitId, currentRemoteLane)) ||
-            (await this.scope.isPartOfLaneHistory(bitId, currentLane)) ||
+            (currentLane && (await this.scope.isPartOfLaneHistory(bitId, currentLane))) ||
             (await this.scope.isPartOfMainHistory(bitId));
           if (!isOnCurrentLane) idsFromAnotherLane.push(bitId);
         })
