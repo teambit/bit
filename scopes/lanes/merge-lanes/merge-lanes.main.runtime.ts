@@ -118,7 +118,7 @@ export class MergeLanesMain {
         // don't assign `lane` to the result of this command. otherwise, if you have local snaps, it'll ignore them and use the remote-lane.
         const otherLane = await this.lanes.fetchLaneWithItsComponents(otherLaneId);
 
-        await this.importer.importHeadArtifactsFromLane(otherLane, true);
+        await this.importer.importHeadArtifactsFromLane(otherLane, pattern, true);
 
         lane = await consumer.scope.loadLane(otherLaneId);
       }
@@ -299,7 +299,7 @@ export class MergeLanesMain {
       ignoreMissingHead: true,
       lane: toLaneObj,
     });
-    await this.importer.importHeadArtifactsFromLane(fromLaneObj, true);
+    await this.importer.importHeadArtifactsFromLane(fromLaneObj, undefined, true);
     await this.throwIfNotUpToDate(fromLaneId, toLaneId);
     const repo = this.scope.legacyScope.objects;
     // loop through all components, make sure they're all ahead of main (it might not be on main yet).
