@@ -654,6 +654,27 @@ describe('merge lanes', function () {
         expect(() => helper.command.mergeLane('main')).to.not.throw();
       });
     });
+    // dev: snapA -> export -> snapB -> snapC -> merge-snap.
+    // main: snapMain.
+    describe('when the resolved unrelated is not a direct parent', () => {
+      before(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
+        helper.scopeHelper.getClonedLocalScope(afterLaneExport);
+        helper.command.import();
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.mergeLane('main', '--resolve-unrelated -x');
+      });
+      // previously, this was throwing NoCommonSnap error, because getDivergeData was comparing the remote-lane-head
+      // (snapA) with the current merge-snap. The current merge-snap has one parent - head of main. The remote-lane-head has
+      // history of the lane only (snapA). The traversal has source-hash (merge-snap) and target-hash (snapA).
+      // 1. start from source-hash, you get merge-snap and its parent snapMain. and the immediate unrelated, snapC. target was not found.
+      // 2. start from target-hash, you get snapA only, source was not found.
+      // it is fixed by traversing the unrelated. as a result, #1 includes not only snapC, but also snapB and snapA.
+      it('bit status should not throw', () => {
+        expect(() => helper.command.status()).to.not.throw();
+      });
+    });
   });
   describe('merge lanes when local-lane has soft-removed components and the other lane is behind', () => {
     before(() => {
