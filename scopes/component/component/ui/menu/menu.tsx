@@ -10,6 +10,8 @@ import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
+import * as semver from 'semver';
 import type { ComponentModel } from '../component-model';
 import { useComponent as useComponentQuery, UseComponentType } from '../use-component';
 import { CollapsibleMenuNav } from './menu-nav';
@@ -134,19 +136,10 @@ export function VersionRelatedDropdowns({
   host,
 }: VersionRelatedDropdownsProps) {
   const componentFiltersFromProps = useComponentFilters?.() || {};
-  const componentWithLogsOptions = {
-    logFilters: {
-      snapLog: {
-        logLimit: 10,
-      },
-      tagLog: {
-        logLimit: 10,
-      },
-      fetchLogsByTypeSeparately: true,
-      ...componentFiltersFromProps,
-    },
-    customUseComponent: useComponent,
-  };
+  const query = useQuery();
+  const componentVersion = query.get('version');
+  const isTag = componentVersion ? semver.valid(componentVersion) : undefined;
+  const isSnap = componentVersion ? !isTag : undefined;
 
   // initially fetch just the component data
   const initialFetchOptions = {
@@ -160,6 +153,25 @@ export function VersionRelatedDropdowns({
   };
 
   const { component, loading } = useComponentQuery(host, componentId, initialFetchOptions);
+
+  const componentWithLogsOptions = React.useMemo(
+    () => ({
+      logFilters: {
+        snapLog: {
+          logLimit: 10,
+          logHead: isSnap ? componentVersion : undefined,
+        },
+        tagLog: {
+          logLimit: 10,
+          logHead: isTag ? componentVersion : undefined,
+        },
+        fetchLogsByTypeSeparately: true,
+        ...componentFiltersFromProps,
+      },
+      customUseComponent: useComponent,
+    }),
+    [componentVersion, isTag, isSnap]
+  );
 
   const useVersions = () => {
     const { componentLogs = {}, loading: loadingLogs } = useComponentQuery(host, componentId, componentWithLogsOptions);

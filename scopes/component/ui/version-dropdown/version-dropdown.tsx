@@ -105,7 +105,7 @@ function _VersionMenu(
       <div className={styles.top}>
         {loading && <LineSkeleton count={6} className={styles.loader} />}
         {!loading && <div className={classNames(styles.titleContainer, styles.title)}>{message}</div>}
-        {localVersion && (
+        {!loading && localVersion && (
           <MenuLinkItem
             href={'?'}
             active={currentVersion === LOCAL_VERSION}
@@ -221,6 +221,12 @@ function _VersionDropdown(
   const [key, setKey] = useState(0);
   const singleVersion = !hasMoreVersions;
   const [open, setOpen] = useState(false);
+
+  React.useEffect(() => {
+    if (loading && open) {
+      setOpen(false);
+    }
+  }, [loading]);
 
   const { author, message, timestamp } = currentVersionLog;
   const handlePlaceholderClicked = (e: React.MouseEvent<HTMLDivElement>) => {
