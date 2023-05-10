@@ -65,4 +65,14 @@ export type ReactAppOptions = {
    * favicon for the app. You can pass an abs path (using require.resolve()) or a url.
    */
   favicon?: string;
+
+  /**
+   * path to load the webpack instance from
+   */
+  webpackModulePath?: string;
+
+  /**
+   * path to load the webpack dev server instance from.
+   */
+  webpackDevServerModulePath?: string;
 };
