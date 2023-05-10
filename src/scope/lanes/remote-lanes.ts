@@ -166,6 +166,7 @@ export default class RemoteLanes {
       id: { scope: id.scope, name: id.name },
       head: head.toString(),
     }));
-    return fs.outputFile(this.composeRemoteLanePath(remoteName, laneName), JSON.stringify(obj, null, 2));
+    await fs.outputFile(this.composeRemoteLanePath(remoteName, laneName), JSON.stringify(obj, null, 2));
+    delete this.remotes[remoteName][laneName];
   }
 }
