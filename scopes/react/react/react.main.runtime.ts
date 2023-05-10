@@ -76,8 +76,8 @@ export type ReactMainConfig = {
 export type UseWebpackModifiers = {
   previewConfig?: WebpackConfigTransformer[];
   devServerConfig?: WebpackConfigTransformer[];
-  webpack?: any;
-  webpackDevServerPath?: string;
+  webpackModulePath?: string;
+  webpackDevServerModulePath?: string;
 };
 
 export type UseTypescriptModifiers = {
@@ -216,15 +216,20 @@ export class ReactMain {
   useWebpack(modifiers?: UseWebpackModifiers): EnvTransformer {
     const overrides: any = {};
     const devServerTransformers = modifiers?.devServerConfig;
-    if (devServerTransformers || modifiers?.webpack || modifiers?.webpackDevServerPath) {
+    if (devServerTransformers || modifiers?.webpackModulePath || modifiers?.webpackDevServerModulePath) {
       overrides.getDevServer = (context: DevServerContext) =>
-        this.reactEnv.getDevServer(context, devServerTransformers, modifiers?.webpack, modifiers?.webpackDevServerPath);
+        this.reactEnv.getDevServer(
+          context,
+          devServerTransformers,
+          modifiers?.webpackModulePath,
+          modifiers?.webpackDevServerModulePath
+        );
       overrides.getDevEnvId = (context: DevServerContext) => this.reactEnv.getDevEnvId(context.envDefinition.id);
     }
     const previewTransformers = modifiers?.previewConfig;
-    if (previewTransformers || modifiers?.webpack) {
+    if (previewTransformers || modifiers?.webpackModulePath) {
       overrides.getBundler = (context: BundlerContext) =>
-        this.reactEnv.getBundler(context, previewTransformers, modifiers?.webpack);
+        this.reactEnv.getBundler(context, previewTransformers, modifiers?.webpackModulePath);
     }
     return this.envs.override(overrides);
   }

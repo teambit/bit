@@ -319,8 +319,8 @@ export class ReactEnv
   getDevServer(
     context: DevServerContext,
     transformers: WebpackConfigTransformer[] = [],
-    webpack?: any,
-    webpackDevServerPath?: string
+    webpackModulePath?: string,
+    webpackDevServerModulePath?: string
   ): DevServer {
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
@@ -331,21 +331,26 @@ export class ReactEnv
       return merged;
     };
 
-    return this.webpack.createDevServer(context, [defaultTransformer, ...transformers], webpack, webpackDevServerPath);
+    return this.webpack.createDevServer(
+      context,
+      [defaultTransformer, ...transformers],
+      webpackModulePath,
+      webpackDevServerModulePath
+    );
   }
 
   async getBundler(
     context: BundlerContext,
     transformers: WebpackConfigTransformer[] = [],
-    webpack?: any
+    webpackModulePath?: string
   ): Promise<Bundler> {
-    return this.createComponentsWebpackBundler(context, transformers, webpack);
+    return this.createComponentsWebpackBundler(context, transformers, webpackModulePath);
   }
 
   async createComponentsWebpackBundler(
     context: BundlerContext,
     transformers: WebpackConfigTransformer[] = [],
-    webpack?: any
+    webpackModulePath?: string
   ): Promise<Bundler> {
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(context.development);
@@ -356,13 +361,13 @@ export class ReactEnv
       return merged;
     };
     const mergedTransformers = [defaultTransformer, ...transformers];
-    return this.createWebpackBundler(context, mergedTransformers, webpack);
+    return this.createWebpackBundler(context, mergedTransformers, webpackModulePath);
   }
 
   async createTemplateWebpackBundler(
     context: BundlerContext,
     transformers: WebpackConfigTransformer[] = [],
-    webpack?: any
+    webpackModulePath?: string
   ): Promise<Bundler> {
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(context.development);
@@ -373,15 +378,15 @@ export class ReactEnv
       return merged;
     };
     const mergedTransformers = [defaultTransformer, ...transformers];
-    return this.createWebpackBundler(context, mergedTransformers, webpack);
+    return this.createWebpackBundler(context, mergedTransformers, webpackModulePath);
   }
 
   private async createWebpackBundler(
     context: BundlerContext,
     transformers: WebpackConfigTransformer[] = [],
-    webpack?: any
+    webpackModulePath?: string
   ): Promise<Bundler> {
-    return this.webpack.createBundler(context, transformers, undefined, webpack);
+    return this.webpack.createBundler(context, transformers, undefined, webpackModulePath);
   }
 
   getAdditionalHostDependencies(): string[] {

@@ -86,8 +86,8 @@ export class WebpackMain {
   createDevServer(
     context: DevServerContext,
     transformers: WebpackConfigTransformer[] = [],
-    webpackInstance?: any,
-    webpackDevServerPath?: string
+    webpackModulePath?: string,
+    webpackDevServerModulePath?: string
   ): DevServer {
     const config = this.createDevServerConfig(
       context.entry,
@@ -97,7 +97,7 @@ export class WebpackMain {
       context.publicPath,
       context.title
     ) as any;
-    const wdsPath = webpackDevServerPath || require.resolve('webpack-dev-server');
+    const wdsPath = webpackDevServerModulePath || require.resolve('webpack-dev-server');
     const configMutator = new WebpackConfigMutator(config);
     const transformerContext: WebpackConfigDevServerTransformContext = Object.assign(context, { mode: 'dev' as const });
     const internalTransformers = this.generateTransformers(undefined, transformerContext);
@@ -108,7 +108,7 @@ export class WebpackMain {
       transformerContext
     );
     // @ts-ignore - fix this
-    return new WebpackDevServer(afterMutation.raw, webpackInstance || webpack, wdsPath);
+    return new WebpackDevServer(afterMutation.raw, this.getWebpackInstance(webpackModulePath, webpack), wdsPath);
   }
 
   mergeConfig(target: any, source: any): any {
@@ -119,7 +119,7 @@ export class WebpackMain {
     context: BundlerContext,
     transformers: WebpackConfigTransformer[] = [],
     initialConfigs?: webpack.Configuration[],
-    webpackInstance?: any
+    webpackModuleOrPath?: string | any
   ) {
     const transformerContext: GlobalWebpackConfigTransformContext = {
       mode: 'prod',
@@ -129,7 +129,13 @@ export class WebpackMain {
     const configs =
       initialConfigs ||
       this.createConfigs(context.targets, baseConfigFactory, transformers, transformerContext, context);
-    return new WebpackBundler(context.targets, configs, this.logger, webpackInstance || webpack, context.metaData);
+    return new WebpackBundler(
+      context.targets,
+      configs,
+      this.logger,
+      this.getWebpackInstance(webpackModuleOrPath, webpack),
+      context.metaData
+    );
   }
 
   private createConfigs(
@@ -172,6 +178,17 @@ export class WebpackMain {
       }
     }
     return transformers;
+  }
+
+  private getWebpackInstance(webpackOrPath?: any | string, fallback?: any) {
+    if (!webpackOrPath) {
+      return fallback;
+    }
+    if (typeof webpackOrPath === 'string') {
+      // eslint-disable-next-line import/no-dynamic-require, global-require
+      return require(webpackOrPath);
+    }
+    return webpackOrPath;
   }
 
   private createDevServerConfig(
