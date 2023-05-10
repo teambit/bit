@@ -32,6 +32,12 @@ export default class RemoteLanes {
     this.pushToRemoteLane(remoteLane, componentId, head, remoteLaneId);
   }
 
+  removeFromCacheByFilePath(filePath: string) {
+    const { laneName, remoteName } = this.decomposeRemoteLanePath(filePath);
+    logger.debug(`RemoteLanes, removing refs from the cache: ${remoteName}/${laneName}`);
+    delete this.remotes[remoteName]?.[laneName];
+  }
+
   private pushToRemoteLane(remoteLane: LaneComponent[], componentId: BitId, head: Ref, remoteLaneId: LaneId) {
     const existingComponent = remoteLane.find((n) => n.id.isEqualWithoutVersion(componentId));
     if (existingComponent) {
@@ -132,6 +138,13 @@ export default class RemoteLanes {
 
   private composeRemoteLanePath(remoteName: string, laneName: string) {
     return path.join(this.basePath, remoteName, laneName);
+  }
+  private decomposeRemoteLanePath(filePath: string): { remoteName: string; laneName: string } {
+    const dir = path.dirname(filePath);
+    return {
+      remoteName: path.basename(dir),
+      laneName: path.basename(filePath),
+    };
   }
 
   async write() {
