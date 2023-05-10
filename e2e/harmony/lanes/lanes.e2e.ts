@@ -997,6 +997,29 @@ describe('bit lane command', function () {
       expect(() => helper.command.export()).to.not.throw();
     });
   });
+  describe('multiple scopes - fork the lane and export to another scope', () => {
+    let anotherRemote: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane('lane-b', `--scope ${anotherRemote}`);
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      // previously, it was errored here because the remote didn't have comp2, so it couldn't merge the lane.
+      helper.command.export();
+    });
+    it('should be able to import the forked lane with no errors', () => {
+      expect(() => helper.command.import(`${anotherRemote}/lane-b`)).to.not.throw();
+    });
+  });
   describe('snapping and un-tagging on a lane', () => {
     let afterFirstSnap: string;
     before(() => {

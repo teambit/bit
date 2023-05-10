@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-
+import { IssuesClasses } from '@teambit/component-issues';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 
@@ -8,8 +8,7 @@ console.log('got ' + b() + ' and got A')`;
 const fixtureB = `const a = require('../a/a');
 console.log('got ' + a() + ' and got B')`;
 
-// @TODO: FIX ON HARMONY! (see the first test for more info).
-describe.skip('cyclic dependencies', function () {
+describe('cyclic dependencies', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -19,8 +18,6 @@ describe.skip('cyclic dependencies', function () {
     helper.scopeHelper.destroy();
   });
 
-  // @TODO: FIX ON HARMONY!
-  // this is failing in the "bit add" command of comp/b. it gets stuck in an infinite loop.
   describe('a => b, b => a (component A requires B, component B requires A)', () => {
     let output;
     before(() => {
@@ -30,7 +27,12 @@ describe.skip('cyclic dependencies', function () {
       helper.command.addComponent('comp/a', { i: 'comp/a' });
       helper.command.addComponent('comp/b', { i: 'comp/b' });
       helper.command.linkAndRewire();
-      output = helper.command.tagAllWithoutBuild();
+
+      // an intermediate step, make sure it throws when CircularDependencies issue is not ignored.
+      const errOutput = helper.general.runWithTryCatch('bit tag -a');
+      expect(errOutput).to.have.string(IssuesClasses.CircularDependencies.name);
+
+      output = helper.command.tagAllWithoutBuild('--ignore-issues="CircularDependencies"');
     });
     it('should be able to tag both with no errors', () => {
       expect(output).to.have.string('2 component(s) tagged');
@@ -80,7 +82,8 @@ describe.skip('cyclic dependencies', function () {
       });
     });
   });
-  describe('a complex case with a long chain of dependencies', () => {
+  // @TODO: FIX ON HARMONY!
+  describe.skip('a complex case with a long chain of dependencies', () => {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -274,7 +277,8 @@ describe.skip('cyclic dependencies', function () {
       });
     });
   });
-  describe('same component require itself using module path (@bit/component-name)', () => {
+  // @TODO: FIX ON HARMONY!
+  describe.skip('same component require itself using module path (@bit/component-name)', () => {
     let tagOutput;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();

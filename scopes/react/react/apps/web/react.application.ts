@@ -35,7 +35,9 @@ export class ReactApp implements Application {
     readonly devServer?: DevServer,
     readonly transformers: WebpackConfigTransformer[] = [],
     readonly deploy?: (context: ReactDeployContext) => Promise<void>,
-    readonly favicon?: string
+    readonly favicon?: string,
+    readonly webpackModulePath?: string,
+    readonly webpackDevServerModulePath?: string
   ) {}
   readonly applicationType = 'react-common-js';
   readonly dir = 'public';
@@ -51,7 +53,12 @@ export class ReactApp implements Application {
     }
 
     const devServerContext = await this.getDevServerContext(context);
-    const devServer = this.reactEnv.getDevServer(devServerContext, [addDevServer, setOutput, ...this.transformers]);
+    const devServer = this.reactEnv.getDevServer(
+      devServerContext,
+      [addDevServer, setOutput, ...this.transformers],
+      this.webpackModulePath,
+      this.webpackDevServerModulePath
+    );
     await devServer.listen(port);
     return port;
   }
@@ -115,10 +122,11 @@ export class ReactApp implements Application {
       previousTasksResults: [],
     });
 
-    const bundler = await this.reactEnv.getBundler(ctx, [
-      (config) => config.merge([clientConfig()]),
-      ...this.transformers,
-    ]);
+    const bundler = await this.reactEnv.getBundler(
+      ctx,
+      [(config) => config.merge([clientConfig()]), ...this.transformers],
+      this.webpackModulePath
+    );
 
     const bundleResult = await bundler.run();
     return bundleResult[0];
@@ -143,10 +151,11 @@ export class ReactApp implements Application {
       previousTasksResults: [],
     });
 
-    const bundler = await this.reactEnv.getBundler(ctx, [
-      (config) => config.merge([ssrConfig()]),
-      ...this.transformers,
-    ]);
+    const bundler = await this.reactEnv.getBundler(
+      ctx,
+      [(config) => config.merge([ssrConfig()]), ...this.transformers],
+      this.webpackModulePath
+    );
 
     const bundleResult = await bundler.run();
     return bundleResult[0];
@@ -246,7 +255,7 @@ export class ReactApp implements Application {
     ]);
 
     const reactEnv = context.env as ReactEnv;
-    const bundler: Bundler = await reactEnv.getBundler(bundlerContext, transformers);
+    const bundler: Bundler = await reactEnv.getBundler(bundlerContext, transformers, this.webpackModulePath);
     return bundler;
   }
 
@@ -263,7 +272,7 @@ export class ReactApp implements Application {
     ]);
 
     const reactEnv = context.env as ReactEnv;
-    const bundler: Bundler = await reactEnv.getBundler(bundlerContext, transformers);
+    const bundler: Bundler = await reactEnv.getBundler(bundlerContext, transformers, this.webpackModulePath);
     return bundler;
   }
 

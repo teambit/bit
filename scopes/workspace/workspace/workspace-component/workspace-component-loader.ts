@@ -207,7 +207,7 @@ export class WorkspaceComponentLoader {
     return undefined;
   }
 
-  private async getConsumerComponent(id: ComponentID): Promise<ConsumerComponent | undefined> {
+  async getConsumerComponent(id: ComponentID): Promise<ConsumerComponent | undefined> {
     try {
       return await this.workspace.consumer.loadComponent(id._legacy);
     } catch (err: any) {
