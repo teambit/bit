@@ -1,6 +1,5 @@
 import { filter } from 'bluebird';
 import { Mutex } from 'async-mutex';
-import pMap from 'p-map';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import groupArray from 'group-array';
@@ -31,6 +30,7 @@ import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
 import { getAllVersionHashes } from './traverse-versions';
 import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
+import { pMapPool } from '../../utils/promise-with-concurrent';
 
 type HashesPerRemote = { [remoteName: string]: string[] };
 
@@ -651,7 +651,7 @@ export default class ScopeComponentsImporter {
     skipComponentsWithDepsGraph = false
   ): Promise<VersionDependencies[]> {
     const concurrency = concurrentComponentsLimit();
-    const componentsWithVersionsWithNulls = await pMap(
+    const componentsWithVersionsWithNulls = await pMapPool(
       compsDefs,
       async ({ component, id }) => {
         if (!component) return null;
