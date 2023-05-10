@@ -83,7 +83,12 @@ export class WebpackMain {
   /**
    * create an instance of bit-compliant webpack dev server for a set of components
    */
-  createDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
+  createDevServer(
+    context: DevServerContext,
+    transformers: WebpackConfigTransformer[] = [],
+    webpackInstance?: any,
+    webpackDevServerPath?: string
+  ): DevServer {
     const config = this.createDevServerConfig(
       context.entry,
       this.workspace.path,
@@ -92,6 +97,7 @@ export class WebpackMain {
       context.publicPath,
       context.title
     ) as any;
+    const wdsPath = webpackDevServerPath || require.resolve('webpack-dev-server');
     const configMutator = new WebpackConfigMutator(config);
     const transformerContext: WebpackConfigDevServerTransformContext = Object.assign(context, { mode: 'dev' as const });
     const internalTransformers = this.generateTransformers(undefined, transformerContext);
@@ -102,7 +108,7 @@ export class WebpackMain {
       transformerContext
     );
     // @ts-ignore - fix this
-    return new WebpackDevServer(afterMutation.raw, webpack, require.resolve('webpack-dev-server'));
+    return new WebpackDevServer(afterMutation.raw, webpackInstance || webpack, wdsPath);
   }
 
   mergeConfig(target: any, source: any): any {
