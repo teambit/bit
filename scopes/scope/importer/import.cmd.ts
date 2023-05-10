@@ -210,8 +210,8 @@ export class ImportCmd implements Command {
 function formatMissingComponents(missing?: string[]) {
   if (!missing?.length) return '';
   const title = chalk.underline('Missing Components');
-  const subTitle =
-    'The following components are missing from the remote in the requested version, try running "bit status" to re-sync your .bitmap file';
+  const subTitle = `The following components are missing from the remote in the requested version, try running "bit status" to re-sync your .bitmap file
+Also, make sure the requested version exists on main or the checked out lane`;
   const body = chalk.red(missing.join('\n'));
   return `\n\n${title}\n${subTitle}\n${body}`;
 }
