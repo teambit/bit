@@ -48,6 +48,7 @@ export class ComponentWriterMain {
     await this.populateComponentsFilesToWrite(opts);
     this.moveComponentsIfNeeded(opts);
     await this.persistComponentsData(opts);
+    await this.consumer.writeBitMap();
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     if (!opts.skipDependencyInstallation) {
@@ -55,7 +56,6 @@ export class ComponentWriterMain {
       // no point to compile if the installation is not running. the environment is not ready.
       compilationError = await this.compileGracefully();
     }
-    await this.consumer.writeBitMap();
     this.logger.debug('writeMany, completed!');
     return { installationError, compilationError };
   }
