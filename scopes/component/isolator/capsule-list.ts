@@ -1,5 +1,5 @@
 import type { Component, ComponentID } from '@teambit/component';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { Dependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Edge, Graph, Node } from '@teambit/graph.cleargraph';
 import { BitId } from '@teambit/legacy-bit-id';
 import { normalize } from 'path';
@@ -34,15 +34,17 @@ export default class CapsuleList extends Array<Capsule> {
     const components = this.getAllComponents();
     const graph = new Graph<Component, string>();
 
-    components.forEach((comp) => graph.setNode(new Node(comp.id.toString(), comp)));
+    // Build a graph with all the components from the current capsule list
+    components.forEach((comp: Component) => graph.setNode(new Node(depResolver.getPackageName(comp), comp)));
 
-    for (const comp of components) {
+    // Add edges between the components according to their interdependencies
+    for (const node of graph.nodes) {
       // eslint-disable-next-line no-await-in-loop
-      const deps = await depResolver.getComponentDependencies(comp);
-      deps.forEach((dep) => {
-        const depCompId = dep.componentId;
-        if (graph.hasNode(depCompId.toString())) {
-          graph.setEdge(new Edge(comp.id.toString(), depCompId.toString(), dep.lifecycle));
+      const deps = await depResolver.getDependencies(node.attr);
+      deps.forEach((dep: Dependency) => {
+        const depPkgName = dep.getPackageName?.();
+        if (depPkgName && graph.hasNode(depPkgName)) {
+          graph.setEdge(new Edge(node.id, depPkgName, dep.lifecycle));
         }
       });
     }
