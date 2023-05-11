@@ -329,6 +329,13 @@ export class CheckoutMain {
         true
       );
     }
+    if (!reset) {
+      const divergeDataForMergePending = await componentModel.getDivergeDataForMergePending(repo);
+      const isMergePending = divergeDataForMergePending.isDiverged();
+      if (isMergePending) {
+        return returnFailure(`component is merge-pending and cannot be checked out, run "bit status" for more info`);
+      }
+    }
     const currentVersionObject: Version = await componentModel.loadVersion(currentlyUsedVersion, repo);
     const isModified = await consumer.isComponentModified(currentVersionObject, component);
     if (!isModified && reset) {
