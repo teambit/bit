@@ -117,11 +117,13 @@ export function configFactory(
         // @ts-ignore - @types/WDS mismatch - 3.11.6 vs 4.0.3
         app.use(evalSourceMapMiddleware(wds));
         // This lets us open files from the runtime error overlay.
+        // @ts-ignore
         app.use(errorOverlayMiddleware());
       },
 
       onAfterSetupMiddleware({ app }) {
         // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
+        // @ts-ignore
         app.use(redirectServedPath(publicUrlOrPath));
 
         // This service worker file is effectively a 'no-op' that will reset any
@@ -129,6 +131,7 @@ export function configFactory(
         // We do this in development to avoid hitting the production cache if
         // it used the same host and port.
         // https://github.com/facebook/create-react-app/issues/2272#issuecomment-302832432
+        // @ts-ignore
         app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
       },
 
