@@ -42,7 +42,7 @@ import { ModelComponent, Symlink, Version } from './models';
 import Lane from './models/lane';
 import { ComponentLog } from './models/model-component';
 import { BitObject, BitRawObject, Ref, Repository } from './objects';
-import { ComponentItem, IndexType } from './objects/components-index';
+import { ComponentItem, IndexType } from './objects/scope-index';
 import RemovedObjects from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
