@@ -231,7 +231,7 @@
         "@types/url-join": "4.0.0",
         "@types/url-parse": "1.4.3",
         "@types/webpack": "5.28.1",
-        "@types/webpack-dev-server": "4.15.0",
+        "@types/webpack-dev-server": "4.7.2",
         "@yarnpkg/cli": "4.0.0-rc.42",
         "@yarnpkg/core": "^4.0.0-rc.42",
         "@yarnpkg/fslib": "3.0.0-rc.42",
