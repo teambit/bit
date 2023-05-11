@@ -40,7 +40,6 @@ export type InstallOptions = {
   packageManagerConfigRootDir?: string;
   resolveVersionsFromDependenciesOnly?: boolean;
   linkedDependencies?: Record<string, Record<string, string>>;
-  pruneNodeModules?: boolean;
 };
 
 export type GetComponentManifestsOptions = {
@@ -132,7 +131,7 @@ export class DependencyInstaller {
     componentDirectoryMap: ComponentMap<string>,
     options: InstallOptions = DEFAULT_INSTALL_OPTIONS,
     packageManagerOptions: PackageManagerInstallOptions = DEFAULT_PM_INSTALL_OPTIONS
-  ) {
+  ): Promise<{ dependenciesChanged: boolean }> {
     const args = {
       componentDirectoryMap,
       options,
@@ -180,7 +179,6 @@ export class DependencyInstaller {
       engineStrict: this.engineStrict,
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
       peerDependencyRules: this.peerDependencyRules,
-      pruneNodeModules: options.pruneNodeModules,
       hidePackageManagerOutput,
       ...packageManagerOptions,
     };
@@ -218,7 +216,7 @@ export class DependencyInstaller {
     const startTime = process.hrtime();
 
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
-    await this.packageManager.install(
+    const installResult = await this.packageManager.install(
       {
         rootDir: finalRootDir,
         manifests,
@@ -230,7 +228,14 @@ export class DependencyInstaller {
       this.logger.consoleSuccess(`done ${message}`, startTime);
     }
     await this.runPrePostSubscribers(this.postInstallSubscriberList, 'post', args);
-    return componentDirectoryMap;
+    return installResult;
+  }
+
+  public async pruneModules(rootDir: string): Promise<void> {
+    if (!this.packageManager.pruneModules) {
+      return;
+    }
+    await this.packageManager.pruneModules(rootDir);
   }
 
   /**

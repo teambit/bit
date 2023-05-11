@@ -542,6 +542,23 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * this is not the complete legacy component (ConsumerComponent), it's missing dependencies and hooks from Harmony
+   * are skipped. do not trust the data you get from this method unless you know what you're doing.
+   */
+  async getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined> {
+    try {
+      const componentMap = this.consumer.bitMap.getComponent(id._legacy);
+      return await ConsumerComponent.loadFromFileSystem({
+        componentMap,
+        id: id._legacy,
+        consumer: this.consumer,
+      });
+    } catch (err) {
+      return undefined;
+    }
+  }
+
+  /**
    * get a component from workspace
    * @param id component ID
    */
@@ -684,7 +701,7 @@ export class Workspace implements ComponentFactory {
 
   /**
    * if checked out to a lane and the lane exists in the remote,
-   * return the remote lane id (name+scope). otherwise, return null.
+   * return the remote lane. otherwise, return null.
    */
   async getCurrentRemoteLane(): Promise<Lane | null> {
     const currentLaneId = this.getCurrentLaneId();

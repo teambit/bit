@@ -156,6 +156,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
     const resolvedEnvAspects = await this.preview.resolveAspects(MainRuntime.name, [envComponent.id], undefined, {
       requestedOnly: true,
+      // required to support envs that are plguins (.bit-env files)
+      filterByRuntime: false,
     });
     const resolvedEnv = resolvedEnvAspects[0];
     const hostRootDir = resolvedEnv?.aspectPath;

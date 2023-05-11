@@ -6,17 +6,18 @@ export type AspectDefinitionProps = {
   aspectPath: string;
   runtimePath: string | null;
   aspectFilePath: string | null;
+  local?: boolean;
 };
 
 export class AspectDefinition {
   constructor(
     /**
-     * path the the root directory of the aspect module.
+     * path to the root directory of the aspect module.
      */
     readonly aspectPath: string,
 
     /**
-     * path the the aspect file (.aspect).
+     * path to the aspect file (.aspect).
      */
     readonly aspectFilePath: string | null,
 
@@ -44,7 +45,7 @@ export class AspectDefinition {
     return null;
   }
 
-  static from({ component, aspectPath, aspectFilePath, runtimePath, id }: AspectDefinitionProps) {
-    return new AspectDefinition(aspectPath, aspectFilePath, runtimePath, component, id);
+  static from({ component, aspectPath, aspectFilePath, runtimePath, id, local }: AspectDefinitionProps) {
+    return new AspectDefinition(aspectPath, aspectFilePath, runtimePath, component, id, local);
   }
 }

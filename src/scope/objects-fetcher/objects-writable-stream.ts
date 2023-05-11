@@ -9,7 +9,7 @@ import { ObjectItem } from '../objects/object-list';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { WriteComponentsQueue } from './write-components-queue';
 
-const TIMEOUT_MINUTES = 5;
+const TIMEOUT_MINUTES = 3;
 
 /**
  * first, write all immutable objects, such as files/sources/versions into the filesystem, as they arrive.

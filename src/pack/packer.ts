@@ -116,9 +116,9 @@ export class Packer {
       return { metadata, warnings, errors, startTime, endTime: Date.now() };
     } catch (err: any) {
       const errorMsg = `failed running ${packageManager} ${args} at ${cwd}`;
-      logger.error(`${errorMsg}`);
+      logger.error(`${errorMsg}`, err);
       if (err.stderr) logger.error(`${err.stderr}`);
-      errors.push(`${errorMsg}\n${err.stderr}`);
+      errors.push(`${errorMsg}\n${err.stderr || err.message}`);
       return { errors, startTime, endTime: Date.now() };
     }
   }

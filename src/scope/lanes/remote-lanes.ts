@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import pMapSeries from 'p-map-series';
 import { LaneId } from '@teambit/lane-id';
-import { compact } from 'lodash';
+import { compact, set } from 'lodash';
 import { Mutex } from 'async-mutex';
 import { BitId } from '../../bit-id';
 import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '../../constants';
@@ -19,33 +19,40 @@ type Lanes = { [laneName: string]: LaneComponent[] };
  */
 export default class RemoteLanes {
   basePath: string;
-  remotes: { [remoteName: string]: Lanes };
+  private remotes: { [remoteName: string]: Lanes } = {};
+  private changed: { [remoteName: string]: { [laneName: string]: boolean } } = {};
   writeMutex = new Mutex();
   constructor(scopePath: string) {
     this.basePath = path.join(scopePath, REMOTE_REFS_DIR);
-    this.remotes = {};
   }
   async addEntry(remoteLaneId: LaneId, componentId: BitId, head?: Ref) {
     if (!remoteLaneId) throw new TypeError('addEntry expects to get remoteLaneId');
     if (!head) return; // do nothing
     const remoteLane = await this.getRemoteLane(remoteLaneId);
-    this.pushToRemoteLane(remoteLane, componentId, head);
+    this.pushToRemoteLane(remoteLane, componentId, head, remoteLaneId);
   }
 
-  private pushToRemoteLane(remoteLane: LaneComponent[], componentId: BitId, head: Ref) {
+  removeFromCacheByFilePath(filePath: string) {
+    const { laneName, remoteName } = this.decomposeRemoteLanePath(filePath);
+    logger.debug(`RemoteLanes, removing refs from the cache: ${remoteName}/${laneName}`);
+    delete this.remotes[remoteName]?.[laneName];
+  }
+
+  private pushToRemoteLane(remoteLane: LaneComponent[], componentId: BitId, head: Ref, remoteLaneId: LaneId) {
     const existingComponent = remoteLane.find((n) => n.id.isEqualWithoutVersion(componentId));
     if (existingComponent) {
       existingComponent.head = head;
     } else {
       remoteLane.push({ id: componentId, head });
     }
+    set(this.changed, [remoteLaneId.scope, remoteLaneId.name], true);
   }
 
   async addEntriesFromModelComponents(remoteLaneId: LaneId, components: ModelComponent[]) {
     const remoteLane = await this.getRemoteLane(remoteLaneId);
     components.forEach((component) => {
       if (!component.remoteHead) return;
-      this.pushToRemoteLane(remoteLane, component.toBitId(), component.remoteHead);
+      this.pushToRemoteLane(remoteLane, component.toBitId(), component.remoteHead, remoteLaneId);
     });
   }
 
@@ -132,12 +139,24 @@ export default class RemoteLanes {
   private composeRemoteLanePath(remoteName: string, laneName: string) {
     return path.join(this.basePath, remoteName, laneName);
   }
+  private decomposeRemoteLanePath(filePath: string): { remoteName: string; laneName: string } {
+    const dir = path.dirname(filePath);
+    return {
+      remoteName: path.basename(dir),
+      laneName: path.basename(filePath),
+    };
+  }
 
   async write() {
+    const numOfChangedRemotes = Object.keys(this.changed).length;
+    if (!numOfChangedRemotes) {
+      logger.debug(`remote-lanes.write, nothing has changed, no need to write`);
+      return;
+    }
     await this.writeMutex.runExclusive(async () => {
-      logger.debug(`remote-lanes.write, start, ${Object.keys(this.remotes).length} remotes`);
+      logger.debug(`remote-lanes.write, start, ${numOfChangedRemotes} remotes`);
       await Promise.all(Object.keys(this.remotes).map((remoteName) => this.writeRemoteLanes(remoteName)));
-      logger.debug(`remote-lanes.write, end, ${Object.keys(this.remotes).length} remotes`);
+      logger.debug(`remote-lanes.write, end, ${numOfChangedRemotes} remotes`);
     });
   }
 
@@ -162,10 +181,12 @@ export default class RemoteLanes {
   }
 
   private async writeRemoteLaneFile(remoteName: string, laneName: string) {
+    if (!this.changed[remoteName]?.[laneName]) return;
     const obj = this.remotes[remoteName][laneName].map(({ id, head }) => ({
       id: { scope: id.scope, name: id.name },
       head: head.toString(),
     }));
-    return fs.outputFile(this.composeRemoteLanePath(remoteName, laneName), JSON.stringify(obj, null, 2));
+    await fs.outputFile(this.composeRemoteLanePath(remoteName, laneName), JSON.stringify(obj, null, 2));
+    delete this.changed[remoteName][laneName];
   }
 }

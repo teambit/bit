@@ -30,9 +30,9 @@ export class ObjectsReadableGenerator {
       await pMapSeries(componentsWithOptions, async (componentWithOptions) =>
         this.pushComponentObjects(componentWithOptions)
       );
-      this.closeReadable();
+      this.closeReadableSuccessfully();
     } catch (err: any) {
-      this.readable.destroy(err);
+      this.closeReadableFailure(err);
     }
   }
 
@@ -44,9 +44,9 @@ export class ObjectsReadableGenerator {
           this.push({ ref: laneToFetch.hash(), buffer: laneBuffer });
         })
       );
-      this.closeReadable();
+      this.closeReadableSuccessfully();
     } catch (err: any) {
-      this.readable.destroy(err);
+      this.closeReadableFailure(err);
     }
   }
 
@@ -56,16 +56,23 @@ export class ObjectsReadableGenerator {
         const objectItem = await this.getObjectGracefully(ref, scope);
         if (objectItem) this.push(objectItem);
       });
-      this.closeReadable();
+      this.closeReadableSuccessfully();
     } catch (err: any) {
-      this.readable.destroy(err);
+      this.closeReadableFailure(err);
     }
   }
 
-  private closeReadable() {
+  private closeReadableSuccessfully() {
     logger.debug(`ObjectsReadableGenerator, pushed ${this.pushed.length} objects`);
     this.callbackOnceDone();
     this.readable.push(null);
+  }
+
+  private closeReadableFailure(err: Error) {
+    logger.debug(`ObjectsReadableGenerator, pushed ${this.pushed.length} objects`);
+    logger.error(`ObjectsReadableGenerator, got an error`, err);
+    this.callbackOnceDone(err);
+    this.readable.destroy(err);
   }
 
   private async getObjectGracefully(ref: Ref, scope: Scope) {

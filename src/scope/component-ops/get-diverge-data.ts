@@ -126,6 +126,12 @@ export async function getDivergeData({
         error = err;
       }
     });
+    if (version.unrelated?.hash) {
+      const unrelatedData = getVersionData(Ref.from(version.unrelated.hash));
+      if (unrelatedData) {
+        addParentsRecursively(unrelatedData, snaps, isSource, depth + 1);
+      }
+    }
   };
   const localVersion = getVersionData(localHead);
   if (!localVersion) {

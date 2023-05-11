@@ -1,13 +1,15 @@
 import execa from 'execa';
+import os from 'os';
 import fs from 'fs-extra';
 import { Graph } from 'graphlib';
 import graphviz, { Digraph } from 'graphviz';
+import { Graph as ClearGraph } from '@teambit/graph.cleargraph';
 import * as path from 'path';
 
 import BitId from '../../bit-id/bit-id';
 import BitIds from '../../bit-id/bit-ids';
 import logger from '../../logger/logger';
-import { getLatestVersionNumber } from '../../utils';
+import { generateRandomStr, getLatestVersionNumber } from '../../utils';
 
 // const Graph = GraphLib.Graph;
 // const Digraph = graphviz.digraph;
@@ -23,6 +25,7 @@ type ConfigProps = {
   graphVizOptions?: Record<string, any>; // null Custom GraphViz options
   graphVizPath?: string; // null Custom GraphViz path
   highlightColor?: string;
+  colorPerEdgeType?: { [edgeType: string]: string };
 };
 
 const defaultConfig: ConfigProps = {
@@ -62,6 +65,18 @@ export default class VisualDependencyGraph {
     return new VisualDependencyGraph(graphlib, graph, mergedConfig);
   }
 
+  static async loadFromClearGraph(
+    clearGraph: ClearGraph<any, any>,
+    config: ConfigProps = {}
+  ): Promise<VisualDependencyGraph> {
+    const mergedConfig = Object.assign({}, defaultConfig, config);
+    await checkGraphvizInstalled(config.graphVizPath);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const graph: Digraph = VisualDependencyGraph.buildDependenciesGraphFromClearGraph(clearGraph, mergedConfig);
+    // @ts-ignore
+    return new VisualDependencyGraph(clearGraph, graph, mergedConfig);
+  }
+
   /**
    * Creates the graphviz graph
    */
@@ -92,6 +107,29 @@ export default class VisualDependencyGraph {
     return graph;
   }
 
+  static buildDependenciesGraphFromClearGraph(clearGraph: ClearGraph<any, any>, config: ConfigProps): Digraph {
+    const graph = graphviz.digraph('G');
+
+    if (config.graphVizPath) {
+      graph.setGraphVizPath(config.graphVizPath);
+    }
+
+    const nodes = clearGraph.nodes;
+    const edges = clearGraph.edges;
+
+    nodes.forEach((node) => {
+      graph.addNode(node);
+    });
+    edges.forEach((edge) => {
+      const edgeType = edge.attr;
+      const vizEdge = graph.addEdge(edge.sourceId, edge.targetId);
+      const color = config.colorPerEdgeType?.[edgeType] || 'green';
+      setEdgeColor(vizEdge, color);
+    });
+
+    return graph;
+  }
+
   getNode(id: BitId) {
     if (id.hasVersion()) {
       return this.graph.getNode(id.toString());
@@ -108,12 +146,16 @@ export default class VisualDependencyGraph {
     setNodeColor(node, this.config.highlightColor);
   }
 
+  private getTmpFilename() {
+    return path.join(os.tmpdir(), `${generateRandomStr()}.png`);
+  }
+
   /**
    * Creates an image from the module dependency graph.
    * @param  {String} imagePath
    * @return {Promise}
    */
-  async image(imagePath: string): Promise<string> {
+  async image(imagePath: string = this.getTmpFilename()): Promise<string> {
     const options: Record<string, any> = createGraphvizOptions(this.config);
     const type: string = path.extname(imagePath).replace('.', '') || 'png';
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -241,16 +241,13 @@ export class InstallMain {
       // are not added to the manifests.
       // This is an issue when installation is done using root components.
       hasMissingLocalComponents = hasRootComponents && hasComponentsFromWorkspaceInMissingDeps(current);
-      await installer.installComponents(
+      const { dependenciesChanged } = await installer.installComponents(
         this.workspace.path,
         current.manifests,
         mergedRootPolicy,
         current.componentDirectoryMap,
         {
           installTeambitBit: false,
-          // We clean node_modules only on the first install.
-          // Otherwise, we might load an env from a location that we later remove.
-          pruneNodeModules: installCycle === 0,
         },
         pmInstallOptions
       );
@@ -269,6 +266,7 @@ export class InstallMain {
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
       await this.link(linkOpts);
+      if (!dependenciesChanged) break;
       prevManifests.add(manifestsHash(current.manifests));
       // We need to clear cache before creating the new component manifests.
       this.workspace.consumer.componentLoader.clearComponentsCache();
@@ -276,6 +274,9 @@ export class InstallMain {
       current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
+    // We clean node_modules only after the last install.
+    // Otherwise, we might load an env from a location that we later remove.
+    await installer.pruneModules(this.workspace.path);
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;

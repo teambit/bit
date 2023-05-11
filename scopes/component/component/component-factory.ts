@@ -13,6 +13,7 @@ export type ResolveAspectsOptions = FilterAspectsOptions & {
   throwOnError?: boolean;
   useScopeAspectsCapsule?: boolean;
   workspaceName?: string;
+  skipDeps?: boolean;
 };
 
 export type LoadAspectsOptions = {
@@ -78,6 +79,14 @@ export interface ComponentFactory {
    * returns a component by ID.
    */
   get(id: ComponentID): Promise<Component | undefined>;
+
+  /**
+   * returns the legacy representation of a component with minimal loading.
+   * when loaded from the workspace, it won't run any Harmony hooks and even won't load dependencies.
+   * it's good to get raw aspects data or some basic properties.
+   * use carefully. prefer using `get()` instead.
+   */
+  getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined>;
 
   /**
    * returns many components by ids.
