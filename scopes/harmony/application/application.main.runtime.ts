@@ -285,19 +285,21 @@ export class ApplicationMain {
   /**
    * get the component ID of a certain app.
    */
-  getAppIdOrThrow(appName: string) {
+  async getAppIdOrThrow(appName: string) {
     const maybeApp = this.appSlot.toArray().find(([, apps]) => {
       return apps.find((app) => app.name === appName);
     });
 
     if (!maybeApp) throw new AppNotFound(appName);
-    return ComponentID.fromString(maybeApp[0]);
+
+    const host = this.componentAspect.getHost();
+    return host.resolveComponentId(maybeApp[0]);
   }
 
   private async createAppContext(appName: string): Promise<AppContext> {
     const host = this.componentAspect.getHost();
     // const components = await host.list();
-    const id = this.getAppIdOrThrow(appName);
+    const id = await this.getAppIdOrThrow(appName);
     // const component = components.find((c) => c.id.isEqual(id));
     const component = await host.get(id);
     if (!component) throw new AppNotFound(appName);
