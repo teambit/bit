@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import { BitError } from '@teambit/bit-error';
 import { Command, CommandOptions } from '@teambit/cli';
 import {
   ApplyVersionResults,
@@ -51,8 +50,6 @@ export class CheckoutCmd implements Command {
       'when on a lane, avoid introducing new components from the remote lane that do not exist locally',
     ],
     ['v', 'verbose', 'showing verbose output for inspection'],
-    ['', 'reset', 'DEPRECATED. run "bit checkout reset" instead'],
-    ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
   ] as CommandOptions;
   loader = true;
@@ -66,35 +63,21 @@ export class CheckoutCmd implements Command {
       ours = false,
       theirs = false,
       manual = false,
-      reset = false,
       all = false,
       workspaceOnly = false,
       verbose = false,
-      skipNpmInstall = false,
       skipDependencyInstallation = false,
     }: {
       interactiveMerge?: boolean;
       ours?: boolean;
       theirs?: boolean;
       manual?: boolean;
-      reset?: boolean;
       all?: boolean;
       workspaceOnly?: boolean;
       verbose?: boolean;
-      skipNpmInstall?: boolean;
       skipDependencyInstallation?: boolean;
     }
   ) {
-    if (reset) {
-      throw new BitError(`--reset flag has been removed. please run "bit checkout reset" instead`);
-    }
-    if (skipNpmInstall) {
-      // eslint-disable-next-line no-console
-      console.log(
-        chalk.yellow(`"--skip-npm-install" has been deprecated, please use "--skip-dependency-installation" instead`)
-      );
-      skipDependencyInstallation = true;
-    }
     const checkoutProps: CheckoutProps = {
       promptMergeOptions: interactiveMerge,
       mergeStrategy: getMergeStrategy(ours, theirs, manual),
