@@ -78,6 +78,8 @@ export class Watcher {
     const watcher = this.fsWatcher;
     msgs?.onStart(this.workspace);
 
+    await this.workspace.scope.watchScopeInternalFiles();
+
     return new Promise((resolve, reject) => {
       // prefix your command with "BIT_LOG=*" to see all watch events
       if (process.env.BIT_LOG) {

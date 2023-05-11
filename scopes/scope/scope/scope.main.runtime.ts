@@ -39,6 +39,7 @@ import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
+import chokidar from 'chokidar';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
@@ -340,6 +341,37 @@ export class ScopeMain implements ComponentFactory {
       }
     });
     return result;
+  }
+
+  /**
+   * for long-running processes, such as `bit start` or `bit watch`, it's important to keep the following data up to date:
+   * 1. scope-index (.bit/index.json file).
+   * 2. remote-refs (.bit/refs/*).
+   * it's possible that other commands (e.g. `bit import`) modified these files, while these processes are running.
+   * Because these data are kept in memory, they're not up to date anymore.
+   */
+  async watchScopeInternalFiles() {
+    const scopeIndexFile = this.legacyScope.objects.scopeIndex.getPath();
+    const remoteLanesDir = this.legacyScope.objects.remoteLanes.basePath;
+    const pathsToWatch = [scopeIndexFile, remoteLanesDir];
+    const watcher = chokidar.watch(pathsToWatch);
+    watcher.on('ready', () => {
+      this.logger.debug(`watchSystemFiles has started, watching ${pathsToWatch.join(', ')}`);
+    });
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    watcher.on('change', async (filePath) => {
+      if (filePath === scopeIndexFile) {
+        this.logger.debug('scope index file has been changed, reloading it');
+        await this.legacyScope.objects.reLoadScopeIndex();
+      } else if (filePath.startsWith(remoteLanesDir)) {
+        this.legacyScope.objects.remoteLanes.removeFromCacheByFilePath(filePath);
+      } else {
+        this.logger.error(
+          'unknown file has been changed, please check why it is watched by scope.watchSystemFiles',
+          filePath
+        );
+      }
+    });
   }
 
   async toObjectList(types: Types): Promise<ObjectList> {
