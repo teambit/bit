@@ -1,16 +1,21 @@
 import { compact } from 'lodash';
 import * as path from 'path';
-import { Consumer } from '..';
-import { BitId } from '../../bit-id';
-import GeneralError from '../../error/general-error';
-import Version from '../../scope/models/version';
-import { pathNormalizeToLinux, PathOsBased } from '../../utils/path';
-import ConsumerComponent from '../component';
-import { SourceFile } from '../component/sources';
-import DataToPersist from '../component/sources/data-to-persist';
-import RemovePath from '../component/sources/remove-path';
-import { ApplyVersionResult, FileStatus, MergeOptions, MergeStrategy } from './merge-version';
-import { MergeResultsThreeWay } from './merge-version/three-way-merge';
+import { Consumer } from '@teambit/legacy/dist/consumer';
+import { BitId } from '@teambit/legacy-bit-id';
+import GeneralError from '@teambit/legacy/dist/error/general-error';
+import Version from '@teambit/legacy/dist/scope/models/version';
+import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy/dist/utils/path';
+import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
+import {
+  ApplyVersionResult,
+  FileStatus,
+  MergeOptions,
+  MergeStrategy,
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
