@@ -105,6 +105,11 @@ export default class VersionHistory extends BitObject {
     return { found: allHashes, missing };
   }
 
+  isRefPartOfHistory(startFrom: Ref, searchFor: Ref) {
+    const { found } = this.getAllHashesFrom(startFrom);
+    return found?.includes(searchFor.toString());
+  }
+
   getAllHashesAsString(): string[] {
     return this.versions.map((v) => v.hash.toString());
   }

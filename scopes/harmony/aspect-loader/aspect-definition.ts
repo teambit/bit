@@ -6,6 +6,7 @@ export type AspectDefinitionProps = {
   aspectPath: string;
   runtimePath: string | null;
   aspectFilePath: string | null;
+  local?: boolean;
 };
 
 export class AspectDefinition {
@@ -44,7 +45,7 @@ export class AspectDefinition {
     return null;
   }
 
-  static from({ component, aspectPath, aspectFilePath, runtimePath, id }: AspectDefinitionProps) {
-    return new AspectDefinition(aspectPath, aspectFilePath, runtimePath, component, id);
+  static from({ component, aspectPath, aspectFilePath, runtimePath, id, local }: AspectDefinitionProps) {
+    return new AspectDefinition(aspectPath, aspectFilePath, runtimePath, component, id, local);
   }
 }

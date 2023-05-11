@@ -30,6 +30,7 @@ export class ScopeUIRoot implements UIRoot {
 
   buildOptions = {
     ssr: true,
+    prebundle: false,
   };
 
   resolveAspects(runtime: string, componentIds?: ComponentID[], opts?: ResolveAspectsOptions) {

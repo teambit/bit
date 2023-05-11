@@ -40,7 +40,6 @@ export default class Repository {
   onRead: ContentTransformer;
   onPersist: ContentTransformer;
   scopePath: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   scopeIndex: ScopeIndex;
   private cache: InMemoryCache<BitObject>;
   remoteLanes!: RemoteLanes;
@@ -84,7 +83,14 @@ export default class Repository {
 
   static onPostObjectsPersist: () => Promise<void>;
 
-  // if current scope index difference with <scope_folder>/index.json content, reload it
+  async reLoadScopeIndex() {
+    this.scopeIndex = await this.loadOptionallyCreateScopeIndex();
+  }
+
+  /**
+   * current scope index difference with <scope_folder>/index.json content, reload it
+   * @deprecated use Scope aspect `watchSystemFiles` instead, it's way more efficient.
+   */
   public async reloadScopeIndexIfNeed(force = false) {
     const latestScopeIndex = await this.loadOptionallyCreateScopeIndex();
     if (force) {
