@@ -371,11 +371,12 @@ export class InstallMain {
       await Promise.all(
         envs.map(async (envId) => {
           return [
-            getRootComponentDir(this.workspace.path, envId),
+            getRootComponentDir(this.workspace.path, envId.toString()),
             {
               dependencies: {
                 ...(await this._getEnvDependencies(envId)),
                 ...workspaceDeps,
+                ...(await this._getEnvPackage(envId)),
               },
               dependenciesMeta: workspaceDepsMeta,
               installConfig: {
@@ -388,15 +389,31 @@ export class InstallMain {
     );
   }
 
-  private async _getEnvDependencies(envId: string): Promise<Record<string, string>> {
-    const env = this.envs.getEnvDefinitionByStringId(envId);
-    if (!env) throw new BitError(`Cannot find environment with id: ${envId}`);
-    const policy = await this.dependencyResolver.getComponentEnvPolicyFromEnvDefinition(env);
+  private async _getEnvDependencies(envId: ComponentID): Promise<Record<string, string>> {
+    const policy = await this.dependencyResolver.getEnvPolicyFromEnvId(envId);
+    if (!policy) return {};
     return Object.fromEntries(
       policy.selfPolicy.entries
         .filter(({ force, value }) => force && value.version !== '-')
         .map(({ dependencyId, value }) => [dependencyId, value.version])
     );
+  }
+
+  /**
+   * Return the package name of the env with its version.
+   * (only if the env is not a core env and is not in the workspace)
+   * @param envId
+   * @returns
+   */
+  private async _getEnvPackage(envId: ComponentID): Promise<Record<string, string> | undefined> {
+    if (this.envs.isCoreEnv(envId.toStringWithoutVersion())) return undefined;
+    const inWs = await this.workspace.hasId(envId);
+    if (inWs) return undefined;
+    const envComponent = await this.envs.getEnvComponentByEnvId(envId.toString(), envId.toString());
+    if (!envComponent) return undefined;
+    const packageName = this.dependencyResolver.getPackageName(envComponent);
+    const version = envId.version;
+    return { [packageName]: version };
   }
 
   private async _getAppManifests(
@@ -413,7 +430,7 @@ export class InstallMain {
             const appPkgName = this.dependencyResolver.getPackageName(app);
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
             if (!appManifest) return null;
-            const envId = this.envs.getEnvId(app);
+            const envId = this.envs.calculateEnvId(app);
             return [
               getRootComponentDir(this.workspace.path, app.id.toString()),
               {
@@ -438,10 +455,10 @@ export class InstallMain {
     );
   }
 
-  private async _getAllUsedEnvIds(): Promise<string[]> {
-    const envs = new Set<string>();
+  private async _getAllUsedEnvIds(): Promise<ComponentID[]> {
+    const envs = new Set<ComponentID>();
     (await this.workspace.list()).forEach((component) => {
-      envs.add(this.envs.getEnvId(component));
+      envs.add(this.envs.calculateEnvId(component));
     });
     return Array.from(envs.values());
   }
@@ -593,7 +610,7 @@ export class InstallMain {
     const apps = (await this.app.listAppsFromComponents()).map((component) => component.id.toString());
     await Promise.all(
       [...envs, ...apps].map(async (id) => {
-        await fs.mkdirp(getRootComponentDir(this.workspace.path, id));
+        await fs.mkdirp(getRootComponentDir(this.workspace.path, id.toString()));
       })
     );
     await linkPkgsToBitRoots(
