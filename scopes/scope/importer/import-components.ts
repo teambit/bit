@@ -19,7 +19,7 @@ import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import Component from '@teambit/legacy/dist/consumer/component';
-import { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
+import { applyModifiedVersion } from '@teambit/checkout';
 import {
   FileStatus,
   getMergeStrategyInteractive,
