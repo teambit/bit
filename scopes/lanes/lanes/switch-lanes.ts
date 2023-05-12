@@ -13,7 +13,7 @@ import {
   CheckoutProps,
   deleteFilesIfNeeded,
   markFilesToBeRemovedIfNeeded,
-} from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
+} from '@teambit/checkout';
 import {
   FailedComponents,
   getMergeStrategyInteractive,

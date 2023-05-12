@@ -10,12 +10,6 @@ import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import {
-  applyVersion,
-  markFilesToBeRemovedIfNeeded,
-  ComponentStatus,
-  deleteFilesIfNeeded,
-} from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
-import {
   FailedComponents,
   getMergeStrategyInteractive,
   MergeStrategy,
@@ -30,6 +24,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ComponentID } from '@teambit/component-id';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
+import { applyVersion, markFilesToBeRemovedIfNeeded, ComponentStatus, deleteFilesIfNeeded } from './checkout-version';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
