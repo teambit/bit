@@ -591,7 +591,7 @@ export class MergingMain {
     const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
     const componentOnOther: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
     if (componentOnOther.isRemoved()) {
-      componentStatus.shouldBeRemoved = true;
+      if (existingBitMapId) componentStatus.shouldBeRemoved = true;
       return returnUnmerged(`component has been removed`, true);
     }
     const getCurrentId = () => {

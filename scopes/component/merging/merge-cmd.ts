@@ -127,7 +127,7 @@ export function mergeReport({
   };
 
   const getRemovedOutput = () => {
-    if (!removedComponents) return '';
+    if (!removedComponents?.length) return '';
     const title = `the following ${removedComponents.length} component(s) have been removed`;
     const body = removedComponents.join('\n');
     return `\n\n${chalk.underline(title)}\n${body}\n\n`;
