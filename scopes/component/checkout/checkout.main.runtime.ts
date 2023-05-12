@@ -353,8 +353,8 @@ export class CheckoutMain {
 
     const versionRef = componentModel.getRef(newVersion);
     if (!versionRef) throw new Error(`unable to get ref ${newVersion} from ${componentModel.id()}`);
-    const componentVersion = (await consumer.scope.getObject(versionRef.hash)) as Version;
-    if (componentVersion.isRemoved() && existingBitMapId) {
+    const componentVersion = (await consumer.scope.getObject(versionRef.hash)) as Version | undefined;
+    if (componentVersion?.isRemoved() && existingBitMapId) {
       componentStatus.shouldBeRemoved = true;
       return returnFailure(`component has been removed`, true);
     }
