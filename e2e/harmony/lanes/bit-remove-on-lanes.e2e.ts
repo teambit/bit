@@ -232,4 +232,34 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe('soft remove on lane when another user of the same lane is checking out head', () => {
+    let beforeRemoveScope: string;
+    let output: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      beforeRemoveScope = helper.scopeHelper.cloneLocalScope();
+      helper.command.softRemoveComponent('comp2');
+      helper.fs.outputFile('comp1/index.js', '');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(beforeRemoveScope);
+      helper.command.import();
+      output = helper.command.checkoutHead('-x');
+    });
+    it('should indicate that the component was removed', () => {
+      expect(output).to.have.string('the following 1 component(s) have been removed');
+    });
+    it('should remove the soft-removed component from .bitmap', () => {
+      const list = helper.command.list();
+      expect(list).to.not.have.string('comp2');
+    });
+    it('should remove the component files from the filesystem', () => {
+      expect(path.join(helper.scopes.localPath, 'comp2')).to.not.be.a.path();
+    });
+  });
 });
