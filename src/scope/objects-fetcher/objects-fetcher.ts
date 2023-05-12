@@ -90,7 +90,7 @@ ${failedScopesErr.join('\n')}`);
     const compStr = totalComponents ? ` Processing ${totalComponents} components` : '';
     loader.start(`${objectsQueue.added} objects were written to the filesystem successfully.${compStr}`);
     if (totalComponents) {
-      await this.mergeAndPersistComponents(multipleComponentsMerger, componentsPerRemote);
+      await this.mergeAndPersistComponents(multipleComponentsMerger);
       logger.debug(`[-] fetchFromRemoteAndWrite, completed writing ${totalComponents} components`);
       loader.start(`${totalComponents} components were written to the filesystem successfully.`);
     }
@@ -98,17 +98,27 @@ ${failedScopesErr.join('\n')}`);
     return objectsQueue.addedHashes;
   }
 
-  private async mergeAndPersistComponents(
-    multipleComponentsMerger: MultipleComponentMerger,
-    componentsPerRemote: ComponentsPerRemote
-  ) {
+  private async mergeAndPersistComponents(multipleComponentsMerger: MultipleComponentMerger) {
     const modelComponents = await multipleComponentsMerger.merge();
     await this.repo.writeObjectsToTheFS(modelComponents);
+
+    const mergedPerRemote = modelComponents.reduce((acc, component) => {
+      if (!component.remoteHead) {
+        // only when a component is fetched from its origin, it has remoteHead.
+        // if it's not from the origin, we don't want to add it to the remote-lanes
+        return acc;
+      }
+      const remoteName = component.scope as string;
+      if (!acc[remoteName]) acc[remoteName] = [];
+      acc[remoteName].push(component);
+      return acc;
+    }, {} as ComponentsPerRemote);
+
     await Promise.all(
-      Object.keys(componentsPerRemote).map(async (remoteName) => {
+      Object.keys(mergedPerRemote).map(async (remoteName) => {
         await this.repo.remoteLanes.addEntriesFromModelComponents(
           LaneId.from(DEFAULT_LANE, remoteName),
-          componentsPerRemote[remoteName]
+          mergedPerRemote[remoteName]
         );
       })
     );
