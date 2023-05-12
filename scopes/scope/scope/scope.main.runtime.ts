@@ -682,10 +682,103 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
+   * Performs a Depth-First Search (DFS) to find a node in a graph by offset.
+   *
+   * This function starts from a given node and moves either forward or backward in the graph, depending on the provided getNodes function.
+   * The goal is to reach a node that is at a given offset from the starting node. The offset is decremented each time a new node is visited.
+   * The function will return the node that corresponds to the exact offset if it exists.
+   *
+   * If the graph cannot go any deeper (i.e., there are no more successors or predecessors), or the offset becomes zero, the function will return the last visited node.
+   * This ensures that the function always returns a node, either the exact offset node (if it exists) or the closest node by offset.
+   *
+   * @param _node The node from where to start the search.
+   * @param _versionGraph The graph in which to perform the search.
+   * @param _offset The offset from the starting node to find. It is always an absolute value.
+   * @param _getNodesFunc A function that, given a node id, returns the successors (if moving forward) or predecessors (if moving backward) of that node in the graph.
+   *
+   * @returns The node that corresponds to the exact offset if it exists, or the closest node by offset otherwise.
+   */
+  private findNodeByOffset(_node, _versionGraph, _offset, _getNodesFunc) {
+    if (_offset === 0 || !_node) return _node;
+
+    const nextNodes = _getNodesFunc(_node.id, { edgeFilter: (edge) => edge.attr === 'parent' });
+
+    if (!nextNodes || nextNodes.length === 0) {
+      return _node;
+    }
+
+    for (const nextNode of nextNodes) {
+      const foundNode = this.findNodeByOffset(nextNode, _versionGraph, _offset - 1, _getNodesFunc);
+      if (foundNode) {
+        return foundNode;
+      }
+    }
+
+    return _node;
+  }
+
+  /**
    * get component log sorted by the timestamp in ascending order (from the earliest to the latest)
    */
-  async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
-    return this.legacyScope.loadComponentLogs(id._legacy, shortHash, startsFrom);
+  async getLogs(
+    id: ComponentID,
+    shortHash = false,
+    head?: string,
+    startFrom?: string,
+    stopAt?: string,
+    startFromOffset?: number,
+    stopAtOffset?: number
+  ): Promise<ComponentLog[]> {
+    const componentModel = await this.legacyScope.getModelComponentIfExist(id._legacy);
+
+    if (!componentModel) return [];
+
+    const headRef = head ? componentModel.getRef(head) : componentModel.head;
+
+    if (!headRef) return [];
+
+    if (!startFromOffset && !stopAtOffset) {
+      return this.legacyScope.loadComponentLogs(id._legacy, shortHash, startFrom, stopAt ? [stopAt] : undefined);
+    }
+    const versionHistory = await componentModel.getAndPopulateVersionHistory(this.legacyScope.objects, headRef);
+    const versionGraph = versionHistory.getGraph();
+    const startFromRef = startFrom ? componentModel.getRef(startFrom) : undefined;
+    let startNode = versionGraph.node(startFromRef?.hash ?? headRef.hash);
+
+    if (!startNode) {
+      this.logger.error(`Node with id ${headRef.hash} not found`);
+      return [];
+    }
+
+    const startOffset = startFromOffset || 0;
+
+    if (startOffset !== 0) {
+      startNode = this.findNodeByOffset(
+        startNode,
+        versionGraph,
+        Math.abs(startOffset),
+        startOffset > 0 ? versionGraph.successors.bind(versionGraph) : versionGraph.predecessors.bind(versionGraph)
+      );
+    }
+
+    const stopOffset = stopAtOffset || 0;
+    const stopRef = stopAt ? componentModel.getRef(stopAt) : (stopOffset !== 0 && { hash: startNode?.id }) || undefined;
+    let stopNode = stopRef?.hash ? versionGraph.node(stopRef.hash) : undefined;
+    if (stopOffset !== 0) {
+      stopNode = this.findNodeByOffset(
+        stopNode,
+        versionGraph,
+        Math.abs(stopOffset),
+        stopOffset > 0 ? versionGraph.successors.bind(versionGraph) : versionGraph.predecessors.bind(versionGraph)
+      );
+    }
+
+    return this.legacyScope.loadComponentLogs(
+      id._legacy,
+      shortHash,
+      startNode?.id,
+      stopNode ? [stopNode.id] : undefined
+    );
   }
 
   async getStagedConfig() {

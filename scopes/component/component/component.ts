@@ -114,25 +114,30 @@ export class Component implements IComponent {
     return this.state.aspects.get(id)?.serialize();
   }
 
-  async getLogs(filter?: { type?: string; offset?: number; limit?: number; head?: string; sort?: string }) {
-    const allLogs = await this.factory.getLogs(this.id, false, filter?.head);
-
-    if (!filter) return allLogs;
-
-    const { type, limit, offset, sort } = filter;
-
+  async getLogs(filter?: {
+    type?: string;
+    offset?: number;
+    limit?: number;
+    head?: string;
+    sort?: string;
+    startFrom?: string;
+    until?: string;
+  }) {
+    const { type, limit, offset, sort, head, startFrom, until } = filter || {};
     const typeFilter = (snap) => {
       if (type === 'tag') return snap.tag;
       if (type === 'snap') return !snap.tag;
       return true;
     };
 
+    const allLogs = await this.factory.getLogs(this.id, false, head, startFrom, until, offset, limit);
+
+    if (!filter) {
+      return allLogs;
+    }
+
     let filteredLogs = (type && allLogs.filter(typeFilter)) || allLogs;
     if (sort !== 'asc') filteredLogs = filteredLogs.reverse();
-
-    if (limit) {
-      filteredLogs = slice(filteredLogs, offset, limit + (offset || 0));
-    }
 
     return filteredLogs;
   }

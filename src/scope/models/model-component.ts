@@ -480,9 +480,9 @@ export default class Component extends BitObject {
   /**
    * get component log and sort by the timestamp in ascending order (from the earliest to the latest)
    */
-  async collectLogs(scope: Scope, shortHash = false, startFrom?: Ref): Promise<ComponentLog[]> {
+  async collectLogs(scope: Scope, shortHash = false, startFrom?: Ref, stopAt?: Ref[]): Promise<ComponentLog[]> {
     const repo = scope.objects;
-    let versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+    let versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom, stopAt });
 
     // due to recent changes of getting version-history object rather than fetching the entire history, some version
     // objects might be missing. import the component from the remote

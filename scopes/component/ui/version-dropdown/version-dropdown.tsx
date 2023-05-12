@@ -71,10 +71,13 @@ function _VersionMenu(
   const hasMore = activeTabOrSnap === 'SNAP' ? !!hasMoreSnaps : activeTabOrSnap === 'TAG' && !!hasMoreTags;
   const observer = React.useRef<IntersectionObserver>();
 
-  const handleLoadMore = React.useCallback(() => {
-    if (activeTabOrSnap === 'SNAP') loadMoreSnaps?.();
-    if (activeTabOrSnap === 'TAG') loadMoreTags?.();
-  }, [activeTabOrSnap, tabs.length]);
+  const handleLoadMore = React.useCallback(
+    (backwards?: boolean) => {
+      if (activeTabOrSnap === 'SNAP') loadMoreSnaps?.(backwards);
+      if (activeTabOrSnap === 'TAG') loadMoreTags?.(backwards);
+    },
+    [activeTabOrSnap, tabs.length]
+  );
 
   const lastLogRef = React.useCallback(
     (node) => {
@@ -95,6 +98,27 @@ function _VersionMenu(
     },
     [loading, hasMoreSnaps, hasMoreTags, handleLoadMore]
   );
+
+  const firstLogRef = React.useCallback(
+    (node) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && hasMore) {
+            handleLoadMore(true);
+          }
+        },
+        {
+          threshold: 0.1,
+          rootMargin: '100px',
+        }
+      );
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMoreSnaps, hasMoreTags, handleLoadMore]
+  );
+
   const multipleTabs = tabs.length > 1;
   const message = multipleTabs
     ? 'Switch to view tags, snaps, or lanes'
@@ -139,17 +163,21 @@ function _VersionMenu(
             <LaneInfo key={payload.id} currentLane={currentLane} {...payload}></LaneInfo>
           ))}
         {tabs[activeTabIndex]?.name !== 'LANE' &&
-          tabs[activeTabIndex]?.payload.map((payload, index) => (
-            <VersionInfo
-              ref={index === tabs[activeTabIndex]?.payload.length - 1 ? ref || lastLogRef : null}
-              key={payload.version}
-              currentVersion={currentVersion}
-              latestVersion={latestVersion}
-              overrideVersionHref={overrideVersionHref}
-              showDetails={showVersionDetails}
-              {...payload}
-            ></VersionInfo>
-          ))}
+          tabs[activeTabIndex]?.payload.map((payload, index) => {
+            const _ref =
+              index === 0 ? firstLogRef : (index === tabs[activeTabIndex]?.payload.length - 1 && lastLogRef) || ref;
+            return (
+              <VersionInfo
+                ref={_ref}
+                key={payload.version}
+                currentVersion={currentVersion}
+                latestVersion={latestVersion}
+                overrideVersionHref={overrideVersionHref}
+                showDetails={showVersionDetails}
+                {...payload}
+              ></VersionInfo>
+            );
+          })}
       </div>
     </div>
   );
@@ -158,8 +186,8 @@ function _VersionMenu(
 export type UseComponentVersionsResult = {
   tags?: DropdownComponentVersion[];
   snaps?: DropdownComponentVersion[];
-  loadMoreTags?: () => void;
-  loadMoreSnaps?: () => void;
+  loadMoreTags?: (backwards?: boolean) => void;
+  loadMoreSnaps?: (backwards?: boolean) => void;
   hasMoreTags?: boolean;
   hasMoreSnaps?: boolean;
   loading?: boolean;

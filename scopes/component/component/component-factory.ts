@@ -115,7 +115,15 @@ export interface ComponentFactory {
    */
   getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<CompIdGraph>;
 
-  getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;
+  getLogs(
+    id: ComponentID,
+    shortHash?: boolean,
+    head?: string,
+    startFrom?: string,
+    stopAt?: string,
+    startFromOffset?: number,
+    stopAtOffset?: number
+  ): Promise<ComponentLog[]>;
 
   /**
    * returns a specific state of a component by hash or semver.

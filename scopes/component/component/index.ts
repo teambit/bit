@@ -33,7 +33,7 @@ export { Section } from './section';
 export { ComponentContext, ComponentDescriptorContext, useComponentDescriptor } from './ui/context/component-context';
 export type { ComponentProviderProps, ComponentDescriptorProviderProps } from './ui/context';
 export { ComponentProvider, ComponentDescriptorProvider } from './ui/context';
-export { componentFields, componentIdFields, componentOverviewFields } from './ui';
+export { componentFields, componentIdFields, componentOverviewFields, COMPONENT_QUERY_FIELDS } from './ui';
 export {
   NavPlugin,
   ConsumePlugin,

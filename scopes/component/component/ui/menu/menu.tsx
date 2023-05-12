@@ -55,6 +55,7 @@ export type MenuProps = {
   useComponent?: UseComponentType;
 
   useComponentFilters?: () => Filters;
+
   path?: string;
 };
 function getComponentIdStr(componentIdStr?: string | (() => string | undefined)): string | undefined {
@@ -83,6 +84,7 @@ export function ComponentMenu({
   const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
   const resolvedComponentIdStr = path || idFromLocation;
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
+  const { loading, ...componentFiltersFromProps } = useComponentFilters?.() || {};
 
   const RightSide = (
     <div className={styles.rightSide}>
@@ -93,7 +95,8 @@ export function ComponentMenu({
             host={host}
             componentId={componentId?.toString() || idFromLocation}
             useComponent={useComponent}
-            useComponentFilters={useComponentFilters}
+            componentFilters={componentFiltersFromProps}
+            loading={loading}
           />
           <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
         </>
@@ -122,58 +125,68 @@ export type VersionRelatedDropdownsProps = {
   consumeMethods?: ConsumeMethodSlot;
   className?: string;
   host: string;
-  useComponentFilters?: () => Filters;
+  componentFilters?: Filters;
+  loading?: boolean;
   useComponent?: UseComponentType;
   componentId?: string;
 };
 
 export function VersionRelatedDropdowns({
   componentId,
-  useComponentFilters,
+  componentFilters: componentFiltersFromProps = {},
   useComponent,
   consumeMethods,
   className,
+  loading: loadingFromProps,
   host,
 }: VersionRelatedDropdownsProps) {
-  const componentFiltersFromProps = useComponentFilters?.() || {};
   const query = useQuery();
   const componentVersion = query.get('version');
   const isTag = componentVersion ? semver.valid(componentVersion) : undefined;
   const isSnap = componentVersion ? !isTag : undefined;
 
   // initially fetch just the component data
-  const initialFetchOptions = {
-    logFilters: {
-      log: {
-        logLimit: 3,
-      },
-      ...componentFiltersFromProps,
-    },
-    customUseComponent: useComponent,
-  };
-
-  const { component, loading } = useComponentQuery(host, componentId, initialFetchOptions);
-
-  const componentWithLogsOptions = React.useMemo(
+  const initialFetchOptions = React.useMemo(
     () => ({
       logFilters: {
+        ...componentFiltersFromProps,
+        log: {
+          logLimit: 3,
+          ...componentFiltersFromProps.log,
+        },
+      },
+      skip: loadingFromProps,
+      customUseComponent: useComponent,
+    }),
+    [loadingFromProps, componentFiltersFromProps, componentVersion]
+  );
+
+  const { component, loading: loadingComponent } = useComponentQuery(host, componentId, initialFetchOptions);
+
+  const loading = React.useMemo(() => loadingComponent || loadingFromProps, [loadingComponent, loadingFromProps]);
+
+  const useVersions = React.useCallback(() => {
+    const componentWithLogsOptions = {
+      logFilters: {
+        fetchLogsByTypeSeparately: true,
+        ...componentFiltersFromProps,
         snapLog: {
           logLimit: 10,
-          logHead: isSnap ? componentVersion : undefined,
+          logStartFrom: isSnap ? componentVersion ?? undefined : undefined,
+          logOffset: isSnap ? -3 : undefined,
+          ...componentFiltersFromProps.snapLog,
         },
         tagLog: {
           logLimit: 10,
-          logHead: isTag ? componentVersion : undefined,
+          logStartFrom: isTag ? componentVersion ?? undefined : undefined,
+          logOffset: isTag ? -3 : undefined,
+          ...componentFiltersFromProps.tagLog,
         },
-        fetchLogsByTypeSeparately: true,
-        ...componentFiltersFromProps,
       },
+      skip: loadingFromProps,
       customUseComponent: useComponent,
-    }),
-    [componentVersion, isTag, isSnap]
-  );
+    };
 
-  const useVersions = () => {
     const { componentLogs = {}, loading: loadingLogs } = useComponentQuery(host, componentId, componentWithLogsOptions);
     return {
       loading: loadingLogs,
@@ -181,7 +194,7 @@ export function VersionRelatedDropdowns({
       snaps: (componentLogs.snaps || []).map((snap) => ({ ...snap, version: snap.hash })),
       tags: (componentLogs.tags || []).map((tag) => ({ ...tag, version: tag.tag as string })),
     };
-  };
+  }, [componentVersion, isTag, isSnap, componentFiltersFromProps, loadingFromProps]);
 
   const location = useLocation();
   const { lanesModel } = useLanes();

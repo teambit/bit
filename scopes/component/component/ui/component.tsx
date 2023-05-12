@@ -55,19 +55,27 @@ export function Component({
   const resolvedComponentIdStr = path || idFromLocation;
   const componentFiltersFromProps = useComponentFilters?.() || {};
 
-  const useComponentOptions = {
-    logFilters: {
-      log: { logLimit: 3 },
-      ...componentFiltersFromProps,
-    },
-    customUseComponent: useComponent,
-  };
+  const useComponentOptions = componentFiltersFromProps.loading
+    ? {
+        logFilters: {
+          ...componentFiltersFromProps,
+        },
+        customUseComponent: useComponent,
+      }
+    : {
+        logFilters: {
+          ...componentFiltersFromProps,
+          log: { logLimit: 3, ...componentFiltersFromProps.log },
+        },
+        customUseComponent: useComponent,
+      };
 
   const { component, componentDescriptor, error } = useComponentQuery(
     host,
     componentId?.toString() || idFromLocation,
     useComponentOptions
   );
+
   // trigger onComponentChange when component changes
   useEffect(() => onComponentChange?.(component), [component]);
   // cleanup when unmounting component
@@ -77,7 +85,7 @@ export function Component({
   const before = useMemo(() => pageItems.filter((x) => x.type === 'before').map((x) => x.content), [pageItems]);
   const after = useMemo(() => pageItems.filter((x) => x.type === 'after').map((x) => x.content), [pageItems]);
 
-  if (error) return error.renderError();
+  if (error) return error?.renderError();
   if (!component) return <div></div>;
 
   return (

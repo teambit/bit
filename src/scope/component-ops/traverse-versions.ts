@@ -48,8 +48,10 @@ export async function getAllVersionsInfo({
   repo?: Repository;
   throws?: boolean; // in case objects are missing
   versionObjects?: Version[];
-  startFrom?: Ref | null; // by default, start from the head
+  startFrom?: Ref | null; // by default, start from the head //
+  startFromOffset?: number; // -5
   stopAt?: Ref[] | null; // by default, stop when the parents is empty
+  stopAtOffset?: number; // 5
 }): Promise<VersionInfo[]> {
   const results: VersionInfo[] = [];
   const isAlreadyProcessed = (ref: Ref): boolean => {

@@ -29,6 +29,7 @@ export type LaneSelectorProps = {
   sortOptions?: LaneSelectorSortBy[];
   scopeIconLookup?: Map<string, React.ReactNode>;
   forceCloseOnEnter?: boolean;
+  loading?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 
 export type GroupedLaneDropdownItem = [scope: string, lanes: LaneModel[]];
@@ -61,6 +62,7 @@ export function LaneSelector(props: LaneSelectorProps) {
     scopeIcon,
     scopeIconLookup,
     forceCloseOnEnter,
+    loading,
     ...rest
   } = props;
 
@@ -235,7 +237,12 @@ export function LaneSelector(props: LaneSelectorProps) {
           });
         }}
         placeholderContent={
-          <LanePlaceholder disabled={!multipleLanes} selectedLaneId={selectedLaneId} showScope={groupByScope} />
+          <LanePlaceholder
+            loading={loading}
+            disabled={!multipleLanes}
+            selectedLaneId={selectedLaneId}
+            showScope={groupByScope}
+          />
         }
         className={classnames(styles.dropdown, !multipleLanes && styles.disabled)}
       >
