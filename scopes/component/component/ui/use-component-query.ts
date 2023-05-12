@@ -255,6 +255,51 @@ function getOffsetValue(offset, limit) {
   }
   return undefined;
 }
+/**
+ * Calculates the new offset based on initial offset, current offset, and the number of logs.
+ *
+ * @param {boolean} [fetchLogsByTypeSeparately] A flag to determine if logs are fetched by type separately.
+ * @param {number} [initialOffset] The initial offset.
+ * @param {number} [currentOffset] The current offset.
+ * @param {any[]} [logs=[]] The array of logs.
+ *
+ * @returns {number | undefined} -  new offset
+ */
+function calculateNewOffset(
+  fetchLogsByTypeSeparately?: boolean,
+  initialOffset = 0,
+  currentOffset = 0,
+  logs: any[] = []
+): number | undefined {
+  if (!fetchLogsByTypeSeparately) return currentOffset;
+
+  const logCount = logs.length;
+
+  if (initialOffset !== currentOffset && logCount + initialOffset >= currentOffset) return currentOffset;
+  return logCount + initialOffset;
+}
+
+/**
+ * Calculate the availability of more logs.
+ *
+ * @param {number | undefined} logLimit - The limit for the logs.
+ * @param {any} rawComponent - The raw component object containing logs.
+ * @param {string} logType - Type of log ('logs', 'tagLogs', 'snapLogs').
+ * @param {boolean | undefined} currentHasMoreLogs - Current state of having more logs.
+ *
+ * @returns {boolean | undefined} - Whether there are more logs available.
+ */
+function calculateHasMoreLogs(
+  logLimit?: number,
+  rawComponent?: any,
+  logType = 'logs',
+  currentHasMoreLogs?: boolean
+): boolean | undefined {
+  if (!logLimit) return false;
+  if (rawComponent === undefined) return undefined;
+  if (currentHasMoreLogs === undefined) return rawComponent?.[logType]?.length >= logLimit;
+  return currentHasMoreLogs;
+}
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
 export function useComponentQuery(
   componentId: string,
@@ -324,49 +369,38 @@ export function useComponentQuery(
   });
 
   const rawComponent = data?.getHost?.get;
-  const rawTags = rawComponent?.tagLogs ?? [];
-  const rawSnaps = rawComponent?.snapLogs ?? [];
-  const rawCompLogs = rawComponent?.logs ?? mergeLogs(rawTags, rawSnaps);
-  offsetRef.current = useMemo(() => {
-    const currentOffset = offsetRef.current;
-    if (!currentOffset) return rawCompLogs.length;
-    return offsetRef.current;
-  }, [rawCompLogs]);
+  const rawTags: Array<any> = rawComponent?.tagLogs ?? [];
+  const rawSnaps: Array<any> = rawComponent?.snapLogs ?? [];
+  const rawCompLogs: Array<any> = rawComponent?.logs ?? mergeLogs(rawTags, rawSnaps);
+  offsetRef.current = useMemo(
+    () => calculateNewOffset(fetchLogsByTypeSeparately, logOffset, offsetRef.current, rawCompLogs),
+    [rawCompLogs, fetchLogsByTypeSeparately, logOffset]
+  );
 
-  tagOffsetRef.current = useMemo(() => {
-    if (!fetchLogsByTypeSeparately) return offsetRef.current;
-    const currentOffset = tagOffsetRef.current;
-    if (!currentOffset) return rawTags.length;
-    return tagOffsetRef.current;
-  }, [rawCompLogs]);
+  tagOffsetRef.current = useMemo(
+    () => calculateNewOffset(fetchLogsByTypeSeparately, tagLogOffset, tagOffsetRef.current, rawTags),
+    [rawTags, fetchLogsByTypeSeparately, tagLogOffset]
+  );
 
-  snapOffsetRef.current = useMemo(() => {
-    if (!fetchLogsByTypeSeparately) return offsetRef.current;
-    const currentOffset = snapOffsetRef.current;
-    if (!currentOffset) return rawSnaps.length;
-    return snapOffsetRef.current;
-  }, [rawSnaps]);
+  snapOffsetRef.current = useMemo(
+    () => calculateNewOffset(fetchLogsByTypeSeparately, snapLogOffset, snapOffsetRef.current, rawSnaps),
+    [rawSnaps, fetchLogsByTypeSeparately, snapLogOffset]
+  );
 
-  hasMoreLogs.current = useMemo(() => {
-    if (!logLimit) return false;
-    if (rawComponent === undefined) return undefined;
-    if (hasMoreLogs.current === undefined) return rawComponent?.logs.length >= logLimit;
-    return hasMoreLogs.current;
-  }, [rawCompLogs]);
+  hasMoreLogs.current = useMemo(
+    () => calculateHasMoreLogs(logLimit, rawComponent, 'logs', hasMoreLogs.current),
+    [rawCompLogs]
+  );
 
-  hasMoreTagLogs.current = useMemo(() => {
-    if (!tagLogLimit) return false;
-    if (rawComponent === undefined) return undefined;
-    if (hasMoreTagLogs.current === undefined) return rawComponent?.tagLogs.length >= tagLogLimit;
-    return hasMoreTagLogs.current;
-  }, [rawTags]);
+  hasMoreTagLogs.current = useMemo(
+    () => calculateHasMoreLogs(tagLogLimit, rawComponent, 'tagLogs', hasMoreTagLogs.current),
+    [rawTags]
+  );
 
-  hasMoreSnapLogs.current = useMemo(() => {
-    if (!snapLogLimit) return false;
-    if (rawComponent === undefined) return undefined;
-    if (hasMoreSnapLogs.current === undefined) return rawComponent?.snapLogs.length === snapLogLimit;
-    return hasMoreSnapLogs.current;
-  }, [rawSnaps]);
+  hasMoreSnapLogs.current = useMemo(
+    () => calculateHasMoreLogs(snapLogLimit, rawComponent, 'snapLogs', hasMoreSnapLogs.current),
+    [rawSnaps]
+  );
 
   const loadMoreLogs = React.useCallback(
     async (backwards = false) => {
@@ -386,7 +420,7 @@ export function useComponentQuery(
               const updatedLogs = mergeLogs(prevComponent.logs, fetchedComponent.logs);
               hasMoreLogs.current = fetchedComponent.logs.length >= logLimit;
               if (updatedLogs.length > prevComponent.logs.length) {
-                offsetRef.current = updatedLogs.length;
+                offsetRef.current = fetchedComponent.logs.length + offset;
               }
 
               return {
@@ -424,13 +458,14 @@ export function useComponentQuery(
 
             const prevComponent = prev.getHost.get;
             const fetchedComponent = fetchMoreResult.getHost.get;
-            const prevCompLogs = prevComponent.tagLogs;
+            const prevTags = prevComponent.tagLogs;
+            const fetchedTags = fetchedComponent.tagLogs ?? [];
             if (fetchedComponent && ComponentID.isEqualObj(prevComponent.id, fetchedComponent.id)) {
-              const updatedTags = mergeLogs(prevCompLogs, fetchedComponent.tagLogs);
-              if (updatedTags.length > prevCompLogs.length) {
-                tagOffsetRef.current = updatedTags.length;
+              const updatedTags = mergeLogs(prevTags, fetchedTags);
+              if (updatedTags.length > prevTags.length) {
+                tagOffsetRef.current = fetchedTags.length + offset;
               }
-              hasMoreTagLogs.current = fetchedComponent.tagLogs.length >= tagLogLimit;
+              hasMoreTagLogs.current = fetchedTags.length >= tagLogLimit;
               return {
                 ...prev,
                 getHost: {
@@ -465,15 +500,15 @@ export function useComponentQuery(
             if (!fetchMoreResult) return prev;
 
             const prevComponent = prev.getHost.get;
-            const prevCompLogs = prevComponent.snapLogs ?? [];
-
+            const prevSnaps = prevComponent.snapLogs ?? [];
             const fetchedComponent = fetchMoreResult.getHost.get;
+            const fetchedSnaps = fetchedComponent.snapLogs ?? [];
             if (fetchedComponent && ComponentID.isEqualObj(prevComponent.id, fetchedComponent.id)) {
-              const updatedSnaps = mergeLogs(prevCompLogs, fetchedComponent.snapLogs);
-              if (updatedSnaps.length > prevCompLogs.length) {
-                snapOffsetRef.current = updatedSnaps.length;
+              const updatedSnaps = mergeLogs(prevSnaps, fetchedSnaps);
+              if (updatedSnaps.length > prevSnaps.length) {
+                snapOffsetRef.current = fetchedSnaps.length + offset;
               }
-              hasMoreSnapLogs.current = fetchedComponent.snapLogs.length >= snapLogLimit;
+              hasMoreSnapLogs.current = fetchedSnaps.length >= snapLogLimit;
               return {
                 ...prev,
                 getHost: {
