@@ -109,6 +109,7 @@ ${WILDCARD_HELP('merge')}`;
 export function mergeReport({
   components,
   failedComponents,
+  removedComponents,
   version,
   mergeSnapResults,
   mergeSnapError,
@@ -123,6 +124,13 @@ export function mergeReport({
     const title = `successfully merged components${version ? `from version ${chalk.bold(version)}` : ''}\n`;
     // @ts-ignore components is set in case of merge command
     return chalk.underline(title) + chalk.green(applyVersionReport(components));
+  };
+
+  const getRemovedOutput = () => {
+    if (!removedComponents) return '';
+    const title = `the following ${removedComponents.length} component(s) have been removed`;
+    const body = removedComponents.join('\n');
+    return `\n\n${chalk.underline(title)}\n${body}\n\n`;
   };
 
   const getConflictSummary = () => {
@@ -219,13 +227,15 @@ ${mergeSnapError.message}
     const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(unchangedLegitimately.toString())}`;
     const failedToMergeStr = `\nTotal Failed: ${chalk.bold(failedToMerge.toString())}`;
     const autoSnappedStr = `\nTotal Snapped: ${chalk.bold(autoSnapped.toString())}`;
+    const removedStr = `\nTotal Removed: ${chalk.bold(removedComponents?.length.toString() || '0')}`;
 
-    return newLines + title + mergedStr + unchangedLegitimatelyStr + failedToMergeStr + autoSnappedStr;
+    return newLines + title + mergedStr + unchangedLegitimatelyStr + failedToMergeStr + autoSnappedStr + removedStr;
   };
 
   return (
     getSuccessOutput() +
     getFailureOutput() +
+    getRemovedOutput() +
     getSnapsOutput() +
     getWorkspaceDepsOutput() +
     getConfigMergeConflictSummary() +

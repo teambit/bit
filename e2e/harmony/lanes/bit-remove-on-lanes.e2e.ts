@@ -187,4 +187,49 @@ describe('bit lane command', function () {
       );
     });
   });
+  describe('soft remove on lane when a forked lane is merging this lane', () => {
+    let beforeRemoveScope: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      beforeRemoveScope = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('lane-a', '-x');
+      helper.command.softRemoveComponent('comp2');
+      helper.fs.outputFile('comp1/index.js', '');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(beforeRemoveScope);
+    });
+    // @todo: fix!
+    it.skip('bit status --lanes should show updates from lane-a', () => {
+      const status = helper.command.statusJson(undefined, '--lanes');
+      expect(status.updatesFromForked).to.have.lengthOf(2);
+    });
+    describe('merge the original lane', () => {
+      let output;
+      before(() => {
+        helper.command.fetchAllLanes();
+        output = helper.command.mergeLane('lane-a', '-x');
+      });
+      it('should indicate that the component was removed', () => {
+        expect(output).to.have.string('the following 1 component(s) have been removed');
+      });
+      it('should remove the soft-removed component from .bitmap', () => {
+        const list = helper.command.list();
+        expect(list).to.not.have.string('comp2');
+      });
+      it('should remove the component files from the filesystem', () => {
+        expect(path.join(helper.scopes.localPath, 'comp2')).to.not.be.a.path();
+      });
+    });
+  });
 });

@@ -41,6 +41,7 @@ import { DependencyResolverAspect, WorkspacePolicyConfigKeysNames } from '@teamb
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
+import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
@@ -64,6 +65,7 @@ export type ComponentMergeStatus = {
   divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
   configMergeResult?: ConfigMergeResult;
+  shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
 };
 
 export type ComponentMergeStatusBeforeMergeAttempt = {
@@ -74,6 +76,7 @@ export type ComponentMergeStatusBeforeMergeAttempt = {
   unmergedLegitimately?: boolean; // failed to merge but for a legitimate reason, such as, up-to-date
   divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
+  shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
   mergeProps?: {
     otherLaneHead: Ref;
     currentId: BitId;
@@ -85,6 +88,7 @@ export type ApplyVersionResults = {
   components?: ApplyVersionResult[];
   version?: string;
   failedComponents?: FailedComponents[];
+  removedComponents?: BitId[];
   resolvedComponents?: ConsumerComponent[]; // relevant for bit merge --resolve
   abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
   mergeSnapResults?: { snappedComponents: ConsumerComponent[]; autoSnappedResults: AutoTagResult[] } | null;
@@ -219,11 +223,23 @@ export class MergingMain {
     }
     const failedComponents: FailedComponents[] = allComponentsStatus
       .filter((componentStatus) => componentStatus.unmergedMessage)
+      .filter((componentStatus) => !componentStatus.shouldBeRemoved)
       .map((componentStatus) => ({
         id: componentStatus.id,
         failureMessage: componentStatus.unmergedMessage as string,
         unchangedLegitimately: componentStatus.unmergedLegitimately,
       }));
+
+    const componentIdsToRemove = allComponentsStatus
+      .filter((componentStatus) => componentStatus.shouldBeRemoved)
+      .map((c) => c.id.changeVersion(undefined));
+
+    if (componentIdsToRemove.length) {
+      const compBitIdsToRemove = BitIds.fromArray(componentIdsToRemove);
+      await deleteComponentsFiles(consumer, compBitIdsToRemove);
+      await consumer.cleanFromBitMap(compBitIdsToRemove);
+    }
+
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.unmergedMessage);
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
     // which can be an issue when some components are also dependencies of others
@@ -305,6 +321,7 @@ export class MergingMain {
     return {
       components: componentsResults,
       failedComponents,
+      removedComponents: componentIdsToRemove,
       mergeSnapResults,
       mergeSnapError,
       leftUnresolvedConflicts,
@@ -575,6 +592,7 @@ export class MergingMain {
     const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
     const componentOnOther: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
     if (componentOnOther.isRemoved()) {
+      componentStatus.shouldBeRemoved = true;
       return returnUnmerged(`component has been removed`, true);
     }
     const getCurrentId = () => {
