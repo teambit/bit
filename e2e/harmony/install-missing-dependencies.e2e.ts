@@ -4,13 +4,21 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
-describe('install --add-missing-deps', function () {
+describe('install missing dependencies', function () {
   let helper: Helper;
   this.timeout(0);
   before(async () => {
     helper = new Helper();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.fixtures.createComponentBarFoo('const isPositive = require("is-positive");');
+    helper.fixtures.addComponentBarFooAsDir();
+    helper.command.install('--add-missing-deps');
+    helper.command.tagAllWithoutBuild();
+    helper.command.export();
+
     helper.scopeHelper.reInitLocalScope();
-    helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
+    helper.scopeHelper.addRemoteScope();
+    helper.command.importComponent('bar/foo');
     helper.fixtures.populateComponents(2);
     helper.fs.outputFile(`comp1/index.js`, `const isOdd = require("is-odd")`);
     helper.fs.outputFile(`comp2/index.js`, `const isEven = require("is-even")`);
