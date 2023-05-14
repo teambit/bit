@@ -269,6 +269,12 @@ export interface DependencyResolverWorkspaceConfig {
    * It only makes sense to set this to "false" in a workspace in which core aspects are actually developed.
    */
   linkCoreAspects?: boolean;
+
+  /*
+   * Ignore the builds of specific dependencies. The "preinstall", "install", and "postinstall" scripts
+   * of the listed packages will not be executed during installation.
+   */
+  neverBuiltDependencies?: string[];
 }
 
 export interface DependencyResolverVariantConfig {
@@ -672,6 +678,7 @@ export class DependencyResolverMain {
       this.config.nodeVersion,
       this.config.engineStrict,
       this.config.peerDependencyRules,
+      this.config.neverBuiltDependencies,
       options.installingContext
     );
   }

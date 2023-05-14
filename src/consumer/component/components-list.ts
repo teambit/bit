@@ -281,15 +281,7 @@ export default class ComponentsList {
           componentsFromFs.map(async (component: Component) => {
             const modelComponent = componentsFromModel.find((c) => c.toBitId().isEqualWithoutVersion(component.id));
             if (!modelComponent || duringMergeComps.hasWithoutScopeAndVersion(component.id)) return null;
-            await modelComponent.setDivergeData(this.scope.objects);
-            // don't use modelComponent.getDivergeData() because in some scenarios when on a lane, it compare the head
-            // on the lane against the head on the main, which could show the component as diverged incorrectly.
-            const divergedData = await getDivergeData({
-              repo: this.scope.objects,
-              modelComponent,
-              targetHead: (modelComponent.laneId ? modelComponent.laneHeadRemote : modelComponent.remoteHead) || null,
-              throws: false,
-            });
+            const divergedData = await modelComponent.getDivergeDataForMergePending(this.scope.objects);
             if (!divergedData.isDiverged()) return null;
             return { id: modelComponent.toBitId(), diverge: divergedData };
           })

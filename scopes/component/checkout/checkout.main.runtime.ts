@@ -10,12 +10,6 @@ import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import {
-  applyVersion,
-  markFilesToBeRemovedIfNeeded,
-  ComponentStatus,
-  deleteFilesIfNeeded,
-} from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
-import {
   FailedComponents,
   getMergeStrategyInteractive,
   MergeStrategy,
@@ -30,6 +24,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ComponentID } from '@teambit/component-id';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
+import { applyVersion, markFilesToBeRemovedIfNeeded, ComponentStatus, deleteFilesIfNeeded } from './checkout-version';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
@@ -328,6 +323,13 @@ export class CheckoutMain {
         `component ${component.id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`,
         true
       );
+    }
+    if (!reset) {
+      const divergeDataForMergePending = await componentModel.getDivergeDataForMergePending(repo);
+      const isMergePending = divergeDataForMergePending.isDiverged();
+      if (isMergePending) {
+        return returnFailure(`component is merge-pending and cannot be checked out, run "bit status" for more info`);
+      }
     }
     const currentVersionObject: Version = await componentModel.loadVersion(currentlyUsedVersion, repo);
     const isModified = await consumer.isComponentModified(currentVersionObject, component);

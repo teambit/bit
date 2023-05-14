@@ -32,13 +32,12 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { compact, isEmpty } from 'lodash';
-import { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
 import threeWayMerge, {
   MergeResultsThreeWay,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { DependencyResolverAspect, WorkspacePolicyConfigKeysNames } from '@teambit/dependency-resolver';
-import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
+import { CheckoutAspect, CheckoutMain, applyModifiedVersion } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
