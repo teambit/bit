@@ -218,6 +218,8 @@ export async function install(
   const opts: InstallOptions = {
     allProjects,
     autoInstallPeers: false,
+    confirmModulesPurge: false,
+    excludeLinksFromLockfile: true,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
     dir: rootDir,
@@ -261,6 +263,10 @@ export async function install(
         throttleProgress: 200,
       },
       streamParser,
+      // Linked in core aspects are excluded from the output to reduce noise.
+      // Other @teambit/ dependencies will be shown.
+      // Only those that are symlinked from outside the workspace will be hidden.
+      filterPkgsDiff: (diff) => !diff.name.startsWith('@teambit/') || !diff.from,
     });
   }
   let dependenciesChanged = false;
