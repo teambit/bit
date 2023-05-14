@@ -172,7 +172,12 @@ export async function install(
     hidePackageManagerOutput?: boolean;
   } & Pick<
     InstallOptions,
-    'publicHoistPattern' | 'hoistPattern' | 'nodeVersion' | 'engineStrict' | 'peerDependencyRules'
+    | 'publicHoistPattern'
+    | 'hoistPattern'
+    | 'nodeVersion'
+    | 'engineStrict'
+    | 'peerDependencyRules'
+    | 'neverBuiltDependencies'
   > &
     Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -228,7 +233,7 @@ export async function install(
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
     modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
-    neverBuiltDependencies: ['core-js'],
+    neverBuiltDependencies: options.neverBuiltDependencies,
     registries: registriesMap,
     resolutionMode: 'highest',
     rawConfig: authConfig,

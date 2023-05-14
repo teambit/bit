@@ -92,6 +92,8 @@ export class DependencyInstaller {
 
     private peerDependencyRules?: PeerDependencyRules,
 
+    private neverBuiltDependencies?: string[],
+
     private installingContext: DepInstallerContext = {}
   ) {}
 
@@ -187,6 +189,7 @@ export class DependencyInstaller {
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
       peerDependencyRules: this.peerDependencyRules,
       hidePackageManagerOutput,
+      neverBuiltDependencies: ['core-js', ...(this.neverBuiltDependencies ?? [])],
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {
