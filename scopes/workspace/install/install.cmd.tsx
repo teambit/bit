@@ -1,3 +1,4 @@
+import { BitError } from '@teambit/bit-error';
 import { Command, CommandOptions } from '@teambit/cli';
 import { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
@@ -14,6 +15,7 @@ type InstallCmdOptions = {
   update: boolean;
   updateExisting: boolean;
   savePrefix: string;
+  addMissingDeps: boolean;
   addMissingPeers: boolean;
   noOptional: boolean;
 };
@@ -40,6 +42,7 @@ export default class InstallCmd implements Command {
     ['', 'skip-dedupe [skipDedupe]', 'do not dedupe dependencies on installation'],
     ['', 'skip-import [skipImport]', 'do not import bit objects post installation'],
     ['', 'skip-compile [skipCompile]', 'do not compile components'],
+    ['', 'add-missing-deps [addMissingDeps]', 'install all missing dependencies'],
     ['', 'add-missing-peers [addMissingPeers]', 'install all missing peer dependencies'],
     ['', 'no-optional [noOptional]', 'do not install optional dependencies (works with pnpm only)'],
   ] as CommandOptions;
@@ -60,6 +63,9 @@ export default class InstallCmd implements Command {
   async report([packages = []]: [string[]], options: InstallCmdOptions) {
     const startTime = Date.now();
     if (!this.workspace) throw new OutsideWorkspaceError();
+    if (packages.length && options.addMissingDeps) {
+      throw new BitError('You can not use --add-missing-deps with a list of packages');
+    }
     if (options.updateExisting) {
       this.logger.consoleWarning(
         `--update-existing is deprecated, please omit it. "bit install" will update existing dependency by default`
@@ -73,6 +79,7 @@ export default class InstallCmd implements Command {
       import: !options.skipImport,
       updateExisting: true,
       savePrefix: options.savePrefix,
+      addMissingDeps: options.addMissingDeps,
       addMissingPeers: options.addMissingPeers,
       compile: !options.skipCompile,
       includeOptionalDeps: !options.noOptional,
