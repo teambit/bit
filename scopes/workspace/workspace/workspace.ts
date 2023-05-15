@@ -1335,7 +1335,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.harmony,
       this.onAspectsResolveSlot,
       this.onRootAspectAddedSlot,
-      this.config.resolveAspectsFromNodeModules
+      this.config.resolveAspectsFromNodeModules,
+      this.config.resolveEnvsFromRoots
     );
     return workspaceAspectsLoader;
   }

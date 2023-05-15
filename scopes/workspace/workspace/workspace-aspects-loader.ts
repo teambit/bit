@@ -1,4 +1,5 @@
 import findRoot from 'find-root';
+import { getRootComponentDir } from '@teambit/bit-roots';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { Graph } from '@teambit/graph.cleargraph';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
@@ -38,6 +39,7 @@ export type WorkspaceLoadAspectsOptions = LoadAspectsOptions & {
   useScopeAspectsCapsule?: boolean;
   runSubscribers?: boolean;
   skipDeps?: boolean;
+  resolveEnvsFromRoots?: boolean;
 };
 
 export type AspectPackage = { packageName: string; version: string };
@@ -56,10 +58,13 @@ export class WorkspaceAspectsLoader {
     private harmony: Harmony,
     private onAspectsResolveSlot: OnAspectsResolveSlot,
     private onRootAspectAddedSlot: OnRootAspectAddedSlot,
-    private resolveAspectsFromNodeModules = false
+    private resolveAspectsFromNodeModules = false,
+    private resolveEnvsFromRoots = false
   ) {
     this.consumer = this.workspace.consumer;
     this.resolvedInstalledAspects = new Map();
+    // Only enable this when root components is enabled as well
+    this.resolveEnvsFromRoots = this.resolveEnvsFromRoots && this.dependencyResolver.hasRootComponents();
   }
 
   /**
@@ -80,6 +85,7 @@ export class WorkspaceAspectsLoader {
       skipDeps: false,
       hideMissingModuleError: !!this.workspace.inInstallContext,
       ignoreErrors: false,
+      resolveEnvsFromRoots: this.resolveEnvsFromRoots,
     };
     const mergedOpts: Required<WorkspaceLoadAspectsOptions> = { ...defaultOpts, ...opts };
 
@@ -95,7 +101,12 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
 
     const componentIds = await this.workspace.resolveMultipleComponentIds(idsWithoutCore);
-    const { workspaceIds, nonWorkspaceIds } = await this.groupIdsByWorkspaceExistence(componentIds);
+
+    const { workspaceIds, nonWorkspaceIds } = await this.groupIdsByWorkspaceExistence(
+      componentIds,
+      mergedOpts.resolveEnvsFromRoots
+    );
+
     this.logFoundWorkspaceVsScope(loggerPrefix, workspaceIds, nonWorkspaceIds);
     let idsToLoadFromWs = componentIds;
     let scopeAspectIds: string[] = [];
@@ -110,32 +121,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     if (mergedOpts.useScopeAspectsCapsule) {
       idsToLoadFromWs = workspaceIds;
-      const currentLane = await this.consumer.getCurrentLaneObject();
-
-      const nonWorkspaceIdsString = nonWorkspaceIds.map((id) => id.toString());
-      try {
-        scopeAspectIds = await this.scope.loadAspects(
-          nonWorkspaceIdsString,
-          throwOnError,
-          neededFor,
-          currentLane || undefined,
-          {
-            packageManagerConfigRootDir: this.workspace.path,
-            workspaceName: this.workspace.name,
-          }
-        );
-      } catch (err: any) {
-        if (err instanceof ComponentNotFound) {
-          const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
-          const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
-          if (configStr.includes(err.id)) {
-            throw new BitError(`error: a component "${err.id}" was not found
-  your workspace.jsonc has this component-id set. you might want to remove/change it.`);
-          }
-        }
-
-        throw err;
-      }
+      scopeAspectIds = await this.loadFromScopeAspectsCapsule(nonWorkspaceIds, throwOnError, neededFor);
     }
 
     const aspectsDefs = await this.resolveAspects(undefined, idsToLoadFromWs, {
@@ -170,10 +156,45 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       throwOnError,
       opts.runSubscribers
     );
+
     await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, { throwOnError });
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
     const manifestIds = manifests.map((manifest) => manifest.id);
     return compact(manifestIds.concat(scopeAspectIds));
+  }
+
+  private async loadFromScopeAspectsCapsule(ids: ComponentID[], throwOnError?: boolean, neededFor?: string) {
+    let scopeAspectIds: string[] = [];
+    const currentLane = await this.consumer.getCurrentLaneObject();
+
+    if (!ids.length) return [];
+
+    const nonWorkspaceIdsString = ids.map((id) => id.toString());
+    try {
+      scopeAspectIds = await this.scope.loadAspects(
+        nonWorkspaceIdsString,
+        throwOnError,
+        neededFor,
+        currentLane || undefined,
+        {
+          packageManagerConfigRootDir: this.workspace.path,
+          workspaceName: this.workspace.name,
+        }
+      );
+      return scopeAspectIds;
+    } catch (err: any) {
+      if (err instanceof ComponentNotFound) {
+        const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
+        const configStr = JSON.stringify(config.workspaceConfig?.raw || {});
+        if (configStr.includes(err.id)) {
+          throw new BitError(`error: a component "${err.id}" was not found
+  your workspace.jsonc has this component-id set. you might want to remove/change it.`);
+        }
+        return scopeAspectIds;
+      }
+
+      throw err;
+    }
   }
 
   private async loadAspectDefsByOrder(
@@ -225,6 +246,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       filterByRuntime: true,
       useScopeAspectsCapsule: false,
       workspaceName: this.workspace.name,
+      resolveEnvsFromRoots: false,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
@@ -265,7 +287,11 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const graph = await this.getAspectsGraphWithoutCore(components, this.isAspect.bind(this));
     const aspects = graph.nodes.map((node) => node.attr);
     this.logger.debug(`${loggerPrefix} found ${aspects.length} aspects in the aspects-graph`);
-    const { workspaceComps, nonWorkspaceComps } = await this.groupComponentsByWorkspaceExistence(aspects);
+    const { workspaceComps, nonWorkspaceComps } = await this.groupComponentsByWorkspaceExistence(
+      aspects,
+      mergedOpts.resolveEnvsFromRoots
+    );
+
     const workspaceCompsIds = workspaceComps.map((c) => c.id);
     const nonWorkspaceCompsIds = workspaceComps.map((c) => c.id);
     this.logFoundWorkspaceVsScope(loggerPrefix, workspaceCompsIds, nonWorkspaceCompsIds);
@@ -646,6 +672,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       useScopeAspectsCapsule: true,
       throwOnError: false,
       hideMissingModuleError: !!this.workspace.inInstallContext,
+      resolveEnvsFromRoots: this.resolveEnvsFromRoots,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
@@ -702,17 +729,61 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
    * @returns
    */
   private async groupComponentsByWorkspaceExistence(
-    components: Component[]
+    components: Component[],
+    resolveEnvsFromRoots?: boolean
   ): Promise<{ workspaceComps: Component[]; nonWorkspaceComps: Component[] }> {
-    const workspaceComps: Component[] = [];
-    const nonWorkspaceComps: Component[] = [];
+    let workspaceComps: Component[] = [];
+    let nonWorkspaceComps: Component[] = [];
     await Promise.all(
       components.map(async (component) => {
         const existOnWorkspace = await this.workspace.hasId(component.id);
         existOnWorkspace ? workspaceComps.push(component) : nonWorkspaceComps.push(component);
       })
     );
+    if (resolveEnvsFromRoots) {
+      const { rootComps, nonRootComps } = await this.groupComponentsByLoadFromRootComps(nonWorkspaceComps);
+      workspaceComps = workspaceComps.concat(rootComps);
+      nonWorkspaceComps = nonRootComps;
+    }
     return { workspaceComps, nonWorkspaceComps };
+  }
+
+  private async groupComponentsByLoadFromRootComps(
+    components: Component[]
+  ): Promise<{ rootComps: Component[]; nonRootComps: Component[] }> {
+    const rootComps: Component[] = [];
+    const nonRootComps: Component[] = [];
+    await Promise.all(
+      components.map(async (component) => {
+        const shouldLoadFromRootComps = await this.shouldLoadFromRootComps(component);
+        if (shouldLoadFromRootComps) {
+          rootComps.push(component);
+          return;
+        }
+        nonRootComps.push(component);
+      })
+    );
+    return { rootComps, nonRootComps };
+  }
+
+  private async shouldLoadFromRootComps(component: Component): Promise<boolean> {
+    const rootDir = getRootComponentDir(this.workspace.path, component.id.toString());
+    const rootDirExist = await fs.pathExists(rootDir);
+    const localPath = this.workspace.getComponentPackagePath(component);
+
+    // checking that we have the root dir and that the local path is inside the root dir
+    // the fact that local path is inside the root dir is important because we want to make sure
+    // that we can really load the component from that path (if it's there it means that it's an env)
+    if (rootDirExist && localPath.startsWith(rootDir)) {
+      return true;
+    }
+    // If the component has env.jsonc we want to list it to be loaded from the root folder
+    // even if it's not there yet
+    // in that case we will fail to load it, and the user will need to run bit install
+    if (this.dependencyResolver.hasEnvManifest(component)) {
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -729,23 +800,43 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       aspectDefs.map(async (aspectDef) => {
         const id = aspectDef.component?.id;
         const existOnWorkspace = id ? await this.workspace.hasId(id) : true;
-        existOnWorkspace ? workspaceDefs.push(aspectDef) : nonWorkspaceDefs.push(aspectDef);
+        if (existOnWorkspace) {
+          workspaceDefs.push(aspectDef);
+          return;
+        }
+        const shouldLoadFromRootComps = aspectDef.component
+          ? await this.shouldLoadFromRootComps(aspectDef.component)
+          : undefined;
+        if (shouldLoadFromRootComps) {
+          workspaceDefs.push(aspectDef);
+          return;
+        }
+        nonWorkspaceDefs.push(aspectDef);
       })
     );
     return { workspaceDefs, nonWorkspaceDefs };
   }
 
   private async groupIdsByWorkspaceExistence(
-    ids: ComponentID[]
+    ids: ComponentID[],
+    resolveEnvsFromRoots?: boolean
   ): Promise<{ workspaceIds: ComponentID[]; nonWorkspaceIds: ComponentID[] }> {
-    const workspaceIds: ComponentID[] = [];
-    const nonWorkspaceIds: ComponentID[] = [];
+    let workspaceIds: ComponentID[] = [];
+    let nonWorkspaceIds: ComponentID[] = [];
     await Promise.all(
       ids.map(async (id) => {
         const existOnWorkspace = await this.workspace.hasId(id);
         existOnWorkspace ? workspaceIds.push(id) : nonWorkspaceIds.push(id);
       })
     );
+    // We need to bring the components in order to really group them with taking the root comps into account
+    const scopeComponents = await this.importAndGetAspects(nonWorkspaceIds);
+    const { nonWorkspaceComps, workspaceComps } = await this.groupComponentsByWorkspaceExistence(
+      scopeComponents,
+      resolveEnvsFromRoots
+    );
+    workspaceIds = workspaceIds.concat(workspaceComps.map((c) => c.id));
+    nonWorkspaceIds = nonWorkspaceComps.map((c) => c.id);
     return { workspaceIds, nonWorkspaceIds };
   }
 }

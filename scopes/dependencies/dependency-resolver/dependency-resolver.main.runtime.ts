@@ -630,6 +630,15 @@ export class DependencyResolverMain {
       return modulePath;
     }
     const pkgName = this.getPackageName(component);
+    const selfRootDir = getRelativeRootComponentDir(component.id.toString());
+    // In case the component is it's own root we want to load it from it's own root folder
+    if (fs.pathExistsSync(selfRootDir)) {
+      const innerDir = join(selfRootDir, 'node_modules', pkgName);
+      if (fs.pathExistsSync(innerDir)) return innerDir;
+      // sometime for the env itself we don't have the env package in the env root dir, because it was hoisted
+      // in that case we return the dir from the root node_modules
+      return this.getModulePath(component);
+    }
     const envId = this.envs.getEnvId(component);
     return join(getRelativeRootComponentDir(envId), 'node_modules', pkgName);
   }
@@ -1102,6 +1111,29 @@ export class DependencyResolverMain {
     if (fromFile) return fromFile;
     const env = this.envs.getEnv(component).env;
     return this.getComponentEnvPolicyFromEnv(env);
+  }
+
+  /**
+   * This function checks if an environment manifest file exists in a given component or set of legacy files.
+   * @param {Component} [envComponent] - A component object that represents an environment. It contains information about
+   * the files and directories that make up the environment.
+   * @param {SourceFile[]} [legacyFiles] - An optional array of SourceFile objects representing the files in the legacy
+   * file system. If this parameter is not provided, the function will attempt to retrieve the files from the envComponent
+   * parameter.
+   * @returns a boolean value indicating whether an `env.jsonc` or `env.json` file exists in the `files` array of either
+   * the `envComponent` object or the `legacyFiles` array. If neither `envComponent` nor `legacyFiles` are provided, the
+   * function returns `undefined`.
+   */
+  hasEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): boolean | undefined {
+    if (!envComponent && !legacyFiles) return undefined;
+    // @ts-ignore
+    const files = legacyFiles || envComponent.filesystem.files;
+    const envJson = files.find((file) => {
+      return file.relative === 'env.jsonc' || file.relative === 'env.json';
+    });
+
+    if (!envJson) return false;
+    return true;
   }
 
   getEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): EnvPolicy | undefined {
