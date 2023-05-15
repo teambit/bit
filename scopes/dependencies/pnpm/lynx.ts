@@ -172,7 +172,12 @@ export async function install(
     hidePackageManagerOutput?: boolean;
   } & Pick<
     InstallOptions,
-    'publicHoistPattern' | 'hoistPattern' | 'nodeVersion' | 'engineStrict' | 'peerDependencyRules'
+    | 'publicHoistPattern'
+    | 'hoistPattern'
+    | 'nodeVersion'
+    | 'engineStrict'
+    | 'peerDependencyRules'
+    | 'neverBuiltDependencies'
   > &
     Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -218,6 +223,8 @@ export async function install(
   const opts: InstallOptions = {
     allProjects,
     autoInstallPeers: false,
+    confirmModulesPurge: false,
+    excludeLinksFromLockfile: true,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
     dir: rootDir,
@@ -226,7 +233,7 @@ export async function install(
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
     modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
-    neverBuiltDependencies: ['core-js'],
+    neverBuiltDependencies: options.neverBuiltDependencies,
     registries: registriesMap,
     resolutionMode: 'highest',
     rawConfig: authConfig,
@@ -261,6 +268,10 @@ export async function install(
         throttleProgress: 200,
       },
       streamParser,
+      // Linked in core aspects are excluded from the output to reduce noise.
+      // Other @teambit/ dependencies will be shown.
+      // Only those that are symlinked from outside the workspace will be hidden.
+      filterPkgsDiff: (diff) => !diff.name.startsWith('@teambit/') || !diff.from,
     });
   }
   let dependenciesChanged = false;
