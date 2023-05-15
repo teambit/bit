@@ -1,4 +1,5 @@
 import { Component } from '@teambit/component';
+import { RunInsightOptions } from './insight-manager';
 
 export type InsightMetaData = {
   name: string;
@@ -24,7 +25,7 @@ export interface Insight {
   /**
    * runs a specific insight using _runInsight, gets a RawResult, and uses _formatData to transform the output to InsightResult.
    */
-  run(...args: any[]): Promise<InsightResult>;
+  run(opts?: RunInsightOptions): Promise<InsightResult>;
 
   /**
    * add the results from the insights as a component-issue so then bit-status could show them and bit-tag could block
