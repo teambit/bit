@@ -69,7 +69,8 @@ function _VersionMenu(
 
   const activeTabOrSnap: 'SNAP' | 'TAG' | 'LANE' | undefined = tabs[activeTabIndex]?.name;
   const hasMore = activeTabOrSnap === 'SNAP' ? !!hasMoreSnaps : activeTabOrSnap === 'TAG' && !!hasMoreTags;
-  const observer = React.useRef<IntersectionObserver>();
+  const firstObserver = React.useRef<IntersectionObserver>();
+  const lastObserver = React.useRef<IntersectionObserver>();
 
   const handleLoadMore = React.useCallback(
     (backwards?: boolean) => {
@@ -82,8 +83,8 @@ function _VersionMenu(
   const lastLogRef = React.useCallback(
     (node) => {
       if (loading) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver(
+      if (lastObserver.current) lastObserver.current.disconnect();
+      lastObserver.current = new IntersectionObserver(
         (entries) => {
           if (entries[0].isIntersecting && hasMore) {
             handleLoadMore();
@@ -94,7 +95,7 @@ function _VersionMenu(
           rootMargin: '100px',
         }
       );
-      if (node) observer.current.observe(node);
+      if (node) lastObserver.current.observe(node);
     },
     [loading, hasMoreSnaps, hasMoreTags, handleLoadMore]
   );
@@ -102,8 +103,8 @@ function _VersionMenu(
   const firstLogRef = React.useCallback(
     (node) => {
       if (loading) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver(
+      if (firstObserver.current) firstObserver.current.disconnect();
+      firstObserver.current = new IntersectionObserver(
         (entries) => {
           if (entries[0].isIntersecting && hasMore) {
             handleLoadMore(true);
@@ -111,10 +112,10 @@ function _VersionMenu(
         },
         {
           threshold: 0.1,
-          rootMargin: '100px',
+          rootMargin: '50px',
         }
       );
-      if (node) observer.current.observe(node);
+      if (node) firstObserver.current.observe(node);
     },
     [loading, hasMoreSnaps, hasMoreTags, handleLoadMore]
   );

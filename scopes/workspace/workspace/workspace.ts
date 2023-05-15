@@ -433,9 +433,10 @@ export class Workspace implements ComponentFactory {
     startFrom?: string,
     stopAt?: string,
     startFromOffset?: number,
-    stopAtOffset?: number
+    stopAtOffset?: number,
+    type?: 'snap' | 'tag'
   ): Promise<ComponentLog[]> {
-    return this.scope.getLogs(id, shortHash, head, startFrom, stopAt, startFromOffset, stopAtOffset);
+    return this.scope.getLogs(id, shortHash, head, startFrom, stopAt, startFromOffset, stopAtOffset, type);
   }
 
   async getGraph(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<Graph<Component, string>> {

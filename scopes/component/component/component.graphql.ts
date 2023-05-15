@@ -202,7 +202,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         logs: async (
           component: Component,
           filter?: {
-            type?: string;
+            type?: 'tag' | 'snap';
             offset?: number;
             limit?: number;
             head?: string;

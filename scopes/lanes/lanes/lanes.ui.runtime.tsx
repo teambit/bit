@@ -16,6 +16,7 @@ import {
   LanesOrderedNavigationSlot,
   LanesOverviewMenu,
 } from '@teambit/lanes.ui.menus.lanes-overview-menu';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { UseLaneMenu } from '@teambit/lanes.ui.menus.use-lanes-menu';
 import { LanesHost, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LanesProvider, useLanes, IgnoreDerivingFromUrl } from '@teambit/lanes.hooks.use-lanes';
@@ -52,16 +53,26 @@ export function useComponentFilters() {
     },
   };
 }
-export function useLaneComponentIdFromUrl() {
+export function useLaneComponentIdFromUrl(): ComponentID | undefined | null {
   const idFromLocation = useIdFromLocation();
   const { lanesModel, loading } = useLanes();
   const laneFromUrl = useViewedLaneFromUrl();
+  const query = useQuery();
+  const componentVersion = query.get('version');
+
+  if (componentVersion && laneFromUrl) {
+    const componentId = ComponentID.fromString(`${idFromLocation}@${componentVersion}`);
+    console.log('🚀 ~ file: lanes.ui.runtime.tsx:66 ~ useLaneComponentIdFromUrl ~ componentId:', componentId);
+    return componentId;
+  }
   const laneComponentId =
     idFromLocation && !laneFromUrl?.isDefault()
       ? lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl) ?? null
       : null;
+
   return loading ? undefined : laneComponentId;
 }
+
 export function useComponentId() {
   return useLaneComponentIdFromUrl()?.toString();
 }

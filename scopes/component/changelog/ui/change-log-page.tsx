@@ -20,6 +20,7 @@ export function ChangeLogPage({ className, host }: ChangeLogPageProps) {
     logFilters: {
       log: {
         logLimit: 15,
+        logOffset: 0,
       },
     },
   });

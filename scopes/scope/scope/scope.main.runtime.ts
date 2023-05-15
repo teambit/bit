@@ -51,6 +51,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
+import { isSnap, isTag } from '@teambit/component-version';
 import { compact, slice, difference } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
@@ -680,23 +681,24 @@ export class ScopeMain implements ComponentFactory {
     if (!ref) throw new Error(`ref was not found: ${id.toString()} with tag ${hash}`);
     return this.componentLoader.getSnap(id, ref.toString());
   }
-
   /**
    * Performs a Depth-First Search (DFS) to find a node in a graph by offset.
    *
-   * This function starts from a given node and moves either forward or backward in the graph, depending on the provided getNodes function.
-   * The goal is to reach a node that is at a given offset from the starting node. The offset is decremented each time a new node is visited.
-   * The function will return the node that corresponds to the exact offset if it exists.
+   * This function starts from a given node and moves either forward or backward in the graph, depending on the provided getNodesFunc function.
+   * The goal is to reach a node that is at a given offset from the starting node
    *
    * If the graph cannot go any deeper (i.e., there are no more successors or predecessors), or the offset becomes zero, the function will return the last visited node.
    * This ensures that the function always returns a node, either the exact offset node (if it exists) or the closest node by offset.
    *
-   * @param node The node from where to start the search.
    * @param versionGraph The graph in which to perform the search.
    * @param offset The offset from the starting node to find. It is always an absolute value.
    * @param getNodesFunc A function that, given a node id, returns the successors (if moving forward) or predecessors (if moving backward) of that node in the graph.
+   * @param node The node from where to start the search. If not provided, the function will return undefined.
+   * @param nodeFilter Optional. A function that, given a node, determines if it should be included in the search. If not provided, all nodes are included.
+   * @param edgeFilter Optional. A function that, given an edge, determines if it should be included in the search. If not provided, all edges are included.
+   * @param skipNode Optional. A function that, given a node, determines if it should be skipped (not decrease the offset). If not provided, no nodes are skipped.
    *
-   * @returns The node that corresponds to the exact offset if it exists, or the closest node by offset otherwise.
+   * @returns The node that corresponds to the exact offset if it exists, or the closest node by offset otherwise. If no starting node is provided, the function will return undefined.
    */
   private findNodeByOffset(
     versionGraph: Graph<Ref, string>,
@@ -711,18 +713,33 @@ export class ScopeMain implements ComponentFactory {
         edgeFilter?: (edge: Edge<string>) => boolean;
       }
     ) => Array<Node<Ref>>,
-    node?: Node<Ref>
+    node?: Node<Ref>,
+    nodeFilter?: (node: Node<Ref>) => boolean,
+    edgeFilter?: (edge: Edge<string>) => boolean,
+    skipNode?: (node: Node<Ref>) => boolean
   ) {
     if (offset === 0 || !node) return node;
 
-    const nextNodes = getNodesFunc(node.id, { edgeFilter: (edge) => edge.attr === 'parent' });
+    const nextNodes = getNodesFunc(node.id, { edgeFilter, nodeFilter });
 
     if (!nextNodes || nextNodes.length === 0) {
       return node;
     }
 
     for (const nextNode of nextNodes) {
-      const foundNode = this.findNodeByOffset(versionGraph, offset - 1, getNodesFunc, nextNode);
+      const skip = skipNode && skipNode(nextNode);
+      const nextOffset = skip ? offset : offset - 1;
+
+      const foundNode = this.findNodeByOffset(
+        versionGraph,
+        nextOffset,
+        getNodesFunc,
+        nextNode,
+        nodeFilter,
+        edgeFilter,
+        skipNode
+      );
+
       if (foundNode) {
         return foundNode;
       }
@@ -734,19 +751,20 @@ export class ScopeMain implements ComponentFactory {
   /**
    * Fetches the logs for a given component.
    *
-   * @param id - The ComponentID of the component for which to fetch logs.
-   * @param shortHash - If true, returns a shorter version of the hash. Defaults to false.
-   * @param head - The specific version to start fetching logs from. If not provided, starts from the head.
-   * @param startFrom - The specific version to start slicing logs from.
-   * @param stopAt - The specific version to stop fetching logs at.
-   * @param startFromOffset - Offset from the start version to fetch logs from.
-   * @param stopAtOffset - Offset from the stop version to fetch logs at.
+   * @param id The ComponentID of the component for which to fetch logs.
+   * @param shortHash If true, returns a shorter version of the hash. Defaults to false.
+   * @param head The specific version to start fetching logs from. If not provided, starts from the head.
+   * @param startFrom The specific version to start slicing logs from.
+   * @param stopAt The specific version to stop fetching logs at.
+   * @param startFromOffset Offset from the start version to fetch logs from.
+   * @param stopAtOffset Offset from the stop version to fetch logs at.
+   * @param type Optional. The type of logs to fetch - 'snap' or 'tag'
    *
    * @returns A promise that resolves to an array of ComponentLog objects representing the filtered logs for the component.
    *
    * @throws Error - Throws an error if the node with given headRef hash is not found.
-   *
    */
+
   async getLogs(
     id: ComponentID,
     shortHash = false,
@@ -754,7 +772,8 @@ export class ScopeMain implements ComponentFactory {
     startFrom?: string,
     stopAt?: string,
     startFromOffset?: number,
-    stopAtOffset?: number
+    stopAtOffset?: number,
+    type?: 'snap' | 'tag'
   ): Promise<ComponentLog[]> {
     const componentModel = await this.legacyScope.getModelComponentIfExist(id._legacy);
 
@@ -779,12 +798,28 @@ export class ScopeMain implements ComponentFactory {
 
     const startOffset = startFromOffset || 0;
 
+    const componentVersionSet = new Set<string>(componentModel.versionArray.map((v) => v.hash));
+
+    const skipNode = (node: Node<Ref>) => {
+      if (type === 'snap') {
+        return componentVersionSet.has(node.id);
+      }
+      if (type === 'tag') {
+        return !componentVersionSet.has(node.id);
+      }
+
+      return false;
+    };
+
     if (startOffset !== 0) {
       startNode = this.findNodeByOffset(
         versionGraph,
         Math.abs(startOffset),
         startOffset > 0 ? versionGraph.successors.bind(versionGraph) : versionGraph.predecessors.bind(versionGraph),
-        startNode
+        startNode,
+        undefined,
+        (edge) => edge.attr === 'parent',
+        skipNode
       );
     }
 
@@ -796,16 +831,24 @@ export class ScopeMain implements ComponentFactory {
         versionGraph,
         Math.abs(stopOffset),
         stopOffset > 0 ? versionGraph.successors.bind(versionGraph) : versionGraph.predecessors.bind(versionGraph),
-        stopNode
+        stopNode,
+        undefined,
+        (edge) => edge.attr === 'parent',
+        skipNode
       );
     }
 
-    return this.legacyScope.loadComponentLogs(
-      id._legacy,
-      shortHash,
-      startNode?.id,
-      stopNode ? [stopNode.id] : undefined
-    );
+    return this.legacyScope
+      .loadComponentLogs(id._legacy, shortHash, startNode?.id, stopNode ? [stopNode.id] : undefined)
+      .then((logs) => {
+        if (type === 'snap') {
+          return logs.filter((log) => !log.tag);
+        }
+        if (type === 'tag') {
+          return logs.filter((log) => log.tag);
+        }
+        return logs;
+      });
   }
 
   async getStagedConfig() {

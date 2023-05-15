@@ -122,7 +122,8 @@ export interface ComponentFactory {
     startFrom?: string,
     stopAt?: string,
     startFromOffset?: number,
-    stopAtOffset?: number
+    stopAtOffset?: number,
+    type?: 'tag' | 'snap'
   ): Promise<ComponentLog[]>;
 
   /**

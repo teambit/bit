@@ -246,9 +246,9 @@ export type ComponentQueryResult = {
   loading?: boolean;
   error?: ComponentError;
 };
-function getOffsetValue(offset, limit) {
+function getOffsetValue(offset, limit, backwards = false) {
   if (offset !== undefined) {
-    return offset;
+    return backwards ? -offset : offset;
   }
   if (limit !== undefined) {
     return 0;
@@ -265,14 +265,7 @@ function getOffsetValue(offset, limit) {
  *
  * @returns {number | undefined} -  new offset
  */
-function calculateNewOffset(
-  fetchLogsByTypeSeparately?: boolean,
-  initialOffset = 0,
-  currentOffset = 0,
-  logs: any[] = []
-): number | undefined {
-  if (!fetchLogsByTypeSeparately) return currentOffset;
-
+function calculateNewOffset(initialOffset = 0, currentOffset = 0, logs: any[] = []): number | undefined {
   const logCount = logs.length;
 
   if (initialOffset !== currentOffset && logCount + initialOffset >= currentOffset) return currentOffset;
@@ -335,7 +328,7 @@ export function useComponentQuery(
     fetchLogsByTypeSeparately,
     snapLogOffset: getOffsetValue(snapLogOffset, snapLogLimit),
     tagLogOffset: getOffsetValue(tagLogOffset, tagLogLimit),
-    logOffset: logOffset ?? logLimit ? 0 : undefined,
+    logOffset: getOffsetValue(logOffset, logLimit),
     logLimit,
     snapLogLimit,
     tagLogLimit,
@@ -373,17 +366,17 @@ export function useComponentQuery(
   const rawSnaps: Array<any> = rawComponent?.snapLogs ?? [];
   const rawCompLogs: Array<any> = rawComponent?.logs ?? mergeLogs(rawTags, rawSnaps);
   offsetRef.current = useMemo(
-    () => calculateNewOffset(fetchLogsByTypeSeparately, logOffset, offsetRef.current, rawCompLogs),
+    () => calculateNewOffset(logOffset, offsetRef.current, rawCompLogs),
     [rawCompLogs, fetchLogsByTypeSeparately, logOffset]
   );
 
   tagOffsetRef.current = useMemo(
-    () => calculateNewOffset(fetchLogsByTypeSeparately, tagLogOffset, tagOffsetRef.current, rawTags),
+    () => calculateNewOffset(tagLogOffset, tagOffsetRef.current, rawTags),
     [rawTags, fetchLogsByTypeSeparately, tagLogOffset]
   );
 
   snapOffsetRef.current = useMemo(
-    () => calculateNewOffset(fetchLogsByTypeSeparately, snapLogOffset, snapOffsetRef.current, rawSnaps),
+    () => calculateNewOffset(snapLogOffset, snapOffsetRef.current, rawSnaps),
     [rawSnaps, fetchLogsByTypeSeparately, snapLogOffset]
   );
 
@@ -404,7 +397,7 @@ export function useComponentQuery(
 
   const loadMoreLogs = React.useCallback(
     async (backwards = false) => {
-      const offset = offsetRef.current ? (backwards && -offsetRef.current) || offsetRef.current : undefined;
+      const offset = getOffsetValue(offsetRef.current, logLimit, backwards);
 
       if (logLimit) {
         await fetchMore({
@@ -445,7 +438,7 @@ export function useComponentQuery(
 
   const loadMoreTags = React.useCallback(
     async (backwards = false) => {
-      const offset = tagOffsetRef.current ? (backwards && -tagOffsetRef.current) || tagOffsetRef.current : undefined;
+      const offset = getOffsetValue(tagOffsetRef.current, tagLogLimit, backwards);
 
       if (tagLogLimit) {
         await fetchMore({
@@ -488,7 +481,7 @@ export function useComponentQuery(
 
   const loadMoreSnaps = React.useCallback(
     async (backwards = false) => {
-      const offset = snapOffsetRef.current ? (backwards && -snapOffsetRef.current) || snapOffsetRef.current : undefined;
+      const offset = getOffsetValue(snapOffsetRef.current, snapLogLimit, backwards);
 
       if (snapLogLimit) {
         await fetchMore({
@@ -687,10 +680,44 @@ interface Log {
   id: string;
   date: string;
 }
-
 function mergeLogs(logs1: Log[] = [], logs2: Log[] = []): Log[] {
-  const mergedLogs: Log[] = [];
-  logs1.forEach((log) => mergedLogs.push(log));
-  logs2.forEach((log) => mergedLogs.push(log));
-  return mergedLogs;
+  const logMap = new Map<string, Log>();
+  const result: Log[] = [];
+
+  let index1 = 0;
+  let index2 = 0;
+
+  while (index1 < logs1.length && index2 < logs2.length) {
+    if (Number(logs1[index1].date) >= Number(logs2[index2].date)) {
+      if (!logMap.has(logs1[index1].id)) {
+        logMap.set(logs1[index1].id, logs1[index1]);
+        result.push(logs1[index1]);
+      }
+      index1 += 1;
+    } else {
+      if (!logMap.has(logs2[index2].id)) {
+        logMap.set(logs2[index2].id, logs2[index2]);
+        result.push(logs2[index2]);
+      }
+      index2 += 1;
+    }
+  }
+
+  while (index1 < logs1.length) {
+    if (!logMap.has(logs1[index1].id)) {
+      logMap.set(logs1[index1].id, logs1[index1]);
+      result.push(logs1[index1]);
+    }
+    index1 += 1;
+  }
+
+  while (index2 < logs2.length) {
+    if (!logMap.has(logs2[index2].id)) {
+      logMap.set(logs2[index2].id, logs2[index2]);
+      result.push(logs2[index2]);
+    }
+    index2 += 1;
+  }
+
+  return result;
 }

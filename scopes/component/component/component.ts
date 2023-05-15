@@ -114,7 +114,7 @@ export class Component implements IComponent {
   }
 
   async getLogs(filter?: {
-    type?: string;
+    type?: 'tag' | 'snap';
     offset?: number;
     limit?: number;
     head?: string;
@@ -123,20 +123,10 @@ export class Component implements IComponent {
     until?: string;
   }) {
     const { type, limit, offset, sort, head, startFrom, until } = filter || {};
-    const typeFilter = (snap) => {
-      if (type === 'tag') return snap.tag;
-      if (type === 'snap') return !snap.tag;
-      return true;
-    };
 
-    const allLogs = await this.factory.getLogs(this.id, false, head, startFrom, until, offset, limit);
+    const filteredLogs = await this.factory.getLogs(this.id, false, head, startFrom, until, offset, limit, type);
 
-    if (!filter) {
-      return allLogs;
-    }
-
-    let filteredLogs = (type && allLogs.filter(typeFilter)) || allLogs;
-    if (sort !== 'asc') filteredLogs = filteredLogs.reverse();
+    if (sort !== 'asc') filteredLogs.reverse();
 
     return filteredLogs;
   }
