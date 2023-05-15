@@ -6,6 +6,7 @@ import {
   conflictSummaryReport,
   installationErrorOutput,
   compilationErrorOutput,
+  getRemovedOutput,
 } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
@@ -91,6 +92,7 @@ export class CheckoutCmd implements Command {
       components,
       version,
       failedComponents,
+      removedComponents,
       leftUnresolvedConflicts,
       newFromLane,
       newFromLaneAdded,
@@ -197,6 +199,7 @@ once ready, snap/tag the components to persist the changes`;
       getFailureOutput() +
       getNotCheckedOutOutput() +
       getSuccessfulOutput() +
+      getRemovedOutput(removedComponents) +
       getNewOnLaneOutput() +
       getConflictSummary() +
       getSummary() +

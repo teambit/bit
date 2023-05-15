@@ -5,6 +5,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
+import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import { ApplyVersionResults } from '@teambit/merging';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
@@ -47,6 +48,7 @@ export type ComponentStatusBeforeMergeAttempt = {
   id: BitId;
   failureMessage?: string;
   unchangedLegitimately?: boolean; // failed to checkout but for a legitimate reason, such as, up-to-date
+  shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
   propsForMerge?: {
     currentlyUsedVersion: string;
     componentModel: ModelComponent;
@@ -60,7 +62,8 @@ export class CheckoutMain {
     private workspace: Workspace,
     private logger: Logger,
     private componentWriter: ComponentWriterMain,
-    private importer: ImporterMain
+    private importer: ImporterMain,
+    private remove: RemoveMain
   ) {}
 
   async checkout(checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
@@ -119,6 +122,7 @@ export class CheckoutMain {
     }
     const failedComponents: FailedComponents[] = allComponentsStatus
       .filter((componentStatus) => componentStatus.failureMessage)
+      .filter((componentStatus) => !componentStatus.shouldBeRemoved)
       .map((componentStatus) => ({
         id: componentStatus.id,
         failureMessage: componentStatus.failureMessage as string,
@@ -165,8 +169,17 @@ export class CheckoutMain {
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
+    const componentIdsToRemove = allComponentsStatus
+      .filter((componentStatus) => componentStatus.shouldBeRemoved)
+      .map((c) => c.id.changeVersion(undefined));
+
+    if (componentIdsToRemove.length) {
+      await this.remove.removeLocallyByIds(componentIdsToRemove, { force: true });
+    }
+
     return {
       components: appliedVersionComponents,
+      removedComponents: componentIdsToRemove,
       version,
       failedComponents,
       leftUnresolvedConflicts,
@@ -280,7 +293,7 @@ export class CheckoutMain {
     const { version, head: headVersion, reset, latest: latestVersion } = checkoutProps;
     const repo = consumer.scope.objects;
     const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
-    const componentStatus: ComponentStatus = { id: component.id };
+    const componentStatus: ComponentStatusBeforeMergeAttempt = { id: component.id };
     const returnFailure = (msg: string, unchangedLegitimately = false) => {
       componentStatus.failureMessage = msg;
       componentStatus.unchangedLegitimately = unchangedLegitimately;
@@ -339,7 +352,12 @@ export class CheckoutMain {
 
     const versionRef = componentModel.getRef(newVersion);
     if (!versionRef) throw new Error(`unable to get ref ${newVersion} from ${componentModel.id()}`);
-    const componentVersion = (await consumer.scope.getObject(versionRef.hash)) as Version;
+    const componentVersion = (await consumer.scope.getObject(versionRef.hash)) as Version | undefined;
+    if (componentVersion?.isRemoved() && existingBitMapId) {
+      componentStatus.shouldBeRemoved = true;
+      return returnFailure(`component has been removed`, true);
+    }
+
     const newId = component.id.changeVersion(newVersion);
 
     if (reset || !isModified) {
@@ -393,19 +411,20 @@ export class CheckoutMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ComponentWriterAspect, ImporterAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ComponentWriterAspect, ImporterAspect, RemoveAspect];
 
   static runtime = MainRuntime;
 
-  static async provider([cli, workspace, loggerMain, compWriter, importer]: [
+  static async provider([cli, workspace, loggerMain, compWriter, importer, remove]: [
     CLIMain,
     Workspace,
     LoggerMain,
     ComponentWriterMain,
-    ImporterMain
+    ImporterMain,
+    RemoveMain
   ]) {
     const logger = loggerMain.createLogger(CheckoutAspect.id);
-    const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer);
+    const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer, remove);
     cli.register(new CheckoutCmd(checkoutMain));
     return checkoutMain;
   }

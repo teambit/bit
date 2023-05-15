@@ -25,6 +25,7 @@ import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import chalk from 'chalk';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
+import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
@@ -63,6 +64,7 @@ export type ComponentMergeStatus = {
   divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
   configMergeResult?: ConfigMergeResult;
+  shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
 };
 
 export type ComponentMergeStatusBeforeMergeAttempt = {
@@ -73,6 +75,7 @@ export type ComponentMergeStatusBeforeMergeAttempt = {
   unmergedLegitimately?: boolean; // failed to merge but for a legitimate reason, such as, up-to-date
   divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
+  shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
   mergeProps?: {
     otherLaneHead: Ref;
     currentId: BitId;
@@ -84,6 +87,7 @@ export type ApplyVersionResults = {
   components?: ApplyVersionResult[];
   version?: string;
   failedComponents?: FailedComponents[];
+  removedComponents?: BitId[];
   resolvedComponents?: ConsumerComponent[]; // relevant for bit merge --resolve
   abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
   mergeSnapResults?: { snappedComponents: ConsumerComponent[]; autoSnappedResults: AutoTagResult[] } | null;
@@ -107,7 +111,8 @@ export class MergingMain {
     private logger: Logger,
     private componentWriter: ComponentWriterMain,
     private importer: ImporterMain,
-    private config: ConfigMain
+    private config: ConfigMain,
+    private remove: RemoveMain
   ) {
     this.consumer = this.workspace?.consumer;
   }
@@ -218,11 +223,21 @@ export class MergingMain {
     }
     const failedComponents: FailedComponents[] = allComponentsStatus
       .filter((componentStatus) => componentStatus.unmergedMessage)
+      .filter((componentStatus) => !componentStatus.shouldBeRemoved)
       .map((componentStatus) => ({
         id: componentStatus.id,
         failureMessage: componentStatus.unmergedMessage as string,
         unchangedLegitimately: componentStatus.unmergedLegitimately,
       }));
+
+    const componentIdsToRemove = allComponentsStatus
+      .filter((componentStatus) => componentStatus.shouldBeRemoved)
+      .map((c) => c.id.changeVersion(undefined));
+
+    if (componentIdsToRemove.length) {
+      await this.remove.removeLocallyByIds(componentIdsToRemove, { force: true });
+    }
+
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.unmergedMessage);
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
     // which can be an issue when some components are also dependencies of others
@@ -304,6 +319,7 @@ export class MergingMain {
     return {
       components: componentsResults,
       failedComponents,
+      removedComponents: componentIdsToRemove,
       mergeSnapResults,
       mergeSnapError,
       leftUnresolvedConflicts,
@@ -574,6 +590,7 @@ export class MergingMain {
     const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
     const componentOnOther: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
     if (componentOnOther.isRemoved()) {
+      if (existingBitMapId) componentStatus.shouldBeRemoved = true;
       return returnUnmerged(`component has been removed`, true);
     }
     const getCurrentId = () => {
@@ -989,9 +1006,21 @@ other:   ${otherLaneHead.toString()}`);
     ComponentWriterAspect,
     ImporterAspect,
     ConfigAspect,
+    RemoveAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, snapping, checkout, install, loggerMain, compWriter, importer, config]: [
+  static async provider([
+    cli,
+    workspace,
+    snapping,
+    checkout,
+    install,
+    loggerMain,
+    compWriter,
+    importer,
+    config,
+    remove,
+  ]: [
     CLIMain,
     Workspace,
     SnappingMain,
@@ -1000,10 +1029,21 @@ other:   ${otherLaneHead.toString()}`);
     LoggerMain,
     ComponentWriterMain,
     ImporterMain,
-    ConfigMain
+    ConfigMain,
+    RemoveMain
   ]) {
     const logger = loggerMain.createLogger(MergingAspect.id);
-    const merging = new MergingMain(workspace, install, snapping, checkout, logger, compWriter, importer, config);
+    const merging = new MergingMain(
+      workspace,
+      install,
+      snapping,
+      checkout,
+      logger,
+      compWriter,
+      importer,
+      config,
+      remove
+    );
     cli.register(new MergeCmd(merging));
     return merging;
   }
