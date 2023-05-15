@@ -25,6 +25,7 @@ import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import chalk from 'chalk';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
+import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
@@ -40,7 +41,6 @@ import { DependencyResolverAspect, WorkspacePolicyConfigKeysNames } from '@teamb
 import { CheckoutAspect, CheckoutMain, applyModifiedVersion } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
-import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
@@ -111,7 +111,8 @@ export class MergingMain {
     private logger: Logger,
     private componentWriter: ComponentWriterMain,
     private importer: ImporterMain,
-    private config: ConfigMain
+    private config: ConfigMain,
+    private remove: RemoveMain
   ) {
     this.consumer = this.workspace?.consumer;
   }
@@ -234,9 +235,7 @@ export class MergingMain {
       .map((c) => c.id.changeVersion(undefined));
 
     if (componentIdsToRemove.length) {
-      const compBitIdsToRemove = BitIds.fromArray(componentIdsToRemove);
-      await deleteComponentsFiles(consumer, compBitIdsToRemove);
-      await consumer.cleanFromBitMap(compBitIdsToRemove);
+      await this.remove.removeLocallyByIds(componentIdsToRemove, { force: true });
     }
 
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.unmergedMessage);
@@ -1007,9 +1006,21 @@ other:   ${otherLaneHead.toString()}`);
     ComponentWriterAspect,
     ImporterAspect,
     ConfigAspect,
+    RemoveAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, snapping, checkout, install, loggerMain, compWriter, importer, config]: [
+  static async provider([
+    cli,
+    workspace,
+    snapping,
+    checkout,
+    install,
+    loggerMain,
+    compWriter,
+    importer,
+    config,
+    remove,
+  ]: [
     CLIMain,
     Workspace,
     SnappingMain,
@@ -1018,10 +1029,21 @@ other:   ${otherLaneHead.toString()}`);
     LoggerMain,
     ComponentWriterMain,
     ImporterMain,
-    ConfigMain
+    ConfigMain,
+    RemoveMain
   ]) {
     const logger = loggerMain.createLogger(MergingAspect.id);
-    const merging = new MergingMain(workspace, install, snapping, checkout, logger, compWriter, importer, config);
+    const merging = new MergingMain(
+      workspace,
+      install,
+      snapping,
+      checkout,
+      logger,
+      compWriter,
+      importer,
+      config,
+      remove
+    );
     cli.register(new MergeCmd(merging));
     return merging;
   }

@@ -6,6 +6,7 @@ import {
   conflictSummaryReport,
   installationErrorOutput,
   compilationErrorOutput,
+  getRemovedOutput,
 } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
@@ -168,12 +169,6 @@ once ready, snap/tag the components to persist the changes`;
       const componentsStr = applyVersionReport(components, true, showVersion);
       return chalk.underline(title) + componentsStr;
     };
-    const getRemovedOutput = () => {
-      if (!removedComponents?.length) return '';
-      const title = `the following ${removedComponents.length} component(s) have been removed`;
-      const body = removedComponents.join('\n');
-      return `\n\n${chalk.underline(title)}\n${body}\n\n`;
-    };
     const getNewOnLaneOutput = () => {
       if (!newFromLane?.length) return '';
       const title = newFromLaneAdded
@@ -204,7 +199,7 @@ once ready, snap/tag the components to persist the changes`;
       getFailureOutput() +
       getNotCheckedOutOutput() +
       getSuccessfulOutput() +
-      getRemovedOutput() +
+      getRemovedOutput(removedComponents) +
       getNewOnLaneOutput() +
       getConflictSummary() +
       getSummary() +

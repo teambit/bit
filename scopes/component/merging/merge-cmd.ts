@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
+import { BitId } from '@teambit/legacy-bit-id';
 import { compact } from 'lodash';
 import { WILDCARD_HELP, AUTO_SNAPPED_MSG, MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import {
@@ -126,13 +127,6 @@ export function mergeReport({
     return chalk.underline(title) + chalk.green(applyVersionReport(components));
   };
 
-  const getRemovedOutput = () => {
-    if (!removedComponents?.length) return '';
-    const title = `the following ${removedComponents.length} component(s) have been removed`;
-    const body = removedComponents.join('\n');
-    return `\n\n${chalk.underline(title)}\n${body}\n\n`;
-  };
-
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
     const title = `\n\nfiles with conflicts summary\n`;
@@ -235,7 +229,7 @@ ${mergeSnapError.message}
   return (
     getSuccessOutput() +
     getFailureOutput() +
-    getRemovedOutput() +
+    getRemovedOutput(removedComponents) +
     getSnapsOutput() +
     getWorkspaceDepsOutput() +
     getConfigMergeConflictSummary() +
@@ -300,4 +294,11 @@ export function compilationErrorOutput(compilationError?: Error) {
   const subTitle = 'The following error had been caught from the compiler, please fix the issue and run "bit compile"';
   const body = chalk.red(compilationError.message);
   return `\n\n${title}\n${subTitle}\n${body}`;
+}
+
+export function getRemovedOutput(removedComponents?: BitId[]) {
+  if (!removedComponents?.length) return '';
+  const title = `the following ${removedComponents.length} component(s) have been removed`;
+  const body = removedComponents.join('\n');
+  return `\n\n${chalk.underline(title)}\n${body}\n\n`;
 }

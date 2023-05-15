@@ -5,6 +5,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
+import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import { ApplyVersionResults } from '@teambit/merging';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
@@ -18,7 +19,6 @@ import {
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import mapSeries from 'p-map-series';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
-import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import { Version, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -62,7 +62,8 @@ export class CheckoutMain {
     private workspace: Workspace,
     private logger: Logger,
     private componentWriter: ComponentWriterMain,
-    private importer: ImporterMain
+    private importer: ImporterMain,
+    private remove: RemoveMain
   ) {}
 
   async checkout(checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
@@ -173,9 +174,7 @@ export class CheckoutMain {
       .map((c) => c.id.changeVersion(undefined));
 
     if (componentIdsToRemove.length) {
-      const compBitIdsToRemove = BitIds.fromArray(componentIdsToRemove);
-      await deleteComponentsFiles(consumer, compBitIdsToRemove);
-      await consumer.cleanFromBitMap(compBitIdsToRemove);
+      await this.remove.removeLocallyByIds(componentIdsToRemove, { force: true });
     }
 
     return {
@@ -412,19 +411,20 @@ export class CheckoutMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ComponentWriterAspect, ImporterAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ComponentWriterAspect, ImporterAspect, RemoveAspect];
 
   static runtime = MainRuntime;
 
-  static async provider([cli, workspace, loggerMain, compWriter, importer]: [
+  static async provider([cli, workspace, loggerMain, compWriter, importer, remove]: [
     CLIMain,
     Workspace,
     LoggerMain,
     ComponentWriterMain,
-    ImporterMain
+    ImporterMain,
+    RemoveMain
   ]) {
     const logger = loggerMain.createLogger(CheckoutAspect.id);
-    const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer);
+    const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer, remove);
     cli.register(new CheckoutCmd(checkoutMain));
     return checkoutMain;
   }
