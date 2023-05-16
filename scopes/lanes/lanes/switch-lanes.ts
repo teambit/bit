@@ -30,6 +30,7 @@ import { throwForStagedComponents } from './create-lane';
 export type SwitchProps = {
   laneName: string;
   ids?: BitId[];
+  pattern?: string;
   existingOnWorkspaceOnly: boolean;
   remoteLane?: Lane;
   localTrackedLane?: string;
@@ -38,7 +39,7 @@ export type SwitchProps = {
 
 export class LaneSwitcher {
   private consumer: Consumer;
-  private laneIdToSwitch: LaneId; // populated by `this.populateSwitchProps()`
+  private laneIdToSwitchTo: LaneId; // populated by `this.populateSwitchProps()`
   private laneToSwitchTo: Lane | undefined; // populated by `this.populateSwitchProps()`, if default-lane, it's undefined
   constructor(
     private workspace: Workspace,
@@ -118,10 +119,22 @@ export class LaneSwitcher {
     } else {
       await this.populatePropsAccordingToRemoteLane(laneId);
     }
+
+    if (this.switchProps.pattern) {
+      if (this.consumer.bitMap.getAllBitIdsFromAllLanes().length) {
+        // if the workspace is not empty, it's possible that it has components from lane-x, and is now switching
+        // partially to lane-y, while lane-y has the same components as lane-x. in which case, the user ends up with
+        // an invalid state of components from lane-x and lane-y together.
+        throw new BitError('error: use --pattern only when the workspace is empty');
+      }
+      const allIds = await this.workspace.resolveMultipleComponentIds(this.switchProps.ids || []);
+      const patternIds = this.workspace.scope.filterIdsFromPoolIdsByPattern(this.switchProps.pattern, allIds);
+      this.switchProps.ids = patternIds.map((id) => id._legacy);
+    }
   }
 
   private async populatePropsAccordingToRemoteLane(remoteLaneId: LaneId) {
-    this.laneIdToSwitch = remoteLaneId;
+    this.laneIdToSwitchTo = remoteLaneId;
     this.logger.debug(`populatePropsAccordingToRemoteLane, remoteLaneId: ${remoteLaneId.toString()}`);
     if (this.consumer.getCurrentLaneId().isEqual(remoteLaneId)) {
       throw new BitError(`already checked out to "${remoteLaneId.toString()}"`);
@@ -140,7 +153,7 @@ export class LaneSwitcher {
       throw new BitError(`already checked out to "${this.switchProps.laneName}"`);
     }
     this.switchProps.ids = await this.consumer.getIdsOfDefaultLane();
-    this.laneIdToSwitch = LaneId.from(DEFAULT_LANE, this.consumer.scope.name);
+    this.laneIdToSwitchTo = LaneId.from(DEFAULT_LANE, this.consumer.scope.name);
   }
 
   private populatePropsAccordingToLocalLane(localLane: Lane) {
@@ -148,7 +161,7 @@ export class LaneSwitcher {
       throw new BitError(`already checked out to "${this.switchProps.laneName}"`);
     }
     this.switchProps.ids = localLane.components.map((c) => c.id.changeVersion(c.head.toString()));
-    this.laneIdToSwitch = localLane.toLaneId();
+    this.laneIdToSwitchTo = localLane.toLaneId();
     this.laneToSwitchTo = localLane;
   }
 
@@ -168,18 +181,18 @@ export class LaneSwitcher {
   }
 
   private async saveLanesData() {
-    const localLaneName = this.switchProps.alias || this.laneIdToSwitch.name;
+    const localLaneName = this.switchProps.alias || this.laneIdToSwitchTo.name;
     if (this.switchProps.remoteLane) {
       if (!this.switchProps.localTrackedLane) {
         this.consumer.scope.lanes.trackLane({
           localLane: localLaneName,
-          remoteLane: this.laneIdToSwitch.name,
-          remoteScope: this.laneIdToSwitch.scope,
+          remoteLane: this.laneIdToSwitchTo.name,
+          remoteScope: this.laneIdToSwitchTo.scope,
         });
       }
     }
 
-    this.consumer.setCurrentLane(this.laneIdToSwitch, !this.laneToSwitchTo?.isNew);
+    this.consumer.setCurrentLane(this.laneIdToSwitchTo, !this.laneToSwitchTo?.isNew);
     this.consumer.bitMap.syncWithLanes(this.laneToSwitchTo);
   }
 }
