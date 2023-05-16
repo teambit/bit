@@ -252,34 +252,18 @@ export class Watcher {
         `unable to find componentMap for ${updatedComponentId.toString()}, make sure this component is in .bitmap`
       );
     }
+    const compFilesRelativeToWorkspace = componentMap.getFilesRelativeToConsumer();
     const [compFiles, nonCompFiles] = partition(files, (filePath) => {
       const relativeFile = this.getRelativePathLinux(filePath);
-      return Boolean(componentMap.getFilesRelativeToConsumer().find((p) => p === relativeFile));
+      return Boolean(compFilesRelativeToWorkspace.find((p) => p === relativeFile));
     });
-    // nonCompFiles are either, files that were removed from the filesystem or existing files that are ignored
+    // nonCompFiles are either, files that were removed from the filesystem or existing files that are ignored.
+    // the compiler takes care of removedFiles differently, e.g. removes dists dir and old symlinks.
     const removedFiles = compact(
-      await Promise.all(
-        nonCompFiles.map(async (filePath) => {
-          if (await fs.pathExists(filePath)) {
-            return null;
-          }
-          return filePath;
-        })
-      )
+      await Promise.all(nonCompFiles.map(async (filePath) => ((await fs.pathExists(filePath)) ? null : filePath)))
     );
-    if (removedFiles.length) {
-      // when files are removed, we need to remove the entire package directory from node_modules, otherwise, it has
-      // symlinks to non-exist files and the dist has stale files
-      const pkgDir = this.workspace.componentPackageDir(component);
-      await fs.remove(pkgDir);
-      // this will re-compile and link the component
-      const buildResults = await this.executeWatchOperationsOnComponent(updatedComponentId, [], true, initiator);
-      if (!compFiles.length) return buildResults;
-      // it's possible that in the same call, some files were removed and some were changed. in that case, although the
-      // component is recompiled and linked, there are subscribers, such as TypeScript that need the changed file paths
-      // to reload them, that's why we don't return here.
-    }
-    if (!compFiles.length) {
+
+    if (!compFiles.length && !removedFiles.length) {
       logger.debug(
         `the following files are part of the component ${componentId.toStringWithoutVersion()} but configured to be ignored:\n${files.join(
           '\n'
@@ -287,7 +271,13 @@ export class Watcher {
       );
       return [];
     }
-    const buildResults = await this.executeWatchOperationsOnComponent(updatedComponentId, compFiles, true, initiator);
+    const buildResults = await this.executeWatchOperationsOnComponent(
+      updatedComponentId,
+      compFiles,
+      removedFiles,
+      true,
+      initiator
+    );
     return buildResults;
   }
 
@@ -304,7 +294,7 @@ export class Watcher {
     if (newDirs.length) {
       this.fsWatcher.add(newDirs);
       const addResults = await mapSeries(newDirs, async (dir) =>
-        this.executeWatchOperationsOnComponent(this.trackDirs[dir], [], false)
+        this.executeWatchOperationsOnComponent(this.trackDirs[dir], [], [], false)
       );
       results.push(...addResults.flat());
     }
@@ -324,6 +314,7 @@ export class Watcher {
   private async executeWatchOperationsOnComponent(
     componentId: ComponentID,
     files: string[],
+    removedFiles: string[] = [],
     isChange = true,
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
@@ -342,21 +333,10 @@ export class Watcher {
       this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentAddEvent(idStr, 'OnComponentAdd'));
     }
 
-    // the try/catch is probably not needed here because this gets called by `handleChange()` which already has a try/catch
-    // I left it here commented out for now just in case, but it should be removed as soon as we're more confident
-
-    // let buildResults: OnComponentEventResult[];
-    // try {
     const buildResults = isChange
-      ? await this.workspace.triggerOnComponentChange(componentId, files, initiator)
+      ? await this.workspace.triggerOnComponentChange(componentId, files, removedFiles, initiator)
       : await this.workspace.triggerOnComponentAdd(componentId);
-    // } catch (err: any) {
-    //   // do not exit the watch process on errors, just print them
-    //   const msg = `found an issue during onComponentChange or onComponentAdd hooks for ${idStr}`;
-    //   logger.error(msg, err);
-    //   logger.console(`\n${msg}: ${err.message || err}`);
-    //   return [];
-    // }
+
     return buildResults;
   }
 
