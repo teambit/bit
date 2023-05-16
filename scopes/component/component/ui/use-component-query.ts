@@ -237,9 +237,9 @@ export type ComponentQueryResult = {
     hasMoreLogs?: boolean;
     hasMoreSnaps?: boolean;
     hasMoreTags?: boolean;
-    loadMoreLogs?: (backwards?: boolean) => void;
-    loadMoreTags?: (backwards?: boolean) => void;
-    loadMoreSnaps?: (backwards?: boolean) => void;
+    loadMoreLogs?: (backwards?: boolean, offset?: number) => void;
+    loadMoreTags?: (backwards?: boolean, offset?: number) => void;
+    loadMoreSnaps?: (backwards?: boolean, offset?: number) => void;
     snaps?: LegacyComponentLog[];
     tags?: LegacyComponentLog[];
   };
@@ -283,6 +283,7 @@ function calculateNewOffset(initialOffset = 0, currentOffset = 0, logs: any[] = 
  * @returns {boolean | undefined} - Whether there are more logs available.
  */
 function calculateHasMoreLogs(
+  // @todo account for limit (the API gives the nearest nodes to the limit, not the exact limit)
   logLimit?: number,
   rawComponent?: any,
   logType = 'logs',
@@ -290,7 +291,7 @@ function calculateHasMoreLogs(
 ): boolean | undefined {
   if (!logLimit) return false;
   if (rawComponent === undefined) return undefined;
-  if (currentHasMoreLogs === undefined) return rawComponent?.[logType]?.length >= logLimit;
+  if (currentHasMoreLogs === undefined) return !!rawComponent?.[logType]?.length;
   return currentHasMoreLogs;
 }
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
@@ -411,9 +412,10 @@ export function useComponentQuery(
             const fetchedComponent = fetchMoreResult.getHost.get;
             if (fetchedComponent && ComponentID.isEqualObj(prevComponent.id, fetchedComponent.id)) {
               const updatedLogs = mergeLogs(prevComponent.logs, fetchedComponent.logs);
-              hasMoreLogs.current = fetchedComponent.logs.length >= logLimit;
               if (updatedLogs.length > prevComponent.logs.length) {
                 offsetRef.current = fetchedComponent.logs.length + offset;
+                // @todo account for limit (the API gives the nearest nodes to the limit, not the exact limit)
+                hasMoreLogs.current = true;
               }
 
               return {
@@ -457,8 +459,10 @@ export function useComponentQuery(
               const updatedTags = mergeLogs(prevTags, fetchedTags);
               if (updatedTags.length > prevTags.length) {
                 tagOffsetRef.current = fetchedTags.length + offset;
+                // @todo account for limit (the API gives the nearest nodes to the limit, not the exact limit)
+                hasMoreTagLogs.current = true;
               }
-              hasMoreTagLogs.current = fetchedTags.length >= tagLogLimit;
+
               return {
                 ...prev,
                 getHost: {
@@ -500,8 +504,10 @@ export function useComponentQuery(
               const updatedSnaps = mergeLogs(prevSnaps, fetchedSnaps);
               if (updatedSnaps.length > prevSnaps.length) {
                 snapOffsetRef.current = fetchedSnaps.length + offset;
+                // @todo account for limit (the API gives the nearest nodes to the limit, not the exact limit)
+                hasMoreSnapLogs.current = true;
               }
-              hasMoreSnapLogs.current = fetchedSnaps.length >= snapLogLimit;
+
               return {
                 ...prev,
                 getHost: {

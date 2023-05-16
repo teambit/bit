@@ -17,23 +17,20 @@ export const LOCAL_VERSION = 'workspace';
 
 export type DropdownComponentVersion = Partial<LegacyComponentLog> & { version: string };
 
-const VersionMenu = React.memo(React.forwardRef<HTMLDivElement, VersionMenuProps>(_VersionMenu));
+const VersionMenu = React.memo(_VersionMenu);
 
-function _VersionMenu(
-  {
-    currentVersion,
-    localVersion,
-    latestVersion,
-    overrideVersionHref,
-    showVersionDetails,
-    useVersions,
-    currentLane,
-    lanes,
-    loading: loadingFromProps,
-    ...rest
-  }: VersionMenuProps,
-  ref?: React.ForwardedRef<HTMLDivElement>
-) {
+function _VersionMenu({
+  currentVersion,
+  localVersion,
+  latestVersion,
+  overrideVersionHref,
+  showVersionDetails,
+  useVersions,
+  currentLane,
+  lanes,
+  loading: loadingFromProps,
+  ...rest
+}: VersionMenuProps) {
   const {
     snaps,
     tags,
@@ -65,12 +62,52 @@ function _VersionMenu(
     return 0;
   };
 
-  const [activeTabIndex, setActiveTab] = React.useState<number>(getActiveTabIndex());
-
-  const activeTabOrSnap: 'SNAP' | 'TAG' | 'LANE' | undefined = tabs[activeTabIndex]?.name;
-  const hasMore = activeTabOrSnap === 'SNAP' ? !!hasMoreSnaps : activeTabOrSnap === 'TAG' && !!hasMoreTags;
+  const [activeTabIndex, setActiveTab] = React.useState<number | undefined>(undefined);
   const firstObserver = React.useRef<IntersectionObserver>();
   const lastObserver = React.useRef<IntersectionObserver>();
+  const currentVersionRef = React.useRef<HTMLDivElement | null>();
+
+  React.useEffect(() => {
+    if (activeTabIndex !== undefined) return;
+    if (!currentLane) return;
+    if (tabs.length === 0) return;
+    const _activeTabIndex = getActiveTabIndex();
+    if (_activeTabIndex !== activeTabIndex) setActiveTab(_activeTabIndex);
+  }, [currentLane, currentVersion, snaps?.length, tags?.length, tabs.length]);
+
+  const activeTabOrSnap: 'SNAP' | 'TAG' | 'LANE' | undefined = React.useMemo(
+    () => (activeTabIndex !== undefined ? tabs[activeTabIndex]?.name : undefined),
+    [activeTabIndex, tabs.length]
+  );
+
+  const hasMore = React.useMemo(
+    () => (activeTabOrSnap === 'SNAP' ? !!hasMoreSnaps : activeTabOrSnap === 'TAG' && !!hasMoreTags),
+    [hasMoreSnaps, activeTabOrSnap, hasMoreTags]
+  );
+
+  const [isIndicatorActive, setIsIndicatorActive] = React.useState(false);
+
+  const handleScroll = (event) => {
+    if (event.target.scrollTop === 0) {
+      setIsIndicatorActive(true);
+    } else {
+      setIsIndicatorActive(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (!currentVersion) return;
+    if (currentVersionRef.current) {
+      currentVersionRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [currentVersion]);
+
+  React.useEffect(() => {
+    setIsIndicatorActive(false);
+  }, [activeTabIndex]);
 
   const handleLoadMore = React.useCallback(
     (backwards?: boolean) => {
@@ -79,7 +116,6 @@ function _VersionMenu(
     },
     [activeTabOrSnap, tabs.length]
   );
-
   const lastLogRef = React.useCallback(
     (node) => {
       if (loading) return;
@@ -97,7 +133,7 @@ function _VersionMenu(
       );
       if (node) lastObserver.current.observe(node);
     },
-    [loading, hasMoreSnaps, hasMoreTags, handleLoadMore]
+    [loading, hasMore, handleLoadMore]
   );
 
   const firstLogRef = React.useCallback(
@@ -111,19 +147,34 @@ function _VersionMenu(
           }
         },
         {
-          threshold: 0.1,
-          rootMargin: '50px',
+          threshold: 1,
+          rootMargin: '0px',
         }
       );
       if (node) firstObserver.current.observe(node);
     },
-    [loading, hasMoreSnaps, hasMoreTags, handleLoadMore]
+    [loading, hasMore, handleLoadMore]
   );
+
+  const versionRef = (node, version, index, versions) => {
+    if (index === 0) {
+      firstLogRef(node);
+      return { current: firstObserver.current };
+    }
+    if (index === versions.length - 1) {
+      lastLogRef(node);
+      return { current: lastObserver.current };
+    }
+    if (version === currentVersion) return currentVersionRef;
+    return null;
+  };
 
   const multipleTabs = tabs.length > 1;
   const message = multipleTabs
     ? 'Switch to view tags, snaps, or lanes'
     : `Switch between ${tabs[0]?.name.toLocaleLowerCase()}s`;
+
+  const showTab = activeTabIndex !== undefined && tabs[activeTabIndex]?.payload.length > 0;
 
   return (
     <div {...rest}>
@@ -158,18 +209,31 @@ function _VersionMenu(
             );
           })}
       </div>
-      <div className={styles.versionContainer}>
-        {tabs[activeTabIndex]?.name === 'LANE' &&
+      <div className={styles.versionContainer} onScroll={handleScroll}>
+        {showTab && tabs[activeTabIndex]?.name !== 'LANE' && (
+          <div
+            className={classNames(styles.pullDownIndicator, isIndicatorActive && styles.active)}
+            ref={(node) =>
+              versionRef(node, (tabs[activeTabIndex]?.payload?.[0] as any).version, 0, tabs[activeTabIndex]?.payload)
+            }
+          >
+            Pull down to load more
+          </div>
+        )}
+        {showTab &&
+          tabs[activeTabIndex]?.name === 'LANE' &&
           tabs[activeTabIndex]?.payload.map((payload) => (
             <LaneInfo key={payload.id} currentLane={currentLane} {...payload}></LaneInfo>
           ))}
-        {tabs[activeTabIndex]?.name !== 'LANE' &&
-          tabs[activeTabIndex]?.payload.map((payload, index) => {
-            const _ref =
-              index === 0 ? firstLogRef : (index === tabs[activeTabIndex]?.payload.length - 1 && lastLogRef) || ref;
+        {showTab &&
+          tabs[activeTabIndex]?.name !== 'LANE' &&
+          tabs[activeTabIndex]?.payload.map((payload, index, versions) => {
+            // const _ref = (index === tabs[activeTabIndex]?.payload.length - 1 && lastLogRef) || ref;
             return (
               <VersionInfo
-                ref={_ref}
+                ref={(node) =>
+                  versionRef(node, index === 0 ? undefined : payload.version, index === 0 ? undefined : index, versions)
+                }
                 key={payload.version}
                 currentVersion={currentVersion}
                 latestVersion={latestVersion}
@@ -222,31 +286,28 @@ export type VersionDropdownProps = {
   placeholderComponent?: ReactNode;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export const VersionDropdown = React.memo(React.forwardRef<HTMLDivElement, VersionDropdownProps>(_VersionDropdown));
+export const VersionDropdown = React.memo(_VersionDropdown);
 
-function _VersionDropdown(
-  {
-    currentVersion,
-    latestVersion,
-    localVersion,
-    currentVersionLog = {},
-    hasMoreVersions,
-    loading,
-    overrideVersionHref,
-    className,
-    placeholderClassName,
-    dropdownClassName,
-    menuClassName,
-    showVersionDetails,
-    disabled,
-    placeholderComponent,
-    currentLane,
-    useComponentVersions,
-    lanes,
-    ...rest
-  }: VersionDropdownProps,
-  ref?: React.ForwardedRef<HTMLDivElement>
-) {
+function _VersionDropdown({
+  currentVersion,
+  latestVersion,
+  localVersion,
+  currentVersionLog = {},
+  hasMoreVersions,
+  loading,
+  overrideVersionHref,
+  className,
+  placeholderClassName,
+  dropdownClassName,
+  menuClassName,
+  showVersionDetails,
+  disabled,
+  placeholderComponent,
+  currentLane,
+  useComponentVersions,
+  lanes,
+  ...rest
+}: VersionDropdownProps) {
   const [key, setKey] = useState(0);
   const singleVersion = !hasMoreVersions;
   const [open, setOpen] = useState(false);
@@ -303,7 +364,6 @@ function _VersionDropdown(
       >
         {open && (
           <VersionMenu
-            ref={ref}
             className={menuClassName}
             key={key}
             currentVersion={currentVersion}

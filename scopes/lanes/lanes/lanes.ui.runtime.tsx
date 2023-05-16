@@ -62,7 +62,6 @@ export function useLaneComponentIdFromUrl(): ComponentID | undefined | null {
 
   if (componentVersion && laneFromUrl) {
     const componentId = ComponentID.fromString(`${idFromLocation}@${componentVersion}`);
-    console.log('🚀 ~ file: lanes.ui.runtime.tsx:66 ~ useLaneComponentIdFromUrl ~ componentId:', componentId);
     return componentId;
   }
   const laneComponentId =
