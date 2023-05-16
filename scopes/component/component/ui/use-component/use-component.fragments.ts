@@ -55,7 +55,6 @@ export const componentOverviewFields = gql`
   }
   ${componentIdFields}
 `;
-console.log('🚀 ~ file: use-component.fragments.ts:58 ~ componentOverviewFields:', componentOverviewFields);
 
 export const componentFields = gql`
   fragment componentFields on Component {
@@ -69,6 +68,7 @@ export const componentFields = gql`
     tags {
       version
     }
+  }
   ${componentOverviewFields}
 `;
 
@@ -172,7 +172,11 @@ export const GET_COMPONENT = gql`
 `;
 
 export const GET_COMPONENT_WITH_LOGS = gql`
-  query Component($extensionId: String!, $id: String!) {
+  query Component(
+    $extensionId: String!
+    $id: String!
+    ${COMPONENT_QUERY_LOG_FIELDS}
+    ) {
     getHost(id: $extensionId) {
       id # used for GQL caching
       get(id: $id) {

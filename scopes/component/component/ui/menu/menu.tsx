@@ -11,15 +11,13 @@ import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
+import { ComponentID } from '@teambit/component-id';
 import * as semver from 'semver';
 import type { ComponentModel } from '../component-model';
-import { useComponent as useComponentQuery, UseComponentType } from '../use-component';
+import { Filters, useComponent as useComponentQuery, UseComponentType, useIdFromLocation } from '../use-component';
 import { CollapsibleMenuNav } from './menu-nav';
 import styles from './menu.module.scss';
 import { OrderedNavigationSlot, ConsumeMethodSlot } from './nav-plugin';
-import { useIdFromLocation } from '../use-component-from-location';
-import { ComponentID } from '../..';
-import { Filters } from '../use-component-query';
 
 export type MenuProps = {
   className?: string;

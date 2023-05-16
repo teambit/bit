@@ -1,6 +1,7 @@
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { ComponentError, ComponentModel } from '..';
+import { ComponentError } from '../component-error';
+import { ComponentModel } from '../component-model';
 
 export type LogFilter = {
   logOffset?: number;

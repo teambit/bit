@@ -28,8 +28,8 @@ export function ChangeLogPage({ className, host }: ChangeLogPageProps) {
   const logs = component?.logs ?? [];
 
   const observer = React.useRef<IntersectionObserver>();
-  const handleLoadMore = () => {
-    loadMoreLogs?.();
+  const handleLoadMore = async () => {
+    await loadMoreLogs?.();
   };
 
   const lastLogRef = React.useCallback(
@@ -38,7 +38,7 @@ export function ChangeLogPage({ className, host }: ChangeLogPageProps) {
       if (observer.current) observer.current.disconnect();
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMore) {
-          handleLoadMore();
+          handleLoadMore().catch(() => {});
         }
       });
       if (node) observer.current.observe(node);
