@@ -1,7 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { ComponentID } from '@teambit/component-id';
 import { calculateHasMoreLogs, calculateNewOffset, getOffsetValue, mergeLogs } from './use-component.utils';
 import { ComponentLogsResult, Filters } from './use-component.model';
@@ -210,31 +209,7 @@ export function useComponentLogs(
       ? new ComponentError(500, error.message)
       : (!rawComponent && !loading && new ComponentError(404)) || undefined;
 
-  const idDepKey = rawComponent?.id
-    ? `${rawComponent?.id?.scope}/${rawComponent?.id?.name}@${rawComponent?.id?.version}}`
-    : undefined;
-
-  const id: ComponentID | undefined = useMemo(
-    () => (rawComponent ? ComponentID.fromObject(rawComponent.id) : undefined),
-    [idDepKey]
-  );
-
-  const componentDescriptor = useMemo(() => {
-    const aspectList = {
-      entries: rawComponent?.aspects.map((aspectObject) => {
-        return {
-          ...aspectObject,
-          aspectId: aspectObject.id,
-          aspectData: aspectObject.data,
-        };
-      }),
-    };
-
-    return id ? ComponentDescriptor.fromObject({ id: id.toString(), aspectList }) : undefined;
-  }, [id?.toString()]);
-
   return {
-    componentDescriptor,
     loading,
     error: componentError,
     componentLogs: {

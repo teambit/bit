@@ -74,7 +74,9 @@ export const componentFields = gql`
 
 export const componentFieldsWithLogs = gql`
   fragment componentFieldWithLogs on Component {
-    ...componentFields
+    id {
+      ...componentIdFields
+    }
     logs(
       type: $logType
       offset: $logOffset
@@ -130,7 +132,7 @@ export const componentFieldsWithLogs = gql`
       tag
     }
   }
-  ${componentFields}
+  ${componentIdFields}
 `;
 
 export const COMPONENT_QUERY_LOG_FIELDS = `

@@ -37,7 +37,6 @@ export type ComponentQueryResult = {
 };
 
 export type ComponentLogsResult = {
-  componentDescriptor?: ComponentDescriptor;
   componentLogs?: ComponentLogs;
   error?: ComponentError;
   loading?: boolean;
