@@ -637,10 +637,6 @@ export class Workspace implements ComponentFactory {
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
-    // if a new file was added, upon component-load, its .bitmap entry is updated to include the
-    // new file. write these changes to the .bitmap file so then other processes have access to
-    // this new file. If the .bitmap wasn't change, it won't do anything.
-    await this.bitMap.write();
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {

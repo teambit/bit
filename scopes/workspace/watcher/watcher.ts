@@ -1,6 +1,7 @@
 import { PubsubMain } from '@teambit/pubsub';
+import fs from 'fs-extra';
 import { dirname, sep } from 'path';
-import { difference } from 'lodash';
+import { compact, difference, partition } from 'lodash';
 import { ComponentID } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -33,11 +34,19 @@ export type EventMessages = {
   onAll: Function;
   onStart: Function;
   onReady: Function;
-  onChange: Function;
-  onAdd: Function;
-  onUnlink: Function;
+  onChange: OnFileEventFunc;
+  onAdd: OnFileEventFunc;
+  onUnlink: OnFileEventFunc;
   onError: Function;
 };
+
+export type OnFileEventFunc = (
+  filePaths: string[],
+  buildResults: OnComponentEventResult[],
+  verbose: boolean,
+  duration: number,
+  failureMsg?: string
+) => void;
 
 export type WatchOptions = {
   msgs?: EventMessages;
@@ -111,9 +120,14 @@ export class Watcher {
         msgs?.onAdd(files, results, this.verbose, duration, failureMsg);
       });
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      watcher.on('unlink', async (p) => {
-        msgs?.onUnlink(p);
-        await this.handleChange(p);
+      watcher.on('unlink', async (filePath) => {
+        const startTime = new Date().getTime();
+        const { files, results, debounced, failureMsg } = await this.handleChange(filePath, opts?.initiator);
+        if (debounced) {
+          return;
+        }
+        const duration = new Date().getTime() - startTime;
+        msgs?.onUnlink(files, results, this.verbose, duration, failureMsg);
       });
       watcher.on('error', (err) => {
         msgs?.onError(err);
@@ -162,7 +176,7 @@ export class Watcher {
     initiator?: CompilationInitiator
   ): Promise<{
     results: OnComponentEventResult[];
-    files?: string[];
+    files: string[];
     failureMsg?: string;
     debounced?: boolean;
   }> {
@@ -188,7 +202,7 @@ export class Watcher {
       if (this.changedFilesPerComponent[compIdStr]) {
         this.changedFilesPerComponent[compIdStr].push(filePath);
         loader.stop();
-        return { results: [], debounced: true };
+        return { results: [], files: [], debounced: true };
       }
       this.changedFilesPerComponent[compIdStr] = [filePath];
       await this.sleep(DEBOUNCE_WAIT_MS);
@@ -214,12 +228,6 @@ export class Watcher {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  /**
-   * if a file was added/remove, once the component is loaded, it changes .bitmap, and then the
-   * entire cache is invalidated and the consumer is reloaded.
-   * when a file just changed, no need to reload the consumer, it is enough to just delete the
-   * component from the cache (both, workspace and consumer)
-   */
   private async triggerCompChanges(
     componentId: ComponentID,
     files: string[],
@@ -244,11 +252,33 @@ export class Watcher {
         `unable to find componentMap for ${updatedComponentId.toString()}, make sure this component is in .bitmap`
       );
     }
-    const compFiles = files.filter((filePath) => {
+    const [compFiles, nonCompFiles] = partition(files, (filePath) => {
       const relativeFile = this.getRelativePathLinux(filePath);
-      const isCompFile = Boolean(componentMap.getFilesRelativeToConsumer().find((p) => p === relativeFile));
-      return isCompFile;
+      return Boolean(componentMap.getFilesRelativeToConsumer().find((p) => p === relativeFile));
     });
+    // nonCompFiles are either, files that were removed from the filesystem or existing files that are ignored
+    const removedFiles = compact(
+      await Promise.all(
+        nonCompFiles.map(async (filePath) => {
+          if (await fs.pathExists(filePath)) {
+            return null;
+          }
+          return filePath;
+        })
+      )
+    );
+    if (removedFiles.length) {
+      // when files are removed, we need to remove the entire package directory from node_modules, otherwise, it has
+      // symlinks to non-exist files and the dist has stale files
+      const pkgDir = this.workspace.componentPackageDir(component);
+      await fs.remove(pkgDir);
+      // this will re-compile and link the component
+      const buildResults = await this.executeWatchOperationsOnComponent(updatedComponentId, [], true, initiator);
+      if (!compFiles.length) return buildResults;
+      // it's possible that in the same call, some files were removed and some were changed. in that case, although the
+      // component is recompiled and linked, there are subscribers, such as TypeScript that need the changed file paths
+      // to reload them, that's why we don't return here.
+    }
     if (!compFiles.length) {
       logger.debug(
         `the following files are part of the component ${componentId.toStringWithoutVersion()} but configured to be ignored:\n${files.join(
