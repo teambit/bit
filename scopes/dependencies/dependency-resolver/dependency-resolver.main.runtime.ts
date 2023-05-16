@@ -274,6 +274,11 @@ export interface DependencyResolverWorkspaceConfig {
    * of the listed packages will not be executed during installation.
    */
   neverBuiltDependencies?: string[];
+
+  /*
+   * Mount a virtual node_modules using a daemon that operates FUSE.
+   */
+  mountModules?: boolean;
 }
 
 export interface DependencyResolverVariantConfig {

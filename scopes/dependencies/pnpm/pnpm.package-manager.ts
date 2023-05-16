@@ -60,6 +60,7 @@ export class PnpmPackageManager implements PackageManager {
       networkConfig,
       {
         engineStrict: installOptions.engineStrict ?? config.engineStrict,
+        mountModules: installOptions.mountModules,
         neverBuiltDependencies: installOptions.neverBuiltDependencies,
         nodeLinker: installOptions.nodeLinker,
         nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,

@@ -2,10 +2,16 @@ import fs from 'fs-extra';
 import path from 'path';
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
+import * as dp from '@pnpm/dependency-path';
 import { initDefaultReporter } from '@pnpm/default-reporter';
+import { readWantedLockfile, Lockfile } from '@pnpm/lockfile-file';
+import { nameVerFromPkgSnapshot } from '@pnpm/lockfile-utils';
 import { streamParser } from '@pnpm/logger';
+import { hoist } from '@pnpm/hoist';
 import { StoreController, WantedDependency } from '@pnpm/package-store';
-import { readModulesManifest } from '@pnpm/modules-yaml';
+import { rebuild } from '@pnpm/plugin-commands-rebuild';
+import { linkBins } from '@pnpm/link-bins';
+import { readModulesManifest, writeModulesManifest } from '@pnpm/modules-yaml';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { sortPackages } from '@pnpm/sort-packages';
 import {
@@ -30,6 +36,7 @@ import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
 import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
+import ipcBus from '@teambit/network.ipc.ipc-bus';
 import toNerfDart from 'nerf-dart';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
@@ -164,6 +171,7 @@ export async function install(
   networkConfig: PackageManagerNetworkConfig = {},
   options: {
     updateAll?: boolean;
+    mountModules?: boolean;
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
     rootComponents?: boolean;
@@ -224,7 +232,7 @@ export async function install(
     allProjects,
     autoInstallPeers: false,
     confirmModulesPurge: false,
-    excludeLinksFromLockfile: true,
+    excludeLinksFromLockfile: !options.mountModules,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
     dir: rootDir,
@@ -255,6 +263,7 @@ export async function install(
       ...options?.peerDependencyRules,
     },
     depth: options.updateAll ? Infinity : 0,
+    lockfileOnly: options.mountModules,
   };
 
   let stopReporting;
@@ -281,6 +290,48 @@ export async function install(
     const { stats } = await installsRunning[rootDir];
     dependenciesChanged = stats.added + stats.removed + stats.linkedToRoot > 0;
     delete installsRunning[rootDir];
+    if (options.mountModules) {
+      const modulesDir = path.join(rootDir, 'node_modules');
+      const { sendMessage } = ipcBus('librarian');
+      await sendMessage({
+        folder: modulesDir,
+      });
+      const virtualStoreDir = path.join(modulesDir, '.pnpm');
+      const lockfile = (await readWantedLockfile(rootDir, { ignoreIncompatible: true }))!;
+      await hoist({
+        lockfile,
+        privateHoistPattern: opts.hoistPattern ?? ['*'],
+        privateHoistedModulesDir: path.join(virtualStoreDir, 'node_modules'),
+        publicHoistPattern: opts.publicHoistPattern ?? [],
+        publicHoistedModulesDir: modulesDir,
+        virtualStoreDir,
+      });
+      try {
+        await linkBins(modulesDir, path.join(modulesDir, '.bin'), {
+          warn: () => {},
+        });
+      } catch (err: any) {
+        // eslint-disable-line
+        // Some packages generate their commands with lifecycle hooks.
+        // At this stage, such commands are not generated yet.
+        // For now, we don't hoist such generated commands.
+        // Related issue: https://github.com/pnpm/pnpm/issues/2071
+      }
+      await linkAllBins(lockfile, virtualStoreDir);
+      await writeModulesManifest(modulesDir, {
+        virtualStoreDir,
+        layoutVersion: 5,
+        storeDir: storeController.dir,
+      } as any);
+      await fs.writeFile(path.join(rootDir, 'package.json'), '{}', 'utf8'); // TODO: this workaround should be removed once pnpm fixes the issue
+      await rebuild.handler(
+        {
+          ...opts,
+          cacheDir,
+        },
+        []
+      );
+    }
   } catch (err: any) {
     if (logger) {
       logger.warn('got an error from pnpm mutateModules function', err);
@@ -302,6 +353,40 @@ export async function install(
     }
   }
   return { dependenciesChanged };
+}
+
+async function linkAllBins(lockfile: Lockfile, virtualStoreDir: string) {
+  for (const [depPath, pkgSnapshot] of Object.entries(lockfile.packages ?? {})) {
+    let hasBin = pkgSnapshot.hasBin;
+    if (!hasBin) {
+      for (const [depName, ref] of Object.entries({
+        ...pkgSnapshot.dependencies,
+        ...pkgSnapshot.optionalDependencies,
+      })) {
+        const depRelPath = dp.refToRelative(ref, depName);
+        if (!depRelPath) continue;
+        const depPkgSnapshot = lockfile.packages?.[depRelPath];
+        if (!depPkgSnapshot) continue;
+        hasBin = depPkgSnapshot.hasBin;
+        if (hasBin) break;
+      }
+      if (!hasBin) continue;
+    }
+    const { name } = nameVerFromPkgSnapshot(depPath, pkgSnapshot);
+    const currentPath = dp.depPathToFilename(depPath);
+    try {
+      const modulesDir = path.join(virtualStoreDir, currentPath, 'node_modules');
+      await linkBins(modulesDir, path.join(modulesDir, name, 'node_modules/.bin'), {
+        warn: () => {},
+      });
+    } catch (err: any) {
+      // eslint-disable-line
+      // Some packages generate their commands with lifecycle hooks.
+      // At this stage, such commands are not generated yet.
+      // For now, we don't hoist such generated commands.
+      // Related issue: https://github.com/pnpm/pnpm/issues/2071
+    }
+  }
 }
 
 /*
