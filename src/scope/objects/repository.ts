@@ -16,7 +16,7 @@ import RemoteLanes from '../lanes/remote-lanes';
 import UnmergedComponents from '../lanes/unmerged-components';
 import ScopeMeta from '../models/scopeMeta';
 import { ScopeJson } from '../scope-json';
-import ScopeIndex, { IndexType } from './components-index';
+import ScopeIndex, { IndexType } from './scope-index';
 import BitObject from './object';
 import { ObjectItem, ObjectList } from './object-list';
 import BitRawObject from './raw-object';

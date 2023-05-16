@@ -62,11 +62,12 @@ export {
   LinkDetail,
   LinkResults,
   LinkingOptions,
+  DependencyLinker,
   DepsLinkedToEnvResult,
   NestedNMDepsLinksResult,
   LinkToDirResult,
 } from './dependency-linker';
-export { InstallOptions, InstallArgs, DependencyInstaller } from './dependency-installer';
+export { GetComponentManifestsOptions, InstallOptions, InstallArgs, DependencyInstaller } from './dependency-installer';
 export { DependencyDetector, FileContext } from './dependency-detector';
 export { DependencySource, VariantPolicyEntry } from './policy/variant-policy/variant-policy';
 export { OutdatedPkg } from './get-all-policy-pkgs';

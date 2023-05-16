@@ -207,18 +207,8 @@ export class MergeLanesMain {
     let deleteResults = {};
 
     if (!keepReadme && otherLane && otherLane.readmeComponent && mergedSuccessfully) {
-      const readmeComponentId = otherLane.readmeComponent.id
-        .changeVersion(otherLane.readmeComponent?.head?.hash)
-        .toString();
-
-      deleteResults = await this.remove.remove({
-        componentsPattern: readmeComponentId,
-        force: false,
-        remote: false,
-        track: false,
-        deleteFiles: true,
-        fromLane: false,
-      });
+      const readmeComponentId = otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash);
+      deleteResults = await this.remove.removeLocallyByIds([readmeComponentId]);
     } else if (otherLane && !otherLane.readmeComponent) {
       deleteResults = { readmeResult: `\nlane ${otherLane.name} doesn't have a readme component` };
     }

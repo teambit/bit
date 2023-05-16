@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [[0.1.42] - 2023-05-14](https://github.com/teambit/bit/releases/tag/v0.1.42)
+
+### New Features
+
+- React (core) env and react (core) app types can be configured to use a different instance of webpack and webpack dev server (#7382, #7385)
+- Generate a visual graph (PNG file) with the component's history when running `bit cat-version-history COMPONENT_ID --graph` (#7377)
+
+### Changes
+
+- Webpack upgraded from version `5.51.0` to version `5.81.1` (#7389, #7390)
+- Webpack Dev Server upgraded from version `4.1.1` to version `4.15.0` (#7389, #7390)
+- Removed: `bit checkout --reset` and `bit checkout --skip-npm-install` (#7396)
+
+### Performance
+
+- Serve pre-built Workspae UI artifacts to boost `bit start` loading time (#7336)
+- Workspace components are no longer loaded on `bit run APP_NAME` (#7379)
+- Aspects that are listed as another aspect dependencies (`static dependencies = []`) are only loaded if they are listed in the `workspace.jsonc` (#7370)
+
+### Bug Fixes
+
+- Better handling of circular dependencies to avoid infinite loops (#7355)
+- Improve 'lanes' stability (#7397, #7391, #7388, #7275, #7386, #7378, #7376)
+- When importing a component, add to `.bitmap` file before starting the installation process (#7392)
+- Resolve peer dependencies correctly in preview-template-task (#7395)
+- Merge ModelComponent from different remotes (#7401)
+- Clean node_modules only after all iteration of installation were completed to avoid irrelevant error messages (#7369)
+
+### Internal
+
+- Move checkout-version from legacy to 'checkout' aspect (#7399)
+- Rename `component-index.ts` to `scope-index.ts` according to the class name (#7398)
+- Extend 'artifact storage error' to with the original error message (#7393)
+- Include component peer dependencies in the capsule component dependency graph (#7383)
+- Push all snaps from the original lane to the forked lane scope (#7380)
+- Improve http e2e-tests to show the full error from bit-start process (#7375)
+
 ## [[0.1.36] - 2023-05-07](https://github.com/teambit/bit/releases/tag/v0.1.36)
 
 ### New Features

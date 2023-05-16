@@ -53,6 +53,8 @@ export type PackageManagerInstallOptions = {
   updateAll?: boolean;
 
   hidePackageManagerOutput?: boolean;
+
+  neverBuiltDependencies?: string[];
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

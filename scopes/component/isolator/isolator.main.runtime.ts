@@ -12,7 +12,6 @@ import {
   DependencyResolverMain,
   LinkingOptions,
   LinkDetail,
-  LinkResults,
   WorkspacePolicy,
   InstallOptions,
   DependencyList,
@@ -476,8 +475,7 @@ export class IsolatorMain {
       linkingOptions,
       linkingContext: { inCapsule: true },
     });
-    const peerOnlyPolicy = this.getWorkspacePeersOnlyPolicy();
-    const linkResults = await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), {
+    const { linkedRootDeps } = await linker.calculateLinkedDeps(capsulesDir, this.toComponentMap(capsuleList), {
       ...linkingOptions,
       linkNestedDepsInNM: !this.dependencyResolver.hasRootComponents() && linkingOptions.linkNestedDepsInNM,
     });
@@ -499,38 +497,15 @@ export class IsolatorMain {
     }
     return {
       ...nestedLinks,
-      [capsulesDir]: this.toLocalLinks(linkResults, rootLinks),
+      [capsulesDir]: {
+        ...linkedRootDeps,
+        ...this.toLocalLinks(rootLinks),
+      },
     };
   }
 
-  private toLocalLinks(linkResults: LinkResults, rootLinks: LinkDetail[] | undefined): Record<string, string> {
+  private toLocalLinks(rootLinks: LinkDetail[] | undefined): Record<string, string> {
     const localLinks: Array<[string, string]> = [];
-    if (linkResults.teambitBitLink) {
-      localLinks.push(this.linkDetailToLocalDepEntry(linkResults.teambitBitLink.linkDetail));
-    }
-    if (linkResults.coreAspectsLinks) {
-      linkResults.coreAspectsLinks.forEach((link) => {
-        localLinks.push(this.linkDetailToLocalDepEntry(link.linkDetail));
-      });
-    }
-    if (linkResults.harmonyLink) {
-      localLinks.push(this.linkDetailToLocalDepEntry(linkResults.harmonyLink));
-    }
-    if (linkResults.teambitLegacyLink) {
-      localLinks.push(this.linkDetailToLocalDepEntry(linkResults.teambitLegacyLink));
-    }
-    if (linkResults.resolvedFromEnvLinks) {
-      linkResults.resolvedFromEnvLinks.forEach((link) => {
-        link.linksDetail.forEach((linkDetail) => {
-          localLinks.push(this.linkDetailToLocalDepEntry(linkDetail));
-        });
-      });
-    }
-    if (linkResults.linkToDirResults) {
-      linkResults.linkToDirResults.forEach((link) => {
-        localLinks.push(this.linkDetailToLocalDepEntry(link.linksDetail));
-      });
-    }
     if (rootLinks) {
       rootLinks.forEach((link) => {
         localLinks.push(this.linkDetailToLocalDepEntry(link));
