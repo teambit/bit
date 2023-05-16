@@ -250,7 +250,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
     const snappedDesc = '\n(use "bit tag [version]" or "bit tag --snapped [version]" to lock a version)\n';
     const snappedComponentsOutput = immutableUnshift(
       snappedComponents.map((c) => format(c)),
-      snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
+      snappedComponents.length ? chalk.underline.white('snapped components (tag pending)') + snappedDesc : ''
     ).join('\n');
 
     const unavailableOnMainDesc = '\n(use "bit checkout head" to make it available)\n';

@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
+import { BitId } from '@teambit/legacy-bit-id';
 import { compact } from 'lodash';
 import { WILDCARD_HELP, AUTO_SNAPPED_MSG, MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import {
@@ -109,6 +110,7 @@ ${WILDCARD_HELP('merge')}`;
 export function mergeReport({
   components,
   failedComponents,
+  removedComponents,
   version,
   mergeSnapResults,
   mergeSnapError,
@@ -219,13 +221,15 @@ ${mergeSnapError.message}
     const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(unchangedLegitimately.toString())}`;
     const failedToMergeStr = `\nTotal Failed: ${chalk.bold(failedToMerge.toString())}`;
     const autoSnappedStr = `\nTotal Snapped: ${chalk.bold(autoSnapped.toString())}`;
+    const removedStr = `\nTotal Removed: ${chalk.bold(removedComponents?.length.toString() || '0')}`;
 
-    return newLines + title + mergedStr + unchangedLegitimatelyStr + failedToMergeStr + autoSnappedStr;
+    return newLines + title + mergedStr + unchangedLegitimatelyStr + failedToMergeStr + autoSnappedStr + removedStr;
   };
 
   return (
     getSuccessOutput() +
     getFailureOutput() +
+    getRemovedOutput(removedComponents) +
     getSnapsOutput() +
     getWorkspaceDepsOutput() +
     getConfigMergeConflictSummary() +
@@ -290,4 +294,11 @@ export function compilationErrorOutput(compilationError?: Error) {
   const subTitle = 'The following error had been caught from the compiler, please fix the issue and run "bit compile"';
   const body = chalk.red(compilationError.message);
   return `\n\n${title}\n${subTitle}\n${body}`;
+}
+
+export function getRemovedOutput(removedComponents?: BitId[]) {
+  if (!removedComponents?.length) return '';
+  const title = `the following ${removedComponents.length} component(s) have been removed`;
+  const body = removedComponents.join('\n');
+  return `\n\n${chalk.underline(title)}\n${body}\n\n`;
 }

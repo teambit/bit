@@ -48,9 +48,9 @@ export class ComponentIdGraph extends Graph<ComponentID, DepEdgeType> {
   /**
    * overrides the super class to eliminate non-seeders components
    */
-  findCycles(graph?: this): string[][] {
+  findCycles(graph?: this, includeDeps = false): string[][] {
     const cycles = super.findCycles(graph);
-    if (!this.shouldLimitToSeedersOnly()) {
+    if (!this.shouldLimitToSeedersOnly() || includeDeps) {
       return cycles;
     }
     const seederIdsStr = this.seederIds.map((id) => id.toString());

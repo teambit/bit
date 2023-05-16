@@ -38,6 +38,7 @@ export type ComponentStatus = {
   id: BitId;
   failureMessage?: string;
   unchangedLegitimately?: boolean; // failed to checkout but for a legitimate reason, such as, up-to-date
+  shouldBeRemoved?: boolean;
   mergeResults?: MergeResultsThreeWay | null | undefined;
 };
 

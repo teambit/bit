@@ -1,6 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
@@ -29,18 +29,18 @@ export class RemoveMain {
 
   async remove({
     componentsPattern,
-    force,
-    remote,
-    track,
-    deleteFiles,
-    fromLane,
+    force = false,
+    remote = false,
+    track = false,
+    deleteFiles = true,
+    fromLane = false,
   }: {
     componentsPattern: string;
-    force: boolean;
-    remote: boolean;
-    track: boolean;
-    deleteFiles: boolean;
-    fromLane: boolean;
+    force?: boolean;
+    remote?: boolean;
+    track?: boolean;
+    deleteFiles?: boolean;
+    fromLane?: boolean;
   }): Promise<any> {
     this.logger.setStatusLine(BEFORE_REMOVE);
     const bitIds = remote
@@ -59,6 +59,25 @@ export class RemoveMain {
     });
     if (consumer) await consumer.onDestroy();
     return removeResults;
+  }
+
+  /**
+   * remove components from the workspace.
+   */
+  async removeLocallyByIds(ids: BitId[], { force = false }: { force?: boolean } = {}) {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    const results = await removeComponents({
+      consumer: this.workspace.consumer,
+      ids: BitIds.fromArray(ids),
+      force,
+      remote: false,
+      track: false,
+      deleteFiles: true,
+      fromLane: false,
+    });
+    await this.workspace.bitMap.write();
+
+    return results;
   }
 
   async softRemove(componentsPattern: string): Promise<ComponentID[]> {
