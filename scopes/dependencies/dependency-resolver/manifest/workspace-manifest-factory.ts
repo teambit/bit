@@ -132,7 +132,6 @@ export class WorkspaceManifestFactory {
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
       let depList = await this.dependencyResolver.getDependencies(component, { includeHidden: true });
-      const componentPolicy = await this.dependencyResolver.getPolicy(component);
       const additionalDeps = {};
       if (referenceLocalPackages) {
         const coreAspectIds = this.aspectLoader.getCoreAspectIds();
@@ -153,7 +152,6 @@ export class WorkspaceManifestFactory {
       if (filterComponentsFromManifests ?? true) {
         depList = filterComponents(depList, components);
       }
-      depList = filterResolvedFromEnv(depList, componentPolicy);
       // Remove bit bin from dep list
       depList = depList.filter((dep) => dep.id !== '@teambit/legacy');
       if (dependencyFilterFn) {
@@ -162,8 +160,12 @@ export class WorkspaceManifestFactory {
       await this.updateDependenciesVersions(component, rootPolicy, depList);
       const depManifest = depList.toDependenciesManifest();
       const missingRootDeps = rootDependencies ? pick(rootDependencies, getMissingPackages(component)) : {};
+      // Only add missing root deps that are not already in the component manifest
+      const unresolvedMissingRootDeps = pickBy(missingRootDeps, (_version, missingPackageName) => {
+        return !depManifest.dependencies[missingPackageName] && !depManifest.devDependencies[missingPackageName];
+      });
       depManifest.dependencies = {
-        ...missingRootDeps,
+        ...unresolvedMissingRootDeps,
         ...additionalDeps,
         ...depManifest.dependencies,
       };
@@ -270,25 +272,6 @@ function filterComponents(dependencyList: DependencyList, componentsToFilterOut:
       );
     });
     if (existingComponent) return false;
-    return true;
-  });
-  return filtered;
-}
-
-/**
- * Filter deps which should be resolved from the env, we don't want to install them, they will be linked manually later
- * @param dependencyList
- * @param componentPolicy
- */
-function filterResolvedFromEnv(dependencyList: DependencyList, componentPolicy: VariantPolicy): DependencyList {
-  const filtered = dependencyList.filter((dep) => {
-    const fromPolicy = componentPolicy.find(dep.id);
-    if (!fromPolicy) {
-      return true;
-    }
-    if (fromPolicy.value.resolveFromEnv) {
-      return false;
-    }
     return true;
   });
   return filtered;
