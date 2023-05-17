@@ -477,15 +477,30 @@ export class AspectLoaderMain {
 
   getPlugins(component: Component, componentPath: string): Plugins {
     const defs = this.getPluginDefs();
-    return Plugins.from(component, defs, this.triggerOnAspectLoadError.bind(this), this.logger, (relativePath) => {
+    return Plugins.from(
+      component,
+      defs,
+      this.triggerOnAspectLoadError.bind(this),
+      this.logger,
+      this.pluginFileResolver.call(this, component, componentPath)
+    );
+  }
+
+  getPluginFiles(component: Component, componentPath: string): string[] {
+    const defs = this.getPluginDefs();
+    return Plugins.files(component, defs, this.pluginFileResolver.call(this, component, componentPath));
+  }
+
+  pluginFileResolver(component: Component, rootDir: string) {
+    return (relativePath: string) => {
       const compiler = this.getCompiler(component);
       if (!compiler) {
-        return join(componentPath, relativePath);
+        return join(rootDir, relativePath);
       }
 
       const dist = compiler.getDistPathBySrcPath(relativePath);
-      return join(componentPath, dist);
-    });
+      return join(rootDir, dist);
+    };
   }
 
   isAspect(manifest: any) {

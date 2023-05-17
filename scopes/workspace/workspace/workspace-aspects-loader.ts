@@ -767,15 +767,18 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   }
 
   private async shouldLoadFromRootComps(component: Component): Promise<boolean> {
-    const rootDir = getRootComponentDir(this.workspace.path, component.id.toString());
+    // const rootDir = getRootComponentDir(this.workspace.path, component.id.toString());
+    const rootDir = this.workspace.getComponentPackagePath(component);
     const rootDirExist = await fs.pathExists(rootDir);
-    // const localPath = this.workspace.getComponentPackagePath(component);
-    const localPathExist = await fs.pathExists(rootDir);
+    // const localPathExist = await fs.pathExists(rootDir);
+    const aspectFilePath = await this.aspectLoader.getAspectFilePath(component, rootDir);
+    const aspectFilePathExist = aspectFilePath ? await fs.pathExists(aspectFilePath) : false;
+    const pluginFiles = await this.aspectLoader.getPluginFiles(component, rootDir);
 
     // checking that we have the root dir (this means it's an aspect that needs to be loaded from there)
     // and validate that localPathExist so we can
     // really load the component from that path (if it's there it means that it's an env)
-    if (rootDirExist && localPathExist) {
+    if (rootDirExist && (aspectFilePathExist || pluginFiles.length)) {
       return true;
     }
     // If the component has env.jsonc we want to list it to be loaded from the root folder
