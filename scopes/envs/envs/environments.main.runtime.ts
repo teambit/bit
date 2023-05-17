@@ -428,7 +428,7 @@ export class EnvsMain {
     });
 
     if (envDefFromList) {
-      return envDefFromList.id;
+      return ComponentID.fromString(envDefFromList.id);
     }
     const defaultEnvId = this.getDefaultEnv().id;
     return ComponentID.fromString(defaultEnvId);
