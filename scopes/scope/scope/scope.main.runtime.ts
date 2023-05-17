@@ -780,11 +780,10 @@ export class ScopeMain implements ComponentFactory {
 
     const headRef = head ? componentModel.getRef(head) : componentModel.head;
 
-    if (!headRef) return [];
-
-    if (!startFromOffset && !stopAtOffset) {
+    if (!headRef || (startFromOffset === undefined && stopAtOffset === undefined)) {
       return this.legacyScope.loadComponentLogs(id._legacy, shortHash, startFrom, stopAt ? [stopAt] : undefined);
     }
+
     const versionHistory = await componentModel.getAndPopulateVersionHistory(this.legacyScope.objects, headRef);
     const versionGraph = versionHistory.getGraph();
     const startFromRef = startFrom ? componentModel.getRef(startFrom) : undefined;
