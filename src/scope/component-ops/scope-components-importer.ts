@@ -100,13 +100,9 @@ export default class ScopeComponentsImporter {
     ignoreMissingHead?: boolean; // needed when fetching "main" objects when on a lane
     preferDependencyGraph?: boolean; // if an external is missing and the remote has it with the dependency graph, don't fetch all its dependencies
   }): Promise<VersionDependencies[]> {
-    logger.debugAndAddBreadCrumb(
-      'importMany',
-      `cache ${cache}, preferDependencyGraph: ${preferDependencyGraph}, reFetchUnBuiltVersion: ${reFetchUnBuiltVersion}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: {ids}, lane: {lane}`,
-      {
-        ids: ids.toString(),
-        lane: lane?.toLaneId().toString(),
-      }
+    if (!ids.length) return [];
+    logger.debug(
+      `importMany, cache ${cache}, preferDependencyGraph: ${preferDependencyGraph}, reFetchUnBuiltVersion: ${reFetchUnBuiltVersion}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: ${ids.toString()}, lane: ${lane?.id()}`
     );
     const idsToImport = compact(ids.filter((id) => id.hasScope()));
     if (R.isEmpty(idsToImport)) {
@@ -728,13 +724,8 @@ export default class ScopeComponentsImporter {
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
     lane = await this.getLaneForFetcher(lane);
-    logger.debugAndAddBreadCrumb(
-      'ScopeComponentsImporter.getExternalMany',
-      `fetching from remote scope. Ids: {ids}, Lanes: {lane}`,
-      {
-        ids: ids.join(', '),
-        lane: lane?.toLaneId().toString(),
-      }
+    logger.debug(
+      `copeComponentsImporter.getExternalMany, fetching from remote scope. Ids: ${ids.join(', ')}, Lane: ${lane?.id()}`
     );
     const context = {};
     ids.forEach((id) => {
