@@ -527,13 +527,12 @@ export class ScopeMain implements ComponentFactory {
     const withoutOwnScopeAndLocals = legacyIds.filter((id) => {
       return id.scope !== this.name && id.hasScope();
     });
-    const lanes = lane ? [lane] : undefined;
     await this.legacyScope.scopeImporter.importMany({
       ids: ComponentsIds.fromArray(withoutOwnScopeAndLocals),
       cache: useCache,
       throwForDependencyNotFound: false,
       reFetchUnBuiltVersion,
-      lanes,
+      lane,
       preferDependencyGraph,
     });
 
