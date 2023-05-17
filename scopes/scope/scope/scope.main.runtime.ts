@@ -766,7 +766,10 @@ export class ScopeMain implements ComponentFactory {
 
   // todo: move this to somewhere else (where?)
   filterIdsFromPoolIdsByPattern(pattern: string, ids: ComponentID[], throwForNoMatch = true) {
-    const patterns = pattern.split(',').map((p) => p.trim());
+    const patterns = pattern
+      .split(',')
+      .map((p) => p.trim())
+      .map((p) => p.split('@')[0]); // no need for the version
     if (patterns.every((p) => p.startsWith('!'))) {
       // otherwise it'll never match anything. don't use ".push()". it must be the first item in the array.
       patterns.unshift('**');
