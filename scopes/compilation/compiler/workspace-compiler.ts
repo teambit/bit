@@ -12,7 +12,10 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { AbstractVinyl, Dist } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
+import {
+  linkToNodeModulesByComponents,
+  removeLinksFromNodeModules,
+} from '@teambit/workspace.modules.node-modules-linker';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -264,11 +267,18 @@ export class WorkspaceCompiler {
   async onComponentChange(
     component: Component,
     files: string[],
+    removedFiles?: string[],
     initiator?: CompilationInitiator
   ): Promise<SerializableResults> {
+    // when files are removed, we need to remove the dist directories and the old symlinks, otherwise, it has
+    // symlinks to non-exist files and the dist has stale files
+    const deleteDistDir = Boolean(removedFiles?.length);
+    if (removedFiles?.length) {
+      await removeLinksFromNodeModules(component, this.workspace, removedFiles);
+    }
     const buildResults = await this.compileComponents(
       [component.id.toString()],
-      { initiator: initiator || CompilationInitiator.ComponentChanged },
+      { initiator: initiator || CompilationInitiator.ComponentChanged, deleteDistDir },
       true
     );
     await linkToNodeModulesByComponents([component], this.workspace);
