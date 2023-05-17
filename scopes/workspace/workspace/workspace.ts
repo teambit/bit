@@ -921,7 +921,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
     const ids = BitIds.fromArray(lane.toBitIds().filter((id) => id.hasScope()));
     await scopeComponentsImporter.importManyDeltaWithoutDeps({ ids, fromHead: true, lane });
-    await scopeComponentsImporter.importMany({ ids, lanes: [lane] });
+    await scopeComponentsImporter.importMany({ ids, lane });
   }
 
   async use(aspectIdStr: string): Promise<string> {

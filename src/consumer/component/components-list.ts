@@ -243,7 +243,7 @@ export default class ComponentsList {
       {
         cache: false,
         includeVersionHistory: true,
-        lanes: [forkedFromLane],
+        lane: forkedFromLane,
         ignoreMissingHead: true,
       }
     );
