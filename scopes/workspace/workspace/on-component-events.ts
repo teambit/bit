@@ -5,7 +5,8 @@ import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/co
 export type SerializableResults = { results: any; toString: () => string };
 export type OnComponentChange = (
   component: Component,
-  files: string[],
+  files: string[], // os absolute paths
+  removedFiles?: string[], // os absolute paths
   initiator?: CompilationInitiator
 ) => Promise<SerializableResults>;
 export type OnComponentAdd = (component: Component, files: string[]) => Promise<SerializableResults>;
