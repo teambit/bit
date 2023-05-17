@@ -2,7 +2,8 @@ import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { pickBy, pick, mapValues, uniq } from 'lodash';
+import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
+import { pickBy, mapValues, uniq, difference } from 'lodash';
 import { SemVer } from 'semver';
 import pMapSeries from 'p-map-series';
 import { snapToSemver } from '@teambit/component-package-version';
@@ -159,15 +160,32 @@ export class WorkspaceManifestFactory {
       }
       await this.updateDependenciesVersions(component, rootPolicy, depList);
       const depManifest = depList.toDependenciesManifest();
-      const missingRootDeps = rootDependencies ? pick(rootDependencies, getMissingPackages(component)) : {};
+      const { devMissings, runtimeMissings } = await getMissingPackages(component);
       // Only add missing root deps that are not already in the component manifest
-      const unresolvedMissingRootDeps = pickBy(missingRootDeps, (_version, missingPackageName) => {
-        return !depManifest.dependencies[missingPackageName] && !depManifest.devDependencies[missingPackageName];
+      const unresolvedRuntimeMissingRootDeps = pickBy(rootDependencies, (_version, rootPackageName) => {
+        return (
+          runtimeMissings.includes(rootPackageName) &&
+          !depManifest.dependencies[rootPackageName] &&
+          !depManifest.devDependencies[rootPackageName]
+        );
+      });
+      // Only add missing root deps that are not already in the component manifest
+      const unresolvedDevMissingRootDeps = pickBy(rootDependencies, (_version, rootPackageName) => {
+        return (
+          devMissings.includes(rootPackageName) &&
+          !depManifest.dependencies[rootPackageName] &&
+          !depManifest.devDependencies[rootPackageName]
+        );
       });
       depManifest.dependencies = {
-        ...unresolvedMissingRootDeps,
+        ...unresolvedRuntimeMissingRootDeps,
         ...additionalDeps,
         ...depManifest.dependencies,
+      };
+
+      depManifest.devDependencies = {
+        ...unresolvedDevMissingRootDeps,
+        ...depManifest.devDependencies,
       };
 
       return { packageName, depManifest };
@@ -281,8 +299,24 @@ function excludeWorkspaceDependencies(deps: DepObjectValue): DepObjectValue {
   return pickBy(deps, (versionSpec) => !versionSpec.startsWith('file:') && !versionSpec.startsWith('workspace:'));
 }
 
-function getMissingPackages(component: Component): string[] {
-  return uniq(
-    Object.values(component.state.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data).flat()
-  );
+async function getMissingPackages(component: Component): Promise<{ devMissings: string[]; runtimeMissings: string[] }> {
+  const missingPackagesData = component.state.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data;
+  // TODO: this is a hack to get it from the legacy, we should take it from the dev files aspect
+  // TODO: the reason we don't is that it will make circular dependency between the dep resolver and the dev files aspect
+  const devFiles = await DependencyResolver.getDevFiles(component.state._consumer);
+  let devMissings: string[] = [];
+  let runtimeMissings: string[] = [];
+  Object.entries(missingPackagesData).forEach(([fileName, packages]) => {
+    if (devFiles.includes(fileName)) {
+      devMissings = uniq([...devMissings, ...packages]);
+    } else {
+      runtimeMissings = uniq([...runtimeMissings, ...packages]);
+    }
+  });
+  // Remove dev missing which are also runtime missing
+  devMissings = difference(devMissings, runtimeMissings);
+  return {
+    devMissings,
+    runtimeMissings,
+  };
 }
