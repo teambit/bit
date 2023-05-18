@@ -19,6 +19,7 @@ const TIMEOUT_MINUTES = 3;
  */
 export class ObjectsWritable extends Writable {
   private timeoutId: NodeJS.Timeout;
+  private intervalCounter = 0;
   constructor(
     private repo: Repository,
     private remoteName: string,
@@ -27,8 +28,11 @@ export class ObjectsWritable extends Writable {
   ) {
     super({ objectMode: true });
     if (!this.componentsPerRemote[remoteName]) this.componentsPerRemote[remoteName] = [];
-    this.timeoutId = setTimeout(() => {
-      const msg = `fetching from ${remoteName} takes more than ${TIMEOUT_MINUTES} minutes. make sure the remote is responsive`;
+    this.timeoutId = setInterval(() => {
+      this.intervalCounter += 1;
+      const msg = `fetching from ${remoteName} takes more than ${
+        this.intervalCounter * TIMEOUT_MINUTES
+      } minutes. make sure the remote is responsive`;
       logger.warn(msg);
       logger.console(`\n${msg}`, 'warn', 'yellow');
     }, TIMEOUT_MINUTES * 60 * 1000);
@@ -48,7 +52,7 @@ export class ObjectsWritable extends Writable {
   }
 
   async _final() {
-    clearTimeout(this.timeoutId);
+    clearInterval(this.timeoutId);
   }
 
   private async writeObjectToFs(obj: ObjectItem) {
