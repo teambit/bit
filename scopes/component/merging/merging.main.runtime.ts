@@ -135,8 +135,7 @@ export class MergingMain {
     } else if (abort) {
       mergeResults = await this.abortMerge(ids);
     } else {
-      const bitIds = this.getComponentsToMerge(consumer, ids);
-      // @todo: version could be the lane only or remote/lane
+      const bitIds = await this.getComponentsToMerge(consumer, ids);
       mergeResults = await this.mergeComponentsFromRemote(
         consumer,
         bitIds,
@@ -987,9 +986,13 @@ other:   ${otherLaneHead.toString()}`);
     return unresolvedComponents.map((u) => ComponentID.fromLegacy(new BitId(u.id)));
   }
 
-  private getComponentsToMerge(consumer: Consumer, ids: string[]): BitId[] {
+  private async getComponentsToMerge(consumer: Consumer, ids: string[]): Promise<BitId[]> {
+    const componentsList = new ComponentsList(consumer);
+    if (!ids.length) {
+      const mergePending = await componentsList.listMergePendingComponents();
+      return mergePending.map((c) => c.id);
+    }
     if (hasWildcard(ids)) {
-      const componentsList = new ComponentsList(consumer);
       return componentsList.listComponentsByIdsWithWildcard(ids);
     }
     return ids.map((id) => consumer.getParsedId(id));
