@@ -30,6 +30,7 @@ import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-di
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -471,7 +472,7 @@ please create a new lane instead, which will include all components of this lane
 
   /**
    * fetch the lane object and its components from the remote.
-   * save the objects to the local scope.
+   * save the objects and the lane to the local scope.
    * this method doesn't change anything in the workspace.
    */
   async fetchLaneWithItsComponents(laneId: LaneId): Promise<Lane> {
@@ -481,8 +482,9 @@ please create a new lane instead, which will include all components of this lane
     }
     const lane = await this.importer.importLaneObject(laneId);
     if (!lane) throw new Error(`unable to import lane ${laneId.toString()} from the remote`);
-    const { importedIds } = await this.importer.fetchLaneWithComponents(lane);
-    this.logger.debug(`fetching lane ${laneId.toString()} done, fetched ${importedIds.length} components`);
+
+    await this.importer.fetchLaneComponents(lane);
+    this.logger.debug(`fetching lane ${laneId.toString()} done, fetched ${lane.components.length} components`);
     return lane;
   }
 
@@ -860,6 +862,60 @@ please create a new lane instead, which will include all components of this lane
     }
     await this.workspace.bitMap.write();
     return { result: true };
+  }
+
+  /**
+   * if the local lane was forked from another lane, this gets the differences between the two.
+   * it also fetches the original lane from the remote to make sure the data is up to date.
+   */
+  async listUpdatesFromForked(componentsList: ComponentsList): Promise<DivergeDataPerId[]> {
+    const consumer = this.workspace?.consumer;
+    if (!consumer) throw new Error(`unable to get listUpdatesFromForked outside of a workspace`);
+    if (consumer.isOnMain()) {
+      return [];
+    }
+    const lane = await consumer.getCurrentLaneObject();
+    const forkedFromLaneId = lane?.forkedFrom;
+    if (!forkedFromLaneId) {
+      return [];
+    }
+    const forkedFromLane = await consumer.scope.loadLane(forkedFromLaneId);
+    if (!forkedFromLane) return []; // should we fetch it here?
+
+    const workspaceIds = consumer.bitMap.getAllBitIds();
+
+    const duringMergeIds = componentsList.listDuringMergeStateComponents();
+
+    const componentsFromModel = await componentsList.getModelComponents();
+    const compFromModelOnWorkspace = componentsFromModel
+      .filter((c) => workspaceIds.hasWithoutVersion(c.toBitId()))
+      // if a component is merge-pending, it needs to be resolved first before getting more updates from main
+      .filter((c) => !duringMergeIds.hasWithoutVersion(c.toBitId()));
+
+    // by default, when on a lane, forked is not fetched. we need to fetch it to get the latest updates.
+    await this.fetchLaneWithItsComponents(forkedFromLaneId);
+
+    const remoteForkedLane = await consumer.scope.objects.remoteLanes.getRemoteLane(forkedFromLaneId);
+    if (!remoteForkedLane.length) return [];
+
+    const results = await Promise.all(
+      compFromModelOnWorkspace.map(async (modelComponent) => {
+        const headOnForked = remoteForkedLane.find((c) => c.id.isEqualWithoutVersion(modelComponent.toBitId()));
+        const headOnLane = modelComponent.laneHeadLocal;
+        if (!headOnForked || !headOnLane) return undefined;
+        const divergeData = await getDivergeData({
+          repo: consumer.scope.objects,
+          modelComponent,
+          targetHead: headOnForked.head,
+          sourceHead: headOnLane,
+          throws: false,
+        });
+        if (!divergeData.snapsOnTargetOnly.length && !divergeData.err) return undefined;
+        return { id: modelComponent.toBitId(), divergeData };
+      })
+    );
+
+    return compact(results);
   }
 
   private async getLaneDataOfDefaultLane(): Promise<LaneData | null> {
