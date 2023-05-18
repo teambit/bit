@@ -740,8 +740,8 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead?: boolean;
       collectParents?: boolean;
     }
-  ): Promise<ComponentVersion[]> {
-    if (!ids.length) return [];
+  ): Promise<void> {
+    if (!ids.length) return;
     const remotes = await getScopeRemotes(this.scope);
     logger.debug(`getExternalManyWithoutDeps, total ids: ${ids.length}, localFetch: ${localFetch.toString()}`);
     const defs: ComponentDef[] = await this.sources.getMany(ids, true);
@@ -749,7 +749,7 @@ export default class ScopeComponentsImporter {
 
     if (left.length === 0) {
       logger.debug('getExternalManyWithoutDeps, no more ids left, all found locally');
-      return this.componentsDefToComponentsVersion(defs, ignoreMissingHead);
+      return;
     }
     const leftIds = left.map((def) => def.id);
     const leftIdsStr = leftIds.map((id) => id.toString());
@@ -771,11 +771,6 @@ export default class ScopeComponentsImporter {
       lane ? [lane] : [],
       context
     ).fetchFromRemoteAndWrite();
-
-    const finalDefs: ComponentDef[] = await this.sources.getMany(ids);
-
-    // @todo: should we warn about the non-missing?
-    return this.componentsDefToComponentsVersion(finalDefs, ignoreMissingHead, true);
   }
 
   private async getLaneForFetcher(lane?: Lane): Promise<Lane | undefined> {
@@ -787,7 +782,10 @@ export default class ScopeComponentsImporter {
 
   private async _getComponentVersion(id: BitId): Promise<ComponentVersion> {
     if (!id.isLocal(this.scope.name)) {
-      const componentVersions = await this.getExternalManyWithoutDeps([id], { localFetch: true });
+      await this.getExternalManyWithoutDeps([id], { localFetch: true });
+      const compDefs: ComponentDef[] = await this.sources.getMany([id]);
+      const componentVersions = this.componentsDefToComponentsVersion(compDefs, false, true);
+
       if (!componentVersions.length) throw new GeneralError(`unable to find ${id.toString()} in its remote`);
       return componentVersions[0];
     }
