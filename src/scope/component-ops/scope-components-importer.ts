@@ -1,7 +1,7 @@
 import { filter } from 'bluebird';
 import { Mutex } from 'async-mutex';
 import mapSeries from 'p-map-series';
-import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import groupArray from 'group-array';
 import R from 'ramda';
 import { compact, flatten, partition, uniq } from 'lodash';
@@ -283,35 +283,20 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead?: boolean;
       collectParents?: boolean;
     }
-  ): Promise<ComponentVersion[]> {
+  ): Promise<void> {
     const idsWithoutNils = compact(ids);
-    if (!idsWithoutNils.length) return [];
+    if (!idsWithoutNils.length) return;
     logger.debug(`importWithoutDeps, total ids: ${ids.length}`);
 
-    const [locals, externals] = partition(idsWithoutNils, (id) => id.isLocal(this.scope.name));
+    const [, externals] = partition(idsWithoutNils, (id) => id.isLocal(this.scope.name));
 
-    const localDefs: ComponentDef[] = await this.sources.getMany(locals);
-    const componentVersionArr = localDefs.map((def) => {
-      if (!def.component) {
-        logger.warn(
-          `importWithoutDeps failed to find a local component ${def.id.toString()}. continuing without this component`
-        );
-        return null;
-      }
-      if (ignoreMissingHead && !def.component.head && !def.id.hasVersion()) {
-        logger.debug(`importWithoutDeps, ignored missing head ${def.id.toString()}`);
-        return null;
-      }
-      return def.component.toComponentVersion(def.id.version as string);
-    });
-    const externalDeps = await this.getExternalManyWithoutDeps(externals, {
+    await this.getExternalManyWithoutDeps(externals, {
       localFetch: cache,
       lane,
       includeVersionHistory,
       ignoreMissingHead,
       collectParents,
     });
-    return [...compact(componentVersionArr), ...externalDeps];
   }
 
   /**
@@ -667,7 +652,9 @@ export default class ScopeComponentsImporter {
       })
     );
 
-    const compVersionsOfDeps = await this.importWithoutDeps(flattenedDepsToFetch, { lane });
+    await this.importWithoutDeps(flattenedDepsToFetch, { lane });
+    const compDefsOfDeps = await this.sources.getMany(flattenedDepsToFetch);
+    const compVersionsOfDeps = this.componentsDefToComponentsVersion(compDefsOfDeps);
 
     const versionDeps = componentsWithVersion.map(({ componentVersion, versionObj }) => {
       const dependencies = versionObj.flattenedDependencies.map((dep) =>
@@ -735,7 +722,7 @@ export default class ScopeComponentsImporter {
 
   private componentsDefToComponentsVersion(
     defs: ComponentDef[],
-    ignoreMissingHead?: boolean,
+    ignoreMissingHead = false,
     ignoreIfMissing = false
   ): ComponentVersion[] {
     const componentVersions = defs.map((def) => {
