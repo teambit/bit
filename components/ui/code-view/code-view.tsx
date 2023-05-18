@@ -10,6 +10,7 @@ import { DarkTheme } from '@teambit/design.themes.dark-theme';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { ComponentID } from '@teambit/component';
 import styles from './code-view.module.scss';
+import { setupLanguage } from './monaco-language-init';
 
 export type CodeViewProps = {
   componentId: ComponentID;
@@ -17,7 +18,6 @@ export type CodeViewProps = {
   currentFileContent?: string;
   icon?: string;
   loading?: boolean;
-  codeSnippetClassName?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
 // a translation list of specific monaco languages that are not the same as their file ending.
@@ -36,7 +36,6 @@ export function CodeView({
   currentFile,
   icon,
   currentFileContent,
-  // codeSnippetClassName,
   loading: loadingFromProps,
 }: CodeViewProps) {
   const monacoRef = React.useRef<{
@@ -56,17 +55,43 @@ export function CodeView({
      * ts cant validate all types because imported files aren't available to the editor
      */
     monacoRef.current = { monaco, editor };
-    if (monacoRef.current) {
-      monacoRef.current.monaco.languages?.typescript?.typescriptDefaults?.setDiagnosticsOptions({
-        noSemanticValidation: true,
-        noSyntaxValidation: true,
-      });
-    }
+
+    // monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+    //   noSemanticValidation: true,
+    //   noSyntaxValidation: true,
+    // });
+
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      target: monaco.languages.typescript.ScriptTarget.Latest,
+      allowNonTsExtensions: true,
+      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monaco.languages.typescript.ModuleKind.CommonJS,
+      jsx: monaco.languages.typescript.JsxEmit.React,
+      noEmit: true,
+      typeRoots: ['node_modules/@types'],
+      jsxFactory: 'JSXAlone.createElement',
+      reactNamespace: 'React',
+      esModuleInterop: true,
+    });
+
+    setupLanguage(monaco, 'typescript').catch(() => {});
 
     monaco.editor.defineTheme('bit', {
       base: 'vs-dark',
       inherit: true,
-      rules: [],
+      rules: [
+        { token: 'delimiter', foreground: 'ffffff' },
+        { token: 'delimiter.angle', foreground: '808080' },
+        { token: 'tag.dom', foreground: '569cd6' },
+        { token: 'tag.custom', foreground: '4ec9b0' },
+        { token: 'delimiter.bracket', foreground: 'd7ba7d' },
+        { token: 'attribute.key', foreground: '9cdcfe' },
+        { token: 'attribute.value', foreground: 'ce9178' },
+        { token: 'delimiter.bracket', foreground: 'd7ba7d' },
+        { token: 'jsx.attribute.value', foreground: 'ce9178' },
+        { token: 'tag.name', foreground: '569cd6' },
+      ],
+
       colors: {
         'scrollbar.shadow': '#222222',
         'diffEditor.insertedTextBackground': '#1C4D2D',
@@ -76,6 +101,7 @@ export function CodeView({
         'editor.lineHighlightBorder': '#6a57fd',
       },
     });
+
     monaco.editor.setTheme('bit');
   };
 
@@ -131,5 +157,5 @@ function EmptyCodeView() {
 }
 
 export function CodeViewLoader({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
-  return <LineSkeleton {...rest} className={classNames(styles.loader, className)} count={50} />;
+  return <LineSkeleton {...rest} className={classNames(styles.loader, className)} count={75} />;
 }

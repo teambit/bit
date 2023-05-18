@@ -44,7 +44,7 @@
 }
 
 .loader {
-  width: calc(100% - 48px);
+  width: 100%;
   color: var(--on-surface-neutral-low-color, #282828);
   background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
   opacity: 1;
