@@ -275,11 +275,13 @@ export default class ScopeComponentsImporter {
       lane,
       includeVersionHistory = false,
       ignoreMissingHead = false,
+      collectParents = false,
     }: {
       cache?: boolean;
       lane?: Lane;
       includeVersionHistory?: boolean;
       ignoreMissingHead?: boolean;
+      collectParents?: boolean;
     }
   ): Promise<ComponentVersion[]> {
     const idsWithoutNils = compact(ids);
@@ -307,14 +309,14 @@ export default class ScopeComponentsImporter {
       lane,
       includeVersionHistory,
       ignoreMissingHead,
+      collectParents,
     });
     return [...compact(componentVersionArr), ...externalDeps];
   }
 
   /**
-   * delta between the local head and the remote head. mainly to improve performance
-   * Mainly needed for backward compatibility. once the remotes support version-history (after > 0.0.900),
-   * then no need to calculate delta. just bring the version you want and the version-history object.
+   * @deprecated use importWithoutDeps() instead.
+   * no need for the delta anymore now that all remote-scopes support version-history.
    */
   async importManyDeltaWithoutDeps({
     ids,
@@ -330,49 +332,15 @@ export default class ScopeComponentsImporter {
     collectParents?: boolean;
   }): Promise<void> {
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
-    const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
-    if (R.isEmpty(idsWithoutNils)) return;
 
-    const compDef = await this.sources.getMany(idsWithoutNils.toVersionLatest(), true);
-    const idsToFetch = await mapSeries(compDef, async ({ id, component }) => {
-      if (!component || fromHead) {
-        return id.changeVersion(undefined);
-      }
-      const remoteLaneId = lane ? lane.toLaneId() : LaneId.from(DEFAULT_LANE, id.scope as string);
-      const remoteHead = await this.repo.remoteLanes.getRef(remoteLaneId, id);
-      if (!remoteHead) {
-        return id.changeVersion(undefined);
-      }
-      const remoteHeadExists = await this.repo.has(remoteHead);
-      if (!remoteHeadExists) {
-        logger.warn(
-          `remote-ref exists for ${id.toString()}, lane ${remoteLaneId.toString()}, but the object is missing on the fs`
-        );
-        return id.changeVersion(undefined);
-      }
-      return id.changeVersion(remoteHead.toString());
+    if (fromHead) ids = ids.toVersionLatest();
+    await this.importWithoutDeps(ids, {
+      cache: false,
+      lane: lane || undefined,
+      includeVersionHistory: true,
+      collectParents,
+      ignoreMissingHead,
     });
-    const groupedIds = lane ? groupByLanes(idsToFetch, [lane]) : groupByScopeName(idsToFetch);
-    const remotesCount = Object.keys(groupedIds).length;
-    const statusMsg = `fetching ${idsToFetch.length} components from ${remotesCount} remotes.`;
-    loader.start(statusMsg);
-    logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', statusMsg);
-    const remotes = await getScopeRemotes(this.scope);
-    lane = await this.getLaneForFetcher(lane || undefined);
-    await new ObjectFetcher(
-      this.repo,
-      this.scope,
-      remotes,
-      {
-        type: 'component-delta',
-        laneId: lane ? lane.id() : undefined,
-        ignoreMissingHead,
-        includeVersionHistory: true,
-        collectParents,
-      },
-      idsToFetch,
-      lane ? [lane] : []
-    ).fetchFromRemoteAndWrite();
   }
 
   /**
@@ -789,11 +757,13 @@ export default class ScopeComponentsImporter {
       lane,
       includeVersionHistory = false,
       ignoreMissingHead = false,
+      collectParents = false,
     }: {
       localFetch?: boolean;
       lane?: Lane;
       includeVersionHistory?: boolean;
       ignoreMissingHead?: boolean;
+      collectParents?: boolean;
     }
   ): Promise<ComponentVersion[]> {
     if (!ids.length) return [];
@@ -820,6 +790,7 @@ export default class ScopeComponentsImporter {
         includeVersionHistory,
         ignoreMissingHead,
         laneId: lane ? lane.id() : undefined,
+        collectParents,
       },
       leftIds,
       lane ? [lane] : [],
