@@ -1,5 +1,4 @@
 import mapSeries from 'p-map-series';
-import { parse } from 'comment-json';
 import { MainRuntime } from '@teambit/cli';
 import { getAllCoreAspectsIds } from '@teambit/bit';
 import { getRelativeRootComponentDir } from '@teambit/bit-roots';
@@ -1075,15 +1074,15 @@ export class DependencyResolverMain {
   // }
 
   async getComponentEnvPolicyFromExtension(configuredExtensions: ExtensionDataList): Promise<EnvPolicy> {
-    const envId = this.envs.calculateEnvIdFromExtensions(configuredExtensions);
+    const envId = await this.envs.calculateEnvIdFromExtensions(configuredExtensions);
     if (this.envs.isCoreEnv(envId)) {
-      const env = this.envs.calculateEnvFromExtensions(configuredExtensions);
+      const env = await this.envs.calculateEnvFromExtensions(configuredExtensions);
       return this.getComponentEnvPolicyFromEnv(env.env);
     }
 
     const fromFile = await this.getEnvPolicyFromFile(envId);
     if (fromFile) return fromFile;
-    const env = this.envs.calculateEnvFromExtensions(configuredExtensions);
+    const env = await this.envs.calculateEnvFromExtensions(configuredExtensions);
     return this.getComponentEnvPolicyFromEnv(env.env);
   }
 
@@ -1102,7 +1101,7 @@ export class DependencyResolverMain {
 
   async getComponentEnvPolicy(component: Component): Promise<EnvPolicy> {
     // const envComponent = await this.envs.getEnvComponent(component);
-    const envId = this.envs.calculateEnvId(component);
+    const envId = await this.envs.calculateEnvId(component);
     if (this.envs.isCoreEnv(envId.toStringWithoutVersion())) {
       const env = this.envs.getEnv(component).env;
       return this.getComponentEnvPolicyFromEnv(env);
@@ -1113,41 +1112,8 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env);
   }
 
-  /**
-   * This function checks if an environment manifest file exists in a given component or set of legacy files.
-   * @param {Component} [envComponent] - A component object that represents an environment. It contains information about
-   * the files and directories that make up the environment.
-   * @param {SourceFile[]} [legacyFiles] - An optional array of SourceFile objects representing the files in the legacy
-   * file system. If this parameter is not provided, the function will attempt to retrieve the files from the envComponent
-   * parameter.
-   * @returns a boolean value indicating whether an `env.jsonc` or `env.json` file exists in the `files` array of either
-   * the `envComponent` object or the `legacyFiles` array. If neither `envComponent` nor `legacyFiles` are provided, the
-   * function returns `undefined`.
-   */
-  hasEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): boolean | undefined {
-    if (!envComponent && !legacyFiles) return undefined;
-    // @ts-ignore
-    const files = legacyFiles || envComponent.filesystem.files;
-    const envJson = files.find((file) => {
-      return file.relative === 'env.jsonc' || file.relative === 'env.json';
-    });
-
-    if (!envJson) return false;
-    return true;
-  }
-
   getEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): EnvPolicy | undefined {
-    // TODO: maybe throw an error here?
-    if (!envComponent && !legacyFiles) return undefined;
-    // @ts-ignore
-    const files = legacyFiles || envComponent.filesystem.files;
-    const envJson = files.find((file) => {
-      return file.relative === 'env.jsonc' || file.relative === 'env.json';
-    });
-
-    if (!envJson) return undefined;
-
-    const object = parse(envJson.contents.toString('utf8'));
+    const object = this.envs.getEnvManifest(envComponent, legacyFiles) as any;
     const policy = object?.policy;
     if (!policy) return undefined;
     const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy);
@@ -1306,7 +1272,7 @@ export class DependencyResolverMain {
    * Do not use this function for other purposes.
    */
   async calcComponentEnvDepDetectors(extensions: ExtensionDataList) {
-    const envDef = this.envs.calculateEnvFromExtensions(extensions);
+    const envDef = await this.envs.calculateEnvFromExtensions(extensions);
     const depEnv = envDef.env as DependenciesEnv;
     if (typeof depEnv?.getDepDetectors === 'function') {
       return depEnv.getDepDetectors();

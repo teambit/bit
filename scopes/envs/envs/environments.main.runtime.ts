@@ -1,3 +1,6 @@
+import pLocate from 'p-locate';
+import { parse } from 'comment-json';
+import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain, ComponentID } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -202,6 +205,49 @@ export class EnvsMain {
     return targetEnv as T & S;
   }
 
+  /**
+   * This function checks if an environment manifest file exists in a given component or set of legacy files.
+   * @param {Component} [envComponent] - A component object that represents an environment. It contains information about
+   * the files and directories that make up the environment.
+   * @param {SourceFile[]} [legacyFiles] - An optional array of SourceFile objects representing the files in the legacy
+   * file system. If this parameter is not provided, the function will attempt to retrieve the files from the envComponent
+   * parameter.
+   * @returns a boolean value indicating whether an `env.jsonc` or `env.json` file exists in the `files` array of either
+   * the `envComponent` object or the `legacyFiles` array. If neither `envComponent` nor `legacyFiles` are provided, the
+   * function returns `undefined`.
+   */
+  hasEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): boolean | undefined {
+    if (!envComponent && !legacyFiles) return undefined;
+    // @ts-ignore
+    const files = legacyFiles || envComponent.filesystem.files;
+    const envJson = files.find((file) => {
+      return file.relative === 'env.jsonc' || file.relative === 'env.json';
+    });
+
+    if (!envJson) return false;
+    return true;
+  }
+
+  getEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): Object | undefined {
+    // TODO: maybe throw an error here?
+    if (!envComponent && !legacyFiles) return undefined;
+    // @ts-ignore
+    const files = legacyFiles || envComponent.filesystem.files;
+    const envJson = files.find((file) => {
+      return file.relative === 'env.jsonc' || file.relative === 'env.json';
+    });
+
+    if (!envJson) return undefined;
+
+    const object = parse(envJson.contents.toString('utf8'));
+    return object;
+  }
+
+  async hasEnvManifestById(envId: string, requesting: string): Promise<boolean | undefined> {
+    const component = await this.getEnvComponentByEnvId(envId, requesting);
+    return this.hasEnvManifest(component);
+  }
+
   getEnvData(component: Component): Descriptor {
     let envsData = component.state.aspects.get(EnvsAspect.id);
     if (!envsData) {
@@ -291,12 +337,12 @@ export class EnvsMain {
   /**
    * get the env component by the env id.
    */
-  async getEnvComponentByEnvId(envId: string, requesting: string): Promise<Component> {
+  async getEnvComponentByEnvId(envId: string, requesting?: string): Promise<Component> {
     const host = this.componentMain.getHost();
     const newId = await host.resolveComponentId(envId);
     const envComponent = await host.get(newId);
     if (!envComponent) {
-      throw new BitError(`can't load env. env id is ${envId} used by component ${requesting}`);
+      throw new BitError(`can't load env. env id is ${envId} used by component ${requesting || 'unknown'}`);
     }
     return envComponent;
   }
@@ -395,7 +441,7 @@ export class EnvsMain {
    * Do not use it to get the env (use getEnv instead)
    * This should be used only during on load
    */
-  calculateEnvId(component: Component): ComponentID {
+  async calculateEnvId(component: Component): Promise<ComponentID> {
     // Search first for env configured via envs aspect itself
     const envIdFromEnvsConfig = this.getEnvIdFromEnvsConfig(component);
     // if (!envIdFromEnvsConfig) return this.getDefaultEnv();
@@ -418,20 +464,14 @@ export class EnvsMain {
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
-    let envDefFromList;
-    component.state.aspects.entries.find((aspectEntry) => {
-      const envDef = this.getEnvDefinitionById(aspectEntry.id);
-      if (envDef) {
-        envDefFromList = envDef;
-      }
-      return !!envDef;
+    const ids: string[] = [];
+    component.state.aspects.entries.forEach((aspectEntry) => {
+      ids.push(aspectEntry.id.toString());
+      ids.push(aspectEntry.id.toString({ ignoreVersion: true }));
     });
-
-    if (envDefFromList) {
-      return ComponentID.fromString(envDefFromList.id);
-    }
-    const defaultEnvId = this.getDefaultEnv().id;
-    return ComponentID.fromString(defaultEnvId);
+    const envId = await this.findFirstEnv(ids);
+    const finalId = envId || this.getDefaultEnv().id;
+    return ComponentID.fromString(finalId);
   }
 
   /**
@@ -563,7 +603,7 @@ export class EnvsMain {
   /**
    * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .calculateEnvId() instead!)
    */
-  calculateEnvIdFromExtensions(extensions: ExtensionDataList): string {
+  async calculateEnvIdFromExtensions(extensions: ExtensionDataList): Promise<string> {
     // Search first for env configured via envs aspect itself
     const envsAspect = extensions.findCoreExtension(EnvsAspect.id);
     const envIdFromEnvsConfig = envsAspect?.config.env;
@@ -589,26 +629,24 @@ export class EnvsMain {
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
-    let envEntryFromList: ExtensionDataEntry | undefined;
-    extensions.find((extension: ExtensionDataEntry) => {
-      const envDef = this.getEnvDefinitionByLegacyExtension(extension);
-      if (envDef) {
-        envEntryFromList = extension;
+    const ids: string[] = [];
+    extensions.forEach((extension) => {
+      if (extension.newExtensionId) {
+        ids.push(extension.newExtensionId.toString());
+        ids.push(extension.newExtensionId.toString({ ignoreVersion: true }));
+      } else {
+        ids.push(extension.stringId);
       }
-      return !!envDef;
     });
-
-    if (envEntryFromList) {
-      return envEntryFromList.stringId;
-    }
-    const defaultEnvId = this.getDefaultEnv().id;
-    return defaultEnvId;
+    const envId = await this.findFirstEnv(ids);
+    const finalId = envId || this.getDefaultEnv().id;
+    return finalId;
   }
 
   /**
    * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .calculateEnv() instead!)
    */
-  calculateEnvFromExtensions(extensions: ExtensionDataList): EnvDefinition {
+  async calculateEnvFromExtensions(extensions: ExtensionDataList): Promise<EnvDefinition> {
     // Search first for env configured via envs aspect itself
     const envsAspect = extensions.findCoreExtension(EnvsAspect.id);
     const envIdFromEnvsConfig = envsAspect?.config.env;
@@ -654,19 +692,40 @@ export class EnvsMain {
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
-    let envDefFromList;
-    extensions.find((extension: ExtensionDataEntry) => {
-      const envDef = this.getEnvDefinitionByLegacyExtension(extension);
-      if (envDef) {
-        envDefFromList = envDef;
+    const ids: string[] = [];
+    extensions.forEach((extension) => {
+      if (extension.newExtensionId) {
+        ids.push(extension.newExtensionId.toString());
+        ids.push(extension.newExtensionId.toString({ ignoreVersion: true }));
+      } else {
+        ids.push(extension.stringId);
       }
-      return !!envDef;
     });
+    const envId = await this.findFirstEnv(ids);
+    const envDef = envId ? this.getEnvDefinitionByStringId(envId) : undefined;
 
-    if (envDefFromList) {
-      return envDefFromList;
-    }
-    return this.getDefaultEnv();
+    return envDef || this.getDefaultEnv();
+  }
+
+  /**
+   * This function finds the first environment ID from a list of IDs by checking if it is register as env (to the slot).
+   * or contains env.jsonc file
+   * @param {string[]} ids - `ids` is an array of string values representing environment IDs. The function `findFirstEnv`
+   * takes this array as input and returns a Promise that resolves to a string value representing the first environment ID
+   * that matches certain conditions.
+   * @returns The `findFirstEnv` function returns a Promise that resolves to a string or undefined. The string represents
+   * the ID of the first environment that matches the conditions specified in the function, or undefined if no environment
+   * is found.
+   */
+  private async findFirstEnv(ids: string[]): Promise<string | undefined> {
+    const envId = await pLocate(ids, async (id) => {
+      const envDef = this.getEnvDefinitionByStringId(id);
+      if (envDef) return true;
+      const envComponent = await this.getEnvComponentByEnvId(id);
+      const hasManifest = this.hasEnvManifest(envComponent);
+      return !!hasManifest;
+    });
+    return envId;
   }
 
   private getEnvDefinitionByLegacyExtension(extension: ExtensionDataEntry): EnvDefinition | undefined {

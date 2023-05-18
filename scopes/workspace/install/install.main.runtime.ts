@@ -494,7 +494,7 @@ export class InstallMain {
             const appPkgName = this.dependencyResolver.getPackageName(app);
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
             if (!appManifest) return null;
-            const envId = this.envs.calculateEnvId(app);
+            const envId = await this.envs.calculateEnvId(app);
             return [
               getRootComponentDir(this.workspace.path, app.id.toString()),
               {
@@ -521,8 +521,9 @@ export class InstallMain {
 
   private async _getAllUsedEnvIds(): Promise<ComponentID[]> {
     const envs = new Set<ComponentID>();
-    (await this.workspace.list()).forEach((component) => {
-      envs.add(this.envs.calculateEnvId(component));
+    const components = await this.workspace.list();
+    await pMapSeries(components, async (component) => {
+      envs.add(await this.envs.calculateEnvId(component));
     });
     return Array.from(envs.values());
   }
