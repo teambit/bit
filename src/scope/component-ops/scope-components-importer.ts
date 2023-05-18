@@ -5,7 +5,6 @@ import { LaneId } from '@teambit/lane-id';
 import groupArray from 'group-array';
 import R from 'ramda';
 import { compact, flatten, partition, uniq } from 'lodash';
-import loader from '../../cli/loader';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import ConsumerComponent from '../../consumer/component';
@@ -271,7 +270,7 @@ export default class ScopeComponentsImporter {
   async importWithoutDeps(
     ids: BitIds,
     {
-      cache = true,
+      cache = true, // if cache is true and the component found locally, don't go to the remote
       lane,
       includeVersionHistory = false,
       ignoreMissingHead = false,
@@ -302,6 +301,10 @@ export default class ScopeComponentsImporter {
   /**
    * @deprecated use importWithoutDeps() instead.
    * no need for the delta anymore now that all remote-scopes support version-history.
+   *
+   * delta between the local head and the remote head. mainly to improve performance
+   * Mainly needed for backward compatibility. once the remotes support version-history (after > 0.0.900),
+   * then no need to calculate delta. just bring the version you want and the version-history object.
    */
   async importManyDeltaWithoutDeps({
     ids,
@@ -329,6 +332,8 @@ export default class ScopeComponentsImporter {
   }
 
   /**
+   * @deprecated use importWithoutDeps() instead.
+   *
    * this is a minimal import, which runs very fast.
    * it only brings the version you asked for, nothing else. it doesn't bring dependencies, it doesn't bring previous
    * versions, it even doesn't bring the version-history object. (for performance reasons).
@@ -337,38 +342,21 @@ export default class ScopeComponentsImporter {
     ids,
     fromHead = false,
     lane,
-    ignoreMissingHead = false,
   }: {
     ids: BitIds;
     fromHead?: boolean;
     lane?: Lane;
-    ignoreMissingHead?: boolean;
   }): Promise<void> {
     logger.debugAndAddBreadCrumb('importManyIfMissingWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
     const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
     if (R.isEmpty(idsWithoutNils)) return;
     const idsToImport = fromHead ? idsWithoutNils.toVersionLatest() : idsWithoutNils;
-    const compExistence = await this.sources.existMany(idsToImport);
-    const idsToFetch = compExistence.filter((c) => !c.exists).map((c) => c.id);
-    const groupedIds = lane ? groupByLanes(idsToFetch, [lane]) : groupByScopeName(idsToFetch);
-    const remotesCount = Object.keys(groupedIds).length;
-    const statusMsg = `fetching ${idsToFetch.length} components from ${remotesCount} remotes.`;
-    loader.start(statusMsg);
-    logger.debugAndAddBreadCrumb('importManyIfMissingWithoutDeps', statusMsg);
-    const remotes = await getScopeRemotes(this.scope);
-    lane = await this.getLaneForFetcher(lane);
-    await new ObjectFetcher(
-      this.repo,
-      this.scope,
-      remotes,
-      {
-        type: 'component',
-        laneId: lane ? lane.id() : undefined,
-        ignoreMissingHead,
-      },
-      idsToFetch,
-      lane ? [lane] : []
-    ).fetchFromRemoteAndWrite();
+
+    await this.importWithoutDeps(idsToImport, {
+      cache: true,
+      lane,
+      includeVersionHistory: false,
+    });
   }
 
   async importLanes(remoteLaneIds: LaneId[]): Promise<Lane[]> {
