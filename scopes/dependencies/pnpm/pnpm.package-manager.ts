@@ -50,7 +50,7 @@ export class PnpmPackageManager implements PackageManager {
     if (!installOptions.useNesting) {
       manifests = await extendWithComponentsFromDir(rootDir, manifests);
     }
-    await install(
+    const { dependenciesChanged } = await install(
       rootDir,
       manifests,
       config.storeDir,
@@ -87,7 +87,7 @@ export class PnpmPackageManager implements PackageManager {
       // this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
       // this.logger.consoleSuccess('installing dependencies using pnpm');
     }
-    return { dependenciesChanged: true };
+    return { dependenciesChanged };
   }
 
   async getPeerDependencyIssues(
