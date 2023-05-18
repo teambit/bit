@@ -209,8 +209,7 @@ describe('bit lane command', function () {
 
       helper.scopeHelper.getClonedLocalScope(beforeRemoveScope);
     });
-    // @todo: fix!
-    it.skip('bit status --lanes should show updates from lane-a', () => {
+    it('bit status --lanes should show updates from lane-a', () => {
       const status = helper.command.statusJson(undefined, '--lanes');
       expect(status.updatesFromForked).to.have.lengthOf(2);
     });

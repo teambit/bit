@@ -819,6 +819,7 @@ export default class ScopeComponentsImporter {
       {
         includeVersionHistory,
         ignoreMissingHead,
+        laneId: lane ? lane.id() : undefined,
       },
       leftIds,
       lane ? [lane] : [],
