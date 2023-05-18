@@ -282,6 +282,9 @@ export async function install(
     dependenciesChanged = stats.added + stats.removed + stats.linkedToRoot > 0;
     delete installsRunning[rootDir];
   } catch (err: any) {
+    if (logger) {
+      logger.warn('got an error from pnpm mutateModules function', err);
+    }
     throw pnpmErrorToBitError(err);
   } finally {
     if (stopReporting) {
