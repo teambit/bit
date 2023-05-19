@@ -643,7 +643,7 @@ export default class ScopeComponentsImporter {
 
     await this.importWithoutDeps(flattenedDepsToFetch, { lane });
     const compDefsOfDeps = await this.sources.getMany(flattenedDepsToFetch);
-    const compVersionsOfDeps = this.componentsDefToComponentsVersion(compDefsOfDeps);
+    const compVersionsOfDeps = this.componentsDefToComponentsVersion(compDefsOfDeps, false, true);
 
     const versionDeps = componentsWithVersion.map(({ componentVersion, versionObj }) => {
       const dependencies = versionObj.flattenedDependencies.map((dep) =>
