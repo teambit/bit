@@ -308,6 +308,7 @@ export default class ScopeComponentsImporter {
    */
   async importManyDeltaWithoutDeps({
     ids,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     fromHead = false,
     lane,
     ignoreMissingHead = false,
@@ -321,7 +322,7 @@ export default class ScopeComponentsImporter {
   }): Promise<void> {
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
 
-    if (fromHead) ids = ids.toVersionLatest();
+    ids = ids.toVersionLatest();
     await this.importWithoutDeps(ids, {
       cache: false,
       lane: lane || undefined,
