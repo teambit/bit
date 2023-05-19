@@ -1,7 +1,7 @@
 import { filter } from 'bluebird';
 import { Mutex } from 'async-mutex';
 import mapSeries from 'p-map-series';
-import { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import groupArray from 'group-array';
 import R from 'ramda';
 import { compact, flatten, partition, uniq } from 'lodash';
@@ -270,17 +270,31 @@ export default class ScopeComponentsImporter {
   async importWithoutDeps(
     ids: BitIds,
     {
-      cache = true, // if cache is true and the component found locally, don't go to the remote
+      cache = true,
       lane,
       includeVersionHistory = false,
       ignoreMissingHead = false,
       collectParents = false,
+      fetchHeadIfLocalIsBehind = false,
     }: {
+      /**
+       * if cache is true and the component found locally, don't go to the remote
+       */
       cache?: boolean;
       lane?: Lane;
       includeVersionHistory?: boolean;
+      /**
+       * relevant when fetching from main and we're not sure whether the component exists on main
+       */
       ignoreMissingHead?: boolean;
+      /**
+       * fetch all history of the component (all previous Version objects)
+       */
       collectParents?: boolean;
+      /**
+       * go to the remote, check what’s the head. if the local head is behind, then fetch it, otherwise, return nothing
+       */
+      fetchHeadIfLocalIsBehind?: boolean;
     }
   ): Promise<void> {
     const idsWithoutNils = compact(ids);
@@ -288,13 +302,38 @@ export default class ScopeComponentsImporter {
     logger.debug(`importWithoutDeps, total ids: ${ids.length}`);
 
     const [, externals] = partition(idsWithoutNils, (id) => id.isLocal(this.scope.name));
+    if (!externals.length) return;
 
-    await this.getExternalManyWithoutDeps(externals, {
+    let idsForDelta: BitId[] = [];
+    if (fetchHeadIfLocalIsBehind) {
+      const compDef = await this.sources.getMany(BitIds.fromArray(externals).toVersionLatest(), true);
+      idsForDelta = await mapSeries(compDef, async ({ id, component }) => {
+        if (!component) {
+          return id.changeVersion(undefined);
+        }
+        const remoteLaneId = lane ? lane.toLaneId() : LaneId.from(DEFAULT_LANE, id.scope as string);
+        const remoteHead = await this.repo.remoteLanes.getRef(remoteLaneId, id);
+        if (!remoteHead) {
+          return id.changeVersion(undefined);
+        }
+        const remoteHeadExists = await this.repo.has(remoteHead);
+        if (!remoteHeadExists) {
+          logger.warn(
+            `remote-ref exists for ${id.toString()}, lane ${remoteLaneId.toString()}, but the object is missing on the fs`
+          );
+          return id.changeVersion(undefined);
+        }
+        return id.changeVersion(remoteHead.toString());
+      });
+    }
+
+    await this.getExternalManyWithoutDeps(idsForDelta || externals, {
       localFetch: cache,
       lane,
       includeVersionHistory,
       ignoreMissingHead,
       collectParents,
+      delta: fetchHeadIfLocalIsBehind,
     });
   }
 
@@ -329,6 +368,7 @@ export default class ScopeComponentsImporter {
       includeVersionHistory: true,
       collectParents,
       ignoreMissingHead,
+      fetchHeadIfLocalIsBehind: !fromHead,
     });
   }
 
@@ -734,12 +774,14 @@ export default class ScopeComponentsImporter {
       includeVersionHistory = false,
       ignoreMissingHead = false,
       collectParents = false,
+      delta = false,
     }: {
       localFetch?: boolean;
       lane?: Lane;
       includeVersionHistory?: boolean;
       ignoreMissingHead?: boolean;
       collectParents?: boolean;
+      delta?: boolean;
     }
   ): Promise<void> {
     if (!ids.length) return;
@@ -763,6 +805,7 @@ export default class ScopeComponentsImporter {
       this.scope,
       remotes,
       {
+        type: delta ? 'component-delta' : 'component',
         includeVersionHistory,
         ignoreMissingHead,
         laneId: lane ? lane.id() : undefined,
