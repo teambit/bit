@@ -86,6 +86,7 @@ function readAllDependenciesFromPolicyObject(
   context: Pick<CurrentPkg, 'source' | 'componentId' | 'variantPattern'>,
   policy: VariantPolicyConfigObject
 ): CurrentPkg[] {
+  if (!policy) return [];
   const pkgs: CurrentPkg[] = [];
   for (const targetField of [
     'dependencies',
