@@ -89,7 +89,6 @@ export function CodeView({
         { token: 'attribute.value', foreground: 'ce9178' },
         { token: 'delimiter.bracket', foreground: 'd7ba7d' },
         { token: 'jsx.attribute.value', foreground: 'ce9178' },
-        { token: 'tag.name', foreground: '569cd6' },
       ],
 
       colors: {
