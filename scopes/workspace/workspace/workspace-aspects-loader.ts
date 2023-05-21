@@ -784,7 +784,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     // If the component has env.jsonc we want to list it to be loaded from the root folder
     // even if it's not there yet
     // in that case we will fail to load it, and the user will need to run bit install
-    if (this.dependencyResolver.hasEnvManifest(component)) {
+    if (this.envs.hasEnvManifest(component)) {
       return true;
     }
     return false;
