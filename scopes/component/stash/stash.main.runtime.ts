@@ -1,4 +1,5 @@
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import { Component, ComponentID } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -12,7 +13,7 @@ import { StashFiles } from './stash-files';
 
 export class StashMain {
   private stashFiles: StashFiles;
-  constructor(private workspace: Workspace, private checkout: CheckoutMain) {
+  constructor(private workspace: Workspace, private checkout: CheckoutMain, private snapping: SnappingMain) {
     this.stashFiles = new StashFiles(workspace.scope.path);
   }
 
@@ -34,6 +35,8 @@ export class StashMain {
     if (!modifiedComps.length) return [];
 
     // per comp: create Version object, save it in the local scope and return the hash. don't save anything in the .bitmap
+    const consumeComponents = modifiedComps.map((comp) => comp.state._consumer);
+    await this.snapping._addFlattenedDependenciesToComponents(consumeComponents);
     const hashPerId = await Promise.all(
       modifiedComps.map(async (comp) => {
         const versionObj = await this.addComponentDataToRepo(comp);
@@ -89,10 +92,10 @@ export class StashMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, CheckoutAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, CheckoutAspect, SnappingAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, checkout]: [CLIMain, Workspace, CheckoutMain]) {
-    const stashMain = new StashMain(workspace, checkout);
+  static async provider([cli, workspace, checkout, snapping]: [CLIMain, Workspace, CheckoutMain, SnappingMain]) {
+    const stashMain = new StashMain(workspace, checkout, snapping);
     const stashCmd = new StashCmd(stashMain);
     stashCmd.commands = [new StashSaveCmd(stashMain), new StashLoadCmd(stashMain)];
     cli.register(stashCmd);
