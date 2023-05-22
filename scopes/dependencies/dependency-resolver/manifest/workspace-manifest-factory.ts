@@ -166,7 +166,8 @@ export class WorkspaceManifestFactory {
         return (
           runtimeMissings.includes(rootPackageName) &&
           !depManifest.dependencies[rootPackageName] &&
-          !depManifest.devDependencies[rootPackageName]
+          !depManifest.devDependencies[rootPackageName] &&
+          !depManifest.peerDependencies[rootPackageName]
         );
       });
       // Only add missing root deps that are not already in the component manifest
@@ -174,7 +175,8 @@ export class WorkspaceManifestFactory {
         return (
           devMissings.includes(rootPackageName) &&
           !depManifest.dependencies[rootPackageName] &&
-          !depManifest.devDependencies[rootPackageName]
+          !depManifest.devDependencies[rootPackageName] &&
+          !depManifest.peerDependencies[rootPackageName]
         );
       });
       depManifest.dependencies = {
