@@ -304,10 +304,12 @@ export default class ScopeComponentsImporter {
     const [, externals] = partition(idsWithoutNils, (id) => id.isLocal(this.scope.name));
     if (!externals.length) return;
 
-    let idsForDelta: BitId[] = [];
-    if (fetchHeadIfLocalIsBehind) {
+    const getIds = async () => {
+      if (!fetchHeadIfLocalIsBehind) {
+        return externals;
+      }
       const compDef = await this.sources.getMany(BitIds.fromArray(externals).toVersionLatest(), true);
-      idsForDelta = await mapSeries(compDef, async ({ id, component }) => {
+      const idsForDelta = await mapSeries(compDef, async ({ id, component }) => {
         if (!component) {
           return id.changeVersion(undefined);
         }
@@ -325,9 +327,12 @@ export default class ScopeComponentsImporter {
         }
         return id.changeVersion(remoteHead.toString());
       });
-    }
+      return idsForDelta;
+    };
 
-    await this.getExternalManyWithoutDeps(idsForDelta || externals, {
+    const idsToFetch = await getIds();
+
+    await this.getExternalManyWithoutDeps(idsToFetch, {
       localFetch: cache,
       lane,
       includeVersionHistory,
