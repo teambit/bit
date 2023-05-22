@@ -449,6 +449,10 @@ export class EnvsMain {
       ? ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion()
       : undefined;
 
+    if (envIdFromEnvsConfig && this.isCoreEnv(envIdFromEnvsConfig)) {
+      return ComponentID.fromString(envIdFromEnvsConfig);
+    }
+
     // in some cases we have the id configured in the teambit.envs/envs but without the version
     // in such cases we won't find it in the slot
     // we search in the component aspect list a matching aspect which is match the id from the teambit.envs/envs
@@ -612,6 +616,10 @@ export class EnvsMain {
       ? ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion()
       : undefined;
 
+    if (envIdFromEnvsConfig && this.isCoreEnv(envIdFromEnvsConfig)) {
+      return envIdFromEnvsConfig;
+    }
+
     // in some cases we have the id configured in the teambit.envs/envs but without the version
     // in such cases we won't find it in the slot
     // we search in the component aspect list a matching aspect which is match the id from the teambit.envs/envs
@@ -760,6 +768,11 @@ export class EnvsMain {
     const host = this.componentMain.getHost();
     const newId = await host.resolveComponentId(id);
     return this.getEnvDefinitionById(newId);
+  }
+
+  public isRegisteredEnv(envId: string): boolean {
+    const env = this.envSlot.get(envId);
+    return !!env;
   }
 
   public getEnvDefinitionByStringId(envId: string): EnvDefinition | undefined {
