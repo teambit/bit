@@ -639,7 +639,9 @@ export class DependencyResolverMain {
       return this.getModulePath(component);
     }
     const envId = this.envs.getEnvId(component);
-    return join(getRelativeRootComponentDir(envId), 'node_modules', pkgName);
+    const dirInEnvRoot = join(getRelativeRootComponentDir(envId), 'node_modules', pkgName);
+    if (fs.pathExistsSync(dirInEnvRoot)) return dirInEnvRoot;
+    return this.getModulePath(component);
   }
 
   /**
