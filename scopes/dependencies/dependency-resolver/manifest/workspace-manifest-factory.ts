@@ -150,6 +150,8 @@ export class WorkspaceManifestFactory {
           }
         }
       }
+      const depManifestBeforeFiltering = depList.toDependenciesManifest();
+
       if (filterComponentsFromManifests ?? true) {
         depList = filterComponents(depList, components);
       }
@@ -162,21 +164,26 @@ export class WorkspaceManifestFactory {
       const depManifest = depList.toDependenciesManifest();
       const { devMissings, runtimeMissings } = await getMissingPackages(component);
       // Only add missing root deps that are not already in the component manifest
+      // We are using depManifestBeforeFiltering to support (rare) cases when a dependency is both:
+      // a component in the workspace (bitmap) and a dependency in the workspace.jsonc / package.json
+      // this happens for the bit repo itself for the @teambit/component-version component
+      // in this case we don't want to add that to the manifest when it's missing, because it will be linked from the
+      // workspace
       const unresolvedRuntimeMissingRootDeps = pickBy(rootDependencies, (_version, rootPackageName) => {
         return (
           runtimeMissings.includes(rootPackageName) &&
-          !depManifest.dependencies[rootPackageName] &&
-          !depManifest.devDependencies[rootPackageName] &&
-          !depManifest.peerDependencies[rootPackageName]
+          !depManifestBeforeFiltering.dependencies[rootPackageName] &&
+          !depManifestBeforeFiltering.devDependencies[rootPackageName] &&
+          !depManifestBeforeFiltering.peerDependencies[rootPackageName]
         );
       });
       // Only add missing root deps that are not already in the component manifest
       const unresolvedDevMissingRootDeps = pickBy(rootDependencies, (_version, rootPackageName) => {
         return (
           devMissings.includes(rootPackageName) &&
-          !depManifest.dependencies[rootPackageName] &&
-          !depManifest.devDependencies[rootPackageName] &&
-          !depManifest.peerDependencies[rootPackageName]
+          !depManifestBeforeFiltering.dependencies[rootPackageName] &&
+          !depManifestBeforeFiltering.devDependencies[rootPackageName] &&
+          !depManifestBeforeFiltering.peerDependencies[rootPackageName]
         );
       });
       depManifest.dependencies = {
