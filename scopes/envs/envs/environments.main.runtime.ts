@@ -4,6 +4,9 @@ import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain, ComponentID } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import IssuesAspect, { IssuesMain } from '@teambit/issues';
+import pMapSeries from 'p-map-series';
+import { IssuesClasses } from '@teambit/component-issues';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import type { AspectDefinition } from '@teambit/aspect-loader';
@@ -872,6 +875,15 @@ export class EnvsMain {
     return this.envSlot.register(env);
   }
 
+  async addNonLoadedEnvAsComponentIssues(components: Component[]) {
+    await pMapSeries(components, async (component) => {
+      const envId = (await this.calculateEnvId(component)).toString();
+      if (!this.isEnvRegistered(envId)) {
+        component.state.issues.getOrCreate(IssuesClasses.NonLoadedEnv).data = envId;
+      }
+    });
+  }
+
   // refactor here
   private async createRuntime(components: Component[]): Promise<Runtime> {
     return new Runtime(await this.aggregateByDefs(components), this.logger);
@@ -927,10 +939,17 @@ export class EnvsMain {
 
   static slots = [Slot.withType<Environment>(), Slot.withType<EnvService<any>>()];
 
-  static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect, CLIAspect, WorkerAspect];
+  static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect, CLIAspect, WorkerAspect, IssuesAspect];
 
   static async provider(
-    [graphql, loggerAspect, component, cli, worker]: [GraphqlMain, LoggerMain, ComponentMain, CLIMain, WorkerMain],
+    [graphql, loggerAspect, component, cli, worker, issues]: [
+      GraphqlMain,
+      LoggerMain,
+      ComponentMain,
+      CLIMain,
+      WorkerMain,
+      IssuesMain
+    ],
     config: EnvsConfig,
     [envSlot, servicesRegistry]: [EnvsRegistry, ServicesRegistry],
     context: Harmony
@@ -938,6 +957,8 @@ export class EnvsMain {
     const logger = loggerAspect.createLogger(EnvsAspect.id);
     const envs = new EnvsMain(config, context, envSlot, logger, servicesRegistry, component, loggerAspect, worker);
     component.registerShowFragments([new EnvFragment(envs)]);
+    issues.registerAddComponentsIssues(envs.addNonLoadedEnvAsComponentIssues.bind(envs));
+
     const envsCmd = new EnvsCmd(envs, component);
     envsCmd.commands = [new ListEnvsCmd(envs, component), new GetEnvCmd(envs, component)];
     cli.register(envsCmd);
