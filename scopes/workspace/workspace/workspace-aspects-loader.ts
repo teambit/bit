@@ -293,7 +293,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     );
 
     const workspaceCompsIds = workspaceComps.map((c) => c.id);
-    const nonWorkspaceCompsIds = workspaceComps.map((c) => c.id);
+    const nonWorkspaceCompsIds = nonWorkspaceComps.map((c) => c.id);
     this.logFoundWorkspaceVsScope(loggerPrefix, workspaceCompsIds, nonWorkspaceCompsIds);
 
     const stringIds: string[] = [];
