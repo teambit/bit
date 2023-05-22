@@ -14,7 +14,7 @@ import { StashFiles } from './stash-files';
 export class StashMain {
   private stashFiles: StashFiles;
   constructor(private workspace: Workspace, private checkout: CheckoutMain, private snapping: SnappingMain) {
-    this.stashFiles = new StashFiles(workspace.scope.path);
+    this.stashFiles = new StashFiles(workspace);
   }
 
   async save(options: { message?: string; pattern?: string }): Promise<ComponentID[]> {

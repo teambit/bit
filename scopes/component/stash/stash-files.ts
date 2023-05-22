@@ -8,10 +8,10 @@ const STASH_DIR = 'stash';
 const STASH_FILE_PREFIX = 'stash';
 
 export class StashFiles {
-  constructor(private scopePath: string) {}
+  constructor(private workspace: Workspace) {}
 
   getPath() {
-    return path.join(this.scopePath, STASH_DIR);
+    return path.join(this.workspace.scope.path, STASH_DIR);
   }
 
   async getStashFiles(): Promise<string[]> {
@@ -43,11 +43,11 @@ export class StashFiles {
     await fs.outputFile(filePath, JSON.stringify(stashData.toObject(), undefined, 4));
   }
 
-  async getStashData(filename: string, workspace: Workspace): Promise<StashData> {
+  async getStashData(filename: string): Promise<StashData> {
     const stashPath = this.getPath();
     const filePath = path.join(stashPath, filename);
     const content = await fs.readFile(filePath, 'utf8');
     const data = JSON.parse(content);
-    return StashData.fromObject(data, workspace);
+    return StashData.fromObject(data, this.workspace);
   }
 }
