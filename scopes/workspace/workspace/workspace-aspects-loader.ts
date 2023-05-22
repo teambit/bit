@@ -284,11 +284,15 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       return finalDefs;
     }
 
-    const graph = await this.getAspectsGraphWithoutCore(components, this.isAspect.bind(this));
-    const aspects = graph.nodes.map((node) => node.attr);
-    this.logger.debug(`${loggerPrefix} found ${aspects.length} aspects in the aspects-graph`);
+    const groupedByIsPlugin = groupBy(components, (component) => {
+      return this.aspectLoader.hasPluginFiles(component);
+    });
+
+    const graph = await this.getAspectsGraphWithoutCore(groupedByIsPlugin.false, this.isAspect.bind(this));
+    const aspectsComponents = graph.nodes.map((node) => node.attr).concat(groupedByIsPlugin.true);
+    this.logger.debug(`${loggerPrefix} found ${aspectsComponents.length} aspects in the aspects-graph`);
     const { workspaceComps, nonWorkspaceComps } = await this.groupComponentsByWorkspaceExistence(
-      aspects,
+      aspectsComponents,
       mergedOpts.resolveEnvsFromRoots
     );
 
@@ -625,13 +629,10 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
    * @returns
    */
   private async getAspectsGraphWithoutCore(
-    components: Component[],
+    components: Component[] = [],
     isAspect?: ShouldLoadFunc
   ): Promise<Graph<Component, string>> {
-    const nonPluginComponents = components.filter((component) => {
-      return !this.aspectLoader.hasPluginFiles(component);
-    });
-    const ids = nonPluginComponents.map((component) => component.id);
+    const ids = components.map((component) => component.id);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
     // const coreAspectsComponentIds = coreAspectsStringIds.map((id) => BitId.parse(id, true));
