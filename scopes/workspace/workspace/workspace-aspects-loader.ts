@@ -628,7 +628,10 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     components: Component[],
     isAspect?: ShouldLoadFunc
   ): Promise<Graph<Component, string>> {
-    const ids = components.map((component) => component.id);
+    const nonPluginComponents = components.filter((component) => {
+      return !this.aspectLoader.hasPluginFiles(component);
+    });
+    const ids = nonPluginComponents.map((component) => component.id);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
     // const coreAspectsComponentIds = coreAspectsStringIds.map((id) => BitId.parse(id, true));

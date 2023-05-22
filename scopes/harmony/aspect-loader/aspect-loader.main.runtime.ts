@@ -15,7 +15,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { loadBit } from '@teambit/bit';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
-import { difference, compact, flatten, intersection, uniqBy, some } from 'lodash';
+import { difference, compact, flatten, intersection, uniqBy, some, isEmpty } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
@@ -489,6 +489,12 @@ export class AspectLoaderMain {
   getPluginFiles(component: Component, componentPath: string): string[] {
     const defs = this.getPluginDefs();
     return Plugins.files(component, defs, this.pluginFileResolver.call(this, component, componentPath));
+  }
+
+  hasPluginFiles(component: Component): boolean {
+    const defs = this.getPluginDefs();
+    const files = Plugins.files(component, defs);
+    return !isEmpty(files);
   }
 
   pluginFileResolver(component: Component, rootDir: string) {
