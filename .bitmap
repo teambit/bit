@@ -1179,6 +1179,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/snapping"
     },
+    "stash": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/stash"
+    },
     "status": {
         "scope": "teambit.component",
         "version": "0.0.374",

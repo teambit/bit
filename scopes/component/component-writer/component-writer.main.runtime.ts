@@ -26,6 +26,7 @@ export interface ManyComponentsWriterParams {
   verbose?: boolean;
   resetConfig?: boolean;
   skipWritingToFs?: boolean;
+  skipUpdatingBitMap?: boolean;
 }
 
 export type ComponentWriterResults = { installationError?: Error; compilationError?: Error };
@@ -48,7 +49,7 @@ export class ComponentWriterMain {
     await this.populateComponentsFilesToWrite(opts);
     this.moveComponentsIfNeeded(opts);
     await this.persistComponentsData(opts);
-    await this.consumer.writeBitMap();
+    if (!opts.skipUpdatingBitMap) await this.consumer.writeBitMap();
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     if (!opts.skipDependencyInstallation) {
@@ -185,6 +186,7 @@ export class ComponentWriterMain {
       component,
       writeToPath: componentRootDir,
       writeConfig: opts.writeConfig,
+      skipUpdatingBitMap: opts.skipUpdatingBitMap,
       ...getParams(),
     };
   }

@@ -100,6 +100,7 @@ import { ComponentWriterAspect } from '@teambit/component-writer';
 import { TrackerAspect } from '@teambit/tracker';
 import { MoverAspect } from '@teambit/mover';
 import { WatcherAspect } from '@teambit/watcher';
+import { StashAspect } from '@teambit/stash';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -204,6 +205,7 @@ export const manifestsMap = {
   [TrackerAspect.id]: TrackerAspect,
   [MoverAspect.id]: MoverAspect,
   [WatcherAspect.id]: WatcherAspect,
+  [StashAspect.id]: StashAspect,
 };
 
 export function isCoreAspect(id: string) {

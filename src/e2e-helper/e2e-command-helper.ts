@@ -516,6 +516,14 @@ export default class CommandHelper {
     return JSON.parse(status);
   }
 
+  stash() {
+    return this.runCmd('bit stash');
+  }
+
+  stashLoad() {
+    return this.runCmd('bit stash load');
+  }
+
   isDeprecated(compName: string): boolean {
     const deprecationData = this.showAspectConfig(compName, Extensions.deprecation);
     return deprecationData.config.deprecate;
