@@ -287,9 +287,8 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const groupedByIsPlugin = groupBy(components, (component) => {
       return this.aspectLoader.hasPluginFiles(component);
     });
-
     const graph = await this.getAspectsGraphWithoutCore(groupedByIsPlugin.false, this.isAspect.bind(this));
-    const aspectsComponents = graph.nodes.map((node) => node.attr).concat(groupedByIsPlugin.true);
+    const aspectsComponents = graph.nodes.map((node) => node.attr).concat(groupedByIsPlugin.true || []);
     this.logger.debug(`${loggerPrefix} found ${aspectsComponents.length} aspects in the aspects-graph`);
     const { workspaceComps, nonWorkspaceComps } = await this.groupComponentsByWorkspaceExistence(
       aspectsComponents,
