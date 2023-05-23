@@ -523,6 +523,13 @@ export class UiMain {
     });
     return sha1(aspectPathStrings.join(''));
   }
+  /**
+   * Generate hash for a given root
+   * This API is public and used by external users, do not rename this function
+   */
+  async buildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
+    return this.createBuildUiHash(uiRoot, runtime);
+  }
 
   async createBundleUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
     const aspects = await uiRoot.resolveAspects(runtime);
