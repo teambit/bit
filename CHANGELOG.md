@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [[0.1.48] - 2023-05-21](https://github.com/teambit/bit/releases/tag/v0.1.48)
+
+### New Features
+
+- Better handking of missing dependencies (use `bit install --add-missing-deps` to automatically install missing dependencies) (#7412, #7264)
+-`bit insight --include-deps`  shows circular dependencies of extenral dependnecies (i.e, dependencies not maintained  in the same workspace) (#7407)
+- Ignore the builds of specific dependencies. The "preinstall", "install", and "postinstall" scripts of the listed packages will not be executed during installation.
+For example `{ "@teambit.dependencies/dependency-resolver": {  "neverBuiltDependencies": ["fsevents", "level"]}}` (#7387)
+
+### Changes
+
+- `bit merge` without component IDs merges all components (#7427)
+- Improved dev ex. Ignore component versions when using patterns for better pattern matching (#7416)
+- Components in a lane can created usingt the same component name of a previously soft-removed component (requires a different scope) (#7413)
+- Remove lane-id from .bitmap when running bit init with `--reset-lane-new` flag. This is helpful when you want the source file changes but not the lane these changes are part of. (#7408)
+- When merging lanes exclude components that were soft-removed from the lane (#7402)
+- Improve `bit statu` message from "snapped components" to "snapped components (tag pending)" (#7403)
+
+### Bug Fixes
+
+- `bit artifacts COMPONENT_PATTERN` supports using component to retrieve artifacts of staged componetns (#7423)
+- Fetch and save original lane when --lanes was used (#7425)
+-  Output fix. Remove suggestion for tag [version] which is not supported anymore (#7424)
+- Fix error message when soft-remove from a new lane to suggest the new flag --delete (#7420)
+- Fix error "Cannot read properties of undefined when poilicies are missing (#7431)
+- Remove dists and symlinks from node_modules/component-package-dir upon file removal. This makes sure removed components are not available for consumption. (#7411)
+
+
+### Internal
+
+-  Repeat the warning message when a scope is not responsive (#7426)
+- Update pnpm (#7421)
+- Write original pnpm error to debug.log (#7418)
+- Change import methods to work with one lane instead of an array (#7414)
+- Introduce "--pattern" to import part of a lane (#7410)
+- Make webpack config mutators types more relaxed (#7409)
+- node_modules linking is done by the package manager (#7176)
+
 ## [[0.1.42] - 2023-05-14](https://github.com/teambit/bit/releases/tag/v0.1.42)
 
 ### New Features
