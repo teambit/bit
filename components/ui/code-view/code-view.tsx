@@ -49,17 +49,21 @@ export function CodeView({
     !!currentFileContent
   );
 
+  const loading = loadingFromProps || loadingFileContent;
+  const fileContent = currentFileContent || downloadedFileContent;
+  const title = useMemo(() => currentFile?.split('/').pop(), [currentFile]);
+  const language = useMemo(() => {
+    if (!currentFile) return languageOverrides.ts;
+    const fileEnding = currentFile?.split('.').pop();
+    return languageOverrides[fileEnding || ''] || fileEnding;
+  }, [currentFile]);
+
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     /**
      * disable syntax check
      * ts cant validate all types because imported files aren't available to the editor
      */
     monacoRef.current = { monaco, editor };
-
-    // monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-    //   noSemanticValidation: true,
-    //   noSyntaxValidation: true,
-    // });
 
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
       target: monaco.languages.typescript.ScriptTarget.Latest,
@@ -74,7 +78,7 @@ export function CodeView({
       esModuleInterop: true,
     });
 
-    setupLanguage(monaco, 'typescript').catch(() => {});
+    setupLanguage(monaco, language).catch(() => {});
 
     monaco.editor.defineTheme('bit', {
       base: 'vs-dark',
@@ -103,16 +107,6 @@ export function CodeView({
 
     monaco.editor.setTheme('bit');
   };
-
-  const loading = loadingFromProps || loadingFileContent;
-  const fileContent = currentFileContent || downloadedFileContent;
-  const title = useMemo(() => currentFile?.split('/').pop(), [currentFile]);
-  const language = useMemo(() => {
-    if (!currentFile) return languageOverrides.ts;
-    const fileEnding = currentFile?.split('.').pop();
-    return languageOverrides[fileEnding || ''] || fileEnding;
-  }, [currentFile]);
-
   const codeEditor = useMemo(
     () => (
       <CodeEditor

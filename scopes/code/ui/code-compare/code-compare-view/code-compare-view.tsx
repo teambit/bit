@@ -242,7 +242,7 @@ export function CodeCompareView({
 
     if (containerElement) {
       resizeObserver = new ResizeObserver(() => {
-        updateEditorHeight();
+        setTimeout(() => updateEditorHeight());
       });
       resizeObserver.observe(containerElement);
     }

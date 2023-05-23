@@ -39,7 +39,7 @@ export const customTokenizer: monaco.languages.IMonarchLanguage = {
         /([A-Za-z_$][A-Za-z$]*)(?=[\s\n]*[/>]|[\s\n]*)/,
         { cases: { '[A-Z$][\\w$]*': 'tag.custom', '@default': 'tag.dom' } },
       ],
-      [/([A-Za-z_$][A-Za-z$]*)(?=[\s\n]*=)/, 'attribute.key'], // 2
+      [/([A-Za-z_$][A-Za-z$]*)(?=[\s\n]*=)/, 'attribute.key'],
       [/\/>/, { token: 'delimiter.angle', next: '@pop' }],
       [/>/, { token: 'delimiter.angle', next: '@pop' }],
       [/=/, 'delimiter'],
@@ -62,6 +62,7 @@ export const customTokenizer: monaco.languages.IMonarchLanguage = {
     jsxAttributeValue: [
       [/{/, { token: 'delimiter.bracket', next: '@nestedJsxAttributeValue' }],
       [/}/, { token: 'delimiter.bracket', next: '@pop' }],
+      [/<(?=[A-Za-z])/, { token: 'delimiter.angle', next: '@tag' }],
       [/(\w+)(?=[\s\n]*=)/, 'attribute.key'],
       [/[^{}]+/, 'attribute.key'],
     ],
