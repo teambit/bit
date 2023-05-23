@@ -1,3 +1,4 @@
+import { isCoreAspect } from '@teambit/bit';
 import pLocate from 'p-locate';
 import { parse } from 'comment-json';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
@@ -734,6 +735,8 @@ export class EnvsMain {
    */
   private async findFirstEnv(ids: string[]): Promise<string | undefined> {
     const envId = await pLocate(ids, async (id) => {
+      if (this.isCoreEnv(id)) return true;
+      if (isCoreAspect(id)) return false;
       const envDef = this.getEnvDefinitionByStringId(id);
       if (envDef) return true;
       const envComponent = await this.getEnvComponentByEnvId(id);
