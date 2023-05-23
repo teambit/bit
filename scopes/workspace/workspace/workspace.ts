@@ -617,6 +617,7 @@ export class Workspace implements ComponentFactory {
 
   clearCache() {
     this.aspectLoader.resetFailedLoadAspects();
+    this.envs.resetFailedToLoadEnvs();
     this.logger.debug('clearing the workspace and scope caches');
     delete this._cachedListIds;
     this.componentLoader.clearCache();

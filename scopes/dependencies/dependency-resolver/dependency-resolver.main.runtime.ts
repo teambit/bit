@@ -367,6 +367,12 @@ export class DependencyResolverMain {
   ) {}
 
   /**
+   * Save list of envs that doesn't contains env.jsonc file
+   * this is used to show warning / instuctions to the user
+   */
+  public envsWithoutManifest = new Set<string>();
+
+  /**
    * This function is a temporary workaround for installation in capsules with pnpm.
    * Currently pnpm breaks the root node_modules inside the capsule because it removes deps from it.
    * Install runs several times in the same capsule and pnpm removes deps from the previous runs.
@@ -1110,6 +1116,7 @@ export class DependencyResolverMain {
     }
     const fromFile = await this.getEnvPolicyFromFile(envId.toString());
     if (fromFile) return fromFile;
+    this.envsWithoutManifest.add(envId.toString());
     const env = this.envs.getEnv(component).env;
     return this.getComponentEnvPolicyFromEnv(env);
   }

@@ -7,7 +7,6 @@ import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
 import { compact, mapValues, omit, uniq, pick } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
-import { BitError } from '@teambit/bit-error';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
 import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
@@ -70,6 +69,7 @@ export type WorkspaceInstallOptions = {
   compile?: boolean;
   includeOptionalDeps?: boolean;
   updateAll?: boolean;
+  recurringInstall?: boolean;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -225,6 +225,7 @@ export class InstallMain {
         addMissingDeps: options?.addMissingDeps,
       }
     );
+
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
       includeOptionalDeps: options?.includeOptionalDeps,
@@ -278,6 +279,9 @@ export class InstallMain {
       }
       await this.linkCodemods(compDirMap);
       if (!dependenciesChanged) break;
+      if (!options?.recurringInstall) break;
+      const oldNonLoadedEnvs = this.getOldNonLoadedEnvs();
+      if (!oldNonLoadedEnvs.length) break;
       prevManifests.add(manifestsHash(current.manifests));
       // We need to clear cache before creating the new component manifests.
       this.workspace.consumer.componentLoader.clearComponentsCache();
@@ -389,6 +393,25 @@ export class InstallMain {
       componentDirectoryMap,
       manifests,
     };
+  }
+
+  /**
+   * This function returns a list of old non-loaded environments names.
+   * @returns an array of strings called `oldNonLoadedEnvs`. This array contains the names of environment variables that
+   * failed to load as extensions and are also don't have an env.jsonc file.
+   * If this list is not empty, then the user might need to run another install to make sure all dependencies resolved
+   * correctly
+   */
+  public getOldNonLoadedEnvs() {
+    const oldNonLoadedEnvs: string[] = [];
+
+    for (const string of this.envs.failedToLoadEnvs) {
+      if (this.dependencyResolver.envsWithoutManifest.has(string)) {
+        oldNonLoadedEnvs.push(string);
+      }
+    }
+
+    return oldNonLoadedEnvs;
   }
 
   private async _updateRootDirs(rootDirs: string[]) {

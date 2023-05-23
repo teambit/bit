@@ -74,7 +74,7 @@ export type Descriptor = RegularCompDescriptor | EnvCompDescriptor;
 export const DEFAULT_ENV = 'teambit.harmony/node';
 
 export class EnvsMain {
-  private failedToLoadExt = new Set<string>();
+  public failedToLoadEnvs = new Set<string>();
 
   static runtime = MainRuntime;
 
@@ -133,10 +133,14 @@ export class EnvsMain {
    * Then it is used to hide different errors that are caused by the same issue.
    * @param {string} id - string - represents the unique identifier of an extension that failed to load.
    */
-  addFailedToLoadExtension(id: string) {
-    if (!this.failedToLoadExt.has(id)) {
-      this.failedToLoadExt.add(id);
+  addFailedToLoadEnvs(id: string) {
+    if (!this.failedToLoadEnvs.has(id)) {
+      this.failedToLoadEnvs.add(id);
     }
+  }
+
+  resetFailedToLoadEnvs() {
+    this.failedToLoadEnvs.clear();
   }
 
   /**
@@ -795,9 +799,10 @@ export class EnvsMain {
   }
 
   private printWarningIfFirstTime(envId: string, message: string) {
-    if (!this.alreadyShownWarning[envId] && !this.failedToLoadExt.has(envId)) {
+    if (!this.alreadyShownWarning[envId] && !this.failedToLoadEnvs.has(envId)) {
       this.alreadyShownWarning[envId] = true;
       this.logger.consoleWarning(message);
+      this.addFailedToLoadEnvs(envId);
     }
   }
 
@@ -874,6 +879,7 @@ export class EnvsMain {
     await pMapSeries(components, async (component) => {
       const envId = (await this.calculateEnvId(component)).toString();
       if (!this.isEnvRegistered(envId)) {
+        this.addFailedToLoadEnvs(envId);
         component.state.issues.getOrCreate(IssuesClasses.NonLoadedEnv).data = envId;
       }
     });

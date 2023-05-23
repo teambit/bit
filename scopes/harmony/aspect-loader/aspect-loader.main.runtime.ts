@@ -675,11 +675,11 @@ export class AspectLoaderMain {
         if (!needToPrint) return;
         ids.forEach((id) => {
           this.failedToLoadExt.add(id);
-          this.envs.addFailedToLoadExtension(id);
+          this.envs.addFailedToLoadEnvs(id);
           const parsedId = ComponentID.tryFromString(id);
           if (parsedId) {
             this.failedToLoadExt.add(parsedId.fullName);
-            this.envs.addFailedToLoadExtension(parsedId.fullName);
+            this.envs.addFailedToLoadEnvs(parsedId.fullName);
           }
         });
       }

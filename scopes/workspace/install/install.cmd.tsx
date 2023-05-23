@@ -18,7 +18,18 @@ type InstallCmdOptions = {
   addMissingDeps: boolean;
   addMissingPeers: boolean;
   noOptional: boolean;
+  recurringInstall: boolean;
 };
+
+type FormatOutputArgs = {
+  numOfComps: string;
+  startTime: number;
+  endTime: number;
+  oldNonLoadedEnvs: string[];
+  recurringInstall: boolean;
+};
+
+const recurringInstallFlagName = 'recurring-install';
 
 export default class InstallCmd implements Command {
   name = 'install [packages...]';
@@ -44,6 +55,11 @@ export default class InstallCmd implements Command {
     ['', 'skip-compile [skipCompile]', 'do not compile components'],
     ['', 'add-missing-deps [addMissingDeps]', 'install all missing dependencies'],
     ['', 'add-missing-peers [addMissingPeers]', 'install all missing peer dependencies'],
+    [
+      '',
+      recurringInstallFlagName,
+      'automatically run install again if there are non loaded old envs in your workspace',
+    ],
     ['', 'no-optional [noOptional]', 'do not install optional dependencies (works with pnpm only)'],
   ] as CommandOptions;
 
@@ -84,17 +100,60 @@ export default class InstallCmd implements Command {
       compile: !options.skipCompile,
       includeOptionalDeps: !options.noOptional,
       updateAll: options.update,
+      recurringInstall: options.recurringInstall,
     };
     const components = await this.install.install(packages, installOpts);
     const endTime = Date.now();
-    const executionTime = calculateTime(startTime, endTime);
-    return `Successfully installed dependencies and compiled ${chalk.cyan(
-      components.toArray().length.toString()
-    )} component(s) in ${chalk.cyan(executionTime.toString())} seconds`;
+    const oldNonLoadedEnvs = this.install.getOldNonLoadedEnvs();
+    return formatOutput({
+      startTime,
+      endTime,
+      numOfComps: components.toArray().length.toString(),
+      recurringInstall: options[recurringInstallFlagName],
+      oldNonLoadedEnvs,
+    });
   }
 }
 
 function calculateTime(startTime: number, endTime: number) {
   const diff = endTime - startTime;
   return diff / 1000;
+}
+
+function formatOutput({
+  numOfComps,
+  endTime,
+  startTime,
+  recurringInstall,
+  oldNonLoadedEnvs,
+}: FormatOutputArgs): string {
+  const executionTime = calculateTime(startTime, endTime);
+  const summary = chalk.green(
+    `Successfully installed dependencies and compiled ${chalk.cyan(numOfComps)} component(s) in ${chalk.cyan(
+      executionTime.toString()
+    )} seconds`
+  );
+  const anotherInstallRequiredOutput = getAnotherInstallRequiredOutput(recurringInstall, oldNonLoadedEnvs);
+  return anotherInstallRequiredOutput ? `\n${anotherInstallRequiredOutput}\n\n${summary}` : `\n${summary}`;
+}
+
+function getAnotherInstallRequiredOutput(recurringInstall = false, oldNonLoadedEnvs: string[] = []): string {
+  // oldNonLoadedEnvs = ['my-org.my-scope/envs/my-react-env']
+  if (!oldNonLoadedEnvs.length) return '';
+  const oldNonLoadedEnvsStr = oldNonLoadedEnvs.join(', ');
+  const firstPart = `The following environments are not loaded: ${chalk.cyan(
+    oldNonLoadedEnvsStr
+  )} and doesn't contain env.jsonc file`;
+  const docsLink = `Read more about how to fix this issue in:`;
+  const installAgain = `Please run "bit install" again to make sure all dependencies installed correctly`;
+  const flag = chalk.cyan(`--${recurringInstallFlagName}`);
+  const suggestRecurringInstall = `You can add the ${flag} flag to automatically run "bit install" again. but it is recommended to fix this issue`;
+  let msg = `${firstPart}\n${installAgain}\n${suggestRecurringInstall}\n${docsLink}`;
+
+  if (recurringInstall) {
+    const autoInstallAgain =
+      'bit run install again for you to make sure all dependencies installed correctly, but it is recommended to fix this issue';
+    msg = `${firstPart}\n${autoInstallAgain}\n${docsLink}`;
+  }
+  return chalk.yellow(msg);
 }
