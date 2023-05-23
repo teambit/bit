@@ -523,6 +523,7 @@ export class UiMain {
     });
     return sha1(aspectPathStrings.join(''));
   }
+
   /**
    * Generate hash for a given root
    * This API is public and used by external users, do not rename this function
