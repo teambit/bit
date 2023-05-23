@@ -63,7 +63,7 @@ export class StashMain {
     if (!stashFile) {
       throw new BitError('no stashed components found');
     }
-    const stashData = await this.stashFiles.getStashData(stashFile, this.workspace);
+    const stashData = await this.stashFiles.getStashData(stashFile);
     const compIds = stashData.stashCompsData.map((c) => c.id);
     const versionPerId = stashData.stashCompsData.map((c) => c.id.changeVersion(c.hash.toString()));
 
