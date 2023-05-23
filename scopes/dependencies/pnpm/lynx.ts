@@ -166,14 +166,18 @@ export async function install(
     updateAll?: boolean;
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
-    pruneNodeModules?: boolean;
     rootComponents?: boolean;
     rootComponentsForCapsules?: boolean;
     includeOptionalDeps?: boolean;
     hidePackageManagerOutput?: boolean;
   } & Pick<
     InstallOptions,
-    'publicHoistPattern' | 'hoistPattern' | 'nodeVersion' | 'engineStrict' | 'peerDependencyRules'
+    | 'publicHoistPattern'
+    | 'hoistPattern'
+    | 'nodeVersion'
+    | 'engineStrict'
+    | 'peerDependencyRules'
+    | 'neverBuiltDependencies'
   > &
     Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -219,6 +223,8 @@ export async function install(
   const opts: InstallOptions = {
     allProjects,
     autoInstallPeers: false,
+    confirmModulesPurge: false,
+    excludeLinksFromLockfile: true,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
     dir: rootDir,
@@ -226,8 +232,8 @@ export async function install(
     workspacePackages,
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
-    modulesCacheMaxAge: options.pruneNodeModules ? 0 : undefined,
-    neverBuiltDependencies: ['core-js'],
+    modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
+    neverBuiltDependencies: options.neverBuiltDependencies,
     registries: registriesMap,
     resolutionMode: 'highest',
     rawConfig: authConfig,
@@ -262,6 +268,10 @@ export async function install(
         throttleProgress: 200,
       },
       streamParser,
+      // Linked in core aspects are excluded from the output to reduce noise.
+      // Other @teambit/ dependencies will be shown.
+      // Only those that are symlinked from outside the workspace will be hidden.
+      filterPkgsDiff: (diff) => !diff.name.startsWith('@teambit/') || !diff.from,
     });
   }
   let dependenciesChanged = false;
@@ -272,6 +282,9 @@ export async function install(
     dependenciesChanged = stats.added + stats.removed + stats.linkedToRoot > 0;
     delete installsRunning[rootDir];
   } catch (err: any) {
+    if (logger) {
+      logger.warn('got an error from pnpm mutateModules function', err);
+    }
     throw pnpmErrorToBitError(err);
   } finally {
     if (stopReporting) {

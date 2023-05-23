@@ -571,6 +571,7 @@ export default class Consumer {
 
   async resetLaneNew() {
     this.bitMap.resetLaneComponentsToNew();
+    this.bitMap.laneId = undefined;
     await Scope.reset(this.scope.path, true);
   }
 

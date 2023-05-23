@@ -228,7 +228,7 @@ describe('bit checkout command', function () {
     });
     describe('bit checkout head', () => {
       before(() => {
-        helper.command.checkoutHead('comp1 --skip-npm-install');
+        helper.command.checkoutHead('comp1 --skip-dependency-installation');
       });
       it('should leave the file deleted', () => {
         const deletedFile = path.join(helper.scopes.localPath, 'comp1/foo.ts');
@@ -238,7 +238,7 @@ describe('bit checkout command', function () {
     describe('bit checkout reset', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeCheckout);
-        helper.command.checkoutReset('comp1 --skip-npm-install');
+        helper.command.checkoutReset('comp1 --skip-dependency-installation');
       });
       it('should re-create the file', () => {
         const deletedFile = path.join(helper.scopes.localPath, 'comp1/foo.ts');

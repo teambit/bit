@@ -39,6 +39,7 @@ import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
+import chokidar from 'chokidar';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
@@ -342,6 +343,37 @@ export class ScopeMain implements ComponentFactory {
     return result;
   }
 
+  /**
+   * for long-running processes, such as `bit start` or `bit watch`, it's important to keep the following data up to date:
+   * 1. scope-index (.bit/index.json file).
+   * 2. remote-refs (.bit/refs/*).
+   * it's possible that other commands (e.g. `bit import`) modified these files, while these processes are running.
+   * Because these data are kept in memory, they're not up to date anymore.
+   */
+  async watchScopeInternalFiles() {
+    const scopeIndexFile = this.legacyScope.objects.scopeIndex.getPath();
+    const remoteLanesDir = this.legacyScope.objects.remoteLanes.basePath;
+    const pathsToWatch = [scopeIndexFile, remoteLanesDir];
+    const watcher = chokidar.watch(pathsToWatch);
+    watcher.on('ready', () => {
+      this.logger.debug(`watchSystemFiles has started, watching ${pathsToWatch.join(', ')}`);
+    });
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    watcher.on('change', async (filePath) => {
+      if (filePath === scopeIndexFile) {
+        this.logger.debug('scope index file has been changed, reloading it');
+        await this.legacyScope.objects.reLoadScopeIndex();
+      } else if (filePath.startsWith(remoteLanesDir)) {
+        this.legacyScope.objects.remoteLanes.removeFromCacheByFilePath(filePath);
+      } else {
+        this.logger.error(
+          'unknown file has been changed, please check why it is watched by scope.watchSystemFiles',
+          filePath
+        );
+      }
+    });
+  }
+
   async toObjectList(types: Types): Promise<ObjectList> {
     const objects = await this.legacyScope.objects.list(types);
     return ObjectList.fromBitObjects(objects);
@@ -495,13 +527,12 @@ export class ScopeMain implements ComponentFactory {
     const withoutOwnScopeAndLocals = legacyIds.filter((id) => {
       return id.scope !== this.name && id.hasScope();
     });
-    const lanes = lane ? [lane] : undefined;
     await this.legacyScope.scopeImporter.importMany({
       ids: ComponentsIds.fromArray(withoutOwnScopeAndLocals),
       cache: useCache,
       throwForDependencyNotFound: false,
       reFetchUnBuiltVersion,
-      lanes,
+      lane,
       preferDependencyGraph,
     });
 
@@ -734,7 +765,10 @@ export class ScopeMain implements ComponentFactory {
 
   // todo: move this to somewhere else (where?)
   filterIdsFromPoolIdsByPattern(pattern: string, ids: ComponentID[], throwForNoMatch = true) {
-    const patterns = pattern.split(',').map((p) => p.trim());
+    const patterns = pattern
+      .split(',')
+      .map((p) => p.trim())
+      .map((p) => p.split('@')[0]); // no need for the version
     if (patterns.every((p) => p.startsWith('!'))) {
       // otherwise it'll never match anything. don't use ".push()". it must be the first item in the array.
       patterns.unshift('**');
@@ -776,6 +810,15 @@ export class ScopeMain implements ComponentFactory {
     const remote = await remotes.resolve(scopeName, this.legacyScope);
     const results = await remote.list();
     return results.map(({ id }) => ComponentID.fromLegacy(id));
+  }
+
+  async getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined> {
+    try {
+      return await this.legacyScope.getConsumerComponent(id._legacy);
+    } catch (err) {
+      // in case the component is missing locally, this.get imports it.
+      return (await this.get(id))?.state._consumer;
+    }
   }
 
   /**

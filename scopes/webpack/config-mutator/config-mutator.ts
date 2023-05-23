@@ -107,7 +107,7 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  addModuleRule(rule: RuleSetRule, opts: AddToArrayOpts = {}): WebpackConfigMutator {
+  addModuleRule(rule: RuleSetRule | any, opts: AddToArrayOpts = {}): WebpackConfigMutator {
     if (!this.raw.module) {
       this.raw.module = {};
     }
@@ -125,7 +125,7 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  addModuleRules(rules: RuleSetRule[], opts: AddToArrayOpts = {}): WebpackConfigMutator {
+  addModuleRules(rules: RuleSetRule[] | any[], opts: AddToArrayOpts = {}): WebpackConfigMutator {
     rules.forEach((rule) => this.addModuleRule(rule, opts));
     return this;
   }
@@ -135,7 +135,7 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  addRuleToOneOf(rule: RuleSetRule, opts: AddToArrayOpts = {}): WebpackConfigMutator {
+  addRuleToOneOf(rule: RuleSetRule | any, opts: AddToArrayOpts = {}): WebpackConfigMutator {
     if (!this.raw.module) {
       this.raw.module = {};
     }
@@ -219,7 +219,7 @@ export class WebpackConfigMutator {
    * @param resolve
    * @returns
    */
-  addResolve(resolve: ResolveOptions): WebpackConfigMutator {
+  addResolve(resolve: ResolveOptions | any): WebpackConfigMutator {
     if (!this.raw.resolve) {
       this.raw.resolve = {};
     }
@@ -298,7 +298,7 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  mergeWithRules(configs: Configuration[] | any, rules: Rules, opts: MergeOpts): WebpackConfigMutator | any {
+  mergeWithRules(configs: Configuration[] | any, rules: Rules | any, opts: MergeOpts): WebpackConfigMutator | any {
     const concreteOpts = Object.assign({}, defaultMergeOpts, opts);
     const { firstConfig, configs: otherConfigs } = getConfigsToMerge(this.raw, configs, concreteOpts.rawConfigPosition);
     const merged = mergeWithRules(rules)(firstConfig, ...otherConfigs);

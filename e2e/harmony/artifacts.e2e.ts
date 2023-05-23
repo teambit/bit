@@ -22,6 +22,9 @@ describe('bit artifacts command', function () {
     it('should not throw an error about missing scope', () => {
       expect(() => helper.command.artifacts('comp1')).to.not.throw();
     });
+    it('should be able to work when using the full component-id', () => {
+      expect(() => helper.command.artifacts('my-scope/comp1')).to.not.throw();
+    });
   });
   describe('running the command on a snap', () => {
     before(() => {

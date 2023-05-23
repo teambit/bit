@@ -1,13 +1,10 @@
 import { Writable } from 'stream';
-import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { BitObject, Repository } from '../objects';
 import logger from '../../logger/logger';
-import { ModelComponentMerger } from '../component-ops/model-components-merger';
 import { Lane, ModelComponent, Version, VersionHistory } from '../models';
-import { SourceRepository } from '../repositories';
 import { ObjectItem } from '../objects/object-list';
 import { WriteObjectsQueue } from './write-objects-queue';
-import { WriteComponentsQueue } from './write-components-queue';
+import { ComponentsPerRemote } from '../component-ops/multiple-component-merger';
 
 const TIMEOUT_MINUTES = 3;
 
@@ -21,18 +18,21 @@ const TIMEOUT_MINUTES = 3;
  * remotes are processed. see @writeManyObjectListToModel.
  */
 export class ObjectsWritable extends Writable {
-  private componentObjectsPendingWrite: ModelComponent[] = [];
   private timeoutId: NodeJS.Timeout;
+  private intervalCounter = 0;
   constructor(
     private repo: Repository,
-    private sources: SourceRepository,
     private remoteName: string,
     private objectsQueue: WriteObjectsQueue,
-    private componentsQueue: WriteComponentsQueue
+    private componentsPerRemote: ComponentsPerRemote
   ) {
     super({ objectMode: true });
-    this.timeoutId = setTimeout(() => {
-      const msg = `fetching from ${remoteName} takes more than ${TIMEOUT_MINUTES} minutes. make sure the remote is responsive`;
+    if (!this.componentsPerRemote[remoteName]) this.componentsPerRemote[remoteName] = [];
+    this.timeoutId = setInterval(() => {
+      this.intervalCounter += 1;
+      const msg = `fetching from ${remoteName} takes more than ${
+        this.intervalCounter * TIMEOUT_MINUTES
+      } minutes. make sure the remote is responsive`;
       logger.warn(msg);
       logger.console(`\n${msg}`, 'warn', 'yellow');
     }, TIMEOUT_MINUTES * 60 * 1000);
@@ -52,8 +52,7 @@ export class ObjectsWritable extends Writable {
   }
 
   async _final() {
-    await this.writePendingComponentObjects();
-    clearTimeout(this.timeoutId);
+    clearInterval(this.timeoutId);
   }
 
   private async writeObjectToFs(obj: ObjectItem) {
@@ -62,7 +61,7 @@ export class ObjectsWritable extends Writable {
       throw new Error('ObjectsWritable does not support lanes');
     }
     if (bitObject instanceof ModelComponent) {
-      await this.componentsQueue.addComponent(bitObject.id(), () => this.addComponentObjectToPending(bitObject));
+      this.addComponentToComponentsPerRemote(bitObject);
     } else if (bitObject instanceof VersionHistory) {
       // technically it's mutable, but it's ok to have it in the same queue with high concurrency because the merge is
       // simple enough and can't interrupt others
@@ -80,8 +79,7 @@ export class ObjectsWritable extends Writable {
     await this.repo.writeObjectsToTheFS([bitObject]);
   }
 
-  private async addComponentObjectToPending(modelComponent: ModelComponent) {
-    const component = await this.mergeModelComponent(modelComponent, this.remoteName);
+  private addComponentToComponentsPerRemote(component: ModelComponent) {
     const componentIsPersistPendingAlready = this.repo.objects[component.hash().toString()];
     if (componentIsPersistPendingAlready) {
       // this happens during tag/snap, when all objects are waiting in the repo.objects and only once the tag/snap is
@@ -89,34 +87,7 @@ export class ObjectsWritable extends Writable {
       // components objects during the tag/snap.
       return;
     }
-    this.componentObjectsPendingWrite.push(component);
-  }
-
-  private async writePendingComponentObjects() {
-    if (!this.componentObjectsPendingWrite.length) return;
-    await this.repo.writeObjectsToTheFS(this.componentObjectsPendingWrite);
-    await this.repo.remoteLanes.addEntriesFromModelComponents(
-      LaneId.from(DEFAULT_LANE, this.remoteName),
-      this.componentObjectsPendingWrite
-    );
-  }
-
-  /**
-   * merge the imported component with the existing component in the local scope.
-   * when importing a component, save the remote head into the remote main ref file.
-   * unless this component arrived as a cache of the dependent, which its head might be wrong
-   */
-  private async mergeModelComponent(incomingComp: ModelComponent, remoteName: string): Promise<ModelComponent> {
-    const isIncomingFromOrigin = remoteName === incomingComp.scope;
-    const existingComp = await this.sources._findComponent(incomingComp);
-    if (!existingComp || (existingComp && incomingComp.isEqual(existingComp))) {
-      if (isIncomingFromOrigin) incomingComp.remoteHead = incomingComp.head;
-      return incomingComp;
-    }
-    const modelComponentMerger = new ModelComponentMerger(existingComp, incomingComp, true, isIncomingFromOrigin);
-    const { mergedComponent } = await modelComponentMerger.merge();
-    if (isIncomingFromOrigin) mergedComponent.remoteHead = incomingComp.head;
-    return mergedComponent;
+    this.componentsPerRemote[this.remoteName].push(component);
   }
 
   private async mergeVersionHistory(versionHistory: VersionHistory) {

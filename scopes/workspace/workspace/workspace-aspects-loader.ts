@@ -36,6 +36,8 @@ export type GetConfiguredUserAspectsPackagesOptions = {
 
 export type WorkspaceLoadAspectsOptions = LoadAspectsOptions & {
   useScopeAspectsCapsule?: boolean;
+  runSubscribers?: boolean;
+  skipDeps?: boolean;
 };
 
 export type AspectPackage = { packageName: string; version: string };
@@ -74,6 +76,8 @@ export class WorkspaceAspectsLoader {
     const defaultOpts: Required<WorkspaceLoadAspectsOptions> = {
       useScopeAspectsCapsule: false,
       throwOnError: calculatedThrowOnError,
+      runSubscribers: true,
+      skipDeps: false,
       hideMissingModuleError: !!this.workspace.inInstallContext,
       ignoreErrors: false,
     };
@@ -147,7 +151,8 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       idsWithoutCore,
       mergedOpts.throwOnError,
       mergedOpts.hideMissingModuleError,
-      neededFor
+      neededFor,
+      mergedOpts.runSubscribers,
     );
 
     const potentialPluginsIndexes = compact(
@@ -164,7 +169,8 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     // Do the require again now that the plugins defs already registered
     const pluginsManifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
       pluginsRequireableComponents,
-      throwOnError
+      throwOnError,
+      opts.runSubscribers
     );
     await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, { throwOnError });
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
@@ -177,7 +183,8 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     seeders: string[],
     throwOnError: boolean,
     hideMissingModuleError: boolean,
-    neededFor?: string
+    neededFor?: string,
+    runSubscribers = true
   ): Promise<{ manifests: Array<Aspect | ExtensionManifest>; requireableComponents: RequireableComponent[] }> {
     const { nonWorkspaceDefs } = await this.groupAspectDefsByWorkspaceExistence(aspectsDefs);
     const scopeAspectsLoader = this.scope.getScopeAspectsLoader();
@@ -186,13 +193,14 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     // Make sure to first load envs from the list otherwise it will fail when trying to load other aspects
     // as their envs might not be loaded yet
-    if (scopeIdsGrouped.envs && scopeIdsGrouped.envs.length) {
+    if (scopeIdsGrouped.envs && scopeIdsGrouped.envs.length && !runSubscribers) {
       await this.scope.loadAspects(scopeIdsGrouped.envs, throwOnError, 'workspace.loadAspects loading scope aspects');
     }
     const requireableComponents = this.aspectDefsToRequireableComponents(aspectsDefs);
     const manifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
       requireableComponents,
-      throwOnError
+      throwOnError,
+      runSubscribers
     );
     await this.aspectLoader.loadExtensionsByManifests(
       manifests,
@@ -235,6 +243,26 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     // Run the on load slot
     await this.runOnAspectsResolveFunctions(components);
+
+    if (opts?.skipDeps) {
+      const wsAspectDefs = await this.aspectLoader.resolveAspects(
+        components,
+        this.getWorkspaceAspectResolver([], runtimeName)
+      );
+
+      const coreAspectDefs = await Promise.all(
+        coreAspectsIds.map(async (coreId) => {
+          const rawDef = await getAspectDef(coreId, runtimeName);
+          return this.aspectLoader.loadDefinition(rawDef);
+        })
+      );
+
+      const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
+      const targetDefs = wsAspectDefs.concat(coreAspectDefs);
+      const finalDefs = this.aspectLoader.filterAspectDefs(targetDefs, idsToFilter, runtimeName, mergedOpts);  
+      
+      return finalDefs;
+    }
 
     const graph = await this.getAspectsGraphWithoutCore(components, this.isAspect.bind(this));
     const aspects = graph.nodes.map((node) => node.attr);

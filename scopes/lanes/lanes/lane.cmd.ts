@@ -326,6 +326,11 @@ export class LaneImportCmd implements Command {
   alias = '';
   options = [
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    [
+      'p',
+      'pattern <component-pattern>',
+      'EXPERIMENTAL. switch only the specified component-pattern. works only when the workspace is empty',
+    ],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -334,9 +339,9 @@ export class LaneImportCmd implements Command {
 
   async report(
     [lane]: [string],
-    { skipDependencyInstallation = false }: { skipDependencyInstallation: boolean }
+    { skipDependencyInstallation = false, pattern }: { skipDependencyInstallation: boolean; pattern?: string }
   ): Promise<string> {
-    return this.switchCmd.report([lane], { getAll: true, skipDependencyInstallation });
+    return this.switchCmd.report([lane], { getAll: true, skipDependencyInstallation, pattern });
   }
 }
 

@@ -42,7 +42,7 @@ import { ModelComponent, Symlink, Version } from './models';
 import Lane from './models/lane';
 import { ComponentLog } from './models/model-component';
 import { BitObject, BitRawObject, Ref, Repository } from './objects';
-import { ComponentItem, IndexType } from './objects/components-index';
+import { ComponentItem, IndexType } from './objects/scope-index';
 import RemovedObjects from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
@@ -385,6 +385,35 @@ once done, to continue working, please run "bit cc"`
     if (foundOnMain) return false;
     // we don't have enough data to determine whether it's on the lane or not.
     return null;
+  }
+
+  async isPartOfLaneHistory(id: BitId, lane: Lane) {
+    if (!id.version) throw new Error(`isIdOnGivenLane expects id with version, got ${id.toString()}`);
+    const laneIds = lane.toBitIds();
+    if (laneIds.has(id)) return true; // in the lane with the same version
+    const laneIdWithDifferentVersion = laneIds.searchWithoutVersion(id);
+    if (!laneIdWithDifferentVersion) return false; // not in the lane at all
+
+    // component is in the lane object but with a different version.
+    // we have to figure out whether this version is part of the lane history
+    const component = await this.getModelComponent(id);
+    const laneVersionRef = Ref.from(laneIdWithDifferentVersion.version as string);
+    const verHistory = await component.getAndPopulateVersionHistory(this.objects, laneVersionRef);
+    const verRef = component.getRef(id.version);
+    if (!verRef) throw new Error(`isIdOnGivenLane unable to find ref for ${id.toString()}`);
+    return verHistory.isRefPartOfHistory(laneVersionRef, verRef);
+  }
+
+  async isPartOfMainHistory(id: BitId) {
+    if (!id.version) throw new Error(`isIdOnMain expects id with version, got ${id.toString()}`);
+    if (isTag(id.version)) return true; // tags can be on main only
+    const component = await this.getModelComponent(id);
+    if (!component.head) return false; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
+    if (component.head.toString() === id.version) return true; // it's on main
+
+    const verHistory = await component.getAndPopulateVersionHistory(this.objects, component.head);
+    const verRef = Ref.from(id.version);
+    return verHistory.isRefPartOfHistory(component.head, verRef);
   }
 
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {

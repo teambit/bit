@@ -41,7 +41,6 @@ export class ImportCmd implements Command {
     ['v', 'verbose', 'show verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],
     // ['', 'conf', 'write the configuration file (component.json) of the component'], // not working. need to fix once ComponentWriter is moved to Harmony
-    ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
     [
       'm',
@@ -84,7 +83,6 @@ export class ImportCmd implements Command {
       verbose = false,
       json = false,
       conf,
-      skipNpmInstall = false,
       skipDependencyInstallation = false,
       merge,
       saveInLane = false,
@@ -101,7 +99,6 @@ export class ImportCmd implements Command {
       verbose?: boolean;
       json?: boolean;
       conf?: string;
-      skipNpmInstall?: boolean;
       skipDependencyInstallation?: boolean;
       merge?: MergeStrategy;
       saveInLane?: boolean;
@@ -126,13 +123,6 @@ export class ImportCmd implements Command {
     }
     if (!ids.length && trackOnly) {
       throw new GeneralError('you have to specify ids to use "--track-only" flag');
-    }
-    if (skipNpmInstall) {
-      // eslint-disable-next-line no-console
-      console.log(
-        chalk.yellow(`"--skip-npm-install" has been deprecated, please use "--skip-dependency-installation" instead`)
-      );
-      skipDependencyInstallation = true;
     }
     let mergeStrategy;
     if (merge && R.is(String, merge)) {
@@ -210,8 +200,8 @@ export class ImportCmd implements Command {
 function formatMissingComponents(missing?: string[]) {
   if (!missing?.length) return '';
   const title = chalk.underline('Missing Components');
-  const subTitle =
-    'The following components are missing from the remote in the requested version, try running "bit status" to re-sync your .bitmap file';
+  const subTitle = `The following components are missing from the remote in the requested version, try running "bit status" to re-sync your .bitmap file
+Also, make sure the requested version exists on main or the checked out lane`;
   const body = chalk.red(missing.join('\n'));
   return `\n\n${title}\n${subTitle}\n${body}`;
 }

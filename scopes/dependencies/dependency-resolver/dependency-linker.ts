@@ -10,7 +10,6 @@ import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
 import { createSymlinkOrCopy } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import Symlink from '@teambit/legacy/dist/links/symlink';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import {
@@ -19,7 +18,6 @@ import {
   CoreAspectLinkError,
   NonAspectCorePackageLinkError,
 } from './exceptions';
-import { WorkspacePolicy } from './policy';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
 /**
@@ -124,9 +122,60 @@ export class DependencyLinker {
     private linkingContext: DepLinkerContext = {}
   ) {}
 
-  async link(
+  async createLinks(rootDir: string, linkedDeps: Record<string, string>) {
+    const modulesDir = path.join(rootDir, 'node_modules');
+    await Promise.all(
+      Object.entries(linkedDeps).map(([packageName, linkPath]) =>
+        createSymlinkOrCopy(linkPath.substring(5), path.join(modulesDir, packageName))
+      )
+    );
+  }
+
+  async calculateLinkedDeps(
     rootDir: string | undefined,
-    rootPolicy: WorkspacePolicy,
+    componentDirectoryMap: ComponentMap<string>,
+    options: LinkingOptions = {}
+  ): Promise<{ linkedRootDeps: Record<string, string>; linkResults: LinkResults }> {
+    const linkResults = await this._calculateLinks(rootDir, componentDirectoryMap, options);
+    const localLinks: Array<[string, string]> = [];
+    if (linkResults.teambitBitLink) {
+      localLinks.push(this.linkDetailToLocalDepEntry(linkResults.teambitBitLink.linkDetail));
+    }
+    if (linkResults.coreAspectsLinks) {
+      linkResults.coreAspectsLinks.forEach((link) => {
+        localLinks.push(this.linkDetailToLocalDepEntry(link.linkDetail));
+      });
+    }
+    if (linkResults.harmonyLink) {
+      localLinks.push(this.linkDetailToLocalDepEntry(linkResults.harmonyLink));
+    }
+    if (linkResults.teambitLegacyLink) {
+      localLinks.push(this.linkDetailToLocalDepEntry(linkResults.teambitLegacyLink));
+    }
+    if (linkResults.resolvedFromEnvLinks) {
+      linkResults.resolvedFromEnvLinks.forEach((link) => {
+        link.linksDetail.forEach((linkDetail) => {
+          localLinks.push(this.linkDetailToLocalDepEntry(linkDetail));
+        });
+      });
+    }
+    if (linkResults.linkToDirResults) {
+      linkResults.linkToDirResults.forEach((link) => {
+        localLinks.push(this.linkDetailToLocalDepEntry(link.linksDetail));
+      });
+    }
+    return {
+      linkedRootDeps: Object.fromEntries(localLinks.map(([key, value]) => [key, `link:${value}`])),
+      linkResults,
+    };
+  }
+
+  private linkDetailToLocalDepEntry(linkDetail: LinkDetail): [string, string] {
+    return [linkDetail.packageName, linkDetail.from];
+  }
+
+  private async _calculateLinks(
+    rootDir: string | undefined,
     componentDirectoryMap: ComponentMap<string>,
     options: LinkingOptions = {}
   ): Promise<LinkResults> {
@@ -171,7 +220,7 @@ export class DependencyLinker {
     });
     result = {
       ...result,
-      ...(await this.linkCoreAspectsAndLegacy(rootDir, componentIds, rootPolicy, linkingOpts)),
+      ...(await this.linkCoreAspectsAndLegacy(finalRootDir, componentIds, linkingOpts)),
     };
     if (!this.linkingContext?.inCapsule) {
       this.logger.consoleSuccess(outputMessage, startTime);
@@ -179,10 +228,9 @@ export class DependencyLinker {
     return result;
   }
 
-  public async linkCoreAspectsAndLegacy(
-    rootDir: string | undefined,
+  async linkCoreAspectsAndLegacy(
+    rootDir: string,
     componentIds: ComponentID[] = [],
-    rootPolicy: WorkspacePolicy = new WorkspacePolicy([]),
     options: Pick<LinkingOptions, 'linkTeambitBit' | 'linkCoreAspects'> = {}
   ) {
     const result: LinkResults = {};
@@ -191,32 +239,28 @@ export class DependencyLinker {
       componentIdsWithoutVersions.push(id.toString({ ignoreVersion: true }));
       return undefined;
     });
-    const finalRootDir = rootDir || this.rootDir;
-    if (!finalRootDir) {
-      throw new RootDirNotDefined();
-    }
     const linkingOpts = Object.assign({}, DEFAULT_LINKING_OPTIONS, this.linkingOptions || {}, options || {});
-    if (linkingOpts.linkTeambitBit && !this.isBitRepoWorkspace(finalRootDir)) {
+    if (linkingOpts.linkTeambitBit && !this.isBitRepoWorkspace(rootDir)) {
       const bitLink = await this.linkBitAspectIfNotExist(
-        path.join(finalRootDir, 'node_modules'),
+        path.join(rootDir, 'node_modules'),
         componentIdsWithoutVersions
       );
       result.teambitBitLink = bitLink;
     }
 
-    if (linkingOpts.linkCoreAspects && !this.isBitRepoWorkspace(finalRootDir)) {
+    if (linkingOpts.linkCoreAspects && !this.isBitRepoWorkspace(rootDir)) {
       const hasLocalInstallation = !linkingOpts.linkTeambitBit;
       const coreAspectsLinks = await this.linkNonExistingCoreAspects(
-        path.join(finalRootDir, 'node_modules'),
+        path.join(rootDir, 'node_modules'),
         componentIdsWithoutVersions,
         hasLocalInstallation
       );
       result.coreAspectsLinks = coreAspectsLinks;
     }
 
-    const teambitLegacyLink = this.linkTeambitLegacy(finalRootDir, rootPolicy);
+    const teambitLegacyLink = this.linkTeambitLegacy(rootDir);
     result.teambitLegacyLink = teambitLegacyLink;
-    const harmonyLink = this.linkHarmony(finalRootDir, rootPolicy);
+    const harmonyLink = this.linkHarmony(rootDir);
     result.harmonyLink = harmonyLink;
     return result;
   }
@@ -320,13 +364,9 @@ export class DependencyLinker {
           from: `${linkSrc} ${origPath}`,
           to: linkTarget,
         };
-        const linkTargetParent = path.resolve(linkTarget, '..');
-        const relativeSrc = path.relative(linkTargetParent, linkSrc);
-        const symlink = new Symlink(relativeSrc, linkTarget, component.id._legacy, false);
         this.logger.info(
           `linking nested dependency ${folderEntry.moduleName} for component ${component}. link src: ${linkSrc} link target: ${linkTarget}`
         );
-        symlink.write();
         return linkDetail;
       });
 
@@ -398,12 +438,10 @@ export class DependencyLinker {
           from: linkSrc,
           to: linkTarget,
         };
-        fs.removeSync(linkTarget);
         this.logger.info(
           `linking dependency ${depEntry.dependencyId} from env directory ${envDir}. link src: ${linkSrc} link target: ${linkTarget}`
         );
 
-        createSymlinkOrCopy(linkSrc, linkTarget);
         return linkDetail;
       });
       const oneComponentLinks = await Promise.all(oneComponentLinksP);
@@ -447,7 +485,6 @@ export class DependencyLinker {
     if (!shouldSymlink) return undefined;
     const src = this.aspectLoader.mainAspect.path;
     await fs.ensureDir(path.dirname(target));
-    createSymlinkOrCopy(src, target);
     return { packageName: this.aspectLoader.mainAspect.packageName, from: src, to: target };
   }
 
@@ -510,7 +547,6 @@ export class DependencyLinker {
     if (!isAspectDirExist) {
       this.logger.debug(`linkCoreAspect: aspectDir ${aspectDir} does not exist, linking it to ${target}`);
       aspectDir = getAspectDir(id);
-      createSymlinkOrCopy(aspectDir, target);
       return { aspectId: id, linkDetail: { packageName, from: aspectDir, to: target } };
     }
 
@@ -525,7 +561,6 @@ export class DependencyLinker {
         return undefined;
       }
       this.logger.debug(`linkCoreAspect: linking aspectPath ${aspectPath} to ${target}`);
-      createSymlinkOrCopy(aspectPath, target);
       return { aspectId: id, linkDetail: { packageName, from: aspectPath, to: target } };
     } catch (err: any) {
       throw new CoreAspectLinkError(id, err);
@@ -550,20 +585,12 @@ export class DependencyLinker {
         this.logger.debug(`removing link target, target ${targetPath} already exist. skipping it`);
         return false;
       }
-      // it's a symlink, remove is as it might point to an older version
-      fs.removeSync(targetPath);
       return true;
     }
     return true;
   }
 
-  private linkNonAspectCorePackages(
-    rootDir: string,
-    name: string,
-    packageName = `@teambit/${name}`,
-    skipExisting = false,
-    existsInRootPolicy = false
-  ): LinkDetail | undefined {
+  private linkNonAspectCorePackages(rootDir: string, name: string): LinkDetail | undefined {
     if (!this.aspectLoader.mainAspect) return undefined;
     if (!this.aspectLoader.mainAspect.packageName) {
       throw new MainAspectNotLinkable();
@@ -571,25 +598,11 @@ export class DependencyLinker {
     const mainAspectPath = path.join(rootDir, this.aspectLoader.mainAspect.packageName);
     const distDir = path.join(mainAspectPath, 'dist', name);
 
+    const packageName = `@teambit/${name}`;
     const target = path.join(rootDir, 'node_modules', packageName);
-    const isTargetExisting = fs.pathExistsSync(target);
-    if (skipExisting && isTargetExisting) {
-      return undefined;
-    }
-    let shouldSymlink;
-    // In case it's not part of the workspace policy we want to remove it anyway, as we want it to be linked to
-    // bit version
-    if (isTargetExisting && !existsInRootPolicy) {
-      fs.removeSync(target);
-      shouldSymlink = true;
-    } else {
-      shouldSymlink = this.removeSymlinkTarget(target);
-    }
-    if (!shouldSymlink) return undefined;
     const isDistDirExist = fs.pathExistsSync(distDir);
     if (!isDistDirExist) {
       const newDir = getDistDirForDevEnv(packageName);
-      createSymlinkOrCopy(newDir, target);
       return { packageName, from: newDir, to: target };
     }
 
@@ -597,32 +610,18 @@ export class DependencyLinker {
       // eslint-disable-next-line global-require, import/no-dynamic-require
       const module = require(distDir);
       const resolvedPath = path.resolve(path.join(module.path, '..', '..'));
-      // in this case we want the symlinks to be relative links
-      // Using the fs module to make sure it is relative to the target
-      if (fs.existsSync(target)) {
-        return undefined;
-      }
-      createSymlinkOrCopy(resolvedPath, target);
       return { packageName, from: resolvedPath, to: target };
     } catch (err: any) {
       throw new NonAspectCorePackageLinkError(err, packageName);
     }
   }
 
-  private linkHarmony(rootDir: string, rootPolicy: WorkspacePolicy): LinkDetail | undefined {
-    const name = 'harmony';
-    const packageName = `@teambit/${name}`;
-    const existsInRootPolicy = Boolean(rootPolicy?.find(packageName));
-
-    return this.linkNonAspectCorePackages(rootDir, name, packageName, undefined, existsInRootPolicy);
+  private linkHarmony(rootDir: string): LinkDetail | undefined {
+    return this.linkNonAspectCorePackages(rootDir, 'harmony');
   }
 
-  private linkTeambitLegacy(rootDir: string, rootPolicy: WorkspacePolicy): LinkDetail | undefined {
-    const name = 'legacy';
-    const packageName = `@teambit/${name}`;
-
-    const existsInRootPolicy = rootPolicy ? !!rootPolicy.find(packageName) : false;
-    return this.linkNonAspectCorePackages(rootDir, name, packageName, undefined, existsInRootPolicy);
+  private linkTeambitLegacy(rootDir: string): LinkDetail | undefined {
+    return this.linkNonAspectCorePackages(rootDir, 'legacy');
   }
 }
 

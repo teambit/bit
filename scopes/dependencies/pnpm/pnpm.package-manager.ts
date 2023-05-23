@@ -19,6 +19,7 @@ import { readModulesManifest } from '@pnpm/modules-yaml';
 import { ProjectManifest } from '@pnpm/types';
 import { join } from 'path';
 import { readConfig } from './read-config';
+import { pnpmPruneModules } from './pnpm-prune-modules';
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
@@ -49,7 +50,7 @@ export class PnpmPackageManager implements PackageManager {
     if (!installOptions.useNesting) {
       manifests = await extendWithComponentsFromDir(rootDir, manifests);
     }
-    await install(
+    const { dependenciesChanged } = await install(
       rootDir,
       manifests,
       config.storeDir,
@@ -59,6 +60,7 @@ export class PnpmPackageManager implements PackageManager {
       networkConfig,
       {
         engineStrict: installOptions.engineStrict ?? config.engineStrict,
+        neverBuiltDependencies: installOptions.neverBuiltDependencies,
         nodeLinker: installOptions.nodeLinker,
         nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
         includeOptionalDeps: installOptions.includeOptionalDeps,
@@ -74,7 +76,6 @@ export class PnpmPackageManager implements PackageManager {
         sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
         sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
         pnpmHomeDir: config.pnpmHomeDir,
-        pruneNodeModules: installOptions.pruneNodeModules,
         updateAll: installOptions.updateAll,
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
       },
@@ -86,7 +87,7 @@ export class PnpmPackageManager implements PackageManager {
       // this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
       // this.logger.consoleSuccess('installing dependencies using pnpm');
     }
-    return { dependenciesChanged: true };
+    return { dependenciesChanged };
   }
 
   async getPeerDependencyIssues(
@@ -197,5 +198,9 @@ export class PnpmPackageManager implements PackageManager {
 
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
     return Object.fromEntries(manifests.map((manifest) => [manifest.name, 'workspace:*']));
+  }
+
+  async pruneModules(rootDir: string): Promise<void> {
+    return pnpmPruneModules(rootDir);
   }
 }
