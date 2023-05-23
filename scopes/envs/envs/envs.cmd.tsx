@@ -127,7 +127,7 @@ export class EnvsCmd implements Command {
       // const envId = this.envs.getEnvId(component);
       const envId = await this.envs.calculateEnvId(component);
       const envIdStr = envId.toString();
-      const isLoaded = this.envs.isRegisteredEnv(envIdStr);
+      const isLoaded = this.envs.isEnvRegistered(envIdStr);
       if (!isLoaded) {
         this.nonLoadedEnvs.add(envIdStr);
       }

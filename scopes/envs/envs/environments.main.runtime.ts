@@ -773,11 +773,6 @@ export class EnvsMain {
     return this.getEnvDefinitionById(newId);
   }
 
-  public isRegisteredEnv(envId: string): boolean {
-    const env = this.envSlot.get(envId);
-    return !!env;
-  }
-
   public getEnvDefinitionByStringId(envId: string): EnvDefinition | undefined {
     const env = this.envSlot.get(envId);
     if (env) {
@@ -809,7 +804,7 @@ export class EnvsMain {
   /**
    * determines whether an env is registered.
    */
-  isEnvRegistered(id: string) {
+  public isEnvRegistered(id: string) {
     return Boolean(this.envSlot.get(id));
   }
 
