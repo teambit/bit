@@ -518,12 +518,12 @@ export class EnvsMain {
         // Do not allow a non existing env
         this.printWarningIfFirstTime(
           matchedEntry.id.toString(),
-          `environment with ID: ${matchedEntry.id.toString()} configured on component ${component.id.toString()} was not found`
+          `environment with ID: ${matchedEntry.id.toString()} configured on component ${component.id.toString()} was not loaded (run "bit install")`
         );
       }
       // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
-      const errMsg = new EnvNotConfiguredForComponent(envIdFromEnvsConfig as string, component.id.toString()).message;
-      this.printWarningIfFirstTime(envIdFromEnvsConfig as string, errMsg);
+      // const errMsg = new EnvNotConfiguredForComponent(envIdFromEnvsConfig as string, component.id.toString()).message;
+      // this.printWarningIfFirstTime(envIdFromEnvsConfig as string, errMsg);
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
@@ -692,14 +692,14 @@ export class EnvsMain {
           return envDef;
         }
         // Do not allow a non existing env
-        this.printWarningIfFirstTime(
-          matchedEntry.id.toString(),
-          `environment with ID: ${matchedEntry.id.toString()} was not found`
-        );
+        // this.printWarningIfFirstTime(
+        //   matchedEntry.id.toString(),
+        //   `environment with ID: ${matchedEntry.id.toString()} was not found`
+        // );
       }
       // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
-      const errMsg = new EnvNotConfiguredForComponent(envIdFromEnvsConfig).message;
-      this.printWarningIfFirstTime(envIdFromEnvsConfig, errMsg);
+      // const errMsg = new EnvNotConfiguredForComponent(envIdFromEnvsConfig).message;
+      // this.printWarningIfFirstTime(envIdFromEnvsConfig, errMsg);
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
