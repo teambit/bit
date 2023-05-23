@@ -1168,6 +1168,11 @@ describe('bit lane command', function () {
         const status = helper.command.statusJson();
         expect(status.mergePendingComponents).to.have.lengthOf(1);
       });
+      it('bit merge with no args should merge them', () => {
+        const output = helper.command.merge(`--manual`);
+        expect(output).to.have.string('successfully merged');
+        expect(output).to.have.string('CONFLICT');
+      });
     });
   });
   describe('rename an exported lane', () => {

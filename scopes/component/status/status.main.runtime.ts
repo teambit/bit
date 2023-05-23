@@ -3,6 +3,7 @@ import pMapSeries from 'p-map-series';
 import { LaneId } from '@teambit/lane-id';
 import { IssuesList } from '@teambit/component-issues';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import LanesAspect, { LanesMain } from '@teambit/lanes';
 import { ComponentID } from '@teambit/component-id';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -49,7 +50,8 @@ export class StatusMain {
     private workspace: Workspace,
     private issues: IssuesMain,
     private insights: InsightsMain,
-    private remove: RemoveMain
+    private remove: RemoveMain,
+    private lanes: LanesMain
   ) {}
 
   async status({ lanes }: { lanes?: boolean }): Promise<StatusResult> {
@@ -115,7 +117,7 @@ export class StatusMain {
     const softTaggedComponents = componentsList.listSoftTaggedComponents();
     const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toBitId());
     const pendingUpdatesFromMain = lanes ? await componentsList.listUpdatesFromMainPending() : [];
-    const updatesFromForked = lanes ? await componentsList.listUpdatesFromForked() : [];
+    const updatesFromForked = lanes ? await this.lanes.listUpdatesFromForked(componentsList) : [];
     const currentLaneId = consumer.getCurrentLaneId();
     const currentLane = await consumer.getCurrentLaneObject();
     const forkedLaneId = currentLane?.forkedFrom;
@@ -196,16 +198,17 @@ export class StatusMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, InsightsAspect, IssuesAspect, RemoveAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, InsightsAspect, IssuesAspect, RemoveAspect, LanesAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, insights, issues, remove]: [
+  static async provider([cli, workspace, insights, issues, remove, lanes]: [
     CLIMain,
     Workspace,
     InsightsMain,
     IssuesMain,
-    RemoveMain
+    RemoveMain,
+    LanesMain
   ]) {
-    const statusMain = new StatusMain(workspace, issues, insights, remove);
+    const statusMain = new StatusMain(workspace, issues, insights, remove, lanes);
     cli.register(new StatusCmd(statusMain));
     return statusMain;
   }

@@ -634,17 +634,14 @@ export class Workspace implements ComponentFactory {
   async triggerOnComponentChange(
     id: ComponentID,
     files: string[],
+    removedFiles: string[],
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
-    // if a new file was added, upon component-load, its .bitmap entry is updated to include the
-    // new file. write these changes to the .bitmap file so then other processes have access to
-    // this new file. If the .bitmap wasn't change, it won't do anything.
-    await this.bitMap.write();
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
-      const onChangeResult = await onChangeFunc(component, files, initiator);
+      const onChangeResult = await onChangeFunc(component, files, removedFiles, initiator);
       results.push({ extensionId: extension, results: onChangeResult });
     });
 
@@ -924,7 +921,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
     const ids = BitIds.fromArray(lane.toBitIds().filter((id) => id.hasScope()));
     await scopeComponentsImporter.importManyDeltaWithoutDeps({ ids, fromHead: true, lane });
-    await scopeComponentsImporter.importMany({ ids, lanes: [lane] });
+    await scopeComponentsImporter.importMany({ ids, lane });
   }
 
   async use(aspectIdStr: string): Promise<string> {
@@ -942,7 +939,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   /**
-   * Get the component root dir in the file system (relative to workspace or full) in Linux format
+   * @todo: the return path here is Linux when asking for relative and os-based when asking for absolute. fix this to be consistent.
+   *
+   * Get the component root dir in the file system (relative to workspace or full)
    * @param componentId
    * @param relative return the path relative to the workspace or full path
    */

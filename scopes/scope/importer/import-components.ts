@@ -306,7 +306,7 @@ if you need this specific snap, find the lane this snap is belong to, then run "
       : await scopeComponentsImporter.importMany({
           ids,
           ignoreMissingHead,
-          lanes: lane ? [lane] : undefined,
+          lane,
           preferDependencyGraph: !this.options.fetchDeps,
           // when user is running "bit import", we want to re-fetch if it wasn't built. todo: check if this can be disabled when not needed
           reFetchUnBuiltVersion: true,
