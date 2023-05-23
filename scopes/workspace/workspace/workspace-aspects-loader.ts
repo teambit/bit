@@ -1,5 +1,4 @@
 import findRoot from 'find-root';
-import { getRootComponentDir } from '@teambit/bit-roots';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { Graph } from '@teambit/graph.cleargraph';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
@@ -770,10 +769,8 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   }
 
   private async shouldLoadFromRootComps(component: Component): Promise<boolean> {
-    // const rootDir = getRootComponentDir(this.workspace.path, component.id.toString());
     const rootDir = this.workspace.getComponentPackagePath(component);
     const rootDirExist = await fs.pathExists(rootDir);
-    // const localPathExist = await fs.pathExists(rootDir);
     const aspectFilePath = await this.aspectLoader.getAspectFilePath(component, rootDir);
     const aspectFilePathExist = aspectFilePath ? await fs.pathExists(aspectFilePath) : false;
     const pluginFiles = await this.aspectLoader.getPluginFiles(component, rootDir);
