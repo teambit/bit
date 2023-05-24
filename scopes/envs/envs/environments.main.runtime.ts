@@ -510,7 +510,7 @@ export class EnvsMain {
     let ids: string[] = [];
     component.state.aspects.entries.forEach((aspectEntry) => {
       ids.push(aspectEntry.id.toString());
-      ids.push(aspectEntry.id.toString({ ignoreVersion: true }));
+      // ids.push(aspectEntry.id.toString({ ignoreVersion: true }));
     });
     ids = uniq(ids);
     const envId = await this.findFirstEnv(ids);
@@ -684,7 +684,7 @@ export class EnvsMain {
     extensions.forEach((extension) => {
       if (extension.newExtensionId) {
         ids.push(extension.newExtensionId.toString());
-        ids.push(extension.newExtensionId.toString({ ignoreVersion: true }));
+        // ids.push(extension.newExtensionId.toString({ ignoreVersion: true }));
       } else {
         ids.push(extension.stringId);
       }
@@ -749,7 +749,7 @@ export class EnvsMain {
     extensions.forEach((extension) => {
       if (extension.newExtensionId) {
         ids.push(extension.newExtensionId.toString());
-        ids.push(extension.newExtensionId.toString({ ignoreVersion: true }));
+        // ids.push(extension.newExtensionId.toString({ ignoreVersion: true }));
       } else {
         ids.push(extension.stringId);
       }
@@ -771,21 +771,30 @@ export class EnvsMain {
    * is found.
    */
   private async findFirstEnv(ids: string[]): Promise<string | undefined> {
+    let isFoundWithoutVersion = false;
     const envId = await pLocate(ids, async (id) => {
-      if (this.isCoreEnv(id)) return true;
-      if (isCoreAspect(id)) return false;
+      const idWithoutVersion = id.split('@')[0];
+      if (this.isCoreEnv(idWithoutVersion)) return true;
+      if (isCoreAspect(idWithoutVersion)) return false;
       const envDef = this.getEnvDefinitionByStringId(id);
       if (envDef) return true;
+      const envDefWithoutVersion = this.getEnvDefinitionByStringId(idWithoutVersion);
+      if (envDefWithoutVersion) {
+        isFoundWithoutVersion = true;
+        return true;
+      }
       const envComponent = await this.getEnvComponentByEnvId(id);
       const hasManifest = this.hasEnvManifest(envComponent);
       if (hasManifest) return true;
       const isUsingEnvEnv = this.isUsingEnvEnv(envComponent);
       return !!isUsingEnvEnv;
     });
+    let finalEnvId;
     if (envId) {
+      finalEnvId = isFoundWithoutVersion ? envId?.split('@')[0] : envId;
       this.envIds.add(envId);
     }
-    return envId;
+    return finalEnvId;
   }
 
   private getEnvDefinitionByLegacyExtension(extension: ExtensionDataEntry): EnvDefinition | undefined {
