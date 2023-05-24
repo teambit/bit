@@ -298,7 +298,7 @@ export class BuilderMain {
 
   async runTagTasks(components: Component[], builderOptions: BuilderServiceOptions): Promise<TaskResultsList> {
     const envs = await this.envs.createEnvironment(components);
-    const buildResult = await envs.runOnce(this.snapService, builderOptions);
+    const buildResult = await envs.runOnce(this.tagService, builderOptions);
 
     return buildResult;
   }

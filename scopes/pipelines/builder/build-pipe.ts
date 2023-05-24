@@ -62,9 +62,7 @@ export class BuildPipe {
     readonly artifactFactory: ArtifactFactory,
     private previousTaskResults?: TaskResults[],
     private options?: PipeOptions
-  ) {
-    console.log('options', options);
-  }
+  ) {}
 
   get allTasksResults(): TaskResults[] {
     return [...(this.previousTaskResults || []), ...(this.taskResults || [])];
