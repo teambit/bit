@@ -6,7 +6,7 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ApiServerAspect } from './api-server.aspect';
 import { CLIRoute } from './cli.route';
 import { ServerCmd } from './server.cmd';
-import { VSCodeRoute } from './ vscode.route';
+import { VSCodeRoute } from './vscode.route';
 import { APIForVSCode } from './api-for-vscode';
 
 export class ApiServerMain {
