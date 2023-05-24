@@ -1208,58 +1208,79 @@ describe('env root components', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-      helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
-        envName: 'env1',
-        dependencies: {
-          peers: [
-            {
-              name: 'react',
-              supportedRange: '^16.8.0',
-              version: env1DefaultPeerVersion,
-            },
-          ],
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        {
+          policy: {
+            peers: [
+              {
+                name: 'react',
+                version: env1DefaultPeerVersion,
+                supportedRange: '^16.8.0',
+              },
+            ],
+          },
         },
-      });
-      helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
-      helper.fixtures.populateEnvMainRuntime(`custom-react/env2/env2.main.runtime.ts`, {
-        envName: 'env2',
-        dependencies: {
-          peers: [
-            {
-              name: 'react',
-              supportedRange: '^16.8.0',
-              version: env2DefaultPeerVersion,
-            },
-          ],
+        false,
+        'custom-react/env1',
+        'custom-react/env1'
+      );
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        {
+          policy: {
+            peers: [
+              {
+                name: 'react',
+                version: env2DefaultPeerVersion,
+                supportedRange: '^16.8.0',
+              },
+            ],
+          },
         },
-      });
-      helper.command.create('react-env', 'custom-react/env3', '-p custom-react/env3');
-      helper.fixtures.populateEnvMainRuntime(`custom-react/env3/env3.main.runtime.ts`, {
-        envName: 'env3',
-        dependencies: {
-          peers: [
-            {
-              name: 'react',
-              supportedRange: '17',
-              version: '17.0.0',
-            },
-          ],
+        false,
+        'custom-react/env2',
+        'custom-react/env2'
+      );
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        {
+          policy: {
+            peers: [
+              {
+                name: 'react',
+                supportedRange: '17',
+                version: '17.0.0',
+              },
+            ],
+          },
         },
-      });
-      helper.command.create('react-env', 'custom-react/env4', '-p custom-react/env4');
-      helper.fixtures.populateEnvMainRuntime(`custom-react/env4/env4.main.runtime.ts`, {
-        envName: 'env4',
-        dependencies: {
-          peers: [
-            {
-              name: 'react',
-              supportedRange: '17',
-              version: '17.0.1',
-            },
-          ],
+        false,
+        'custom-react/env3',
+        'custom-react/env3'
+      );
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        {
+          policy: {
+            peers: [
+              {
+                name: 'react',
+                supportedRange: '17',
+                version: '17.0.1',
+              },
+            ],
+          },
         },
-      });
+        false,
+        'custom-react/env4',
+        'custom-react/env4'
+      );
+
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
