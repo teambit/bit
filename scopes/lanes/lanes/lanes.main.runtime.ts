@@ -141,9 +141,12 @@ export class LanesMain {
   }): Promise<LaneData[]> {
     const showMergeData = Boolean(merged || notMerged);
     const consumer = this.workspace?.consumer;
+
     if (remote) {
+      if (!name) throw new Error('remote name must be provided when getting lanes from a remote');
+      const laneId = LaneId.from(name, remote);
       const remoteObj = await getRemoteByName(remote, consumer);
-      const lanes = await remoteObj.listLanes(name, showMergeData);
+      const lanes = await remoteObj.listLanes(laneId.toString(), showMergeData);
       // no need to filter soft-removed here. it was filtered already in the remote
       return lanes;
     }
@@ -161,6 +164,11 @@ export class LanesMain {
     }
 
     return this.filterSoftRemovedLaneComps(lanes);
+  }
+
+  async parseLaneId(idStr: string): Promise<LaneId> {
+    const scope: LegacyScope = this.scope.legacyScope;
+    return scope.lanes.parseLaneIdFromString(idStr);
   }
 
   private async filterSoftRemovedLaneComps(lanes: LaneData[]): Promise<LaneData[]> {
