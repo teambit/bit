@@ -445,6 +445,7 @@ export class AspectLoaderMain {
   }
 
   handleExtensionLoadingError(error: Error, idStr: string, throwOnError: boolean) {
+    this.envs.addFailedToLoadExt(idStr);
     const errorMsg = error.message.split('\n')[0]; // show only the first line if the error is long (e.g. happens with MODULE_NOT_FOUND errors)
     const msg = UNABLE_TO_LOAD_EXTENSION(idStr, errorMsg);
     if (throwOnError) {
@@ -683,11 +684,11 @@ export class AspectLoaderMain {
         if (!needToPrint) return;
         ids.forEach((id) => {
           this.failedToLoadExt.add(id);
-          this.envs.addFailedToLoadEnvs(id);
+          this.envs.addFailedToLoadExt(id);
           const parsedId = ComponentID.tryFromString(id);
           if (parsedId) {
             this.failedToLoadExt.add(parsedId.fullName);
-            this.envs.addFailedToLoadEnvs(parsedId.fullName);
+            this.envs.addFailedToLoadExt(parsedId.fullName);
           }
         });
       }

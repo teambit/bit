@@ -14,7 +14,7 @@ import type { AspectDefinition } from '@teambit/aspect-loader';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { BitError } from '@teambit/bit-error';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
-import { head } from 'lodash';
+import { head, uniq } from 'lodash';
 import WorkerAspect, { WorkerMain } from '@teambit/worker';
 import { BitId } from '@teambit/legacy-bit-id';
 import { EnvService } from './services';
@@ -75,7 +75,20 @@ export type Descriptor = RegularCompDescriptor | EnvCompDescriptor;
 export const DEFAULT_ENV = 'teambit.harmony/node';
 
 export class EnvsMain {
-  public failedToLoadEnvs = new Set<string>();
+  /**
+   * Envs that are failed to load
+   */
+  private failedToLoadEnvs = new Set<string>();
+  /**
+   * Extensions that are failed to load
+   * We use this as sometime when we couldn't load an extension we don't know if it's an env or not
+   * We should ideally take it from the aspect loader aspect, but right now the aspect loader is using envs
+   */
+  private failedToLoadExt = new Set<string>();
+  /**
+   * Ids of envs (not neccesrraly loaded successfully)
+   */
+  public envIds = new Set<string>();
 
   static runtime = MainRuntime;
 
@@ -135,13 +148,31 @@ export class EnvsMain {
    * @param {string} id - string - represents the unique identifier of an extension that failed to load.
    */
   addFailedToLoadEnvs(id: string) {
-    if (!this.failedToLoadEnvs.has(id)) {
-      this.failedToLoadEnvs.add(id);
+    this.failedToLoadEnvs.add(id);
+    this.envIds.add(id);
+  }
+
+  addFailedToLoadExt(id: string) {
+    this.failedToLoadExt.add(id);
+    if (this.envIds.has(id)) {
+      this.addFailedToLoadEnvs(id);
     }
   }
 
   resetFailedToLoadEnvs() {
     this.failedToLoadEnvs.clear();
+    this.failedToLoadExt.clear();
+  }
+
+  getFailedToLoadEnvs() {
+    const failedToLoadEnvs = Array.from(this.failedToLoadEnvs);
+    // Add all extensions which are also envs
+    for (const extId of this.failedToLoadExt) {
+      if (this.envIds.has(extId)) {
+        failedToLoadEnvs.push(extId);
+      }
+    }
+    return uniq(failedToLoadEnvs);
   }
 
   /**
@@ -476,11 +507,12 @@ export class EnvsMain {
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
-    const ids: string[] = [];
+    let ids: string[] = [];
     component.state.aspects.entries.forEach((aspectEntry) => {
       ids.push(aspectEntry.id.toString());
       ids.push(aspectEntry.id.toString({ ignoreVersion: true }));
     });
+    ids = uniq(ids);
     const envId = await this.findFirstEnv(ids);
     const finalId = envId || this.getDefaultEnv().id;
     return ComponentID.fromString(finalId);
@@ -499,6 +531,7 @@ export class EnvsMain {
       envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
       const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
       if (envDef) {
+        this.envIds.add(envDef.id);
         return envDef;
       }
     }
@@ -518,6 +551,7 @@ export class EnvsMain {
         // same as it was when it registered to the slot.
         const envDef = this.getEnvDefinitionById(matchedEntry.id);
         if (envDef) {
+          this.envIds.add(envDef.id);
           return envDef;
         }
         // Do not allow a non existing env
@@ -542,6 +576,7 @@ export class EnvsMain {
     });
 
     if (envDefFromList) {
+      this.envIds.add(envDefFromList.id);
       return envDefFromList;
     }
     return this.getDefaultEnv();
@@ -672,6 +707,7 @@ export class EnvsMain {
       envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
       const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
       if (envDef) {
+        this.envIds.add(envDef.id);
         return envDef;
       }
     }
@@ -694,6 +730,7 @@ export class EnvsMain {
         // same as it was when it registered to the slot.
         const envDef = this.getEnvDefinitionByLegacyExtension(matchedEntry);
         if (envDef) {
+          this.envIds.add(envDef.id);
           return envDef;
         }
         // Do not allow a non existing env
@@ -741,8 +778,13 @@ export class EnvsMain {
       if (envDef) return true;
       const envComponent = await this.getEnvComponentByEnvId(id);
       const hasManifest = this.hasEnvManifest(envComponent);
-      return !!hasManifest;
+      if (hasManifest) return true;
+      const isUsingEnvEnv = this.isUsingEnvEnv(envComponent);
+      return !!isUsingEnvEnv;
     });
+    if (envId) {
+      this.envIds.add(envId);
+    }
     return envId;
   }
 

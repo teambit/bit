@@ -5,7 +5,7 @@ import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/com
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { compact, mapValues, omit, uniq, pick } from 'lodash';
+import { compact, mapValues, omit, uniq, pick, intersection } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
@@ -403,14 +403,9 @@ export class InstallMain {
    * correctly
    */
   public getOldNonLoadedEnvs() {
-    const oldNonLoadedEnvs: string[] = [];
-
-    for (const string of this.envs.failedToLoadEnvs) {
-      if (this.dependencyResolver.envsWithoutManifest.has(string)) {
-        oldNonLoadedEnvs.push(string);
-      }
-    }
-
+    const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
+    const envsWithoutManifest = Array.from(this.dependencyResolver.envsWithoutManifest);
+    const oldNonLoadedEnvs = intersection(nonLoadedEnvs, envsWithoutManifest);
     return oldNonLoadedEnvs;
   }
 
@@ -546,7 +541,8 @@ export class InstallMain {
     const envs = new Set<ComponentID>();
     const components = await this.workspace.list();
     await pMapSeries(components, async (component) => {
-      envs.add(await this.envs.calculateEnvId(component));
+      const envId = await this.envs.calculateEnvId(component);
+      envs.add(envId);
     });
     return Array.from(envs.values());
   }
