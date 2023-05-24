@@ -931,10 +931,23 @@ export class EnvsMain {
 
   async addNonLoadedEnvAsComponentIssues(components: Component[]) {
     await pMapSeries(components, async (component) => {
-      const envId = (await this.calculateEnvId(component)).toString();
-      if (!this.isEnvRegistered(envId)) {
-        this.addFailedToLoadEnvs(envId);
-        component.state.issues.getOrCreate(IssuesClasses.NonLoadedEnv).data = envId;
+      const envId = await this.calculateEnvId(component);
+      const envIdStr = envId.toString();
+      if (!this.isEnvRegistered(envIdStr)) {
+        this.addFailedToLoadEnvs(envIdStr);
+        // If there is no version and the env is not in the workspace this is not valid
+        // you can't set external env without version
+        if (!envIdStr.includes('@')) {
+          const foundComp = components.find((c) => c.id.toStringWithoutVersion() === envIdStr);
+          if (!foundComp) {
+            component.state.issues.getOrCreate(IssuesClasses.ExternalEnvWithoutVersion).data = {
+              envId: envIdStr,
+              componentId: component.id.toString(),
+            };
+          }
+        } else {
+          component.state.issues.getOrCreate(IssuesClasses.NonLoadedEnv).data = envIdStr;
+        }
       }
     });
   }

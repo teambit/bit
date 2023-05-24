@@ -157,9 +157,8 @@ describe('custom env', function () {
         helper.extensions.addExtensionToVariant('*', envId);
       });
       it('should show a descriptive error when tagging the component', () => {
-        expect(() => helper.command.tagAllComponents()).to.throw(
-          `if this is an external env/extension/aspect configured in workspace.jsonc, make sure it is set with a version`
-        );
+        const tagOutput = helper.general.runWithTryCatch('bit tag -m msg');
+        expect(tagOutput).to.have.string('failed loading env - external env without a version');
       });
       describe('running any other command', () => {
         // @Gilad TODO
