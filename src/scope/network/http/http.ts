@@ -548,11 +548,11 @@ export class Http implements Network {
     return new DependencyGraph(oldGraph);
   }
 
-  async listLanes(): Promise<LaneData[]> {
+  async listLanes(id?: string): Promise<LaneData[]> {
     const LIST_LANES = gql`
-      query Lanes {
+      query Lanes($ids: [String!]) {
         lanes {
-          list {
+          list(ids: $ids) {
             id {
               name
               scope
@@ -567,12 +567,12 @@ export class Http implements Network {
       }
     `;
 
-    const res = await this.graphClientRequest(LIST_LANES, Verb.READ);
+    const res = await this.graphClientRequest(LIST_LANES, Verb.READ, { ids: id ? [id] : [] });
 
     return res.lanes.list.map((lane) => ({
       ...lane,
       id: LaneId.from(lane.id.name, lane.id.scope),
-      components: lane.components.map((id) => ({ id: new BitId(id), head: id.version })),
+      components: lane.components.map((laneCompId) => ({ id: new BitId(laneCompId), head: laneCompId.version })),
     }));
   }
 
