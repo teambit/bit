@@ -309,7 +309,8 @@ function excludeWorkspaceDependencies(deps: DepObjectValue): DepObjectValue {
 }
 
 async function getMissingPackages(component: Component): Promise<{ devMissings: string[]; runtimeMissings: string[] }> {
-  const missingPackagesData = component.state.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data;
+  const missingPackagesData = component.state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data;
+  if (!missingPackagesData) return { devMissings: [], runtimeMissings: [] };
   // TODO: this is a hack to get it from the legacy, we should take it from the dev files aspect
   // TODO: the reason we don't is that it will make circular dependency between the dep resolver and the dev files aspect
   const devFiles = await DependencyResolver.getDevFiles(component.state._consumer);
