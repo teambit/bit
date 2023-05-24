@@ -6,6 +6,8 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ApiServerAspect } from './api-server.aspect';
 import { CLIRoute } from './cli.route';
 import { ServerCmd } from './server.cmd';
+import { VSCodeRoute } from './vscode.route';
+import { APIForVSCode } from './api-for-vscode';
 
 export class ApiServerMain {
   constructor(
@@ -50,9 +52,11 @@ export class ApiServerMain {
     cli.register(new ServerCmd(apiServer));
 
     const cliRoute = new CLIRoute(logger, cli);
+    const apiForVscode = new APIForVSCode(workspace);
+    const vscodeRoute = new VSCodeRoute(logger, apiForVscode);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.
     if (workspace) {
-      express.register([cliRoute]);
+      express.register([cliRoute, vscodeRoute]);
     }
 
     return apiServer;
