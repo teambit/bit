@@ -197,6 +197,7 @@ export async function tagModelComponent({
   packageManagerConfigRootDir,
   dependencyResolver,
   copyLogFromPreviousSnap = false,
+  exitOnFirstFailedTask = false,
 }: {
   workspace?: Workspace;
   scope: ScopeMain;
@@ -213,6 +214,7 @@ export async function tagModelComponent({
   isSnap?: boolean;
   packageManagerConfigRootDir?: string;
   dependencyResolver: DependencyResolverMain;
+  exitOnFirstFailedTask?: boolean;
 } & BasicTagParams): Promise<{
   taggedComponents: ConsumerComponent[];
   autoTaggedResults: AutoTagResult[];
@@ -327,17 +329,17 @@ export async function tagModelComponent({
       disableTagAndSnapPipelines,
       throwOnError: true,
       forceDeploy,
-      skipTests,
       isSnap,
       skipBuildPipeline,
       combineBuildDataFromParent: skipBuildPipeline,
     };
     const seedersOnly = !workspace; // if tag from scope, build only the given components
     const isolateOptions = { packageManagerConfigRootDir, seedersOnly };
+    const builderOptions = { exitOnFirstFailedTask, skipTests };
 
     await scope.reloadAspectsWithNewVersion(allComponentsToTag);
     harmonyComps = await (workspace || scope).getManyByLegacy(allComponentsToTag);
-    const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions);
+    const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions, builderOptions);
     const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
 
     snapping._updateComponentsByTagResult(allComponentsToTag, buildResult);
