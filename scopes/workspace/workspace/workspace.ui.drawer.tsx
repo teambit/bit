@@ -73,6 +73,7 @@ export const workspaceDrawer = ({
       const { components: workspaceComponents } = workspace;
 
       const loading = lanesLoading || laneCompsLoading || mainCompsLoading;
+
       /**
        * if viewing locally checked out lane, return all components from the workspace
        * when viewing main when locally checked out to another lane, explicitly return components from the "main" lane
