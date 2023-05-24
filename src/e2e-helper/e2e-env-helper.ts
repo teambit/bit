@@ -243,15 +243,21 @@ export default class EnvHelper {
   setCustomNewEnv(
     extensionsBaseFolder = 'react-based-env',
     basePackages: string[] = ['@teambit/react.react-env'],
-    envJsoncOptions: GenerateEnvJsoncOptions
+    envJsoncOptions: GenerateEnvJsoncOptions,
+    runInstall = true,
+    targetFolder?: string,
+    id?: string
   ): string {
-    this.fixtures.copyFixtureExtensions(extensionsBaseFolder);
-    this.command.addComponent(extensionsBaseFolder);
-    this.fixtures.generateEnvJsoncFile(extensionsBaseFolder, envJsoncOptions);
-    this.extensions.addExtensionToVariant(extensionsBaseFolder, 'teambit.envs/env');
-    this.command.setEnv(extensionsBaseFolder, 'teambit.envs/env');
+    const addOptions = id ? { i: id } : {};
+    this.fixtures.copyFixtureExtensions(extensionsBaseFolder, undefined, targetFolder);
+    this.command.addComponent(targetFolder || extensionsBaseFolder, addOptions);
+    this.fixtures.generateEnvJsoncFile(targetFolder || extensionsBaseFolder, envJsoncOptions);
+    this.extensions.addExtensionToVariant(targetFolder || extensionsBaseFolder, 'teambit.envs/env');
+    this.command.setEnv(id || extensionsBaseFolder, 'teambit.envs/env');
     this.command.link();
-    this.command.install(basePackages.join(' '));
+    if (runInstall) {
+      this.command.install(basePackages.join(' '));
+    }
     // this.command.compile();
     return extensionsBaseFolder;
   }
