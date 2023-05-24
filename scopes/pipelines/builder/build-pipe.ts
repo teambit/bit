@@ -43,6 +43,10 @@ export type TaskResults = {
   endTime: number;
 };
 
+type PipeOptions = {
+  exitOnFirstFailedTask?: boolean; // by default it skips only when a dependent failed.
+};
+
 export class BuildPipe {
   private failedTasks: BuildTask[] = [];
   private failedDependencyTask: BuildTask | undefined;
@@ -56,8 +60,11 @@ export class BuildPipe {
     readonly envsBuildContext: EnvsBuildContext,
     readonly logger: Logger,
     readonly artifactFactory: ArtifactFactory,
-    private previousTaskResults?: TaskResults[]
-  ) {}
+    private previousTaskResults?: TaskResults[],
+    private options?: PipeOptions
+  ) {
+    console.log('options', options);
+  }
 
   get allTasksResults(): TaskResults[] {
     return [...(this.previousTaskResults || []), ...(this.taskResults || [])];
@@ -166,6 +173,11 @@ export class BuildPipe {
   }
 
   private shouldSkipTask(taskId: string, envId: string): boolean {
+    if (this.options?.exitOnFirstFailedTask && this.failedTasks.length) {
+      const failedTaskId = BuildTaskHelper.serializeId(this.failedTasks[0]);
+      this.logger.consoleWarning(`env: ${envId}, task "${taskId}" has skipped due to "${failedTaskId}" failure`);
+      return true;
+    }
     if (!this.failedDependencyTask) return false;
     const failedTaskId = BuildTaskHelper.serializeId(this.failedDependencyTask);
     this.logger.consoleWarning(`env: ${envId}, task "${taskId}" has skipped due to "${failedTaskId}" failure`);

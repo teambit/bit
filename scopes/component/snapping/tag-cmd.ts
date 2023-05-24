@@ -66,6 +66,11 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
 to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
     ],
     ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)'],
+    [
+      '',
+      'fail-fast',
+      'stop pipeline execution on the first failed task (by default a task is skipped only when its dependent failed)',
+    ],
     ['b', 'build', 'EXPERIMENTAL. not needed for now. run the pipeline build and complete the tag'],
     [
       'a',
@@ -116,6 +121,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableDeployPipeline = false,
       disableTagPipeline = false,
       forceDeploy = false,
+      failFast = false,
       incrementBy = 1,
     }: {
       all?: boolean | string;
@@ -134,6 +140,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       scope?: string | boolean;
       incrementBy?: number;
       disableDeployPipeline?: boolean;
+      failFast?: boolean;
       disableTagPipeline?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<string> {
@@ -230,6 +237,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       forceDeploy,
       incrementBy,
       version: ver,
+      failFast,
     };
 
     const results = await this.snapping.tag(params);

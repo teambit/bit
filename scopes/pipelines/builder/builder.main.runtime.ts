@@ -40,7 +40,6 @@ export type OnTagOpts = {
   forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
   skipBuildPipeline?: boolean; // helpful for tagging from scope where we want to use the build-artifacts of previous snap.
   combineBuildDataFromParent?: boolean; // helpful for tagging from scope where we want to save the build-data of parent snap.
-  skipTests?: boolean;
   isSnap?: boolean;
 };
 export const FILE_PATH_PARAM_DELIM = '~';
@@ -109,7 +108,8 @@ export class BuilderMain {
   async tagListener(
     components: Component[],
     options: OnTagOpts = {},
-    isolateOptions: IsolateComponentsOptions = {}
+    isolateOptions: IsolateComponentsOptions = {},
+    builderOptions: BuilderServiceOptions = {}
   ): Promise<OnTagResults> {
     const pipeResults: TaskResultsList[] = [];
     const allTasksResults: TaskResults[] = [];
@@ -119,7 +119,7 @@ export class BuilderMain {
       components,
       { emptyRootDir: true, ...isolateOptions },
       {
-        skipTests: options.skipTests,
+        ...builderOptions,
         // even when build is skipped (in case of tag-from-scope), the pre-build/post-build and teambit.harmony/aspect tasks are needed
         tasks: skipBuildPipeline ? [AspectAspect.id] : undefined,
       }
@@ -129,9 +129,14 @@ export class BuilderMain {
     pipeResults.push(buildEnvsExecutionResults);
 
     if (forceDeploy || (!disableTagAndSnapPipelines && !buildEnvsExecutionResults?.hasErrors())) {
+      const builderOptionsForTagSnap: BuilderServiceOptions = {
+        ...builderOptions,
+        seedersOnly: isolateOptions.seedersOnly,
+        previousTasksResults: buildEnvsExecutionResults?.tasksResults,
+      };
       const deployEnvsExecutionResults = isSnap
-        ? await this.runSnapTasks(components, isolateOptions, buildEnvsExecutionResults?.tasksResults)
-        : await this.runTagTasks(components, isolateOptions, buildEnvsExecutionResults?.tasksResults);
+        ? await this.runSnapTasks(components, builderOptionsForTagSnap)
+        : await this.runTagTasks(components, builderOptionsForTagSnap);
       if (throwOnError && !forceDeploy) deployEnvsExecutionResults.throwErrorsIfExist();
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
       pipeResults.push(deployEnvsExecutionResults);
@@ -291,30 +296,16 @@ export class BuilderMain {
     return buildResult;
   }
 
-  async runTagTasks(
-    components: Component[],
-    isolateOptions?: IsolateComponentsOptions,
-    previousTasksResults?: TaskResults[]
-  ): Promise<TaskResultsList> {
+  async runTagTasks(components: Component[], builderOptions: BuilderServiceOptions): Promise<TaskResultsList> {
     const envs = await this.envs.createEnvironment(components);
-    const buildResult = await envs.runOnce(this.tagService, {
-      seedersOnly: isolateOptions?.seedersOnly,
-      previousTasksResults,
-    });
+    const buildResult = await envs.runOnce(this.snapService, builderOptions);
 
     return buildResult;
   }
 
-  async runSnapTasks(
-    components: Component[],
-    isolateOptions?: IsolateComponentsOptions,
-    previousTasksResults?: TaskResults[]
-  ): Promise<TaskResultsList> {
+  async runSnapTasks(components: Component[], builderOptions: BuilderServiceOptions): Promise<TaskResultsList> {
     const envs = await this.envs.createEnvironment(components);
-    const buildResult = await envs.runOnce(this.snapService, {
-      seedersOnly: isolateOptions?.seedersOnly,
-      previousTasksResults,
-    });
+    const buildResult = await envs.runOnce(this.snapService, builderOptions);
 
     return buildResult;
   }
