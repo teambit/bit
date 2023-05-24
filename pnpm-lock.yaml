@@ -533,8 +533,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/html.modules.inject-html-element':
-        specifier: ^0.0.2
-        version: 0.0.2(react@17.0.2)
+        specifier: ^0.0.3
+        version: 0.0.3(react@17.0.2)
       '@teambit/html.modules.render-template':
         specifier: 0.0.104
         version: 0.0.104
@@ -31118,8 +31118,8 @@ importers:
   scopes/webpack/config-mutator:
     dependencies:
       '@teambit/html.modules.inject-html-element':
-        specifier: ^0.0.2
-        version: 0.0.2(react@17.0.2)
+        specifier: ^0.0.3
+        version: 0.0.3(react@17.0.2)
       html-webpack-plugin:
         specifier: 5.3.2
         version: 5.3.2(webpack@5.82.1)
@@ -41864,11 +41864,12 @@ packages:
     engines: {node: '>=12.22.0'}
     dev: false
 
-  /@teambit/html.modules.inject-html-element@0.0.2(react@17.0.2):
-    resolution: {integrity: sha1-JrSmZrGw33TNIoZ9TurRvNFjNxY=, tarball: https://node-registry.bit.cloud/tarballs/teambit.html/modules/inject-html-element@0.0.2.tgz}
+  /@teambit/html.modules.inject-html-element@0.0.3(react@17.0.2):
+    resolution: {integrity: sha1-wpifvBfflz5lvoh3ARZLDsuFXAs=, tarball: https://node-registry.bit.cloud/@teambit/html.modules.inject-html-element/-/@teambit-html.modules.inject-html-element-0.0.3.tgz}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0
     dependencies:
+      outdent: 0.8.0
       react: 17.0.2
     dev: false
 
@@ -57133,6 +57134,10 @@ packages:
       os-tmpdir: 1.0.2
     dev: false
 
+  /outdent@0.8.0:
+    resolution: {integrity: sha512-KiOAIsdpUTcAXuykya5fnVVT+/5uS0Q1mrkRHcF89tpieSmY33O/tmc54CqwA+bfhbtEfZUNLHaPUiB9X3jt1A==}
+    dev: false
+
   /p-cancelable@2.1.1:
     resolution: {integrity: sha512-BZOr3nRQHOntUjTrH8+Lh54smKHoHyur8We1V8DSMVrl5A2malOOwuJRnKRDjSnkoeBh4at6BwEnb5I7Jl31wg==}
     engines: {node: '>=8'}
@@ -71500,7 +71505,7 @@ packages:
     name: '@teambit/webpack.modules.config-mutator'
     version: 0.0.156
     dependencies:
-      '@teambit/html.modules.inject-html-element': 0.0.2(react@17.0.2)
+      '@teambit/html.modules.inject-html-element': 0.0.3(react@17.0.2)
       html-webpack-plugin: 5.3.2(webpack@5.82.1)
       json-formatter-js: 2.3.4
       lodash: 4.17.21
