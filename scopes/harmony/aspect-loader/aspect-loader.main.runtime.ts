@@ -111,6 +111,7 @@ export type MainAspect = {
 export class AspectLoaderMain {
   private inMemoryConfiguredAspects: string[] = [];
   private failedToLoadExt = new Set<string>();
+  private alreadyShownWarning = new Set<string>();
 
   constructor(
     private logger: Logger,
@@ -452,10 +453,17 @@ export class AspectLoaderMain {
       throw new CannotLoadExtension(idStr, error);
     }
     this.logger.error(msg, error);
-    if (this.logger.isLoaderStarted) {
-      this.logger.consoleFailure(msg);
-    } else {
-      this.logger.consoleWarning(msg);
+    this.printWarningIfFirstTime(idStr, msg, this.logger.isLoaderStarted);
+  }
+
+  private printWarningIfFirstTime(envId: string, msg: string, showAsFailure: boolean) {
+    if (!this.alreadyShownWarning.has(envId)) {
+      this.alreadyShownWarning.add(envId);
+      if (showAsFailure) {
+        this.logger.consoleFailure(msg);
+      } else {
+        this.logger.consoleWarning(msg);
+      }
     }
   }
 
