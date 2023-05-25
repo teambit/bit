@@ -11,7 +11,6 @@ import {
 import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
-import { ResolveModulesConfig } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import AbstractConfig from './abstract-config';
 import ConsumerOverrides from './consumer-overrides';
 import { BitConfigNotFound, InvalidBitJson, InvalidPackageJson } from './exceptions';
@@ -49,7 +48,6 @@ export type WorkspaceConfigProps = {
   packageManagerProcessOptions?: Record<string, any>;
   useWorkspaces?: boolean;
   manageWorkspaces?: boolean;
-  resolveModules?: ResolveModulesConfig;
   defaultScope?: string;
   overrides?: ConsumerOverrides;
 };
@@ -63,7 +61,6 @@ export default class WorkspaceConfig extends AbstractConfig {
   packageManagerProcessOptions: Record<string, any> | undefined; // package manager process options
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
   manageWorkspaces: boolean; // manage workspaces with yarn
-  resolveModules: ResolveModulesConfig | undefined;
   overrides: ConsumerOverrides;
   packageJsonObject: Record<string, any> | null | undefined; // workspace package.json if exists (parsed)
   defaultScope: string | undefined; // default remote scope to export to
@@ -98,7 +95,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     packageManagerProcessOptions,
     useWorkspaces = DEFAULT_USE_WORKSPACES,
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
-    resolveModules,
     defaultScope,
     overrides = ConsumerOverrides.load(),
   }: WorkspaceConfigProps) {
@@ -118,7 +114,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     this.packageManagerProcessOptions = packageManagerProcessOptions;
     this.useWorkspaces = useWorkspaces;
     this.manageWorkspaces = manageWorkspaces;
-    this.resolveModules = resolveModules;
     this.defaultScope = defaultScope;
     this.overrides = overrides;
   }
@@ -135,7 +130,6 @@ export default class WorkspaceConfig extends AbstractConfig {
       packageManagerProcessOptions: this.packageManagerProcessOptions,
       useWorkspaces: this.useWorkspaces,
       manageWorkspaces: this.manageWorkspaces,
-      resolveModules: this.resolveModules,
       defaultScope: this.defaultScope,
       overrides: this.overrides.overrides,
     };
@@ -230,8 +224,6 @@ export default class WorkspaceConfig extends AbstractConfig {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       manageWorkspaces,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      resolveModules,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       defaultScope,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       overrides,
@@ -249,7 +241,6 @@ export default class WorkspaceConfig extends AbstractConfig {
       packageManagerProcessOptions,
       useWorkspaces,
       manageWorkspaces,
-      resolveModules,
       defaultScope,
       overrides: ConsumerOverrides.load(overrides),
     });

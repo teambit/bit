@@ -15,7 +15,6 @@ import sassLookup from 'sass-lookup';
 import stylusLookup from 'stylus-lookup';
 import ts from 'typescript';
 
-import { isRelativeImport } from '../../../../../utils';
 import { DetectorHook } from '../detector-hook';
 
 const debug = require('debug')('cabinet');
@@ -56,7 +55,6 @@ type Options = {
   ast?: string;
   ext?: string;
   content?: string;
-  wasCustomResolveUsed?: boolean;
 };
 
 export default function cabinet(options: Options) {
@@ -209,14 +207,7 @@ function jsLookup(options: Options) {
     syntax for importing relative files. Writing `@import "file"` is the same as `@import "./file";
  */
 function cssPreprocessorLookup(options: Options) {
-  const { filename, dependency, directory, resolveConfig } = options;
-  if (resolveConfig && !isRelativeImport(dependency)) {
-    const result = resolveNonRelativePath(dependency, filename, directory, resolveConfig);
-    if (result) {
-      options.wasCustomResolveUsed = true;
-      return result;
-    }
-  }
+  const { filename, dependency, directory } = options;
   if (dependency.startsWith('~') && !dependency.startsWith('~/')) {
     // webpack syntax for resolving a module from node_modules
     debug('changing the resolver of css preprocessor to resolveWebpackPath as it has a ~ prefix');
@@ -261,23 +252,8 @@ function tsLookup(options: Options) {
   return result ? path.resolve(result) : '';
 }
 
-function resolveNonRelativePath(dependency, filename, directory, resolveConfig) {
-  const webpackResolveConfig = {};
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  if (resolveConfig.modulesDirectories) webpackResolveConfig.modules = resolveConfig.modulesDirectories;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  if (resolveConfig.aliases) webpackResolveConfig.alias = resolveConfig.aliases;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  webpackResolveConfig.extensions = resolveExtensions;
-  // a resolve module might point to an imported component via the package name, in which case
-  // the package name is a symlink to the imported component. we want it to be resolved as a pkg
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  webpackResolveConfig.symlinks = false;
-  return resolveWebpack(dependency, filename, directory, webpackResolveConfig);
-}
-
 function commonJSLookup(options: Options) {
-  const { filename, resolveConfig } = options;
+  const { filename } = options;
   const directory = path.dirname(filename); // node_modules should be propagated from the file location backwards
   // Need to resolve dependencies within the directory of the module, not filing-cabinet
   const moduleLookupDir = path.join(directory, 'node_modules');
@@ -289,17 +265,6 @@ function commonJSLookup(options: Options) {
   let dependency = options.dependency;
 
   let result = '';
-
-  if (!isRelativeImport(dependency) && resolveConfig) {
-    debug(`trying to resolve using resolveConfig ${JSON.stringify(resolveConfig)}`);
-    result = resolveNonRelativePath(dependency, filename, directory, resolveConfig);
-    if (result) {
-      debug('successfully resolved using resolveConfig');
-      options.wasCustomResolveUsed = true;
-      return result;
-    }
-    debug('failed resolved using resolveConfig, fall back to the standard resolver');
-  }
 
   // Make sure the dependency is being resolved to the filename's context
   // 3rd party modules will not be relative
