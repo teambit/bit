@@ -36,7 +36,8 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
-    ['', 'no-squash', 'EXPERIMENTAL. relevant for merging lanes into main, which by default squash.'],
+    ['', 'no-squash', 'relevant for merging lanes into main, which by default squash'],
+    ['', 'squash', 'EXPERIMENTAL. relevant for merging a lane into another lane, which by default does not squash'],
     [
       '',
       'ignore-config-changes',
@@ -71,6 +72,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       manual = false,
       build,
       workspace: existingOnWorkspaceOnly = false,
+      squash = false,
       noSnap = false,
       tag = false,
       message: snapMessage = '',
@@ -92,6 +94,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       tag: boolean;
       message: string;
       keepReadme?: boolean;
+      squash?: boolean;
       noSquash: boolean;
       skipDependencyInstallation?: boolean;
       skipFetch: boolean;
@@ -126,6 +129,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       noSnap,
       snapMessage,
       keepReadme,
+      squash,
       noSquash,
       tag,
       pattern,

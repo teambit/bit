@@ -40,6 +40,7 @@ export type MergeLaneOptions = {
   existingOnWorkspaceOnly: boolean;
   build: boolean;
   keepReadme: boolean;
+  squash?: boolean;
   noSquash: boolean;
   tag?: boolean;
   pattern?: string;
@@ -79,6 +80,7 @@ export class MergeLanesMain {
       existingOnWorkspaceOnly,
       build,
       keepReadme,
+      squash,
       noSquash,
       pattern,
       includeDeps,
@@ -140,7 +142,7 @@ export class MergeLanesMain {
       resolveUnrelated,
       ignoreConfigChanges,
     });
-    const shouldSquash = currentLaneId.isDefault() && !noSquash;
+    const shouldSquash = squash || (currentLaneId.isDefault() && !noSquash);
 
     if (pattern) {
       const componentIds = await this.workspace.resolveMultipleComponentIds(bitIds);
