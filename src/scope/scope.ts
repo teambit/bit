@@ -358,7 +358,7 @@ once done, to continue working, please run "bit cc"`
     // in which case, we prefer to go to main instead of the lane.
     // for some reason (needs to check why) the tag-artifacts which got created using merge+tag from-scope
     // exist only on main and not on the lane-scope.
-    const component = await this.getModelComponent(id);
+    const component = await this.getModelComponent(id.changeVersion(undefined));
     if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
     if (component.head.toString() === id.version) return false; // it's on main
     if (isTag(id.version)) return false; // tags can be on main only

@@ -91,9 +91,9 @@ in case this is running on a lane, it'll mark the component as deleted on the la
         throw new BitError(
           `error: --hard and --delete cannot be used together. soft delete can only be done locally, after tag/snap and export it updates the remote`
         );
-      if (track) throw new BitError(`error: please use either --soft or --track, not both`);
-      if (keepFiles) throw new BitError(`error: please use either --soft or --keep-files, not both`);
-      if (fromLane) throw new BitError(`error: please use either --soft or --from-lane, not both`);
+      if (track) throw new BitError(`error: please use either --delete or --track, not both`);
+      if (keepFiles) throw new BitError(`error: please use either --delete or --keep-files, not both`);
+      if (fromLane) throw new BitError(`error: please use either --delete or --from-lane, not both`);
       const removedCompIds = await this.remove.softRemove(componentsPattern);
       return `${chalk.green('successfully soft-removed the following components:')}
 ${removedCompIds.join('\n')}
