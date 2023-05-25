@@ -415,7 +415,7 @@ export default class ComponentsList {
   }
 
   /**
-   * components that were deleted by soft-remove (bit remove --soft) and were not tagged/snapped after this change.
+   * components that were deleted by soft-remove (bit remove --delete) and were not tagged/snapped after this change.
    * practically, their bitmap record has the config or "removed: true" and the component has deleted from the filesystem
    * in bit-status, we suggest to snap+export.
    */
