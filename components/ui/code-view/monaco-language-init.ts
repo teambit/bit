@@ -36,7 +36,7 @@ export const customTokenizer: monaco.languages.IMonarchLanguage = {
     tag: [
       [/\s+/, ''],
       [
-        /([A-Za-z_$][A-Za-z0-9_$]*)(?=\s*[\s\n]*[/>]|[\s\n]*=|[\s\n]*)/,
+        /([A-Za-z_$][A-Za-z0-9_.$]*)(?=\s+[\s\n]*[/>]|[\s\n]*=|[\s\n]*)/,
         {
           cases: {
             '[A-Z$][\\w$]*(?!\\s*=)': 'tag.custom',
@@ -45,7 +45,7 @@ export const customTokenizer: monaco.languages.IMonarchLanguage = {
           },
         },
       ],
-      [/([A-Za-z_$][\w$-]*|[\w$-]+(?=\s*=))/, 'attribute.key'],
+      [/([A-Za-z_$][\w$-]*)(?=\s*=)/, 'attribute.key'],
       [/\/>/, { token: 'delimiter.angle', next: '@pop' }],
       [/>/, { token: 'delimiter.angle', next: '@pop' }],
       [/=/, 'delimiter'],
@@ -54,7 +54,7 @@ export const customTokenizer: monaco.languages.IMonarchLanguage = {
       [/{/, { token: 'delimiter.bracket', next: '@jsxAttributeValue' }],
     ],
     attribute: [
-      [/([A-Za-z_$][\w$-]*)(?=[\s\n]*=)/, 'attribute.key'],
+      [/([A-Za-z_$][\w$-]*)(?=\s*=)/, 'attribute.key'],
       [/\/>/, { token: 'delimiter.angle', next: '@pop' }],
       [/>/, { token: 'delimiter.angle', next: '@pop' }],
       [/=/, 'delimiter'],
@@ -67,7 +67,7 @@ export const customTokenizer: monaco.languages.IMonarchLanguage = {
     closingTag: [
       [/\s+/, ''],
       [
-        /([A-Za-z_$][A-Za-z0-9_$]*)(?=[\s\n]*[/>]|[\s\n]*=|[\s\n]*)/,
+        /([A-Za-z_$][A-Za-z0-9_.$]*)(?=[\s\n]*[/>]|[\s\n]*)/,
         { cases: { '[A-Z$][\\w$]*': 'tag.custom', '@default': 'tag.dom' }, next: '@pop' },
       ],
       [/>/, { token: 'delimiter.angle', next: '@pop' }],
@@ -84,7 +84,6 @@ export const customTokenizer: monaco.languages.IMonarchLanguage = {
       [/{/, { token: 'delimiter.bracket', next: '@nestedJsxAttributeValue' }],
       [/}/, { token: 'delimiter.bracket', next: '@pop' }],
       [/<(?=[A-Za-z])/, { token: 'delimiter.angle', next: '@tag' }],
-      [/(\w+)(?=[\s\n]*=)/, 'attribute.key'],
       [/[^{}]+/, 'attribute.key'],
     ],
     nestedJsxAttributeValue: [

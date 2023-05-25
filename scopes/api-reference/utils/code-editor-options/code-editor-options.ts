@@ -21,6 +21,7 @@ export const defaultCodeEditorOptions: monaco.editor.IStandaloneEditorConstructi
     enabled: false,
   },
   renderLineHighlight: 'none',
-  lineHeight: 18,
-  padding: { top: 8 },
+  lineHeight: 20,
+  padding: { top: 8, bottom: 8 },
+  cursorBlinking: 'smooth',
 };
