@@ -72,7 +72,6 @@ export class CheckoutMain {
     const consumer = this.workspace.consumer;
     const { version, ids, promptMergeOptions } = checkoutProps;
     await this.syncNewComponents(checkoutProps);
-    await this.importer.importCurrentObjects(); // important. among others, it fetches the remote lane object and its new components.
     const bitIds = BitIds.fromArray(ids?.map((id) => id._legacy) || []);
     const { components } = await consumer.loadComponents(bitIds);
 
@@ -201,6 +200,7 @@ export class CheckoutMain {
     this.logger.setStatusLine(BEFORE_CHECKOUT);
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
+    await this.importer.importCurrentObjects(); // important. among others, it fetches the remote lane object and its new components.
     if (to === 'head') await this.makeLaneComponentsAvailableOnMain();
     await this.parseValues(to, componentPattern, checkoutProps);
     const checkoutResults = await this.checkout(checkoutProps);
