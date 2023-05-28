@@ -518,7 +518,7 @@ jobs:
           command: cd bit && bit diff
       - run:
           name: 'bit build'
-          command: 'cd bit && bit build'
+          command: 'cd bit && bit build --unmodified'
           environment:
             NODE_OPTIONS: --max-old-space-size=15000
       - store_artifacts:
