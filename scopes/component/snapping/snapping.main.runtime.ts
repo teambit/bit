@@ -134,6 +134,7 @@ export class SnappingMain {
     forceDeploy = false,
     incrementBy = 1,
     disableTagAndSnapPipelines = false,
+    failFast = false,
   }: {
     ids?: string[];
     all?: boolean | string;
@@ -144,6 +145,7 @@ export class SnappingMain {
     ignoreIssues?: string;
     scope?: string | boolean;
     incrementBy?: number;
+    failFast?: boolean;
   } & Partial<BasicTagParams>): Promise<TagResults | null> {
     if (soft) build = false;
     if (disableTagAndSnapPipelines && forceDeploy) {
@@ -211,6 +213,7 @@ export class SnappingMain {
       incrementBy,
       packageManagerConfigRootDir: this.workspace.path,
       dependencyResolver: this.dependencyResolver,
+      exitOnFirstFailedTask: failFast,
     });
 
     const tagResults = { taggedComponents, autoTaggedResults, isSoftTag: soft, publishedPackages };
@@ -426,6 +429,7 @@ export class SnappingMain {
     disableTagAndSnapPipelines = false,
     forceDeploy = false,
     unmodified = false,
+    exitOnFirstFailedTask = false,
   }: {
     pattern?: string;
     legacyBitIds?: BitIds;
@@ -439,6 +443,7 @@ export class SnappingMain {
     disableTagAndSnapPipelines?: boolean;
     forceDeploy?: boolean;
     unmodified?: boolean;
+    exitOnFirstFailedTask?: boolean;
   }): Promise<SnapResults | null> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     if (pattern && legacyBitIds) throw new Error(`please pass either pattern or legacyBitIds, not both`);
@@ -475,6 +480,7 @@ export class SnappingMain {
       forceDeploy,
       packageManagerConfigRootDir: this.workspace.path,
       dependencyResolver: this.dependencyResolver,
+      exitOnFirstFailedTask,
     });
 
     const snapResults: Partial<SnapResults> = {

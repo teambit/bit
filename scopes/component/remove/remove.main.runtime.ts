@@ -93,7 +93,7 @@ export class RemoveMain {
     const newComps = components.filter((c) => !c.id.hasVersion());
     if (newComps.length) {
       throw new BitError(
-        `unable to soft-remove the following new component(s), please remove them without --soft\n${newComps
+        `unable to soft-remove the following new component(s), please remove them without --delete\n${newComps
           .map((c) => c.id.toString())
           .join('\n')}`
       );
