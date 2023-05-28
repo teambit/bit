@@ -164,6 +164,9 @@ export class DependencyInstaller {
             delete linkedDependencies[finalRootDir][manifest.name];
           }
         }
+        if (!packageManagerOptions.hasHarmonyInRootPolicy) {
+          delete manifests[finalRootDir].dependencies!['@teambit/harmony'];
+        }
       }
       Object.entries(linkedDependencies).forEach(([dir, linkedDeps]) => {
         if (!manifests[dir]) {

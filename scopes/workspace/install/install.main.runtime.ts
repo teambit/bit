@@ -233,6 +233,7 @@ export class InstallMain {
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       rootComponents: hasRootComponents,
       updateAll: options?.updateAll,
+      hasHarmonyInRootPolicy: this.dependencyResolver.hasHarmonyInRootPolicy(),
     };
     const prevManifests = new Set<string>();
     // TODO: this make duplicate
