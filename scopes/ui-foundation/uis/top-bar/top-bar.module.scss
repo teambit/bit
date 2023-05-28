@@ -10,5 +10,5 @@ $topbarHeight: 56px;
   box-sizing: border-box;
   font-size: var(--bit-p-xs, 14px);
   // top bar needs to be with higher zindex in order for the menu to go over collapser button and splitter
-  z-index: $pane-splitter-zIndex;
+  z-index: $topBar-zIndex;
 }
