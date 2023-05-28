@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### New Features
 
-- Use the `--squash` option, when merging one lane to another, to squsash snaps (this was previously only available when merging to 'main') (#7448)
 - Use the `--fail-fast` option to exist the build process (and log the error) when a build task fails (use with `bit build`/`bit snap` /`bit tag` (#7444)
 - Enable injecting raw strings to the HTML Injector (#7274)
+- Use the `--squash` option, when merging one lane to another, to squsash snaps (this was previously only available when merging to 'main') (#7448)
 
 ### Bug Fixes
 
