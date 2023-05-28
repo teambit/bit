@@ -1,4 +1,4 @@
-import fs from 'fs';
+// import fs from 'fs';
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
