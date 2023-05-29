@@ -46,4 +46,33 @@ describe('bit checkout command when on a lane', function () {
       expect(bitmap.comp2.version).to.equal(comp2RemoteHead);
     });
   });
+  describe('checkout head on main when some components are not available on main', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      // helper.fixtures.populateComponents(2);
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      // as an intermediate step, make sure that comp2 is not available on main
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
+
+      // merge the lane from a bare-scope
+      const bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+      helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`, '--push');
+
+      helper.command.checkoutHead('-x');
+    });
+    it('should make them available on main even without running bit-import before', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(2);
+    });
+  });
 });
