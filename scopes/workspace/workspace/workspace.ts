@@ -100,6 +100,10 @@ export type EjectConfResult = {
   configPath: string;
 };
 
+export type ClearCacheOptions = {
+  skipClearFailedToLoadEnvs?: boolean;
+};
+
 export const AspectSpecificField = '__specific';
 export const ComponentAdded = 'componentAdded';
 export const ComponentChanged = 'componentChanged';
@@ -615,8 +619,9 @@ export class Workspace implements ComponentFactory {
     return workspaceAspectsLoader.getConfiguredUserAspectsPackages(options);
   }
 
-  clearCache() {
+  clearCache(options: ClearCacheOptions = {}) {
     this.aspectLoader.resetFailedLoadAspects();
+    if (!options.skipClearFailedToLoadEnvs) this.envs.resetFailedToLoadEnvs();
     this.logger.debug('clearing the workspace and scope caches');
     delete this._cachedListIds;
     this.componentLoader.clearCache();
@@ -1334,7 +1339,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.harmony,
       this.onAspectsResolveSlot,
       this.onRootAspectAddedSlot,
-      this.config.resolveAspectsFromNodeModules
+      this.config.resolveAspectsFromNodeModules,
+      this.config.resolveEnvsFromRoots
     );
     return workspaceAspectsLoader;
   }
