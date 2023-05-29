@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
+import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { IssuesClasses } from '../../scopes/component/component-issues';
 import { Extensions, IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -156,6 +157,72 @@ describe('custom env', function () {
       expect(env).to.include(envId);
     });
   });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('load env from env root', () => {
+    let envId;
+    let envName;
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      helper.bitJsonc.setupDefault();
+      envName = helper.env.setCustomNewEnv(undefined, undefined, {
+        policy: {
+          peers: [
+            {
+              name: 'react',
+              version: '^16.8.0',
+              supportedRange: '^16.8.0',
+            },
+          ],
+        },
+      });
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.showComponent(envId);
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      // Clean the capsule dir to make sure it's empty before we continue
+      const scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
+      if (fs.pathExistsSync(scopeAspectsCapsulesRootDir)) {
+        fs.rmdirSync(scopeAspectsCapsulesRootDir, { recursive: true });
+      }
+
+      helper.scopeHelper.addRemoteScope();
+      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.extensions.bitJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', true);
+      helper.fixtures.populateComponents(1);
+      helper.command.setEnv('comp1', envId);
+      helper.command.install();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper = new Helper();
+    });
+    it('should load the env without issue', () => {
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.NonLoadedEnv.name);
+      const showOutput = helper.command.showComponent('comp1');
+      expect(showOutput).to.have.string(envId);
+      expect(showOutput).to.not.have.string('not loaded');
+    });
+    it('should have the env installed in its root', () => {
+      const envRootDir = helper.env.rootCompDir(`${envId}@0.0.1`);
+      const resolvedInstalledEnv = resolveFrom(envRootDir, [
+        `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.react-based-env`,
+      ]);
+      expect(envRootDir).to.be.a.path();
+      expect(resolvedInstalledEnv).to.be.a.path();
+    });
+    it('should not create scope aspect capsule', () => {
+      const scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
+      expect(scopeAspectsCapsulesRootDir).to.not.be.a.path();
+    });
+  });
+
   (supportNpmCiRegistryTesting ? describe : describe.skip)('custom env installed as a package', () => {
     let envId;
     let envName;
@@ -178,6 +245,10 @@ describe('custom env', function () {
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();
     });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper = new Helper();
+    });
     describe('setting up the external env without a version', () => {
       before(() => {
         helper.fixtures.populateComponents(1);
@@ -192,6 +263,7 @@ describe('custom env', function () {
         it.skip('should warn or error about the misconfigured env and suggest to enter the version', () => {});
       });
     });
+
     describe('set up the env using bit env set without a version', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
