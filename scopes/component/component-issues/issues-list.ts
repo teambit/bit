@@ -1,5 +1,4 @@
 import { ComponentIssue } from './component-issue';
-import { CustomModuleResolutionUsed } from './custom-module-resolution-used';
 import { ImportNonMainFiles } from './import-non-main-files';
 import { MissingComponents } from './missing-components';
 import { MissingDependenciesOnFs } from './missing-dependencies-on-fs';
@@ -33,7 +32,6 @@ export const IssuesClasses = {
   LegacyInsideHarmony,
   MissingDependenciesOnFs,
   ImportNonMainFiles,
-  CustomModuleResolutionUsed,
   MultipleEnvs,
   MissingLinksFromNodeModulesToSrc,
   CircularDependencies,

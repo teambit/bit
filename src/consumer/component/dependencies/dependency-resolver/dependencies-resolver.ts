@@ -16,7 +16,6 @@ import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../uti
 import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../../utils/path';
 import ComponentMap from '../../../bit-map/component-map';
 import Component from '../../../component/consumer-component';
-import Dependencies from '../dependencies';
 import { RelativePath } from '../dependency';
 import { getDependencyTree } from '../files-dependency-builder';
 import { FileObject, ImportSpecifier, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
@@ -214,7 +213,6 @@ export default class DependencyResolver {
       workspacePath: this.consumerPath,
       filePaths: allFiles,
       bindingPrefix: this.component.bindingPrefix,
-      resolveModulesConfig: this.consumer.config._resolveModules,
       visited: cacheResolvedDependencies,
       cacheProjectAst,
       envDetectors,
@@ -271,14 +269,13 @@ export default class DependencyResolver {
       this.processPackages(file, fileType);
       this.processComponents(file, fileType);
       this.processDepFiles(file, fileType);
-      this.processUnidentifiedPackages(file, fileType);
+      this.processUnidentifiedPackages(file);
     });
 
     this.cloneAllPackagesDependencies();
 
     this.removeIgnoredPackagesByOverrides();
     this.removeDevAndEnvDepsIfTheyAlsoRegulars();
-    this.addCustomResolvedIssues();
     this.applyPeersFromComponentModel();
     this.applyPackageJson();
     this.applyWorkspacePolicy();
@@ -308,23 +305,6 @@ export default class DependencyResolver {
   private async loadAutoDetectConfigMerge() {
     const autoDetectOverrides = await DependencyResolver.getOnComponentAutoDetectConfigMerge(this.component.id);
     this.autoDetectConfigMerge = autoDetectOverrides || {};
-  }
-
-  addCustomResolvedIssues() {
-    const deps: Dependency[] = [...this.allDependencies.dependencies, ...this.allDependencies.devDependencies];
-    const customModulesDeps = deps.filter((dep) => dep.relativePaths.some((r) => r.isCustomResolveUsed));
-    if (customModulesDeps.length) {
-      const importSources = customModulesDeps.reduce((acc, current) => {
-        current.relativePaths.forEach((relativePath) => {
-          if (relativePath.isCustomResolveUsed) {
-            // @ts-ignore
-            acc[relativePath.importSource] = current.id.toStringWithoutVersion();
-          }
-        });
-        return acc;
-      }, {});
-      this.issues.getOrCreate(IssuesClasses.CustomModuleResolutionUsed).data = importSources;
-    }
   }
 
   cloneAllPackagesDependencies() {
@@ -442,7 +422,6 @@ export default class DependencyResolver {
     destination: string | null | undefined;
   } {
     let depFileRelative: PathLinux = depFile; // dependency file path relative to consumer root
-    let componentId: BitId | null | undefined;
     let destination: string | null | undefined;
     const rootDir = this.componentMap.rootDir;
     if (rootDir) {
@@ -454,37 +433,9 @@ export default class DependencyResolver {
       depFileRelative = pathNormalizeToLinux(path.relative(this.consumerPath, fullDepFile));
     }
 
-    componentId = this.consumer.bitMap.getComponentIdByPath(depFileRelative);
-    if (!componentId) componentId = this._getComponentIdFromCustomResolveToPackageWithDist(depFileRelative);
+    const componentId = this.consumer.bitMap.getComponentIdByPath(depFileRelative);
 
     return { componentId, depFileRelative, destination };
-  }
-
-  /**
-   * this is a workaround for cases where an alias points to a package with dist.
-   * normally, aliases are created for local directories.
-   * they can be however useful when a source code can't be touched and `require` to one package
-   * needs to be replaced with a `require` to a component. in that case, our options are:
-   * 1) point the alias to the package name.
-   * 2) point the alias to the relative directory of the imported component
-   * the ideal solution is #1, however, it requires changes in the Tree structure, which should
-   * allow "components" to have more data, such as importSource.
-   * here, we go option #2, the alias is a relative path to the component. however, when there is
-   * dist directory, the resolved path contains the "dist", which doesn't exist in the ComponentMap,
-   * the solution we take is to identify such cases, strip the dist, then try to find them again.
-   */
-  _getComponentIdFromCustomResolveToPackageWithDist(depFile: string): BitId | null | undefined {
-    if (!depFile.includes('dist')) return null;
-    const resolveModules = this.consumer.config._resolveModules;
-    if (!resolveModules || !resolveModules.aliases) return null;
-    const aliases = resolveModules.aliases;
-    const foundAlias = Object.keys(aliases).find((alias) => depFile.startsWith(aliases[alias]));
-    if (!foundAlias) return null;
-    const newDepFile = depFile.replace(
-      `${resolveModules.aliases[foundAlias]}/dist`,
-      resolveModules.aliases[foundAlias]
-    );
-    return this.consumer.bitMap.getComponentIdByPath(newDepFile);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -618,10 +569,6 @@ either, use the ignore file syntax or change the require statement to have a mod
       });
       depsPaths.importSpecifiers = importSpecifiers;
     }
-    if (depFileObject.isCustomResolveUsed) {
-      depsPaths.isCustomResolveUsed = depFileObject.isCustomResolveUsed;
-      depsPaths.importSource = importSource;
-    }
     const currentComponentsDeps: Dependency = { id: componentId, relativePaths: [depsPaths] };
     this._pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource, depsPaths);
 
@@ -651,10 +598,7 @@ either, use the ignore file syntax or change the require statement to have a mod
           existingDepRelativePaths.importSpecifiers.push(...nonExistingImportSpecifiers);
         }
       }
-      // Handle cases when the first dep paths are not custom resolved and the new one is
-      if (depsPaths.isCustomResolveUsed && !existingDepRelativePaths.isCustomResolveUsed) {
-        existingDepRelativePaths.isCustomResolveUsed = depsPaths.isCustomResolveUsed;
-      }
+
       if (depsPaths.importSource && !existingDepRelativePaths.importSource) {
         existingDepRelativePaths.importSource = depsPaths.importSource;
       }
@@ -927,13 +871,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       const missingPackages = missing.packages.filter(
         (pkg) => !this.overridesDependencies.shouldIgnorePackage(pkg, fileType)
       );
-      if (R.isEmpty(missingPackages)) return;
-      const customResolvedDependencies = this.findOriginallyCustomModuleResolvedDependencies(missingPackages);
-      const missingPackagesWithoutCustomResolved = customResolvedDependencies
-        ? R.difference(missingPackages, Object.keys(customResolvedDependencies))
-        : missingPackages;
-
-      if (!R.isEmpty(missingPackagesWithoutCustomResolved)) {
+      if (!R.isEmpty(missingPackages)) {
         this._pushToMissingPackagesDependenciesIssues(originFile, missingPackages);
       }
     };
@@ -1042,6 +980,10 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   /**
+   * ** LEGACY ONLY **
+   * This is related to a legacy feature "custom-module-resolution". the code was removed, only the debug is still there, just in case.
+   *
+   * ** OLD COMMENT **
    * currently the only unidentified packages being process are the ones coming from custom-modules-resolution.
    * assuming the author used custom-resolution, which enable using non-relative import syntax,
    * for example, requiring the file 'src/utils/is-string' from anywhere as require('utils/is-string');
@@ -1055,37 +997,10 @@ either, use the ignore file syntax or change the require statement to have a mod
    * keep in mind that this custom-modules-resolution supported on legacy components only.
    * as such, no need to find the packageName to pass to _pushToDependenciesIfNotExist method.
    */
-  processUnidentifiedPackages(originFile: PathLinuxRelative, fileType: FileType) {
+  processUnidentifiedPackages(originFile: PathLinuxRelative) {
     const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
     if (!unidentifiedPackages || !unidentifiedPackages.length) return;
     this.debugDependenciesData.unidentifiedPackages = unidentifiedPackages;
-    if (!this.componentFromModel) return; // not relevant, the component is not imported
-    const getDependencies = (): Dependencies => {
-      if (fileType.isTestFile) return this.componentFromModel.devDependencies;
-      return this.componentFromModel.dependencies;
-    };
-    const dependencies: Dependencies = getDependencies();
-    if (dependencies.isEmpty()) return;
-    const importSourceMap = dependencies.getCustomResolvedData();
-    if (R.isEmpty(importSourceMap)) return;
-    const clonedDependencies = new Dependencies(dependencies.getClone());
-    unidentifiedPackages.forEach((unidentifiedPackage) => {
-      const packageLinuxFormat = pathNormalizeToLinux(unidentifiedPackage);
-      const packageWithNoNodeModules = packageLinuxFormat.replace('node_modules/', '');
-      const foundImportSource = Object.keys(importSourceMap).find((importSource) =>
-        packageWithNoNodeModules.startsWith(importSource)
-      );
-      if (foundImportSource) {
-        const dependencyId: BitId = importSourceMap[foundImportSource];
-        const currentComponentDeps = {
-          id: dependencyId,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          relativePaths: clonedDependencies.getById(dependencyId).relativePaths,
-        };
-        const depData: DebugComponentsDependency = { id: dependencyId, importSource: foundImportSource };
-        this._pushToDependenciesIfNotExist(currentComponentDeps, fileType, depData);
-      }
-    });
   }
 
   private _pushToDependenciesIfNotExist(
@@ -1133,31 +1048,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     this.allDependencies.devDependencies = this.allDependencies.devDependencies.filter(
       (d) => !componentDepsIds.has(d.id)
     );
-  }
-
-  /**
-   * given missing packages name, find whether they were dependencies with custom-resolve before.
-   */
-  findOriginallyCustomModuleResolvedDependencies(packages: string[]): Record<string, any> | null | undefined {
-    if (!packages) return undefined;
-    if (!this.componentFromModel) return undefined; // not relevant, the component is not imported
-    const dependencies: Dependencies = new Dependencies(this.componentFromModel.getAllDependencies());
-    if (dependencies.isEmpty()) return undefined;
-    const importSourceMap = dependencies.getCustomResolvedData();
-    if (R.isEmpty(importSourceMap)) return undefined;
-    const foundPackages = packages.reduce((acc, value) => {
-      const packageLinuxFormat = pathNormalizeToLinux(value);
-      const foundImportSource = Object.keys(importSourceMap).find((importSource) =>
-        importSource.startsWith(packageLinuxFormat)
-      );
-      if (foundImportSource) {
-        const dependencyId = importSourceMap[foundImportSource];
-        acc[value] = dependencyId;
-      }
-      return acc;
-    }, {});
-
-    return R.isEmpty(foundPackages) ? undefined : foundPackages;
   }
 
   getExistingDependency(dependencies: Dependency[], id: BitId): Dependency | null | undefined {
