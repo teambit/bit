@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
+import { getRootComponentDir } from '@teambit/bit-roots';
 
 import { generateRandomStr } from '../utils';
 import CommandHelper from './e2e-command-helper';
@@ -50,6 +51,14 @@ export default class EnvHelper {
       this.createCompiler();
     }
     return this.command.runCmd(`bit import ${id} --compiler`);
+  }
+
+  rootCompDirDep(envName: string, depComponentName: string) {
+    return path.join(this.rootCompDir(envName), 'node_modules', `@${this.scopes.remote}/${depComponentName}`);
+  }
+
+  rootCompDir(envName: string) {
+    return getRootComponentDir(this.scopes.localPath, envName);
   }
 
   importTypescriptCompiler(version = '3.0.0') {
