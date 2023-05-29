@@ -40,6 +40,7 @@ export type InstallOptions = {
   packageManagerConfigRootDir?: string;
   resolveVersionsFromDependenciesOnly?: boolean;
   linkedDependencies?: Record<string, Record<string, string>>;
+  forceTeambitHarmonyLink?: boolean;
 };
 
 export type GetComponentManifestsOptions = {
@@ -164,7 +165,7 @@ export class DependencyInstaller {
             delete linkedDependencies[finalRootDir][manifest.name];
           }
         }
-        if (!packageManagerOptions.hasHarmonyInRootPolicy) {
+        if (options.forceTeambitHarmonyLink) {
           delete manifests[finalRootDir].dependencies!['@teambit/harmony'];
         }
       }

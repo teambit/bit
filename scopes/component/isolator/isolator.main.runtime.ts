@@ -443,6 +443,7 @@ export class IsolatorMain {
       packageManagerConfigRootDir: isolateInstallOptions.packageManagerConfigRootDir,
       resolveVersionsFromDependenciesOnly: true,
       linkedDependencies: opts.linkedDependencies,
+      forceTeambitHarmonyLink: !this.dependencyResolver.hasHarmonyInRootPolicy(),
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
@@ -454,7 +455,6 @@ export class IsolatorMain {
       rootComponentsForCapsules: this.dependencyResolver.hasRootComponents(),
       useNesting: isolateInstallOptions.useNesting,
       keepExistingModulesDir: this.dependencyResolver.hasRootComponents(),
-      hasHarmonyInRootPolicy: this.dependencyResolver.hasHarmonyInRootPolicy(),
     };
     await installer.install(
       capsulesDir,

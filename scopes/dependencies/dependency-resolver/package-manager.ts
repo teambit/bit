@@ -55,8 +55,6 @@ export type PackageManagerInstallOptions = {
   hidePackageManagerOutput?: boolean;
 
   neverBuiltDependencies?: string[];
-
-  hasHarmonyInRootPolicy?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
