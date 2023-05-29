@@ -5,9 +5,8 @@ import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/com
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { compact, mapValues, omit, uniq, pick } from 'lodash';
+import { compact, mapValues, omit, uniq, pick, intersection } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
-import { BitError } from '@teambit/bit-error';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
 import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
@@ -70,6 +69,7 @@ export type WorkspaceInstallOptions = {
   compile?: boolean;
   includeOptionalDeps?: boolean;
   updateAll?: boolean;
+  recurringInstall?: boolean;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -225,6 +225,7 @@ export class InstallMain {
         addMissingDeps: options?.addMissingDeps,
       }
     );
+
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
       includeOptionalDeps: options?.includeOptionalDeps,
@@ -280,10 +281,14 @@ export class InstallMain {
       }
       await this.linkCodemods(compDirMap);
       if (!dependenciesChanged) break;
+      if (!options?.recurringInstall) break;
+      const oldNonLoadedEnvs = this.getOldNonLoadedEnvs();
+      if (!oldNonLoadedEnvs.length) break;
       prevManifests.add(manifestsHash(current.manifests));
       // We need to clear cache before creating the new component manifests.
       this.workspace.consumer.componentLoader.clearComponentsCache();
-      this.workspace.clearCache();
+      // We don't want to clear the failed to load envs because we want to show the warning at the end
+      this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
       current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
@@ -378,6 +383,7 @@ export class InstallMain {
       rootDir: this.workspace.path,
       referenceLocalPackages: this.dependencyResolver.hasRootComponents() && installOptions.nodeLinker === 'isolated',
     });
+
     if (this.dependencyResolver.hasRootComponents()) {
       const rootManifests = await this._getRootManifests(manifests);
       await this._updateRootDirs(Object.keys(rootManifests));
@@ -390,6 +396,20 @@ export class InstallMain {
       componentDirectoryMap,
       manifests,
     };
+  }
+
+  /**
+   * This function returns a list of old non-loaded environments names.
+   * @returns an array of strings called `oldNonLoadedEnvs`. This array contains the names of environment variables that
+   * failed to load as extensions and are also don't have an env.jsonc file.
+   * If this list is not empty, then the user might need to run another install to make sure all dependencies resolved
+   * correctly
+   */
+  public getOldNonLoadedEnvs() {
+    const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
+    const envsWithoutManifest = Array.from(this.dependencyResolver.envsWithoutManifest);
+    const oldNonLoadedEnvs = intersection(nonLoadedEnvs, envsWithoutManifest);
+    return oldNonLoadedEnvs;
   }
 
   private async _updateRootDirs(rootDirs: string[]) {
@@ -436,11 +456,12 @@ export class InstallMain {
       await Promise.all(
         envs.map(async (envId) => {
           return [
-            getRootComponentDir(this.workspace.path, envId),
+            getRootComponentDir(this.workspace.path, envId.toString()),
             {
               dependencies: {
                 ...(await this._getEnvDependencies(envId)),
                 ...workspaceDeps,
+                ...(await this._getEnvPackage(envId)),
               },
               dependenciesMeta: workspaceDepsMeta,
               installConfig: {
@@ -453,15 +474,31 @@ export class InstallMain {
     );
   }
 
-  private async _getEnvDependencies(envId: string): Promise<Record<string, string>> {
-    const env = this.envs.getEnvDefinitionByStringId(envId);
-    if (!env) throw new BitError(`Cannot find environment with id: ${envId}`);
-    const policy = await this.dependencyResolver.getComponentEnvPolicyFromEnvDefinition(env);
+  private async _getEnvDependencies(envId: ComponentID): Promise<Record<string, string>> {
+    const policy = await this.dependencyResolver.getEnvPolicyFromEnvId(envId);
+    if (!policy) return {};
     return Object.fromEntries(
       policy.selfPolicy.entries
         .filter(({ force, value }) => force && value.version !== '-')
         .map(({ dependencyId, value }) => [dependencyId, value.version])
     );
+  }
+
+  /**
+   * Return the package name of the env with its version.
+   * (only if the env is not a core env and is not in the workspace)
+   * @param envId
+   * @returns
+   */
+  private async _getEnvPackage(envId: ComponentID): Promise<Record<string, string> | undefined> {
+    if (this.envs.isCoreEnv(envId.toStringWithoutVersion())) return undefined;
+    const inWs = await this.workspace.hasId(envId);
+    if (inWs) return undefined;
+    const envComponent = await this.envs.getEnvComponentByEnvId(envId.toString(), envId.toString());
+    if (!envComponent) return undefined;
+    const packageName = this.dependencyResolver.getPackageName(envComponent);
+    const version = envId.version;
+    return { [packageName]: version };
   }
 
   private async _getAppManifests(
@@ -478,7 +515,7 @@ export class InstallMain {
             const appPkgName = this.dependencyResolver.getPackageName(app);
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
             if (!appManifest) return null;
-            const envId = this.envs.getEnvId(app);
+            const envId = await this.envs.calculateEnvId(app);
             return [
               getRootComponentDir(this.workspace.path, app.id.toString()),
               {
@@ -503,10 +540,12 @@ export class InstallMain {
     );
   }
 
-  private async _getAllUsedEnvIds(): Promise<string[]> {
-    const envs = new Set<string>();
-    (await this.workspace.list()).forEach((component) => {
-      envs.add(this.envs.getEnvId(component));
+  private async _getAllUsedEnvIds(): Promise<ComponentID[]> {
+    const envs = new Set<ComponentID>();
+    const components = await this.workspace.list();
+    await pMapSeries(components, async (component) => {
+      const envId = await this.envs.calculateEnvId(component);
+      envs.add(envId);
     });
     return Array.from(envs.values());
   }
@@ -667,7 +706,7 @@ export class InstallMain {
     const apps = (await this.app.listAppsFromComponents()).map((component) => component.id.toString());
     await Promise.all(
       [...envs, ...apps].map(async (id) => {
-        await fs.mkdirp(getRootComponentDir(this.workspace.path, id));
+        await fs.mkdirp(getRootComponentDir(this.workspace.path, id.toString()));
       })
     );
     await linkPkgsToBitRoots(

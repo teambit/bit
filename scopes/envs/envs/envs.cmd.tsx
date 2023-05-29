@@ -1,5 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
 import React from 'react';
+import pMapSeries from 'p-map-series';
 import { Text, Newline } from 'ink';
 import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
@@ -106,23 +107,34 @@ export class EnvsCmd implements Command {
   group = 'development';
   commands: Command[] = [];
 
+  // private showNonLoadedEnvsWarning = false;
+  private nonLoadedEnvs = new Set<string>();
+
   constructor(private envs: EnvsMain, private componentAspect: ComponentMain) {}
 
-  async render(): Promise<JSX.Element> {
+  async report(): Promise<string> {
     const host = this.componentAspect.getHost();
     // TODO: think what to do re this line with gilad.
     if (!host) throw new Error('error: workspace not found');
     const components = await host.list();
-    // TODO: refactor to a react table
-    return <Text>{this.getTable(components)}</Text>;
+    const table = await this.getTable(components);
+    const warning = this.getNonLoadedEnvsWarning();
+    return warning ? `${table}\n${warning}` : table;
   }
 
-  private getTable(components: Component[]) {
-    const tableData = components.map((component) => {
-      const envId = this.envs.getEnvId(component);
+  private async getTable(components: Component[]) {
+    const tableData = await pMapSeries(components, async (component) => {
+      // const envId = this.envs.getEnvId(component);
+      const envId = await this.envs.calculateEnvId(component);
+      const envIdStr = envId.toString();
+      const isLoaded = this.envs.isEnvRegistered(envIdStr);
+      if (!isLoaded) {
+        this.nonLoadedEnvs.add(envIdStr);
+      }
+      const envWithErr = isLoaded ? envIdStr : `${envIdStr} ${chalk.red('(not loaded)')}`;
       return {
         component: component.id.toString(),
-        env: envId,
+        env: envWithErr,
       };
     });
 
@@ -137,5 +149,14 @@ export class EnvsCmd implements Command {
     const table = CLITable.fromObject(header, tableData);
     table.sort();
     return table.render();
+  }
+
+  getNonLoadedEnvsWarning() {
+    if (!this.nonLoadedEnvs.size) return '';
+    const list = Array.from(this.nonLoadedEnvs.values()).join(',');
+    return chalk.yellow(`warning: bit wasn't able to load the following envs: ${chalk.cyan(list)}.
+please run ${chalk.cyan("'bit install'")} to fix. if this doesn't help, run ${chalk.cyan(
+      "'bit status'"
+    )} to see if there are any additional issues`);
   }
 }

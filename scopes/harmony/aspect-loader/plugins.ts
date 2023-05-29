@@ -112,4 +112,21 @@ export class Plugins {
 
     return new Plugins(component, plugins, triggerOnAspectLoadError, logger);
   }
+
+  /**
+   * Get the plugin files from the component.
+   */
+  static files(component: Component, defs: PluginDefinition[], resolvePath?: (path: string) => string): string[] {
+    const files = defs.flatMap((pluginDef) => {
+      const matches =
+        typeof pluginDef.pattern === 'string'
+          ? component.filesystem.byGlob([pluginDef.pattern])
+          : component.filesystem.byRegex(pluginDef.pattern);
+
+      return matches.map((file) => {
+        return resolvePath ? resolvePath(file.relative) : file.path;
+      });
+    });
+    return files;
+  }
 }
