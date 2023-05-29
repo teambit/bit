@@ -4,10 +4,12 @@ import fs from 'fs-extra';
 import { addDistTag } from '@pnpm/registry-mock';
 import { IssuesClasses } from '@teambit/component-issues';
 import { getAnotherInstallRequiredOutput } from '@teambit/install/install.cmd';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { IS_WINDOWS } from '../../src/constants';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+
+chai.use(require('chai-fs'));
 
 describe('install command', function () {
   this.timeout(0);
