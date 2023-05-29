@@ -354,11 +354,13 @@ once done, to continue working, please run "bit cc"`
   async isIdOnLane(id: BitId, lane?: Lane | null, throwForDivergeDataErr = true): Promise<boolean | null> {
     if (!lane) return false;
 
+    // it's important to remove the version here before passing it to the `getModelComponent` function.
+    // otherwise, in case this version doesn't exist, it'll throw a ComponentNotFound error.
+    const component = await this.getModelComponent(id.changeVersion(undefined));
     // it's possible that main was merged to the lane, so the ref in the lane object is actually a tag.
     // in which case, we prefer to go to main instead of the lane.
     // for some reason (needs to check why) the tag-artifacts which got created using merge+tag from-scope
     // exist only on main and not on the lane-scope.
-    const component = await this.getModelComponent(id.changeVersion(undefined));
     if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
     if (component.head.toString() === id.version) return false; // it's on main
     if (isTag(id.version)) return false; // tags can be on main only
