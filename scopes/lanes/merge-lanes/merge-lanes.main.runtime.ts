@@ -482,8 +482,10 @@ ${depsOnLane.map((d) => d.toString()).join('\n')}`);
     });
   });
   if (depsToAdd.length) {
-    const depsUniq = BitIds.uniqFromArray(depsToAdd);
-    depsUniq.forEach((id) => {
+    // remove the version, otherwise, the uniq gives duplicate components with different versions.
+    const depsWithoutVersion = depsToAdd.map((d) => d.changeVersion(undefined));
+    const depsUniqWithoutVersion = BitIds.uniqFromArray(depsWithoutVersion);
+    depsUniqWithoutVersion.forEach((id) => {
       const fromStatus = allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(id));
       if (!fromStatus) {
         throw new Error(`filterComponentsStatus: unable to find ${id.toString()} in component-status`);
