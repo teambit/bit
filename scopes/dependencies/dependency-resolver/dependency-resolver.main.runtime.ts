@@ -1,5 +1,4 @@
 import mapSeries from 'p-map-series';
-import { parse } from 'comment-json';
 import { MainRuntime } from '@teambit/cli';
 import { getAllCoreAspectsIds } from '@teambit/bit';
 import { getRelativeRootComponentDir } from '@teambit/bit-roots';
@@ -368,6 +367,12 @@ export class DependencyResolverMain {
   ) {}
 
   /**
+   * Save list of envs that doesn't contains env.jsonc file
+   * this is used to show warning / instuctions to the user
+   */
+  public envsWithoutManifest = new Set<string>();
+
+  /**
    * This function is a temporary workaround for installation in capsules with pnpm.
    * Currently pnpm breaks the root node_modules inside the capsule because it removes deps from it.
    * Install runs several times in the same capsule and pnpm removes deps from the previous runs.
@@ -384,6 +389,11 @@ export class DependencyResolverMain {
 
   hasRootComponents(): boolean {
     return Boolean(this.config.rootComponents);
+  }
+
+  hasHarmonyInRootPolicy(): boolean {
+    const rootPolicy = this.getWorkspacePolicyFromConfig();
+    return rootPolicy.entries.some(({ dependencyId }) => dependencyId === '@teambit/harmony');
   }
 
   nodeLinker(): 'hoisted' | 'isolated' {
@@ -630,8 +640,19 @@ export class DependencyResolverMain {
       return modulePath;
     }
     const pkgName = this.getPackageName(component);
+    const selfRootDir = getRelativeRootComponentDir(component.id.toString());
+    // In case the component is it's own root we want to load it from it's own root folder
+    if (fs.pathExistsSync(selfRootDir)) {
+      const innerDir = join(selfRootDir, 'node_modules', pkgName);
+      if (fs.pathExistsSync(innerDir)) return innerDir;
+      // sometime for the env itself we don't have the env package in the env root dir, because it was hoisted
+      // in that case we return the dir from the root node_modules
+      return this.getModulePath(component);
+    }
     const envId = this.envs.getEnvId(component);
-    return join(getRelativeRootComponentDir(envId), 'node_modules', pkgName);
+    const dirInEnvRoot = join(getRelativeRootComponentDir(envId), 'node_modules', pkgName);
+    if (fs.pathExistsSync(dirInEnvRoot)) return dirInEnvRoot;
+    return this.getModulePath(component);
   }
 
   /**
@@ -1058,10 +1079,23 @@ export class DependencyResolverMain {
     return this.rootPolicyRegistry.register(policy);
   }
 
+  // async getComponentEnvPolicyFromExtension(configuredExtensions: ExtensionDataList): Promise<EnvPolicy> {
+  //   const env = this.envs.calculateEnvFromExtensions(configuredExtensions);
+  //   const fromFile = await this.getEnvPolicyFromFile(env.id);
+  //   if (fromFile) return fromFile;
+  //   return this.getComponentEnvPolicyFromEnv(env.env);
+  // }
+
   async getComponentEnvPolicyFromExtension(configuredExtensions: ExtensionDataList): Promise<EnvPolicy> {
-    const env = this.envs.calculateEnvFromExtensions(configuredExtensions);
-    const fromFile = await this.getEnvPolicyFromFile(env.id);
+    const envId = await this.envs.calculateEnvIdFromExtensions(configuredExtensions);
+    if (this.envs.isCoreEnv(envId)) {
+      const env = await this.envs.calculateEnvFromExtensions(configuredExtensions);
+      return this.getComponentEnvPolicyFromEnv(env.env);
+    }
+
+    const fromFile = await this.getEnvPolicyFromFile(envId);
     if (fromFile) return fromFile;
+    const env = await this.envs.calculateEnvFromExtensions(configuredExtensions);
     return this.getComponentEnvPolicyFromEnv(env.env);
   }
 
@@ -1080,33 +1114,34 @@ export class DependencyResolverMain {
 
   async getComponentEnvPolicy(component: Component): Promise<EnvPolicy> {
     // const envComponent = await this.envs.getEnvComponent(component);
-    const fromFile = await this.getEnvPolicyFromFile(this.envs.getEnvId(component));
+    const envId = await this.envs.calculateEnvId(component);
+    if (this.envs.isCoreEnv(envId.toStringWithoutVersion())) {
+      const env = this.envs.getEnv(component).env;
+      return this.getComponentEnvPolicyFromEnv(env);
+    }
+    const fromFile = await this.getEnvPolicyFromFile(envId.toString());
     if (fromFile) return fromFile;
+    this.envsWithoutManifest.add(envId.toString());
     const env = this.envs.getEnv(component).env;
     return this.getComponentEnvPolicyFromEnv(env);
+  }
+
+  getEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): EnvPolicy | undefined {
+    const object = this.envs.getEnvManifest(envComponent, legacyFiles) as any;
+    const policy = object?.policy;
+    if (!policy) return undefined;
+    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy);
+    return allPoliciesFromEnv;
   }
 
   private async getEnvPolicyFromFile(envId: string, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;
-    let envJson;
     if (legacyFiles) {
-      envJson = legacyFiles.find((file) => {
-        return file.relative === 'env.jsonc' || file.relative === 'env.json';
-      });
-    } else {
-      const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
-      envJson = envComponent.filesystem.files.find((file) => {
-        return file.relative === 'env.jsonc' || file.relative === 'env.json';
-      });
+      return this.getEnvManifest(undefined, legacyFiles);
     }
-    if (!envJson) return undefined;
-
-    const object = parse(envJson.contents.toString('utf8'));
-    const policy = object?.policy;
-    if (!policy) return undefined;
-    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy);
-    return allPoliciesFromEnv;
+    const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
+    return this.getEnvManifest(envComponent);
   }
 
   async getComponentEnvPolicyFromEnv(env: DependenciesEnv): Promise<EnvPolicy> {
@@ -1251,7 +1286,7 @@ export class DependencyResolverMain {
    * Do not use this function for other purposes.
    */
   async calcComponentEnvDepDetectors(extensions: ExtensionDataList) {
-    const envDef = this.envs.calculateEnvFromExtensions(extensions);
+    const envDef = await this.envs.calculateEnvFromExtensions(extensions);
     const depEnv = envDef.env as DependenciesEnv;
     if (typeof depEnv?.getDepDetectors === 'function') {
       return depEnv.getDepDetectors();

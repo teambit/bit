@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
+import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { IssuesClasses } from '../../scopes/component/component-issues';
 import { Extensions, IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -29,6 +30,33 @@ describe('custom env', function () {
       expect(() => helper.command.status()).to.throw(
         'unable to import the following component(s): company.scope/envs/fake-env'
       );
+    });
+  });
+  describe('non loaded env', () => {
+    let envId;
+    let envName;
+    before(async () => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+      envName = helper.env.setCustomEnv(undefined, { skipCompile: true, skipInstall: true });
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.fixtures.populateComponents(1, undefined, undefined, false);
+      helper.extensions.addExtensionToVariant('*', envId);
+      // Clean the node_modules as we want to run tests when node_modules is empty
+      fs.rmdirSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
+    });
+    it('should show the correct env in bit show (with no loaded indication)', () => {
+      const componentShowParsed = helper.command.showComponentParsedHarmonyByTitle('comp1', 'env');
+      expect(componentShowParsed).to.equal(envId);
+      const regularShowOutput = helper.command.showComponent('comp1');
+      expect(regularShowOutput).to.contain(`${envId} (not loaded)`);
+    });
+    it('should show the correct env in bit envs (with no loaded indication)', () => {
+      const envsOutput = helper.command.envs();
+      expect(envsOutput).to.contain(`${envId} (not loaded)`);
+    });
+    it('should show a component issue in bit status', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.NonLoadedEnv.name);
     });
   });
   describe('custom env with 3 components', () => {
@@ -129,6 +157,72 @@ describe('custom env', function () {
       expect(env).to.include(envId);
     });
   });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('load env from env root', () => {
+    let envId;
+    let envName;
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      helper.bitJsonc.setupDefault();
+      envName = helper.env.setCustomNewEnv(undefined, undefined, {
+        policy: {
+          peers: [
+            {
+              name: 'react',
+              version: '^16.8.0',
+              supportedRange: '^16.8.0',
+            },
+          ],
+        },
+      });
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.showComponent(envId);
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      // Clean the capsule dir to make sure it's empty before we continue
+      const scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
+      if (fs.pathExistsSync(scopeAspectsCapsulesRootDir)) {
+        fs.rmdirSync(scopeAspectsCapsulesRootDir, { recursive: true });
+      }
+
+      helper.scopeHelper.addRemoteScope();
+      helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.extensions.bitJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', true);
+      helper.fixtures.populateComponents(1);
+      helper.command.setEnv('comp1', envId);
+      helper.command.install();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper = new Helper();
+    });
+    it('should load the env without issue', () => {
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.NonLoadedEnv.name);
+      const showOutput = helper.command.showComponent('comp1');
+      expect(showOutput).to.have.string(envId);
+      expect(showOutput).to.not.have.string('not loaded');
+    });
+    it('should have the env installed in its root', () => {
+      const envRootDir = helper.env.rootCompDir(`${envId}@0.0.1`);
+      const resolvedInstalledEnv = resolveFrom(envRootDir, [
+        `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.react-based-env`,
+      ]);
+      expect(envRootDir).to.be.a.path();
+      expect(resolvedInstalledEnv).to.be.a.path();
+    });
+    it('should not create scope aspect capsule', () => {
+      const scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
+      expect(scopeAspectsCapsulesRootDir).to.not.be.a.path();
+    });
+  });
+
   (supportNpmCiRegistryTesting ? describe : describe.skip)('custom env installed as a package', () => {
     let envId;
     let envName;
@@ -151,21 +245,25 @@ describe('custom env', function () {
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();
     });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper = new Helper();
+    });
     describe('setting up the external env without a version', () => {
       before(() => {
         helper.fixtures.populateComponents(1);
         helper.extensions.addExtensionToVariant('*', envId);
       });
       it('should show a descriptive error when tagging the component', () => {
-        expect(() => helper.command.tagAllComponents()).to.throw(
-          `if this is an external env/extension/aspect configured in workspace.jsonc, make sure it is set with a version`
-        );
+        const tagOutput = helper.general.runWithTryCatch('bit tag -m msg');
+        expect(tagOutput).to.have.string('failed loading env - external env without a version');
       });
       describe('running any other command', () => {
         // @Gilad TODO
         it.skip('should warn or error about the misconfigured env and suggest to enter the version', () => {});
       });
     });
+
     describe('set up the env using bit env set without a version', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();

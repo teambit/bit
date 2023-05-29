@@ -1,5 +1,4 @@
 import { ComponentIssue } from './component-issue';
-import { CustomModuleResolutionUsed } from './custom-module-resolution-used';
 import { ImportNonMainFiles } from './import-non-main-files';
 import { MissingComponents } from './missing-components';
 import { MissingDependenciesOnFs } from './missing-dependencies-on-fs';
@@ -17,6 +16,8 @@ import { MissingLinksFromNodeModulesToSrc } from './missing-links-from-nm-to-src
 import { CircularDependencies } from './circular-dependencies';
 import { DuplicateComponentAndPackage } from './duplicate-component-and-package';
 import { MergeConfigHasConflict } from './merge-config-has-conflict';
+import { NonLoadedEnv } from './non-loaded-env';
+import { ExternalEnvWithoutVersion } from './external-env-without-version';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -31,12 +32,13 @@ export const IssuesClasses = {
   LegacyInsideHarmony,
   MissingDependenciesOnFs,
   ImportNonMainFiles,
-  CustomModuleResolutionUsed,
   MultipleEnvs,
   MissingLinksFromNodeModulesToSrc,
   CircularDependencies,
   DuplicateComponentAndPackage,
   MergeConfigHasConflict,
+  NonLoadedEnv,
+  ExternalEnvWithoutVersion,
 };
 export type IssuesNames = keyof typeof IssuesClasses;
 

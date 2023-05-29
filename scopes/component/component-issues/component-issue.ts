@@ -14,8 +14,11 @@ export class ComponentIssue {
   isCacheBlocker = true; // if true, it doesn't cache the component in the filesystem
   formatDataFunction: FormatIssueFunc = componentIssueToString;
   get descriptionWithSolution() {
-    const solution = this.solution ? ` (${this.solution})` : '';
-    return `${this.description}${solution}`;
+    const solution = this.formatSolution();
+    return `${this.description} ${solution}`;
+  }
+  formatSolution(): string {
+    return this.solution ? ` (${this.solution})` : '';
   }
   outputForCLI(): string {
     return formatTitle(this.descriptionWithSolution) + chalk.white(this.dataToString());

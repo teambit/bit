@@ -7,7 +7,7 @@ import Scope from '../../../scope/scope';
 import { fetchRemoteVersions } from '../../../scope/scope-remotes';
 import { isValidPath } from '../../../utils';
 import validateType from '../../../utils/validate-type';
-import Dependency, { RelativePath } from './dependency';
+import Dependency from './dependency';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
 export const DEPENDENCIES_TYPES_UI_MAP = {
@@ -80,22 +80,6 @@ export default class Dependencies {
     });
   }
 
-  /**
-   * needed for calculating the originallySharedDir. when isCustomResolveUsed, don't take into
-   * account the dependencies as they don't have relative paths
-   */
-  getSourcesPaths(): string[] {
-    return R.flatten(
-      this.dependencies.map((dependency) =>
-        dependency.relativePaths
-          .map((relativePath) => {
-            return relativePath.isCustomResolveUsed ? null : relativePath.sourceRelativePath;
-          })
-          .filter((x) => x)
-      )
-    );
-  }
-
   getById(id: BitId): Dependency | null | undefined {
     return this.dependencies.find((dep) => dep.id.isEqual(id));
   }
@@ -146,29 +130,6 @@ export default class Dependencies {
     });
   }
 
-  getCustomResolvedData(): { [importSource: string]: BitId } {
-    const importSourceMap = {};
-    this.dependencies.forEach((dependency: Dependency) => {
-      dependency.relativePaths.forEach((relativePath: RelativePath) => {
-        if (relativePath.isCustomResolveUsed) {
-          if (!relativePath.importSource) {
-            throw new Error(
-              `${dependency.id.toString()} relativePath.importSource must be set when relativePath.isCustomResolveUsed`
-            );
-          }
-          importSourceMap[relativePath.importSource] = dependency.id;
-        }
-      });
-    });
-    return importSourceMap;
-  }
-
-  isCustomResolvedUsed(): boolean {
-    return this.dependencies.some((dependency: Dependency) => {
-      return dependency.relativePaths.some((relativePath: RelativePath) => relativePath.isCustomResolveUsed);
-    });
-  }
-
   validate(bitId?: BitId): void {
     const compIdStr = bitId ? ` of ${bitId.toString()}` : '';
     let message = `failed validating the dependencies${compIdStr}.`;
@@ -204,7 +165,7 @@ export default class Dependencies {
         validateType(message, dependency, 'dependency', 'object');
         const requiredProps = ['sourceRelativePath', 'destinationRelativePath'];
         const pathProps = ['sourceRelativePath', 'destinationRelativePath'];
-        const optionalProps = ['importSpecifiers', 'isCustomResolveUsed', 'importSource'];
+        const optionalProps = ['importSpecifiers', 'importSource'];
         const allProps = requiredProps.concat(optionalProps);
         requiredProps.forEach((prop) => {
           if (!relativePath[prop]) {
@@ -221,12 +182,6 @@ export default class Dependencies {
             throw new ValidationError(`${message} undetected property of relativePaths "${prop}"`);
           }
         });
-        if (relativePath.isCustomResolveUsed) {
-          if (!relativePath.importSource) {
-            throw new ValidationError(`a dependency ${dependency.id.toString()} is missing relativePath.importSource`);
-          }
-          validateType(message, relativePath.importSource, 'relativePath.importSource', 'string');
-        }
         if (relativePath.importSpecifiers) {
           validateType(message, relativePath.importSpecifiers, 'relativePath.importSpecifiers', 'array');
           // $FlowFixMe it's already confirmed that relativePath.importSpecifiers is set

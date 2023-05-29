@@ -14,6 +14,7 @@ export type ResolveAspectsOptions = FilterAspectsOptions & {
   useScopeAspectsCapsule?: boolean;
   workspaceName?: string;
   skipDeps?: boolean;
+  resolveEnvsFromRoots?: boolean;
 };
 
 export type LoadAspectsOptions = {
