@@ -31,6 +31,33 @@ describe('custom env', function () {
       );
     });
   });
+  describe('non loaded env', () => {
+    let envId;
+    let envName;
+    before(async () => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+      envName = helper.env.setCustomEnv(undefined, { skipCompile: true, skipInstall: true });
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.fixtures.populateComponents(1, undefined, undefined, false);
+      helper.extensions.addExtensionToVariant('*', envId);
+      // Clean the node_modules as we want to run tests when node_modules is empty
+      fs.rmdirSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
+    });
+    it('should show the correct env in bit show (with no loaded indication)', () => {
+      const componentShowParsed = helper.command.showComponentParsedHarmonyByTitle('comp1', 'env');
+      expect(componentShowParsed).to.equal(envId);
+      const regularShowOutput = helper.command.showComponent('comp1');
+      expect(regularShowOutput).to.contain(`${envId} (not loaded)`);
+    });
+    it('should show the correct env in bit envs (with no loaded indication)', () => {
+      const envsOutput = helper.command.envs();
+      expect(envsOutput).to.contain(`${envId} (not loaded)`);
+    });
+    it('should show a component issue in bit status', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.NonLoadedEnv.name);
+    });
+  });
   describe('custom env with 3 components', () => {
     let wsAllNew;
     let envId;

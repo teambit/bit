@@ -10,6 +10,12 @@ import { ensureAndWriteJson } from './e2e-helper';
 import ScopeHelper from './e2e-scope-helper';
 import ScopesData from './e2e-scopes';
 
+type SetCustomEnvOpts = {
+  skipInstall?: boolean;
+  skipCompile?: boolean;
+  skipLink?: boolean;
+};
+
 export default class EnvHelper {
   command: CommandHelper;
   fs: FsHelper;
@@ -225,13 +231,13 @@ export default class EnvHelper {
     return EXTENSIONS_BASE_FOLDER;
   }
 
-  setCustomEnv(extensionsBaseFolder = 'node-env'): string {
+  setCustomEnv(extensionsBaseFolder = 'node-env', options: SetCustomEnvOpts = {}): string {
     this.fixtures.copyFixtureExtensions(extensionsBaseFolder);
     this.command.addComponent(extensionsBaseFolder);
     this.extensions.addExtensionToVariant(extensionsBaseFolder, 'teambit.envs/env');
-    this.command.link();
-    this.command.install();
-    this.command.compile();
+    if (!options.skipLink) this.command.link();
+    if (!options.skipInstall) this.command.install();
+    if (!options.skipCompile) this.command.compile();
     return extensionsBaseFolder;
   }
 

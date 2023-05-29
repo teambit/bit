@@ -944,6 +944,8 @@ export class EnvsMain {
               envId: envIdStr,
               componentId: component.id.toString(),
             };
+          } else {
+            component.state.issues.getOrCreate(IssuesClasses.NonLoadedEnv).data = envIdStr;
           }
         } else {
           component.state.issues.getOrCreate(IssuesClasses.NonLoadedEnv).data = envIdStr;

@@ -100,6 +100,10 @@ export type EjectConfResult = {
   configPath: string;
 };
 
+export type ClearCacheOptions = {
+  skipClearFailedToLoadEnvs?: boolean;
+};
+
 export const AspectSpecificField = '__specific';
 export const ComponentAdded = 'componentAdded';
 export const ComponentChanged = 'componentChanged';
@@ -615,9 +619,9 @@ export class Workspace implements ComponentFactory {
     return workspaceAspectsLoader.getConfiguredUserAspectsPackages(options);
   }
 
-  clearCache() {
+  clearCache(options: ClearCacheOptions = {}) {
     this.aspectLoader.resetFailedLoadAspects();
-    this.envs.resetFailedToLoadEnvs();
+    if (!options.skipClearFailedToLoadEnvs) this.envs.resetFailedToLoadEnvs();
     this.logger.debug('clearing the workspace and scope caches');
     delete this._cachedListIds;
     this.componentLoader.clearCache();
