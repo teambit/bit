@@ -3,7 +3,6 @@
 
 import { BitId } from '../../bit-id';
 import { PathOsBasedAbsolute } from '../../utils/path';
-import { ResolveModulesConfig } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { AbstractVinyl } from '../component/sources';
 import ConsumerOverrides, { ConsumerOverridesOfComponent } from './consumer-overrides';
 
@@ -29,7 +28,6 @@ export interface ILegacyWorkspaceConfig {
   _saveDependenciesAsComponents?: boolean;
   _dependenciesDirectory?: string;
   componentsDefaultDirectory?: string;
-  _resolveModules?: ResolveModulesConfig;
   _manageWorkspaces?: boolean;
   defaultOwner?: string;
   path: string;
