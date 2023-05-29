@@ -64,7 +64,7 @@ function TypeRefComponent(props: APINodeRenderProps) {
 
       if (typeArgRenderer) {
         return (
-          <React.Fragment key={`type-arg-renderer-container-${typeArg.__schema}-${typeArg.toString()}-${index}`}>
+          <React.Fragment key={`type-arg-container-${typeArg.__schema}-${typeArg.toString()}-${index}`}>
             <typeArgRenderer.Component
               {...props}
               key={`type-arg-${typeArg.__schema}-${typeArg.toString()}-${index}`}
@@ -78,7 +78,7 @@ function TypeRefComponent(props: APINodeRenderProps) {
       }
 
       return (
-        <React.Fragment key={`type-arg-container-${typeArg.__schema}-${typeArg.toString()}-${index}`}>
+        <React.Fragment key={typeArg.toString()}>
           {typeArg.toString()}
           {(typeArgs?.length ?? 0) > 1 && index !== (typeArgs?.length ?? 0) - 1 ? ', ' : null}
         </React.Fragment>
@@ -148,7 +148,7 @@ function getExportedTypeUrlFromAnotherComp({
   componentId: ComponentID;
   selectedAPI: string;
 }) {
-  const componentUrl = ComponentUrl.toUrl(componentId, { useLocationOrigin: true });
+  const componentUrl = ComponentUrl.toUrl(componentId);
   const [componentIdUrl, versionQuery] = componentUrl.split('?');
 
   const exportedTypeUrl = `${componentIdUrl}/~api-reference?selectedAPI=${encodeURIComponent(

@@ -23,7 +23,6 @@
 
 .row {
   grid-template-columns: 1fr 1fr 2fr;
-
   &.isHovering {
     background-color: #f4f5f6;
     cursor: pointer;
@@ -45,7 +44,6 @@
 
 .signatureDetails {
   background-color: var(--bit-bg-heavy, #f4f5f6);
-  margin-left: 8px;
 }
 
 .returnContainer,

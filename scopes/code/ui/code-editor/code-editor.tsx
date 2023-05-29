@@ -1,6 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
-import Editor, { OnMount, BeforeMount } from '@monaco-editor/react';
+import Editor, { OnMount, BeforeMount, OnChange } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 
@@ -8,12 +8,13 @@ export type CodeEditorProps = {
   filePath?: string;
   fileContent?: string;
   language?: string;
-  handleEditorDidMount?: OnMount;
-  handleEditorBeforeMount?: BeforeMount;
-  Loader?: React.ReactNode;
-  options?: monaco.editor.IStandaloneEditorConstructionOptions;
-  className?: string;
   height?: string;
+  className?: string;
+  options?: monaco.editor.IStandaloneEditorConstructionOptions;
+  beforeMount?: BeforeMount;
+  onMount?: OnMount;
+  onChange?: OnChange;
+  Loader?: React.ReactNode;
 };
 
 export const DEFAULT_EDITOR_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
@@ -29,7 +30,7 @@ export const DEFAULT_EDITOR_OPTIONS: monaco.editor.IStandaloneEditorConstruction
   fixedOverflowWidgets: true,
   renderLineHighlight: 'none',
   lineHeight: 20,
-  padding: { top: 8 },
+  padding: { top: 8, bottom: 8 },
   hover: { enabled: false },
   cursorBlinking: 'smooth',
 };
@@ -48,8 +49,9 @@ export function CodeEditor({
   fileContent,
   filePath,
   language,
-  handleEditorBeforeMount,
-  handleEditorDidMount,
+  beforeMount,
+  onMount,
+  onChange,
   Loader,
   options,
   className,
@@ -67,10 +69,11 @@ export function CodeEditor({
       value={fileContent || undefined}
       language={language || defaultLang}
       height={height || '100%'}
-      onMount={handleEditorDidMount}
+      onMount={onMount}
+      beforeMount={beforeMount}
+      onChange={onChange}
       className={classnames(darkMode, className)}
       theme={'vs-dark'}
-      beforeMount={handleEditorBeforeMount}
       options={options || DEFAULT_EDITOR_OPTIONS}
       loading={Loader}
     />
