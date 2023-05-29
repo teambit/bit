@@ -14,7 +14,6 @@ const debug = require('debug')('path-map');
 
 export type PathMapDependency = {
   importSource: string; // dependency path as it has been received from dependency-tree lib
-  isCustomResolveUsed?: boolean; // whether a custom resolver, such as an alias "@" for "src" dir, is used
   resolvedDep: string; // path relative to consumer root (after convertPathMapToRelativePaths() )
   importSpecifiers?: Specifier[]; // relevant for ES6 and TS
   linkFile?: boolean;
