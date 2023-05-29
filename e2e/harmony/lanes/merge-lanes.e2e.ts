@@ -315,9 +315,7 @@ describe('merge lanes', function () {
       describe('without --include-deps', () => {
         it('should throw an error asking to enter --include-deps flag', () => {
           const mergeFn = () => helper.command.mergeLane('dev', `--pattern ${helper.scopes.remote}/comp2`);
-          expect(mergeFn).to.throw(
-            'the following dependencies which were not included in the pattern. consider adding "--include-deps" flag'
-          );
+          expect(mergeFn).to.throw('consider adding "--include-deps" flag');
         });
       });
       describe('with --include-deps', () => {

@@ -25,13 +25,14 @@ import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { compact } from 'lodash';
+import { compact, uniq } from 'lodash';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitObject } from '@teambit/legacy/dist/scope/objects';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { MergeLanesAspect } from './merge-lanes.aspect';
 import { MergeLaneCmd } from './merge-lane.cmd';
 import { MergeLaneFromScopeCmd } from './merge-lane-from-scope.cmd';
+import { MissingCompsToMerge } from './exceptions/missing-comps-to-merge';
 
 export type MergeLaneOptions = {
   mergeStrategy: MergeStrategy;
@@ -421,6 +422,8 @@ async function filterComponentsStatus(
   const bitIdsNotFromPattern = allBitIds.filter((bitId) => !bitIdsFromPattern.hasWithoutVersion(bitId));
   const filteredComponentStatus: ComponentMergeStatus[] = [];
   const depsToAdd: BitId[] = [];
+  const missingDepsFromHead = {};
+  const missingDepsFromHistory: string[] = [];
   await pMapSeries(compIdsToKeep, async (compId) => {
     const fromStatus = allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(compId._legacy));
     if (!fromStatus) {
@@ -473,14 +476,25 @@ async function filterComponentsStatus(
       if (!depsOnLane.length) {
         return;
       }
-      if (!includeDeps) {
-        throw new BitError(`unable to merge ${compId.toString()}.
-it has (in version ${remoteVersion.toString()}) the following dependencies which were not included in the pattern. consider adding "--include-deps" flag
-${depsOnLane.map((d) => d.toString()).join('\n')}`);
+      if (includeDeps) {
+        depsToAdd.push(...depsOnLane);
+      } else {
+        const headOnTarget = otherLane ? otherLane.getComponent(compId._legacy)?.head : modelComponent.head;
+        const depsOnLaneStr = depsOnLane.map((dep) => dep.toStringWithoutVersion());
+        if (headOnTarget?.isEqual(remoteVersion)) {
+          depsOnLaneStr.forEach((dep) => {
+            (missingDepsFromHead[dep] ||= []).push(compId.toStringWithoutVersion());
+          });
+        } else {
+          missingDepsFromHistory.push(...depsOnLaneStr);
+        }
       }
-      depsToAdd.push(...depsOnLane);
     });
   });
+  if (Object.keys(missingDepsFromHead).length || missingDepsFromHistory.length) {
+    throw new MissingCompsToMerge(missingDepsFromHead, uniq(missingDepsFromHistory));
+  }
+
   if (depsToAdd.length) {
     // remove the version, otherwise, the uniq gives duplicate components with different versions.
     const depsWithoutVersion = depsToAdd.map((d) => d.changeVersion(undefined));
