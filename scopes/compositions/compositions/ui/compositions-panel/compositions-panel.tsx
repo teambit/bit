@@ -26,6 +26,8 @@ export type CompositionsPanelProps = {
    * checks if a component is using the new preview api. if false, doesnt scale to support new preview
    */
   isScaling?: boolean;
+
+  includesEnvTemplate?: boolean;
 } & React.HTMLAttributes<HTMLUListElement>;
 
 export function CompositionsPanel({
@@ -34,9 +36,12 @@ export function CompositionsPanel({
   isScaling,
   onSelectComposition: onSelect,
   active,
+  includesEnvTemplate,
   className,
   ...rest
 }: CompositionsPanelProps) {
+  const shouldAddNameParam = isScaling && includesEnvTemplate === false;
+
   const handleSelect = useCallback(
     (selected: Composition) => {
       onSelect && onSelect(selected);
@@ -47,7 +52,7 @@ export function CompositionsPanel({
   return (
     <ul {...rest} className={classNames(className)}>
       {compositions.map((composition) => {
-        const href = isScaling ? `${url}&name=${composition.identifier}` : `${url}&${composition.identifier}`;
+        const href = shouldAddNameParam ? `${url}&name=${composition.identifier}` : `${url}&${composition.identifier}`;
 
         // TODO - move to composition panel node
         return (
