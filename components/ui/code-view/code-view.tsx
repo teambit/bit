@@ -113,7 +113,7 @@ export function CodeView({
         language={language}
         fileContent={fileContent}
         filePath={currentFile}
-        handleEditorDidMount={handleEditorDidMount}
+        onMount={handleEditorDidMount}
         Loader={<CodeViewLoader />}
       />
     ),
