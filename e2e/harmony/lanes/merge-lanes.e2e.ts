@@ -397,8 +397,7 @@ describe('merge lanes', function () {
           expect(() => helper.command.untagAll()).to.not.throw();
         });
       });
-      // TODO: @david please fix this
-      describe.skip('switching to main and merging the lane to main (with squash)', () => {
+      describe('switching to main and merging the lane to main (with squash)', () => {
         let beforeMergeHead: string;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(afterMergeToMain);
