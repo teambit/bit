@@ -235,19 +235,26 @@ describe('dependency-resolver extension', function () {
       });
       it('should force a newer version of a subdependency using just the dependency name', function () {
         // Without the override, is-odd would be 0.1.2
-        expect(helper.fixtures.fs.readJsonFile('node_modules/is-odd/package.json').version).to.eq('1.0.0');
+        expect(helper.fixtures.fs.readJsonFile('node_modules/is-even/node_modules/is-odd/package.json').version).to.eq(
+          '1.0.0'
+        );
       });
       it('should force a newer version of a subdependency using the dependency name and version', function () {
-        expect(helper.fixtures.fs.readJsonFile('node_modules/glob/package.json').version).to.eq('6.0.4');
+        expect(helper.fixtures.fs.readJsonFile('node_modules/rimraf/node_modules/glob/package.json').version).to.eq(
+          '6.0.4'
+        );
       });
       it('should not change the version of the package if the parent package does not match the pattern', function () {
-        expect(helper.fixtures.fs.readJsonFile('node_modules/glob/node_modules/once/package.json').version).to.eq(
-          '1.4.0'
-        );
+        expect(
+          helper.fixtures.fs.readJsonFile('node_modules/rimraf/node_modules/glob/node_modules/once/package.json')
+            .version
+        ).to.eq('1.4.0');
       });
       it('should change the version of the package if the parent package matches the pattern', function () {
         // This gets hoisted from the dependencies of inflight
-        expect(helper.fixtures.fs.readJsonFile('node_modules/once/package.json').version).to.eq('1.3.0');
+        expect(helper.fixtures.fs.readJsonFile('node_modules/rimraf/node_modules/once/package.json').version).to.eq(
+          '1.3.0'
+        );
       });
     });
     describe('using pnpm as a package manager', () => {
