@@ -525,6 +525,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/fs/hard-link-directory"
     },
+    "fs/linked-dependencies": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/fs/linked-dependencies"
+    },
     "generator": {
         "scope": "teambit.generator",
         "version": "0.0.1067",
