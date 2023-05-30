@@ -18,7 +18,9 @@ export class MergeCmd implements Command {
   description = 'merge changes of the remote head into local';
   helpUrl = 'docs/components/merging-changes';
   group = 'development';
-  extendedDescription = `merge changes of the remote head into local, optionally use '--abort' or '--resolve
+  extendedDescription = `merge changes of the remote head into local. when on a lane, merge the remote head of the lane into the local.
+if no ids are specified, all pending-merge components will be merged. (run "bit status" to list them).
+optionally use '--abort' to revert the last merge/lane-merge.
 ${WILDCARD_HELP('merge')}`;
   alias = '';
   options = [

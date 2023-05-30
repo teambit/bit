@@ -175,8 +175,8 @@ export class StatusCmd implements Command {
     const outdatedStr = outdatedComponents.length ? [outdatedTitle, outdatedDesc, outdatedComps].join('\n') : '';
 
     const pendingMergeTitle = chalk.underline.white('pending merge');
-    const pendingMergeDesc = `(use "bit reset" to add local changes on top of the remote and discard local tags.
-alternatively, to keep local tags/snaps history, use "bit merge <remote-name>/<lane-name> [component-id]")\n`;
+    const pendingMergeDesc = `(use "bit reset" to add local changes on top of the remote and discard local tags/snaps.
+alternatively, to keep local tags/snaps history, use "bit merge [component-id]")\n`;
     const pendingMergeComps = mergePendingComponents
       .map((component) => {
         return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
@@ -198,7 +198,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       ? [compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps].join('\n')
       : '';
 
-    const newComponentDescription = '\n(use "bit tag [version]" to lock a version with all your changes)\n';
+    const newComponentDescription = '\n(use "bit tag" to lock a version with all your changes)\n';
     const newComponentsTitle = newComponents.length
       ? chalk.underline.white('new components') + newComponentDescription
       : '';
@@ -247,7 +247,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
     ).join('\n');
 
-    const snappedDesc = '\n(use "bit tag [version]" or "bit tag --snapped [version]" to lock a version)\n';
+    const snappedDesc = '\n(use "bit tag" or "bit tag --snapped" to lock a version)\n';
     const snappedComponentsOutput = immutableUnshift(
       snappedComponents.map((c) => format(c)),
       snappedComponents.length ? chalk.underline.white('snapped components (tag pending)') + snappedDesc : ''

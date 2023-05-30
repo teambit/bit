@@ -28,7 +28,7 @@ import { CheckoutAspect } from './checkout.aspect';
 import { applyVersion, markFilesToBeRemovedIfNeeded, ComponentStatus, deleteFilesIfNeeded } from './checkout-version';
 
 export type CheckoutProps = {
-  version?: string; // if reset is true, the version is undefined
+  version?: string; // if reset/head/latest is true, the version is undefined
   ids?: ComponentID[];
   head?: boolean;
   latest?: boolean;
@@ -40,6 +40,8 @@ export type CheckoutProps = {
   all?: boolean; // checkout all ids
   isLane?: boolean;
   workspaceOnly?: boolean;
+  versionPerId?: ComponentID[]; // if given, the ComponentID.version is the version to checkout to.
+  skipUpdatingBitmap?: boolean; // needed for stash
 };
 
 export type ComponentStatusBeforeMergeAttempt = {
@@ -70,7 +72,6 @@ export class CheckoutMain {
     const consumer = this.workspace.consumer;
     const { version, ids, promptMergeOptions } = checkoutProps;
     await this.syncNewComponents(checkoutProps);
-    await this.importer.importCurrentObjects(); // important. among others, it fetches the remote lane object and its new components.
     const bitIds = BitIds.fromArray(ids?.map((id) => id._legacy) || []);
     const { components } = await consumer.loadComponents(bitIds);
 
@@ -162,6 +163,7 @@ export class CheckoutMain {
         skipDependencyInstallation: checkoutProps.skipNpmInstall || leftUnresolvedConflicts,
         verbose: checkoutProps.verbose,
         resetConfig: checkoutProps.reset,
+        skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap,
       };
       componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
       await deleteFilesIfNeeded(componentsResults, consumer);
@@ -198,6 +200,7 @@ export class CheckoutMain {
     this.logger.setStatusLine(BEFORE_CHECKOUT);
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
+    await this.importer.importCurrentObjects(); // important. among others, it fetches the remote lane object and its new components.
     if (to === 'head') await this.makeLaneComponentsAvailableOnMain();
     await this.parseValues(to, componentPattern, checkoutProps);
     const checkoutResults = await this.checkout(checkoutProps);
@@ -290,7 +293,7 @@ export class CheckoutMain {
     checkoutProps: CheckoutProps
   ): Promise<ComponentStatusBeforeMergeAttempt> {
     const consumer = this.workspace.consumer;
-    const { version, head: headVersion, reset, latest: latestVersion } = checkoutProps;
+    const { version, head: headVersion, reset, latest: latestVersion, versionPerId } = checkoutProps;
     const repo = consumer.scope.objects;
     const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
     const componentStatus: ComponentStatusBeforeMergeAttempt = { id: component.id };
@@ -313,6 +316,9 @@ export class CheckoutMain {
 
       if (headVersion) return componentModel.headIncludeRemote(repo);
       if (latestVersion) return componentModel.latestVersion();
+      if (versionPerId)
+        return versionPerId.find((id) => id._legacy.isEqualWithoutVersion(component.id))?.version as string;
+
       // @ts-ignore if !reset the version is defined
       return version;
     };

@@ -6,7 +6,8 @@ import { ObjectItem } from '../objects/object-list';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { ComponentsPerRemote } from '../component-ops/multiple-component-merger';
 
-const TIMEOUT_MINUTES = 3;
+const TIMEOUT_MINUTES_WARNING = 3;
+const TIMEOUT_MINUTES_EXIT = 30;
 
 /**
  * first, write all immutable objects, such as files/sources/versions into the filesystem, as they arrive.
@@ -19,6 +20,7 @@ const TIMEOUT_MINUTES = 3;
  */
 export class ObjectsWritable extends Writable {
   private timeoutId: NodeJS.Timeout;
+  private intervalCounter = 0;
   constructor(
     private repo: Repository,
     private remoteName: string,
@@ -27,11 +29,16 @@ export class ObjectsWritable extends Writable {
   ) {
     super({ objectMode: true });
     if (!this.componentsPerRemote[remoteName]) this.componentsPerRemote[remoteName] = [];
-    this.timeoutId = setTimeout(() => {
-      const msg = `fetching from ${remoteName} takes more than ${TIMEOUT_MINUTES} minutes. make sure the remote is responsive`;
+    this.timeoutId = setInterval(() => {
+      this.intervalCounter += 1;
+      const timeLapsedInMinutes = this.intervalCounter * TIMEOUT_MINUTES_WARNING;
+      const msg = `fetching from ${remoteName} takes more than ${timeLapsedInMinutes} minutes. make sure the remote is responsive`;
       logger.warn(msg);
       logger.console(`\n${msg}`, 'warn', 'yellow');
-    }, TIMEOUT_MINUTES * 60 * 1000);
+      if (timeLapsedInMinutes > TIMEOUT_MINUTES_EXIT) {
+        throw new Error(`fetching from ${remoteName} takes more than ${TIMEOUT_MINUTES_EXIT} minutes. exiting...`);
+      }
+    }, TIMEOUT_MINUTES_WARNING * 60 * 1000);
   }
   async _write(obj: ObjectItem, _, callback: Function) {
     logger.trace('ObjectsWritable.write', obj.ref);
@@ -48,7 +55,7 @@ export class ObjectsWritable extends Writable {
   }
 
   async _final() {
-    clearTimeout(this.timeoutId);
+    clearInterval(this.timeoutId);
   }
 
   private async writeObjectToFs(obj: ObjectItem) {

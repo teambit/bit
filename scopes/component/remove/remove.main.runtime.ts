@@ -85,7 +85,7 @@ export class RemoveMain {
     const currentLane = await this.workspace.getCurrentLaneObject();
     if (currentLane?.isNew) {
       throw new BitError(
-        `unable to soft-remove on a new (not-exported) lane "${currentLane.name}". please remove without --soft`
+        `unable to soft-remove on a new (not-exported) lane "${currentLane.name}". please remove without --delete`
       );
     }
     const componentIds = await this.workspace.idsByPattern(componentsPattern);
@@ -93,7 +93,7 @@ export class RemoveMain {
     const newComps = components.filter((c) => !c.id.hasVersion());
     if (newComps.length) {
       throw new BitError(
-        `unable to soft-remove the following new component(s), please remove them without --soft\n${newComps
+        `unable to soft-remove the following new component(s), please remove them without --delete\n${newComps
           .map((c) => c.id.toString())
           .join('\n')}`
       );

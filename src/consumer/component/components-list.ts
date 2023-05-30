@@ -212,65 +212,6 @@ export default class ComponentsList {
     return compact(results);
   }
 
-  /**
-   * if the local lane was forked from another lane, this gets the differences between the two
-   */
-  async listUpdatesFromForked(): Promise<DivergeDataPerId[]> {
-    if (this.consumer.isOnMain()) {
-      return [];
-    }
-    const lane = await this.consumer.getCurrentLaneObject();
-    const forkedFromLaneId = lane?.forkedFrom;
-    if (!forkedFromLaneId) {
-      return [];
-    }
-    const forkedFromLane = await this.scope.loadLane(forkedFromLaneId);
-    if (!forkedFromLane) return []; // should we fetch it here?
-
-    const workspaceIds = this.bitMap.getAllBitIds();
-
-    const duringMergeIds = this.listDuringMergeStateComponents();
-
-    const componentsFromModel = await this.getModelComponents();
-    const compFromModelOnWorkspace = componentsFromModel
-      .filter((c) => workspaceIds.hasWithoutVersion(c.toBitId()))
-      // if a component is merge-pending, it needs to be resolved first before getting more updates from main
-      .filter((c) => !duringMergeIds.hasWithoutVersion(c.toBitId()));
-
-    // by default, when on a lane, forked is not fetched. we need to fetch it to get the latest updates.
-    await this.scope.scopeImporter.importWithoutDeps(
-      BitIds.fromArray(compFromModelOnWorkspace.map((c) => c.toBitId())),
-      {
-        cache: false,
-        includeVersionHistory: true,
-        lane: forkedFromLane,
-        ignoreMissingHead: true,
-      }
-    );
-
-    const remoteForkedLane = await this.scope.objects.remoteLanes.getRemoteLane(forkedFromLaneId);
-    if (!remoteForkedLane.length) return [];
-
-    const results = await Promise.all(
-      compFromModelOnWorkspace.map(async (modelComponent) => {
-        const headOnForked = remoteForkedLane.find((c) => c.id.isEqualWithoutVersion(modelComponent.toBitId()));
-        const headOnLane = modelComponent.laneHeadLocal;
-        if (!headOnForked || !headOnLane) return undefined;
-        const divergeData = await getDivergeData({
-          repo: this.scope.objects,
-          modelComponent,
-          targetHead: headOnForked.head,
-          sourceHead: headOnLane,
-          throws: false,
-        });
-        if (!divergeData.snapsOnTargetOnly.length && !divergeData.err) return undefined;
-        return { id: modelComponent.toBitId(), divergeData };
-      })
-    );
-
-    return compact(results);
-  }
-
   async listMergePendingComponents(loadOpts?: ComponentLoadOptions): Promise<DivergedComponent[]> {
     if (!this._mergePendingComponents) {
       const componentsFromFs = await this.getComponentsFromFS(loadOpts);
@@ -474,7 +415,7 @@ export default class ComponentsList {
   }
 
   /**
-   * components that were deleted by soft-remove (bit remove --soft) and were not tagged/snapped after this change.
+   * components that were deleted by soft-remove (bit remove --delete) and were not tagged/snapped after this change.
    * practically, their bitmap record has the config or "removed: true" and the component has deleted from the filesystem
    * in bit-status, we suggest to snap+export.
    */

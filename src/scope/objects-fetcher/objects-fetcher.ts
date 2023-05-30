@@ -88,11 +88,11 @@ ${failedScopesErr.join('\n')}`);
     const multipleComponentsMerger = new MultipleComponentMerger(componentsPerRemote, this.scope.sources);
     const totalComponents = multipleComponentsMerger.totalComponents();
     const compStr = totalComponents ? ` Processing ${totalComponents} components` : '';
-    loader.start(`${objectsQueue.added} objects were written to the filesystem successfully.${compStr}`);
+    loader.start(`${objectsQueue.added} objects were written successfully.${compStr}`);
     if (totalComponents) {
       await this.mergeAndPersistComponents(multipleComponentsMerger);
       logger.debug(`[-] fetchFromRemoteAndWrite, completed writing ${totalComponents} components`);
-      loader.start(`${totalComponents} components were written to the filesystem successfully.`);
+      loader.start(`${totalComponents} component-objects were written successfully.`);
     }
 
     return objectsQueue.addedHashes;

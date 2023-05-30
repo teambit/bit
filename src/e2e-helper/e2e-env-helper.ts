@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
+import { getRootComponentDir } from '@teambit/bit-roots';
 
 import { generateRandomStr } from '../utils';
 import CommandHelper from './e2e-command-helper';
@@ -9,6 +10,12 @@ import FsHelper from './e2e-fs-helper';
 import { ensureAndWriteJson } from './e2e-helper';
 import ScopeHelper from './e2e-scope-helper';
 import ScopesData from './e2e-scopes';
+
+type SetCustomEnvOpts = {
+  skipInstall?: boolean;
+  skipCompile?: boolean;
+  skipLink?: boolean;
+};
 
 export default class EnvHelper {
   command: CommandHelper;
@@ -44,6 +51,14 @@ export default class EnvHelper {
       this.createCompiler();
     }
     return this.command.runCmd(`bit import ${id} --compiler`);
+  }
+
+  rootCompDirDep(envName: string, depComponentName: string) {
+    return path.join(this.rootCompDir(envName), 'node_modules', `@${this.scopes.remote}/${depComponentName}`);
+  }
+
+  rootCompDir(envName: string) {
+    return getRootComponentDir(this.scopes.localPath, envName);
   }
 
   importTypescriptCompiler(version = '3.0.0') {
@@ -225,13 +240,13 @@ export default class EnvHelper {
     return EXTENSIONS_BASE_FOLDER;
   }
 
-  setCustomEnv(extensionsBaseFolder = 'node-env'): string {
+  setCustomEnv(extensionsBaseFolder = 'node-env', options: SetCustomEnvOpts = {}): string {
     this.fixtures.copyFixtureExtensions(extensionsBaseFolder);
     this.command.addComponent(extensionsBaseFolder);
     this.extensions.addExtensionToVariant(extensionsBaseFolder, 'teambit.envs/env');
-    this.command.link();
-    this.command.install();
-    this.command.compile();
+    if (!options.skipLink) this.command.link();
+    if (!options.skipInstall) this.command.install();
+    if (!options.skipCompile) this.command.compile();
     return extensionsBaseFolder;
   }
 
@@ -243,15 +258,21 @@ export default class EnvHelper {
   setCustomNewEnv(
     extensionsBaseFolder = 'react-based-env',
     basePackages: string[] = ['@teambit/react.react-env'],
-    envJsoncOptions: GenerateEnvJsoncOptions
+    envJsoncOptions: GenerateEnvJsoncOptions,
+    runInstall = true,
+    targetFolder?: string,
+    id?: string
   ): string {
-    this.fixtures.copyFixtureExtensions(extensionsBaseFolder);
-    this.command.addComponent(extensionsBaseFolder);
-    this.fixtures.generateEnvJsoncFile(extensionsBaseFolder, envJsoncOptions);
-    this.extensions.addExtensionToVariant(extensionsBaseFolder, 'teambit.envs/env');
-    this.command.setEnv(extensionsBaseFolder, 'teambit.envs/env');
+    const addOptions = id ? { i: id } : {};
+    this.fixtures.copyFixtureExtensions(extensionsBaseFolder, undefined, targetFolder);
+    this.command.addComponent(targetFolder || extensionsBaseFolder, addOptions);
+    this.fixtures.generateEnvJsoncFile(targetFolder || extensionsBaseFolder, envJsoncOptions);
+    this.extensions.addExtensionToVariant(targetFolder || extensionsBaseFolder, 'teambit.envs/env');
+    this.command.setEnv(id || extensionsBaseFolder, 'teambit.envs/env');
     this.command.link();
-    this.command.install(basePackages.join(' '));
+    if (runInstall) {
+      this.command.install(basePackages.join(' '));
+    }
     // this.command.compile();
     return extensionsBaseFolder;
   }
