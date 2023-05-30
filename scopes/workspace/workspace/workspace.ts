@@ -1336,8 +1336,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     let resolveEnvsFromRoots = this.config.resolveEnvsFromRoots;
     if (resolveEnvsFromRoots === undefined) {
       const resolveEnvsFromRootsConfig = this.globalConfig.getSync(CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS);
-      // @ts-ignore
       const defaultResolveEnvsFromRoots: boolean =
+        // @ts-ignore
         resolveEnvsFromRootsConfig === 'true' || resolveEnvsFromRootsConfig === true;
       resolveEnvsFromRoots = defaultResolveEnvsFromRoots;
     }
