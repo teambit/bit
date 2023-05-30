@@ -285,6 +285,9 @@ export class DependencyInstaller {
       options,
       this.installingContext
     );
+    const packageNames = componentDirectoryMap.components.map((component) =>
+      this.dependencyResolver.getPackageName(component)
+    );
     const manifests: Record<string, ProjectManifest> = componentDirectoryMap
       .toArray()
       .reduce((acc, [component, dir]) => {
@@ -292,7 +295,10 @@ export class DependencyInstaller {
         const manifest = workspaceManifest.componentsManifestsMap.get(packageName);
         if (manifest) {
           acc[dir] = manifest.toJson({ copyPeerToRuntime: copyPeerToRuntimeOnComponents });
-          acc[dir].defaultPeerDependencies = fromPairs(manifest.envPolicy.selfPolicy.toNameVersionTuple());
+          const selfPolicyWithoutLocal = manifest.envPolicy.selfPolicy.filter(
+            (dep) => !packageNames.includes(dep.dependencyId)
+          );
+          acc[dir].defaultPeerDependencies = fromPairs(selfPolicyWithoutLocal.toNameVersionTuple());
         }
         return acc;
       }, {});
