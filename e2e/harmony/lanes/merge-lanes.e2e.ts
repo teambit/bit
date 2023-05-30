@@ -383,7 +383,7 @@ describe('merge lanes', function () {
         expect(status.mergePendingComponents).to.have.lengthOf(0);
       });
       // TODO: @david please fix this
-      describe.skip('switching to main and merging the lane to main without squash', () => {
+      describe('switching to main and merging the lane to main without squash', () => {
         before(() => {
           helper.command.switchLocalLane('main');
           helper.command.mergeLane('dev', '--no-squash');
