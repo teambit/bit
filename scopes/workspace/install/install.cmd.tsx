@@ -137,7 +137,7 @@ function formatOutput({
   return anotherInstallRequiredOutput ? `\n${anotherInstallRequiredOutput}\n\n${summary}` : `\n${summary}`;
 }
 
-function getAnotherInstallRequiredOutput(recurringInstall = false, oldNonLoadedEnvs: string[] = []): string {
+export function getAnotherInstallRequiredOutput(recurringInstall = false, oldNonLoadedEnvs: string[] = []): string {
   // oldNonLoadedEnvs = ['my-org.my-scope/envs/my-react-env']
   if (!oldNonLoadedEnvs.length) return '';
   const oldNonLoadedEnvsStr = oldNonLoadedEnvs.join(', ');

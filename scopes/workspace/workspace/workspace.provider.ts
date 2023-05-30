@@ -17,6 +17,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { BitId } from '@teambit/legacy-bit-id';
+import { GlobalConfigMain } from '@teambit/global-config';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { DependencyResolver as LegacyDependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { EXT_NAME } from './constants';
@@ -48,7 +49,8 @@ export type WorkspaceDeps = [
   UiMain,
   BundlerMain,
   AspectLoaderMain,
-  EnvsMain
+  EnvsMain,
+  GlobalConfigMain
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -80,6 +82,7 @@ export default async function provideWorkspace(
     bundler,
     aspectLoader,
     envs,
+    globalConfig,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   [
@@ -119,6 +122,7 @@ export default async function provideWorkspace(
     onComponentLoadSlot,
     onComponentChangeSlot,
     envs,
+    globalConfig,
     onComponentAddSlot,
     onComponentRemoveSlot,
     onAspectsResolveSlot,

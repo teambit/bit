@@ -10,7 +10,7 @@ export type EmptyScopeProps = { name: string } & EmptyComponentGalleryProps;
  */
 export function EmptyScope({ name }: EmptyScopeProps) {
   return (
-    <EmptyComponentGallery name={name}>
+    <EmptyComponentGallery name={name} title={'Export components to'}>
       <div className={styles.text}>
         <span>Set</span> <HighlightedText>{`"defaultScope": "${name}"`}</HighlightedText> <span>in</span>{' '}
         <HighlightedText>workspace.jsonc</HighlightedText> <div>file and export components here.</div>

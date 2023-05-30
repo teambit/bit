@@ -27,7 +27,6 @@ export type FileObject = {
   file: string;
   importSpecifiers?: ImportSpecifier[];
   importSource?: string;
-  isCustomResolveUsed?: boolean;
   isLink?: boolean;
   linkDependencies?: Record<string, any>[];
 };
@@ -63,18 +62,11 @@ export type DependenciesTree = {
   [filePath: string]: DependenciesTreeItem;
 };
 
-export type ResolveModulesConfig = {
-  modulesDirectories?: string[];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  aliases?: { [key: string]: string }; // e.g. { '@': 'src' }
-};
-
 export type DependencyTreeParams = {
   componentDir: string;
   workspacePath: string;
   filePaths: string[];
   bindingPrefix: string;
-  resolveModulesConfig?: ResolveModulesConfig;
   visited?: Record<string, any>;
   cacheResolvedDependencies?: Record<string, any>;
   cacheProjectAst?: Record<string, any>;

@@ -142,11 +142,6 @@ module.exports._getDependencies = function (config) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       pathMap.importSpecifiers = dependenciesRaw[dependency].importSpecifiers;
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (cabinetParams.wasCustomResolveUsed) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      pathMap.isCustomResolveUsed = true;
-    }
 
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     pathMapDependencies.push(pathMap);

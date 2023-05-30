@@ -252,6 +252,7 @@ export class InstallMain {
     const compDirMap = await this.getComponentsDirectory([]);
     let installCycle = 0;
     let hasMissingLocalComponents = true;
+    const forceTeambitHarmonyLink = !this.dependencyResolver.hasHarmonyInRootPolicy();
     /* eslint-disable no-await-in-loop */
     do {
       // In case there are missing local components,
@@ -267,6 +268,7 @@ export class InstallMain {
         {
           linkedDependencies,
           installTeambitBit: false,
+          forceTeambitHarmonyLink,
         },
         pmInstallOptions
       );
@@ -285,7 +287,8 @@ export class InstallMain {
       prevManifests.add(manifestsHash(current.manifests));
       // We need to clear cache before creating the new component manifests.
       this.workspace.consumer.componentLoader.clearComponentsCache();
-      this.workspace.clearCache();
+      // We don't want to clear the failed to load envs because we want to show the warning at the end
+      this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
       current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);

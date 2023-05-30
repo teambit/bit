@@ -17,7 +17,6 @@
                       }
                   }
               ],
-              "isCustomResolveUsed": true,
               "importSource": "utils"
           }
       ]

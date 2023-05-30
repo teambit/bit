@@ -28,6 +28,7 @@ export type BuilderServiceOptions = {
   skipTests?: boolean;
   previousTasksResults?: TaskResults[];
   dev?: boolean;
+  exitOnFirstFailedTask?: boolean;
 };
 
 type BuilderTransformationMap = ServiceTransformationMap & {
@@ -127,7 +128,8 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
       envsBuildContext,
       this.logger,
       this.artifactFactory,
-      options.previousTasksResults
+      options.previousTasksResults,
+      { exitOnFirstFailedTask: options.exitOnFirstFailedTask }
     );
     const buildResults = await buildPipe.execute();
     longProcessLogger.end();

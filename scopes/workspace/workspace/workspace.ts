@@ -47,7 +47,7 @@ import {
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact } from 'lodash';
-import { MergeConfigFilename } from '@teambit/legacy/dist/constants';
+import { MergeConfigFilename, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy/dist/constants';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -60,6 +60,8 @@ import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { isHash } from '@teambit/component-version';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { GlobalConfigMain } from '@teambit/global-config';
+
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,
@@ -98,6 +100,10 @@ import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 
 export type EjectConfResult = {
   configPath: string;
+};
+
+export type ClearCacheOptions = {
+  skipClearFailedToLoadEnvs?: boolean;
 };
 
 export const AspectSpecificField = '__specific';
@@ -188,6 +194,8 @@ export class Workspace implements ComponentFactory {
     private onComponentChangeSlot: OnComponentChangeSlot,
 
     readonly envs: EnvsMain,
+
+    readonly globalConfig: GlobalConfigMain,
 
     /**
      * on component add slot.
@@ -615,9 +623,9 @@ export class Workspace implements ComponentFactory {
     return workspaceAspectsLoader.getConfiguredUserAspectsPackages(options);
   }
 
-  clearCache() {
+  clearCache(options: ClearCacheOptions = {}) {
     this.aspectLoader.resetFailedLoadAspects();
-    this.envs.resetFailedToLoadEnvs();
+    if (!options.skipClearFailedToLoadEnvs) this.envs.resetFailedToLoadEnvs();
     this.logger.debug('clearing the workspace and scope caches');
     delete this._cachedListIds;
     this.componentLoader.clearCache();
@@ -1325,6 +1333,15 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   getWorkspaceAspectsLoader(): WorkspaceAspectsLoader {
+    let resolveEnvsFromRoots = this.config.resolveEnvsFromRoots;
+    if (resolveEnvsFromRoots === undefined) {
+      const resolveEnvsFromRootsConfig = this.globalConfig.getSync(CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS);
+      const defaultResolveEnvsFromRoots: boolean =
+        // @ts-ignore
+        resolveEnvsFromRootsConfig === 'true' || resolveEnvsFromRootsConfig === true;
+      resolveEnvsFromRoots = defaultResolveEnvsFromRoots;
+    }
+
     const workspaceAspectsLoader = new WorkspaceAspectsLoader(
       this,
       this.scope,
@@ -1336,7 +1353,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.onAspectsResolveSlot,
       this.onRootAspectAddedSlot,
       this.config.resolveAspectsFromNodeModules,
-      this.config.resolveEnvsFromRoots
+      resolveEnvsFromRoots
     );
     return workspaceAspectsLoader;
   }

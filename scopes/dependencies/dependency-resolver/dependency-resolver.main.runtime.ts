@@ -391,6 +391,11 @@ export class DependencyResolverMain {
     return Boolean(this.config.rootComponents);
   }
 
+  hasHarmonyInRootPolicy(): boolean {
+    const rootPolicy = this.getWorkspacePolicyFromConfig();
+    return rootPolicy.entries.some(({ dependencyId }) => dependencyId === '@teambit/harmony');
+  }
+
   nodeLinker(): 'hoisted' | 'isolated' {
     if (this.config.nodeLinker) return this.config.nodeLinker;
     if (this.config.packageManager === 'teambit.dependencies/pnpm') return 'isolated';
