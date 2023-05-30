@@ -382,8 +382,7 @@ describe('merge lanes', function () {
       it('bit status should not show the components in pending-merge', () => {
         expect(status.mergePendingComponents).to.have.lengthOf(0);
       });
-      // TODO: @david please fix this
-      describe.skip('switching to main and merging the lane to main without squash', () => {
+      describe('switching to main and merging the lane to main without squash', () => {
         before(() => {
           helper.command.switchLocalLane('main');
           helper.command.mergeLane('dev', '--no-squash');
@@ -398,8 +397,7 @@ describe('merge lanes', function () {
           expect(() => helper.command.untagAll()).to.not.throw();
         });
       });
-      // TODO: @david please fix this
-      describe.skip('switching to main and merging the lane to main (with squash)', () => {
+      describe('switching to main and merging the lane to main (with squash)', () => {
         let beforeMergeHead: string;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(afterMergeToMain);
