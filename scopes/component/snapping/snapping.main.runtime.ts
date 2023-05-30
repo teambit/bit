@@ -780,6 +780,8 @@ there are matching among unmodified components thought. consider using --unmodif
   }
 
   private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
+    const compIds = await this.workspace.resolveMultipleComponentIds(ids);
+    compIds.map((compId) => this.workspace.clearComponentCache(compId));
     const { components, removedComponents } = await this.workspace.consumer.loadComponents(ids.toVersionLatest());
     components.forEach((component) => {
       const componentMap = component.componentMap as ComponentMap;
