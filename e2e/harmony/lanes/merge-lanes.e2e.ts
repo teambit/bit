@@ -382,7 +382,6 @@ describe('merge lanes', function () {
       it('bit status should not show the components in pending-merge', () => {
         expect(status.mergePendingComponents).to.have.lengthOf(0);
       });
-      // TODO: @david please fix this
       describe('switching to main and merging the lane to main without squash', () => {
         before(() => {
           helper.command.switchLocalLane('main');
