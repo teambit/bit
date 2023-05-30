@@ -4017,6 +4017,9 @@ importers:
       '@teambit/dependencies.aspect-docs.yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/yarn(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/dependencies.fs.linked-dependencies':
+        specifier: workspace:*
+        version: file:scopes/dependencies/fs/linked-dependencies
       '@teambit/dependencies.modules.packages-excluder':
         specifier: workspace:*
         version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
@@ -4227,9 +4230,6 @@ importers:
       '@teambit/legacy-component-log':
         specifier: workspace:*
         version: file:scopes/component/legacy-component-log
-      '@teambit/linked-dependencies':
-        specifier: workspace:*
-        version: file:scopes/dependencies/linked-dependencies(react-dom@17.0.2)(react@17.0.2)
       '@teambit/linter':
         specifier: workspace:*
         version: file:scopes/defender/linter(@types/react@17.0.8)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -5016,6 +5016,8 @@ importers:
         injected: true
       '@teambit/dependencies.aspect-docs.yarn':
         injected: true
+      '@teambit/dependencies.fs.linked-dependencies':
+        injected: true
       '@teambit/dependencies.modules.packages-excluder':
         injected: true
       '@teambit/dependency-resolver':
@@ -5155,8 +5157,6 @@ importers:
       '@teambit/lanes.ui.readme':
         injected: true
       '@teambit/legacy-component-log':
-        injected: true
-      '@teambit/linked-dependencies':
         injected: true
       '@teambit/linter':
         injected: true
@@ -5916,6 +5916,9 @@ importers:
       '@teambit/dependencies.aspect-docs.yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/yarn(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/dependencies.fs.linked-dependencies':
+        specifier: workspace:*
+        version: file:scopes/dependencies/fs/linked-dependencies
       '@teambit/dependencies.modules.packages-excluder':
         specifier: workspace:*
         version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
@@ -6126,9 +6129,6 @@ importers:
       '@teambit/legacy-component-log':
         specifier: workspace:*
         version: file:scopes/component/legacy-component-log
-      '@teambit/linked-dependencies':
-        specifier: workspace:*
-        version: file:scopes/dependencies/linked-dependencies(react-dom@17.0.2)(react@17.0.2)
       '@teambit/linter':
         specifier: workspace:*
         version: file:scopes/defender/linter(@types/react@17.0.8)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -6900,6 +6900,8 @@ importers:
         injected: true
       '@teambit/dependencies.aspect-docs.yarn':
         injected: true
+      '@teambit/dependencies.fs.linked-dependencies':
+        injected: true
       '@teambit/dependencies.modules.packages-excluder':
         injected: true
       '@teambit/dependency-resolver':
@@ -7039,8 +7041,6 @@ importers:
       '@teambit/lanes.ui.readme':
         injected: true
       '@teambit/legacy-component-log':
-        injected: true
-      '@teambit/linked-dependencies':
         injected: true
       '@teambit/linter':
         injected: true
@@ -7800,6 +7800,9 @@ importers:
       '@teambit/dependencies.aspect-docs.yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/yarn(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/dependencies.fs.linked-dependencies':
+        specifier: workspace:*
+        version: file:scopes/dependencies/fs/linked-dependencies
       '@teambit/dependencies.modules.packages-excluder':
         specifier: workspace:*
         version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
@@ -8010,9 +8013,6 @@ importers:
       '@teambit/legacy-component-log':
         specifier: workspace:*
         version: file:scopes/component/legacy-component-log
-      '@teambit/linked-dependencies':
-        specifier: workspace:*
-        version: file:scopes/dependencies/linked-dependencies(react-dom@17.0.2)(react@17.0.2)
       '@teambit/linter':
         specifier: workspace:*
         version: file:scopes/defender/linter(@types/react@17.0.8)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -8784,6 +8784,8 @@ importers:
         injected: true
       '@teambit/dependencies.aspect-docs.yarn':
         injected: true
+      '@teambit/dependencies.fs.linked-dependencies':
+        injected: true
       '@teambit/dependencies.modules.packages-excluder':
         injected: true
       '@teambit/dependency-resolver':
@@ -8923,8 +8925,6 @@ importers:
       '@teambit/lanes.ui.readme':
         injected: true
       '@teambit/legacy-component-log':
-        injected: true
-      '@teambit/linked-dependencies':
         injected: true
       '@teambit/linter':
         injected: true
@@ -9684,6 +9684,9 @@ importers:
       '@teambit/dependencies.aspect-docs.yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/yarn(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/dependencies.fs.linked-dependencies':
+        specifier: workspace:*
+        version: file:scopes/dependencies/fs/linked-dependencies
       '@teambit/dependencies.modules.packages-excluder':
         specifier: workspace:*
         version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
@@ -9894,9 +9897,6 @@ importers:
       '@teambit/legacy-component-log':
         specifier: workspace:*
         version: file:scopes/component/legacy-component-log
-      '@teambit/linked-dependencies':
-        specifier: workspace:*
-        version: file:scopes/dependencies/linked-dependencies(react-dom@17.0.2)(react@17.0.2)
       '@teambit/linter':
         specifier: workspace:*
         version: file:scopes/defender/linter(@types/react@17.0.8)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -10668,6 +10668,8 @@ importers:
         injected: true
       '@teambit/dependencies.aspect-docs.yarn':
         injected: true
+      '@teambit/dependencies.fs.linked-dependencies':
+        injected: true
       '@teambit/dependencies.modules.packages-excluder':
         injected: true
       '@teambit/dependency-resolver':
@@ -10807,8 +10809,6 @@ importers:
       '@teambit/lanes.ui.readme':
         injected: true
       '@teambit/legacy-component-log':
-        injected: true
-      '@teambit/linked-dependencies':
         injected: true
       '@teambit/linter':
         injected: true
@@ -11568,6 +11568,9 @@ importers:
       '@teambit/dependencies.aspect-docs.yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/yarn(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/dependencies.fs.linked-dependencies':
+        specifier: workspace:*
+        version: file:scopes/dependencies/fs/linked-dependencies
       '@teambit/dependencies.modules.packages-excluder':
         specifier: workspace:*
         version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
@@ -11778,9 +11781,6 @@ importers:
       '@teambit/legacy-component-log':
         specifier: workspace:*
         version: file:scopes/component/legacy-component-log
-      '@teambit/linked-dependencies':
-        specifier: workspace:*
-        version: file:scopes/dependencies/linked-dependencies(react-dom@17.0.2)(react@17.0.2)
       '@teambit/linter':
         specifier: workspace:*
         version: file:scopes/defender/linter(@types/react@17.0.8)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -12552,6 +12552,8 @@ importers:
         injected: true
       '@teambit/dependencies.aspect-docs.yarn':
         injected: true
+      '@teambit/dependencies.fs.linked-dependencies':
+        injected: true
       '@teambit/dependencies.modules.packages-excluder':
         injected: true
       '@teambit/dependency-resolver':
@@ -12691,8 +12693,6 @@ importers:
       '@teambit/lanes.ui.readme':
         injected: true
       '@teambit/legacy-component-log':
-        injected: true
-      '@teambit/linked-dependencies':
         injected: true
       '@teambit/linter':
         injected: true
@@ -13452,6 +13452,9 @@ importers:
       '@teambit/dependencies.aspect-docs.yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/yarn(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/dependencies.fs.linked-dependencies':
+        specifier: workspace:*
+        version: file:scopes/dependencies/fs/linked-dependencies
       '@teambit/dependencies.modules.packages-excluder':
         specifier: workspace:*
         version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
@@ -13662,9 +13665,6 @@ importers:
       '@teambit/legacy-component-log':
         specifier: workspace:*
         version: file:scopes/component/legacy-component-log
-      '@teambit/linked-dependencies':
-        specifier: workspace:*
-        version: file:scopes/dependencies/linked-dependencies(react-dom@17.0.2)(react@17.0.2)
       '@teambit/linter':
         specifier: workspace:*
         version: file:scopes/defender/linter(@types/react@17.0.8)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -14436,6 +14436,8 @@ importers:
         injected: true
       '@teambit/dependencies.aspect-docs.yarn':
         injected: true
+      '@teambit/dependencies.fs.linked-dependencies':
+        injected: true
       '@teambit/dependencies.modules.packages-excluder':
         injected: true
       '@teambit/dependency-resolver':
@@ -14575,8 +14577,6 @@ importers:
       '@teambit/lanes.ui.readme':
         injected: true
       '@teambit/legacy-component-log':
-        injected: true
-      '@teambit/linked-dependencies':
         injected: true
       '@teambit/linter':
         injected: true
@@ -15336,6 +15336,9 @@ importers:
       '@teambit/dependencies.aspect-docs.yarn':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/yarn(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/dependencies.fs.linked-dependencies':
+        specifier: workspace:*
+        version: file:scopes/dependencies/fs/linked-dependencies
       '@teambit/dependencies.modules.packages-excluder':
         specifier: workspace:*
         version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
@@ -15546,9 +15549,6 @@ importers:
       '@teambit/legacy-component-log':
         specifier: workspace:*
         version: file:scopes/component/legacy-component-log
-      '@teambit/linked-dependencies':
-        specifier: workspace:*
-        version: file:scopes/dependencies/linked-dependencies(react-dom@17.0.2)(react@17.0.2)
       '@teambit/linter':
         specifier: workspace:*
         version: file:scopes/defender/linter(@types/react@17.0.8)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -16320,6 +16320,8 @@ importers:
         injected: true
       '@teambit/dependencies.aspect-docs.yarn':
         injected: true
+      '@teambit/dependencies.fs.linked-dependencies':
+        injected: true
       '@teambit/dependencies.modules.packages-excluder':
         injected: true
       '@teambit/dependency-resolver':
@@ -16459,8 +16461,6 @@ importers:
       '@teambit/lanes.ui.readme':
         injected: true
       '@teambit/legacy-component-log':
-        injected: true
-      '@teambit/linked-dependencies':
         injected: true
       '@teambit/linter':
         injected: true
@@ -23179,23 +23179,13 @@ importers:
         specifier: 4.3.0
         version: 4.3.0
 
-  scopes/dependencies/linked-dependencies:
-    dependencies:
+  scopes/dependencies/fs/linked-dependencies:
+    devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
         version: 7.20.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
       '@types/jest':
-        specifier: ^26.0.0
+        specifier: 26.0.20
         version: 26.0.20
       '@types/mocha':
         specifier: 9.1.0
@@ -23203,15 +23193,6 @@ importers:
       '@types/node':
         specifier: 12.20.4
         version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.8
-        version: 17.0.8
-      '@types/react-dom':
-        specifier: ^17.0.5
-        version: 17.0.18
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
 
   scopes/dependencies/modules/packages-excluder:
     dependencies:
@@ -68099,19 +68080,10 @@ packages:
       - utf-8-validate
     dev: false
 
-  file:scopes/dependencies/linked-dependencies(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: scopes/dependencies/linked-dependencies, type: directory}
-    id: file:scopes/dependencies/linked-dependencies
-    name: '@teambit/linked-dependencies'
+  file:scopes/dependencies/fs/linked-dependencies:
+    resolution: {directory: scopes/dependencies/fs/linked-dependencies, type: directory}
+    name: '@teambit/dependencies.fs.linked-dependencies'
     version: 0.0.1-new
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@babel/runtime': 7.20.0
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
     dev: false
 
   file:scopes/dependencies/modules/packages-excluder(react@17.0.2):
