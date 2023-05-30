@@ -1323,6 +1323,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-compare"
     },
+    "ui/code-editor": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/code/ui/code-editor"
+    },
     "ui/code-tab-page": {
         "scope": "teambit.code",
         "version": "0.0.614",

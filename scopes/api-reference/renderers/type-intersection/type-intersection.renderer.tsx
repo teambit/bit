@@ -16,6 +16,7 @@ function TypeIntersectionComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
     renderers,
+    metadata,
   } = props;
 
   const typeNode = api as TypeIntersectionSchema;
@@ -33,7 +34,7 @@ function TypeIntersectionComponent(props: APINodeRenderProps) {
                 key={`typeIntersectionMember-${type.toString()}-${index}}`}
                 apiNode={{ ...props.apiNode, api: type, renderer: typeRenderer }}
                 depth={(props.depth ?? 0) + 1}
-                metadata={{ [type.__schema]: { columnView: true } }}
+                metadata={{ [type.__schema]: { columnView: metadata?.[typeNode.__schema]?.columnView } }}
               />
               {types.length > 1 && index !== types.length - 1 ? (
                 <div key={`${type.name}-${index}-&`} className={classnames(styles.node, styles.separator)}>

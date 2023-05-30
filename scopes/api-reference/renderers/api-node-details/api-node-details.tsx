@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { H6 } from '@teambit/documenter.ui.heading';
-import Editor from '@monaco-editor/react';
+import { CodeEditor } from '@teambit/code.ui.code-editor';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
 import classnames from 'classnames';
@@ -10,6 +10,8 @@ import { APIRefQueryParams } from '@teambit/api-reference.hooks.use-api-ref-url'
 import { useNavigate } from 'react-router-dom';
 import { APINode } from '@teambit/api-reference.models.api-reference-model';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
+import { OnMount, Monaco } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 import styles from './api-node-details.module.scss';
 
@@ -42,34 +44,41 @@ export function APINodeDetails({
   const routerLocation = useLocation();
   const query = useQuery();
   const navigate = useNavigate();
-  const editorRef = useRef<any>();
-  const monacoRef = useRef<any>();
+
+  const signatureEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
+  const signatureMonacoRef = useRef<Monaco>();
+
+  const exampleEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
+  const exampleMonacoRef = useRef<Monaco>();
+
   const routeToAPICmdId = useRef<string | null>(null);
   const apiUrlToRoute = useRef<string | null>(null);
+
   const hoverProviderDispose = useRef<any>();
+
   const rootRef = useRef() as React.MutableRefObject<HTMLDivElement>;
   const apiRef = useRef<HTMLDivElement | null>(null);
-  const currentQueryParams = query.toString();
-  const [containerSize, setContainerSize] = useState<{ width?: number; height?: number }>({
+
+  const signatureContainerRef = useRef<HTMLDivElement | null>(null);
+  const exampleContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const [signatureHeight, setSignatureHeight] = useState<string | undefined>();
+  const [exampleHeight, setExampleHeight] = useState<string | undefined>();
+
+  const [containerSize] = useState<{ width?: number; height?: number }>({
     width: undefined,
     height: undefined,
   });
+
+  const currentQueryParams = query.toString();
+  const signatureHeightStyle = (!!signatureHeight && `calc(${signatureHeight} + 16px)`) || '250px';
+  const exampleHeightStyle = (!!exampleHeight && `calc(${exampleHeight} + 16px)`) || '250px';
+
   const indexHidden = (containerSize.width ?? 0) < INDEX_THRESHOLD_WIDTH;
 
   const example = (doc?.tags || []).find((tag) => tag.tagName === 'example');
   const comment = doc?.comment;
   const signature = displaySignature || defaultSignature;
-  /**
-   * @HACK
-   * Make Monaco responsive
-   * default line height: 18px;
-   * totalHeight: (no of lines * default line height)
-   */
-  const exampleHeight = (example?.comment?.split('\n').length || 0) * 18;
-  const defaultSignatureHeight = 36 + ((signature?.split('\n').length || 0) - 1) * 18;
-
-  const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
-  const [isMounted, setIsMounted] = useState(false);
 
   const getAPINodeUrl = useCallback((queryParams: APIRefQueryParams) => {
     const queryObj = Object.fromEntries(query.entries());
@@ -95,57 +104,145 @@ export function APINodeDetails({
     };
   }, []);
 
-  useEffect(() => {
-    if (isMounted && signature) {
-      monacoRef.current.languages.typescript.typescriptDefaults.setCompilerOptions({
-        jsx: monacoRef.current.languages.typescript.JsxEmit.Preserve,
-        target: monacoRef.current.languages.typescript.ScriptTarget.ES2020,
-        esModuleInterop: true,
-      });
-      ``;
-      monacoRef.current.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-        noSemanticValidation: true,
-        noSyntaxValidation: true,
-      });
-      const container = editorRef.current.getDomNode();
-      editorRef.current.onDidContentSizeChange(({ contentHeight }) => {
-        if (container && isMounted && signature) {
-          const updatedHeight = Math.min(200, contentHeight + 18);
-          setSignatureHeight(updatedHeight);
-        }
-      });
-      routeToAPICmdId.current = editorRef.current.addCommand(0, () => {
-        apiUrlToRoute.current && navigate(apiUrlToRoute.current);
-      });
-      if (!hoverProviderDispose.current) {
-        hoverProviderDispose.current = monacoRef.current.languages.registerHoverProvider('typescript', {
-          provideHover: hoverProvider,
-        });
-      }
+  const getDisplayedLineCount = (editorInstance, containerWidth) => {
+    if (!signatureMonacoRef.current) return 0;
+
+    const model = editorInstance.getModel();
+
+    if (!model) {
+      return 0;
     }
-  }, [isMounted]);
 
-  const handleSize = useCallback(() => {
-    setContainerSize({
-      width: rootRef.current.offsetWidth,
-      height: rootRef.current.offsetHeight,
-    });
-  }, []);
+    const lineCount = model.getLineCount();
 
-  useEffect(() => {
-    if (window) window.addEventListener('resize', handleSize);
-    // Call handler right away so state gets updated with initial container size
-    handleSize();
-    return () => {
-      hoverProviderDispose.current?.dispose();
-      if (window) window.removeEventListener('resize', handleSize);
-      setIsMounted(false);
+    let displayedLines = 0;
+
+    const lineWidth = editorInstance.getOption(signatureMonacoRef.current.editor.EditorOption.wordWrapColumn);
+    const fontWidthApproximation = 8;
+
+    for (let lineNumber = 1; lineNumber <= lineCount; lineNumber += 1) {
+      const line = model.getLineContent(lineNumber);
+      const length = line.length || 1;
+      const lineFitsContainer = length * fontWidthApproximation <= containerWidth;
+      const wrappedLineCount = (lineFitsContainer ? 1 : Math.ceil(length / lineWidth)) || 1;
+      displayedLines += wrappedLineCount;
+    }
+
+    return displayedLines;
+  };
+
+  const updateEditorHeight =
+    (
+      setHeight: React.Dispatch<React.SetStateAction<string | undefined>>,
+      editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | undefined>
+    ) =>
+    () => {
+      if (!signatureMonacoRef.current) return undefined;
+
+      const editor = editorRef.current;
+
+      if (!editor) {
+        return undefined;
+      }
+
+      const lineHeight = editor.getOption(signatureMonacoRef.current.editor.EditorOption.lineHeight);
+
+      const paddingTop = editor.getOption(signatureMonacoRef.current.editor.EditorOption.padding)?.top || 0;
+      const paddingBottom = editor.getOption(signatureMonacoRef.current.editor.EditorOption.padding)?.bottom || 0;
+      const glyphMargin = editor.getOption(signatureMonacoRef.current.editor.EditorOption.glyphMargin);
+      const lineNumbers = editor.getOption(signatureMonacoRef.current.editor.EditorOption.lineNumbers);
+
+      const glyphMarginHeight = glyphMargin ? lineHeight : 0;
+      const lineNumbersHeight = lineNumbers.renderType !== 0 ? lineHeight : 0;
+
+      const containerWidth = editor.getLayoutInfo().contentWidth;
+      const displayedLines = getDisplayedLineCount(editor, containerWidth);
+
+      const contentHeight =
+        displayedLines * lineHeight + paddingTop + paddingBottom + glyphMarginHeight + lineNumbersHeight;
+
+      const domNode = editor.getDomNode()?.parentElement;
+
+      if (!domNode) {
+        return undefined;
+      }
+
+      domNode.style.height = `${contentHeight}px`;
+      signatureEditorRef.current?.layout();
+      setHeight(() => `${contentHeight}px`);
+      return undefined;
     };
-  }, []);
 
-  useEffect(() => {
-    handleSize();
-  }, [rootRef?.current?.offsetHeight, rootRef?.current?.offsetWidth]);
+  const handleEditorDidMount: (
+    monacoRef: React.MutableRefObject<Monaco | undefined>,
+    editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | undefined>,
+    containerRef: React.MutableRefObject<HTMLDivElement | null>,
+    setHeight: React.Dispatch<React.SetStateAction<string | undefined>>,
+    onMount?: (monaco: Monaco, editor: monaco.editor.IStandaloneCodeEditor) => void,
+    onUnMount?: () => void
+  ) => OnMount = (monacoRef, editorRef, containerRef, setHeight, onMount, unMount) => (editor, _monaco) => {
+    /**
+     * disable syntax check
+     * ts cant validate all types because imported files aren't available to the editor
+     */
+    monacoRef.current = _monaco;
+    editorRef.current = editor;
+
+    monacoRef.current.languages?.typescript?.typescriptDefaults?.setDiagnosticsOptions({
+      noSemanticValidation: true,
+      noSyntaxValidation: true,
+    });
+
+    monacoRef.current?.languages.typescript.typescriptDefaults.setCompilerOptions({
+      jsx: monacoRef.current.languages.typescript.JsxEmit.Preserve,
+      target: monacoRef.current.languages.typescript.ScriptTarget.ES2020,
+      esModuleInterop: true,
+    });
+
+    monaco.editor.defineTheme('bit', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [],
+      colors: {
+        'scrollbar.shadow': '#222222',
+        'diffEditor.insertedTextBackground': '#1C4D2D',
+        'diffEditor.removedTextBackground': '#761E24',
+        'editor.selectionBackground': '#5A5A5A',
+        'editor.overviewRulerBorder': '#6a57fd',
+        'editor.lineHighlightBorder': '#6a57fd',
+      },
+    });
+
+    monaco.editor.setTheme('bit');
+
+    onMount?.(monacoRef.current, editorRef.current);
+
+    const containerElement = containerRef.current;
+
+    let resizeObserver: ResizeObserver | undefined;
+
+    if (containerElement) {
+      resizeObserver = new ResizeObserver(() => {
+        setTimeout(() => updateEditorHeight(setHeight, editorRef));
+      });
+      resizeObserver.observe(containerElement);
+    }
+
+    updateEditorHeight(setHeight, editorRef);
+
+    editor.onDidDispose(() => {
+      containerElement && resizeObserver?.unobserve(containerElement);
+      unMount?.();
+    });
+  };
+
+  React.useLayoutEffect(() => {
+    if (signatureMonacoRef.current) updateEditorHeight(setSignatureHeight, signatureEditorRef)();
+  }, [signatureMonacoRef.current]);
+
+  React.useLayoutEffect(() => {
+    if (exampleMonacoRef.current) updateEditorHeight(setExampleHeight, exampleEditorRef)();
+  }, [exampleMonacoRef.current]);
 
   return (
     /**
@@ -164,38 +261,74 @@ export function APINodeDetails({
           <div
             key={`${signature}-${currentQueryParams}-api-signature-editor`}
             className={classnames(styles.apiNodeDetailsSignatureContainer, styles.codeEditorContainer)}
+            ref={signatureContainerRef}
+            style={{
+              minHeight: signatureHeightStyle,
+              maxHeight: signatureHeightStyle,
+              height: signatureHeightStyle,
+            }}
           >
-            <Editor
+            <CodeEditor
               options={defaultCodeEditorOptions}
-              value={signature}
-              height={signatureHeight}
-              path={`${currentQueryParams}-${filePath}`}
+              fileContent={signature}
+              filePath={`${currentQueryParams}-${filePath}`}
               className={styles.editor}
-              beforeMount={(monaco) => {
-                monacoRef.current = monaco;
+              beforeMount={(_monaco) => {
+                signatureMonacoRef.current = _monaco;
               }}
-              onMount={(editor) => {
-                editorRef.current = editor;
-                const signatureContent = editorRef.current.getValue();
-                const updatedSignatureHeight = 36 + ((signatureContent?.split('\n').length || 0) - 1) * 18;
-                setIsMounted(true);
-                setSignatureHeight(updatedSignatureHeight);
+              onChange={() => {
+                updateEditorHeight(setSignatureHeight, signatureEditorRef)();
               }}
-              theme={'vs-dark'}
+              onMount={handleEditorDidMount(
+                signatureMonacoRef,
+                signatureEditorRef,
+                signatureContainerRef,
+                setSignatureHeight,
+                (_monaco, _editor) => {
+                  routeToAPICmdId.current =
+                    _editor.addCommand(0, () => {
+                      apiUrlToRoute.current && navigate(apiUrlToRoute.current);
+                    }) ?? null;
+
+                  if (!hoverProviderDispose.current) {
+                    hoverProviderDispose.current = _monaco.languages.registerHoverProvider('typescript', {
+                      provideHover: hoverProvider,
+                    });
+                  }
+                },
+                () => {
+                  hoverProviderDispose.current?.dispose();
+                }
+              )}
             />
           </div>
         )}
         {example && example.comment && (
           <div className={styles.apiNodeDetailsExample}>
             <H6 className={styles.apiNodeDetailsExampleTitle}>Example</H6>
-            <div className={styles.codeEditorContainer}>
-              <Editor
+            <div
+              className={styles.codeEditorContainer}
+              ref={exampleContainerRef}
+              style={{
+                minHeight: exampleHeightStyle,
+                maxHeight: exampleHeightStyle,
+                height: exampleHeightStyle,
+              }}
+            >
+              <CodeEditor
                 options={defaultCodeEditorOptions}
-                value={example.comment}
-                path={`${example?.location.line}:${example?.location.filePath}`}
-                height={exampleHeight}
-                theme={'vs-dark'}
+                fileContent={example.comment}
+                filePath={`${example?.location.line}:${example?.location.filePath}`}
                 className={styles.editor}
+                onMount={handleEditorDidMount(
+                  exampleMonacoRef,
+                  exampleEditorRef,
+                  exampleContainerRef,
+                  setExampleHeight
+                )}
+                onChange={() => {
+                  updateEditorHeight(setExampleHeight, exampleEditorRef)();
+                }}
               />
             </div>
           </div>
