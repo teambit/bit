@@ -11,7 +11,7 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
 import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
-import { createLinks } from '@teambit/toolbox.fs.linked-dependencies';
+import { createLinks } from '@teambit/linked-dependencies';
 import pMapSeries from 'p-map-series';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { linkToNodeModulesWithCodemod, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';

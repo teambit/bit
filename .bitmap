@@ -525,13 +525,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/fs/hard-link-directory"
     },
-    "fs/linked-dependencies": {
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.toolbox",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/fs/linked-dependencies"
-    },
     "generator": {
         "scope": "teambit.generator",
         "version": "0.0.1067",
@@ -663,6 +656,13 @@
         "version": "0.0.399",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/legacy-component-log"
+    },
+    "linked-dependencies": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.dependencies",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/dependencies/linked-dependencies"
     },
     "linter": {
         "scope": "teambit.defender",

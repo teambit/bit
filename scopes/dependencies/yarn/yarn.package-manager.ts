@@ -39,7 +39,7 @@ import { homedir } from 'os';
 import { Logger } from '@teambit/logger';
 import versionSelectorType from 'version-selector-type';
 import YAML from 'yaml';
-import { createLinks } from '@teambit/toolbox.fs.linked-dependencies';
+import { createLinks } from '@teambit/linked-dependencies';
 import { createRootComponentsDir } from './create-root-components-dir';
 
 type BackupJsons = {
