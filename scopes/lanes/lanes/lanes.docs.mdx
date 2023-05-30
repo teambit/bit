@@ -89,7 +89,7 @@ This change won't affect the remote scope, even after exporting the lane.
 This is becuase on the remote, the merge-lane process doesn't remove anything, only adds/changes components to the lane object.
 Remember that by default when importing a lane, only the components on the workspace are part of the lane, so the same lane-object, locally can have less components than the remote and obviously in this case we don't want to remove them from the remote on export.
 
-To mark a component as removed on the lane, use `bit remove --soft`, which will modify the component, mark it as removed, then, on the next snap+export, the remote will be updated.
+To mark a component as removed on the lane, use `bit remove --delete`, which will modify the component, mark it as removed, then, on the next snap+export, the remote will be updated.
 Once a component is marked as removed, it won't be merged during `bit lane merge`, and won't be imported during `bit lane import`.
 
 ### Debug issues during merge

@@ -113,7 +113,7 @@ export class DevFilesMain {
     const fromEnvJsonFile = await this.computeDevPatternsFromEnvJsoncFile(envId);
     let fromEnvFunc;
     if (!fromEnvJsonFile) {
-      const envDef = this.envs.calculateEnv(component);
+      const envDef = await this.envs.calculateEnv(component);
       fromEnvFunc = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns(component) : [];
     }
     const envPatterns = fromEnvJsonFile || fromEnvFunc || {};

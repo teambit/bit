@@ -16,6 +16,7 @@ type BuildOpts = {
   tasks: string;
   listTasks?: string;
   skipTests?: boolean;
+  failFast?: boolean;
 };
 
 export class BuilderCmd implements Command {
@@ -44,6 +45,11 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       'list tasks of an env or a component-id for each one of the pipelines: build, tag and snap',
     ],
     ['', 'skip-tests', 'skip running component tests during tag process'],
+    [
+      '',
+      'fail-fast',
+      'stop pipeline execution on the first failed task (by default a task is skipped only when its dependent failed)',
+    ],
   ] as CommandOptions;
 
   constructor(private builder: BuilderMain, private workspace: Workspace, private logger: Logger) {}
@@ -60,6 +66,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       tasks,
       listTasks,
       skipTests,
+      failFast,
     }: BuildOpts
   ): Promise<string> {
     if (!this.workspace) throw new OutsideWorkspaceError();
@@ -95,6 +102,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
         dev,
         tasks: tasks ? tasks.split(',').map((task) => task.trim()) : [],
         skipTests,
+        exitOnFirstFailedTask: failFast,
       }
     );
     longProcessLogger.end();

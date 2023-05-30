@@ -179,6 +179,9 @@ export default class CommandHelper {
   renameScopeOwner(oldScope: string, newScope: string, flags = '') {
     return this.runCmd(`bit scope rename-owner ${oldScope} ${newScope} ${flags}`);
   }
+  envs() {
+    return this.runCmd(`bit envs`);
+  }
   setEnv(compId: string, envId: string) {
     return this.runCmd(`bit envs set ${compId} ${envId}`);
   }
@@ -202,7 +205,7 @@ export default class CommandHelper {
     return this.runCmd(`bit remove ${id} --silent ${flags}`);
   }
   softRemoveComponent(id: string, flags = '') {
-    return this.runCmd(`bit remove ${id} --silent --soft ${flags}`);
+    return this.runCmd(`bit remove ${id} --silent --delete ${flags}`);
   }
   removeComponentFromRemote(id: string, flags = '') {
     return this.runCmd(`bit remove ${id} --silent --remote ${flags}`);
@@ -514,6 +517,14 @@ export default class CommandHelper {
   statusJson(cwd = this.scopes.localPath, flags = ''): Record<string, any> {
     const status = this.runCmd(`bit status --json ${flags}`, cwd);
     return JSON.parse(status);
+  }
+
+  stash() {
+    return this.runCmd('bit stash');
+  }
+
+  stashLoad() {
+    return this.runCmd('bit stash load');
   }
 
   isDeprecated(compName: string): boolean {

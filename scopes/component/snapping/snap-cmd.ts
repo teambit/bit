@@ -49,6 +49,11 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     ],
     ['a', 'all', 'DEPRECATED (not needed anymore, it is the default now). snap all new and modified components'],
     [
+      '',
+      'fail-fast',
+      'stop pipeline execution on the first failed task (by default a task is skipped only when its dependent failed)',
+    ],
+    [
       'f',
       'force',
       'DEPRECATED (use "--skip-tests" or "--unmodified" instead). force-snap even if tests are failing and even when component has not changed',
@@ -74,6 +79,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableSnapPipeline = false,
       forceDeploy = false,
       unmodified = false,
+      failFast = false,
     }: {
       message?: string;
       all?: boolean;
@@ -87,6 +93,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableSnapPipeline?: boolean;
       forceDeploy?: boolean;
       unmodified?: boolean;
+      failFast?: boolean;
     }
   ) {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
@@ -124,6 +131,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableTagAndSnapPipelines,
       forceDeploy,
       unmodified,
+      exitOnFirstFailedTask: failFast,
     });
 
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
