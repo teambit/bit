@@ -3,6 +3,7 @@ import mock from 'mock-fs';
 import path from 'path';
 import rewire from 'rewire';
 import sinon from 'sinon';
+import { DependencyDetector } from '../detector-hook';
 
 const cabinetNonDefault = rewire('./');
 const cabinet = cabinetNonDefault.default;
@@ -449,6 +450,32 @@ describe('filing-cabinet', () => {
         dependency: './bar',
         filename: 'barbazim/foo.baz',
         directory: 'barbazim/',
+      });
+
+      assert.equal(result, path.normalize(`${mockRootDir}/barbazim/bar.baz`));
+    });
+  });
+
+  describe('custom env lookups', () => {
+    it('supports passing env detectors', () => {
+      const detector: DependencyDetector = {
+        detect: (fileContent: string) => {
+          return fileContent.indexOf('foo') === -1 ? [] : ['foo'];
+        },
+        isSupported: ({ ext }) => {
+          return ext === '.foo';
+        },
+        dependencyLookup: ({ dependency }) => {
+          return `${dependency}.baz`;
+        },
+        type: 'foo',
+      };
+      const result = cabinet({
+        directory: 'barbazim/',
+        filename: 'barbazim/xxx.foo',
+        ext: '.foo',
+        dependency: './bar',
+        envDetectors: [detector],
       });
 
       assert.equal(result, path.normalize(`${mockRootDir}/barbazim/bar.baz`));

@@ -17,9 +17,30 @@ export type DependencyContext = {
   ext: string;
 
   /**
+   * name of the file.
+   */
+  filename: string;
+
+  /**
+   * directory of the file.
+   */
+  directory: string;
+
+  /**
+   * name of the dependency.
+   * e.g. `lodash` in `import _ from 'lodash'`
+   */
+  dependency: string;
+
+  /**
    * content of the file.
    */
   content?: string;
+
+  /**
+   * Resolve config of the lookup process.
+   */
+  resolveConfig?: Record<string, any>;
 };
 
 export interface DependencyDetector {
