@@ -196,41 +196,9 @@ export class SchemaExtractorContext {
 
   visitTypeDefinition() {}
 
-  // findFileInComponent(filePath: string) {
-  //   const filePathToCompare = pathNormalizeToLinux(filePath);
-  //   console.log("🚀 ~ file: schema-extractor-context.ts:202 ~ SchemaExtractorContext ~ findFileInComponent ~ filePathToCompare:", filePathToCompare)
-
-  //   const matchingFile = this.component.filesystem.files.find((file) => {
-  //     const currentFilePath = pathNormalizeToLinux(file.path);
-  //     // TODO: fix this line to support further extensions.
-  //     const currentFilePathWithExts = ['ts', 'tsx', 'js', 'jsx'].map((format) => {
-  //       if (filePathToCompare.endsWith(`.${format}`)) return filePathToCompare;
-
-  //       return `${filePathToCompare}.${format}`;
-  //     });
-
-  //     const matchesWithExtension = !!currentFilePathWithExts.find(
-  //       (filePathWithExt) => filePathWithExt.includes(currentFilePath));
-
-  //     // check if it is an index file export
-  //     const matchesIndexFile =
-  //       !matchesWithExtension &&
-  //       ['ts', 'js'].some((ext) => {
-  //         return `${filePathToCompare}/index.${ext}`.includes(currentFilePath);
-  //       });
-
-  //     return matchesWithExtension || matchesIndexFile;
-  //   });
-
-  //   console.log("🚀 ~ file: schema-extractor-context.ts:225 ~ SchemaExtractorContext ~ findFileInComponent ~ matchingFile:", matchingFile?.path)
-  //   return matchingFile;
-  // }
-
   findFileInComponent(filePath: string) {
     const filePathToCompare = pathNormalizeToLinux(filePath);
-    // console.log("🚀 ~ file: schema-extractor-context.ts:234 ~ SchemaExtractorContext ~ findFileInComponent ~ filePathToCompare:", filePathToCompare)
     const fileNameToCompare = basename(filePathToCompare); // Get the filename from the filePath
-    // console.log("🚀 ~ file: schema-extractor-context.ts:235 ~ SchemaExtractorContext ~ findFileInComponent ~ fileNameToCompare:", fileNameToCompare)
 
     const matchingFile = this.component.filesystem.files.find((file) => {
       const currentFilePath = pathNormalizeToLinux(file.path);
