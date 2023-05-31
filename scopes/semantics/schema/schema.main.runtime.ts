@@ -94,7 +94,6 @@ export class SchemaMain {
     alwaysRunExtractor = false,
     path?: string
   ): Promise<APISchema> {
-    // if on workspace get schema from ts server
     if (alwaysRunExtractor || this.workspace) {
       const env = this.envs.getEnv(component).env;
       // types need to be fixed

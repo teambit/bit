@@ -135,7 +135,7 @@ export class TypescriptMain {
     files: string[] = []
   ): Promise<TsserverClient> {
     this.tsServer = new TsserverClient(projectPath, this.logger, options, files);
-    this.tsServer.init();
+    await this.tsServer.init();
     return this.tsServer;
   }
 

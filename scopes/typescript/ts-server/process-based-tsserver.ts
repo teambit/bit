@@ -78,9 +78,10 @@ export interface TypeScriptRequestTypes {
 }
 
 export class ProcessBasedTsServer {
-  private readlineInterface: readline.ReadLine;
-  private tsServerProcess: cp.ChildProcess;
+  private readlineInterface: readline.ReadLine | null;
+  private tsServerProcess: cp.ChildProcess | null;
   private seq = 0;
+  private TSSERVER_START_TIMEOUT = 5000; // 5s
 
   private readonly deferreds: {
     [seq: number]: Deferred<any>;
@@ -93,73 +94,95 @@ export class ProcessBasedTsServer {
     this.logger = options.logger;
   }
 
-  start(): void {
-    if (this.readlineInterface) {
-      return;
-    }
-    const { tsserverPath } = this.options;
-    const { logFile, logVerbosity, maxTsServerMemory, globalPlugins, pluginProbeLocations } = this.tsServerArgs;
-    const args: string[] = [];
-    if (logFile) {
-      args.push('--logFile', logFile);
-    }
-    if (logVerbosity) {
-      args.push('--logVerbosity', logVerbosity);
-    }
-    if (globalPlugins && globalPlugins.length) {
-      args.push('--globalPlugins', globalPlugins.join(','));
-    }
-    if (pluginProbeLocations && pluginProbeLocations.length) {
-      args.push('--pluginProbeLocations', pluginProbeLocations.join(','));
-    }
-    this.cancellationPipeName = tempy.file({ name: 'tscancellation' });
-    args.push('--cancellationPipeName', `${this.cancellationPipeName}*`);
-    this.logger.info(`Starting tsserver : '${tsserverPath} ${args.join(' ')}'`);
-    const tsserverPathIsModule = path.extname(tsserverPath) === '.js';
-    const options = {
-      silent: true,
-      execArgv: [...(maxTsServerMemory ? [`--max-old-space-size=${maxTsServerMemory}`] : [])],
-    };
-    this.tsServerProcess = tsserverPathIsModule ? cp.fork(tsserverPath, args, options) : cp.spawn(tsserverPath, args);
-    this.readlineInterface = readline.createInterface(
-      this.tsServerProcess.stdout as Readable,
-      this.tsServerProcess.stdin as Writable,
-      undefined
-    );
-    process.on('exit', () => {
-      this.readlineInterface.close();
-      this.tsServerProcess.stdin?.destroy();
-      this.tsServerProcess.kill();
-    });
-    this.readlineInterface.on('line', (line) => this.processMessage(line));
+  async restart() {
+    this.kill();
+    await this.start();
+  }
 
-    const dec = new decoder.StringDecoder('utf-8');
-    this.tsServerProcess.stderr?.addListener('data', (data) => {
-      const stringMsg = typeof data === 'string' ? data : dec.write(data);
-      this.logger.error(stringMsg);
+  start() {
+    return new Promise<void>((resolve, reject) => {
+      if (this.tsServerProcess) {
+        reject(new Error('server already started'));
+        return;
+      }
+
+      const { tsserverPath } = this.options;
+      const { logFile, logVerbosity, maxTsServerMemory, globalPlugins, pluginProbeLocations } = this.tsServerArgs;
+      const args: string[] = [];
+      if (logFile) {
+        args.push('--logFile', logFile);
+      }
+      if (logVerbosity) {
+        args.push('--logVerbosity', logVerbosity);
+      }
+      if (globalPlugins && globalPlugins.length) {
+        args.push('--globalPlugins', globalPlugins.join(','));
+      }
+      if (pluginProbeLocations && pluginProbeLocations.length) {
+        args.push('--pluginProbeLocations', pluginProbeLocations.join(','));
+      }
+      this.cancellationPipeName = tempy.file({ name: 'tscancellation' });
+      args.push('--cancellationPipeName', `${this.cancellationPipeName}*`);
+      this.logger.info(`Starting tsserver : '${tsserverPath} ${args.join(' ')}'`);
+      const tsserverPathIsModule = path.extname(tsserverPath) === '.js';
+      const options = {
+        silent: true,
+        execArgv: [...(maxTsServerMemory ? [`--max-old-space-size=${maxTsServerMemory}`] : [])],
+      };
+      this.tsServerProcess = tsserverPathIsModule ? cp.fork(tsserverPath, args, options) : cp.spawn(tsserverPath, args);
+
+      const timeout = setTimeout(() => {
+        reject(new Error(`TIMEOUT: TSServer did not start within the specified time ${this.TSSERVER_START_TIMEOUT}s`));
+      }, this.TSSERVER_START_TIMEOUT);
+
+      this.readlineInterface = readline.createInterface(
+        this.tsServerProcess.stdout as Readable,
+        this.tsServerProcess.stdin as Writable,
+        undefined
+      );
+      process.on('exit', () => {
+        this.kill();
+        reject(new Error('TSServer was killed'));
+      });
+
+      this.readlineInterface.on('line', (line) => {
+        clearTimeout(timeout);
+        this.processMessage(line, resolve, reject);
+      });
+
+      const dec = new decoder.StringDecoder('utf-8');
+      this.tsServerProcess.stderr?.addListener('data', (data) => {
+        const stringMsg = typeof data === 'string' ? data : dec.write(data);
+        this.logger.error(stringMsg);
+        reject(new Error(stringMsg));
+      });
     });
   }
 
-  notify(command: CommandTypes.Open, args: protocol.OpenRequestArgs): void;
-  notify(command: CommandTypes.Close, args: protocol.FileRequestArgs): void;
-  notify(command: CommandTypes.Saveto, args: protocol.SavetoRequestArgs): void;
-  notify(command: CommandTypes.Change, args: protocol.ChangeRequestArgs): void;
-  notify(command: string, args: any): void {
+  async notify(command: CommandTypes.Open, args: protocol.OpenRequestArgs): Promise<void>;
+  async notify(command: CommandTypes.Close, args: protocol.FileRequestArgs): Promise<void>;
+  async notify(command: CommandTypes.Saveto, args: protocol.SavetoRequestArgs): Promise<void>;
+  async notify(command: CommandTypes.Change, args: protocol.ChangeRequestArgs): Promise<void>;
+  async notify(command: string, args: any): Promise<void> {
+    await this.ensureServerIsRunning();
     this.sendMessage(command, true, args);
   }
 
-  request<K extends keyof TypeScriptRequestTypes>(
+  async request<K extends keyof TypeScriptRequestTypes>(
     command: K,
     args: TypeScriptRequestTypes[K][0],
     token?: CancellationToken
   ): Promise<TypeScriptRequestTypes[K][1]> {
+    await this.ensureServerIsRunning();
     this.sendMessage(command, false, args);
     const seq = this.seq;
     const deferred = new Deferred<TypeScriptRequestTypes[K][1]>();
     this.deferreds[seq] = deferred;
     const request = deferred.promise;
+
+    let onCancelled;
     if (token) {
-      const onCancelled = token.onCancellationRequested(() => {
+      onCancelled = token.onCancellationRequested(() => {
         onCancelled.dispose();
         if (this.cancellationPipeName) {
           const requestCancellationPipeName = `${this.cancellationPipeName}${seq}`;
@@ -176,11 +199,23 @@ export class ProcessBasedTsServer {
         }
       });
     }
-    return request;
+
+    try {
+      const result = await request;
+      onCancelled?.dispose();
+      return result;
+    } catch (error) {
+      this.logger.error(`Error in request: ${error}`);
+      throw error;
+    }
   }
 
   kill() {
-    this.tsServerProcess.kill();
+    this.tsServerProcess?.kill();
+    this.tsServerProcess?.stdin?.destroy();
+    this.readlineInterface?.close();
+    this.tsServerProcess = null;
+    this.readlineInterface = null;
   }
 
   private log(msg: string, obj: Record<string, any> = {}) {
@@ -203,17 +238,31 @@ export class ProcessBasedTsServer {
       request.arguments = args;
     }
     const serializedRequest = `${JSON.stringify(request)}\n`;
-    this.tsServerProcess.stdin?.write(serializedRequest);
+    this.tsServerProcess?.stdin?.write(serializedRequest);
     this.log(notification ? 'notify' : 'request', request);
   }
 
-  protected processMessage(untrimmedMessageString: string): void {
+  protected processMessage(untrimmedMessageString: string, resolve?: () => void, reject?: (err) => void): void {
     const messageString = untrimmedMessageString.trim();
     if (!messageString || messageString.startsWith('Content-Length:')) {
       return;
     }
-    const message: protocol.Message = JSON.parse(messageString);
+    let message: protocol.Message;
+
+    try {
+      message = JSON.parse(messageString);
+    } catch (error) {
+      // If the message isn't valid JSON, it's not a valid tsserver message. Reject the promise.
+      reject?.(new Error(`Received invalid message from TSServer: ${untrimmedMessageString}`));
+      return;
+    }
+
     this.log('processMessage', message);
+
+    if (this.isEvent(message)) {
+      resolve?.();
+    }
+
     if (this.isResponse(message)) {
       this.resolveResponse(message, message.request_seq, message.success);
     } else if (this.isEvent(message)) {
@@ -248,5 +297,11 @@ export class ProcessBasedTsServer {
 
   private isRequestCompletedEvent(message: protocol.Message): message is protocol.RequestCompletedEvent {
     return this.isEvent(message) && message.event === 'requestCompleted';
+  }
+
+  private async ensureServerIsRunning() {
+    if (!this.tsServerProcess) {
+      await this.restart();
+    }
   }
 }
