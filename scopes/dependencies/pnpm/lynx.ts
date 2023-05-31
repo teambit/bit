@@ -297,7 +297,10 @@ export async function install(
         folder: modulesDir,
       });
       const virtualStoreDir = path.join(modulesDir, '.pnpm');
-      const lockfile = (await readWantedLockfile(rootDir, { ignoreIncompatible: true }))!;
+      const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: true });
+      if (lockfile == null) {
+        throw new BitError(`Cannot mount node_modules because lockfile is not found at ${rootDir}`);
+      }
       await hoist({
         lockfile,
         privateHoistPattern: opts.hoistPattern ?? ['*'],
@@ -356,21 +359,23 @@ export async function install(
 }
 
 async function linkAllBins(lockfile: Lockfile, virtualStoreDir: string) {
-  for (const [depPath, pkgSnapshot] of Object.entries(lockfile.packages ?? {})) {
+  await Promise.all(Object.entries(lockfile.packages ?? {}).map(async ([depPath, pkgSnapshot]) => {
     let hasBin = pkgSnapshot.hasBin;
-    if (!hasBin) {
+    if (!hasBin && lockfile.packages) {
       for (const [depName, ref] of Object.entries({
         ...pkgSnapshot.dependencies,
         ...pkgSnapshot.optionalDependencies,
       })) {
         const depRelPath = dp.refToRelative(ref, depName);
-        if (!depRelPath) continue;
-        const depPkgSnapshot = lockfile.packages?.[depRelPath];
-        if (!depPkgSnapshot) continue;
-        hasBin = depPkgSnapshot.hasBin;
-        if (hasBin) break;
+        if (depRelPath) {
+          const depPkgSnapshot = lockfile.packages[depRelPath];
+          if (depPkgSnapshot) {
+            hasBin = depPkgSnapshot.hasBin;
+            if (hasBin) break;
+          }
+        }
       }
-      if (!hasBin) continue;
+      if (!hasBin) return;
     }
     const { name } = nameVerFromPkgSnapshot(depPath, pkgSnapshot);
     const currentPath = dp.depPathToFilename(depPath);
@@ -386,7 +391,7 @@ async function linkAllBins(lockfile: Lockfile, virtualStoreDir: string) {
       // For now, we don't hoist such generated commands.
       // Related issue: https://github.com/pnpm/pnpm/issues/2071
     }
-  }
+  }));
 }
 
 /*
