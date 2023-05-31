@@ -136,18 +136,6 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         },
       },
 
-      onBeforeSetupMiddleware(wds) {
-        const { app } = wds;
-        // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
-        // middlewares before `redirectServedPath` otherwise will not have any effect
-        // This lets us fetch source contents from webpack for the error overlay
-        // @ts-ignore @types/wds mismatch
-        app.use(evalSourceMapMiddleware(wds));
-        // This lets us open files from the runtime error overlay.
-        // @ts-ignore
-        app.use(errorOverlayMiddleware());
-      },
-
       setupMiddlewares: (middlewares, devServer) => {
         if (!devServer) {
           throw new Error('webpack-dev-server is not defined');
