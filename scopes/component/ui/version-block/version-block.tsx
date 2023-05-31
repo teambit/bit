@@ -24,9 +24,10 @@ export type VersionBlockProps = {
 export function VersionBlock({ isLatest, className, snap, componentId, isCurrent, ...rest }: VersionBlockProps) {
   const { username, email, message, tag, hash, date } = snap;
   const { lanesModel } = useLanes();
-  const currentLaneUrl = lanesModel?.viewedLane
-    ? `${LanesModel.getLaneUrl(lanesModel?.viewedLane?.id)}${LanesModel.baseLaneComponentRoute}`
-    : '';
+  const currentLaneUrl =
+    !!lanesModel?.viewedLane?.id && !lanesModel.viewedLane.id.isDefault()
+      ? `${LanesModel.getLaneUrl(lanesModel?.viewedLane?.id)}${LanesModel.baseLaneComponentRoute}`
+      : '';
   const version = tag || hash;
   const author = useMemo(() => {
     return {
