@@ -337,6 +337,8 @@ export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
 export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
 
+export const CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS = 'default_resolve_envs_from_roots';
+
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
 export const CFG_PROXY_NO_PROXY = 'proxy.no_proxy';

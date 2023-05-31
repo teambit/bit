@@ -12,6 +12,7 @@ import { LoggerAspect } from '@teambit/logger';
 import { ScopeAspect } from '@teambit/scope';
 import { UIAspect } from '@teambit/ui';
 import { VariantsAspect } from '@teambit/variants';
+import GlobalConfigAspect from '@teambit/global-config';
 
 import { EXT_NAME } from './constants';
 import { OnComponentAdd, OnComponentChange, OnComponentRemove, OnComponentLoad } from './on-component-events';
@@ -35,6 +36,7 @@ export const WorkspaceMain = {
     BundlerAspect,
     AspectLoaderAspect,
     EnvsAspect,
+    GlobalConfigAspect,
   ],
   slots: [
     Slot.withType<OnComponentLoad>(),
