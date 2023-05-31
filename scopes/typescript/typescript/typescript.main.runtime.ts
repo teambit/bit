@@ -16,6 +16,7 @@ import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/w
 import WatcherAspect, { WatcherMain, WatchOptions } from '@teambit/watcher';
 import type { Component } from '@teambit/component';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
+import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
@@ -92,6 +93,7 @@ export class TypescriptMain {
     private logger: Logger,
     readonly schemaTransformerSlot: SchemaTransformerSlot,
     readonly workspace: Workspace,
+    readonly scope: ScopeMain,
     readonly depResolver: DependencyResolverMain,
     private envs: EnvsMain,
     private tsConfigWriter: TsconfigWriter,
@@ -209,9 +211,10 @@ export class TypescriptMain {
       tsconfig,
       this.schemaTransformerSlot,
       this,
-      path || this.workspace.path,
+      path || this.workspace?.path || '',
       this.depResolver,
       this.workspace,
+      this.scope,
       this.aspectLoader,
       this.logger
     );
@@ -312,11 +315,24 @@ export class TypescriptMain {
     WatcherAspect,
     WorkspaceConfigFilesAspect,
     CompilerAspect,
+    ScopeAspect,
   ];
   static slots = [Slot.withType<SchemaTransformer[]>()];
 
   static async provider(
-    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs, watcher, workspaceConfigFiles, compiler]: [
+    [
+      schema,
+      loggerExt,
+      aspectLoader,
+      workspace,
+      cli,
+      depResolver,
+      envs,
+      watcher,
+      workspaceConfigFiles,
+      compiler,
+      scope,
+    ]: [
       SchemaMain,
       LoggerMain,
       AspectLoaderMain,
@@ -326,7 +342,8 @@ export class TypescriptMain {
       EnvsMain,
       WatcherMain,
       WorkspaceConfigFilesMain,
-      CompilerMain
+      CompilerMain,
+      ScopeMain
     ],
     config,
     [schemaTransformerSlot]: [SchemaTransformerSlot]
@@ -341,6 +358,7 @@ export class TypescriptMain {
       logger,
       schemaTransformerSlot,
       workspace,
+      scope,
       depResolver,
       envs,
       tsconfigWriter,

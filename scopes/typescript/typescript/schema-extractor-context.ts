@@ -6,7 +6,7 @@ import { head, uniqBy } from 'lodash';
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-import { resolve, sep, relative } from 'path';
+import { resolve, sep, relative, basename, join } from 'path';
 import { Component, ComponentID } from '@teambit/component';
 import {
   TypeRefSchema,
@@ -108,7 +108,6 @@ export class SchemaExtractorContext {
     const location = this.getLocation(node);
     const key = this.getComputedNodeKey(location);
     const existingComputedSchema = this.computed.get(key);
-
     if (existingComputedSchema) {
       return existingComputedSchema;
     }
@@ -197,24 +196,61 @@ export class SchemaExtractorContext {
 
   visitTypeDefinition() {}
 
+  // findFileInComponent(filePath: string) {
+  //   const filePathToCompare = pathNormalizeToLinux(filePath);
+  //   console.log("🚀 ~ file: schema-extractor-context.ts:202 ~ SchemaExtractorContext ~ findFileInComponent ~ filePathToCompare:", filePathToCompare)
+
+  //   const matchingFile = this.component.filesystem.files.find((file) => {
+  //     const currentFilePath = pathNormalizeToLinux(file.path);
+  //     // TODO: fix this line to support further extensions.
+  //     const currentFilePathWithExts = ['ts', 'tsx', 'js', 'jsx'].map((format) => {
+  //       if (filePathToCompare.endsWith(`.${format}`)) return filePathToCompare;
+
+  //       return `${filePathToCompare}.${format}`;
+  //     });
+
+  //     const matchesWithExtension = !!currentFilePathWithExts.find(
+  //       (filePathWithExt) => filePathWithExt.includes(currentFilePath));
+
+  //     // check if it is an index file export
+  //     const matchesIndexFile =
+  //       !matchesWithExtension &&
+  //       ['ts', 'js'].some((ext) => {
+  //         return `${filePathToCompare}/index.${ext}`.includes(currentFilePath);
+  //       });
+
+  //     return matchesWithExtension || matchesIndexFile;
+  //   });
+
+  //   console.log("🚀 ~ file: schema-extractor-context.ts:225 ~ SchemaExtractorContext ~ findFileInComponent ~ matchingFile:", matchingFile?.path)
+  //   return matchingFile;
+  // }
+
   findFileInComponent(filePath: string) {
     const filePathToCompare = pathNormalizeToLinux(filePath);
+    // console.log("🚀 ~ file: schema-extractor-context.ts:234 ~ SchemaExtractorContext ~ findFileInComponent ~ filePathToCompare:", filePathToCompare)
+    const fileNameToCompare = basename(filePathToCompare); // Get the filename from the filePath
+    // console.log("🚀 ~ file: schema-extractor-context.ts:235 ~ SchemaExtractorContext ~ findFileInComponent ~ fileNameToCompare:", fileNameToCompare)
+
     const matchingFile = this.component.filesystem.files.find((file) => {
       const currentFilePath = pathNormalizeToLinux(file.path);
-      // TODO: fix this line to support further extensions.
-      if (currentFilePath.includes(filePathToCompare)) {
-        const strings = ['ts', 'tsx', 'js', 'jsx'].map((format) => {
-          if (filePathToCompare.endsWith(`.${format}`)) return filePathToCompare;
+      const currentFileName = basename(currentFilePath); // Get the filename from the current file path
 
-          return `${filePathToCompare}.${format}`;
+      // TODO: fix this line to support further extensions.
+      if (currentFileName === fileNameToCompare || currentFilePath.includes(fileNameToCompare)) {
+        const strings = ['ts', 'tsx', 'js', 'jsx'].map((format) => {
+          if (fileNameToCompare.endsWith(`.${format}`)) return fileNameToCompare;
+
+          return `${fileNameToCompare}.${format}`;
         });
 
-        const matchesWithExtension = !!strings.find((string) => string === currentFilePath);
+        const matchesWithExtension = !!strings.find((string) => string === currentFileName);
         // check if it is an index file export
         const matchesIndexFile =
           !matchesWithExtension &&
           ['ts', 'js'].some((format) => {
-            return `${filePathToCompare}/index.${format}` === currentFilePath;
+            const indexFilePath = join(filePathToCompare, `index.${format}`);
+            return pathNormalizeToLinux(indexFilePath) === currentFilePath;
           });
 
         return matchesWithExtension || matchesIndexFile;
@@ -516,7 +552,6 @@ export class SchemaExtractorContext {
     const relativeDir = identifier.filePath.substring(0, identifier.filePath.lastIndexOf('/'));
     const absFilePath = resolve(relativeDir, sourceFilePath);
     const compFilePath = this.findFileInComponent(absFilePath);
-
     if (!compFilePath) {
       // @todo handle this better
       throw new Error(
