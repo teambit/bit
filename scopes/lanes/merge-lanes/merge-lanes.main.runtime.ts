@@ -14,6 +14,7 @@ import { getBasicLog } from '@teambit/snapping';
 import { BitId } from '@teambit/legacy-bit-id';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
 import pMapSeries from 'p-map-series';
+import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
@@ -323,7 +324,7 @@ export class MergeLanesMain {
         targetHead: fromLaneHead,
       });
       const modifiedVersion = shouldSquash
-        ? squashOneComp(DEFAULT_LANE, fromLaneId, id, divergeData, log, fromVersionObj)
+        ? await squashOneComp(DEFAULT_LANE, fromLaneId, id, divergeData, log, this.scope.legacyScope, fromVersionObj)
         : undefined;
       const objects: BitObject[] = [];
       if (modifiedVersion) objects.push(modifiedVersion);
@@ -536,7 +537,7 @@ async function squashSnaps(allComponentsStatus: ComponentMergeStatus[], otherLan
         id,
         divergeData,
         log,
-        consumer,
+        consumer.scope,
         componentFromModel
       );
       if (modifiedComp) {
@@ -558,7 +559,7 @@ async function squashOneComp(
   id: BitId,
   divergeData: SnapsDistance,
   log: Log,
-  consumer: Consumer,
+  scope: LegacyScope,
   componentFromModel?: Version
 ): Promise<Version | undefined> {
   if (divergeData.isDiverged()) {
@@ -602,7 +603,7 @@ alternatively, use "--no-squash" flag to keep the entire history of "${otherLane
     }
     if (currentLaneName !== DEFAULT_LANE) {
       // when squashing into lane, we have to take main into account
-      const modelComponent = await consumer.scope.getModelComponentIfExist(id);
+      const modelComponent = await scope.getModelComponentIfExist(id);
       if (!modelComponent) throw new Error(`missing ModelComponent for ${id.toString()}`);
       if (modelComponent.head) {
         componentFromModel.addAsOnlyParent(modelComponent.head);
