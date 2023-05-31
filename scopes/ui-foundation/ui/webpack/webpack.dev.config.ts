@@ -148,21 +148,29 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         app.use(errorOverlayMiddleware());
       },
 
-      onAfterSetupMiddleware(wds) {
-        // @ts-ignore
-        const { app } = wds;
+      setupMiddlewares: (middlewares, devServer) => {
+        if (!devServer) {
+          throw new Error('webpack-dev-server is not defined');
+        }
 
-        // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
-        // @ts-ignore
-        app.use(redirectServedPath(publicUrlOrPath));
-
-        // This service worker file is effectively a 'no-op' that will reset any
-        // previous service worker registered for the same host:port combination.
-        // We do this in development to avoid hitting the production cache if
-        // it used the same host and port.
-        // https://github.com/facebook/create-react-app/issues/2272#issuecomment-302832432
-        // @ts-ignore
-        app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
+        // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
+        // middlewares before `redirectServedPath` otherwise will not have any effect
+        // This lets us fetch source contents from webpack for the error overlay
+        middlewares.push(
+          // @ts-ignore @types/wds mismatch
+          evalSourceMapMiddleware(devServer),
+          // This lets us open files from the runtime error overlay.
+          errorOverlayMiddleware(),
+          // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
+          redirectServedPath(publicUrlOrPath),
+          // This service worker file is effectively a 'no-op' that will reset any
+          // previous service worker registered for the same host:port combination.
+          // We do this in development to avoid hitting the production cache if
+          // it used the same host and port.
+          // https://github.com/facebook/create-react-app/issues/2272#issuecomment-302832432
+          noopServiceWorkerMiddleware(publicUrlOrPath)
+        );
+        return middlewares;
       },
 
       devMiddleware: {
