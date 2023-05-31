@@ -378,7 +378,7 @@
         "vscode-icons-js": "11.0.0",
         "vscode-jsonrpc": "6.0.0",
         "vscode-languageserver-types": "3.16.0",
-        "webpack": "5.82.1",
+        "webpack": "5.84.1",
         "webpack-assets-manifest": "5.1.0",
         "webpack-dev-server": "4.15.0",
         "webpack-manifest-plugin": "4.0.2",
