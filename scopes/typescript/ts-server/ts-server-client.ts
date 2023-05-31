@@ -51,8 +51,16 @@ export class TsserverClient {
         logToConsole: this.options.verbose,
         onEvent: this.onTsserverEvent.bind(this),
       });
-      await this.tsServer.start();
-      this.serverRunning = true;
+
+      this.tsServer
+        .start()
+        .then(() => {
+          this.serverRunning = true;
+        })
+        .catch((err) => {
+          this.logger.error('TsserverClient.init failed', err);
+        });
+
       if (this.files.length) {
         const openPromises = this.files.map((file) => this.open(file));
         await Promise.all(openPromises.map((promise) => promise.catch((error) => error)));
