@@ -1,0 +1,16 @@
+---
+labels: []
+description: 'Links linked dependencies to node_modules'
+---
+
+Usage:
+
+```ts
+import { createLinks } from '@teambit/dependencies.linked-dependencies';
+
+await createLinks('/Users/Foo/src/project', {
+  lodash: 'link:../lodash-fork',
+});
+```
+
+This will create a symlink at `/Users/Foo/src/project/node_modules/lodash` pointing to `/Users/Foo/src/project/lodash/fork`.
