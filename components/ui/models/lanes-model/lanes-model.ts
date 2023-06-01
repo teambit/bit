@@ -319,6 +319,8 @@ export class LanesModel {
   };
 
   isViewingCurrentLane = () => this.currentLane && this.viewedLane && this.currentLane.id.isEqual(this.viewedLane.id);
+  isViewingDefaultLane = () => this.viewedLane && this.viewedLane.id.isDefault();
+  isViewingNonDefaultLane = () => this.viewedLane && !this.viewedLane.id.isDefault();
 
   getLanesByComponentName = (componentId: ComponentID) => this.lanesByComponentName.get(componentId.fullName);
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.toString());

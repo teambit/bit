@@ -1,6 +1,6 @@
 import { H3 } from '@teambit/documenter.ui.heading';
 import { Contributors } from '@teambit/design.ui.contributors';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link, useLocation } from '@teambit/base-react.navigation.link';
 import { Labels } from '@teambit/component.ui.version-label';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useMemo } from 'react';
@@ -24,9 +24,11 @@ export type VersionBlockProps = {
 export function VersionBlock({ isLatest, className, snap, componentId, isCurrent, ...rest }: VersionBlockProps) {
   const { username, email, message, tag, hash, date } = snap;
   const { lanesModel } = useLanes();
-  const currentLaneUrl = lanesModel?.viewedLane
-    ? `${LanesModel.getLaneUrl(lanesModel?.viewedLane?.id)}${LanesModel.baseLaneComponentRoute}`
+  const currentLaneUrl = lanesModel?.isViewingNonDefaultLane()
+    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      `${LanesModel.getLaneUrl(lanesModel.viewedLane!.id)}${LanesModel.baseLaneComponentRoute}`
     : '';
+
   const version = tag || hash;
   const author = useMemo(() => {
     return {
@@ -34,16 +36,22 @@ export function VersionBlock({ isLatest, className, snap, componentId, isCurrent
       email,
     };
   }, [snap]);
+
   const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
+  const location = useLocation();
+  const { pathname, search } = location || {};
+
+  const testsPath = `${pathname?.replace('~changelog', '~tests')}${search}`;
+  const compositionsPath = `${pathname?.replace('~changelog', '~compositions')}${search}`;
 
   return (
     <div className={classNames(styles.versionWrapper, className)}>
       <div className={styles.left}>
         <Labels isLatest={isLatest} isCurrent={isCurrent} />
-        <Link className={styles.link} href={`~tests?version=${version}`}>
+        <Link className={styles.link} href={testsPath}>
           Tests
         </Link>
-        <Link className={styles.link} href={`~compositions?version=${version}`}>
+        <Link className={styles.link} href={compositionsPath}>
           Compositions
         </Link>
         <div className={styles.placeholder} />
