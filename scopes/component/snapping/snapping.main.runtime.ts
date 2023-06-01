@@ -780,7 +780,7 @@ there are matching among unmodified components thought. consider using --unmodif
       compIds.map((compId) => this.workspace.clearComponentCache(compId));
     }
 
-    return this.workspace.getMany(compIds);
+    return this.workspace.getMany(compIds.map((id) => id.changeVersion(undefined)));
   }
 
   private async throwForComponentIssues(components: Component[], ignoreIssues?: string) {
