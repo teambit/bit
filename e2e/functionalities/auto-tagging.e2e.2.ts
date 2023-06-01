@@ -220,8 +220,8 @@ describe('auto tagging functionality', function () {
     });
     it('bit-status should show the auto-tagged pending', () => {
       const status = helper.command.statusJson();
-      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remote}/bar/a@0.0.1`);
-      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remote}/bar/b@0.0.1`);
+      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remote}/bar/a`);
+      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remote}/bar/b`);
     });
     describe('tagging the dependency', () => {
       let tagOutput;
