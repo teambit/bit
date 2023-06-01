@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://storage.googleapis.com/bit-docs/readme-logo%20(6).png"/>
+  <img src="http://static.bit.dev/bit-docs/readme-bit-logo.png"/>
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 <a href="https://github.com/teambit/bit/blob/master/CONTRIBUTING.md"><img alt="prs" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
 <a href="https://circleci.com/gh/teambit/bit/tree/master"><img alt="Circle Status" src="https://circleci.com/gh/teambit/bit/tree/master.svg?style=shield">
 <a href="https://github.com/prettier/prettier"><img alt ="Styled with Prettier" src="https://img.shields.io/badge/styled_with-prettier-ff69b4.svg">
-<a href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-1ccd6k1nn-wIKOlqNNUEypmmO9bUujUg" ><img alt="Join Slack" src="https://img.shields.io/badge/Slack-Join%20Bit%20Slack-blueviolet"/></a>
+<a href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-1vq1vcxxu-CEVobR1p9BurmW8QnQFh1w" ><img alt="Join Slack" src="https://img.shields.io/badge/Slack-Join%20Bit%20Slack-blueviolet"/></a>
 
 ## Build composable software
 
@@ -32,7 +32,7 @@ Bit allows you to create components that are independently developed, versioned,
 
 Architectural pains that stem from monolithic development no longer exist; Scalable workflows for autonomous teams, collaboration, rapid delivery, shared components, and even micro frontends become a native and effortless way of work.
 
-Bit comes with native support and best-practice dev environments for most web technologies such as TS, React, and Node, and can be easily extended to support just about anything.
+Bit comes with native support and best-practice dev environments for most web technologies such as TS, React, React Native, Angular, Vue and Node, and can be easily extended to support just about anything.
 
 It provides features such as [Workspace](https://bit.dev/docs/workspace/workspace-overview), [Components](https://bit.dev/docs/components/component-overview), [Dev Environments](https://bit.dev/docs/envs/envs-overview/), [Scopes](https://bit.dev/docs/scope/scope-overview), and [Dependencies](https://bit.dev/docs/dependencies/dependencies-overview) (which allow the composition of components and collaboration between developers).
 
