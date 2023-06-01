@@ -11,6 +11,7 @@ import { EnvContext } from '@teambit/envs';
 import { Formatter } from '@teambit/formatter';
 import { Logger } from '@teambit/logger';
 import AspectLoaderAspect, { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
+import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { compact, flatten } from 'lodash';
 import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
@@ -29,6 +30,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     private rootPath: string,
     private depResolver: DependencyResolverMain,
     private workspace: Workspace | undefined,
+    private scope: ScopeMain,
     private aspectLoader: AspectLoaderMain,
     private logger: Logger
   ) {}
@@ -52,7 +54,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
   async extract(component: Component, formatter?: Formatter): Promise<APISchema> {
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
-    const compatibleExts = ['.tsx', '.jsx', '.ts', '.js'];
+    const compatibleExts = ['.tsx', '.ts', '.jsx', '.js'];
     const internalFiles = component.filesystem.files.filter(
       (file) => compatibleExts.includes(file.extname) && file.path !== mainFile.path
     );
@@ -152,17 +154,17 @@ export class TypeScriptExtractor implements SchemaExtractor {
   }
 
   async getComponentIDByPath(file: string) {
-    if (!this.workspace) {
-      return null;
-    }
     const coreAspectIds = this.aspectLoader.getCoreAspectIds();
     const matchingCoreAspect = coreAspectIds.find((c) => file === getCoreAspectPackageName(c));
 
     if (matchingCoreAspect) {
-      return this.workspace.resolveComponentId(matchingCoreAspect);
+      return (this.workspace || this.scope).resolveComponentId(matchingCoreAspect);
     }
 
-    return this.workspace.getComponentIdByPath(file);
+    if (this.workspace) {
+      return this.workspace.getComponentIdByPath(file);
+    }
+    return null;
   }
 
   /**
@@ -196,6 +198,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
         wsPath,
         tsMain.depResolver,
         tsMain.workspace,
+        tsMain.scope,
         aspectLoaderMain,
         context.createLogger(options.name)
       );

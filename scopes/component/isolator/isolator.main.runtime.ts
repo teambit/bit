@@ -377,17 +377,13 @@ export class IsolatorMain {
           })
         );
       } else {
-        // When nesting is used, the first component (which is the entry component) is installed in the root
-        // and all other components (which are the dependencies of the entry component) are installed in
-        // a subdirectory.
-        const rootDir = installOptions?.useNesting ? capsuleList[0].path : capsulesDir;
         const linkedDependencies = await this.linkInCapsules(
           capsulesDir,
           capsuleList,
           capsulesWithPackagesData,
           linkingOptions
         );
-        await this.installInCapsules(rootDir, capsuleList, installOptions, {
+        await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
           cachePackagesOnCapsulesRoot,
           linkedDependencies,
         });

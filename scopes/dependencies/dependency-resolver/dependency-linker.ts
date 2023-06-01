@@ -122,15 +122,6 @@ export class DependencyLinker {
     private linkingContext: DepLinkerContext = {}
   ) {}
 
-  async createLinks(rootDir: string, linkedDeps: Record<string, string>) {
-    const modulesDir = path.join(rootDir, 'node_modules');
-    await Promise.all(
-      Object.entries(linkedDeps).map(([packageName, linkPath]) =>
-        createSymlinkOrCopy(linkPath.substring(5), path.join(modulesDir, packageName))
-      )
-    );
-  }
-
   async calculateLinkedDeps(
     rootDir: string | undefined,
     componentDirectoryMap: ComponentMap<string>,
