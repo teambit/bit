@@ -658,9 +658,9 @@ jobs:
           key: bitsrc-registry10
       - run: node -v
       - run: npm -v
-      - run:
-          name: 'install husky globally'
-          command: 'npm i -g husky'
+      # - run:
+      #     name: 'install husky globally'
+      #     command: 'npm i -g husky'
 
       - install_bvm
       - run: npm view @teambit/bit version > ./version.txt
