@@ -1,5 +1,6 @@
 import { BitId } from '@teambit/legacy-bit-id';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
+// @ts-ignore
 import { pipeline } from 'stream/promises';
 import pMap from 'p-map';
 import { Scope } from '..';
