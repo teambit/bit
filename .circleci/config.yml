@@ -181,7 +181,7 @@ commands: # reusable commands
       - run: 'ssh-add ~/.ssh/id_rsa'
   install_bvm:
     steps:
-      - run: npm i -g @teambit/bvm
+      - run: yarn global add @teambit/bvm
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run: bvm config set RELEASE_TYPE nightly
   set_bit_cloud_registry:
