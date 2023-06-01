@@ -114,7 +114,7 @@ function addDependenciesToGraph(graphs: TasksLocationGraph[], pipeline: BuildTas
     });
     if (dependencyTasks.length === 0) {
       throw new Error(
-        `unable to find dependency "${dependency}" of "${BuildTaskHelper.serializeId(task)}" in the pipeline`
+        `Pipeline error - missing task dependency "${dependency}" of the "${BuildTaskHelper.serializeId(task)}"`
       );
     }
     dependencyTasks.forEach((dependencyTask) => {
