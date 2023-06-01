@@ -39,6 +39,7 @@ import { homedir } from 'os';
 import { Logger } from '@teambit/logger';
 import versionSelectorType from 'version-selector-type';
 import YAML from 'yaml';
+import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import { createRootComponentsDir } from './create-root-components-dir';
 
 type BackupJsons = {
@@ -55,6 +56,18 @@ export class YarnPackageManager implements PackageManager {
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<{ dependenciesChanged: boolean }> {
     this.logger.setStatusLine('installing dependencies');
+    if (installOptions.useNesting && installOptions.rootComponentsForCapsules) {
+      // For some reason Yarn doesn't want to link core aspects to the capsules root directory,
+      // because the capsule root directory is outside the workspace's root directory.
+      // So we need to create the symlinks ourselves.
+      const [capsulesRoot, capsulesRootManifest] =
+        Object.entries(manifests).find(([path]) => {
+          return rootDir.startsWith(path) && rootDir !== path;
+        }) ?? [];
+      if (capsulesRoot && capsulesRootManifest?.dependencies) {
+        await createLinks(capsulesRoot, capsulesRootManifest.dependencies);
+      }
+    }
 
     const rootDirPath = npath.toPortablePath(rootDir);
     const config = await this.computeConfiguration(rootDirPath, {
