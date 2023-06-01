@@ -45,7 +45,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   const anyFileHasDiffStatus = useRef<boolean>(false);
 
   const fileTree = useMemo(() => {
-    const allFiles = uniq(baseFileTree.concat(compareFileTree));
+    const allFiles = uniq<any>(baseFileTree.concat(compareFileTree));
     anyFileHasDiffStatus.current = false;
     // sort by diff status
     return !fileCompareDataByName
