@@ -11,6 +11,7 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
 import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
+import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { linkToNodeModulesWithCodemod, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
@@ -28,7 +29,6 @@ import {
   WorkspacePolicyEntry,
   LinkingOptions,
   LinkResults,
-  DependencyLinker,
   DependencyList,
   OutdatedPkg,
   WorkspacePolicy,
@@ -666,7 +666,7 @@ export class InstallMain {
    */
   async calculateLinks(
     options: WorkspaceLinkOptions = {}
-  ): Promise<{ linkResults: WorkspaceLinkResults; linkedRootDeps: Record<string, string>; linker: DependencyLinker }> {
+  ): Promise<{ linkResults: WorkspaceLinkResults; linkedRootDeps: Record<string, string> }> {
     await pMapSeries(this.preLinkSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
     const compDirMap = await this.getComponentsDirectory([]);
     const linker = this.dependencyResolver.getLinker({
@@ -687,7 +687,7 @@ export class InstallMain {
     if (this.dependencyResolver.hasRootComponents() && options.linkToBitRoots) {
       await this._linkAllComponentsToBitRoots(compDirMap);
     }
-    return { linkResults: res, linkedRootDeps, linker };
+    return { linkResults: res, linkedRootDeps };
   }
 
   async linkCodemods(compDirMap: ComponentMap<string>, options?: { rewire?: boolean }) {
@@ -696,8 +696,8 @@ export class InstallMain {
   }
 
   async link(options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
-    const { linkResults, linkedRootDeps, linker } = await this.calculateLinks(options);
-    await linker.createLinks(this.workspace.path, linkedRootDeps);
+    const { linkResults, linkedRootDeps } = await this.calculateLinks(options);
+    await createLinks(this.workspace.path, linkedRootDeps);
     return linkResults;
   }
 

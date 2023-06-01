@@ -32,7 +32,9 @@ describe('status command on Harmony', function () {
       // as an intermediate step, make sure the missing-dist is not an issue.
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingDists.name);
       const distDir = 'node_modules/@my-scope/comp1/dist';
+      const distDirInBitRoots = 'node_modules/.bit_roots/teambit.harmony_node/node_modules/@my-scope/comp1/dist';
       helper.fs.deletePath(distDir);
+      helper.fs.deletePath(distDirInBitRoots);
     });
     it('should show an issue of missing-dists', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MissingDists.name);
