@@ -803,7 +803,7 @@
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
           "bvm": {
-            "node": "16.16.0"
+            "node": "20.2.0"
           },
           "bin": {
             "bbit": "bin/bit"
