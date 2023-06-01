@@ -1,7 +1,6 @@
 import { BitId } from '@teambit/legacy-bit-id';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
-import { pipeline } from 'stream';
-import { promisify } from 'util';
+import { pipeline } from 'stream/promises';
 import pMap from 'p-map';
 import { Scope } from '..';
 import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
@@ -161,7 +160,6 @@ the remote scope "${scopeName}" was not found`);
     componentsPerRemote: ComponentsPerRemote
   ) {
     const writable = new ObjectsWritable(this.repo, scopeName, objectsQueue, componentsPerRemote);
-    const pipelinePromise = promisify(pipeline);
     // add an error listener for the ObjectList to differentiate between errors coming from the
     // remote and errors happening inside the Writable.
     let readableError: Error | undefined;
@@ -170,7 +168,7 @@ the remote scope "${scopeName}" was not found`);
       readableError = err;
     });
     try {
-      await pipelinePromise(objectsStream, writable);
+      await pipeline(objectsStream, writable);
     } catch (err: any) {
       if (readableError) {
         if (!readableError.message) {
