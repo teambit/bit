@@ -44,6 +44,9 @@ function CreateTerserPlugin() {
     // Link to options - https://esbuild.github.io/api/#minify
     terserOptions: {
       minify: true,
+      // this ensures the Class Names for all Schema Classes is not minimized
+      // so that schemaObjToClass can match the correct Class Name during runtime
+      keep_classnames: new RegExp('.*(Schema)$'),
     },
   });
 }
@@ -52,6 +55,9 @@ function CreateTerserPluginForPrerender() {
   return new TerserPlugin({
     extractComments: false,
     terserOptions: {
+      // this ensures the Class Names for all Schema Classes is not minimized
+      // so that schemaObjToClass can match the correct Class Name during runtime
+      keep_classnames: new RegExp('.*(Schema)$'),
       parse: {
         // We want terser to parse ecma 8 code. However, we don't want it
         // to apply any minification steps that turns valid ecma 5 code
