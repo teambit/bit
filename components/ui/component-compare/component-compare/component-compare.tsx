@@ -79,7 +79,15 @@ export function ComponentCompare(props: ComponentCompareProps) {
     component: base,
     loading: loadingBase,
     componentDescriptor: baseComponentDescriptor,
-  } = useComponent(host, baseId.toString(), { customUseComponent });
+  } = useComponent(host, baseId.toString(), {
+    customUseComponent,
+    logFilters: {
+      log: {
+        logLimit: 3,
+      },
+    },
+  });
+
   const {
     component: compareComponent,
     loading: loadingCompare,
@@ -87,6 +95,11 @@ export function ComponentCompare(props: ComponentCompareProps) {
   } = useComponent(host, _compareId?.toString() || '', {
     skip: !_compareId,
     customUseComponent,
+    logFilters: {
+      log: {
+        logLimit: 3,
+      },
+    },
   });
 
   const loading = loadingBase || loadingCompare;
@@ -170,7 +183,11 @@ function RenderCompareScreen(props: ComponentCompareProps) {
   return (
     <>
       {showVersionPicker && (
-        <div className={styles.top}>{state?.versionPicker?.element || <ComponentCompareVersionPicker />}</div>
+        <div className={styles.top}>
+          {state?.versionPicker?.element || (
+            <ComponentCompareVersionPicker host={props.host} customUseComponent={props.customUseComponent} />
+          )}
+        </div>
       )}
       <div className={styles.bottom}>
         <CompareMenuNav {...props} />

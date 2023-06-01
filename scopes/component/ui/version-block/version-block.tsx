@@ -17,11 +17,11 @@ export type VersionBlockProps = {
   snap: LegacyComponentLog;
   isCurrent: boolean;
 } & HTMLAttributes<HTMLDivElement>;
-/**
- * change log section
- * @name VersionBlock
- */
-export function VersionBlock({ isLatest, className, snap, componentId, isCurrent, ...rest }: VersionBlockProps) {
+
+function _VersionBlock(
+  { isLatest, className, snap, componentId, isCurrent, ...rest }: VersionBlockProps,
+  ref: React.ForwardedRef<HTMLDivElement>
+) {
   const { username, email, message, tag, hash, date } = snap;
   const { lanesModel } = useLanes();
   const currentLaneUrl = lanesModel?.isViewingNonDefaultLane()
@@ -45,7 +45,7 @@ export function VersionBlock({ isLatest, className, snap, componentId, isCurrent
   const compositionsPath = `${pathname?.replace('~changelog', '~compositions')}${search}`;
 
   return (
-    <div className={classNames(styles.versionWrapper, className)}>
+    <div className={classNames(styles.versionWrapper, className)} ref={ref}>
       <div className={styles.left}>
         <Labels isLatest={isLatest} isCurrent={isCurrent} />
         <Link className={styles.link} href={testsPath}>
@@ -70,6 +70,11 @@ export function VersionBlock({ isLatest, className, snap, componentId, isCurrent
     </div>
   );
 }
+/**
+ * change log section
+ * @name VersionBlock
+ */
+export const VersionBlock = React.memo(React.forwardRef<HTMLDivElement, VersionBlockProps>(_VersionBlock));
 
 function commitMessage(message: string) {
   if (!message || message === '') return <div className={styles.emptyMessage}>No commit message</div>;

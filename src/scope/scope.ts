@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import * as pathLib from 'path';
 import R from 'ramda';
 import { LaneId } from '@teambit/lane-id';
+import { compact } from 'lodash';
 import semver from 'semver';
 import { isTag } from '@teambit/component-version';
 import { Analytics } from '../analytics/analytics';
@@ -537,11 +538,19 @@ once done, to continue working, please run "bit cc"`
     return removeNils(components);
   }
 
-  async loadComponentLogs(id: BitId, shortHash = false, startFrom?: string): Promise<ComponentLog[]> {
+  async loadComponentLogs(
+    id: BitId,
+    shortHash = false,
+    startFrom?: string,
+    stopsAt?: string[]
+  ): Promise<ComponentLog[]> {
     const componentModel = await this.getModelComponentIfExist(id);
     if (!componentModel) return [];
+
     const startFromRef = startFrom ? componentModel.getRef(startFrom) ?? undefined : undefined;
-    const logs = await componentModel.collectLogs(this, shortHash, startFromRef);
+    const stopsAtRef = stopsAt ? compact(stopsAt.map((s) => componentModel.getRef(s) ?? undefined)) : undefined;
+
+    const logs = await componentModel.collectLogs(this, shortHash, startFromRef, stopsAtRef);
     return logs;
   }
 

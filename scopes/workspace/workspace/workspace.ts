@@ -434,8 +434,17 @@ export class Workspace implements ComponentFactory {
     return this.getMany(ids);
   }
 
-  async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
-    return this.scope.getLogs(id, shortHash, startsFrom);
+  async getLogs(
+    id: ComponentID,
+    shortHash = false,
+    head?: string,
+    startFrom?: string,
+    stopAt?: string,
+    startFromOffset?: number,
+    stopAtOffset?: number,
+    type?: 'snap' | 'tag'
+  ): Promise<ComponentLog[]> {
+    return this.scope.getLogs(id, shortHash, head, startFrom, stopAt, startFromOffset, stopAtOffset, type);
   }
 
   async getGraph(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<Graph<Component, string>> {

@@ -16,18 +16,22 @@ export type VersionInfoProps = DropdownComponentVersion & {
   showDetails?: boolean;
 };
 
-export function VersionInfo({
-  version,
-  currentVersion,
-  latestVersion,
-  date,
-  username,
-  email,
-  overrideVersionHref,
-  showDetails,
-  message,
-  tag,
-}: VersionInfoProps) {
+export const VersionInfo = React.memo(React.forwardRef<HTMLDivElement, VersionInfoProps>(_VersionInfo));
+function _VersionInfo(
+  {
+    version,
+    currentVersion,
+    latestVersion,
+    date,
+    username,
+    email,
+    overrideVersionHref,
+    showDetails,
+    message,
+    tag,
+  }: VersionInfoProps,
+  ref?: React.ForwardedRef<HTMLDivElement>
+) {
   const isCurrent = version === currentVersion;
   const author = useMemo(() => {
     return {
@@ -38,6 +42,7 @@ export function VersionInfo({
 
   const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
   const currentVersionRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (isCurrent) {
       currentVersionRef.current?.scrollIntoView({ block: 'nearest' });
@@ -47,7 +52,7 @@ export function VersionInfo({
   const href = overrideVersionHref ? overrideVersionHref(version) : `?version=${version}`;
 
   return (
-    <div ref={currentVersionRef}>
+    <div ref={ref || currentVersionRef}>
       <MenuLinkItem active={isCurrent} href={href} className={styles.versionRow}>
         <div className={styles.version}>
           <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />

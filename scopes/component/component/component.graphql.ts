@@ -115,6 +115,14 @@ export function componentSchema(componentExtension: ComponentMain) {
           start traversing logs from the fetched component's head
           """
           takeHeadFromComponent: Boolean
+          """
+          start slicing logs from this version
+          """
+          startFrom: String
+          """
+          end slicing logs until this version
+          """
+          until: String
         ): [LogEntry]!
 
         aspects(include: [String]): [Aspect]
@@ -194,12 +202,14 @@ export function componentSchema(componentExtension: ComponentMain) {
         logs: async (
           component: Component,
           filter?: {
-            type?: string;
+            type?: 'tag' | 'snap';
             offset?: number;
             limit?: number;
             head?: string;
             sort?: string;
             takeHeadFromComponent: boolean;
+            startFrom?: string;
+            until?: string;
           }
         ) => {
           let head = filter?.head;

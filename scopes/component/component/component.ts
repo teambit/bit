@@ -5,7 +5,6 @@ import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { BuildStatus } from '@teambit/legacy/dist/constants';
 
-import { slice } from 'lodash';
 import { ComponentFactory } from './component-factory';
 import ComponentFS from './component-fs';
 // import { NothingToSnap } from './exceptions';
@@ -114,25 +113,20 @@ export class Component implements IComponent {
     return this.state.aspects.get(id)?.serialize();
   }
 
-  async getLogs(filter?: { type?: string; offset?: number; limit?: number; head?: string; sort?: string }) {
-    const allLogs = await this.factory.getLogs(this.id, false, filter?.head);
+  async getLogs(filter?: {
+    type?: 'tag' | 'snap';
+    offset?: number;
+    limit?: number;
+    head?: string;
+    sort?: string;
+    startFrom?: string;
+    until?: string;
+  }) {
+    const { type, limit, offset, sort, head, startFrom, until } = filter || {};
 
-    if (!filter) return allLogs;
+    const filteredLogs = await this.factory.getLogs(this.id, false, head, startFrom, until, offset, limit, type);
 
-    const { type, limit, offset, sort } = filter;
-
-    const typeFilter = (snap) => {
-      if (type === 'tag') return snap.tag;
-      if (type === 'snap') return !snap.tag;
-      return true;
-    };
-
-    let filteredLogs = (type && allLogs.filter(typeFilter)) || allLogs;
-    if (sort !== 'asc') filteredLogs = filteredLogs.reverse();
-
-    if (limit) {
-      filteredLogs = slice(filteredLogs, offset, limit + (offset || 0));
-    }
+    if (sort !== 'asc') filteredLogs.reverse();
 
     return filteredLogs;
   }
