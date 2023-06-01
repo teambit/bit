@@ -196,13 +196,13 @@ describe('merge functionality', function () {
         helper.command.importComponent('comp1', '--path components/comp1');
         helper.fs.createFile('components/comp2', 'is-type.js', fixtures.isTypeV3);
         // an intermediate step, make sure bit status shows as modified
-        expect(helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2@0.0.2`)).to.be.true;
+        expect(helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2`)).to.be.true;
         helper.command.importComponent('comp1 --merge');
       });
       it('should not remove the dependency changes', () => {
         const isTypeContent = helper.fs.readFile('components/comp2/is-type.js');
         expect(isTypeContent).to.equal(fixtures.isTypeV3);
-        expect(helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2@0.0.2`)).to.be.true;
+        expect(helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2`)).to.be.true;
       });
     });
   });
