@@ -20,6 +20,9 @@ export type FETCH_OPTIONS = {
   type: FETCH_TYPE;
   /**
    * @deprecated (since 0.0.900) use includeDependencies
+   * since 0.1.53 this is ignored from the remotes.
+   * it'll be safe to delete this prop once all remotes are updated to 0.1.53 or above.
+   * otherwise, in absence of this prop, the remotes will fetch with deps.
    */
   withoutDependencies?: boolean; // default - true
   includeDependencies?: boolean; // default - false
@@ -136,9 +139,7 @@ async function fetchByType(
   objectsReadableGenerator: ObjectsReadableGenerator
 ): Promise<void> {
   const shouldFetchDependencies = () => {
-    if (fetchOptions.includeDependencies) return true;
-    // backward compatible before 0.0.900
-    return !fetchOptions.withoutDependencies;
+    return fetchOptions.includeDependencies;
   };
   switch (fetchOptions.type) {
     case 'component': {
