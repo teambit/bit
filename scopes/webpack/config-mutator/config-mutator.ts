@@ -135,11 +135,12 @@ export class WebpackConfigMutator {
       this.raw.module.rules = [];
     }
     // @ts-ignore
-    if (!this.raw.module.rules.find((r) => !!r.oneOf)) {
+    const moduleWithOneOf = this.raw.module.rules.find((r) => !!(r as RuleSetRule).oneOf);
+    if (!moduleWithOneOf) {
       this.raw.module.rules.unshift({ oneOf: [] });
     }
 
-    addToArray(this.raw.module.rules.find((r) => !!(r as RuleSetRule).oneOf) as RuleSetRule[], rule, opts);
+    addToArray(moduleWithOneOf.oneOf, rule, opts);
     return this;
   }
 
