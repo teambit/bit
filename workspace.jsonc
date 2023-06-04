@@ -719,7 +719,7 @@
             "css-loader": "6.2.0",
             "postcss": "8.4.18",
             "postcss-loader": "7.0.1",
-            "babel-loader": "8.2.2",
+            "babel-loader": "9.1.2",
             "@babel/preset-react": "7.18.6",
             "@babel/preset-env": "7.19.4",
             "resolve-url-loader": "5.0.0",
@@ -754,7 +754,7 @@
           "devDependencies": {
             "@babel/preset-react": "7.18.6",
             "@babel/preset-env": "7.19.4",
-            "babel-loader": "8.2.2"
+            "babel-loader": "9.1.2"
           }
         }
       }
