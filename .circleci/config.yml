@@ -661,7 +661,8 @@ jobs:
       - run: uname -or
       - run: uname -a
       - run: cat /proc/version
-      - run: sudo apt install zstd
+      - run: sudo apt-get update -y
+      - run: sudo apt-get install -y zstd
       - run: which zstd
       - run:
           name: 'install husky globally'
