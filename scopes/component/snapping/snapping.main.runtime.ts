@@ -20,7 +20,6 @@ import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import pMap from 'p-map';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
@@ -180,13 +179,9 @@ export class SnappingMain {
     const legacyBitIds = BitIds.fromArray(bitIds);
 
     this.logger.debug(`tagging the following components: ${legacyBitIds.toString()}`);
-    Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(legacyBitIds)}`);
-    if (!soft) {
-      await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
-    }
-    const consumerComponents = await this.loadComponentsForTag(legacyBitIds);
+    const components = await this.loadComponentsForTagOrSnap(legacyBitIds, !soft);
+    const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
-    const components = await this.workspace.getManyByLegacy(consumerComponents);
     await this.throwForComponentIssues(components, ignoreIssues);
     this.throwForPendingImport(consumerComponents);
 
@@ -453,10 +448,9 @@ export class SnappingMain {
     const ids = legacyBitIds || (await getIdsToSnap(this.workspace));
     if (!ids) return null;
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
-    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
-    const consumerComponents = await this.loadComponentsForTag(ids);
+    const components = await this.loadComponentsForTagOrSnap(ids);
+    const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
-    const components = await this.workspace.getManyByLegacy(consumerComponents);
     await this.throwForComponentIssues(components, ignoreIssues);
     this.throwForPendingImport(consumerComponents);
 
@@ -779,17 +773,14 @@ there are matching among unmodified components thought. consider using --unmodif
     return artifacts;
   }
 
-  private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
+  private async loadComponentsForTagOrSnap(ids: BitIds, shouldClearCacheFirst = true): Promise<Component[]> {
     const compIds = await this.workspace.resolveMultipleComponentIds(ids);
-    compIds.map((compId) => this.workspace.clearComponentCache(compId));
-    const { components, removedComponents } = await this.workspace.consumer.loadComponents(ids.toVersionLatest());
-    components.forEach((component) => {
-      const componentMap = component.componentMap as ComponentMap;
-      if (!componentMap.rootDir) {
-        throw new Error(`unable to tag ${component.id.toString()}, the "rootDir" is missing in the .bitmap file`);
-      }
-    });
-    return [...components, ...removedComponents];
+    if (shouldClearCacheFirst) {
+      await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
+      compIds.map((compId) => this.workspace.clearComponentCache(compId));
+    }
+
+    return this.workspace.getMany(compIds.map((id) => id.changeVersion(undefined)));
   }
 
   private async throwForComponentIssues(components: Component[], ignoreIssues?: string) {
