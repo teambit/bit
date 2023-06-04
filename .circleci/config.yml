@@ -658,6 +658,9 @@ jobs:
           key: bitsrc-registry10
       - run: node -v
       - run: npm -v
+      - run: uname -or
+      - run: uname -a
+      - run: which zstd
       - run:
           name: 'install husky globally'
           command: 'npm i -g husky'
