@@ -660,6 +660,8 @@ jobs:
       - run: npm -v
       - run: uname -or
       - run: uname -a
+      - run: cat /proc/version
+      - run: apt install zstd
       - run: which zstd
       - run:
           name: 'install husky globally'
