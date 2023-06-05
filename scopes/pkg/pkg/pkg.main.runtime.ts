@@ -11,7 +11,6 @@ import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
-import { CloneConfig } from '@teambit/new-component-helper';
 import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -96,7 +95,7 @@ export type VersionPackageManifest = {
   };
 };
 
-export class PkgMain implements CloneConfig {
+export class PkgMain {
   static runtime = MainRuntime;
   static dependencies = [
     CLIAspect,

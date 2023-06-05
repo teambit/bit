@@ -110,7 +110,3 @@ export class NewComponentHelperMain {
 }
 
 NewComponentHelperAspect.addRuntime(NewComponentHelperMain);
-
-export interface CloneConfig {
-  readonly shouldPreserveConfigForClonedComponent?: boolean; // default true
-}
