@@ -26,7 +26,7 @@ import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds, BitIds as ComponentsIds } from '@teambit/legacy/dist/bit-id';
-import { ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
+import { ModelComponent, Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { Repository } from '@teambit/legacy/dist/scope/objects';
 import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -819,6 +819,27 @@ export class ScopeMain implements ComponentFactory {
       // in case the component is missing locally, this.get imports it.
       return (await this.get(id))?.state._consumer;
     }
+  }
+
+  /**
+   * ModelComponent is of type `BitObject` which gets saved into the local scope as an object file.
+   * It has data about the tags and the component head. It doesn't have any data about the source-files/artifacts etc.
+   */
+  async getBitObjectModelComponent(id: ComponentID, throwIfNotExist = false): Promise<ModelComponent | undefined> {
+    return throwIfNotExist
+      ? this.legacyScope.getModelComponent(id._legacy)
+      : this.legacyScope.getModelComponentIfExist(id._legacy);
+  }
+
+  /**
+   * Version BitObject holds the data of the source files and build artifacts of a specific snap/tag.
+   */
+  async getBitObjectVersion(
+    modelComponent: ModelComponent,
+    version: string,
+    throwIfNotExist = false
+  ): Promise<Version | undefined> {
+    return modelComponent.loadVersion(version, this.legacyScope.objects, throwIfNotExist);
   }
 
   /**
