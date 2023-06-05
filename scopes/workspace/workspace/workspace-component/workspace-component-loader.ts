@@ -7,6 +7,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
 import { IssuesClasses } from '@teambit/component-issues';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
@@ -209,7 +210,11 @@ export class WorkspaceComponentLoader {
 
   async getConsumerComponent(id: ComponentID): Promise<ConsumerComponent | undefined> {
     try {
-      return await this.workspace.consumer.loadComponent(id._legacy);
+      const { components, removedComponents } = await this.workspace.consumer.loadComponents(
+        BitIds.fromArray([id._legacy]),
+        true
+      );
+      return components?.[0] || removedComponents?.[0];
     } catch (err: any) {
       // don't return undefined for any error. otherwise, if the component is invalid (e.g. main
       // file is missing) it returns the model component later unexpectedly, or if it's new, it

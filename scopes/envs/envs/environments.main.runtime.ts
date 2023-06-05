@@ -195,6 +195,7 @@ export class EnvsMain {
       'teambit.mdx/mdx',
       'teambit.envs/env',
       'teambit.mdx/readme',
+      'teambit.harmony/bit-custom-aspect',
     ];
   }
 
