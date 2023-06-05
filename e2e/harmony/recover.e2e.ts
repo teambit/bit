@@ -60,7 +60,7 @@ describe('bit recover command', function () {
       expect(list).to.have.lengthOf(2);
     });
     it('bit status should show the component as modified because the RemoveAspect has changed', () => {
-      const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2@0.0.2`);
+      const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2`);
       expect(isModified).to.be.true;
     });
   });
@@ -87,7 +87,7 @@ describe('bit recover command', function () {
       helper.bitMap.expectToHaveId('comp2');
     });
     it('bit status should show the component as modified because the RemoveAspect has changed', () => {
-      const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2@0.0.2`);
+      const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2`);
       expect(isModified).to.be.true;
     });
   });
@@ -112,7 +112,7 @@ describe('bit recover command', function () {
       expect(status.remotelySoftRemoved).to.have.lengthOf(1);
     });
     it('bit status should not show the component as modified', () => {
-      const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2@0.0.2`);
+      const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2`);
       expect(isModified).to.be.false;
     });
     describe('recover the component', () => {
@@ -120,7 +120,7 @@ describe('bit recover command', function () {
         helper.command.recover(`comp2`);
       });
       it('should make the component modified', () => {
-        const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2@0.0.2`);
+        const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2`);
         expect(isModified).to.be.true;
       });
       it('bit status should not show the component as soft-removed anymore', () => {
@@ -179,8 +179,7 @@ describe('bit recover command', function () {
         expect(list).to.have.lengthOf(2);
       });
       it('bit status should show the component as modified because the RemoveAspect has changed', () => {
-        const head = helper.command.getHeadOfLane('dev', 'comp2');
-        const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2@${head}`);
+        const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2`);
         expect(isModified).to.be.true;
       });
     });
@@ -209,8 +208,7 @@ describe('bit recover command', function () {
         helper.bitMap.expectToHaveId('comp2');
       });
       it('bit status should show the component as modified because the RemoveAspect has changed', () => {
-        const head = helper.command.getHeadOfLane('dev', 'comp2');
-        const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2@${head}`);
+        const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2`);
         expect(isModified).to.be.true;
       });
     });
