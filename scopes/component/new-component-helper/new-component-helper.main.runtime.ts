@@ -10,6 +10,7 @@ import { ComponentID } from '@teambit/component-id';
 import { Harmony } from '@teambit/harmony';
 import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { PkgAspect } from '@teambit/pkg';
 import { NewComponentHelperAspect } from './new-component-helper.aspect';
 
 export class NewComponentHelperMain {
@@ -86,20 +87,13 @@ export class NewComponentHelperMain {
   }
 
   async getConfigFromExistingToNewComponent(comp: Component) {
-    const aspectIds = comp.state.aspects.entries.map((e) => e.id.toString());
-    // the reason to load aspects is to be able to check later for the `shouldPreserveConfigForClonedComponent` prop.
-    // it's not saved in the model, it's available only on the aspect instance.
-    await this.workspace.loadAspects(aspectIds, undefined, 'new-component-helper.getConfigFromExistingToNewComponent');
     const fromExisting = {};
     comp.state.aspects.entries.forEach((entry) => {
       if (!entry.config) return;
       const aspectId = entry.id.toString();
-      const aspect = this.harmony.get<CloneConfig>(aspectId);
-      if (!aspect) throw new Error(`error: unable to get "${aspectId}" aspect from Harmony`);
-      if (
-        'shouldPreserveConfigForClonedComponent' in aspect &&
-        aspect.shouldPreserveConfigForClonedComponent === false
-      ) {
+      // don't copy the pkg aspect, it's not relevant for the new component
+      // (it might contains values that are bounded to the other component name / id)
+      if (aspectId === PkgAspect.id) {
         return;
       }
       fromExisting[aspectId] = entry.config;

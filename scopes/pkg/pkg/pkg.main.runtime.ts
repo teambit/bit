@@ -183,8 +183,6 @@ export class PkgMain implements CloneConfig {
     return pkg;
   }
 
-  readonly shouldPreserveConfigForClonedComponent = false;
-
   /**
    * get the package name of a component.
    */
