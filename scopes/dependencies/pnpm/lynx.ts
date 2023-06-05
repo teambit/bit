@@ -146,6 +146,8 @@ export async function getPeerDependencyIssues(
     rootDir: opts.rootDir,
   });
   return pnpm.getPeerDependencyIssues(projects, {
+    autoInstallPeers: false,
+    excludeLinksFromLockfile: true,
     storeController: storeController.ctrl,
     storeDir: storeController.dir,
     overrides: opts.overrides,
