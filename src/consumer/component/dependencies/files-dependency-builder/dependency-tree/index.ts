@@ -108,6 +108,7 @@ module.exports._getDependencies = function (config) {
       config: config.requireConfig,
       webpackConfig: config.webpackConfig,
       resolveConfig: config.resolveConfig,
+      envDetectors: config.envDetectors,
     };
     if (!isDependenciesArray && dependenciesRaw[dependency].isScript !== undefined) {
       // used for vue
