@@ -1632,7 +1632,7 @@
     "ui/constants/z-indexes": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.498",
-        "mainFile": "z-indexes.module.scss",
+        "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/constants/z-indexes"
     },
     "ui/corner": {
