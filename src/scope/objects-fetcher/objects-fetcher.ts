@@ -1,4 +1,5 @@
 import { BitId } from '@teambit/legacy-bit-id';
+import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { pipeline } from 'stream';
 import { promisify } from 'util';
 import pMap from 'p-map';
@@ -13,12 +14,12 @@ import { UnexpectedNetworkError } from '../network/exceptions';
 import { Repository } from '../objects';
 import { ObjectItemsStream } from '../objects/object-list';
 import { ObjectsWritable } from './objects-writable-stream';
-import { WriteComponentsQueue } from './write-components-queue';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { groupByLanes, groupByScopeName } from '../component-ops/scope-components-importer';
 import { concurrentFetchLimit } from '../../utils/concurrency';
 import { ScopeNotFoundOrDenied } from '../../remotes/exceptions/scope-not-found-or-denied';
 import { Lane } from '../models';
+import { ComponentsPerRemote, MultipleComponentMerger } from '../component-ops/multiple-component-merger';
 
 /**
  * due to the use of streams, this is memory efficient and can handle easily GBs of objects.
@@ -41,10 +42,11 @@ export class ObjectFetcher {
     private ids: BitId[],
     private lanes: Lane[] = [],
     private context = {},
-    private throwOnUnavailableScope = true
+    private throwOnUnavailableScope = true,
+    private groupedHashes?: { [scopeName: string]: string[] }
   ) {}
 
-  public async fetchFromRemoteAndWrite() {
+  public async fetchFromRemoteAndWrite(): Promise<string[]> {
     this.fetchOptions = {
       type: 'component',
       withoutDependencies: true, // backward compatibility. not needed for remotes > 0.0.900
@@ -52,21 +54,22 @@ export class ObjectFetcher {
       allowExternal: Boolean(this.lanes.length),
       ...this.fetchOptions,
     };
-    const idsGrouped = this.lanes.length ? groupByLanes(this.ids, this.lanes) : groupByScopeName(this.ids);
+    const idsGrouped =
+      this.groupedHashes || (this.lanes.length ? groupByLanes(this.ids, this.lanes) : groupByScopeName(this.ids));
     const scopes = Object.keys(idsGrouped);
     logger.debug(
       `[-] Running fetch on ${scopes.length} remote(s), to get ${this.ids.length} id(s), lanes: ${this.lanes.length}, with the following options`,
       this.fetchOptions
     );
     const objectsQueue = new WriteObjectsQueue();
-    const componentsQueue = new WriteComponentsQueue();
-    this.showProgress(objectsQueue, componentsQueue);
+    const componentsPerRemote: ComponentsPerRemote = {};
+    this.showProgress(objectsQueue);
     await pMap(
       scopes,
       async (scopeName) => {
         const readableStream = await this.fetchFromSingleRemote(scopeName, idsGrouped[scopeName]);
         if (!readableStream) return;
-        await this.writeFromSingleRemote(readableStream, scopeName, objectsQueue, componentsQueue);
+        await this.writeFromSingleRemote(readableStream, scopeName, objectsQueue, componentsPerRemote);
       },
       { concurrency: concurrentFetchLimit() }
     );
@@ -80,9 +83,45 @@ export class ObjectFetcher {
 server responded with the following error messages:
 ${failedScopesErr.join('\n')}`);
     }
-    await Promise.all([objectsQueue.onIdle(), componentsQueue.onIdle()]);
+    await objectsQueue.onIdle();
     logger.debug(`[-] fetchFromRemoteAndWrite, completed writing ${objectsQueue.added} objects`);
-    loader.start('all objects were processed and written to the filesystem successfully');
+    const multipleComponentsMerger = new MultipleComponentMerger(componentsPerRemote, this.scope.sources);
+    const totalComponents = multipleComponentsMerger.totalComponents();
+    const compStr = totalComponents ? ` Processing ${totalComponents} components` : '';
+    loader.start(`${objectsQueue.added} objects were written successfully.${compStr}`);
+    if (totalComponents) {
+      await this.mergeAndPersistComponents(multipleComponentsMerger);
+      logger.debug(`[-] fetchFromRemoteAndWrite, completed writing ${totalComponents} components`);
+      loader.start(`${totalComponents} component-objects were written successfully.`);
+    }
+
+    return objectsQueue.addedHashes;
+  }
+
+  private async mergeAndPersistComponents(multipleComponentsMerger: MultipleComponentMerger) {
+    const modelComponents = await multipleComponentsMerger.merge();
+    await this.repo.writeObjectsToTheFS(modelComponents);
+
+    const mergedPerRemote = modelComponents.reduce((acc, component) => {
+      if (!component.remoteHead) {
+        // only when a component is fetched from its origin, it has remoteHead.
+        // if it's not from the origin, we don't want to add it to the remote-lanes
+        return acc;
+      }
+      const remoteName = component.scope as string;
+      if (!acc[remoteName]) acc[remoteName] = [];
+      acc[remoteName].push(component);
+      return acc;
+    }, {} as ComponentsPerRemote);
+
+    await Promise.all(
+      Object.keys(mergedPerRemote).map(async (remoteName) => {
+        await this.repo.remoteLanes.addEntriesFromModelComponents(
+          LaneId.from(DEFAULT_LANE, remoteName),
+          mergedPerRemote[remoteName]
+        );
+      })
+    );
     await this.repo.writeRemoteLanes();
   }
 
@@ -119,9 +158,9 @@ the remote scope "${scopeName}" was not found`);
     objectsStream: ObjectItemsStream,
     scopeName: string,
     objectsQueue: WriteObjectsQueue,
-    componentsQueue: WriteComponentsQueue
+    componentsPerRemote: ComponentsPerRemote
   ) {
-    const writable = new ObjectsWritable(this.repo, this.scope.sources, scopeName, objectsQueue, componentsQueue);
+    const writable = new ObjectsWritable(this.repo, scopeName, objectsQueue, componentsPerRemote);
     const pipelinePromise = promisify(pipeline);
     // add an error listener for the ObjectList to differentiate between errors coming from the
     // remote and errors happening inside the Writable.
@@ -144,35 +183,16 @@ the remote scope "${scopeName}" was not found`);
     }
   }
 
-  private showProgress(objectsQueue: WriteObjectsQueue, componentsQueue: WriteComponentsQueue) {
+  private showProgress(objectsQueue: WriteObjectsQueue) {
     if (process.env.CI) {
       return; // don't show progress on CI.
     }
     let objectsAdded = 0;
-    let objectsCompleted = 0;
-    let componentsAdded = 0;
-    let componentsCompleted = 0;
     objectsQueue.getQueue().on('add', () => {
       objectsAdded += 1;
       if (objectsAdded % 100 === 0) {
-        loader.start(
-          `Downloaded ${objectsAdded} objects, ${componentsAdded} components. Processed successfully ${objectsCompleted} objects, ${componentsCompleted} components`
-        );
+        loader.start(`Downloaded ${objectsAdded} objects`);
       }
-    });
-    objectsQueue.getQueue().on('next', () => {
-      objectsCompleted += 1;
-      if (objectsAdded % 100 === 0) {
-        loader.start(
-          `Downloaded ${objectsAdded} objects, ${componentsAdded} components. Processed successfully ${objectsCompleted} objects, ${componentsCompleted} components`
-        );
-      }
-    });
-    componentsQueue.getQueue().on('add', () => {
-      componentsAdded += 1;
-    });
-    componentsQueue.getQueue().on('next', () => {
-      componentsCompleted += 1;
     });
   }
 }

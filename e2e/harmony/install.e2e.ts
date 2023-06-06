@@ -1,10 +1,15 @@
+import stripAnsi from 'strip-ansi';
 import path from 'path';
 import fs from 'fs-extra';
 import { addDistTag } from '@pnpm/registry-mock';
 import { IssuesClasses } from '@teambit/component-issues';
-import { expect } from 'chai';
+import { getAnotherInstallRequiredOutput } from '@teambit/install/install.cmd';
+import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { IS_WINDOWS } from '../../src/constants';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+
+chai.use(require('chai-fs'));
 
 describe('install command', function () {
   this.timeout(0);
@@ -35,6 +40,61 @@ describe('install command', function () {
     });
     it('bit status should show it with DuplicateComponentAndPackage issue', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.DuplicateComponentAndPackage.name);
+    });
+  });
+
+  describe('install with old envs in the workspace', () => {
+    let wsEmptyNM: string;
+    let envId;
+    let envName;
+    let output;
+    before(async () => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+      envName = helper.env.setCustomEnv('env-add-dependencies', { skipCompile: true, skipInstall: true });
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.fixtures.populateComponents(1, undefined, undefined, false);
+      helper.extensions.addExtensionToVariant('*', envId);
+      // Clean the node_modules as we want to run tests when node_modules is empty
+      fs.rmdirSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
+      wsEmptyNM = helper.scopeHelper.cloneLocalScope(IS_WINDOWS);
+    });
+    describe('without --recurring-install', () => {
+      before(async () => {
+        output = helper.command.install();
+      });
+      it('should show a warning that the workspace has old env without env.jsonc so another install might be required', async () => {
+        const msg = stripAnsi(getAnotherInstallRequiredOutput(false, [envId]));
+        expect(output).to.have.string(msg);
+      });
+      it('should not install deps that were configured in the env in first install', async () => {
+        expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/lodash.get')).to.not.be.a.path();
+      });
+      describe('without --recurring-install - second install', () => {
+        before(async () => {
+          output = helper.command.install();
+        });
+        it('should not show a warning that the workspace has old env without env.jsonc so another install might be required', async () => {
+          const msg = stripAnsi(getAnotherInstallRequiredOutput(false, [envId]));
+          expect(output).to.not.have.string(msg);
+        });
+        it('should install deps that were configured in the env in second install', async () => {
+          expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/lodash.get')).to.be.a.path();
+        });
+      });
+    });
+    describe('with --recurring-install', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(wsEmptyNM);
+        output = helper.command.install(undefined, { 'recurring-install': '' });
+      });
+      it('should show a warning that the workspace has old env without env.jsonc but not offer the recurring-install flag', async () => {
+        const msg = stripAnsi(getAnotherInstallRequiredOutput(true, [envId]));
+        expect(output).to.have.string(msg);
+      });
+      it('should install deps that were configured in the env', async () => {
+        expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/lodash.get')).to.be.a.path();
+      });
     });
   });
 });

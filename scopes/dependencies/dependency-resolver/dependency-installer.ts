@@ -40,7 +40,7 @@ export type InstallOptions = {
   packageManagerConfigRootDir?: string;
   resolveVersionsFromDependenciesOnly?: boolean;
   linkedDependencies?: Record<string, Record<string, string>>;
-  pruneNodeModules?: boolean;
+  forceTeambitHarmonyLink?: boolean;
 };
 
 export type GetComponentManifestsOptions = {
@@ -94,6 +94,8 @@ export class DependencyInstaller {
 
     private peerDependencyRules?: PeerDependencyRules,
 
+    private neverBuiltDependencies?: string[],
+
     private installingContext: DepInstallerContext = {}
   ) {}
 
@@ -133,7 +135,7 @@ export class DependencyInstaller {
     componentDirectoryMap: ComponentMap<string>,
     options: InstallOptions = DEFAULT_INSTALL_OPTIONS,
     packageManagerOptions: PackageManagerInstallOptions = DEFAULT_PM_INSTALL_OPTIONS
-  ) {
+  ): Promise<{ dependenciesChanged: boolean }> {
     const args = {
       componentDirectoryMap,
       options,
@@ -148,24 +150,34 @@ export class DependencyInstaller {
       throw new RootDirNotDefined();
     }
     if (options.linkedDependencies) {
-      const directDeps = new Set<string>();
-      Object.values(manifests).forEach((manifest) => {
-        for (const depName of Object.keys({ ...manifest.dependencies, ...manifest.devDependencies })) {
-          directDeps.add(depName);
-        }
-      });
-      if (options.linkedDependencies[finalRootDir]) {
+      manifests = JSON.parse(JSON.stringify(manifests));
+      const linkedDependencies = JSON.parse(
+        JSON.stringify(options.linkedDependencies)
+      ) as typeof options.linkedDependencies;
+      if (linkedDependencies[finalRootDir]) {
+        const directDeps = new Set<string>();
+        Object.values(manifests).forEach((manifest) => {
+          for (const depName of Object.keys({ ...manifest.dependencies, ...manifest.devDependencies })) {
+            directDeps.add(depName);
+          }
+        });
         for (const manifest of Object.values(manifests)) {
           if (manifest.name && directDeps.has(manifest.name)) {
-            delete options.linkedDependencies[finalRootDir][manifest.name];
+            delete linkedDependencies[finalRootDir][manifest.name];
           }
         }
+        if (options.forceTeambitHarmonyLink) {
+          delete manifests[finalRootDir].dependencies!['@teambit/harmony'];
+        }
       }
-      Object.entries(options.linkedDependencies).forEach(([dir, linkedDeps]) => {
+      Object.entries(linkedDependencies).forEach(([dir, linkedDeps]) => {
         if (!manifests[dir]) {
           manifests[dir] = {};
         }
-        manifests[dir].dependencies = Object.assign({}, manifests[dir].dependencies, linkedDeps);
+        manifests[dir].dependencies = {
+          ...linkedDeps,
+          ...manifests[dir].dependencies,
+        };
       });
     }
     const hidePackageManagerOutput = !!(this.installingContext.inCapsule && process.env.VERBOSE_PM_OUTPUT !== 'true');
@@ -181,8 +193,8 @@ export class DependencyInstaller {
       engineStrict: this.engineStrict,
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
       peerDependencyRules: this.peerDependencyRules,
-      pruneNodeModules: options.pruneNodeModules,
       hidePackageManagerOutput,
+      neverBuiltDependencies: ['core-js', ...(this.neverBuiltDependencies ?? [])],
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {
@@ -219,7 +231,7 @@ export class DependencyInstaller {
     const startTime = process.hrtime();
 
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
-    await this.packageManager.install(
+    const installResult = await this.packageManager.install(
       {
         rootDir: finalRootDir,
         manifests,
@@ -231,7 +243,14 @@ export class DependencyInstaller {
       this.logger.consoleSuccess(`done ${message}`, startTime);
     }
     await this.runPrePostSubscribers(this.postInstallSubscriberList, 'post', args);
-    return componentDirectoryMap;
+    return installResult;
+  }
+
+  public async pruneModules(rootDir: string): Promise<void> {
+    if (!this.packageManager.pruneModules) {
+      return;
+    }
+    await this.packageManager.pruneModules(rootDir);
   }
 
   /**
@@ -269,6 +288,9 @@ export class DependencyInstaller {
       options,
       this.installingContext
     );
+    const packageNames = componentDirectoryMap.components.map((component) =>
+      this.dependencyResolver.getPackageName(component)
+    );
     const manifests: Record<string, ProjectManifest> = componentDirectoryMap
       .toArray()
       .reduce((acc, [component, dir]) => {
@@ -276,7 +298,10 @@ export class DependencyInstaller {
         const manifest = workspaceManifest.componentsManifestsMap.get(packageName);
         if (manifest) {
           acc[dir] = manifest.toJson({ copyPeerToRuntime: copyPeerToRuntimeOnComponents });
-          acc[dir].defaultPeerDependencies = fromPairs(manifest.envPolicy.selfPolicy.toNameVersionTuple());
+          const selfPolicyWithoutLocal = manifest.envPolicy.selfPolicy.filter(
+            (dep) => !packageNames.includes(dep.dependencyId)
+          );
+          acc[dir].defaultPeerDependencies = fromPairs(selfPolicyWithoutLocal.toNameVersionTuple());
         }
         return acc;
       }, {});

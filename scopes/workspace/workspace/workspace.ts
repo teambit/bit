@@ -47,7 +47,7 @@ import {
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact } from 'lodash';
-import { MergeConfigFilename } from '@teambit/legacy/dist/constants';
+import { MergeConfigFilename, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy/dist/constants';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -60,6 +60,8 @@ import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { isHash } from '@teambit/component-version';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { GlobalConfigMain } from '@teambit/global-config';
+
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,
@@ -98,6 +100,10 @@ import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 
 export type EjectConfResult = {
   configPath: string;
+};
+
+export type ClearCacheOptions = {
+  skipClearFailedToLoadEnvs?: boolean;
 };
 
 export const AspectSpecificField = '__specific';
@@ -188,6 +194,8 @@ export class Workspace implements ComponentFactory {
     private onComponentChangeSlot: OnComponentChangeSlot,
 
     readonly envs: EnvsMain,
+
+    readonly globalConfig: GlobalConfigMain,
 
     /**
      * on component add slot.
@@ -542,6 +550,23 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * this is not the complete legacy component (ConsumerComponent), it's missing dependencies and hooks from Harmony
+   * are skipped. do not trust the data you get from this method unless you know what you're doing.
+   */
+  async getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined> {
+    try {
+      const componentMap = this.consumer.bitMap.getComponent(id._legacy);
+      return await ConsumerComponent.loadFromFileSystem({
+        componentMap,
+        id: id._legacy,
+        consumer: this.consumer,
+      });
+    } catch (err) {
+      return undefined;
+    }
+  }
+
+  /**
    * get a component from workspace
    * @param id component ID
    */
@@ -598,8 +623,9 @@ export class Workspace implements ComponentFactory {
     return workspaceAspectsLoader.getConfiguredUserAspectsPackages(options);
   }
 
-  clearCache() {
+  clearCache(options: ClearCacheOptions = {}) {
     this.aspectLoader.resetFailedLoadAspects();
+    if (!options.skipClearFailedToLoadEnvs) this.envs.resetFailedToLoadEnvs();
     this.logger.debug('clearing the workspace and scope caches');
     delete this._cachedListIds;
     this.componentLoader.clearCache();
@@ -617,17 +643,14 @@ export class Workspace implements ComponentFactory {
   async triggerOnComponentChange(
     id: ComponentID,
     files: string[],
+    removedFiles: string[],
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
-    // if a new file was added, upon component-load, its .bitmap entry is updated to include the
-    // new file. write these changes to the .bitmap file so then other processes have access to
-    // this new file. If the .bitmap wasn't change, it won't do anything.
-    await this.bitMap.write();
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
-      const onChangeResult = await onChangeFunc(component, files, initiator);
+      const onChangeResult = await onChangeFunc(component, files, removedFiles, initiator);
       results.push({ extensionId: extension, results: onChangeResult });
     });
 
@@ -684,7 +707,7 @@ export class Workspace implements ComponentFactory {
 
   /**
    * if checked out to a lane and the lane exists in the remote,
-   * return the remote lane id (name+scope). otherwise, return null.
+   * return the remote lane. otherwise, return null.
    */
   async getCurrentRemoteLane(): Promise<Lane | null> {
     const currentLaneId = this.getCurrentLaneId();
@@ -907,7 +930,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
     const ids = BitIds.fromArray(lane.toBitIds().filter((id) => id.hasScope()));
     await scopeComponentsImporter.importManyDeltaWithoutDeps({ ids, fromHead: true, lane });
-    await scopeComponentsImporter.importMany({ ids, lanes: [lane] });
+    await scopeComponentsImporter.importMany({ ids, lane });
   }
 
   async use(aspectIdStr: string): Promise<string> {
@@ -925,7 +948,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   /**
-   * Get the component root dir in the file system (relative to workspace or full) in Linux format
+   * @todo: the return path here is Linux when asking for relative and os-based when asking for absolute. fix this to be consistent.
+   *
+   * Get the component root dir in the file system (relative to workspace or full)
    * @param componentId
    * @param relative return the path relative to the workspace or full path
    */
@@ -1308,6 +1333,15 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   getWorkspaceAspectsLoader(): WorkspaceAspectsLoader {
+    let resolveEnvsFromRoots = this.config.resolveEnvsFromRoots;
+    if (resolveEnvsFromRoots === undefined) {
+      const resolveEnvsFromRootsConfig = this.globalConfig.getSync(CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS);
+      const defaultResolveEnvsFromRoots: boolean =
+        // @ts-ignore
+        resolveEnvsFromRootsConfig === 'true' || resolveEnvsFromRootsConfig === true;
+      resolveEnvsFromRoots = defaultResolveEnvsFromRoots;
+    }
+
     const workspaceAspectsLoader = new WorkspaceAspectsLoader(
       this,
       this.scope,
@@ -1318,7 +1352,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.harmony,
       this.onAspectsResolveSlot,
       this.onRootAspectAddedSlot,
-      this.config.resolveAspectsFromNodeModules
+      this.config.resolveAspectsFromNodeModules,
+      resolveEnvsFromRoots
     );
     return workspaceAspectsLoader;
   }
@@ -1360,6 +1395,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
+    if (id instanceof BitId && id.hasScope() && id.hasVersion()) {
+      // an optimization to make it faster when BitId is passed
+      return ComponentID.fromLegacy(id);
+    }
     const getDefaultScope = async (bitId: BitId, bitMapOptions?: GetBitMapComponentOptions) => {
       if (bitId.scope) {
         return bitId.scope;

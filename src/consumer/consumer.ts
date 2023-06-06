@@ -304,16 +304,13 @@ export default class Consumer {
     return Promise.all(componentsP);
   }
 
-  /**
-   * For legacy, it loads all the dependencies. For Harmony, it's not needed.
-   */
   async loadComponentFromModelImportIfNeeded(id: BitId, throwIfNotExist = true): Promise<Component> {
     const scopeComponentsImporter = this.scope.scopeImporter;
     const getModelComponent = async (): Promise<ModelComponent> => {
       if (throwIfNotExist) return this.scope.getModelComponent(id);
       const modelComponent = await this.scope.getModelComponentIfExist(id);
       if (modelComponent) return modelComponent;
-      await scopeComponentsImporter.importMany({ ids: new BitIds(id) });
+      await scopeComponentsImporter.importMany({ ids: new BitIds(id), preferDependencyGraph: true });
       return this.scope.getModelComponent(id);
     };
     const modelComponent = await getModelComponent();
@@ -333,19 +330,6 @@ export default class Consumer {
 
   async loadComponents(ids: BitIds, throwOnFailure = true, loadOpts?: ComponentLoadOptions): Promise<LoadManyResult> {
     return this.componentLoader.loadMany(ids, throwOnFailure, loadOpts);
-  }
-
-  async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
-    if (saveDependenciesAsComponents === undefined) {
-      saveDependenciesAsComponents = this.config._saveDependenciesAsComponents;
-    }
-    const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
-      return {
-        id: bitId, // if it doesn't go to the hub, it can't import dependencies as packages
-        saveDependenciesAsComponents: false,
-      };
-    });
-    return shouldDependenciesSavedAsComponents;
   }
 
   async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<Component[]> {
@@ -587,6 +571,7 @@ export default class Consumer {
 
   async resetLaneNew() {
     this.bitMap.resetLaneComponentsToNew();
+    this.bitMap.laneId = undefined;
     await Scope.reset(this.scope.path, true);
   }
 

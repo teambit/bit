@@ -133,7 +133,7 @@ export class LaneShowCmd implements Command {
   alias = '';
   options = [
     ['j', 'json', 'show the lane details in json format'],
-    ['r', 'remote <string>', 'show remote lanes'],
+    ['r', 'remote', 'show the lane from remote'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -148,9 +148,16 @@ export class LaneShowCmd implements Command {
     if (!name) {
       name = this.lanes.getCurrentLaneName() || DEFAULT_LANE;
     }
+
+    if (!name && remote) {
+      throw new Error('remote flag is not supported without lane name');
+    }
+
+    const laneId = await this.lanes.parseLaneId(name);
+
     const lanes = await this.lanes.getLanes({
-      name,
-      remote,
+      name: laneId.name,
+      remote: remote ? laneId.scope : undefined,
     });
 
     const onlyLane = lanes[0];
@@ -169,6 +176,7 @@ export class LaneShowCmd implements Command {
       name,
       remote,
     });
+
     return lanes[0];
   }
 }
@@ -265,7 +273,6 @@ export class LaneRenameCmd implements Command {
   options = [] as CommandOptions;
   loader = true;
   migration = true;
-
   constructor(private lanes: LanesMain) {}
 
   async report([currentName, newName]: [string, string]): Promise<string> {
@@ -326,6 +333,11 @@ export class LaneImportCmd implements Command {
   alias = '';
   options = [
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    [
+      'p',
+      'pattern <component-pattern>',
+      'EXPERIMENTAL. switch only the specified component-pattern. works only when the workspace is empty',
+    ],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -334,9 +346,9 @@ export class LaneImportCmd implements Command {
 
   async report(
     [lane]: [string],
-    { skipDependencyInstallation = false }: { skipDependencyInstallation: boolean }
+    { skipDependencyInstallation = false, pattern }: { skipDependencyInstallation: boolean; pattern?: string }
   ): Promise<string> {
-    return this.switchCmd.report([lane], { getAll: true, skipDependencyInstallation });
+    return this.switchCmd.report([lane], { getAll: true, skipDependencyInstallation, pattern });
   }
 }
 

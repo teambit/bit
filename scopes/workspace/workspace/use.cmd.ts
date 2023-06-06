@@ -18,6 +18,8 @@ export class UseCmd implements Command {
 
   async report([id]: [string]): Promise<any> {
     const aspectIdAdded = await this.workspace.use(id);
-    return chalk.green(`aspect "${aspectIdAdded}" has been saved into the workspace.jsonc file.`);
+    return chalk.green(
+      `workspace.jsonc updated successfully! features and extensions from "${aspectIdAdded}" are now available.`
+    );
   }
 }

@@ -79,6 +79,7 @@ export class WebpackDevServer implements DevServer {
     const webpackDs: WDS = new this.WsDevServer(this.config.devServer, this.getCompiler());
     await webpackDs.start();
 
+    // @ts-ignore
     return webpackDs.server;
   }
 

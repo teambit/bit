@@ -15,7 +15,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { loadBit } from '@teambit/bit';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
-import { difference, compact, flatten, intersection, uniqBy, some } from 'lodash';
+import { difference, compact, flatten, intersection, uniqBy, some, isEmpty } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
@@ -111,6 +111,7 @@ export type MainAspect = {
 export class AspectLoaderMain {
   private inMemoryConfiguredAspects: string[] = [];
   private failedToLoadExt = new Set<string>();
+  private alreadyShownWarning = new Set<string>();
 
   constructor(
     private logger: Logger,
@@ -369,15 +370,18 @@ export class AspectLoaderMain {
   /**
    * run "require" of the component code to get the manifest
    */
-  async doRequire(requireableExtension: RequireableComponent): Promise<ExtensionManifest | Aspect> {
+  async doRequire(
+    requireableExtension: RequireableComponent,
+    runSubscribers = true
+  ): Promise<ExtensionManifest | Aspect> {
     const idStr = requireableExtension.component.id.toString();
     const aspect = await requireableExtension.require();
     const manifest = aspect.default || aspect;
     manifest.id = idStr;
     // It's important to clone deep the manifest here to prevent mutate dependencies of other manifests as they point to the same location in memory
     const cloned = this.cloneManifest(manifest);
-    const newManifest = await this.runOnLoadRequireableExtensionSubscribers(requireableExtension, cloned);
-    return newManifest;
+    if (runSubscribers) return this.runOnLoadRequireableExtensionSubscribers(requireableExtension, cloned);
+    return cloned;
   }
 
   /**
@@ -407,13 +411,14 @@ export class AspectLoaderMain {
 
   async getManifestsFromRequireableExtensions(
     requireableExtensions: RequireableComponent[],
-    throwOnError = false
+    throwOnError = false,
+    runSubscribers = true
   ): Promise<Array<ExtensionManifest | Aspect>> {
     const manifestsP = mapSeries(requireableExtensions, async (requireableExtension) => {
       if (!requireableExtensions) return undefined;
       const idStr = requireableExtension.component.id.toString();
       try {
-        return await this.doRequire(requireableExtension);
+        return await this.doRequire(requireableExtension, runSubscribers);
       } catch (firstErr: any) {
         this.addFailure(idStr);
         this.logger.warn(`failed loading an aspect "${idStr}", will try to fix and reload`, firstErr);
@@ -440,6 +445,7 @@ export class AspectLoaderMain {
   }
 
   handleExtensionLoadingError(error: Error, idStr: string, throwOnError: boolean) {
+    this.envs.addFailedToLoadExt(idStr);
     const errorMsg = error.message.split('\n')[0]; // show only the first line if the error is long (e.g. happens with MODULE_NOT_FOUND errors)
     const msg = UNABLE_TO_LOAD_EXTENSION(idStr, errorMsg);
     if (throwOnError) {
@@ -448,10 +454,17 @@ export class AspectLoaderMain {
       throw new CannotLoadExtension(idStr, error);
     }
     this.logger.error(msg, error);
-    if (this.logger.isLoaderStarted) {
-      this.logger.consoleFailure(msg);
-    } else {
-      this.logger.consoleWarning(msg);
+    this.printWarningIfFirstTime(idStr, msg, this.logger.isLoaderStarted);
+  }
+
+  private printWarningIfFirstTime(envId: string, msg: string, showAsFailure: boolean) {
+    if (!this.alreadyShownWarning.has(envId)) {
+      this.alreadyShownWarning.add(envId);
+      if (showAsFailure) {
+        this.logger.consoleFailure(msg);
+      } else {
+        this.logger.consoleWarning(msg);
+      }
     }
   }
 
@@ -473,15 +486,36 @@ export class AspectLoaderMain {
 
   getPlugins(component: Component, componentPath: string): Plugins {
     const defs = this.getPluginDefs();
-    return Plugins.from(component, defs, this.triggerOnAspectLoadError.bind(this), this.logger, (relativePath) => {
+    return Plugins.from(
+      component,
+      defs,
+      this.triggerOnAspectLoadError.bind(this),
+      this.logger,
+      this.pluginFileResolver.call(this, component, componentPath)
+    );
+  }
+
+  getPluginFiles(component: Component, componentPath: string): string[] {
+    const defs = this.getPluginDefs();
+    return Plugins.files(component, defs, this.pluginFileResolver.call(this, component, componentPath));
+  }
+
+  hasPluginFiles(component: Component): boolean {
+    const defs = this.getPluginDefs();
+    const files = Plugins.files(component, defs);
+    return !isEmpty(files);
+  }
+
+  pluginFileResolver(component: Component, rootDir: string) {
+    return (relativePath: string) => {
       const compiler = this.getCompiler(component);
       if (!compiler) {
-        return join(componentPath, relativePath);
+        return join(rootDir, relativePath);
       }
 
       const dist = compiler.getDistPathBySrcPath(relativePath);
-      return join(componentPath, dist);
-    });
+      return join(rootDir, dist);
+    };
   }
 
   isAspect(manifest: any) {
@@ -650,11 +684,11 @@ export class AspectLoaderMain {
         if (!needToPrint) return;
         ids.forEach((id) => {
           this.failedToLoadExt.add(id);
-          this.envs.addFailedToLoadExtension(id);
+          this.envs.addFailedToLoadExt(id);
           const parsedId = ComponentID.tryFromString(id);
           if (parsedId) {
             this.failedToLoadExt.add(parsedId.fullName);
-            this.envs.addFailedToLoadExtension(parsedId.fullName);
+            this.envs.addFailedToLoadExt(parsedId.fullName);
           }
         });
       }

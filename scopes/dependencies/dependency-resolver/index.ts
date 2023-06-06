@@ -1,3 +1,5 @@
+import { DependencyResolverAspect } from './dependency-resolver.aspect';
+
 export { RawComponentState, ComponentsManifestsMap, RegistriesMap } from './types';
 export {
   WorkspaceManifest,
@@ -26,7 +28,6 @@ export {
   ProxyConfig as PackageManagerProxyConfig,
   NetworkConfig as PackageManagerNetworkConfig,
 } from './dependency-resolver.main.runtime';
-export { DependencyResolverAspect } from './dependency-resolver.aspect';
 export {
   DependencyLifecycleType,
   WorkspaceDependencyLifecycleType,
@@ -61,14 +62,16 @@ export {
   LinkDetail,
   LinkResults,
   LinkingOptions,
+  DependencyLinker,
   DepsLinkedToEnvResult,
   NestedNMDepsLinksResult,
   LinkToDirResult,
 } from './dependency-linker';
-export { InstallOptions, InstallArgs, DependencyInstaller } from './dependency-installer';
+export { GetComponentManifestsOptions, InstallOptions, InstallArgs, DependencyInstaller } from './dependency-installer';
 export { DependencyDetector, FileContext } from './dependency-detector';
 export { DependencySource, VariantPolicyEntry } from './policy/variant-policy/variant-policy';
 export { OutdatedPkg } from './get-all-policy-pkgs';
 export { extendWithComponentsFromDir } from './extend-with-components-from-dir';
 export { isRange } from './manifest/deduping/hoist-dependencies';
 export { DependencyEnv } from './dependency-env';
+export { DependencyResolverAspect as default, DependencyResolverAspect };

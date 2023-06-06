@@ -5,7 +5,7 @@ import { EmptyComponentGallery } from './empty-component-gallery';
 export const EmptyComponentGalleryExample = () => {
   return (
     <ThemeCompositions>
-      <EmptyComponentGallery name="bit.scope" />
+      <EmptyComponentGallery name="bit.scope" title={'Export components to'} />
     </ThemeCompositions>
   );
 };

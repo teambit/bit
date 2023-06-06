@@ -45,12 +45,16 @@ export function getAspectDirFromBvm(id: string, bvmDirOptions?: BvmDirOptions): 
   if (!_bvmConfig) {
     _bvmConfig = Config.load(false, ['env', 'file']);
   }
+
   const bvmConfig = _bvmConfig;
   let version;
   if (bvmDirOptions?.version) {
     version = bvmDirOptions?.version;
   } else {
     const link = bvmDirOptions?.linkName || bvmConfig.getDefaultLinkName();
+    if (!link) {
+      throw new BitError(`can't find link in bvm config. most likely bvm is not installed`);
+    }
     const links = bvmConfig.getLinks();
     version = links[link];
     if (!version) {

@@ -26,6 +26,7 @@ export interface ManyComponentsWriterParams {
   verbose?: boolean;
   resetConfig?: boolean;
   skipWritingToFs?: boolean;
+  skipUpdatingBitMap?: boolean;
 }
 
 export type ComponentWriterResults = { installationError?: Error; compilationError?: Error };
@@ -48,6 +49,7 @@ export class ComponentWriterMain {
     await this.populateComponentsFilesToWrite(opts);
     this.moveComponentsIfNeeded(opts);
     await this.persistComponentsData(opts);
+    if (!opts.skipUpdatingBitMap) await this.consumer.writeBitMap();
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     if (!opts.skipDependencyInstallation) {
@@ -55,7 +57,6 @@ export class ComponentWriterMain {
       // no point to compile if the installation is not running. the environment is not ready.
       compilationError = await this.compileGracefully();
     }
-    await this.consumer.writeBitMap();
     this.logger.debug('writeMany, completed!');
     return { installationError, compilationError };
   }
@@ -185,6 +186,7 @@ export class ComponentWriterMain {
       component,
       writeToPath: componentRootDir,
       writeConfig: opts.writeConfig,
+      skipUpdatingBitMap: opts.skipUpdatingBitMap,
       ...getParams(),
     };
   }

@@ -315,9 +315,7 @@ describe('merge lanes', function () {
       describe('without --include-deps', () => {
         it('should throw an error asking to enter --include-deps flag', () => {
           const mergeFn = () => helper.command.mergeLane('dev', `--pattern ${helper.scopes.remote}/comp2`);
-          expect(mergeFn).to.throw(
-            'the following dependencies which were not included in the pattern. consider adding "--include-deps" flag'
-          );
+          expect(mergeFn).to.throw('consider adding "--include-deps" flag');
         });
       });
       describe('with --include-deps', () => {
@@ -652,6 +650,27 @@ describe('merge lanes', function () {
       });
       it('should not throw', () => {
         expect(() => helper.command.mergeLane('main')).to.not.throw();
+      });
+    });
+    // dev: snapA -> export -> snapB -> snapC -> merge-snap.
+    // main: snapMain.
+    describe('when the resolved unrelated is not a direct parent', () => {
+      before(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
+        helper.scopeHelper.getClonedLocalScope(afterLaneExport);
+        helper.command.import();
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.mergeLane('main', '--resolve-unrelated -x');
+      });
+      // previously, this was throwing NoCommonSnap error, because getDivergeData was comparing the remote-lane-head
+      // (snapA) with the current merge-snap. The current merge-snap has one parent - head of main. The remote-lane-head has
+      // history of the lane only (snapA). The traversal has source-hash (merge-snap) and target-hash (snapA).
+      // 1. start from source-hash, you get merge-snap and its parent snapMain. and the immediate unrelated, snapC. target was not found.
+      // 2. start from target-hash, you get snapA only, source was not found.
+      // it is fixed by traversing the unrelated. as a result, #1 includes not only snapC, but also snapB and snapA.
+      it('bit status should not throw', () => {
+        expect(() => helper.command.status()).to.not.throw();
       });
     });
   });
@@ -1180,6 +1199,81 @@ describe('merge lanes', function () {
     it('should not show the component as pending-merge', () => {
       const status = helper.command.statusJson();
       expect(status.mergePendingComponents).to.have.lengthOf(0);
+    });
+  });
+  describe('merge from one lane to another with --squash', () => {
+    let previousSnapLaneB: string;
+    let headLaneB: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // should not be part of the history
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      previousSnapLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      headLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
+      helper.command.export();
+      helper.command.switchLocalLane('lane-a', '-x');
+      helper.command.mergeLane('lane-b', '--squash -x');
+    });
+    it('bit log should not include previous versions from lane-b', () => {
+      const log = helper.command.log('comp1');
+      expect(log).to.not.have.string(previousSnapLaneB);
+    });
+    it('Version object should include the squash data', () => {
+      const headVersion = helper.command.catComponent(`${helper.scopes.remote}/comp1@${headLaneB}`);
+      expect(headVersion).to.have.property('squashed');
+      expect(headVersion.squashed).to.have.property('laneId');
+      expect(headVersion.squashed.laneId.name).to.equal('lane-b');
+      expect(headVersion.squashed.previousParents).to.have.lengthOf(1);
+      expect(headVersion.squashed.previousParents[0]).to.equal(previousSnapLaneB);
+    });
+  });
+  describe('merge from one lane to another with --squash when it has history in main', () => {
+    let mainHead: string;
+    let previousSnapLaneA: string;
+    let headLaneB: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      mainHead = helper.command.getHead('comp1');
+      helper.command.export();
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // should not be part of the history
+      previousSnapLaneA = helper.command.getHeadOfLane('lane-a', 'comp1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.createLane('lane-b');
+      helper.command.mergeLane(`${helper.scopes.remote}/lane-a`, '--squash -x');
+      headLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
+    });
+    // previously it was throwing NoCommonSnap error
+    it('bit status should not throw', () => {
+      expect(() => helper.command.status()).to.not.throw();
+    });
+    it('Version object should have the main head as the parent', () => {
+      const headVersion = helper.command.catComponent(`${helper.scopes.remote}/comp1@${headLaneB}`);
+      expect(headVersion.parents).to.have.lengthOf(1);
+      expect(headVersion.parents[0]).to.equal(mainHead);
+      expect(headVersion.squashed.laneId.name).to.equal('lane-a');
+      expect(headVersion.squashed.previousParents).to.have.lengthOf(1);
+      expect(headVersion.squashed.previousParents[0]).to.equal(previousSnapLaneA);
+    });
+    it('Version object should include the squash data', () => {
+      const headVersion = helper.command.catComponent(`${helper.scopes.remote}/comp1@${headLaneB}`);
+      expect(headVersion).to.have.property('squashed');
+      expect(headVersion.squashed).to.have.property('laneId');
+      expect(headVersion.squashed.laneId.name).to.equal('lane-a');
+      expect(headVersion.squashed.previousParents).to.have.lengthOf(1);
+      expect(headVersion.squashed.previousParents[0]).to.equal(previousSnapLaneA);
     });
   });
 });

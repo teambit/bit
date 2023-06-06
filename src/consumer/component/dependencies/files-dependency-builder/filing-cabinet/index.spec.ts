@@ -548,19 +548,6 @@ describe('filing-cabinet', () => {
     });
   });
   describe('.scss with a dependency prefix with a tilda and resolve config', () => {
-    describe('when the alias in resolve-config is resolved to an existing file', () => {
-      it('should resolve the dependency according to the resolve-config', () => {
-        const resolveConfig = { aliases: { '~bootstrap': path.normalize(fixtures) } };
-        const result = cabinet({
-          resolveConfig,
-          dependency: '~bootstrap/foo2',
-          filename: `${fixtures}/foo.scss`,
-          directory: fixtures,
-        });
-
-        assert.equal(result, path.resolve(`${fixtures}/foo2.scss`));
-      });
-    });
     describe('when the alias in resolve-config does not match the dependency', () => {
       it('should fallback to the node-module resolution', () => {
         const resolveConfig = { aliases: { '~non-exist': 'some-dir' } };

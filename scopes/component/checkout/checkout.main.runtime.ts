@@ -5,15 +5,11 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
+import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import { ApplyVersionResults } from '@teambit/merging';
+import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import {
-  applyVersion,
-  markFilesToBeRemovedIfNeeded,
-  ComponentStatus,
-  deleteFilesIfNeeded,
-} from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
 import {
   FailedComponents,
   getMergeStrategyInteractive,
@@ -29,9 +25,10 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ComponentID } from '@teambit/component-id';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
+import { applyVersion, markFilesToBeRemovedIfNeeded, ComponentStatus, deleteFilesIfNeeded } from './checkout-version';
 
 export type CheckoutProps = {
-  version?: string; // if reset is true, the version is undefined
+  version?: string; // if reset/head/latest is true, the version is undefined
   ids?: ComponentID[];
   head?: boolean;
   latest?: boolean;
@@ -43,6 +40,8 @@ export type CheckoutProps = {
   all?: boolean; // checkout all ids
   isLane?: boolean;
   workspaceOnly?: boolean;
+  versionPerId?: ComponentID[]; // if given, the ComponentID.version is the version to checkout to.
+  skipUpdatingBitmap?: boolean; // needed for stash
 };
 
 export type ComponentStatusBeforeMergeAttempt = {
@@ -51,6 +50,7 @@ export type ComponentStatusBeforeMergeAttempt = {
   id: BitId;
   failureMessage?: string;
   unchangedLegitimately?: boolean; // failed to checkout but for a legitimate reason, such as, up-to-date
+  shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
   propsForMerge?: {
     currentlyUsedVersion: string;
     componentModel: ModelComponent;
@@ -60,13 +60,18 @@ export type ComponentStatusBeforeMergeAttempt = {
 type CheckoutTo = 'head' | 'reset' | string;
 
 export class CheckoutMain {
-  constructor(private workspace: Workspace, private logger: Logger, private componentWriter: ComponentWriterMain) {}
+  constructor(
+    private workspace: Workspace,
+    private logger: Logger,
+    private componentWriter: ComponentWriterMain,
+    private importer: ImporterMain,
+    private remove: RemoveMain
+  ) {}
 
   async checkout(checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
     const consumer = this.workspace.consumer;
     const { version, ids, promptMergeOptions } = checkoutProps;
     await this.syncNewComponents(checkoutProps);
-    await this.workspace.scope.import(ids || [], { useCache: false, preferDependencyGraph: true });
     const bitIds = BitIds.fromArray(ids?.map((id) => id._legacy) || []);
     const { components } = await consumer.loadComponents(bitIds);
 
@@ -118,6 +123,7 @@ export class CheckoutMain {
     }
     const failedComponents: FailedComponents[] = allComponentsStatus
       .filter((componentStatus) => componentStatus.failureMessage)
+      .filter((componentStatus) => !componentStatus.shouldBeRemoved)
       .map((componentStatus) => ({
         id: componentStatus.id,
         failureMessage: componentStatus.failureMessage as string,
@@ -157,6 +163,7 @@ export class CheckoutMain {
         skipDependencyInstallation: checkoutProps.skipNpmInstall || leftUnresolvedConflicts,
         verbose: checkoutProps.verbose,
         resetConfig: checkoutProps.reset,
+        skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap,
       };
       componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
       await deleteFilesIfNeeded(componentsResults, consumer);
@@ -164,8 +171,17 @@ export class CheckoutMain {
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
+    const componentIdsToRemove = allComponentsStatus
+      .filter((componentStatus) => componentStatus.shouldBeRemoved)
+      .map((c) => c.id.changeVersion(undefined));
+
+    if (componentIdsToRemove.length) {
+      await this.remove.removeLocallyByIds(componentIdsToRemove, { force: true });
+    }
+
     return {
       components: appliedVersionComponents,
+      removedComponents: componentIdsToRemove,
       version,
       failedComponents,
       leftUnresolvedConflicts,
@@ -184,6 +200,7 @@ export class CheckoutMain {
     this.logger.setStatusLine(BEFORE_CHECKOUT);
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
+    await this.importer.importCurrentObjects(); // important. among others, it fetches the remote lane object and its new components.
     if (to === 'head') await this.makeLaneComponentsAvailableOnMain();
     await this.parseValues(to, componentPattern, checkoutProps);
     const checkoutResults = await this.checkout(checkoutProps);
@@ -202,7 +219,7 @@ export class CheckoutMain {
       });
     } catch (err) {
       // don't stop the process. it's possible that the scope doesn't exist yet because these are new components
-      this.logger.error(`unable to sync new components due to an error`, err);
+      this.logger.error(`unable to sync new components, if these components are really new, ignore the error`, err);
     }
   }
 
@@ -253,6 +270,7 @@ export class CheckoutMain {
   }
 
   private async getNewComponentsFromLane(ids: ComponentID[]): Promise<ComponentID[]> {
+    // current lane object is up to date due to the previous `importCurrentObjects()` call
     const lane = await this.workspace.consumer.getCurrentLaneObject();
     if (!lane) {
       return [];
@@ -275,10 +293,10 @@ export class CheckoutMain {
     checkoutProps: CheckoutProps
   ): Promise<ComponentStatusBeforeMergeAttempt> {
     const consumer = this.workspace.consumer;
-    const { version, head: headVersion, reset, latest: latestVersion } = checkoutProps;
+    const { version, head: headVersion, reset, latest: latestVersion, versionPerId } = checkoutProps;
     const repo = consumer.scope.objects;
     const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
-    const componentStatus: ComponentStatus = { id: component.id };
+    const componentStatus: ComponentStatusBeforeMergeAttempt = { id: component.id };
     const returnFailure = (msg: string, unchangedLegitimately = false) => {
       componentStatus.failureMessage = msg;
       componentStatus.unchangedLegitimately = unchangedLegitimately;
@@ -298,6 +316,9 @@ export class CheckoutMain {
 
       if (headVersion) return componentModel.headIncludeRemote(repo);
       if (latestVersion) return componentModel.latestVersion();
+      if (versionPerId)
+        return versionPerId.find((id) => id._legacy.isEqualWithoutVersion(component.id))?.version as string;
+
       // @ts-ignore if !reset the version is defined
       return version;
     };
@@ -322,6 +343,13 @@ export class CheckoutMain {
         true
       );
     }
+    if (!reset) {
+      const divergeDataForMergePending = await componentModel.getDivergeDataForMergePending(repo);
+      const isMergePending = divergeDataForMergePending.isDiverged();
+      if (isMergePending) {
+        return returnFailure(`component is merge-pending and cannot be checked out, run "bit status" for more info`);
+      }
+    }
     const currentVersionObject: Version = await componentModel.loadVersion(currentlyUsedVersion, repo);
     const isModified = await consumer.isComponentModified(currentVersionObject, component);
     if (!isModified && reset) {
@@ -330,7 +358,12 @@ export class CheckoutMain {
 
     const versionRef = componentModel.getRef(newVersion);
     if (!versionRef) throw new Error(`unable to get ref ${newVersion} from ${componentModel.id()}`);
-    const componentVersion = (await consumer.scope.getObject(versionRef.hash)) as Version;
+    const componentVersion = (await consumer.scope.getObject(versionRef.hash)) as Version | undefined;
+    if (componentVersion?.isRemoved() && existingBitMapId) {
+      componentStatus.shouldBeRemoved = true;
+      return returnFailure(`component has been removed`, true);
+    }
+
     const newId = component.id.changeVersion(newVersion);
 
     if (reset || !isModified) {
@@ -384,18 +417,20 @@ export class CheckoutMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ComponentWriterAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ComponentWriterAspect, ImporterAspect, RemoveAspect];
 
   static runtime = MainRuntime;
 
-  static async provider([cli, workspace, loggerMain, compWriter]: [
+  static async provider([cli, workspace, loggerMain, compWriter, importer, remove]: [
     CLIMain,
     Workspace,
     LoggerMain,
-    ComponentWriterMain
+    ComponentWriterMain,
+    ImporterMain,
+    RemoveMain
   ]) {
     const logger = loggerMain.createLogger(CheckoutAspect.id);
-    const checkoutMain = new CheckoutMain(workspace, logger, compWriter);
+    const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer, remove);
     cli.register(new CheckoutCmd(checkoutMain));
     return checkoutMain;
   }

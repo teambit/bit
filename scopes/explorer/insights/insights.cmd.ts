@@ -11,24 +11,25 @@ export default class InsightsCmd implements Command {
   options = [
     ['l', 'list', 'list all insights'],
     ['j', 'json', 'return the insights in json format'],
+    ['', 'include-deps', 'include component dependencies that are not in this workspace'],
   ] as CommandOptions;
   constructor(private insights: InsightsMain) {}
 
-  async report([names]: [string[]], options: { list: boolean }): Promise<string> {
+  async report([names]: [string[]], options: { list: boolean; includeDeps: boolean }): Promise<string> {
     if (options.list) {
       const results = await this.json([names], options);
       return JSON.stringify(results, null, 2);
     }
-    const results = await this.insights.runInsights(names, { renderData: true });
+    const results = await this.insights.runInsights(names, { renderData: true, includeDeps: options.includeDeps });
     return template(results);
   }
 
-  async json([names]: [string[]], { list }: { list: boolean }) {
+  async json([names]: [string[]], { list, includeDeps }: { list: boolean; includeDeps: boolean }) {
     if (list) {
       const results = this.insights.listInsights();
       return results;
     }
-    return this.insights.runInsights(names, { renderData: false });
+    return this.insights.runInsights(names, { renderData: false, includeDeps });
   }
 }
 

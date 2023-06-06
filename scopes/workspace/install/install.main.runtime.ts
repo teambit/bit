@@ -1,24 +1,24 @@
 import fs, { pathExists } from 'fs-extra';
 import path from 'path';
 import { getRootComponentDir, getBitRootsDir, linkPkgsToBitRoots } from '@teambit/bit-roots';
-import { CommunityMain, CommunityAspect } from '@teambit/community';
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { compact, omit, pick } from 'lodash';
+import { compact, mapValues, omit, uniq, pick, intersection } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
-import { BitError } from '@teambit/bit-error';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
 import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
+import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { linkToNodeModulesWithCodemod, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { IssuesClasses } from '@teambit/component-issues';
 import {
+  GetComponentManifestsOptions,
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
   DependencyInstaller,
@@ -56,6 +56,7 @@ export type WorkspaceLinkResults = {
 } & LinkResults;
 
 export type WorkspaceInstallOptions = {
+  addMissingDeps?: boolean;
   addMissingPeers?: boolean;
   variants?: string;
   lifecycleType?: WorkspaceDependencyLifecycleType;
@@ -68,6 +69,7 @@ export type WorkspaceInstallOptions = {
   compile?: boolean;
   includeOptionalDeps?: boolean;
   updateAll?: boolean;
+  recurringInstall?: boolean;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -77,6 +79,12 @@ type PreInstall = (installOpts?: WorkspaceInstallOptions) => Promise<void>;
 
 type PreLinkSlot = SlotRegistry<PreLink>;
 type PreInstallSlot = SlotRegistry<PreInstall>;
+
+type GetComponentsAndManifestsOptions = Omit<
+  GetComponentManifestsOptions,
+  'componentDirectoryMap' | 'rootPolicy' | 'rootDir'
+> &
+  Pick<PackageManagerInstallOptions, 'nodeLinker'>;
 
 export class InstallMain {
   private visitedAspects: Set<string> = new Set();
@@ -198,43 +206,53 @@ export class InstallMain {
       )})`
     );
     this.logger.debug(`installing dependencies in workspace with options`, options);
-    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
-    const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy(workspacePolicy);
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
     const hasRootComponents = this.dependencyResolver.hasRootComponents();
-    const pmInstallOptions: PackageManagerInstallOptions = {
-      dedupe: !hasRootComponents && options?.dedupe,
-      copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
+    // TODO: pass get install options
+    const installer = this.dependencyResolver.getInstaller({});
+    const calcManifestsOpts: GetComponentsAndManifestsOptions = {
       copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
+      copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
+      dedupe: !hasRootComponents && options?.dedupe,
       dependencyFilterFn: depsFilterFn,
+      nodeLinker: this.dependencyResolver.nodeLinker(),
+    };
+    // eslint-disable-next-line prefer-const
+    let { mergedRootPolicy, componentsAndManifests: current } = await this._getComponentsManifestsAndRootPolicy(
+      installer,
+      {
+        ...calcManifestsOpts,
+        addMissingDeps: options?.addMissingDeps,
+      }
+    );
+
+    const pmInstallOptions: PackageManagerInstallOptions = {
+      ...calcManifestsOpts,
       includeOptionalDeps: options?.includeOptionalDeps,
+      neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
       overrides: this.dependencyResolver.config.overrides,
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       rootComponents: hasRootComponents,
-      nodeLinker: this.dependencyResolver.nodeLinker(),
       updateAll: options?.updateAll,
     };
-    // TODO: pass get install options
-    const installer = this.dependencyResolver.getInstaller({});
-    let current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
     const prevManifests = new Set<string>();
     // TODO: this make duplicate
     // this.logger.consoleSuccess();
     // TODO: add the links results to the output
-    await this.link({
+    const linkOpts = {
       linkTeambitBit: true,
       linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
       linkDepsResolvedFromEnv: !hasRootComponents,
-      linkNestedDepsInNM: false,
-    });
-    const linkOpts = {
-      linkTeambitBit: false,
-      linkCoreAspects: false,
-      linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
+    const { linkedRootDeps } = await this.calculateLinks(linkOpts);
+    const linkedDependencies = {
+      [this.workspace.path]: linkedRootDeps,
+    };
+    const compDirMap = await this.getComponentsDirectory([]);
     let installCycle = 0;
     let hasMissingLocalComponents = true;
+    const forceTeambitHarmonyLink = !this.dependencyResolver.hasHarmonyInRootPolicy();
     /* eslint-disable no-await-in-loop */
     do {
       // In case there are missing local components,
@@ -242,26 +260,18 @@ export class InstallMain {
       // are not added to the manifests.
       // This is an issue when installation is done using root components.
       hasMissingLocalComponents = hasRootComponents && hasComponentsFromWorkspaceInMissingDeps(current);
-      await installer.installComponents(
+      const { dependenciesChanged } = await installer.installComponents(
         this.workspace.path,
         current.manifests,
         mergedRootPolicy,
         current.componentDirectoryMap,
         {
+          linkedDependencies,
           installTeambitBit: false,
-          // We clean node_modules only on the first install.
-          // Otherwise, we might load an env from a location that we later remove.
-          pruneNodeModules: installCycle === 0,
+          forceTeambitHarmonyLink,
         },
         pmInstallOptions
       );
-      // Core aspects should be relinked after installation because Yarn removes all symlinks created not by Yarn.
-      // If we don't link the core aspects immediately, the components will fail during load.
-      await this.linkCoreAspectsAndLegacy({
-        linkTeambitBit: false,
-        linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
-        rootPolicy: mergedRootPolicy,
-      });
       if (options?.compile) {
         const compileStartTime = process.hrtime();
         const compileOutputMessage = `compiling components`;
@@ -269,20 +279,53 @@ export class InstallMain {
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
-      await this.link(linkOpts);
-      prevManifests.add(hash(current.manifests));
+      await this.linkCodemods(compDirMap);
+      if (!dependenciesChanged) break;
+      if (!options?.recurringInstall) break;
+      const oldNonLoadedEnvs = this.getOldNonLoadedEnvs();
+      if (!oldNonLoadedEnvs.length) break;
+      prevManifests.add(manifestsHash(current.manifests));
       // We need to clear cache before creating the new component manifests.
       this.workspace.consumer.componentLoader.clearComponentsCache();
-      this.workspace.clearCache();
-      current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
+      // We don't want to clear the failed to load envs because we want to show the warning at the end
+      this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+      current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
-    } while ((!prevManifests.has(hash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
+    } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
+    // We clean node_modules only after the last install.
+    // Otherwise, we might load an env from a location that we later remove.
+    await installer.pruneModules(this.workspace.path);
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
   }
 
-  private async addConfiguredAspectsToWorkspacePolicy(rootPolicy: WorkspacePolicy): Promise<WorkspacePolicy> {
+  private async _getComponentsManifestsAndRootPolicy(
+    installer: DependencyInstaller,
+    options: GetComponentsAndManifestsOptions & {
+      addMissingDeps?: boolean;
+    }
+  ): Promise<{ componentsAndManifests: ComponentsAndManifests; mergedRootPolicy: WorkspacePolicy }> {
+    const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
+    const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, options);
+    if (!options?.addMissingDeps) {
+      return { componentsAndManifests, mergedRootPolicy };
+    }
+    const addedNewPkgs = await this._addMissingPackagesToRootPolicy(
+      componentsAndManifests.manifests[this.workspace.path]
+    );
+    if (!addedNewPkgs) {
+      return { componentsAndManifests, mergedRootPolicy };
+    }
+    const mergedRootPolicyWithMissingDeps = await this.addConfiguredAspectsToWorkspacePolicy();
+    return {
+      mergedRootPolicy: mergedRootPolicyWithMissingDeps,
+      componentsAndManifests: await this._getComponentsManifests(installer, mergedRootPolicyWithMissingDeps, options),
+    };
+  }
+
+  private async addConfiguredAspectsToWorkspacePolicy(): Promise<WorkspacePolicy> {
+    const rootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const aspectsPackages = await this.workspace.getConfiguredUserAspectsPackages({ externalsOnly: true });
     aspectsPackages.forEach((aspectsPackage) => {
       rootPolicy.add({
@@ -296,13 +339,41 @@ export class InstallMain {
     return rootPolicy;
   }
 
+  private async _addMissingPackagesToRootPolicy(
+    rootManifest: ProjectManifest,
+    options?: WorkspaceInstallOptions
+  ): Promise<boolean> {
+    const packages = await this._getMissingPackagesWithoutRootDeps(rootManifest);
+    if (packages && packages.length) {
+      await this._addPackages(packages, options);
+    }
+    return packages.length > 0;
+  }
+
+  private async _getMissingPackagesWithoutRootDeps(rootManifest: ProjectManifest) {
+    const packages = await this._getAllMissingPackages();
+    const rootDeps = {
+      ...rootManifest?.devDependencies,
+      ...rootManifest?.dependencies,
+    };
+    return packages.filter((pkg) => !rootDeps[pkg]);
+  }
+
+  private async _getAllMissingPackages(): Promise<string[]> {
+    const comps = await this.workspace.list();
+    return uniq(
+      comps
+        .map((comp) =>
+          Object.values(comp.state.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data).flat()
+        )
+        .flat()
+    );
+  }
+
   private async _getComponentsManifests(
     dependencyInstaller: DependencyInstaller,
     rootPolicy: WorkspacePolicy,
-    installOptions: Pick<
-      PackageManagerInstallOptions,
-      'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents' | 'nodeLinker'
-    >
+    installOptions: GetComponentsAndManifestsOptions
   ): Promise<ComponentsAndManifests> {
     const componentDirectoryMap = await this.getComponentsDirectory([]);
     let manifests = await dependencyInstaller.getComponentManifests({
@@ -312,6 +383,7 @@ export class InstallMain {
       rootDir: this.workspace.path,
       referenceLocalPackages: this.dependencyResolver.hasRootComponents() && installOptions.nodeLinker === 'isolated',
     });
+
     if (this.dependencyResolver.hasRootComponents()) {
       const rootManifests = await this._getRootManifests(manifests);
       await this._updateRootDirs(Object.keys(rootManifests));
@@ -324,6 +396,20 @@ export class InstallMain {
       componentDirectoryMap,
       manifests,
     };
+  }
+
+  /**
+   * This function returns a list of old non-loaded environments names.
+   * @returns an array of strings called `oldNonLoadedEnvs`. This array contains the names of environment variables that
+   * failed to load as extensions and are also don't have an env.jsonc file.
+   * If this list is not empty, then the user might need to run another install to make sure all dependencies resolved
+   * correctly
+   */
+  public getOldNonLoadedEnvs() {
+    const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
+    const envsWithoutManifest = Array.from(this.dependencyResolver.envsWithoutManifest);
+    const oldNonLoadedEnvs = intersection(nonLoadedEnvs, envsWithoutManifest);
+    return oldNonLoadedEnvs;
   }
 
   private async _updateRootDirs(rootDirs: string[]) {
@@ -370,11 +456,12 @@ export class InstallMain {
       await Promise.all(
         envs.map(async (envId) => {
           return [
-            getRootComponentDir(this.workspace.path, envId),
+            getRootComponentDir(this.workspace.path, envId.toString()),
             {
               dependencies: {
                 ...(await this._getEnvDependencies(envId)),
                 ...workspaceDeps,
+                ...(await this._getEnvPackage(envId)),
               },
               dependenciesMeta: workspaceDepsMeta,
               installConfig: {
@@ -387,15 +474,31 @@ export class InstallMain {
     );
   }
 
-  private async _getEnvDependencies(envId: string): Promise<Record<string, string>> {
-    const env = this.envs.getEnvDefinitionByStringId(envId);
-    if (!env) throw new BitError(`Cannot find environment with id: ${envId}`);
-    const policy = await this.dependencyResolver.getComponentEnvPolicyFromEnvDefinition(env);
+  private async _getEnvDependencies(envId: ComponentID): Promise<Record<string, string>> {
+    const policy = await this.dependencyResolver.getEnvPolicyFromEnvId(envId);
+    if (!policy) return {};
     return Object.fromEntries(
       policy.selfPolicy.entries
         .filter(({ force, value }) => force && value.version !== '-')
         .map(({ dependencyId, value }) => [dependencyId, value.version])
     );
+  }
+
+  /**
+   * Return the package name of the env with its version.
+   * (only if the env is not a core env and is not in the workspace)
+   * @param envId
+   * @returns
+   */
+  private async _getEnvPackage(envId: ComponentID): Promise<Record<string, string> | undefined> {
+    if (this.envs.isCoreEnv(envId.toStringWithoutVersion())) return undefined;
+    const inWs = await this.workspace.hasId(envId);
+    if (inWs) return undefined;
+    const envComponent = await this.envs.getEnvComponentByEnvId(envId.toString(), envId.toString());
+    if (!envComponent) return undefined;
+    const packageName = this.dependencyResolver.getPackageName(envComponent);
+    const version = envId.version;
+    return { [packageName]: version };
   }
 
   private async _getAppManifests(
@@ -412,7 +515,7 @@ export class InstallMain {
             const appPkgName = this.dependencyResolver.getPackageName(app);
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
             if (!appManifest) return null;
-            const envId = this.envs.getEnvId(app);
+            const envId = await this.envs.calculateEnvId(app);
             return [
               getRootComponentDir(this.workspace.path, app.id.toString()),
               {
@@ -437,10 +540,12 @@ export class InstallMain {
     );
   }
 
-  private async _getAllUsedEnvIds(): Promise<string[]> {
-    const envs = new Set<string>();
-    (await this.workspace.list()).forEach((component) => {
-      envs.add(this.envs.getEnvId(component));
+  private async _getAllUsedEnvIds(): Promise<ComponentID[]> {
+    const envs = new Set<ComponentID>();
+    const components = await this.workspace.list();
+    await pMapSeries(components, async (component) => {
+      const envId = await this.envs.calculateEnvId(component);
+      envs.add(envId);
     });
     return Array.from(envs.values());
   }
@@ -555,36 +660,45 @@ export class InstallMain {
     return this._installModules({ dedupe: true });
   }
 
-  async linkCoreAspectsAndLegacy(options: WorkspaceLinkOptions = {}) {
-    const linker = this.dependencyResolver.getLinker({
-      rootDir: this.workspace.path,
-      linkingOptions: options,
-    });
-    const compIds = await this.workspace.listIds();
-    const res = await linker.linkCoreAspectsAndLegacy(this.workspace.path, compIds, options.rootPolicy, options);
-    return res;
-  }
-
-  async link(options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
+  /**
+   * This function returns all the locations of the external links that should be created inside node_modules.
+   * This information may then be passed to the package manager, which will create the links on its own.
+   */
+  async calculateLinks(
+    options: WorkspaceLinkOptions = {}
+  ): Promise<{ linkResults: WorkspaceLinkResults; linkedRootDeps: Record<string, string> }> {
     await pMapSeries(this.preLinkSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
     const compDirMap = await this.getComponentsDirectory([]);
-    const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const linker = this.dependencyResolver.getLinker({
       rootDir: this.workspace.path,
       linkingOptions: options,
     });
-    const res = await linker.link(this.workspace.path, mergedRootPolicy, compDirMap, options);
+    const { linkResults: res, linkedRootDeps } = await linker.calculateLinkedDeps(
+      this.workspace.path,
+      compDirMap,
+      options
+    );
     const workspaceRes = res as WorkspaceLinkResults;
 
-    const bitIds = compDirMap.toArray().map(([component]) => component.id._legacy);
-    const legacyResults = await linkToNodeModulesWithCodemod(this.workspace, bitIds, options.rewire ?? false);
+    const legacyResults = await this.linkCodemods(compDirMap, options);
     workspaceRes.legacyLinkResults = legacyResults.linksResults;
     workspaceRes.legacyLinkCodemodResults = legacyResults.codemodResults;
 
     if (this.dependencyResolver.hasRootComponents() && options.linkToBitRoots) {
       await this._linkAllComponentsToBitRoots(compDirMap);
     }
-    return res;
+    return { linkResults: res, linkedRootDeps };
+  }
+
+  async linkCodemods(compDirMap: ComponentMap<string>, options?: { rewire?: boolean }) {
+    const bitIds = compDirMap.toArray().map(([component]) => component.id._legacy);
+    return linkToNodeModulesWithCodemod(this.workspace, bitIds, options?.rewire ?? false);
+  }
+
+  async link(options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
+    const { linkResults, linkedRootDeps } = await this.calculateLinks(options);
+    await createLinks(this.workspace.path, linkedRootDeps);
+    return linkResults;
   }
 
   private async _linkAllComponentsToBitRoots(compDirMap: ComponentMap<string>) {
@@ -592,7 +706,7 @@ export class InstallMain {
     const apps = (await this.app.listAppsFromComponents()).map((component) => component.id.toString());
     await Promise.all(
       [...envs, ...apps].map(async (id) => {
-        await fs.mkdirp(getRootComponentDir(this.workspace.path, id));
+        await fs.mkdirp(getRootComponentDir(this.workspace.path, id.toString()));
       })
     );
     await linkPkgsToBitRoots(
@@ -675,7 +789,6 @@ export class InstallMain {
     LoggerAspect,
     VariantsAspect,
     CLIAspect,
-    CommunityAspect,
     CompilerAspect,
     IssuesAspect,
     EnvsAspect,
@@ -685,13 +798,12 @@ export class InstallMain {
   static runtime = MainRuntime;
 
   static async provider(
-    [dependencyResolver, workspace, loggerExt, variants, cli, community, compiler, issues, envs, app]: [
+    [dependencyResolver, workspace, loggerExt, variants, cli, compiler, issues, envs, app]: [
       DependencyResolverMain,
       Workspace,
       LoggerMain,
       VariantsMain,
       CLIMain,
-      CommunityMain,
       CompilerMain,
       IssuesMain,
       EnvsMain,
@@ -719,7 +831,7 @@ export class InstallMain {
       new InstallCmd(installExt, workspace, logger),
       new UninstallCmd(installExt),
       new UpdateCmd(installExt),
-      new LinkCommand(installExt, workspace, logger, community.getDocsDomain()),
+      new LinkCommand(installExt, workspace, logger),
     ];
     // For now do not automate installation during aspect resolving
     // workspace.registerOnAspectsResolve(installExt.onAspectsResolveSubscriber.bind(installExt));
@@ -756,3 +868,12 @@ function hasComponentsFromWorkspaceInMissingDeps({
 InstallAspect.addRuntime(InstallMain);
 
 export default InstallMain;
+
+function manifestsHash(manifests: Record<string, ProjectManifest>): string {
+  // We don't care if the type of the dependency changes as it doesn't change the node_modules structure
+  const depsByProjectPaths = mapValues(manifests, (manifest) => ({
+    ...manifest.devDependencies,
+    ...manifest.dependencies,
+  }));
+  return hash(depsByProjectPaths);
+}

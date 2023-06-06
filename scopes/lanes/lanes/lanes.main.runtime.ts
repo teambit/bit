@@ -29,6 +29,8 @@ import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-w
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
+import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -74,6 +76,7 @@ export type SwitchLaneOptions = {
   alias?: string;
   merge?: MergeStrategy;
   getAll?: boolean;
+  pattern?: string;
   skipDependencyInstallation?: boolean;
   verbose?: boolean;
   override?: boolean;
@@ -138,9 +141,11 @@ export class LanesMain {
   }): Promise<LaneData[]> {
     const showMergeData = Boolean(merged || notMerged);
     const consumer = this.workspace?.consumer;
+
     if (remote) {
+      const laneId = name ? LaneId.from(name, remote) : undefined;
       const remoteObj = await getRemoteByName(remote, consumer);
-      const lanes = await remoteObj.listLanes(name, showMergeData);
+      const lanes = await remoteObj.listLanes(laneId?.toString(), showMergeData);
       // no need to filter soft-removed here. it was filtered already in the remote
       return lanes;
     }
@@ -160,6 +165,11 @@ export class LanesMain {
     return this.filterSoftRemovedLaneComps(lanes);
   }
 
+  async parseLaneId(idStr: string): Promise<LaneId> {
+    const scope: LegacyScope = this.scope.legacyScope;
+    return scope.lanes.parseLaneIdFromString(idStr);
+  }
+
   private async filterSoftRemovedLaneComps(lanes: LaneData[]): Promise<LaneData[]> {
     return Promise.all(
       lanes.map(async (lane) => {
@@ -170,7 +180,15 @@ export class LanesMain {
             (
               await this.getLaneComponentIds(lane)
             ).map(async (laneCompId) => {
-              if (await this.scope.isComponentRemoved(laneCompId)) return undefined;
+              try {
+                if (await this.scope.isComponentRemoved(laneCompId)) return undefined;
+              } catch (err) {
+                if (err instanceof ComponentNotFound)
+                  throw new Error(
+                    `component "${laneCompId.toString()}" from the lane "${lane.id.toString()}" not found`
+                  );
+                throw err;
+              }
               return { id: laneCompId._legacy, head: laneCompId.version as string };
             })
           )
@@ -461,7 +479,7 @@ please create a new lane instead, which will include all components of this lane
 
   /**
    * fetch the lane object and its components from the remote.
-   * save the objects to the local scope.
+   * save the objects and the lane to the local scope.
    * this method doesn't change anything in the workspace.
    */
   async fetchLaneWithItsComponents(laneId: LaneId): Promise<Lane> {
@@ -471,8 +489,9 @@ please create a new lane instead, which will include all components of this lane
     }
     const lane = await this.importer.importLaneObject(laneId);
     if (!lane) throw new Error(`unable to import lane ${laneId.toString()} from the remote`);
-    const { importedIds } = await this.importer.fetchLaneWithComponents(lane);
-    this.logger.debug(`fetching lane ${laneId.toString()} done, fetched ${importedIds.length} components`);
+
+    await this.importer.fetchLaneComponents(lane);
+    this.logger.debug(`fetching lane ${laneId.toString()} done, fetched ${lane.components.length} components`);
     return lane;
   }
 
@@ -517,7 +536,7 @@ please create a new lane instead, which will include all components of this lane
    */
   async switchLanes(
     laneName: string,
-    { alias, merge, getAll = false, skipDependencyInstallation = false }: SwitchLaneOptions
+    { alias, merge, pattern, getAll = false, skipDependencyInstallation = false }: SwitchLaneOptions
   ) {
     if (!this.workspace) {
       throw new BitError(`unable to switch lanes outside of Bit workspace`);
@@ -537,6 +556,7 @@ please create a new lane instead, which will include all components of this lane
     const switchProps = {
       laneName,
       existingOnWorkspaceOnly: !getAll,
+      pattern,
       alias,
     };
     const checkoutProps = {
@@ -792,6 +812,19 @@ please create a new lane instead, which will include all components of this lane
     };
   }
 
+  private async recreateNewLaneIfDeleted() {
+    if (!this.workspace) return;
+    const laneId = this.getCurrentLaneId();
+    if (!laneId || laneId.isDefault() || this.workspace.consumer.bitMap.isLaneExported) {
+      return;
+    }
+    const laneObj = await this.scope.legacyScope.getCurrentLaneObject();
+    if (laneObj) {
+      return;
+    }
+    await this.createLane(laneId.name, { scope: laneId.scope });
+  }
+
   async addLaneReadme(readmeComponentIdStr: string, laneName?: string): Promise<{ result: boolean; message?: string }> {
     if (!this.workspace) {
       throw new BitError(`unable to track a lane readme component outside of Bit workspace`);
@@ -836,6 +869,60 @@ please create a new lane instead, which will include all components of this lane
     }
     await this.workspace.bitMap.write();
     return { result: true };
+  }
+
+  /**
+   * if the local lane was forked from another lane, this gets the differences between the two.
+   * it also fetches the original lane from the remote to make sure the data is up to date.
+   */
+  async listUpdatesFromForked(componentsList: ComponentsList): Promise<DivergeDataPerId[]> {
+    const consumer = this.workspace?.consumer;
+    if (!consumer) throw new Error(`unable to get listUpdatesFromForked outside of a workspace`);
+    if (consumer.isOnMain()) {
+      return [];
+    }
+    const lane = await consumer.getCurrentLaneObject();
+    const forkedFromLaneId = lane?.forkedFrom;
+    if (!forkedFromLaneId) {
+      return [];
+    }
+    const forkedFromLane = await consumer.scope.loadLane(forkedFromLaneId);
+    if (!forkedFromLane) return []; // should we fetch it here?
+
+    const workspaceIds = consumer.bitMap.getAllBitIds();
+
+    const duringMergeIds = componentsList.listDuringMergeStateComponents();
+
+    const componentsFromModel = await componentsList.getModelComponents();
+    const compFromModelOnWorkspace = componentsFromModel
+      .filter((c) => workspaceIds.hasWithoutVersion(c.toBitId()))
+      // if a component is merge-pending, it needs to be resolved first before getting more updates from main
+      .filter((c) => !duringMergeIds.hasWithoutVersion(c.toBitId()));
+
+    // by default, when on a lane, forked is not fetched. we need to fetch it to get the latest updates.
+    await this.fetchLaneWithItsComponents(forkedFromLaneId);
+
+    const remoteForkedLane = await consumer.scope.objects.remoteLanes.getRemoteLane(forkedFromLaneId);
+    if (!remoteForkedLane.length) return [];
+
+    const results = await Promise.all(
+      compFromModelOnWorkspace.map(async (modelComponent) => {
+        const headOnForked = remoteForkedLane.find((c) => c.id.isEqualWithoutVersion(modelComponent.toBitId()));
+        const headOnLane = modelComponent.laneHeadLocal;
+        if (!headOnForked || !headOnLane) return undefined;
+        const divergeData = await getDivergeData({
+          repo: consumer.scope.objects,
+          modelComponent,
+          targetHead: headOnForked.head,
+          sourceHead: headOnLane,
+          throws: false,
+        });
+        if (!divergeData.snapsOnTargetOnly.length && !divergeData.err) return undefined;
+        return { id: modelComponent.toBitId(), divergeData };
+      })
+    );
+
+    return compact(results);
   }
 
   private async getLaneDataOfDefaultLane(): Promise<LaneData | null> {
@@ -942,6 +1029,9 @@ please create a new lane instead, which will include all components of this lane
       new LaneImportCmd(switchCmd),
     ];
     cli.register(laneCmd, switchCmd);
+    cli.registerOnStart(async () => {
+      await lanesMain.recreateNewLaneIfDeleted();
+    });
     graphql.register(lanesSchema(lanesMain));
     express.register([
       new LanesCreateRoute(lanesMain, logger),

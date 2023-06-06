@@ -19,7 +19,7 @@ import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import Component from '@teambit/legacy/dist/consumer/component';
-import { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
+import { applyModifiedVersion } from '@teambit/checkout';
 import {
   FileStatus,
   getMergeStrategyInteractive,
@@ -200,6 +200,7 @@ export default class ImportComponents {
       const components = await multipleVersionDependenciesToConsumer(versionDependenciesArr, this.scope.objects);
       await this._fetchDivergeData(components);
       this._throwForDivergedHistory();
+      await this.throwForComponentsFromAnotherLane(components.map((c) => c.id));
       componentWriterResults = await this._writeToFileSystem(components);
       await this._saveLaneDataIfNeeded(components);
       writtenComponents = components;
@@ -243,6 +244,40 @@ export default class ImportComponents {
     }
   }
 
+  private async throwForComponentsFromAnotherLane(bitIds: BitId[]) {
+    if (this.options.objectsOnly) return;
+    const currentLaneId = this.workspace.getCurrentLaneId();
+    const currentRemoteLane = currentLaneId
+      ? this.options.lanes?.lanes.find((l) => l.toLaneId().isEqual(currentLaneId))
+      : undefined;
+    const currentLane = await this.workspace.getCurrentLaneObject();
+    const idsFromAnotherLane: BitId[] = [];
+    if (currentRemoteLane) {
+      await Promise.all(
+        bitIds.map(async (bitId) => {
+          const isOnCurrentLane =
+            (await this.scope.isPartOfLaneHistory(bitId, currentRemoteLane)) ||
+            (currentLane && (await this.scope.isPartOfLaneHistory(bitId, currentLane))) ||
+            (await this.scope.isPartOfMainHistory(bitId));
+          if (!isOnCurrentLane) idsFromAnotherLane.push(bitId);
+        })
+      );
+    } else {
+      await Promise.all(
+        bitIds.map(async (bitId) => {
+          const isIdOnMain = await this.scope.isPartOfMainHistory(bitId);
+          if (!isIdOnMain) idsFromAnotherLane.push(bitId);
+        })
+      );
+    }
+    if (idsFromAnotherLane.length) {
+      throw new BitError(`unable to import the following component(s) as they belong to other lane(s):
+${idsFromAnotherLane.map((id) => id.toString()).join(', ')}
+if you need this specific snap, find the lane this snap is belong to, then run "bit lane merge <lane-id> [component-id]" to merge this component from the lane.
+`);
+    }
+  }
+
   private async _importComponentsObjects(
     ids: BitIds,
     {
@@ -271,7 +306,7 @@ export default class ImportComponents {
       : await scopeComponentsImporter.importMany({
           ids,
           ignoreMissingHead,
-          lanes: lane ? [lane] : undefined,
+          lane,
           preferDependencyGraph: !this.options.fetchDeps,
           // when user is running "bit import", we want to re-fetch if it wasn't built. todo: check if this can be disabled when not needed
           reFetchUnBuiltVersion: true,
@@ -312,7 +347,7 @@ export default class ImportComponents {
     const idsWithoutWildcardPreferFromLane = idsWithoutWildcard.map((idStr) => {
       const id = BitId.parse(idStr, true);
       const fromLane = bitIdsFromLane.searchWithoutVersion(id);
-      return fromLane || id;
+      return fromLane && !id.hasVersion() ? fromLane : id;
     });
 
     const bitIds: BitId[] = [...idsWithoutWildcardPreferFromLane];

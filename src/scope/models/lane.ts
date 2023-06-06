@@ -132,7 +132,7 @@ export default class Lane extends BitObject {
     return Buffer.from(str);
   }
   addComponent(component: LaneComponent) {
-    const existsComponent = this.getComponentByName(component.id);
+    const existsComponent = this.getComponent(component.id);
     if (existsComponent) {
       existsComponent.id = component.id;
       existsComponent.head = component.head;
@@ -215,9 +215,9 @@ export default class Lane extends BitObject {
   }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
-    // validate that the head
+    const bitIds = this.toBitIds();
     this.components.forEach((component) => {
-      if (this.components.filter((c) => c.id.name === component.id.name).length > 1) {
+      if (bitIds.filterWithoutVersion(component.id).length > 1) {
         throw new ValidationError(`${message}, the following component is duplicated "${component.id.name}"`);
       }
       if (!isHash(component.head.hash)) {

@@ -1,22 +1,21 @@
 import cliSpinners from 'cli-spinners';
-import os from 'os';
 import * as path from 'path';
 import format from 'string-format';
+import { homedir, platform } from 'os';
 
 import { PathOsBased } from './utils/path';
 import { getSync } from './api/consumer/lib/global-config';
 
-const userHome = require('user-home');
 const packageFile = require('../package.json');
 
-export const IS_WINDOWS = os.platform() === 'win32';
+export const IS_WINDOWS = platform() === 'win32';
 
 function getDirectory(): PathOsBased {
   if (process.platform === 'win32' && process.env.LOCALAPPDATA) {
     return path.join(process.env.LOCALAPPDATA, 'Bit');
   }
 
-  return path.join(userHome, '.bit');
+  return path.join(homedir(), '.bit');
 }
 
 export const CACHE_GLOBALS_ENV = 'BIT_GLOBALS_DIR';
@@ -27,7 +26,7 @@ function getCacheDirectory(): PathOsBased {
     return fromEnvVar;
   }
   if (process.platform === 'darwin' || process.platform === 'linux') {
-    return path.join(userHome, 'Library', 'Caches', 'Bit');
+    return path.join(homedir(), 'Library', 'Caches', 'Bit');
   }
 
   return getDirectory();
@@ -220,7 +219,7 @@ export const CENTRAL_BIT_HUB_NAME = getCloudDomain();
 
 export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
 
-export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
+export const DEFAULT_SSH_KEY_FILE = `${homedir()}/.ssh/id_rsa`;
 
 export const DEFAULT_BIT_ENV = 'production';
 
@@ -337,6 +336,8 @@ export const CFG_FEATURE_TOGGLE = 'features';
 export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
 export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
+
+export const CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS = 'default_resolve_envs_from_roots';
 
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';

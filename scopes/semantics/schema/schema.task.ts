@@ -34,7 +34,7 @@ export class SchemaTask implements BuildTask {
     await pMapSeries(capsules, async (capsule) => {
       const component = capsule.component;
       try {
-        const schema = await this.schema.getSchema(component);
+        const schema = await this.schema.getSchema(component, true, true, capsule.path);
         const schemaObj = schema.toObject();
         await fs.outputFile(join(capsule.path, getSchemaArtifactPath()), JSON.stringify(schemaObj, null, 2));
         schemaResult.push({
@@ -43,6 +43,7 @@ export class SchemaTask implements BuildTask {
           endTime: Date.now(),
         });
       } catch (e) {
+        this.logger.warn(`failed extracting schema for ${component.id.toString()}`);
         /**
          * @todo once schema extractor is more stable change this to an error
          */

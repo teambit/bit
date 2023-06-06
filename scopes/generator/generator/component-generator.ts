@@ -6,7 +6,9 @@ import { Workspace } from '@teambit/workspace';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import camelcase from 'camelcase';
 import { BitError } from '@teambit/bit-error';
+import { Logger } from '@teambit/logger';
 import { TrackerMain } from '@teambit/tracker';
+import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -34,6 +36,7 @@ export class ComponentGenerator {
     private envs: EnvsMain,
     private newComponentHelper: NewComponentHelperMain,
     private tracker: TrackerMain,
+    private logger: Logger,
     private aspectId: string,
     private envId?: ComponentID
   ) {}
@@ -60,6 +63,18 @@ export class ComponentGenerator {
     });
 
     await this.workspace.bitMap.write();
+
+    const ids = generateResults.map((r) => r.id);
+    try {
+      await linkToNodeModulesByIds(
+        this.workspace,
+        ids.map((id) => id._legacy)
+      );
+    } catch (err: any) {
+      this.logger.consoleFailure(
+        `failed linking the new components to node_modules, please run "bit link" manually. error: ${err.message}`
+      );
+    }
 
     return generateResults;
   }
@@ -176,11 +191,8 @@ export class ComponentGenerator {
       // the component template has an env and the user wants a different env.
       delete config[templateEnv];
     }
-    const userEnvId = await this.workspace.resolveComponentId(userEnv);
-    const userEnvIdWithPotentialVersion = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(userEnvId);
-    config[userEnvIdWithPotentialVersion] = {};
-    config[EnvsAspect.id] = config[EnvsAspect.id] || {};
-    config[EnvsAspect.id].env = userEnvId.toStringWithoutVersion();
+    await this.tracker.addEnvToConfig(userEnv, config);
+
     return config;
   }
 

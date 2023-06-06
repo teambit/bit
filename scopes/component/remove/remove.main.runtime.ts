@@ -1,6 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
@@ -25,22 +25,22 @@ export type RemoveInfo = {
 };
 
 export class RemoveMain {
-  constructor(private workspace: Workspace, private logger: Logger, private importer: ImporterMain) {}
+  constructor(private workspace: Workspace, public logger: Logger, private importer: ImporterMain) {}
 
   async remove({
     componentsPattern,
-    force,
-    remote,
-    track,
-    deleteFiles,
-    fromLane,
+    force = false,
+    remote = false,
+    track = false,
+    deleteFiles = true,
+    fromLane = false,
   }: {
     componentsPattern: string;
-    force: boolean;
-    remote: boolean;
-    track: boolean;
-    deleteFiles: boolean;
-    fromLane: boolean;
+    force?: boolean;
+    remote?: boolean;
+    track?: boolean;
+    deleteFiles?: boolean;
+    fromLane?: boolean;
   }): Promise<any> {
     this.logger.setStatusLine(BEFORE_REMOVE);
     const bitIds = remote
@@ -61,12 +61,31 @@ export class RemoveMain {
     return removeResults;
   }
 
+  /**
+   * remove components from the workspace.
+   */
+  async removeLocallyByIds(ids: BitId[], { force = false }: { force?: boolean } = {}) {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    const results = await removeComponents({
+      consumer: this.workspace.consumer,
+      ids: BitIds.fromArray(ids),
+      force,
+      remote: false,
+      track: false,
+      deleteFiles: true,
+      fromLane: false,
+    });
+    await this.workspace.bitMap.write();
+
+    return results;
+  }
+
   async softRemove(componentsPattern: string): Promise<ComponentID[]> {
     if (!this.workspace) throw new ConsumerNotFound();
     const currentLane = await this.workspace.getCurrentLaneObject();
     if (currentLane?.isNew) {
       throw new BitError(
-        `unable to soft-remove on a new (not-exported) lane "${currentLane.name}". please remove without --soft`
+        `unable to soft-remove on a new (not-exported) lane "${currentLane.name}". please remove without --delete`
       );
     }
     const componentIds = await this.workspace.idsByPattern(componentsPattern);
@@ -74,7 +93,7 @@ export class RemoveMain {
     const newComps = components.filter((c) => !c.id.hasVersion());
     if (newComps.length) {
       throw new BitError(
-        `unable to soft-remove the following new component(s), please remove them without --soft\n${newComps
+        `unable to soft-remove the following new component(s), please remove them without --delete\n${newComps
           .map((c) => c.id.toString())
           .join('\n')}`
       );

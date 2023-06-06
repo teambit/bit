@@ -2,7 +2,6 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
-import CommunityAspect, { CommunityMain } from '@teambit/community';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import R from 'ramda';
 import semver, { ReleaseType } from 'semver';
@@ -21,7 +20,6 @@ import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import pMap from 'p-map';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
@@ -135,6 +133,7 @@ export class SnappingMain {
     forceDeploy = false,
     incrementBy = 1,
     disableTagAndSnapPipelines = false,
+    failFast = false,
   }: {
     ids?: string[];
     all?: boolean | string;
@@ -145,6 +144,7 @@ export class SnappingMain {
     ignoreIssues?: string;
     scope?: string | boolean;
     incrementBy?: number;
+    failFast?: boolean;
   } & Partial<BasicTagParams>): Promise<TagResults | null> {
     if (soft) build = false;
     if (disableTagAndSnapPipelines && forceDeploy) {
@@ -179,13 +179,9 @@ export class SnappingMain {
     const legacyBitIds = BitIds.fromArray(bitIds);
 
     this.logger.debug(`tagging the following components: ${legacyBitIds.toString()}`);
-    Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(legacyBitIds)}`);
-    if (!soft) {
-      await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
-    }
-    const consumerComponents = await this.loadComponentsForTag(legacyBitIds);
+    const components = await this.loadComponentsForTagOrSnap(legacyBitIds, !soft);
+    const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
-    const components = await this.workspace.getManyByLegacy(consumerComponents);
     await this.throwForComponentIssues(components, ignoreIssues);
     this.throwForPendingImport(consumerComponents);
 
@@ -212,6 +208,7 @@ export class SnappingMain {
       incrementBy,
       packageManagerConfigRootDir: this.workspace.path,
       dependencyResolver: this.dependencyResolver,
+      exitOnFirstFailedTask: failFast,
     });
 
     const tagResults = { taggedComponents, autoTaggedResults, isSoftTag: soft, publishedPackages };
@@ -427,6 +424,7 @@ export class SnappingMain {
     disableTagAndSnapPipelines = false,
     forceDeploy = false,
     unmodified = false,
+    exitOnFirstFailedTask = false,
   }: {
     pattern?: string;
     legacyBitIds?: BitIds;
@@ -440,6 +438,7 @@ export class SnappingMain {
     disableTagAndSnapPipelines?: boolean;
     forceDeploy?: boolean;
     unmodified?: boolean;
+    exitOnFirstFailedTask?: boolean;
   }): Promise<SnapResults | null> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     if (pattern && legacyBitIds) throw new Error(`please pass either pattern or legacyBitIds, not both`);
@@ -449,10 +448,9 @@ export class SnappingMain {
     const ids = legacyBitIds || (await getIdsToSnap(this.workspace));
     if (!ids) return null;
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
-    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
-    const consumerComponents = await this.loadComponentsForTag(ids);
+    const components = await this.loadComponentsForTagOrSnap(ids);
+    const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
-    const components = await this.workspace.getManyByLegacy(consumerComponents);
     await this.throwForComponentIssues(components, ignoreIssues);
     this.throwForPendingImport(consumerComponents);
 
@@ -476,6 +474,7 @@ export class SnappingMain {
       forceDeploy,
       packageManagerConfigRootDir: this.workspace.path,
       dependencyResolver: this.dependencyResolver,
+      exitOnFirstFailedTask,
     });
 
     const snapResults: Partial<SnapResults> = {
@@ -485,7 +484,7 @@ export class SnappingMain {
 
     snapResults.newComponents = newComponents;
     const currentLane = consumer.getCurrentLaneId();
-    snapResults.laneName = currentLane.isDefault() ? null : currentLane.name;
+    snapResults.laneName = currentLane.isDefault() ? null : currentLane.toString();
     await consumer.onDestroy();
     await stagedConfig?.write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -774,15 +773,14 @@ there are matching among unmodified components thought. consider using --unmodif
     return artifacts;
   }
 
-  private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
-    const { components, removedComponents } = await this.workspace.consumer.loadComponents(ids.toVersionLatest());
-    components.forEach((component) => {
-      const componentMap = component.componentMap as ComponentMap;
-      if (!componentMap.rootDir) {
-        throw new Error(`unable to tag ${component.id.toString()}, the "rootDir" is missing in the .bitmap file`);
-      }
-    });
-    return [...components, ...removedComponents];
+  private async loadComponentsForTagOrSnap(ids: BitIds, shouldClearCacheFirst = true): Promise<Component[]> {
+    const compIds = await this.workspace.resolveMultipleComponentIds(ids);
+    if (shouldClearCacheFirst) {
+      await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
+      compIds.map((compId) => this.workspace.clearComponentCache(compId));
+    }
+
+    return this.workspace.getMany(compIds.map((id) => id.changeVersion(undefined)));
   }
 
   private async throwForComponentIssues(components: Component[], ignoreIssues?: string) {
@@ -958,7 +956,6 @@ there are matching among unmodified components thought. consider using --unmodif
   static dependencies = [
     WorkspaceAspect,
     CLIAspect,
-    CommunityAspect,
     LoggerAspect,
     IssuesAspect,
     InsightsAspect,
@@ -972,7 +969,6 @@ there are matching among unmodified components thought. consider using --unmodif
   static async provider([
     workspace,
     cli,
-    community,
     loggerMain,
     issues,
     insights,
@@ -984,7 +980,6 @@ there are matching among unmodified components thought. consider using --unmodif
   ]: [
     Workspace,
     CLIMain,
-    CommunityMain,
     LoggerMain,
     IssuesMain,
     InsightsMain,
@@ -1006,7 +1001,7 @@ there are matching among unmodified components thought. consider using --unmodif
       builder,
       importer
     );
-    const snapCmd = new SnapCmd(community.getBaseDomain(), snapping, logger);
+    const snapCmd = new SnapCmd(snapping, logger);
     const tagCmd = new TagCmd(snapping, logger);
     const tagFromScopeCmd = new TagFromScopeCmd(snapping, logger);
     const snapFromScopeCmd = new SnapFromScopeCmd(snapping, logger);

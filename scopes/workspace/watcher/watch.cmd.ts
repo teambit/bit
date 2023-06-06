@@ -8,7 +8,7 @@ import { OnComponentEventResult } from '@teambit/workspace';
 // import IDs and events
 import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
 
-import { WatchOptions } from './watcher';
+import { EventMessages, WatchOptions } from './watcher';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 import { CheckTypes } from './check-types';
 import { WatcherMain } from './watcher.main.runtime';
@@ -20,66 +20,6 @@ export type WatchCmdOpts = {
 };
 
 export class WatchCommand implements Command {
-  msgs = {
-    onAll: (event: string, path: string) => this.logger.console(`Event: "${event}". Path: ${path}`),
-    onStart: () => {},
-    onReady: (workspace, watchPathsSortByComponent, verbose) => {
-      clearOutdatedData();
-      if (verbose) {
-        this.logger.console(formatWatchPathsSortByComponent(watchPathsSortByComponent));
-      }
-      this.logger.console(
-        chalk.yellow(
-          `Watching for component changes in workspace ${workspace.config.name} (${moment().format('HH:mm:ss')})...\n`
-        )
-      );
-    },
-    onChange: (
-      filePaths: string[],
-      buildResults: OnComponentEventResult[],
-      verbose: boolean,
-      duration,
-      failureMsg?: string
-    ) => {
-      const files = filePaths.join(', ');
-      // clearOutdatedData();
-      if (!buildResults.length) {
-        failureMsg = failureMsg || `The files ${files} have been changed, but nothing to compile`;
-        this.logger.console(`${failureMsg}\n\n`);
-        return;
-      }
-      this.logger.console(`The file(s) ${files} have been changed.\n\n`);
-      this.logger.console(formatCompileResults(buildResults, verbose));
-      this.logger.console(`Finished. (${duration}ms)`);
-      this.logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:mm:ss')})...`));
-    },
-    onAdd: (
-      filePaths: string[],
-      buildResults: OnComponentEventResult[],
-      verbose: boolean,
-      duration,
-      failureMsg?: string
-    ) => {
-      const files = filePaths.join(', ');
-      // clearOutdatedData();
-      if (!buildResults.length) {
-        failureMsg = failureMsg || `The files ${files} have been added, but nothing to compile`;
-        this.logger.console(`${failureMsg}\n\n`);
-        return;
-      }
-      this.logger.console(`The file(s) ${filePaths} have been added.\n\n`);
-      this.logger.console(formatCompileResults(buildResults, verbose));
-      this.logger.console(`Finished. (${duration}ms)`);
-      this.logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:mm:ss')})...`));
-    },
-    onUnlink: (p) => {
-      this.logger.console(`file ${p} has been removed`);
-    },
-    onError: (err) => {
-      this.logger.console(`Watcher error ${err}`);
-    },
-  };
-
   name = 'watch';
   description = 'automatically recompile modified components (on save)';
   helpUrl = 'reference/compiling/compiler-overview';
@@ -144,7 +84,7 @@ export class WatchCommand implements Command {
       }
     };
     const watchOpts: WatchOptions = {
-      msgs: this.msgs,
+      msgs: getMessages(this.logger),
       verbose,
       preCompile: !watchCmdOpts.skipPreCompilation,
       spawnTSServer: Boolean(checkTypes), // if check-types is enabled, it must spawn the tsserver.
@@ -153,6 +93,57 @@ export class WatchCommand implements Command {
     await this.watcher.watch(watchOpts);
     return 'watcher terminated';
   }
+}
+
+function getMessages(logger: Logger): EventMessages {
+  return {
+    onAll: (event: string, path: string) => logger.console(`Event: "${event}". Path: ${path}`),
+    onStart: () => {},
+    onReady: (workspace, watchPathsSortByComponent, verbose) => {
+      clearOutdatedData();
+      if (verbose) {
+        logger.console(formatWatchPathsSortByComponent(watchPathsSortByComponent));
+      }
+      logger.console(
+        chalk.yellow(
+          `Watching for component changes in workspace ${workspace.config.name} (${moment().format('HH:mm:ss')})...\n`
+        )
+      );
+    },
+    onChange: (...args) => {
+      printOnFileEvent(logger, 'changed', ...args);
+    },
+    onAdd: (...args) => {
+      printOnFileEvent(logger, 'added', ...args);
+    },
+    onUnlink: (...args) => {
+      printOnFileEvent(logger, 'removed', ...args);
+    },
+    onError: (err) => {
+      logger.console(`Watcher error ${err}`);
+    },
+  };
+}
+
+function printOnFileEvent(
+  logger: Logger,
+  eventMsgPlaceholder: 'changed' | 'added' | 'removed',
+  filePaths: string[],
+  buildResults: OnComponentEventResult[],
+  verbose: boolean,
+  duration: number,
+  failureMsg?: string
+) {
+  const files = filePaths.join(', ');
+  if (!buildResults.length) {
+    failureMsg = failureMsg || `The files ${files} have been ${eventMsgPlaceholder}, but nothing to compile`;
+    logger.console(`${failureMsg}\n\n`);
+    return;
+  }
+  logger.console(`The file(s) ${files} have been ${eventMsgPlaceholder}.\n\n`);
+  logger.console(formatCompileResults(buildResults, verbose));
+  logger.console(`Finished. (${duration}ms)`);
+  logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:mm:ss')})...`));
 }
 
 /**

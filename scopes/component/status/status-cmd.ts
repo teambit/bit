@@ -64,26 +64,29 @@ export class StatusCmd implements Command {
     }: StatusResult = await this.status.status({ lanes });
     return {
       newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
-      modifiedComponents: modifiedComponents.map((c) => c.toString()),
+      modifiedComponents: modifiedComponents.map((c) => c.toStringWithoutVersion()),
       stagedComponents: stagedComponents.map((c) => ({ id: c.id.toStringWithoutVersion(), versions: c.versions })),
-      unavailableOnMain: unavailableOnMain.map((c) => c.toString()),
+      unavailableOnMain: unavailableOnMain.map((c) => c.toStringWithoutVersion()),
       componentsWithIssues: componentsWithIssues.map((c) => ({
-        id: c.id.toString(),
+        id: c.id.toStringWithoutVersion(),
         issues: c.issues?.toObject(),
       })),
-      importPendingComponents: importPendingComponents.map((id) => id.toString()),
-      autoTagPendingComponents: autoTagPendingComponents.map((s) => s.toString()),
+      importPendingComponents: importPendingComponents.map((id) => id.toStringWithoutVersion()),
+      autoTagPendingComponents: autoTagPendingComponents.map((s) => s.toStringWithoutVersion()),
       invalidComponents,
-      locallySoftRemoved: locallySoftRemoved.map((id) => id.toString()),
-      remotelySoftRemoved: remotelySoftRemoved.map((id) => id.toString()),
-      outdatedComponents: outdatedComponents.map((c) => ({ ...c, id: c.id.toString() })),
-      mergePendingComponents: mergePendingComponents.map((c) => c.id.toString()),
-      componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toString()),
-      softTaggedComponents: softTaggedComponents.map((s) => s.toString()),
-      snappedComponents: snappedComponents.map((s) => s.toString()),
-      pendingUpdatesFromMain: pendingUpdatesFromMain.map((p) => ({ id: p.id.toString(), divergeData: p.divergeData })),
+      locallySoftRemoved: locallySoftRemoved.map((id) => id.toStringWithoutVersion()),
+      remotelySoftRemoved: remotelySoftRemoved.map((id) => id.toStringWithoutVersion()),
+      outdatedComponents: outdatedComponents.map((c) => ({ ...c, id: c.id.toStringWithoutVersion() })),
+      mergePendingComponents: mergePendingComponents.map((c) => c.id.toStringWithoutVersion()),
+      componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toStringWithoutVersion()),
+      softTaggedComponents: softTaggedComponents.map((s) => s.toStringWithoutVersion()),
+      snappedComponents: snappedComponents.map((s) => s.toStringWithoutVersion()),
+      pendingUpdatesFromMain: pendingUpdatesFromMain.map((p) => ({
+        id: p.id.toStringWithoutVersion(),
+        divergeData: p.divergeData,
+      })),
       updatesFromForked: updatesFromForked.map((p) => ({
-        id: p.id.toString(),
+        id: p.id.toStringWithoutVersion(),
         divergeData: p.divergeData,
       })),
       currentLaneId,
@@ -175,8 +178,8 @@ export class StatusCmd implements Command {
     const outdatedStr = outdatedComponents.length ? [outdatedTitle, outdatedDesc, outdatedComps].join('\n') : '';
 
     const pendingMergeTitle = chalk.underline.white('pending merge');
-    const pendingMergeDesc = `(use "bit reset" to add local changes on top of the remote and discard local tags.
-alternatively, to keep local tags/snaps history, use "bit merge <remote-name>/<lane-name> [component-id]")\n`;
+    const pendingMergeDesc = `(use "bit reset" to add local changes on top of the remote and discard local tags/snaps.
+alternatively, to keep local tags/snaps history, use "bit merge [component-id]")\n`;
     const pendingMergeComps = mergePendingComponents
       .map((component) => {
         return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
@@ -198,7 +201,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       ? [compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps].join('\n')
       : '';
 
-    const newComponentDescription = '\n(use "bit tag [version]" to lock a version with all your changes)\n';
+    const newComponentDescription = '\n(use "bit tag" to lock a version with all your changes)\n';
     const newComponentsTitle = newComponents.length
       ? chalk.underline.white('new components') + newComponentDescription
       : '';
@@ -247,10 +250,10 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
     ).join('\n');
 
-    const snappedDesc = '\n(use "bit tag [version]" or "bit tag --snapped [version]" to lock a version)\n';
+    const snappedDesc = '\n(use "bit tag" or "bit tag --snapped" to lock a version)\n';
     const snappedComponentsOutput = immutableUnshift(
       snappedComponents.map((c) => format(c)),
-      snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
+      snappedComponents.length ? chalk.underline.white('snapped components (tag pending)') + snappedDesc : ''
     ).join('\n');
 
     const unavailableOnMainDesc = '\n(use "bit checkout head" to make it available)\n';
