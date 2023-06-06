@@ -129,6 +129,7 @@ export type PreviewAnyComponentData = {
  */
 export type PreviewEnvComponentData = {
   isScaling?: boolean;
+  isSkipIncludes?: boolean;
 };
 
 export type PreviewConfig = {
@@ -243,6 +244,22 @@ export class PreviewMain {
     return previewData;
   }
 
+  isEnvSkipIncludes(envComponent: Component): boolean {
+    const previewData = this.getPreviewData(envComponent);
+    return !!previewData?.skipIncludes;
+  }
+
+  private async calculateDoesSkipIncludes(component: Component): Promise<boolean> {
+    if (this.envs.isUsingCoreEnv(component)) {
+      const isNew = await component.isNew();
+      if (isNew) {
+        return true;
+      }
+    }
+    const envComponent = await this.envs.getEnvComponent(component);
+    return this.isEnvSkipIncludes(envComponent);
+  }
+
   /**
    * Calculate preview data on component load
    * @param component
@@ -252,8 +269,11 @@ export class PreviewMain {
     const doesScaling = await this.calcDoesScalingForComponent(component);
     const dataFromEnv = await this.calcPreviewDataFromEnv(component);
     const envData = (await this.calculateDataForEnvComponent(component)) || {};
+    const skipIncludes = await this.calculateDoesSkipIncludes(component);
+
     const data: PreviewComponentData = {
       doesScaling,
+      skipIncludes,
       ...dataFromEnv,
       ...envData,
     };
@@ -267,7 +287,7 @@ export class PreviewMain {
    */
   async calcPreviewDataFromEnv(
     component: Component
-  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling'> | undefined> {
+  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling' | 'skipIncludes'> | undefined> {
     // Prevent infinite loop that caused by the fact that the env of the aspect env or the env env is the same as the component
     // so we can't load it since during load we are trying to get env component and load it again
     if (
@@ -303,8 +323,7 @@ export class PreviewMain {
     const data = {
       // default to true if the env doesn't have a preview config
       isScaling: previewAspectConfig?.isScaling ?? true,
-      // disalbe it for now, we will re-enable it later
-      // skipIncludes: true,
+      isSkipIncludes: true,
     };
     return data;
   }
