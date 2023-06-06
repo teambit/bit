@@ -7,14 +7,10 @@ export type FileContext = {
 
 export type DependencyContext = {
   /**
-   * path of the imported file.
+   * name of the dependency.
+   * e.g. `lodash` in `import _ from 'lodash'`
    */
-  filepath: string;
-
-  /**
-   * extension of the file.
-   */
-  ext: string;
+  dependency: string;
 
   /**
    * name of the file.
@@ -25,22 +21,6 @@ export type DependencyContext = {
    * directory of the file.
    */
   directory: string;
-
-  /**
-   * name of the dependency.
-   * e.g. `lodash` in `import _ from 'lodash'`
-   */
-  dependency: string;
-
-  /**
-   * content of the file.
-   */
-  content?: string;
-
-  /**
-   * Resolve config of the lookup process.
-   */
-  resolveConfig?: Record<string, any>;
 };
 
 export interface DependencyDetector {
