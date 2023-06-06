@@ -1,7 +1,8 @@
 import { filter } from 'bluebird';
-import { Mutex } from 'async-mutex';
+import { Mutex, withTimeout } from 'async-mutex';
 import mapSeries from 'p-map-series';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
+import { BitError } from '@teambit/bit-error';
 import groupArray from 'group-array';
 import R from 'ramda';
 import { compact, flatten, partition, uniq } from 'lodash';
@@ -33,6 +34,8 @@ import { pMapPool } from '../../utils/promise-with-concurrent';
 
 type HashesPerRemote = { [remoteName: string]: string[] };
 
+const TIMEOUT_FOR_MUTEX = 5 * 60 * 1000; // 5 minutes
+
 /**
  * Helper to import objects/components from remotes.
  * this class is singleton because it uses Mutex to ensure that the same objects are not fetched and written at the same time.
@@ -42,8 +45,16 @@ export default class ScopeComponentsImporter {
   private static instancePerScope: { [scopeName: string]: ScopeComponentsImporter } = {};
   private sources: SourcesRepository;
   private repo: Repository;
-  private fetchWithDepsMutex = new Mutex();
-  private importManyObjectsMutex = new Mutex();
+  private fetchWithDepsMutex = withTimeout(
+    new Mutex(),
+    TIMEOUT_FOR_MUTEX,
+    new BitError(`error: fetch-with-dependencies timeout exceeded (${TIMEOUT_FOR_MUTEX} minutes)`)
+  );
+  private importManyObjectsMutex = withTimeout(
+    new Mutex(),
+    TIMEOUT_FOR_MUTEX,
+    new BitError(`error: fetch-multiple-objects timeout exceeded (${TIMEOUT_FOR_MUTEX} minutes)`)
+  );
   shouldOnlyFetchFromCurrentLane = false;
   private constructor(private scope: Scope) {
     if (!scope) throw new Error('unable to instantiate ScopeComponentsImporter without Scope');
