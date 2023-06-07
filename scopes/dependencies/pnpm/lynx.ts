@@ -326,7 +326,9 @@ export async function install(
         layoutVersion: 5,
         storeDir: storeController.dir,
       } as any);
-      await fs.writeFile(path.join(rootDir, 'package.json'), '{}', 'utf8'); // TODO: this workaround should be removed once pnpm fixes the issue
+      try {
+        await fs.writeFile(path.join(rootDir, 'package.json'), '{}', 'utf8'); // TODO: this workaround should be removed once pnpm fixes the issue
+      } catch {}
       await rebuild.handler(
         {
           ...opts,
@@ -359,39 +361,41 @@ export async function install(
 }
 
 async function linkAllBins(lockfile: Lockfile, virtualStoreDir: string) {
-  await Promise.all(Object.entries(lockfile.packages ?? {}).map(async ([depPath, pkgSnapshot]) => {
-    let hasBin = pkgSnapshot.hasBin;
-    if (!hasBin && lockfile.packages) {
-      for (const [depName, ref] of Object.entries({
-        ...pkgSnapshot.dependencies,
-        ...pkgSnapshot.optionalDependencies,
-      })) {
-        const depRelPath = dp.refToRelative(ref, depName);
-        if (depRelPath) {
-          const depPkgSnapshot = lockfile.packages[depRelPath];
-          if (depPkgSnapshot) {
-            hasBin = depPkgSnapshot.hasBin;
-            if (hasBin) break;
+  await Promise.all(
+    Object.entries(lockfile.packages ?? {}).map(async ([depPath, pkgSnapshot]) => {
+      let hasBin = pkgSnapshot.hasBin;
+      if (!hasBin && lockfile.packages) {
+        for (const [depName, ref] of Object.entries({
+          ...pkgSnapshot.dependencies,
+          ...pkgSnapshot.optionalDependencies,
+        })) {
+          const depRelPath = dp.refToRelative(ref, depName);
+          if (depRelPath) {
+            const depPkgSnapshot = lockfile.packages[depRelPath];
+            if (depPkgSnapshot) {
+              hasBin = depPkgSnapshot.hasBin;
+              if (hasBin) break;
+            }
           }
         }
+        if (!hasBin) return;
       }
-      if (!hasBin) return;
-    }
-    const { name } = nameVerFromPkgSnapshot(depPath, pkgSnapshot);
-    const currentPath = dp.depPathToFilename(depPath);
-    try {
-      const modulesDir = path.join(virtualStoreDir, currentPath, 'node_modules');
-      await linkBins(modulesDir, path.join(modulesDir, name, 'node_modules/.bin'), {
-        warn: () => {},
-      });
-    } catch (err: any) {
-      // eslint-disable-line
-      // Some packages generate their commands with lifecycle hooks.
-      // At this stage, such commands are not generated yet.
-      // For now, we don't hoist such generated commands.
-      // Related issue: https://github.com/pnpm/pnpm/issues/2071
-    }
-  }));
+      const { name } = nameVerFromPkgSnapshot(depPath, pkgSnapshot);
+      const currentPath = dp.depPathToFilename(depPath);
+      try {
+        const modulesDir = path.join(virtualStoreDir, currentPath, 'node_modules');
+        await linkBins(modulesDir, path.join(modulesDir, name, 'node_modules/.bin'), {
+          warn: () => {},
+        });
+      } catch (err: any) {
+        // eslint-disable-line
+        // Some packages generate their commands with lifecycle hooks.
+        // At this stage, such commands are not generated yet.
+        // For now, we don't hoist such generated commands.
+        // Related issue: https://github.com/pnpm/pnpm/issues/2071
+      }
+    })
+  );
 }
 
 /*
