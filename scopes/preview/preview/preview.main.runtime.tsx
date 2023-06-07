@@ -246,7 +246,7 @@ export class PreviewMain {
 
   isEnvSkipIncludes(envComponent: Component): boolean {
     const previewData = this.getPreviewData(envComponent);
-    return !!previewData?.skipIncludes;
+    return !!previewData?.isSkipIncludes;
   }
 
   private async calculateDoesSkipIncludes(component: Component): Promise<boolean> {
@@ -447,12 +447,23 @@ export class PreviewMain {
   }
 
   async isSupportSkipIncludes(component: Component) {
-    const isCore = this.envs.isUsingCoreEnv(component);
-    if (isCore) return false;
-
-    const envComponent = await this.envs.getEnvComponent(component);
-    const previewData = this.getPreviewData(envComponent);
-    return !!previewData?.skipIncludes;
+    const inWorkspace = await this.workspace?.hasId(component.id);
+    if (inWorkspace) {
+      if (this.envs.isUsingCoreEnv(component)) {
+        return true;
+      }
+      const envComponent = await this.envs.getEnvComponent(component);
+      const envSupportSkipIncludes = await this.isEnvSkipIncludes(envComponent);
+      return envSupportSkipIncludes ?? true;
+    }
+    const previewData = this.getPreviewData(component);
+    if (!previewData) return false;
+    if (previewData.skipIncludes) {
+      const envComponent = await this.envs.getEnvComponent(component);
+      const envSupportSkipIncludes = this.isEnvSkipIncludes(envComponent);
+      return !!envSupportSkipIncludes;
+    }
+    return false;
   }
 
   /**
