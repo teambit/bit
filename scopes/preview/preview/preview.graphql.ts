@@ -40,7 +40,7 @@ export function previewSchema(previewExtension: PreviewMain) {
         },
         skipIncludes: ({ component }) => {
           // return true;
-          return previewExtension.isSupportSkipIncludes(component);
+          return previewExtension.doesSkipIncludes(component);
         },
       },
     },

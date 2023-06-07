@@ -446,7 +446,7 @@ export class PreviewMain {
     return !!previewData?.isScaling;
   }
 
-  async isSupportSkipIncludes(component: Component) {
+  async doesSkipIncludes(component: Component) {
     const inWorkspace = await this.workspace?.hasId(component.id);
     if (inWorkspace) {
       if (this.envs.isUsingCoreEnv(component)) {
@@ -457,13 +457,7 @@ export class PreviewMain {
       return envSupportSkipIncludes ?? true;
     }
     const previewData = this.getPreviewData(component);
-    if (!previewData) return false;
-    if (previewData.skipIncludes) {
-      const envComponent = await this.envs.getEnvComponent(component);
-      const envSupportSkipIncludes = this.isEnvSkipIncludes(envComponent);
-      return !!envSupportSkipIncludes;
-    }
-    return false;
+    return previewData?.skipIncludes ?? false;
   }
 
   /**
