@@ -207,10 +207,10 @@ export default class ScopeComponentsImporter {
       return;
     }
     logger.debug(`importMissingHistory, total ${missingHistory.length} component has history missing`);
-    await this.importManyDeltaWithoutDeps({
-      ids: BitIds.fromArray(missingHistory),
-      fromHead: true,
+    await this.importWithoutDeps(BitIds.fromArray(missingHistory).toVersionLatest(), {
+      cache: false,
       collectParents: true,
+      includeVersionHistory: true, // probably not needed
     });
   }
 
@@ -247,9 +247,9 @@ export default class ScopeComponentsImporter {
     logger.profile(`importMissingVersionHistory, ${externalComponents.length} externalComponents`);
     const [compsWithHead, compsWithoutHead] = partition(externalComponents, (comp) => comp.hasHead());
     try {
-      await this.importManyDeltaWithoutDeps({
-        ids: BitIds.fromArray(compsWithoutHead.map((c) => c.toBitId())),
-        fromHead: true,
+      await this.importWithoutDeps(BitIds.fromArray(compsWithoutHead.map((c) => c.toBitId())).toVersionLatest(), {
+        cache: false,
+        includeVersionHistory: true,
       });
     } catch (err) {
       // probably scope doesn't exist, which is fine.
@@ -271,9 +271,9 @@ export default class ScopeComponentsImporter {
     const missingHistory = compact(missingHistoryWithNulls);
     if (!missingHistory.length) return;
     logger.debug(`importMissingVersionHistory, total ${missingHistory.length} component has version-history missing`);
-    await this.importManyDeltaWithoutDeps({
-      ids: BitIds.fromArray(missingHistory),
-      fromHead: true,
+    await this.importWithoutDeps(BitIds.fromArray(missingHistory).toVersionLatest(), {
+      cache: false,
+      includeVersionHistory: true,
     });
     logger.profile(`importMissingVersionHistory, ${externalComponents.length} externalComponents`);
   }
@@ -350,41 +350,6 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead,
       collectParents,
       delta: fetchHeadIfLocalIsBehind,
-    });
-  }
-
-  /**
-   * @deprecated use importWithoutDeps() instead.
-   * no need for the delta anymore now that all remote-scopes support version-history.
-   *
-   * delta between the local head and the remote head. mainly to improve performance
-   * Mainly needed for backward compatibility. once the remotes support version-history (after > 0.0.900),
-   * then no need to calculate delta. just bring the version you want and the version-history object.
-   */
-  async importManyDeltaWithoutDeps({
-    ids,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    fromHead = false,
-    lane,
-    ignoreMissingHead = false,
-    collectParents = false,
-  }: {
-    ids: BitIds;
-    fromHead?: boolean; // previously, this was named "allHistory". now with versionHistory, it only instructs fetch to start from head
-    lane?: Lane | null;
-    ignoreMissingHead?: boolean;
-    collectParents?: boolean;
-  }): Promise<void> {
-    logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
-
-    ids = ids.toVersionLatest();
-    await this.importWithoutDeps(ids, {
-      cache: false,
-      lane: lane || undefined,
-      includeVersionHistory: true,
-      collectParents,
-      ignoreMissingHead,
-      fetchHeadIfLocalIsBehind: !fromHead,
     });
   }
 

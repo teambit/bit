@@ -291,15 +291,17 @@ if you need this specific snap, find the lane this snap is belong to, then run "
     }
   ): Promise<VersionDependencies[]> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
-    await scopeComponentsImporter.importManyDeltaWithoutDeps({
-      ids,
-      fromHead: this.options.allHistory,
-      collectParents: this.options.allHistory,
+    await scopeComponentsImporter.importWithoutDeps(ids.toVersionLatest(), {
+      cache: false,
       lane,
+      includeVersionHistory: true,
+      fetchHeadIfLocalIsBehind: !this.options.allHistory,
+      collectParents: this.options.allHistory,
       // in case a user is merging a lane into a new workspace, then, locally main has head, but remotely the head is
       // empty, until it's exported. going to the remote and asking this component will throw an error if ignoreMissingHead is false
       ignoreMissingHead: true,
     });
+
     loader.start(`import ${ids.length} components with their dependencies (if missing)`);
     const results = fromOriginalScope
       ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)

@@ -7,19 +7,20 @@ export type FileContext = {
 
 export type DependencyContext = {
   /**
-   * path of the imported file.
+   * name of the dependency.
+   * e.g. `lodash` in `import _ from 'lodash'`
    */
-  filepath: string;
+  dependency: string;
 
   /**
-   * extension of the file.
+   * name of the file.
    */
-  ext: string;
+  filename: string;
 
   /**
-   * content of the file.
+   * directory of the file.
    */
-  content?: string;
+  directory: string;
 };
 
 export interface DependencyDetector {
