@@ -121,7 +121,7 @@ export type PreviewAnyComponentData = {
   /**
    * don't allow other aspects implementing a preview definition to be included in your preview.
    */
-  skipIncludes?: boolean;
+  doesSkipIncludes?: boolean;
 };
 
 /**
@@ -245,7 +245,7 @@ export class PreviewMain {
   }
 
   /**
-   * check if the current version of env component supports skipIncludes
+   * check if the current version of env component supports skipping other included previews
    * @param envComponent
    * @returns
    */
@@ -274,11 +274,11 @@ export class PreviewMain {
     const doesScaling = await this.calcDoesScalingForComponent(component);
     const dataFromEnv = await this.calcPreviewDataFromEnv(component);
     const envData = (await this.calculateDataForEnvComponent(component)) || {};
-    const skipIncludes = await this.calculateDoesSkipIncludes(component);
+    const doesSkipIncludes = await this.calculateDoesSkipIncludes(component);
 
     const data: PreviewComponentData = {
       doesScaling,
-      skipIncludes,
+      doesSkipIncludes,
       ...dataFromEnv,
       ...envData,
     };
@@ -292,7 +292,7 @@ export class PreviewMain {
    */
   async calcPreviewDataFromEnv(
     component: Component
-  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling' | 'skipIncludes'> | undefined> {
+  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling' | 'doesSkipIncludes'> | undefined> {
     // Prevent infinite loop that caused by the fact that the env of the aspect env or the env env is the same as the component
     // so we can't load it since during load we are trying to get env component and load it again
     if (
@@ -467,7 +467,7 @@ export class PreviewMain {
       return envSupportSkipIncludes ?? true;
     }
     const previewData = this.getPreviewData(component);
-    return previewData?.skipIncludes ?? false;
+    return previewData?.doesSkipIncludes ?? false;
   }
 
   /**
