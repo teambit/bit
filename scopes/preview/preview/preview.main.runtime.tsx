@@ -244,6 +244,11 @@ export class PreviewMain {
     return previewData;
   }
 
+  /**
+   * check if the current version of env component supports skipIncludes
+   * @param envComponent
+   * @returns
+   */
   isEnvSkipIncludes(envComponent: Component): boolean {
     const previewData = this.getPreviewData(envComponent);
     return !!previewData?.isSkipIncludes;
@@ -446,7 +451,12 @@ export class PreviewMain {
     return !!previewData?.isScaling;
   }
 
-  async doesSkipIncludes(component: Component) {
+  /**
+   * check if the component preview should skip including other previews
+   * @param component
+   * @returns
+   */
+  async doesSkipIncludes(component: Component): Promise<boolean> {
     const inWorkspace = await this.workspace?.hasId(component.id);
     if (inWorkspace) {
       if (this.envs.isUsingCoreEnv(component)) {
