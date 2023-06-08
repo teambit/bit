@@ -51,6 +51,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
     Loader = CompareLoader,
     baseContext,
     compareContext,
+    isFullScreen,
     ...rest
   } = props;
   const baseVersion = useCompareQueryParam('baseVersion');
@@ -161,6 +162,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
     compareContext,
     fieldCompareDataByName,
     fileCompareDataByName,
+    isFullScreen,
   };
 
   const changes =
