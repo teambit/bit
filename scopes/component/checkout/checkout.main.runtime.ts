@@ -134,9 +134,12 @@ export class CheckoutMain {
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
     // which can be an issue when some components are also dependencies of others
     const checkoutPropsLegacy = { ...checkoutProps, ids: checkoutProps.ids?.map((id) => id._legacy) };
-    const componentsResults = await mapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
-      return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutPropsLegacy);
-    });
+    const componentsResults = await mapSeries(
+      succeededComponents,
+      ({ id, currentComponent: componentFromFS, mergeResults }) => {
+        return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutPropsLegacy);
+      }
+    );
 
     markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
 
@@ -166,7 +169,7 @@ export class CheckoutMain {
         skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap,
       };
       componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
-      await deleteFilesIfNeeded(componentsResults, consumer);
+      await deleteFilesIfNeeded(componentsResults, this.workspace);
     }
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
@@ -413,7 +416,7 @@ export class CheckoutMain {
       baseComponent,
     });
 
-    return { componentFromFS, componentFromModel, id, mergeResults };
+    return { currentComponent: componentFromFS, componentFromModel, id, mergeResults };
   }
 
   static slots = [];
