@@ -17,20 +17,20 @@ export class PkgUI {
 
   constructor(private compUI: ComponentUI) {}
 
-  private npmConsumeMethod: ConsumePlugin = (comp) => {
-    const registry = comp.packageName.split('/')[0];
+  private npmConsumeMethod: ConsumePlugin = ({ packageName, latest, componentId }) => {
+    const registry = packageName.split('/')[0];
 
     const packageVersion =
-      comp.version === comp.latest ? '' : `@${this.compUI.formatToInstallableVersion(comp.version)}`;
+      componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version)}`;
 
     return {
       Title: <img style={{ width: '30px' }} src="https://static.bit.dev/brands/logo-npm-new.svg" />,
       Component: (
         <Install
           config={`npm config set '${registry}:registry' https://node.bit.cloud`}
-          componentName={comp.id.name}
+          componentName={componentId.name}
           packageManager="npm"
-          copyString={`npm i ${comp.packageName}${packageVersion}`}
+          copyString={`npm i ${packageName}${packageVersion}`}
           registryName={registry}
         />
       ),

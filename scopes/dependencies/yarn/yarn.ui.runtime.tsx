@@ -17,10 +17,10 @@ export class YarnUI {
 
   constructor(private compUI: ComponentUI) {}
 
-  private consumeMethod: ConsumePlugin = (comp) => {
-    const registry = comp.packageName.split('/')[0];
+  private consumeMethod: ConsumePlugin = ({ packageName, componentId, latest }) => {
+    const registry = packageName.split('/')[0];
     const packageVersion =
-      comp.version === comp.latest ? '' : `@${this.compUI.formatToInstallableVersion(comp.version)}`;
+      componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version)}`;
 
     return {
       Title: (
@@ -29,9 +29,9 @@ export class YarnUI {
       Component: (
         <Install
           config={`npm config set '${registry}:registry' https://node.bit.cloud`}
-          componentName={comp.id.name}
+          componentName={componentId.name}
           packageManager="yarn"
-          copyString={`yarn add ${comp.packageName}${packageVersion}`}
+          copyString={`yarn add ${packageName}${packageVersion}`}
           registryName={registry}
         />
       ),

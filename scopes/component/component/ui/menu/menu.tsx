@@ -1,25 +1,21 @@
 import { Routes, Route } from 'react-router-dom';
 import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
-import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
-import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
+import { DropdownComponentVersion, GetActiveTabIndex, VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { useLocation } from '@teambit/base-react.navigation.link';
-import { flatten, groupBy, compact, isFunction } from 'lodash';
+import { compact, flatten, groupBy, isFunction } from 'lodash';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
-import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
+import { useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
+import { ComponentID } from '@teambit/component-id';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import type { ComponentModel } from '../component-model';
-import { useComponent as useComponentQuery, UseComponentType } from '../use-component';
+import { Filters, useComponent as useComponentQuery, UseComponentType, useIdFromLocation } from '../use-component';
 import { CollapsibleMenuNav } from './menu-nav';
 import styles from './menu.module.scss';
-import { OrderedNavigationSlot, ConsumeMethodSlot } from './nav-plugin';
-import { useIdFromLocation } from '../use-component-from-location';
-import { ComponentID } from '../..';
-import { Filters } from '../use-component-query';
+import { OrderedNavigationSlot, ConsumeMethodSlot, ConsumePluginProps } from './nav-plugin';
 
 export type MenuProps = {
   className?: string;
@@ -54,9 +50,14 @@ export type MenuProps = {
 
   useComponent?: UseComponentType;
 
-  path?: string;
-
   useComponentFilters?: () => Filters;
+
+  useLanes?: () => {
+    loading?: boolean;
+    lanesModel?: LanesModel;
+  };
+
+  path?: string;
 };
 function getComponentIdStr(componentIdStr?: string | (() => string | undefined)): string | undefined {
   if (isFunction(componentIdStr)) return componentIdStr();
@@ -83,22 +84,21 @@ export function ComponentMenu({
   const _componentIdStr = getComponentIdStr(componentIdStr);
   const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
   const resolvedComponentIdStr = path || idFromLocation;
-
-  const useComponentOptions = {
-    logFilters: useComponentFilters?.(),
-    customUseComponent: useComponent,
-  };
-
-  const { component } = useComponentQuery(host, componentId?.toString() || idFromLocation, useComponentOptions);
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
-
-  if (!component) return <FullLoader />;
+  const componentFilters = useComponentFilters?.() || {};
 
   const RightSide = (
     <div className={styles.rightSide}>
       {RightNode || (
         <>
-          <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
+          <VersionRelatedDropdowns
+            consumeMethods={consumeMethodSlot}
+            host={host}
+            componentId={componentId?.toString() || idFromLocation}
+            useComponent={useComponent}
+            componentFilters={componentFilters}
+            // loading={loading}
+          />
           <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
         </>
       )}
@@ -122,91 +122,247 @@ export function ComponentMenu({
   );
 }
 
-export function VersionRelatedDropdowns({
-  component,
-  consumeMethods,
-  className,
-  host,
-}: {
-  component: ComponentModel;
+export type VersionRelatedDropdownsProps = {
   consumeMethods?: ConsumeMethodSlot;
   className?: string;
   host: string;
-}) {
+  componentFilters?: Filters;
+  loading?: boolean;
+  useComponent?: UseComponentType;
+  componentId?: string;
+  loadInitialVersions?: UseComponentVersions;
+  loadAllVersions?: UseComponentVersions;
+  useLanes?: () => {
+    loading?: boolean;
+    lanesModel?: LanesModel;
+  };
+  getActiveTabIndex?: GetActiveTabIndex;
+};
+
+export type UseComponentVersions = () => UseComponentVersionsResult;
+
+export type UseComponentVersionsResult = {
+  tags?: DropdownComponentVersion[];
+  snaps?: DropdownComponentVersion[];
+  componentId?: ComponentID;
+  packageName?: string;
+  latestVersion?: string;
+  currentVersion?: string;
+  /**
+   * TBD - will be implement with lazy loading logs
+   */
+  // loadMoreTags?: (backwards?: boolean) => void;
+  // loadMoreSnaps?: (backwards?: boolean) => void;
+  // hasMoreTags?: boolean;
+  // hasMoreSnaps?: boolean;
+  loading?: boolean;
+};
+
+export const defaultLoadInitialVersions: (props: VersionRelatedDropdownsProps) => UseComponentVersions = ({
+  componentFilters = {},
+  loading: loadingFromProps,
+  host,
+  useComponent,
+  componentId,
+}) => {
+  return React.useCallback(() => {
+    // initially fetch just the component data
+    const initialFetchOptions = {
+      logFilters: {
+        ...componentFilters,
+        log: {
+          logLimit: 3,
+          ...componentFilters.log,
+        },
+      },
+      skip: loadingFromProps,
+      customUseComponent: useComponent,
+    };
+    const {
+      component,
+      loading: loadingComponent,
+      componentLogs = {},
+    } = useComponentQuery(host, componentId, initialFetchOptions);
+    const logs = componentLogs?.logs;
+    const loading = React.useMemo(
+      () => loadingComponent || loadingFromProps || componentLogs.loading,
+      [loadingComponent, loadingFromProps, componentLogs.loading]
+    );
+
+    const snaps = useMemo(() => {
+      return (logs || []).filter((log) => !log.tag).map((snap) => ({ ...snap, version: snap.hash }));
+    }, [logs]);
+
+    const tags = useMemo(() => {
+      const tagLookup = new Map<string, LegacyComponentLog>();
+      (logs || [])
+        .filter((log) => log.tag)
+        .forEach((tag) => {
+          tagLookup.set(tag?.tag as string, tag);
+        });
+      return compact((component?.tags?.toArray() || []).reverse().map((tag) => tagLookup.get(tag.version.version))).map(
+        (tag) => ({ ...tag, version: tag.tag as string })
+      );
+    }, [logs]);
+
+    return {
+      loading,
+      componentId: component?.id,
+      packageName: component?.packageName,
+      latestVersion: component?.latest,
+      currentVersion: component?.version,
+      snaps,
+      tags,
+    };
+  }, [componentId, loadingFromProps, componentFilters]);
+};
+
+export const defaultLoadMoreVersions: (props: VersionRelatedDropdownsProps) => UseComponentVersions = ({
+  host,
+  loading: loadingFromProps,
+  componentFilters = {},
+  useComponent,
+  componentId,
+}) => {
+  return React.useCallback(() => {
+    const componentWithLogsOptions = {
+      logFilters: {
+        ...componentFilters,
+        log: {
+          ...componentFilters.log,
+          offset: undefined,
+          limit: undefined,
+        },
+      },
+      skip: loadingFromProps,
+      customUseComponent: useComponent,
+    };
+    const {
+      component,
+      loading: loadingComponent,
+      componentLogs = {},
+    } = useComponentQuery(host, componentId, componentWithLogsOptions);
+    const logs = componentLogs?.logs;
+    const loading = React.useMemo(
+      () => loadingComponent || loadingFromProps || componentLogs.loading,
+      [loadingComponent, loadingFromProps, componentLogs.loading]
+    );
+
+    const snaps = useMemo(() => {
+      return (logs || []).filter((log) => !log.tag).map((snap) => ({ ...snap, version: snap.hash }));
+    }, [logs]);
+
+    const tags = useMemo(() => {
+      const tagLookup = new Map<string, LegacyComponentLog>();
+      (logs || [])
+        .filter((log) => log.tag)
+        .forEach((tag) => {
+          tagLookup.set(tag?.tag as string, tag);
+        });
+      return compact((component?.tags?.toArray() || []).reverse().map((tag) => tagLookup.get(tag.version.version))).map(
+        (tag) => ({ ...tag, version: tag.tag as string })
+      );
+    }, [logs]);
+
+    return {
+      loading,
+      componentId: component?.id,
+      packageName: component?.packageName,
+      latestVersion: component?.latest,
+      currentVersion: component?.version,
+      snaps,
+      tags,
+    };
+  }, [componentId, componentFilters, loadingFromProps]);
+};
+
+export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
+  const {
+    // componentFilters: componentFiltersFromProps = {},
+    // useComponent,
+    consumeMethods,
+    className,
+    loadInitialVersions = defaultLoadInitialVersions(props),
+    loadAllVersions = defaultLoadMoreVersions(props),
+    host,
+    useLanes = defaultUseLanes,
+  } = props;
+  const {
+    loading,
+    componentId,
+    tags,
+    snaps,
+    latestVersion,
+    packageName,
+    currentVersion: _currentVersion,
+  } = loadInitialVersions();
   const location = useLocation();
   const { lanesModel } = useLanes();
+  const lanes = componentId
+    ? lanesModel?.getLanesByComponentId(componentId)?.filter((lane) => !lane.id.isDefault()) || []
+    : [];
   const viewedLane =
     lanesModel?.viewedLane?.id && !lanesModel?.viewedLane?.id.isDefault() ? lanesModel.viewedLane : undefined;
 
-  const { logs } = component;
   const isWorkspace = host === 'teambit.workspace/workspace';
 
-  const snaps = useMemo(() => {
-    return (logs || []).filter((log) => !log.tag).map((snap) => ({ ...snap, version: snap.hash }));
-  }, [logs]);
+  const isNew = tags?.length === 0 && snaps?.length === 0;
 
-  const tags = useMemo(() => {
-    const tagLookup = new Map<string, LegacyComponentLog>();
-    (logs || [])
-      .filter((log) => log.tag)
-      .forEach((tag) => {
-        tagLookup.set(tag?.tag as string, tag);
-      });
-    return compact(
-      component.tags
-        ?.toArray()
-        .reverse()
-        .map((tag) => tagLookup.get(tag.version.version))
-    ).map((tag) => ({ ...tag, version: tag.tag as string }));
-  }, [logs]);
-
-  const isNew = snaps.length === 0 && tags.length === 0;
-
-  const lanes = lanesModel?.getLanesByComponentId(component.id)?.filter((lane) => !lane.id.isDefault()) || [];
   const localVersion = isWorkspace && !isNew && (!viewedLane || lanesModel?.isViewingCurrentLane());
 
   const currentVersion =
-    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.version;
+    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : _currentVersion ?? '';
 
-  const methods = useConsumeMethods(component, consumeMethods, viewedLane);
+  const methods = useConsumeMethods(
+    consumeMethods,
+    componentId && packageName
+      ? {
+          componentId,
+          packageName,
+          latest: latestVersion,
+          options: { viewedLane },
+        }
+      : undefined
+  );
+
   return (
     <>
-      {consumeMethods && tags.length > 0 && (
+      {consumeMethods && (tags?.length ?? 0) > 0 && componentId && (
         <UseBoxDropdown
           position="bottom-end"
           className={classnames(styles.useBox, styles.hideOnMobile)}
-          Menu={<ConsumeMethodsMenu methods={methods} componentName={component.id.name} />}
+          Menu={<ConsumeMethodsMenu methods={methods} componentName={componentId.name} />}
         />
       )}
       <VersionDropdown
-        tags={tags}
-        snaps={snaps}
         lanes={lanes}
+        loading={loading}
+        useComponentVersions={loadAllVersions}
+        hasMoreVersions={!isNew}
         localVersion={localVersion}
         currentVersion={currentVersion}
-        latestVersion={component.latest}
+        latestVersion={latestVersion}
         currentLane={viewedLane}
         className={className}
         menuClassName={styles.componentVersionMenu}
+        getActiveTabIndex={props.getActiveTabIndex}
       />
     </>
   );
 }
 
 function useConsumeMethods(
-  componentModel?: ComponentModel,
   consumeMethods?: ConsumeMethodSlot,
-  currentLane?: LaneModel
+  consumePluginProps?: ConsumePluginProps
 ): ConsumeMethod[] {
-  // if (!consumeMethods || !componentModel) return [];
   return useMemo(
     () =>
       flatten(consumeMethods?.values())
         .map((method) => {
-          if (!componentModel) return undefined;
-          return method?.(componentModel, { currentLane });
+          if (!consumePluginProps) return undefined;
+          return method?.(consumePluginProps);
         })
         .filter((x) => !!x && x.Component && x.Title) as ConsumeMethod[],
-    [consumeMethods, componentModel, currentLane]
+    [consumeMethods, consumePluginProps]
   );
 }
