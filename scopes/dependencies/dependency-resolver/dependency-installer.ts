@@ -165,7 +165,8 @@ export class DependencyInstaller {
             delete linkedDependencies[finalRootDir][manifest.name];
           }
         }
-        if (options.forceTeambitHarmonyLink) {
+        if (options.forceTeambitHarmonyLink && manifests[finalRootDir].dependencies?.['@teambit/harmony']) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           delete manifests[finalRootDir].dependencies!['@teambit/harmony'];
         }
       }
