@@ -8,7 +8,7 @@ import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { InputText as SearchInput } from '@teambit/design.inputs.input-text';
 import { ToggleButton } from '@teambit/design.inputs.toggle-button';
 import { Icon } from '@teambit/design.elements.icon';
-import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
+// import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 
 import { LaneSelectorList, ListNavigatorCmd } from './lane-selector-list';
