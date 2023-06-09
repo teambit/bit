@@ -38,7 +38,6 @@ export type ComponentStatusBase = {
   currentComponent?: ConsumerComponent;
   componentFromModel?: Version;
   id: BitId;
-  mergeResults?: MergeResultsThreeWay;
   shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
 };
 

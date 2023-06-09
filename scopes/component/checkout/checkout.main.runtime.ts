@@ -25,7 +25,13 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ComponentID } from '@teambit/component-id';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
-import { applyVersion, markFilesToBeRemovedIfNeeded, ComponentStatus, deleteFilesIfNeeded } from './checkout-version';
+import {
+  applyVersion,
+  markFilesToBeRemovedIfNeeded,
+  ComponentStatus,
+  deleteFilesIfNeeded,
+  ComponentStatusBase,
+} from './checkout-version';
 
 export type CheckoutProps = {
   version?: string; // if reset/head/latest is true, the version is undefined
@@ -44,13 +50,9 @@ export type CheckoutProps = {
   skipUpdatingBitmap?: boolean; // needed for stash
 };
 
-export type ComponentStatusBeforeMergeAttempt = {
-  componentFromFS?: ConsumerComponent;
-  componentFromModel?: Version;
-  id: BitId;
+export type ComponentStatusBeforeMergeAttempt = ComponentStatusBase & {
   failureMessage?: string;
   unchangedLegitimately?: boolean; // failed to checkout but for a legitimate reason, such as, up-to-date
-  shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
   propsForMerge?: {
     currentlyUsedVersion: string;
     componentModel: ModelComponent;
@@ -371,7 +373,7 @@ export class CheckoutMain {
     if (reset || !isModified) {
       // if the component is not modified, no need to try merge the files, they will be written later on according to the
       // checked out version. same thing when no version is specified, it'll be reset to the model-version later.
-      return { componentFromFS: component, componentFromModel: componentVersion, id: newId };
+      return { currentComponent: component, componentFromModel: componentVersion, id: newId };
     }
 
     const propsForMerge = {
@@ -379,11 +381,11 @@ export class CheckoutMain {
       componentModel,
     };
 
-    return { componentFromFS: component, componentFromModel: componentVersion, id: newId, propsForMerge };
+    return { currentComponent: component, componentFromModel: componentVersion, id: newId, propsForMerge };
   }
 
   private async getMergeStatus({
-    componentFromFS,
+    currentComponent: componentFromFS,
     componentFromModel,
     id,
     propsForMerge,
