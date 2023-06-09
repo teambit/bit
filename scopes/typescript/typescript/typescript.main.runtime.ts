@@ -227,7 +227,7 @@ export class TypescriptMain {
   getCjsPackageJsonProps(): PackageJsonProps {
     return {
       main: 'dist/{main}.js',
-      types: '{main}.ts',
+      // types: '{main}.ts',
     };
   }
 
@@ -240,7 +240,7 @@ export class TypescriptMain {
       // main: 'dist-esm/{main}.js',
       main: 'dist/{main}.js',
       type: 'module',
-      types: '{main}.ts',
+      // types: '{main}.ts',
     };
   }
 
