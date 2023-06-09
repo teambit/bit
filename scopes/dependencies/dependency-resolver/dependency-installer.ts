@@ -95,6 +95,8 @@ export class DependencyInstaller {
 
     private neverBuiltDependencies?: string[],
 
+    private preferOffline?: boolean,
+
     private installingContext: DepInstallerContext = {}
   ) {}
 
@@ -165,7 +167,8 @@ export class DependencyInstaller {
             delete linkedDependencies[finalRootDir][manifest.name];
           }
         }
-        if (options.forceTeambitHarmonyLink) {
+        if (options.forceTeambitHarmonyLink && manifests[finalRootDir].dependencies?.['@teambit/harmony']) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           delete manifests[finalRootDir].dependencies!['@teambit/harmony'];
         }
       }
@@ -194,6 +197,7 @@ export class DependencyInstaller {
       peerDependencyRules: this.peerDependencyRules,
       hidePackageManagerOutput,
       neverBuiltDependencies: ['core-js', ...(this.neverBuiltDependencies ?? [])],
+      preferOffline: this.preferOffline,
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {
