@@ -92,6 +92,7 @@ export const componentFieldsWithLogs = gql`
       date
       hash
       tag
+      displayName
     }
   }
   ${componentIdFields}

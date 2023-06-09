@@ -1,9 +1,10 @@
 import React, { HTMLAttributes } from 'react';
-import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
+import { DetailedVersion, VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { UseComponentType, useComponent } from '@teambit/component';
 import classNames from 'classnames';
+import * as semver from 'semver';
 
 import styles from './component-compare-version-picker.module.scss';
 
@@ -24,8 +25,12 @@ export function ComponentCompareVersionPicker({
     customUseComponent,
   };
 
-  const useVersions = () => {
-    const { componentLogs = {}, loading: loadingLogs } = useComponent(host, componentId, componentWithLogsOptions);
+  const useVersions = (props?: { skip?: boolean }) => {
+    const { skip } = props || {};
+    const { componentLogs = {}, loading: loadingLogs } = useComponent(host, componentId, {
+      ...componentWithLogsOptions,
+      skip,
+    });
     return {
       loading: loadingLogs,
       ...componentLogs,
@@ -44,6 +49,16 @@ export function ComponentCompareVersionPicker({
           return componentCompare?.compare?.hasLocalChanges || version !== compare?.id.version;
         }),
     };
+  };
+
+  const useVersion = (props?: { version?: string; skip?: boolean }) => {
+    const { version, skip } = props || {};
+    const { tags, snaps, loading } = useVersions({ skip });
+    const isTag = React.useMemo(() => semver.valid(version), [loading, version]);
+    if (isTag) {
+      return React.useMemo(() => tags?.find((tag) => tag.tag === version), [loading, tags?.length, version]);
+    }
+    return React.useMemo(() => snaps?.find((snap) => snap.version === version), [loading, snaps?.length, version]);
   };
 
   const compareVersion = componentCompare?.compare?.hasLocalChanges ? 'workspace' : compare?.version;
@@ -70,6 +85,8 @@ export function ComponentCompareVersionPicker({
         hasMoreVersions={(compare?.logs?.length ?? 0) > 1}
         showVersionDetails={true}
         useComponentVersions={useVersions}
+        useCurrentVersionLog={useVersion}
+        PlaceholderComponent={DetailedVersion}
       />
       <div className={styles.titleText}>with</div>
       <VersionDropdown
@@ -80,6 +97,9 @@ export function ComponentCompareVersionPicker({
         disabled={true}
         loading={componentCompare?.loading}
         currentVersion={compareVersion as string}
+        PlaceholderComponent={DetailedVersion}
+        useCurrentVersionLog={useVersion}
+        showVersionDetails={true}
       />
     </div>
   );

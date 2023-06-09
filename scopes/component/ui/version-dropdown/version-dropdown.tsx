@@ -1,4 +1,4 @@
-import React, { useState, ReactNode } from 'react';
+import React, { useState } from 'react';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
@@ -11,11 +11,11 @@ import classNames from 'classnames';
 import styles from './version-dropdown.module.scss';
 import { VersionInfo } from './version-info';
 import { LaneInfo } from './lane-info';
-import { SimpleVersion } from './version-dropdown-placeholder';
+import { SimpleVersion, VersionProps } from './version-dropdown-placeholder';
 
 export const LOCAL_VERSION = 'workspace';
 
-export type DropdownComponentVersion = Partial<LegacyComponentLog> & { version: string };
+export type DropdownComponentVersion = Partial<LegacyComponentLog> & { version: string; profileImage?: string };
 
 export type UseComponentDropdownVersionsResult = {
   tags?: DropdownComponentVersion[];
@@ -29,8 +29,12 @@ export type UseComponentDropdownVersionsResult = {
   // hasMoreSnaps?: boolean;
   loading?: boolean;
 };
-
-export type UseComponentDropdownVersions = () => UseComponentDropdownVersionsResult;
+export type UseComponentDropdownVersionsProps = {
+  skip?: boolean;
+};
+export type UseComponentDropdownVersions = (
+  props?: UseComponentDropdownVersionsProps
+) => UseComponentDropdownVersionsResult;
 export type GetActiveTabIndex = (
   currentVersion?: string,
   tabs?: Array<VersionMenuTab>,
@@ -38,19 +42,11 @@ export type GetActiveTabIndex = (
   snaps?: DropdownComponentVersion[],
   currentLane?: LaneModel
 ) => number;
-
 export type VersionDropdownProps = {
   localVersion?: boolean;
   latestVersion?: string;
   currentVersion: string;
-  currentVersionLog?: {
-    timestamp?: string | number;
-    author?: {
-      displayName?: string;
-      email?: string;
-    };
-    message?: string;
-  };
+  useCurrentVersionLog?: (props?: { skip?: boolean; version?: string }) => DropdownComponentVersion | undefined;
   hasMoreVersions?: boolean;
   loading?: boolean;
   useComponentVersions?: UseComponentDropdownVersions;
@@ -63,17 +59,16 @@ export type VersionDropdownProps = {
   menuClassName?: string;
   showVersionDetails?: boolean;
   disabled?: boolean;
-  placeholderComponent?: ReactNode;
+  PlaceholderComponent?: React.ComponentType<VersionProps>;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export const VersionDropdown = React.memo(_VersionDropdown);
 const VersionMenu = React.memo(_VersionMenu);
-
 function _VersionDropdown({
   currentVersion,
   latestVersion,
   localVersion,
-  currentVersionLog = {},
+  useCurrentVersionLog,
   hasMoreVersions,
   loading,
   overrideVersionHref,
@@ -82,9 +77,9 @@ function _VersionDropdown({
   getActiveTabIndex,
   dropdownClassName,
   menuClassName,
-  showVersionDetails,
+  showVersionDetails = true,
   disabled,
-  placeholderComponent,
+  PlaceholderComponent: _PlaceholderComponent,
   currentLane,
   useComponentVersions,
   lanes,
@@ -100,7 +95,6 @@ function _VersionDropdown({
     }
   }, [loading]);
 
-  const { author, message, timestamp } = currentVersionLog;
   const handlePlaceholderClicked = (e: React.MouseEvent<HTMLDivElement>) => {
     if (loading) return;
     if (e.target === e.currentTarget) {
@@ -110,19 +104,31 @@ function _VersionDropdown({
 
   const defaultPlaceholder = (
     <SimpleVersion
-      author={author}
-      message={message}
-      timestamp={timestamp}
+      useCurrentVersionLog={useCurrentVersionLog}
       disabled={disabled}
       className={placeholderClassName}
       currentVersion={currentVersion}
       onClick={handlePlaceholderClicked}
       hasMoreVersions={hasMoreVersions}
       loading={loading}
+      showFullVersion={currentVersion === 'workspace'}
     />
   );
 
-  const PlaceholderComponent = placeholderComponent || defaultPlaceholder;
+  const PlaceholderComponent = _PlaceholderComponent ? (
+    <_PlaceholderComponent
+      useCurrentVersionLog={useCurrentVersionLog}
+      disabled={disabled}
+      className={placeholderClassName}
+      currentVersion={currentVersion}
+      onClick={handlePlaceholderClicked}
+      hasMoreVersions={hasMoreVersions}
+      loading={loading}
+      showFullVersion={currentVersion === 'workspace'}
+    />
+  ) : (
+    defaultPlaceholder
+  );
 
   if (disabled || (singleVersion && !loading)) {
     return <div className={classNames(styles.noVersions, className)}>{PlaceholderComponent}</div>;
@@ -144,21 +150,20 @@ function _VersionDropdown({
         )}
         placeholder={PlaceholderComponent}
       >
-        {open && (
-          <VersionMenu
-            className={menuClassName}
-            key={key}
-            currentVersion={currentVersion}
-            latestVersion={latestVersion}
-            localVersion={localVersion}
-            overrideVersionHref={overrideVersionHref}
-            showVersionDetails={showVersionDetails}
-            currentLane={currentLane}
-            getActiveTabIndex={getActiveTabIndex}
-            lanes={lanes}
-            useVersions={useComponentVersions}
-          />
-        )}
+        <VersionMenu
+          className={menuClassName}
+          key={key}
+          currentVersion={currentVersion}
+          latestVersion={latestVersion}
+          localVersion={localVersion}
+          overrideVersionHref={overrideVersionHref}
+          showVersionDetails={showVersionDetails}
+          currentLane={currentLane}
+          getActiveTabIndex={getActiveTabIndex}
+          lanes={lanes}
+          useVersions={useComponentVersions}
+          open={open}
+        />
       </Dropdown>
     </div>
   );
@@ -175,6 +180,7 @@ type VersionMenuProps = {
   showVersionDetails?: boolean;
   loading?: boolean;
   getActiveTabIndex?: GetActiveTabIndex;
+  open?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export type VersionMenuTab =
@@ -191,9 +197,7 @@ export type VersionMenuTab =
       payload: DropdownComponentVersion[];
     };
 
-const defaultActiveTabIndex: GetActiveTabIndex = (currentVersion, tabs = [], tags, snaps, currentLane) => {
-  if (currentLane?.components.some((c) => c.version === currentVersion))
-    return tabs.findIndex((tab) => tab.name === 'LANE');
+const defaultActiveTabIndex: GetActiveTabIndex = (currentVersion, tabs = [], tags, snaps) => {
   if ((snaps || []).some((snap) => snap.version === currentVersion))
     return tabs.findIndex((tab) => tab.name === 'SNAP');
   return 0;
@@ -210,9 +214,10 @@ function _VersionMenu({
   lanes,
   getActiveTabIndex = defaultActiveTabIndex,
   loading: loadingFromProps,
+  open,
   ...rest
 }: VersionMenuProps) {
-  const { snaps, tags, loading: loadingVersions } = useVersions?.() || {};
+  const { snaps, tags, loading: loadingVersions } = useVersions?.({ skip: !open }) || {};
   const VERSION_TAB_NAMES = ['TAG', 'SNAP', 'LANE'] as const;
   const loading = loadingFromProps || loadingVersions;
 
@@ -246,7 +251,7 @@ function _VersionMenu({
   const showTab = activeTabIndex !== undefined && tabs[activeTabIndex]?.payload.length > 0;
 
   return (
-    <div {...rest}>
+    <div {...rest} className={classNames(styles.versionMenuContainer, !open && styles.hide)}>
       <div className={styles.top}>
         {loading && <LineSkeleton count={6} className={styles.loader} />}
         {!loading && <div className={classNames(styles.titleContainer, styles.title)}>{message}</div>}

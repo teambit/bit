@@ -133,3 +133,10 @@
     transform: translateY(0);
   }
 }
+
+.versionMenuContainer {
+  display: initial;
+  &.hide {
+    display: none;
+  }
+}

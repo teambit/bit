@@ -24,21 +24,25 @@ function _VersionInfo(
     latestVersion,
     date,
     username,
+    displayName,
     email,
     overrideVersionHref,
     showDetails,
     message,
     tag,
+    profileImage,
   }: VersionInfoProps,
   ref?: React.ForwardedRef<HTMLDivElement>
 ) {
   const isCurrent = version === currentVersion;
   const author = useMemo(() => {
     return {
-      displayName: username,
+      displayName: displayName ?? '',
       email,
+      name: username ?? '',
+      profileImage,
     };
-  }, [version]);
+  }, [displayName, email, username, profileImage]);
 
   const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
   const currentVersionRef = useRef<HTMLDivElement>(null);
@@ -50,15 +54,14 @@ function _VersionInfo(
   }, [isCurrent]);
 
   const href = overrideVersionHref ? overrideVersionHref(version) : `?version=${version}`;
+  const formattedVersion = tag ? version : version.slice(0, 6);
 
   return (
     <div ref={ref || currentVersionRef}>
       <MenuLinkItem active={isCurrent} href={href} className={styles.versionRow}>
         <div className={styles.version}>
           <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />
-          <Ellipsis className={classNames(styles.versionName, tag && styles.tag, !tag && styles.snap)}>
-            {version}
-          </Ellipsis>
+          <Ellipsis className={classNames(styles.versionName)}>{formattedVersion}</Ellipsis>
           {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
           {showDetails && commitMessage(message)}
         </div>

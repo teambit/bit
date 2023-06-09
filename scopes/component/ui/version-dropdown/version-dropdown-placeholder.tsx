@@ -6,21 +6,19 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import { TimeAgo } from '@teambit/design.ui.time-ago';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
+import { DropdownComponentVersion } from './version-dropdown';
 
 import styles from './version-dropdown-placeholder.module.scss';
+import { on } from 'events';
 
 export type VersionProps = {
   currentVersion?: string;
   isTag?: (version?: string) => boolean;
-  timestamp?: string | number;
-  author?: {
-    displayName?: string;
-    email?: string;
-  };
-  message?: string;
   disabled?: boolean;
   hasMoreVersions?: boolean;
+  showFullVersion?: boolean;
   loading?: boolean;
+  useCurrentVersionLog?: (props: { skip?: boolean; version?: string }) => DropdownComponentVersion | undefined;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function SimpleVersion({
@@ -30,23 +28,18 @@ export function SimpleVersion({
   hasMoreVersions,
   isTag = (version) => semver.valid(version) !== null,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  author,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  message,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  timestamp,
+  useCurrentVersionLog,
+  showFullVersion,
   loading,
   ...rest
 }: VersionProps) {
   if (loading) return <WordSkeleton className={styles.loader} length={9} />;
+  const formattedVersion = showFullVersion || isTag(currentVersion) ? currentVersion : currentVersion?.slice(0, 6);
 
   return (
     <div {...rest} className={classNames(styles.simple, className, disabled && styles.disabled)}>
-      <Ellipsis
-        className={classNames(styles.versionName, isTag(currentVersion) && styles.tag, !isTag && styles.snap)}
-        onClick={rest.onClick}
-      >
-        {currentVersion}
+      <Ellipsis className={classNames(styles.versionName)} onClick={rest.onClick}>
+        {formattedVersion}
       </Ellipsis>
       {hasMoreVersions && <Icon of="fat-arrow-down" onClick={rest.onClick} />}
     </div>
@@ -58,34 +51,59 @@ export function DetailedVersion({
   className,
   disabled,
   hasMoreVersions,
-  timestamp,
   isTag = (version) => semver.valid(version) !== null,
-  author,
-  message,
   loading,
+  useCurrentVersionLog,
+  showFullVersion,
   ...rest
 }: VersionProps) {
+  const currentVersionLog = useCurrentVersionLog?.({ skip: loading, version: currentVersion });
+  const { displayName, message, username, email, date: _date, profileImage } = currentVersionLog || {};
+  const author = React.useMemo(() => {
+    return {
+      displayName: displayName ?? '',
+      email,
+      name: username ?? '',
+      profileImage,
+    };
+  }, [displayName, email, username, profileImage]);
+  const formattedVersion = showFullVersion || isTag(currentVersion) ? currentVersion : currentVersion?.slice(0, 6);
+
+  const date = _date ? new Date(+_date) : undefined;
+  const timestamp = React.useMemo(() => (date ? new Date(+date).toString() : new Date().toString()), [date]);
   if (loading) return <WordSkeleton className={styles.loader} length={9} />;
 
   return (
     <div {...rest} className={classNames(styles.detailed, className, disabled && styles.disabled)}>
-      <UserAvatar size={24} account={author ?? {}} className={styles.versionUserAvatar} showTooltip={true} />
-      <Ellipsis
-        className={classNames(styles.versionName, isTag(currentVersion) && styles.tag, !isTag && styles.snap)}
+      <UserAvatar
+        size={24}
+        account={author ?? {}}
+        className={styles.versionUserAvatar}
+        showTooltip={true}
         onClick={rest.onClick}
-      >
-        {currentVersion}
-      </Ellipsis>
-      {commitMessage(message)}
-      <Ellipsis className={styles.versionTimestamp} onClick={rest.onClick}>
-        <TimeAgo date={timestamp ?? ''} onClick={rest.onClick} />
-      </Ellipsis>
+      />
+      <div className={classNames(styles.versionName)} onClick={rest.onClick}>
+        {formattedVersion}
+      </div>
+      {commitMessage(message, rest.onClick)}
+      <div className={styles.versionTimestamp} onClick={rest.onClick}>
+        <TimeAgo date={timestamp} onClick={rest.onClick} />
+      </div>
       {hasMoreVersions && <Icon of="fat-arrow-down" onClick={rest.onClick} />}
     </div>
   );
 }
 
-function commitMessage(message?: string) {
-  if (!message || message === '') return <Ellipsis className={styles.emptyMessage}>No commit message</Ellipsis>;
-  return <Ellipsis className={styles.commitMessage}>{message}</Ellipsis>;
+function commitMessage(message?: string, onClick?: React.MouseEventHandler<HTMLDivElement> | undefined) {
+  if (!message || message === '')
+    return (
+      <Ellipsis className={styles.emptyMessage} onClick={onClick}>
+        No commit message
+      </Ellipsis>
+    );
+  return (
+    <Ellipsis className={styles.commitMessage} onClick={onClick}>
+      {message}
+    </Ellipsis>
+  );
 }
