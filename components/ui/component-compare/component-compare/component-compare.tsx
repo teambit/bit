@@ -58,36 +58,6 @@ export function ComponentCompare(props: ComponentCompareProps) {
   const component = useContext(ComponentContext);
   const location = useLocation();
   const isWorkspace = host === 'teambit.workspace/workspace';
-  const allVersionInfo = useMemo(() => component.logs?.slice().sort(sortByDateDsc) || [], [component.id.toString()]);
-  const isNew = allVersionInfo.length === 0;
-  const compareVersion =
-    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.id.version;
-
-  const compareIsLocalChanges = compareVersion === 'workspace';
-
-  const lastVersionInfo = useMemo(() => {
-    const prevVersionInfo = allVersionInfo.find(findPrevVersionFromCurrent(compareVersion));
-    return prevVersionInfo;
-  }, [component.logs]);
-
-  const baseId =
-    _baseId ||
-    (baseVersion && component.id.changeVersion(baseVersion)) ||
-    (lastVersionInfo && component.id.changeVersion(lastVersionInfo.tag || lastVersionInfo.hash)) ||
-    component.id;
-
-  const {
-    component: base,
-    loading: loadingBase,
-    componentDescriptor: baseComponentDescriptor,
-  } = useComponent(host, baseId.toString(), {
-    customUseComponent,
-    logFilters: {
-      log: {
-        limit: 3,
-      },
-    },
-  });
 
   const {
     component: compareComponent,
@@ -96,6 +66,44 @@ export function ComponentCompare(props: ComponentCompareProps) {
   } = useComponent(host, _compareId?.toString() || '', {
     skip: !_compareId,
     customUseComponent,
+    logFilters: {
+      log: {
+        limit: 3,
+      },
+    },
+  });
+
+  const allVersionInfo = useMemo(
+    () => (compareComponent?.logs || component.logs)?.slice().sort(sortByDateDsc) || [],
+    [component.id.toString(), loadingCompare, component.logs?.length, compareComponent?.logs?.length]
+  );
+  const isNew = useMemo(() => allVersionInfo.length === 0, [allVersionInfo]);
+  const compareVersion =
+    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.id.version;
+  const compareIsLocalChanges = compareVersion === 'workspace';
+
+  const lastVersionInfo = useMemo(() => {
+    if (compareIsLocalChanges) return allVersionInfo[0];
+    const prevVersionInfo = allVersionInfo.find(findPrevVersionFromCurrent(compareVersion));
+    return prevVersionInfo;
+  }, [component.logs?.length, loadingCompare, compareComponent?.logs?.length]);
+
+  const baseId = React.useMemo(
+    () =>
+      _baseId ||
+      (baseVersion && component.id.changeVersion(baseVersion)) ||
+      (lastVersionInfo && component.id.changeVersion(lastVersionInfo.tag || lastVersionInfo.hash)) ||
+      component.id,
+    [loadingCompare, _baseId, baseVersion, lastVersionInfo?.tag, lastVersionInfo?.hash]
+  );
+
+  const {
+    component: base,
+    loading: loadingBase,
+    componentDescriptor: baseComponentDescriptor,
+  } = useComponent(host, baseId?.toString(), {
+    customUseComponent,
+    skip: !baseId,
     logFilters: {
       log: {
         limit: 3,
