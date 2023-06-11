@@ -103,7 +103,10 @@ export class ExportCmd implements Command {
     };
     const removedOutput = () => {
       if (!removedIds.length) return '';
-      const title = chalk.bold(`\n\nthe following component(s) have been marked as removed on the remote\n`);
+      const remoteLaneStr = exportedLanes.length ? ' lane' : '';
+      const title = chalk.bold(
+        `\n\nthe following component(s) have been marked as removed on the remote${remoteLaneStr}\n`
+      );
       const idsStr = removedIds.join('\n');
       return title + idsStr;
     };

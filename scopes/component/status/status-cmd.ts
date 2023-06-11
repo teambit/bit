@@ -201,7 +201,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       ? [compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps].join('\n')
       : '';
 
-    const newComponentDescription = '\n(use "bit tag" to lock a version with all your changes)\n';
+    const newComponentDescription = '\n(use "bit snap/tag" to lock a version with all your changes)\n';
     const newComponentsTitle = newComponents.length
       ? chalk.underline.white('new components') + newComponentDescription
       : '';

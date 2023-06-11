@@ -3,45 +3,31 @@
 /**
  * this file had been forked from https://github.com/dependents/node-filing-cabinet
  */
-import appModulePath from 'app-module-path';
-import webpackResolve from 'enhanced-resolve';
-import isRelative from 'is-relative-path';
-import getModuleType from 'module-definition';
-import objectAssign from 'object-assign';
 import path from 'path';
-import resolve from 'resolve';
 import resolveDependencyPath from 'resolve-dependency-path';
-import sassLookup from 'sass-lookup';
 import stylusLookup from 'stylus-lookup';
-import ts from 'typescript';
 
-import { DetectorHook } from '../detector-hook';
+import { lookupJavaScript, lookupTypeScript } from '@teambit/typescript.deps-lookups.lookup-typescript';
+import { lookupStyling } from '@teambit/styling.deps-lookups.lookup-styling';
+
+import { DependencyDetector, DetectorHook } from '../detector-hook';
 
 const debug = require('debug')('cabinet');
 
 const defaultLookups = {
-  '.js': jsLookup,
-  '.cjs': jsLookup,
-  '.mjs': jsLookup,
-  '.jsx': jsLookup,
-  '.ts': tsLookup,
-  '.tsx': tsLookup,
-  '.cts': tsLookup,
-  '.mts': tsLookup,
-  '.scss': cssPreprocessorLookup,
-  '.sass': cssPreprocessorLookup,
+  '.js': lookupJavaScript,
+  '.cjs': lookupJavaScript,
+  '.mjs': lookupJavaScript,
+  '.jsx': lookupJavaScript,
+  '.ts': lookupTypeScript,
+  '.tsx': lookupTypeScript,
+  '.cts': lookupTypeScript,
+  '.mts': lookupTypeScript,
+  '.scss': lookupStyling,
+  '.sass': lookupStyling,
   '.styl': stylusLookup,
-  '.less': cssPreprocessorLookup,
+  '.less': lookupStyling,
 };
-
-// for some reason, .ts is not sufficient, .d.ts is needed as well
-// these extensions are used with commonJs and nonRelative lookups. When a dependency doesn't have an
-// extension it will look for files with these extensions in order.
-// for example, `const a = require('.a')`, it'll look for a.js, a.jsx, a.ts and so on.
-const resolveExtensions = Object.keys(defaultLookups).concat(['.d.ts', '.json', '.css']);
-
-// when webpack resolves dependencies from a style file, such as .scss file, look for style extensions only
-const styleExtensions = ['.scss', '.sass', '.less', '.css'];
 
 type Options = {
   dependency: string; // previous name was "partial"
@@ -55,6 +41,7 @@ type Options = {
   ast?: string;
   ext?: string;
   content?: string;
+  envDetectors?: DependencyDetector[];
 };
 
 export default function cabinet(options: Options) {
@@ -69,7 +56,7 @@ export default function cabinet(options: Options) {
     debug('using generic resolver');
     resolver = resolveDependencyPath;
   }
-  if (ext === '.css' && dependency.startsWith('~')) resolver = cssPreprocessorLookup;
+  if (ext === '.css' && dependency.startsWith('~')) resolver = lookupStyling;
 
   const detector = detectorHook.getDetector(ext);
   if (detector) {
@@ -78,7 +65,15 @@ export default function cabinet(options: Options) {
       resolver = detector.dependencyLookup;
     } else {
       // otherwise use TypeScript as the default resolver.
-      resolver = tsLookup;
+      resolver = lookupTypeScript;
+    }
+  }
+
+  if (options?.envDetectors) {
+    for (const envDetector of options.envDetectors) {
+      if (envDetector.isSupported({ ext }) && envDetector.dependencyLookup) {
+        resolver = envDetector.dependencyLookup;
+      }
     }
   }
 
@@ -122,229 +117,3 @@ module.exports.register = function (extension, lookupStrategy) {
     this.supportedFileExtensions.push(extension);
   }
 };
-
-/**
- * Exposed for testing
- *
- * @param  {Object} options
- * @param  {String} options.config
- * @param  {String} options.webpackConfig
- * @param  {String} options.filename
- * @param  {Object} options.ast
- * @return {String}
- */
-
-function _getJSType(options) {
-  options = options || {};
-
-  if (options.config) {
-    return 'amd';
-  }
-
-  if (options.webpackConfig) {
-    return 'webpack';
-  }
-
-  const ast = options.ast || options.content;
-  if (ast) {
-    debug('reusing the given ast or content');
-    return getModuleType.fromSource(ast);
-  }
-
-  debug('using the filename to find the module type');
-  return getModuleType.sync(options.filename);
-}
-
-/**
- * @private
- * @param  {String} dependency
- * @param  {String} filename
- * @param  {String} directory
- * @param  {String} [config]
- * @param  {String} [webpackConfig]
- * @param  {String} [configPath]
- * @param  {Object} [ast]
- * @return {String}
- */
-function jsLookup(options: Options) {
-  const { dependency, directory, config, webpackConfig, filename, ast, isScript, content } = options;
-  const type = _getJSType({
-    config,
-    webpackConfig,
-    filename,
-    ast,
-    isScript,
-    content,
-  });
-
-  switch (type) {
-    case 'amd':
-      throw new Error('AMD is not supported');
-
-    case 'webpack':
-      debug('using webpack resolver for es6');
-      return resolveWebpackPath(dependency, filename, directory, webpackConfig);
-
-    case 'commonjs':
-    case 'es6':
-    default:
-      debug(`using commonjs resolver ${type}`);
-      return commonJSLookup(options);
-  }
-}
-
-/**
- * from https://github.com/webpack-contrib/sass-loader
-   webpack provides an [advanced mechanism to resolve files](https://webpack.js.org/concepts/module-resolution/).
-   The sass-loader uses node-sass' custom importer feature to pass all queries to the webpack resolving engine.
-   Thus you can import your Sass modules from `node_modules`. Just prepend them with a `~` to tell webpack that
-   this is not a relative import:
-    ```css
-    @import "~bootstrap/dist/css/bootstrap";
-      ```
-    It's important to only prepend it with `~`, because `~/` resolves to the home directory.
-    webpack needs to distinguish between `bootstrap` and `~bootstrap` because CSS and Sass files have no special
-    syntax for importing relative files. Writing `@import "file"` is the same as `@import "./file";
- */
-function cssPreprocessorLookup(options: Options) {
-  const { filename, dependency, directory } = options;
-  if (dependency.startsWith('~') && !dependency.startsWith('~/')) {
-    // webpack syntax for resolving a module from node_modules
-    debug('changing the resolver of css preprocessor to resolveWebpackPath as it has a ~ prefix');
-    const dependencyWithNoTilda = dependency.replace('~', '');
-    return resolveWebpack(dependencyWithNoTilda, filename, directory, { extensions: styleExtensions, symlinks: false });
-  }
-
-  // Less and Sass imports are very similar
-  return sassLookup({ dependency, filename, directory });
-}
-
-function tsLookup(options: Options) {
-  const { dependency, filename } = options;
-  if (dependency[0] !== '.') {
-    // when a path is not relative, use the standard commonJS lookup
-    return commonJSLookup(options);
-  }
-  debug('performing a typescript lookup');
-
-  const tsOptions = {
-    module: ts.ModuleKind.CommonJS,
-  };
-
-  const host = ts.createCompilerHost({});
-  debug('with options: ', tsOptions);
-  let resolvedModule = ts.resolveModuleName(dependency, filename, tsOptions, host).resolvedModule;
-  if (!resolvedModule) {
-    // for some reason, on Windows, ts.resolveModuleName method tries to find the module in the
-    // root directory. For example, it searches for module './bar', in 'c:\bar.ts'.
-    const fallbackModule = path.resolve(path.dirname(filename), dependency);
-    resolvedModule = ts.resolveModuleName(fallbackModule, filename, tsOptions, host).resolvedModule;
-  }
-  if (!resolvedModule) {
-    // ts.resolveModuleName doesn't always work, fallback to commonJSLookup
-    debug('failed resolving with tsLookup, trying commonJSLookup');
-    return commonJSLookup(options);
-  }
-  debug('ts resolved module: ', resolvedModule);
-  const result = resolvedModule ? resolvedModule.resolvedFileName : '';
-
-  debug(`result: ${result}`);
-  return result ? path.resolve(result) : '';
-}
-
-function commonJSLookup(options: Options) {
-  const { filename } = options;
-  const directory = path.dirname(filename); // node_modules should be propagated from the file location backwards
-  // Need to resolve dependencies within the directory of the module, not filing-cabinet
-  const moduleLookupDir = path.join(directory, 'node_modules');
-
-  debug(`adding ${moduleLookupDir} to the require resolution paths`);
-
-  appModulePath.addPath(moduleLookupDir);
-
-  let dependency = options.dependency;
-
-  let result = '';
-
-  // Make sure the dependency is being resolved to the filename's context
-  // 3rd party modules will not be relative
-  if (dependency[0] === '.') {
-    dependency = path.resolve(path.dirname(filename), dependency);
-  }
-
-  try {
-    result = resolve.sync(dependency, {
-      extensions: resolveExtensions,
-      basedir: directory,
-      moduleDirectory: ['node_modules'],
-    });
-    debug(`resolved path: ${result}`);
-  } catch (e: any) {
-    debug(`could not resolve ${dependency}`);
-  }
-
-  return result;
-}
-
-function resolveWebpackPath(dependency, filename, directory, webpackConfig) {
-  webpackConfig = path.resolve(webpackConfig);
-  let loadedConfig;
-  try {
-    // eslint-disable-next-line import/no-dynamic-require, global-require
-    loadedConfig = require(webpackConfig);
-
-    if (typeof loadedConfig === 'function') {
-      loadedConfig = loadedConfig();
-    }
-  } catch (e: any) {
-    debug(`error loading the webpack config at ${webpackConfig}`);
-    debug(e.message);
-    debug(e.stack);
-    return '';
-  }
-
-  const resolveConfig = objectAssign({}, loadedConfig.resolve);
-
-  if (!resolveConfig.modules && (resolveConfig.root || resolveConfig.modulesDirectories)) {
-    resolveConfig.modules = [];
-
-    if (resolveConfig.root) {
-      resolveConfig.modules = resolveConfig.modules.concat(resolveConfig.root);
-    }
-
-    if (resolveConfig.modulesDirectories) {
-      resolveConfig.modules = resolveConfig.modules.concat(resolveConfig.modulesDirectories);
-    }
-  }
-
-  return resolveWebpack(dependency, filename, directory, resolveConfig);
-}
-
-function resolveWebpack(dependency, filename, directory, resolveConfig) {
-  try {
-    const resolver = webpackResolve.create.sync(resolveConfig);
-
-    // We don't care about what the loader resolves the dependency to
-    // we only want the path of the resolved file
-    dependency = stripLoader(dependency);
-
-    const lookupPath = isRelative(dependency) ? path.dirname(filename) : directory;
-
-    return resolver(lookupPath, dependency);
-  } catch (e: any) {
-    debug(`error when resolving ${dependency}`);
-    debug(e.message);
-    debug(e.stack);
-    return '';
-  }
-}
-
-function stripLoader(dependency) {
-  const exclamationLocation = dependency.indexOf('!');
-
-  if (exclamationLocation === -1) {
-    return dependency;
-  }
-
-  return dependency.slice(exclamationLocation + 1);
-}

@@ -280,18 +280,19 @@ export class MergeLanesMain {
     };
     const idsToMerge = await getIdsToMerge();
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
-    await scopeComponentsImporter.importManyDeltaWithoutDeps({
-      ids: idsToMerge,
-      fromHead: true,
+    await scopeComponentsImporter.importWithoutDeps(idsToMerge.toVersionLatest(), {
+      cache: false,
       lane: fromLaneObj,
       ignoreMissingHead: true,
+      includeVersionHistory: true,
     });
+
     // get their main/to-lane as well
-    await scopeComponentsImporter.importManyDeltaWithoutDeps({
-      ids: idsToMerge.toVersionLatest(),
-      fromHead: true,
-      ignoreMissingHead: true,
+    await scopeComponentsImporter.importWithoutDeps(idsToMerge.toVersionLatest(), {
+      cache: false,
       lane: toLaneObj,
+      ignoreMissingHead: true,
+      includeVersionHistory: true,
     });
     await this.importer.importHeadArtifactsFromLane(fromLaneObj, true);
     await this.throwIfNotUpToDate(fromLaneId, toLaneId);
