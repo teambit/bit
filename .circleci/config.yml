@@ -1105,7 +1105,7 @@ jobs:
           name: Update index.json
           command: gsutil cp bit/index.json gs://bvm.bit.dev/bit/index.json
       - run:
-          name: Update index.json
+          name: clear index.json cache
           command: gsutil setmeta -h "Cache-Control:no-cache" gs://bvm.bit.dev/bit/index.json
 
   bit_export:
