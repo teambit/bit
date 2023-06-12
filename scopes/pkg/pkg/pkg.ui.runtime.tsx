@@ -17,7 +17,7 @@ export class PkgUI {
 
   constructor(private compUI: ComponentUI) {}
 
-  private npmConsumeMethod: ConsumePlugin = ({ packageName, latest, componentId }) => {
+  private npmConsumeMethod: ConsumePlugin = ({ packageName, latest, componentId, options }) => {
     const registry = packageName.split('/')[0];
 
     const packageVersion =
@@ -25,7 +25,7 @@ export class PkgUI {
 
     return {
       Title: <img style={{ width: '30px' }} src="https://static.bit.dev/brands/logo-npm-new.svg" />,
-      Component: (
+      Component: !options?.hide ? (
         <Install
           config={`npm config set '${registry}:registry' https://node.bit.cloud`}
           componentName={componentId.name}
@@ -33,7 +33,7 @@ export class PkgUI {
           copyString={`npm i ${packageName}${packageVersion}`}
           registryName={registry}
         />
-      ),
+      ) : null,
       order: 10,
     };
   };

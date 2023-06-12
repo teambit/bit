@@ -17,7 +17,7 @@ export class YarnUI {
 
   constructor(private compUI: ComponentUI) {}
 
-  private consumeMethod: ConsumePlugin = ({ packageName, componentId, latest }) => {
+  private consumeMethod: ConsumePlugin = ({ packageName, componentId, latest, options }) => {
     const registry = packageName.split('/')[0];
     const packageVersion =
       componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version)}`;
@@ -26,7 +26,7 @@ export class YarnUI {
       Title: (
         <img style={{ height: '17px', paddingTop: '4px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />
       ),
-      Component: packageName ? (
+      Component: !options?.hide ? (
         <Install
           config={`npm config set '${registry}:registry' https://node.bit.cloud`}
           componentName={componentId.name}

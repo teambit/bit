@@ -159,6 +159,7 @@ export type UseComponentVersionsResult = {
   packageName?: string;
   latestVersion?: string;
   currentVersion?: string;
+  buildStatus?: string;
   /**
    * TBD - will be implement with lazy loading logs
    */
@@ -226,6 +227,7 @@ export const defaultLoadInitialVersions: (props: VersionRelatedDropdownsProps) =
         currentVersion: component?.version,
         snaps,
         tags,
+        buildStatus: component?.buildStatus,
       };
     },
     [componentId, loadingFromProps, componentFilters]
@@ -287,6 +289,7 @@ export const defaultLoadMoreVersions: (props: VersionRelatedDropdownsProps) => U
         packageName: component?.packageName,
         latestVersion: component?.latest,
         currentVersion: component?.version,
+        buildStatus: component?.buildStatus,
         snaps,
         tags,
       };
@@ -342,6 +345,7 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
     latestVersion,
     packageName,
     currentVersion: _currentVersion,
+    buildStatus,
   } = initialLoad();
   const location = useLocation();
   const { lanesModel } = useLanes();
@@ -360,21 +364,23 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
   const currentVersion =
     isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : _currentVersion ?? '';
 
-  const methods = useConsumeMethods(
-    consumeMethods,
-    componentId && packageName
+  const consumeMethodProps = React.useMemo(() => {
+    return componentId && packageName
       ? {
           componentId,
           packageName,
           latest: latestVersion,
-          options: { viewedLane },
+          options: { viewedLane, hide: buildStatus !== 'succeed' },
         }
-      : undefined
-  );
+      : undefined;
+  }, [componentId, packageName, latestVersion, viewedLane, buildStatus]);
+
+  const methods = useConsumeMethods(consumeMethods, consumeMethodProps);
+  const hasMethods = methods?.length > 0;
 
   return (
     <>
-      {consumeMethods && componentId && (
+      {consumeMethods && componentId && hasMethods && (
         <UseBoxDropdown
           position="bottom-end"
           className={classnames(styles.useBox, styles.hideOnMobile)}
