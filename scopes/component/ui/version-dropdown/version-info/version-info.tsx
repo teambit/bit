@@ -53,8 +53,18 @@ function _VersionInfo(
     }
   }, [isCurrent]);
 
-  const href = overrideVersionHref ? overrideVersionHref(version) : `?version=${version}`;
-  const formattedVersion = tag ? version : version.slice(0, 6);
+  const href = useMemo(() => {
+    return overrideVersionHref ? overrideVersionHref(version) : `?version=${version}`;
+  }, [version]);
+
+  const formattedVersion = useMemo(() => {
+    return tag ? version : version.slice(0, 6);
+  }, [tag, version]);
+
+  const commitMessage = React.useCallback((_message?: string) => {
+    if (!_message || _message === '') return <Ellipsis className={styles.emptyMessage}>No commit message</Ellipsis>;
+    return <Ellipsis className={styles.commitMessage}>{_message}</Ellipsis>;
+  }, []);
 
   return (
     <div ref={ref || currentVersionRef}>
@@ -71,9 +81,4 @@ function _VersionInfo(
       </MenuLinkItem>
     </div>
   );
-}
-
-function commitMessage(message?: string) {
-  if (!message || message === '') return <Ellipsis className={styles.emptyMessage}>No commit message</Ellipsis>;
-  return <Ellipsis className={styles.commitMessage}>{message}</Ellipsis>;
 }

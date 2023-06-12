@@ -374,7 +374,7 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
 
   return (
     <>
-      {consumeMethods && (tags?.length ?? 0) > 0 && componentId && (
+      {consumeMethods && componentId && (
         <UseBoxDropdown
           position="bottom-end"
           className={classnames(styles.useBox, styles.hideOnMobile)}

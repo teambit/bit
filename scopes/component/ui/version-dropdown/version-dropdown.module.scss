@@ -28,7 +28,7 @@
   margin-bottom: 2px;
 }
 
-.versionContainer {
+.versionContainerRoot {
   max-height: 240px;
   overflow-y: scroll;
   padding-bottom: 8px;
@@ -111,26 +111,6 @@
   color: var(--bit-bg-dent, #f6f6f6);
   > div {
     padding: 8px 0px;
-  }
-}
-
-.pullDownIndicator {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #f2f2f2;
-  font-size: 14px;
-  color: #666;
-  transform: translateY(-100%);
-  transition: transform 0.3s ease-in-out;
-  z-index: 1;
-  &.active {
-    transform: translateY(0);
   }
 }
 

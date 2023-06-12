@@ -7,7 +7,6 @@ import { UserAvatar } from '@teambit/design.ui.avatar';
 import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import classNames from 'classnames';
-
 import styles from './version-dropdown.module.scss';
 import { VersionInfo } from './version-info';
 import { LaneInfo } from './lane-info';
@@ -203,6 +202,7 @@ const defaultActiveTabIndex: GetActiveTabIndex = (currentVersion, tabs = [], tag
   return 0;
 };
 
+const VERSION_TAB_NAMES = ['TAG', 'SNAP', 'LANE'] as const;
 function _VersionMenu({
   currentVersion,
   localVersion,
@@ -218,22 +218,30 @@ function _VersionMenu({
   ...rest
 }: VersionMenuProps) {
   const { snaps, tags, loading: loadingVersions } = useVersions?.({ skip: !open }) || {};
-  const VERSION_TAB_NAMES = ['TAG', 'SNAP', 'LANE'] as const;
   const loading = loadingFromProps || loadingVersions;
 
-  const tabs = VERSION_TAB_NAMES.map((name) => {
-    switch (name) {
-      case 'SNAP':
-        return { name, payload: snaps || [] };
-      case 'LANE':
-        return { name, payload: lanes || [] };
-      default:
-        return { name, payload: tags || [] };
-    }
-  }).filter((tab) => tab.payload.length > 0);
+  const tabs = React.useMemo(
+    () =>
+      VERSION_TAB_NAMES.map((name) => {
+        switch (name) {
+          case 'SNAP':
+            return { name, payload: snaps || [] };
+          case 'LANE':
+            return { name, payload: lanes || [] };
+          default:
+            return { name, payload: tags || [] };
+        }
+      }).filter((tab) => tab.payload.length > 0),
+    [snaps?.length, tags?.length, lanes?.length, loading]
+  );
 
   const [activeTabIndex, setActiveTab] = React.useState<number | undefined>(
     getActiveTabIndex(currentVersion, tabs, tags, snaps, currentLane)
+  );
+
+  const activeTab = React.useMemo(
+    () => (activeTabIndex !== undefined ? tabs[activeTabIndex] : undefined),
+    [activeTabIndex, tabs]
   );
 
   React.useEffect(() => {
@@ -241,7 +249,7 @@ function _VersionMenu({
     if (tabs.length === 0) return;
     const _activeTabIndex = getActiveTabIndex(currentVersion, tabs, tags, snaps, currentLane);
     if (_activeTabIndex !== activeTabIndex) setActiveTab(_activeTabIndex);
-  }, [loadingVersions, currentLane?.id.toString()]);
+  }, [currentLane, tabs.length, tags?.length, snaps?.length, currentVersion, activeTabIndex, loading]);
 
   const multipleTabs = tabs.length > 1;
   const message = multipleTabs
@@ -249,6 +257,35 @@ function _VersionMenu({
     : `Switch between ${tabs[0]?.name.toLocaleLowerCase()}s`;
 
   const showTab = activeTabIndex !== undefined && tabs[activeTabIndex]?.payload.length > 0;
+
+  const _rowRenderer = React.useCallback(
+    function VersionRowRenderer({ index }) {
+      const { name, payload = [] } = activeTab || {};
+      const item = payload[index];
+      if (!item) return null;
+      if (name === 'LANE') {
+        const lane = item as LaneModel;
+        return <LaneInfo key={lane.id.toString()} currentLane={currentLane} {...lane}></LaneInfo>;
+      }
+      const version = item as DropdownComponentVersion;
+      return (
+        <VersionInfo
+          key={version.version}
+          currentVersion={currentVersion}
+          latestVersion={latestVersion}
+          overrideVersionHref={overrideVersionHref}
+          showDetails={showVersionDetails}
+          {...version}
+        ></VersionInfo>
+      );
+    },
+    [activeTab, currentVersion, latestVersion, showVersionDetails, currentLane?.id.toString(), showTab]
+  );
+
+  const rowRenderer = React.useMemo(
+    () => (showTab && activeTab ? _rowRenderer : () => null),
+    [showTab, activeTab, _rowRenderer]
+  );
 
   return (
     <div {...rest} className={classNames(styles.versionMenuContainer, !open && styles.hide)}>
@@ -283,11 +320,20 @@ function _VersionMenu({
             );
           })}
       </div>
-      <div className={styles.versionContainer}>
-        {showTab && tabs[activeTabIndex]?.name !== 'LANE' && (
+      <div className={styles.versionContainerRoot}>
+        {/* {showTab && tabs[activeTabIndex]?.name !== 'LANE' && (
           <div className={classNames(styles.pullDownIndicator)}>Pull down to load more</div>
         )}
         {showTab &&
+          tabs[activeTabIndex]?.name === 'LANE' &&
+          tabs[activeTabIndex]?.payload.map((payload) => (
+            <LaneInfo key={payload.id} currentLane={currentLane} {...payload}></LaneInfo>
+          ))} */}
+        {activeTab?.payload.map((payload, index) => {
+          return rowRenderer({ index });
+        })}
+      </div>
+      {/* {showTab &&
           tabs[activeTabIndex]?.name === 'LANE' &&
           tabs[activeTabIndex]?.payload.map((payload) => (
             <LaneInfo key={payload.id} currentLane={currentLane} {...payload}></LaneInfo>
@@ -296,17 +342,22 @@ function _VersionMenu({
           tabs[activeTabIndex]?.name !== 'LANE' &&
           tabs[activeTabIndex]?.payload.map((payload) => {
             return (
-              <VersionInfo
-                key={payload.version}
-                currentVersion={currentVersion}
-                latestVersion={latestVersion}
-                overrideVersionHref={overrideVersionHref}
-                showDetails={showVersionDetails}
-                {...payload}
-              ></VersionInfo>
+             
             );
-          })}
-      </div>
+          })} */}
+      {/* <AutoSizer disableHeight>
+        {({ width }) => (
+          <List
+            height={240}
+            width={width}
+            rowHeight={40}
+            rowRenderer={rowRenderer}
+            rowCount={rowCount}
+            className={styles.versionContainerRoot}
+            scrollToIndex={scrollToIndex}
+          />
+        )}
+      </AutoSizer> */}
     </div>
   );
 }
