@@ -38,6 +38,8 @@ export const componentOverviewFields = gql`
     server {
       env
       url
+      host
+      basePath
     }
     buildStatus
     env {
@@ -158,6 +160,7 @@ export function useComponentQuery(componentId: string, host: string, filters?: F
   const { data, error, loading, subscribeToMore, ...rest } = useDataQuery(GET_COMPONENT, {
     variables: { id: componentId, extensionId: host, ...(filters?.log || {}) },
     skip,
+    errorPolicy: 'all',
   });
 
   useEffect(() => {
@@ -256,15 +259,12 @@ export function useComponentQuery(componentId: string, host: string, filters?: F
       }),
     };
     const id = rawComponent && ComponentID.fromObject(rawComponent.id);
+    const componentError =
+      error && !data ? new ComponentError(500, error.message) : !rawComponent && !loading && new ComponentError(404);
     return {
       componentDescriptor: id ? ComponentDescriptor.fromObject({ id: id.toString(), aspectList }) : undefined,
       component: rawComponent ? ComponentModel.from({ ...rawComponent, host }) : undefined,
-      // eslint-disable-next-line
-      error: error
-        ? new ComponentError(500, error.message)
-        : !rawComponent && !loading
-        ? new ComponentError(404)
-        : undefined,
+      error: componentError || undefined,
       loading,
       ...rest,
     };

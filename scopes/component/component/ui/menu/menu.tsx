@@ -14,7 +14,7 @@ import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.me
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentModel } from '../component-model';
 import { useComponent as useComponentQuery, UseComponentType } from '../use-component';
-import { CollapsableMenuNav } from './menu-nav';
+import { CollapsibleMenuNav } from './menu-nav';
 import styles from './menu.module.scss';
 import { OrderedNavigationSlot, ConsumeMethodSlot } from './nav-plugin';
 import { useIdFromLocation } from '../use-component-from-location';
@@ -23,12 +23,14 @@ import { Filters } from '../use-component-query';
 
 export type MenuProps = {
   className?: string;
-
   /**
    * skip the right side.
    */
   skipRightSide?: boolean;
-
+  /**
+   * custom render the right side
+   */
+  RightNode?: React.ReactNode;
   /**
    * slot for top bar menu nav items
    */
@@ -37,6 +39,9 @@ export type MenuProps = {
    * right side menu item slot
    */
   widgetSlot: OrderedNavigationSlot;
+  /**
+   * workspace or scope
+   */
   host: string;
   /**
    * main dropdown item slot
@@ -69,6 +74,7 @@ export function ComponentMenu({
   consumeMethodSlot,
   componentIdStr,
   skipRightSide,
+  RightNode,
   useComponent,
   path,
   useComponentFilters,
@@ -85,7 +91,20 @@ export function ComponentMenu({
 
   const { component } = useComponentQuery(host, componentId?.toString() || idFromLocation, useComponentOptions);
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
+
   if (!component) return <FullLoader />;
+
+  const RightSide = (
+    <div className={styles.rightSide}>
+      {RightNode || (
+        <>
+          <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
+          <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
+        </>
+      )}
+    </div>
+  );
+
   return (
     <Routes>
       <Route
@@ -93,14 +112,9 @@ export function ComponentMenu({
         element={
           <div className={classnames(styles.topBar, className)}>
             <div className={styles.leftSide}>
-              <CollapsableMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
+              <CollapsibleMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
             </div>
-            {!skipRightSide && (
-              <div className={styles.rightSide}>
-                <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
-                <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
-              </div>
-            )}
+            {!skipRightSide && <div className={styles.rightSide}>{RightSide}</div>}
           </div>
         }
       />
@@ -116,12 +130,12 @@ export function VersionRelatedDropdowns({
 }: {
   component: ComponentModel;
   consumeMethods?: ConsumeMethodSlot;
-  className?: string,
+  className?: string;
   host: string;
 }) {
   const location = useLocation();
   const { lanesModel } = useLanes();
-  const currentLane =
+  const viewedLane =
     lanesModel?.viewedLane?.id && !lanesModel?.viewedLane?.id.isDefault() ? lanesModel.viewedLane : undefined;
 
   const { logs } = component;
@@ -149,12 +163,12 @@ export function VersionRelatedDropdowns({
   const isNew = snaps.length === 0 && tags.length === 0;
 
   const lanes = lanesModel?.getLanesByComponentId(component.id)?.filter((lane) => !lane.id.isDefault()) || [];
-  const localVersion = isWorkspace && !isNew && !currentLane;
+  const localVersion = isWorkspace && !isNew && (!viewedLane || lanesModel?.isViewingCurrentLane());
 
   const currentVersion =
     isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.version;
 
-  const methods = useConsumeMethods(component, consumeMethods, currentLane);
+  const methods = useConsumeMethods(component, consumeMethods, viewedLane);
   return (
     <>
       {consumeMethods && tags.length > 0 && (
@@ -171,7 +185,7 @@ export function VersionRelatedDropdowns({
         localVersion={localVersion}
         currentVersion={currentVersion}
         latestVersion={component.latest}
-        currentLane={currentLane}
+        currentLane={viewedLane}
         className={className}
         menuClassName={styles.componentVersionMenu}
       />

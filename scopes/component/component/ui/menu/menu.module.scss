@@ -55,12 +55,11 @@
   align-items: center;
   height: 100%;
   padding-left: 16px;
+
   > * {
     margin-right: 12px;
-    &:last-child {
-      margin-right: 16px;
-    }
   }
+
   @media screen and (max-width: $br-lg) {
     > * {
       margin-right: 8px;
@@ -81,7 +80,7 @@
 
 .tab {
   > div {
-    color: var(--on-background-color, #2B2B2B);
+    color: var(--on-background-color, #2b2b2b);
     padding: 0;
   }
 }

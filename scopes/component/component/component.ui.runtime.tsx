@@ -2,7 +2,6 @@ import React from 'react';
 import flatten from 'lodash.flatten';
 import copy from 'copy-to-clipboard';
 import type { RouteProps } from 'react-router-dom';
-
 import type { LinkProps } from '@teambit/base-react.navigation.link';
 import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
@@ -16,6 +15,7 @@ import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import { MenuItem, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { Import } from '@teambit/ui-foundation.ui.use-box.menu';
+import { snapToSemver } from '@teambit/component-package-version';
 import { AspectSection } from './aspect.section';
 import { ComponentAspect } from './component.aspect';
 import { ComponentModel } from './ui';
@@ -74,16 +74,26 @@ export class ComponentUI {
     if (isBrowser) this.registerPubSub();
   }
 
+  get routes() {
+    return this.routeSlot
+      .toArray()
+      .map(([key, routes]) => [key, Array.isArray(routes) ? [...flatten(routes)] : [routes]] as [string, RouteProps[]]);
+  }
+
   /**
    * the current visible component
    */
   private activeComponent?: ComponentModel;
 
+  formatToInstallableVersion(version: string) {
+    return snapToSemver(version);
+  }
+
   private copyNpmId = () => {
     const packageName = this.activeComponent?.packageName;
     if (packageName) {
       const version = this.activeComponent?.id.version;
-      const versionString = version ? `@${version}` : '';
+      const versionString = version ? `@${this.formatToInstallableVersion(version)}` : '';
       copy(`${packageName}${versionString}`);
     }
   };
@@ -137,12 +147,14 @@ export class ComponentUI {
 
   private bitMethod: ConsumePlugin = (comp, options) => {
     const version = comp.version === comp.latest ? '' : `@${comp.version}`;
+    const packageVersion = comp.version === comp.latest ? '' : `@${this.formatToInstallableVersion(comp.version)}`;
+
     return {
       Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
       Component: (
         <Import
           componentId={`${comp.id.toString({ ignoreVersion: true })}${version}`}
-          packageName={`${comp.packageName}${version}`}
+          packageName={`${comp.packageName}${packageVersion}`}
           componentName={comp.id.name}
           showInstallMethod={!options?.currentLane}
         />
@@ -181,6 +193,7 @@ export class ComponentUI {
         useComponent={options.useComponent}
         componentIdStr={options.componentId}
         useComponentFilters={options.useComponentFilters}
+        overriddenRoutes={options.routes}
       />
     );
   }
@@ -188,6 +201,7 @@ export class ComponentUI {
   getMenu(host: string, options: GetComponentsOptions = {}) {
     return (
       <ComponentMenu
+        className={options.className}
         skipRightSide={options.skipRightSide}
         navigationSlot={this.navSlot}
         consumeMethodSlot={this.consumeMethodSlot}
@@ -198,6 +212,7 @@ export class ComponentUI {
         path={options.path}
         componentIdStr={options.componentId}
         useComponentFilters={options.useComponentFilters}
+        RightNode={options.RightNode}
       />
     );
   }

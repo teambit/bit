@@ -1,12 +1,17 @@
 import React from 'react';
 import { Text, Newline } from 'ink';
-import { EnvService, EnvDefinition } from '@teambit/envs';
+import { EnvService, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import highlight from 'cli-highlight';
+import { DependencyDetector } from './dependency-detector';
 
 export type DependenciesDescriptor = {
   id: string;
   displayName: string;
   config?: string;
+};
+
+type DependenciesTransformationMap = ServiceTransformationMap & {
+  getDepDetectors: () => DependencyDetector[] | null;
 };
 
 export class DependenciesService implements EnvService<{}, DependenciesDescriptor> {
@@ -34,6 +39,14 @@ export class DependenciesService implements EnvService<{}, DependenciesDescripto
       id: this.name,
       config: dependencies ? JSON.stringify(dependencies, null, 2) : undefined,
       displayName: this.name,
+    };
+  }
+
+  transform(env: Env, context: EnvContext): DependenciesTransformationMap | undefined {
+    // Old env
+    if (!env?.detectors) return undefined;
+    return {
+      getDepDetectors: () => env.detectors()(context),
     };
   }
 }

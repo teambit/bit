@@ -18,77 +18,77 @@ import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { readModulesManifest } from '@pnpm/modules-yaml';
 import { ProjectManifest } from '@pnpm/types';
 import { join } from 'path';
-import userHome from 'user-home';
 import { readConfig } from './read-config';
-
-const defaultStoreDir = join(userHome, '.pnpm-store');
-const defaultCacheDir = join(userHome, '.pnpm-cache');
+import { pnpmPruneModules } from './pnpm-prune-modules';
 
 export class PnpmPackageManager implements PackageManager {
+  readonly name = 'pnpm';
+
   private readConfig = memoize(readConfig);
   constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
-
-  async _getGlobalPnpmDirs(
-    opts: {
-      cacheRootDir?: string;
-      packageManagerConfigRootDir?: string;
-    } = {}
-  ) {
-    const { config } = await this.readConfig(opts.packageManagerConfigRootDir);
-    const storeDir = opts.cacheRootDir ? join(opts.cacheRootDir, '.pnpm-store') : config.storeDir ?? defaultStoreDir;
-    const cacheDir = opts.cacheRootDir ? join(opts.cacheRootDir, '.pnpm-cache') : config.cacheDir ?? defaultCacheDir;
-    return { storeDir, cacheDir };
-  }
 
   async install(
     { rootDir, manifests }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
-  ): Promise<void> {
+  ): Promise<{ dependenciesChanged: boolean }> {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
 
     this.logger.debug(`running installation in root dir ${rootDir}`);
     this.logger.debug('components manifests for installation', manifests);
-    this.logger.setStatusLine('installing dependencies using pnpm');
-    // turn off the logger because it interrupts the pnpm output
-    this.logger.off();
+    if (!installOptions.hidePackageManagerOutput) {
+      // this.logger.setStatusLine('installing dependencies using pnpm');
+      // turn off the logger because it interrupts the pnpm output
+      // this.logger.console('-------------------------PNPM OUTPUT-------------------------');
+      this.logger.off();
+    }
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
-    const { storeDir, cacheDir } = await this._getGlobalPnpmDirs(installOptions);
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
     if (!installOptions.useNesting) {
       manifests = await extendWithComponentsFromDir(rootDir, manifests);
     }
-    await install(
+    const { dependenciesChanged } = await install(
       rootDir,
       manifests,
-      storeDir,
-      cacheDir,
+      config.storeDir,
+      config.cacheDir,
       registries,
       proxyConfig,
       networkConfig,
       {
         engineStrict: installOptions.engineStrict ?? config.engineStrict,
+        neverBuiltDependencies: installOptions.neverBuiltDependencies,
         nodeLinker: installOptions.nodeLinker,
         nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
+        includeOptionalDeps: installOptions.includeOptionalDeps,
         overrides: installOptions.overrides,
         hoistPattern: config.hoistPattern,
-        publicHoistPattern: ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
+        publicHoistPattern: config.shamefullyHoist
+          ? ['*']
+          : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
+        preferOffline: installOptions.preferOffline,
         rootComponents: installOptions.rootComponents,
         rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
         peerDependencyRules: installOptions.peerDependencyRules,
         sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
         sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
+        pnpmHomeDir: config.pnpmHomeDir,
+        updateAll: installOptions.updateAll,
+        hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
       },
       this.logger
     );
-    this.logger.on();
-    // Make a divider row to improve output
-    this.logger.console('-------------------------');
-    this.logger.consoleSuccess('installing dependencies using pnpm');
+    if (!installOptions.hidePackageManagerOutput) {
+      this.logger.on();
+      // Make a divider row to improve output
+      // this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
+      // this.logger.consoleSuccess('installing dependencies using pnpm');
+    }
+    return { dependenciesChanged };
   }
 
   async getPeerDependencyIssues(
@@ -96,17 +96,16 @@ export class PnpmPackageManager implements PackageManager {
     manifests: Record<string, ProjectManifest>,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<PeerDependencyIssuesByProjects> {
-    const { storeDir, cacheDir } = await this._getGlobalPnpmDirs(installOptions);
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const registries = await this.depResolver.getRegistries();
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const lynx = require('./lynx');
-    const { config } = await this.readConfig();
+    const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
     return lynx.getPeerDependencyIssues(manifests, {
-      storeDir,
-      cacheDir,
+      storeDir: config.storeDir,
+      cacheDir: config.cacheDir,
       proxyConfig,
       registries,
       rootDir,
@@ -123,11 +122,11 @@ export class PnpmPackageManager implements PackageManager {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { resolveRemoteVersion } = require('./lynx');
-    const { cacheDir } = await this._getGlobalPnpmDirs(options);
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
-    return resolveRemoteVersion(packageName, options.rootDir, cacheDir, registries, proxyConfig, networkConfig);
+    const { config } = await this.readConfig(options.packageManagerConfigRootDir);
+    return resolveRemoteVersion(packageName, options.rootDir, config.cacheDir, registries, proxyConfig, networkConfig);
   }
 
   async getProxyConfig?(): Promise<PackageManagerProxyConfig> {
@@ -196,5 +195,13 @@ export class PnpmPackageManager implements PackageManager {
     const modulesState = await readModulesManifest(join(rootDir, 'node_modules'));
     if (modulesState?.injectedDeps == null) return [];
     return modulesState.injectedDeps[`node_modules/${packageName}`] ?? modulesState.injectedDeps[componentDir] ?? [];
+  }
+
+  getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
+    return Object.fromEntries(manifests.map((manifest) => [manifest.name, 'workspace:*']));
+  }
+
+  async pruneModules(rootDir: string): Promise<void> {
+    return pnpmPruneModules(rootDir);
   }
 }

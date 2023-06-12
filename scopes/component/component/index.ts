@@ -7,7 +7,12 @@ export { Component, InvalidComponent } from './component';
 export { ComponentID } from '@teambit/component-id';
 export { default as ComponentFS } from './component-fs';
 export type { default as ComponentConfig } from './config';
-export type { ComponentFactory, ResolveAspectsOptions } from './component-factory';
+export type {
+  ComponentFactory,
+  ResolveAspectsOptions,
+  FilterAspectsOptions,
+  LoadAspectsOptions,
+} from './component-factory';
 export type { AspectList } from './aspect-list';
 export { AspectEntry, AspectData, ResolveComponentIdFunc } from './aspect-entry';
 // TODO: check why it's not working when using the index in snap dir like this:
@@ -29,7 +34,14 @@ export { ComponentContext, ComponentDescriptorContext, useComponentDescriptor } 
 export type { ComponentProviderProps, ComponentDescriptorProviderProps } from './ui/context';
 export { ComponentProvider, ComponentDescriptorProvider } from './ui/context';
 export { componentFields, componentIdFields, componentOverviewFields } from './ui';
-export { ConsumePlugin, ComponentMenu, VersionRelatedDropdowns } from './ui/menu';
+export {
+  NavPlugin,
+  ConsumePlugin,
+  CollapsibleMenuNav,
+  MenuNavProps,
+  ComponentMenu,
+  VersionRelatedDropdowns,
+} from './ui/menu';
 export { RegisteredComponentRoute, ComponentUrlParams } from './component.route';
 export { ComponentModel, ComponentModelProps } from './ui/component-model';
 export { TopBarNav } from './ui/top-bar-nav';

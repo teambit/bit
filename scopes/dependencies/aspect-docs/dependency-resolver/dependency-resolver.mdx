@@ -501,6 +501,22 @@ This will tell Bit that any dependency that has react in its peer dependencies s
 
 The above setting will mute any warnings about peer dependency version mismatches related to `@babel/` packages or `eslint`.
 
+## Build
+
+### neverBuiltDependencies
+
+This field allows to ignore the builds of specific dependencies. The "preinstall", "install", and "postinstall" scripts of the listed packages will not be executed during installation.
+
+An example of the "neverBuiltDependencies" field:
+
+```json
+{
+  "@teambit.dependencies/dependency-resolver": {
+    "neverBuiltDependencies": ["fsevents", "level"]
+  }
+}
+```
+
 ## CLI reference
 
 ### install
@@ -536,18 +552,6 @@ bit install <package>@<version>
 
 // For example
 bit install lodash@1.0.0
-```
-
-##### Install packages that are already listed in the Dependency Resolver policies
-
-When trying to install a specific package that is already listed in the Dependency Resolver policies, an error will be thrown.
-
-To override it:
-
-```bash
-bit install <package> --update-existing
-
-bit install <package> -u
 ```
 
 ##### Install packages without importing components
