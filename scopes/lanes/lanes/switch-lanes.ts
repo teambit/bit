@@ -80,9 +80,12 @@ export class LaneSwitcher {
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
     // which can be an issue when some components are also dependencies of others
-    const componentsResults = await mapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
-      return applyVersion(this.consumer, id, componentFromFS, mergeResults, this.checkoutProps);
-    });
+    const componentsResults = await mapSeries(
+      succeededComponents,
+      ({ id, currentComponent: componentFromFS, mergeResults }) => {
+        return applyVersion(this.consumer, id, componentFromFS, mergeResults, this.checkoutProps);
+      }
+    );
 
     markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
 
@@ -99,7 +102,7 @@ export class LaneSwitcher {
     const { installationError, compilationError } = await this.Lanes.componentWriter.writeMany(
       manyComponentsWriterOpts
     );
-    await deleteFilesIfNeeded(componentsResults, this.consumer);
+    await deleteFilesIfNeeded(componentsResults, this.workspace);
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
@@ -227,13 +230,13 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
     if (switchProps.existingOnWorkspaceOnly) {
       return returnFailure(`component ${id.toStringWithoutVersion()} is not in the workspace`, true);
     }
-    return { componentFromFS: undefined, componentFromModel: componentOnLane, id, mergeResults: null };
+    return { componentFromModel: componentOnLane, id };
   }
   if (!existingBitMapId.hasVersion()) {
     // happens when switching from main to a lane and a component was snapped on the lane.
     // in the .bitmap file, the version is "latest" or empty. so we just need to write the component according to the
     // model. we don't care about the componentFromFS
-    return { componentFromFS: undefined, componentFromModel: componentOnLane, id, mergeResults: null };
+    return { componentFromModel: componentOnLane, id };
   }
   const currentlyUsedVersion = existingBitMapId.version;
   if (currentlyUsedVersion === version) {
@@ -275,5 +278,5 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
     });
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  return { componentFromFS: component, componentFromModel: componentOnLane, id, mergeResults };
+  return { currentComponent: component, componentFromModel: componentOnLane, id, mergeResults };
 }

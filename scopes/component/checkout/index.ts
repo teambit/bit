@@ -11,4 +11,6 @@ export {
   applyVersion,
   deleteFilesIfNeeded,
   markFilesToBeRemovedIfNeeded,
+  ComponentStatusBase,
+  ApplyVersionWithComps,
 } from './checkout-version';
