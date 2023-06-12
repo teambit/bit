@@ -254,7 +254,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
   ) {
     const logger = loggerMain.createLogger(SignAspect.id);
     const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes, snapping, harmony);
-    cli.register(new SignCmd(signMain));
+    cli.register(new SignCmd(signMain, logger));
     return signMain;
   }
 }

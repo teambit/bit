@@ -245,7 +245,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       filterByRuntime: true,
       useScopeAspectsCapsule: false,
       workspaceName: this.workspace.name,
-      resolveEnvsFromRoots: false,
+      resolveEnvsFromRoots: this.resolveEnvsFromRoots,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
