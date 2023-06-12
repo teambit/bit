@@ -1,7 +1,9 @@
 import chalk from 'chalk';
+import { Logger } from '@teambit/logger';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component';
 import { BuildStatus } from '@teambit/legacy/dist/constants';
+import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import { SignMain } from './sign.main.runtime';
 
 type SignOptions = { multiple: boolean; alwaysSucceed: boolean; push: boolean; lane?: string; rebuild?: boolean };
@@ -21,9 +23,11 @@ with --multiple, a new bare-scope needs to be created and it will import the com
     ['', 'rebuild', 'allow signing components that their buildStatus is success for testing purposes'],
   ] as CommandOptions;
 
-  constructor(private signMain: SignMain) {}
+  constructor(private signMain: SignMain, private logger: Logger) {}
 
   async report([components = []]: [string[]], { multiple, alwaysSucceed, push, lane, rebuild }: SignOptions) {
+    const harmonyVersion = getHarmonyVersion();
+    this.logger.console(`signing using ${harmonyVersion} version`); // eslint-disable-line no-console
     const componentIds = components.map((c) => ComponentID.fromString(c));
     this.warnForMissingVersions(componentIds);
     if (push && rebuild) {
