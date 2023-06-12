@@ -54,7 +54,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
   async extract(component: Component, formatter?: Formatter): Promise<APISchema> {
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
-    const compatibleExts = ['.tsx', '.ts', '.jsx', '.js'];
+    const compatibleExts = ['.tsx', '.ts'];
     const internalFiles = component.filesystem.files.filter(
       (file) => compatibleExts.includes(file.extname) && file.path !== mainFile.path
     );

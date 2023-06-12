@@ -81,7 +81,6 @@ export class ProcessBasedTsServer {
   private readlineInterface: readline.ReadLine | null;
   private tsServerProcess: cp.ChildProcess | null;
   private seq = 0;
-  private TSSERVER_START_TIMEOUT = 5000; // 5s
 
   private readonly deferreds: {
     [seq: number]: Deferred<any>;
@@ -131,10 +130,6 @@ export class ProcessBasedTsServer {
       };
       this.tsServerProcess = tsserverPathIsModule ? cp.fork(tsserverPath, args, options) : cp.spawn(tsserverPath, args);
 
-      const timeout = setTimeout(() => {
-        reject(new Error(`TIMEOUT: TSServer did not start within the specified time ${this.TSSERVER_START_TIMEOUT}s`));
-      }, this.TSSERVER_START_TIMEOUT);
-
       this.readlineInterface = readline.createInterface(
         this.tsServerProcess.stdout as Readable,
         this.tsServerProcess.stdin as Writable,
@@ -146,7 +141,6 @@ export class ProcessBasedTsServer {
       });
 
       this.readlineInterface.on('line', (line) => {
-        clearTimeout(timeout);
         this.processMessage(line, resolve, reject);
       });
 

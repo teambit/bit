@@ -6,7 +6,7 @@ import { head, uniqBy } from 'lodash';
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-import { resolve, sep, relative, basename, join } from 'path';
+import { resolve, sep, relative, basename, join, extname } from 'path';
 import { Component, ComponentID } from '@teambit/component';
 import {
   TypeRefSchema,
@@ -122,10 +122,14 @@ export class SchemaExtractorContext {
    */
   getLocation(node: Node, targetSourceFile?: ts.SourceFile, absolutePath = false): Location {
     const sourceFile = targetSourceFile || node.getSourceFile();
+    const filePath = absolutePath ? sourceFile.fileName : this.getPathRelativeToComponent(sourceFile.fileName);
+    if (sourceFile.fileName.endsWith('.js')) {
+      // Skip JavaScript files
+      throw new Error(`Cannot get location of node in JavaScript file ${sourceFile.fileName}`);
+    }
     const position = sourceFile.getLineAndCharacterOfPosition(node.getStart());
     const line = position.line + 1;
     const character = position.character + 1;
-    const filePath = absolutePath ? sourceFile.fileName : this.getPathRelativeToComponent(sourceFile.fileName);
 
     return {
       filePath: pathNormalizeToLinux(filePath),
@@ -197,31 +201,30 @@ export class SchemaExtractorContext {
   visitTypeDefinition() {}
 
   findFileInComponent(filePath: string) {
-    const filePathToCompare = pathNormalizeToLinux(filePath);
-    const fileNameToCompare = basename(filePathToCompare); // Get the filename from the filePath
+    const normalizedFilePath = pathNormalizeToLinux(filePath);
+    const fileNameToCompare = basename(normalizedFilePath);
+    const pathWithoutExtension = fileNameToCompare.replace(/\.[^/.]+$/, '');
+    const possibleFormats = new Set(['ts', 'tsx']);
 
     const matchingFile = this.component.filesystem.files.find((file) => {
       const currentFilePath = pathNormalizeToLinux(file.path);
-      const currentFileName = basename(currentFilePath); // Get the filename from the current file path
+      const currentFileName = basename(currentFilePath);
+      const currentFileExtension = extname(currentFilePath).substring(1);
 
-      // TODO: fix this line to support further extensions.
-      if (currentFileName === fileNameToCompare || currentFilePath.includes(fileNameToCompare)) {
-        const strings = ['ts', 'tsx', 'js', 'jsx'].map((format) => {
-          if (fileNameToCompare.endsWith(`.${format}`)) return fileNameToCompare;
+      const isSameBaseName = pathWithoutExtension === basename(currentFileName, `.${currentFileExtension}`);
+      const isValidExtension = possibleFormats.has(currentFileExtension);
 
-          return `${fileNameToCompare}.${format}`;
-        });
+      if (isSameBaseName && isValidExtension) {
+        return true;
+      }
 
-        const matchesWithExtension = !!strings.find((string) => string === currentFileName);
-        // check if it is an index file export
-        const matchesIndexFile =
-          !matchesWithExtension &&
-          ['ts', 'js'].some((format) => {
-            const indexFilePath = join(filePathToCompare, `index.${format}`);
-            return pathNormalizeToLinux(indexFilePath) === currentFilePath;
-          });
-
-        return matchesWithExtension || matchesIndexFile;
+      if (
+        ['ts', 'js'].some((format) => {
+          const indexFilePath = join(normalizedFilePath, `index.${format}`);
+          return pathNormalizeToLinux(indexFilePath) === currentFilePath;
+        })
+      ) {
+        return true;
       }
 
       return false;
