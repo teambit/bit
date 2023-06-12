@@ -6,8 +6,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import ts from 'typescript';
 import { BitError } from '@teambit/bit-error';
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
-import { getMainFileWithoutExtension } from '@teambit/legacy/dist/utils/bit/component-placeholders';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptCompilerInterface } from './typescript-compiler-interface';
 
@@ -105,7 +103,6 @@ export class TypescriptCompiler implements Compiler, TypescriptCompilerInterface
     await this.writeTsConfig(capsuleDirs);
     await this.writeTypes(capsuleDirs);
     await this.writeNpmIgnore(capsuleDirs);
-    await this.addTypesToPkgJson(context.capsuleNetwork);
   }
 
   /**
@@ -118,37 +115,6 @@ export class TypescriptCompiler implements Compiler, TypescriptCompilerInterface
       artifacts: this.getArtifactDefinition(),
       componentsResults,
     };
-  }
-
-  async postBuild(context: BuildContext) {
-    await this.removeTypesFromPkgJson(context.capsuleNetwork);
-  }
-
-  private async removeTypesFromPkgJson(capsuleNetwork: Network) {
-    await Promise.all(
-      capsuleNetwork.seedersCapsules.map(async (capsule) => {
-        const packageJson = PackageJsonFile.loadFromCapsuleSync(capsule.path);
-        // the types['index.ts'] is needed only during the build to avoid errors when tsc finds the
-        // same type once in the d.ts and once in the ts file.
-        // the reason for `packageJson.packageJsonObject.main` is that .d.ts components don't have a main file and they do need the types prop
-        if (packageJson.packageJsonObject.types && packageJson.packageJsonObject.main) {
-          delete packageJson.packageJsonObject.types;
-          await packageJson.write();
-        }
-      })
-    );
-  }
-
-  private async addTypesToPkgJson(capsuleNetwork: Network) {
-    await Promise.all(
-      capsuleNetwork.seedersCapsules.map(async (capsule) => {
-        const mainFile = capsule.component.mainFile.relative;
-        const packageJson = PackageJsonFile.loadFromCapsuleSync(capsule.path);
-        if (packageJson.packageJsonObject.main?.endsWith('.d.ts')) return;
-        packageJson.packageJsonObject.types = `${getMainFileWithoutExtension(mainFile)}.ts`;
-        await packageJson.write();
-      })
-    );
   }
 
   getArtifactDefinition() {
