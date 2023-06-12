@@ -24,7 +24,7 @@ export class PnpmUI {
 
     return {
       Title: <img style={{ height: '16px', marginTop: '-2px' }} src="https://static.bit.dev/brands/pnpm.svg" />,
-      Component: (
+      Component: packageName ? (
         <Install
           config={`npm config set '${registry}:registry' https://node.bit.cloud`}
           componentName={componentId.name}
@@ -32,7 +32,7 @@ export class PnpmUI {
           copyString={`pnpm i ${packageName}${packageVersion}`}
           registryName={registry}
         />
-      ),
+      ) : null,
       order: 30,
     };
   };

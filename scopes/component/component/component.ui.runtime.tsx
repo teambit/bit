@@ -152,14 +152,14 @@ export class ComponentUI {
 
     return {
       Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
-      Component: (
+      Component: packageName ? (
         <Import
           componentId={`${componentId.toString({ ignoreVersion: true })}${version}`}
           packageName={`${packageName}${packageVersion}`}
           componentName={componentId.name}
           showInstallMethod={!options?.viewedLane}
         />
-      ),
+      ) : null,
       order: 0,
     };
   };

@@ -26,7 +26,7 @@ export class YarnUI {
       Title: (
         <img style={{ height: '17px', paddingTop: '4px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />
       ),
-      Component: (
+      Component: packageName ? (
         <Install
           config={`npm config set '${registry}:registry' https://node.bit.cloud`}
           componentName={componentId.name}
@@ -34,7 +34,7 @@ export class YarnUI {
           copyString={`yarn add ${packageName}${packageVersion}`}
           registryName={registry}
         />
-      ),
+      ) : null,
       order: 20,
     };
   };

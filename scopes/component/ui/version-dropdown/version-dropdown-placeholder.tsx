@@ -9,7 +9,6 @@ import { WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DropdownComponentVersion } from './version-dropdown';
 
 import styles from './version-dropdown-placeholder.module.scss';
-import { on } from 'events';
 
 export type VersionProps = {
   currentVersion?: string;
