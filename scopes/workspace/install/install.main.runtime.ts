@@ -39,6 +39,7 @@ import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codem
 import hash from 'object-hash';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
+import { snapToSemver } from '@teambit/component-package-version';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
 import { LinkCommand } from './link';
 import InstallCmd from './install.cmd';
@@ -498,7 +499,8 @@ export class InstallMain {
     if (!envComponent) return undefined;
     const packageName = this.dependencyResolver.getPackageName(envComponent);
     const version = envId.version;
-    return { [packageName]: version };
+    const finalVersion = snapToSemver(version);
+    return { [packageName]: finalVersion };
   }
 
   private async _getAppManifests(
