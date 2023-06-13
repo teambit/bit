@@ -53,18 +53,13 @@ function _VersionInfo(
     }
   }, [isCurrent]);
 
-  const href = useMemo(() => {
-    return overrideVersionHref ? overrideVersionHref(version) : `?version=${version}`;
-  }, [version]);
+  const href = overrideVersionHref ? overrideVersionHref(version) : `?version=${version}`;
 
   const formattedVersion = useMemo(() => {
     return tag ? version : version.slice(0, 6);
   }, [tag, version]);
 
-  const commitMessage = React.useCallback((_message?: string) => {
-    if (!_message || _message === '') return <Ellipsis className={styles.emptyMessage}>No commit message</Ellipsis>;
-    return <Ellipsis className={styles.commitMessage}>{_message}</Ellipsis>;
-  }, []);
+  const isLatest = version === latestVersion;
 
   return (
     <div ref={ref || currentVersionRef}>
@@ -72,8 +67,8 @@ function _VersionInfo(
         <div className={styles.version}>
           <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />
           <Ellipsis className={classNames(styles.versionName)}>{formattedVersion}</Ellipsis>
-          {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
-          {showDetails && commitMessage(message)}
+          {isLatest && <VersionLabel status="latest" />}
+          <CommitMessage message={message} showDetails={showDetails} />
         </div>
         <Ellipsis className={styles.versionTimestamp}>
           <TimeAgo date={timestamp} />
@@ -81,4 +76,10 @@ function _VersionInfo(
       </MenuLinkItem>
     </div>
   );
+}
+
+function CommitMessage({ message, showDetails }: { message?: string; showDetails?: boolean }) {
+  if (!showDetails) return null;
+  if (!message || message === '') return <Ellipsis className={styles.emptyMessage}>No commit message</Ellipsis>;
+  return <Ellipsis className={styles.commitMessage}>{message}</Ellipsis>;
 }

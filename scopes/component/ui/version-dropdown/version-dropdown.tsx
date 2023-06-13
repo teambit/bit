@@ -249,7 +249,7 @@ function _VersionMenu({
     if (tabs.length === 0) return;
     const _activeTabIndex = getActiveTabIndex(currentVersion, tabs, tags, snaps, currentLane);
     if (_activeTabIndex !== activeTabIndex) setActiveTab(_activeTabIndex);
-  }, [currentLane, tabs.length, tags?.length, snaps?.length, currentVersion, activeTabIndex, loading]);
+  }, [currentLane, tabs.length, tags?.length, snaps?.length, currentVersion, loading]);
 
   const multipleTabs = tabs.length > 1;
   const message = multipleTabs
@@ -321,43 +321,10 @@ function _VersionMenu({
           })}
       </div>
       <div className={styles.versionContainerRoot}>
-        {/* {showTab && tabs[activeTabIndex]?.name !== 'LANE' && (
-          <div className={classNames(styles.pullDownIndicator)}>Pull down to load more</div>
-        )}
-        {showTab &&
-          tabs[activeTabIndex]?.name === 'LANE' &&
-          tabs[activeTabIndex]?.payload.map((payload) => (
-            <LaneInfo key={payload.id} currentLane={currentLane} {...payload}></LaneInfo>
-          ))} */}
         {activeTab?.payload.map((payload, index) => {
           return rowRenderer({ index });
         })}
       </div>
-      {/* {showTab &&
-          tabs[activeTabIndex]?.name === 'LANE' &&
-          tabs[activeTabIndex]?.payload.map((payload) => (
-            <LaneInfo key={payload.id} currentLane={currentLane} {...payload}></LaneInfo>
-          ))}
-        {showTab &&
-          tabs[activeTabIndex]?.name !== 'LANE' &&
-          tabs[activeTabIndex]?.payload.map((payload) => {
-            return (
-             
-            );
-          })} */}
-      {/* <AutoSizer disableHeight>
-        {({ width }) => (
-          <List
-            height={240}
-            width={width}
-            rowHeight={40}
-            rowRenderer={rowRenderer}
-            rowCount={rowCount}
-            className={styles.versionContainerRoot}
-            scrollToIndex={scrollToIndex}
-          />
-        )}
-      </AutoSizer> */}
     </div>
   );
 }

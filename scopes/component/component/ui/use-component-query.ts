@@ -2,7 +2,7 @@ import { useMemo, useEffect, useRef } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
-import { ComponentModel } from '../component-model';
+import { ComponentModel } from './component-model';
 import { ComponentQueryResult, Filters } from './use-component.model';
 import {
   GET_COMPONENT,
@@ -11,7 +11,7 @@ import {
   SUB_SUBSCRIPTION_ADDED,
 } from './use-component.fragments';
 import { useComponentLogs } from './use-component-logs';
-import { ComponentError } from '../component-error';
+import { ComponentError } from './component-error';
 
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
 export function useComponentQuery(

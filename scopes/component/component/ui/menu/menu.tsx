@@ -1,21 +1,23 @@
+import React, { useMemo } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
+import classnames from 'classnames';
+import { compact, flatten, groupBy, isFunction } from 'lodash';
+import * as semver from 'semver';
+import { ComponentID } from '@teambit/component-id';
 import { DropdownComponentVersion, GetActiveTabIndex, VersionDropdown } from '@teambit/component.ui.version-dropdown';
+import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { useLocation } from '@teambit/base-react.navigation.link';
-import { compact, flatten, groupBy, isFunction } from 'lodash';
-import classnames from 'classnames';
-import React, { useMemo } from 'react';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
-import { ComponentID } from '@teambit/component-id';
-import * as semver from 'semver';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { Filters, useComponent as useComponentQuery, UseComponentType, useIdFromLocation } from '../use-component';
+import { useComponent as useComponentQuery } from '../use-component';
 import { CollapsibleMenuNav } from './menu-nav';
 import { OrderedNavigationSlot, ConsumeMethodSlot, ConsumePluginProps } from './nav-plugin';
+import { Filters, UseComponentType } from '../use-component.model';
+import { useIdFromLocation } from '../use-component-from-location';
 import styles from './menu.module.scss';
 
 export type MenuProps = {
@@ -87,16 +89,22 @@ export function ComponentMenu({
   const resolvedComponentIdStr = path || idFromLocation;
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
   const componentFilters = useComponentFilters?.() || {};
+  const useComponentVersions = defaultLoadVersions(
+    host,
+    componentId?.toString() || idFromLocation,
+    componentFilters,
+    useComponent
+  );
 
   const RightSide = (
     <div className={styles.rightSide}>
       {RightNode || (
         <>
           <VersionRelatedDropdowns
-            consumeMethods={consumeMethodSlot}
             host={host}
+            consumeMethods={consumeMethodSlot}
             componentId={componentId?.toString() || idFromLocation}
-            useComponent={useComponent}
+            useComponent={useComponentVersions}
             componentFilters={componentFilters}
             // loading={loading}
           />
@@ -124,27 +132,26 @@ export function ComponentMenu({
 }
 
 export type VersionRelatedDropdownsProps = {
-  consumeMethods?: ConsumeMethodSlot;
-  className?: string;
-  host: string;
-  componentFilters?: Filters;
-  loading?: boolean;
   componentId?: string;
-  useComponent?: UseComponentType;
-  versionHooks?: {
-    initialLoad?: UseComponentVersions;
-    loadVersions?: UseComponentVersions;
-    loadVersion?: UseComponentVersion;
-  };
+  consumeMethods?: ConsumeMethodSlot;
+  componentFilters?: Filters;
+  useComponent?: UseComponentVersions;
+  className?: string;
+  loading?: boolean;
+  host: string;
   useLanes?: () => {
     loading?: boolean;
     lanesModel?: LanesModel;
   };
-  getActiveTabIndex?: GetActiveTabIndex;
-  showVersionDetails?: boolean;
+  dropdownOptions?: {
+    showVersionDetails?: boolean;
+    getActiveTabIndex?: GetActiveTabIndex;
+  };
 };
 export type UseComponentVersionsProps = {
   skip?: boolean;
+  id?: string;
+  initialLoad?: boolean;
 };
 export type UseComponentVersionProps = {
   skip?: boolean;
@@ -170,23 +177,22 @@ export type UseComponentVersionsResult = {
   loading?: boolean;
 };
 
-export const defaultLoadInitialVersions: (props: VersionRelatedDropdownsProps) => UseComponentVersions = ({
-  componentFilters = {},
-  loading: loadingFromProps,
-  host,
-  useComponent,
-  componentId,
-}) => {
+export function defaultLoadVersions(
+  host: string,
+  componentId?: string,
+  componentFilters: Filters = {},
+  useComponent?: UseComponentType,
+  loadingFromProps?: boolean
+): UseComponentVersions {
   return React.useCallback(
     (_props) => {
-      const { skip } = _props || {};
-      // initially fetch just the component data
-      const initialFetchOptions = {
+      const { skip, initialLoad } = _props || {};
+      const fetchOptions = {
         logFilters: {
           ...componentFilters,
           log: {
-            logLimit: 3,
             ...componentFilters.log,
+            limit: initialLoad ? 3 : undefined,
           },
         },
         skip: loadingFromProps || skip,
@@ -196,7 +202,7 @@ export const defaultLoadInitialVersions: (props: VersionRelatedDropdownsProps) =
         component,
         loading: loadingComponent,
         componentLogs = {},
-      } = useComponentQuery(host, componentId, initialFetchOptions);
+      } = useComponentQuery(host, componentId, fetchOptions);
       const logs = componentLogs?.logs;
       const loading = React.useMemo(
         () => loadingComponent || loadingFromProps || componentLogs.loading,
@@ -232,76 +238,12 @@ export const defaultLoadInitialVersions: (props: VersionRelatedDropdownsProps) =
     },
     [componentId, loadingFromProps, componentFilters]
   );
-};
-
-export const defaultLoadMoreVersions: (props: VersionRelatedDropdownsProps) => UseComponentVersions = ({
-  host,
-  loading: loadingFromProps,
-  componentFilters = {},
-  useComponent,
-  componentId,
-}) => {
-  return React.useCallback(
-    (_props) => {
-      const { skip } = _props || {};
-      const componentWithLogsOptions = {
-        logFilters: {
-          ...componentFilters,
-          log: {
-            ...componentFilters.log,
-            offset: undefined,
-            limit: undefined,
-          },
-        },
-        skip: loadingFromProps || skip,
-        customUseComponent: useComponent,
-      };
-      const {
-        component,
-        loading: loadingComponent,
-        componentLogs = {},
-      } = useComponentQuery(host, componentId, componentWithLogsOptions);
-      const logs = componentLogs?.logs;
-      const loading = React.useMemo(
-        () => loadingComponent || loadingFromProps || componentLogs.loading,
-        [loadingComponent, loadingFromProps, componentLogs.loading]
-      );
-
-      const snaps = useMemo(() => {
-        return (logs || []).filter((log) => !log.tag).map((snap) => ({ ...snap, version: snap.hash }));
-      }, [logs]);
-
-      const tags = useMemo(() => {
-        const tagLookup = new Map<string, LegacyComponentLog>();
-        (logs || [])
-          .filter((log) => log.tag)
-          .forEach((tag) => {
-            tagLookup.set(tag?.tag as string, tag);
-          });
-        return compact(
-          (component?.tags?.toArray() || []).reverse().map((tag) => tagLookup.get(tag.version.version))
-        ).map((tag) => ({ ...tag, version: tag.tag as string }));
-      }, [logs]);
-
-      return {
-        loading,
-        componentId: component?.id,
-        packageName: component?.packageName,
-        latestVersion: component?.latest,
-        currentVersion: component?.version,
-        buildStatus: component?.buildStatus,
-        snaps,
-        tags,
-      };
-    },
-    [componentId, componentFilters, loadingFromProps]
-  );
-};
+}
 
 export const defaultLoadCurrentVersion: (props: VersionRelatedDropdownsProps) => UseComponentVersion = (props) => {
   return (_props) => {
     const { skip, version: _version } = _props || {};
-    const { snaps, tags, currentVersion, loading } = props.versionHooks?.loadVersions?.({ skip }) ?? {};
+    const { snaps, tags, currentVersion, loading } = props.useComponent?.({ skip, id: props.componentId }) ?? {};
     const version = _version ?? currentVersion;
     const isTag = React.useMemo(() => semver.valid(version), [loading, version]);
     if (isTag) {
@@ -312,31 +254,18 @@ export const defaultLoadCurrentVersion: (props: VersionRelatedDropdownsProps) =>
 };
 
 export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
-  const versionHooksWithDefaults = {
-    initialLoad: defaultLoadInitialVersions(props),
-    loadVersions: defaultLoadMoreVersions(props),
-    loadVersion: undefined,
-  };
-
   const updatedPropsWithDefaults = {
     ...props,
-    versionHooks: {
-      ...versionHooksWithDefaults,
-      ...props.versionHooks,
-    },
     useLanes: props.useLanes ?? defaultUseLanes,
-    showVersionDetails: props.showVersionDetails ?? true,
+    dropdownOptions: {
+      ...props.dropdownOptions,
+      showVersionDetails: props?.dropdownOptions?.showVersionDetails ?? true,
+    },
   };
 
-  updatedPropsWithDefaults.versionHooks.loadVersion = defaultLoadCurrentVersion(updatedPropsWithDefaults);
-  const {
-    versionHooks: { initialLoad, loadVersion, loadVersions },
-    useLanes,
-    host,
-    consumeMethods,
-    className,
-    showVersionDetails,
-  } = updatedPropsWithDefaults;
+  const loadVersion = defaultLoadCurrentVersion(updatedPropsWithDefaults);
+
+  const { useLanes, consumeMethods, className, dropdownOptions, host } = updatedPropsWithDefaults;
   const {
     loading,
     componentId,
@@ -346,7 +275,7 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
     packageName,
     currentVersion: _currentVersion,
     buildStatus,
-  } = initialLoad();
+  } = props.useComponent?.({ initialLoad: true }) || {};
   const location = useLocation();
   const { lanesModel } = useLanes();
   const lanes = componentId
@@ -390,7 +319,7 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
       <VersionDropdown
         lanes={lanes}
         loading={loading}
-        useComponentVersions={loadVersions}
+        useComponentVersions={props.useComponent}
         hasMoreVersions={!isNew}
         useCurrentVersionLog={loadVersion}
         localVersion={localVersion}
@@ -399,8 +328,8 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
         currentLane={viewedLane}
         className={className}
         menuClassName={styles.componentVersionMenu}
-        getActiveTabIndex={props.getActiveTabIndex}
-        showVersionDetails={showVersionDetails}
+        getActiveTabIndex={dropdownOptions?.getActiveTabIndex}
+        showVersionDetails={dropdownOptions?.showVersionDetails}
       />
     </>
   );
