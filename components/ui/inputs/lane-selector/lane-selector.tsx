@@ -168,7 +168,7 @@ export function LaneSelector(props: LaneSelectorProps) {
             e.stopPropagation();
           }}
         >
-          <div className={styles.groupText}>Group By Scope</div>
+          Group scopes
         </CheckboxItem>
       </div>
     );
