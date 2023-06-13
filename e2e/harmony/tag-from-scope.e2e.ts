@@ -174,5 +174,65 @@ describe('tag components on Harmony', function () {
         expect(dep.version).to.equal('0.0.1');
       });
     });
+    describe('tagging them one by one with semver', () => {
+      before(() => {
+        helper.scopeHelper.getClonedScope(beforeTagging, bareTag.scopePath);
+        helper.scopeHelper.getClonedRemoteScope(beforeExporting);
+        // tag comp3 first
+        const data = [
+          {
+            componentId: `${helper.scopes.remote}/comp3`,
+            versionToTag: `0.0.2`,
+            message: `msg for third comp`,
+          },
+        ];
+        helper.command.tagFromScope(bareTag.scopePath, data, '--push');
+
+        // then tag comp2
+        const data2 = [
+          {
+            componentId: `${helper.scopes.remote}/comp2`,
+            dependencies: [`${helper.scopes.remote}/comp3@~0.0.1`],
+            versionToTag: `0.0.1`,
+            message: `msg for second comp`,
+          },
+        ];
+        // console.log('data2', JSON.stringify(data2));
+        helper.command.tagFromScope(bareTag.scopePath, data2);
+
+        // then tag comp1
+        const data3 = [
+          {
+            componentId: `${helper.scopes.remote}/comp1`,
+            dependencies: [`${helper.scopes.remote}/comp2@0.0.1`],
+            versionToTag: `0.0.1`,
+            message: `msg for first comp`,
+          },
+        ];
+        // console.log('data2', JSON.stringify(data3));
+        helper.command.tagFromScope(bareTag.scopePath, data3);
+      });
+      it('should save the dependency version according to the version provided in the json', () => {
+        const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2@0.0.1`, bareTag.scopePath);
+        expect(comp2OnBare.dependencies[0].id.name).to.equal('comp3');
+        expect(comp2OnBare.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(comp2OnBare.flattenedDependencies[0].name).to.equal('comp3');
+        expect(comp2OnBare.flattenedDependencies[0].version).to.equal('0.0.2');
+
+        const depResolver = comp2OnBare.extensions.find((e) => e.name === Extensions.dependencyResolver).data;
+        const dep = depResolver.dependencies.find((d) => d.id.includes('comp3'));
+        expect(dep.version).to.equal('0.0.2');
+      });
+      it('should save the dependency version according to the version provided in the json', () => {
+        const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp1@0.0.1`, bareTag.scopePath);
+        expect(comp2OnBare.dependencies[0].id.name).to.equal('comp2');
+        expect(comp2OnBare.dependencies[0].id.version).to.equal('0.0.1');
+
+        const depResolver = comp2OnBare.extensions.find((e) => e.name === Extensions.dependencyResolver).data;
+        const dep = depResolver.dependencies.find((d) => d.id.includes('comp2'));
+        expect(dep.version).to.equal('0.0.1');
+      });
+    });
   });
 });
