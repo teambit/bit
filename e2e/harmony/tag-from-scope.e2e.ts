@@ -182,7 +182,7 @@ describe('tag components on Harmony', function () {
         const data = [
           {
             componentId: `${helper.scopes.remote}/comp3`,
-            versionToTag: `0.0.5`,
+            versionToTag: `0.0.6`,
             message: `msg for third comp`,
           },
         ];
@@ -203,14 +203,14 @@ describe('tag components on Harmony', function () {
       it('should save the dependency version according to the version provided in the json', () => {
         const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2@10.0.0`, bareTag.scopePath);
         expect(comp2OnBare.dependencies[0].id.name).to.equal('comp3');
-        expect(comp2OnBare.dependencies[0].id.version).to.equal('0.0.5');
+        expect(comp2OnBare.dependencies[0].id.version).to.equal('0.0.6');
 
         expect(comp2OnBare.flattenedDependencies[0].name).to.equal('comp3');
-        expect(comp2OnBare.flattenedDependencies[0].version).to.equal('0.0.5');
+        expect(comp2OnBare.flattenedDependencies[0].version).to.equal('0.0.6');
 
         const depResolver = comp2OnBare.extensions.find((e) => e.name === Extensions.dependencyResolver).data;
         const dep = depResolver.dependencies.find((d) => d.id.includes('comp3'));
-        expect(dep.version).to.equal('0.0.5');
+        expect(dep.version).to.equal('0.0.6');
       });
     });
   });
