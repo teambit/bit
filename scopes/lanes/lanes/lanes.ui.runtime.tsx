@@ -49,7 +49,7 @@ export function useComponentFilters() {
   return {
     loading: false,
     log: {
-      head: laneComponentId.version,
+      logHead: laneComponentId.version,
     },
   };
 }
