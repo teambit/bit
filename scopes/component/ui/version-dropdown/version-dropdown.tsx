@@ -14,7 +14,7 @@ import { SimpleVersion, VersionProps } from './version-dropdown-placeholder';
 
 export const LOCAL_VERSION = 'workspace';
 
-export type DropdownComponentVersion = Partial<LegacyComponentLog> & { version: string; profileImage?: string };
+export type DropdownComponentVersion = Partial<LegacyComponentLog> & { version: string };
 
 export type UseComponentDropdownVersionsResult = {
   tags?: DropdownComponentVersion[];

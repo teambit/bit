@@ -53,6 +53,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         hash: String!
         tag: String
         id: String!
+        profileImage: String
       }
 
       type Author {
