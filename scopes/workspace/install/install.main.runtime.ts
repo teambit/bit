@@ -11,6 +11,7 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
 import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
+import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { linkToNodeModulesWithCodemod, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
@@ -28,7 +29,6 @@ import {
   WorkspacePolicyEntry,
   LinkingOptions,
   LinkResults,
-  DependencyLinker,
   DependencyList,
   OutdatedPkg,
   WorkspacePolicy,
@@ -36,6 +36,7 @@ import {
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
+import { snapToSemver } from '@teambit/component-package-version';
 import hash from 'object-hash';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
@@ -363,9 +364,10 @@ export class InstallMain {
     const comps = await this.workspace.list();
     return uniq(
       comps
-        .map((comp) =>
-          Object.values(comp.state.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data).flat()
-        )
+        .map((comp) => {
+          const data = comp.state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data || {};
+          return Object.values(data).flat();
+        })
         .flat()
     );
   }
@@ -498,7 +500,8 @@ export class InstallMain {
     if (!envComponent) return undefined;
     const packageName = this.dependencyResolver.getPackageName(envComponent);
     const version = envId.version;
-    return { [packageName]: version };
+    const finalVersion = snapToSemver(version);
+    return { [packageName]: finalVersion };
   }
 
   private async _getAppManifests(
@@ -666,7 +669,7 @@ export class InstallMain {
    */
   async calculateLinks(
     options: WorkspaceLinkOptions = {}
-  ): Promise<{ linkResults: WorkspaceLinkResults; linkedRootDeps: Record<string, string>; linker: DependencyLinker }> {
+  ): Promise<{ linkResults: WorkspaceLinkResults; linkedRootDeps: Record<string, string> }> {
     await pMapSeries(this.preLinkSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
     const compDirMap = await this.getComponentsDirectory([]);
     const linker = this.dependencyResolver.getLinker({
@@ -687,7 +690,7 @@ export class InstallMain {
     if (this.dependencyResolver.hasRootComponents() && options.linkToBitRoots) {
       await this._linkAllComponentsToBitRoots(compDirMap);
     }
-    return { linkResults: res, linkedRootDeps, linker };
+    return { linkResults: res, linkedRootDeps };
   }
 
   async linkCodemods(compDirMap: ComponentMap<string>, options?: { rewire?: boolean }) {
@@ -696,8 +699,8 @@ export class InstallMain {
   }
 
   async link(options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
-    const { linkResults, linkedRootDeps, linker } = await this.calculateLinks(options);
-    await linker.createLinks(this.workspace.path, linkedRootDeps);
+    const { linkResults, linkedRootDeps } = await this.calculateLinks(options);
+    await createLinks(options.linkToDir ?? this.workspace.path, linkedRootDeps);
     return linkResults;
   }
 

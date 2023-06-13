@@ -183,11 +183,17 @@ export class LanesMain {
               try {
                 if (await this.scope.isComponentRemoved(laneCompId)) return undefined;
               } catch (err) {
+                // if (err instanceof ComponentNotFound)
+                // throw new Error(
+                //   `component "${laneCompId.toString()}" from the lane "${lane.id.toString()}" not found`
+                // );
+                // throw err;
                 if (err instanceof ComponentNotFound)
-                  throw new Error(
+                  this.logger.warn(
                     `component "${laneCompId.toString()}" from the lane "${lane.id.toString()}" not found`
                   );
-                throw err;
+
+                return undefined;
               }
               return { id: laneCompId._legacy, head: laneCompId.version as string };
             })

@@ -88,11 +88,13 @@ export class SchemaMain {
    * relevant. for calling the API only to get a schema for one component, this is needed to ensure the ts-server is
    * not kept alive. otherwise, the process will never end.
    */
-  async getSchema(component: Component, shouldDisposeResourcesOnceDone = false): Promise<APISchema> {
-    this.logger.debug(`getSchema of ${component.id.toString()}`);
-
-    // if on workspace get schema from ts server
-    if (this.workspace) {
+  async getSchema(
+    component: Component,
+    shouldDisposeResourcesOnceDone = false,
+    alwaysRunExtractor = false,
+    path?: string
+  ): Promise<APISchema> {
+    if (alwaysRunExtractor || this.workspace) {
       const env = this.envs.getEnv(component).env;
       // types need to be fixed
       const formatter: Formatter | undefined = env.getFormatter?.(null, [
@@ -104,7 +106,7 @@ export class SchemaMain {
       if (typeof env.getSchemaExtractor === 'undefined') {
         throw new Error(`No SchemaExtractor defined for ${env.name}`);
       }
-      const schemaExtractor: SchemaExtractor = env.getSchemaExtractor();
+      const schemaExtractor: SchemaExtractor = env.getSchemaExtractor(undefined, path);
 
       const result = await schemaExtractor.extract(component, formatter);
       if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();
@@ -120,6 +122,8 @@ export class SchemaMain {
     );
 
     if (schemaArtifact.length === 0) {
+      this.logger.debug(`no schema found for ${component.id.toString()}`);
+
       /**
        * return empty schema
        * when tag/snap without build

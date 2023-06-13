@@ -510,11 +510,11 @@ export default class Component extends BitObject {
       logger.info(`collectLogs is unable to find some objects for ${this.id()}. will try to import them`);
       try {
         const lane = await scope.getCurrentLaneObject();
-        await scope.scopeImporter.importManyDeltaWithoutDeps({
-          ids: BitIds.fromArray([this.toBitId()]),
+        await scope.scopeImporter.importWithoutDeps(BitIds.fromArray([this.toBitId()]).toVersionLatest(), {
+          cache: false,
+          includeVersionHistory: true,
           collectParents: true,
-          fromHead: true,
-          lane,
+          lane: lane || undefined,
         });
         versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
       } catch (err) {
