@@ -123,10 +123,6 @@ export class SchemaExtractorContext {
   getLocation(node: Node, targetSourceFile?: ts.SourceFile, absolutePath = false): Location {
     const sourceFile = targetSourceFile || node.getSourceFile();
     const filePath = absolutePath ? sourceFile.fileName : this.getPathRelativeToComponent(sourceFile.fileName);
-    if (sourceFile.fileName.endsWith('.js')) {
-      // Skip JavaScript files
-      throw new Error(`Cannot get location of node in JavaScript file ${sourceFile.fileName}`);
-    }
     const position = sourceFile.getLineAndCharacterOfPosition(node.getStart());
     const line = position.line + 1;
     const character = position.character + 1;
@@ -204,7 +200,7 @@ export class SchemaExtractorContext {
     const normalizedFilePath = pathNormalizeToLinux(filePath);
     const fileNameToCompare = basename(normalizedFilePath);
     const pathWithoutExtension = fileNameToCompare.replace(/\.[^/.]+$/, '');
-    const possibleFormats = new Set(['ts', 'tsx']);
+    const possibleFormats = new Set(['ts', 'tsx', 'js', 'jsx']);
 
     const matchingFile = this.component.filesystem.files.find((file) => {
       const currentFilePath = pathNormalizeToLinux(file.path);
