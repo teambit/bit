@@ -19,13 +19,6 @@ export type DropdownComponentVersion = Partial<LegacyComponentLog> & { version: 
 export type UseComponentDropdownVersionsResult = {
   tags?: DropdownComponentVersion[];
   snaps?: DropdownComponentVersion[];
-  /**
-   * TBD - will be implement with lazy loading logs
-   */
-  // loadMoreTags?: (backwards?: boolean) => void;
-  // loadMoreSnaps?: (backwards?: boolean) => void;
-  // hasMoreTags?: boolean;
-  // hasMoreSnaps?: boolean;
   loading?: boolean;
 };
 export type UseComponentDropdownVersionsProps = {
