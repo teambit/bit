@@ -43,7 +43,6 @@ export class SchemaTask implements BuildTask {
           endTime: Date.now(),
         });
       } catch (e) {
-        console.log('🚀 ~ file: schema.task.ts:46 ~ SchemaTask ~ awaitpMapSeries ~ e:', e);
         this.logger.warn(`failed extracting schema for ${component.id.toString()}`);
         /**
          * @todo once schema extractor is more stable change this to an error
