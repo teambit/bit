@@ -167,13 +167,6 @@ export type UseComponentVersionsResult = {
   latestVersion?: string;
   currentVersion?: string;
   buildStatus?: string;
-  /**
-   * TBD - will be implement with lazy loading logs
-   */
-  // loadMoreTags?: (backwards?: boolean) => void;
-  // loadMoreSnaps?: (backwards?: boolean) => void;
-  // hasMoreTags?: boolean;
-  // hasMoreSnaps?: boolean;
   loading?: boolean;
 };
 
