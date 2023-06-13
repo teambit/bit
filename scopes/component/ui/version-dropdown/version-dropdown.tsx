@@ -217,7 +217,7 @@ function _VersionMenu({
   open,
   ...rest
 }: VersionMenuProps) {
-  const { snaps, tags, loading: loadingVersions } = useVersions?.({ skip: !open }) || {};
+  const { snaps, tags, loading: loadingVersions } = useVersions?.() || {};
   const loading = loadingFromProps || loadingVersions;
 
   const tabs = React.useMemo(
@@ -287,6 +287,12 @@ function _VersionMenu({
     [showTab, activeTab, _rowRenderer]
   );
 
+  const ActiveTab = React.useMemo(() => {
+    return activeTab?.payload.map((payload, index) => {
+      return rowRenderer({ index });
+    });
+  }, [activeTab]);
+
   return (
     <div {...rest} className={classNames(styles.versionMenuContainer, !open && styles.hide)}>
       <div className={styles.top}>
@@ -320,11 +326,7 @@ function _VersionMenu({
             );
           })}
       </div>
-      <div className={styles.versionContainerRoot}>
-        {activeTab?.payload.map((payload, index) => {
-          return rowRenderer({ index });
-        })}
-      </div>
+      <div className={styles.versionContainerRoot}>{ActiveTab}</div>
     </div>
   );
 }
