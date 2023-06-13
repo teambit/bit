@@ -33,7 +33,7 @@ export function replacePlaceHolderForPackageValue(
   return res;
 }
 
-function getMainFileWithoutExtension(mainFile: string) {
+export function getMainFileWithoutExtension(mainFile: string) {
   return mainFile.replace(new RegExp(`${path.extname(mainFile)}$`), ''); // makes sure it's the last occurrence
 }
 

@@ -16,62 +16,44 @@ export type VersionInfoProps = DropdownComponentVersion & {
   showDetails?: boolean;
 };
 
-export const VersionInfo = React.memo(React.forwardRef<HTMLDivElement, VersionInfoProps>(_VersionInfo));
-function _VersionInfo(
-  {
-    version,
-    currentVersion,
-    latestVersion,
-    date,
-    username,
-    displayName,
-    email,
-    overrideVersionHref,
-    showDetails,
-    message,
-    tag,
-    profileImage,
-  }: VersionInfoProps,
-  ref?: React.ForwardedRef<HTMLDivElement>
-) {
+export function VersionInfo({
+  version,
+  currentVersion,
+  latestVersion,
+  date,
+  username,
+  email,
+  overrideVersionHref,
+  showDetails,
+  message,
+  tag,
+}: VersionInfoProps) {
   const isCurrent = version === currentVersion;
   const author = useMemo(() => {
     return {
-      displayName: displayName ?? '',
+      displayName: username,
       email,
-      name: username ?? '',
-      profileImage,
     };
-  }, [displayName, email, username, profileImage]);
+  }, [version]);
 
   const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
   const currentVersionRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (isCurrent) {
       currentVersionRef.current?.scrollIntoView({ block: 'nearest' });
     }
   }, [isCurrent]);
 
-  const href = useMemo(() => {
-    return overrideVersionHref ? overrideVersionHref(version) : `?version=${version}`;
-  }, [version]);
-
-  const formattedVersion = useMemo(() => {
-    return tag ? version : version.slice(0, 6);
-  }, [tag, version]);
-
-  const commitMessage = React.useCallback((_message?: string) => {
-    if (!_message || _message === '') return <Ellipsis className={styles.emptyMessage}>No commit message</Ellipsis>;
-    return <Ellipsis className={styles.commitMessage}>{_message}</Ellipsis>;
-  }, []);
+  const href = overrideVersionHref ? overrideVersionHref(version) : `?version=${version}`;
 
   return (
-    <div ref={ref || currentVersionRef}>
+    <div ref={currentVersionRef}>
       <MenuLinkItem active={isCurrent} href={href} className={styles.versionRow}>
         <div className={styles.version}>
           <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />
-          <Ellipsis className={classNames(styles.versionName)}>{formattedVersion}</Ellipsis>
+          <Ellipsis className={classNames(styles.versionName, tag && styles.tag, !tag && styles.snap)}>
+            {version}
+          </Ellipsis>
           {version === latestVersion && <VersionLabel className={styles.label} status="latest" />}
           {showDetails && commitMessage(message)}
         </div>
@@ -81,4 +63,9 @@ function _VersionInfo(
       </MenuLinkItem>
     </div>
   );
+}
+
+function commitMessage(message?: string) {
+  if (!message || message === '') return <Ellipsis className={styles.emptyMessage}>No commit message</Ellipsis>;
+  return <Ellipsis className={styles.commitMessage}>{message}</Ellipsis>;
 }

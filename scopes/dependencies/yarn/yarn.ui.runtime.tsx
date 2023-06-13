@@ -17,24 +17,24 @@ export class YarnUI {
 
   constructor(private compUI: ComponentUI) {}
 
-  private consumeMethod: ConsumePlugin = ({ packageName, componentId, latest, options }) => {
-    const registry = packageName.split('/')[0];
+  private consumeMethod: ConsumePlugin = (comp) => {
+    const registry = comp.packageName.split('/')[0];
     const packageVersion =
-      componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version)}`;
+      comp.version === comp.latest ? '' : `@${this.compUI.formatToInstallableVersion(comp.version)}`;
 
     return {
       Title: (
         <img style={{ height: '17px', paddingTop: '4px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />
       ),
-      Component: !options?.hide ? (
+      Component: (
         <Install
           config={`npm config set '${registry}:registry' https://node.bit.cloud`}
-          componentName={componentId.name}
+          componentName={comp.id.name}
           packageManager="yarn"
-          copyString={`yarn add ${packageName}${packageVersion}`}
+          copyString={`yarn add ${comp.packageName}${packageVersion}`}
           registryName={registry}
         />
-      ) : null,
+      ),
       order: 20,
     };
   };

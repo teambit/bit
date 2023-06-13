@@ -17,22 +17,22 @@ export class PnpmUI {
 
   constructor(private compUI: ComponentUI) {}
 
-  private consumeMethod: ConsumePlugin = ({ componentId, packageName, latest, options }) => {
-    const registry = packageName.split('/')[0];
+  private consumeMethod: ConsumePlugin = (comp) => {
+    const registry = comp.packageName.split('/')[0];
     const packageVersion =
-      componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version)}`;
+      comp.version === comp.latest ? '' : `@${this.compUI.formatToInstallableVersion(comp.version)}`;
 
     return {
       Title: <img style={{ height: '16px', marginTop: '-2px' }} src="https://static.bit.dev/brands/pnpm.svg" />,
-      Component: !options?.hide ? (
+      Component: (
         <Install
           config={`npm config set '${registry}:registry' https://node.bit.cloud`}
-          componentName={componentId.name}
+          componentName={comp.id.name}
           packageManager="pnpm"
-          copyString={`pnpm i ${packageName}${packageVersion}`}
+          copyString={`pnpm i ${comp.packageName}${packageVersion}`}
           registryName={registry}
         />
-      ) : null,
+      ),
       order: 30,
     };
   };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { expect } from 'chai';
 import { VersionDropdownWithOneVersion, VersionDropdownWithMultipleVersions } from './version-dropdown.composition';
 
@@ -16,14 +16,13 @@ describe('version dropdown tests', () => {
     const textVersion = getByText(/^0.1$/);
     expect(textVersion).to.exist;
   });
-  it('should not return multiple versions when mounted (lazy loading)', () => {
-    render(<VersionDropdownWithMultipleVersions />);
-    const textVersionOne = screen.queryByText(/^0.1$/);
-    const textVersionTwo = screen.queryByText(/^0.2$/);
-    const textVersionThree = screen.getAllByText(/^0.3$/);
-
-    expect(textVersionOne).to.be.null;
-    expect(textVersionTwo).to.be.null;
-    expect(textVersionThree).to.have.lengthOf.at.least(1);
+  it('should return multiple versions', () => {
+    const { getByText, getAllByText } = render(<VersionDropdownWithMultipleVersions />);
+    const textVersionOne = getByText(/^0.1$/);
+    const textVersionTwo = getByText(/^0.2$/);
+    const textVersionThree = getAllByText(/^0.3$/);
+    expect(textVersionOne).to.exist;
+    expect(textVersionTwo).to.exist;
+    expect(textVersionThree).to.exist;
   });
 });

@@ -28,11 +28,10 @@
   margin-bottom: 2px;
 }
 
-.versionContainerRoot {
+.versionContainer {
   max-height: 240px;
   overflow-y: scroll;
   padding-bottom: 8px;
-  position: relative;
 }
 
 .versionRow {
@@ -104,19 +103,5 @@
 }
 
 .loading {
-  color: var(--bit-bg-dent, #f6f6f6);
-}
-
-.loader {
-  color: var(--bit-bg-dent, #f6f6f6);
-  > div {
-    padding: 8px 0px;
-  }
-}
-
-.versionMenuContainer {
-  display: initial;
-  &.hide {
-    display: none;
-  }
+  color: var(--bit-bg-heavy, #f6f6f6);
 }

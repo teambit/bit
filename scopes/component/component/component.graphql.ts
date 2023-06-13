@@ -45,7 +45,6 @@ export function componentSchema(componentExtension: ComponentMain) {
 
       type LogEntry {
         message: String!
-        displayName: String
         username: String
         parents: [String]!
         email: String
@@ -169,8 +168,7 @@ export function componentSchema(componentExtension: ComponentMain) {
             ...snap,
             date: snap.timestamp.getTime(),
             email: snap.author.email,
-            username: snap.author.name,
-            displayName: snap.author.displayName,
+            username: snap.author.displayName,
             id: snap.hash,
           };
         },
