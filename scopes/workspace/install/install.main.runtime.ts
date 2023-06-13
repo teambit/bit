@@ -364,9 +364,10 @@ export class InstallMain {
     const comps = await this.workspace.list();
     return uniq(
       comps
-        .map((comp) =>
-          Object.values(comp.state.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data).flat()
-        )
+        .map((comp) => {
+          const data = comp.state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data || {};
+          return Object.values(data).flat();
+        })
         .flat()
     );
   }
