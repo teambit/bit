@@ -35,15 +35,7 @@ export class ComponentCompareUI {
     const routes = props?.routes || (() => flatten(this.routeSlot.values()));
     const host = props?.host || this.host;
 
-    return (
-      <ComponentCompare
-        {...(props || {})}
-        tabs={tabs}
-        routes={routes}
-        host={host}
-        isFullScreen={props?.isFullScreen ?? true}
-      />
-    );
+    return <ComponentCompare {...(props || {})} tabs={tabs} routes={routes} host={host} />;
   };
 
   getAspectsComparePage = () => {

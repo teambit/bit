@@ -1,10 +1,9 @@
-import React, { HTMLAttributes, useRef } from 'react';
+import React, { HTMLAttributes, useEffect, useState, useRef } from 'react';
 import { useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSelector, LaneSelectorSortBy } from '@teambit/lanes.ui.inputs.lane-selector';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { LaneId } from '@teambit/lane-id';
-import { WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import classnames from 'classnames';
 
 import styles from './lane-switcher.module.scss';
@@ -30,8 +29,10 @@ export function LaneSwitcher({
   getHref = LanesModel.getLaneUrl,
   ...rest
 }: LaneSwitcherProps) {
+  const { lanesModel } = useLanes();
+  const [viewedLane, setViewedLane] = useState(lanesModel?.viewedLane);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { lanesModel, loading } = useLanes();
+
   const mainLane = lanesModel?.getDefaultLane();
   const nonMainLanes = lanesModel?.getNonMainLanes() || [];
 
@@ -44,37 +45,37 @@ export function LaneSwitcher({
       : []
   );
 
-  const selectedLane = lanesModel?.viewedLane || mainLane;
+  useEffect(() => {
+    if (lanesModel?.viewedLane?.id.toString() !== viewedLane?.id.toString()) {
+      setViewedLane(lanesModel?.viewedLane);
+    }
+  }, [lanesModel?.viewedLane?.id.toString()]);
+
+  const selectedLane = viewedLane || mainLane;
   const selectedLaneGalleryHref = selectedLane && getHref(selectedLane.id);
 
   return (
     <div className={classnames(styles.laneSwitcherContainer, className)} ref={containerRef}>
       <div className={styles.laneSelectorContainer}>
-        {loading && <WordSkeleton className={styles.loader} length={24} />}
-        {
-          <LaneSelector
-            selectedLaneId={selectedLane?.id}
-            nonMainLanes={nonMainLanes}
-            mainLane={mainLane}
-            mainIcon={mainIcon?.()}
-            scopeIcon={scopeIcon}
-            groupByScope={groupByScope}
-            sortBy={sortBy}
-            sortOptions={sortOptions}
-            scopeIconLookup={scopeIconLookup}
-            getHref={getHref}
-            loading={loading}
-            {...rest}
-          />
-        }
+        <LaneSelector
+          selectedLaneId={selectedLane?.id}
+          nonMainLanes={nonMainLanes}
+          mainLane={mainLane}
+          mainIcon={mainIcon?.()}
+          scopeIcon={scopeIcon}
+          groupByScope={groupByScope}
+          sortBy={sortBy}
+          sortOptions={sortOptions}
+          scopeIconLookup={scopeIconLookup}
+          getHref={getHref}
+          {...rest}
+        />
       </div>
-      {!loading && (
-        <div className={styles.laneIconContainer}>
-          <MenuLinkItem exact={true} className={styles.laneGalleryIcon} href={selectedLaneGalleryHref}>
-            <img src="https://static.bit.dev/bit-icons/corner-up-left.svg" />
-          </MenuLinkItem>
-        </div>
-      )}
+      <div className={styles.laneIconContainer}>
+        <MenuLinkItem exact={true} className={styles.laneGalleryIcon} href={selectedLaneGalleryHref}>
+          <img src="https://static.bit.dev/bit-icons/corner-up-left.svg" />
+        </MenuLinkItem>
+      </div>
     </div>
   );
 }

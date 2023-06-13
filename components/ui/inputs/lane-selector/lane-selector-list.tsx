@@ -39,7 +39,6 @@ export function LaneSelectorList({
   listNavigator,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   forceCloseOnEnter,
-  loading,
   ...rest
 }: LaneSelectorListProps) {
   const navigate = useNavigate();
@@ -156,8 +155,6 @@ export function LaneSelectorList({
       selectedLaneElement?.scrollIntoView({ block: 'nearest' });
     }
   }, [selectedLaneId?.toString()]);
-
-  if (loading) return null;
 
   return (
     <div {...rest} className={classnames(className, styles.laneSelectorList)}>

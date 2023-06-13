@@ -8,7 +8,7 @@ import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { InputText as SearchInput } from '@teambit/design.inputs.input-text';
 import { ToggleButton } from '@teambit/design.inputs.toggle-button';
 import { Icon } from '@teambit/design.elements.icon';
-// import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
+import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 
 import { LaneSelectorList, ListNavigatorCmd } from './lane-selector-list';
@@ -29,7 +29,6 @@ export type LaneSelectorProps = {
   sortOptions?: LaneSelectorSortBy[];
   scopeIconLookup?: Map<string, React.ReactNode>;
   forceCloseOnEnter?: boolean;
-  loading?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 
 export type GroupedLaneDropdownItem = [scope: string, lanes: LaneModel[]];
@@ -62,7 +61,6 @@ export function LaneSelector(props: LaneSelectorProps) {
     scopeIcon,
     scopeIconLookup,
     forceCloseOnEnter,
-    loading,
     ...rest
   } = props;
 
@@ -159,24 +157,22 @@ export function LaneSelector(props: LaneSelectorProps) {
     );
   }
 
-  // TBD: needs redesign
-
-  // function LaneGroup() {
-  //   return (
-  //     <div className={styles.group}>
-  //       <CheckboxItem
-  //         checked={groupByScope}
-  //         onInputChanged={(e) => {
-  //           // prevent dropdown from closing
-  //           setGroupScope((v) => !v);
-  //           e.stopPropagation();
-  //         }}
-  //       >
-  //         <div className={styles.groupText}>Group By Scope</div>
-  //       </CheckboxItem>
-  //     </div>
-  //   );
-  // }
+  function LaneGroup() {
+    return (
+      <div className={styles.group}>
+        <CheckboxItem
+          checked={groupByScope}
+          onInputChanged={(e) => {
+            // prevent dropdown from closing
+            setGroupScope((v) => !v);
+            e.stopPropagation();
+          }}
+        >
+          <div className={styles.groupText}>Group By Scope</div>
+        </CheckboxItem>
+      </div>
+    );
+  }
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [, setPlaceholderOpenStateTracker] = useState<boolean | undefined>(false);
@@ -241,22 +237,17 @@ export function LaneSelector(props: LaneSelectorProps) {
           });
         }}
         placeholderContent={
-          <LanePlaceholder
-            loading={loading}
-            disabled={!multipleLanes}
-            selectedLaneId={selectedLaneId}
-            showScope={groupByScope}
-          />
+          <LanePlaceholder disabled={!multipleLanes} selectedLaneId={selectedLaneId} showScope={groupByScope} />
         }
         className={classnames(styles.dropdown, !multipleLanes && styles.disabled)}
       >
         {multipleLanes && (
           <div className={styles.toolbar}>
-            {/* {multipleLanes && groupByScope && (
+            {multipleLanes && groupByScope && (
               <div className={styles.groupBy}>
                 <LaneGroup />
               </div>
-            )} */}
+            )}
             <LaneSearch />
             <div className={styles.sort}>
               <ToggleButton

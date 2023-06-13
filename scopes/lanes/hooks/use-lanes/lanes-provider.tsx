@@ -53,12 +53,14 @@ export function LanesProvider({
   useEffect(() => {
     if (ignoreDerivingFromUrl(location)) return;
 
-    // const onHomeRoute = location?.pathname === '/';
     const viewedLaneIdFromUrl =
       (location?.pathname && LanesModel.getLaneIdFromPathname(location?.pathname, query)) || undefined;
 
     const viewedLaneIdToSet =
-      viewedLaneIdFromUrl || lanesModel?.currentLane?.id || lanesModel?.lanes.find((lane) => lane.id.isDefault())?.id;
+      viewedLaneIdFromUrl ||
+      viewedLaneId ||
+      lanesModel?.currentLane?.id ||
+      lanesModel?.lanes.find((lane) => lane.id.isDefault())?.id;
 
     updateViewedLane(viewedLaneIdToSet);
   }, [location?.pathname]);
