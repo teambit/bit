@@ -92,7 +92,6 @@ export function LaneSelector(props: LaneSelectorProps) {
 
   const [filteredLanes, setFilteredLanes] = useState<LaneModel[]>(sortedNonMainLanes);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [groupScope, setGroupScope] = useState<boolean>(groupByScope);
   const location = useLocation();
 
@@ -173,7 +172,6 @@ export function LaneSelector(props: LaneSelectorProps) {
       </div>
     );
   }
-
   const containerRef = useRef<HTMLDivElement>(null);
   const [, setPlaceholderOpenStateTracker] = useState<boolean | undefined>(false);
   const [forceCloseDropdown, setForceCloseDropdown] = useState<boolean | undefined>(true);
