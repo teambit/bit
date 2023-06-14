@@ -126,11 +126,8 @@ chai.use(require('chai-string'));
     });
     it('all packages are correctly installed inside capsules', () => {
       const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-      const env1Folder = `${helper.scopes.remote}_node-env-1@0.0.1`;
-      const env2Folder = `${helper.scopes.remote}_node-env-2@0.0.1`;
-
-      expect(path.join(scopeAspectsCapsulesRootDir, env1Folder, 'node_modules/lodash.get')).to.be.a.path();
-      expect(path.join(scopeAspectsCapsulesRootDir, env2Folder, 'node_modules/lodash.flatten')).to.be.a.path();
+      expect(path.join(scopeAspectsCapsulesRootDir, 'node_modules/lodash.get')).to.be.a.path();
+      expect(path.join(scopeAspectsCapsulesRootDir, 'node_modules/lodash.flatten')).to.be.a.path();
     });
   });
   after(() => {
