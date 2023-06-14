@@ -11,6 +11,7 @@ type RunOptions = {
   verbose: boolean;
   skipWatch: boolean;
   ssr: boolean;
+  port: string;
 };
 
 export class RunCmd implements Command {
@@ -28,6 +29,7 @@ export class RunCmd implements Command {
   group = 'apps';
   options = [
     ['d', 'dev', 'start the application in dev mode.'],
+    ['p', 'port [port-number]', 'port of the app'],
     ['v', 'verbose', 'showing verbose output for inspection and prints stack trace'],
     ['', 'skip-watch', 'avoid running the watch process that compiles components in the background'],
     ['', 'ssr', 'run app in server side rendering mode.'],
@@ -42,12 +44,16 @@ export class RunCmd implements Command {
     private logger: Logger
   ) {}
 
-  async render([appName]: [string], { dev, skipWatch, ssr }: RunOptions): Promise<React.ReactElement | RenderResult> {
+  async render(
+    [appName]: [string],
+    { dev, skipWatch, ssr, port: exactPort }: RunOptions
+  ): Promise<React.ReactElement | RenderResult> {
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
     const { port, errors } = await this.application.runApp(appName, {
       dev,
       watch: !skipWatch,
       ssr,
+      exactPort: +exactPort,
     });
 
     if (errors) {
