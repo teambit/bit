@@ -31,6 +31,7 @@ export type CreateFromComponentsOptions = {
   dependencyFilterFn?: DepsFilterFn;
   resolveVersionsFromDependenciesOnly?: boolean;
   referenceLocalPackages?: boolean;
+  hasRootComponents?: boolean;
 };
 
 const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
@@ -52,7 +53,7 @@ export class WorkspaceManifestFactory {
   ): Promise<WorkspaceManifest> {
     // Make sure to take other default if passed options with only one option
     const optsWithDefaults = Object.assign({}, DEFAULT_CREATE_OPTIONS, options);
-    const hasRootComponents = this.dependencyResolver.hasRootComponents();
+    const hasRootComponents = options.hasRootComponents ?? this.dependencyResolver.hasRootComponents();
     const componentDependenciesMap: ComponentDependenciesMap = await this.buildComponentDependenciesMap(components, {
       filterComponentsFromManifests: optsWithDefaults.filterComponentsFromManifests,
       rootPolicy: optsWithDefaults.resolveVersionsFromDependenciesOnly ? undefined : rootPolicy,

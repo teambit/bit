@@ -325,7 +325,7 @@ export class IsolatorMain {
     const installOptions = {
       ...DEFAULT_ISOLATE_INSTALL_OPTIONS,
       ...opts.installOptions,
-      useNesting: this.dependencyResolver.hasRootComponents() && opts.installOptions?.useNesting,
+      useNesting: this.dependencyResolver.isolatedCapsules() && opts.installOptions?.useNesting,
     };
     if (!opts.emptyRootDir) {
       installOptions.dedupe = installOptions.dedupe && this.dependencyResolver.supportsDedupingOnExistingRoot();
@@ -453,9 +453,10 @@ export class IsolatorMain {
       copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
       overrides: this.dependencyResolver.config.capsulesOverrides || this.dependencyResolver.config.overrides,
-      rootComponentsForCapsules: this.dependencyResolver.hasRootComponents(),
+      rootComponentsForCapsules: this.dependencyResolver.isolatedCapsules(),
       useNesting: isolateInstallOptions.useNesting,
-      keepExistingModulesDir: this.dependencyResolver.hasRootComponents(),
+      keepExistingModulesDir: this.dependencyResolver.isolatedCapsules(),
+      hasRootComponents: this.dependencyResolver.isolatedCapsules(),
     };
     await installer.install(
       capsulesDir,
@@ -479,11 +480,11 @@ export class IsolatorMain {
     });
     const { linkedRootDeps } = await linker.calculateLinkedDeps(capsulesDir, this.toComponentMap(capsuleList), {
       ...linkingOptions,
-      linkNestedDepsInNM: !this.dependencyResolver.hasRootComponents() && linkingOptions.linkNestedDepsInNM,
+      linkNestedDepsInNM: !this.dependencyResolver.isolatedCapsules() && linkingOptions.linkNestedDepsInNM,
     });
     let rootLinks: LinkDetail[] | undefined;
     let nestedLinks: Record<string, Record<string, string>> | undefined;
-    if (!this.dependencyResolver.hasRootComponents()) {
+    if (!this.dependencyResolver.isolatedCapsules()) {
       rootLinks = await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
       const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
       nestedLinks = await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
