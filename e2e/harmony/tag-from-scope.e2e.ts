@@ -37,6 +37,7 @@ describe('tag components on Harmony', function () {
     });
     after(() => {
       npmCiRegistry.destroy();
+      helper = new Helper();
     });
     describe('tagging them all at the same time', () => {
       let data;
@@ -174,58 +175,62 @@ describe('tag components on Harmony', function () {
         expect(dep.version).to.equal('0.0.1');
       });
     });
-    describe('tagging them one by one with semver', () => {
-      before(async () => {
-        helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        // new npmCiRegistry to avoid collision with the previous one
-        npmCiRegistry = new NpmCiRegistry(helper);
-        await npmCiRegistry.init();
-        npmCiRegistry.configureCiInPackageJsonHarmony();
-        helper.fixtures.populateComponents(3);
-        helper.command.snapAllComponents();
-        helper.command.export();
+  });
 
-        bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
-        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('tagging them one by one with semver', () => {
+    let bareTag;
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      // new npmCiRegistry to avoid collision with the previous one
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      helper.fixtures.populateComponents(3);
+      helper.command.snapAllComponents();
+      helper.command.export();
 
-        // tag comp3 first
-        const data = [
-          {
-            componentId: `${helper.scopes.remote}/comp3`,
-            versionToTag: `0.0.6`,
-            message: `msg for third comp`,
-          },
-        ];
-        helper.command.tagFromScope(bareTag.scopePath, data, '--push');
+      bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
 
-        // then tag comp2
-        const data2 = [
-          {
-            componentId: `${helper.scopes.remote}/comp2`,
-            dependencies: [`${helper.scopes.remote}/comp3@~0.0.1`],
-            versionToTag: `10.0.0`,
-            message: `msg for second comp`,
-          },
-        ];
-        // console.log('data2', JSON.stringify(data2));
-        helper.command.tagFromScope(bareTag.scopePath, data2);
-      });
-      after(() => {
-        npmCiRegistry.destroy();
-      });
-      it('should save the dependency version according to the version provided in the json', () => {
-        const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2@10.0.0`, bareTag.scopePath);
-        expect(comp2OnBare.dependencies[0].id.name).to.equal('comp3');
-        expect(comp2OnBare.dependencies[0].id.version).to.equal('0.0.6');
+      // tag comp3 first
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/comp3`,
+          versionToTag: `0.0.6`,
+          message: `msg for third comp`,
+        },
+      ];
+      helper.command.tagFromScope(bareTag.scopePath, data, '--push');
 
-        expect(comp2OnBare.flattenedDependencies[0].name).to.equal('comp3');
-        expect(comp2OnBare.flattenedDependencies[0].version).to.equal('0.0.6');
+      // then tag comp2
+      const data2 = [
+        {
+          componentId: `${helper.scopes.remote}/comp2`,
+          dependencies: [`${helper.scopes.remote}/comp3@~0.0.1`],
+          versionToTag: `10.0.0`,
+          message: `msg for second comp`,
+        },
+      ];
+      // console.log('data2', JSON.stringify(data2));
+      helper.command.tagFromScope(bareTag.scopePath, data2);
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper = new Helper();
+    });
+    it('should save the dependency version according to the version provided in the json', () => {
+      const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2@10.0.0`, bareTag.scopePath);
+      expect(comp2OnBare.dependencies[0].id.name).to.equal('comp3');
+      expect(comp2OnBare.dependencies[0].id.version).to.equal('0.0.6');
 
-        const depResolver = comp2OnBare.extensions.find((e) => e.name === Extensions.dependencyResolver).data;
-        const dep = depResolver.dependencies.find((d) => d.id.includes('comp3'));
-        expect(dep.version).to.equal('0.0.6');
-      });
+      expect(comp2OnBare.flattenedDependencies[0].name).to.equal('comp3');
+      expect(comp2OnBare.flattenedDependencies[0].version).to.equal('0.0.6');
+
+      const depResolver = comp2OnBare.extensions.find((e) => e.name === Extensions.dependencyResolver).data;
+      const dep = depResolver.dependencies.find((d) => d.id.includes('comp3'));
+      expect(dep.version).to.equal('0.0.6');
     });
   });
 });
