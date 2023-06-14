@@ -3,7 +3,6 @@ import { Routes, Route } from 'react-router-dom';
 import classnames from 'classnames';
 import { compact, flatten, groupBy, isFunction } from 'lodash';
 import * as semver from 'semver';
-import { ComponentID } from '@teambit/component-id';
 import { DropdownComponentVersion, GetActiveTabIndex, VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
@@ -17,6 +16,7 @@ import { useComponent as useComponentQuery, UseComponentType, Filters } from '..
 import { CollapsibleMenuNav } from './menu-nav';
 import { OrderedNavigationSlot, ConsumeMethodSlot, ConsumePluginProps } from './nav-plugin';
 import { useIdFromLocation } from '../use-component-from-location';
+import { ComponentID } from '../..';
 import styles from './menu.module.scss';
 
 export type MenuProps = {
