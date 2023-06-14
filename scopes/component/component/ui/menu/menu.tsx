@@ -260,19 +260,17 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
   const { useLanes, consumeMethods, className, dropdownOptions, host } = updatedPropsWithDefaults;
   const {
     loading,
-    id: componentId,
+    id,
     tags,
     snaps,
-    latest: latestVersion,
+    latest,
     packageName,
     currentVersion: _currentVersion,
     buildStatus,
   } = props.useComponent?.({ initialLoad: true }) || {};
   const location = useLocation();
   const { lanesModel } = useLanes();
-  const lanes = componentId
-    ? lanesModel?.getLanesByComponentId(componentId)?.filter((lane) => !lane.id.isDefault()) || []
-    : [];
+  const lanes = id ? lanesModel?.getLanesByComponentId(id)?.filter((lane) => !lane.id.isDefault()) || [] : [];
   const viewedLane =
     lanesModel?.viewedLane?.id && !lanesModel?.viewedLane?.id.isDefault() ? lanesModel.viewedLane : undefined;
 
@@ -286,26 +284,26 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
     isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : _currentVersion ?? '';
 
   const consumeMethodProps = React.useMemo(() => {
-    return componentId && packageName
+    return id && packageName
       ? {
-          componentId,
+          id,
           packageName,
-          latest: latestVersion,
-          options: { viewedLane, hide: buildStatus !== 'succeed' },
+          latest,
+          options: { viewedLane, hide: !!buildStatus && buildStatus?.toLowerCase() !== 'succeed' },
         }
       : undefined;
-  }, [componentId, packageName, latestVersion, viewedLane, buildStatus]);
+  }, [id, packageName, latest, viewedLane, buildStatus]);
 
   const methods = useConsumeMethods(consumeMethods, consumeMethodProps);
   const hasMethods = methods?.length > 0;
 
   return (
     <>
-      {consumeMethods && componentId && hasMethods && (
+      {consumeMethods && id && hasMethods && (
         <UseBoxDropdown
           position="bottom-end"
           className={classnames(styles.useBox, styles.hideOnMobile)}
-          Menu={<ConsumeMethodsMenu methods={methods} componentName={componentId.name} />}
+          Menu={<ConsumeMethodsMenu methods={methods} componentName={id.name} />}
         />
       )}
       <VersionDropdown
@@ -316,7 +314,7 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
         useCurrentVersionLog={loadVersion}
         localVersion={localVersion}
         currentVersion={currentVersion}
-        latestVersion={latestVersion}
+        latestVersion={latest}
         currentLane={viewedLane}
         className={className}
         menuClassName={styles.componentVersionMenu}

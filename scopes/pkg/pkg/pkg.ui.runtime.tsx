@@ -17,7 +17,16 @@ export class PkgUI {
 
   constructor(private compUI: ComponentUI) {}
 
-  private npmConsumeMethod: ConsumePlugin = ({ packageName, latest, componentId, options }) => {
+  private npmConsumeMethod: ConsumePlugin = ({
+    packageName: packageNameFromProps,
+    latest: latestFromProps,
+    id: componentId,
+    options,
+    componentModel,
+  }) => {
+    const packageName = componentModel?.packageName || packageNameFromProps;
+    const latest = componentModel?.latest || latestFromProps;
+
     const registry = packageName.split('/')[0];
 
     const packageVersion =

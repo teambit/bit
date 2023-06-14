@@ -17,7 +17,16 @@ export class PnpmUI {
 
   constructor(private compUI: ComponentUI) {}
 
-  private consumeMethod: ConsumePlugin = ({ componentId, packageName, latest, options }) => {
+  private consumeMethod: ConsumePlugin = ({
+    id: componentId,
+    packageName: packageNameFromProps,
+    latest: latestFromProps,
+    options,
+    componentModel,
+  }) => {
+    const packageName = componentModel?.packageName || packageNameFromProps;
+    const latest = componentModel?.latest || latestFromProps;
+
     const registry = packageName.split('/')[0];
     const packageVersion =
       componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version)}`;

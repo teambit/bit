@@ -145,7 +145,16 @@ export class ComponentUI {
     },
   ];
 
-  private bitMethod: ConsumePlugin = ({ options, componentId, packageName, latest }) => {
+  private bitMethod: ConsumePlugin = ({
+    options,
+    id: componentId,
+    packageName: packageNameFromProps,
+    latest: latestFromProps,
+    componentModel,
+  }) => {
+    const packageName = packageNameFromProps || componentModel?.packageName;
+    const latest = latestFromProps || componentModel?.id.version;
+
     const version = componentId.version === latest ? '' : `@${componentId.version}`;
     const packageVersion =
       componentId.version === latest ? '' : `@${this.formatToInstallableVersion(componentId.version)}`;
