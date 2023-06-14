@@ -4,11 +4,11 @@ import flatten from 'lodash.flatten';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SlotRegistry } from '@teambit/harmony';
 import { isFunction } from 'lodash';
-import { ComponentID } from '@teambit/component-id';
 import { ComponentProvider, ComponentDescriptorProvider } from './context';
 import { useComponent as useComponentQuery, UseComponentType, Filters } from './use-component';
 import { ComponentModel } from './component-model';
 import { useIdFromLocation } from './use-component-from-location';
+import { ComponentID } from '..';
 
 import styles from './component.module.scss';
 
