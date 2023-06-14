@@ -161,9 +161,9 @@ export type UseComponentVersion = (props?: UseComponentVersionProps) => Dropdown
 export type UseComponentVersionsResult = {
   tags?: DropdownComponentVersion[];
   snaps?: DropdownComponentVersion[];
-  componentId?: ComponentID;
+  id?: ComponentID;
   packageName?: string;
-  latestVersion?: string;
+  latest?: string;
   currentVersion?: string;
   buildStatus?: string;
   loading?: boolean;
@@ -260,10 +260,10 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
   const { useLanes, consumeMethods, className, dropdownOptions, host } = updatedPropsWithDefaults;
   const {
     loading,
-    componentId,
+    id: componentId,
     tags,
     snaps,
-    latestVersion,
+    latest: latestVersion,
     packageName,
     currentVersion: _currentVersion,
     buildStatus,
