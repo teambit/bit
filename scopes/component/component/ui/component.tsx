@@ -6,9 +6,8 @@ import { SlotRegistry } from '@teambit/harmony';
 import { isFunction } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentProvider, ComponentDescriptorProvider } from './context';
-import { useComponent as useComponentQuery } from './use-component';
+import { useComponent as useComponentQuery, UseComponentType, Filters } from './use-component';
 import { ComponentModel } from './component-model';
-import { Filters, UseComponentType } from './use-component.model';
 import { useIdFromLocation } from './use-component-from-location';
 
 import styles from './component.module.scss';
