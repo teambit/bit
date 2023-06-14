@@ -175,9 +175,19 @@ describe('tag components on Harmony', function () {
       });
     });
     describe('tagging them one by one with semver', () => {
-      before(() => {
-        helper.scopeHelper.getClonedScope(beforeTagging, bareTag.scopePath);
-        helper.scopeHelper.getClonedRemoteScope(beforeExporting);
+      before(async () => {
+        helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        npmCiRegistry = new NpmCiRegistry(helper);
+        await npmCiRegistry.init();
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        helper.fixtures.populateComponents(3);
+        helper.command.snapAllComponents();
+        helper.command.export();
+
+        bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+
         // tag comp3 first
         const data = [
           {
