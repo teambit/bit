@@ -54,6 +54,10 @@ export type PackageManagerInstallOptions = {
 
   hidePackageManagerOutput?: boolean;
 
+  pruneNodeModules?: boolean;
+
+  hasRootComponents?: boolean;
+
   neverBuiltDependencies?: string[];
 
   preferOffline?: boolean;
