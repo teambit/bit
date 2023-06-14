@@ -45,7 +45,7 @@ export class ReactApp implements Application {
 
   async run(context: AppContext): Promise<number> {
     const [from, to] = this.portRange;
-    const port = await Port.getPort(from, to);
+    const port = context.port || (await Port.getPort(from, to));
 
     if (this.devServer) {
       await this.devServer.listen(port);

@@ -113,6 +113,11 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   baseDir?: string;
 
   /**
+   * Whether to use hash function (of base dir) as capsules root dir name
+   */
+  useHash?: boolean;
+
+  /**
    * create a new capsule with a random string attached to the path suffix
    */
   alwaysNew?: boolean;
@@ -247,7 +252,7 @@ export class IsolatorMain {
     });
     opts.baseDir = opts.baseDir || host.path;
     const capsuleList = await this.createCapsules(componentsToIsolate, opts, legacyScope);
-    const capsuleDir = this.getCapsulesRootDir(opts.baseDir, opts.rootBaseDir);
+    const capsuleDir = this.getCapsulesRootDir(opts.baseDir, opts.rootBaseDir, opts.useHash);
     this.logger.debug(
       `creating network with base dir: ${opts.baseDir}, rootBaseDir: ${opts.rootBaseDir}. final capsule-dir: ${capsuleDir}. capsuleList: ${capsuleList.length}`
     );
@@ -305,7 +310,7 @@ export class IsolatorMain {
     legacyScope?: Scope
   ): Promise<CapsuleList> {
     this.logger.debug(`createCapsules, ${components.length} components`);
-    const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir);
+    const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir, opts.useHash);
 
     let longProcessLogger;
     if (opts.context?.aspects) {
@@ -594,9 +599,10 @@ export class IsolatorMain {
     }
   }
 
-  getCapsulesRootDir(baseDir: string, rootBaseDir?: string): PathOsBasedAbsolute {
+  getCapsulesRootDir(baseDir: string, rootBaseDir?: string, useHash = true): PathOsBasedAbsolute {
     const capsulesRootBaseDir = rootBaseDir || this.getRootDirOfAllCapsules();
-    return path.join(capsulesRootBaseDir, hash(baseDir));
+    const dir = useHash ? hash(baseDir) : baseDir;
+    return path.join(capsulesRootBaseDir, dir);
   }
 
   async deleteCapsules(capsuleBaseDir: string | null): Promise<string> {

@@ -15,6 +15,7 @@ import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import WatcherAspect, { WatcherMain, WatchOptions } from '@teambit/watcher';
 import type { Component } from '@teambit/component';
+import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { TypeScriptExtractor } from './typescript.extractor';
@@ -67,6 +68,7 @@ import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
 import WriteTsconfigCmd from './cmds/write-tsconfig.cmd';
 import { TypescriptConfigWriter } from './ts-config-writer';
+import { RemoveTypesTask } from './remove-types-task';
 
 export type TsMode = 'build' | 'dev';
 
@@ -317,6 +319,7 @@ export class TypescriptMain {
     WorkspaceConfigFilesAspect,
     CompilerAspect,
     ScopeAspect,
+    BuilderAspect,
   ];
   static slots = [Slot.withType<SchemaTransformer[]>()];
 
@@ -333,6 +336,7 @@ export class TypescriptMain {
       workspaceConfigFiles,
       compiler,
       scope,
+      builder,
     ]: [
       SchemaMain,
       LoggerMain,
@@ -344,7 +348,8 @@ export class TypescriptMain {
       WatcherMain,
       WorkspaceConfigFilesMain,
       CompilerMain,
-      ScopeMain
+      ScopeMain,
+      BuilderMain
     ],
     config,
     [schemaTransformerSlot]: [SchemaTransformerSlot]
@@ -410,6 +415,10 @@ export class TypescriptMain {
       workspace.registerOnComponentChange(tsMain.onComponentChange.bind(tsMain));
       workspace.registerOnComponentAdd(tsMain.onComponentChange.bind(tsMain));
     }
+
+    const removeTypesTask = new RemoveTypesTask();
+    builder.registerSnapTasks([removeTypesTask]);
+    builder.registerTagTasks([removeTypesTask]);
 
     const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);
     const writeTsconfigCmd = new WriteTsconfigCmd(tsMain);
