@@ -27,7 +27,7 @@ export class AppContext extends ExecutionContext {
     /**
      * A port to run the app on
      */
-    readonly exactPort?: number
+    readonly port?: number
   ) {
     super(execContext.upper, execContext.envRuntime, execContext.components);
   }

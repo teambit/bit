@@ -70,7 +70,7 @@ export type ServeAppOptions = {
   /**
    * exact port to run the app
    */
-  exactPort?: number;
+  port?: number;
 };
 
 export class ApplicationMain {
@@ -263,7 +263,7 @@ export class ApplicationMain {
   async runApp(appName: string, options?: ServeAppOptions) {
     options = this.computeOptions(options);
     const app = this.getAppOrThrow(appName);
-    const context = await this.createAppContext(app.name, options.exactPort);
+    const context = await this.createAppContext(app.name, options.port);
     if (!context) throw new AppNotFound(appName);
 
     if (options.ssr) {
@@ -301,7 +301,7 @@ export class ApplicationMain {
     return host.resolveComponentId(maybeApp[0]);
   }
 
-  private async createAppContext(appName: string, exactPort?: number): Promise<AppContext> {
+  private async createAppContext(appName: string, port?: number): Promise<AppContext> {
     const host = this.componentAspect.getHost();
     // const components = await host.list();
     const id = await this.getAppIdOrThrow(appName);
@@ -314,15 +314,7 @@ export class ApplicationMain {
     const context = res.results[0].data;
     if (!context) throw new AppNotFound(appName);
     const hostRootDir = this.workspace.getComponentPackagePath(component);
-    const appContext = new AppContext(
-      appName,
-      context.dev,
-      component,
-      this.workspace.path,
-      context,
-      hostRootDir,
-      exactPort
-    );
+    const appContext = new AppContext(appName, context.dev, component, this.workspace.path, context, hostRootDir, port);
     return appContext;
   }
 

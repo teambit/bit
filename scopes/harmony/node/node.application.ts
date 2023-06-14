@@ -22,7 +22,7 @@ export class NodeApp implements Application {
   async run(context: AppContext): Promise<number | undefined> {
     const logger = this.logger;
     const [from, to] = this.portRange;
-    const port = context.exactPort || (await Port.getPort(from, to));
+    const port = context.port || (await Port.getPort(from, to));
     const child = execFile('node', [this.entry, port.toString()], (error) => {
       if (error) {
         // @todo: this is causing uncaughtException in the main process. a better way to handle this would be to use promise.

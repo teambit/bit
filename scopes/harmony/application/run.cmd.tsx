@@ -53,7 +53,7 @@ export class RunCmd implements Command {
       dev,
       watch: !skipWatch,
       ssr,
-      exactPort: +exactPort,
+      port: +exactPort,
     });
 
     if (errors) {
