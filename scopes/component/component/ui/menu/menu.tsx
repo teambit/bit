@@ -13,10 +13,9 @@ import { useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { useComponent as useComponentQuery } from '../use-component';
+import { useComponent as useComponentQuery, UseComponentType, Filters } from '../use-component';
 import { CollapsibleMenuNav } from './menu-nav';
 import { OrderedNavigationSlot, ConsumeMethodSlot, ConsumePluginProps } from './nav-plugin';
-import { Filters, UseComponentType } from '../use-component.model';
 import { useIdFromLocation } from '../use-component-from-location';
 import styles from './menu.module.scss';
 
