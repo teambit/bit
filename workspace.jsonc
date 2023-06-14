@@ -34,6 +34,7 @@
         "@pnpm/package-store": "0.0.0-20230605-20230605142810",
         "@pnpm/parse-overrides": "0.0.0-20230605-20230605142810",
         "@pnpm/pick-registry-for-package": "5.0.1",
+        "@pnpm/plugin-commands-rebuild": "^9.0.1",
         "@pnpm/registry-mock": "3.4.0",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/sort-packages": "5.0.2",
