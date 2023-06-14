@@ -178,6 +178,7 @@ describe('tag components on Harmony', function () {
       before(async () => {
         helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
         helper.scopeHelper.setNewLocalAndRemoteScopes();
+        // new npmCiRegistry to avoid collision with the previous one
         npmCiRegistry = new NpmCiRegistry(helper);
         await npmCiRegistry.init();
         npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -209,6 +210,9 @@ describe('tag components on Harmony', function () {
         ];
         // console.log('data2', JSON.stringify(data2));
         helper.command.tagFromScope(bareTag.scopePath, data2);
+      });
+      after(() => {
+        npmCiRegistry.destroy();
       });
       it('should save the dependency version according to the version provided in the json', () => {
         const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2@10.0.0`, bareTag.scopePath);
