@@ -6,7 +6,7 @@ import { head, uniqBy } from 'lodash';
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-import { resolve, sep, relative, basename, join, extname } from 'path';
+import { resolve, sep, relative, join, extname } from 'path';
 import { Component, ComponentID } from '@teambit/component';
 import {
   TypeRefSchema,
@@ -111,7 +111,6 @@ export class SchemaExtractorContext {
     if (existingComputedSchema) {
       return existingComputedSchema;
     }
-
     const computedSchema = await this.extractor.computeSchema(node, this);
     this.setComputed(computedSchema);
     return computedSchema;
@@ -198,19 +197,18 @@ export class SchemaExtractorContext {
 
   findFileInComponent(filePath: string) {
     const normalizedFilePath = pathNormalizeToLinux(filePath);
-    const fileNameToCompare = basename(normalizedFilePath);
-    const pathWithoutExtension = fileNameToCompare.replace(/\.[^/.]+$/, '');
+    const pathToCompareWithoutExtension = normalizedFilePath.replace(/\.[^/.]+$/, '');
     const possibleFormats = new Set(['ts', 'tsx', 'js', 'jsx']);
 
     const matchingFile = this.component.filesystem.files.find((file) => {
       const currentFilePath = pathNormalizeToLinux(file.path);
-      const currentFileName = basename(currentFilePath);
+      const currentFilePathWithoutExtension = currentFilePath.replace(/\.[^/.]+$/, '');
       const currentFileExtension = extname(currentFilePath).substring(1);
 
-      const isSameBaseName = pathWithoutExtension === basename(currentFileName, `.${currentFileExtension}`);
+      const isSameFilePath = pathToCompareWithoutExtension === currentFilePathWithoutExtension;
       const isValidExtension = possibleFormats.has(currentFileExtension);
 
-      if (isSameBaseName && isValidExtension) {
+      if (isSameFilePath && isValidExtension) {
         return true;
       }
 
