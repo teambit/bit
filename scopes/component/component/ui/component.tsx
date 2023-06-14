@@ -65,7 +65,7 @@ export function Component({
     : {
         logFilters: {
           ...componentFiltersFromProps,
-          log: { logLimit: 3, ...componentFiltersFromProps.log },
+          log: { limit: 3, ...componentFiltersFromProps.log },
         },
         customUseComponent: useComponent,
       };
