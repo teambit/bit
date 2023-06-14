@@ -126,10 +126,8 @@ export class ImporterMain {
    */
   async fetchLaneComponents(lane: Lane) {
     const ids = lane.toBitIds();
-    await this.scope.legacyScope.scopeImporter.importMany({
-      ids,
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(ids, {
       lane,
-      preferDependencyGraph: true,
     });
     const { mergeLane } = await this.scope.legacyScope.sources.mergeLane(lane, true);
     await this.scope.legacyScope.lanes.saveLane(mergeLane);
