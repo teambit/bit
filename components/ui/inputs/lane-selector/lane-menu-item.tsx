@@ -58,16 +58,7 @@ export const LaneMenuItem = forwardRef<HTMLDivElement, LaneMenuItemProps>(
       />
     );
 
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true,
-    };
-    const formattedTimestamp = timestamp?.toLocaleString(undefined, options).replace(',', '');
+    const formattedTimestamp = timestamp?.toString();
 
     return (
       <div {...rest} ref={ref} className={classnames(className, styles.laneMenuItemContainer)}>

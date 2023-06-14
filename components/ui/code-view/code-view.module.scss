@@ -10,7 +10,7 @@
     .codeSnippet {
       display: block;
       overflow: auto;
-      height: 100vh;
+      height: calc(100vh - 200px);
       > code {
         > code {
           // this is to design the line numbers culumn

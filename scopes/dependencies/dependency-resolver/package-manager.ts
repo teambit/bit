@@ -20,11 +20,15 @@ export type PackageManagerInstallOptions = {
 
   copyPeerToRuntimeOnComponents?: boolean;
 
+  excludeLinksFromLockfile?: boolean;
+
   installPeersFromEnvs?: boolean;
 
   dependencyFilterFn?: DepsFilterFn;
 
   overrides?: Record<string, string>;
+
+  lockfileOnly?: boolean;
 
   nodeLinker?: 'hoisted' | 'isolated';
 
