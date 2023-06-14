@@ -279,6 +279,11 @@ export interface DependencyResolverWorkspaceConfig {
    * of the listed packages will not be executed during installation.
    */
   neverBuiltDependencies?: string[];
+
+  /**
+   * If true, staleness checks for cached data will be bypassed, but missing data will be requested from the server.
+   */
+  preferOffline?: boolean;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -709,6 +714,7 @@ export class DependencyResolverMain {
       this.config.engineStrict,
       this.config.peerDependencyRules,
       this.config.neverBuiltDependencies,
+      this.config.preferOffline,
       options.installingContext
     );
   }

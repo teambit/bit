@@ -51,7 +51,7 @@ async function createStoreController(
     registries: Registries;
     proxyConfig: PackageManagerProxyConfig;
     networkConfig: PackageManagerNetworkConfig;
-  } & Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir'>
+  } & Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>
 ): Promise<{ ctrl: StoreController; dir: string }> {
   const authConfig = getAuthConfig(options.registries);
   const opts: CreateStoreControllerOptions = {
@@ -71,6 +71,7 @@ async function createStoreController(
     maxSockets: options.networkConfig.maxSockets,
     networkConcurrency: options.networkConfig.networkConcurrency,
     packageImportMethod: options.packageImportMethod,
+    preferOffline: options.preferOffline,
     resolveSymlinksInInjectedDirs: true,
     pnpmHomeDir: options.pnpmHomeDir,
   };
@@ -181,7 +182,7 @@ export async function install(
     | 'peerDependencyRules'
     | 'neverBuiltDependencies'
   > &
-    Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir'>,
+    Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ): Promise<{ dependenciesChanged: boolean }> {
@@ -217,6 +218,7 @@ export async function install(
     storeDir,
     cacheDir,
     registries,
+    preferOffline: options?.preferOffline,
     proxyConfig,
     networkConfig,
     packageImportMethod: options?.packageImportMethod,
