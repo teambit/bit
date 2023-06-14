@@ -95,11 +95,39 @@ chai.use(require('chai-string'));
     });
     it('all packages are correctly installed inside capsules', () => {
       const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-      const env1Folder = `${helper.scopes.remote}_node-env-1@0.0.1`;
-      const env2Folder = `${helper.scopes.remote}_node-env-2@0.0.1`;
-
-      expect(path.join(scopeAspectsCapsulesRootDir, env1Folder, 'node_modules/lodash.get')).to.be.a.path();
-      expect(path.join(scopeAspectsCapsulesRootDir, env2Folder, 'node_modules/lodash.flatten')).to.be.a.path();
+      expect(
+        path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-1@0.0.1/node_modules/lodash.get`)
+      ).to.be.a.path();
+      expect(
+        path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-2@0.0.1/node_modules/lodash.flatten`)
+      ).to.be.a.path();
+    });
+  });
+  describe('using Yarn with isolatedCapsules set to false', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
+      helper.extensions.bitJsonc.addKeyValToDependencyResolver('isolatedCapsules', false);
+      helper.scopeHelper.addRemoteScope();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
+      helper.extensions.addExtensionToVariant('comp2', `${envId2}@0.0.1`);
+      const capsules = helper.command.capsuleListParsed();
+      const scopeAspectCapsulesPath = capsules.scopeAspectsCapsulesRootDir;
+      fs.removeSync(scopeAspectCapsulesPath);
+      helper.command.status(); // populate capsules.
+    });
+    it('bit show should show the correct env', () => {
+      const env1 = helper.env.getComponentEnv('comp1');
+      expect(env1).to.equal(`${envId1}@0.0.1`);
+      const env2 = helper.env.getComponentEnv('comp2');
+      expect(env2).to.equal(`${envId2}@0.0.1`);
+    });
+    it('all packages are correctly installed inside capsules', () => {
+      const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
+      expect(path.join(scopeAspectsCapsulesRootDir, 'node_modules/lodash.get')).to.be.a.path();
+      expect(path.join(scopeAspectsCapsulesRootDir, 'node_modules/lodash.flatten')).to.be.a.path();
     });
   });
   after(() => {

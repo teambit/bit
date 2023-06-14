@@ -6,6 +6,7 @@ import { initDefaultReporter } from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
 import { StoreController, WantedDependency } from '@pnpm/package-store';
 import { readModulesManifest } from '@pnpm/modules-yaml';
+import { rebuild } from '@pnpm/plugin-commands-rebuild';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { sortPackages } from '@pnpm/sort-packages';
 import {
@@ -177,15 +178,17 @@ export async function install(
     InstallOptions,
     | 'publicHoistPattern'
     | 'hoistPattern'
+    | 'lockfileOnly'
     | 'nodeVersion'
     | 'engineStrict'
+    | 'excludeLinksFromLockfile'
     | 'peerDependencyRules'
     | 'neverBuiltDependencies'
   > &
     Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
-): Promise<{ dependenciesChanged: boolean }> {
+): Promise<{ dependenciesChanged: boolean; rebuild: () => Promise<void>; storeDir: string }> {
   let externalDependencies: Set<string> | undefined;
   const readPackage: ReadPackageHook[] = [];
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
@@ -228,7 +231,7 @@ export async function install(
     allProjects,
     autoInstallPeers: false,
     confirmModulesPurge: false,
-    excludeLinksFromLockfile: true,
+    excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
     dir: rootDir,
@@ -236,6 +239,7 @@ export async function install(
     workspacePackages,
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
+    lockfileOnly: options.lockfileOnly ?? false,
     modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
     neverBuiltDependencies: options.neverBuiltDependencies,
     registries: registriesMap,
@@ -305,7 +309,18 @@ export async function install(
       });
     }
   }
-  return { dependenciesChanged };
+  return {
+    dependenciesChanged,
+    rebuild: () =>
+      rebuild.handler(
+        {
+          ...opts,
+          cacheDir,
+        } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        []
+      ),
+    storeDir: storeController.dir,
+  };
 }
 
 /*
