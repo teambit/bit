@@ -52,6 +52,7 @@ export class CreateCmd implements Command {
     ['n', 'namespace <string>', `sets the component's namespace and nested dirs inside the scope`],
     ['s', 'scope <string>', `sets the component's scope-name. if not entered, the default-scope will be used`],
     ['a', 'aspect <string>', 'aspect-id of the template. helpful when multiple aspects use the same template name'],
+    ['t', 'template <string>', 'env-id of the template. alias from --aspect.'],
     ['p', 'path <string>', 'relative path in the workspace. by default the path is `<scope>/<namespace>/<name>`'],
     ['e', 'env <string>', "set the component's environment. (overrides the env from variants and the template)"],
   ] as CommandOptions;
