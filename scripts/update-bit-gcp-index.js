@@ -10,8 +10,11 @@ const BIT_VERSION = process.env.BIT_VERSION;
   }
   https.get(
     {
-      host: 'bvm.bit.dev',
-      path: '/bit/index.json',
+      // host: 'bvm.bit.dev',
+      // Going to the google storage directly to not getting a version from the cache
+      host: 'https://storage.googleapis.com',
+      // path: '/bit/index.json',
+      path: '/bvm.bit.dev/bit/index.json',
       port: 443,
       headers: {
         'Content-Type': 'application/json',

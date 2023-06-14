@@ -62,6 +62,14 @@
 
 .groupBy {
   display: flex;
+  flex: 1;
+}
+
+.groupText {
+  font-size: var(--bit-p-xs, '14px');
+  flex: 1;
+  display: flex;
+  padding: 0px 4px;
 }
 
 .sort {
