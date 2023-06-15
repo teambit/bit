@@ -34,6 +34,7 @@
         "@pnpm/package-store": "0.0.0-20230605-20230605142810",
         "@pnpm/parse-overrides": "0.0.0-20230605-20230605142810",
         "@pnpm/pick-registry-for-package": "5.0.1",
+        "@pnpm/plugin-commands-rebuild": "^9.0.1",
         "@pnpm/registry-mock": "3.4.0",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/sort-packages": "5.0.2",
@@ -390,7 +391,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.504",
+        "@teambit/legacy": "1.0.506",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "browserslist": "4.16.3",
@@ -482,7 +483,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.504"
+            "@teambit/legacy": "1.0.506"
           }
         }
       },
@@ -743,7 +744,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.504"
+            "@teambit/legacy": "1.0.506"
           }
         }
       }
@@ -833,7 +834,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.504",
+            "@teambit/legacy": "1.0.506",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -968,7 +969,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.504"
+            "@teambit/legacy": "1.0.506"
           }
         }
       }

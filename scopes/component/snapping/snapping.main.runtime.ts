@@ -41,6 +41,7 @@ import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { ComponentID } from '@teambit/component-id';
+import { isHash } from '@teambit/component-version';
 import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
 import {
   ArtifactFiles,
@@ -259,13 +260,25 @@ export class SnappingMain {
     const componentIds = tagDataPerComp.map((t) => t.componentId);
     const bitIds = componentIds.map((c) => c._legacy);
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
+    const deps = compact(tagDataPerComp.map((t) => t.dependencies).flat()).map((dep) => dep.changeVersion(LATEST));
     const components = await this.scope.import(componentIdsLatest);
+
+    // import deps to be able to resolve semver
+    await this.scope.import(deps, { useCache: false });
+    await Promise.all(
+      tagDataPerComp.map(async (tagData) => {
+        tagData.dependencies = tagData.dependencies
+          ? await Promise.all(tagData.dependencies.map((d) => this.getCompIdWithExactVersionAccordingToSemver(d)))
+          : [];
+      })
+    );
+
     // needed in order to load all aspects of these components
     await this.scope.loadMany(components.map((c) => c.id));
     await Promise.all(
       components.map(async (comp) => {
         const tagData = tagDataPerComp.find((t) => t.componentId.isEqual(comp.id, { ignoreVersion: true }));
-        if (!tagData) throw new Error(`unable to find ${comp.id.toString()} in tagDAtaPerComp`);
+        if (!tagData) throw new Error(`unable to find ${comp.id.toString()} in tagDataPerComp`);
         if (!tagData.dependencies.length) return;
         await this.updateDependenciesVersionsOfComponent(comp, tagData.dependencies, bitIds);
       })
@@ -835,6 +848,25 @@ there are matching among unmodified components thought. consider using --unmodif
       );
     };
     await pMap(components, (component) => throwForComponent(component), { concurrency: concurrentComponentsLimit() });
+  }
+
+  /**
+   * the compId.version can be a range (e.g. "^1.0.0"), in which case, it finds the component in the local scope and
+   * resolves the latest version that falls under the range.
+   * in case the version has no range, it returns the same compId.
+   * in case it has no version, it returns the latest.
+   */
+  async getCompIdWithExactVersionAccordingToSemver(compId: ComponentID): Promise<ComponentID> {
+    if (isHash(compId.version)) {
+      return compId;
+    }
+    const range = compId.version || '*'; // if not version specified, assume the latest
+    const id = compId.changeVersion(undefined);
+    const exactVersion = await this.scope.getExactVersionBySemverRange(id, range);
+    if (!exactVersion) {
+      throw new Error(`unable to find a version that satisfies "${range}" of "${compId.toString()}"`);
+    }
+    return compId.changeVersion(exactVersion);
   }
 
   async updateDependenciesVersionsOfComponent(

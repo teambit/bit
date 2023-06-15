@@ -269,6 +269,11 @@ export interface DependencyResolverWorkspaceConfig {
    */
   linkCoreAspects?: boolean;
 
+  /**
+   * When false, Bit will create a shared node_modules directory for all components in a capsule.
+   */
+  isolatedCapsules?: boolean;
+
   /*
    * Ignore the builds of specific dependencies. The "preinstall", "install", and "postinstall" scripts
    * of the listed packages will not be executed during installation.
@@ -389,11 +394,15 @@ export class DependencyResolverMain {
    */
   supportsDedupingOnExistingRoot(): boolean {
     const packageManager = this.getPackageManager();
-    return packageManager?.supportsDedupingOnExistingRoot?.() === true && !this.hasRootComponents();
+    return packageManager?.supportsDedupingOnExistingRoot?.() === true && !this.isolatedCapsules();
   }
 
   hasRootComponents(): boolean {
     return Boolean(this.config.rootComponents);
+  }
+
+  isolatedCapsules(): boolean {
+    return this.config.isolatedCapsules ?? true;
   }
 
   hasHarmonyInRootPolicy(): boolean {
