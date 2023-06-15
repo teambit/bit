@@ -219,7 +219,7 @@ export function defaultLoadVersions(
 
       return {
         loading,
-        componentId: component?.id,
+        id: component?.id,
         packageName: component?.packageName,
         latestVersion: component?.latest,
         currentVersion: component?.version,

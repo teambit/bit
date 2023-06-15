@@ -55,20 +55,13 @@ export function Component({
   const resolvedComponentIdStr = path || idFromLocation;
   const componentFiltersFromProps = useComponentFilters?.() || {};
 
-  const useComponentOptions = componentFiltersFromProps.loading
-    ? {
-        logFilters: {
-          ...componentFiltersFromProps,
-        },
-        customUseComponent: useComponent,
-      }
-    : {
-        logFilters: {
-          ...componentFiltersFromProps,
-          log: { limit: 3, ...componentFiltersFromProps.log },
-        },
-        customUseComponent: useComponent,
-      };
+  const useComponentOptions = {
+    logFilters: {
+      ...componentFiltersFromProps,
+      ...(componentFiltersFromProps.loading ? {} : { log: { limit: 3, ...componentFiltersFromProps.log } }),
+    },
+    customUseComponent: useComponent,
+  };
 
   const { component, componentDescriptor, error } = useComponentQuery(
     host,

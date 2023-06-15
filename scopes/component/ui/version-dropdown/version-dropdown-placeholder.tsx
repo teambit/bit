@@ -81,13 +81,13 @@ export function DetailedVersion({
         showTooltip={true}
         onClick={rest.onClick}
       />
-      <div className={classNames(styles.versionName)} onClick={rest.onClick}>
+      <Ellipsis className={classNames(styles.versionName)} onClick={rest.onClick}>
         {formattedVersion}
-      </div>
+      </Ellipsis>
       {commitMessage(message, rest.onClick)}
-      <div className={styles.versionTimestamp} onClick={rest.onClick}>
+      <Ellipsis className={styles.versionTimestamp} onClick={rest.onClick}>
         <TimeAgo date={timestamp} onClick={rest.onClick} />
-      </div>
+      </Ellipsis>
       {hasMoreVersions && <Icon of="fat-arrow-down" onClick={rest.onClick} />}
     </div>
   );

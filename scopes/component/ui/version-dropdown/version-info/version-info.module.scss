@@ -11,9 +11,6 @@
   min-width: fit-content;
   margin-right: 2px;
   text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .versionUserAvatar {
@@ -37,17 +34,11 @@
 .versionName {
   padding: 0px 8px;
   flex-grow: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   min-width: fit-content;
 }
 
 .commitMessage {
   flex-grow: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   padding: 0px 8px;
 }
 

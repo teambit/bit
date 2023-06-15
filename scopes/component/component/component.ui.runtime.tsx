@@ -166,7 +166,6 @@ export class ComponentUI {
           componentId={`${componentId.toString({ ignoreVersion: true })}${version}`}
           packageName={`${packageName}${packageVersion}`}
           componentName={componentId.name}
-          showInstallMethod={!options?.viewedLane}
         />
       ) : null,
       order: 0,

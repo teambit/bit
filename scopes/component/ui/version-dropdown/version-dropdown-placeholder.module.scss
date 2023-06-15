@@ -1,4 +1,5 @@
-.simple {
+.simple,
+.detailed {
   cursor: pointer;
   border: 1px solid var(--bit-border-color, #babec9);
   border-radius: 6px;
@@ -22,86 +23,20 @@
     > span {
       display: none;
     }
-  }
-
-  .versionName {
-    flex-grow: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: fit-content;
-  }
-
-  .commitMessage {
-    flex-grow: 1;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .versionTimestamp {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .versionUserAvatar {
-    flex: none;
-    margin-right: 5px;
   }
 }
+.versionName {
+  flex-grow: 1;
+  min-width: fit-content;
+}
 
-.detailed {
-  display: flex;
-  align-items: center;
-  box-sizing: border-box;
-  height: 30px;
-  border-radius: 6px;
-  user-select: none;
-  transition: background-color 300ms ease-in-out;
-  border: 1px solid var(--bit-border-color, #babec9);
-  cursor: pointer;
-  flex-wrap: nowrap;
-  gap: 8px;
-  padding: 8px;
+.commitMessage {
+  flex-grow: 1;
+}
 
-  &:hover {
-    background-color: var(--bit-bg-heavy);
-  }
-
-  &.disabled {
-    cursor: default;
-    background-color: #ededed;
-    > span {
-      display: none;
-    }
-  }
-
-  .versionName {
-    flex-grow: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: fit-content;
-  }
-
-  .commitMessage {
-    flex-grow: 1;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .versionTimestamp {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .versionUserAvatar {
-    flex: none;
-    margin-right: 5px;
-  }
+.versionUserAvatar {
+  flex: none;
+  margin-right: 5px;
 }
 
 .loader {
