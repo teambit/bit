@@ -34,16 +34,16 @@ export class PkgUI {
 
     return {
       Title: <img style={{ width: '30px' }} src="https://static.bit.dev/brands/logo-npm-new.svg" />,
-      Component:
-        !options?.hide && !options?.hideInstall ? (
-          <Install
-            config={`npm config set '${registry}:registry' https://node.bit.cloud`}
-            componentName={componentId.name}
-            packageManager="npm"
-            copyString={`npm i ${packageName}${packageVersion}`}
-            registryName={registry}
-          />
-        ) : null,
+      Component: !options?.hide ? (
+        <Install
+          config={`npm config set '${registry}:registry' https://node.bit.cloud`}
+          componentName={componentId.name}
+          packageManager="npm"
+          copyString={`npm i ${packageName}${packageVersion}`}
+          registryName={registry}
+          isInstallable={!options?.disableInstall}
+        />
+      ) : null,
       order: 10,
     };
   };

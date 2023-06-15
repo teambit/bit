@@ -18,7 +18,7 @@ export type OrderedNavigationSlot = SlotRegistry<NavPlugin>;
 export type ConsumePluginOptions = {
   viewedLane?: LaneModel;
   hide?: boolean;
-  hideInstall?: boolean;
+  disableInstall?: boolean;
 };
 
 export type ConsumePluginProps = {

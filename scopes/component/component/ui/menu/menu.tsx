@@ -281,13 +281,13 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
   const currentVersion =
     isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : _currentVersion ?? '';
 
-  const consumeMethodProps = React.useMemo(() => {
+  const consumeMethodProps: ConsumePluginProps | undefined = React.useMemo(() => {
     return id
       ? {
           id,
           packageName: packageName ?? '',
           latest,
-          options: { viewedLane, hideInstall: !packageName },
+          options: { viewedLane, disableInstall: !packageName },
         }
       : undefined;
   }, [id, packageName, latest, viewedLane]);
