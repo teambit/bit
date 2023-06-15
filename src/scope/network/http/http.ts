@@ -336,10 +336,7 @@ export class Http implements Network {
       headers,
     });
 
-    // delete opts.headers.Authorization;
-
     const res = await fetch(urlToFetch, opts);
-    // console.log("🚀 ~ fetch url", urlToFetch, 'opts', opts)
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
     const objectListReadable = ObjectList.fromTarToObjectStream(res.body);
@@ -603,7 +600,6 @@ export class Http implements Network {
   }
 
   private addAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {
-    // return opts;
     const optsWithAgent = this.agent ? Object.assign({}, opts, { agent: this.agent }) : opts;
     return optsWithAgent;
   }
