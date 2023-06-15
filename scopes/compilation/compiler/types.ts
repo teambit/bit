@@ -85,7 +85,10 @@ export interface Compiler extends CompilerOptions, ServiceHandler {
    * transpile a single file that gets saved into the workspace, used by `bit compile` and during
    * development
    */
-  transpileFile?: (fileContent: string, params: TranspileFileParams) => TranspileFileOutput;
+  transpileFile?: (
+    fileContent: string,
+    params: TranspileFileParams
+  ) => TranspileFileOutput | Promise<TranspileFileOutput>;
 
   /**
    * transpile all the files of a component, use this when you can't use `transpileFile`

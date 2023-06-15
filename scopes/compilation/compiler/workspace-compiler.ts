@@ -162,7 +162,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     let compileResults;
     if (isFileSupported) {
       try {
-        compileResults = this.compilerInstance.transpileFile?.(file.contents.toString(), options);
+        compileResults = await this.compilerInstance.transpileFile?.(file.contents.toString(), options);
       } catch (error: any) {
         this.compileErrors.push({ path: file.path, error });
         return;
