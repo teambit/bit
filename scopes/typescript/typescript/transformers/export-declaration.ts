@@ -108,35 +108,38 @@ async function namedExport(exportClause: NamedExports, context: SchemaExtractorC
 }
 
 async function exportSpecifierToSchemaNode(element: ExportSpecifier, context: SchemaExtractorContext) {
-  const definitionInfo = await context.definitionInfo(element);
+  try {
+    const definitionInfo = await context.definitionInfo(element);
+    if (!definitionInfo) {
+      // happens for example when the main index.ts file exports variable from an mdx file.
+      // tsserver is unable to get the definition node because it doesn't know to parse mdx files.
+      return new UnresolvedSchema(context.getLocation(element.name), element.name.getText());
+    }
 
-  if (!definitionInfo) {
-    // happens for example when the main index.ts file exports variable from an mdx file.
-    // tsserver is unable to get the definition node because it doesn't know to parse mdx files.
-    return new UnresolvedSchema(context.getLocation(element.name), element.name.getText());
-  }
+    const definitionNode = await context.definition(definitionInfo);
 
-  const definitionNode = await context.definition(definitionInfo);
+    if (!definitionNode) {
+      return await context.resolveType(element, element.name.getText(), false);
+    }
 
-  if (!definitionNode) {
-    return context.resolveType(element, element.name.getText(), false);
-  }
-
-  // if it is reexported from another export
-  if (isSameNode(element, definitionNode.parent)) {
-    // the definition node is the same node as element.name. tsserver wasn't able to find the source for it
-    // normally, "bit install" should fix it. another option is to open vscode and look for errors.
-    throw new Error(`error: tsserver is unable to locate the identifier "${element.name.getText()}" at ${context.getLocationAsString(
-      element.name
-    )}.
+    // if it is reexported from another export
+    if (isSameNode(element, definitionNode.parent)) {
+      // the definition node is the same node as element.name. tsserver wasn't able to find the source for it
+      // normally, "bit install" should fix it. another option is to open vscode and look for errors.
+      throw new Error(`error: tsserver is unable to locate the identifier "${element.name.getText()}" at ${context.getLocationAsString(
+        element.name
+      )}.
 make sure "bit status" is clean and there are no errors about missing packages/links.
 also, make sure the tsconfig.json in the root has the "jsx" setting defined.`);
+    }
+
+    if (definitionNode.parent.kind === SyntaxKind.ExportSpecifier)
+      return exportSpecifierToSchemaNode(definitionNode.parent as ExportSpecifier, context);
+
+    return await context.computeSchema(definitionNode.parent);
+  } catch (e) {
+    return new UnresolvedSchema(context.getLocation(element.name), element.name.getText());
   }
-
-  if (definitionNode.parent.kind === SyntaxKind.ExportSpecifier)
-    return exportSpecifierToSchemaNode(definitionNode.parent as ExportSpecifier, context);
-
-  return context.computeSchema(definitionNode.parent);
 }
 
 async function namespaceExport(

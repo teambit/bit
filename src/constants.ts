@@ -336,6 +336,16 @@ export const CFG_FEATURE_TOGGLE = 'features';
 export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
 export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
+/**
+ * Name of the directory where the capsules for aspects for regular scope are stored
+ * This directory is relative to the capsules root directory
+ */
+export const CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR = 'capsules_scopes_aspects_base_dir';
+/**
+ * Name of the directory where the capsules for aspects for the global scope are stored
+ * This directory is relative to the capsules root directory
+ */
+export const CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR = 'capsules_global_scope_aspects_base_dir';
 
 export const CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS = 'default_resolve_envs_from_roots';
 

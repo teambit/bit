@@ -50,7 +50,7 @@ export function useLanes(
   skip?: boolean
 ): LanesContextModel & Omit<QueryResult<LanesQuery & { getHost: { id: string } }>, 'data'> {
   const lanesContext = useLanesContext();
-  const shouldSkip = skip || !!targetLanes || !!lanesContext;
+  const shouldSkip = skip || !!targetLanes || !!lanesContext?.lanesModel;
 
   const { data, loading, ...rest } = useDataQuery<LanesQuery & { getHost: { id: string } }>(GET_LANES, {
     skip: shouldSkip,

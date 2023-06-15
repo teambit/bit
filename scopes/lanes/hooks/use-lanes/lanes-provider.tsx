@@ -27,6 +27,16 @@ export function LanesProvider({
 
   const [lanesState, setLanesState] = useState<LanesModel | undefined>(lanesModel);
   const [viewedLaneId, setViewedLaneId] = useState<LaneId | undefined>(viewedIdFromProps);
+  const updateViewedLane = useCallback(
+    (lane?: LaneId) => {
+      setViewedLaneId(lane);
+      setLanesState((state) => {
+        state?.setViewedOrDefaultLane(lane);
+        return state;
+      });
+    },
+    [lanesModel]
+  );
 
   const location = useLocation();
   const query = useQuery();
@@ -37,39 +47,43 @@ export function LanesProvider({
   }, []);
 
   useEffect(() => {
-    if (viewedIdFromProps) setViewedLaneId(viewedIdFromProps);
+    if (viewedIdFromProps) updateViewedLane(viewedIdFromProps);
   }, [viewedIdFromProps?.toString()]);
 
   useEffect(() => {
     if (ignoreDerivingFromUrl(location)) return;
 
-    // const onHomeRoute = location?.pathname === '/';
     const viewedLaneIdFromUrl =
       (location?.pathname && LanesModel.getLaneIdFromPathname(location?.pathname, query)) || undefined;
 
     const viewedLaneIdToSet =
-      viewedLaneIdFromUrl || lanesModel?.currentLane?.id || lanesModel?.lanes.find((lane) => lane.id.isDefault())?.id;
+      viewedLaneIdFromUrl ||
+      viewedLaneId ||
+      lanesModel?.currentLane?.id ||
+      lanesModel?.lanes.find((lane) => lane.id.isDefault())?.id;
 
-    setViewedLaneId(viewedLaneIdToSet);
+    updateViewedLane(viewedLaneIdToSet);
   }, [location?.pathname]);
 
   useEffect(() => {
-    if (viewedLaneId === undefined && lanesModel?.currentLane?.id) {
-      setViewedLaneId(lanesModel.currentLane.id);
-      lanesModel?.setViewedOrDefaultLane(lanesModel.currentLane.id);
-      setLanesState(lanesModel);
-      return;
-    }
-    lanesModel?.setViewedOrDefaultLane(viewedLaneId);
-    setLanesState(lanesModel);
-  }, [loading, lanesModel?.lanes.length]);
-
-  lanesState?.setViewedOrDefaultLane(viewedLaneId);
+    setLanesState((existing) => {
+      if (!loading && lanesModel?.lanes.length) {
+        const state = new LanesModel({ ...lanesModel });
+        if (viewedLaneId === undefined && lanesModel?.currentLane?.id) {
+          state.setViewedOrDefaultLane(lanesModel?.currentLane?.id);
+        } else {
+          state.setViewedOrDefaultLane(viewedLaneId);
+        }
+        return state;
+      }
+      return existing;
+    });
+  }, [loading, lanesModel?.lanes.length, viewedLaneId]);
 
   const lanesContextModel: LanesContextModel = {
     lanesModel: lanesState,
     updateLanesModel: setLanesState,
-    updateViewedLane: setViewedLaneId,
+    updateViewedLane,
   };
 
   return <LanesContext.Provider value={lanesContextModel}>{children}</LanesContext.Provider>;

@@ -38,7 +38,15 @@ import threeWayMerge, {
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { DependencyResolverAspect, WorkspacePolicyConfigKeysNames } from '@teambit/dependency-resolver';
-import { CheckoutAspect, CheckoutMain, applyModifiedVersion } from '@teambit/checkout';
+import {
+  ApplyVersionWithComps,
+  CheckoutAspect,
+  CheckoutMain,
+  ComponentStatusBase,
+  applyModifiedVersion,
+  deleteFilesIfNeeded,
+  markFilesToBeRemovedIfNeeded,
+} from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
@@ -54,28 +62,20 @@ type PkgEntry = { name: string; version: string; force: boolean };
 export type WorkspaceDepsUpdates = { [pkgName: string]: [string, string] }; // from => to
 export type WorkspaceDepsConflicts = Record<WorkspacePolicyConfigKeysNames, Array<{ name: string; version: string }>>; // the pkg value is in a format of CONFLICT::OURS::THEIRS
 
-export type ComponentMergeStatus = {
-  currentComponent?: ConsumerComponent | null;
-  componentFromModel?: Version;
-  id: BitId;
+export type ComponentMergeStatus = ComponentStatusBase & {
   unmergedMessage?: string;
   unmergedLegitimately?: boolean; // failed to merge but for a legitimate reason, such as, up-to-date
   mergeResults?: MergeResultsThreeWay | null;
   divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
   configMergeResult?: ConfigMergeResult;
-  shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
 };
 
-export type ComponentMergeStatusBeforeMergeAttempt = {
-  currentComponent?: ConsumerComponent | null;
-  componentFromModel?: Version;
-  id: BitId;
+export type ComponentMergeStatusBeforeMergeAttempt = ComponentStatusBase & {
   unmergedMessage?: string;
   unmergedLegitimately?: boolean; // failed to merge but for a legitimate reason, such as, up-to-date
   divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
-  shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
   mergeProps?: {
     otherLaneHead: Ref;
     currentId: BitId;
@@ -259,6 +259,10 @@ export class MergingMain {
       }
     );
 
+    markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
+
+    await deleteFilesIfNeeded(componentsResults, this.workspace);
+
     const allConfigMerge = compact(succeededComponents.map((c) => c.configMergeResult));
 
     const { workspaceDepsUpdates, workspaceDepsConflicts } = await this.updateWorkspaceJsoncWithDepsIfNeeded(
@@ -316,7 +320,7 @@ export class MergingMain {
     }
 
     return {
-      components: componentsResults,
+      components: componentsResults.map((c) => c.applyVersionResult),
       failedComponents,
       removedComponents: componentIdsToRemove,
       mergeSnapResults,
@@ -609,7 +613,7 @@ export class MergingMain {
     const currentId = getCurrentId();
     if (!currentId) {
       const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
-      return { currentComponent: null, componentFromModel: componentOnOther, id, divergeData };
+      return { componentFromModel: componentOnOther, id, divergeData };
     }
     const getCurrentComponent = () => {
       if (existingBitMapId) return consumer.loadComponent(existingBitMapId);
@@ -795,7 +799,7 @@ other:   ${otherLaneHead.toString()}`);
     localLane: Lane | null;
     resolvedUnrelated?: ResolveUnrelatedData;
     configMergeResult?: ConfigMergeResult;
-  }): Promise<ApplyVersionResult> {
+  }): Promise<ApplyVersionWithComps> {
     const consumer = this.workspace.consumer;
     let filesStatus = {};
     const unmergedComponent: UnmergedComponent = {
@@ -818,7 +822,7 @@ other:   ${otherLaneHead.toString()}`);
       unmergedComponent.head = resolvedUnrelated.head;
       unmergedComponent.unrelated = true;
       consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
-      return { id, filesStatus };
+      return { applyVersionResult: { id, filesStatus }, component: currentComponent };
     };
 
     const markAllFilesAsUnchanged = () => {
@@ -830,7 +834,7 @@ other:   ${otherLaneHead.toString()}`);
     if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
       markAllFilesAsUnchanged();
       consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
-      return { id, filesStatus };
+      return { applyVersionResult: { id, filesStatus }, component: currentComponent || undefined };
     }
     if (resolvedUnrelated?.strategy === 'ours') {
       markAllFilesAsUnchanged();
@@ -897,7 +901,7 @@ other:   ${otherLaneHead.toString()}`);
       consumer.scope.objects.add(modelComponent);
     }
 
-    return { id, filesStatus };
+    return { applyVersionResult: { id, filesStatus }, component: currentComponent || undefined };
   }
 
   private async abortMerge(values: string[]): Promise<ApplyVersionResults> {
