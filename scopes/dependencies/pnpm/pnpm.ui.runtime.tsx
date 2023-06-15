@@ -33,15 +33,16 @@ export class PnpmUI {
 
     return {
       Title: <img style={{ height: '16px', marginTop: '-2px' }} src="https://static.bit.dev/brands/pnpm.svg" />,
-      Component: !options?.hide ? (
-        <Install
-          config={`npm config set '${registry}:registry' https://node.bit.cloud`}
-          componentName={componentId.name}
-          packageManager="pnpm"
-          copyString={`pnpm i ${packageName}${packageVersion}`}
-          registryName={registry}
-        />
-      ) : null,
+      Component:
+        !options?.hide && !options?.hideInstall ? (
+          <Install
+            config={`npm config set '${registry}:registry' https://node.bit.cloud`}
+            componentName={componentId.name}
+            packageManager="pnpm"
+            copyString={`pnpm i ${packageName}${packageVersion}`}
+            registryName={registry}
+          />
+        ) : null,
       order: 30,
     };
   };

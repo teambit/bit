@@ -165,7 +165,6 @@ export type UseComponentVersionsResult = {
   packageName?: string;
   latest?: string;
   currentVersion?: string;
-  buildStatus?: string;
   loading?: boolean;
 };
 
@@ -266,7 +265,6 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
     latest,
     packageName,
     currentVersion: _currentVersion,
-    buildStatus,
   } = props.useComponent?.({ initialLoad: true }) || {};
   const location = useLocation();
   const { lanesModel } = useLanes();
@@ -284,15 +282,15 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
     isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : _currentVersion ?? '';
 
   const consumeMethodProps = React.useMemo(() => {
-    return id && packageName
+    return id
       ? {
           id,
-          packageName,
+          packageName: packageName ?? '',
           latest,
-          options: { viewedLane, hide: !!buildStatus && buildStatus?.toLowerCase() !== 'succeed' },
+          options: { viewedLane, hideInstall: !packageName },
         }
       : undefined;
-  }, [id, packageName, latest, viewedLane, buildStatus]);
+  }, [id, packageName, latest, viewedLane]);
 
   const methods = useConsumeMethods(consumeMethods, consumeMethodProps);
   const hasMethods = methods?.length > 0;

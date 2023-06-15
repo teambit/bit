@@ -35,15 +35,16 @@ export class YarnUI {
       Title: (
         <img style={{ height: '17px', paddingTop: '4px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />
       ),
-      Component: !options?.hide ? (
-        <Install
-          config={`npm config set '${registry}:registry' https://node.bit.cloud`}
-          componentName={componentId.name}
-          packageManager="yarn"
-          copyString={`yarn add ${packageName}${packageVersion}`}
-          registryName={registry}
-        />
-      ) : null,
+      Component:
+        !options?.hide && !options?.hideInstall ? (
+          <Install
+            config={`npm config set '${registry}:registry' https://node.bit.cloud`}
+            componentName={componentId.name}
+            packageManager="yarn"
+            copyString={`yarn add ${packageName}${packageVersion}`}
+            registryName={registry}
+          />
+        ) : null,
       order: 20,
     };
   };
