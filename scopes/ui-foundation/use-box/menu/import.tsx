@@ -2,7 +2,6 @@ import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { ExpandableTabContent, ExpandableTabContentProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
-import classNames from 'classnames';
 import { TooltipCopybox } from './tooltip-copybox';
 import styles from './menu.module.scss';
 
