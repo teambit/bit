@@ -49,6 +49,7 @@ import {
 } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
+import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
@@ -233,10 +234,6 @@ export class MergingMain {
       .filter((componentStatus) => componentStatus.shouldBeRemoved)
       .map((c) => c.id.changeVersion(undefined));
 
-    if (componentIdsToRemove.length) {
-      await this.remove.removeLocallyByIds(componentIdsToRemove, { force: true });
-    }
-
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.unmergedMessage);
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
     // which can be an issue when some components are also dependencies of others
@@ -278,6 +275,12 @@ export class MergingMain {
     await consumer.scope.objects.unmergedComponents.write();
 
     await consumer.writeBitMap();
+
+    if (componentIdsToRemove.length) {
+      const compBitIdsToRemove = BitIds.fromArray(componentIdsToRemove);
+      await deleteComponentsFiles(consumer, compBitIdsToRemove);
+      await consumer.cleanFromBitMap(compBitIdsToRemove);
+    }
 
     const componentsHasConfigMergeConflicts = allComponentsStatus.some((c) => c.configMergeResult?.hasConflicts());
     const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
@@ -569,7 +572,7 @@ export class MergingMain {
     options?: { resolveUnrelated?: MergeStrategy; ignoreConfigChanges?: boolean }
   ): Promise<ComponentMergeStatusBeforeMergeAttempt> {
     const consumer = this.workspace.consumer;
-    const componentStatus: ComponentMergeStatus = { id };
+    const componentStatus: ComponentMergeStatusBeforeMergeAttempt = { id };
     const returnUnmerged = (msg: string, unmergedLegitimately = false) => {
       componentStatus.unmergedMessage = msg;
       componentStatus.unmergedLegitimately = unmergedLegitimately;
@@ -594,7 +597,10 @@ export class MergingMain {
     const componentOnOther: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
     if (componentOnOther.isRemoved()) {
       if (existingBitMapId) componentStatus.shouldBeRemoved = true;
-      return returnUnmerged(`component has been removed`, true);
+      if (!localLane) {
+        // on main, don't merge soft-removed components.
+        return returnUnmerged(`component has been removed`, true);
+      }
     }
     const getCurrentId = () => {
       if (existingBitMapId) return existingBitMapId;
@@ -613,7 +619,7 @@ export class MergingMain {
     const currentId = getCurrentId();
     if (!currentId) {
       const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
-      return { componentFromModel: componentOnOther, id, divergeData };
+      return { ...componentStatus, componentFromModel: componentOnOther, divergeData };
     }
     const getCurrentComponent = () => {
       if (existingBitMapId) return consumer.loadComponent(existingBitMapId);
@@ -708,9 +714,9 @@ export class MergingMain {
       if (divergeData.isTargetAhead()) {
         // just override with the model data
         return {
+          ...componentStatus,
           currentComponent,
           componentFromModel: componentOnOther,
-          id,
           divergeData,
         };
       }
@@ -724,7 +730,8 @@ export class MergingMain {
       currentId,
       modelComponent,
     };
-    return { currentComponent, id, divergeData, mergeProps };
+
+    return { ...componentStatus, currentComponent, mergeProps, divergeData };
   }
 
   private async getComponentMergeStatus(

@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../../../src/e2e-helper/e2e-helper';
+import { Extensions } from '../../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -228,6 +229,15 @@ describe('bit lane command', function () {
       });
       it('should remove the component files from the filesystem', () => {
         expect(path.join(helper.scopes.localPath, 'comp2')).to.not.be.a.path();
+      });
+      it('should leave the component on the lane and update it according to lane-a to make it soft-removed in lane-b as well', () => {
+        const laneComps = helper.command.catLane('lane-b');
+        const comps = laneComps.components.map((c) => c.id.name);
+        expect(comps).to.include('comp2');
+      });
+      it('bit show should show the component as removed', () => {
+        const removeData = helper.command.showAspectConfig('comp2', Extensions.remove);
+        expect(removeData.config.removed).to.be.true;
       });
     });
   });
