@@ -118,7 +118,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     formatter?: Formatter
   ): Promise<SchemaExtractorContext> {
     const componentDeps = await this.getComponentDeps(component);
-    return new SchemaExtractorContext(tsserver, component, this, componentDeps, formatter);
+    return new SchemaExtractorContext(tsserver, component, this, componentDeps, this.rootPath, formatter);
   }
 
   private async getComponentDeps(component: Component): Promise<ComponentDependency[]> {

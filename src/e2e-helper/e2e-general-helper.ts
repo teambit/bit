@@ -79,7 +79,7 @@ export default class GeneralHelper {
   runWithTryCatch(cmd: string, cwd: string = this.scopes.localPath, overrideFeatures?: string): string {
     let output: string;
     try {
-      output = this.command.runCmd(cmd, cwd, undefined, overrideFeatures);
+      output = this.command.runCmd(cmd, cwd, undefined, overrideFeatures, true);
     } catch (err: any) {
       output = err.toString() + err.stdout.toString();
     }
