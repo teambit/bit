@@ -8,7 +8,6 @@ import { ComponentMap, Component, ComponentID, ComponentMain } from '@teambit/co
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
-import { createSymlinkOrCopy } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
@@ -268,10 +267,6 @@ export class DependencyLinker {
         },
       };
     });
-    results.forEach(({ componentId, linksDetail }) => {
-      createSymlinkOrCopy(linksDetail.from, linksDetail.to, componentId);
-    });
-
     return results;
   }
 
