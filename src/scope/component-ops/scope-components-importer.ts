@@ -31,6 +31,7 @@ import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects'
 import { getAllVersionHashes } from './traverse-versions';
 import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
 import { pMapPool } from '../../utils/promise-with-concurrent';
+import { CLOUD_IMPORTER, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 
 type HashesPerRemote = { [remoteName: string]: string[] };
 
@@ -786,11 +787,13 @@ export default class ScopeComponentsImporter {
       this.scope,
       remotes,
       {
-        type: delta ? 'component-delta' : 'component',
+        // since fetchSchema 0.0.3, "component-delta" type has removed and "returnNothingIfGivenVersionExists" is used instead
+        type: delta && !isFeatureEnabled(CLOUD_IMPORTER) ? 'component-delta' : 'component',
         includeVersionHistory,
         ignoreMissingHead,
         laneId: lane ? lane.id() : undefined,
         collectParents,
+        returnNothingIfGivenVersionExists: delta,
       },
       leftIds,
       lane ? [lane] : [],
