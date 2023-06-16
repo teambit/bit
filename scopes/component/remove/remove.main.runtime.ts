@@ -201,14 +201,33 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
   }
 
   /**
-   * get components that were soft-removed and tagged/snapped but not exported yet.
+   * get components that were soft-removed and tagged/snapped/merged but not exported yet.
    */
   async getRemovedStaged(): Promise<ComponentID[]> {
+    return this.workspace.isOnMain() ? this.getRemovedStagedFromMain() : this.getRemovedStagedFromLane();
+  }
+
+  private async getRemovedStagedFromMain(): Promise<ComponentID[]> {
     const stagedConfig = await this.workspace.scope.getStagedConfig();
     return stagedConfig
       .getAll()
       .filter((compConfig) => compConfig.config?.[RemoveAspect.id]?.removed)
       .map((compConfig) => compConfig.id);
+  }
+
+  private async getRemovedStagedFromLane(): Promise<ComponentID[]> {
+    const currentLane = await this.workspace.getCurrentLaneObject();
+    if (!currentLane) return [];
+    const laneIds = currentLane.toBitIds();
+    const workspaceIds = await this.workspace.listIds();
+    const laneIdsNotInWorkspace = laneIds.filter(
+      (id) => !workspaceIds.find((wId) => wId._legacy.isEqualWithoutVersion(id))
+    );
+    if (!laneIdsNotInWorkspace.length) return [];
+    const laneCompIdsNotInWorkspace = await this.workspace.scope.resolveMultipleComponentIds(laneIdsNotInWorkspace);
+    const comps = await this.workspace.scope.getMany(laneCompIdsNotInWorkspace);
+    const removed = comps.filter((c) => this.isRemoved(c));
+    return removed.map((c) => c.id);
   }
 
   private async getLocalBitIdsToRemove(componentsPattern: string): Promise<BitId[]> {

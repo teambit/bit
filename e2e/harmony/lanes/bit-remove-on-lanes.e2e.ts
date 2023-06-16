@@ -239,6 +239,11 @@ describe('bit lane command', function () {
         const removeData = helper.command.showAspectConfig('comp2', Extensions.remove);
         expect(removeData.config.removed).to.be.true;
       });
+      it('bit status should show the component as staged', () => {
+        const status = helper.command.statusJson();
+        const staged = status.stagedComponents.map((c) => c.id);
+        expect(staged).to.include(`${helper.scopes.remote}/comp2`);
+      });
     });
   });
   describe('soft remove on lane when another user of the same lane is checking out head', () => {
