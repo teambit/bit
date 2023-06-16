@@ -1,5 +1,5 @@
 import React from 'react';
-
+import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
 import { ExpandableTabContent, ExpandableTabContentProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
@@ -30,7 +30,7 @@ export function Install({
       {...rest}
       content={
         <>
-          <div className={!isInstallable && styles.disabled}>
+          <div className={classNames(!isInstallable && styles.disabled)}>
             {!isInstallable && <Icon className={styles.warnIcon} of="warn-circle" />}
             {isInstallable && `Install ${componentName} with ${packageManager}`}
             {!isInstallable && 'Installation unavailable: This component has not been built yet'}
