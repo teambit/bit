@@ -2,7 +2,7 @@ import { SlotRegistry } from '@teambit/harmony';
 import type { LinkProps } from '@teambit/base-react.navigation.link';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
-import { ComponentModel } from '../../ui';
+import { ComponentID, ComponentModel } from '../..';
 
 export type NavPluginProps = {
   displayName?: string;
@@ -16,12 +16,20 @@ export type NavPlugin = {
 
 export type OrderedNavigationSlot = SlotRegistry<NavPlugin>;
 export type ConsumePluginOptions = {
-  currentLane?: LaneModel;
+  viewedLane?: LaneModel;
+  hide?: boolean;
+  disableInstall?: boolean;
 };
 
-export type ConsumePlugin = (
-  componentModel: ComponentModel,
-  options?: ConsumePluginOptions
-) => ConsumeMethod | undefined;
+export type ConsumePluginProps = {
+  id: ComponentID;
+  packageName: string;
+  latest?: string;
+  // @deprecated - pass id, packageName and latest instead via props
+  componentModel?: ComponentModel;
+  options?: ConsumePluginOptions;
+};
+
+export type ConsumePlugin = (props: ConsumePluginProps) => ConsumeMethod | undefined;
 
 export type ConsumeMethodSlot = SlotRegistry<ConsumePlugin[]>;

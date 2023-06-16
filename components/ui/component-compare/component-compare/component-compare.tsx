@@ -68,7 +68,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
     customUseComponent,
     logFilters: {
       log: {
-        logLimit: 3,
+        limit: 3,
       },
     },
   });
@@ -106,7 +106,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
     skip: !baseId,
     logFilters: {
       log: {
-        logLimit: 3,
+        limit: 3,
       },
     },
   });
@@ -193,7 +193,11 @@ function RenderCompareScreen(props: ComponentCompareProps) {
   return (
     <>
       {showVersionPicker && (
-        <div className={styles.top}>{state?.versionPicker?.element || <ComponentCompareVersionPicker />}</div>
+        <div className={styles.top}>
+          {state?.versionPicker?.element || (
+            <ComponentCompareVersionPicker host={props.host} customUseComponent={props.customUseComponent} />
+          )}
+        </div>
       )}
       <div className={styles.bottom}>
         <CompareMenuNav {...props} />

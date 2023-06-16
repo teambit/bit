@@ -1107,6 +1107,8 @@ jobs:
       - run:
           name: clear index.json cache
           command: gsutil setmeta -h "Cache-Control:no-cache" gs://bvm.bit.dev/bit/index.json
+      - store_artifacts:
+          path: bit/index.json
 
   bit_export:
     <<: *defaults

@@ -70,3 +70,15 @@
     font-size: var(--bit-p-md, 16px);
   }
 }
+
+.disabled {
+  font-size: var(--bit-p-xs, 12px);
+  padding: 4px;
+  background-color: var(--warning-surface-color, #fffcf4);
+}
+
+.warnIcon {
+  padding-right: 4px;
+  // warning yellow color
+  filter: invert(59%) sepia(75%) saturate(402%) hue-rotate(3deg) brightness(82%) contrast(100%);
+}
