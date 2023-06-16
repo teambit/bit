@@ -229,15 +229,12 @@ export class SchemaExtractorContext {
   findFileInComponent(filePath: string) {
     const normalizedFilePath = pathNormalizeToLinux(filePath);
     const pathToCompareWithoutExtension = this.getPathWithoutExtension(normalizedFilePath);
-    // const possibleFormats = new Set(['ts', 'tsx', 'js', 'jsx']);
 
     const matchingFile = this.component.filesystem.files.find((file) => {
       const currentFilePath = pathNormalizeToLinux(file.path);
       const currentFilePathWithoutExtension = this.getPathWithoutExtension(currentFilePath);
-      // const currentFileExtension = extname(currentFilePath).substring(1);
 
       const isSameFilePath = pathToCompareWithoutExtension === currentFilePathWithoutExtension;
-      // const isValidExtension = possibleFormats.has(currentFileExtension);
 
       const matches =
         isSameFilePath || this.isIndexFile(pathToCompareWithoutExtension, currentFilePathWithoutExtension);
