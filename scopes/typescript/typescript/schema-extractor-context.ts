@@ -170,7 +170,7 @@ export class SchemaExtractorContext {
 
     const fileName = sourceFile.fileName;
 
-    if (!fileName.startsWith(this.componentRootPath)) {
+    if (!fileName.startsWith(this.componentRootPath) && !fileName.startsWith(this.hostRootPath)) {
       return join(this.componentRootPath, fileName);
     }
 
