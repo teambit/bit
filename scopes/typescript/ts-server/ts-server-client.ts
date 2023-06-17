@@ -186,6 +186,7 @@ export class TsserverClient {
 
     if (!response?.success) {
       // TODO: we need a function to handle responses properly here for all.
+      this.logger.warn(`For file ${absFile} tsserver failed to request definition info`);
       return response;
     }
 
