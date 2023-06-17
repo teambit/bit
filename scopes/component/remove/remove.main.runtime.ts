@@ -5,6 +5,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
+import { compact } from 'lodash';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/lib/list-scope';
 import { ComponentID } from '@teambit/component-id';
@@ -227,7 +228,14 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     const laneCompIdsNotInWorkspace = await this.workspace.scope.resolveMultipleComponentIds(laneIdsNotInWorkspace);
     const comps = await this.workspace.scope.getMany(laneCompIdsNotInWorkspace);
     const removed = comps.filter((c) => this.isRemoved(c));
-    return removed.map((c) => c.id);
+    const staged = await Promise.all(
+      removed.map(async (c) => {
+        const snapDistance = await this.workspace.scope.getSnapDistance(c.id);
+        if (snapDistance.isSourceAhead()) return c.id;
+        return undefined;
+      })
+    );
+    return compact(staged);
   }
 
   private async getLocalBitIdsToRemove(componentsPattern: string): Promise<BitId[]> {

@@ -45,6 +45,7 @@ import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
+import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
 import { remove } from '@teambit/legacy/dist/api/scope';
 import { BitError } from '@teambit/bit-error';
@@ -800,6 +801,12 @@ export class ScopeMain implements ComponentFactory {
       throw new NoIdMatchPattern(pattern);
     }
     return idsFiltered;
+  }
+
+  async getSnapDistance(id: ComponentID): Promise<SnapsDistance> {
+    const modelComp = await this.legacyScope.getModelComponent(id._legacy);
+    await modelComp.setDivergeData(this.legacyScope.objects);
+    return modelComp.getDivergeData();
   }
 
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
