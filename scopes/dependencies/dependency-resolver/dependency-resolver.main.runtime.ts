@@ -407,10 +407,6 @@ export class DependencyResolverMain {
     // @ts-ignore
     const defaultVal = globalConfig !== undefined ? globalConfig === true || globalConfig === 'true' : false;
     const res = this.config.isolatedCapsules ?? defaultVal;
-    console.log(
-      '🚀 ~ file: dependency-resolver.main.runtime.ts:410 ~ DependencyResolverMain ~ isolatedCapsules ~ res:',
-      res
-    );
     return res;
   }
 
