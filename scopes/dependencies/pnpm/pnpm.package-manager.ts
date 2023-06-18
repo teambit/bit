@@ -50,6 +50,16 @@ export class PnpmPackageManager implements PackageManager {
     if (!installOptions.useNesting) {
       manifests = await extendWithComponentsFromDir(rootDir, manifests);
     }
+    if (installOptions.nmSelfReferences) {
+      Object.values(manifests).forEach((manifest) => {
+        if (manifest.name) {
+          manifest.dependencies = {
+            [manifest.name]: 'link:.',
+            ...manifest.dependencies,
+          };
+        }
+      });
+    }
     const { dependenciesChanged, rebuild, storeDir } = await install(
       rootDir,
       manifests,
