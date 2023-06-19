@@ -112,7 +112,7 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * A folder with this hash as its name will be created in the rootBaseDir
    * By default this value will be the host path
    */
-  baseDir: string;
+  baseDir?: string;
 
   /**
    * Whether to use hash function (of base dir) as capsules root dir name
@@ -188,7 +188,9 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   context?: IsolationContext;
 };
 
-type GetCapsuleDirOpts = Pick<IsolateComponentsOptions, 'baseDir' | 'useHash' | 'rootBaseDir' | 'useDatedDirs'>;
+type GetCapsuleDirOpts = Pick<IsolateComponentsOptions, 'useHash' | 'rootBaseDir' | 'useDatedDirs'> & {
+  baseDir: string;
+};
 
 type CapsulePackageJsonData = {
   capsule: Capsule;
@@ -271,13 +273,17 @@ export class IsolatorMain {
     });
     opts.baseDir = opts.baseDir || host.path;
     const shouldUseDatedDirs = this.shouldUseDatedDirs(componentsToIsolate, opts);
-    const capsuleDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: shouldUseDatedDirs });
+    const capsuleDir = this.getCapsulesRootDir({
+      ...opts,
+      useDatedDirs: shouldUseDatedDirs,
+      baseDir: opts.baseDir || '',
+    });
     const capsuleList = await this.createCapsules(componentsToIsolate, capsuleDir, opts, legacyScope);
     this.logger.debug(
       `creating network with base dir: ${opts.baseDir}, rootBaseDir: ${opts.rootBaseDir}. final capsule-dir: ${capsuleDir}. capsuleList: ${capsuleList.length}`
     );
     if (shouldUseDatedDirs) {
-      const targetCapsuleDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: false });
+      const targetCapsuleDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: false, baseDir: opts.baseDir || '' });
       this.registerMoveCapsuleOnProcessExit(capsuleDir, targetCapsuleDir);
       // TODO: ideally this should be inside the on process exit hook
       // but this is an async op which make it a bit hard
@@ -357,7 +363,7 @@ export class IsolatorMain {
     // will not work after moving to the real dir
     if (!opts.installOptions?.useNesting) return false;
     // Getting the real capsule dir to check if all capsules exists
-    const realCapsulesDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: false });
+    const realCapsulesDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: false, baseDir: opts.baseDir || '' });
     const allCapsulesExists = componentsToIsolate.every((component) => {
       const capsuleDir = path.join(realCapsulesDir, Capsule.getCapsuleDirName(component));
       return fs.existsSync(capsuleDir);
