@@ -577,6 +577,10 @@ export class InstallMain {
       outdatedPkgsToUpdate = await pickOutdatedPkgs(outdatedPkgs);
       this.logger.on();
     }
+    if (outdatedPkgsToUpdate.length === 0) {
+      this.logger.consoleSuccess('No outdated dependencies found');
+      return;
+    }
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgsToUpdate, {
       variantPoliciesByPatterns,
       componentPoliciesById,
