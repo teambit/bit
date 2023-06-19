@@ -23487,6 +23487,9 @@ importers:
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
+      symlink-dir:
+        specifier: ^5.1.1
+        version: 5.1.1
       version-selector-type:
         specifier: 3.0.0
         version: 3.0.0
@@ -36678,13 +36681,13 @@ packages:
       '@pnpm/fetcher-base': registry.npmjs.org/@pnpm/fetcher-base@14.0.1
       '@pnpm/graceful-fs': registry.npmjs.org/@pnpm/graceful-fs@3.0.0
       '@pnpm/store-controller-types': 15.0.1
-      '@zkochan/rimraf': registry.npmjs.org/@zkochan/rimraf@2.1.2
+      '@zkochan/rimraf': 2.1.2
       concat-stream: registry.npmjs.org/concat-stream@2.0.0
       get-stream: registry.npmjs.org/get-stream@6.0.1
       gunzip-maybe: registry.npmjs.org/gunzip-maybe@1.4.2
       p-limit: 3.1.0
       path-temp: registry.npmjs.org/path-temp@2.0.0
-      rename-overwrite: registry.npmjs.org/rename-overwrite@4.0.3
+      rename-overwrite: 4.0.3
       ssri: registry.npmjs.org/ssri@10.0.4
       strip-bom: registry.npmjs.org/strip-bom@4.0.0
       tar-stream: registry.npmjs.org/tar-stream@2.2.0
@@ -37230,7 +37233,7 @@ packages:
       '@pnpm/modules-yaml': 12.1.1
       '@pnpm/read-projects-context': registry.npmjs.org/@pnpm/read-projects-context@0.0.0-20230605-20230605142810(@pnpm/logger@5.0.0)
       '@pnpm/types': 9.1.0
-      '@zkochan/rimraf': registry.npmjs.org/@zkochan/rimraf@2.1.2
+      '@zkochan/rimraf': 2.1.2
       ci-info: 3.8.0
       enquirer: 2.3.6
       path-absolute: registry.npmjs.org/path-absolute@1.0.1
@@ -37354,7 +37357,7 @@ packages:
       '@pnpm/store-controller-types': 15.0.1
       '@pnpm/symlink-dependency': registry.npmjs.org/@pnpm/symlink-dependency@7.0.1(@pnpm/logger@5.0.0)
       '@pnpm/types': 9.1.0
-      '@zkochan/rimraf': registry.npmjs.org/@zkochan/rimraf@2.1.2
+      '@zkochan/rimraf': 2.1.2
       p-limit: 3.1.0
       path-absolute: registry.npmjs.org/path-absolute@1.0.1
       path-exists: registry.npmjs.org/path-exists@4.0.0
@@ -37470,7 +37473,7 @@ packages:
       '@pnpm/read-project-manifest': registry.npmjs.org/@pnpm/read-project-manifest@0.0.0-20230605-20230605142810
       '@pnpm/types': 9.1.0
       '@zkochan/cmd-shim': registry.npmjs.org/@zkochan/cmd-shim@6.0.0
-      '@zkochan/rimraf': registry.npmjs.org/@zkochan/rimraf@2.1.2
+      '@zkochan/rimraf': 2.1.2
       bin-links: registry.npmjs.org/bin-links@4.0.1
       is-subdir: registry.npmjs.org/is-subdir@1.2.0
       is-windows: registry.npmjs.org/is-windows@1.0.2
@@ -37546,7 +37549,7 @@ packages:
       '@pnpm/merge-lockfile-changes': registry.npmjs.org/@pnpm/merge-lockfile-changes@5.0.2
       '@pnpm/types': 9.1.0
       '@pnpm/util.lex-comparator': registry.npmjs.org/@pnpm/util.lex-comparator@1.0.0
-      '@zkochan/rimraf': registry.npmjs.org/@zkochan/rimraf@2.1.2
+      '@zkochan/rimraf': 2.1.2
       comver-to-semver: registry.npmjs.org/comver-to-semver@1.0.0
       js-yaml: /@zkochan/js-yaml@0.0.6
       normalize-path: registry.npmjs.org/normalize-path@3.0.0
@@ -37746,7 +37749,7 @@ packages:
       '@pnpm/remove-bins': registry.npmjs.org/@pnpm/remove-bins@0.0.0-20230605-20230605142810(@pnpm/logger@5.0.0)
       '@pnpm/store-controller-types': 15.0.1
       '@pnpm/types': 9.1.0
-      '@zkochan/rimraf': registry.npmjs.org/@zkochan/rimraf@2.1.2
+      '@zkochan/rimraf': 2.1.2
       ramda: /@pnpm/ramda@0.28.1
     dev: false
 
@@ -38036,7 +38039,7 @@ packages:
       path-temp: registry.npmjs.org/path-temp@2.0.0
       promise-share: registry.npmjs.org/promise-share@1.0.0
       ramda: /@pnpm/ramda@0.28.1
-      rename-overwrite: registry.npmjs.org/rename-overwrite@4.0.3
+      rename-overwrite: 4.0.3
       safe-promise-defer: registry.npmjs.org/safe-promise-defer@1.0.1
       semver: 7.5.1
       ssri: registry.npmjs.org/ssri@10.0.4
@@ -38154,7 +38157,7 @@ packages:
       '@pnpm/logger': 5.0.0
       '@pnpm/read-modules-dir': registry.npmjs.org/@pnpm/read-modules-dir@6.0.1
       '@pnpm/symlink-dependency': registry.npmjs.org/@pnpm/symlink-dependency@7.0.1(@pnpm/logger@5.0.0)
-      '@zkochan/rimraf': registry.npmjs.org/@zkochan/rimraf@2.1.2
+      '@zkochan/rimraf': 2.1.2
       ramda: /@pnpm/ramda@0.28.1
       resolve-link-target: 2.0.0
     dev: false
@@ -38392,7 +38395,7 @@ packages:
       '@pnpm/package-bins': registry.npmjs.org/@pnpm/package-bins@8.0.1
       '@pnpm/read-package-json': registry.npmjs.org/@pnpm/read-package-json@0.0.0-20230605-20230605142810
       '@pnpm/types': 9.1.0
-      '@zkochan/rimraf': registry.npmjs.org/@zkochan/rimraf@2.1.2
+      '@zkochan/rimraf': 2.1.2
       cmd-extension: registry.npmjs.org/cmd-extension@1.0.2
       is-windows: registry.npmjs.org/is-windows@1.0.2
     dev: false
@@ -38440,7 +38443,7 @@ packages:
       path-exists: registry.npmjs.org/path-exists@4.0.0
       promise-share: registry.npmjs.org/promise-share@1.0.0
       ramda: /@pnpm/ramda@0.28.1
-      rename-overwrite: registry.npmjs.org/rename-overwrite@4.0.3
+      rename-overwrite: 4.0.3
       safe-promise-defer: registry.npmjs.org/safe-promise-defer@1.0.1
       semver: 7.5.1
       semver-range-intersect: 0.3.1
@@ -69353,6 +69356,7 @@ packages:
       parse-package-name: 0.1.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+      symlink-dir: 5.1.1
       user-home: 2.0.0
       version-selector-type: 3.0.0
       yaml: 1.10.2
@@ -73438,7 +73442,7 @@ packages:
       gunzip-maybe: registry.npmjs.org/gunzip-maybe@1.4.2
       p-limit: 3.1.0
       path-temp: registry.npmjs.org/path-temp@2.0.0
-      rename-overwrite: registry.npmjs.org/rename-overwrite@4.0.3
+      rename-overwrite: 4.0.3
       ssri: registry.npmjs.org/ssri@10.0.4
       strip-bom: 4.0.0
       tar-stream: registry.npmjs.org/tar-stream@2.2.0
@@ -73553,7 +73557,7 @@ packages:
       p-limit: 3.1.0
       path-exists: 4.0.0
       path-temp: registry.npmjs.org/path-temp@2.0.0
-      rename-overwrite: registry.npmjs.org/rename-overwrite@4.0.3
+      rename-overwrite: 4.0.3
       sanitize-filename: registry.npmjs.org/sanitize-filename@1.6.3
     dev: false
 
@@ -73735,7 +73739,7 @@ packages:
       parse-npm-tarball-url: registry.npmjs.org/parse-npm-tarball-url@3.0.0
       path-temp: registry.npmjs.org/path-temp@2.0.0
       ramda: /@pnpm/ramda@0.28.1
-      rename-overwrite: registry.npmjs.org/rename-overwrite@4.0.3
+      rename-overwrite: 4.0.3
       semver: 7.5.1
       ssri: registry.npmjs.org/ssri@10.0.4
       version-selector-type: 3.0.0
@@ -73803,7 +73807,7 @@ packages:
       path-temp: registry.npmjs.org/path-temp@2.0.0
       promise-share: registry.npmjs.org/promise-share@1.0.0
       ramda: /@pnpm/ramda@0.28.1
-      rename-overwrite: registry.npmjs.org/rename-overwrite@4.0.3
+      rename-overwrite: 4.0.3
       safe-promise-defer: registry.npmjs.org/safe-promise-defer@1.0.1
       semver: 7.5.1
       ssri: registry.npmjs.org/ssri@10.0.4
@@ -75484,15 +75488,6 @@ packages:
     name: '@zkochan/retry'
     version: 0.2.0
     engines: {node: '>=10'}
-    dev: false
-
-  registry.npmjs.org/@zkochan/rimraf@2.1.2:
-    resolution: {integrity: sha512-Lc2oK51J6aQWcLWTloobJun5ZF41BbTDdLvE+aMcexoVWFoFqvZmnZoyXR2IZk6NJEVoZW8tjgtvQLfTsmRs2Q==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@zkochan/rimraf/-/rimraf-2.1.2.tgz}
-    name: '@zkochan/rimraf'
-    version: 2.1.2
-    engines: {node: '>=12.10'}
-    dependencies:
-      rimraf: registry.npmjs.org/rimraf@3.0.2
     dev: false
 
   registry.npmjs.org/abbrev@1.1.1:
