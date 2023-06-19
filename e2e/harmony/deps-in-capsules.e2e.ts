@@ -37,6 +37,8 @@ chai.use(require('chai-string'));
     helper.bitJsonc.setupDefault();
   });
   describe('using pnpm', () => {
+    let nodeEnv1CapsuleDir: string;
+    let nodeEnv2CapsuleDir: string;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
@@ -49,6 +51,10 @@ chai.use(require('chai-string'));
       const scopeAspectCapsulesPath = capsules.scopeAspectsCapsulesRootDir;
       fs.removeSync(scopeAspectCapsulesPath);
       helper.command.status(); // populate capsules.
+
+      const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
+      nodeEnv1CapsuleDir = path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-1@0.0.1`);
+      nodeEnv2CapsuleDir = path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-2@0.0.1`);
     });
     it('bit show should show the correct env', () => {
       const env1 = helper.env.getComponentEnv('comp1');
@@ -57,23 +63,19 @@ chai.use(require('chai-string'));
       expect(env2).to.equal(`${envId2}@0.0.1`);
     });
     it('all packages are correctly installed inside capsules', () => {
-      const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-      const capsuleDirs = fs.readdirSync(scopeAspectsCapsulesRootDir);
-      const nodeEnv1CapsuleDir = path.join(
-        scopeAspectsCapsulesRootDir,
-        // eslint-disable-next-line
-        capsuleDirs.find((dir) => dir.includes('node-env-1'))!
-      );
-      const nodeEnv2CapsuleDir = path.join(
-        scopeAspectsCapsulesRootDir,
-        // eslint-disable-next-line
-        capsuleDirs.find((dir) => dir.includes('node-env-2'))!
-      );
       expect(path.join(nodeEnv1CapsuleDir, 'node_modules/lodash.get')).to.be.a.path();
       expect(path.join(nodeEnv2CapsuleDir, 'node_modules/lodash.flatten')).to.be.a.path();
     });
+    it('should add self-references to components', () => {
+      const comp1PkgJson = fs.readJsonSync(path.join(nodeEnv1CapsuleDir, 'package.json'));
+      expect(path.join(nodeEnv1CapsuleDir, 'node_modules', comp1PkgJson.name)).to.be.a.path();
+      const comp2PkgJson = fs.readJsonSync(path.join(nodeEnv2CapsuleDir, 'package.json'));
+      expect(path.join(nodeEnv2CapsuleDir, 'node_modules', comp2PkgJson.name)).to.be.a.path();
+    });
   });
   describe('using Yarn', () => {
+    let nodeEnv1CapsuleDir: string;
+    let nodeEnv2CapsuleDir: string;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
@@ -86,6 +88,10 @@ chai.use(require('chai-string'));
       const scopeAspectCapsulesPath = capsules.scopeAspectsCapsulesRootDir;
       fs.removeSync(scopeAspectCapsulesPath);
       helper.command.status(); // populate capsules.
+
+      const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
+      nodeEnv1CapsuleDir = path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-1@0.0.1`);
+      nodeEnv2CapsuleDir = path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-2@0.0.1`);
     });
     it('bit show should show the correct env', () => {
       const env1 = helper.env.getComponentEnv('comp1');
@@ -94,13 +100,14 @@ chai.use(require('chai-string'));
       expect(env2).to.equal(`${envId2}@0.0.1`);
     });
     it('all packages are correctly installed inside capsules', () => {
-      const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-      expect(
-        path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-1@0.0.1/node_modules/lodash.get`)
-      ).to.be.a.path();
-      expect(
-        path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-2@0.0.1/node_modules/lodash.flatten`)
-      ).to.be.a.path();
+      expect(path.join(nodeEnv1CapsuleDir, `node_modules/lodash.get`)).to.be.a.path();
+      expect(path.join(nodeEnv2CapsuleDir, `node_modules/lodash.flatten`)).to.be.a.path();
+    });
+    it('should add self-references to components', () => {
+      const comp1PkgJson = fs.readJsonSync(path.join(nodeEnv1CapsuleDir, 'package.json'));
+      expect(path.join(nodeEnv1CapsuleDir, 'node_modules', comp1PkgJson.name)).to.be.a.path();
+      const comp2PkgJson = fs.readJsonSync(path.join(nodeEnv2CapsuleDir, 'package.json'));
+      expect(path.join(nodeEnv2CapsuleDir, 'node_modules', comp2PkgJson.name)).to.be.a.path();
     });
   });
   describe('using Yarn with isolatedCapsules set to false', () => {

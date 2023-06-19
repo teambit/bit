@@ -452,6 +452,7 @@ export class IsolatorMain {
       copyPeerToRuntimeOnComponents: isolateInstallOptions.copyPeerToRuntimeOnComponents,
       copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
+      nmSelfReferences: this.dependencyResolver.isolatedCapsules(),
       overrides: this.dependencyResolver.config.capsulesOverrides || this.dependencyResolver.config.overrides,
       rootComponentsForCapsules: this.dependencyResolver.isolatedCapsules(),
       useNesting: isolateInstallOptions.useNesting,
