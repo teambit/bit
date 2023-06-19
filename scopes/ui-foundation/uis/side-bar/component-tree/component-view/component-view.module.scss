@@ -19,14 +19,14 @@
   &:hover {
     background: var(--bit-bg-heavy, #f6f6f6);
     .envIcon {
-      filter: grayscale(0);
+      // filter: grayscale(0);
     }
   }
 
   &.active {
     background: var(--bit-accent-bg, #eceaff);
     .envIcon {
-      filter: grayscale(0);
+      // filter: grayscale(0);
     }
     // .right {
     // 	.componentIcon {
@@ -57,7 +57,7 @@
   }
   .envIcon {
     transition: filter 300ms ease-in-out;
-    filter: grayscale(1);
+    // filter: grayscale(1);
     width: 16px;
     height: 16px;
   }

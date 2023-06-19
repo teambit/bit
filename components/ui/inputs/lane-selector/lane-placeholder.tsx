@@ -11,6 +11,7 @@ export type LanePlaceholderProps = {
   selectedLaneId?: LaneId;
   disabled?: boolean;
   showScope?: boolean;
+  loading?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LanePlaceholder({
@@ -18,11 +19,16 @@ export function LanePlaceholder({
   disabled,
   className,
   showScope = true,
+  loading,
   ...rest
 }: LanePlaceholderProps) {
   const laneIdStr = selectedLaneId?.isDefault()
     ? selectedLaneId.name
     : (showScope && selectedLaneId?.toString()) || selectedLaneId?.name;
+
+  if (loading) {
+    return null;
+  }
 
   return (
     <div {...rest} className={classnames(styles.placeholder, className, disabled && styles.disabled)}>

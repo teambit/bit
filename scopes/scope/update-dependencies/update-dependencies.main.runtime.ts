@@ -7,7 +7,6 @@ import { ScopeAspect, ScopeMain, ComponentNotFound } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
-import { isHash } from '@teambit/component-version';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
@@ -232,16 +231,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       // exact version, expect the entered version to be okay.
       return compId;
     }
-    if (isHash(compId.version)) {
-      return compId;
-    }
-    const range = compId.version || '*'; // if not version specified, assume the latest
-    const id = compId.changeVersion(undefined);
-    const exactVersion = await this.scope.getExactVersionBySemverRange(id, range);
-    if (!exactVersion) {
-      throw new Error(`unable to find a version that satisfies "${range}" of "${depStr}"`);
-    }
-    return compId.changeVersion(exactVersion);
+    return this.snapping.getCompIdWithExactVersionAccordingToSemver(compId);
   }
 
   private async updateFutureVersion() {

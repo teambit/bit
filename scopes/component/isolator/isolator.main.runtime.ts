@@ -113,6 +113,11 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   baseDir?: string;
 
   /**
+   * Whether to use hash function (of base dir) as capsules root dir name
+   */
+  useHash?: boolean;
+
+  /**
    * create a new capsule with a random string attached to the path suffix
    */
   alwaysNew?: boolean;
@@ -247,7 +252,7 @@ export class IsolatorMain {
     });
     opts.baseDir = opts.baseDir || host.path;
     const capsuleList = await this.createCapsules(componentsToIsolate, opts, legacyScope);
-    const capsuleDir = this.getCapsulesRootDir(opts.baseDir, opts.rootBaseDir);
+    const capsuleDir = this.getCapsulesRootDir(opts.baseDir, opts.rootBaseDir, opts.useHash);
     this.logger.debug(
       `creating network with base dir: ${opts.baseDir}, rootBaseDir: ${opts.rootBaseDir}. final capsule-dir: ${capsuleDir}. capsuleList: ${capsuleList.length}`
     );
@@ -305,7 +310,7 @@ export class IsolatorMain {
     legacyScope?: Scope
   ): Promise<CapsuleList> {
     this.logger.debug(`createCapsules, ${components.length} components`);
-    const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir);
+    const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir, opts.useHash);
 
     let longProcessLogger;
     if (opts.context?.aspects) {
@@ -320,7 +325,7 @@ export class IsolatorMain {
     const installOptions = {
       ...DEFAULT_ISOLATE_INSTALL_OPTIONS,
       ...opts.installOptions,
-      useNesting: this.dependencyResolver.hasRootComponents() && opts.installOptions?.useNesting,
+      useNesting: this.dependencyResolver.isolatedCapsules() && opts.installOptions?.useNesting,
     };
     if (!opts.emptyRootDir) {
       installOptions.dedupe = installOptions.dedupe && this.dependencyResolver.supportsDedupingOnExistingRoot();
@@ -447,10 +452,12 @@ export class IsolatorMain {
       copyPeerToRuntimeOnComponents: isolateInstallOptions.copyPeerToRuntimeOnComponents,
       copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
+      nmSelfReferences: this.dependencyResolver.isolatedCapsules(),
       overrides: this.dependencyResolver.config.capsulesOverrides || this.dependencyResolver.config.overrides,
-      rootComponentsForCapsules: this.dependencyResolver.hasRootComponents(),
+      rootComponentsForCapsules: this.dependencyResolver.isolatedCapsules(),
       useNesting: isolateInstallOptions.useNesting,
-      keepExistingModulesDir: this.dependencyResolver.hasRootComponents(),
+      keepExistingModulesDir: this.dependencyResolver.isolatedCapsules(),
+      hasRootComponents: this.dependencyResolver.isolatedCapsules(),
     };
     await installer.install(
       capsulesDir,
@@ -474,11 +481,11 @@ export class IsolatorMain {
     });
     const { linkedRootDeps } = await linker.calculateLinkedDeps(capsulesDir, this.toComponentMap(capsuleList), {
       ...linkingOptions,
-      linkNestedDepsInNM: !this.dependencyResolver.hasRootComponents() && linkingOptions.linkNestedDepsInNM,
+      linkNestedDepsInNM: !this.dependencyResolver.isolatedCapsules() && linkingOptions.linkNestedDepsInNM,
     });
     let rootLinks: LinkDetail[] | undefined;
     let nestedLinks: Record<string, Record<string, string>> | undefined;
-    if (!this.dependencyResolver.hasRootComponents()) {
+    if (!this.dependencyResolver.isolatedCapsules()) {
       rootLinks = await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
       const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
       nestedLinks = await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
@@ -594,9 +601,10 @@ export class IsolatorMain {
     }
   }
 
-  getCapsulesRootDir(baseDir: string, rootBaseDir?: string): PathOsBasedAbsolute {
+  getCapsulesRootDir(baseDir: string, rootBaseDir?: string, useHash = true): PathOsBasedAbsolute {
     const capsulesRootBaseDir = rootBaseDir || this.getRootDirOfAllCapsules();
-    return path.join(capsulesRootBaseDir, hash(baseDir));
+    const dir = useHash ? hash(baseDir) : baseDir;
+    return path.join(capsulesRootBaseDir, dir);
   }
 
   async deleteCapsules(capsuleBaseDir: string | null): Promise<string> {
