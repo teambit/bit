@@ -223,12 +223,12 @@ export function APINodeDetails({
 
     if (containerElement) {
       resizeObserver = new ResizeObserver(() => {
-        setTimeout(() => updateEditorHeight(setHeight, editorRef));
+        setTimeout(() => updateEditorHeight(setHeight, editorRef)());
       });
       resizeObserver.observe(containerElement);
     }
 
-    updateEditorHeight(setHeight, editorRef);
+    updateEditorHeight(setHeight, editorRef)();
 
     editor.onDidDispose(() => {
       containerElement && resizeObserver?.unobserve(containerElement);
