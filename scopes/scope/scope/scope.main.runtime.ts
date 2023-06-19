@@ -1,3 +1,4 @@
+import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import semver from 'semver';
@@ -49,6 +50,7 @@ import { remove } from '@teambit/legacy/dist/api/scope';
 import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { compact, slice, difference } from 'lodash';
@@ -129,7 +131,9 @@ export class ScopeMain implements ComponentFactory {
 
     private envs: EnvsMain,
 
-    private dependencyResolver: DependencyResolverMain
+    private dependencyResolver: DependencyResolverMain,
+
+    private globalConfig: GlobalConfigMain
   ) {
     this.componentLoader = new ScopeComponentLoader(this, this.logger);
   }
@@ -163,6 +167,10 @@ export class ScopeMain implements ComponentFactory {
 
   get isLegacy(): boolean {
     return this.legacyScope.isLegacy;
+  }
+
+  get isGlobalScope(): boolean {
+    return this.path === GLOBAL_SCOPE;
   }
 
   // We need to reload the aspects with their new version since:
@@ -240,12 +248,24 @@ export class ScopeMain implements ComponentFactory {
     return scopeAspectsLoader.getAspectCapsulePath();
   }
 
+  shouldUseHashForCapsules() {
+    const scopeAspectsLoader = this.getScopeAspectsLoader();
+    return scopeAspectsLoader.shouldUseHashForCapsules();
+  }
+
   getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
     return mapSeries(components, async (component) => this.getFromConsumerComponent(component));
   }
 
   getScopeAspectsLoader(): ScopeAspectsLoader {
-    const scopeAspectsLoader = new ScopeAspectsLoader(this, this.aspectLoader, this.envs, this.isolator, this.logger);
+    const scopeAspectsLoader = new ScopeAspectsLoader(
+      this,
+      this.aspectLoader,
+      this.envs,
+      this.isolator,
+      this.logger,
+      this.globalConfig
+    );
     return scopeAspectsLoader;
   }
 
@@ -898,6 +918,7 @@ export class ScopeMain implements ComponentFactory {
     LoggerAspect,
     EnvsAspect,
     DependencyResolverAspect,
+    GlobalConfigAspect,
   ];
 
   static defaultConfig: ScopeConfig = {
@@ -905,7 +926,7 @@ export class ScopeMain implements ComponentFactory {
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver, globalConfig]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -915,7 +936,8 @@ export class ScopeMain implements ComponentFactory {
       ExpressMain,
       LoggerMain,
       EnvsMain,
-      DependencyResolverMain
+      DependencyResolverMain,
+      GlobalConfigMain
     ],
     config: ScopeConfig,
     [postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
@@ -948,7 +970,8 @@ export class ScopeMain implements ComponentFactory {
       aspectLoader,
       logger,
       envs,
-      depsResolver
+      depsResolver,
+      globalConfig
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;
