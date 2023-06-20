@@ -404,7 +404,8 @@
     },
     "linkCoreAspects": false,
     "overrides": {
-      "@types/fs-capacitor": "2.0.0"
+      "@types/fs-capacitor": "2.0.0",
+      "signal-exit@4": "^4.0.2"
     },
     "nodeLinker": "hoisted",
     "rootComponents": true,
