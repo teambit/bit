@@ -1,8 +1,14 @@
+import { GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { readdirSync, existsSync } from 'fs-extra';
 import { resolve, join } from 'path';
-import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
+import {
+  DEFAULT_DIST_DIRNAME,
+  CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR,
+  CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR,
+  CFG_USE_DATED_CAPSULES,
+} from '@teambit/legacy/dist/constants';
 import { Compiler } from '@teambit/compiler';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
@@ -31,7 +37,8 @@ export class ScopeAspectsLoader {
     private aspectLoader: AspectLoaderMain,
     private envs: EnvsMain,
     private isolator: IsolatorMain,
-    private logger: Logger
+    private logger: Logger,
+    private globalConfig: GlobalConfigMain
   ) {}
   private parseLocalAspect(localAspects: string[]) {
     const dirPaths = localAspects.map((localAspect) => resolve(localAspect.replace('file://', '')));
@@ -234,11 +241,15 @@ needed-for: ${neededFor || '<unknown>'}`);
     opts?: { skipIfExists?: boolean; packageManagerConfigRootDir?: string; workspaceName?: string }
   ): Promise<RequireableComponent[]> {
     if (!components || !components.length) return [];
+    const useHash = this.shouldUseHashForCapsules();
+    const useDatedDirs = this.shouldUseDatedCapsules();
     const network = await this.isolator.isolateComponents(
       components.map((c) => c.id),
       // includeFromNestedHosts - to support case when you are in a workspace, trying to load aspect defined in the workspace.jsonc but not part of the workspace
       {
         baseDir: this.getAspectCapsulePath(),
+        useHash,
+        useDatedDirs,
         skipIfExists: opts?.skipIfExists ?? true,
         seedersOnly: true,
         includeFromNestedHosts: true,
@@ -383,8 +394,25 @@ needed-for: ${neededFor || '<unknown>'}`);
     return [];
   }
 
+  shouldUseDatedCapsules(): boolean {
+    const globalConfig = this.globalConfig.getSync(CFG_USE_DATED_CAPSULES);
+    // @ts-ignore
+    return globalConfig === true || globalConfig === 'true';
+  }
+
   getAspectCapsulePath() {
-    return `${this.scope.path}-aspects`;
+    const defaultPath = `${this.scope.path}-aspects`;
+    if (this.scope.isGlobalScope) {
+      return this.globalConfig.getSync(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR) || defaultPath;
+    }
+    return this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR) || defaultPath;
+  }
+
+  shouldUseHashForCapsules(): boolean {
+    if (this.scope.isGlobalScope) {
+      return !this.globalConfig.getSync(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR);
+    }
+    return !this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR);
   }
 
   private async resolveUserAspects(
@@ -394,10 +422,14 @@ needed-for: ${neededFor || '<unknown>'}`);
   ): Promise<AspectDefinition[]> {
     if (!userAspectsIds || !userAspectsIds.length) return [];
     const components = await this.scope.getMany(userAspectsIds);
+    const useHash = this.shouldUseHashForCapsules();
+    const useDatedDirs = this.shouldUseDatedCapsules();
     const network = await this.isolator.isolateComponents(
       userAspectsIds,
       {
         baseDir: this.getAspectCapsulePath(),
+        useHash,
+        useDatedDirs,
         skipIfExists: true,
         // for some reason this needs to be false, otherwise tagging components in some workspaces
         // result in error during Preview task:

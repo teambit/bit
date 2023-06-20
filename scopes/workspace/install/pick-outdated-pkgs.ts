@@ -11,6 +11,7 @@ import semver from 'semver';
  * Lets the user pick the packages that should be updated.
  */
 export async function pickOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): Promise<MergedOutdatedPkg[]> {
+  if (outdatedPkgs.length === 0) return [];
   const { updateDependencies } = (await prompt({
     choices: makeOutdatedPkgChoices(outdatedPkgs),
     footer: '\nEnter to start updating. Ctrl-c to cancel.',

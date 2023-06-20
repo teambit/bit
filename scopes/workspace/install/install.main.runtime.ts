@@ -558,7 +558,7 @@ export class InstallMain {
    *
    * @param options.all {Boolean} updates all outdated dependencies without showing a prompt.
    */
-  async updateDependencies(options: { all: boolean }) {
+  async updateDependencies(options: { all: boolean }): Promise<ComponentMap<string> | null> {
     const { componentConfigFiles, componentPoliciesById } = await this._getComponentsWithDependencyPolicies();
     const variantPatterns = this.variants.raw();
     const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
@@ -576,6 +576,10 @@ export class InstallMain {
       this.logger.off();
       outdatedPkgsToUpdate = await pickOutdatedPkgs(outdatedPkgs);
       this.logger.on();
+    }
+    if (outdatedPkgsToUpdate.length === 0) {
+      this.logger.consoleSuccess('No outdated dependencies found');
+      return null;
     }
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgsToUpdate, {
       variantPoliciesByPatterns,

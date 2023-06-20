@@ -48,7 +48,7 @@ export interface Environment {
   /**
    * Returns a schema generator instance
    */
-  getSchemaExtractor?: (config?: any, path?: string) => SchemaExtractor;
+  getSchemaExtractor?: (config?: any, tsserverPath?: string, contextPath?: string) => SchemaExtractor;
 
   /**
    * Returns the dev patterns to match doc files
