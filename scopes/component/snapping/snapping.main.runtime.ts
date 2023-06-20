@@ -69,11 +69,9 @@ export type TagDataPerComp = {
   message?: string;
 };
 
-export type SnapResults = {
+export type SnapResults = BasicTagResults & {
   snappedComponents: ConsumerComponent[];
   autoSnappedResults: AutoTagResult[];
-  warnings: string[];
-  newComponents: BitIds;
   laneName: string | null; // null if default
 };
 
@@ -82,13 +80,17 @@ export type SnapFromScopeResults = {
   exportedIds?: string[];
 };
 
-export type TagResults = {
+export type TagResults = BasicTagResults & {
   taggedComponents: ConsumerComponent[];
   autoTaggedResults: AutoTagResult[];
-  warnings: string[];
-  newComponents: BitIds;
   isSoftTag: boolean;
   publishedPackages: string[];
+};
+
+export type BasicTagResults = {
+  warnings: string[];
+  newComponents: BitIds;
+  removedComponents?: BitIds;
 };
 
 export class SnappingMain {
@@ -186,38 +188,43 @@ export class SnappingMain {
     await this.throwForComponentIssues(components, ignoreIssues);
     this.throwForPendingImport(consumerComponents);
 
-    const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig } = await tagModelComponent({
-      workspace: this.workspace,
-      scope: this.scope,
-      snapping: this,
-      builder: this.builder,
-      consumerComponents,
-      ids: legacyBitIds,
-      message,
-      editor,
-      exactVersion: validExactVersion,
-      releaseType,
-      preReleaseId,
-      ignoreNewestVersion,
-      skipTests,
-      skipAutoTag,
-      soft,
-      build,
-      persist,
-      disableTagAndSnapPipelines,
-      forceDeploy,
-      incrementBy,
-      packageManagerConfigRootDir: this.workspace.path,
-      dependencyResolver: this.dependencyResolver,
-      exitOnFirstFailedTask: failFast,
-    });
+    const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig, removedComponents } =
+      await tagModelComponent({
+        workspace: this.workspace,
+        scope: this.scope,
+        snapping: this,
+        builder: this.builder,
+        consumerComponents,
+        ids: legacyBitIds,
+        message,
+        editor,
+        exactVersion: validExactVersion,
+        releaseType,
+        preReleaseId,
+        ignoreNewestVersion,
+        skipTests,
+        skipAutoTag,
+        soft,
+        build,
+        persist,
+        disableTagAndSnapPipelines,
+        forceDeploy,
+        incrementBy,
+        packageManagerConfigRootDir: this.workspace.path,
+        dependencyResolver: this.dependencyResolver,
+        exitOnFirstFailedTask: failFast,
+      });
 
-    const tagResults = { taggedComponents, autoTaggedResults, isSoftTag: soft, publishedPackages };
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    tagResults.warnings = warnings;
+    const tagResults = {
+      taggedComponents,
+      autoTaggedResults,
+      isSoftTag: soft,
+      publishedPackages,
+      warnings,
+      newComponents,
+      removedComponents,
+    };
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    tagResults.newComponents = newComponents;
     const postHook = isAll ? POST_TAG_ALL_HOOK : POST_TAG_HOOK;
     HooksManagerInstance?.triggerHook(postHook, tagResults);
     Analytics.setExtraData(
@@ -467,7 +474,7 @@ export class SnappingMain {
     await this.throwForComponentIssues(components, ignoreIssues);
     this.throwForPendingImport(consumerComponents);
 
-    const { taggedComponents, autoTaggedResults, stagedConfig } = await tagModelComponent({
+    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await tagModelComponent({
       workspace: this.workspace,
       scope: this.scope,
       snapping: this,
@@ -493,9 +500,10 @@ export class SnappingMain {
     const snapResults: Partial<SnapResults> = {
       snappedComponents: taggedComponents,
       autoSnappedResults: autoTaggedResults,
+      newComponents,
+      removedComponents,
     };
 
-    snapResults.newComponents = newComponents;
     const currentLane = consumer.getCurrentLaneId();
     snapResults.laneName = currentLane.isDefault() ? null : currentLane.toString();
     await consumer.onDestroy();
@@ -821,7 +829,7 @@ there are matching among unmodified components thought. consider using --unmodif
 
   private throwForPendingImport(components: ConsumerComponent[]) {
     const componentsMissingFromScope = components
-      .filter((c) => !c.removed)
+      .filter((c) => !c.isRemoved())
       .filter((c) => !c.componentFromModel && c.id.hasScope())
       .map((c) => c.id.toString());
     if (componentsMissingFromScope.length) {
