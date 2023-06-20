@@ -22,6 +22,7 @@ import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
 import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
 import { Component } from '@teambit/component';
+import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import { ComponentID } from '@teambit/component-id';
@@ -367,14 +368,11 @@ async function removeDeletedComponentsFromBitmap(comps: ConsumerComponent[], wor
   if (!workspace) {
     return;
   }
-  await Promise.all(
-    comps.map(async (comp) => {
-      if (comp.removed) {
-        const compId = await workspace.resolveComponentId(comp.id);
-        workspace.bitMap.removeComponent(compId);
-      }
-    })
-  );
+  const removedComps = comps.filter((comp) => comp.isRemoved());
+  if (!removedComps.length) return;
+  const compBitIdsToRemove = BitIds.fromArray(removedComps.map((c) => c.id));
+  await deleteComponentsFiles(workspace.consumer, compBitIdsToRemove);
+  await workspace.consumer.cleanFromBitMap(compBitIdsToRemove);
 }
 
 async function removeMergeConfigFromComponents(
