@@ -349,7 +349,7 @@ export class IsolatorMain {
       linkingContext: { inCapsule: true },
     });
     const { linkedRootDeps } = await linker.calculateLinkedDeps(capsulesDir, ComponentMap.create([]), linkingOptions);
-    createLinks(capsulesDir, linkedRootDeps);
+    return createLinks(capsulesDir, linkedRootDeps);
   }
 
   private shouldUseDatedDirs(componentsToIsolate: Component[], opts: IsolateComponentsOptions): boolean {
