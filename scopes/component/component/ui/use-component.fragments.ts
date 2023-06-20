@@ -77,6 +77,8 @@ export const componentFieldsWithLogs = gql`
     id {
       ...componentIdFields
     }
+    packageName
+    latest
     logs(
       type: $logType
       offset: $logOffset

@@ -40,6 +40,7 @@ import { Logger } from '@teambit/logger';
 import versionSelectorType from 'version-selector-type';
 import YAML from 'yaml';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
+import symlinkDir from 'symlink-dir';
 import { createRootComponentsDir } from './create-root-components-dir';
 
 type BackupJsons = {
@@ -181,6 +182,16 @@ export class YarnPackageManager implements PackageManager {
         await removeExternalLinksFromYarnLockfile(rootDir);
       }
     );
+
+    if (installOptions.nmSelfReferences) {
+      await Promise.all(
+        Object.entries(manifests).map(async ([dir, manifest]) => {
+          if (manifest.name) {
+            await symlinkDir(dir, join(dir, 'node_modules', manifest.name));
+          }
+        })
+      );
+    }
 
     // TODO: check if package.json and link files generation can be prevented through the yarn API or
     // mock the files by hooking to `xfs`.

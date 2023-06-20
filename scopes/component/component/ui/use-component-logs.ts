@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { ComponentLogsResult, Filters } from './use-component.model';
 import { GET_COMPONENT_WITH_LOGS } from './use-component.fragments';
 import { ComponentError } from './component-error';
 import { getOffsetValue } from './use-component.utils';
+import { ComponentID } from '..';
 
 export function useComponentLogs(
   componentId: string,
@@ -27,8 +29,20 @@ export function useComponentLogs(
       ? new ComponentError(500, error.message)
       : (!rawComponent && !loading && new ComponentError(404)) || undefined;
 
+  const idDepKey = rawComponent?.id
+    ? `${rawComponent?.id?.scope}/${rawComponent?.id?.name}@${rawComponent?.id?.version}}`
+    : undefined;
+
+  const id: ComponentID | undefined = useMemo(
+    () => (rawComponent ? ComponentID.fromObject(rawComponent.id) : undefined),
+    [idDepKey]
+  );
+
   return {
     loading,
+    id,
+    packageName: rawComponent?.packageName,
+    latest: rawComponent?.latest,
     error: componentError,
     componentLogs: {
       logs: rawCompLogs,
