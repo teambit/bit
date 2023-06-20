@@ -1,5 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { CommandBar } from './command-bar';
 // import { useSearcher } from './command-bar/use-searcher';
 
