@@ -626,7 +626,7 @@ export class MergingMain {
       return consumer.scope.getConsumerComponent(currentId);
     };
     const currentComponent = await getCurrentComponent();
-    if (currentComponent.removed) {
+    if (currentComponent.isRemoved()) {
       return returnUnmerged(`component has been removed`, true);
     }
     const isModified = async () => {
