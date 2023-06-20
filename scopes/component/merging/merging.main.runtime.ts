@@ -11,7 +11,7 @@ import {
   getMergeStrategyInteractive,
   MergeOptions,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import SnappingAspect, { SnappingMain, TagResults } from '@teambit/snapping';
+import SnappingAspect, { SnapResults, SnappingMain, TagResults } from '@teambit/snapping';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import mapSeries from 'p-map-series';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
@@ -91,7 +91,11 @@ export type ApplyVersionResults = {
   removedComponents?: BitId[];
   resolvedComponents?: ConsumerComponent[]; // relevant for bit merge --resolve
   abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
-  mergeSnapResults?: { snappedComponents: ConsumerComponent[]; autoSnappedResults: AutoTagResult[] } | null;
+  mergeSnapResults?: {
+    snappedComponents: ConsumerComponent[];
+    autoSnappedResults: AutoTagResult[];
+    removedComponents?: BitIds;
+  } | null;
   mergeSnapError?: Error;
   leftUnresolvedConflicts?: boolean;
   verbose?: boolean;
@@ -307,8 +311,8 @@ export class MergingMain {
         const idsToTag = allComponentsStatus.map((c) => c.id);
         const results = await this.tagAllLaneComponent(idsToTag, snapMessage, build);
         if (!results) return null;
-        const { taggedComponents, autoTaggedResults } = results;
-        return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults };
+        const { taggedComponents, autoTaggedResults, removedComponents } = results;
+        return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults, removedComponents };
       }
       return this.snapResolvedComponents(consumer, snapMessage, build);
     };
@@ -325,7 +329,7 @@ export class MergingMain {
     return {
       components: componentsResults.map((c) => c.applyVersionResult),
       failedComponents,
-      removedComponents: componentIdsToRemove,
+      removedComponents: [...componentIdsToRemove, ...(mergeSnapResults?.removedComponents || [])],
       mergeSnapResults,
       mergeSnapError,
       leftUnresolvedConflicts,
@@ -956,7 +960,7 @@ other:   ${otherLaneHead.toString()}`);
     consumer: Consumer,
     snapMessage: string,
     build: boolean
-  ): Promise<null | { snappedComponents: ConsumerComponent[]; autoSnappedResults: AutoTagResult[] }> {
+  ): Promise<SnapResults | null> {
     const unmergedComponents = consumer.scope.objects.unmergedComponents.getComponents();
     this.logger.debug(`merge-snaps, snapResolvedComponents, total ${unmergedComponents.length.toString()} components`);
     if (!unmergedComponents.length) return null;

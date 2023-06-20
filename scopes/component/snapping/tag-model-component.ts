@@ -221,6 +221,7 @@ export async function tagModelComponent({
   autoTaggedResults: AutoTagResult[];
   publishedPackages: string[];
   stagedConfig?: StagedConfig;
+  removedComponents?: BitIds;
 }> {
   const consumer = workspace?.consumer;
   const legacyScope = scope.legacyScope;
@@ -349,8 +350,9 @@ export async function tagModelComponent({
     await mapSeries(allComponentsToTag, (consumerComponent) => snapping._enrichComp(consumerComponent));
   }
 
+  let removedComponents: BitIds | undefined;
   if (!soft) {
-    await removeDeletedComponentsFromBitmap(allComponentsToTag, workspace);
+    removedComponents = await removeDeletedComponentsFromBitmap(allComponentsToTag, workspace);
     await legacyScope.objects.persist();
     await removeMergeConfigFromComponents(unmergedComps, allComponentsToTag, workspace);
     if (workspace) {
@@ -361,18 +363,29 @@ export async function tagModelComponent({
     }
   }
 
-  return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages, stagedConfig };
+  return {
+    taggedComponents: componentsToTag,
+    autoTaggedResults: autoTagData,
+    publishedPackages,
+    stagedConfig,
+    removedComponents,
+  };
 }
 
-async function removeDeletedComponentsFromBitmap(comps: ConsumerComponent[], workspace?: Workspace) {
+async function removeDeletedComponentsFromBitmap(
+  comps: ConsumerComponent[],
+  workspace?: Workspace
+): Promise<BitIds | undefined> {
   if (!workspace) {
-    return;
+    return undefined;
   }
   const removedComps = comps.filter((comp) => comp.isRemoved());
-  if (!removedComps.length) return;
+  if (!removedComps.length) return undefined;
   const compBitIdsToRemove = BitIds.fromArray(removedComps.map((c) => c.id));
   await deleteComponentsFiles(workspace.consumer, compBitIdsToRemove);
   await workspace.consumer.cleanFromBitMap(compBitIdsToRemove);
+
+  return compBitIdsToRemove;
 }
 
 async function removeMergeConfigFromComponents(

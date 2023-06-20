@@ -248,6 +248,7 @@ describe('bit lane command', function () {
   });
   describe('soft remove on lane when a forked lane changed it and is now merging this lane', () => {
     let beforeRemoveScope: string;
+    let beforeMerge: string;
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -270,31 +271,79 @@ describe('bit lane command', function () {
       helper.scopeHelper.getClonedLocalScope(beforeRemoveScope);
       helper.command.snapComponentWithoutBuild('comp2', '--unmodified');
       helper.command.fetchAllLanes();
-      output = helper.command.mergeLane('lane-a', '-x');
+      beforeMerge = helper.scopeHelper.cloneLocalScope();
     });
-    it.skip('should indicate that the component was removed', () => {
-      expect(output).to.have.string('the following 1 component(s) have been removed');
+    describe('when merging with auto-snap', () => {
+      before(() => {
+        output = helper.command.mergeLane('lane-a', '-x');
+      });
+      it('should indicate that the component was removed', () => {
+        expect(output).to.have.string('the following 1 component(s) have been removed');
+      });
+      it('should remove the soft-removed component from .bitmap', () => {
+        const list = helper.command.list();
+        expect(list).to.not.have.string('comp2');
+      });
+      it('should remove the component files from the filesystem', () => {
+        expect(path.join(helper.scopes.localPath, 'comp2')).to.not.be.a.path();
+      });
+      it('should leave the component on the lane and update it according to lane-a to make it soft-removed in lane-b as well', () => {
+        const laneComps = helper.command.catLane('lane-b');
+        const comps = laneComps.components.map((c) => c.id.name);
+        expect(comps).to.include('comp2');
+      });
+      it('bit show should show the component as removed', () => {
+        const removeData = helper.command.showAspectConfig('comp2', Extensions.remove);
+        expect(removeData.config.removed).to.be.true;
+      });
+      it('bit status should show the component as staged', () => {
+        const status = helper.command.statusJson();
+        const staged = status.stagedComponents.map((c) => c.id);
+        expect(staged).to.include(`${helper.scopes.remote}/comp2`);
+      });
     });
-    it('should remove the soft-removed component from .bitmap', () => {
-      const list = helper.command.list();
-      expect(list).to.not.have.string('comp2');
-    });
-    it('should remove the component files from the filesystem', () => {
-      expect(path.join(helper.scopes.localPath, 'comp2')).to.not.be.a.path();
-    });
-    it('should leave the component on the lane and update it according to lane-a to make it soft-removed in lane-b as well', () => {
-      const laneComps = helper.command.catLane('lane-b');
-      const comps = laneComps.components.map((c) => c.id.name);
-      expect(comps).to.include('comp2');
-    });
-    it('bit show should show the component as removed', () => {
-      const removeData = helper.command.showAspectConfig('comp2', Extensions.remove);
-      expect(removeData.config.removed).to.be.true;
-    });
-    it('bit status should show the component as staged', () => {
-      const status = helper.command.statusJson();
-      const staged = status.stagedComponents.map((c) => c.id);
-      expect(staged).to.include(`${helper.scopes.remote}/comp2`);
+    describe('when merging with --no-snap', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeMerge);
+        output = helper.command.mergeLane('lane-a', '-x --no-snap');
+      });
+      it('bit status should not show the component as soft-removed from remote', () => {
+        const status = helper.command.statusJson();
+        expect(status.remotelySoftRemoved).to.have.lengthOf(0);
+      });
+      it('should not remove the component from the filesystem', () => {
+        expect(path.join(helper.scopes.localPath, 'comp2')).to.be.a.directory();
+      });
+      describe('snapping the components', () => {
+        let snapOutput: string;
+        before(() => {
+          snapOutput = helper.command.snapAllComponentsWithoutBuild();
+        });
+        it('should indicate that components were removed', () => {
+          expect(snapOutput).to.have.string('removed components');
+        });
+        it('should remove the soft-removed component from .bitmap', () => {
+          const list = helper.command.list();
+          expect(list).to.not.have.string('comp2');
+        });
+        it('should remove the component files from the filesystem', () => {
+          expect(path.join(helper.scopes.localPath, 'comp2')).to.not.be.a.path();
+        });
+        it('should leave the component on the lane and update it according to lane-a to make it soft-removed in lane-b as well', () => {
+          const laneComps = helper.command.catLane('lane-b');
+          const comps = laneComps.components.map((c) => c.id.name);
+          expect(comps).to.include('comp2');
+        });
+        it('bit show should show the component as removed', () => {
+          const removeData = helper.command.showAspectConfig('comp2', Extensions.remove);
+          expect(removeData.config.removed).to.be.true;
+        });
+        it('bit status should show the component as staged', () => {
+          const status = helper.command.statusJson();
+          const staged = status.stagedComponents.map((c) => c.id);
+          expect(staged).to.include(`${helper.scopes.remote}/comp2`);
+        });
+      });
     });
   });
   describe('soft remove on lane when another user of the same lane is checking out head', () => {
