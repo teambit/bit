@@ -298,7 +298,7 @@ importers:
         version: 0.0.406
       '@teambit/component.instructions.exporting-components':
         specifier: 0.0.6
-        version: registry.npmjs.org/@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: registry.npmjs.org/@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.elements.icon':
         specifier: 1.0.5
         version: 1.0.5(react-dom@17.0.2)(react@17.0.2)
@@ -544,22 +544,22 @@ importers:
         version: 0.0.104
       '@teambit/lanes.ui.drawer':
         specifier: ^0.0.37
-        version: 0.0.37(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+        version: 0.0.37(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.lane-readme':
         specifier: ^0.0.116
-        version: 0.0.116(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: 0.0.116(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/lanes.ui.lanes':
         specifier: ^0.0.116
-        version: 0.0.116(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: 0.0.116(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/lanes.ui.menus':
         specifier: ^0.0.36
-        version: 0.0.36(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: 0.0.36(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/lanes.ui.viewed-lane':
         specifier: ^0.0.37
-        version: 0.0.37(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+        version: 0.0.37(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/legacy':
-        specifier: link:/home/circleci/.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
-        version: link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
+        specifier: link:/home/circleci/.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
+        version: link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
       '@teambit/legacy-bit-id':
         specifier: ^0.0.423
         version: 0.0.423
@@ -571,13 +571,13 @@ importers:
         version: 0.0.1
       '@teambit/react.instructions.react-native.adding-tests':
         specifier: 0.0.1
-        version: 0.0.1(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 0.0.1(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.instructions.react.adding-compositions':
         specifier: 0.0.6
-        version: registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.instructions.react.adding-tests':
         specifier: 0.0.6
-        version: registry.npmjs.org/@teambit/react.instructions.react.adding-tests@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: registry.npmjs.org/@teambit/react.instructions.react.adding-tests@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.rendering.ssr':
         specifier: 0.0.3
         version: 0.0.3(react-dom@17.0.2)(react@17.0.2)
@@ -604,7 +604,7 @@ importers:
         version: 0.0.1
       '@teambit/toolbox.network.agent':
         specifier: 0.0.116
-        version: registry.npmjs.org/@teambit/toolbox.network.agent@0.0.116(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)
+        version: registry.npmjs.org/@teambit/toolbox.network.agent@0.0.116(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)
       '@teambit/typescript.deps-detectors.detective-typescript':
         specifier: ^0.0.1
         version: 0.0.1(typescript@4.7.4)
@@ -1652,7 +1652,7 @@ importers:
         version: registry.npmjs.org/@teambit/base-ui.theme.theme-provider@1.0.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit.content.what-is-bit':
         specifier: 1.96.2
-        version: 1.96.2(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.96.2(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.object-formatter':
         specifier: 0.0.1
         version: 0.0.1(react@17.0.2)
@@ -1661,22 +1661,22 @@ importers:
         version: 2.1.14(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/compilation.content.compiler-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component.content.component-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component.content.dev-files':
         specifier: 1.95.9
-        version: 1.95.9(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.9(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/defender.content.formatter-overview':
         specifier: 1.96.1
-        version: 1.96.1(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.96.1(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/defender.content.linter-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/defender.content.tester-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/defender.fs.global-bit-temp-dir':
         specifier: 0.0.1
         version: 0.0.1
@@ -1685,25 +1685,25 @@ importers:
         version: 1.96.2(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/docs.content.docs-overview':
         specifier: 1.95.9
-        version: 1.95.9(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.9(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/pkg.content.packages-overview':
         specifier: 1.95.9
-        version: 1.95.9(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.9(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.content.react-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/scope.content.scope-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/workspace.content.variants':
         specifier: 1.95.9
-        version: 1.95.9(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.9(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/workspace.content.workspace-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@types/archiver':
         specifier: 5.3.1
         version: 5.3.1
@@ -3787,7 +3787,7 @@ importers:
         version: file:scopes/harmony/cache(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(react-dom@17.0.2)(react@17.0.2)
@@ -4408,13 +4408,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.2.2)(react@17.0.2)
@@ -5697,7 +5697,7 @@ importers:
         version: file:scopes/harmony/cache(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(react-dom@17.0.2)(react@17.0.2)
@@ -6312,13 +6312,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -7586,7 +7586,7 @@ importers:
         version: file:scopes/harmony/cache(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(react-dom@17.0.2)(react@17.0.2)
@@ -8201,13 +8201,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -9475,7 +9475,7 @@ importers:
         version: file:scopes/harmony/cache(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(react-dom@17.0.2)(react@17.0.2)
@@ -10090,13 +10090,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -11364,7 +11364,7 @@ importers:
         version: file:scopes/harmony/cache(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(react-dom@17.0.2)(react@17.0.2)
@@ -11979,13 +11979,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -13253,7 +13253,7 @@ importers:
         version: file:scopes/harmony/cache(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(react-dom@17.0.2)(react@17.0.2)
@@ -13868,13 +13868,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -15142,7 +15142,7 @@ importers:
         version: file:scopes/harmony/cache(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(react-dom@17.0.2)(react@17.0.2)
@@ -15757,13 +15757,13 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
-        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
+        version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -18650,7 +18650,7 @@ importers:
     devDependencies:
       '@teambit/compilation.content.compiler-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -18788,7 +18788,7 @@ importers:
         version: 7.20.0
       '@teambit/component.instructions.exporting-components':
         specifier: 0.0.6
-        version: registry.npmjs.org/@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: registry.npmjs.org/@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.alert-card':
         specifier: ^0.0.26
         version: 0.0.26(react-dom@17.0.2)(react@17.0.2)
@@ -19032,7 +19032,7 @@ importers:
     devDependencies:
       '@teambit/component.content.component-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -19747,7 +19747,7 @@ importers:
     devDependencies:
       '@teambit/component.content.dev-files':
         specifier: 1.95.9
-        version: 1.95.9(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.9(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -22296,7 +22296,7 @@ importers:
     devDependencies:
       '@teambit/defender.content.formatter-overview':
         specifier: 1.96.1
-        version: 1.96.1(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.96.1(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -22424,7 +22424,7 @@ importers:
     devDependencies:
       '@teambit/defender.content.linter-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -22528,7 +22528,7 @@ importers:
     devDependencies:
       '@teambit/defender.content.tester-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -22681,7 +22681,7 @@ importers:
     devDependencies:
       '@teambit/defender.content.tester-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -23563,7 +23563,7 @@ importers:
     devDependencies:
       '@teambit/docs.content.docs-overview':
         specifier: 1.95.9
-        version: 1.95.9(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.9(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -24551,7 +24551,7 @@ importers:
     devDependencies:
       '@teambit/bit.content.what-is-bit':
         specifier: 1.96.2
-        version: 1.96.2(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.96.2(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.brand.logo':
         specifier: 1.96.2
         version: 1.96.2(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
@@ -26435,7 +26435,7 @@ importers:
     devDependencies:
       '@teambit/pkg.content.packages-overview':
         specifier: 1.95.9
-        version: 1.95.9(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.9(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -27016,10 +27016,10 @@ importers:
         version: 0.4.6
       '@teambit/react.instructions.react.adding-compositions':
         specifier: 0.0.6
-        version: registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.instructions.react.adding-tests':
         specifier: 0.0.6
-        version: registry.npmjs.org/@teambit/react.instructions.react.adding-tests@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: registry.npmjs.org/@teambit/react.instructions.react.adding-tests@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.rendering.ssr':
         specifier: 0.0.3
         version: 0.0.3(react-dom@17.0.2)(react@17.0.2)
@@ -27191,7 +27191,7 @@ importers:
     devDependencies:
       '@teambit/react.content.react-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@types/express':
         specifier: 4.17.13
         version: 4.17.13
@@ -27390,10 +27390,10 @@ importers:
         version: 0.4.6
       '@teambit/react.instructions.react-native.adding-tests':
         specifier: 0.0.1
-        version: 0.0.1(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 0.0.1(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.instructions.react.adding-compositions':
         specifier: 0.0.6
-        version: registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/jest-native':
         specifier: 4.0.4
         version: 4.0.4
@@ -28055,7 +28055,7 @@ importers:
     devDependencies:
       '@teambit/scope.content.scope-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -32207,7 +32207,7 @@ importers:
     devDependencies:
       '@teambit/workspace.content.variants':
         specifier: 1.95.9
-        version: 1.95.9(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.9(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -32395,7 +32395,7 @@ importers:
     devDependencies:
       '@teambit/workspace.content.workspace-overview':
         specifier: 1.95.0
-        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@types/find-root':
         specifier: 1.1.2
         version: 1.1.2
@@ -39477,7 +39477,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/bit-error@0.0.365(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/bit-error@0.0.365(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-btMRc0fX+Rhx+baLRF2pKwlQEHVMHB9TPYvBWKdyX4AgRBO6mdonkVXxH6RWWR13w4WvYO0kX90z0tLLaPr2fg==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -39486,7 +39486,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.12.18
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -39505,7 +39505,7 @@ packages:
     resolution: {integrity: sha512-hYIJQWD5UCiD35WAIy0YGySW63PP0GyNIpCDmAOYxRGpA0RMQD+zacKpG1SH6iAfsg8NF/Am8lWis1Lg9ihQtQ==}
     engines: {node: '>=12.22.0'}
 
-  /@teambit/bit.content.what-is-bit@1.96.2(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/bit.content.what-is-bit@1.96.2(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-F6iK8JMYsiTXqPK4KiYe2lUP42k=, tarball: https://node-registry.bit.cloud/tarballs/teambit.bit/content/what-is-bit@1.96.2.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39515,7 +39515,7 @@ packages:
       '@teambit/design.ui.brand.logo': 1.96.2(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.layouts.sections.left-right': 1.96.2(@testing-library/react@12.1.5)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-card-group': 1.96.1(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       react: 17.0.2
     transitivePeerDependencies:
       - '@teambit/legacy'
@@ -39741,20 +39741,20 @@ packages:
     resolution: {integrity: sha1-cUo3bbFCwlI564kZTrREbBRp234=, tarball: https://node-registry.bit.cloud/tarballs/teambit.community/constants/links@0.0.2.tgz}
     dev: false
 
-  /@teambit/community.entity.graph.bubble-graph@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/community.entity.graph.bubble-graph@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-DyejJtL3Qht5BLLPYiBdJ4lnK00=, tarball: https://node-registry.bit.cloud/tarballs/teambit.community/entity/graph/bubble-graph@1.95.0.tgz}
     dependencies:
-      '@teambit/community.entity.graph.grid-graph': 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/community.entity.graph.grid-graph': 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
     transitivePeerDependencies:
       - '@teambit/legacy'
       - react
       - react-dom
     dev: true
 
-  /@teambit/community.entity.graph.grid-graph@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/community.entity.graph.grid-graph@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-/SO0DWAyqn76HbmhRfTxwsE/2BA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.community/entity/graph/grid-graph@1.95.0.tgz}
     dependencies:
-      '@teambit/component-id': 0.0.369(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-id': 0.0.369(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       react-xarrows: 2.0.2(react@17.0.2)
     transitivePeerDependencies:
       - '@teambit/legacy'
@@ -39794,14 +39794,14 @@ packages:
       react: 17.0.2
     dev: false
 
-  /@teambit/compilation.content.compiler-overview@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/compilation.content.compiler-overview@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-Tx2zgDjbSEzSAPclXSbRVbNvqfw=, tarball: https://node-registry.bit.cloud/tarballs/teambit.compilation/content/compiler-overview@1.95.0.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -39809,7 +39809,7 @@ packages:
       - '@teambit/legacy'
     dev: true
 
-  /@teambit/component-descriptor@0.0.110(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/component-descriptor@0.0.110(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-mLH50ssOOa0SPkC3ZKj4CMOW8qz+Ld02aCZC2hdRj5fwnDgL9Xmjgd65+c2FBfQ2lBxPIoKB/0rTgsS1RjnblQ==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -39818,13 +39818,13 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.12.18
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/component-descriptor@0.0.12(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/component-descriptor@0.0.12(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-vF+p5bbUKRbqE3KEnNxHMfaRIHBKjMhcmeFFZSGGJbf2JxC4OT9DI6urxyUMKSzIvpTPuxaoJ5C9KzvHTWhpIw==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -39833,13 +39833,13 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.12.18
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     dev: true
 
-  /@teambit/component-descriptor@0.0.146(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/component-descriptor@0.0.146(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-bSYadi59172LX+kcXRqzn3ugWydkJBVnsxSZdurFAQdonD0FbK4g//3SpcVWjmU7oVM0YJfXqVE6wf6KP0ivbQ==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -39848,13 +39848,13 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.12.18
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/component-descriptor@0.0.18(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/component-descriptor@0.0.18(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-TbR5WTJ+hqyZ0ZR+zlbMJkAeWHztOJCLXTEeximC9nZj9DkvXBiXFiKyc4O9m4YMlKRqD6L8/T9XEoNYLrYkMg==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -39863,7 +39863,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.12.18
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -39883,7 +39883,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/component-descriptor@0.0.3(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/component-descriptor@0.0.3(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-/OEPdA80xS76HvGaSlZqNTyvQ/WlO3lERzUNnPnldLye2OWST69vhga8tefBRKMeNpPsITck6adfiLm1DH8m6g==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -39892,13 +39892,13 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.12.18
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     dev: true
 
-  /@teambit/component-descriptor@0.0.46(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/component-descriptor@0.0.46(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-OZuUsAOChiGdqU2fc8G/N1I6QisbeRw4UdeUjuLYdXqRVUEYPAzsjiyit+jRonP8/als9SDoXCO2xz/nckAOFw==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -39907,20 +39907,20 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.12.18
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     dev: true
 
-  /@teambit/component-id@0.0.369(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/component-id@0.0.369(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-TuJ1g/QHScRX9tG96wrdiLR5kC3XRMdK5NdOduzumChMXPO9tGe6jnCwMSiIqdvXbZXfZr1NSvyu80aqYsHpvA==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@teambit/legacy': 1.0.76
     dependencies:
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
-      '@teambit/legacy-bit-id': 0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
+      '@teambit/legacy-bit-id': 0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -39959,14 +39959,14 @@ packages:
     dependencies:
       '@teambit/legacy-bit-id': 0.0.423
 
-  /@teambit/component-version@0.0.366(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/component-version@0.0.366(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-ouewvgwqxESGVFqb25u9E0+Cd0cCVyOl3lTc8IKzBxyc+EmPDq9ZEGLLr4PoKJg/YlM2ZsJfLgJwNZPMT7bCxA==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@teambit/legacy': 1.0.76
     dependencies:
-      '@teambit/bit-error': 0.0.365(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
+      '@teambit/bit-error': 0.0.365(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
       semver: 7.3.4
     transitivePeerDependencies:
       - react
@@ -39995,16 +39995,16 @@ packages:
       '@teambit/bit-error': 0.0.402
       semver: 7.3.4
 
-  /@teambit/component.content.component-overview@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/component.content.component-overview@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-9Dbi90Jg9C5Jmy4g7IdouEqSuo8=, tarball: https://node-registry.bit.cloud/tarballs/teambit.component/content/component-overview@1.95.0.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/community.entity.graph.bubble-graph': 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/community.entity.graph.bubble-graph': 1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/docs.ui.zoomable-image': 1.95.0(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -40012,11 +40012,11 @@ packages:
       - '@teambit/legacy'
     dev: true
 
-  /@teambit/component.content.dev-files@1.95.9(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/component.content.dev-files@1.95.9(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-mkTDg0tdxiZhKKExHhyxyG6DPjc=, tarball: https://node-registry.bit.cloud/tarballs/teambit.component/content/dev-files@1.95.9.tgz}
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
     transitivePeerDependencies:
       - '@teambit/legacy'
       - react
@@ -40316,17 +40316,17 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/components.blocks.component-card-display@0.0.13(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/components.blocks.component-card-display@0.0.13(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-jdwURBnGqc7/r4dGZ7hTyoeBPNs=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/blocks/component-card-display@0.0.13.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/component-id': 0.0.401
-      '@teambit/components.hooks.use-components': 0.0.11(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/explorer.plugins.env-plugin': 0.0.10(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/explorer.plugins.preview-plugin': 0.0.4(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/explorer.ui.component-card': 0.0.11(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/explorer.ui.component-card-grid': 0.0.12(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/components.hooks.use-components': 0.0.11(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.plugins.env-plugin': 0.0.10(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.plugins.preview-plugin': 0.0.4(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.ui.component-card': 0.0.11(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.ui.component-card-grid': 0.0.12(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
     transitivePeerDependencies:
@@ -40337,20 +40337,20 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/components.blocks.component-card-display@0.0.24(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/components.blocks.component-card-display@0.0.24(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-OlVc0FyFcCB5yfe3qAG/tJbiAco=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/blocks/component-card-display@0.0.24.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/component-id': 0.0.402
-      '@teambit/components.descriptors.component-descriptor': 0.0.14(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/components.hooks.use-component-count': 0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/components.hooks.use-components': 0.0.10(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)
-      '@teambit/components.hooks.use-list-components': 0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/explorer.plugins.env-plugin': 0.0.13(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/explorer.plugins.preview-plugin': 0.0.9(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/explorer.ui.component-card': 0.0.14(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/explorer.ui.component-card-grid': 0.0.15(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/components.descriptors.component-descriptor': 0.0.14(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/components.hooks.use-component-count': 0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/components.hooks.use-components': 0.0.10(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)
+      '@teambit/components.hooks.use-list-components': 0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.plugins.env-plugin': 0.0.13(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.plugins.preview-plugin': 0.0.9(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.ui.component-card': 0.0.14(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.ui.component-card-grid': 0.0.15(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
     transitivePeerDependencies:
@@ -40379,10 +40379,10 @@ packages:
       graphql-tag: 2.12.1(graphql@14.7.0)
     dev: true
 
-  /@teambit/components.descriptors.component-descriptor@0.0.14(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/components.descriptors.component-descriptor@0.0.14(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-ZeYw+0jEa9tTCVUggXlIVFTJxaE=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/descriptors/component-descriptor@0.0.14.tgz}
     dependencies:
-      '@teambit/component-descriptor': 0.0.3(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-descriptor': 0.0.3(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.402
       '@teambit/scopes.scope-id': 0.0.3
     transitivePeerDependencies:
@@ -40391,10 +40391,10 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/components.descriptors.component-descriptor@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/components.descriptors.component-descriptor@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-VoayQSccNGOoiQn0eXOQUTylk6Q=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/descriptors/component-descriptor@0.0.6.tgz}
     dependencies:
-      '@teambit/component-descriptor': 0.0.12(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-descriptor': 0.0.12(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.401
       '@teambit/scopes.scope-id': 0.0.1
     transitivePeerDependencies:
@@ -40403,10 +40403,10 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/components.descriptors.component-descriptor@0.0.7(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/components.descriptors.component-descriptor@0.0.7(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-HkbSWB5GKqJNAMc3Eo8n3AiRkOo=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/descriptors/component-descriptor@0.0.7.tgz}
     dependencies:
-      '@teambit/component-descriptor': 0.0.3(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-descriptor': 0.0.3(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.401
       '@teambit/scopes.scope-id': 0.0.1
     transitivePeerDependencies:
@@ -40415,13 +40415,13 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/components.hooks.use-component-count@0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/components.hooks.use-component-count@0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-CjYLTYK0d4z4soJFrz3oU0+z81M=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/hooks/use-component-count@0.0.7.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/analytics.timeseries': 0.0.25(graphql@14.7.0)(react@17.0.2)
-      '@teambit/graphql.hooks.use-query': 0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/graphql.hooks.use-query': 0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       graphql-tag: 2.12.1(graphql@14.7.0)
       react: 17.0.2
@@ -40432,12 +40432,12 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/components.hooks.use-components@0.0.10(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2):
+  /@teambit/components.hooks.use-components@0.0.10(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2):
     resolution: {integrity: sha1-sSRUFzKDbhghNcEX8/UteRwCjdM=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/hooks/use-components@0.0.10.tgz}
     dependencies:
       '@teambit/components.clients.components-node': 0.0.5(graphql@14.7.0)
-      '@teambit/components.descriptors.component-descriptor': 0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/graphql.hooks.use-query': 0.0.1(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/components.descriptors.component-descriptor': 0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/graphql.hooks.use-query': 0.0.1(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       react: 17.0.2
     transitivePeerDependencies:
       - '@apollo/client'
@@ -40446,14 +40446,14 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/components.hooks.use-components@0.0.11(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/components.hooks.use-components@0.0.11(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-mcBupurgV66olC1DdF9uh9enrk8=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/hooks/use-components@0.0.11.tgz}
     peerDependencies:
       react: 17.0.2
     dependencies:
       '@teambit/components.clients.components-node': 0.0.6(graphql@14.7.0)
-      '@teambit/components.descriptors.component-descriptor': 0.0.7(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/graphql.hooks.use-query': 0.0.1(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/components.descriptors.component-descriptor': 0.0.7(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/graphql.hooks.use-query': 0.0.1(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       react: 17.0.2
     transitivePeerDependencies:
       - '@apollo/client'
@@ -40462,14 +40462,14 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/components.hooks.use-list-components@0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/components.hooks.use-list-components@0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-rj+nJVVF4Wp2GAPOkzrVdAt5WKE=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/hooks/use-list-components@0.0.7.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/components.descriptors.component-descriptor': 0.0.14(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/components.hooks.use-component-count': 0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/graphql.hooks.use-query': 0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/components.descriptors.component-descriptor': 0.0.14(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/components.hooks.use-component-count': 0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/graphql.hooks.use-query': 0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       graphql-tag: 2.12.1(graphql@14.7.0)
       react: 17.0.2
@@ -40480,14 +40480,14 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/defender.content.formatter-overview@1.96.1(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/defender.content.formatter-overview@1.96.1(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-r+8A4YQj5e9uNgpqwFhEVQ4UpoA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.defender/content/formatter-overview@1.96.1.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/components.blocks.component-card-display': 0.0.24(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/components.blocks.component-card-display': 0.0.24(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       react: 17.0.2
     transitivePeerDependencies:
       - '@apollo/client'
@@ -40497,14 +40497,14 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/defender.content.linter-overview@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/defender.content.linter-overview@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-OLOF3LYo6/kauWREJuGF2zgBcls=, tarball: https://node-registry.bit.cloud/tarballs/teambit.defender/content/linter-overview@1.95.0.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -40512,14 +40512,14 @@ packages:
       - '@teambit/legacy'
     dev: true
 
-  /@teambit/defender.content.tester-overview@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/defender.content.tester-overview@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-rvAmFD+lPqi22iBo4cK1XoOEbsY=, tarball: https://node-registry.bit.cloud/tarballs/teambit.defender/content/tester-overview@1.95.0.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -41642,12 +41642,12 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/docs.content.docs-overview@1.95.9(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/docs.content.docs-overview@1.95.9(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-mqOj1yh81O1VADkasU8jPw03Hag=, tarball: https://node-registry.bit.cloud/tarballs/teambit.docs/content/docs-overview@1.95.9.tgz}
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/docs.ui.zoomable-image': 1.95.8(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
     transitivePeerDependencies:
       - '@teambit/legacy'
       - react
@@ -42314,12 +42314,12 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/explorer.plugins.env-plugin@0.0.10(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/explorer.plugins.env-plugin@0.0.10(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-onlzjTM5EWSUXIxKh4GogjzLEDE=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/plugins/env-plugin@0.0.10.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/component-descriptor': 0.0.12(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-descriptor': 0.0.12(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
     transitivePeerDependencies:
@@ -42327,12 +42327,12 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/explorer.plugins.env-plugin@0.0.13(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/explorer.plugins.env-plugin@0.0.13(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-C1OuYM2sDr31NrxpBce2W8bIQgI=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/plugins/env-plugin@0.0.13.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/component-descriptor': 0.0.18(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-descriptor': 0.0.18(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
     transitivePeerDependencies:
@@ -42340,12 +42340,12 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/explorer.plugins.preview-plugin@0.0.4(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/explorer.plugins.preview-plugin@0.0.4(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-z82y2WLvhzNkdIGKWx0u+UZgeZk=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/plugins/preview-plugin@0.0.4.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/component-descriptor': 0.0.12(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-descriptor': 0.0.12(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.3.1
       core-js: 3.13.0
       react: 17.0.2
@@ -42354,14 +42354,14 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/explorer.plugins.preview-plugin@0.0.9(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/explorer.plugins.preview-plugin@0.0.9(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-ZIn30mCzb51Upzs9EKsOpS5QaCk=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/plugins/preview-plugin@0.0.9.tgz}
     peerDependencies:
       '@testing-library/react': 12.1.3
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/component-descriptor': 0.0.46(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-descriptor': 0.0.46(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.3.1
       core-js: 3.13.0
@@ -42419,15 +42419,15 @@ packages:
       use-optionally-controlled-state: 1.2.0(react-dom@17.0.2)(react@17.0.2)
     dev: false
 
-  /@teambit/explorer.ui.component-card-grid@0.0.12(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/explorer.ui.component-card-grid@0.0.12(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-grBJIntxQFpGC4y6j4qt5iZ/MO4=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/ui/component-card-grid@0.0.12.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/component-descriptor': 0.0.12(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-descriptor': 0.0.12(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.401
-      '@teambit/explorer.ui.component-card': 0.0.11(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/explorer.ui.gallery.component-grid': 0.0.484(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.ui.component-card': 0.0.11(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.ui.gallery.component-grid': 0.0.484(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
     transitivePeerDependencies:
@@ -42436,15 +42436,15 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/explorer.ui.component-card-grid@0.0.15(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/explorer.ui.component-card-grid@0.0.15(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-nw+ae8xtNXYeGHCfeGh/7kjMHpc=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/ui/component-card-grid@0.0.15.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/component-descriptor': 0.0.18(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-descriptor': 0.0.18(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.401
-      '@teambit/explorer.ui.component-card': 0.0.14(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/explorer.ui.gallery.component-grid': 0.0.484(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.ui.component-card': 0.0.14(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/explorer.ui.gallery.component-grid': 0.0.484(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
     transitivePeerDependencies:
@@ -42453,13 +42453,13 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/explorer.ui.component-card@0.0.11(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/explorer.ui.component-card@0.0.11(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-MRJol4wIkIWOmlc1++quY0UmjCU=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/ui/component-card@0.0.11.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-react.navigation.link': 1.23.0(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-descriptor': 0.0.12(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-descriptor': 0.0.12(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.401
       '@teambit/design.ui.styles.ellipsis': 0.0.346(react-dom@17.0.2)(react@17.0.2)
       '@teambit/docs.entities.doc': 0.0.2
@@ -42474,13 +42474,13 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/explorer.ui.component-card@0.0.14(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/explorer.ui.component-card@0.0.14(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-NXxynFuK+QaIgLiPjuVV9PpH1uY=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/ui/component-card@0.0.14.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-react.navigation.link': 1.23.0(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-descriptor': 0.0.18(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-descriptor': 0.0.18(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.401
       '@teambit/design.ui.styles.ellipsis': 0.0.346(react-dom@17.0.2)(react@17.0.2)
       '@teambit/docs.entities.doc': 0.0.2
@@ -42588,7 +42588,7 @@ packages:
       - '@types/react'
     dev: false
 
-  /@teambit/explorer.ui.gallery.component-grid@0.0.484(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/explorer.ui.gallery.component-grid@0.0.484(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-1JJr4vIMX4zfPor98vVev8V5g/c=, tarball: https://node-registry.bit.cloud/@teambit/explorer.ui.gallery.component-grid/-/@teambit-explorer.ui.gallery.component-grid-0.0.484.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -42596,7 +42596,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -42698,7 +42698,7 @@ packages:
       - encoding
     dev: false
 
-  /@teambit/graphql.hooks.use-query@0.0.1(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/graphql.hooks.use-query@0.0.1(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-SrTB4E64Ycrvmb/n+SgPPNIdYN8=, tarball: https://node-registry.bit.cloud/tarballs/teambit.graphql/hooks/use-query@0.0.1.tgz}
     peerDependencies:
       '@apollo/client': 3.3.7
@@ -42706,7 +42706,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@apollo/client': 3.6.9(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@teambit/ui-foundation.ui.global-loader': 0.0.474(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.global-loader': 0.0.474(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -42714,7 +42714,7 @@ packages:
       - '@teambit/legacy'
     dev: true
 
-  /@teambit/graphql.hooks.use-query@0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/graphql.hooks.use-query@0.0.7(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-OIQYQIPSBBqKXo2ZLc9bzu4P904=, tarball: https://node-registry.bit.cloud/tarballs/teambit.graphql/hooks/use-query@0.0.7.tgz}
     peerDependencies:
       '@apollo/client': 3.3.7
@@ -42722,7 +42722,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@apollo/client': 3.6.9(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@teambit/ui-foundation.ui.global-loader': 0.0.474(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.global-loader': 0.0.474(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -42772,25 +42772,25 @@ packages:
       '@teambit/html.modules.create-element-from-string': 0.0.104
     dev: false
 
-  /@teambit/lane-id@0.0.204(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy):
+  /@teambit/lane-id@0.0.204(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy):
     resolution: {integrity: sha512-XTjG34wnKZmFSxyTcgGm/IpLJVmF4euUjklwiaIPLFvPYbMsKSIzlpeQIHeY9WbyyLCuXFWNYUPIquhAYxeqZg==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@teambit/legacy': 1.0.467
     dependencies:
       '@teambit/bit-error': 0.0.402
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
     dev: false
 
-  /@teambit/lanes.hooks.use-lane-components@0.0.149(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/lanes.hooks.use-lane-components@0.0.149(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-QnNvne623/kMU2CO4PdxzQk1JKo=, tarball: https://node-registry.bit.cloud/@teambit/lanes.hooks.use-lane-components/-/@teambit-lanes.hooks.use-lane-components-0.0.149.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@apollo/client': ^3.6.0
     dependencies:
       '@apollo/client': 3.6.9(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@teambit/lane-id': 0.0.204(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)
-      '@teambit/lanes.ui.models.lanes-model': 0.0.112(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lane-id': 0.0.204(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)
+      '@teambit/lanes.ui.models.lanes-model': 0.0.112(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-data-query': 0.0.500(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
     transitivePeerDependencies:
       - '@teambit/legacy'
@@ -42798,15 +42798,15 @@ packages:
       - react-dom
     dev: false
 
-  /@teambit/lanes.hooks.use-lane-readme@0.0.149(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/lanes.hooks.use-lane-readme@0.0.149(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-RKSkeINQXYiw5iJ+WRsQjqt0OqM=, tarball: https://node-registry.bit.cloud/@teambit/lanes.hooks.use-lane-readme/-/teambit-lanes.hooks.use-lane-readme-0.0.149.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@apollo/client': ^3.6.0
     dependencies:
       '@apollo/client': 3.6.9(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@teambit/lane-id': 0.0.204(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)
-      '@teambit/lanes.ui.models.lanes-model': 0.0.112(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lane-id': 0.0.204(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)
+      '@teambit/lanes.ui.models.lanes-model': 0.0.112(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-data-query': 0.0.500(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
     transitivePeerDependencies:
       - '@teambit/legacy'
@@ -42814,7 +42814,7 @@ packages:
       - react-dom
     dev: false
 
-  /@teambit/lanes.hooks.use-lanes@0.0.150(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/lanes.hooks.use-lanes@0.0.150(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-uE0g2+AYjmmO3bOuNdBrVBDfSOw=, tarball: https://node-registry.bit.cloud/@teambit/lanes.hooks.use-lanes/-/teambit-lanes.hooks.use-lanes-0.0.150.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -42824,8 +42824,8 @@ packages:
     dependencies:
       '@apollo/client': 3.6.9(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lane-id': 0.0.204(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)
-      '@teambit/lanes.ui.models.lanes-model': 0.0.112(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lane-id': 0.0.204(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)
+      '@teambit/lanes.ui.models.lanes-model': 0.0.112(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-data-query': 0.0.500(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.496(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
@@ -42837,7 +42837,7 @@ packages:
       - '@types/react'
     dev: false
 
-  /@teambit/lanes.hooks.use-lanes@0.0.38(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/lanes.hooks.use-lanes@0.0.38(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-VAc8cwDyJeOiQcjhaQbwQYT+/0o=, tarball: https://node-registry.bit.cloud/@teambit/lanes.hooks.use-lanes/-/teambit-lanes.hooks.use-lanes-0.0.38.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -42846,8 +42846,8 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@apollo/client': 3.6.9(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@teambit/lanes.ui.models': 0.0.36(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/scope.ui.hooks.use-scope': 0.0.240(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.models': 0.0.36(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/scope.ui.hooks.use-scope': 0.0.240(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-data-query': 0.0.496(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
@@ -42856,7 +42856,7 @@ packages:
       - '@teambit/legacy'
     dev: false
 
-  /@teambit/lanes.ui.drawer@0.0.37(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/lanes.ui.drawer@0.0.37(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-WwUn89Kmbuz1EDpJYn/Tf9sIK5U=, tarball: https://node-registry.bit.cloud/@teambit/lanes.ui.drawer/-/teambit-lanes.ui.drawer-0.0.37.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -42872,10 +42872,10 @@ packages:
       '@teambit/design.ui.styles.muted-italic': 0.0.41(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tree': 0.0.12(react-dom@17.0.2)(react@17.0.2)
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.hooks.use-lanes': 0.0.38(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.models': 0.0.36(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.hooks.use-lanes': 0.0.38(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.models': 0.0.36(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.full-loader': 0.0.492(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/ui-foundation.ui.side-bar': 0.0.649(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/ui-foundation.ui.side-bar': 0.0.649(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.drawer': 0.0.505(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -42888,7 +42888,7 @@ packages:
       - '@types/react'
     dev: false
 
-  /@teambit/lanes.ui.lane-details@0.0.109(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/lanes.ui.lane-details@0.0.109(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-GQDoQzmLDF00KviTRMKBX1iFfBc=, tarball: https://node-registry.bit.cloud/@teambit/lanes.ui.lane-details/-/teambit-lanes.ui.lane-details-0.0.109.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -42897,7 +42897,7 @@ packages:
     dependencies:
       '@teambit/component.ui.badges.component-count': 0.0.10(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.sub-title': registry.npmjs.org/@teambit/documenter.ui.sub-title@4.1.1(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lane-id': 0.0.204(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)
+      '@teambit/lane-id': 0.0.204(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)
       '@teambit/scope.ui.scope-title': 0.0.508(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -42908,7 +42908,7 @@ packages:
       - '@testing-library/react'
     dev: false
 
-  /@teambit/lanes.ui.lane-overview@0.0.113(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+  /@teambit/lanes.ui.lane-overview@0.0.113(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
     resolution: {integrity: sha1-fzSebCVkXOz7sR1ky8DK3Hbw8gw=, tarball: https://node-registry.bit.cloud/@teambit/lanes.ui.lane-overview/-/teambit-lanes.ui.lane-overview-0.0.113.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -42917,10 +42917,10 @@ packages:
     dependencies:
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
-      '@teambit/lanes.hooks.use-lane-components': 0.0.149(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.hooks.use-lanes': 0.0.150(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.lane-details': 0.0.109(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.models.lanes-model': 0.0.112(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.hooks.use-lane-components': 0.0.149(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.hooks.use-lanes': 0.0.150(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.lane-details': 0.0.109(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.models.lanes-model': 0.0.112(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.empty-component-gallery': 0.0.502(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/workspace.ui.workspace-component-card': 0.0.510(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -42936,7 +42936,7 @@ packages:
       - react-router-dom
     dev: false
 
-  /@teambit/lanes.ui.lane-readme@0.0.116(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+  /@teambit/lanes.ui.lane-readme@0.0.116(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
     resolution: {integrity: sha1-JEGwWrr5eWvABOe4EwzRxBA/k5o=, tarball: https://node-registry.bit.cloud/@teambit/lanes.ui.lane-readme/-/teambit-lanes.ui.lane-readme-0.0.116.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -42945,11 +42945,11 @@ packages:
       react-router-dom: ^6.0.0
     dependencies:
       '@teambit/explorer.ui.gallery.component-card': 0.0.507(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.hooks.use-lane-readme': 0.0.149(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.hooks.use-lanes': 0.0.150(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.lane-details': 0.0.109(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.lane-overview': 0.0.113(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      '@teambit/lanes.ui.models.lanes-model': 0.0.112(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.hooks.use-lane-readme': 0.0.149(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.hooks.use-lanes': 0.0.150(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.lane-details': 0.0.109(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.lane-overview': 0.0.113(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/lanes.ui.models.lanes-model': 0.0.112(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/preview.ui.component-preview': 0.0.517(react-dom@17.0.2)(react@17.0.2)
       '@teambit/preview.ui.preview-placeholder': 0.0.496(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -42965,7 +42965,7 @@ packages:
       - '@types/react'
     dev: false
 
-  /@teambit/lanes.ui.lanes@0.0.116(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+  /@teambit/lanes.ui.lanes@0.0.116(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
     resolution: {integrity: sha1-WN3sGDeI+kgG3vDEd/OSxsPQRKc=, tarball: https://node-registry.bit.cloud/@teambit/lanes.ui.lanes/-/teambit-lanes.ui.lanes-0.0.116.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -42994,8 +42994,8 @@ packages:
       '@teambit/harmony': 0.3.3
       '@teambit/preview.ui.component-preview': 0.0.494(react-dom@17.0.2)(react@17.0.2)
       '@teambit/preview.ui.preview-placeholder': 0.0.487(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/scope.models.scope-model': 0.0.199(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/scope.ui.hooks.use-scope': 0.0.203(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/scope.models.scope-model': 0.0.199(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/scope.ui.hooks.use-scope': 0.0.203(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/scope.ui.scope-title': 0.0.495(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.empty-component-gallery': 0.0.492(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.full-loader': 0.0.486(react-dom@17.0.2)(react@17.0.2)
@@ -43003,7 +43003,7 @@ packages:
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.487(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.menu': 0.0.487(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.slot-router': 0.0.490(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      '@teambit/ui-foundation.ui.side-bar': 0.0.613(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/ui-foundation.ui.side-bar': 0.0.613(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/ui-foundation.ui.tree.drawer': 0.0.499(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.bottom-link': 0.0.104(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.dropdown': 0.0.116(react-dom@17.0.2)(react@17.0.2)
@@ -43022,7 +43022,7 @@ packages:
       - '@types/react'
     dev: false
 
-  /@teambit/lanes.ui.menus@0.0.36(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+  /@teambit/lanes.ui.menus@0.0.36(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
     resolution: {integrity: sha1-a3nLuMEgJFzVxVG9k09sWykZHog=, tarball: https://node-registry.bit.cloud/@teambit/lanes.ui.menus/-/teambit-lanes.ui.menus-0.0.36.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -43035,7 +43035,7 @@ packages:
       '@teambit/documenter.ui.copy-box': registry.npmjs.org/@teambit/documenter.ui.copy-box@4.0.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.3.3
-      '@teambit/lanes.ui.models': 0.0.36(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.models': 0.0.36(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.493(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.menu': 0.0.493(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.use-box.bottom-link': 0.0.110(react-dom@17.0.2)(react@17.0.2)
@@ -43053,7 +43053,7 @@ packages:
       - '@types/react'
     dev: false
 
-  /@teambit/lanes.ui.models.lanes-model@0.0.112(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/lanes.ui.models.lanes-model@0.0.112(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-2Ogukm35n+YDM3SlwD8MSQWmaLM=, tarball: https://node-registry.bit.cloud/@teambit/lanes.ui.models.lanes-model/-/teambit-lanes.ui.models.lanes-model-0.0.112.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -43062,7 +43062,7 @@ packages:
     dependencies:
       '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.427
-      '@teambit/lane-id': 0.0.204(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)
+      '@teambit/lane-id': 0.0.204(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)
       core-js: 3.13.0
       path-to-regexp: 6.2.0
       react: 17.0.2
@@ -43071,7 +43071,7 @@ packages:
       - '@teambit/legacy'
     dev: false
 
-  /@teambit/lanes.ui.models@0.0.36(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/lanes.ui.models@0.0.36(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-W4YrdKa3aLz+Kli79jTaBVVyU+c=, tarball: https://node-registry.bit.cloud/@teambit/lanes.ui.models/-/teambit-lanes.ui.models-0.0.36.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -43080,7 +43080,7 @@ packages:
     dependencies:
       '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.417
-      '@teambit/scope.models.scope-model': 0.0.235(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/scope.models.scope-model': 0.0.235(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       path-to-regexp: 6.2.0
       react: 17.0.2
@@ -43089,7 +43089,7 @@ packages:
       - '@teambit/legacy'
     dev: false
 
-  /@teambit/lanes.ui.viewed-lane@0.0.37(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/lanes.ui.viewed-lane@0.0.37(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-Jf6uIOO5As4EcHtoPwPqmiyX1s4=, tarball: https://node-registry.bit.cloud/@teambit/lanes.ui.viewed-lane/-/teambit-lanes.ui.viewed-lane-0.0.37.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -43097,8 +43097,8 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.hooks.use-lanes': 0.0.38(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.models': 0.0.36(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.hooks.use-lanes': 0.0.38(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.models': 0.0.36(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -43109,15 +43109,15 @@ packages:
       - '@types/react'
     dev: false
 
-  /@teambit/legacy-bit-id@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/legacy-bit-id@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-7vt07radnL9dcdzVfD1Rr8pfKc4I30Rv9H6wnu6hnGLHdqzmzUkovAM6Fg6Bzw53w4OrdbPUWuH+aaUGReT33A==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@teambit/legacy': 1.0.76
     dependencies:
-      '@teambit/bit-error': 0.0.365(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-version': 0.0.366(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
+      '@teambit/bit-error': 0.0.365(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-version': 0.0.366(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
       decamelize: 1.2.0
       lodash: 4.17.21
       semver: 7.3.4
@@ -43212,12 +43212,12 @@ packages:
     resolution: {integrity: sha1-UTUJiakxdUY1KZKMoaxTLTrRap8=, tarball: https://node-registry.bit.cloud/@teambit/node.deps-detectors.parser-helper/-/teambit-node.deps-detectors.parser-helper-0.0.0-1ca3300f0fe89cba790beb930903095053a2a24a.tgz}
     dev: false
 
-  /@teambit/pkg.content.packages-overview@1.95.9(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/pkg.content.packages-overview@1.95.9(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-zWayNWQaoC66R1elFFytwR1vaLQ=, tarball: https://node-registry.bit.cloud/tarballs/teambit.pkg/content/packages-overview@1.95.9.tgz}
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/components.blocks.component-card-display': 0.0.13(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/components.blocks.component-card-display': 0.0.13(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
     transitivePeerDependencies:
       - '@apollo/client'
       - '@teambit/legacy'
@@ -43282,14 +43282,14 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/react.content.react-overview@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/react.content.react-overview@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-pZxx1yJoIMPKGrX/0P+nNCzkDOQ=, tarball: https://node-registry.bit.cloud/tarballs/teambit.react/content/react-overview@1.95.0.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -43297,14 +43297,14 @@ packages:
       - '@teambit/legacy'
     dev: true
 
-  /@teambit/react.instructions.react-native.adding-tests@0.0.1(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/react.instructions.react-native.adding-tests@0.0.1(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-Ej1pIaYbWdwLNUbsHMjEQQ/utnQ=, tarball: https://node-registry.bit.cloud/tarballs/teambit.react/instructions/react-native/adding-tests@0.0.1.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -43391,7 +43391,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/scope.content.scope-overview@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/scope.content.scope-overview@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-q6rTENX4D2/Cg2fabNBlj8miHdc=, tarball: https://node-registry.bit.cloud/tarballs/teambit.scope/content/scope-overview@1.95.0.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43399,7 +43399,7 @@ packages:
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/docs.ui.zoomable-image': 1.95.0(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -43407,11 +43407,11 @@ packages:
       - '@teambit/legacy'
     dev: true
 
-  /@teambit/scope.models.scope-model@0.0.199(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/scope.models.scope-model@0.0.199(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-uKcM8GxZ7PY7qjtrnglrcNdWOl8=, tarball: https://node-registry.bit.cloud/@teambit/scope.models.scope-model/-/teambit-scope.models.scope-model-0.0.199.tgz}
     engines: {node: '>=12.22.0'}
     dependencies:
-      '@teambit/component-descriptor': 0.0.110(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-descriptor': 0.0.110(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.405
     transitivePeerDependencies:
       - '@teambit/legacy'
@@ -43419,11 +43419,11 @@ packages:
       - react-dom
     dev: false
 
-  /@teambit/scope.models.scope-model@0.0.235(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/scope.models.scope-model@0.0.235(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-Ivlq0sF9GaNYn7ubwN/99AzJJLE=, tarball: https://node-registry.bit.cloud/@teambit/scope.models.scope-model/-/@teambit-scope.models.scope-model-0.0.235.tgz}
     engines: {node: '>=12.22.0'}
     dependencies:
-      '@teambit/component-descriptor': 0.0.146(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-descriptor': 0.0.146(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.417
     transitivePeerDependencies:
       - '@teambit/legacy'
@@ -43431,7 +43431,7 @@ packages:
       - react-dom
     dev: false
 
-  /@teambit/scope.ui.hooks.use-scope@0.0.203(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/scope.ui.hooks.use-scope@0.0.203(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-fe5QGB7RCxZZ8GGovNrm3KlMnsQ=, tarball: https://node-registry.bit.cloud/@teambit/scope.ui.hooks.use-scope/-/teambit-scope.ui.hooks.use-scope-0.0.203.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -43440,7 +43440,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@apollo/client': 3.6.9(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@teambit/scope.models.scope-model': 0.0.199(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/scope.models.scope-model': 0.0.199(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-data-query': 0.0.488(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
@@ -43449,7 +43449,7 @@ packages:
       - '@teambit/legacy'
     dev: false
 
-  /@teambit/scope.ui.hooks.use-scope@0.0.240(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/scope.ui.hooks.use-scope@0.0.240(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-ArQ+DdQNq/Aw2rjpUZcWpcveyck=, tarball: https://node-registry.bit.cloud/@teambit/scope.ui.hooks.use-scope/-/@teambit-scope.ui.hooks.use-scope-0.0.240.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -43458,7 +43458,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@apollo/client': 3.6.9(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@teambit/scope.models.scope-model': 0.0.235(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/scope.models.scope-model': 0.0.235(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.hooks.use-data-query': 0.0.496(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
@@ -43764,7 +43764,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
       vscode-icons-js: 11.0.0
 
-  /@teambit/ui-foundation.ui.global-loader@0.0.474(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/ui-foundation.ui.global-loader@0.0.474(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-7X0x1qLPQV7ySEUh5Rs1iXt+AX4=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.474.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -43772,7 +43772,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -44168,7 +44168,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@teambit/ui-foundation.ui.side-bar@0.0.613(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+  /@teambit/ui-foundation.ui.side-bar@0.0.613(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
     resolution: {integrity: sha1-8vs4qdsE5d7E5gOwpXlFYZ3/GPI=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.side-bar/-/teambit-ui-foundation.ui.side-bar-0.0.613.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -44187,7 +44187,7 @@ packages:
       '@teambit/design.ui.tree': 0.0.6(react-dom@17.0.2)(react@17.0.2)
       '@teambit/envs.ui.env-icon': 0.0.486(react-dom@17.0.2)(react@17.0.2)
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.lanes': 0.0.116(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/lanes.ui.lanes': 0.0.116(@apollo/client@3.6.9)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -44201,7 +44201,7 @@ packages:
       - react-router-dom
     dev: false
 
-  /@teambit/ui-foundation.ui.side-bar@0.0.649(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/ui-foundation.ui.side-bar@0.0.649(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-5VNC36o2vGNZ87v66MegcwO04gc=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.side-bar/-/teambit-ui-foundation.ui.side-bar-0.0.649.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -44220,7 +44220,7 @@ packages:
       '@teambit/design.ui.tree': 0.0.12(react-dom@17.0.2)(react@17.0.2)
       '@teambit/envs.ui.env-icon': 0.0.492(react-dom@17.0.2)(react@17.0.2)
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.models': 0.0.36(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/lanes.ui.models': 0.0.36(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -44368,18 +44368,18 @@ packages:
       url-parse: 1.5.3
     dev: true
 
-  /@teambit/workspace.content.variants@1.95.9(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/workspace.content.variants@1.95.9(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-YmooxPFjXZFNY3CxRrKZjmOYXF0=, tarball: https://node-registry.bit.cloud/tarballs/teambit.workspace/content/variants@1.95.9.tgz}
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
     transitivePeerDependencies:
       - '@teambit/legacy'
       - react
       - react-dom
     dev: true
 
-  /@teambit/workspace.content.workspace-overview@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  /@teambit/workspace.content.workspace-overview@1.95.0(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-x5h4JrPOVGs+OEGkH/thS8QhxhM=, tarball: https://node-registry.bit.cloud/tarballs/teambit.workspace/content/workspace-overview@1.95.0.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -44387,7 +44387,7 @@ packages:
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@teambit/docs.ui.zoomable-image': 1.95.0(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -66492,7 +66492,7 @@ packages:
     resolution: {directory: scopes/api-reference/api-reference, type: directory}
     id: file:scopes/api-reference/api-reference
     name: '@teambit/api-reference'
-    version: 0.0.187
+    version: 0.0.188
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67194,7 +67194,7 @@ packages:
     resolution: {directory: scopes/compilation/babel, type: directory}
     id: file:scopes/compilation/babel
     name: '@teambit/babel'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67217,7 +67217,7 @@ packages:
     resolution: {directory: scopes/compilation/bundler, type: directory}
     id: file:scopes/compilation/bundler
     name: '@teambit/bundler'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -67258,7 +67258,7 @@ packages:
     resolution: {directory: scopes/compilation/compiler, type: directory}
     id: file:scopes/compilation/compiler
     name: '@teambit/compiler'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67297,7 +67297,7 @@ packages:
     resolution: {directory: scopes/compilation/multi-compiler, type: directory}
     id: file:scopes/compilation/multi-compiler
     name: '@teambit/multi-compiler'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67326,17 +67326,17 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  file:scopes/component/changelog(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/component/changelog, type: directory}
     id: file:scopes/component/changelog
     name: '@teambit/changelog'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@teambit/component.instructions.exporting-components': registry.npmjs.org/@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component.instructions.exporting-components': registry.npmjs.org/@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.alert-card': 0.0.26(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.separator': 0.0.354(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.heading': registry.npmjs.org/@teambit/documenter.ui.heading@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -67353,7 +67353,7 @@ packages:
     resolution: {directory: scopes/component/checkout, type: directory}
     id: file:scopes/component/checkout
     name: '@teambit/checkout'
-    version: 0.0.250
+    version: 0.0.251
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67374,7 +67374,7 @@ packages:
     resolution: {directory: scopes/component/code, type: directory}
     id: file:scopes/component/code
     name: '@teambit/code'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67397,7 +67397,7 @@ packages:
     resolution: {directory: scopes/component/code, type: directory}
     id: file:scopes/component/code
     name: '@teambit/code'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67420,7 +67420,7 @@ packages:
     resolution: {directory: scopes/component/component, type: directory}
     id: file:scopes/component/component
     name: '@teambit/component'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -67467,7 +67467,7 @@ packages:
     resolution: {directory: scopes/component/component, type: directory}
     id: file:scopes/component/component
     name: '@teambit/component'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -67514,7 +67514,7 @@ packages:
     resolution: {directory: scopes/component/component-compare, type: directory}
     id: file:scopes/component/component-compare
     name: '@teambit/component-compare'
-    version: 0.0.329
+    version: 0.0.330
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67536,7 +67536,7 @@ packages:
     resolution: {directory: scopes/component/component-compare, type: directory}
     id: file:scopes/component/component-compare
     name: '@teambit/component-compare'
-    version: 0.0.329
+    version: 0.0.330
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67675,7 +67675,7 @@ packages:
     resolution: {directory: scopes/component/component-log, type: directory}
     id: file:scopes/component/component-log
     name: '@teambit/component-log'
-    version: 0.0.458
+    version: 0.0.459
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67705,7 +67705,7 @@ packages:
     resolution: {directory: scopes/component/component-sizer, type: directory}
     id: file:scopes/component/component-sizer
     name: '@teambit/component-sizer'
-    version: 0.0.454
+    version: 0.0.455
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67724,7 +67724,7 @@ packages:
     resolution: {directory: scopes/component/component-tree, type: directory}
     id: file:scopes/component/component-tree
     name: '@teambit/component-tree'
-    version: 0.0.869
+    version: 0.0.870
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67766,7 +67766,7 @@ packages:
     resolution: {directory: scopes/component/component-writer, type: directory}
     id: file:scopes/component/component-writer
     name: '@teambit/component-writer'
-    version: 0.0.117
+    version: 0.0.118
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67784,7 +67784,7 @@ packages:
     resolution: {directory: scopes/component/deprecation, type: directory}
     id: file:scopes/component/deprecation
     name: '@teambit/deprecation'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67805,7 +67805,7 @@ packages:
     resolution: {directory: scopes/component/dev-files, type: directory}
     id: file:scopes/component/dev-files
     name: '@teambit/dev-files'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67826,7 +67826,7 @@ packages:
     resolution: {directory: scopes/component/forking, type: directory}
     id: file:scopes/component/forking
     name: '@teambit/forking'
-    version: 0.0.485
+    version: 0.0.486
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67850,7 +67850,7 @@ packages:
     resolution: {directory: scopes/component/graph, type: directory}
     id: file:scopes/component/graph
     name: '@teambit/graph'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -67891,7 +67891,7 @@ packages:
     resolution: {directory: scopes/component/isolator, type: directory}
     id: file:scopes/component/isolator
     name: '@teambit/isolator'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67924,7 +67924,7 @@ packages:
     resolution: {directory: scopes/component/issues, type: directory}
     id: file:scopes/component/issues
     name: '@teambit/issues'
-    version: 0.0.389
+    version: 0.0.390
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67948,7 +67948,7 @@ packages:
     resolution: {directory: scopes/component/lister, type: directory}
     id: file:scopes/component/lister
     name: '@teambit/lister'
-    version: 0.0.317
+    version: 0.0.318
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67969,7 +67969,7 @@ packages:
     resolution: {directory: scopes/component/merging, type: directory}
     id: file:scopes/component/merging
     name: '@teambit/merging'
-    version: 0.0.396
+    version: 0.0.397
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -67992,7 +67992,7 @@ packages:
     resolution: {directory: scopes/component/mover, type: directory}
     id: file:scopes/component/mover
     name: '@teambit/mover'
-    version: 0.0.112
+    version: 0.0.113
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68011,7 +68011,7 @@ packages:
     resolution: {directory: scopes/component/new-component-helper, type: directory}
     id: file:scopes/component/new-component-helper
     name: '@teambit/new-component-helper'
-    version: 0.0.485
+    version: 0.0.486
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68030,7 +68030,7 @@ packages:
     resolution: {directory: scopes/component/refactoring, type: directory}
     id: file:scopes/component/refactoring
     name: '@teambit/refactoring'
-    version: 0.0.378
+    version: 0.0.379
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68050,7 +68050,7 @@ packages:
     resolution: {directory: scopes/component/remove, type: directory}
     id: file:scopes/component/remove
     name: '@teambit/remove'
-    version: 0.0.258
+    version: 0.0.259
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68074,7 +68074,7 @@ packages:
     resolution: {directory: scopes/component/renaming, type: directory}
     id: file:scopes/component/renaming
     name: '@teambit/renaming'
-    version: 0.0.485
+    version: 0.0.486
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68096,7 +68096,7 @@ packages:
     resolution: {directory: scopes/component/snapping, type: directory}
     id: file:scopes/component/snapping
     name: '@teambit/snapping'
-    version: 0.0.396
+    version: 0.0.397
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68127,7 +68127,7 @@ packages:
     resolution: {directory: scopes/component/stash, type: directory}
     id: file:scopes/component/stash
     name: '@teambit/stash'
-    version: 0.0.19
+    version: 0.0.20
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68148,7 +68148,7 @@ packages:
     resolution: {directory: scopes/component/status, type: directory}
     id: file:scopes/component/status
     name: '@teambit/status'
-    version: 0.0.393
+    version: 0.0.394
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68180,7 +68180,7 @@ packages:
     resolution: {directory: scopes/component/tracker, type: directory}
     id: file:scopes/component/tracker
     name: '@teambit/tracker'
-    version: 0.0.112
+    version: 0.0.113
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68608,7 +68608,7 @@ packages:
     resolution: {directory: scopes/compositions/compositions, type: directory}
     id: file:scopes/compositions/compositions
     name: '@teambit/compositions'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68649,7 +68649,7 @@ packages:
     resolution: {directory: scopes/compositions/compositions, type: directory}
     id: file:scopes/compositions/compositions
     name: '@teambit/compositions'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68834,7 +68834,7 @@ packages:
     resolution: {directory: scopes/defender/eslint, type: directory}
     id: file:scopes/defender/eslint
     name: '@teambit/eslint'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68868,7 +68868,7 @@ packages:
     resolution: {directory: scopes/defender/formatter, type: directory}
     id: file:scopes/defender/formatter
     name: '@teambit/formatter'
-    version: 0.0.632
+    version: 0.0.633
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68894,7 +68894,7 @@ packages:
     resolution: {directory: scopes/defender/jest, type: directory}
     id: file:scopes/defender/jest
     name: '@teambit/jest'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       jest: 27.5.1
       react: ^16.8.0 || ^17.0.0
@@ -68920,7 +68920,7 @@ packages:
     resolution: {directory: scopes/defender/linter, type: directory}
     id: file:scopes/defender/linter
     name: '@teambit/linter'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68946,7 +68946,7 @@ packages:
     resolution: {directory: scopes/defender/mocha, type: directory}
     id: file:scopes/defender/mocha
     name: '@teambit/mocha'
-    version: 0.0.418
+    version: 0.0.419
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68969,7 +68969,7 @@ packages:
     resolution: {directory: scopes/defender/multi-tester, type: directory}
     id: file:scopes/defender/multi-tester
     name: '@teambit/multi-tester'
-    version: 0.0.250
+    version: 0.0.251
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -68987,7 +68987,7 @@ packages:
     resolution: {directory: scopes/defender/prettier, type: directory}
     id: file:scopes/defender/prettier
     name: '@teambit/prettier'
-    version: 0.0.632
+    version: 0.0.633
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69015,7 +69015,7 @@ packages:
     resolution: {directory: scopes/defender/tester, type: directory}
     id: file:scopes/defender/tester
     name: '@teambit/tester'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69205,7 +69205,7 @@ packages:
     resolution: {directory: scopes/dependencies/dependencies, type: directory}
     id: file:scopes/dependencies/dependencies
     name: '@teambit/dependencies'
-    version: 0.0.274
+    version: 0.0.275
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69228,7 +69228,7 @@ packages:
     resolution: {directory: scopes/dependencies/dependency-resolver, type: directory}
     id: file:scopes/dependencies/dependency-resolver
     name: '@teambit/dependency-resolver'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69293,7 +69293,7 @@ packages:
     resolution: {directory: scopes/dependencies/pnpm, type: directory}
     id: file:scopes/dependencies/pnpm
     name: '@teambit/pnpm'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69336,7 +69336,7 @@ packages:
     resolution: {directory: scopes/dependencies/yarn, type: directory}
     id: file:scopes/dependencies/yarn
     name: '@teambit/yarn'
-    version: 0.0.1082
+    version: 0.0.1083
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69371,7 +69371,7 @@ packages:
     resolution: {directory: scopes/docs/docs, type: directory}
     id: file:scopes/docs/docs
     name: '@teambit/docs'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69458,7 +69458,7 @@ packages:
     resolution: {directory: scopes/envs/env, type: directory}
     id: file:scopes/envs/env
     name: '@teambit/env'
-    version: 0.0.454
+    version: 0.0.455
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69474,7 +69474,7 @@ packages:
     resolution: {directory: scopes/envs/envs, type: directory}
     id: file:scopes/envs/envs
     name: '@teambit/envs'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69517,7 +69517,7 @@ packages:
     resolution: {directory: scopes/explorer/command-bar, type: directory}
     id: file:scopes/explorer/command-bar
     name: '@teambit/command-bar'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69542,7 +69542,7 @@ packages:
     resolution: {directory: scopes/explorer/command-bar, type: directory}
     id: file:scopes/explorer/command-bar
     name: '@teambit/command-bar'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69567,7 +69567,7 @@ packages:
     resolution: {directory: scopes/explorer/insights, type: directory}
     id: file:scopes/explorer/insights
     name: '@teambit/insights'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69622,7 +69622,7 @@ packages:
     resolution: {directory: scopes/generator/generator, type: directory}
     id: file:scopes/generator/generator
     name: '@teambit/generator'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69649,7 +69649,7 @@ packages:
     resolution: {directory: scopes/harmony/api-server, type: directory}
     id: file:scopes/harmony/api-server
     name: '@teambit/api-server'
-    version: 0.0.93
+    version: 0.0.94
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69666,7 +69666,7 @@ packages:
     resolution: {directory: scopes/harmony/application, type: directory}
     id: file:scopes/harmony/application
     name: '@teambit/application'
-    version: 0.0.723
+    version: 0.0.724
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69691,7 +69691,7 @@ packages:
     resolution: {directory: scopes/harmony/aspect, type: directory}
     id: file:scopes/harmony/aspect
     name: '@teambit/aspect'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69760,7 +69760,7 @@ packages:
     resolution: {directory: scopes/harmony/aspect-loader, type: directory}
     id: file:scopes/harmony/aspect-loader
     name: '@teambit/aspect-loader'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69783,7 +69783,7 @@ packages:
     resolution: {directory: scopes/harmony/bit, type: directory}
     id: file:scopes/harmony/bit
     name: '@teambit/bit'
-    version: 0.1.68
+    version: 0.1.69
     dependencies:
       '@apollo/client': 3.6.9(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.11.0)
       '@babel/runtime': 7.20.0
@@ -69818,7 +69818,7 @@ packages:
     resolution: {directory: scopes/harmony/bit, type: directory}
     id: file:scopes/harmony/bit
     name: '@teambit/bit'
-    version: 0.1.68
+    version: 0.1.69
     dependencies:
       '@apollo/client': 3.6.9(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       '@babel/runtime': 7.20.0
@@ -69853,7 +69853,7 @@ packages:
     resolution: {directory: scopes/harmony/bit-custom-aspect, type: directory}
     id: file:scopes/harmony/bit-custom-aspect
     name: '@teambit/bit-custom-aspect'
-    version: 0.0.418
+    version: 0.0.419
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -69958,7 +69958,7 @@ packages:
     resolution: {directory: scopes/harmony/diagnostic, type: directory}
     id: file:scopes/harmony/diagnostic
     name: '@teambit/diagnostic'
-    version: 0.0.374
+    version: 0.0.375
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -70017,7 +70017,7 @@ packages:
     resolution: {directory: scopes/harmony/graphql, type: directory}
     id: file:scopes/harmony/graphql
     name: '@teambit/graphql'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       '@apollo/client': ^3.6.0
       graphql: 14.7.0
@@ -70094,7 +70094,7 @@ packages:
     resolution: {directory: scopes/harmony/node, type: directory}
     id: file:scopes/harmony/node
     name: '@teambit/node'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -70114,7 +70114,7 @@ packages:
     resolution: {directory: scopes/harmony/pubsub, type: directory}
     id: file:scopes/harmony/pubsub
     name: '@teambit/pubsub'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -70193,7 +70193,7 @@ packages:
     resolution: {directory: scopes/html/html, type: directory}
     id: file:scopes/html/html
     name: '@teambit/html'
-    version: 0.0.649
+    version: 0.0.650
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -70304,7 +70304,7 @@ packages:
     resolution: {directory: scopes/lanes/lanes, type: directory}
     id: file:scopes/lanes/lanes
     name: '@teambit/lanes'
-    version: 0.0.653
+    version: 0.0.654
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -70336,7 +70336,7 @@ packages:
     resolution: {directory: scopes/lanes/lanes, type: directory}
     id: file:scopes/lanes/lanes
     name: '@teambit/lanes'
-    version: 0.0.653
+    version: 0.0.654
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -70368,7 +70368,7 @@ packages:
     resolution: {directory: scopes/lanes/merge-lanes, type: directory}
     id: file:scopes/lanes/merge-lanes
     name: '@teambit/merge-lanes'
-    version: 0.0.258
+    version: 0.0.259
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -70407,7 +70407,7 @@ packages:
     resolution: {directory: scopes/mdx/mdx, type: directory}
     id: file:scopes/mdx/mdx
     name: '@teambit/mdx'
-    version: 0.0.1061
+    version: 0.0.1062
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -70469,7 +70469,7 @@ packages:
     resolution: {directory: scopes/mdx/readme, type: directory}
     id: file:scopes/mdx/readme
     name: '@teambit/readme'
-    version: 0.0.365
+    version: 0.0.366
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -70557,7 +70557,7 @@ packages:
     resolution: {directory: scopes/pipelines/builder, type: directory}
     id: file:scopes/pipelines/builder
     name: '@teambit/builder'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -70633,7 +70633,7 @@ packages:
     resolution: {directory: scopes/pkg/pkg, type: directory}
     id: file:scopes/pkg/pkg
     name: '@teambit/pkg'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -70704,7 +70704,7 @@ packages:
     resolution: {directory: scopes/preview/preview, type: directory}
     id: file:scopes/preview/preview
     name: '@teambit/preview'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -70863,11 +70863,11 @@ packages:
       - utf-8-validate
     dev: false
 
-  file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
+  file:scopes/react/react(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
     resolution: {directory: scopes/react/react, type: directory}
     id: file:scopes/react/react
     name: '@teambit/react'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -70893,8 +70893,8 @@ packages:
       '@teambit/design.ui.input.option-button': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
-      '@teambit/react.instructions.react.adding-compositions': registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/react.instructions.react.adding-tests': registry.npmjs.org/@teambit/react.instructions.react.adding-tests@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/react.instructions.react.adding-compositions': registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/react.instructions.react.adding-tests': registry.npmjs.org/@teambit/react.instructions.react.adding-tests@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.rendering.ssr': 0.0.3(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/jest-dom': 5.16.2
       '@typescript-eslint/eslint-plugin': 5.35.1(@typescript-eslint/parser@5.35.1)(eslint@7.32.0)(typescript@4.7.4)
@@ -70990,7 +70990,7 @@ packages:
     resolution: {directory: scopes/react/react-elements, type: directory}
     id: file:scopes/react/react-elements
     name: '@teambit/react-elements'
-    version: 0.0.534
+    version: 0.0.535
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -71044,11 +71044,11 @@ packages:
       - webpack-cli
     dev: false
 
-  file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2):
+  file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2):
     resolution: {directory: scopes/react/react-native, type: directory}
     id: file:scopes/react/react-native
     name: '@teambit/react-native'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -71059,8 +71059,8 @@ packages:
       '@babel/preset-react': 7.13.13(@babel/core@7.19.6)
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
-      '@teambit/react.instructions.react-native.adding-tests': 0.0.1(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/react.instructions.react.adding-compositions': registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/react.instructions.react-native.adding-tests': 0.0.1(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/react.instructions.react.adding-compositions': registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/jest-native': 4.0.4
       comment-json: 3.0.3
       core-js: 3.13.0
@@ -71248,7 +71248,7 @@ packages:
     resolution: {directory: scopes/scope/export, type: directory}
     id: file:scopes/scope/export
     name: '@teambit/export'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -71268,7 +71268,7 @@ packages:
     resolution: {directory: scopes/scope/importer, type: directory}
     id: file:scopes/scope/importer
     name: '@teambit/importer'
-    version: 0.0.510
+    version: 0.0.511
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -71297,7 +71297,7 @@ packages:
     resolution: {directory: scopes/scope/scope, type: directory}
     id: file:scopes/scope/scope
     name: '@teambit/scope'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -71338,7 +71338,7 @@ packages:
     resolution: {directory: scopes/scope/scope, type: directory}
     id: file:scopes/scope/scope
     name: '@teambit/scope'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -71379,7 +71379,7 @@ packages:
     resolution: {directory: scopes/scope/sign, type: directory}
     id: file:scopes/scope/sign
     name: '@teambit/sign'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -71498,7 +71498,7 @@ packages:
     resolution: {directory: scopes/scope/update-dependencies, type: directory}
     id: file:scopes/scope/update-dependencies
     name: '@teambit/update-dependencies'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -71529,7 +71529,7 @@ packages:
     resolution: {directory: scopes/semantics/schema, type: directory}
     id: file:scopes/semantics/schema
     name: '@teambit/schema'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -71721,7 +71721,7 @@ packages:
     resolution: {directory: scopes/typescript/typescript, type: directory}
     id: file:scopes/typescript/typescript
     name: '@teambit/typescript'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -71837,7 +71837,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/harmony-ui-app/harmony-ui-app, type: directory}
     id: file:scopes/ui-foundation/harmony-ui-app/harmony-ui-app
     name: '@teambit/harmony-ui-app'
-    version: 0.0.723
+    version: 0.0.724
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -71887,7 +71887,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/notifications/aspect, type: directory}
     id: file:scopes/ui-foundation/notifications/aspect
     name: '@teambit/notifications'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -71991,7 +71991,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/react-router/react-router, type: directory}
     id: file:scopes/ui-foundation/react-router/react-router
     name: '@teambit/react-router'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -72014,7 +72014,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/react-router/react-router, type: directory}
     id: file:scopes/ui-foundation/react-router/react-router
     name: '@teambit/react-router'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -72099,7 +72099,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/sidebar, type: directory}
     id: file:scopes/ui-foundation/sidebar
     name: '@teambit/sidebar'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -72200,7 +72200,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/ui, type: directory}
     id: file:scopes/ui-foundation/ui
     name: '@teambit/ui'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -72288,7 +72288,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/ui, type: directory}
     id: file:scopes/ui-foundation/ui
     name: '@teambit/ui'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -72817,7 +72817,7 @@ packages:
     resolution: {directory: scopes/ui-foundation/user-agent, type: directory}
     id: file:scopes/ui-foundation/user-agent
     name: '@teambit/user-agent'
-    version: 0.0.767
+    version: 0.0.768
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -72834,7 +72834,7 @@ packages:
     resolution: {directory: scopes/web-components/elements, type: directory}
     id: file:scopes/web-components/elements
     name: '@teambit/elements'
-    version: 0.0.534
+    version: 0.0.535
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -72921,7 +72921,7 @@ packages:
     resolution: {directory: scopes/webpack/webpack, type: directory}
     id: file:scopes/webpack/webpack
     name: '@teambit/webpack'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -73032,7 +73032,7 @@ packages:
     resolution: {directory: scopes/workspace/eject, type: directory}
     id: file:scopes/workspace/eject
     name: '@teambit/eject'
-    version: 0.0.552
+    version: 0.0.553
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -73191,7 +73191,7 @@ packages:
     resolution: {directory: scopes/workspace/watcher, type: directory}
     id: file:scopes/workspace/watcher
     name: '@teambit/watcher'
-    version: 0.0.93
+    version: 0.0.94
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -73216,7 +73216,7 @@ packages:
     resolution: {directory: scopes/workspace/workspace, type: directory}
     id: file:scopes/workspace/workspace
     name: '@teambit/workspace'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -73265,7 +73265,7 @@ packages:
     resolution: {directory: scopes/workspace/workspace, type: directory}
     id: file:scopes/workspace/workspace
     name: '@teambit/workspace'
-    version: 0.0.1081
+    version: 0.0.1082
     peerDependencies:
       '@apollo/client': ^3.6.0
       react: ^16.8.0 || ^17.0.0
@@ -73314,7 +73314,7 @@ packages:
     resolution: {directory: scopes/workspace/workspace-config-files, type: directory}
     id: file:scopes/workspace/workspace-config-files
     name: '@teambit/workspace-config-files'
-    version: 0.0.61
+    version: 0.0.62
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -74845,7 +74845,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  registry.npmjs.org/@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  registry.npmjs.org/@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-ku7UpvjuRW6hu5Uz01g0tBa6hgArnF2WpgotayCe5LL2GBoNs0KTGRPoa16zFVtqmt21eWxIKrZZq4TvL1ZsoQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/component.instructions.exporting-components/-/component.instructions.exporting-components-0.0.6.tgz}
     id: registry.npmjs.org/@teambit/component.instructions.exporting-components/0.0.6
     name: '@teambit/component.instructions.exporting-components'
@@ -74855,7 +74855,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -75267,7 +75267,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-AoIdyGYo1JmN+3UCoyMJMYiI/CJ6P4x84TQFOJnqxrExxZgZbNx004df3cIsj92mljubGGGXTxd94loqon2G7w==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context/-/mdx.ui.mdx-scope-context-0.0.368.tgz}
     id: registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context/0.0.368
     name: '@teambit/mdx.ui.mdx-scope-context'
@@ -75278,12 +75278,12 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
 
-  registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-6GzCl0ZnmpfQ923yuCahI4mXZ8wSQCeF6D4+xtCq8tk+W5GHb12ZSlHBCD5xAZsc7i7VRUUZcTdhbc8L2RhMpg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/react.instructions.react.adding-compositions/-/react.instructions.react.adding-compositions-0.0.6.tgz}
     id: registry.npmjs.org/@teambit/react.instructions.react.adding-compositions/0.0.6
     name: '@teambit/react.instructions.react.adding-compositions'
@@ -75293,7 +75293,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -75301,7 +75301,7 @@ packages:
       - '@teambit/legacy'
     dev: false
 
-  registry.npmjs.org/@teambit/react.instructions.react.adding-tests@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  registry.npmjs.org/@teambit/react.instructions.react.adding-tests@0.0.6(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-OoNj8YPPc7I9a3TtUche2IdCHe2d/5hgZbjmZXWSPJVM69JCSzxhUNXaQRbiOuCI7m7+O2bBzMS4G2UboJ5Nmg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/react.instructions.react.adding-tests/-/react.instructions.react.adding-tests-0.0.6.tgz}
     id: registry.npmjs.org/@teambit/react.instructions.react.adding-tests/0.0.6
     name: '@teambit/react.instructions.react.adding-tests'
@@ -75311,7 +75311,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -75319,7 +75319,7 @@ packages:
       - '@teambit/legacy'
     dev: false
 
-  registry.npmjs.org/@teambit/toolbox.network.agent@0.0.116(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy):
+  registry.npmjs.org/@teambit/toolbox.network.agent@0.0.116(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy):
     resolution: {integrity: sha512-WYK7V5bs7S3djNjGepUhhrKcgESo7hULAUOa+6k000Z0QUaa6BfMqJ0X6aicMRJO7d8HD4wIcR0TEfc7Sa2S1Q==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/toolbox.network.agent/-/toolbox.network.agent-0.0.116.tgz}
     id: registry.npmjs.org/@teambit/toolbox.network.agent/0.0.116
     name: '@teambit/toolbox.network.agent'
@@ -75328,14 +75328,14 @@ packages:
     peerDependencies:
       '@teambit/legacy': 1.0.108
     dependencies:
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
-      '@teambit/toolbox.network.proxy-agent': registry.npmjs.org/@teambit/toolbox.network.proxy-agent@0.0.116(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
+      '@teambit/toolbox.network.proxy-agent': registry.npmjs.org/@teambit/toolbox.network.proxy-agent@0.0.116(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)
       agentkeepalive: 4.1.4
     transitivePeerDependencies:
       - supports-color
     dev: false
 
-  registry.npmjs.org/@teambit/toolbox.network.proxy-agent@0.0.116(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy):
+  registry.npmjs.org/@teambit/toolbox.network.proxy-agent@0.0.116(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy):
     resolution: {integrity: sha512-XFF8dwV7t0tLh/OtWArayE16/j020YA5nMwOLTeFeQEK9JuA+KK820cWTILyzysOel8Xt9tfvp6x/LLq/wE13w==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/toolbox.network.proxy-agent/-/toolbox.network.proxy-agent-0.0.116.tgz}
     id: registry.npmjs.org/@teambit/toolbox.network.proxy-agent/0.0.116
     name: '@teambit/toolbox.network.proxy-agent'
@@ -75344,8 +75344,8 @@ packages:
     peerDependencies:
       '@teambit/legacy': 1.0.108
     dependencies:
-      '@teambit/legacy': link:../../.bvm/versions/0.1.68/bit-0.1.68/node_modules/@teambit/legacy
-      '@teambit/toolbox.network.agent': registry.npmjs.org/@teambit/toolbox.network.agent@0.0.116(@teambit/legacy@..+.bvm+versions+0.1.68+bit-0.1.68+node_modules+@teambit+legacy)
+      '@teambit/legacy': link:../../.bvm/versions/0.1.69/bit-0.1.69/node_modules/@teambit/legacy
+      '@teambit/toolbox.network.agent': registry.npmjs.org/@teambit/toolbox.network.agent@0.0.116(@teambit/legacy@..+.bvm+versions+0.1.69+bit-0.1.69+node_modules+@teambit+legacy)
       http-proxy-agent: 4.0.1
       https-proxy-agent: 5.0.0
       socks-proxy-agent: 5.0.0
