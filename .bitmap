@@ -1347,6 +1347,12 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-view"
     },
+    "ui/command-bar": {
+        "scope": "teambit.explorer",
+        "version": "2.0.3",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/command-bar"
+    },
     "ui/compare/lane-compare": {
         "scope": "teambit.lanes",
         "version": "0.0.102",
