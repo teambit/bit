@@ -279,9 +279,7 @@ export class GeneratorMain {
   ): Promise<GenerateResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     await this.loadAspects();
-    const { namespace } = options;
-
-    const aspectId = options.aspect ?? options.env;
+    const { namespace, aspect: aspectId } = options;
 
     const componentConfigLoadingRegistry = ComponentConfig.componentConfigLoadingRegistry;
 

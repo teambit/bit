@@ -59,7 +59,13 @@ export class CreateCmd implements Command {
 
   constructor(private generator: GeneratorMain, private docsDomain: string) {}
 
-  async report([templateName, componentNames]: [string, string[]], options: CreateOptions) {
+  async report(
+    [templateName, componentNames]: [string, string[]],
+    options: CreateOptions & {
+      template?: string;
+    }
+  ) {
+    options.aspect = options.aspect ?? options.template;
     const results = await this.generator.generateComponentTemplate(componentNames, templateName, options);
     const title = `${results.length} component(s) were created`;
 
