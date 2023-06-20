@@ -319,9 +319,13 @@ export class CheckoutMain {
       if (reset) return component.id.version as string;
 
       if (headVersion) return componentModel.headIncludeRemote(repo);
-      if (latestVersion) return componentModel.latestVersion();
-      if (versionPerId)
+      if (latestVersion) {
+        const latest = componentModel.latestVersionIfExist();
+        return latest || componentModel.headIncludeRemote(repo);
+      }
+      if (versionPerId) {
         return versionPerId.find((id) => id._legacy.isEqualWithoutVersion(component.id))?.version as string;
+      }
 
       // @ts-ignore if !reset the version is defined
       return version;

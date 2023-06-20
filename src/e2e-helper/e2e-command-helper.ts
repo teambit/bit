@@ -638,6 +638,9 @@ export default class CommandHelper {
   checkoutHead(values = '') {
     return this.runCmd(`bit checkout head ${values}`);
   }
+  checkoutLatest(values = '') {
+    return this.runCmd(`bit checkout latest ${values}`);
+  }
   checkoutReset(values = '') {
     return this.runCmd(`bit checkout reset ${values}`);
   }
