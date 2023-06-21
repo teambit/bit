@@ -101,7 +101,7 @@ export class ComponentGenerator {
     const nameCamelCase = camelcase(name);
     const aspectId = ComponentID.fromString(this.aspectId);
 
-    const files = this.template.generateFiles({
+    const files = await this.template.generateFiles({
       name,
       namePascalCase,
       nameCamelCase,
