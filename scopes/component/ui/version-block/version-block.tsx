@@ -39,26 +39,35 @@ export function VersionBlock({ isLatest, className, snap, componentId, isCurrent
 
   const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
   const location = useLocation();
-  const { pathname, search } = location || {};
+  const { pathname } = location || {};
 
-  const testsPath = `${pathname?.replace('~changelog', '~tests')}${search}`;
-  const compositionsPath = `${pathname?.replace('~changelog', '~compositions')}${search}`;
+  const testsUrl = currentLaneUrl
+    ? `${currentLaneUrl}/${componentId}/~tests?version=${version}`
+    : `${pathname?.replace('~changelog', '~tests')}?version=${version}`;
+
+  const compositionsUrl = currentLaneUrl
+    ? `${currentLaneUrl}/${componentId}/~compositions?version=${version}`
+    : `${pathname?.replace('~changelog', '~compositions')}?version=${version}`;
+
+  const versionUrl = currentLaneUrl
+    ? `${currentLaneUrl}/${componentId}?version=${version}`
+    : `${pathname}?version=${version}`;
 
   return (
     <div className={classNames(styles.versionWrapper, className)}>
       <div className={styles.left}>
         <Labels isLatest={isLatest} isCurrent={isCurrent} />
-        <Link className={styles.link} href={testsPath}>
+        <Link className={styles.link} href={testsUrl}>
           Tests
         </Link>
-        <Link className={styles.link} href={compositionsPath}>
+        <Link className={styles.link} href={compositionsUrl}>
           Compositions
         </Link>
         <div className={styles.placeholder} />
       </div>
       <div className={classNames(styles.right, className)} {...rest}>
         <Tooltip placement="right" content={hash}>
-          <Link className={styles.titleLink} href={`${currentLaneUrl}/${componentId}?version=${version}`}>
+          <Link className={styles.titleLink} href={versionUrl}>
             <H3 size="xs" className={styles.versionTitle}>
               {tag ? `v${tag}` : hash}
             </H3>

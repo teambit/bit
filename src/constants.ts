@@ -213,6 +213,9 @@ export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_W
 
 export const CENTRAL_BIT_HUB_URL = `https://${getSymphonyUrl()}/exporter`;
 
+// export const CENTRAL_BIT_HUB_URL_IMPORTER = `http://localhost:5001/importer/api/fetch`;
+export const CENTRAL_BIT_HUB_URL_IMPORTER = `https://${getSymphonyUrl()}/importer/api/fetch`;
+
 export const CENTRAL_BIT_HUB_NAME = getCloudDomain();
 
 // END URLS
@@ -348,6 +351,11 @@ export const CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR = 'capsules_scopes_aspects_bas
 export const CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR = 'capsules_global_scope_aspects_base_dir';
 
 export const CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS = 'default_resolve_envs_from_roots';
+
+/**
+ * whether to generate non existing capsules for scope aspects in a temp dated dir
+ */
+export const CFG_USE_DATED_CAPSULES = 'use_dated_capsules';
 
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';

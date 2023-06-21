@@ -488,15 +488,37 @@ describe('bit checkout command', function () {
       expect(comp.headVersion).to.equal(helper.command.getHead('comp1'));
     });
     it('bit checkout latest should checkout to the semver latest and not to the head snap', () => {
-      helper.command.checkout('latest');
+      helper.command.checkoutLatest();
       const bitMap = helper.bitMap.read();
       expect(bitMap.comp1.version).to.equal('0.0.2');
     });
     it('bit checkout head should checkout to the head snap and not to the semver latest', () => {
-      helper.command.checkout('head');
+      helper.command.checkoutHead();
       const bitMap = helper.bitMap.read();
       const head = helper.command.getHead('comp1');
       expect(bitMap.comp1.version).to.equal(head);
+    });
+  });
+  describe('checkout latest when there is no tag', () => {
+    let firstSnap: string;
+    let secondSnap: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      firstSnap = helper.command.getHead('comp1');
+      helper.command.export();
+      const afterFirstSnap = helper.scopeHelper.cloneLocalScope();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      secondSnap = helper.command.getHead('comp1');
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(afterFirstSnap);
+      helper.command.checkoutLatest('-x');
+    });
+    it('should checkout to the head', () => {
+      const head = helper.command.getHead('comp1');
+      expect(head).to.equal(secondSnap);
+      expect(head).not.to.equal(firstSnap);
     });
   });
   describe('checkout to a version that does not exist locally', () => {

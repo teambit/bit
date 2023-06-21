@@ -1,0 +1,110 @@
+Command bar is a search box with built in results area, and keyboard navigation.
+
+### Basic usage:
+
+The command bar only requires a _searcher_ to operate. It has minimal styles, and will work from anywhere.
+
+```tsx
+<CommandBar searcher={searchLogic} />
+```
+
+### Searcher
+
+The Searcher is a simple function that returns results, based on an input term.
+
+```tsx
+type Searcher = (term: string, limit: number) => {};
+
+// for example:
+const search = (term: string, limit: number) => {
+  if (term.includes('paris'))
+    return [{ id: 'opt-paris', children: 'france', action: location.assign('gouvernement.fr') }];
+  if (term.includes('new york')) return [{ id: 'opt-ny', children: 'usa', action: location.assign('usa.gov') }];
+
+  return [];
+};
+```
+
+You can extend the built in `Searcher`, based on `fuze.js`.  
+It comes with built-in memoization for the `update()` and `search()` methods, so you can call them as part of your react render flow.
+
+```tsx
+import { FuzzySearcher, SearchResult, FuzzySearchItem } from '@teambit/explorer.ui.command-bar';
+
+type Book = { bookId: string; title: string; author: string; copies: number };
+
+export class BookSearcher extends FuzzySearcher<Book, Book> {
+  constructor() {
+    // apply fuzzy search to book.title (only)
+    super({ searchKeys: ['title'] });
+  }
+
+  // use this method to customize the items indexed in the search
+  // ie. so you could add custom properties to search
+  protected override toSearchableItem(item: Book) {
+    return item;
+  }
+
+  // prepare search results for presentation
+  protected override toSearchResult({ item }: FuzzySearchItem<Command>): SearchResult {
+    return {
+      id: item.id,
+      action: () => openQuickView(item),
+      children: <BookResult name={item.title} author={item.author} />,
+    };
+  }
+}
+
+const bookSearcher = BookSearcher();
+bookSearcher.update(bookList);
+
+return <CommandBar searcher={bookSearcher} />;
+```
+
+#### Custom properties
+
+In the searcher above, you defined a `toSearchableItem`, but it's not doing much.  
+The method gets very useful once you add custom fields for the searcher to go over:
+
+```tsx
+export class BookSearcher extends Searcher<Book, Book> {
+  constructor() {
+    // apply fuzzy search on book title, and also the new custom property 'initials'
+    super({ searchKeys: ['initials', 'book.title'] });
+  }
+
+  protected override toSearchableItem(item: Book) {
+    return {
+      // generate custom property:
+      initials: item.author.split(' ').map((name) => name.slice(0, 1)),
+      book: item,
+    };
+  }
+
+  protected override toSearchResult({ item }: FuzzySearchItem<Command>): SearchResult {
+    return {
+      id: item.book.id,
+      action: () => openQuickView(item.book),
+      children: <BookResult name={item.book.title} author={item.book.author} />,
+    };
+  }
+}
+```
+
+### Visibility
+
+The component's visibility is fully controlled, via the `visible` property.  
+To listen to internal events (like blur, keyboard selection, etc), use the `onVisibilityChange` prop:
+
+```tsx
+function MyApp() {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setVisible(true)}>open command bar!</button>
+      <CommandBar searcher={_searcher} visible={visible} onVisibilityChange={setVisible} />
+    </div>
+  );
+}
+```

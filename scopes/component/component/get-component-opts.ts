@@ -1,7 +1,6 @@
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
-import type { UseComponentType } from './ui/use-component';
-import { Filters } from './ui/use-component-query';
+import type { UseComponentType, Filters } from './ui/use-component';
 
 export type GetComponentsOptions = {
   useComponent?: UseComponentType;

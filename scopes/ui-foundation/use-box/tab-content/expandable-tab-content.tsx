@@ -19,13 +19,16 @@ export function ExpandableTabContent({ content, drawerContent, drawerTitle, ...r
     <TabContent
       {...rest}
       bottom={
-        <>
-          <div className={classNames(linkStyles, styles.drawer)} onClick={() => toggle(!open)}>
-            <div>{drawerTitle}</div>
-            <Icon of="down-rounded-corners" className={iconStyles} />
-          </div>
-          <AnimateHeight height={open ? 'auto' : 0}>{drawerContent}</AnimateHeight>
-        </>
+        drawerTitle &&
+        drawerContent && (
+          <>
+            <div className={classNames(linkStyles, styles.drawer)} onClick={() => toggle(!open)}>
+              <div>{drawerTitle}</div>
+              <Icon of="down-rounded-corners" className={iconStyles} />
+            </div>
+            <AnimateHeight height={open ? 'auto' : 0}>{drawerContent}</AnimateHeight>
+          </>
+        )
       }
     >
       {content}

@@ -27,7 +27,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
     private tsconfig: any,
     private schemaTransformerSlot: SchemaTransformerSlot,
     private tsMain: TypescriptMain,
-    private rootPath: string,
+    private rootTsserverPath: string,
+    private rootContextPath: string,
     private depResolver: DependencyResolverMain,
     private workspace: Workspace | undefined,
     private scope: ScopeMain,
@@ -118,7 +119,15 @@ export class TypeScriptExtractor implements SchemaExtractor {
     formatter?: Formatter
   ): Promise<SchemaExtractorContext> {
     const componentDeps = await this.getComponentDeps(component);
-    return new SchemaExtractorContext(tsserver, component, this, componentDeps, this.rootPath, formatter);
+    return new SchemaExtractorContext(
+      tsserver,
+      component,
+      this,
+      componentDeps,
+      this.rootContextPath,
+      this.workspace?.path || this.scope.path,
+      formatter
+    );
   }
 
   private async getComponentDeps(component: Component): Promise<ComponentDependency[]> {
@@ -137,7 +146,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
         return tsserver;
       }
 
-      this.tsserver = await this.tsMain.initTsserverClient(this.rootPath);
+      this.tsserver = await this.tsMain.initTsserverClient(this.rootTsserverPath);
       return this.tsserver;
     }
 
@@ -190,12 +199,14 @@ export class TypeScriptExtractor implements SchemaExtractor {
       const aspectLoaderMain = context.getAspect<AspectLoaderMain>(AspectLoaderAspect.id);
 
       // When loading the env from a scope you don't have a workspace
-      const wsPath = tsMain.workspace?.path || '';
+      const rootPath = tsMain.workspace?.path || tsMain.scope.path || '';
+
       return new TypeScriptExtractor(
         tsconfig,
         tsMain.schemaTransformerSlot,
         tsMain,
-        wsPath,
+        rootPath,
+        rootPath,
         tsMain.depResolver,
         tsMain.workspace,
         tsMain.scope,
