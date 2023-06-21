@@ -1358,6 +1358,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.envs,
       this.dependencyResolver,
       this.logger,
+      this.globalConfig,
       this.harmony,
       this.onAspectsResolveSlot,
       this.onRootAspectAddedSlot,
@@ -1365,6 +1366,16 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       resolveEnvsFromRoots
     );
     return workspaceAspectsLoader;
+  }
+
+  getCapsulePath() {
+    const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
+    return workspaceAspectsLoader.getCapsulePath();
+  }
+
+  shouldUseHashForCapsules() {
+    const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
+    return workspaceAspectsLoader.shouldUseHashForCapsules();
   }
 
   /**
