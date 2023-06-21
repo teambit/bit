@@ -6,6 +6,7 @@ settings:
 
 overrides:
   '@types/fs-capacitor': 2.0.0
+  signal-exit@4: ^4.0.2
 
 importers:
 
@@ -626,6 +627,9 @@ importers:
       '@testing-library/jest-native':
         specifier: 4.0.4
         version: 4.0.4
+      '@testing-library/react':
+        specifier: ^12.1.5
+        version: 12.1.5(react-dom@17.0.2)(react@17.0.2)
       '@tippyjs/react':
         specifier: 4.2.0
         version: 4.2.0(react-dom@17.0.2)(react@17.0.2)
@@ -1719,9 +1723,6 @@ importers:
       '@teambit/workspace.content.workspace-overview':
         specifier: 1.95.0
         version: 1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      '@testing-library/react':
-        specifier: 12.1.5
-        version: 12.1.5(react-dom@17.0.2)(react@17.0.2)
       '@types/archiver':
         specifier: 5.3.1
         version: 5.3.1
@@ -1948,6 +1949,9 @@ importers:
       '@teambit/design.ui.surfaces.menu.item':
         specifier: 0.0.354
         version: 0.0.354(react-dom@17.0.2)(react@17.0.2)
+      '@testing-library/react':
+        specifier: ^12.1.5
+        version: 12.1.5(react-dom@17.0.2)(react@17.0.2)
       classnames:
         specifier: 2.2.6
         version: 2.2.6
@@ -1982,9 +1986,6 @@ importers:
       '@testing-library/jest-dom':
         specifier: 5.16.2
         version: 5.16.2
-      '@testing-library/react':
-        specifier: 12.1.5
-        version: 12.1.5(react-dom@17.0.2)(react@17.0.2)
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -4241,7 +4242,7 @@ importers:
         version: file:scopes/defender/eslint(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.command-bar':
         specifier: workspace:*
-        version: file:components/ui/command-bar(react-dom@17.0.2)(react-router-dom@6.2.2)(react@17.0.2)
+        version: file:components/ui/command-bar(@testing-library/react@12.1.5)(react-dom@17.0.2)(react-router-dom@6.2.2)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-card':
         specifier: workspace:*
         version: file:scopes/explorer/ui/component-card(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -6150,7 +6151,7 @@ importers:
         version: file:scopes/defender/eslint(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.command-bar':
         specifier: workspace:*
-        version: file:components/ui/command-bar(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: file:components/ui/command-bar(@testing-library/react@12.1.5)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-card':
         specifier: workspace:*
         version: file:scopes/explorer/ui/component-card(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -8044,7 +8045,7 @@ importers:
         version: file:scopes/defender/eslint(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.command-bar':
         specifier: workspace:*
-        version: file:components/ui/command-bar(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: file:components/ui/command-bar(@testing-library/react@12.1.5)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-card':
         specifier: workspace:*
         version: file:scopes/explorer/ui/component-card(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -9938,7 +9939,7 @@ importers:
         version: file:scopes/defender/eslint(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.command-bar':
         specifier: workspace:*
-        version: file:components/ui/command-bar(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: file:components/ui/command-bar(@testing-library/react@12.1.5)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-card':
         specifier: workspace:*
         version: file:scopes/explorer/ui/component-card(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -11832,7 +11833,7 @@ importers:
         version: file:scopes/defender/eslint(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.command-bar':
         specifier: workspace:*
-        version: file:components/ui/command-bar(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: file:components/ui/command-bar(@testing-library/react@12.1.5)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-card':
         specifier: workspace:*
         version: file:scopes/explorer/ui/component-card(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -13726,7 +13727,7 @@ importers:
         version: file:scopes/defender/eslint(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.command-bar':
         specifier: workspace:*
-        version: file:components/ui/command-bar(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: file:components/ui/command-bar(@testing-library/react@12.1.5)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-card':
         specifier: workspace:*
         version: file:scopes/explorer/ui/component-card(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -15620,7 +15621,7 @@ importers:
         version: file:scopes/defender/eslint(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.command-bar':
         specifier: workspace:*
-        version: file:components/ui/command-bar(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: file:components/ui/command-bar(@testing-library/react@12.1.5)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-card':
         specifier: workspace:*
         version: file:scopes/explorer/ui/component-card(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -23261,6 +23262,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/legacy-bit-id':
+        specifier: ^0.0.423
+        version: 0.0.423
       archy:
         specifier: 1.0.0
         version: 1.0.0
@@ -42881,7 +42885,7 @@ packages:
       user-home: 2.0.0
 
   /@teambit/html.modules.create-element-from-string@0.0.104:
-    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: https://node-registry.bit.cloud/@teambit/html.modules.create-element-from-string/-/@teambit-html.modules.create-element-from-string-0.0.104.tgz}
+    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: https://node-registry.bit.cloud/@teambit/html.modules.create-element-from-string/-/teambit-html.modules.create-element-from-string-0.0.104.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -43727,16 +43731,16 @@ packages:
     dev: false
 
   /@teambit/toolbox.string.ellipsis@0.0.172:
-    resolution: {integrity: sha1-nbLwbPi2d8Qeg6aCX2TYlARSRew=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.172.tgz}
+    resolution: {integrity: sha1-nbLwbPi2d8Qeg6aCX2TYlARSRew=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/teambit-toolbox.string.ellipsis-0.0.172.tgz}
     engines: {node: '>=12.22.0'}
     dev: true
 
   /@teambit/toolbox.string.ellipsis@0.0.173:
-    resolution: {integrity: sha1-CY+uj2sRmPejtTCee4HDvLFeeI8=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.173.tgz}
+    resolution: {integrity: sha1-CY+uj2sRmPejtTCee4HDvLFeeI8=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/teambit-toolbox.string.ellipsis-0.0.173.tgz}
     engines: {node: '>=12.22.0'}
 
   /@teambit/toolbox.string.ellipsis@0.0.181:
-    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.181.tgz}
+    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/teambit-toolbox.string.ellipsis-0.0.181.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -43746,17 +43750,17 @@ packages:
     dev: false
 
   /@teambit/toolbox.string.get-initials@0.0.491:
-    resolution: {integrity: sha1-dMkF7hxhtmK2aXz7QCkAAajSrKI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.get-initials/-/@teambit-toolbox.string.get-initials-0.0.491.tgz}
+    resolution: {integrity: sha1-dMkF7hxhtmK2aXz7QCkAAajSrKI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.get-initials/-/teambit-toolbox.string.get-initials-0.0.491.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/toolbox.types.serializable@0.0.483:
-    resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.483.tgz}
+    resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/teambit-toolbox.types.serializable-0.0.483.tgz}
     engines: {node: '>=12.22.0'}
     dev: true
 
   /@teambit/toolbox.types.serializable@0.0.491:
-    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.491.tgz}
+    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/teambit-toolbox.types.serializable-0.0.491.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -43766,7 +43770,7 @@ packages:
     dev: false
 
   /@teambit/toolbox.url.add-avatar-query-params@0.0.492:
-    resolution: {integrity: sha1-dECMYTXTkMlAIUaK22cpmNlTsak=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.url.add-avatar-query-params/-/@teambit-toolbox.url.add-avatar-query-params-0.0.492.tgz}
+    resolution: {integrity: sha1-dECMYTXTkMlAIUaK22cpmNlTsak=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.url.add-avatar-query-params/-/teambit-toolbox.url.add-avatar-query-params-0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -43881,7 +43885,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.get-icon-from-file-name@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.get-icon-from-file-name/-/@teambit-ui-foundation.ui.get-icon-from-file-name-0.0.495.tgz}
+    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.get-icon-from-file-name/-/teambit-ui-foundation.ui.get-icon-from-file-name-0.0.495.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -44393,8 +44397,8 @@ packages:
     resolution: {integrity: sha1-bU5bUChvqZ6FgR2iDflWJU+hU8U=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.tree.drawer/-/@teambit-ui-foundation.ui.tree.drawer-0.0.512.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
+      react: '*'
+      react-dom: '*'
     dependencies:
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
@@ -52443,7 +52447,7 @@ packages:
       is-stream: registry.npmjs.org/is-stream@1.1.0
       npm-run-path: registry.npmjs.org/npm-run-path@2.0.2
       p-finally: registry.npmjs.org/p-finally@1.0.0
-      signal-exit: registry.npmjs.org/signal-exit@3.0.7
+      signal-exit: 3.0.7
       strip-eof: 1.0.0
     dev: false
 
@@ -62190,8 +62194,8 @@ packages:
   /signal-exit@3.0.7:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
 
-  /signal-exit@4.0.1:
-    resolution: {integrity: sha512-uUWsN4aOxJAS8KOuf3QMyFtgm1pkb6I+KRZbRF/ghdf5T7sM+B1lLLzPDxswUjkmHyxQAVzEgG35E3NzDM9GVw==}
+  /signal-exit@4.0.2:
+    resolution: {integrity: sha512-MY2/qGx4enyjprQnFaZsHib3Yadh3IXyV2C321GY0pjGfVBu4un0uDJkwgdxqO+Rdx8JMT8IfJIRwbYVz3Ob3Q==}
     engines: {node: '>=14'}
     dev: false
 
@@ -65416,7 +65420,7 @@ packages:
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
       imurmurhash: 0.1.4
-      signal-exit: 4.0.1
+      signal-exit: 4.0.2
     dev: false
 
   /write-json-file@4.3.0:
@@ -65826,12 +65830,13 @@ packages:
       - '@apollo/client'
     dev: false
 
-  file:components/ui/command-bar(react-dom@17.0.2)(react-router-dom@6.2.2)(react@17.0.2):
+  file:components/ui/command-bar(@testing-library/react@12.1.5)(react-dom@17.0.2)(react-router-dom@6.2.2)(react@17.0.2):
     resolution: {directory: components/ui/command-bar, type: directory}
     id: file:components/ui/command-bar
     name: '@teambit/explorer.ui.command-bar'
     version: 2.0.3
     peerDependencies:
+      '@testing-library/react': ^12.1.5
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
       react-router-dom: ^6.0.0
@@ -65841,6 +65846,7 @@ packages:
       '@teambit/base-react.hooks.use-queued-execution': 0.0.3(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.card': registry.npmjs.org/@teambit/base-ui.surfaces.card@1.0.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.surfaces.menu.item': 0.0.354(react-dom@17.0.2)(react@17.0.2)
+      '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       fuse.js: 6.6.2
@@ -65852,12 +65858,13 @@ packages:
       use-optionally-controlled-state: 1.2.0(react-dom@17.0.2)(react@17.0.2)
     dev: false
 
-  file:components/ui/command-bar(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+  file:components/ui/command-bar(@testing-library/react@12.1.5)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
     resolution: {directory: components/ui/command-bar, type: directory}
     id: file:components/ui/command-bar
     name: '@teambit/explorer.ui.command-bar'
     version: 2.0.3
     peerDependencies:
+      '@testing-library/react': ^12.1.5
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
       react-router-dom: ^6.0.0
@@ -65867,6 +65874,7 @@ packages:
       '@teambit/base-react.hooks.use-queued-execution': 0.0.3(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.card': registry.npmjs.org/@teambit/base-ui.surfaces.card@1.0.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.surfaces.menu.item': 0.0.354(react-dom@17.0.2)(react@17.0.2)
+      '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       fuse.js: 6.6.2
@@ -69379,6 +69387,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
+      '@teambit/legacy-bit-id': 0.0.423
       archy: 1.0.0
       chalk: 2.4.2
       cli-table: 0.3.6
@@ -76913,13 +76922,6 @@ packages:
     version: 3.0.7
     dev: false
 
-  registry.npmjs.org/signal-exit@4.0.1:
-    resolution: {integrity: sha512-uUWsN4aOxJAS8KOuf3QMyFtgm1pkb6I+KRZbRF/ghdf5T7sM+B1lLLzPDxswUjkmHyxQAVzEgG35E3NzDM9GVw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/signal-exit/-/signal-exit-4.0.1.tgz}
-    name: signal-exit
-    version: 4.0.1
-    engines: {node: '>=14'}
-    dev: false
-
   registry.npmjs.org/slash@2.0.0:
     resolution: {integrity: sha512-ZYKh3Wh2z1PpEXWr0MpSBZ0V6mZHAQfYevttO11c51CaWjGTaadiKZ+wVt1PbMlDV5qhMFslpZCemhwOK7C89A==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/slash/-/slash-2.0.0.tgz}
     name: slash
@@ -77272,7 +77274,7 @@ packages:
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
       imurmurhash: registry.npmjs.org/imurmurhash@0.1.4
-      signal-exit: registry.npmjs.org/signal-exit@4.0.1
+      signal-exit: 4.0.2
     dev: false
 
   registry.npmjs.org/xmlbuilder@11.0.1:
