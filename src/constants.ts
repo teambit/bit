@@ -339,6 +339,14 @@ export const CFG_FEATURE_TOGGLE = 'features';
 export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
 export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
+
+/**
+ * Name of the directory where the capsules for building components are stored
+ * This is used for the components capsules for bit build / tag / snap / sign
+ * This directory is relative to the capsules root directory
+ */
+export const CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR = 'capsules_build_components_base_dir';
+
 /**
  * Name of the directory where the capsules for aspects for regular scope are stored
  * This directory is relative to the capsules root directory

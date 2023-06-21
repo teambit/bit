@@ -23262,6 +23262,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/legacy-bit-id':
+        specifier: ^0.0.423
+        version: 0.0.423
       archy:
         specifier: 1.0.0
         version: 1.0.0
@@ -69384,6 +69387,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
+      '@teambit/legacy-bit-id': 0.0.423
       archy: 1.0.0
       chalk: 2.4.2
       cli-table: 0.3.6
