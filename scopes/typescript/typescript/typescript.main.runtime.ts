@@ -63,6 +63,7 @@ import {
   NamedTupleTransformer,
   ConstructorTransformer,
   ExpressionStatementTransformer,
+  ModuleDeclarationTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
@@ -409,6 +410,7 @@ export class TypescriptMain {
       new ConstructorTransformer(),
       new ImportDeclarationTransformer(),
       new ExpressionStatementTransformer(),
+      new ModuleDeclarationTransformer(),
     ]);
 
     if (workspace) {
