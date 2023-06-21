@@ -16,6 +16,7 @@ import { HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import type { ModelComponent, Version } from '../models';
 import type { VersionParents } from '../models/version-history';
 import { Ref, Repository } from '../objects';
+import logger from '../../logger/logger';
 
 export type VersionInfo = {
   ref: Ref;
@@ -140,12 +141,14 @@ export type GetAllVersionHashesParams = {
 
 export async function getAllVersionHashes(options: GetAllVersionHashesParams): Promise<Ref[]> {
   const { repo, modelComponent, throws, versionObjects, startFrom, stopAt } = options;
+  logger.profile(`getAllVersionHashes-${modelComponent.id()}`);
   const head = getRefToStartFrom(modelComponent, startFrom);
   if (!head) {
     return [];
   }
   const versionParents = await getAllVersionParents({ repo, modelComponent, throws, versionObjects, heads: [head] });
   const subsetOfVersionParents = getSubsetOfVersionParents(versionParents, head, stopAt);
+  logger.profile(`getAllVersionHashes-${modelComponent.id()}`);
   return subsetOfVersionParents.map((s) => s.hash);
 }
 
