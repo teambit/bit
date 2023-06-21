@@ -81,25 +81,8 @@ export class RemoveMain {
     return results;
   }
 
-  async softRemove(componentsPattern: string): Promise<ComponentID[]> {
-    if (!this.workspace) throw new ConsumerNotFound();
-    const currentLane = await this.workspace.getCurrentLaneObject();
-    if (currentLane?.isNew) {
-      throw new BitError(
-        `unable to soft-remove on a new (not-exported) lane "${currentLane.name}". please remove without --delete`
-      );
-    }
-    const componentIds = await this.workspace.idsByPattern(componentsPattern);
+  async markRemoveComps(componentIds: ComponentID[]) {
     const components = await this.workspace.getMany(componentIds);
-    const newComps = components.filter((c) => !c.id.hasVersion());
-    if (newComps.length) {
-      throw new BitError(
-        `unable to soft-remove the following new component(s), please remove them without --delete\n${newComps
-          .map((c) => c.id.toString())
-          .join('\n')}`
-      );
-    }
-    await this.throwForMainComponentWhenOnLane(components);
     await removeComponentsFromNodeModules(
       this.workspace.consumer,
       components.map((c) => c.state._consumer)
@@ -116,6 +99,25 @@ export class RemoveMain {
     await deleteComponentsFiles(this.workspace.consumer, bitIds);
 
     return componentIds;
+  }
+
+  async markRemoveOnMain(componentsPattern: string): Promise<ComponentID[]> {
+    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace.isOnMain()) {
+      throw new Error(`markRemoveOnMain expects to get called when on main`);
+    }
+    const componentIds = await this.workspace.idsByPattern(componentsPattern);
+
+    const newComps = componentIds.filter((id) => !id.hasVersion());
+    if (newComps.length) {
+      throw new BitError(
+        `unable to mark-remove the following new component(s), please remove them without --delete\n${newComps
+          .map((id) => id.toString())
+          .join('\n')}`
+      );
+    }
+
+    return this.markRemoveComps(componentIds);
   }
 
   /**
@@ -265,7 +267,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     const logger = loggerMain.createLogger(RemoveAspect.id);
     const removeMain = new RemoveMain(workspace, logger, importerMain);
     componentAspect.registerShowFragments([new RemoveFragment(removeMain)]);
-    cli.register(new RemoveCmd(removeMain), new RecoverCmd(removeMain));
+    cli.register(new RemoveCmd(removeMain, workspace), new RecoverCmd(removeMain));
     return removeMain;
   }
 }

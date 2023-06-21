@@ -705,6 +705,10 @@ export class Workspace implements ComponentFactory {
     return this.consumer.isOnMain();
   }
 
+  isOnLane(): boolean {
+    return this.consumer.isOnLane();
+  }
+
   /**
    * if checked out to a lane and the lane exists in the remote,
    * return the remote lane. otherwise, return null.
