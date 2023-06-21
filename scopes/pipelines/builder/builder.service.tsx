@@ -29,6 +29,7 @@ export type BuilderServiceOptions = {
   previousTasksResults?: TaskResults[];
   dev?: boolean;
   exitOnFirstFailedTask?: boolean;
+  capsulesBaseDir?: string;
 };
 
 type BuilderTransformationMap = ServiceTransformationMap & {
@@ -100,16 +101,19 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     const longProcessLogger = this.logger.createLongProcessLogger(title);
     this.logger.consoleTitle(title);
     const envsBuildContext: EnvsBuildContext = {};
+    const isolateOpts = {
+      baseDir: options.capsulesBaseDir,
+      useHash: !options.capsulesBaseDir,
+      getExistingAsIs: true,
+      seedersOnly: options.seedersOnly,
+    };
     await pMapSeries(envsExecutionContext, async (executionContext) => {
       const componentIds = executionContext.components.map((component) => component.id);
       const { originalSeeders } = options;
       const originalSeedersOfThisEnv = componentIds.filter((compId) =>
         originalSeeders ? originalSeeders.find((seeder) => compId.isEqual(seeder)) : true
       );
-      const capsuleNetwork = await this.isolator.isolateComponents(componentIds, {
-        getExistingAsIs: true,
-        seedersOnly: options.seedersOnly,
-      });
+      const capsuleNetwork = await this.isolator.isolateComponents(componentIds, isolateOpts);
       capsuleNetwork._originalSeeders = originalSeedersOfThisEnv;
       this.logger.console(
         `generated graph for env "${executionContext.id}", originalSeedersOfThisEnv: ${originalSeedersOfThisEnv.length}, graphOfThisEnv: ${capsuleNetwork.seedersCapsules.length}, graph total: ${capsuleNetwork.graphCapsules.length}`
