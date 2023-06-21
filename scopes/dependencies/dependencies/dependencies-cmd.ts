@@ -86,7 +86,7 @@ export class DependenciesDebugCmd implements Command {
   constructor(private deps: DependenciesMain) {}
 
   async report([id]: [string]) {
-    const results = this.deps.debugDependencies(id);
+    const results = await this.deps.debugDependencies(id);
     return JSON.stringify(results, undefined, 4);
   }
 }
