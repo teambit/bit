@@ -701,15 +701,22 @@ export class IsolatorMain {
     if (typeof getCapsuleDirOpts === 'string') {
       getCapsuleDirOpts = { baseDir: getCapsuleDirOpts, rootBaseDir, useHash, useDatedDirs };
     }
-    const capsulesRootBaseDir = getCapsuleDirOpts.rootBaseDir || this.getRootDirOfAllCapsules();
-    if (getCapsuleDirOpts.useDatedDirs) {
+    const getCapsuleDirOptsWithDefaults = {
+      useHash: true,
+      useDatedDirs: false,
+      ...getCapsuleDirOpts,
+    };
+    const capsulesRootBaseDir = getCapsuleDirOptsWithDefaults.rootBaseDir || this.getRootDirOfAllCapsules();
+    if (getCapsuleDirOptsWithDefaults.useDatedDirs) {
       const date = new Date();
       const dateDir = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
       const datedBaseDir = 'dated-capsules';
       const hashDir = v4();
       return path.join(capsulesRootBaseDir, datedBaseDir, dateDir, hashDir);
     }
-    const dir = getCapsuleDirOpts.useHash ? hash(getCapsuleDirOpts.baseDir) : getCapsuleDirOpts.baseDir;
+    const dir = getCapsuleDirOptsWithDefaults.useHash
+      ? hash(getCapsuleDirOptsWithDefaults.baseDir)
+      : getCapsuleDirOptsWithDefaults.baseDir;
     return path.join(capsulesRootBaseDir, dir);
   }
 
