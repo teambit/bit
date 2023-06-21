@@ -1,5 +1,6 @@
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import { ComponentID } from '../';
 import { ComponentError } from './component-error';
 import { ComponentModel } from './component-model';
 
@@ -32,7 +33,10 @@ export type ComponentQueryResult = {
 };
 
 export type ComponentLogsResult = {
+  id?: ComponentID;
   componentLogs?: ComponentLogs;
+  latest?: string;
+  packageName?: string;
   error?: ComponentError;
   loading?: boolean;
 };

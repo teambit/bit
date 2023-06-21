@@ -52,13 +52,20 @@ export class CreateCmd implements Command {
     ['n', 'namespace <string>', `sets the component's namespace and nested dirs inside the scope`],
     ['s', 'scope <string>', `sets the component's scope-name. if not entered, the default-scope will be used`],
     ['a', 'aspect <string>', 'aspect-id of the template. helpful when multiple aspects use the same template name'],
+    ['t', 'template <string>', 'env-id of the template. alias for --aspect.'],
     ['p', 'path <string>', 'relative path in the workspace. by default the path is `<scope>/<namespace>/<name>`'],
     ['e', 'env <string>', "set the component's environment. (overrides the env from variants and the template)"],
   ] as CommandOptions;
 
   constructor(private generator: GeneratorMain, private docsDomain: string) {}
 
-  async report([templateName, componentNames]: [string, string[]], options: CreateOptions) {
+  async report(
+    [templateName, componentNames]: [string, string[]],
+    options: CreateOptions & {
+      template?: string;
+    }
+  ) {
+    options.aspect = options.aspect ?? options.template;
     const results = await this.generator.generateComponentTemplate(componentNames, templateName, options);
     const title = `${results.length} component(s) were created`;
 

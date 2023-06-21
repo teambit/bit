@@ -354,6 +354,11 @@ export const CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR = 'capsules_global_scope
 
 export const CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS = 'default_resolve_envs_from_roots';
 
+/**
+ * whether to generate non existing capsules for scope aspects in a temp dated dir
+ */
+export const CFG_USE_DATED_CAPSULES = 'use_dated_capsules';
+
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
 export const CFG_PROXY_NO_PROXY = 'proxy.no_proxy';

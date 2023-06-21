@@ -433,8 +433,11 @@ export default class ComponentsList {
    */
   async listRemotelySoftRemoved(): Promise<Component[]> {
     const fromFs = await this.getFromFileSystem();
-
-    return fromFs.filter((comp) => comp.isRemoved());
+    // if it's during-merge it might be removed on the other lane remote, not this lane remote and then upon snap/tag
+    // the component will be removed from the workspace, so no need to suggest using "bit remove".
+    const duringMerge = this.listDuringMergeStateComponents();
+    const removed = fromFs.filter((comp) => comp.isRemoved());
+    return removed.filter((comp) => !duringMerge.hasWithoutVersion(comp.id));
   }
 
   /**
