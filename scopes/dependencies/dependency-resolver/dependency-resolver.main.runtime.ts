@@ -403,9 +403,9 @@ export class DependencyResolverMain {
   }
 
   isolatedCapsules(): boolean {
-    const globalConfig = this.globalConfig.getSync(CFG_ISOLATED_SCOPE_CAPSULES) ?? false;
+    const globalConfig = this.globalConfig.getSync(CFG_ISOLATED_SCOPE_CAPSULES);
     // @ts-ignore
-    const defaultVal = globalConfig !== undefined ? globalConfig === true || globalConfig === 'true' : false;
+    const defaultVal = globalConfig !== undefined ? globalConfig === true || globalConfig === 'true' : true;
     const res = this.config.isolatedCapsules ?? defaultVal;
     return res;
   }
