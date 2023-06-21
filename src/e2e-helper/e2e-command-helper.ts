@@ -208,7 +208,7 @@ export default class CommandHelper {
     return this.runCmd(`bit remove ${id} --silent --delete ${flags}`);
   }
   removeComponentFromRemote(id: string, flags = '') {
-    return this.runCmd(`bit remove ${id} --silent --remote ${flags}`);
+    return this.runCmd(`bit remove ${id} --silent --hard ${flags}`);
   }
   removeLaneComp(id: string, flags = '') {
     return this.runCmd(`bit lane remove-comp ${id} ${flags}`);
