@@ -31,9 +31,7 @@ to remove components from lanes, use "bit lane remove-comp".
   skipWorkspace = true;
   alias = 'rm';
   options = [
-    ['', 'soft', 'DEPRECATED. use --delete instead'],
     ['', 'delete', 'mark the component as deleted. after tag/snap and export the remote will be updated'],
-    ['', 'remote', 'DEPRECATED. use --hard instead'],
     [
       '',
       'hard',
@@ -59,20 +57,16 @@ to remove components from lanes, use "bit lane remove-comp".
   async report(
     [componentsPattern]: [string],
     {
-      soft,
       delete: softDelete = false,
       force = false,
-      remote,
       hard = false,
       fromLane = false,
       track = false,
       silent = false,
       keepFiles = false,
     }: {
-      soft?: boolean;
       delete?: boolean;
       force?: boolean;
-      remote?: boolean;
       hard?: boolean;
       track?: boolean;
       fromLane?: boolean;
@@ -80,15 +74,6 @@ to remove components from lanes, use "bit lane remove-comp".
       keepFiles?: boolean;
     }
   ) {
-    if (soft) {
-      this.remove.logger.consoleWarning('--soft flag is deprecated. please use --delete instead');
-      softDelete = true;
-    }
-    if (remote) {
-      this.remove.logger.consoleWarning('--remote flag is deprecated. please use --hard instead');
-      hard = true;
-    }
-
     if (!hard && this.workspace?.isOnLane()) {
       throw new BitError(
         `error: unable to remove components when on a lane, please run "bit lane remove-comp" instead`

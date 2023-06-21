@@ -390,15 +390,21 @@ describe('bit remove command', function () {
       expect(removeAspect.config.removed).to.be.true;
     });
   });
-  describe('soft-remove when a lane is new', () => {
+  describe('remove when a lane is new', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
+      helper.command.removeLaneComp('comp1');
     });
-    it('should throw an error suggesting to remove without --soft', () => {
-      expect(() => helper.command.removeLaneComp('comp1')).to.throw();
+    it('should remove the components from the local lane', () => {
+      const laneComps = helper.command.showOneLane('dev');
+      expect(laneComps).to.not.have.string('comp1');
+    });
+    it('should remove the components from the workspace', () => {
+      const list = helper.command.list();
+      expect(list).to.not.have.string('comp1');
     });
   });
 

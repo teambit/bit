@@ -339,13 +339,14 @@ export class LaneRemoveCompCmd implements Command {
   ];
   description = `remove components when on a lane`;
   extendedDescription = `in case the components are part of the lane and the lane is exported, it marks the components as removed,
-and then after snap+export, the remote-lane gets updated as well.
-otherwise, (e.g. new components or main-components) it simply removes the components from the workspace`;
+and then after snap+export, the remote-lane gets updated as well. upon lane-merge, these components are skipped.
+
+in case the components are not part of the lane or the lane is new, it simply removes the components from the workspace`;
   group = 'collaborate';
   alias = 'rc';
   options = [
     ['', 'workspace-only', 'do not mark the components as removed. instead, remove them from the workspace only'],
-    ['', 'update-main', 'NOT WORKING YET. mark as removed on main after merging this lane into main'],
+    ['', 'update-main', 'NOT IMPLEMENTED YET. mark as removed on main after merging this lane into main'],
   ] as CommandOptions;
   loader = true;
   migration = true;
