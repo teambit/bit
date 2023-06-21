@@ -353,6 +353,7 @@ otherwise, (e.g. new components or main-components) it simply removes the compon
   constructor(private workspace: Workspace, private lanes: LanesMain) {}
 
   async report([componentsPattern]: [string], removeCompsOpts: RemoveCompsOpts): Promise<string> {
+    if (removeCompsOpts.updateMain) throw new Error('not implemented yet');
     if (!this.workspace) throw new OutsideWorkspaceError();
     if (this.workspace.isOnMain()) {
       throw new Error(`error: you're checked out to main, please use "bit remove" instead`);
