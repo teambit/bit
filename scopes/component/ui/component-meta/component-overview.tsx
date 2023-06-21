@@ -1,4 +1,5 @@
 import React from 'react';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { textColumn } from '@teambit/base-ui.layout.page-frame';
 import { H1 } from '@teambit/documenter.ui.heading';
@@ -74,6 +75,13 @@ export function ComponentOverview({
       <div className={textColumn}>
         <Row className={styles.titleRow}>
           <div className={styles.componentTitle}>
+            <div>
+              <Tooltip content={component?.environment?.id}>
+                <div>
+                  <img className={styles.envIcon} src={component?.environment?.icon} />
+                </div>
+              </Tooltip>
+            </div>
             <H1>{displayName}</H1>
           </div>
           <BadgeSection

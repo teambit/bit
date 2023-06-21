@@ -42,3 +42,13 @@
   background: var(--background-color, #ffffff);
   border-top-left-radius: 0;
 }
+
+.componentTitle {
+  display: flex;
+  align-items: center;
+}
+
+.envIcon {
+  height: 32px;
+  margin-right: 8px;
+}
