@@ -7,6 +7,8 @@ import { Component, ComponentMap, IComponent, ComponentAspect, ComponentMain, Co
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
+import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy/dist/constants';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import AspectAspect from '@teambit/aspect';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
@@ -71,6 +73,7 @@ export class BuilderMain {
     private isolator: IsolatorMain,
     private aspectLoader: AspectLoaderMain,
     private componentAspect: ComponentMain,
+    private globalConfig: GlobalConfigMain,
     private buildTaskSlot: TaskSlot,
     private tagTaskSlot: TaskSlot,
     private snapTaskSlot: TaskSlot
@@ -285,15 +288,30 @@ export class BuilderMain {
     builderOptions?: BuilderServiceOptions
   ): Promise<TaskResultsList> {
     const ids = components.map((c) => c.id);
-    const network = await this.isolator.isolateComponents(ids, isolateOptions || {}, this.scope.legacyScope);
+    const capsulesBaseDir = this.getComponentsCapsulesBaseDir();
+    const baseIsolateOpts = {
+      baseDir: capsulesBaseDir,
+      useHash: !capsulesBaseDir,
+    };
+    const mergedIsolateOpts = {
+      ...baseIsolateOpts,
+      ...isolateOptions,
+    };
+
+    const network = await this.isolator.isolateComponents(ids, mergedIsolateOpts, this.scope.legacyScope);
     const envs = await this.envs.createEnvironment(network.graphCapsules.getAllComponents());
     const builderServiceOptions = {
       seedersOnly: isolateOptions?.seedersOnly,
       originalSeeders: ids,
+      capsulesBaseDir,
       ...(builderOptions || {}),
     };
     const buildResult = await envs.runOnce(this.buildService, builderServiceOptions);
     return buildResult;
+  }
+
+  getComponentsCapsulesBaseDir(): string | undefined {
+    return this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
   }
 
   async runTagTasks(components: Component[], builderOptions: BuilderServiceOptions): Promise<TaskResultsList> {
@@ -372,10 +390,11 @@ export class BuilderMain {
     GeneratorAspect,
     ComponentAspect,
     UIAspect,
+    GlobalConfigAspect,
   ];
 
   static async provider(
-    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator, component, ui]: [
+    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator, component, ui, globalConfig]: [
       CLIMain,
       EnvsMain,
       Workspace,
@@ -386,7 +405,8 @@ export class BuilderMain {
       GraphqlMain,
       GeneratorMain,
       ComponentMain,
-      UiMain
+      UiMain,
+      GlobalConfigMain
     ],
     config,
     [buildTaskSlot, tagTaskSlot, snapTaskSlot]: [TaskSlot, TaskSlot, TaskSlot]
@@ -423,6 +443,7 @@ export class BuilderMain {
       isolator,
       aspectLoader,
       component,
+      globalConfig,
       buildTaskSlot,
       tagTaskSlot,
       snapTaskSlot
