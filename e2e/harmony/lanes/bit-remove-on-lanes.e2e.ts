@@ -388,7 +388,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.removeComponent('comp1', '--workspace-only');
+      helper.command.removeLaneComp('comp1', '--workspace-only');
       helper.command.export();
     });
     // previously in older bit versions, it used to leave the removed-component with the snapped version in the lane-object.
