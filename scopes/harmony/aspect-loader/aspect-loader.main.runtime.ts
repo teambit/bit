@@ -15,7 +15,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { loadBit } from '@teambit/bit';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
-import { difference, compact, flatten, intersection, uniqBy, some, isEmpty } from 'lodash';
+import { difference, compact, flatten, intersection, uniqBy, some, isEmpty, isObject } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
@@ -605,6 +605,37 @@ export class AspectLoaderMain {
     }
 
     return defs;
+  }
+
+  getAspectIdFromAspectFile(aspectFilePath: string): string | undefined {
+    try {
+      const module = aspectFilePath ? require(aspectFilePath) : undefined;
+      let manifest = module.default || module;
+      if (this.isAspect(manifest)) {
+        return manifest.id;
+      }
+      if (isObject(manifest)) {
+        if (isEmpty(manifest)) {
+          this.logger.warn(
+            `getAspectIdFromAspectFile - aspect at ${aspectFilePath} missing exports. couldn't calculate the manifest`
+          );
+          return undefined;
+        }
+        if (Object.keys(manifest).length > 1) {
+          this.logger.warn(
+            `getAspectIdFromAspectFile - aspect at ${aspectFilePath} exports too many keys. couldn't calculate the manifest`
+          );
+          return undefined;
+        }
+        manifest = Object.values(manifest)[0];
+        if (this.isAspect(manifest)) {
+          return manifest.id;
+        }
+      }
+      this.logger.warn(`getAspectIdFromAspectFile - aspect at ${aspectFilePath} is not a valid aspect`);
+    } catch (err) {
+      this.logger.warn(`getAspectIdFromAspectFile - couldn't require the aspect file ${aspectFilePath}. err: ${err}`);
+    }
   }
 
   private prepareManifests(manifests: Array<ExtensionManifest | Aspect>): Aspect[] {
