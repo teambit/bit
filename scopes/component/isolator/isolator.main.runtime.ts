@@ -689,21 +689,27 @@ export class IsolatorMain {
     }
   }
 
-  getCapsulesRootDir({
-    baseDir,
-    rootBaseDir,
+  /** @deprecated use the new function signature with an object parameter instead */
+  getCapsulesRootDir(baseDir: string, rootBaseDir?: string, useHash?: boolean): PathOsBasedAbsolute;
+  getCapsulesRootDir(getCapsuleDirOpts: GetCapsuleDirOpts): PathOsBasedAbsolute;
+  getCapsulesRootDir(
+    getCapsuleDirOpts: GetCapsuleDirOpts | string,
+    rootBaseDir?: string,
     useHash = true,
-    useDatedDirs = false,
-  }: GetCapsuleDirOpts): PathOsBasedAbsolute {
-    const capsulesRootBaseDir = rootBaseDir || this.getRootDirOfAllCapsules();
-    if (useDatedDirs) {
+    useDatedDirs = false
+  ): PathOsBasedAbsolute {
+    if (typeof getCapsuleDirOpts === 'string') {
+      getCapsuleDirOpts = { baseDir: getCapsuleDirOpts, rootBaseDir, useHash, useDatedDirs };
+    }
+    const capsulesRootBaseDir = getCapsuleDirOpts.rootBaseDir || this.getRootDirOfAllCapsules();
+    if (getCapsuleDirOpts.useDatedDirs) {
       const date = new Date();
       const dateDir = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
       const datedBaseDir = 'dated-capsules';
       const hashDir = v4();
       return path.join(capsulesRootBaseDir, datedBaseDir, dateDir, hashDir);
     }
-    const dir = useHash ? hash(baseDir) : baseDir;
+    const dir = getCapsuleDirOpts.useHash ? hash(getCapsuleDirOpts.baseDir) : getCapsuleDirOpts.baseDir;
     return path.join(capsulesRootBaseDir, dir);
   }
 
