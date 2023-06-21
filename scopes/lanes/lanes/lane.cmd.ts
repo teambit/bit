@@ -327,6 +327,8 @@ export class LaneRemoveCmd implements Command {
   }
 }
 
+export type RemoveCompsOpts = { workspaceOnly?: boolean; updateMain?: boolean };
+
 export class LaneRemoveCompCmd implements Command {
   name = 'remove-comp <component-pattern>';
   arguments = [
@@ -335,13 +337,14 @@ export class LaneRemoveCompCmd implements Command {
       description: COMPONENT_PATTERN_HELP,
     },
   ];
-  description = `mark components as removed on the lane`;
-  extendedDescription = `in case the components are part of the lane and the lane is exported, it mark the components as removed,
+  description = `remove components when on a lane`;
+  extendedDescription = `in case the components are part of the lane and the lane is exported, it marks the components as removed,
 and then after snap+export, the remote-lane gets updated as well.
 otherwise, (e.g. new components or main-components) it simply removes the components from the workspace`;
   group = 'collaborate';
   alias = 'rc';
   options = [
+    ['', 'workspace-only', 'do not mark the components as removed. instead, remove them from the workspace only'],
     ['', 'update-main', 'NOT WORKING YET. mark as removed on main after merging this lane into main'],
   ] as CommandOptions;
   loader = true;
@@ -349,27 +352,27 @@ otherwise, (e.g. new components or main-components) it simply removes the compon
 
   constructor(private workspace: Workspace, private lanes: LanesMain) {}
 
-  async report([componentsPattern]: [string]): Promise<string> {
+  async report([componentsPattern]: [string], removeCompsOpts: RemoveCompsOpts): Promise<string> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     if (this.workspace.isOnMain()) {
       throw new Error(`error: you're checked out to main, please use "bit remove" instead`);
     }
-    const { mainResults, laneResults } = await this.lanes.removeComps(componentsPattern);
-    const getLaneResultsStr = () => {
-      if (!laneResults.length) return '';
+    const { removedFromWs, markedRemoved } = await this.lanes.removeComps(componentsPattern, removeCompsOpts);
+    const getMarkedRemovedStr = () => {
+      if (!markedRemoved.length) return '';
       return `${chalk.green('successfully marked the following components as removed:')}
-${laneResults.join('\n')}
+${markedRemoved.join('\n')}
 
 ${chalk.bold('to update the remote, please snap and then export. to revert, please use "bit recover"')}
 `;
     };
-    const getMainResultsStr = () => {
-      if (!mainResults.length) return '';
+    const getRemovedFromWsStr = () => {
+      if (!removedFromWs.length) return '';
       return `\n${chalk.green('successfully removed the following components from the workspace:')}
-(these components were not part of the lane, so there was no need to mark them as removed)
-${mainResults.join('\n')}`;
+(either: these components were not part of the lane, so there was no need to mark them as removed or --workspace-only was used)
+${removedFromWs.join('\n')}`;
     };
-    return getLaneResultsStr() + getMainResultsStr();
+    return getMarkedRemovedStr() + getRemovedFromWsStr();
   }
 }
 

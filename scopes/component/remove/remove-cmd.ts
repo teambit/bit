@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import yn from 'yn';
 import { Command, CommandOptions } from '@teambit/cli';
+import { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import { removePrompt } from '@teambit/legacy/dist/prompts';
 import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
@@ -16,7 +17,8 @@ export class RemoveCmd implements Command {
 
 to remove a component from the remote scope, use "bit remove --delete", to mark the components as deleted.
 once tagged/snapped and exported, the remote scope will be updated and it'll be marked as deleted there as well.
-in case this is running on a lane, it'll mark the component as deleted on the lane only, which tells bit not to merge them. the main will not be affected.
+
+to remove components from lanes, use "bit lane remove-comp".
 `;
   arguments = [
     {
@@ -37,7 +39,8 @@ in case this is running on a lane, it'll mark the component as deleted on the la
       'hard',
       'remove a component completely from a remote scope. careful! this is a permanent change that could corrupt dependents. prefer --delete',
     ],
-    ['', 'from-lane', 'revert to main if exists on currently checked out lane, otherwise, remove it'],
+    // this option is confusing and probably not in use. if needed, move this to "bit lane remove-comp" command.
+    // ['', 'from-lane', 'revert to main if exists on currently checked out lane, otherwise, remove it'],
     ['t', 'track', 'keep tracking component in .bitmap (default = false), helps transform a tagged-component to new'],
     ['', 'keep-files', 'keep component files (just untrack the component)'],
     [
@@ -51,7 +54,7 @@ in case this is running on a lane, it'll mark the component as deleted on the la
   migration = true;
   remoteOp = true;
 
-  constructor(private remove: RemoveMain) {}
+  constructor(private remove: RemoveMain, private workspace?: Workspace) {}
 
   async report(
     [componentsPattern]: [string],
@@ -67,14 +70,14 @@ in case this is running on a lane, it'll mark the component as deleted on the la
       keepFiles = false,
     }: {
       soft?: boolean;
-      delete: boolean;
-      force: boolean;
+      delete?: boolean;
+      force?: boolean;
       remote?: boolean;
-      hard: boolean;
-      track: boolean;
-      fromLane: boolean;
-      silent: boolean;
-      keepFiles: boolean;
+      hard?: boolean;
+      track?: boolean;
+      fromLane?: boolean;
+      silent?: boolean;
+      keepFiles?: boolean;
     }
   ) {
     if (soft) {
@@ -84,6 +87,12 @@ in case this is running on a lane, it'll mark the component as deleted on the la
     if (remote) {
       this.remove.logger.consoleWarning('--remote flag is deprecated. please use --hard instead');
       hard = true;
+    }
+
+    if (!hard && this.workspace?.isOnLane()) {
+      throw new BitError(
+        `error: unable to remove components when on a lane, please run "bit lane remove-comp" instead`
+      );
     }
 
     if (softDelete) {

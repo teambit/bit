@@ -398,7 +398,7 @@ describe('bit remove command', function () {
       helper.command.snapAllComponentsWithoutBuild();
     });
     it('should throw an error suggesting to remove without --soft', () => {
-      expect(() => helper.command.softRemoveComponent('comp1')).to.throw();
+      expect(() => helper.command.removeLaneComp('comp1')).to.throw();
     });
   });
 
@@ -409,7 +409,7 @@ describe('bit remove command', function () {
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.command.softRemoveComponent('comp2');
+      helper.command.removeLaneComp('comp2');
     });
     it('should not throwing an error upon import', () => {
       expect(() => helper.command.importComponent('comp2')).to.not.throw();

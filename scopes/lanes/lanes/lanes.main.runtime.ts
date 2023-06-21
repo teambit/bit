@@ -3,7 +3,7 @@ import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { OutsideWorkspaceError, Workspace, WorkspaceAspect } from '@teambit/workspace';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { LaneDiffCmd, LaneDiffGenerator, LaneDiffResults } from '@teambit/lanes.modules.diff';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
@@ -22,12 +22,12 @@ import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId, InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { compact } from 'lodash';
+import { compact, partition } from 'lodash';
 import { ComponentCompareMain, ComponentCompareAspect } from '@teambit/component-compare';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
-import RemoveAspect, { MarkRemoveOnLaneResult, RemoveMain } from '@teambit/remove';
+import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
@@ -47,6 +47,7 @@ import {
   LaneAddReadmeCmd,
   LaneRemoveReadmeCmd,
   LaneRemoveCompCmd,
+  RemoveCompsOpts,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -108,6 +109,8 @@ export type LaneDiffStatus = {
   target: LaneId;
   componentsStatus: LaneComponentDiffStatus[];
 };
+
+export type MarkRemoveOnLaneResult = { removedFromWs: ComponentID[]; markedRemoved: ComponentID[] };
 
 type CreateLaneResult = {
   laneId: LaneId;
@@ -537,8 +540,41 @@ please create a new lane instead, which will include all components of this lane
     await this.scope.legacyScope.objects.restoreFromTrash([ref]);
   }
 
-  async removeComps(componentsPattern: string): Promise<MarkRemoveOnLaneResult> {
-    return this.remove.markRemoveOnLane(componentsPattern);
+  async removeComps(componentsPattern: string, removeCompsOpts: RemoveCompsOpts): Promise<MarkRemoveOnLaneResult> {
+    const workspace = this.workspace;
+    if (!workspace) throw new OutsideWorkspaceError();
+    const currentLane = await workspace.getCurrentLaneObject();
+    if (!currentLane) {
+      throw new Error('markRemoveOnLane expects to get called when on a lane');
+    }
+    if (currentLane.isNew || removeCompsOpts.workspaceOnly) {
+      const results = await this.remove.remove({
+        componentsPattern,
+        force: true,
+      });
+      const ids = results.localResult.removedComponentIds;
+      const compIds = await workspace.resolveMultipleComponentIds(ids);
+      return { removedFromWs: compIds, markedRemoved: [] };
+    }
+
+    const componentIds = await workspace.idsByPattern(componentsPattern);
+    const laneBitIds = currentLane.toBitIds();
+    const [laneCompIds, mainCompIds] = partition(componentIds, (id) => laneBitIds.hasWithoutVersion(id._legacy));
+
+    const removeFromWorkspace = async () => {
+      if (!mainCompIds.length) return [];
+      const results = await this.remove.removeLocallyByIds(
+        mainCompIds.map((id) => id._legacy),
+        { force: true }
+      );
+      const ids = results.localResult.removedComponentIds;
+      return workspace.resolveMultipleComponentIds(ids);
+    };
+
+    const removedFromWs = await removeFromWorkspace();
+    const markedRemoved = await this.remove.markRemoveComps(laneCompIds);
+
+    return { removedFromWs, markedRemoved };
   }
 
   /**

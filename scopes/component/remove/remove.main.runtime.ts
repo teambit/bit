@@ -5,7 +5,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
-import { compact, partition } from 'lodash';
+import { compact } from 'lodash';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/lib/list-scope';
 import { ComponentID } from '@teambit/component-id';
@@ -24,8 +24,6 @@ const BEFORE_REMOVE = 'removing components';
 export type RemoveInfo = {
   removed: boolean;
 };
-
-export type MarkRemoveOnLaneResult = { mainResults: ComponentID[]; laneResults: ComponentID[] };
 
 export class RemoveMain {
   constructor(private workspace: Workspace, public logger: Logger, private importer: ImporterMain) {}
@@ -83,46 +81,7 @@ export class RemoveMain {
     return results;
   }
 
-  async markRemoveOnLane(componentsPattern: string): Promise<MarkRemoveOnLaneResult> {
-    if (!this.workspace) throw new ConsumerNotFound();
-    const currentLane = await this.workspace.getCurrentLaneObject();
-    if (!currentLane) {
-      throw new Error('markRemoveOnLane expects to get called when on a lane');
-    }
-    if (currentLane.isNew) {
-      const results = await this.remove({
-        componentsPattern,
-        force: true,
-      });
-      const ids = results.localResult.removedComponentIds;
-      const compIds = await this.workspace.resolveMultipleComponentIds(ids);
-      return { mainResults: compIds, laneResults: [] };
-    }
-
-    const componentIds = await this.workspace.idsByPattern(componentsPattern);
-
-    const laneBitIds = currentLane.toBitIds();
-
-    const [laneCompIds, mainCompIds] = partition(componentIds, (id) => laneBitIds.hasWithoutVersion(id._legacy));
-
-    const getMainResults = async () => {
-      if (!mainCompIds.length) return [];
-      const results = await this.removeLocallyByIds(
-        mainCompIds.map((id) => id._legacy),
-        { force: true }
-      );
-      const ids = results.localResult.removedComponentIds;
-      return this.workspace.resolveMultipleComponentIds(ids);
-    };
-
-    const mainResults = await getMainResults();
-
-    const laneResults = await this.markRemoveComps(laneCompIds);
-
-    return { mainResults, laneResults };
-  }
-
-  private async markRemoveComps(componentIds: ComponentID[]) {
+  async markRemoveComps(componentIds: ComponentID[]) {
     const components = await this.workspace.getMany(componentIds);
     await removeComponentsFromNodeModules(
       this.workspace.consumer,
@@ -308,7 +267,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     const logger = loggerMain.createLogger(RemoveAspect.id);
     const removeMain = new RemoveMain(workspace, logger, importerMain);
     componentAspect.registerShowFragments([new RemoveFragment(removeMain)]);
-    cli.register(new RemoveCmd(removeMain), new RecoverCmd(removeMain));
+    cli.register(new RemoveCmd(removeMain, workspace), new RecoverCmd(removeMain));
     return removeMain;
   }
 }
