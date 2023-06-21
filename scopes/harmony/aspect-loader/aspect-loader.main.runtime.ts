@@ -609,6 +609,7 @@ export class AspectLoaderMain {
 
   getAspectIdFromAspectFile(aspectFilePath: string): string | undefined {
     try {
+      // eslint-disable-next-line global-require, import/no-dynamic-require
       const module = aspectFilePath ? require(aspectFilePath) : undefined;
       let manifest = module.default || module;
       if (this.isAspect(manifest)) {
@@ -633,8 +634,10 @@ export class AspectLoaderMain {
         }
       }
       this.logger.warn(`getAspectIdFromAspectFile - aspect at ${aspectFilePath} is not a valid aspect`);
+      return undefined;
     } catch (err) {
       this.logger.warn(`getAspectIdFromAspectFile - couldn't require the aspect file ${aspectFilePath}. err: ${err}`);
+      return undefined;
     }
   }
 

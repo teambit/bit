@@ -226,8 +226,8 @@ needed-for: ${neededFor || '<unknown>'}`);
       const srcRuntimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
       const srcAspectFilePath = runtime ? this.findAspectFile(dir) : undefined;
       const aspectFilePath = srcAspectFilePath ? join(dir, 'dist', srcAspectFilePath) : null;
-      const runtimeManifest = srcAspectFilePath ? join(dir, 'dist', srcAspectFilePath) : null;
-      let aspectId = aspectFilePath ? this.aspectLoader.getAspectIdFromAspectFile(aspectFilePath) : undefined;
+      const runtimeManifest = srcRuntimeManifest ? join(dir, 'dist', srcRuntimeManifest) : null;
+      const aspectId = aspectFilePath ? this.aspectLoader.getAspectIdFromAspectFile(aspectFilePath) : undefined;
 
       return new AspectDefinition(dir, aspectFilePath, runtimeManifest, undefined, aspectId, true);
     });
