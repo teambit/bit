@@ -5,7 +5,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
-import { compact } from 'lodash';
+import { compact, partition } from 'lodash';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/lib/list-scope';
 import { ComponentID } from '@teambit/component-id';
@@ -24,6 +24,8 @@ const BEFORE_REMOVE = 'removing components';
 export type RemoveInfo = {
   removed: boolean;
 };
+
+export type MarkRemoveOnLaneResult = { mainResults: ComponentID[]; laneResults: ComponentID[] };
 
 export class RemoveMain {
   constructor(private workspace: Workspace, public logger: Logger, private importer: ImporterMain) {}
@@ -81,25 +83,47 @@ export class RemoveMain {
     return results;
   }
 
-  async softRemove(componentsPattern: string): Promise<ComponentID[]> {
+  async markRemoveOnLane(componentsPattern: string): Promise<MarkRemoveOnLaneResult> {
     if (!this.workspace) throw new ConsumerNotFound();
     const currentLane = await this.workspace.getCurrentLaneObject();
-    if (currentLane?.isNew) {
-      throw new BitError(
-        `unable to soft-remove on a new (not-exported) lane "${currentLane.name}". please remove without --delete`
-      );
+    if (!currentLane) {
+      throw new Error('markRemoveOnLane expects to get called when on a lane');
     }
+    if (currentLane.isNew) {
+      const results = await this.remove({
+        componentsPattern,
+        force: true,
+      });
+      const ids = results.localResult.removedComponentIds;
+      const compIds = await this.workspace.resolveMultipleComponentIds(ids);
+      return { mainResults: compIds, laneResults: [] };
+    }
+
     const componentIds = await this.workspace.idsByPattern(componentsPattern);
-    const components = await this.workspace.getMany(componentIds);
-    const newComps = components.filter((c) => !c.id.hasVersion());
-    if (newComps.length) {
-      throw new BitError(
-        `unable to soft-remove the following new component(s), please remove them without --delete\n${newComps
-          .map((c) => c.id.toString())
-          .join('\n')}`
+
+    const laneBitIds = currentLane.toBitIds();
+
+    const [laneCompIds, mainCompIds] = partition(componentIds, (id) => laneBitIds.hasWithoutVersion(id._legacy));
+
+    const getMainResults = async () => {
+      if (!mainCompIds.length) return [];
+      const results = await this.removeLocallyByIds(
+        mainCompIds.map((id) => id._legacy),
+        { force: true }
       );
-    }
-    await this.throwForMainComponentWhenOnLane(components);
+      const ids = results.localResult.removedComponentIds;
+      return this.workspace.resolveMultipleComponentIds(ids);
+    };
+
+    const mainResults = await getMainResults();
+
+    const laneResults = await this.markRemoveComps(laneCompIds);
+
+    return { mainResults, laneResults };
+  }
+
+  private async markRemoveComps(componentIds: ComponentID[]) {
+    const components = await this.workspace.getMany(componentIds);
     await removeComponentsFromNodeModules(
       this.workspace.consumer,
       components.map((c) => c.state._consumer)
@@ -116,6 +140,25 @@ export class RemoveMain {
     await deleteComponentsFiles(this.workspace.consumer, bitIds);
 
     return componentIds;
+  }
+
+  async markRemoveOnMain(componentsPattern: string): Promise<ComponentID[]> {
+    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace.isOnMain()) {
+      throw new Error(`markRemoveOnMain expects to get called when on main`);
+    }
+    const componentIds = await this.workspace.idsByPattern(componentsPattern);
+
+    const newComps = componentIds.filter((id) => !id.hasVersion());
+    if (newComps.length) {
+      throw new BitError(
+        `unable to mark-remove the following new component(s), please remove them without --delete\n${newComps
+          .map((id) => id.toString())
+          .join('\n')}`
+      );
+    }
+
+    return this.markRemoveComps(componentIds);
   }
 
   /**

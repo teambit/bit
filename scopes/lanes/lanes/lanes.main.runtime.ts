@@ -27,6 +27,7 @@ import { ComponentCompareMain, ComponentCompareAspect } from '@teambit/component
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
+import RemoveAspect, { MarkRemoveOnLaneResult, RemoveMain } from '@teambit/remove';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
@@ -45,6 +46,7 @@ import {
   LaneRenameCmd,
   LaneAddReadmeCmd,
   LaneRemoveReadmeCmd,
+  LaneRemoveCompCmd,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -123,7 +125,8 @@ export class LanesMain {
     readonly importer: ImporterMain,
     private exporter: ExportMain,
     private componentCompare: ComponentCompareMain,
-    readonly componentWriter: ComponentWriterMain
+    readonly componentWriter: ComponentWriterMain,
+    private remove: RemoveMain
   ) {}
 
   async getLanes({
@@ -532,6 +535,10 @@ please create a new lane instead, which will include all components of this lane
       );
     }
     await this.scope.legacyScope.objects.restoreFromTrash([ref]);
+  }
+
+  async removeComps(componentsPattern: string): Promise<MarkRemoveOnLaneResult> {
+    return this.remove.markRemoveOnLane(componentsPattern);
   }
 
   /**
@@ -977,6 +984,7 @@ please create a new lane instead, which will include all components of this lane
     ExpressAspect,
     ComponentCompareAspect,
     ComponentWriterAspect,
+    RemoveAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -992,6 +1000,7 @@ please create a new lane instead, which will include all components of this lane
     express,
     componentCompare,
     componentWriter,
+    remove,
   ]: [
     CLIMain,
     ScopeMain,
@@ -1004,7 +1013,8 @@ please create a new lane instead, which will include all components of this lane
     ExportMain,
     ExpressMain,
     ComponentCompareMain,
-    ComponentWriterMain
+    ComponentWriterMain,
+    RemoveMain
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(
@@ -1016,7 +1026,8 @@ please create a new lane instead, which will include all components of this lane
       importer,
       exporter,
       componentCompare,
-      componentWriter
+      componentWriter,
+      remove
     );
     const switchCmd = new SwitchCmd(lanesMain);
     const laneCmd = new LaneCmd(lanesMain, workspace, scope);
@@ -1033,6 +1044,7 @@ please create a new lane instead, which will include all components of this lane
       new LaneAddReadmeCmd(lanesMain),
       new LaneRemoveReadmeCmd(lanesMain),
       new LaneImportCmd(switchCmd),
+      new LaneRemoveCompCmd(workspace, lanesMain),
     ];
     cli.register(laneCmd, switchCmd);
     cli.registerOnStart(async () => {

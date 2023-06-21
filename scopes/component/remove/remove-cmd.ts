@@ -94,7 +94,7 @@ in case this is running on a lane, it'll mark the component as deleted on the la
       if (track) throw new BitError(`error: please use either --delete or --track, not both`);
       if (keepFiles) throw new BitError(`error: please use either --delete or --keep-files, not both`);
       if (fromLane) throw new BitError(`error: please use either --delete or --from-lane, not both`);
-      const removedCompIds = await this.remove.softRemove(componentsPattern);
+      const removedCompIds = await this.remove.markRemoveOnMain(componentsPattern);
       return `${chalk.green('successfully soft-removed the following components:')}
 ${removedCompIds.join('\n')}
 
