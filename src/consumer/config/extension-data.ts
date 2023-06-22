@@ -231,7 +231,9 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   }
 
   static fromConfigObject(obj: { [extensionId: string]: any } = {}): ExtensionDataList {
-    const arr = Object.keys(obj).map((extensionId) => configEntryToDataEntry(extensionId, obj[extensionId]));
+    const arr = Object.keys(obj)
+      .filter((extensionId) => !extensionId.startsWith('file:'))
+      .map((extensionId) => configEntryToDataEntry(extensionId, obj[extensionId]));
     return this.fromArray(arr);
   }
 

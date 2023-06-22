@@ -1308,6 +1308,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     neededFor?: string,
     opts: WorkspaceLoadAspectsOptions = {}
   ): Promise<string[]> {
+    console.log('loadAspects', ids);
     const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
     return workspaceAspectsLoader.loadAspects(ids, throwOnError, neededFor, opts);
   }

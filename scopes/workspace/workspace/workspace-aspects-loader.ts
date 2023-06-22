@@ -14,12 +14,13 @@ import {
 } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
 import fs from 'fs-extra';
+import { join, resolve } from 'path';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import pMapSeries from 'p-map-series';
-import { difference, compact, groupBy } from 'lodash';
+import { difference, compact, groupBy, partition } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
@@ -48,6 +49,7 @@ export type AspectPackage = { packageName: string; version: string };
 export class WorkspaceAspectsLoader {
   private consumer: Consumer;
   private resolvedInstalledAspects: Map<string, string | null>;
+  private localAspects: string[];
 
   constructor(
     private workspace: Workspace,
@@ -97,6 +99,10 @@ export class WorkspaceAspectsLoader {
     this.logger.info(`${loggerPrefix} loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts, null, 2)}`);
+    const [localIds, nonLocalIds] = partition(ids, (id) => id.startsWith('file:'));
+    this.localAspects = localIds ?? [];
+    await this.loadAspectFromPath(this.localAspects);
+    ids = nonLocalIds;
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -163,6 +169,55 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
     const manifestIds = manifests.map((manifest) => manifest.id);
     return compact(manifestIds.concat(scopeAspectIds));
+  }
+
+  private async loadAspectFromPath(localAspects: string[]) {
+    const dirPaths = this.parseLocalAspect(localAspects);
+    const manifests = dirPaths.map((dirPath) => {
+      const scopeRuntime = this.findRuntime(dirPath, 'scope');
+      if (scopeRuntime) {
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        const module = require(join(dirPath, 'dist', scopeRuntime));
+        return module.default || module;
+      }
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      const module = require(dirPath);
+      return module.default || module;
+    });
+
+    await this.aspectLoader.loadExtensionsByManifests(manifests, undefined, { throwOnError: true });
+  }
+
+  private parseLocalAspect(localAspects: string[]) {
+    const dirPaths = localAspects.map((localAspect) => resolve(localAspect.replace('file://', '')));
+    const nonExistsDirPaths = dirPaths.filter((path) => !fs.existsSync(path));
+    nonExistsDirPaths.forEach((path) => this.logger.warn(`no such file or directory: ${path}`));
+    const existsDirPaths = dirPaths.filter((path) => fs.existsSync(path));
+    return existsDirPaths;
+  }
+
+  private async resolveLocalAspects(ids: string[], runtime?: string): Promise<AspectDefinition[]> {
+    const dirs = this.parseLocalAspect(ids);
+
+    return dirs.map((dir) => {
+      const srcRuntimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
+      const srcAspectFilePath = runtime ? this.findAspectFile(dir) : undefined;
+      const aspectFilePath = srcAspectFilePath ? join(dir, 'dist', srcAspectFilePath) : null;
+      const runtimeManifest = srcRuntimeManifest ? join(dir, 'dist', srcRuntimeManifest) : null;
+      const aspectId = aspectFilePath ? this.aspectLoader.getAspectIdFromAspectFile(aspectFilePath) : undefined;
+
+      return new AspectDefinition(dir, aspectFilePath, runtimeManifest, undefined, aspectId, true);
+    });
+  }
+
+  private findAspectFile(dirPath: string) {
+    const files = fs.readdirSync(join(dirPath, 'dist'));
+    return files.find((path) => path.includes(`.aspect.js`));
+  }
+
+  private findRuntime(dirPath: string, runtime: string) {
+    const files = fs.readdirSync(join(dirPath, 'dist'));
+    return files.find((path) => path.includes(`${runtime}.runtime.js`));
   }
 
   private async loadFromScopeAspectsCapsule(ids: ComponentID[], throwOnError?: boolean, neededFor?: string) {
@@ -366,7 +421,16 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
         return coreAspect.runtimePath;
       });
     }
-    const allDefs = wsAspectDefs.concat(coreAspectDefs).concat(scopeAspectsDefs).concat(installedAspectsDefs);
+    const localResolved = await this.resolveLocalAspects(this.localAspects ?? [], runtimeName);
+    console.log('localAspects', this.localAspects);
+    console.log('localResolved', localResolved);
+    const allDefs = [
+      ...wsAspectDefs,
+      ...coreAspectDefs,
+      ...scopeAspectsDefs,
+      ...installedAspectsDefs,
+      ...localResolved,
+    ];
     const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
     const filteredDefs = this.aspectLoader.filterAspectDefs(allDefs, idsToFilter, runtimeName, mergedOpts);
     return filteredDefs;
@@ -434,7 +498,9 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const configuredAspects = this.aspectLoader.getConfiguredAspects();
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const userAspectsIds: string[] = difference(configuredAspects, coreAspectsIds);
-    const componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(userAspectsIds);
+    const componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(
+      userAspectsIds.filter((id) => !id.startsWith('file:'))
+    );
     const aspectsComponents = await this.importAndGetAspects(componentIdsToResolve);
     let componentsToGetPackages = aspectsComponents;
     if (options.externalsOnly) {
