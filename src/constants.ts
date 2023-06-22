@@ -340,6 +340,8 @@ export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
 export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
 
+export const CFG_ISOLATED_SCOPE_CAPSULES = 'isolated_scope_capsules';
+
 /**
  * Name of the directory where the capsules for building components are stored
  * This is used for the components capsules for bit build / tag / snap / sign
