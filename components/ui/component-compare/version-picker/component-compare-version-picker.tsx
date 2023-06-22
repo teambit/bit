@@ -69,38 +69,42 @@ export function ComponentCompareVersionPicker({
 
   return (
     <div className={styles.componentCompareVersionPicker}>
-      <div className={classNames(styles.titleText, styles.rightPad)}>Comparing</div>
-      <VersionDropdown
-        key={key}
-        className={classNames(styles.componentCompareVersionContainer, styles.left, className)}
-        dropdownClassName={styles.componentCompareDropdown}
-        placeholderClassName={styles.componentCompareVersionPlaceholder}
-        menuClassName={classNames(styles.componentCompareVersionMenu, styles.showMenuOverNav)}
-        currentVersion={baseVersion as string}
-        loading={componentCompare?.loading}
-        overrideVersionHref={(_baseVersion) => {
-          return useUpdatedUrlFromQuery({ baseVersion: _baseVersion });
-        }}
-        disabled={(compare?.logs?.length ?? 0) < 2}
-        hasMoreVersions={(compare?.logs?.length ?? 0) > 1}
-        showVersionDetails={true}
-        useComponentVersions={useVersions}
-        useCurrentVersionLog={useVersion}
-        PlaceholderComponent={DetailedVersion}
-      />
-      <div className={styles.titleText}>with</div>
-      <VersionDropdown
-        className={classNames(styles.componentCompareVersionContainer, styles.right)}
-        dropdownClassName={styles.componentCompareDropdown}
-        placeholderClassName={styles.componentCompareVersionPlaceholder}
-        menuClassName={styles.componentCompareVersionMenu}
-        disabled={true}
-        loading={componentCompare?.loading}
-        currentVersion={compareVersion as string}
-        PlaceholderComponent={DetailedVersion}
-        useCurrentVersionLog={useVersion}
-        showVersionDetails={true}
-      />
+      <div className={classNames(styles.titleText, styles.rightPad)}>
+        Comparing
+        <VersionDropdown
+          key={key}
+          className={classNames(styles.componentCompareVersionContainer, styles.left, className)}
+          dropdownClassName={styles.componentCompareDropdown}
+          placeholderClassName={styles.componentCompareVersionPlaceholder}
+          menuClassName={classNames(styles.componentCompareVersionMenu, styles.showMenuOverNav)}
+          currentVersion={baseVersion as string}
+          loading={componentCompare?.loading}
+          overrideVersionHref={(_baseVersion) => {
+            return useUpdatedUrlFromQuery({ baseVersion: _baseVersion });
+          }}
+          disabled={(compare?.logs?.length ?? 0) < 2}
+          hasMoreVersions={(compare?.logs?.length ?? 0) > 1}
+          showVersionDetails={true}
+          useComponentVersions={useVersions}
+          useCurrentVersionLog={useVersion}
+          PlaceholderComponent={DetailedVersion}
+        />
+      </div>
+      <div className={styles.titleText}>
+        with
+        <VersionDropdown
+          className={classNames(styles.componentCompareVersionContainer, styles.right)}
+          dropdownClassName={styles.componentCompareDropdown}
+          placeholderClassName={styles.componentCompareVersionPlaceholder}
+          menuClassName={styles.componentCompareVersionMenu}
+          disabled={true}
+          loading={componentCompare?.loading}
+          currentVersion={compareVersion as string}
+          PlaceholderComponent={DetailedVersion}
+          useCurrentVersionLog={useVersion}
+          showVersionDetails={true}
+        />
+      </div>
     </div>
   );
 }

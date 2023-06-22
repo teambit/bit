@@ -244,16 +244,16 @@ function CompareMenuNav({ tabs, state, hooks, changes: changed }: ComponentCompa
           },
         ];
       }),
-    [_tabs.length, activeTab, changed?.length]
+    [_tabs.length, activeTab, changed, changed?.length]
   );
 
   const sortedTabs = useMemo(
     () => extractedTabs.filter(([, tab]) => !tab.widget),
-    [extractedTabs.length, activeTab, changed?.length]
+    [extractedTabs.length, activeTab, changed?.length, changed]
   );
   const sortedWidgets = useMemo(
     () => extractedTabs.filter(([, tab]) => tab.widget),
-    [extractedTabs.length, activeTab, changed?.length]
+    [extractedTabs.length, activeTab, changed?.length, changed]
   );
 
   return (
