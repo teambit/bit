@@ -1,5 +1,4 @@
 import React from 'react';
-import { Tooltip } from '@teambit/design.ui.tooltip';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { textColumn } from '@teambit/base-ui.layout.page-frame';
 import { H1 } from '@teambit/documenter.ui.heading';
