@@ -41,7 +41,11 @@ export function LanesProvider({
     [skip, optionsFromProps.ids, optionsFromProps.ids?.length, viewedLaneId?.toString()]
   );
 
-  const { lanesModel, loading, hasMore, fetchMoreLanes } = useLanes(targetLanes, skipNetworkCall, options);
+  const { lanesModel, loading, hasMore, fetchMoreLanes, offset, limit } = useLanes(
+    targetLanes,
+    skipNetworkCall,
+    options
+  );
 
   useEffect(() => {
     if (!loading && lanesModel) setLanesState(lanesModel);
@@ -104,9 +108,11 @@ export function LanesProvider({
     lanesModel: lanesState,
     updateViewedLane,
     loading,
-    hasMoreLanes: hasMore,
+    hasMore,
     fetchMoreLanes,
     options,
+    offset,
+    limit,
   };
 
   return <LanesContext.Provider value={lanesContextModel}>{children}</LanesContext.Provider>;

@@ -7,9 +7,11 @@ export type LanesContextModel = {
   lanesModel?: LanesModel;
   updateViewedLane?: (viewedLaneId?: LaneId) => void;
   fetchMoreLanes?: FetchMoreLanes;
-  hasMoreLanes?: boolean;
+  hasMore?: boolean;
   loading?: boolean;
   options?: UseLanesOptions;
+  offset?: number;
+  limit?: number;
 };
 
 export const LanesContext: React.Context<LanesContextModel | undefined> = createContext<LanesContextModel | undefined>(

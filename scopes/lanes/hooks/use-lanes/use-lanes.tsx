@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import { LanesModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { gql } from '@apollo/client';
 import { LaneId } from '@teambit/lane-id';
 import { isEqual } from 'lodash';
@@ -129,6 +129,8 @@ export type UseLanesResult = {
   loading?: boolean;
   fetchMoreLanes?: FetchMoreLanes;
   hasMore?: boolean;
+  offset?: number;
+  limit?: number;
 };
 
 export type UseLanes = (
@@ -143,7 +145,7 @@ export type UseRootLanes = (viewedLaneId?: LaneId, skip?: boolean, options?: Use
 export const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => {
   const { ids, offset, limit } = options;
 
-  const { data, fetchMore, loading } = useDataQuery(GET_LANES, {
+  const { data, fetchMore, loading } = useDataQuery<LanesQuery>(GET_LANES, {
     variables: {
       laneIds: ids,
       offset,
@@ -166,10 +168,8 @@ export const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => 
 
   const hasMore = useMemo(() => {
     if (loading) return true;
-    if (!loading && !!data && limit) {
-      return data.lanes.length >= limit;
-    }
-    return false;
+    if (!limit) return false;
+    return (data?.lanes?.list?.length ?? 0) >= limit;
   }, [loading, data]);
 
   const fetchMoreLanes: FetchMoreLanes = useCallback(
@@ -184,12 +184,12 @@ export const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => 
             return {
               lanesModel: newLanesModel,
               loading: _loadingMore,
-              hasMore: moreData.lanes.length >= newLimit,
+              hasMore: (moreData.lanes.list?.length ?? 0) >= newLimit,
               nextOffset: newOffset + newLimit,
             };
           }
           return {
-            lanesModel: undefined,
+            lanesModel,
             loading: _loadingMore,
             nextOffset: newOffset,
             currentLimit: newLimit,
@@ -197,24 +197,27 @@ export const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => 
         } catch (err) {
           // eslint-disable-next-line no-console
           console.error(err);
+          return {};
         }
       }
       return {
-        lanesModel: undefined,
+        lanesModel,
         loading: false,
         hasMore: false,
         nextOffset: newOffset,
         currentLimit: newLimit,
       };
     },
-    [hasMore, ids, ids?.length, viewedLaneId?.toString()]
+    [hasMore, ids, ids?.length, viewedLaneId?.toString(), lanesModel]
   );
 
   return {
     loading,
     lanesModel,
-    fetchMore: fetchMoreLanes,
+    fetchMoreLanes,
     hasMore,
+    offset,
+    limit,
   };
 };
 

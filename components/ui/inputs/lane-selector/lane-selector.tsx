@@ -1,10 +1,10 @@
 import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect, useCallback, useMemo, useRef } from 'react';
 import classnames from 'classnames';
 import { useLocation } from 'react-router-dom';
-import { startCase } from 'lodash';
+import { isEqual, startCase } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
-import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
+import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { InputText as SearchInput } from '@teambit/design.inputs.input-text';
 import { ToggleButton } from '@teambit/design.inputs.toggle-button';
 import { Icon } from '@teambit/design.elements.icon';
@@ -33,6 +33,7 @@ export type LaneSelectorProps = {
   loading?: boolean;
   hasMore?: boolean;
   fetchMoreLanes?: FetchMoreLanes;
+  initialOffset?: number;
 } & HTMLAttributes<HTMLDivElement>;
 
 export type GroupedLaneDropdownItem = [scope: string, lanes: LaneModel[]];
@@ -44,6 +45,8 @@ export enum LaneSelectorSortBy {
   CREATED = 'CREATED',
   ALPHABETICAL = 'ALPHABETICAL',
 }
+
+export const LIMIT = 10;
 
 export function LaneSelector(props: LaneSelectorProps) {
   const {
@@ -66,6 +69,9 @@ export function LaneSelector(props: LaneSelectorProps) {
     scopeIconLookup,
     forceCloseOnEnter,
     loading,
+    hasMore,
+    fetchMoreLanes,
+    initialOffset = 0,
     ...rest
   } = props;
 
@@ -90,10 +96,34 @@ export function LaneSelector(props: LaneSelectorProps) {
 
   const [search, setSearch] = useState<string>('');
   const [sortBy, setSortBy] = useState<LaneSelectorSortBy>(sortByFromProps);
+  const [offset, setOffset] = useState(initialOffset ?? 0);
+  const [hasMoreState, setHasMore] = useState<boolean>(hasMore ?? false);
+  const [lazilyLoadedLanes, setLazilyLoadedLanes] = useState<LaneModel[]>([]);
+
+  useEffect(() => {
+    const allNonMainLanes = LanesModel.concatLanes(nonMainLanes, lazilyLoadedLanes);
+    if (!isEqual(lazilyLoadedLanes, allNonMainLanes)) {
+      setLazilyLoadedLanes(allNonMainLanes);
+    }
+  }, [nonMainLanes, nonMainLanes.length]);
+
+  const fetchMore = useCallback(async () => {
+    const result = await fetchMoreLanes?.(offset, LIMIT);
+    setLazilyLoadedLanes((existing) => {
+      setHasMore(() => {
+        setOffset(result?.nextOffset ?? 0);
+        return result?.hasMore ?? false;
+      });
+      const updatedLanes = LanesModel.concatLanes(existing, result?.lanesModel?.lanes);
+      return updatedLanes.filter((lane) => !lane.id.isDefault()) ?? [];
+    });
+
+    return result;
+  }, [offset, fetchMoreLanes]);
 
   const sortedNonMainLanes = useMemo(() => {
-    return nonMainLanes.sort(compareFn(sortBy));
-  }, [sortBy, nonMainLanes.length]);
+    return lazilyLoadedLanes.sort(compareFn(sortBy));
+  }, [sortBy, lazilyLoadedLanes]);
 
   const [filteredLanes, setFilteredLanes] = useState<LaneModel[]>(sortedNonMainLanes);
 
@@ -102,10 +132,10 @@ export function LaneSelector(props: LaneSelectorProps) {
   const location = useLocation();
 
   useEffect(() => {
-    if (filteredLanes.length !== nonMainLanes.length) {
-      setFilteredLanes(nonMainLanes);
+    if (filteredLanes.length !== lazilyLoadedLanes.length) {
+      setFilteredLanes(lazilyLoadedLanes);
     }
-  }, [nonMainLanes.length]);
+  }, [lazilyLoadedLanes.length]);
 
   const multipleLanes = nonMainLanes.length >= 1;
 
@@ -182,15 +212,14 @@ export function LaneSelector(props: LaneSelectorProps) {
   // }
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [, setPlaceholderOpenStateTracker] = useState<boolean | undefined>(false);
-  const [forceCloseDropdown, setForceCloseDropdown] = useState<boolean | undefined>(true);
+  const [dropdownOpen, setDropdownOpen] = useState<boolean | undefined>(false);
   const [listNavCmd, setListNavCmd] = useState<{ command?: ListNavigatorCmd; update?: number } | undefined>();
 
   const handleKeyDown = (e: KeyboardEvent) => {
     setListNavCmd((_listNavCmd) => {
       switch (e.key) {
         case 'Enter': {
-          if (forceCloseOnEnter) setForceCloseDropdown(true);
+          if (forceCloseOnEnter) setDropdownOpen(true);
           return { command: 'Enter', update: (_listNavCmd?.update ?? 0) + 1 };
         }
         case 'ArrowUp': {
@@ -219,41 +248,15 @@ export function LaneSelector(props: LaneSelectorProps) {
   }, [containerRef.current]);
 
   useEffect(() => {
-    setForceCloseDropdown(() => {
-      setPlaceholderOpenStateTracker(false);
-      return true;
+    setDropdownOpen(() => {
+      return false;
     });
   }, [location.pathname]);
 
-  useEffect(() => {
-    if (forceCloseDropdown) setForceCloseDropdown(false);
-  }, [forceCloseDropdown]);
-
-  return (
-    <div {...rest} className={classnames(className, styles.laneSelector)} ref={containerRef}>
-      <Dropdown
-        dropClass={styles.menu}
-        position="bottom"
-        clickPlaceholderToggles={multipleLanes}
-        clickToggles={multipleLanes}
-        open={forceCloseDropdown ? !forceCloseDropdown : undefined}
-        onPlaceholderToggle={() => {
-          setPlaceholderOpenStateTracker((v) => {
-            // if (!v) containerRef.current?.focus();
-            return !v;
-          });
-        }}
-        placeholderContent={
-          <LanePlaceholder
-            loading={loading}
-            disabled={!multipleLanes}
-            selectedLaneId={selectedLaneId}
-            showScope={groupByScope}
-          />
-        }
-        className={classnames(styles.dropdown, !multipleLanes && styles.disabled)}
-      >
-        {multipleLanes && (
+  const LaneList = React.useMemo(() => {
+    return (
+      <React.Fragment key={'lane-selector-dropdown-root'}>
+        {multipleLanes && dropdownOpen && (
           <div className={styles.toolbar}>
             {/* {multipleLanes && groupByScope && (
               <div className={styles.groupBy}>
@@ -293,17 +296,57 @@ export function LaneSelector(props: LaneSelectorProps) {
             </div>
           </div>
         )}
-        {multipleLanes && (
+        {multipleLanes && dropdownOpen && (
           <LaneSelectorList
-            {...props}
+            hasMore={hasMoreState}
+            fetchMore={fetchMore}
             nonMainLanes={filteredLanes}
             search={search}
             sortBy={sortBy}
             groupByScope={groupScope}
             scopeIconLookup={scopeIconLookup}
             listNavigator={listNavCmd}
+            selectedLaneId={selectedLaneId}
+            loading={loading}
+            mainLane={mainLane}
           />
         )}
+      </React.Fragment>
+    );
+  }, [
+    filteredLanes,
+    listNavCmd,
+    groupByScope,
+    multipleLanes,
+    selectedLaneId,
+    loading,
+    hasMore,
+    fetchMore,
+    dropdownOpen,
+  ]);
+
+  return (
+    <div {...rest} className={classnames(className, styles.laneSelector)} ref={containerRef}>
+      <Dropdown
+        dropClass={styles.menu}
+        position="bottom"
+        clickPlaceholderToggles={multipleLanes}
+        clickToggles={multipleLanes}
+        open={dropdownOpen}
+        onPlaceholderToggle={() => {
+          setDropdownOpen((v) => !v);
+        }}
+        placeholderContent={
+          <LanePlaceholder
+            loading={loading}
+            disabled={!multipleLanes}
+            selectedLaneId={selectedLaneId}
+            showScope={groupByScope}
+          />
+        }
+        className={classnames(styles.dropdown, !multipleLanes && styles.disabled)}
+      >
+        {LaneList}
       </Dropdown>
     </div>
   );

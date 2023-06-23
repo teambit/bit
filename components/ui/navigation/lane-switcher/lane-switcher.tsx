@@ -31,11 +31,7 @@ export function LaneSwitcher({
   ...rest
 }: LaneSwitcherProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { lanesModel, loading, fetchMoreLanes, hasMore } =
-    useLanes(undefined, undefined, {
-      offset: 0,
-      limit: 5,
-    }) || {};
+  const { lanesModel, loading, fetchMoreLanes, hasMore, offset, limit } = useLanes() || {};
 
   const mainLane = lanesModel?.getDefaultLane();
   const nonMainLanes = lanesModel?.getNonMainLanes() || [];
@@ -69,6 +65,9 @@ export function LaneSwitcher({
             scopeIconLookup={scopeIconLookup}
             getHref={getHref}
             loading={loading}
+            fetchMoreLanes={fetchMoreLanes}
+            hasMore={hasMore}
+            initialOffset={(offset ?? 0) + (limit ?? 0)}
             {...rest}
           />
         }

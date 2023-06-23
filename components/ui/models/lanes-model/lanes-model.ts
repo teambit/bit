@@ -364,11 +364,15 @@ export class LanesModel {
       (lane) => !lane.id.isDefault() && (!laneId || lane.id.isEqual(laneId))
     );
   };
-  addLanes(newLanes: LaneModel[]) {
-    this.lanes = compact(uniqBy([...this.lanes, ...newLanes], (lane) => lane?.id.toString()));
+  addLanes(newLanes: LaneModel[] = []) {
+    this.lanes = LanesModel.concatLanes(this.lanes, newLanes);
     this.laneIdsByScope = LanesModel.groupLaneIdsByScope(this.lanes.map((lane) => lane.id));
     const { byId, byName } = LanesModel.groupByComponentNameAndId(this.lanes);
     this.lanesByComponentId = byId;
     this.lanesByComponentName = byName;
+  }
+
+  static concatLanes(lanes: LaneModel[] = [], newLanes: LaneModel[] = []): LaneModel[] {
+    return compact(uniqBy([...lanes, ...newLanes], (lane) => lane?.id.toString()));
   }
 }
