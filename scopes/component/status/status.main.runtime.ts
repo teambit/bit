@@ -16,7 +16,6 @@ import ComponentsList from '@teambit/legacy/dist/consumer/component/components-l
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
