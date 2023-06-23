@@ -52,6 +52,7 @@ import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { CompilationInitiator } from '@teambit/compiler';
+import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -97,6 +98,7 @@ import {
 } from './workspace-aspects-loader';
 import { MergeConflictFile } from './merge-conflict-file';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
+import { CompFiles } from './workspace-component/comp-files';
 
 export type EjectConfResult = {
   configPath: string;
@@ -564,6 +566,26 @@ export class Workspace implements ComponentFactory {
     } catch (err) {
       return undefined;
     }
+  }
+
+  async getFilesModification(id: ComponentID): Promise<CompFiles> {
+    const bitMapEntry = this.bitMap.getBitmapEntry(id);
+    const compDirAbs = path.join(this.path, bitMapEntry.getComponentDir());
+    const sourceFilesVinyls = bitMapEntry.files.map((file) => {
+      const filePath = path.join(compDirAbs, file.relativePath);
+      return SourceFile.load(filePath, compDirAbs, this.path, {});
+    });
+
+    const getHeadFiles = async () => {
+      const modelComp = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
+      if (!modelComp) return [];
+      const head = modelComp.getHeadRegardlessOfLane();
+      if (!head) return [];
+      const verObj = await modelComp.loadVersion(head.toString(), this.scope.legacyScope.objects);
+      return verObj.files;
+    };
+
+    return new CompFiles(id, sourceFilesVinyls, await getHeadFiles());
   }
 
   /**

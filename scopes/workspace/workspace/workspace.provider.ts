@@ -235,6 +235,9 @@ export default async function provideWorkspace(
   component.registerHost(workspace);
 
   cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string) => {
+    if (currentCommand === 'mini-status' || currentCommand === 'ms') {
+      return; // mini-status should be super fast.
+    }
     if (currentCommand === 'install') {
       workspace.inInstallContext = true;
     }
