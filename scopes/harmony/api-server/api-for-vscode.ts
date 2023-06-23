@@ -1,15 +1,15 @@
 import path from 'path';
 import fs from 'fs-extra';
-import filenamify from 'filenamify';
 import { Workspace } from '@teambit/workspace';
 import { PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy/dist/utils/path';
 import pMap from 'p-map';
+import { SnappingMain } from '@teambit/snapping';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
 
 export class APIForVSCode {
-  constructor(private workspace: Workspace) {}
+  constructor(private workspace: Workspace, private snapping: SnappingMain) {}
 
   async listIdsWithPaths() {
     const ids = await this.workspace.listIds();
@@ -73,5 +73,10 @@ export class APIForVSCode {
       { concurrency: 30 }
     );
     return results;
+  }
+
+  async tagOrSnap(message = '') {
+    const params = { message, build: false };
+    return this.workspace.isOnMain() ? this.snapping.tag(params) : this.snapping.snap(params);
   }
 }
