@@ -600,9 +600,13 @@ export class MergingMain {
     const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
     const componentOnOther: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
     if (componentOnOther.isRemoved()) {
-      if (existingBitMapId) componentStatus.shouldBeRemoved = true;
-      if (!localLane) {
+      if (existingBitMapId && localLane) {
+        // continue with merging the component, so then the current lane will get the soft-remove update.
+        // also, remove the component from the workspace.
+        componentStatus.shouldBeRemoved = true;
+      } else {
         // on main, don't merge soft-removed components.
+        // on lane, if it's not part of the current lane (!existingBitMapId), don't merge it.
         return returnUnmerged(`component has been removed`, true);
       }
     }
