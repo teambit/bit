@@ -16,9 +16,11 @@ import ComponentsList from '@teambit/legacy/dist/consumer/component/components-l
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
+import MiniStatusCmd from './mini-status-cmd';
 
 type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
 
@@ -43,6 +45,11 @@ export type StatusResult = {
   currentLaneId: LaneId;
   forkedLaneId?: LaneId;
   workspaceIssues: string[];
+};
+
+export type MiniStatusResults = {
+  modified: ComponentID[];
+  newComps: ComponentID[];
 };
 
 export class StatusMain {
@@ -183,6 +190,18 @@ export class StatusMain {
     };
   }
 
+  async statusMini(componentPattern?: string): Promise<MiniStatusResults> {
+    const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : await this.workspace.listIds();
+    const comps = await pMapSeries(ids, (id) => this.workspace.getFilesModification(id));
+    const modified: ComponentID[] = [];
+    const newComps: ComponentID[] = [];
+    comps.forEach((comp) => {
+      if (!comp.id.hasVersion()) newComps.push(comp.id);
+      if (comp.isModified()) modified.push(comp.id);
+    });
+    return { modified, newComps };
+  }
+
   private async addRemovedStagedIfNeeded(stagedComponents: ModelComponent[]) {
     const removedStagedIds = await this.remove.getRemovedStaged();
     if (!removedStagedIds.length) return;
@@ -209,7 +228,7 @@ export class StatusMain {
     LanesMain
   ]) {
     const statusMain = new StatusMain(workspace, issues, insights, remove, lanes);
-    cli.register(new StatusCmd(statusMain));
+    cli.register(new StatusCmd(statusMain), new MiniStatusCmd(statusMain));
     return statusMain;
   }
 }
