@@ -189,7 +189,7 @@ export function LaneSelectorList({
       const selectedLaneElement = laneDOMRefs.current.get(selectedLaneId.toString())?.current;
       selectedLaneElement?.scrollIntoView({ block: 'nearest' });
     }
-  }, [selectedLaneId?.toString()]);
+  }, [selectedLaneId?.toString(), laneDropdownItems]);
 
   if (loading) return null;
 

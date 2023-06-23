@@ -177,7 +177,13 @@ export const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => 
       if (hasMore) {
         try {
           const { data: moreData, loading: _loadingMore } = await fetchMore({
-            variables: { laneIds: ids, offset: newOffset, limit: newLimit },
+            variables: {
+              offset: newOffset,
+              limit: newLimit,
+              laneIds: [],
+              skipViewedLane: !viewedLaneId || viewedLaneId.isDefault(),
+              viewedLaneId: viewedLaneId ? [viewedLaneId?.toString()] : undefined,
+            },
           });
           if (!_loadingMore && moreData.lanes) {
             const newLanesModel = LanesModel.from({ data: moreData });
@@ -208,7 +214,7 @@ export const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => 
         currentLimit: newLimit,
       };
     },
-    [hasMore, ids, ids?.length, viewedLaneId?.toString(), lanesModel]
+    [hasMore, viewedLaneId?.toString(), lanesModel]
   );
 
   return {
