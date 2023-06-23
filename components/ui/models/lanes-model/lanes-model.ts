@@ -3,6 +3,7 @@ import { LaneId } from '@teambit/lane-id';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { affix } from '@teambit/base-ui.utils.string.affix';
 import { pathToRegexp } from 'path-to-regexp';
+import { compact, uniqBy } from 'lodash';
 
 /**
  * GQL (lanes/getLanes/components)
@@ -29,7 +30,6 @@ export type LaneQueryLaneOwner = {
  */
 export type LaneQueryResult = {
   id: { name: string; scope: string };
-  remote?: string;
   isMerged: boolean;
   displayName?: string;
   laneComponentIds: Array<ComponentIdObj>;
@@ -47,6 +47,7 @@ export type LaneQueryResult = {
 export type LanesQueryResult = {
   list?: LaneQueryResult[];
   current?: LaneQueryResult;
+  default?: LaneQueryResult;
 };
 /**
  * GQL (lanes)
@@ -79,6 +80,7 @@ export type LanesModelProps = {
   lanes?: LaneModel[];
   viewedLane?: LaneModel;
   currentLane?: LaneModel;
+  defaultLane?: LaneModel;
 };
 
 /**
@@ -133,7 +135,7 @@ export class LanesModel {
     return `${componentUrl}${urlSearch}`;
   };
 
-  static mapToLaneModel(laneData: LaneQueryResult, host: string): LaneModel {
+  static mapToLaneModel(laneData: LaneQueryResult): LaneModel {
     const {
       id,
       laneComponentIds,
@@ -152,7 +154,7 @@ export class LanesModel {
         return componentId;
       }) || [];
 
-    const readmeComponentModel = readmeComponent && ComponentModel.from({ ...readmeComponent, host });
+    const readmeComponentModel = readmeComponent && ComponentModel.from({ ...readmeComponent });
 
     const createdAtDate = (createdAt && new Date(+createdAt)) || undefined;
     const createdBy = createdByData
@@ -236,33 +238,35 @@ export class LanesModel {
     return { byName, byId };
   }
 
-  static from({ data, host, viewedLaneId }: { data: LanesQuery; host: string; viewedLaneId?: LaneId }): LanesModel {
-    const lanes = data?.lanes?.list?.map((lane) => LanesModel.mapToLaneModel(lane, host)) || [];
-    const currentLane = data.lanes?.current?.id
-      ? lanes.find((lane) => lane.id.isEqual(data.lanes?.current?.id as LaneId))
-      : undefined;
-    const lanesModel = new LanesModel({ lanes, currentLane });
+  static from({ data, viewedLaneId }: { data: LanesQuery; viewedLaneId?: LaneId }): LanesModel {
+    const lanes = data?.lanes?.list?.map((lane) => LanesModel.mapToLaneModel(lane)) || [];
+    const currentLane = data?.lanes?.current ? LanesModel.mapToLaneModel(data.lanes.current) : undefined;
+    const defaultLane = data?.lanes?.default ? LanesModel.mapToLaneModel(data.lanes.default) : undefined;
+    const lanesModel = new LanesModel({ lanes, currentLane, defaultLane });
     lanesModel.setViewedLane(viewedLaneId);
     return lanesModel;
   }
 
-  constructor({ lanes, viewedLane, currentLane }: LanesModelProps) {
+  constructor({ lanes = [], viewedLane, currentLane, defaultLane }: LanesModelProps) {
     this.viewedLane = viewedLane;
     this.currentLane = currentLane;
-    this.lanes = lanes || [];
+    this.defaultLane = defaultLane;
+    const allUniqueLanes = compact(uniqBy([...lanes, defaultLane, currentLane], (lane) => lane?.id.toString()));
+    this.lanes = allUniqueLanes;
     this.laneIdsByScope = LanesModel.groupLaneIdsByScope(this.lanes.map((lane) => lane.id));
     const { byId, byName } = LanesModel.groupByComponentNameAndId(this.lanes);
     this.lanesByComponentId = byId;
     this.lanesByComponentName = byName;
   }
 
-  readonly laneIdsByScope: Map<string, LaneId[]>;
-  readonly lanesByComponentName: Map<string, LaneModel[]>;
-  readonly lanesByComponentId: Map<string, LaneModel[]>;
+  laneIdsByScope: Map<string, LaneId[]>;
+  lanesByComponentName: Map<string, LaneModel[]>;
+  lanesByComponentId: Map<string, LaneModel[]>;
 
   viewedLane?: LaneModel;
   currentLane?: LaneModel;
-  readonly lanes: LaneModel[];
+  defaultLane?: LaneModel;
+  lanes: LaneModel[];
 
   getLaneComponentUrlByVersion = (componentId: ComponentID, laneId?: LaneId) => {
     // if there is no version, the component is new and is on main
@@ -306,7 +310,7 @@ export class LanesModel {
     return comps.find((component) => component.fullName === idFromUrl);
   };
 
-  getDefaultLane = () => this.lanes.find((lane) => lane.id.isDefault());
+  getDefaultLane = () => this.defaultLane;
   getNonMainLanes = () => this.lanes.filter((lane) => !lane.id.isDefault());
 
   isInViewedLane = (componentId: ComponentID, includeVersion?: boolean) => {
@@ -355,4 +359,11 @@ export class LanesModel {
       (lane) => !lane.id.isDefault() && (!laneId || lane.id.isEqual(laneId))
     );
   };
+  addLanes(newLanes: LaneModel[]) {
+    this.lanes = compact(uniqBy([...this.lanes, ...newLanes], (lane) => lane?.id.toString()));
+    this.laneIdsByScope = LanesModel.groupLaneIdsByScope(this.lanes.map((lane) => lane.id));
+    const { byId, byName } = LanesModel.groupByComponentNameAndId(this.lanes);
+    this.lanesByComponentId = byId;
+    this.lanesByComponentName = byName;
+  }
 }

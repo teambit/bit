@@ -1,5 +1,5 @@
-import React, { ReactNode, useState, useEffect, useCallback } from 'react';
-import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import React, { ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
+import { UseLaneOptions, useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { useLocation, Location } from '@teambit/base-react.navigation.link';
@@ -14,6 +14,7 @@ export type LanesProviderProps = {
   targetLanes?: LanesModel;
   skipNetworkCall?: boolean;
   ignoreDerivingFromUrl?: IgnoreDerivingFromUrl[];
+  options?: UseLaneOptions;
 };
 
 export function LanesProvider({
@@ -22,11 +23,30 @@ export function LanesProvider({
   targetLanes,
   ignoreDerivingFromUrl: ignoreDerivingFromUrlFromProps,
   skipNetworkCall,
+  options: optionsFromProps = {},
 }: LanesProviderProps) {
-  const { lanesModel, loading } = useLanes(targetLanes, skipNetworkCall);
-
-  const [lanesState, setLanesState] = useState<LanesModel | undefined>(lanesModel);
+  const [lanesState, setLanesState] = useState<LanesModel | undefined>();
   const [viewedLaneId, setViewedLaneId] = useState<LaneId | undefined>(viewedIdFromProps);
+
+  const skip = skipNetworkCall || !!targetLanes;
+
+  const options = useMemo(
+    () => ({
+      skip,
+      ids: optionsFromProps.ids ?? (viewedLaneId ? [viewedLaneId.toString()] : undefined),
+      offset: optionsFromProps.offset ?? 0,
+      limit: optionsFromProps.limit ?? 1,
+      ...optionsFromProps,
+    }),
+    [skip, optionsFromProps.ids, optionsFromProps.ids?.length, viewedLaneId?.toString()]
+  );
+
+  const { lanesModel, loading, hasMore, fetchMoreLanes } = useLanes(targetLanes, skipNetworkCall, options);
+
+  useEffect(() => {
+    if (!loading && lanesModel) setLanesState(lanesModel);
+  }, [lanesModel, loading]);
+
   const updateViewedLane = useCallback(
     (lane?: LaneId) => {
       setViewedLaneId(lane);
@@ -82,8 +102,11 @@ export function LanesProvider({
 
   const lanesContextModel: LanesContextModel = {
     lanesModel: lanesState,
-    updateLanesModel: setLanesState,
     updateViewedLane,
+    loading,
+    hasMoreLanes: hasMore,
+    fetchMoreLanes,
+    options,
   };
 
   return <LanesContext.Provider value={lanesContextModel}>{children}</LanesContext.Provider>;

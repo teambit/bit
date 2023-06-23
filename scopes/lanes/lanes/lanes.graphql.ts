@@ -100,6 +100,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
       type Lanes {
         id: String!
         list(ids: [String!], offset: Int, limit: Int): [Lane!]!
+        default: Lane
         diff(from: String!, to: String!, options: DiffOptions): GetDiffResult
         diffStatus(source: String!, target: String, options: DiffStatusOptions): LaneDiffStatus!
         current: Lane
@@ -122,7 +123,16 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
           if (!ids || ids.length === 0) {
             lanes = await lanesMain.getLanes({ showDefaultLane: true });
           } else {
-            lanes = flatten(await Promise.all(ids.map((id) => lanesMain.getLanes({ name: LaneId.parse(id).name }))));
+            lanes = flatten(
+              await Promise.all(
+                ids.map((id) => {
+                  if (id === lanesMain.getDefaultLaneId().name) {
+                    return lanesMain.getLanes({ showDefaultLane: true, name: id });
+                  }
+                  return lanesMain.getLanes({ name: LaneId.parse(id).name });
+                })
+              )
+            );
           }
 
           if (limit || offset) {
@@ -130,6 +140,13 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
           }
 
           return lanes;
+        },
+        default: async (lanesMain: LanesMain) => {
+          const [defaultLane] = await lanesMain.getLanes({
+            showDefaultLane: true,
+            name: lanesMain.getDefaultLaneId().name,
+          });
+          return defaultLane;
         },
         current: async (lanesMain: LanesMain) => {
           const currentLaneName = lanesMain.getCurrentLaneName();

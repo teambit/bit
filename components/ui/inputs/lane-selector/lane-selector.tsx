@@ -10,6 +10,7 @@ import { ToggleButton } from '@teambit/design.inputs.toggle-button';
 import { Icon } from '@teambit/design.elements.icon';
 // import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
 import { Tooltip } from '@teambit/design.ui.tooltip';
+import { FetchMoreLanes } from '@teambit/lanes.hooks.use-lanes';
 
 import { LaneSelectorList, ListNavigatorCmd } from './lane-selector-list';
 import { LanePlaceholder } from './lane-placeholder';
@@ -30,6 +31,8 @@ export type LaneSelectorProps = {
   scopeIconLookup?: Map<string, React.ReactNode>;
   forceCloseOnEnter?: boolean;
   loading?: boolean;
+  hasMore?: boolean;
+  fetchMoreLanes?: FetchMoreLanes;
 } & HTMLAttributes<HTMLDivElement>;
 
 export type GroupedLaneDropdownItem = [scope: string, lanes: LaneModel[]];

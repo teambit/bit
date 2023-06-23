@@ -1,5 +1,5 @@
 import React, { HTMLAttributes, useRef } from 'react';
-import { useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
+import { UseLanes, useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSelector, LaneSelectorSortBy } from '@teambit/lanes.ui.inputs.lane-selector';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
@@ -15,7 +15,7 @@ export type LaneSwitcherProps = {
   sortOptions?: LaneSelectorSortBy[];
   mainIcon?: () => React.ReactNode;
   scopeIcon?: (scopeName: string) => React.ReactNode;
-  useLanes?: () => { loading?: boolean; lanesModel?: LanesModel };
+  useLanes?: UseLanes;
   getHref?: (lane: LaneId) => string;
 } & HTMLAttributes<HTMLDivElement>;
 
@@ -31,7 +31,12 @@ export function LaneSwitcher({
   ...rest
 }: LaneSwitcherProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { lanesModel, loading } = useLanes();
+  const { lanesModel, loading, fetchMoreLanes, hasMore } =
+    useLanes(undefined, undefined, {
+      offset: 0,
+      limit: 5,
+    }) || {};
+
   const mainLane = lanesModel?.getDefaultLane();
   const nonMainLanes = lanesModel?.getNonMainLanes() || [];
 

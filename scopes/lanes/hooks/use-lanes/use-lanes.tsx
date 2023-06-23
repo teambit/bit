@@ -1,13 +1,16 @@
+import { useMemo, useCallback } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { LanesModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
-import { gql, QueryResult } from '@apollo/client';
-import { LanesContextModel, useLanesContext } from './lanes-context';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import { gql } from '@apollo/client';
+import { LaneId } from '@teambit/lane-id';
+import { isEqual } from 'lodash';
+import { useLanesContext } from './lanes-context';
 
 const GET_LANES = gql`
-  query Lanes($extensionId: String) {
+  query Lanes($extensionId: String, $laneIds: [String!], $offset: Int, $limit: Int) {
     lanes {
       id
-      list {
+      list(ids: $laneIds, offset: $offset, limit: $limit) {
         id {
           name
           scope
@@ -37,6 +40,34 @@ const GET_LANES = gql`
           name
           scope
         }
+        createdAt
+        createdBy {
+          name
+          email
+          profileImage
+        }
+        laneComponentIds {
+          name
+          scope
+          version
+        }
+      }
+      default {
+        id {
+          name
+          scope
+        }
+        createdAt
+        createdBy {
+          name
+          email
+          profileImage
+        }
+        laneComponentIds {
+          name
+          scope
+          version
+        }
       }
     }
     getHost(id: $extensionId) {
@@ -45,25 +76,131 @@ const GET_LANES = gql`
   }
 `;
 
-export function useLanes(
-  targetLanes?: LanesModel,
-  skip?: boolean
-): LanesContextModel & Omit<QueryResult<LanesQuery & { getHost: { id: string } }>, 'data'> {
-  const lanesContext = useLanesContext();
-  const shouldSkip = skip || !!targetLanes || !!lanesContext?.lanesModel;
+export type UseLanesOptions = {
+  ids?: string[];
+  offset?: number;
+  limit?: number;
+};
 
-  const { data, loading, ...rest } = useDataQuery<LanesQuery & { getHost: { id: string } }>(GET_LANES, {
-    skip: shouldSkip,
+export type FetchMoreLanesResult = {
+  lanesModel?: LanesModel;
+  loading?: boolean;
+  hasMore?: boolean;
+  nextOffset?: number;
+  currentLimit?: number;
+};
+
+export type FetchMoreLanes = (offset: number, limit: number) => Promise<FetchMoreLanesResult>;
+
+export type UseLanesResult = {
+  lanesModel?: LanesModel;
+  loading?: boolean;
+  fetchMoreLanes?: FetchMoreLanes;
+  hasMore?: boolean;
+};
+
+export type UseLanes = (
+  targetLanes?: LanesModel,
+  skip?: boolean,
+  options?: UseLanesOptions,
+  useContext?: boolean
+) => UseLanesResult;
+
+export type UseRootLanes = (viewedLaneId?: LaneId, skip?: boolean, options?: UseLanesOptions) => UseLanesResult;
+
+export const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => {
+  const { ids, offset, limit } = options;
+
+  const { data, fetchMore, loading } = useDataQuery(GET_LANES, {
+    variables: { laneIds: ids, offset, limit },
+    skip,
+    errorPolicy: 'all',
+    fetchPolicy: 'cache-and-network',
   });
 
-  let lanesModel: LanesModel | undefined;
-  if (lanesContext) lanesModel = lanesContext.lanesModel;
-  else lanesModel = (data && LanesModel.from({ data, host: data?.getHost?.id })) || targetLanes;
+  const lanesModel = useMemo(() => {
+    if (!loading && !!data) {
+      const newLanesModel = LanesModel.from({ data, viewedLaneId });
+      return newLanesModel;
+    }
+    return undefined;
+  }, [loading, data, viewedLaneId?.toString()]);
+
+  const hasMore = useMemo(() => {
+    if (loading) return true;
+    if (!loading && !!data && limit) {
+      return data.lanes.length >= limit;
+    }
+    return false;
+  }, [loading, data]);
+
+  const fetchMoreLanes: FetchMoreLanes = useCallback(
+    async (newOffset, newLimit) => {
+      if (hasMore) {
+        try {
+          const { data: moreData, loading: _loadingMore } = await fetchMore({
+            variables: { laneIds: ids, offset: newOffset, limit: newLimit },
+          });
+          if (!_loadingMore && moreData.lanes) {
+            const newLanesModel = LanesModel.from({ data: moreData, viewedLaneId });
+            return {
+              lanesModel: newLanesModel,
+              loading: _loadingMore,
+              hasMore: moreData.lanes.length >= newLimit,
+              nextOffset: newOffset + newLimit,
+            };
+          }
+          return {
+            lanesModel: undefined,
+            loading: _loadingMore,
+            nextOffset: newOffset,
+            currentLimit: newLimit,
+          };
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error(err);
+        }
+      }
+      return {
+        lanesModel: undefined,
+        loading: false,
+        hasMore: false,
+        nextOffset: newOffset,
+        currentLimit: newLimit,
+      };
+    },
+    [hasMore, ids, ids?.length, viewedLaneId?.toString()]
+  );
 
   return {
-    ...rest,
-    ...(lanesContext || {}),
     loading,
     lanesModel,
+    fetchMore: fetchMoreLanes,
+    hasMore,
   };
-}
+};
+
+export const useLanes: UseLanes = (targetLanes, skip, optionsFromProps, useContextFromProps = true) => {
+  const context = useLanesContext() || {};
+  const options = optionsFromProps || context?.options;
+  const isSameOptions = isEqual(options, context?.options);
+  const useContext = useContextFromProps && !!context && isSameOptions;
+  const shouldSkip = skip || !!targetLanes || useContext;
+  const rootLanesData = useRootLanes(context?.lanesModel?.viewedLane?.id, shouldSkip, options);
+  if (targetLanes) {
+    return {
+      ...context,
+      ...rootLanesData,
+      lanesModel: targetLanes,
+    };
+  }
+  if (useContext) {
+    return {
+      ...context,
+    };
+  }
+  return {
+    ...context,
+    ...rootLanesData,
+  };
+};

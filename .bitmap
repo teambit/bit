@@ -1911,12 +1911,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/menus/use-lanes-menu"
     },
-    "ui/models": {
-        "scope": "teambit.lanes",
-        "version": "0.0.69",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/models_1"
-    },
     "ui/models/lanes-model": {
         "scope": "teambit.lanes",
         "version": "0.0.146",
