@@ -18,3 +18,11 @@ $highlighter-z-index: 15500;
 // 32,768 (2^16)
 // and can be up to 1,073,741,824 (2^30), depending on the browser
 // (depending on the browser)
+
+:export {
+  navZIndex: $nav-z-index;
+  paneSplitterZIndex: $pane-splitter-zIndex;
+  topBarZIndex: $topBar-zIndex;
+  modalZIndex: $modal-z-index;
+  highlighterZIndex: $highlighter-z-index;
+}

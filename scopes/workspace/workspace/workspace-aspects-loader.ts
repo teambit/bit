@@ -1,3 +1,5 @@
+import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy/dist/constants';
+import { GlobalConfigMain } from '@teambit/global-config';
 import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { Graph } from '@teambit/graph.cleargraph';
@@ -54,6 +56,7 @@ export class WorkspaceAspectsLoader {
     private envs: EnvsMain,
     private dependencyResolver: DependencyResolverMain,
     private logger: Logger,
+    private globalConfig: GlobalConfigMain,
     private harmony: Harmony,
     private onAspectsResolveSlot: OnAspectsResolveSlot,
     private onRootAspectAddedSlot: OnRootAspectAddedSlot,
@@ -245,7 +248,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       filterByRuntime: true,
       useScopeAspectsCapsule: false,
       workspaceName: this.workspace.name,
-      resolveEnvsFromRoots: false,
+      resolveEnvsFromRoots: this.resolveEnvsFromRoots,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
@@ -367,6 +370,15 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
     const filteredDefs = this.aspectLoader.filterAspectDefs(allDefs, idsToFilter, runtimeName, mergedOpts);
     return filteredDefs;
+  }
+
+  shouldUseHashForCapsules(): boolean {
+    return !this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
+  }
+
+  getCapsulePath() {
+    const defaultPath = this.workspace.path;
+    return this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR) || defaultPath;
   }
 
   private logFoundWorkspaceVsScope(loggerPrefix: string, workspaceIds: ComponentID[], nonWorkspaceIds: ComponentID[]) {

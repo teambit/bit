@@ -42,6 +42,7 @@ import {
   CFG_NETWORK_CERT,
   CFG_NETWORK_KEY,
   CFG_NETWORK_STRICT_SSL,
+  CENTRAL_BIT_HUB_URL_IMPORTER,
 } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
@@ -53,6 +54,7 @@ import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
 import loader from '../../../cli/loader';
 import { UnexpectedNetworkError } from '../exceptions';
+import { CLOUD_IMPORTER, isFeatureEnabled } from '../../../api/consumer/lib/feature-toggle';
 
 export enum Verb {
   WRITE = 'write',
@@ -317,7 +319,11 @@ export class Http implements Network {
 
   async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectItemsStream> {
     const route = 'api/scope/fetch';
-    const scopeData = `scopeName: ${this.scopeName}, url: ${this.url}/${route}`;
+    const isCloudImporterEnabled = isFeatureEnabled(CLOUD_IMPORTER);
+    const urlToFetch = isCloudImporterEnabled
+      ? `${CENTRAL_BIT_HUB_URL_IMPORTER}/${this.scopeName}`
+      : `${this.url}/${route}`;
+    const scopeData = `scopeName: ${this.scopeName}, url: ${urlToFetch}`;
     logger.debug(`Http.fetch, ${scopeData}`);
     const body = JSON.stringify({
       ids,
@@ -329,7 +335,8 @@ export class Http implements Network {
       body,
       headers,
     });
-    const res = await fetch(`${this.url}/${route}`, opts);
+
+    const res = await fetch(urlToFetch, opts);
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
     const objectListReadable = ObjectList.fromTarToObjectStream(res.body);

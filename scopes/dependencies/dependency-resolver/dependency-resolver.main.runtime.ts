@@ -17,6 +17,7 @@ import {
   CFG_PACKAGE_MANAGER_CACHE,
   CFG_REGISTRY_URL_KEY,
   CFG_USER_TOKEN_KEY,
+  CFG_ISOLATED_SCOPE_CAPSULES,
   getCloudDomain,
 } from '@teambit/legacy/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
@@ -269,11 +270,21 @@ export interface DependencyResolverWorkspaceConfig {
    */
   linkCoreAspects?: boolean;
 
+  /**
+   * When false, Bit will create a shared node_modules directory for all components in a capsule.
+   */
+  isolatedCapsules?: boolean;
+
   /*
    * Ignore the builds of specific dependencies. The "preinstall", "install", and "postinstall" scripts
    * of the listed packages will not be executed during installation.
    */
   neverBuiltDependencies?: string[];
+
+  /**
+   * If true, staleness checks for cached data will be bypassed, but missing data will be requested from the server.
+   */
+  preferOffline?: boolean;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -384,11 +395,19 @@ export class DependencyResolverMain {
    */
   supportsDedupingOnExistingRoot(): boolean {
     const packageManager = this.getPackageManager();
-    return packageManager?.supportsDedupingOnExistingRoot?.() === true && !this.hasRootComponents();
+    return packageManager?.supportsDedupingOnExistingRoot?.() === true && !this.isolatedCapsules();
   }
 
   hasRootComponents(): boolean {
     return Boolean(this.config.rootComponents);
+  }
+
+  isolatedCapsules(): boolean {
+    const globalConfig = this.globalConfig.getSync(CFG_ISOLATED_SCOPE_CAPSULES);
+    // @ts-ignore
+    const defaultVal = globalConfig !== undefined ? globalConfig === true || globalConfig === 'true' : true;
+    const res = this.config.isolatedCapsules ?? defaultVal;
+    return res;
   }
 
   hasHarmonyInRootPolicy(): boolean {
@@ -700,6 +719,7 @@ export class DependencyResolverMain {
       this.config.engineStrict,
       this.config.peerDependencyRules,
       this.config.neverBuiltDependencies,
+      this.config.preferOffline,
       options.installingContext
     );
   }

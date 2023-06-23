@@ -6,6 +6,7 @@ import { initDefaultReporter } from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
 import { StoreController, WantedDependency } from '@pnpm/package-store';
 import { readModulesManifest } from '@pnpm/modules-yaml';
+import { rebuild } from '@pnpm/plugin-commands-rebuild';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { sortPackages } from '@pnpm/sort-packages';
 import {
@@ -51,7 +52,7 @@ async function createStoreController(
     registries: Registries;
     proxyConfig: PackageManagerProxyConfig;
     networkConfig: PackageManagerNetworkConfig;
-  } & Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir'>
+  } & Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>
 ): Promise<{ ctrl: StoreController; dir: string }> {
   const authConfig = getAuthConfig(options.registries);
   const opts: CreateStoreControllerOptions = {
@@ -71,6 +72,7 @@ async function createStoreController(
     maxSockets: options.networkConfig.maxSockets,
     networkConcurrency: options.networkConfig.networkConcurrency,
     packageImportMethod: options.packageImportMethod,
+    preferOffline: options.preferOffline,
     resolveSymlinksInInjectedDirs: true,
     pnpmHomeDir: options.pnpmHomeDir,
   };
@@ -146,6 +148,8 @@ export async function getPeerDependencyIssues(
     rootDir: opts.rootDir,
   });
   return pnpm.getPeerDependencyIssues(projects, {
+    autoInstallPeers: false,
+    excludeLinksFromLockfile: true,
     storeController: storeController.ctrl,
     storeDir: storeController.dir,
     overrides: opts.overrides,
@@ -174,15 +178,17 @@ export async function install(
     InstallOptions,
     | 'publicHoistPattern'
     | 'hoistPattern'
+    | 'lockfileOnly'
     | 'nodeVersion'
     | 'engineStrict'
+    | 'excludeLinksFromLockfile'
     | 'peerDependencyRules'
     | 'neverBuiltDependencies'
   > &
-    Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir'>,
+    Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
-): Promise<{ dependenciesChanged: boolean }> {
+): Promise<{ dependenciesChanged: boolean; rebuild: () => Promise<void>; storeDir: string }> {
   let externalDependencies: Set<string> | undefined;
   const readPackage: ReadPackageHook[] = [];
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
@@ -215,6 +221,7 @@ export async function install(
     storeDir,
     cacheDir,
     registries,
+    preferOffline: options?.preferOffline,
     proxyConfig,
     networkConfig,
     packageImportMethod: options?.packageImportMethod,
@@ -224,7 +231,6 @@ export async function install(
     allProjects,
     autoInstallPeers: false,
     confirmModulesPurge: false,
-    excludeLinksFromLockfile: true,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
     dir: rootDir,
@@ -232,6 +238,7 @@ export async function install(
     workspacePackages,
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
+    lockfileOnly: options.lockfileOnly ?? false,
     modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
     neverBuiltDependencies: options.neverBuiltDependencies,
     registries: registriesMap,
@@ -249,6 +256,7 @@ export async function install(
       optionalDependencies: options?.includeOptionalDeps !== false,
     },
     ...options,
+    excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     peerDependencyRules: {
       allowAny: ['*'],
       ignoreMissing: ['*'],
@@ -301,7 +309,18 @@ export async function install(
       });
     }
   }
-  return { dependenciesChanged };
+  return {
+    dependenciesChanged,
+    rebuild: () =>
+      rebuild.handler(
+        {
+          ...opts,
+          cacheDir,
+        } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        []
+      ),
+    storeDir: storeController.dir,
+  };
 }
 
 /*

@@ -485,7 +485,7 @@ export class UiMain {
     return currentBundleUiHash === cachedBundleUiHash && !isLocalBuildAvailable && !force;
   }
 
-  private async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined): Promise<boolean> {
+  async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined): Promise<boolean> {
     this.logger.debug(`buildIfChanged, name ${name}`);
 
     if (this._isBundleUiServed) {

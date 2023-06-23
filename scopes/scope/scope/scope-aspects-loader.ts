@@ -1,8 +1,14 @@
+import { GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { readdirSync, existsSync } from 'fs-extra';
 import { resolve, join } from 'path';
-import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
+import {
+  DEFAULT_DIST_DIRNAME,
+  CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR,
+  CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR,
+  CFG_USE_DATED_CAPSULES,
+} from '@teambit/legacy/dist/constants';
 import { Compiler } from '@teambit/compiler';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
@@ -31,7 +37,8 @@ export class ScopeAspectsLoader {
     private aspectLoader: AspectLoaderMain,
     private envs: EnvsMain,
     private isolator: IsolatorMain,
-    private logger: Logger
+    private logger: Logger,
+    private globalConfig: GlobalConfigMain
   ) {}
   private parseLocalAspect(localAspects: string[]) {
     const dirPaths = localAspects.map((localAspect) => resolve(localAspect.replace('file://', '')));
@@ -198,7 +205,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const aspectIds = idsWithoutCore.filter((id) => !id.startsWith('file://'));
     // TODO: use diff instead of filter twice
     const localAspects = ids.filter((id) => id.startsWith('file://'));
-    this.scope.localAspects = this.scope.localAspects.concat(localAspects);
+    this.scope.localAspects = uniq(this.scope.localAspects.concat(localAspects));
     // load local aspects for debugging purposes.
     await this.loadAspectFromPath(localAspects);
     const componentIds = await this.scope.resolveMultipleComponentIds(aspectIds);
@@ -216,16 +223,13 @@ needed-for: ${neededFor || '<unknown>'}`);
     const dirs = this.parseLocalAspect(ids);
 
     return dirs.map((dir) => {
-      const runtimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
-      const aspectFilePath = runtime ? this.findAspectFile(dir) : undefined;
-      return new AspectDefinition(
-        dir,
-        aspectFilePath ? join(dir, 'dist', aspectFilePath) : null,
-        runtimeManifest ? join(dir, 'dist', runtimeManifest) : null,
-        undefined,
-        undefined,
-        true
-      );
+      const srcRuntimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
+      const srcAspectFilePath = runtime ? this.findAspectFile(dir) : undefined;
+      const aspectFilePath = srcAspectFilePath ? join(dir, 'dist', srcAspectFilePath) : null;
+      const runtimeManifest = srcRuntimeManifest ? join(dir, 'dist', srcRuntimeManifest) : null;
+      const aspectId = aspectFilePath ? this.aspectLoader.getAspectIdFromAspectFile(aspectFilePath) : undefined;
+
+      return new AspectDefinition(dir, aspectFilePath, runtimeManifest, undefined, aspectId, true);
     });
   }
 
@@ -234,11 +238,15 @@ needed-for: ${neededFor || '<unknown>'}`);
     opts?: { skipIfExists?: boolean; packageManagerConfigRootDir?: string; workspaceName?: string }
   ): Promise<RequireableComponent[]> {
     if (!components || !components.length) return [];
+    const useHash = this.shouldUseHashForCapsules();
+    const useDatedDirs = this.shouldUseDatedCapsules();
     const network = await this.isolator.isolateComponents(
       components.map((c) => c.id),
       // includeFromNestedHosts - to support case when you are in a workspace, trying to load aspect defined in the workspace.jsonc but not part of the workspace
       {
         baseDir: this.getAspectCapsulePath(),
+        useHash,
+        useDatedDirs,
         skipIfExists: opts?.skipIfExists ?? true,
         seedersOnly: true,
         includeFromNestedHosts: true,
@@ -383,8 +391,25 @@ needed-for: ${neededFor || '<unknown>'}`);
     return [];
   }
 
+  shouldUseDatedCapsules(): boolean {
+    const globalConfig = this.globalConfig.getSync(CFG_USE_DATED_CAPSULES);
+    // @ts-ignore
+    return globalConfig === true || globalConfig === 'true';
+  }
+
   getAspectCapsulePath() {
-    return `${this.scope.path}-aspects`;
+    const defaultPath = `${this.scope.path}-aspects`;
+    if (this.scope.isGlobalScope) {
+      return this.globalConfig.getSync(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR) || defaultPath;
+    }
+    return this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR) || defaultPath;
+  }
+
+  shouldUseHashForCapsules(): boolean {
+    if (this.scope.isGlobalScope) {
+      return !this.globalConfig.getSync(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR);
+    }
+    return !this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR);
   }
 
   private async resolveUserAspects(
@@ -394,10 +419,14 @@ needed-for: ${neededFor || '<unknown>'}`);
   ): Promise<AspectDefinition[]> {
     if (!userAspectsIds || !userAspectsIds.length) return [];
     const components = await this.scope.getMany(userAspectsIds);
+    const useHash = this.shouldUseHashForCapsules();
+    const useDatedDirs = this.shouldUseDatedCapsules();
     const network = await this.isolator.isolateComponents(
       userAspectsIds,
       {
         baseDir: this.getAspectCapsulePath(),
+        useHash,
+        useDatedDirs,
         skipIfExists: true,
         // for some reason this needs to be false, otherwise tagging components in some workspaces
         // result in error during Preview task:
@@ -458,7 +487,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
-    let userAspectsIds;
+    let userAspectsIds: ComponentID[];
     // let requestedCoreStringIds;
     if (componentIds && componentIds.length) {
       const groupedByIsCore = groupBy(componentIds, (id) => coreAspectsIds.includes(id.toString()));
@@ -467,15 +496,14 @@ needed-for: ${neededFor || '<unknown>'}`);
     } else {
       userAspectsIds = await this.scope.resolveMultipleComponentIds(this.aspectLoader.getUserAspects());
     }
+    const localResolved = await this.resolveLocalAspects(this.scope.localAspects, runtimeName);
 
     const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
-      return !this.scope.localAspects.find((localAspect) => {
-        return localAspect.includes(aspectId.fullName.replace('/', '.'));
+      return !localResolved.find((localAspect) => {
+        return localAspect.id === aspectId.toStringWithoutVersion();
       });
     });
-
     const userAspectsDefs = await this.resolveUserAspects(runtimeName, withoutLocalAspects, opts);
-    const localResolved = await this.resolveLocalAspects(this.scope.localAspects, runtimeName);
     const coreAspectsDefs = await this.aspectLoader.getCoreAspectDefs(runtimeName);
 
     const allDefs = userAspectsDefs.concat(coreAspectsDefs).concat(localResolved);

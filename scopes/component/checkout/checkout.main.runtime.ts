@@ -25,7 +25,13 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ComponentID } from '@teambit/component-id';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
-import { applyVersion, markFilesToBeRemovedIfNeeded, ComponentStatus, deleteFilesIfNeeded } from './checkout-version';
+import {
+  applyVersion,
+  markFilesToBeRemovedIfNeeded,
+  ComponentStatus,
+  deleteFilesIfNeeded,
+  ComponentStatusBase,
+} from './checkout-version';
 
 export type CheckoutProps = {
   version?: string; // if reset/head/latest is true, the version is undefined
@@ -44,13 +50,9 @@ export type CheckoutProps = {
   skipUpdatingBitmap?: boolean; // needed for stash
 };
 
-export type ComponentStatusBeforeMergeAttempt = {
-  componentFromFS?: ConsumerComponent;
-  componentFromModel?: Version;
-  id: BitId;
+export type ComponentStatusBeforeMergeAttempt = ComponentStatusBase & {
   failureMessage?: string;
   unchangedLegitimately?: boolean; // failed to checkout but for a legitimate reason, such as, up-to-date
-  shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
   propsForMerge?: {
     currentlyUsedVersion: string;
     componentModel: ModelComponent;
@@ -134,9 +136,12 @@ export class CheckoutMain {
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
     // which can be an issue when some components are also dependencies of others
     const checkoutPropsLegacy = { ...checkoutProps, ids: checkoutProps.ids?.map((id) => id._legacy) };
-    const componentsResults = await mapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
-      return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutPropsLegacy);
-    });
+    const componentsResults = await mapSeries(
+      succeededComponents,
+      ({ id, currentComponent: componentFromFS, mergeResults }) => {
+        return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutPropsLegacy);
+      }
+    );
 
     markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
 
@@ -166,7 +171,7 @@ export class CheckoutMain {
         skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap,
       };
       componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
-      await deleteFilesIfNeeded(componentsResults, consumer);
+      await deleteFilesIfNeeded(componentsResults, this.workspace);
     }
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
@@ -213,9 +218,8 @@ export class CheckoutMain {
     const notExported = ids?.filter((id) => !id._legacy.hasScope()).map((id) => id._legacy.changeScope(id.scope));
     const scopeComponentsImporter = this.workspace.consumer.scope.scopeImporter;
     try {
-      await scopeComponentsImporter.importManyDeltaWithoutDeps({
-        ids: BitIds.fromArray(notExported || []),
-        fromHead: true,
+      await scopeComponentsImporter.importWithoutDeps(BitIds.fromArray(notExported || []).toVersionLatest(), {
+        cache: false,
       });
     } catch (err) {
       // don't stop the process. it's possible that the scope doesn't exist yet because these are new components
@@ -315,9 +319,13 @@ export class CheckoutMain {
       if (reset) return component.id.version as string;
 
       if (headVersion) return componentModel.headIncludeRemote(repo);
-      if (latestVersion) return componentModel.latestVersion();
-      if (versionPerId)
+      if (latestVersion) {
+        const latest = componentModel.latestVersionIfExist();
+        return latest || componentModel.headIncludeRemote(repo);
+      }
+      if (versionPerId) {
         return versionPerId.find((id) => id._legacy.isEqualWithoutVersion(component.id))?.version as string;
+      }
 
       // @ts-ignore if !reset the version is defined
       return version;
@@ -369,7 +377,7 @@ export class CheckoutMain {
     if (reset || !isModified) {
       // if the component is not modified, no need to try merge the files, they will be written later on according to the
       // checked out version. same thing when no version is specified, it'll be reset to the model-version later.
-      return { componentFromFS: component, componentFromModel: componentVersion, id: newId };
+      return { currentComponent: component, componentFromModel: componentVersion, id: newId };
     }
 
     const propsForMerge = {
@@ -377,11 +385,11 @@ export class CheckoutMain {
       componentModel,
     };
 
-    return { componentFromFS: component, componentFromModel: componentVersion, id: newId, propsForMerge };
+    return { currentComponent: component, componentFromModel: componentVersion, id: newId, propsForMerge };
   }
 
   private async getMergeStatus({
-    componentFromFS,
+    currentComponent: componentFromFS,
     componentFromModel,
     id,
     propsForMerge,
@@ -413,7 +421,7 @@ export class CheckoutMain {
       baseComponent,
     });
 
-    return { componentFromFS, componentFromModel, id, mergeResults };
+    return { currentComponent: componentFromFS, componentFromModel, id, mergeResults };
   }
 
   static slots = [];

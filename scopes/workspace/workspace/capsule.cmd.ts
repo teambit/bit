@@ -106,8 +106,14 @@ use --json to get the list of all workspace capsules`);
   }
 
   private getCapsulesRootDirs() {
-    const workspaceCapsulesRootDir = this.isolator.getCapsulesRootDir(this.workspace.path);
-    const scopeAspectsCapsulesRootDir = this.isolator.getCapsulesRootDir(this.workspace.scope.getAspectCapsulePath());
+    const workspaceCapsulesRootDir = this.isolator.getCapsulesRootDir({
+      baseDir: this.workspace.getCapsulePath(),
+      useHash: this.workspace.shouldUseHashForCapsules(),
+    });
+    const scopeAspectsCapsulesRootDir = this.isolator.getCapsulesRootDir({
+      baseDir: this.workspace.scope.getAspectCapsulePath(),
+      useHash: this.workspace.scope.shouldUseHashForCapsules(),
+    });
 
     return { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir };
   }
