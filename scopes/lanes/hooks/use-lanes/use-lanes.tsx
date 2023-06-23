@@ -7,9 +7,41 @@ import { isEqual } from 'lodash';
 import { useLanesContext } from './lanes-context';
 
 const GET_LANES = gql`
-  query Lanes($extensionId: String, $laneIds: [String!], $offset: Int, $limit: Int) {
+  query Lanes(
+    $extensionId: String
+    $laneIds: [String!]
+    $offset: Int
+    $limit: Int
+    $viewedLaneId: [String!]
+    $skipViewedLane: Boolean!
+  ) {
     lanes {
       id
+      viewedLane: list(ids: $viewedLaneId, offset: $offset, limit: $limit) @skip(if: $skipViewedLane) {
+        id {
+          name
+          scope
+        }
+        hash
+        createdAt
+        createdBy {
+          name
+          email
+          profileImage
+        }
+        readmeComponent {
+          id {
+            name
+            scope
+            version
+          }
+        }
+        laneComponentIds {
+          name
+          scope
+          version
+        }
+      }
       list(ids: $laneIds, offset: $offset, limit: $limit) {
         id {
           name
@@ -112,7 +144,13 @@ export const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => 
   const { ids, offset, limit } = options;
 
   const { data, fetchMore, loading } = useDataQuery(GET_LANES, {
-    variables: { laneIds: ids, offset, limit },
+    variables: {
+      laneIds: ids,
+      offset,
+      limit,
+      skipViewedLane: !viewedLaneId || viewedLaneId.isDefault(),
+      viewedLaneId: viewedLaneId ? [viewedLaneId?.toString()] : undefined,
+    },
     skip,
     errorPolicy: 'all',
     fetchPolicy: 'cache-and-network',
@@ -120,7 +158,7 @@ export const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => 
 
   const lanesModel = useMemo(() => {
     if (!loading && !!data) {
-      const newLanesModel = LanesModel.from({ data, viewedLaneId });
+      const newLanesModel = LanesModel.from({ data });
       return newLanesModel;
     }
     return undefined;
@@ -142,7 +180,7 @@ export const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => 
             variables: { laneIds: ids, offset: newOffset, limit: newLimit },
           });
           if (!_loadingMore && moreData.lanes) {
-            const newLanesModel = LanesModel.from({ data: moreData, viewedLaneId });
+            const newLanesModel = LanesModel.from({ data: moreData });
             return {
               lanesModel: newLanesModel,
               loading: _loadingMore,

@@ -48,6 +48,7 @@ export type LanesQueryResult = {
   list?: LaneQueryResult[];
   current?: LaneQueryResult;
   default?: LaneQueryResult;
+  viewedLane?: [LaneQueryResult];
 };
 /**
  * GQL (lanes)
@@ -238,12 +239,14 @@ export class LanesModel {
     return { byName, byId };
   }
 
-  static from({ data, viewedLaneId }: { data: LanesQuery; viewedLaneId?: LaneId }): LanesModel {
+  static from({ data }: { data: LanesQuery }): LanesModel {
     const lanes = data?.lanes?.list?.map((lane) => LanesModel.mapToLaneModel(lane)) || [];
     const currentLane = data?.lanes?.current ? LanesModel.mapToLaneModel(data.lanes.current) : undefined;
     const defaultLane = data?.lanes?.default ? LanesModel.mapToLaneModel(data.lanes.default) : undefined;
-    const lanesModel = new LanesModel({ lanes, currentLane, defaultLane });
-    lanesModel.setViewedLane(viewedLaneId);
+    const viewedLane = data?.lanes?.viewedLane
+      ? LanesModel.mapToLaneModel(data.lanes.viewedLane[0])
+      : currentLane || defaultLane;
+    const lanesModel = new LanesModel({ lanes, currentLane, defaultLane, viewedLane });
     return lanesModel;
   }
 
@@ -251,7 +254,9 @@ export class LanesModel {
     this.viewedLane = viewedLane;
     this.currentLane = currentLane;
     this.defaultLane = defaultLane;
-    const allUniqueLanes = compact(uniqBy([...lanes, defaultLane, currentLane], (lane) => lane?.id.toString()));
+    const allUniqueLanes = compact(
+      uniqBy([...lanes, this.defaultLane, this.currentLane, this.viewedLane], (lane) => lane?.id.toString())
+    );
     this.lanes = allUniqueLanes;
     this.laneIdsByScope = LanesModel.groupLaneIdsByScope(this.lanes.map((lane) => lane.id));
     const { byId, byName } = LanesModel.groupByComponentNameAndId(this.lanes);
