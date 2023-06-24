@@ -75,6 +75,10 @@ export class APIForVSCode {
     return results;
   }
 
+  getCurrentLaneName(): string {
+    return this.workspace.getCurrentLaneId().name;
+  }
+
   async tagOrSnap(message = '') {
     const params = { message, build: false };
     return this.workspace.isOnMain() ? this.snapping.tag(params) : this.snapping.snap(params);
