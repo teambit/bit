@@ -40,40 +40,6 @@ export class ScopeAspectsLoader {
     private logger: Logger,
     private globalConfig: GlobalConfigMain
   ) {}
-  private parseLocalAspect(localAspects: string[]) {
-    const dirPaths = localAspects.map((localAspect) => resolve(localAspect.replace('file://', '')));
-    const nonExistsDirPaths = dirPaths.filter((path) => !existsSync(path));
-    nonExistsDirPaths.forEach((path) => this.logger.warn(`no such file or directory: ${path}`));
-    const existsDirPaths = dirPaths.filter((path) => existsSync(path));
-    return existsDirPaths;
-  }
-
-  private findRuntime(dirPath: string, runtime: string) {
-    const files = readdirSync(join(dirPath, 'dist'));
-    return files.find((path) => path.includes(`${runtime}.runtime.js`));
-  }
-
-  private findAspectFile(dirPath: string) {
-    const files = readdirSync(join(dirPath, 'dist'));
-    return files.find((path) => path.includes(`.aspect.js`));
-  }
-
-  private async loadAspectFromPath(localAspects: string[]) {
-    const dirPaths = this.parseLocalAspect(localAspects);
-    const manifests = dirPaths.map((dirPath) => {
-      const scopeRuntime = this.findRuntime(dirPath, 'scope');
-      if (scopeRuntime) {
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        const module = require(join(dirPath, 'dist', scopeRuntime));
-        return module.default || module;
-      }
-      // eslint-disable-next-line global-require, import/no-dynamic-require
-      const module = require(dirPath);
-      return module.default || module;
-    });
-
-    await this.aspectLoader.loadExtensionsByManifests(manifests, undefined, { throwOnError: true });
-  }
 
   private localAspects: string[] = [];
 
@@ -207,7 +173,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const localAspects = ids.filter((id) => id.startsWith('file://'));
     this.scope.localAspects = uniq(this.scope.localAspects.concat(localAspects));
     // load local aspects for debugging purposes.
-    await this.loadAspectFromPath(localAspects);
+    await this.aspectLoader.loadAspectFromPath(localAspects);
     const componentIds = await this.scope.resolveMultipleComponentIds(aspectIds);
     if (!componentIds || !componentIds.length) return [];
     const components = await this.scope.import(componentIds, {
@@ -217,20 +183,6 @@ needed-for: ${neededFor || '<unknown>'}`);
     });
 
     return components;
-  }
-
-  private async resolveLocalAspects(ids: string[], runtime?: string): Promise<AspectDefinition[]> {
-    const dirs = this.parseLocalAspect(ids);
-
-    return dirs.map((dir) => {
-      const srcRuntimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
-      const srcAspectFilePath = runtime ? this.findAspectFile(dir) : undefined;
-      const aspectFilePath = srcAspectFilePath ? join(dir, 'dist', srcAspectFilePath) : null;
-      const runtimeManifest = srcRuntimeManifest ? join(dir, 'dist', srcRuntimeManifest) : null;
-      const aspectId = aspectFilePath ? this.aspectLoader.getAspectIdFromAspectFile(aspectFilePath) : undefined;
-
-      return new AspectDefinition(dir, aspectFilePath, runtimeManifest, undefined, aspectId, true);
-    });
   }
 
   async getResolvedAspects(
@@ -496,7 +448,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     } else {
       userAspectsIds = await this.scope.resolveMultipleComponentIds(this.aspectLoader.getUserAspects());
     }
-    const localResolved = await this.resolveLocalAspects(this.scope.localAspects, runtimeName);
+    const localResolved = await this.aspectLoader.resolveLocalAspects(this.scope.localAspects, runtimeName);
 
     const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
       return !localResolved.find((localAspect) => {
