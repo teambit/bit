@@ -24291,6 +24291,12 @@ importers:
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
+      fs-extra:
+        specifier: 10.0.0
+        version: 10.0.0
+      p-map:
+        specifier: 4.0.0
+        version: 4.0.0
       pretty-time:
         specifier: 1.1.0
         version: 1.1.0
@@ -24301,6 +24307,9 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
+      '@types/fs-extra':
+        specifier: 9.0.7
+        version: 9.0.7
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -69334,6 +69343,8 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
       core-js: 3.13.0
+      fs-extra: 10.0.0
+      p-map: 4.0.0
       pretty-time: 1.1.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
