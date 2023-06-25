@@ -1,6 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ApiServerAspect } from './api-server.aspect';
@@ -38,21 +39,22 @@ export class ApiServerMain {
     });
   }
 
-  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ExpressAspect, WatcherAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ExpressAspect, WatcherAspect, SnappingAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, loggerMain, express, watcher]: [
+  static async provider([cli, workspace, loggerMain, express, watcher, snapping]: [
     CLIMain,
     Workspace,
     LoggerMain,
     ExpressMain,
-    WatcherMain
+    WatcherMain,
+    SnappingMain
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher);
     cli.register(new ServerCmd(apiServer));
 
     const cliRoute = new CLIRoute(logger, cli);
-    const apiForVscode = new APIForVSCode(workspace);
+    const apiForVscode = new APIForVSCode(workspace, snapping);
     const vscodeRoute = new VSCodeRoute(logger, apiForVscode);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.
     if (workspace) {

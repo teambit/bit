@@ -50,7 +50,7 @@ export interface ComponentContext {
   /**
    * env id of the env that register the template itself
    * This will be usually identical to the aspectId
-   * but aspectId will be exist always, while envId will be undefined if the template is not registered by an env
+   * but aspectId will always exist, while envId will be undefined if the template is not registered by an env
    * so in case you want to use the envId, you should check if it exists first
    * You can use this in case you want to only do something if the template was registered by an env
    */
@@ -90,7 +90,7 @@ export interface ComponentTemplate {
   /**
    * template function for generating the file of a certain component.,
    */
-  generateFiles(context: ComponentContext): ComponentFile[];
+  generateFiles(context: ComponentContext): Promise<ComponentFile[]> | ComponentFile[];
 
   /**
    * component config. gets saved in the .bitmap file and it overrides the workspace.jsonc config.

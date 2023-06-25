@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { Command, CommandOptions } from '@teambit/cli';
 import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
@@ -242,7 +243,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
     const results = await this.snapping.tag(params);
     if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
-    const { taggedComponents, autoTaggedResults, warnings, newComponents }: TagResults = results;
+    const { taggedComponents, autoTaggedResults, warnings, newComponents, removedComponents }: TagResults = results;
     const changedComponents = taggedComponents.filter((component) => !newComponents.searchWithoutVersion(component.id));
     const addedComponents = taggedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
     const autoTaggedCount = autoTaggedResults ? autoTaggedResults.length : 0;
@@ -313,8 +314,14 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       tagExplanation +
       outputIfExists('new components', newDesc, addedComponents) +
       outputIfExists('changed components', changedDesc, changedComponents) +
+      outputIdsIfExists('removed components', removedComponents) +
       publishOutput() +
       softTagClarification
     );
   }
+}
+
+export function outputIdsIfExists(label: string, ids?: BitIds) {
+  if (!ids?.length) return '';
+  return `\n${chalk.underline(label)}\n${ids.map((id) => id.toStringWithoutVersion()).join('\n')}\n`;
 }
