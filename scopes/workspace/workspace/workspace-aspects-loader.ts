@@ -370,13 +370,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       });
     }
     const localResolved = await this.aspectLoader.resolveLocalAspects(this.workspace.localAspects, runtimeName);
-    const allDefsExceptLocal = [
-      ...wsAspectDefs,
-      ...coreAspectDefs,
-      ...scopeAspectsDefs,
-      ...installedAspectsDefs,
-      ...localResolved,
-    ];
+    const allDefsExceptLocal = [...wsAspectDefs, ...coreAspectDefs, ...scopeAspectsDefs, ...installedAspectsDefs];
     const withoutLocalAspects = allDefsExceptLocal.filter((aspectId) => {
       return !localResolved.find((localAspect) => {
         return localAspect.id === aspectId.component?.id?.toStringWithoutVersion();
