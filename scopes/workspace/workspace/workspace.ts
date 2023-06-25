@@ -148,6 +148,7 @@ export class Workspace implements ComponentFactory {
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
   private componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized;
+  localAspects: string[] = [];
   constructor(
     /**
      * private pubsub.

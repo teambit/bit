@@ -30,8 +30,6 @@ export type ScopeLoadAspectsOptions = LoadAspectsOptions & {
 };
 
 export class ScopeAspectsLoader {
-  private resolvedInstalledAspects: Map<string, string | null>;
-
   constructor(
     private scope: ScopeMain,
     private aspectLoader: AspectLoaderMain,
@@ -40,8 +38,6 @@ export class ScopeAspectsLoader {
     private logger: Logger,
     private globalConfig: GlobalConfigMain
   ) {}
-
-  private localAspects: string[] = [];
 
   async loadAspects(
     ids: string[],

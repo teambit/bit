@@ -48,7 +48,6 @@ export type AspectPackage = { packageName: string; version: string };
 export class WorkspaceAspectsLoader {
   private consumer: Consumer;
   private resolvedInstalledAspects: Map<string, string | null>;
-  private localAspects: string[];
 
   constructor(
     private workspace: Workspace,
@@ -99,8 +98,8 @@ export class WorkspaceAspectsLoader {
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts, null, 2)}`);
     const [localIds, nonLocalIds] = partition(ids, (id) => id.startsWith('file:'));
-    this.localAspects = localIds ?? [];
-    await this.aspectLoader.loadAspectFromPath(this.localAspects);
+    this.workspace.localAspects = localIds ?? [];
+    await this.aspectLoader.loadAspectFromPath(this.workspace.localAspects);
     ids = nonLocalIds;
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
@@ -371,7 +370,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
         return coreAspect.runtimePath;
       });
     }
-    const localResolved = await this.aspectLoader.resolveLocalAspects(this.localAspects ?? [], runtimeName);
+    const localResolved = await this.aspectLoader.resolveLocalAspects(this.workspace.localAspects, runtimeName);
     const allDefs = [
       ...wsAspectDefs,
       ...coreAspectDefs,
