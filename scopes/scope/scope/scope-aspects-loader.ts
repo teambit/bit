@@ -1,8 +1,8 @@
 import { GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
 import { Lane } from '@teambit/legacy/dist/scope/models';
-import { readdirSync, existsSync } from 'fs-extra';
-import { resolve, join } from 'path';
+import { existsSync } from 'fs-extra';
+import { join } from 'path';
 import {
   DEFAULT_DIST_DIRNAME,
   CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR,

@@ -14,7 +14,6 @@ import {
 } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
 import fs from 'fs-extra';
-import { join, resolve } from 'path';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { BitId } from '@teambit/legacy-bit-id';
@@ -373,8 +372,6 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       });
     }
     const localResolved = await this.aspectLoader.resolveLocalAspects(this.localAspects ?? [], runtimeName);
-    console.log('localAspects', this.localAspects);
-    console.log('localResolved', localResolved);
     const allDefs = [
       ...wsAspectDefs,
       ...coreAspectDefs,
