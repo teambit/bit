@@ -48,6 +48,7 @@ import { propogateUntil as propagateUntil } from '@teambit/legacy/dist/utils';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
 import loader from '@teambit/legacy/dist/cli/loader';
+import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
 import { manifestsMap } from './manifests';
@@ -209,6 +210,10 @@ function shouldLoadInSafeMode() {
   return isSafeModeCommand || hasSafeModeFlag;
 }
 
+function shouldRunAsDaemon() {
+  return process.env.BIT_DAEMON === 'true';
+}
+
 export async function loadBit(path = process.cwd()) {
   clearGlobalsIfNeeded();
   logger.info(`*** Loading Bit *** argv:\n${process.argv.join('\n')}`);
@@ -224,6 +229,9 @@ export async function loadBit(path = process.cwd()) {
   const loadCLIOnly = shouldLoadInSafeMode();
   if (!loadCLIOnly) {
     aspectsToLoad.push(BitAspect);
+  }
+  if (shouldRunAsDaemon()) {
+    legacyLogger.isDaemon = true;
   }
   const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
 

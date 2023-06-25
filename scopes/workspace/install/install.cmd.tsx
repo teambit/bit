@@ -19,7 +19,6 @@ type InstallCmdOptions = {
   addMissingPeers: boolean;
   noOptional: boolean;
   recurringInstall: boolean;
-  keepRunning: boolean;
 };
 
 type FormatOutputArgs = {
@@ -56,7 +55,6 @@ export default class InstallCmd implements Command {
     ['', 'skip-compile [skipCompile]', 'do not compile components'],
     ['', 'add-missing-deps [addMissingDeps]', 'install all missing dependencies'],
     ['', 'add-missing-peers [addMissingPeers]', 'install all missing peer dependencies'],
-    ['', 'keep-running', 'keep running'],
     [
       '',
       recurringInstallFlagName,
@@ -107,11 +105,6 @@ export default class InstallCmd implements Command {
     const components = await this.install.install(packages, installOpts);
     const endTime = Date.now();
     const oldNonLoadedEnvs = this.install.getOldNonLoadedEnvs();
-    // process.stdin.resume();
-    if (options.keepRunning) {
-      console.log('install done');
-      await new Promise((resolve) => setTimeout(resolve, 1000 * 60 * 60 * 24));
-    }
     return formatOutput({
       startTime,
       endTime,

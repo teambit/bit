@@ -232,6 +232,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
 
   static fromConfigObject(obj: { [extensionId: string]: any } = {}): ExtensionDataList {
     const arr = Object.keys(obj)
+      // We don't want to store extensions with the file protocol because they are bounded to a specific machine.
       .filter((extensionId) => !extensionId.startsWith('file:'))
       .map((extensionId) => configEntryToDataEntry(extensionId, obj[extensionId]));
     return this.fromArray(arr);
