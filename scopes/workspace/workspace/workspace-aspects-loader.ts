@@ -97,11 +97,10 @@ export class WorkspaceAspectsLoader {
     this.logger.info(`${loggerPrefix} loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts, null, 2)}`);
-    const [localIds, nonLocalIds] = partition(ids, (id) => id.startsWith('file:'));
-    this.workspace.localAspects = localIds ?? [];
+    const [localAspects, nonLocalAspects] = partition(ids, (id) => id.startsWith('file:'));
+    this.workspace.localAspects = localAspects;
     await this.aspectLoader.loadAspectFromPath(this.workspace.localAspects);
-    ids = nonLocalIds;
-    const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
+    const notLoadedIds = nonLocalAspects.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
@@ -371,13 +370,19 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       });
     }
     const localResolved = await this.aspectLoader.resolveLocalAspects(this.workspace.localAspects, runtimeName);
-    const allDefs = [
+    const allDefsExceptLocal = [
       ...wsAspectDefs,
       ...coreAspectDefs,
       ...scopeAspectsDefs,
       ...installedAspectsDefs,
       ...localResolved,
     ];
+    const withoutLocalAspects = allDefsExceptLocal.filter((aspectId) => {
+      return !localResolved.find((localAspect) => {
+        return localAspect.id === aspectId.component?.id?.toStringWithoutVersion();
+      });
+    });
+    const allDefs = [...withoutLocalAspects, ...localResolved];
     const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
     const filteredDefs = this.aspectLoader.filterAspectDefs(allDefs, idsToFilter, runtimeName, mergedOpts);
     return filteredDefs;
