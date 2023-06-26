@@ -1,1 +1,7 @@
-export { userAgentContext, userAgentBrowserContext, UserAgentProvider, useUserAgent } from './use-user-agent';
+export {
+  SSRBrowserProvider,
+  ssrBrowserContext,
+  userAgentContext,
+  UserAgentProvider,
+  useUserAgent,
+} from './use-user-agent';
