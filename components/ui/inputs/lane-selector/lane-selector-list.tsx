@@ -11,8 +11,6 @@ import { LaneGroupedMenuItem } from './lane-grouped-menu-item';
 
 import styles from './lane-selector-list.module.scss';
 
-export type ListNavigatorCmd = 'Up' | 'Down' | 'Enter';
-
 export type LaneSelectorListProps = {
   selectedLaneId?: LaneId;
   mainLane?: LaneModel;
@@ -24,7 +22,6 @@ export type LaneSelectorListProps = {
   search?: string;
   mainIcon?: React.ReactNode;
   scopeIconLookup?: Map<string, React.ReactNode>;
-  scopeIcon?: React.ReactNode;
   loading?: boolean;
   hasMore: boolean;
   fetchMore: () => Promise<FetchMoreLanesResult | undefined>;
@@ -158,40 +155,6 @@ export function _LaneSelectorList({
     lastLaneElementRef,
     mainLane?.id.name,
   ]);
-
-  // useEffect(() => {
-  //   const selectedIndex = selectedLaneId
-  //     ? laneRefs.current.findIndex((lane) => lane.toString() === selectedLaneId.toString())
-  //     : undefined;
-
-  //   switch (listNavigator?.command) {
-  //     case 'Enter': {
-  //       const selectedLane =
-  //         (selectedLaneId && nonMainLanes.find((nonMainLane) => nonMainLane.id.isEqual(selectedLaneId))) || mainLane;
-  //       selectedLaneId && selectedLane && onLaneSelected?.(selectedLaneId, selectedLane);
-  //       selectedLaneId && selectedLane && navigate(getHref(selectedLaneId));
-  //       break;
-  //     }
-  //     case 'Up': {
-  //       const updatedIndex =
-  //         (selectedIndex !== undefined &&
-  //           (laneRefs.current[selectedIndex - 1] ? selectedIndex - 1 : laneRefs.current.length - 1)) ||
-  //         0;
-  //       setSelectedLaneId(laneRefs.current[updatedIndex]);
-  //       break;
-  //     }
-
-  //     case 'Down': {
-  //       const updatedIndex =
-  //         (selectedIndex !== undefined && (laneRefs.current[selectedIndex + 1] ? selectedIndex + 1 : 0)) || 0;
-  //       setSelectedLaneId(laneRefs.current[updatedIndex]);
-
-  //       break;
-  //     }
-  //     default:
-  //       break;
-  //   }
-  // }, [listNavigator?.update, listNavigator?.command]);
 
   useEffect(() => {
     if (selectedLaneId) {

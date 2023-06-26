@@ -58,7 +58,6 @@ export function LaneSwitcher({
             nonMainLanes={nonMainLanes}
             mainLane={mainLane}
             mainIcon={mainIcon?.()}
-            scopeIcon={scopeIcon}
             groupByScope={groupByScope}
             // sortBy={sortBy}
             // sortOptions={sortOptions}

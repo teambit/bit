@@ -2,6 +2,7 @@ import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect, useCall
 import classnames from 'classnames';
 import { useLocation } from 'react-router-dom';
 import { isEqual } from 'lodash';
+import Fuse from 'fuse.js';
 import { LaneId } from '@teambit/lane-id';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
 import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
@@ -12,7 +13,7 @@ import { Icon } from '@teambit/design.elements.icon';
 // import { Tooltip } from '@teambit/design.ui.tooltip';
 import { FetchMoreLanes } from '@teambit/lanes.hooks.use-lanes';
 
-import { LaneSelectorList, ListNavigatorCmd } from './lane-selector-list';
+import { LaneSelectorList } from './lane-selector-list';
 import { LanePlaceholder } from './lane-placeholder';
 
 import styles from './lane-selector.module.scss';
@@ -25,7 +26,6 @@ export type LaneSelectorProps = {
   getHref?: (laneId: LaneId) => string;
   onLaneSelected?: (laneId: LaneId, lane: LaneModel) => void;
   mainIcon?: React.ReactNode;
-  scopeIcon?: (scopeName: string) => React.ReactNode;
   // sortBy?: LaneSelectorSortBy;
   // sortOptions?: LaneSelectorSortBy[];
   scopeIconLookup?: Map<string, React.ReactNode>;
@@ -46,6 +46,8 @@ export type LaneDropdownItems = Array<LaneModel> | Array<GroupedLaneDropdownItem
 // }
 
 export const LIMIT = 5;
+const DEFAULT_SEARCH_ICON = 'magnifying';
+const CLEAR_SEARCH_ICON = 'crossmark';
 
 export function LaneSelector(props: LaneSelectorProps) {
   const {
@@ -61,7 +63,6 @@ export function LaneSelector(props: LaneSelectorProps) {
     // sortOptions = [LaneSelectorSortBy.ALPHABETICAL, LaneSelectorSortBy.CREATED],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mainIcon,
-    scopeIcon,
     scopeIconLookup,
     loading,
     hasMore,
@@ -93,7 +94,7 @@ export function LaneSelector(props: LaneSelectorProps) {
   // const [sortBy, setSortBy] = useState<LaneSelectorSortBy>(sortByFromProps);
   const [offset, setOffset] = useState(initialOffset ?? 0);
   const [hasMoreState, setHasMore] = useState<boolean>(hasMore ?? false);
-  const [lazilyLoadedLanes, setLazilyLoadedLanes] = useState<LaneModel[]>([]);
+  const [allLanes, setLanes] = useState<LaneModel[]>([]);
   const [loadingState, setLoading] = useState<boolean>(loading ?? false);
 
   useEffect(() => {
@@ -101,16 +102,16 @@ export function LaneSelector(props: LaneSelectorProps) {
   }, [loading]);
 
   useEffect(() => {
-    const allNonMainLanes = LanesModel.concatLanes(nonMainLanes, lazilyLoadedLanes);
-    if (!isEqual(lazilyLoadedLanes, allNonMainLanes)) {
-      setLazilyLoadedLanes(allNonMainLanes);
+    const allNonMainLanes = LanesModel.concatLanes(nonMainLanes, allLanes);
+    if (!isEqual(allLanes, allNonMainLanes)) {
+      setLanes(allNonMainLanes);
     }
   }, [nonMainLanes, nonMainLanes.length]);
 
   const fetchMore = useCallback(async () => {
     setLoading(true);
     const result = await fetchMoreLanes?.(offset, LIMIT);
-    setLazilyLoadedLanes((existing) => {
+    setLanes((existing) => {
       setHasMore(() => {
         setLoading(!!result?.loading);
         setOffset(result?.nextOffset ?? 0);
@@ -126,43 +127,60 @@ export function LaneSelector(props: LaneSelectorProps) {
   //   return lazilyLoadedLanes.sort(compareFn(sortBy));
   // }, [sortBy, lazilyLoadedLanes]);
 
-  const [filteredLanes, setFilteredLanes] = useState<LaneModel[]>(lazilyLoadedLanes);
+  const [filteredLanes, setFilteredLanes] = useState<LaneModel[]>(allLanes);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [groupScope, setGroupScope] = useState<boolean>(groupByScope);
   const location = useLocation();
 
   useEffect(() => {
-    if (filteredLanes.length !== lazilyLoadedLanes.length) {
-      setFilteredLanes(lazilyLoadedLanes);
+    if (filteredLanes.length !== allLanes.length) {
+      setFilteredLanes(allLanes);
     }
-  }, [lazilyLoadedLanes.length]);
+  }, [allLanes.length]);
 
   const multipleLanes = nonMainLanes.length >= 1;
+  const searchIconRef = useRef<string>(DEFAULT_SEARCH_ICON);
 
   const handleSearchOnChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     e.stopPropagation();
     const searchTerm = e.target.value;
     if (!searchTerm || searchTerm === '') {
-      setFilteredLanes(lazilyLoadedLanes);
+      searchIconRef.current = DEFAULT_SEARCH_ICON;
+      setFilteredLanes(allLanes);
     } else {
+      searchIconRef.current = CLEAR_SEARCH_ICON;
       setFilteredLanes(() => {
-        // first search for items that startWith search term
-        let updatedLanes = lazilyLoadedLanes.filter((lane) => {
-          const laneName = lane.id.name;
-          return laneName.toLowerCase().startsWith(searchTerm.toLowerCase());
-        });
-        // if nothing matches search anywhere in the string
-        if (updatedLanes.length === 0) {
-          updatedLanes = nonMainLanes.filter((lane) => {
-            const laneName = lane.id.name;
-            return laneName.toLowerCase().includes(searchTerm.toLowerCase());
-          });
-        }
+        const options = {
+          keys: ['id.name', 'displayName'],
+          includeMatches: true,
+          findAllMatches: true,
+          threshold: 0.4,
+          location: 0,
+          distance: 100,
+          minMatchCharLength: 1,
+          ignoreLocation: false,
+          shouldSort: true,
+          useExtendedSearch: true,
+        };
+
+        const fuse = new Fuse(allLanes, options);
+        const result = fuse.search(searchTerm);
+        const updatedLanes = result.map((matchedLane) => matchedLane.item);
+
         return [...updatedLanes];
       });
     }
     setSearch(searchTerm || '');
+  };
+
+  const handleSearchIconClicked = (e) => {
+    // prevent dropdown from closing
+    e.stopPropagation();
+    if (searchIconRef.current !== CLEAR_SEARCH_ICON) return;
+    setSearch('');
+    searchIconRef.current = DEFAULT_SEARCH_ICON;
+    setFilteredLanes(allLanes);
   };
 
   const handleSearchOnClick = (e) => {
@@ -171,6 +189,8 @@ export function LaneSelector(props: LaneSelectorProps) {
   };
 
   function LaneSearch() {
+    const isClear = searchIconRef.current === CLEAR_SEARCH_ICON;
+
     return (
       (multipleLanes && (
         <div className={styles.search}>
@@ -178,21 +198,20 @@ export function LaneSelector(props: LaneSelectorProps) {
             activeLabel={false}
             inputSize={'s'}
             // ref={inputRef}
-            className={styles.searchInputContainer}
+            className={classnames(styles.searchInputContainer, isClear && styles.pointer)}
             inputClass={styles.searchInput}
             placeholder={'Search'}
             value={search}
             onChange={handleSearchOnChange}
             onClick={handleSearchOnClick}
             autoFocus={true}
-            icon={<Icon of="magnifying" className={styles.searchIcon} />}
+            icon={<Icon of={searchIconRef.current} className={styles.searchIcon} onClick={handleSearchIconClicked} />}
           />
         </div>
       )) ||
       null
     );
   }
-
   // TBD: needs redesign
 
   // function LaneGroup() {
@@ -214,39 +233,6 @@ export function LaneSelector(props: LaneSelectorProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [dropdownOpen, setDropdownOpen] = useState<boolean | undefined>(false);
-  const [listNavCmd, setListNavCmd] = useState<{ command?: ListNavigatorCmd; update?: number } | undefined>();
-
-  // const handleKeyDown = (e: KeyboardEvent) => {
-  //   setListNavCmd((_listNavCmd) => {
-  //     switch (e.key) {
-  //       case 'Enter': {
-  //         setDropdownOpen(false);
-  //         return { command: 'Enter', update: (_listNavCmd?.update ?? 0) + 1 };
-  //       }
-  //       case 'ArrowUp': {
-  //         return { command: 'Up', update: (_listNavCmd?.update ?? 0) + 1 };
-  //       }
-
-  //       case 'ArrowDown': {
-  //         return { command: 'Down', update: (_listNavCmd?.update ?? 0) + 1 };
-  //       }
-  //       default:
-  //         return _listNavCmd;
-  //     }
-  //   });
-  // };
-
-  // useEffect(() => {
-  //   const containerElement = containerRef.current;
-  //   if (containerElement) {
-  //     containerElement.addEventListener('keydown', handleKeyDown);
-  //   }
-  //   return () => {
-  //     if (containerElement) {
-  //       containerElement.removeEventListener('keydown', handleKeyDown);
-  //     }
-  //   };
-  // }, [containerRef.current]);
 
   useEffect(() => {
     setDropdownOpen(() => {
@@ -311,32 +297,19 @@ export function LaneSelector(props: LaneSelectorProps) {
             fetchMore={fetchMore}
             nonMainLanes={filteredLanes}
             search={search}
-            // sortBy={sortBy}
             groupByScope={groupScope}
             scopeIconLookup={scopeIconLookup}
-            // listNavigator={listNavCmd}
             selectedLaneId={selectedLaneId}
             loading={loading}
             mainLane={mainLane}
             getHref={getHref}
             onLaneSelected={onLaneSelectedHandler}
-            scopeIcon={scopeIcon}
             mainIcon={mainIcon}
           />
         )}
       </React.Fragment>
     );
-  }, [
-    filteredLanes,
-    listNavCmd,
-    groupByScope,
-    multipleLanes,
-    selectedLaneId,
-    loading,
-    hasMore,
-    fetchMore,
-    dropdownOpen,
-  ]);
+  }, [filteredLanes, groupByScope, multipleLanes, selectedLaneId, loading, hasMore, fetchMore, dropdownOpen]);
 
   return (
     <div {...rest} className={classnames(className, styles.laneSelector)} ref={containerRef}>
