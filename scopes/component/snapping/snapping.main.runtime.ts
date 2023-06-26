@@ -258,7 +258,7 @@ export class SnappingMain {
         return {
           componentId: await this.scope.resolveComponentId(tagData.componentId),
           dependencies: tagData.dependencies ? await this.scope.resolveMultipleComponentIds(tagData.dependencies) : [],
-          versionToTag: tagData.versionToTag || 'patch',
+          versionToTag: tagData.versionToTag || params.releaseType || 'patch',
           prereleaseId: tagData.prereleaseId,
           message: tagData.message,
         };
@@ -292,9 +292,6 @@ if you're willing to lose the history from the head to the specified version, us
           : [];
       })
     );
-
-    // needed in order to load all aspects of these components
-    await this.scope.loadMany(components.map((c) => c.id));
     const bitIds = componentIds.map((c) => c._legacy);
     await Promise.all(
       components.map(async (comp) => {
@@ -304,6 +301,9 @@ if you're willing to lose the history from the head to the specified version, us
         await this.updateDependenciesVersionsOfComponent(comp, tagData.dependencies, bitIds);
       })
     );
+
+    await this.scope.loadManyCompsAspects(components);
+
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     const shouldUsePopulateArtifactsFrom = components.every((comp) => {
       if (!comp.buildStatus) throw new Error(`tag-from-scope expect ${comp.id.toString()} to have buildStatus`);
@@ -927,6 +927,8 @@ there are matching among unmodified components thought. consider using --unmodif
         ext.extensionId = updatedBitId;
       }
     });
+
+    component.state.aspects = await this.scope.createAspectListFromExtensionDataList(legacyComponent.extensions);
 
     const dependenciesListSerialized = (await this.dependencyResolver.extractDepsFromLegacy(component)).serialize();
     const extId = DependencyResolverAspect.id;
