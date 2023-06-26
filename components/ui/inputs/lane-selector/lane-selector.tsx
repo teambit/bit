@@ -56,15 +56,12 @@ export function LaneSelector(props: LaneSelectorProps) {
     nonMainLanes,
     selectedLaneId,
     groupByScope = true,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     getHref,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onLaneSelected,
     // sortBy: sortByFromProps = LaneSelectorSortBy.ALPHABETICAL,
     // sortOptions = [LaneSelectorSortBy.ALPHABETICAL, LaneSelectorSortBy.CREATED],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mainIcon,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     scopeIcon,
     scopeIconLookup,
     forceCloseOnEnter,
@@ -315,6 +312,7 @@ export function LaneSelector(props: LaneSelectorProps) {
             selectedLaneId={selectedLaneId}
             loading={loading}
             mainLane={mainLane}
+            getHref={getHref}
           />
         )}
       </React.Fragment>

@@ -1,6 +1,6 @@
 import React, { HTMLAttributes, useRef } from 'react';
 import { UseLanes, useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
-import { LaneSelector, LaneSelectorSortBy } from '@teambit/lanes.ui.inputs.lane-selector';
+import { LaneSelector } from '@teambit/lanes.ui.inputs.lane-selector';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { LaneId } from '@teambit/lane-id';
