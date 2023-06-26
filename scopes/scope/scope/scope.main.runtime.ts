@@ -27,7 +27,7 @@ import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds, BitIds as ComponentsIds } from '@teambit/legacy/dist/bit-id';
-import { ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
+import { ModelComponent, Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { Repository } from '@teambit/legacy/dist/scope/objects';
 import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -45,6 +45,7 @@ import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
+import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
 import { remove } from '@teambit/legacy/dist/api/scope';
 import { BitError } from '@teambit/bit-error';
@@ -802,6 +803,12 @@ export class ScopeMain implements ComponentFactory {
     return idsFiltered;
   }
 
+  async getSnapDistance(id: ComponentID): Promise<SnapsDistance> {
+    const modelComp = await this.legacyScope.getModelComponent(id._legacy);
+    await modelComp.setDivergeData(this.legacyScope.objects);
+    return modelComp.getDivergeData();
+  }
+
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
@@ -839,6 +846,27 @@ export class ScopeMain implements ComponentFactory {
       // in case the component is missing locally, this.get imports it.
       return (await this.get(id))?.state._consumer;
     }
+  }
+
+  /**
+   * ModelComponent is of type `BitObject` which gets saved into the local scope as an object file.
+   * It has data about the tags and the component head. It doesn't have any data about the source-files/artifacts etc.
+   */
+  async getBitObjectModelComponent(id: ComponentID, throwIfNotExist = false): Promise<ModelComponent | undefined> {
+    return throwIfNotExist
+      ? this.legacyScope.getModelComponent(id._legacy)
+      : this.legacyScope.getModelComponentIfExist(id._legacy);
+  }
+
+  /**
+   * Version BitObject holds the data of the source files and build artifacts of a specific snap/tag.
+   */
+  async getBitObjectVersion(
+    modelComponent: ModelComponent,
+    version: string,
+    throwIfNotExist = false
+  ): Promise<Version | undefined> {
+    return modelComponent.loadVersion(version, this.legacyScope.objects, throwIfNotExist);
   }
 
   /**

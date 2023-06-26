@@ -68,7 +68,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
     customUseComponent,
     logFilters: {
       log: {
-        logLimit: 3,
+        limit: 3,
       },
     },
   });
@@ -106,7 +106,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
     skip: !baseId,
     logFilters: {
       log: {
-        logLimit: 3,
+        limit: 3,
       },
     },
   });
@@ -193,7 +193,11 @@ function RenderCompareScreen(props: ComponentCompareProps) {
   return (
     <>
       {showVersionPicker && (
-        <div className={styles.top}>{state?.versionPicker?.element || <ComponentCompareVersionPicker />}</div>
+        <div className={styles.top}>
+          {state?.versionPicker?.element || (
+            <ComponentCompareVersionPicker host={props.host} customUseComponent={props.customUseComponent} />
+          )}
+        </div>
       )}
       <div className={styles.bottom}>
         <CompareMenuNav {...props} />
@@ -240,16 +244,16 @@ function CompareMenuNav({ tabs, state, hooks, changes: changed }: ComponentCompa
           },
         ];
       }),
-    [_tabs.length, activeTab, changed?.length]
+    [_tabs.length, activeTab, changed, changed?.length]
   );
 
   const sortedTabs = useMemo(
     () => extractedTabs.filter(([, tab]) => !tab.widget),
-    [extractedTabs.length, activeTab, changed?.length]
+    [extractedTabs.length, activeTab, changed?.length, changed]
   );
   const sortedWidgets = useMemo(
     () => extractedTabs.filter(([, tab]) => tab.widget),
-    [extractedTabs.length, activeTab, changed?.length]
+    [extractedTabs.length, activeTab, changed?.length, changed]
   );
 
   return (

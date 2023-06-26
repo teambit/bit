@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
+import classNames from 'classnames';
 import { ExpandableTabContent, ExpandableTabContentProps } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
 import { TooltipCopybox } from './tooltip-copybox';
@@ -30,12 +31,18 @@ export function Import({ componentId, packageName, componentName, showInstallMet
       {...rest}
       content={
         <div className={styles.importContent}>
-          {showInstallMethod && (
+          {
             <>
-              <div>{`Add ${componentName} as a dependency`}</div>
-              <TooltipCopybox content={`bit install ${packageName}`} />
+              <div className={classNames(!showInstallMethod && styles.disabled)}>
+                {!showInstallMethod && <Icon className={styles.warnIcon} of="warn-circle" />}
+                {showInstallMethod && `Add ${componentName} as a dependency`}
+                {!showInstallMethod && 'Installation unavailable: This component has not been built yet'}
+              </div>
+              {showInstallMethod && (
+                <TooltipCopybox content={`bit install ${packageName ?? ''}`} disabled={!showInstallMethod} />
+              )}
             </>
-          )}
+          }
           <div>{`Import ${componentName} to your workspace`}</div>
           <TooltipCopybox content={`bit import ${componentId}`} />
           <div>{`Fork ${componentName} to your workspace`}</div>
@@ -44,7 +51,7 @@ export function Import({ componentId, packageName, componentName, showInstallMet
       }
       drawerTitle={
         <div className={styles.bottom}>
-          <Icon of="download" />
+          <Icon color="yellow" of="download" />
           <span>Install Bit on your computer</span>
         </div>
       }

@@ -63,6 +63,7 @@ import {
   NamedTupleTransformer,
   ConstructorTransformer,
   ExpressionStatementTransformer,
+  ModuleDeclarationTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
@@ -209,12 +210,13 @@ export class TypescriptMain {
   /**
    * create an instance of a typescript semantic schema extractor.
    */
-  createSchemaExtractor(tsconfig: any, path?: string): SchemaExtractor {
+  createSchemaExtractor(tsconfig: any, tsserverPath?: string, contextPath?: string): SchemaExtractor {
     return new TypeScriptExtractor(
       tsconfig,
       this.schemaTransformerSlot,
       this,
-      path || this.workspace?.path || '',
+      tsserverPath || this.workspace?.path || '',
+      contextPath || this.workspace?.path || '',
       this.depResolver,
       this.workspace,
       this.scope,
@@ -408,6 +410,7 @@ export class TypescriptMain {
       new ConstructorTransformer(),
       new ImportDeclarationTransformer(),
       new ExpressionStatementTransformer(),
+      new ModuleDeclarationTransformer(),
     ]);
 
     if (workspace) {

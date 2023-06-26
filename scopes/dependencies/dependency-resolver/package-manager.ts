@@ -65,6 +65,8 @@ export type PackageManagerInstallOptions = {
   neverBuiltDependencies?: string[];
 
   preferOffline?: boolean;
+
+  nmSelfReferences?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

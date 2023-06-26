@@ -64,8 +64,12 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
     return this.tsAspect.getCjsPackageJsonProps();
   }
 
-  getSchemaExtractor(tsconfig: TsConfigSourceFile, path?: string): SchemaExtractor {
-    return this.tsAspect.createSchemaExtractor(this.reactAspect.reactEnv.getTsConfig(tsconfig), path);
+  getSchemaExtractor(tsconfig: TsConfigSourceFile, tsserverPath?: string, contextPath?: string): SchemaExtractor {
+    return this.tsAspect.createSchemaExtractor(
+      this.reactAspect.reactEnv.getTsConfig(tsconfig),
+      tsserverPath,
+      contextPath
+    );
   }
 
   async __getDescriptor() {

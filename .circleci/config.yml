@@ -836,6 +836,15 @@ jobs:
           name: Upload tar file
           command: ./jfrog rt u "bit-${BIT_VERSION}.tar.gz" bvm/dev/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz --flat=false
 
+  # This is a special task that just wait 5 minutes (sleep)
+  # it required before we install @teambit/bit from the registry
+  # because sometime the registry metedata is cached which lead to sometimes getting missing packages during install
+  sleep_5_minutes:
+    <<: *defaults
+    resource_class: small
+    steps:
+      - run: sleep 300;
+
   get_linux_arm64_packages:
     <<: *defaults
     resource_class: small
@@ -1107,6 +1116,8 @@ jobs:
       - run:
           name: clear index.json cache
           command: gsutil setmeta -h "Cache-Control:no-cache" gs://bvm.bit.dev/bit/index.json
+      - store_artifacts:
+          path: bit/index.json
 
   bit_export:
     <<: *defaults
@@ -1815,23 +1826,31 @@ workflows:
           <<: *master_only_filter
           requires:
             - setup_harmony
+      - sleep_5_minutes:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+            - bit_export
       - bundle_version_linux:
           <<: *master_only_filter
           requires:
             - bit_tag
             - bit_export
             - get_linux_arm64_packages
+            - sleep_5_minutes
       - bundle_version_windows:
           <<: *master_only_filter
           requires:
             - bit_export
             - bit_tag
+            - sleep_5_minutes
       - bundle_version_macos:
           <<: *master_only_filter
           requires:
             - bit_export
             - bit_tag
             - get_darwin_arm64_packages
+            - sleep_5_minutes
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
@@ -1847,6 +1866,7 @@ workflows:
           requires:
             - bit_export
             - bit_tag
+            - sleep_5_minutes
       # - docker_build:
       #     requires:
       #       - harmony_publish_to_gcloud
@@ -1956,6 +1976,12 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - setup_harmony
+      - sleep_5_minutes:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bit_tag
+            - bit_export
       - bundle_version_linux:
           <<: *master_only_filter
           requires:
@@ -1963,12 +1989,14 @@ workflows:
             - bit_tag
             - bit_export
             - get_linux_arm64_packages
+            - sleep_5_minutes
       - bundle_version_windows:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
             - bit_export
             - bit_tag
+            - sleep_5_minutes
       - bundle_version_macos:
           <<: *master_only_filter
           requires:
@@ -1976,6 +2004,7 @@ workflows:
             - bit_export
             - bit_tag
             - get_darwin_arm64_packages
+            - sleep_5_minutes
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
@@ -1994,6 +2023,7 @@ workflows:
             - harmony_deploy_approval_job
             - bit_tag
             - bit_export
+            - sleep_5_minutes
       # - docker_build:
       #     requires:
       #       - harmony_deploy_approval_job

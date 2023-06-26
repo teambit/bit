@@ -30,11 +30,11 @@ export class SchemaTask implements BuildTask {
     const startTime = Date.now();
     const capsules = context.capsuleNetwork.seedersCapsules;
     const schemaResult: ComponentResult[] = [];
-    // persist schema json
+    const rootDir = context.capsuleNetwork.capsulesRootDir;
     await pMapSeries(capsules, async (capsule) => {
       const component = capsule.component;
       try {
-        const schema = await this.schema.getSchema(component, true, true, capsule.path);
+        const schema = await this.schema.getSchema(component, false, true, rootDir, capsule.path);
         const schemaObj = schema.toObject();
         await fs.outputFile(join(capsule.path, getSchemaArtifactPath()), JSON.stringify(schemaObj, null, 2));
         schemaResult.push({
