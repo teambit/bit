@@ -122,7 +122,7 @@ async function setFutureVersions(
           return modelComponent.getVersionToAdd(
             exactVersionOrReleaseType.releaseType,
             exactVersionOrReleaseType.exactVersion,
-            undefined,
+            incrementBy,
             tagData.prereleaseId
           );
         }

@@ -209,6 +209,10 @@ function shouldLoadInSafeMode() {
   return isSafeModeCommand || hasSafeModeFlag;
 }
 
+function shouldRunAsDaemon() {
+  return process.env.BIT_DAEMON === 'true';
+}
+
 export async function loadBit(path = process.cwd()) {
   clearGlobalsIfNeeded();
   logger.info(`*** Loading Bit *** argv:\n${process.argv.join('\n')}`);
@@ -224,6 +228,9 @@ export async function loadBit(path = process.cwd()) {
   const loadCLIOnly = shouldLoadInSafeMode();
   if (!loadCLIOnly) {
     aspectsToLoad.push(BitAspect);
+  }
+  if (shouldRunAsDaemon()) {
+    logger.isDaemon = true;
   }
   const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
 
