@@ -59,9 +59,8 @@ export function LaneComparePage({
               mainLane={defaultLane}
               groupByScope={groupByScope}
               getHref={() => ''}
-              forceCloseOnEnter={true}
-              onLaneSelected={(laneId) => {
-                setBase(lanesModel?.lanes.find((l) => l.id.toString() === laneId.toString()));
+              onLaneSelected={(_, lane) => {
+                setBase(lane);
               }}
               loading={loading}
               fetchMoreLanes={fetchMoreLanes}

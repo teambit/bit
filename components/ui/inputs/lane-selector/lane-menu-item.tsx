@@ -13,7 +13,7 @@ export type LaneMenuItemProps = {
   selected?: LaneId;
   current: LaneModel;
   getHref?: (laneId: LaneId) => string;
-  onLaneSelected?: (laneId: LaneId) => void;
+  onLaneSelected?: (laneId: LaneId, lane: LaneModel) => void;
   icon?: React.ReactNode;
   timestamp?: Date;
 } & HTMLAttributes<HTMLDivElement>;
@@ -40,7 +40,7 @@ export const LaneMenuItem = forwardRef<HTMLDivElement, LaneMenuItemProps>(
     const href = getHref(current.id);
 
     const onClick = () => {
-      onLaneSelected?.(current.id);
+      onLaneSelected?.(current.id, current);
     };
 
     const laneDisplayName = current.displayName || current.id.name;

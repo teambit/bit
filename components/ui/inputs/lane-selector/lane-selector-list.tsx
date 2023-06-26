@@ -20,24 +20,24 @@ export type LaneSelectorListProps = {
   className?: string;
   groupByScope?: boolean;
   getHref?: (laneId: LaneId) => string;
-  onLaneSelected?: (selectedLaneId: LaneId) => void;
+  onLaneSelected?: (selectedLaneId: LaneId, selectedLane: LaneModel) => void;
   search?: string;
   mainIcon?: React.ReactNode;
   scopeIconLookup?: Map<string, React.ReactNode>;
   scopeIcon?: React.ReactNode;
-  listNavigator?: {
-    command?: ListNavigatorCmd;
-    update?: number;
-  };
-  forceCloseOnEnter?: boolean;
   loading?: boolean;
   hasMore: boolean;
   fetchMore: () => Promise<FetchMoreLanesResult | undefined>;
   fetchMoreLanes?: () => Promise<FetchMoreLanesResult | undefined>;
   initialOffset?: number;
+  forwardedRef?: React.Ref<HTMLDivElement>;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function LaneSelectorList({
+export const LaneSelectorList = React.forwardRef<HTMLDivElement, LaneSelectorListProps>(function _(props, ref) {
+  return <_LaneSelectorList {...props} forwardedRef={ref} />;
+});
+
+export function _LaneSelectorList({
   selectedLaneId: selectedLaneIdFromProps,
   mainLane,
   nonMainLanes,
@@ -48,10 +48,10 @@ export function LaneSelectorList({
   search = '',
   mainIcon,
   scopeIconLookup,
-  listNavigator,
   loading,
   hasMore,
   fetchMore,
+  forwardedRef,
   ...rest
 }: LaneSelectorListProps) {
   const navigate = useNavigate();
@@ -159,37 +159,39 @@ export function LaneSelectorList({
     mainLane?.id.name,
   ]);
 
-  useEffect(() => {
-    const selectedIndex = selectedLaneId
-      ? laneRefs.current.findIndex((lane) => lane.toString() === selectedLaneId.toString())
-      : undefined;
+  // useEffect(() => {
+  //   const selectedIndex = selectedLaneId
+  //     ? laneRefs.current.findIndex((lane) => lane.toString() === selectedLaneId.toString())
+  //     : undefined;
 
-    switch (listNavigator?.command) {
-      case 'Enter': {
-        selectedLaneId && onLaneSelected?.(selectedLaneId);
-        selectedLaneId && navigate(getHref(selectedLaneId));
-        break;
-      }
-      case 'Up': {
-        const updatedIndex =
-          (selectedIndex !== undefined &&
-            (laneRefs.current[selectedIndex - 1] ? selectedIndex - 1 : laneRefs.current.length - 1)) ||
-          0;
-        setSelectedLaneId(laneRefs.current[updatedIndex]);
-        break;
-      }
+  //   switch (listNavigator?.command) {
+  //     case 'Enter': {
+  //       const selectedLane =
+  //         (selectedLaneId && nonMainLanes.find((nonMainLane) => nonMainLane.id.isEqual(selectedLaneId))) || mainLane;
+  //       selectedLaneId && selectedLane && onLaneSelected?.(selectedLaneId, selectedLane);
+  //       selectedLaneId && selectedLane && navigate(getHref(selectedLaneId));
+  //       break;
+  //     }
+  //     case 'Up': {
+  //       const updatedIndex =
+  //         (selectedIndex !== undefined &&
+  //           (laneRefs.current[selectedIndex - 1] ? selectedIndex - 1 : laneRefs.current.length - 1)) ||
+  //         0;
+  //       setSelectedLaneId(laneRefs.current[updatedIndex]);
+  //       break;
+  //     }
 
-      case 'Down': {
-        const updatedIndex =
-          (selectedIndex !== undefined && (laneRefs.current[selectedIndex + 1] ? selectedIndex + 1 : 0)) || 0;
-        setSelectedLaneId(laneRefs.current[updatedIndex]);
+  //     case 'Down': {
+  //       const updatedIndex =
+  //         (selectedIndex !== undefined && (laneRefs.current[selectedIndex + 1] ? selectedIndex + 1 : 0)) || 0;
+  //       setSelectedLaneId(laneRefs.current[updatedIndex]);
 
-        break;
-      }
-      default:
-        break;
-    }
-  }, [listNavigator?.update, listNavigator?.command]);
+  //       break;
+  //     }
+  //     default:
+  //       break;
+  //   }
+  // }, [listNavigator?.update, listNavigator?.command]);
 
   useEffect(() => {
     if (selectedLaneId) {
@@ -199,6 +201,65 @@ export function LaneSelectorList({
       }, 0);
     }
   }, [selectedLaneId?.toString(), laneDropdownItems]);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'Enter': {
+          setSelectedLaneId((currentSelectedLaneId) => {
+            const selectedLane =
+              (currentSelectedLaneId &&
+                nonMainLanes.find((nonMainLane) => nonMainLane.id.isEqual(currentSelectedLaneId))) ||
+              mainLane;
+            currentSelectedLaneId && selectedLane && onLaneSelected?.(currentSelectedLaneId, selectedLane);
+            currentSelectedLaneId && selectedLane && navigate(getHref(currentSelectedLaneId));
+            return currentSelectedLaneId;
+          });
+          break;
+        }
+        case 'ArrowUp': {
+          setSelectedLaneId((currentSelectedLaneId) => {
+            const selectedIndex = currentSelectedLaneId
+              ? laneRefs.current.findIndex((lane) => lane.toString() === currentSelectedLaneId.toString())
+              : undefined;
+            const updatedIndex =
+              (selectedIndex !== undefined &&
+                (laneRefs.current[selectedIndex - 1] ? selectedIndex - 1 : laneRefs.current.length - 1)) ||
+              0;
+            return laneRefs.current[updatedIndex];
+          });
+          break;
+        }
+
+        case 'ArrowDown': {
+          setSelectedLaneId((currentSelectedLaneId) => {
+            const selectedIndex = currentSelectedLaneId
+              ? laneRefs.current.findIndex((lane) => lane.toString() === currentSelectedLaneId.toString())
+              : undefined;
+            const updatedIndex =
+              (selectedIndex !== undefined && (laneRefs.current[selectedIndex + 1] ? selectedIndex + 1 : 0)) || 0;
+            return laneRefs.current[updatedIndex];
+          });
+          break;
+        }
+        default:
+          break;
+      }
+    },
+    [nonMainLanes, nonMainLanes.length, laneRefs.current.length]
+  );
+
+  useEffect(() => {
+    const containerElement = window || forwardedRef;
+    if (containerElement) {
+      containerElement.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      if (containerElement) {
+        containerElement.removeEventListener('keydown', handleKeyDown);
+      }
+    };
+  }, []);
 
   if (loading) return null;
 

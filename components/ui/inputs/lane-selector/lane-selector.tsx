@@ -23,13 +23,12 @@ export type LaneSelectorProps = {
   selectedLaneId?: LaneId;
   groupByScope?: boolean;
   getHref?: (laneId: LaneId) => string;
-  onLaneSelected?: (laneId: LaneId) => void;
+  onLaneSelected?: (laneId: LaneId, lane: LaneModel) => void;
   mainIcon?: React.ReactNode;
   scopeIcon?: (scopeName: string) => React.ReactNode;
   // sortBy?: LaneSelectorSortBy;
   // sortOptions?: LaneSelectorSortBy[];
   scopeIconLookup?: Map<string, React.ReactNode>;
-  forceCloseOnEnter?: boolean;
   loading?: boolean;
   hasMore?: boolean;
   fetchMoreLanes?: FetchMoreLanes;
@@ -64,7 +63,6 @@ export function LaneSelector(props: LaneSelectorProps) {
     mainIcon,
     scopeIcon,
     scopeIconLookup,
-    forceCloseOnEnter,
     loading,
     hasMore,
     fetchMoreLanes,
@@ -218,43 +216,50 @@ export function LaneSelector(props: LaneSelectorProps) {
   const [dropdownOpen, setDropdownOpen] = useState<boolean | undefined>(false);
   const [listNavCmd, setListNavCmd] = useState<{ command?: ListNavigatorCmd; update?: number } | undefined>();
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    setListNavCmd((_listNavCmd) => {
-      switch (e.key) {
-        case 'Enter': {
-          if (forceCloseOnEnter) setDropdownOpen(true);
-          return { command: 'Enter', update: (_listNavCmd?.update ?? 0) + 1 };
-        }
-        case 'ArrowUp': {
-          return { command: 'Up', update: (_listNavCmd?.update ?? 0) + 1 };
-        }
+  // const handleKeyDown = (e: KeyboardEvent) => {
+  //   setListNavCmd((_listNavCmd) => {
+  //     switch (e.key) {
+  //       case 'Enter': {
+  //         setDropdownOpen(false);
+  //         return { command: 'Enter', update: (_listNavCmd?.update ?? 0) + 1 };
+  //       }
+  //       case 'ArrowUp': {
+  //         return { command: 'Up', update: (_listNavCmd?.update ?? 0) + 1 };
+  //       }
 
-        case 'ArrowDown': {
-          return { command: 'Down', update: (_listNavCmd?.update ?? 0) + 1 };
-        }
-        default:
-          return _listNavCmd;
-      }
-    });
-  };
+  //       case 'ArrowDown': {
+  //         return { command: 'Down', update: (_listNavCmd?.update ?? 0) + 1 };
+  //       }
+  //       default:
+  //         return _listNavCmd;
+  //     }
+  //   });
+  // };
 
-  useEffect(() => {
-    const containerElement = containerRef.current;
-    if (containerElement) {
-      containerElement.addEventListener('keydown', handleKeyDown);
-    }
-    return () => {
-      if (containerElement) {
-        containerElement.removeEventListener('keydown', handleKeyDown);
-      }
-    };
-  }, [containerRef.current]);
+  // useEffect(() => {
+  //   const containerElement = containerRef.current;
+  //   if (containerElement) {
+  //     containerElement.addEventListener('keydown', handleKeyDown);
+  //   }
+  //   return () => {
+  //     if (containerElement) {
+  //       containerElement.removeEventListener('keydown', handleKeyDown);
+  //     }
+  //   };
+  // }, [containerRef.current]);
 
   useEffect(() => {
     setDropdownOpen(() => {
       return false;
     });
   }, [location.pathname]);
+
+  const onLaneSelectedHandler = (laneId: LaneId, lane: LaneModel) => {
+    setDropdownOpen(() => {
+      onLaneSelected?.(laneId, lane);
+      return false;
+    });
+  };
 
   const LaneList = React.useMemo(() => {
     return (
@@ -301,6 +306,7 @@ export function LaneSelector(props: LaneSelectorProps) {
         )}
         {multipleLanes && dropdownOpen && (
           <LaneSelectorList
+            forwardedRef={containerRef}
             hasMore={hasMoreState}
             fetchMore={fetchMore}
             nonMainLanes={filteredLanes}
@@ -308,11 +314,14 @@ export function LaneSelector(props: LaneSelectorProps) {
             // sortBy={sortBy}
             groupByScope={groupScope}
             scopeIconLookup={scopeIconLookup}
-            listNavigator={listNavCmd}
+            // listNavigator={listNavCmd}
             selectedLaneId={selectedLaneId}
             loading={loading}
             mainLane={mainLane}
             getHref={getHref}
+            onLaneSelected={onLaneSelectedHandler}
+            scopeIcon={scopeIcon}
+            mainIcon={mainIcon}
           />
         )}
       </React.Fragment>
