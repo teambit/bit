@@ -301,7 +301,7 @@ export class SnappingMain {
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
-      consumerComponents: consumerComponents.map((c) => c.clone()),
+      consumerComponents,
       tagDataPerComp,
       populateArtifactsFrom: shouldUsePopulateArtifactsFrom ? components.map((c) => c.id) : undefined,
       copyLogFromPreviousSnap: true,
