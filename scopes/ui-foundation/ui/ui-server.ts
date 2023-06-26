@@ -168,7 +168,8 @@ export class UIServer {
     proxyEntries.forEach((entry) => {
       entry.context.forEach((route) => {
         app.use(`${route}/*`, (req, res) => {
-          proxServer.web(req, res, { ...entry, target: `${entry.target}/${req.originalUrl}` });
+          req.url = req.originalUrl;
+          proxServer.web(req, res, entry);
         });
       });
     });
