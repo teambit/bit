@@ -1,15 +1,15 @@
-import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect, useCallback, useRef } from 'react';
 import classnames from 'classnames';
 import { useLocation } from 'react-router-dom';
-import { isEqual, startCase } from 'lodash';
+import { isEqual } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
 import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { InputText as SearchInput } from '@teambit/design.inputs.input-text';
-import { ToggleButton } from '@teambit/design.inputs.toggle-button';
+// import { ToggleButton } from '@teambit/design.inputs.toggle-button';
 import { Icon } from '@teambit/design.elements.icon';
 // import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
-import { Tooltip } from '@teambit/design.ui.tooltip';
+// import { Tooltip } from '@teambit/design.ui.tooltip';
 import { FetchMoreLanes } from '@teambit/lanes.hooks.use-lanes';
 
 import { LaneSelectorList, ListNavigatorCmd } from './lane-selector-list';
@@ -26,8 +26,8 @@ export type LaneSelectorProps = {
   onLaneSelected?: (laneId: LaneId) => void;
   mainIcon?: React.ReactNode;
   scopeIcon?: (scopeName: string) => React.ReactNode;
-  sortBy?: LaneSelectorSortBy;
-  sortOptions?: LaneSelectorSortBy[];
+  // sortBy?: LaneSelectorSortBy;
+  // sortOptions?: LaneSelectorSortBy[];
   scopeIconLookup?: Map<string, React.ReactNode>;
   forceCloseOnEnter?: boolean;
   loading?: boolean;
@@ -40,13 +40,13 @@ export type GroupedLaneDropdownItem = [scope: string, lanes: LaneModel[]];
 
 export type LaneDropdownItems = Array<LaneModel> | Array<GroupedLaneDropdownItem>;
 
-export enum LaneSelectorSortBy {
-  UPDATED = 'UPDATED',
-  CREATED = 'CREATED',
-  ALPHABETICAL = 'ALPHABETICAL',
-}
+// export enum LaneSelectorSortBy {
+//   UPDATED = 'UPDATED',
+//   CREATED = 'CREATED',
+//   ALPHABETICAL = 'ALPHABETICAL',
+// }
 
-export const LIMIT = 10;
+export const LIMIT = 5;
 
 export function LaneSelector(props: LaneSelectorProps) {
   const {
@@ -60,8 +60,8 @@ export function LaneSelector(props: LaneSelectorProps) {
     getHref,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onLaneSelected,
-    sortBy: sortByFromProps = LaneSelectorSortBy.ALPHABETICAL,
-    sortOptions = [LaneSelectorSortBy.ALPHABETICAL, LaneSelectorSortBy.CREATED],
+    // sortBy: sortByFromProps = LaneSelectorSortBy.ALPHABETICAL,
+    // sortOptions = [LaneSelectorSortBy.ALPHABETICAL, LaneSelectorSortBy.CREATED],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mainIcon,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -75,30 +75,35 @@ export function LaneSelector(props: LaneSelectorProps) {
     ...rest
   } = props;
 
-  const compareFn = useCallback((_sortBy: LaneSelectorSortBy) => {
-    switch (_sortBy) {
-      case LaneSelectorSortBy.UPDATED:
-        return (a: LaneModel, b: LaneModel) => {
-          return (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0);
-        };
-      case LaneSelectorSortBy.CREATED:
-        return (a: LaneModel, b: LaneModel) => {
-          return (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0);
-        };
-      default:
-        return (a: LaneModel, b: LaneModel) => {
-          const scopeCompareResult = a.id.scope.localeCompare(b.id.scope);
-          if (groupByScope && scopeCompareResult !== 0) return scopeCompareResult;
-          return a.id.name.toLowerCase().localeCompare(b.id.name.toLowerCase());
-        };
-    }
-  }, []);
+  // const compareFn = useCallback((_sortBy: LaneSelectorSortBy) => {
+  //   switch (_sortBy) {
+  //     case LaneSelectorSortBy.UPDATED:
+  //       return (a: LaneModel, b: LaneModel) => {
+  //         return (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0);
+  //       };
+  //     case LaneSelectorSortBy.CREATED:
+  //       return (a: LaneModel, b: LaneModel) => {
+  //         return (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0);
+  //       };
+  //     default:
+  //       return (a: LaneModel, b: LaneModel) => {
+  //         const scopeCompareResult = a.id.scope.localeCompare(b.id.scope);
+  //         if (groupByScope && scopeCompareResult !== 0) return scopeCompareResult;
+  //         return a.id.name.toLowerCase().localeCompare(b.id.name.toLowerCase());
+  //       };
+  //   }
+  // }, []);
 
   const [search, setSearch] = useState<string>('');
-  const [sortBy, setSortBy] = useState<LaneSelectorSortBy>(sortByFromProps);
+  // const [sortBy, setSortBy] = useState<LaneSelectorSortBy>(sortByFromProps);
   const [offset, setOffset] = useState(initialOffset ?? 0);
   const [hasMoreState, setHasMore] = useState<boolean>(hasMore ?? false);
   const [lazilyLoadedLanes, setLazilyLoadedLanes] = useState<LaneModel[]>([]);
+  const [loadingState, setLoading] = useState<boolean>(loading ?? false);
+
+  useEffect(() => {
+    if (loading !== loadingState) setLoading(!!loading);
+  }, [loading]);
 
   useEffect(() => {
     const allNonMainLanes = LanesModel.concatLanes(nonMainLanes, lazilyLoadedLanes);
@@ -108,24 +113,25 @@ export function LaneSelector(props: LaneSelectorProps) {
   }, [nonMainLanes, nonMainLanes.length]);
 
   const fetchMore = useCallback(async () => {
+    setLoading(true);
     const result = await fetchMoreLanes?.(offset, LIMIT);
     setLazilyLoadedLanes((existing) => {
       setHasMore(() => {
+        setLoading(!!result?.loading);
         setOffset(result?.nextOffset ?? 0);
         return result?.hasMore ?? false;
       });
       const updatedLanes = LanesModel.concatLanes(existing, result?.lanesModel?.lanes);
       return updatedLanes.filter((lane) => !lane.id.isDefault()) ?? [];
     });
-
     return result;
   }, [offset, fetchMoreLanes]);
 
-  const sortedNonMainLanes = useMemo(() => {
-    return lazilyLoadedLanes.sort(compareFn(sortBy));
-  }, [sortBy, lazilyLoadedLanes]);
+  // const sortedNonMainLanes = useMemo(() => {
+  //   return lazilyLoadedLanes.sort(compareFn(sortBy));
+  // }, [sortBy, lazilyLoadedLanes]);
 
-  const [filteredLanes, setFilteredLanes] = useState<LaneModel[]>(sortedNonMainLanes);
+  const [filteredLanes, setFilteredLanes] = useState<LaneModel[]>(lazilyLoadedLanes);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [groupScope, setGroupScope] = useState<boolean>(groupByScope);
@@ -143,11 +149,11 @@ export function LaneSelector(props: LaneSelectorProps) {
     e.stopPropagation();
     const searchTerm = e.target.value;
     if (!searchTerm || searchTerm === '') {
-      setFilteredLanes(sortedNonMainLanes);
+      setFilteredLanes(lazilyLoadedLanes);
     } else {
       setFilteredLanes(() => {
         // first search for items that startWith search term
-        let updatedLanes = sortedNonMainLanes.filter((lane) => {
+        let updatedLanes = lazilyLoadedLanes.filter((lane) => {
           const laneName = lane.id.name;
           return laneName.toLowerCase().startsWith(searchTerm.toLowerCase());
         });
@@ -264,7 +270,7 @@ export function LaneSelector(props: LaneSelectorProps) {
               </div>
             )} */}
             <LaneSearch />
-            <div className={styles.sort}>
+            {/* <div className={styles.sort}>
               <ToggleButton
                 className={classnames(styles.sortToggle)}
                 defaultIndex={sortOptions.indexOf(sortBy)}
@@ -293,7 +299,7 @@ export function LaneSelector(props: LaneSelectorProps) {
                   });
                 }}
               />
-            </div>
+            </div> */}
           </div>
         )}
         {multipleLanes && dropdownOpen && (
@@ -302,7 +308,7 @@ export function LaneSelector(props: LaneSelectorProps) {
             fetchMore={fetchMore}
             nonMainLanes={filteredLanes}
             search={search}
-            sortBy={sortBy}
+            // sortBy={sortBy}
             groupByScope={groupScope}
             scopeIconLookup={scopeIconLookup}
             listNavigator={listNavCmd}

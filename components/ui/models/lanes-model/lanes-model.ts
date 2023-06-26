@@ -21,6 +21,8 @@ export type LaneQueryLaneOwner = {
   name: string;
   email: string;
   profileImage?: string;
+  username?: string;
+  displayName?: string;
 };
 /**
  * GQL
@@ -162,6 +164,8 @@ export class LanesModel {
       ? {
           name: createdByData?.name ?? undefined,
           email: createdByData.email ?? undefined,
+          username: createdByData?.username ?? undefined,
+          displayName: createdByData?.displayName ?? undefined,
           profileImage: createdByData.profileImage ?? undefined,
         }
       : undefined;
@@ -170,6 +174,8 @@ export class LanesModel {
     const updatedBy = updatedByData?.name
       ? {
           name: updatedByData?.name ?? undefined,
+          username: updatedByData?.username ?? undefined,
+          displayName: updatedByData?.displayName ?? undefined,
           email: updatedByData.email ?? undefined,
           profileImage: updatedByData.profileImage ?? undefined,
         }

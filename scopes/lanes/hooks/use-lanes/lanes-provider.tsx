@@ -35,7 +35,7 @@ export function LanesProvider({
       skip,
       ids: optionsFromProps.ids ?? (viewedLaneId ? [viewedLaneId.toString()] : undefined),
       offset: optionsFromProps.offset ?? 0,
-      limit: optionsFromProps.limit ?? 1,
+      limit: optionsFromProps.limit ?? 10,
       ...optionsFromProps,
     }),
     [skip, optionsFromProps.ids, optionsFromProps.ids?.length, viewedLaneId?.toString()]

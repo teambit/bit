@@ -11,8 +11,8 @@ import styles from './lane-switcher.module.scss';
 
 export type LaneSwitcherProps = {
   groupByScope?: boolean;
-  sortBy?: LaneSelectorSortBy;
-  sortOptions?: LaneSelectorSortBy[];
+  // sortBy?: LaneSelectorSortBy;
+  // sortOptions?: LaneSelectorSortBy[];
   mainIcon?: () => React.ReactNode;
   scopeIcon?: (scopeName: string) => React.ReactNode;
   useLanes?: UseLanes;
@@ -24,14 +24,14 @@ export function LaneSwitcher({
   groupByScope = false,
   mainIcon,
   scopeIcon,
-  sortBy,
-  sortOptions,
+  // sortBy,
+  // sortOptions,
   useLanes = defaultUseLanes,
   getHref = LanesModel.getLaneUrl,
   ...rest
 }: LaneSwitcherProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { lanesModel, loading, fetchMoreLanes, hasMore, offset, limit } = useLanes() || {};
+  const { lanesModel, loading, fetchMoreLanes, hasMore, offset, limit } = useLanes();
 
   const mainLane = lanesModel?.getDefaultLane();
   const nonMainLanes = lanesModel?.getNonMainLanes() || [];
@@ -60,8 +60,8 @@ export function LaneSwitcher({
             mainIcon={mainIcon?.()}
             scopeIcon={scopeIcon}
             groupByScope={groupByScope}
-            sortBy={sortBy}
-            sortOptions={sortOptions}
+            // sortBy={sortBy}
+            // sortOptions={sortOptions}
             scopeIconLookup={scopeIconLookup}
             getHref={getHref}
             loading={loading}

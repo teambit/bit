@@ -5,7 +5,7 @@ import { compact } from 'lodash';
 import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneId } from '@teambit/lane-id';
 import { FetchMoreLanesResult } from '@teambit/lanes.hooks.use-lanes';
-import { LaneDropdownItems, LaneSelectorSortBy, GroupedLaneDropdownItem } from './lane-selector';
+import { LaneDropdownItems, GroupedLaneDropdownItem } from './lane-selector';
 import { LaneMenuItem } from './lane-menu-item';
 import { LaneGroupedMenuItem } from './lane-grouped-menu-item';
 
@@ -24,8 +24,6 @@ export type LaneSelectorListProps = {
   search?: string;
   mainIcon?: React.ReactNode;
   scopeIconLookup?: Map<string, React.ReactNode>;
-  sortBy?: LaneSelectorSortBy;
-  sortOptions?: LaneSelectorSortBy[];
   scopeIcon?: React.ReactNode;
   listNavigator?: {
     command?: ListNavigatorCmd;
@@ -50,8 +48,6 @@ export function LaneSelectorList({
   search = '',
   mainIcon,
   scopeIconLookup,
-  sortBy,
-  sortOptions,
   listNavigator,
   loading,
   hasMore,
@@ -64,7 +60,7 @@ export function LaneSelectorList({
   const lastLaneElementRef = useCallback(
     (node) => {
       if (loading) return;
-      if (observer.current) observer.current.disconnect();
+      observer.current?.disconnect();
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMore) {
           fetchMore().catch(() => {});
@@ -87,7 +83,6 @@ export function LaneSelectorList({
   useEffect(() => {
     if (selectedLaneIdFromProps && selectedLaneIdFromProps?.toString() !== selectedLaneId?.toString()) {
       setSelectedLaneId(selectedLaneIdFromProps);
-      // fetchMore().catch(() => {});
     }
   }, [selectedLaneIdFromProps?.toString()]);
 
@@ -96,60 +91,72 @@ export function LaneSelectorList({
 
     if (nonMainLanes.length === 0) return [];
 
-    const lanesToRenderFn = () => {
-      const mainLaneToRender =
-        search === '' || mainLane?.id.name.toLowerCase().includes(search.toLowerCase()) ? mainLane : undefined;
+    const isSearchMatch = (lane?: LaneModel) =>
+      search === '' || lane?.id.name.toLowerCase().includes(search.toLowerCase());
 
-      if (selectedNonMainLane) {
-        const nonMainLanesWithoutSelected = nonMainLanes.filter(
-          (nonMainLane) => !nonMainLane.id.isEqual(selectedNonMainLane.id)
-        );
-        return compact([selectedNonMainLane, mainLaneToRender, ...nonMainLanesWithoutSelected]);
-      }
-
-      return compact([mainLaneToRender, ...nonMainLanes]);
+    const createLaneRefs = (lanes: LaneModel[]) => {
+      lanes.forEach((lane, index) => {
+        const isLastLane = index === lanes.length - 1;
+        const ref: any = isLastLane ? lastLaneElementRef : React.createRef<HTMLDivElement>();
+        laneDOMRefs.current.set(lane.id.toString(), ref);
+        laneRefs.current.push(lane.id);
+      });
     };
 
     if (groupByScope) {
       const groupedNonMainLanes = LanesModel.groupLanesByScope(nonMainLanes);
       let grouped: GroupedLaneDropdownItem[] = [];
+
       if (selectedNonMainLane) {
-        const groupedSelected = groupedNonMainLanes.get(selectedNonMainLane.id.scope) ?? [];
-        groupedNonMainLanes.delete(selectedNonMainLane.id.scope);
-        grouped = [
-          [selectedNonMainLane.id.scope, groupedSelected],
-          ['', (mainLane && [mainLane]) || []],
-          ...groupedNonMainLanes.entries(),
-        ];
+        const selectedScopeLanes = groupedNonMainLanes.get(selectedNonMainLane.id.scope) ?? [];
+        const selectedScopeLanesWithoutSelected = selectedScopeLanes.filter(
+          (lane) => !lane.id.isEqual(selectedNonMainLane.id)
+        );
+        groupedNonMainLanes.set(selectedNonMainLane.id.scope, selectedScopeLanesWithoutSelected);
+
+        const selectedGroup = [selectedNonMainLane.id.scope, [selectedNonMainLane]] as GroupedLaneDropdownItem;
+        const mainGroup = mainLane ? (['', [mainLane]] as GroupedLaneDropdownItem) : undefined;
+
+        const remainingGroups = Array.from(groupedNonMainLanes.entries()).map(
+          ([scope, lanes]) => [scope, lanes] as GroupedLaneDropdownItem
+        );
+
+        grouped = compact([selectedGroup, mainGroup, ...remainingGroups]);
       } else {
-        grouped = [['', (mainLane && [mainLane]) || []], ...groupedNonMainLanes.entries()];
+        const mainGroup = mainLane ? (['', [mainLane]] as GroupedLaneDropdownItem) : undefined;
+        const remainingGroups = Array.from(groupedNonMainLanes.entries()).map(
+          ([scope, lanes]) => [scope, lanes] as GroupedLaneDropdownItem
+        );
+
+        grouped = compact([mainGroup, ...remainingGroups]);
       }
 
-      grouped.forEach(([, lanes]) => {
-        lanes.forEach((lane, index) => {
-          const ref: any = index === lanes.length - 1 ? lastLaneElementRef : React.createRef<HTMLDivElement>();
-          laneDOMRefs.current.set(lane.id.toString(), ref);
-          laneRefs.current.push(lane.id);
-        });
-      });
+      grouped.forEach(([, lanes]) => createLaneRefs(lanes));
 
       return grouped;
     }
-    const lanesToRender = lanesToRenderFn();
-    lanesToRender.forEach((lane, index) => {
-      const ref: any = index === lanesToRender.length - 1 ? lastLaneElementRef : React.createRef<HTMLDivElement>();
-      laneDOMRefs.current.set(lane.id.toString(), ref);
-      laneRefs.current.push(lane.id);
-    });
+
+    let lanesToRender = nonMainLanes.filter(isSearchMatch);
+
+    if (mainLane && isSearchMatch(mainLane)) {
+      lanesToRender.unshift(mainLane);
+    }
+
+    if (selectedNonMainLane) {
+      lanesToRender = lanesToRender.filter((lane) => !lane.id.isEqual(selectedNonMainLane.id));
+      lanesToRender.unshift(selectedNonMainLane);
+    }
+
+    createLaneRefs(lanesToRender);
+
     return lanesToRender;
   }, [
     nonMainLanes.length,
     search,
-    sortBy,
     groupByScope,
-    selectedLaneId?.toString(),
     selectedNonMainLane?.id.toString(),
     lastLaneElementRef,
+    mainLane?.id.name,
   ]);
 
   useEffect(() => {
@@ -186,8 +193,10 @@ export function LaneSelectorList({
 
   useEffect(() => {
     if (selectedLaneId) {
-      const selectedLaneElement = laneDOMRefs.current.get(selectedLaneId.toString())?.current;
-      selectedLaneElement?.scrollIntoView({ block: 'nearest' });
+      setTimeout(() => {
+        const selectedLaneElement = laneDOMRefs.current.get(selectedLaneId.toString())?.current;
+        selectedLaneElement?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 0);
     }
   }, [selectedLaneId?.toString(), laneDropdownItems]);
 
@@ -206,9 +215,7 @@ export function LaneSelectorList({
               selected={selectedLaneId}
               current={lanesByScope}
               icon={scopeIconLookup?.get(scope)}
-              timestamp={(lane) =>
-                sortOptions?.includes(LaneSelectorSortBy.UPDATED) ? lane.updatedAt : lane.createdAt
-              }
+              timestamp={(lane) => lane.updatedAt || lane.createdAt}
               innerRefs={(laneId) => {
                 return laneDOMRefs.current.get(laneId.toString());
               }}
@@ -224,7 +231,8 @@ export function LaneSelectorList({
             getHref={getHref}
             selected={selectedLaneId}
             current={lane}
-            timestamp={sortOptions?.includes(LaneSelectorSortBy.UPDATED) ? lane.updatedAt : lane.createdAt}
+            timestamp={lane.updatedAt || lane.createdAt}
+            // timestamp={sortOptions?.includes(LaneSelectorSortBy.UPDATED) ? lane.updatedAt : lane.createdAt}
             icon={(lane.id.isDefault() && mainIcon) || undefined}
           ></LaneMenuItem>
         ))}

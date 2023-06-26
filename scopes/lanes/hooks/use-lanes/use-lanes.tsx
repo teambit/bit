@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { LanesModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
+import { LaneModel, LanesModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { gql } from '@apollo/client';
 import { LaneId } from '@teambit/lane-id';
 import { isEqual } from 'lodash';
@@ -12,12 +12,13 @@ const GET_LANES = gql`
     $laneIds: [String!]
     $offset: Int
     $limit: Int
+    $sort: LaneSort
     $viewedLaneId: [String!]
     $skipViewedLane: Boolean!
   ) {
     lanes {
       id
-      viewedLane: list(ids: $viewedLaneId, offset: $offset, limit: $limit) @skip(if: $skipViewedLane) {
+      viewedLane: list(ids: $viewedLaneId, offset: $offset, limit: $limit, sort: $sort) @skip(if: $skipViewedLane) {
         id {
           name
           scope
@@ -112,6 +113,10 @@ export type UseLanesOptions = {
   ids?: string[];
   offset?: number;
   limit?: number;
+  sort?: {
+    by?: Exclude<keyof LaneModel, 'components' | 'readmeComponent'>;
+    direction?: string;
+  };
 };
 
 export type FetchMoreLanesResult = {
@@ -143,13 +148,14 @@ export type UseLanes = (
 export type UseRootLanes = (viewedLaneId?: LaneId, skip?: boolean, options?: UseLanesOptions) => UseLanesResult;
 
 export const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => {
-  const { ids, offset, limit } = options;
+  const { ids, offset, limit, sort } = options;
 
   const { data, fetchMore, loading } = useDataQuery<LanesQuery>(GET_LANES, {
     variables: {
       laneIds: ids,
       offset,
       limit,
+      sort,
       skipViewedLane: !viewedLaneId || viewedLaneId.isDefault(),
       viewedLaneId: viewedLaneId ? [viewedLaneId?.toString()] : undefined,
     },
@@ -169,6 +175,7 @@ export const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => 
   const hasMore = useMemo(() => {
     if (loading) return true;
     if (!limit) return false;
+    if (ids?.length) return (data?.lanes?.list?.length ?? 0) === ids.length;
     return (data?.lanes?.list?.length ?? 0) >= limit;
   }, [loading, data]);
 

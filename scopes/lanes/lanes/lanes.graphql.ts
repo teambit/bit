@@ -82,6 +82,8 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
 
       type LaneOwner {
         name: String
+        username: String
+        displayName: String
         email: String
         profileImage: String
       }
@@ -94,12 +96,19 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         readmeComponent: Component
         createdBy: LaneOwner
         createdAt: String
+        updatedBy: LaneOwner
+        updatedAt: String
+      }
+
+      input LaneSort {
+        by: String
+        direction: String
       }
 
       # Lane API
       type Lanes {
         id: String!
-        list(ids: [String!], offset: Int, limit: Int): [Lane!]!
+        list(ids: [String!], offset: Int, limit: Int, sort: LaneSort): [Lane!]!
         default: Lane
         diff(from: String!, to: String!, options: DiffOptions): GetDiffResult
         diffStatus(source: String!, target: String, options: DiffStatusOptions): LaneDiffStatus!
@@ -116,7 +125,20 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         id: () => 'lanes',
         list: async (
           lanesMain: LanesMain,
-          { ids, limit, offset }: { ids?: string[]; offset?: number; limit?: number }
+          {
+            ids,
+            limit,
+            offset,
+            sort: { by = 'createdAt', direction = 'desc' } = { by: 'createdAt', direction: 'desc' },
+          }: {
+            ids?: string[];
+            offset?: number;
+            limit?: number;
+            sort?: {
+              by?: string;
+              direction?: string;
+            };
+          }
         ) => {
           let lanes: LaneData[] = [];
 
@@ -134,6 +156,37 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
               )
             );
           }
+
+          lanes = lanes.sort((a, b) => {
+            switch (by) {
+              default: {
+                if (!a[by] || !b[by]) return 0;
+
+                if (a[by] < b[by]) return direction === 'asc' ? -1 : 1;
+                if (a[by] > b[by]) return direction === 'asc' ? -1 : 1;
+                return 0;
+              }
+              case 'createdAt':
+              case 'updatedAt': {
+                const aDate = a.log?.date;
+                const bDate = b.log?.date;
+
+                if (!aDate || !bDate) return 0;
+
+                if (+aDate < +bDate) return direction === 'asc' ? -1 : 1;
+                if (+aDate > +bDate) return direction === 'asc' ? 1 : -1;
+                return 0;
+              }
+              case 'id': {
+                const aId = a[by].toString();
+                const bId = b[by].toString();
+
+                if (aId < bId) return direction === 'asc' ? -1 : 1;
+                if (aId > bId) return direction === 'asc' ? -1 : 1;
+                return 0;
+              }
+            }
+          });
 
           if (limit || offset) {
             lanes = slice(lanes, offset, limit && limit + (offset || 0));
@@ -201,7 +254,13 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
           return lane.log?.date;
         },
         createdBy: async (lane: LaneData) => {
-          return { name: lane.log?.username, email: lane.log?.email, profileImage: lane.log?.profileImage };
+          return {
+            name: lane.log?.username,
+            email: lane.log?.email,
+            profileImage: lane.log?.profileImage,
+            displayName: lane.log?.username,
+            username: lane.log?.username,
+          };
         },
       },
       Query: {
