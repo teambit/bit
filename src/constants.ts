@@ -339,6 +339,16 @@ export const CFG_FEATURE_TOGGLE = 'features';
 export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
 export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
+
+export const CFG_ISOLATED_SCOPE_CAPSULES = 'isolated_scope_capsules';
+
+/**
+ * Name of the directory where the capsules for building components are stored
+ * This is used for the components capsules for bit build / tag / snap / sign
+ * This directory is relative to the capsules root directory
+ */
+export const CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR = 'capsules_build_components_base_dir';
+
 /**
  * Name of the directory where the capsules for aspects for regular scope are stored
  * This directory is relative to the capsules root directory
@@ -351,6 +361,11 @@ export const CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR = 'capsules_scopes_aspects_bas
 export const CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR = 'capsules_global_scope_aspects_base_dir';
 
 export const CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS = 'default_resolve_envs_from_roots';
+
+/**
+ * whether to generate non existing capsules for scope aspects in a temp dated dir
+ */
+export const CFG_USE_DATED_CAPSULES = 'use_dated_capsules';
 
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';

@@ -53,7 +53,7 @@ export class InsightsMain {
     // TODO - get user-defined insights as well, and use them when instantiating InsightManager and InsightsCmd
     const insightManager = new InsightManager(initialInsights);
     const insightsMain = new InsightsMain(insightManager);
-    issues.registerAddComponentsIssues(insightsMain.addInsightsAsComponentIssues.bind(insightsMain));
+    if (issues) issues.registerAddComponentsIssues(insightsMain.addInsightsAsComponentIssues.bind(insightsMain));
     const insightsCmd = new InsightsCmd(insightsMain);
     cli.register(insightsCmd);
     return insightsMain;

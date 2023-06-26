@@ -644,7 +644,7 @@ describe('merge lanes', function () {
         helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
         helper.scopeHelper.getClonedLocalScope(afterLaneExport);
         helper.command.import();
-        helper.command.softRemoveComponent('comp1');
+        helper.command.removeLaneComp('comp1');
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
       });
@@ -685,7 +685,7 @@ describe('merge lanes', function () {
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
       helper.command.export();
       helper.command.switchLocalLane('dev');
-      helper.command.softRemoveComponent('comp2');
+      helper.command.removeLaneComp('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -707,7 +707,7 @@ describe('merge lanes', function () {
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
       helper.command.switchLocalLane('dev');
-      helper.command.softRemoveComponent('comp2');
+      helper.command.removeLaneComp('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();

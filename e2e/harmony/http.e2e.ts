@@ -53,7 +53,9 @@ import { HttpHelper } from '../http-helper';
     });
     // previously it was throwing UnexpectedNetworkError without any message.
     it('bit lane remove -r of a non-existing lane should throw a descriptive error', () => {
-      expect(() => helper.command.removeRemoteLane('non-exist')).to.throw('lane "non-exist" was not found');
+      expect(() => helper.command.removeRemoteLane('non-exist')).to.throw(
+        `lane "${helper.scopes.remote}/non-exist" was not found`
+      );
     });
     after(() => {
       httpHelper.killHttp();

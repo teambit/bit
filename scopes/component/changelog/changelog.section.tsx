@@ -1,13 +1,16 @@
 import React from 'react';
 import { Section } from '@teambit/component';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
-import { ChangeLogPage } from './ui/change-log-page';
+import { ChangeLogUI } from './changelog.ui.runtime';
 
 export class ChangelogSection implements Section {
+  constructor(private ui: ChangeLogUI) {}
+
   route = {
     path: '~changelog',
-    element: <ChangeLogPage />,
+    element: this.ui.ChangeLog(),
   };
+
   navigationLink = {
     href: '~changelog',
     children: <MenuWidgetIcon icon="changelog" tooltipContent="Change log" />,

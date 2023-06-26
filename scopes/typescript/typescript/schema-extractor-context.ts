@@ -6,7 +6,7 @@ import { head, uniqBy } from 'lodash';
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-import { resolve, sep, relative, join, isAbsolute } from 'path';
+import { resolve, sep, relative, join, isAbsolute, extname } from 'path';
 import { Component, ComponentID } from '@teambit/component';
 import {
   TypeRefSchema,
@@ -208,17 +208,27 @@ export class SchemaExtractorContext {
   visitTypeDefinition() {}
 
   private getPathWithoutExtension(filePath: string) {
+    const knownExtensions = ['ts', 'js', 'jsx', 'tsx'];
+    const fileExtension = extname(filePath).substring(1);
+
+    const filePathWithoutExtension = () => {
+      if (knownExtensions.includes(fileExtension)) {
+        return filePath.replace(new RegExp(`\\.${fileExtension}$`), '');
+      }
+      return filePath;
+    };
+
     if (!isAbsolute(filePath)) {
-      return filePath.replace(/\.[^/.]+$/, '');
+      return filePathWithoutExtension();
     }
 
     if (filePath.startsWith(this.componentRootPath)) {
-      return relative(this.componentRootPath, filePath.replace(/\.[^/.]+$/, ''));
+      return relative(this.componentRootPath, filePathWithoutExtension());
     }
     if (filePath.startsWith(this.hostRootPath)) {
-      return relative(this.hostRootPath, filePath.replace(/\.[^/.]+$/, ''));
+      return relative(this.hostRootPath, filePathWithoutExtension());
     }
-    return filePath.replace(/\.[^/.]+$/, '');
+    return filePathWithoutExtension();
   }
 
   private isIndexFile(filePath: string, currentFilePath: string) {
