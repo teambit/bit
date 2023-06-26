@@ -13,5 +13,8 @@ export type {
   PostProcessExtendingConfigFilesArgs,
   GenerateExtendingConfigFilesArgs,
 } from './config-writer-entry';
+export type { ConfigWriterHandler } from './config-writer-list';
+export type { WorkspaceConfigEnv } from './workspace-config-env-type';
+export { ConfigWriterList } from './config-writer-list';
 export default WorkspaceConfigFilesAspect;
 export { WorkspaceConfigFilesAspect };

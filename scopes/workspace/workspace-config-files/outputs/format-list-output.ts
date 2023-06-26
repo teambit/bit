@@ -1,13 +1,21 @@
-import Table from 'cli-table';
+import chalk from 'chalk';
 import { ConfigWritersList } from '../workspace-config-files.main.runtime';
+import { ConfigWriterEntry } from '../config-writer-entry';
 
 export function formatListOutput(result: ConfigWritersList): string {
-  const head = ['Aspect ID', 'name', 'CLI name'];
+  return Object.values(result)
+    .map((item) => getEnvOutput(item.envId, item.configWriters))
+    .join('\n\n');
+}
 
-  const rows = result.map((entry) => {
-    return [entry.aspectId, entry.configWriter.name, entry.configWriter.cliName];
-  });
-  const table = new Table({ head, style: { head: ['cyan'] } });
-  table.push(...rows);
-  return table.toString();
+function getEnvOutput(envId: string, configWriters: ConfigWriterEntry[]): string {
+  const title = chalk.bold(envId);
+  const space = '  ';
+  if (!configWriters.length) return `${title}\n${space}${chalk.yellow('no config writers found')}`;
+  const entries = configWriters
+    .map((configWriter) => {
+      return `${configWriter.name} (${configWriter.cliName})`;
+    })
+    .join(`\n${space}`);
+  return `${title}\n${space}${entries}`;
 }
