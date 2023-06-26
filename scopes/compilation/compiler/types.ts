@@ -26,12 +26,12 @@ export type TranspileComponentParams = {
   initiator: CompilationInitiator; // origin of the compilation's request
 };
 
-export type TranspileFileOutput =
-  | {
-      outputText: string;
-      outputPath: string;
-    }[]
-  | null;
+export type TranspileFileOutputOneFile = {
+  outputText: string;
+  outputPath: string;
+};
+
+export type TranspileFileOutput = TranspileFileOutputOneFile[] | null;
 
 export interface CompilerOptions {
   /**
