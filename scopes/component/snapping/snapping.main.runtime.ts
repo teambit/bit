@@ -266,12 +266,14 @@ export class SnappingMain {
     );
     const componentIds = tagDataPerComp.map((t) => t.componentId);
     const bitIds = componentIds.map((c) => c._legacy);
-    const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
+    const additionalComponentIdsToFetch = compact(
+      componentIds.map((c) => (c.hasVersion() ? c.changeVersion(LATEST) : null))
+    );
     const deps = compact(tagDataPerComp.map((t) => t.dependencies).flat()).map((dep) => dep.changeVersion(LATEST));
-    const components = await this.scope.import(componentIdsLatest);
+    const components = await this.scope.import(componentIds);
 
     // import deps to be able to resolve semver
-    await this.scope.import(deps, { useCache: false });
+    await this.scope.import([...deps, ...additionalComponentIdsToFetch], { useCache: false });
     await Promise.all(
       tagDataPerComp.map(async (tagData) => {
         tagData.dependencies = tagData.dependencies
@@ -291,7 +293,7 @@ export class SnappingMain {
       })
     );
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
-    const allComponentsBuildSuccessfully = consumerComponents.every((comp) => {
+    const shouldUsePopulateArtifactsFrom = components.every((comp) => {
       if (!comp.buildStatus) throw new Error(`tag-from-scope expect ${comp.id.toString()} to have buildStatus`);
       return comp.buildStatus === BuildStatus.Succeed;
     });
@@ -299,9 +301,9 @@ export class SnappingMain {
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
-      consumerComponents,
+      consumerComponents: consumerComponents.map((c) => c.clone()),
       tagDataPerComp,
-      skipBuildPipeline: allComponentsBuildSuccessfully,
+      populateArtifactsFrom: shouldUsePopulateArtifactsFrom ? components.map((c) => c.id) : undefined,
       copyLogFromPreviousSnap: true,
       snapping: this,
       builder: this.builder,
