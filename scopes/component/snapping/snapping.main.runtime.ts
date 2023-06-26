@@ -280,8 +280,6 @@ export class SnappingMain {
       })
     );
 
-    // needed in order to load all aspects of these components
-    await this.scope.loadMany(components.map((c) => c.id));
     await Promise.all(
       components.map(async (comp) => {
         const tagData = tagDataPerComp.find((t) => t.componentId.isEqual(comp.id, { ignoreVersion: true }));
@@ -290,6 +288,9 @@ export class SnappingMain {
         await this.updateDependenciesVersionsOfComponent(comp, tagData.dependencies, bitIds);
       })
     );
+
+    await this.scope.loadManyCompsAspects(components);
+
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     const allComponentsBuildSuccessfully = consumerComponents.every((comp) => {
       if (!comp.buildStatus) throw new Error(`tag-from-scope expect ${comp.id.toString()} to have buildStatus`);
@@ -913,6 +914,8 @@ there are matching among unmodified components thought. consider using --unmodif
         ext.extensionId = updatedBitId;
       }
     });
+
+    component.state.aspects = await this.scope.createAspectListFromExtensionDataList(legacyComponent.extensions);
 
     const dependenciesListSerialized = (await this.dependencyResolver.extractDepsFromLegacy(component)).serialize();
     const extId = DependencyResolverAspect.id;
