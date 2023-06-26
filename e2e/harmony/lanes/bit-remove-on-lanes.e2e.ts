@@ -350,6 +350,44 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe('soft remove on lane when a forked lane does not have this comp and is merging this lane', () => {
+    let laneBws: string;
+    let output: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      laneBws = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('lane-a', '-x');
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.removeLaneComp('bar/foo');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(laneBws);
+      output = helper.command.mergeLane('lane-a', '-x --verbose');
+    });
+    it('should show why the component was not merged when using --verbose flag', () => {
+      expect(output).to.have.string('component has been removed');
+    });
+    it('should not bring the marked-removed component to the workspace', () => {
+      const list = helper.command.list();
+      expect(list).to.not.have.string('bar');
+    });
+    it('should not bring the marked-removed component to the lane', () => {
+      const laneComps = helper.command.catLane('lane-b');
+      const comps = laneComps.components.map((c) => c.id.name);
+      expect(comps).to.not.include('bar/foo');
+    });
+  });
   describe('soft remove on lane when another user of the same lane is checking out head', () => {
     let beforeRemoveScope: string;
     let output: string;

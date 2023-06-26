@@ -1,4 +1,5 @@
-import { join } from 'path';
+import { join, resolve } from 'path';
+import { readdirSync, existsSync } from 'fs-extra';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { BitId } from '@teambit/legacy-bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
@@ -751,6 +752,55 @@ export class AspectLoaderMain {
       });
     });
     return graph;
+  }
+
+  public async loadAspectFromPath(localAspects: string[]) {
+    const dirPaths = this.parseLocalAspect(localAspects);
+    const manifests = dirPaths.map((dirPath) => {
+      const scopeRuntime = this.findRuntime(dirPath, 'scope');
+      if (scopeRuntime) {
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        const module = require(join(dirPath, 'dist', scopeRuntime));
+        return module.default || module;
+      }
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      const module = require(dirPath);
+      return module.default || module;
+    });
+
+    await this.loadExtensionsByManifests(manifests, undefined, { throwOnError: true });
+  }
+
+  private parseLocalAspect(localAspects: string[]) {
+    const dirPaths = localAspects.map((localAspect) => resolve(localAspect.replace('file://', '')));
+    const nonExistsDirPaths = dirPaths.filter((path) => !existsSync(path));
+    nonExistsDirPaths.forEach((path) => this.logger.warn(`no such file or directory: ${path}`));
+    const existsDirPaths = dirPaths.filter((path) => existsSync(path));
+    return existsDirPaths;
+  }
+
+  private findRuntime(dirPath: string, runtime: string) {
+    const files = readdirSync(join(dirPath, 'dist'));
+    return files.find((path) => path.includes(`${runtime}.runtime.js`));
+  }
+
+  public async resolveLocalAspects(ids: string[], runtime?: string): Promise<AspectDefinition[]> {
+    const dirs = this.parseLocalAspect(ids);
+
+    return dirs.map((dir) => {
+      const srcRuntimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
+      const srcAspectFilePath = runtime ? this.findAspectFile(dir) : undefined;
+      const aspectFilePath = srcAspectFilePath ? join(dir, 'dist', srcAspectFilePath) : null;
+      const runtimeManifest = srcRuntimeManifest ? join(dir, 'dist', srcRuntimeManifest) : null;
+      const aspectId = aspectFilePath ? this.getAspectIdFromAspectFile(aspectFilePath) : undefined;
+
+      return new AspectDefinition(dir, aspectFilePath, runtimeManifest, undefined, aspectId, true);
+    });
+  }
+
+  private findAspectFile(dirPath: string) {
+    const files = readdirSync(join(dirPath, 'dist'));
+    return files.find((path) => path.includes(`.aspect.js`));
   }
 
   static runtime = MainRuntime;
