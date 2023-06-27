@@ -258,20 +258,33 @@ export class SnappingMain {
         return {
           componentId: await this.scope.resolveComponentId(tagData.componentId),
           dependencies: tagData.dependencies ? await this.scope.resolveMultipleComponentIds(tagData.dependencies) : [],
-          versionToTag: tagData.versionToTag || 'patch',
+          versionToTag: tagData.versionToTag || params.releaseType || 'patch',
           prereleaseId: tagData.prereleaseId,
           message: tagData.message,
         };
       })
     );
     const componentIds = tagDataPerComp.map((t) => t.componentId);
-    const bitIds = componentIds.map((c) => c._legacy);
-    const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
+    const components = await this.scope.import(componentIds);
+
     const deps = compact(tagDataPerComp.map((t) => t.dependencies).flat()).map((dep) => dep.changeVersion(LATEST));
-    const components = await this.scope.import(componentIdsLatest);
+    const additionalComponentIdsToFetch = await Promise.all(
+      componentIds.map(async (id) => {
+        if (!id.hasVersion()) return null;
+        const modelComp = await this.scope.getBitObjectModelComponent(id);
+        if (!modelComp) throw new Error(`unable to find ModelComponent of ${id.toString()}`);
+        if (!modelComp.head) return null;
+        if (modelComp.getRef(id.version)?.isEqual(modelComp.head)) return null;
+        if (!params.ignoreNewestVersion) {
+          throw new BitError(`unable to tag "${id.toString()}", this version is older than the head ${modelComp.head.toString()}.
+if you're willing to lose the history from the head to the specified version, use --ignore-newest-version flag`);
+        }
+        return id.changeVersion(LATEST);
+      })
+    );
 
     // import deps to be able to resolve semver
-    await this.scope.import(deps, { useCache: false });
+    await this.scope.import([...deps, ...compact(additionalComponentIdsToFetch)], { useCache: false });
     await Promise.all(
       tagDataPerComp.map(async (tagData) => {
         tagData.dependencies = tagData.dependencies
@@ -279,9 +292,7 @@ export class SnappingMain {
           : [];
       })
     );
-
-    // needed in order to load all aspects of these components
-    await this.scope.loadMany(components.map((c) => c.id));
+    const bitIds = componentIds.map((c) => c._legacy);
     await Promise.all(
       components.map(async (comp) => {
         const tagData = tagDataPerComp.find((t) => t.componentId.isEqual(comp.id, { ignoreVersion: true }));
@@ -290,8 +301,11 @@ export class SnappingMain {
         await this.updateDependenciesVersionsOfComponent(comp, tagData.dependencies, bitIds);
       })
     );
+
+    await this.scope.loadManyCompsAspects(components);
+
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
-    const allComponentsBuildSuccessfully = consumerComponents.every((comp) => {
+    const shouldUsePopulateArtifactsFrom = components.every((comp) => {
       if (!comp.buildStatus) throw new Error(`tag-from-scope expect ${comp.id.toString()} to have buildStatus`);
       return comp.buildStatus === BuildStatus.Succeed;
     });
@@ -301,7 +315,7 @@ export class SnappingMain {
       scope: this.scope,
       consumerComponents,
       tagDataPerComp,
-      skipBuildPipeline: allComponentsBuildSuccessfully,
+      populateArtifactsFrom: shouldUsePopulateArtifactsFrom ? components.map((c) => c.id) : undefined,
       copyLogFromPreviousSnap: true,
       snapping: this,
       builder: this.builder,
@@ -913,6 +927,8 @@ there are matching among unmodified components thought. consider using --unmodif
         ext.extensionId = updatedBitId;
       }
     });
+
+    component.state.aspects = await this.scope.createAspectListFromExtensionDataList(legacyComponent.extensions);
 
     const dependenciesListSerialized = (await this.dependencyResolver.extractDepsFromLegacy(component)).serialize();
     const extId = DependencyResolverAspect.id;
