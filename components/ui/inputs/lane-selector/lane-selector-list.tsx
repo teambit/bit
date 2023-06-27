@@ -1,7 +1,7 @@
 import React, { HTMLAttributes, useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import classnames from 'classnames';
-import { compact } from 'lodash';
+import { compact, isFunction } from 'lodash';
 import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneId } from '@teambit/lane-id';
 import { FetchMoreLanesResult } from '@teambit/lanes.hooks.use-lanes';
@@ -53,6 +53,9 @@ export function _LaneSelectorList({
 }: LaneSelectorListProps) {
   const navigate = useNavigate();
   const observer = useRef<IntersectionObserver | null>(null);
+  const laneDOMRefs = useRef<Map<string, React.RefObject<HTMLDivElement>>>(new Map());
+  const laneRefs = useRef<LaneId[]>([]);
+  const lastLaneDomRef = useRef<HTMLDivElement | null>(null);
 
   const lastLaneElementRef = useCallback(
     (node) => {
@@ -63,7 +66,10 @@ export function _LaneSelectorList({
           fetchMore().catch(() => {});
         }
       });
-      if (node) observer.current.observe(node);
+      if (node) {
+        observer.current.observe(node);
+        lastLaneDomRef.current = node;
+      }
     },
     [loading, hasMore, fetchMore]
   );
@@ -72,8 +78,6 @@ export function _LaneSelectorList({
     (!!selectedLaneIdFromProps &&
       nonMainLanes.find((nonMainLane) => nonMainLane.id.isEqual(selectedLaneIdFromProps))) ||
     undefined;
-  const laneDOMRefs = useRef<Map<string, React.RefObject<HTMLDivElement>>>(new Map());
-  const laneRefs = useRef<LaneId[]>([]);
 
   const [selectedLaneId, setSelectedLaneId] = useState<LaneId | undefined>(selectedLaneIdFromProps);
 
@@ -159,6 +163,11 @@ export function _LaneSelectorList({
   useEffect(() => {
     if (selectedLaneId) {
       setTimeout(() => {
+        const lastLaneRef = laneRefs.current.slice(-1)[0];
+        if (selectedLaneId.toString() === lastLaneRef?.toString()) {
+          lastLaneDomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          return;
+        }
         const selectedLaneElement = laneDOMRefs.current.get(selectedLaneId.toString())?.current;
         selectedLaneElement?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 0);
@@ -213,16 +222,17 @@ export function _LaneSelectorList({
   );
 
   useEffect(() => {
-    const containerElement = window || forwardedRef;
+    const containerElement = forwardedRef && !isFunction(forwardedRef) ? forwardedRef?.current : undefined;
+
     if (containerElement) {
-      containerElement.addEventListener('keydown', handleKeyDown);
+      containerElement?.addEventListener('keydown', handleKeyDown);
     }
     return () => {
       if (containerElement) {
-        containerElement.removeEventListener('keydown', handleKeyDown);
+        containerElement?.removeEventListener('keydown', handleKeyDown);
       }
     };
-  }, []);
+  }, [forwardedRef]);
 
   if (loading) return null;
 

@@ -145,9 +145,9 @@ export type UseLanes = (
   useContext?: boolean
 ) => UseLanesResult;
 
-export type UseRootLanes = (viewedLaneId?: LaneId, skip?: boolean, options?: UseLanesOptions) => UseLanesResult;
+type UseRootLanes = (viewedLaneId?: LaneId, skip?: boolean, options?: UseLanesOptions) => UseLanesResult;
 
-export const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => {
+const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => {
   const { ids, offset, limit, sort } = options;
 
   const { data, fetchMore, loading } = useDataQuery<LanesQuery>(GET_LANES, {

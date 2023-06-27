@@ -292,7 +292,7 @@ export function LaneSelector(props: LaneSelectorProps) {
         )}
         {multipleLanes && dropdownOpen && (
           <LaneSelectorList
-            forwardedRef={containerRef}
+            ref={containerRef}
             hasMore={hasMoreState}
             fetchMore={fetchMore}
             nonMainLanes={filteredLanes}
