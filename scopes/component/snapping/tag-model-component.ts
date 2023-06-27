@@ -122,7 +122,7 @@ async function setFutureVersions(
           return modelComponent.getVersionToAdd(
             exactVersionOrReleaseType.releaseType,
             exactVersionOrReleaseType.exactVersion,
-            undefined,
+            incrementBy,
             tagData.prereleaseId
           );
         }
@@ -179,7 +179,7 @@ export async function tagModelComponent({
   consumerComponents,
   ids,
   tagDataPerComp,
-  skipBuildPipeline = false,
+  populateArtifactsFrom,
   message,
   editor,
   exactVersion,
@@ -207,7 +207,7 @@ export async function tagModelComponent({
   consumerComponents: ConsumerComponent[];
   ids: BitIds;
   tagDataPerComp?: TagDataPerComp[];
-  skipBuildPipeline?: boolean;
+  populateArtifactsFrom?: ComponentID[];
   copyLogFromPreviousSnap?: boolean;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
@@ -332,8 +332,7 @@ export async function tagModelComponent({
       throwOnError: true,
       forceDeploy,
       isSnap,
-      skipBuildPipeline,
-      combineBuildDataFromParent: skipBuildPipeline,
+      populateArtifactsFrom,
     };
     const seedersOnly = !workspace; // if tag from scope, build only the given components
     const isolateOptions = { packageManagerConfigRootDir, seedersOnly };
@@ -437,6 +436,7 @@ async function addComponentsToScope(
 
 function emptyBuilderData(components: ConsumerComponent[]) {
   components.forEach((component) => {
+    component.extensions = component.extensions.clone();
     const existingBuilder = component.extensions.findCoreExtension(Extensions.builder);
     if (existingBuilder) existingBuilder.data = {};
   });
