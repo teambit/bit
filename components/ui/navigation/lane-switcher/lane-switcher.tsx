@@ -17,7 +17,17 @@ export type LaneSwitcherProps = {
   scopeIcon?: (scopeName: string) => React.ReactNode;
   useLanes?: UseLanes;
   getHref?: (lane: LaneId) => string;
+  searchLanes?: (search?: string) => LanesModel | undefined | null;
 } & HTMLAttributes<HTMLDivElement>;
+
+function defaultSearchLanes(useLanes: UseLanes) {
+  return function (search?: string) {
+    const { searchResult } = useLanes(undefined, undefined, { search });
+    if (searchResult?.loading) return undefined;
+    if (!searchResult?.lanesModel) return null;
+    return searchResult.lanesModel;
+  };
+}
 
 export function LaneSwitcher({
   className,
@@ -27,6 +37,7 @@ export function LaneSwitcher({
   // sortBy,
   // sortOptions,
   useLanes = defaultUseLanes,
+  searchLanes = defaultSearchLanes(useLanes),
   getHref = LanesModel.getLaneUrl,
   ...rest
 }: LaneSwitcherProps) {
@@ -67,6 +78,7 @@ export function LaneSwitcher({
             fetchMoreLanes={fetchMoreLanes}
             hasMore={hasMore}
             initialOffset={(offset ?? 0) + (limit ?? 0)}
+            searchLanes={searchLanes}
             {...rest}
           />
         }

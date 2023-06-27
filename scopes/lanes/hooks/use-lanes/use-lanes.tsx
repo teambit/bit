@@ -13,12 +13,13 @@ const GET_LANES = gql`
     $offset: Int
     $limit: Int
     $sort: LaneSort
+    $search: String
     $viewedLaneId: [String!]
     $skipViewedLane: Boolean!
   ) {
     lanes {
       id
-      viewedLane: list(ids: $viewedLaneId, offset: $offset, limit: $limit, sort: $sort) @skip(if: $skipViewedLane) {
+      viewedLane: list(ids: $viewedLaneId) @skip(if: $skipViewedLane) {
         id {
           name
           scope
@@ -43,7 +44,7 @@ const GET_LANES = gql`
           version
         }
       }
-      list(ids: $laneIds, offset: $offset, limit: $limit) {
+      list(ids: $laneIds, offset: $offset, limit: $limit, sort: $sort, search: $search) {
         id {
           name
           scope
@@ -109,14 +110,16 @@ const GET_LANES = gql`
   }
 `;
 
+export type LaneSort = {
+  by?: Exclude<keyof LaneModel, 'components' | 'readmeComponent'>;
+  direction?: string;
+};
 export type UseLanesOptions = {
   ids?: string[];
   offset?: number;
   limit?: number;
-  sort?: {
-    by?: Exclude<keyof LaneModel, 'components' | 'readmeComponent'>;
-    direction?: string;
-  };
+  sort?: LaneSort;
+  search?: string;
 };
 
 export type FetchMoreLanesResult = {
@@ -127,9 +130,20 @@ export type FetchMoreLanesResult = {
   currentLimit?: number;
 };
 
-export type FetchMoreLanes = (offset: number, limit: number) => Promise<FetchMoreLanesResult>;
+export type SearchLanesResult = {
+  lanesModel?: LanesModel;
+  loading?: boolean;
+};
 
-export type UseLanesResult = {
+export type FetchMoreLanes = (offset: number, limit: number, sort?: LaneSort) => Promise<FetchMoreLanesResult>;
+
+export type SearchLanes = (search?: string, skip?: boolean) => SearchLanesResult;
+
+export type UseLanesResult = UseRootLanesResult & {
+  searchResult?: SearchLanesResult;
+};
+
+export type UseRootLanesResult = {
   lanesModel?: LanesModel;
   loading?: boolean;
   fetchMoreLanes?: FetchMoreLanes;
@@ -145,7 +159,7 @@ export type UseLanes = (
   useContext?: boolean
 ) => UseLanesResult;
 
-type UseRootLanes = (viewedLaneId?: LaneId, skip?: boolean, options?: UseLanesOptions) => UseLanesResult;
+type UseRootLanes = (viewedLaneId?: LaneId, skip?: boolean, options?: UseLanesOptions) => UseRootLanesResult;
 
 const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => {
   const { ids, offset, limit, sort } = options;
@@ -183,7 +197,7 @@ const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => {
     async (newOffset, newLimit) => {
       if (hasMore) {
         try {
-          const { data: moreData, loading: _loadingMore } = await fetchMore({
+          const { data: moreData, networkStatus } = await fetchMore({
             variables: {
               offset: newOffset,
               limit: newLimit,
@@ -192,18 +206,21 @@ const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => {
               viewedLaneId: viewedLaneId ? [viewedLaneId?.toString()] : undefined,
             },
           });
-          if (!_loadingMore && moreData.lanes) {
+          // ===  NetworkStatus.fetchMore
+          const loadingMore = networkStatus === 3;
+
+          if (!loadingMore && moreData.lanes) {
             const newLanesModel = LanesModel.from({ data: moreData });
             return {
               lanesModel: newLanesModel,
-              loading: _loadingMore,
+              loading: loadingMore,
               hasMore: (moreData.lanes.list?.length ?? 0) >= newLimit,
               nextOffset: newOffset + newLimit,
             };
           }
           return {
             lanesModel,
-            loading: _loadingMore,
+            loading: loadingMore,
             nextOffset: newOffset,
             currentLimit: newLimit,
           };
@@ -234,6 +251,29 @@ const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => {
   };
 };
 
+export const useSearchLanes: SearchLanes = (search, skip) => {
+  const { data: searchData, loading: loadingSearch } = useDataQuery<LanesQuery>(GET_LANES, {
+    variables: {
+      search,
+      skipViewedLane: true,
+    },
+    skip: skip || !search,
+    errorPolicy: 'all',
+    fetchPolicy: 'cache-and-network',
+  });
+
+  if (!search) {
+    return {};
+  }
+
+  return {
+    loading: loadingSearch,
+    lanesModel:
+      searchData &&
+      LanesModel.from({ data: { lanes: { ...searchData.lanes, current: undefined, default: undefined } } }),
+  };
+};
+
 export const useLanes: UseLanes = (targetLanes, skip, optionsFromProps, useContextFromProps = true) => {
   const context = useLanesContext() || {};
   const options = optionsFromProps || context?.options;
@@ -241,20 +281,25 @@ export const useLanes: UseLanes = (targetLanes, skip, optionsFromProps, useConte
   const useContext = useContextFromProps && !!context && isSameOptions;
   const shouldSkip = skip || !!targetLanes || useContext;
   const rootLanesData = useRootLanes(context?.lanesModel?.viewedLane?.id, shouldSkip, options);
+  const searchResult = useSearchLanes(options?.search, shouldSkip);
+
   if (targetLanes) {
     return {
       ...context,
       ...rootLanesData,
       lanesModel: targetLanes,
+      searchResult,
     };
   }
   if (useContext) {
     return {
       ...context,
+      searchResult,
     };
   }
   return {
     ...context,
     ...rootLanesData,
+    searchResult,
   };
 };

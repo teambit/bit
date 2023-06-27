@@ -1,5 +1,6 @@
 import { Schema } from '@teambit/graphql';
 import { LaneId } from '@teambit/lane-id';
+import Fuse from 'fuse.js';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import gql from 'graphql-tag';
 import { flatten, slice } from 'lodash';
@@ -108,7 +109,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
       # Lane API
       type Lanes {
         id: String!
-        list(ids: [String!], offset: Int, limit: Int, sort: LaneSort): [Lane!]!
+        list(ids: [String!], offset: Int, limit: Int, sort: LaneSort, search: String): [Lane!]!
         default: Lane
         diff(from: String!, to: String!, options: DiffOptions): GetDiffResult
         diffStatus(source: String!, target: String, options: DiffStatusOptions): LaneDiffStatus!
@@ -130,6 +131,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
             limit,
             offset,
             sort: { by = 'createdAt', direction = 'desc' } = { by: 'createdAt', direction: 'desc' },
+            search,
           }: {
             ids?: string[];
             offset?: number;
@@ -138,6 +140,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
               by?: string;
               direction?: string;
             };
+            search?: string;
           }
         ) => {
           let lanes: LaneData[] = [];
@@ -155,6 +158,22 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
                 })
               )
             );
+          }
+
+          if (search) {
+            const fuseOptions = {
+              keys: ['id.name', 'id.scope', 'log.username', 'log.email', 'log.displayName'],
+              threshold: search.length === 1 ? 0 : 0.3,
+              findAllMatches: true,
+              location: 0,
+              distance: search.length === 1 ? 0 : 100,
+              minMatchCharLength: 1,
+              ignoreLocation: true,
+              shouldSort: false,
+              includeScore: true,
+            };
+            const fuse = new Fuse(lanes, fuseOptions);
+            lanes = fuse.search(search).map((result) => result.item);
           }
 
           lanes = lanes.sort((a, b) => {

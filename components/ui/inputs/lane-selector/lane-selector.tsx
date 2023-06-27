@@ -2,7 +2,6 @@ import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect, useCall
 import classnames from 'classnames';
 import { useLocation } from 'react-router-dom';
 import { isEqual } from 'lodash';
-import Fuse from 'fuse.js';
 import { LaneId } from '@teambit/lane-id';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
 import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
@@ -33,6 +32,7 @@ export type LaneSelectorProps = {
   hasMore?: boolean;
   fetchMoreLanes?: FetchMoreLanes;
   initialOffset?: number;
+  searchLanes?: (search?: string) => LanesModel | undefined | null;
 } & HTMLAttributes<HTMLDivElement>;
 
 export type GroupedLaneDropdownItem = [scope: string, lanes: LaneModel[]];
@@ -67,6 +67,7 @@ export function LaneSelector(props: LaneSelectorProps) {
     loading,
     hasMore,
     fetchMoreLanes,
+    searchLanes,
     initialOffset = 0,
     ...rest
   } = props;
@@ -94,7 +95,7 @@ export function LaneSelector(props: LaneSelectorProps) {
   // const [sortBy, setSortBy] = useState<LaneSelectorSortBy>(sortByFromProps);
   const [offset, setOffset] = useState(initialOffset ?? 0);
   const [hasMoreState, setHasMore] = useState<boolean>(hasMore ?? false);
-  const [allLanes, setLanes] = useState<LaneModel[]>([]);
+  const [allLanes, setAllLanes] = useState<LaneModel[]>([]);
   const [loadingState, setLoading] = useState<boolean>(loading ?? false);
 
   useEffect(() => {
@@ -104,14 +105,14 @@ export function LaneSelector(props: LaneSelectorProps) {
   useEffect(() => {
     const allNonMainLanes = LanesModel.concatLanes(nonMainLanes, allLanes);
     if (!isEqual(allLanes, allNonMainLanes)) {
-      setLanes(allNonMainLanes);
+      setAllLanes(allNonMainLanes);
     }
   }, [nonMainLanes, nonMainLanes.length]);
 
   const fetchMore = useCallback(async () => {
     setLoading(true);
     const result = await fetchMoreLanes?.(offset, LIMIT);
-    setLanes((existing) => {
+    setAllLanes((existing) => {
       setHasMore(() => {
         setLoading(!!result?.loading);
         setOffset(result?.nextOffset ?? 0);
@@ -141,35 +142,36 @@ export function LaneSelector(props: LaneSelectorProps) {
 
   const multipleLanes = nonMainLanes.length >= 1;
   const searchIconRef = useRef<string>(DEFAULT_SEARCH_ICON);
+  const searchedLanes = searchLanes?.(search);
 
   const handleSearchOnChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     e.stopPropagation();
     const searchTerm = e.target.value;
     if (!searchTerm || searchTerm === '') {
       searchIconRef.current = DEFAULT_SEARCH_ICON;
-      setFilteredLanes(allLanes);
+      // setFilteredLanes(allLanes);
     } else {
       searchIconRef.current = CLEAR_SEARCH_ICON;
-      setFilteredLanes(() => {
-        const options = {
-          keys: ['id.name', 'displayName'],
-          includeMatches: true,
-          findAllMatches: true,
-          threshold: 0.4,
-          location: 0,
-          distance: 100,
-          minMatchCharLength: 1,
-          ignoreLocation: false,
-          shouldSort: true,
-          useExtendedSearch: true,
-        };
+      // setFilteredLanes(() => {
+      //   const options = {
+      //     keys: ['id.name', 'displayName'],
+      //     includeMatches: true,
+      //     findAllMatches: true,
+      //     threshold: 0.4,
+      //     location: 0,
+      //     distance: 100,
+      //     minMatchCharLength: 1,
+      //     ignoreLocation: false,
+      //     shouldSort: true,
+      //     useExtendedSearch: true,
+      //   };
 
-        const fuse = new Fuse(allLanes, options);
-        const result = fuse.search(searchTerm);
-        const updatedLanes = result.map((matchedLane) => matchedLane.item);
+      //   const fuse = new Fuse(allLanes, options);
+      //   const result = fuse.search(searchTerm);
+      //   const updatedLanes = result.map((matchedLane) => matchedLane.item);
 
-        return [...updatedLanes];
-      });
+      //   return [...updatedLanes];
+      // });
     }
     setSearch(searchTerm || '');
   };
@@ -293,9 +295,9 @@ export function LaneSelector(props: LaneSelectorProps) {
         {multipleLanes && dropdownOpen && (
           <LaneSelectorList
             ref={containerRef}
-            hasMore={hasMoreState}
+            hasMore={search ? false : hasMoreState}
             fetchMore={fetchMore}
-            nonMainLanes={filteredLanes}
+            nonMainLanes={searchedLanes?.lanes && searchedLanes?.lanes.length > 0 ? searchedLanes.lanes : filteredLanes}
             search={search}
             groupByScope={groupScope}
             scopeIconLookup={scopeIconLookup}
@@ -309,7 +311,17 @@ export function LaneSelector(props: LaneSelectorProps) {
         )}
       </React.Fragment>
     );
-  }, [filteredLanes, groupByScope, multipleLanes, selectedLaneId, loading, hasMore, fetchMore, dropdownOpen]);
+  }, [
+    filteredLanes,
+    groupByScope,
+    multipleLanes,
+    selectedLaneId,
+    loading,
+    hasMore,
+    fetchMore,
+    dropdownOpen,
+    searchedLanes,
+  ]);
 
   return (
     <div {...rest} className={classnames(className, styles.laneSelector)} ref={containerRef}>
