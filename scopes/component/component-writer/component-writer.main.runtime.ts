@@ -135,13 +135,9 @@ export class ComponentWriterMain {
     const parentsOfOthersComps = componentWriterInstances.filter(({ writeToPath }) =>
       allDirs.find((d) => d.startsWith(`${writeToPath}/`))
     );
-    if (!parentsOfOthersComps.length) {
-      return;
-    }
-    const parentsOfOthersCompsDirs = parentsOfOthersComps.map((c) => c.writeToPath);
-
-    const incrementPath = (p: string, number: number) => `${p}_${number}`;
     const existingRootDirs = Object.keys(this.consumer.bitMap.getAllTrackDirs());
+    const incrementPath = (p: string, number: number) => `${p}_${number}`;
+    const parentsOfOthersCompsDirs = parentsOfOthersComps.map((c) => c.writeToPath);
     const allPaths: PathLinuxRelative[] = [...existingRootDirs, ...parentsOfOthersCompsDirs];
     const incrementRecursively = (p: string) => {
       let num = 1;
@@ -152,10 +148,30 @@ export class ComponentWriterMain {
       return newPath;
     };
 
-    // change the paths of all these parents root-dir to not collide with the children root-dir
-    parentsOfOthersComps.forEach((componentWriter) => {
-      if (existingRootDirs.includes(componentWriter.writeToPath)) return; // component already exists.
-      const newPath = incrementRecursively(componentWriter.writeToPath);
+    if (parentsOfOthersComps.length) {
+      // change the paths of all these parents root-dir to not collide with the children root-dir
+      parentsOfOthersComps.forEach((componentWriter) => {
+        if (existingRootDirs.includes(componentWriter.writeToPath)) return; // component already exists.
+        const newPath = incrementRecursively(componentWriter.writeToPath);
+        componentWriter.writeToPath = newPath;
+      });
+    }
+
+    const conflictWithExistingParents = componentWriterInstances.filter(({ writeToPath }) =>
+      existingRootDirs.find((d) => d.startsWith(`${writeToPath}/`))
+    );
+    if (conflictWithExistingParents.length) {
+      conflictWithExistingParents.forEach((componentWriter) => {
+        if (existingRootDirs.includes(componentWriter.writeToPath)) return; // component already exists.
+        const newPath = incrementRecursively(componentWriter.writeToPath);
+        componentWriter.writeToPath = newPath;
+      });
+    }
+
+    componentWriterInstances.forEach((componentWriter) => {
+      const existingUsedParent = existingRootDirs.find((d) => componentWriter.writeToPath.startsWith(`${d}/`));
+      if (!existingUsedParent) return;
+      const newPath = incrementRecursively(existingUsedParent);
       componentWriter.writeToPath = newPath;
     });
   }
