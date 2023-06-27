@@ -675,6 +675,11 @@ export class ScopeMain implements ComponentFactory {
     return compact(components);
   }
 
+  async loadManyCompsAspects(Components: Component[], lane?: Lane): Promise<Component[]> {
+    const components = await mapSeries(Components, (id) => this.loadCompAspects(id, lane));
+    return compact(components);
+  }
+
   /**
    * get a component and throw an exception if not found.
    * @param id component id
@@ -875,6 +880,10 @@ export class ScopeMain implements ComponentFactory {
   async load(id: ComponentID, lane?: Lane): Promise<Component | undefined> {
     const component = await this.get(id);
     if (!component) return undefined;
+    return this.loadCompAspects(component, lane);
+  }
+
+  async loadCompAspects(component: Component, lane?: Lane): Promise<Component> {
     const aspectIds = component.state.aspects.ids;
     // load components from type aspects as aspects.
     // important! previously, this was running for any aspect, not only apps. (the if statement was `this.aspectLoader.isAspectComponent(component)`)
@@ -887,7 +896,7 @@ export class ScopeMain implements ComponentFactory {
     if (envsData?.data?.services || envsData?.data?.self) {
       aspectIds.push(component.id.toString());
     }
-    await this.loadAspects(aspectIds, true, id.toString(), lane);
+    await this.loadAspects(aspectIds, true, component.id.toString(), lane);
 
     return component;
   }

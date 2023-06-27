@@ -171,7 +171,7 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * relevant for tagging from scope, where we tag an existing snap without any code-changes.
    * the idea is to have all build artifacts from the previous snap and run deploy pipeline on top of it.
    */
-  populateArtifactsFromParent?: boolean;
+  populateArtifactsFrom?: ComponentID[];
 
   /**
    * Force specific host to get the component from.
@@ -649,7 +649,7 @@ export class IsolatorMain {
         const capsule = capsuleList.getCapsule(component.id);
         if (!capsule) return;
         const scope =
-          (await CapsuleList.capsuleUsePreviouslySavedDists(component)) || opts?.populateArtifactsFromParent
+          (await CapsuleList.capsuleUsePreviouslySavedDists(component)) || opts?.populateArtifactsFrom
             ? legacyScope
             : undefined;
         const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(component, allIds, scope, opts);
@@ -859,7 +859,7 @@ export class IsolatorMain {
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
     dataToPersist.addFile(packageJson.toVinylFile());
-    const artifacts = await this.getArtifacts(component, legacyScope, opts?.populateArtifactsFromParent);
+    const artifacts = await this.getArtifacts(component, legacyScope, opts?.populateArtifactsFrom);
     dataToPersist.addManyFiles(artifacts);
     return dataToPersist;
   }
@@ -913,25 +913,28 @@ export class IsolatorMain {
   private async getArtifacts(
     component: Component,
     legacyScope?: Scope,
-    fetchParentArtifacts = false
+    populateArtifactsFrom?: ComponentID[]
   ): Promise<AbstractVinyl[]> {
     const legacyComp: ConsumerComponent = component.state._consumer;
     if (!legacyScope) {
-      if (fetchParentArtifacts) throw new Error(`unable to fetch from parent, the legacyScope was not provided`);
+      if (populateArtifactsFrom) throw new Error(`unable to fetch from parent, the legacyScope was not provided`);
       // when capsules are written via the workspace, do not write artifacts, they get created by
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return [];
     }
-    if (legacyComp.buildStatus !== 'succeed' && !fetchParentArtifacts) {
+    if (legacyComp.buildStatus !== 'succeed' && !populateArtifactsFrom) {
       // this is important for "bit sign" when on lane to not go to the original scope
       return [];
     }
     const artifactFilesToFetch = async () => {
-      if (fetchParentArtifacts) {
-        const parent = component.head?.parents[0];
-        if (!parent)
-          throw new Error(`unable to fetch artifacts from parent. parent is missing for ${component.id.toString()}`);
-        const compParent = await legacyScope.getConsumerComponent(legacyComp.id.changeVersion(parent.toString()));
+      if (populateArtifactsFrom) {
+        const found = populateArtifactsFrom.find((id) => id.isEqual(component.id, { ignoreVersion: true }));
+        if (!found) {
+          throw new Error(
+            `getArtifacts: unable to find where to populate the artifacts from for ${component.id.toString()}`
+          );
+        }
+        const compParent = await legacyScope.getConsumerComponent(found._legacy);
         return getArtifactFilesExcludeExtension(compParent.extensions, 'teambit.pkg/pkg');
       }
       const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];
