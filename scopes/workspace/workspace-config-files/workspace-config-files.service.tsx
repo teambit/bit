@@ -22,7 +22,7 @@ export class WorkspaceConfigFilesService implements EnvService<any> {
   transform(env: Env, envContext: EnvContext): PkgTransformationMap | undefined {
     // Old env
     if (!env?.workspaceConfig) {
-      this.printWarningIfFirstTime(env.id);
+      this.printWarningIfFirstTime(envContext.envId.toString());
       return undefined;
     }
 
