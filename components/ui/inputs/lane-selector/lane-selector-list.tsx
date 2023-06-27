@@ -133,7 +133,7 @@ export function _LaneSelectorList({
       return grouped;
     }
 
-    let lanesToRender = nonMainLanes.filter(isSearchMatch);
+    let lanesToRender = nonMainLanes;
 
     if (mainLane && isSearchMatch(mainLane)) {
       lanesToRender.unshift(mainLane);
