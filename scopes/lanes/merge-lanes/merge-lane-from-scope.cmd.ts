@@ -36,8 +36,8 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     ['', 'pattern <string>', 'partially merge the lane with the specified component-pattern'],
     ['', 'push', 'export the updated objects to the original scopes once done'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
-    ['', 'no-squash', 'EXPERIMENTAL. relevant for merging lanes into main, which by default squash.'],
-    ['', 'include-deps', 'EXPERIMENTAL. relevant for "--pattern". merge also dependencies of the given components'],
+    ['', 'no-squash', 'relevant for merging lanes into main, which by default squash.'],
+    ['', 'include-deps', 'relevant for "--pattern". merge also dependencies of the given components'],
     ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;

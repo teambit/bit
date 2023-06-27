@@ -21,7 +21,7 @@ type GraphOpt = {
 
 export class GraphCmd implements Command {
   name = 'graph [id]';
-  description = 'EXPERIMENTAL. generate an image file with the dependencies graph';
+  description = 'generate an image file with the dependencies graph';
   group = 'discover';
   alias = '';
   options = [

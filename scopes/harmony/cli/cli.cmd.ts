@@ -10,7 +10,7 @@ import { GenerateCommandsDoc, GenerateOpts } from './generate-doc-md';
 
 export class CliGenerateCmd implements Command {
   name = 'generate';
-  description = 'EXPERIMENTAL. generate an .md file with all commands details';
+  description = 'generate an .md file with all commands details';
   alias = '';
   loader = false;
   group = 'general';

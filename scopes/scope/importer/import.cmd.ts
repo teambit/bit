@@ -47,16 +47,16 @@ export class ImportCmd implements Command {
       'merge [strategy]',
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"',
     ],
-    ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
+    ['', 'dependencies', 'import all dependencies and write them to the workspace'],
     [
       '',
       'dependents',
-      'EXPERIMENTAL. import components found while traversing from the given ids upwards to the workspace components',
+      'import components found while traversing from the given ids upwards to the workspace components',
     ],
     [
       '',
       'save-in-lane',
-      'EXPERIMENTAL. when checked out to a lane and the component is not on the remote-lane, save it in the lane (default to save on main)',
+      'when checked out to a lane and the component is not on the remote-lane, save it in the lane (default to save on main)',
     ],
     [
       '',
