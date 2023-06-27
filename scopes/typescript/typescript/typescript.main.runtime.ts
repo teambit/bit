@@ -68,7 +68,6 @@ import {
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
 import WriteTsconfigCmd from './cmds/write-tsconfig.cmd';
-import { TypescriptConfigWriter } from './ts-config-writer';
 import { RemoveTypesTask } from './remove-types-task';
 
 export type TsMode = 'build' | 'dev';
@@ -358,7 +357,6 @@ export class TypescriptMain {
   ) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
-    workspaceConfigFiles.registerConfigWriter(new TypescriptConfigWriter(compiler, logger));
 
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
     const tsconfigWriter = new TsconfigWriter(workspace, logger);
