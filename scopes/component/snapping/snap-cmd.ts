@@ -12,7 +12,7 @@ import { outputIdsIfExists } from './tag-cmd';
 
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
-  description = 'EXPERIMENTAL. create an immutable and exportable component snapshot (no release version)';
+  description = 'create an immutable and exportable component snapshot (no release version)';
   extendedDescription: string;
   group = 'development';
   arguments = [
@@ -26,16 +26,12 @@ export class SnapCmd implements Command {
   options = [
     ['m', 'message <message>', 'log message describing the latest changes'],
     ['', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
-    ['', 'unmerged', 'EXPERIMENTAL. complete a merge process by snapping the unmerged components'],
-    [
-      'b',
-      'build',
-      'EXPERIMENTAL. not needed for now. run the build pipeline in case the feature-flag build-on-ci is enabled',
-    ],
+    ['', 'unmerged', 'complete a merge process by snapping the unmerged components'],
+    ['b', 'build', 'not needed for now. run the build pipeline in case the feature-flag build-on-ci is enabled'],
     [
       '',
       'editor [editor]',
-      'EXPERIMENTAL. open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
+      'open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
     ],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],

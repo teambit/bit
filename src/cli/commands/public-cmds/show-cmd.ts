@@ -20,8 +20,8 @@ export default class Show implements LegacyCommand {
     ['o', 'outdated', 'show latest version from the remote scope (if exists)'],
     ['c', 'compare', 'compare current file system component to latest tagged component [default=latest]'],
     ['d', 'detailed', 'show more details'],
-    ['', 'dependents', 'EXPERIMENTAL. show all dependents recursively'],
-    ['', 'dependencies', 'EXPERIMENTAL. show all dependencies recursively'],
+    ['', 'dependents', 'show all dependents recursively'],
+    ['', 'dependencies', 'show all dependencies recursively'],
     ['', 'legacy', ''],
   ] as CommandOptions;
   loader = true;
