@@ -11,6 +11,7 @@ import { Harmony } from '@teambit/harmony';
 import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { PkgAspect } from '@teambit/pkg';
+import { EnvsAspect } from '@teambit/envs';
 import { NewComponentHelperAspect } from './new-component-helper.aspect';
 
 export class NewComponentHelperMain {
@@ -43,12 +44,22 @@ export class NewComponentHelperMain {
   async writeAndAddNewComp(
     comp: Component,
     targetId: ComponentID,
-    options?: { path?: string; scope?: string },
+    options?: { path?: string; scope?: string; env?: string },
     config?: { [aspectName: string]: any }
   ) {
     const targetPath = this.getNewComponentPath(targetId, options?.path);
     await this.throwForExistingPath(targetPath);
     await this.workspace.write(comp, targetPath);
+    if (options?.env && config) {
+      const oldEnv = config[EnvsAspect.id]?.env;
+      if (oldEnv) {
+        const envKey = Object.keys(config).find((key) => key.startsWith(oldEnv));
+        if (envKey) {
+          delete config[envKey];
+        }
+      }
+      await this.tracker.addEnvToConfig(options.env, config);
+    }
     try {
       await this.tracker.track({
         rootDir: targetPath,
@@ -92,7 +103,7 @@ export class NewComponentHelperMain {
       if (!entry.config) return;
       const aspectId = entry.id.toString();
       // don't copy the pkg aspect, it's not relevant for the new component
-      // (it might contains values that are bounded to the other component name / id)
+      // (it might contain values that are bounded to the other component name / id)
       if (aspectId === PkgAspect.id) {
         return;
       }
