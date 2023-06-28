@@ -31,7 +31,7 @@ export class SwitchCmd implements Command {
     [
       'p',
       'pattern <component-pattern>',
-      'EXPERIMENTAL. switch only the specified component-pattern. works only when the workspace is empty',
+      'switch only the specified component-pattern. works only when the workspace is empty',
     ],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
