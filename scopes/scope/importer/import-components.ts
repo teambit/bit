@@ -59,6 +59,7 @@ export type ImportOptions = {
   allHistory?: boolean;
   fetchDeps?: boolean; // by default, if a component was tagged with > 0.0.900, it has the flattened-deps-graph in the object
   trackOnly?: boolean;
+  includeDeprecated?: boolean;
 };
 type ComponentMergeStatus = {
   component: Component;
@@ -359,7 +360,7 @@ if you need this specific snap, find the lane this snap is belong to, then run "
     }
 
     await pMapSeries(idsWithWildcard, async (idStr: string) => {
-      const idsFromRemote = await getRemoteBitIdsByWildcards(idStr);
+      const idsFromRemote = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
       const existingOnLanes = idsFromRemote.filter((id) => bitIdsFromLane.hasWithoutVersion(id));
       if (!existingOnLanes.length) {
         throw new BitError(`the id with the the wildcard "${idStr}" has been parsed to multiple component ids.
@@ -378,7 +379,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     await Promise.all(
       this.options.ids.map(async (idStr: string) => {
         if (hasWildcard(idStr)) {
-          const ids = await getRemoteBitIdsByWildcards(idStr);
+          const ids = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
           loader.start(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
           bitIds.push(...ids);
         } else {
