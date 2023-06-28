@@ -1,4 +1,4 @@
-import R from 'ramda';
+import { differenceBy } from 'lodash';
 import { ParentNotFound, VersionNotFoundOnFS } from '../exceptions';
 import { NoCommonSnap } from '../exceptions/no-common-snap';
 import { ModelComponent, Version } from '../models';
@@ -154,8 +154,8 @@ bit import ${modelComponent.id()} --objects`);
   }
   addParentsRecursively(targetVersion, snapsOnTarget, false);
 
-  const sourceOnlySnaps = R.difference(snapsOnSource, snapsOnTarget);
-  const targetOnlySnaps = R.difference(snapsOnTarget, snapsOnSource);
+  const sourceOnlySnaps = differenceBy(snapsOnSource, snapsOnTarget, 'hash');
+  const targetOnlySnaps = differenceBy(snapsOnTarget, snapsOnSource, 'hash');
 
   if (sourceHeadExistsInTarget) {
     return new SnapsDistance([], targetOnlySnaps, localHead, error);

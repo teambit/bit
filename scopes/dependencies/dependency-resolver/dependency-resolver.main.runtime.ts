@@ -17,6 +17,7 @@ import {
   CFG_PACKAGE_MANAGER_CACHE,
   CFG_REGISTRY_URL_KEY,
   CFG_USER_TOKEN_KEY,
+  CFG_ISOLATED_SCOPE_CAPSULES,
   getCloudDomain,
 } from '@teambit/legacy/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
@@ -402,7 +403,11 @@ export class DependencyResolverMain {
   }
 
   isolatedCapsules(): boolean {
-    return this.config.isolatedCapsules ?? true;
+    const globalConfig = this.globalConfig.getSync(CFG_ISOLATED_SCOPE_CAPSULES);
+    // @ts-ignore
+    const defaultVal = globalConfig !== undefined ? globalConfig === true || globalConfig === 'true' : true;
+    const res = this.config.isolatedCapsules ?? defaultVal;
+    return res;
   }
 
   hasHarmonyInRootPolicy(): boolean {

@@ -13,7 +13,7 @@ export default class LogCmd implements Command {
   alias = '';
   options = [
     ['r', 'remote', 'show log of a remote component'],
-    ['', 'parents', 'EXPERIMENTAL. show parents and lanes data'],
+    ['', 'parents', 'show parents and lanes data'],
     ['o', 'one-line', 'show each log entry in one line'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;

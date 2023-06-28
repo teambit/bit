@@ -20,7 +20,7 @@ export class VSCodeRoute implements Route {
 
   middlewares = [
     async (req: Request, res: Response) => {
-      this.logger.debug(`cli server: got request for ${req.params.method}`);
+      this.logger.debug(`api-vscode: got request for ${req.params.method}`);
       try {
         if (!this.apiForVscode[req.params.method]) {
           throw new Error(`API "${req.params.method}" was not found`);
@@ -29,7 +29,7 @@ export class VSCodeRoute implements Route {
         const { args } = body;
         this.logger.console(`started a new api-vscode call: ${req.params.method}, total: ${args?.length || 0} args`);
         const startTask = process.hrtime();
-        const result = await this.apiForVscode[req.params.method](args);
+        const result = await this.apiForVscode[req.params.method](...args);
         const duration = prettyTime(process.hrtime(startTask));
         this.logger.consoleSuccess(`api-vscode call: ${req.params.method} had been completed in ${duration}`);
         res.json(result);

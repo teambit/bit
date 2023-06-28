@@ -158,7 +158,7 @@ export default class ComponentLoader {
         });
         return null;
       }
-      fromModel.removed = true;
+      fromModel.setRemoved();
       fromModel.componentMap = componentMap;
       removedComponents.push(fromModel);
       return null;
