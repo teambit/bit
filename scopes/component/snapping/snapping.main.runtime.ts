@@ -265,6 +265,7 @@ export class SnappingMain {
       })
     );
     const componentIds = tagDataPerComp.map((t) => t.componentId);
+    await this.scope.import(componentIds);
     const deps = compact(tagDataPerComp.map((t) => t.dependencies).flat()).map((dep) => dep.changeVersion(LATEST));
     const additionalComponentIdsToFetch = await Promise.all(
       componentIds.map(async (id) => {
@@ -282,7 +283,7 @@ if you're willing to lose the history from the head to the specified version, us
     );
 
     // import deps to be able to resolve semver
-    await this.scope.import([...componentIds, ...deps, ...compact(additionalComponentIdsToFetch)], { useCache: false });
+    await this.scope.import([...deps, ...compact(additionalComponentIdsToFetch)], { useCache: false });
     await Promise.all(
       tagDataPerComp.map(async (tagData) => {
         tagData.dependencies = tagData.dependencies
