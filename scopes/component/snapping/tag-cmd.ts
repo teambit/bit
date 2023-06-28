@@ -37,7 +37,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
     [
       '',
       'editor [editor]',
-      'EXPERIMENTAL. open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
+      'open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
     ],
     ['v', 'ver <version>', 'tag with the given version'],
     ['l', 'increment <level>', `options are: [${RELEASE_TYPES.join(', ')}], default to patch`],
@@ -46,8 +46,8 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
     ['', 'minor', 'syntactic sugar for "--increment minor"'],
     ['', 'major', 'syntactic sugar for "--increment major"'],
     ['', 'pre-release [identifier]', 'syntactic sugar for "--increment prerelease" and `--prerelease-id <identifier>`'],
-    ['', 'snapped', 'EXPERIMENTAL. tag components that their head is a snap (not a tag)'],
-    ['', 'unmerged', 'EXPERIMENTAL. complete a merge process by tagging the unmerged components'],
+    ['', 'snapped', 'tag components that their head is a snap (not a tag)'],
+    ['', 'unmerged', 'complete a merge process by tagging the unmerged components'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'skip auto tagging dependents'],
     ['', 'soft', 'do not persist. only keep note of the changes to be made'],
@@ -72,7 +72,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       'fail-fast',
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependent failed)',
     ],
-    ['b', 'build', 'EXPERIMENTAL. not needed for now. run the pipeline build and complete the tag'],
+    ['b', 'build', 'not needed for now. run the pipeline build and complete the tag'],
     [
       'a',
       'all [version]',
