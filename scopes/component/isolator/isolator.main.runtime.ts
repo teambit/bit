@@ -179,6 +179,11 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   host?: ComponentFactory;
 
   /**
+   * Use specific package manager for the isolation process (override the package manager from the dep resolver config)
+   */
+  packageManager?: string;
+
+  /**
    * Dir where to read the package manager config from
    * usually used when running package manager in the capsules dir to use the config
    * from the workspace dir
@@ -466,6 +471,7 @@ export class IsolatorMain {
             await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
               cachePackagesOnCapsulesRoot,
               linkedDependencies,
+              packageManager: opts.packageManager,
             });
           })
         );
@@ -479,6 +485,7 @@ export class IsolatorMain {
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
           cachePackagesOnCapsulesRoot,
           linkedDependencies,
+          packageManager: opts.packageManager,
         });
       }
       if (installLongProcessLogger) {
@@ -516,12 +523,14 @@ export class IsolatorMain {
     opts: {
       cachePackagesOnCapsulesRoot?: boolean;
       linkedDependencies?: Record<string, Record<string, string>>;
+      packageManager?: string;
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({
       rootDir: capsulesDir,
       cacheRootDirectory: opts.cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
       installingContext: { inCapsule: true },
+      packageManager: opts.packageManager,
     });
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace

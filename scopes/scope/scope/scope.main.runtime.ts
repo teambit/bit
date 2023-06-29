@@ -89,6 +89,10 @@ export type ScopeConfig = {
   description?: string;
   icon?: string;
   backgroundIconColor?: string;
+  /**
+   * Set a different package manager for the aspects capsules
+   */
+  aspectsPackageManager?: string;
 };
 
 export class ScopeMain implements ComponentFactory {
@@ -172,6 +176,10 @@ export class ScopeMain implements ComponentFactory {
 
   get isGlobalScope(): boolean {
     return this.path === GLOBAL_SCOPE;
+  }
+
+  get aspectsPackageManager(): string | undefined {
+    return this.config.aspectsPackageManager;
   }
 
   // We need to reload the aspects with their new version since:
