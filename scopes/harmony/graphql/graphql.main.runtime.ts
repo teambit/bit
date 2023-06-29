@@ -1,21 +1,26 @@
-import { mergeSchemas } from 'graphql-tools';
-import { GraphQLModule } from '@graphql-modules/core';
+import { mergeSchemas } from '@graphql-tools/schema';
+import { compact } from 'lodash';
+import { Server as WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
+// import { GraphQLModule } from '@graphql-modules/core';
+import { createModule, createApplication, Module } from 'graphql-modules';
 import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import express, { Express } from 'express';
 import { graphqlHTTP } from 'express-graphql';
 import { Port } from '@teambit/toolbox.network.get-port';
-import { execute, subscribe } from 'graphql';
+// import { execute, subscribe } from 'graphql';
 import { PubSubEngine, PubSub } from 'graphql-subscriptions';
 import { createServer, Server } from 'http';
 import httpProxy from 'http-proxy';
-import { SubscriptionServer } from 'subscriptions-transport-ws';
+// import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
 import { GraphQLServer } from './graphql-server';
 import { createRemoteSchemas } from './create-remote-schemas';
 import { GraphqlAspect } from './graphql.aspect';
 import { Schema } from './schema';
+// import { legacyOptionsToPluginOptions } from 'apollo-server-core/dist/plugin/usageReporting/legacyOptions';
 
 export enum Verb {
   WRITE = 'write',
@@ -79,7 +84,7 @@ export class GraphqlMain {
     return new PubSub();
   }
 
-  private modules = new Map<string, GraphQLModule>();
+  private modules = new Map<string, Module>();
 
   /**
    * returns the schema for a specific aspect by its id.
@@ -146,8 +151,22 @@ export class GraphqlMain {
     const server = createServer(app);
     const subscriptionsPort = options.subscriptionsPortRange || this.config.subscriptionsPortRange;
     const subscriptionServerPort = await this.getPort(subscriptionsPort);
-    const { port } = await this.createSubscription(options, subscriptionServerPort);
-    this.proxySubscription(server, port);
+    const wsServer = new WebSocketServer({
+      server,
+      path: "/graphql",
+    });
+  
+    // Passing in an instance of a GraphQLSchema and
+    // telling the WebSocketServer to start listening
+    useServer({ 
+      schema,
+      context: (ctx) => {
+        options?.onWsConnect && options.onWsConnect(ctx.connectionParams)
+      }
+    }, wsServer);
+  
+    // const { port } = await this.createSubscription(options, subscriptionServerPort);
+    this.proxySubscription(server, subscriptionServerPort);
 
     return server;
   }
@@ -201,40 +220,40 @@ export class GraphqlMain {
 
   /** create Subscription server with different port */
 
-  private async createSubscription(options: GraphQLServerOptions, port: number) {
-    // Create WebSocket listener server
-    const websocketServer = createServer((request, response) => {
-      response.writeHead(404);
-      response.end();
-    });
+  // private async createSubscription(options: GraphQLServerOptions, port: number) {
+  //   // Create WebSocket listener server
+  //   const websocketServer = createServer((request, response) => {
+  //     response.writeHead(404);
+  //     response.end();
+  //   });
 
-    // Bind it to port and start listening
-    websocketServer.listen(port, () =>
-      this.logger.debug(`Websocket Server is now running on http://localhost:${port}`)
-    );
+  //   // Bind it to port and start listening
+  //   websocketServer.listen(port, () =>
+  //     this.logger.debug(`Websocket Server is now running on http://localhost:${port}`)
+  //   );
 
-    const localSchema = this.createRootModule(options.schemaSlot);
-    const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
-    const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
-    const schema = mergeSchemas({
-      schemas,
-    });
+  //   const localSchema = this.createRootModule(options.schemaSlot);
+  //   const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
+  //   const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
+  //   const schema = mergeSchemas({
+  //     schemas,
+  //   });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const subServer = new SubscriptionServer(
-      {
-        execute,
-        subscribe,
-        schema,
-        onConnect: options.onWsConnect,
-      },
-      {
-        server: websocketServer,
-        path: this.config.subscriptionsPath,
-      }
-    );
-    return { subServer, port };
-  }
+  //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //   const subServer = new SubscriptionServer(
+  //     {
+  //       execute,
+  //       subscribe,
+  //       schema,
+  //       onConnect: options.onWsConnect,
+  //     },
+  //     {
+  //       server: websocketServer,
+  //       path: this.config.subscriptionsPath,
+  //     }
+  //   );
+  //   return { subServer, port };
+  // }
   /** proxy ws Subscription server to avoid conflict with different websocket connections */
 
   private proxySubscription(server: Server, port: number) {
@@ -248,29 +267,29 @@ export class GraphqlMain {
   }
 
   private createRootModule(schemaSlot?: SchemaSlot) {
-    const modules = this.buildModules(schemaSlot);
+    const modules = compact(this.buildModules(schemaSlot));
 
-    return new GraphQLModule({
-      imports: modules,
+    return createApplication({
+      modules,
     });
   }
 
   private buildModules(schemaSlot?: SchemaSlot) {
     const schemaSlots = schemaSlot ? schemaSlot.toArray() : this.moduleSlot.toArray();
     return schemaSlots.map(([extensionId, schema]) => {
-      const moduleDeps = this.getModuleDependencies(extensionId);
-
-      const module = new GraphQLModule({
+      // const moduleDeps = this.getModuleDependencies(extensionId);
+      const module = createModule({
+        id: extensionId,
         typeDefs: schema.typeDefs,
-        resolvers: schema.resolvers,
-        schemaDirectives: schema.schemaDirectives,
-        imports: moduleDeps,
-        context: (session) => {
-          return {
-            ...session,
-            verb: session?.headers?.['x-verb'] || Verb.READ,
-          };
-        },
+        resolvers: schema.resolvers || {},
+        // schemaDirectives: schema.schemaDirectives,
+        // imports: moduleDeps,
+        // context: (session) => {
+        //   return {
+        //     ...session,
+        //     verb: session?.headers?.['x-verb'] || Verb.READ,
+        //   };
+        // },
       });
 
       this.modules.set(extensionId, module);
@@ -279,13 +298,12 @@ export class GraphqlMain {
     });
   }
 
-  private getModuleDependencies(extensionId: string): GraphQLModule[] {
+  private getModuleDependencies(extensionId: string) {
     const extension = this.context.extensions.get(extensionId);
     if (!extension) throw new Error(`aspect ${extensionId} was not found`);
     const deps = this.context.getDependencies(extension);
     const ids = deps.map((dep) => dep.id);
 
-    // @ts-ignore check :TODO why types are breaking here.
     return Array.from(this.modules.entries())
       .map(([depId, module]) => {
         const dep = ids.includes(depId);
