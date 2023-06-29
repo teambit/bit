@@ -172,11 +172,12 @@ needed-for: ${neededFor || '<unknown>'}`);
     await this.aspectLoader.loadAspectFromPath(localAspects);
     const componentIds = await this.scope.resolveMultipleComponentIds(aspectIds);
     if (!componentIds || !componentIds.length) return [];
-    const components = await this.scope.import(componentIds, {
+    await this.scope.import(componentIds, {
       reFetchUnBuiltVersion: false,
       preferDependencyGraph: true,
       lane,
     });
+    const components = await this.scope.getMany(componentIds);
 
     return components;
   }
