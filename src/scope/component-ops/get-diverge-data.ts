@@ -1,7 +1,7 @@
 import { differenceBy } from 'lodash';
 import { ParentNotFound, VersionNotFoundOnFS } from '../exceptions';
 import { NoCommonSnap } from '../exceptions/no-common-snap';
-import { ModelComponent, Version } from '../models';
+import { ModelComponent } from '../models';
 import { VersionParents } from '../models/version-history';
 import { Ref, Repository } from '../objects';
 import { SnapsDistance } from './snaps-distance';
@@ -22,14 +22,14 @@ export async function getDivergeData({
   sourceHead, // if empty, use the local head (if on lane - lane head. if on main - component head)
   targetHead,
   throws = true, // otherwise, save the error instance in the `SnapsDistance` object,
-  versionObjects, // relevant for remote-scope where during export the data is not in the repo yet.
+  versionParentsFromObjects, // relevant for remote-scope where during export the data is not in the repo yet.
 }: {
   repo: Repository;
   modelComponent: ModelComponent;
   sourceHead?: Ref | null;
   targetHead: Ref | null;
   throws?: boolean;
-  versionObjects?: Version[];
+  versionParentsFromObjects?: VersionParents[];
 }): Promise<SnapsDistance> {
   const isOnLane = modelComponent.laneHeadLocal || modelComponent.laneHeadLocal === null;
   const localHead = sourceHead || (isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead());
@@ -39,7 +39,7 @@ export async function getDivergeData({
         modelComponent,
         repo,
         throws: false,
-        versionObjects,
+        versionParentsFromObjects,
       });
       return new SnapsDistance(allLocalHashes);
     }
@@ -51,7 +51,7 @@ export async function getDivergeData({
       repo,
       throws: false,
       startFrom: targetHead,
-      versionObjects,
+      versionParentsFromObjects,
     });
     return new SnapsDistance([], allRemoteHashes);
   }
@@ -65,8 +65,9 @@ export async function getDivergeData({
     modelComponent,
     heads: [localHead, targetHead],
     throws: false,
-    versionObjects,
+    versionParentsFromObjects,
   });
+
   const getVersionData = (ref: Ref): VersionParents | undefined => versionParents.find((v) => v.hash.isEqual(ref));
 
   const snapsOnSource: Ref[] = [];
