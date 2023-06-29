@@ -407,7 +407,13 @@
     "linkCoreAspects": false,
     "overrides": {
       "@types/fs-capacitor": "2.0.0",
-      "signal-exit@4": "^4.0.2"
+      "signal-exit@4": "^4.0.2",
+      "@yarnpkg/core": "4.0.0-rc.45",
+      "@yarnpkg/fslib": "3.0.0-rc.42",
+      "@yarnpkg/libzip": "3.0.0-rc.42",
+      "@yarnpkg/parsers": "3.0.0-rc.42",
+      "@yarnpkg/plugin-npm": "3.0.0-rc.42",
+      "@yarnpkg/plugin-pack": "4.0.0-rc.42"
     },
     "nodeLinker": "hoisted",
     "rootComponents": true,

@@ -7,6 +7,12 @@ settings:
 overrides:
   '@types/fs-capacitor': 2.0.0
   signal-exit@4: ^4.0.2
+  '@yarnpkg/core': 4.0.0-rc.45
+  '@yarnpkg/fslib': 3.0.0-rc.42
+  '@yarnpkg/libzip': 3.0.0-rc.42
+  '@yarnpkg/parsers': 3.0.0-rc.42
+  '@yarnpkg/plugin-npm': 3.0.0-rc.42
+  '@yarnpkg/plugin-pack': 4.0.0-rc.42
 
 importers:
 
@@ -667,7 +673,7 @@ importers:
         specifier: 4.0.0-rc.42
         version: 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/core':
-        specifier: ^4.0.0-rc.42
+        specifier: 4.0.0-rc.45
         version: 4.0.0-rc.45
       '@yarnpkg/fslib':
         specifier: 3.0.0-rc.42
@@ -23592,10 +23598,10 @@ importers:
         version: 0.4.6
       '@yarnpkg/cli':
         specifier: 4.0.0-rc.42
-        version: 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        version: 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/core':
-        specifier: ^4.0.0-rc.42
-        version: 4.0.0-rc.42
+        specifier: 4.0.0-rc.45
+        version: 4.0.0-rc.45
       '@yarnpkg/fslib':
         specifier: 3.0.0-rc.42
         version: 3.0.0-rc.42
@@ -23604,7 +23610,7 @@ importers:
         version: 3.0.0-rc.42
       '@yarnpkg/plugin-npm':
         specifier: 3.0.0-rc.42
-        version: 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-pack@4.0.0-rc.42)
+        version: 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-pack@4.0.0-rc.42)
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -30661,6 +30667,9 @@ importers:
 
   scopes/ui-foundation/uis/hooks/use-user-agent:
     dependencies:
+      '@teambit/react.rendering.ssr':
+        specifier: 0.0.3
+        version: 0.0.3(react-dom@17.0.2)(react@17.0.2)
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -38068,7 +38077,6 @@ packages:
     transitivePeerDependencies:
       - encoding
       - supports-color
-      - typanion
     dev: false
 
   /@pnpm/remove-bins@5.0.2(@pnpm/logger@5.0.0):
@@ -42952,7 +42960,7 @@ packages:
     dev: false
 
   /@teambit/react.rendering.ssr@0.0.3(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-A61JbXqd1zNXk1aW4Ur5vs86BpY=, tarball: https://node-registry.bit.cloud/tarballs/teambit.react/rendering/ssr@0.0.3.tgz}
+    resolution: {integrity: sha1-A61JbXqd1zNXk1aW4Ur5vs86BpY=, tarball: https://node-registry.bit.cloud/@teambit/react.rendering.ssr/-/@teambit-react.rendering.ssr-0.0.3.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -43813,7 +43821,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.rendering.html@0.0.69(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-wLxfPsjKW+2sB5juwlbAA60Oirk=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/rendering/html@0.0.69.tgz}
+    resolution: {integrity: sha1-wLxfPsjKW+2sB5juwlbAA60Oirk=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.rendering.html/-/@teambit-ui-foundation.ui.rendering.html-0.0.69.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -45678,51 +45686,6 @@ packages:
   /@xtuc/long@4.2.2:
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
 
-  /@yarnpkg/cli@4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5):
-    resolution: {integrity: sha512-UIX8MHy8sIUdxPUbol4R9+pXTM8uRN+H8T5uWctlR7qGnZsY3QCUyYEAC4Ud/19fMqHw/6DXvx6BUEmx6L9m4Q==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/libzip': 3.0.0-rc.42(@yarnpkg/fslib@3.0.0-rc.42)
-      '@yarnpkg/parsers': 3.0.0-rc.42
-      '@yarnpkg/plugin-compat': 4.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-patch@4.0.0-rc.42)
-      '@yarnpkg/plugin-constraints': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      '@yarnpkg/plugin-dlx': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      '@yarnpkg/plugin-essentials': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-git@3.0.0-rc.42)
-      '@yarnpkg/plugin-exec': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)
-      '@yarnpkg/plugin-file': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      '@yarnpkg/plugin-github': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-git@3.0.0-rc.42)
-      '@yarnpkg/plugin-http': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)
-      '@yarnpkg/plugin-init': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      '@yarnpkg/plugin-interactive-tools': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-essentials@4.0.0-rc.42)(bufferutil@4.0.3)(typanion@3.12.1)(utf-8-validate@5.0.5)
-      '@yarnpkg/plugin-link': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)
-      '@yarnpkg/plugin-nm': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      '@yarnpkg/plugin-npm': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-pack@4.0.0-rc.42)
-      '@yarnpkg/plugin-npm-cli': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-npm@3.0.0-rc.42)(@yarnpkg/plugin-pack@4.0.0-rc.42)
-      '@yarnpkg/plugin-pack': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)
-      '@yarnpkg/plugin-patch': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      '@yarnpkg/plugin-pnpm': 2.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      '@yarnpkg/plugin-typescript': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-essentials@4.0.0-rc.42)
-      '@yarnpkg/plugin-version': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-git@3.0.0-rc.42)(bufferutil@4.0.3)(typanion@3.12.1)(utf-8-validate@5.0.5)
-      '@yarnpkg/plugin-workspace-tools': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-git@3.0.0-rc.42)
-      '@yarnpkg/shell': 4.0.0-rc.42(typanion@3.12.1)
-      ci-info: 3.7.1
-      clipanion: 3.2.0-rc.14
-      semver: 7.5.2
-      tslib: 2.5.0
-      typanion: 3.12.1
-    transitivePeerDependencies:
-      - '@types/react'
-      - bufferutil
-      - utf-8-validate
-    dev: false
-
   /@yarnpkg/cli@4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5):
     resolution: {integrity: sha512-UIX8MHy8sIUdxPUbol4R9+pXTM8uRN+H8T5uWctlR7qGnZsY3QCUyYEAC4Ud/19fMqHw/6DXvx6BUEmx6L9m4Q==}
     engines: {node: '>=14.15.0'}
@@ -45734,29 +45697,29 @@ packages:
       '@yarnpkg/libzip': 3.0.0-rc.42(@yarnpkg/fslib@3.0.0-rc.42)
       '@yarnpkg/parsers': 3.0.0-rc.42
       '@yarnpkg/plugin-compat': 4.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-patch@4.0.0-rc.42)
-      '@yarnpkg/plugin-constraints': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
-      '@yarnpkg/plugin-dlx': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
+      '@yarnpkg/plugin-constraints': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
+      '@yarnpkg/plugin-dlx': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
       '@yarnpkg/plugin-essentials': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)
       '@yarnpkg/plugin-exec': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
       '@yarnpkg/plugin-file': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
+      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
       '@yarnpkg/plugin-github': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)
       '@yarnpkg/plugin-http': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-init': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
-      '@yarnpkg/plugin-interactive-tools': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-essentials@4.0.0-rc.42)(bufferutil@4.0.3)(typanion@3.12.1)(utf-8-validate@5.0.5)
+      '@yarnpkg/plugin-init': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
+      '@yarnpkg/plugin-interactive-tools': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-essentials@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/plugin-link': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-nm': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
+      '@yarnpkg/plugin-nm': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
       '@yarnpkg/plugin-npm': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-pack@4.0.0-rc.42)
       '@yarnpkg/plugin-npm-cli': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-npm@3.0.0-rc.42)(@yarnpkg/plugin-pack@4.0.0-rc.42)
       '@yarnpkg/plugin-pack': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-patch': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
-      '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
-      '@yarnpkg/plugin-pnpm': 2.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
-      '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
+      '@yarnpkg/plugin-patch': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
+      '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
+      '@yarnpkg/plugin-pnpm': 2.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
+      '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
       '@yarnpkg/plugin-typescript': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-essentials@4.0.0-rc.42)
-      '@yarnpkg/plugin-version': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)(bufferutil@4.0.3)(typanion@3.12.1)(utf-8-validate@5.0.5)
+      '@yarnpkg/plugin-version': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/plugin-workspace-tools': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)
-      '@yarnpkg/shell': 4.0.0-rc.42(typanion@3.12.1)
+      '@yarnpkg/shell': 4.0.0-rc.42
       ci-info: 3.7.1
       clipanion: 3.2.0-rc.14
       semver: 7.5.2
@@ -45768,8 +45731,8 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@yarnpkg/core@4.0.0-rc.42:
-    resolution: {integrity: sha512-3P4wHcXp/xrWel2Gqwx33p7qy3389yK9Q44RH39r343uMHz36HLf82giIeWVo5daFzGPDh3/ahrLCGFsm5LyHw==}
+  /@yarnpkg/core@4.0.0-rc.45:
+    resolution: {integrity: sha512-FOJHKIa9CuN5vipQA/pxU3q3ab0vPAcjYAW4g5+hihKL0FSH2ygM9mlMHelo850RMoVWoZ+/c+N3AN2oBk7L6A==}
     engines: {node: '>=14.15.0'}
     dependencies:
       '@arcanis/slice-ansi': 1.1.1
@@ -45778,44 +45741,11 @@ packages:
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/libzip': 3.0.0-rc.42(@yarnpkg/fslib@3.0.0-rc.42)
       '@yarnpkg/parsers': 3.0.0-rc.42
-      '@yarnpkg/shell': 4.0.0-rc.42(typanion@3.12.1)
-      camelcase: 5.3.1
-      chalk: 3.0.0
-      ci-info: 3.7.1
-      clipanion: 3.2.0-rc.14
-      cross-spawn: 7.0.3
-      diff: 5.1.0
-      globby: 11.0.1
-      got: 11.8.6
-      lodash: 4.17.21
-      micromatch: 4.0.5
-      p-limit: 2.3.0
-      semver: 7.5.2
-      strip-ansi: 6.0.0
-      tar: 6.1.11
-      tinylogic: 2.0.0
-      treeify: 1.1.0
-      tslib: 2.5.0
-      tunnel: 0.0.6
-    transitivePeerDependencies:
-      - typanion
-    dev: false
-
-  /@yarnpkg/core@4.0.0-rc.45:
-    resolution: {integrity: sha512-FOJHKIa9CuN5vipQA/pxU3q3ab0vPAcjYAW4g5+hihKL0FSH2ygM9mlMHelo850RMoVWoZ+/c+N3AN2oBk7L6A==}
-    engines: {node: '>=14.15.0'}
-    dependencies:
-      '@arcanis/slice-ansi': 1.1.1
-      '@types/semver': 7.3.4
-      '@types/treeify': 1.0.0
-      '@yarnpkg/fslib': 3.0.0-rc.45
-      '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.45)
-      '@yarnpkg/parsers': 3.0.0-rc.45
       '@yarnpkg/shell': 4.0.0-rc.45
       camelcase: 5.3.1
       chalk: 3.0.0
       ci-info: 3.8.0
-      clipanion: 3.2.0-rc.14
+      clipanion: 3.2.0
       cross-spawn: 7.0.3
       diff: 5.1.0
       globby: 11.0.1
@@ -45841,15 +45771,6 @@ packages:
       '@yarnpkg/core': 4.0.0-rc.45
     dev: false
 
-  /@yarnpkg/extensions@2.0.0-rc.24(@yarnpkg/core@4.0.0-rc.42):
-    resolution: {integrity: sha512-+mOmpZz2UfU8tGEAU4EMBpxQpbqwbOZif7MJfbQuxWpIM0TWUGF77WW+vXr+UesHiyOdhxQTEKpuM6H/HlSoPg==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/core': 4.0.0-rc.42
-    dev: false
-
   /@yarnpkg/extensions@2.0.0-rc.24(@yarnpkg/core@4.0.0-rc.45):
     resolution: {integrity: sha512-+mOmpZz2UfU8tGEAU4EMBpxQpbqwbOZif7MJfbQuxWpIM0TWUGF77WW+vXr+UesHiyOdhxQTEKpuM6H/HlSoPg==}
     engines: {node: '>=14.15.0'}
@@ -45859,23 +45780,8 @@ packages:
       '@yarnpkg/core': 4.0.0-rc.45
     dev: false
 
-  /@yarnpkg/fslib@2.10.1:
-    resolution: {integrity: sha512-pVMLtOYu87N5y5G2lyPNYTY2JbTco99v7nGFI34Blx01Ct9LmoKVOc91vnLOYIMMljKr1c8xs1O2UamRdMG5Pg==}
-    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
-    dependencies:
-      '@yarnpkg/libzip': 2.2.4
-      tslib: 1.14.1
-    dev: false
-
   /@yarnpkg/fslib@3.0.0-rc.42:
     resolution: {integrity: sha512-kMHeTgaDRUJVBym5lEswzG2hAS9vB+d2wSC8v4Be7didRiBGGq83IaynJRU9bpUJDDcMMBCpG7a1PERNIg+n9Q==}
-    engines: {node: '>=14.15.0'}
-    dependencies:
-      tslib: 2.5.0
-    dev: false
-
-  /@yarnpkg/fslib@3.0.0-rc.45:
-    resolution: {integrity: sha512-XarEtHTbeO4+rgZQObn16+uFzb1dXiVHuoqDNGoMywwBm/FF7DeCqSANeKiNYbi79WMgoLk8l3lO4g0vRYkJBg==}
     engines: {node: '>=14.15.0'}
     dependencies:
       tslib: 2.5.0
@@ -45893,14 +45799,6 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@yarnpkg/libzip@2.2.4:
-    resolution: {integrity: sha512-QP0vUP+w0d7Jlo7jqTnlRChSnIB/dOF7nJFLD/gsPvFIHsVWLQQuAiolOcXQUD2hezLD1mQd2qb0yOKqPYRcfQ==}
-    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
-    dependencies:
-      '@types/emscripten': 1.39.6
-      tslib: 1.14.1
-    dev: false
-
   /@yarnpkg/libzip@3.0.0-rc.42(@yarnpkg/fslib@3.0.0-rc.42):
     resolution: {integrity: sha512-Z8qXIOLSulT1NU+CPknddQhg6JpByVAkBpye1OQgTWbzuhBsp3Osh+R5Z604UZ3ulJ4KC4GblMxxz5AKoQfj4Q==}
     engines: {node: '>=14.15.0'}
@@ -45909,28 +45807,6 @@ packages:
     dependencies:
       '@types/emscripten': 1.39.6
       '@yarnpkg/fslib': 3.0.0-rc.42
-      tslib: 2.5.0
-    dev: false
-
-  /@yarnpkg/libzip@3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42):
-    resolution: {integrity: sha512-ZsYi6Y01yMJOLnJ5ISZgOFvCEXzp4EScrM91D7bvCx0lIfH3DZ40H4M5nGNeVFk7jXUHOXuJkNYlNoXixSconA==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/fslib': ^3.0.0-rc.45
-    dependencies:
-      '@types/emscripten': 1.39.6
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      tslib: 2.5.0
-    dev: false
-
-  /@yarnpkg/libzip@3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.45):
-    resolution: {integrity: sha512-ZsYi6Y01yMJOLnJ5ISZgOFvCEXzp4EScrM91D7bvCx0lIfH3DZ40H4M5nGNeVFk7jXUHOXuJkNYlNoXixSconA==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/fslib': ^3.0.0-rc.45
-    dependencies:
-      '@types/emscripten': 1.39.6
-      '@yarnpkg/fslib': 3.0.0-rc.45
       tslib: 2.5.0
     dev: false
 
@@ -45952,16 +45828,8 @@ packages:
     engines: {node: '>=14.15.0'}
     dependencies:
       '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.45
+      '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/pnp': 4.0.0-rc.45
-    dev: false
-
-  /@yarnpkg/parsers@2.5.1:
-    resolution: {integrity: sha512-KtYN6Ez3x753vPF9rETxNTPnPjeaHY11Exlpqb4eTII7WRlnGiZ5rvvQBau4R20Ik5KBv+vS3EJEcHyCunwzzw==}
-    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
-    dependencies:
-      js-yaml: 3.14.1
-      tslib: 1.14.1
     dev: false
 
   /@yarnpkg/parsers@3.0.0-rc.42:
@@ -45970,26 +45838,6 @@ packages:
     dependencies:
       js-yaml: 3.14.1
       tslib: 2.5.0
-    dev: false
-
-  /@yarnpkg/parsers@3.0.0-rc.45:
-    resolution: {integrity: sha512-Aj0aHBV/crFQTpKQvL6k1xNiOhnlfVLu06LunelQAvl1MTeWrSi8LD9UJJDCFJiG4kx8NysUE6Tx0KZyPQUzIw==}
-    engines: {node: '>=14.15.0'}
-    dependencies:
-      js-yaml: 3.14.1
-      tslib: 2.5.0
-    dev: false
-
-  /@yarnpkg/plugin-compat@4.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-patch@4.0.0-rc.42):
-    resolution: {integrity: sha512-raYmm3Mi2xwwtSeDXB2GzFMTQmXpZ2u8OXyS8Hy27l67agme9pzCuy7IEXQH2fKUnUaqmMw7DjeV+wxsJeeHUA==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-patch': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/extensions': 2.0.0-rc.24(@yarnpkg/core@4.0.0-rc.42)
-      '@yarnpkg/plugin-patch': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
     dev: false
 
   /@yarnpkg/plugin-compat@4.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-patch@4.0.0-rc.42):
@@ -46001,28 +45849,10 @@ packages:
     dependencies:
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/extensions': 2.0.0-rc.24(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-patch': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
+      '@yarnpkg/plugin-patch': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
     dev: false
 
-  /@yarnpkg/plugin-constraints@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1):
-    resolution: {integrity: sha512-HaOWrD1C0+ySooMLouc4O6yRmCM+DPR4aMblr/DyB35Gb8UcGKQ0xWXj+hByTu8irK24sGC6snJiyHyna4FPhg==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0(typanion@3.12.1)
-      lodash: 4.17.21
-      tau-prolog: 0.2.81
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
-    dev: false
-
-  /@yarnpkg/plugin-constraints@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1):
+  /@yarnpkg/plugin-constraints@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
     resolution: {integrity: sha512-HaOWrD1C0+ySooMLouc4O6yRmCM+DPR4aMblr/DyB35Gb8UcGKQ0xWXj+hByTu8irK24sGC6snJiyHyna4FPhg==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
@@ -46032,31 +45862,13 @@ packages:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0(typanion@3.12.1)
+      clipanion: 3.2.0
       lodash: 4.17.21
       tau-prolog: 0.2.81
       tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
     dev: false
 
-  /@yarnpkg/plugin-dlx@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1):
-    resolution: {integrity: sha512-Td1QZJy/kJaP8ovdWncXs02N/8BHPzo/Et+71YwvJ4+uPUjwM9h+rU8yYB7zoTU19bl3yJpjV1ye55wSC234+Q==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0(typanion@3.12.1)
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
-    dev: false
-
-  /@yarnpkg/plugin-dlx@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1):
+  /@yarnpkg/plugin-dlx@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
     resolution: {integrity: sha512-Td1QZJy/kJaP8ovdWncXs02N/8BHPzo/Et+71YwvJ4+uPUjwM9h+rU8yYB7zoTU19bl3yJpjV1ye55wSC234+Q==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
@@ -46066,33 +45878,8 @@ packages:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0(typanion@3.12.1)
+      clipanion: 3.2.0
       tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
-    dev: false
-
-  /@yarnpkg/plugin-essentials@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-git@3.0.0-rc.42):
-    resolution: {integrity: sha512-5DVngmRjR+8+OHKoMyPlHLowusbVjBj4cVghnieJTXXrJ+9rjsFrk05Wfwt/esJ1ENUB0r34zjSMYaELdl791g==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-git': ^3.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/parsers': 3.0.0-rc.42
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      ci-info: 3.8.0
-      clipanion: 3.2.0(typanion@3.12.1)
-      enquirer: 2.3.6
-      lodash: 4.17.21
-      micromatch: 4.0.5
-      semver: 7.5.2
-      tslib: 2.5.0
-      typanion: 3.12.1
     dev: false
 
   /@yarnpkg/plugin-essentials@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42):
@@ -46107,26 +45894,15 @@ packages:
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/parsers': 3.0.0-rc.42
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
+      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
       ci-info: 3.8.0
-      clipanion: 3.2.0(typanion@3.12.1)
+      clipanion: 3.2.0
       enquirer: 2.3.6
       lodash: 4.17.21
       micromatch: 4.0.5
       semver: 7.5.2
       tslib: 2.5.0
       typanion: 3.12.1
-    dev: false
-
-  /@yarnpkg/plugin-exec@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42):
-    resolution: {integrity: sha512-3tK0XxcZmEWYeN7OjGV80tI1qM9uDf3eeqVwdUDdrRriYs7pFMyNnqyI48+TQKwJJz2fAWpyNH9dzm/PlQIDEA==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      tslib: 2.5.0
     dev: false
 
   /@yarnpkg/plugin-exec@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45):
@@ -46140,18 +45916,6 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@yarnpkg/plugin-file@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42):
-    resolution: {integrity: sha512-lctt+ERyDmcZOnMVd/QrEY5lp2ghgfvvA4CxSxy+4lj3hsGdN27xQm/0KrcB6zbyISOTPPpzZLVAC/Td5bswZA==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42)
-      tslib: 2.5.0
-    dev: false
-
   /@yarnpkg/plugin-file@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45):
     resolution: {integrity: sha512-lctt+ERyDmcZOnMVd/QrEY5lp2ghgfvvA4CxSxy+4lj3hsGdN27xQm/0KrcB6zbyISOTPPpzZLVAC/Td5bswZA==}
     engines: {node: '>=14.15.0'}
@@ -46160,29 +45924,11 @@ packages:
     dependencies:
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42)
+      '@yarnpkg/libzip': 3.0.0-rc.42(@yarnpkg/fslib@3.0.0-rc.42)
       tslib: 2.5.0
     dev: false
 
-  /@yarnpkg/plugin-git@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1):
-    resolution: {integrity: sha512-zVEc3V88laVovZweVR3ndyU4KDBwlhOYaR1zDuZE8J4N4ykNQ68T5MKMSjhdvtwak0tGIHyJixu+LRiXvjVSeg==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@types/semver': 7.3.4
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0(typanion@3.12.1)
-      git-url-parse: 13.1.0
-      lodash: 4.17.21
-      semver: 7.5.2
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
-    dev: false
-
-  /@yarnpkg/plugin-git@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1):
+  /@yarnpkg/plugin-git@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45):
     resolution: {integrity: sha512-zVEc3V88laVovZweVR3ndyU4KDBwlhOYaR1zDuZE8J4N4ykNQ68T5MKMSjhdvtwak0tGIHyJixu+LRiXvjVSeg==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
@@ -46191,25 +45937,10 @@ packages:
       '@types/semver': 7.3.4
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0(typanion@3.12.1)
+      clipanion: 3.2.0
       git-url-parse: 13.1.0
       lodash: 4.17.21
       semver: 7.5.2
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
-    dev: false
-
-  /@yarnpkg/plugin-github@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-git@3.0.0-rc.42):
-    resolution: {integrity: sha512-X4Zfpu56VgnMJWLi+NRwNyRpCpl5HLBa4HUaZ+uQwSn17bNVpapKY0vIj3NCQLw9x9inyesbTIvNC61F3UEfyA==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-git': ^3.0.0-rc.42
-    dependencies:
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
       tslib: 2.5.0
     dev: false
 
@@ -46222,17 +45953,7 @@ packages:
     dependencies:
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
-      tslib: 2.5.0
-    dev: false
-
-  /@yarnpkg/plugin-http@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42):
-    resolution: {integrity: sha512-oD0RwaeLZWyWGncw0I/KoUMb+XZaRoWx7R+/vN23eM11RAj7pUKELZLBPnS71Byn23NhkUoe8H52DE43m86fJA==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/core': 4.0.0-rc.42
+      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
       tslib: 2.5.0
     dev: false
 
@@ -46246,23 +45967,7 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@yarnpkg/plugin-init@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1):
-    resolution: {integrity: sha512-bNW7RHrVfa3fzVah+V+MUHzdw49Zp12HxEGDrN6j5xZ3zXGOi+CsE6WzNcBUhL06QgZwxEkfZceZZ+6OjPU0zg==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0(typanion@3.12.1)
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
-    dev: false
-
-  /@yarnpkg/plugin-init@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1):
+  /@yarnpkg/plugin-init@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
     resolution: {integrity: sha512-bNW7RHrVfa3fzVah+V+MUHzdw49Zp12HxEGDrN6j5xZ3zXGOi+CsE6WzNcBUhL06QgZwxEkfZceZZ+6OjPU0zg==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
@@ -46272,40 +45977,11 @@ packages:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0(typanion@3.12.1)
+      clipanion: 3.2.0
       tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
     dev: false
 
-  /@yarnpkg/plugin-interactive-tools@4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-essentials@4.0.0-rc.42)(bufferutil@4.0.3)(typanion@3.12.1)(utf-8-validate@5.0.5):
-    resolution: {integrity: sha512-hKyvrd0aX5i37AbMEj5Fv4K7LPkcH4+s+Yo1Y6n9bsd+1ZTdDPJx1du4QiFyh6W+OAs4RLhqbE4ZieA1LeQuNg==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-essentials': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/libui': 3.0.0-rc.42(ink@3.2.0)(react@16.14.0)
-      '@yarnpkg/plugin-essentials': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-git@3.0.0-rc.42)
-      algoliasearch: 4.16.0
-      clipanion: 3.2.0(typanion@3.12.1)
-      diff: 5.1.0
-      ink: 3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@16.14.0)(utf-8-validate@5.0.5)
-      ink-text-input: 4.0.3(ink@3.2.0)(react@16.14.0)
-      react: 16.14.0
-      semver: 7.5.2
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - '@types/react'
-      - bufferutil
-      - typanion
-      - utf-8-validate
-    dev: false
-
-  /@yarnpkg/plugin-interactive-tools@4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-essentials@4.0.0-rc.42)(bufferutil@4.0.3)(typanion@3.12.1)(utf-8-validate@5.0.5):
+  /@yarnpkg/plugin-interactive-tools@4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-essentials@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5):
     resolution: {integrity: sha512-hKyvrd0aX5i37AbMEj5Fv4K7LPkcH4+s+Yo1Y6n9bsd+1ZTdDPJx1du4QiFyh6W+OAs4RLhqbE4ZieA1LeQuNg==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
@@ -46318,7 +45994,7 @@ packages:
       '@yarnpkg/libui': 3.0.0-rc.42(ink@3.2.0)(react@16.14.0)
       '@yarnpkg/plugin-essentials': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)
       algoliasearch: 4.16.0
-      clipanion: 3.2.0(typanion@3.12.1)
+      clipanion: 3.2.0
       diff: 5.1.0
       ink: 3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@16.14.0)(utf-8-validate@5.0.5)
       ink-text-input: 4.0.3(ink@3.2.0)(react@16.14.0)
@@ -46328,19 +46004,7 @@ packages:
     transitivePeerDependencies:
       - '@types/react'
       - bufferutil
-      - typanion
       - utf-8-validate
-    dev: false
-
-  /@yarnpkg/plugin-link@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42):
-    resolution: {integrity: sha512-fu6YFYJR++eY2NJfz7u7sX14DhJz+phJwV08x0ijlKAYwZwvnqP87t1K9GVeCFFKpcGbMnmP0yyCzeYpdRXtrQ==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      tslib: 2.5.0
     dev: false
 
   /@yarnpkg/plugin-link@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45):
@@ -46354,29 +46018,7 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@yarnpkg/plugin-nm@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1):
-    resolution: {integrity: sha512-esGCHhX1uTswdChdqfwT2yDASObYj0zI6q1ZwstdCNKvoa8dIoEy0JIvCLmOIYgKa6KhsGfp2LY38+yYZT/mNQ==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42)
-      '@yarnpkg/nm': 4.0.0-rc.42
-      '@yarnpkg/parsers': 3.0.0-rc.42
-      '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      '@yarnpkg/pnp': 4.0.0-rc.42
-      '@zkochan/cmd-shim': 5.4.1
-      clipanion: 3.2.0(typanion@3.12.1)
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
-    dev: false
-
-  /@yarnpkg/plugin-nm@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1):
+  /@yarnpkg/plugin-nm@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
     resolution: {integrity: sha512-esGCHhX1uTswdChdqfwT2yDASObYj0zI6q1ZwstdCNKvoa8dIoEy0JIvCLmOIYgKa6KhsGfp2LY38+yYZT/mNQ==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
@@ -46386,38 +46028,14 @@ packages:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42)
+      '@yarnpkg/libzip': 3.0.0-rc.42(@yarnpkg/fslib@3.0.0-rc.42)
       '@yarnpkg/nm': 4.0.0-rc.42
       '@yarnpkg/parsers': 3.0.0-rc.42
-      '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
+      '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
       '@yarnpkg/pnp': 4.0.0-rc.42
       '@zkochan/cmd-shim': 5.4.1
-      clipanion: 3.2.0(typanion@3.12.1)
+      clipanion: 3.2.0
       tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
-    dev: false
-
-  /@yarnpkg/plugin-npm-cli@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-npm@3.0.0-rc.42)(@yarnpkg/plugin-pack@4.0.0-rc.42):
-    resolution: {integrity: sha512-cb8hb3PiiggNuuurToLRRUOcjfwXP35+8y4hu0y7JNvbEJod1MG3ZAiXa+Sdp1etiq5Q9vtfx4rt4ZjiqFd6fw==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-npm': ^3.0.0-rc.42
-      '@yarnpkg/plugin-pack': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-npm': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-pack@4.0.0-rc.42)
-      '@yarnpkg/plugin-pack': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)
-      clipanion: 3.2.0(typanion@3.12.1)
-      enquirer: 2.3.6
-      micromatch: 4.0.5
-      semver: 7.5.2
-      tslib: 2.5.0
-      typanion: 3.12.1
     dev: false
 
   /@yarnpkg/plugin-npm-cli@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-npm@3.0.0-rc.42)(@yarnpkg/plugin-pack@4.0.0-rc.42):
@@ -46434,28 +46052,12 @@ packages:
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/plugin-npm': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-pack@4.0.0-rc.42)
       '@yarnpkg/plugin-pack': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      clipanion: 3.2.0(typanion@3.12.1)
+      clipanion: 3.2.0
       enquirer: 2.3.6
       micromatch: 4.0.5
       semver: 7.5.2
       tslib: 2.5.0
       typanion: 3.12.1
-    dev: false
-
-  /@yarnpkg/plugin-npm@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-pack@4.0.0-rc.42):
-    resolution: {integrity: sha512-hUW7oTjrpaScuiaiwSG1GlpDaV43KG8ziFqbCDklY+uQXuH2f1hcosrgmzwBCf1eco59CEGCWHjndT1DiC3prA==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-pack': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-pack': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      enquirer: 2.3.6
-      semver: 7.5.2
-      ssri: 6.0.2
-      tslib: 2.5.0
     dev: false
 
   /@yarnpkg/plugin-npm@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-pack@4.0.0-rc.42):
@@ -46471,22 +46073,6 @@ packages:
       enquirer: 2.3.6
       semver: 7.5.2
       ssri: 6.0.2
-      tslib: 2.5.0
-    dev: false
-
-  /@yarnpkg/plugin-pack@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42):
-    resolution: {integrity: sha512-o47CMYYU3uiTnr/+CRjViWe0rKkDdVBweo46zFe2neZ/PAZitBsL8FsXqKGTRWUMiueWCA/O60mLOnHLBy0BUQ==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0-rc.14
-      micromatch: 4.0.5
-      tar-stream: 2.2.0
       tslib: 2.5.0
     dev: false
 
@@ -46506,24 +46092,7 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@yarnpkg/plugin-patch@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1):
-    resolution: {integrity: sha512-pNbVItXxYL5c5/FyknpYhUYcnA0tRN1ooJW02XjbmUqJKMTyz3HEg0BFIdmt3aJsMIHiQMF1/KycRyUdUecpYw==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42)
-      clipanion: 3.2.0(typanion@3.12.1)
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
-    dev: false
-
-  /@yarnpkg/plugin-patch@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1):
+  /@yarnpkg/plugin-patch@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
     resolution: {integrity: sha512-pNbVItXxYL5c5/FyknpYhUYcnA0tRN1ooJW02XjbmUqJKMTyz3HEg0BFIdmt3aJsMIHiQMF1/KycRyUdUecpYw==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
@@ -46533,35 +46102,12 @@ packages:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42)
-      clipanion: 3.2.0(typanion@3.12.1)
+      '@yarnpkg/libzip': 3.0.0-rc.42(@yarnpkg/fslib@3.0.0-rc.42)
+      clipanion: 3.2.0
       tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
     dev: false
 
-  /@yarnpkg/plugin-pnp@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1):
-    resolution: {integrity: sha512-q4TU2Pmgd+J3b3kTzIKAAVtzjFmD67m1Ym3ZVgqkDXN0jK+/KsN0FqGhDnKHMKgVpGNn4hFkZ1Om0nCi2r2mqQ==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@types/semver': 7.3.4
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      '@yarnpkg/pnp': 4.0.0-rc.42
-      clipanion: 3.2.0(typanion@3.12.1)
-      micromatch: 4.0.5
-      semver: 7.5.2
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
-    dev: false
-
-  /@yarnpkg/plugin-pnp@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1):
+  /@yarnpkg/plugin-pnp@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
     resolution: {integrity: sha512-q4TU2Pmgd+J3b3kTzIKAAVtzjFmD67m1Ym3ZVgqkDXN0jK+/KsN0FqGhDnKHMKgVpGNn4hFkZ1Om0nCi2r2mqQ==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
@@ -46572,36 +46118,15 @@ packages:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
+      '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
       '@yarnpkg/pnp': 4.0.0-rc.42
-      clipanion: 3.2.0(typanion@3.12.1)
+      clipanion: 3.2.0
       micromatch: 4.0.5
       semver: 7.5.2
       tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
     dev: false
 
-  /@yarnpkg/plugin-pnpm@2.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1):
-    resolution: {integrity: sha512-u5xKQSoqG9JbhHpCCvH9VoW8a5oWYN7aQqCzsQNOuti2WGhtBJb2wUaLKvhlXxhUlcCsHadSbG4ZV1wrSjTUQQ==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      clipanion: 3.2.0(typanion@3.12.1)
-      p-limit: 2.3.0
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
-    dev: false
-
-  /@yarnpkg/plugin-pnpm@2.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1):
+  /@yarnpkg/plugin-pnpm@2.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
     resolution: {integrity: sha512-u5xKQSoqG9JbhHpCCvH9VoW8a5oWYN7aQqCzsQNOuti2WGhtBJb2wUaLKvhlXxhUlcCsHadSbG4ZV1wrSjTUQQ==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
@@ -46611,32 +46136,14 @@ packages:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
-      '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
-      clipanion: 3.2.0(typanion@3.12.1)
+      '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
+      '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
+      clipanion: 3.2.0
       p-limit: 2.3.0
       tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
     dev: false
 
-  /@yarnpkg/plugin-stage@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1):
-    resolution: {integrity: sha512-MyJerfEYavT9HedFN8uSufZpDBSsMnXz31U8M5NjOl88IRnyfQk0KSu2AvKHPyykDWFrzlk0IY5ogUH0a3IlJA==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0(typanion@3.12.1)
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
-    dev: false
-
-  /@yarnpkg/plugin-stage@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1):
+  /@yarnpkg/plugin-stage@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
     resolution: {integrity: sha512-MyJerfEYavT9HedFN8uSufZpDBSsMnXz31U8M5NjOl88IRnyfQk0KSu2AvKHPyykDWFrzlk0IY5ogUH0a3IlJA==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
@@ -46646,27 +46153,7 @@ packages:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0(typanion@3.12.1)
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
-    dev: false
-
-  /@yarnpkg/plugin-typescript@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-essentials@4.0.0-rc.42):
-    resolution: {integrity: sha512-kkRMDLjlDyf+cLEQFEv2CZ4N41FcCBIyAu+JT2L3P7SPvl3eYfcZKwyvDRHXpVYdu34Aiioc/MBQgIS+h8KPow==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-essentials': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-essentials': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-git@3.0.0-rc.42)
-      '@yarnpkg/plugin-pack': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)
-      algoliasearch: 4.16.0
-      semver: 7.5.2
+      clipanion: 3.2.0
       tslib: 2.5.0
     dev: false
 
@@ -46688,34 +46175,7 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@yarnpkg/plugin-version@4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-git@3.0.0-rc.42)(bufferutil@4.0.3)(typanion@3.12.1)(utf-8-validate@5.0.5):
-    resolution: {integrity: sha512-iHrNBUroGfExYQF4/tMn0loLH2l+TWv8QeLYG03GP/5wLz9meISq5W9o49UEVbL4NZSeG5dOvFZgGHrsSE6Xdg==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-git': ^3.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/libui': 3.0.0-rc.42(ink@3.2.0)(react@16.14.0)
-      '@yarnpkg/parsers': 3.0.0-rc.42
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      clipanion: 3.2.0(typanion@3.12.1)
-      ink: 3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@16.14.0)(utf-8-validate@5.0.5)
-      lodash: 4.17.21
-      react: 16.14.0
-      semver: 7.5.2
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - '@types/react'
-      - bufferutil
-      - typanion
-      - utf-8-validate
-    dev: false
-
-  /@yarnpkg/plugin-version@4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)(bufferutil@4.0.3)(typanion@3.12.1)(utf-8-validate@5.0.5):
+  /@yarnpkg/plugin-version@4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5):
     resolution: {integrity: sha512-iHrNBUroGfExYQF4/tMn0loLH2l+TWv8QeLYG03GP/5wLz9meISq5W9o49UEVbL4NZSeG5dOvFZgGHrsSE6Xdg==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
@@ -46728,8 +46188,8 @@ packages:
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/libui': 3.0.0-rc.42(ink@3.2.0)(react@16.14.0)
       '@yarnpkg/parsers': 3.0.0-rc.42
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
-      clipanion: 3.2.0(typanion@3.12.1)
+      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
+      clipanion: 3.2.0
       ink: 3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@16.14.0)(utf-8-validate@5.0.5)
       lodash: 4.17.21
       react: 16.14.0
@@ -46738,27 +46198,7 @@ packages:
     transitivePeerDependencies:
       - '@types/react'
       - bufferutil
-      - typanion
       - utf-8-validate
-    dev: false
-
-  /@yarnpkg/plugin-workspace-tools@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.42)(@yarnpkg/plugin-git@3.0.0-rc.42):
-    resolution: {integrity: sha512-+J4sG16ojCVeZmEP/B9D7fRr2KqbPtIrFECnatBw65e5dt/UpWG0xxVF+YDKu/EZlggTDe/5VXfDZs9CHwV0fQ==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-git': ^3.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.42
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.42)(typanion@3.12.1)
-      clipanion: 3.2.0(typanion@3.12.1)
-      micromatch: 4.0.5
-      p-limit: 2.3.0
-      tslib: 2.5.0
-      typanion: 3.12.1
     dev: false
 
   /@yarnpkg/plugin-workspace-tools@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42):
@@ -46772,8 +46212,8 @@ packages:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
-      clipanion: 3.2.0(typanion@3.12.1)
+      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
+      clipanion: 3.2.0
       micromatch: 4.0.5
       p-limit: 2.3.0
       tslib: 2.5.0
@@ -46785,7 +46225,7 @@ packages:
     engines: {node: '>=10.19.0'}
     dependencies:
       '@types/node': 13.13.52
-      '@yarnpkg/fslib': 2.10.1
+      '@yarnpkg/fslib': 3.0.0-rc.42
       tslib: 1.14.1
     dev: false
 
@@ -46802,7 +46242,7 @@ packages:
     engines: {node: '>=14.15.0'}
     dependencies:
       '@types/node': 18.11.18
-      '@yarnpkg/fslib': 3.0.0-rc.45
+      '@yarnpkg/fslib': 3.0.0-rc.42
     dev: false
 
   /@yarnpkg/shell@3.2.5:
@@ -46810,8 +46250,8 @@ packages:
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     hasBin: true
     dependencies:
-      '@yarnpkg/fslib': 2.10.1
-      '@yarnpkg/parsers': 2.5.1
+      '@yarnpkg/fslib': 3.0.0-rc.42
+      '@yarnpkg/parsers': 3.0.0-rc.42
       chalk: 3.0.0
       clipanion: 3.2.0-rc.4
       cross-spawn: 7.0.3
@@ -46821,7 +46261,7 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/shell@4.0.0-rc.42(typanion@3.12.1):
+  /@yarnpkg/shell@4.0.0-rc.42:
     resolution: {integrity: sha512-DDANF6vXd4q3gkUt57I9f1ZsT/ESts/wxTPdQ4I7rFNChtUvTmRPL9JiiYq2XyCLt4zn6AonzpdItrLla0XiNQ==}
     engines: {node: '>=14.15.0'}
     hasBin: true
@@ -46829,13 +46269,11 @@ packages:
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/parsers': 3.0.0-rc.42
       chalk: 3.0.0
-      clipanion: 3.2.0(typanion@3.12.1)
+      clipanion: 3.2.0
       cross-spawn: 7.0.3
       fast-glob: 3.2.12
       micromatch: 4.0.5
       tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
     dev: false
 
   /@yarnpkg/shell@4.0.0-rc.45:
@@ -46843,10 +46281,10 @@ packages:
     engines: {node: '>=14.15.0'}
     hasBin: true
     dependencies:
-      '@yarnpkg/fslib': 3.0.0-rc.45
-      '@yarnpkg/parsers': 3.0.0-rc.45
+      '@yarnpkg/fslib': 3.0.0-rc.42
+      '@yarnpkg/parsers': 3.0.0-rc.42
       chalk: 3.0.0
-      clipanion: 3.2.0-rc.14
+      clipanion: 3.2.0
       cross-spawn: 7.0.3
       fast-glob: 3.2.12
       micromatch: 4.0.5
@@ -49305,10 +48743,8 @@ packages:
     engines: {node: '>= 10'}
     dev: false
 
-  /clipanion@3.2.0(typanion@3.12.1):
+  /clipanion@3.2.0:
     resolution: {integrity: sha512-XaPQiJQZKbyaaDbv5yR/cAt/ORfZfENkr4wGQj+Go/Uf/65ofTQBCPirgWFeJctZW24V3mxrFiEnEmqBflrJYA==}
-    peerDependencies:
-      typanion: '*'
     dependencies:
       typanion: 3.12.1
     dev: false
@@ -64445,7 +63881,7 @@ packages:
       JSONStream: 1.3.5
       async: 3.2.4
       body-parser: 1.20.2
-      clipanion: 3.2.0(typanion@3.12.1)
+      clipanion: 3.2.0
       compression: 1.7.4
       cookies: 0.8.0
       cors: 2.8.5
@@ -64472,7 +63908,6 @@ packages:
     transitivePeerDependencies:
       - encoding
       - supports-color
-      - typanion
     dev: false
 
   /verror@1.10.0:
@@ -72115,10 +71550,13 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
+      '@teambit/react.rendering.ssr': 0.0.3(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
       ua-parser-js: 0.7.24
+    transitivePeerDependencies:
+      - supports-color
     dev: false
 
   file:scopes/ui-foundation/uis/is-browser(react-dom@17.0.2)(react@17.0.2):
