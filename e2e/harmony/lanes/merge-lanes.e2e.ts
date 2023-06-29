@@ -1321,4 +1321,31 @@ describe('merge lanes', function () {
       expect(dir).to.be.a.directory();
     });
   });
+  // the idea here is that main-head doesn't exist in lane-b history.
+  // the history between main and lane-b is connected through the "squashed" property of HEAD^1 (main head minus one),
+  // which is equal to HEAD-LANE-B^1.
+  describe('merge lane-a to main with squashing then from main to lane-b which forked from lane-a', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('lane-a', '-x');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.mergeLane('lane-a', '-x');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('lane-b', '-x');
+    });
+    // previously it was throwing the "unrelated" error
+    it('bit-lane-merge should not throw', () => {
+      expect(() => helper.command.mergeLane('main', '-x --no-snap')).to.not.throw();
+    });
+  });
 });

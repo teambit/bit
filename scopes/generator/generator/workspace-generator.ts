@@ -127,10 +127,12 @@ export class WorkspaceGenerator {
     const componentsToFork =
       this.template?.importComponents?.(workspaceContext) || this.template?.fork?.(workspaceContext) || [];
     if (!componentsToFork.length) return;
-    const componentsToForkRestructured = componentsToFork.map(({ id, targetName, path }) => ({
+    const componentsToForkRestructured = componentsToFork.map(({ id, targetName, path, env, config }) => ({
       sourceId: id,
       targetId: targetName,
       path,
+      env,
+      config,
     }));
     await this.forking.forkMultipleFromRemote(componentsToForkRestructured, {
       scope: this.workspace.defaultScope,

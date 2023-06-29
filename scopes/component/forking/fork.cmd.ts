@@ -1,5 +1,6 @@
-import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
+import { ComponentConfig } from '@teambit/generator';
+import chalk from 'chalk';
 import { ForkingMain } from '.';
 
 export type ForkOptions = {
@@ -10,6 +11,8 @@ export type ForkOptions = {
   skipConfig?: boolean;
   preserve?: boolean;
   noLink?: boolean;
+  env?: string;
+  config?: ComponentConfig;
 };
 
 export class ForkCmd implements Command {
@@ -37,6 +40,7 @@ export class ForkCmd implements Command {
     ],
     ['r', 'refactor', 'update the import/require statements in all dependent components (in the same workspace)'],
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['e', 'env <string>', 'set the environment for the new component'],
     [
       '',
       'skip-config',

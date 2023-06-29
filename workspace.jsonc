@@ -234,7 +234,7 @@
         "@types/webpack": "5.28.1",
         "@types/webpack-dev-server": "4.7.2",
         "@yarnpkg/cli": "4.0.0-rc.42",
-        "@yarnpkg/core": "^4.0.0-rc.42",
+        "@yarnpkg/core": "4.0.0-rc.45",
         "@yarnpkg/fslib": "3.0.0-rc.42",
         "@yarnpkg/parsers": "3.0.0-rc.42",
         "@yarnpkg/plugin-npm": "3.0.0-rc.42",
