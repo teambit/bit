@@ -15,6 +15,10 @@ import EnvsAspect from '@teambit/envs';
 export class BitMap {
   constructor(private legacyBitMap: LegacyBitMap, private consumer: Consumer) {}
 
+  mergeBitmaps(bitmapContent: string, otherBitmapContent: string): string {
+    return LegacyBitMap.mergeContent(bitmapContent, otherBitmapContent);
+  }
+
   /**
    * adds component config to the .bitmap file.
    * later, upon `bit tag`, the data is saved in the scope.

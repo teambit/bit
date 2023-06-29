@@ -537,6 +537,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/generator/generator"
     },
+    "git-merger": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/git-merger"
+    },
     "global-config": {
         "scope": "teambit.harmony",
         "version": "0.0.735",
