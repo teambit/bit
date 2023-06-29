@@ -51,9 +51,9 @@ export class RefactoringMain {
           oldStr: `(['"].+)${sourceId.name}(['"])`,
           newStr: `$1${targetId.name}$2`,
         },
-        // replace variables in code, so excluding any instances with quotation marks
+        // replace variables in code, so excluding any instances that are inside quotation marks
         {
-          oldStr: `(\\s)${camelCase(sourceId.name)}`,
+          oldStr: `^((?!.*['"].*).*)${camelCase(sourceId.name)}`,
           newStr: `$1${camelCase(targetId.name)}`,
         },
         {
