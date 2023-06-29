@@ -48,12 +48,12 @@ export class RefactoringMain {
       [
         // replace import statements, so of format 'comp-name' with string quotation marks
         {
-          oldStr: `(['"])${sourceId.name}(['"])`,
+          oldStr: `(['"].+)${sourceId.name}(['"])`,
           newStr: `$1${targetId.name}$2`,
         },
         // replace variables in code, so excluding any instances with quotation marks
         {
-          oldStr: `([^'"])${camelCase(sourceId.name)}`,
+          oldStr: `(\\s)${camelCase(sourceId.name)}`,
           newStr: `$1${camelCase(targetId.name)}`,
         },
         {
