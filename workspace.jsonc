@@ -414,6 +414,8 @@
       "@yarnpkg/parsers@^3.0.0-rc.45": "3.0.0-rc.45",
       "@yarnpkg/plugin-npm": "3.0.0-rc.42",
       "@yarnpkg/plugin-pack": "4.0.0-rc.42",
+      "@yarnpkg/pnp@^4.0.0-rc.45": "4.0.0-rc.45",
+      "@yarnpkg/pnp@^4.0.0-rc.42": "4.0.0-rc.45",
       "@yarnpkg/shell@^4.0.0-rc.45": "4.0.0-rc.45"
     },
     "nodeLinker": "hoisted",

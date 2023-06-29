@@ -13,6 +13,8 @@ overrides:
   '@yarnpkg/parsers@^3.0.0-rc.45': 3.0.0-rc.45
   '@yarnpkg/plugin-npm': 3.0.0-rc.42
   '@yarnpkg/plugin-pack': 4.0.0-rc.42
+  '@yarnpkg/pnp@^4.0.0-rc.45': 4.0.0-rc.45
+  '@yarnpkg/pnp@^4.0.0-rc.42': 4.0.0-rc.45
   '@yarnpkg/shell@^4.0.0-rc.45': 4.0.0-rc.45
 
 importers:
@@ -45855,7 +45857,7 @@ packages:
     dependencies:
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/pnp': 4.0.0-rc.42
+      '@yarnpkg/pnp': 4.0.0-rc.45
     dev: false
 
   /@yarnpkg/nm@4.0.0-rc.45:
@@ -46083,7 +46085,7 @@ packages:
       '@yarnpkg/nm': 4.0.0-rc.42
       '@yarnpkg/parsers': 3.0.0-rc.42
       '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/pnp': 4.0.0-rc.42
+      '@yarnpkg/pnp': 4.0.0-rc.45
       '@zkochan/cmd-shim': 5.4.1
       clipanion: 3.2.0
       tslib: 2.5.0
@@ -46170,7 +46172,7 @@ packages:
       '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/pnp': 4.0.0-rc.42
+      '@yarnpkg/pnp': 4.0.0-rc.45
       clipanion: 3.2.0
       micromatch: 4.0.5
       semver: 7.5.2
@@ -46278,14 +46280,6 @@ packages:
       '@types/node': 13.13.52
       '@yarnpkg/fslib': 2.10.3
       tslib: 1.14.1
-    dev: false
-
-  /@yarnpkg/pnp@4.0.0-rc.42:
-    resolution: {integrity: sha512-Gy5XYvVPU6hJIOLNsF6/hVTxM6u8ENvIRD9bc5yrk8iSA71M8B5X51OqshFZlvcNPH/KLHsQHLN09uJ0GKCKbQ==}
-    engines: {node: '>=14.15.0'}
-    dependencies:
-      '@types/node': 18.11.18
-      '@yarnpkg/fslib': 3.0.0-rc.42
     dev: false
 
   /@yarnpkg/pnp@4.0.0-rc.45:
