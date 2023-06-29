@@ -619,12 +619,14 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
           });
           return;
         }
-
+        const subsetOfVersionParents = versionParents
+          ? getSubsetOfVersionParents(versionParents, component.head)
+          : undefined;
         const allVersions = await getAllVersionHashes({
           modelComponent,
           repo,
           startFrom: component.head,
-          versionObjects,
+          versionParentsFromObjects: subsetOfVersionParents,
         });
         if (existingLane) existingLane.addComponent(component);
         mergeResults.push({ mergedComponent: modelComponent, mergedVersions: allVersions.map((h) => h.toString()) });
@@ -634,12 +636,15 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
         mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
         return;
       }
+      const subsetOfVersionParents = versionParents
+        ? getSubsetOfVersionParents(versionParents, component.head)
+        : undefined;
       const divergeResults = await getDivergeData({
         repo,
         modelComponent,
         targetHead: component.head,
         sourceHead: existingComponent.head,
-        versionObjects,
+        versionParentsFromObjects: subsetOfVersionParents,
       });
       if (divergeResults.isDiverged()) {
         if (isImport) {
