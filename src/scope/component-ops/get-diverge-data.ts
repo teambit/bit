@@ -79,7 +79,7 @@ export async function getDivergeData({
 
   const commonSnapsWithDepths = {};
 
-  const addParentsRecursively = (version: VersionData, snaps: Ref[], isSource: boolean, depth = 0) => {
+  const addParentsRecursively = (version: VersionParents, snaps: Ref[], isSource: boolean, depth = 0) => {
     if (snaps.find((snap) => snap.isEqual(version.hash))) return; // already processed
 
     if (isSource) {
@@ -92,12 +92,24 @@ export async function getDivergeData({
         snaps.push(version.hash);
         return;
       }
+      const foundInSquashed = version.squashed?.find((s) => s.isEqual(targetHead));
+      if (foundInSquashed) {
+        targetHeadExistsInSource = true;
+        snaps.push(version.hash);
+        return;
+      }
     } else {
       if (version.hash.isEqual(localHead)) {
         sourceHeadExistsInTarget = true;
         return;
       }
       if (version.unrelated?.isEqual(localHead)) {
+        sourceHeadExistsInTarget = true;
+        snaps.push(version.hash);
+        return;
+      }
+      const foundInSquashed = version.squashed?.find((s) => s.isEqual(localHead));
+      if (foundInSquashed) {
         sourceHeadExistsInTarget = true;
         snaps.push(version.hash);
         return;
@@ -126,12 +138,18 @@ export async function getDivergeData({
         error = err;
       }
     });
-    if (version.unrelated?.hash) {
-      const unrelatedData = getVersionData(Ref.from(version.unrelated.hash));
+    if (version.unrelated) {
+      const unrelatedData = getVersionData(version.unrelated);
       if (unrelatedData) {
         addParentsRecursively(unrelatedData, snaps, isSource, depth + 1);
       }
     }
+    version.squashed?.forEach((squashed) => {
+      const squashedVersion = getVersionData(squashed);
+      if (squashedVersion) {
+        addParentsRecursively(squashedVersion, snaps, isSource, depth + 1);
+      }
+    });
   };
   const localVersion = getVersionData(localHead);
   if (!localVersion) {
@@ -180,16 +198,3 @@ bit import ${modelComponent.id()} --objects`);
 
   return new SnapsDistance(sourceOnlySnaps, targetOnlySnaps, commonSnapBeforeDiverge, error);
 }
-
-type VersionDataRaw = {
-  parents: string[];
-  unrelated?: string;
-};
-
-type VersionData = {
-  hash: Ref;
-  parents: Ref[];
-  unrelated?: Ref;
-};
-
-export type VersionsHistory = { [hash: string]: VersionDataRaw };
