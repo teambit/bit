@@ -195,6 +195,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       {
         baseDir: this.getAspectCapsulePath(),
         useHash,
+        packageManager: this.getAspectsPackageManager(),
         useDatedDirs,
         skipIfExists: opts?.skipIfExists ?? true,
         seedersOnly: true,
@@ -361,6 +362,10 @@ needed-for: ${neededFor || '<unknown>'}`);
     return !this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR);
   }
 
+  getAspectsPackageManager(): string | undefined {
+    return this.scope.aspectsPackageManager;
+  }
+
   private async resolveUserAspects(
     runtimeName?: string,
     userAspectsIds?: ComponentID[],
@@ -375,6 +380,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       {
         baseDir: this.getAspectCapsulePath(),
         useHash,
+        packageManager: this.getAspectsPackageManager(),
         useDatedDirs,
         skipIfExists: true,
         // for some reason this needs to be false, otherwise tagging components in some workspaces
