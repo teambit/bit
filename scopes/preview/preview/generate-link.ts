@@ -28,14 +28,24 @@ export function generateLink(
   let modulesLinks;
   if (mainModulesMap) {
     modulesLinks = Object.entries(mainModulesMap).map(([envId, path]) => {
-      const resolveFrom = toWindowsCompatiblePath(path);
+      // HACK
+      // const resolveFrom = toWindowsCompatiblePath(path);
+      const resolveFrom = path.replace(/^.+\/node_modules\//, '');
       const varName = getEnvVarName(envId);
       return { envId, varName, resolveFrom };
     });
   }
 
+  // HACK
+  links.forEach((link) => {
+    link.modules.forEach((module) => {
+      module.resolveFrom = module.resolveFrom.replace(/^.+\/node_modules\//, '');
+    });
+  });
+
   return `
-import { linkModules } from '${toWindowsCompatiblePath(require.resolve('./preview.preview.runtime'))}';
+// import { linkModules } from '${toWindowsCompatiblePath(require.resolve('./preview.preview.runtime'))}';
+import { linkModules } from '@teambit/preview/dist/preview.preview.runtime';
 
 ${links
   .map((link) => link.modules.map((module) => `import * as ${module.varName} from "${module.resolveFrom}";`).join('\n'))
