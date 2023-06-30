@@ -571,22 +571,24 @@ export class Workspace implements ComponentFactory {
 
   async getFilesModification(id: ComponentID): Promise<CompFiles> {
     const bitMapEntry = this.bitMap.getBitmapEntry(id);
-    const compDirAbs = path.join(this.path, bitMapEntry.getComponentDir());
+    const compDir = bitMapEntry.getComponentDir();
+    const compDirAbs = path.join(this.path, compDir);
     const sourceFilesVinyls = bitMapEntry.files.map((file) => {
       const filePath = path.join(compDirAbs, file.relativePath);
       return SourceFile.load(filePath, compDirAbs, this.path, {});
     });
-
+    const repo = this.scope.legacyScope.objects;
     const getHeadFiles = async () => {
       const modelComp = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
       if (!modelComp) return [];
       const head = modelComp.getHeadRegardlessOfLane();
       if (!head) return [];
-      const verObj = await modelComp.loadVersion(head.toString(), this.scope.legacyScope.objects);
+
+      const verObj = await modelComp.loadVersion(head.toString(), repo);
       return verObj.files;
     };
 
-    return new CompFiles(id, sourceFilesVinyls, await getHeadFiles());
+    return new CompFiles(id, repo, sourceFilesVinyls, compDir, await getHeadFiles());
   }
 
   /**

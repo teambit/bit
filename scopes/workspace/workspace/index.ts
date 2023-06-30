@@ -14,6 +14,7 @@ export { WorkspaceContext } from './ui/workspace/workspace-context';
 export { OutsideWorkspaceError } from './exceptions/outside-workspace';
 export type { WorkspaceComponent } from './workspace-component';
 export type { ComponentConfigFile } from './component-config-file';
+export type { CompFiles, FilesStatus } from './workspace-component/comp-files';
 
 export { WorkspaceAspect };
 export default WorkspaceAspect;
