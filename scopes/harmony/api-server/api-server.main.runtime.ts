@@ -3,12 +3,14 @@ import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
+import { Component } from '@teambit/component';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ApiServerAspect } from './api-server.aspect';
 import { CLIRoute } from './cli.route';
 import { ServerCmd } from './server.cmd';
 import { VSCodeRoute } from './vscode.route';
 import { APIForVSCode } from './api-for-vscode';
+import { SSEEventsRoute, sendEventsToClients } from './sse-events.route';
 
 export class ApiServerMain {
   constructor(
@@ -24,6 +26,25 @@ export class ApiServerMain {
     if (!this.workspace) {
       throw new Error(`unable to run bit-server, the current directory ${process.cwd()} is not a workspace`);
     }
+
+    this.workspace.registerOnComponentChange(
+      async (
+        component: Component,
+        files: string[], // os absolute paths
+        removedFiles?: string[] // os absolute paths
+      ) => {
+        sendEventsToClients('onComponentChange', {
+          id: component.id.toStringWithoutVersion(),
+          files,
+          removedFiles,
+        });
+      }
+    );
+
+    this.workspace.registerOnBitmapChange(async () => {
+      sendEventsToClients('onBitmapChange', {});
+    });
+
     this.watcher
       .watch({
         preCompile: false,
@@ -56,9 +77,10 @@ export class ApiServerMain {
     const cliRoute = new CLIRoute(logger, cli);
     const apiForVscode = new APIForVSCode(workspace, snapping);
     const vscodeRoute = new VSCodeRoute(logger, apiForVscode);
+    const sseEventsRoute = new SSEEventsRoute(logger, cli);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.
     if (workspace) {
-      express.register([cliRoute, vscodeRoute]);
+      express.register([cliRoute, vscodeRoute, sseEventsRoute]);
     }
 
     return apiServer;

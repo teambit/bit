@@ -8,7 +8,7 @@ export type OnComponentChange = (
   files: string[], // os absolute paths
   removedFiles?: string[], // os absolute paths
   initiator?: CompilationInitiator
-) => Promise<SerializableResults>;
+) => Promise<SerializableResults | void>;
 export type OnComponentAdd = (component: Component, files: string[]) => Promise<SerializableResults>;
 export type OnComponentRemove = (componentId: ComponentID) => Promise<SerializableResults>;
 export type OnComponentEventResult = { extensionId: string; results: SerializableResults };

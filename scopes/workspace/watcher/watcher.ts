@@ -302,6 +302,8 @@ export class Watcher {
       await this.fsWatcher.unwatch(removedDirs);
       await mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsTrackDirs[dir]));
     }
+    await this.workspace.triggerOnBitmapChange();
+
     return results;
   }
 

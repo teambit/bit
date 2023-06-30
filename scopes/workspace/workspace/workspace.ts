@@ -77,6 +77,8 @@ import { ComponentStatus } from './workspace-component/component-status';
 import {
   OnAspectsResolve,
   OnAspectsResolveSlot,
+  OnBitmapChange,
+  OnBitmapChangeSlot,
   OnComponentAddSlot,
   OnComponentChangeSlot,
   OnComponentLoadSlot,
@@ -211,7 +213,9 @@ export class Workspace implements ComponentFactory {
 
     private onRootAspectAddedSlot: OnRootAspectAddedSlot,
 
-    private graphql: GraphqlMain
+    private graphql: GraphqlMain,
+
+    private onBitmapChangeSlot: OnBitmapChangeSlot
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
 
@@ -276,6 +280,11 @@ export class Workspace implements ComponentFactory {
 
   registerOnComponentRemove(onComponentRemoveFunc: OnComponentRemove) {
     this.onComponentRemoveSlot.register(onComponentRemoveFunc);
+    return this;
+  }
+
+  registerOnBitmapChange(OnBitmapChangeFunc: OnBitmapChange) {
+    this.onBitmapChangeSlot.register(OnBitmapChangeFunc);
     return this;
   }
 
@@ -676,7 +685,7 @@ export class Workspace implements ComponentFactory {
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component, files, removedFiles, initiator);
-      results.push({ extensionId: extension, results: onChangeResult });
+      if (onChangeResult) results.push({ extensionId: extension, results: onChangeResult });
     });
 
     // TODO: find way to standardize event names.
@@ -708,6 +717,13 @@ export class Workspace implements ComponentFactory {
 
     await this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { componentIds: [id.toObject()] } });
     return results;
+  }
+
+  async triggerOnBitmapChange(): Promise<void> {
+    const onBitmapChangeEntries = this.onBitmapChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
+    await mapSeries(onBitmapChangeEntries, async ([, onBitmapChangeFunc]) => {
+      await onBitmapChangeFunc();
+    });
   }
 
   getState(id: ComponentID, hash: string) {
@@ -1412,6 +1428,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   async _reloadConsumer() {
     this.consumer = await loadConsumer(this.path, true);
+    this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     this.clearCache();
   }
 
