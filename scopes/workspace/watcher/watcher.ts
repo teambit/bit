@@ -288,6 +288,7 @@ export class Watcher {
     const previewsTrackDirs = { ...this.trackDirs };
     await this.workspace._reloadConsumer();
     await this.setTrackDirs();
+    await this.workspace.triggerOnBitmapChange();
     const newDirs: string[] = difference(Object.keys(this.trackDirs), Object.keys(previewsTrackDirs));
     const removedDirs: string[] = difference(Object.keys(previewsTrackDirs), Object.keys(this.trackDirs));
     const results: OnComponentEventResult[] = [];
@@ -302,7 +303,6 @@ export class Watcher {
       await this.fsWatcher.unwatch(removedDirs);
       await mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsTrackDirs[dir]));
     }
-    await this.workspace.triggerOnBitmapChange();
 
     return results;
   }
