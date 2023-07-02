@@ -76,20 +76,18 @@ export class MultiCompiler implements Compiler {
         const filesToTranspile = await files;
         if (!filesToTranspile) return null;
         const flatMap = (
-          await Promise.all(
-            filesToTranspile.map(async (file) => {
-              if (!compiler.isFileSupported(file?.outputPath)) return [file];
-              if (!compiler.transpileFile) return [];
-              const params = Object.assign({}, options, {
-                filePath: file.outputPath,
-              });
-              const compiledContent = await compiler.transpileFile(file.outputText, params);
-              if (compiledContent) {
-                return compiledContent;
-              }
-              return [];
-            })
-          )
+          await pMapSeries(filesToTranspile, async (file) => {
+            if (!compiler.isFileSupported(file?.outputPath)) return [file];
+            if (!compiler.transpileFile) return [];
+            const params = Object.assign({}, options, {
+              filePath: file.outputPath,
+            });
+            const compiledContent = await compiler.transpileFile(file.outputText, params);
+            if (compiledContent) {
+              return compiledContent;
+            }
+            return [];
+          })
         ).flat();
         return flatMap;
       },
