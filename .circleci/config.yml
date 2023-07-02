@@ -2118,7 +2118,7 @@ workflows:
       - harmony_publish_to_gcloud:
           filters:
             branches:
-              only: circle-node-18-deploy
+              only: circle-ci-windows-node-version
           requires:
             - bundle_version_macos
             - bundle_version_linux
