@@ -15,6 +15,7 @@
         "@babel/preset-typescript": "7.18.6",
         "@babel/types": "7.22.3",
         "@graphql-modules/core": "0.7.17",
+        "@graphql-tools/schema": "^10.0.0",
         "@jest/test-result": "26.6.2",
         "@mdx-js/mdx": "1.6.21",
         "@mdx-js/react": "1.6.22",
@@ -265,7 +266,6 @@
         "cors": "2.8.5",
         "credentials-by-uri": "2.0.0",
         "cross-env": "7.0.3",
-        "cross-fetch": "3.0.6",
         "css-minimizer-webpack-plugin": "3.0.2",
         "dagre": "0.8.5",
         "didyoumean": "1.2.1",
@@ -287,7 +287,6 @@
         "graceful-fs": "4.2.10",
         "graphql-subscriptions": "1.2.0",
         "graphql-tag": "2.12.1",
-        "graphql-tools": "6.2.4",
         "graphql-type-json": "0.3.2",
         "history": "^5.2.0",
         "html-escaper": "3.0.0",
@@ -392,7 +391,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.514",
+        "@teambit/legacy": "1.0.515",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "browserslist": "4.16.3",
@@ -407,7 +406,44 @@
     "linkCoreAspects": false,
     "overrides": {
       "@types/fs-capacitor": "2.0.0",
-      "signal-exit@4": "^4.0.2"
+      "signal-exit@4": "^4.0.2",
+      // TODO: Remove this once we upgrade to node 18
+      "@yarnpkg/core@^4.0.0-rc.45": "4.0.0-rc.45",
+      "@yarnpkg/extensions@^2.0.0-rc.24": "2.0.0-rc.24",
+      "@yarnpkg/fslib@^3.0.0-rc.45": "3.0.0-rc.45",
+      "@yarnpkg/libui@^3.0.0-rc.42": "3.0.0-rc.42",
+      "@yarnpkg/libzip@^3.0.0-rc.42": "3.0.0-rc.45",
+      "@yarnpkg/libzip@^3.0.0-rc.45": "3.0.0-rc.45",
+      "@yarnpkg/nm@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/parsers@^3.0.0-rc.45": "3.0.0-rc.45",
+      "@yarnpkg/plugin-compat@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-compat@^4.0.0-rc.45": "4.0.0-rc.42",
+      "@yarnpkg/plugin-constraints@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-dlx@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-essentials@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-exec@^3.0.0-rc.42": "3.0.0-rc.42",
+      "@yarnpkg/plugin-file@^3.0.0-rc.42": "3.0.0-rc.42",
+      "@yarnpkg/plugin-git@^3.0.0-rc.42": "3.0.0-rc.42",
+      "@yarnpkg/plugin-github@^3.0.0-rc.42": "3.0.0-rc.42",
+      "@yarnpkg/plugin-http@^3.0.0-rc.42": "3.0.0-rc.42",
+      "@yarnpkg/plugin-init@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-interactive-tools@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-link@^3.0.0-rc.42": "3.0.0-rc.42",
+      "@yarnpkg/plugin-nm@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-npm": "3.0.0-rc.42",
+      "@yarnpkg/plugin-npm-cli@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-pack": "4.0.0-rc.42",
+      "@yarnpkg/plugin-patch@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-pnp@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-pnpm@^2.0.0-rc.42": "2.0.0-rc.42",
+      "@yarnpkg/plugin-stage@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-typescript@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-version@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-workspace-tools@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/pnp@^4.0.0-rc.42": "4.0.0-rc.45",
+      "@yarnpkg/pnp@^4.0.0-rc.45": "4.0.0-rc.45",
+      "@yarnpkg/shell@^4.0.0-rc.42": "4.0.0-rc.45",
+      "@yarnpkg/shell@^4.0.0-rc.45": "4.0.0-rc.45"
     },
     "nodeLinker": "hoisted",
     "rootComponents": true,
@@ -485,7 +521,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.514"
+            "@teambit/legacy": "1.0.515"
           }
         }
       },
@@ -722,7 +758,7 @@
             "css-loader": "6.2.0",
             "postcss": "8.4.18",
             "postcss-loader": "7.0.1",
-            "babel-loader": "8.2.2",
+            "babel-loader": "9.1.2",
             "@babel/preset-react": "7.18.6",
             "@babel/preset-env": "7.19.4",
             "resolve-url-loader": "5.0.0",
@@ -746,7 +782,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.514"
+            "@teambit/legacy": "1.0.515"
           }
         }
       }
@@ -757,7 +793,7 @@
           "devDependencies": {
             "@babel/preset-react": "7.18.6",
             "@babel/preset-env": "7.19.4",
-            "babel-loader": "8.2.2"
+            "babel-loader": "9.1.2"
           }
         }
       }
@@ -805,7 +841,7 @@
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
           "bvm": {
-            "node": "16.16.0"
+            "node": "18.16.1"
           },
           "bin": {
             "bbit": "bin/bit"
@@ -836,7 +872,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.514",
+            "@teambit/legacy": "1.0.515",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -971,7 +1007,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.514"
+            "@teambit/legacy": "1.0.515"
           }
         }
       }
