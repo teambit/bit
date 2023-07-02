@@ -8,6 +8,7 @@ import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { GitAspect } from './git.aspect';
 import { MergeBitmapsCmd } from './merge-bitmaps.cmd';
 import { SetGitMergeDriverCmd } from './set-git-merge-driver.cmd';
+import { GitCmd } from './git.cmd';
 
 type SetGitMergeDriverOpts = {
   global?: boolean;
@@ -107,7 +108,10 @@ export class GitMain {
 
   static async provider([cli, workspace]: [CLIMain, Workspace]) {
     const gitMain = new GitMain(workspace);
-    cli.register(new SetGitMergeDriverCmd(gitMain), new MergeBitmapsCmd(gitMain));
+    const gitCmd = new GitCmd();
+    gitCmd.commands = [new SetGitMergeDriverCmd(gitMain), new MergeBitmapsCmd(gitMain)];
+    cli.register(gitCmd);
+    cli.registerGroup('git', 'Git');
     return gitMain;
   }
 }

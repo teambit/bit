@@ -13,7 +13,7 @@ export class MergeBitmapsCmd implements Command {
   alias = '';
   description = `a special command to merge conflicting bitmap files during git merge`;
   options = [] as CommandOptions;
-  group = 'development';
+  group = 'git';
   commands: Command[] = [];
   private = true;
   // helpUrl = '';

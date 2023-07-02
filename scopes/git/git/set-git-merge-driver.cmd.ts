@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { GitMain } from './git.main.runtime';
 
-const COMMAND_NAME = 'set-git-merge-driver';
+const COMMAND_NAME = 'set-merge-driver';
 
 type SetGitMergeDriverFlags = {
   global?: boolean;
@@ -10,10 +10,10 @@ type SetGitMergeDriverFlags = {
 
 export class SetGitMergeDriverCmd implements Command {
   name = COMMAND_NAME;
-  alias = 'gmd';
+  alias = 'smd';
   description = `setup bit's git merge driver for bitmap files`;
   options = [['g', 'global', 'set the git merge driver globally']] as CommandOptions;
-  group = 'development';
+  group = 'git';
   commands: Command[] = [];
   // helpUrl = '';
 
