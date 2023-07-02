@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: cimg/node:20.2.0
+    - image: cimg/node:18.16.1
 
 default_resource_class: &default_resource_class
   resource_class: medium
