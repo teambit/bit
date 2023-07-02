@@ -407,6 +407,7 @@
     "overrides": {
       "@types/fs-capacitor": "2.0.0",
       "signal-exit@4": "^4.0.2",
+      // TODO: Remove this once we upgrade to node 18
       "@yarnpkg/core@^4.0.0-rc.45": "4.0.0-rc.45",
       "@yarnpkg/extensions@^2.0.0-rc.24": "2.0.0-rc.24",
       "@yarnpkg/fslib@^3.0.0-rc.45": "3.0.0-rc.45",
