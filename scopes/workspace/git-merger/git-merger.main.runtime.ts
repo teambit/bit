@@ -1,5 +1,7 @@
 import fs from 'fs-extra';
 import { BitError } from '@teambit/bit-error';
+import { homedir } from 'os';
+import { join } from 'path';
 import gitconfig from 'gitconfig';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
@@ -16,7 +18,8 @@ const GIT_NAME_KEY = `${GIT_BASE_KEY}.name`;
 const GIT_DRIVER_KEY = `${GIT_BASE_KEY}.driver`;
 
 const GIT_NAME_VALUE = 'A custom merge driver used to resolve conflicts in .bitmap files';
-const GIT_DRIVER_VALUE = 'bd merge-bitmaps %O %A %B';
+// const binName = process.argv[1];
+const GIT_DRIVER_VALUE = 'bit merge-bitmaps %O %A %B';
 
 const GIT_ATTRIBUTES = '.bitmap merge=bitmap-driver';
 
@@ -59,20 +62,36 @@ export class GitMergerMain {
   }
 
   private async setGitAttributes(opts: SetGitMergeDriverOpts) {
+    const attributesPath = await this.getGitAttributesPath(opts.global);
     const isGit = await fs.pathExists('.git');
     if (!isGit && !opts.global) {
       throw new BitError('This is not a git repository');
     }
-    const fileExist = await fs.pathExists('.gitattributes');
+    const fileExist = await fs.pathExists(attributesPath);
     if (!fileExist) {
-      await fs.writeFile('.gitattributes', GIT_ATTRIBUTES);
+      await fs.writeFile(attributesPath, GIT_ATTRIBUTES);
     } else {
-      const gitAttributes = await fs.readFile('.gitattributes', 'utf8');
+      const gitAttributes = await fs.readFile(attributesPath, 'utf8');
       if (gitAttributes.includes(GIT_ATTRIBUTES)) {
         return; // already set
       }
-      await fs.appendFile('.gitattributes', `\n${GIT_ATTRIBUTES}`);
+      await fs.appendFile(attributesPath, `\n${GIT_ATTRIBUTES}`);
     }
+  }
+
+  private async getGitAttributesPath(global = false) {
+    const fromConfig = await gitconfig.get('core.attributesFile', { location: global ? 'global' : 'local' });
+    if (fromConfig) {
+      return fromConfig;
+    }
+    if (!global) {
+      return '.gitattributes';
+    }
+    const xdgConfigHome = process.env.XDG_CONFIG_HOME;
+    if (xdgConfigHome) {
+      return join(xdgConfigHome, 'git', 'attributes');
+    }
+    return join(homedir(), '.config', 'git', 'attributes');
   }
 
   private stripBom(str) {
