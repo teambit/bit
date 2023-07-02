@@ -392,7 +392,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.514",
+        "@teambit/legacy": "1.0.515",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "browserslist": "4.16.3",
@@ -407,7 +407,43 @@
     "linkCoreAspects": false,
     "overrides": {
       "@types/fs-capacitor": "2.0.0",
-      "signal-exit@4": "^4.0.2"
+      "signal-exit@4": "^4.0.2",
+      "@yarnpkg/core@^4.0.0-rc.45": "4.0.0-rc.45",
+      "@yarnpkg/extensions@^2.0.0-rc.24": "2.0.0-rc.24",
+      "@yarnpkg/fslib@^3.0.0-rc.45": "3.0.0-rc.45",
+      "@yarnpkg/libui@^3.0.0-rc.42": "3.0.0-rc.42",
+      "@yarnpkg/libzip@^3.0.0-rc.42": "3.0.0-rc.45",
+      "@yarnpkg/libzip@^3.0.0-rc.45": "3.0.0-rc.45",
+      "@yarnpkg/nm@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/parsers@^3.0.0-rc.45": "3.0.0-rc.45",
+      "@yarnpkg/plugin-compat@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-compat@^4.0.0-rc.45": "4.0.0-rc.42",
+      "@yarnpkg/plugin-constraints@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-dlx@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-essentials@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-exec@^3.0.0-rc.42": "3.0.0-rc.42",
+      "@yarnpkg/plugin-file@^3.0.0-rc.42": "3.0.0-rc.42",
+      "@yarnpkg/plugin-git@^3.0.0-rc.42": "3.0.0-rc.42",
+      "@yarnpkg/plugin-github@^3.0.0-rc.42": "3.0.0-rc.42",
+      "@yarnpkg/plugin-http@^3.0.0-rc.42": "3.0.0-rc.42",
+      "@yarnpkg/plugin-init@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-interactive-tools@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-link@^3.0.0-rc.42": "3.0.0-rc.42",
+      "@yarnpkg/plugin-nm@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-npm": "3.0.0-rc.42",
+      "@yarnpkg/plugin-npm-cli@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-pack": "4.0.0-rc.42",
+      "@yarnpkg/plugin-patch@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-pnp@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-pnpm@^2.0.0-rc.42": "2.0.0-rc.42",
+      "@yarnpkg/plugin-stage@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-typescript@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-version@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/plugin-workspace-tools@^4.0.0-rc.42": "4.0.0-rc.42",
+      "@yarnpkg/pnp@^4.0.0-rc.42": "4.0.0-rc.45",
+      "@yarnpkg/pnp@^4.0.0-rc.45": "4.0.0-rc.45",
+      "@yarnpkg/shell@^4.0.0-rc.42": "4.0.0-rc.45",
+      "@yarnpkg/shell@^4.0.0-rc.45": "4.0.0-rc.45"
     },
     "nodeLinker": "hoisted",
     "rootComponents": true,
@@ -485,7 +521,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.514"
+            "@teambit/legacy": "1.0.515"
           }
         }
       },
@@ -746,7 +782,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.514"
+            "@teambit/legacy": "1.0.515"
           }
         }
       }
@@ -836,7 +872,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.514",
+            "@teambit/legacy": "1.0.515",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -971,7 +1007,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.514"
+            "@teambit/legacy": "1.0.515"
           }
         }
       }
