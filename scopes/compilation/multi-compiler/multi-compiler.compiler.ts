@@ -67,7 +67,6 @@ export class MultiCompiler implements Compiler {
   /**
    * the multi-compiler applies all applicable defined compilers on given content.
    */
-  // eslint-disable-next-line max-len
   async transpileFile(fileContent: string, options: TranspileFileParams): Promise<TranspileFileOutput> {
     const outputs: TranspileFileOutput = await this.compilers.reduce<Promise<TranspileFileOutput>>(
       async (files: Promise<TranspileFileOutput>, compiler: Compiler) => {
