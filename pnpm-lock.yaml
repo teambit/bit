@@ -1035,9 +1035,6 @@ importers:
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@14.7.0)
-      graphql-tools:
-        specifier: 9.0.0
-        version: 9.0.0(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       graphql-type-json:
         specifier: 0.3.2
         version: 0.3.2(graphql@14.7.0)
@@ -39249,7 +39246,7 @@ packages:
     dev: false
 
   /@teambit/component.modules.component-url@0.0.128(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-E5szS9hGfk/lAwEma3/ViMkm32A=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/teambit-component.modules.component-url-0.0.128.tgz}
+    resolution: {integrity: sha1-E5szS9hGfk/lAwEma3/ViMkm32A=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.128.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: 17.0.2
@@ -39263,7 +39260,7 @@ packages:
     dev: false
 
   /@teambit/component.modules.component-url@0.0.140(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-cmcWwISlL+PSKta3Q4HkpLTARBc=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/teambit-component.modules.component-url-0.0.140.tgz}
+    resolution: {integrity: sha1-cmcWwISlL+PSKta3Q4HkpLTARBc=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.140.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: 17.0.2
@@ -39277,7 +39274,7 @@ packages:
     dev: false
 
   /@teambit/component.modules.component-url@0.0.151(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-/dj3W/oKQC/p0X74zRJ+Mov/bec=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/teambit-component.modules.component-url-0.0.151.tgz}
+    resolution: {integrity: sha1-/dj3W/oKQC/p0X74zRJ+Mov/bec=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.151.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: 17.0.2
@@ -39304,7 +39301,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.badges.component-count@0.0.10(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-/KG3gyg1xt3Gk+7z1Yf2Ww9qd50=, tarball: https://node-registry.bit.cloud/tarballs/teambit.component/ui/badges/component-count@0.0.10.tgz}
+    resolution: {integrity: sha1-/KG3gyg1xt3Gk+7z1Yf2Ww9qd50=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.badges.component-count/-/@teambit-component.ui.badges.component-count-0.0.10.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39336,7 +39333,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.hooks.use-component-compare-url@0.0.3(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-mNono316l0rxMgrR/xuTDv4Rp/E=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.hooks.use-component-compare-url/-/teambit-component.ui.component-compare.hooks.use-component-compare-url-0.0.3.tgz}
+    resolution: {integrity: sha1-mNono316l0rxMgrR/xuTDv4Rp/E=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.hooks.use-component-compare-url/-/@teambit-component.ui.component-compare.hooks.use-component-compare-url-0.0.3.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39366,7 +39363,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.models.component-compare-change-type@0.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-2Er9FIkcKdYqxW2aeyZ5Gd370Kc=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-change-type/-/teambit-component.ui.component-compare.models.component-compare-change-type-0.0.1.tgz}
+    resolution: {integrity: sha1-2Er9FIkcKdYqxW2aeyZ5Gd370Kc=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-change-type/-/@teambit-component.ui.component-compare.models.component-compare-change-type-0.0.1.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39378,7 +39375,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.models.component-compare-hooks@0.0.4(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-kVPksYnom+gsZNPMZVx6uJqAHlI=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-hooks/-/teambit-component.ui.component-compare.models.component-compare-hooks-0.0.4.tgz}
+    resolution: {integrity: sha1-kVPksYnom+gsZNPMZVx6uJqAHlI=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-hooks/-/@teambit-component.ui.component-compare.models.component-compare-hooks-0.0.4.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39457,7 +39454,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.models.component-compare-state@0.0.2(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KOvqyfEiwlEHJBWwxZZtLxWBc74=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-state/-/teambit-component.ui.component-compare.models.component-compare-state-0.0.2.tgz}
+    resolution: {integrity: sha1-KOvqyfEiwlEHJBWwxZZtLxWBc74=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-state/-/@teambit-component.ui.component-compare.models.component-compare-state-0.0.2.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39483,7 +39480,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.utils.lazy-loading@0.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-K4iYPn+ng7gCPPwwQ3C3vdAWzDE=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.utils.lazy-loading/-/teambit-component.ui.component-compare.utils.lazy-loading-0.0.1.tgz}
+    resolution: {integrity: sha1-K4iYPn+ng7gCPPwwQ3C3vdAWzDE=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.utils.lazy-loading/-/@teambit-component.ui.component-compare.utils.lazy-loading-0.0.1.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39496,7 +39493,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.deprecation-icon@0.0.494(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-h1I4/6SkzcVxwWznLLLEW4M8r6g=, tarball: https://node-registry.bit.cloud/tarballs/teambit.component/ui/deprecation-icon@0.0.494.tgz}
+    resolution: {integrity: sha1-h1I4/6SkzcVxwWznLLLEW4M8r6g=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.deprecation-icon/-/@teambit-component.ui.deprecation-icon-0.0.494.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39513,7 +39510,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.deprecation-icon@0.0.500(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KGzcqsYSN1S/mTpBE7Ohs8qm414=, tarball: https://node-registry.bit.cloud/tarballs/teambit.component/ui/deprecation-icon@0.0.500.tgz}
+    resolution: {integrity: sha1-KGzcqsYSN1S/mTpBE7Ohs8qm414=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.deprecation-icon/-/@teambit-component.ui.deprecation-icon-0.0.500.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41133,7 +41130,7 @@ packages:
     dev: false
 
   /@teambit/documenter.ui.heading@4.1.6(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-nCoruiI/7n5xcXd4GEMdtuU5nIU=, tarball: https://node-registry.bit.cloud/tarballs/teambit.documenter/ui/heading@4.1.6.tgz}
+    resolution: {integrity: sha1-nCoruiI/7n5xcXd4GEMdtuU5nIU=, tarball: https://node-registry.bit.cloud/@teambit/documenter.ui.heading/-/@teambit-documenter.ui.heading-4.1.6.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -41198,8 +41195,8 @@ packages:
   /@teambit/documenter.ui.linked-heading@4.1.8(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-LGpmPIXZSWsXbYgkS/WR1VxJcCg=, tarball: https://node-registry.bit.cloud/@teambit/documenter.ui.linked-heading/-/@teambit-documenter.ui.linked-heading-4.1.8.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/documenter.ui.anchor': 4.0.8(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.heading': 4.1.6(react-dom@17.0.2)(react@17.0.2)
@@ -41410,7 +41407,7 @@ packages:
     dev: false
 
   /@teambit/envs.ui.env-icon@0.0.486(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-w7KPvgzoXLcmnBjlu8gNuRffmsA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.envs/ui/env-icon@0.0.486.tgz}
+    resolution: {integrity: sha1-w7KPvgzoXLcmnBjlu8gNuRffmsA=, tarball: https://node-registry.bit.cloud/@teambit/envs.ui.env-icon/-/@teambit-envs.ui.env-icon-0.0.486.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41422,7 +41419,7 @@ packages:
     dev: false
 
   /@teambit/envs.ui.env-icon@0.0.492(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-WSxQWxQY/fhy5bqXSjp3fz3XUDY=, tarball: https://node-registry.bit.cloud/tarballs/teambit.envs/ui/env-icon@0.0.492.tgz}
+    resolution: {integrity: sha1-WSxQWxQY/fhy5bqXSjp3fz3XUDY=, tarball: https://node-registry.bit.cloud/@teambit/envs.ui.env-icon/-/@teambit-envs.ui.env-icon-0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41754,7 +41751,7 @@ packages:
     dev: true
 
   /@teambit/explorer.ui.gallery.component-card@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-gkm3X+OtPpzJSabL3xj7V6z75XA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/ui/gallery/component-card@0.0.495.tgz}
+    resolution: {integrity: sha1-gkm3X+OtPpzJSabL3xj7V6z75XA=, tarball: https://node-registry.bit.cloud/@teambit/explorer.ui.gallery.component-card/-/@teambit-explorer.ui.gallery.component-card-0.0.495.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41785,7 +41782,7 @@ packages:
     dev: false
 
   /@teambit/explorer.ui.gallery.component-card@0.0.507(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-p3EePsVfQINlcsiNPimNv3dK1Po=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/ui/gallery/component-card@0.0.507.tgz}
+    resolution: {integrity: sha1-p3EePsVfQINlcsiNPimNv3dK1Po=, tarball: https://node-registry.bit.cloud/@teambit/explorer.ui.gallery.component-card/-/@teambit-explorer.ui.gallery.component-card-0.0.507.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41965,7 +41962,7 @@ packages:
       user-home: 2.0.0
 
   /@teambit/html.modules.create-element-from-string@0.0.104:
-    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: https://node-registry.bit.cloud/tarballs/teambit.html/modules/create-element-from-string@0.0.104.tgz}
+    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: https://node-registry.bit.cloud/@teambit/html.modules.create-element-from-string/-/@teambit-html.modules.create-element-from-string-0.0.104.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -42483,7 +42480,7 @@ packages:
     dev: false
 
   /@teambit/preview.ui.preview-placeholder@0.0.496(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-MgSJUaYFpLjSPyLWttgR63sM/Xg=, tarball: https://node-registry.bit.cloud/tarballs/teambit.preview/ui/preview-placeholder@0.0.496.tgz}
+    resolution: {integrity: sha1-MgSJUaYFpLjSPyLWttgR63sM/Xg=, tarball: https://node-registry.bit.cloud/@teambit/preview.ui.preview-placeholder/-/@teambit-preview.ui.preview-placeholder-0.0.496.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -42731,7 +42728,7 @@ packages:
     dev: false
 
   /@teambit/scope.ui.scope-title@0.0.508(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-2lOC51kJif9bWAma5M4yaPPo/U4=, tarball: https://node-registry.bit.cloud/@teambit/scope.ui.scope-title/-/teambit-scope.ui.scope-title-0.0.508.tgz}
+    resolution: {integrity: sha1-2lOC51kJif9bWAma5M4yaPPo/U4=, tarball: https://node-registry.bit.cloud/@teambit/scope.ui.scope-title/-/@teambit-scope.ui.scope-title-0.0.508.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -42839,16 +42836,16 @@ packages:
     dev: false
 
   /@teambit/toolbox.string.ellipsis@0.0.172:
-    resolution: {integrity: sha1-nbLwbPi2d8Qeg6aCX2TYlARSRew=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/string/ellipsis@0.0.172.tgz}
+    resolution: {integrity: sha1-nbLwbPi2d8Qeg6aCX2TYlARSRew=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.172.tgz}
     engines: {node: '>=12.22.0'}
     dev: true
 
   /@teambit/toolbox.string.ellipsis@0.0.173:
-    resolution: {integrity: sha1-CY+uj2sRmPejtTCee4HDvLFeeI8=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/string/ellipsis@0.0.173.tgz}
+    resolution: {integrity: sha1-CY+uj2sRmPejtTCee4HDvLFeeI8=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.173.tgz}
     engines: {node: '>=12.22.0'}
 
   /@teambit/toolbox.string.ellipsis@0.0.181:
-    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/string/ellipsis@0.0.181.tgz}
+    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.181.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -42858,17 +42855,17 @@ packages:
     dev: false
 
   /@teambit/toolbox.string.get-initials@0.0.491:
-    resolution: {integrity: sha1-dMkF7hxhtmK2aXz7QCkAAajSrKI=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/string/get-initials@0.0.491.tgz}
+    resolution: {integrity: sha1-dMkF7hxhtmK2aXz7QCkAAajSrKI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.get-initials/-/@teambit-toolbox.string.get-initials-0.0.491.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/toolbox.types.serializable@0.0.483:
-    resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/types/serializable@0.0.483.tgz}
+    resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.483.tgz}
     engines: {node: '>=12.22.0'}
     dev: true
 
   /@teambit/toolbox.types.serializable@0.0.491:
-    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/types/serializable@0.0.491.tgz}
+    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.491.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -42878,7 +42875,7 @@ packages:
     dev: false
 
   /@teambit/toolbox.url.add-avatar-query-params@0.0.492:
-    resolution: {integrity: sha1-dECMYTXTkMlAIUaK22cpmNlTsak=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/url/add-avatar-query-params@0.0.492.tgz}
+    resolution: {integrity: sha1-dECMYTXTkMlAIUaK22cpmNlTsak=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.url.add-avatar-query-params/-/@teambit-toolbox.url.add-avatar-query-params-0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -42993,7 +42990,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.get-icon-from-file-name@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/get-icon-from-file-name@0.0.495.tgz}
+    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.get-icon-from-file-name/-/@teambit-ui-foundation.ui.get-icon-from-file-name-0.0.495.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43006,7 +43003,7 @@ packages:
       vscode-icons-js: 11.0.0
 
   /@teambit/ui-foundation.ui.global-loader@0.0.474(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-7X0x1qLPQV7ySEUh5Rs1iXt+AX4=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/global-loader@0.0.474.tgz}
+    resolution: {integrity: sha1-7X0x1qLPQV7ySEUh5Rs1iXt+AX4=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.474.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@teambit/legacy': 1.0.183
@@ -43021,7 +43018,7 @@ packages:
     dev: true
 
   /@teambit/ui-foundation.ui.global-loader@0.0.487(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-t9IdwYuJBCHPUYK73ELRUHQHPVs=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/global-loader@0.0.487.tgz}
+    resolution: {integrity: sha1-t9IdwYuJBCHPUYK73ELRUHQHPVs=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.487.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43034,7 +43031,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.global-loader@0.0.493(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-0DiiKiGSijunFyRRRSMD4R2iQMk=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/global-loader@0.0.493.tgz}
+    resolution: {integrity: sha1-0DiiKiGSijunFyRRRSMD4R2iQMk=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.493.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43047,7 +43044,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.global-loader@0.0.497(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-5fU/29iOW7vvZBaoyaRiSUCyl2I=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/global-loader@0.0.497.tgz}
+    resolution: {integrity: sha1-5fU/29iOW7vvZBaoyaRiSUCyl2I=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.497.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43076,7 +43073,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.hooks.use-data-query@0.0.496(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-oL6ZvMzY0Y/1C9rivf+CdsmJFdI=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/hooks/use-data-query@0.0.496.tgz}
+    resolution: {integrity: sha1-oL6ZvMzY0Y/1C9rivf+CdsmJFdI=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.hooks.use-data-query/-/@teambit-ui-foundation.ui.hooks.use-data-query-0.0.496.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@apollo/client': ^3.6.0
@@ -43092,7 +43089,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.hooks.use-data-query@0.0.500(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-mKHB9+tWg+S+JJ5s4peW17vUf3s=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/hooks/use-data-query@0.0.500.tgz}
+    resolution: {integrity: sha1-mKHB9+tWg+S+JJ5s4peW17vUf3s=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.hooks.use-data-query/-/@teambit-ui-foundation.ui.hooks.use-data-query-0.0.500.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@apollo/client': ^3.6.0
@@ -43108,7 +43105,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.is-browser@0.0.486(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KCR60Lp5r8XU/qN5aU6JnKyCo0U=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/is-browser@0.0.486.tgz}
+    resolution: {integrity: sha1-KCR60Lp5r8XU/qN5aU6JnKyCo0U=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.is-browser/-/@teambit-ui-foundation.ui.is-browser-0.0.486.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43120,7 +43117,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.is-browser@0.0.492(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-K8F9fjln4vfhtryfNuzr8RulqLo=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/is-browser@0.0.492.tgz}
+    resolution: {integrity: sha1-K8F9fjln4vfhtryfNuzr8RulqLo=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.is-browser/-/@teambit-ui-foundation.ui.is-browser-0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43267,7 +43264,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.notification-context@0.0.487(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-WvEy3IkkGkdqrKLZvWO5ay+2LH4=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/notifications/notification-context@0.0.487.tgz}
+    resolution: {integrity: sha1-WvEy3IkkGkdqrKLZvWO5ay+2LH4=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.notification-context/-/@teambit-ui-foundation.ui.notifications.notification-context-0.0.487.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43280,7 +43277,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.notification-context@0.0.493(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-LqvYMR2i+ZTOqyqWpBg/tXCzdgU=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/notifications/notification-context@0.0.493.tgz}
+    resolution: {integrity: sha1-LqvYMR2i+ZTOqyqWpBg/tXCzdgU=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.notification-context/-/@teambit-ui-foundation.ui.notifications.notification-context-0.0.493.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43293,7 +43290,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.notification-context@0.0.496(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-x23R91AzUscSV2WS2yZC2LY8CHE=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/notifications/notification-context@0.0.496.tgz}
+    resolution: {integrity: sha1-x23R91AzUscSV2WS2yZC2LY8CHE=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.notification-context/-/@teambit-ui-foundation.ui.notifications.notification-context-0.0.496.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43306,7 +43303,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.store@0.0.486(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-ZQ4iOfpuzj+jE12XS3b51WELT7I=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/notifications/store@0.0.486.tgz}
+    resolution: {integrity: sha1-ZQ4iOfpuzj+jE12XS3b51WELT7I=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.store/-/@teambit-ui-foundation.ui.notifications.store-0.0.486.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43318,7 +43315,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.store@0.0.492(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-8IWuSf9Qt6QHdudIbjqQ7IHiMFg=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/notifications/store@0.0.492.tgz}
+    resolution: {integrity: sha1-8IWuSf9Qt6QHdudIbjqQ7IHiMFg=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.store/-/@teambit-ui-foundation.ui.notifications.store-0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43330,7 +43327,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.store@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-SciOZ58oyKDy8q/0nvQ4OpvuPz8=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/notifications/store@0.0.495.tgz}
+    resolution: {integrity: sha1-SciOZ58oyKDy8q/0nvQ4OpvuPz8=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.store/-/@teambit-ui-foundation.ui.notifications.store-0.0.495.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43362,7 +43359,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.react-router.slot-router@0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
-    resolution: {integrity: sha1-uUc0/zKzRjSFXhWhBUDlDnIJuO0=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/react-router/slot-router@0.0.501.tgz}
+    resolution: {integrity: sha1-uUc0/zKzRjSFXhWhBUDlDnIJuO0=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.react-router.slot-router/-/@teambit-ui-foundation.ui.react-router.slot-router-0.0.501.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43382,7 +43379,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.react-router.use-query@0.0.496(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-rCJcyZss+uCe7COvKqfs0UQ0TME=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/react-router/use-query@0.0.496.tgz}
+    resolution: {integrity: sha1-rCJcyZss+uCe7COvKqfs0UQ0TME=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.react-router.use-query/-/@teambit-ui-foundation.ui.react-router.use-query-0.0.496.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43505,8 +43502,8 @@ packages:
     resolution: {integrity: sha1-bU5bUChvqZ6FgR2iDflWJU+hU8U=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.tree.drawer/-/@teambit-ui-foundation.ui.tree.drawer-0.0.512.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
@@ -43637,7 +43634,7 @@ packages:
     dev: true
 
   /@teambit/workspace.ui.load-preview@0.0.489(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-e9OonGao9UxvvbCfsJKdGTPbXIg=, tarball: https://node-registry.bit.cloud/tarballs/teambit.workspace/ui/load-preview@0.0.489.tgz}
+    resolution: {integrity: sha1-e9OonGao9UxvvbCfsJKdGTPbXIg=, tarball: https://node-registry.bit.cloud/@teambit/workspace.ui.load-preview/-/@teambit-workspace.ui.load-preview-0.0.489.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43651,7 +43648,7 @@ packages:
     dev: false
 
   /@teambit/workspace.ui.load-preview@0.0.499(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-lvfO7zmO9ZnlI+NPWAFOW3ViZwo=, tarball: https://node-registry.bit.cloud/tarballs/teambit.workspace/ui/load-preview@0.0.499.tgz}
+    resolution: {integrity: sha1-lvfO7zmO9ZnlI+NPWAFOW3ViZwo=, tarball: https://node-registry.bit.cloud/@teambit/workspace.ui.load-preview/-/@teambit-workspace.ui.load-preview-0.0.499.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@testing-library/react': ^12.1.5
@@ -43685,7 +43682,7 @@ packages:
     dev: false
 
   /@teambit/workspace.ui.workspace-component-card@0.0.510(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-bO15xcj1TSQ5iEfw8QBu6GxTigM=, tarball: https://node-registry.bit.cloud/tarballs/teambit.workspace/ui/workspace-component-card@0.0.510.tgz}
+    resolution: {integrity: sha1-bO15xcj1TSQ5iEfw8QBu6GxTigM=, tarball: https://node-registry.bit.cloud/@teambit/workspace.ui.workspace-component-card/-/@teambit-workspace.ui.workspace-component-card-0.0.510.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
