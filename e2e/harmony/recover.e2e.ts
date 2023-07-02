@@ -138,7 +138,7 @@ describe('bit recover command', function () {
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
 
-        helper.command.softRemoveComponent('comp2');
+        helper.command.removeLaneComp('comp2');
         helper.command.recover('comp2');
       });
       it('bit status should not show a section of removed components', () => {
@@ -161,7 +161,7 @@ describe('bit recover command', function () {
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
 
-        helper.command.softRemoveComponent('comp2');
+        helper.command.removeLaneComp('comp2');
         helper.fs.outputFile('comp1/index.js', '');
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.recover(`${helper.scopes.remote}/comp2`);
@@ -191,7 +191,7 @@ describe('bit recover command', function () {
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
 
-        helper.command.softRemoveComponent('comp2');
+        helper.command.removeLaneComp('comp2');
         helper.fs.outputFile('comp1/index.js', '');
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();

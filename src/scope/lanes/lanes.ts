@@ -137,7 +137,7 @@ export default class Lanes {
     const allLanes = await this.listLanes();
     const foundWithSameName = allLanes.filter((lane) => lane.name === name);
     if (foundWithSameName.length === 0) {
-      throw new LaneNotFound(this.scopeJson.name, name);
+      throw new LaneNotFound('', name);
     }
     if (foundWithSameName.length > 1) {
       throw new BitError(

@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { Command, CommandOptions } from '@teambit/cli';
 import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
@@ -36,7 +37,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
     [
       '',
       'editor [editor]',
-      'EXPERIMENTAL. open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
+      'open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
     ],
     ['v', 'ver <version>', 'tag with the given version'],
     ['l', 'increment <level>', `options are: [${RELEASE_TYPES.join(', ')}], default to patch`],
@@ -45,8 +46,8 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
     ['', 'minor', 'syntactic sugar for "--increment minor"'],
     ['', 'major', 'syntactic sugar for "--increment major"'],
     ['', 'pre-release [identifier]', 'syntactic sugar for "--increment prerelease" and `--prerelease-id <identifier>`'],
-    ['', 'snapped', 'EXPERIMENTAL. tag components that their head is a snap (not a tag)'],
-    ['', 'unmerged', 'EXPERIMENTAL. complete a merge process by tagging the unmerged components'],
+    ['', 'snapped', 'tag components that their head is a snap (not a tag)'],
+    ['', 'unmerged', 'complete a merge process by tagging the unmerged components'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'skip auto tagging dependents'],
     ['', 'soft', 'do not persist. only keep note of the changes to be made'],
@@ -71,7 +72,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       'fail-fast',
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependent failed)',
     ],
-    ['b', 'build', 'EXPERIMENTAL. not needed for now. run the pipeline build and complete the tag'],
+    ['b', 'build', 'not needed for now. run the pipeline build and complete the tag'],
     [
       'a',
       'all [version]',
@@ -242,7 +243,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
     const results = await this.snapping.tag(params);
     if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
-    const { taggedComponents, autoTaggedResults, warnings, newComponents }: TagResults = results;
+    const { taggedComponents, autoTaggedResults, warnings, newComponents, removedComponents }: TagResults = results;
     const changedComponents = taggedComponents.filter((component) => !newComponents.searchWithoutVersion(component.id));
     const addedComponents = taggedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
     const autoTaggedCount = autoTaggedResults ? autoTaggedResults.length : 0;
@@ -313,8 +314,14 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       tagExplanation +
       outputIfExists('new components', newDesc, addedComponents) +
       outputIfExists('changed components', changedDesc, changedComponents) +
+      outputIdsIfExists('removed components', removedComponents) +
       publishOutput() +
       softTagClarification
     );
   }
+}
+
+export function outputIdsIfExists(label: string, ids?: BitIds) {
+  if (!ids?.length) return '';
+  return `\n${chalk.underline(label)}\n${ids.map((id) => id.toStringWithoutVersion()).join('\n')}\n`;
 }

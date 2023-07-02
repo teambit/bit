@@ -49,6 +49,7 @@ export type GetComponentManifestsOptions = {
   rootDir: string;
   resolveVersionsFromDependenciesOnly?: boolean;
   referenceLocalPackages?: boolean;
+  hasRootComponents?: boolean;
 } & Pick<
   PackageManagerInstallOptions,
   'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents' | 'copyPeerToRuntimeOnRoot' | 'installPeersFromEnvs'
@@ -94,6 +95,8 @@ export class DependencyInstaller {
     private peerDependencyRules?: PeerDependencyRules,
 
     private neverBuiltDependencies?: string[],
+
+    private preferOffline?: boolean,
 
     private installingContext: DepInstallerContext = {}
   ) {}
@@ -165,7 +168,8 @@ export class DependencyInstaller {
             delete linkedDependencies[finalRootDir][manifest.name];
           }
         }
-        if (options.forceTeambitHarmonyLink) {
+        if (options.forceTeambitHarmonyLink && manifests[finalRootDir].dependencies?.['@teambit/harmony']) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           delete manifests[finalRootDir].dependencies!['@teambit/harmony'];
         }
       }
@@ -194,6 +198,7 @@ export class DependencyInstaller {
       peerDependencyRules: this.peerDependencyRules,
       hidePackageManagerOutput,
       neverBuiltDependencies: ['core-js', ...(this.neverBuiltDependencies ?? [])],
+      preferOffline: this.preferOffline,
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {
@@ -267,6 +272,7 @@ export class DependencyInstaller {
     installPeersFromEnvs,
     resolveVersionsFromDependenciesOnly,
     referenceLocalPackages,
+    hasRootComponents,
   }: GetComponentManifestsOptions) {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
@@ -275,6 +281,7 @@ export class DependencyInstaller {
       dependencyFilterFn,
       resolveVersionsFromDependenciesOnly,
       referenceLocalPackages,
+      hasRootComponents,
     };
     const workspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
       undefined,

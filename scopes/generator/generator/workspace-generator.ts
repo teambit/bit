@@ -88,17 +88,21 @@ export class WorkspaceGenerator {
     await uiMain.createRuntime({});
   }
 
-  /**
-   * writes the generated template files to the default directory set in the workspace config
-   */
-  private async writeWorkspaceFiles(): Promise<void> {
-    const workspaceContext: WorkspaceContext = {
+  private getWorkspaceContext(): WorkspaceContext {
+    return {
       name: this.workspaceName,
       defaultScope: this.options.defaultScope,
       empty: this.options.empty,
       aspectComponent: this.aspectComponent,
       template: this.template,
     };
+  }
+
+  /**
+   * writes the generated template files to the default directory set in the workspace config
+   */
+  private async writeWorkspaceFiles(): Promise<void> {
+    const workspaceContext = this.getWorkspaceContext();
     const templateFiles = await this.template.generateFiles(workspaceContext);
     await Promise.all(
       templateFiles.map(async (templateFile) => {
@@ -119,12 +123,16 @@ export class WorkspaceGenerator {
 
   private async forkComponentsFromRemote() {
     if (this.options.empty) return;
-    const componentsToFork = this.template?.importComponents?.() || this.template?.fork?.() || [];
+    const workspaceContext = this.getWorkspaceContext();
+    const componentsToFork =
+      this.template?.importComponents?.(workspaceContext) || this.template?.fork?.(workspaceContext) || [];
     if (!componentsToFork.length) return;
-    const componentsToForkRestructured = componentsToFork.map(({ id, targetName, path }) => ({
+    const componentsToForkRestructured = componentsToFork.map(({ id, targetName, path, env, config }) => ({
       sourceId: id,
       targetId: targetName,
       path,
+      env,
+      config,
     }));
     await this.forking.forkMultipleFromRemote(componentsToForkRestructured, {
       scope: this.workspace.defaultScope,
@@ -137,7 +145,8 @@ export class WorkspaceGenerator {
 
   private async importComponentsFromRemote() {
     if (this.options.empty) return;
-    const componentsToImport = this.template?.import?.() || [];
+    const workspaceContext = this.getWorkspaceContext();
+    const componentsToImport = this.template?.import?.(workspaceContext) || [];
 
     if (!componentsToImport.length) return;
 

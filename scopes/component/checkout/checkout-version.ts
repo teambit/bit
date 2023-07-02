@@ -16,6 +16,7 @@ import {
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { Workspace } from '@teambit/workspace';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
@@ -32,17 +33,21 @@ export type CheckoutProps = {
   ignoreDist?: boolean;
   isLane?: boolean;
 };
-export type ComponentStatus = {
-  componentFromFS?: ConsumerComponent;
+
+export type ComponentStatusBase = {
+  currentComponent?: ConsumerComponent;
   componentFromModel?: Version;
   id: BitId;
+  shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
+};
+
+export type ComponentStatus = ComponentStatusBase & {
   failureMessage?: string;
   unchangedLegitimately?: boolean; // failed to checkout but for a legitimate reason, such as, up-to-date
-  shouldBeRemoved?: boolean;
   mergeResults?: MergeResultsThreeWay | null | undefined;
 };
 
-type ApplyVersionWithComps = { applyVersionResult: ApplyVersionResult; component?: ConsumerComponent };
+export type ApplyVersionWithComps = { applyVersionResult: ApplyVersionResult; component?: ConsumerComponent };
 
 /**
  * 1) when the files are modified with conflicts and the strategy is "ours", leave the FS as is
@@ -192,17 +197,19 @@ export function markFilesToBeRemovedIfNeeded(
   succeededComponents: ComponentStatus[],
   componentsResults: ApplyVersionWithComps[]
 ) {
-  const succeededComponentsByBitId: { [K in string]: ComponentStatus } = succeededComponents.reduce((accum, next) => {
-    const bitId = next.id.toString();
-    if (!accum[bitId]) accum[bitId] = next;
+  const succeededComponentsByBitId: {
+    [K in string]: ComponentStatus;
+  } = succeededComponents.reduce((accum, current) => {
+    const bitId = current.id.toStringWithoutVersion();
+    if (!accum[bitId]) accum[bitId] = current;
     return accum;
   }, {});
 
   componentsResults.forEach((componentResult) => {
     const existingFilePathsFromModel = componentResult.applyVersionResult.filesStatus;
-    const bitId = componentResult.applyVersionResult.id.toString();
+    const bitId = componentResult.applyVersionResult.id.toStringWithoutVersion();
     const succeededComponent = succeededComponentsByBitId[bitId];
-    const filePathsFromFS = succeededComponent.componentFromFS?.files || [];
+    const filePathsFromFS = succeededComponent.currentComponent?.files || [];
 
     filePathsFromFS.forEach((file) => {
       const filename = pathNormalizeToLinux(file.relative);
@@ -220,13 +227,15 @@ export function markFilesToBeRemovedIfNeeded(
  */
 export async function deleteFilesIfNeeded(
   componentsResults: ApplyVersionWithComps[],
-  consumer: Consumer
+  workspace: Workspace
 ): Promise<void> {
   const pathsToRemoveIncludeNull = componentsResults.map((compResult) => {
     return Object.keys(compResult.applyVersionResult.filesStatus).map((filePath) => {
       if (compResult.applyVersionResult.filesStatus[filePath] === FileStatus.removed) {
-        if (!compResult.component?.writtenPath) return null;
-        return path.join(compResult.component?.writtenPath, filePath);
+        if (!compResult.component) return null;
+        const compDir = compResult.component.writtenPath || compResult.component.componentMap?.rootDir;
+        if (!compDir) return null;
+        return path.join(compDir, filePath);
       }
       return null;
     });
@@ -234,6 +243,6 @@ export async function deleteFilesIfNeeded(
   const pathsToRemove = compact(pathsToRemoveIncludeNull.flat());
   const dataToPersist = new DataToPersist();
   dataToPersist.removeManyPaths(pathsToRemove.map((p) => new RemovePath(p, true)));
-  dataToPersist.addBasePath(consumer.getPath());
+  dataToPersist.addBasePath(workspace.path);
   await dataToPersist.persistAllToFS();
 }

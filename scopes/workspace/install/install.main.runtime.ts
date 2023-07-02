@@ -36,6 +36,7 @@ import {
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
+import { snapToSemver } from '@teambit/component-package-version';
 import hash from 'object-hash';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
@@ -363,9 +364,10 @@ export class InstallMain {
     const comps = await this.workspace.list();
     return uniq(
       comps
-        .map((comp) =>
-          Object.values(comp.state.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data).flat()
-        )
+        .map((comp) => {
+          const data = comp.state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data || {};
+          return Object.values(data).flat();
+        })
         .flat()
     );
   }
@@ -498,7 +500,8 @@ export class InstallMain {
     if (!envComponent) return undefined;
     const packageName = this.dependencyResolver.getPackageName(envComponent);
     const version = envId.version;
-    return { [packageName]: version };
+    const finalVersion = snapToSemver(version);
+    return { [packageName]: finalVersion };
   }
 
   private async _getAppManifests(
@@ -555,7 +558,7 @@ export class InstallMain {
    *
    * @param options.all {Boolean} updates all outdated dependencies without showing a prompt.
    */
-  async updateDependencies(options: { all: boolean }) {
+  async updateDependencies(options: { all: boolean }): Promise<ComponentMap<string> | null> {
     const { componentConfigFiles, componentPoliciesById } = await this._getComponentsWithDependencyPolicies();
     const variantPatterns = this.variants.raw();
     const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
@@ -573,6 +576,10 @@ export class InstallMain {
       this.logger.off();
       outdatedPkgsToUpdate = await pickOutdatedPkgs(outdatedPkgs);
       this.logger.on();
+    }
+    if (outdatedPkgsToUpdate.length === 0) {
+      this.logger.consoleSuccess('No outdated dependencies found');
+      return null;
     }
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgsToUpdate, {
       variantPoliciesByPatterns,
@@ -697,7 +704,7 @@ export class InstallMain {
 
   async link(options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
     const { linkResults, linkedRootDeps } = await this.calculateLinks(options);
-    await createLinks(this.workspace.path, linkedRootDeps);
+    await createLinks(options.linkToDir ?? this.workspace.path, linkedRootDeps);
     return linkResults;
   }
 

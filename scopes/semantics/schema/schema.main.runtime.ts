@@ -72,13 +72,13 @@ export class SchemaMain {
     return parser.parseModule(path);
   }
 
-  getSchemaExtractor(component: Component) {
+  getSchemaExtractor(component: Component, tsserverPath?: string, contextPath?: string): SchemaExtractor {
     const env = this.envs.getEnv(component).env;
     if (typeof env.getSchemaExtractor === 'undefined') {
       throw new Error(`No SchemaExtractor defined for ${env.name}`);
     }
 
-    return env.getSchemaExtractor();
+    return env.getSchemaExtractor(undefined, tsserverPath, contextPath);
   }
 
   /**
@@ -92,7 +92,8 @@ export class SchemaMain {
     component: Component,
     shouldDisposeResourcesOnceDone = false,
     alwaysRunExtractor = false,
-    path?: string
+    tsserverPath?: string,
+    contextPath?: string
   ): Promise<APISchema> {
     if (alwaysRunExtractor || this.workspace) {
       const env = this.envs.getEnv(component).env;
@@ -106,7 +107,7 @@ export class SchemaMain {
       if (typeof env.getSchemaExtractor === 'undefined') {
         throw new Error(`No SchemaExtractor defined for ${env.name}`);
       }
-      const schemaExtractor: SchemaExtractor = env.getSchemaExtractor(undefined, path);
+      const schemaExtractor: SchemaExtractor = env.getSchemaExtractor(undefined, tsserverPath, contextPath);
 
       const result = await schemaExtractor.extract(component, formatter);
       if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();

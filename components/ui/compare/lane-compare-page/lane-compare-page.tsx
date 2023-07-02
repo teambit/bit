@@ -32,7 +32,7 @@ export function LaneComparePage({
     }
   }, [defaultLane, compare?.id.toString(), nonMainLanes?.length]);
 
-  const LaneCompareComponent = getLaneCompare({ base, compare });
+  const LaneCompareComponent = getLaneCompare({ base, compare, groupBy: 'status' });
 
   const lanes: Array<LaneModel> = useMemo(() => {
     const allLanes = (defaultLane && [defaultLane, ...nonMainLanes]) || nonMainLanes;

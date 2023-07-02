@@ -22,7 +22,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
     },
     {
       name: 'pattern',
-      description: 'EXPERIMENTAL. partially merge the lane with the specified component-pattern',
+      description: 'partially merge the lane with the specified component-pattern',
     },
   ];
   alias = '';
@@ -46,15 +46,11 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
     ['', 'verbose', 'show details of components that were not merged legitimately'],
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
     ['', 'skip-fetch', 'use the current target-lane if exits locally without updating it from the remote'],
-    [
-      '',
-      'include-deps',
-      'EXPERIMENTAL. relevant for "--pattern" and "--workspace". merge also dependencies of the given components',
-    ],
+    ['', 'include-deps', 'relevant for "--pattern" and "--workspace". merge also dependencies of the given components'],
     [
       '',
       'resolve-unrelated [merge-strategy]',
-      'EXPERIMENTAL. relevant when a component on a lane and the component on main has nothing in common. merge-strategy can be "ours" (default) or "theirs"',
+      'relevant when a component on a lane and the component on main has nothing in common. merge-strategy can be "ours" (default) or "theirs"',
     ],
   ] as CommandOptions;
   loader = true;

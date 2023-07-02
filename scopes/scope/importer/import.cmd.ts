@@ -47,16 +47,16 @@ export class ImportCmd implements Command {
       'merge [strategy]',
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"',
     ],
-    ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
+    ['', 'dependencies', 'import all dependencies and write them to the workspace'],
     [
       '',
       'dependents',
-      'EXPERIMENTAL. import components found while traversing from the given ids upwards to the workspace components',
+      'import components found while traversing from the given ids upwards to the workspace components',
     ],
     [
       '',
       'save-in-lane',
-      'EXPERIMENTAL. when checked out to a lane and the component is not on the remote-lane, save it in the lane (default to save on main)',
+      'when checked out to a lane and the component is not on the remote-lane, save it in the lane (default to save on main)',
     ],
     [
       '',
@@ -65,6 +65,7 @@ export class ImportCmd implements Command {
     ],
     ['', 'fetch-deps', 'fetch dependencies objects'],
     ['', 'track-only', 'do not write any file, just create .bitmap entries of the imported components'],
+    ['', 'include-deprecated', 'when importing with patterns, include deprecated components (default to exclude them)'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -91,6 +92,7 @@ export class ImportCmd implements Command {
       allHistory = false,
       fetchDeps = false,
       trackOnly = false,
+      includeDeprecated = false,
     }: {
       path?: string;
       objects?: boolean;
@@ -107,6 +109,7 @@ export class ImportCmd implements Command {
       allHistory?: boolean;
       fetchDeps?: boolean;
       trackOnly?: boolean;
+      includeDeprecated?: boolean;
     }
   ): Promise<any> {
     if (objects && merge) {
@@ -149,6 +152,7 @@ export class ImportCmd implements Command {
       allHistory,
       fetchDeps,
       trackOnly,
+      includeDeprecated,
     };
     const importResults = await this.importer.import(importOptions, this._packageManagerArgs);
     const { importDetails, importedIds, importedDeps, installationError, compilationError, missingIds } = importResults;

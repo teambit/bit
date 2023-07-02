@@ -15,11 +15,17 @@ import {
 import { LaneNotFound } from './exceptions/lane-not-found';
 import { Lane } from '../../../scope/models';
 
+/**
+ * 'component-delta' is not supported anymore in fetchSchema of 0.0.3 and above.
+ */
 export type FETCH_TYPE = 'component' | 'lane' | 'object' | 'component-delta';
 export type FETCH_OPTIONS = {
   type: FETCH_TYPE;
   /**
    * @deprecated (since 0.0.900) use includeDependencies
+   * since 0.1.53 this is ignored from the remotes.
+   * it'll be safe to delete this prop once all remotes are updated to 0.1.53 or above.
+   * otherwise, in absence of this prop, the remotes will fetch with deps.
    */
   withoutDependencies?: boolean; // default - true
   includeDependencies?: boolean; // default - false
@@ -44,10 +50,20 @@ export type FETCH_OPTIONS = {
    */
   preferDependencyGraph?: boolean;
 
+  /**
+   * introduced in fetchSchema 0.0.3
+   * this was previously achieved by "component-delta" fetch-type, which is not supported since fetch-schema 0.0.3.
+   * normally, when passing ids with versions, the client request that version from the remote.
+   * if this option is enabled, it tells the remote that the given version exists already on the client, and if  this
+   * version is the head on the remote, then, no need to return anything because the client is up to date already.
+   * this is an optimization for the most commonly used case of "bit import", where most components are up-to-date.
+   */
+  returnNothingIfGivenVersionExists?: boolean;
+
   fetchSchema: string;
 };
 
-export const CURRENT_FETCH_SCHEMA = '0.0.2';
+export const CURRENT_FETCH_SCHEMA = '0.0.3';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -77,6 +93,9 @@ fetchOptions`,
   );
 
   if (!fetchOptions.type) fetchOptions.type = 'component'; // for backward compatibility
+  if (fetchOptions.returnNothingIfGivenVersionExists) {
+    fetchOptions.type = 'component-delta';
+  }
   const args = { path, ids, ...fetchOptions };
   // This might be undefined in case of fork process like during bit test command
   if (HooksManagerInstance) {
@@ -136,9 +155,7 @@ async function fetchByType(
   objectsReadableGenerator: ObjectsReadableGenerator
 ): Promise<void> {
   const shouldFetchDependencies = () => {
-    if (fetchOptions.includeDependencies) return true;
-    // backward compatible before 0.0.900
-    return !fetchOptions.withoutDependencies;
+    return fetchOptions.includeDependencies;
   };
   switch (fetchOptions.type) {
     case 'component': {

@@ -1,3 +1,4 @@
+import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import semver from 'semver';
@@ -26,7 +27,7 @@ import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds, BitIds as ComponentsIds } from '@teambit/legacy/dist/bit-id';
-import { ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
+import { ModelComponent, Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { Repository } from '@teambit/legacy/dist/scope/objects';
 import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -44,11 +45,13 @@ import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
+import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
 import { remove } from '@teambit/legacy/dist/api/scope';
 import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { compact, slice, difference } from 'lodash';
@@ -86,6 +89,10 @@ export type ScopeConfig = {
   description?: string;
   icon?: string;
   backgroundIconColor?: string;
+  /**
+   * Set a different package manager for the aspects capsules
+   */
+  aspectsPackageManager?: string;
 };
 
 export class ScopeMain implements ComponentFactory {
@@ -129,7 +136,9 @@ export class ScopeMain implements ComponentFactory {
 
     private envs: EnvsMain,
 
-    private dependencyResolver: DependencyResolverMain
+    private dependencyResolver: DependencyResolverMain,
+
+    private globalConfig: GlobalConfigMain
   ) {
     this.componentLoader = new ScopeComponentLoader(this, this.logger);
   }
@@ -163,6 +172,14 @@ export class ScopeMain implements ComponentFactory {
 
   get isLegacy(): boolean {
     return this.legacyScope.isLegacy;
+  }
+
+  get isGlobalScope(): boolean {
+    return this.path === GLOBAL_SCOPE;
+  }
+
+  get aspectsPackageManager(): string | undefined {
+    return this.config.aspectsPackageManager;
   }
 
   // We need to reload the aspects with their new version since:
@@ -240,12 +257,24 @@ export class ScopeMain implements ComponentFactory {
     return scopeAspectsLoader.getAspectCapsulePath();
   }
 
+  shouldUseHashForCapsules() {
+    const scopeAspectsLoader = this.getScopeAspectsLoader();
+    return scopeAspectsLoader.shouldUseHashForCapsules();
+  }
+
   getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
     return mapSeries(components, async (component) => this.getFromConsumerComponent(component));
   }
 
   getScopeAspectsLoader(): ScopeAspectsLoader {
-    const scopeAspectsLoader = new ScopeAspectsLoader(this, this.aspectLoader, this.envs, this.isolator, this.logger);
+    const scopeAspectsLoader = new ScopeAspectsLoader(
+      this,
+      this.aspectLoader,
+      this.envs,
+      this.isolator,
+      this.logger,
+      this.globalConfig
+    );
     return scopeAspectsLoader;
   }
 
@@ -492,7 +521,6 @@ export class ScopeMain implements ComponentFactory {
     ids: ComponentID[],
     {
       useCache = true,
-      throwIfNotExist = false,
       reFetchUnBuiltVersion = true,
       preferDependencyGraph = false,
       lane,
@@ -501,7 +529,6 @@ export class ScopeMain implements ComponentFactory {
        * if the component exists locally, don't go to the server to search for updates.
        */
       useCache?: boolean;
-      throwIfNotExist?: boolean;
       /**
        * if the Version objects exists locally, but its `buildStatus` is Pending or Failed, reach the remote to find
        * whether the version was already built there.
@@ -517,7 +544,7 @@ export class ScopeMain implements ComponentFactory {
        */
       preferDependencyGraph?: boolean;
     } = {}
-  ): Promise<Component[]> {
+  ): Promise<void> {
     const legacyIds = ids.map((id) => {
       const legacyId = id._legacy;
       if (legacyId.scope === this.name) return legacyId.changeScope(null);
@@ -535,8 +562,6 @@ export class ScopeMain implements ComponentFactory {
       lane,
       preferDependencyGraph,
     });
-
-    return this.getMany(ids, throwIfNotExist);
   }
 
   async get(id: ComponentID): Promise<Component | undefined> {
@@ -651,6 +676,11 @@ export class ScopeMain implements ComponentFactory {
    */
   async loadMany(ids: ComponentID[], lane?: Lane): Promise<Component[]> {
     const components = await mapSeries(ids, (id) => this.load(id, lane));
+    return compact(components);
+  }
+
+  async loadManyCompsAspects(Components: Component[], lane?: Lane): Promise<Component[]> {
+    const components = await mapSeries(Components, (id) => this.loadCompAspects(id, lane));
     return compact(components);
   }
 
@@ -782,6 +812,12 @@ export class ScopeMain implements ComponentFactory {
     return idsFiltered;
   }
 
+  async getSnapDistance(id: ComponentID): Promise<SnapsDistance> {
+    const modelComp = await this.legacyScope.getModelComponent(id._legacy);
+    await modelComp.setDivergeData(this.legacyScope.objects);
+    return modelComp.getDivergeData();
+  }
+
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
@@ -822,11 +858,36 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
+   * ModelComponent is of type `BitObject` which gets saved into the local scope as an object file.
+   * It has data about the tags and the component head. It doesn't have any data about the source-files/artifacts etc.
+   */
+  async getBitObjectModelComponent(id: ComponentID, throwIfNotExist = false): Promise<ModelComponent | undefined> {
+    return throwIfNotExist
+      ? this.legacyScope.getModelComponent(id._legacy)
+      : this.legacyScope.getModelComponentIfExist(id._legacy);
+  }
+
+  /**
+   * Version BitObject holds the data of the source files and build artifacts of a specific snap/tag.
+   */
+  async getBitObjectVersion(
+    modelComponent: ModelComponent,
+    version: string,
+    throwIfNotExist = false
+  ): Promise<Version | undefined> {
+    return modelComponent.loadVersion(version, this.legacyScope.objects, throwIfNotExist);
+  }
+
+  /**
    * get a component and load its aspect
    */
   async load(id: ComponentID, lane?: Lane): Promise<Component | undefined> {
     const component = await this.get(id);
     if (!component) return undefined;
+    return this.loadCompAspects(component, lane);
+  }
+
+  async loadCompAspects(component: Component, lane?: Lane): Promise<Component> {
     const aspectIds = component.state.aspects.ids;
     // load components from type aspects as aspects.
     // important! previously, this was running for any aspect, not only apps. (the if statement was `this.aspectLoader.isAspectComponent(component)`)
@@ -839,7 +900,7 @@ export class ScopeMain implements ComponentFactory {
     if (envsData?.data?.services || envsData?.data?.self) {
       aspectIds.push(component.id.toString());
     }
-    await this.loadAspects(aspectIds, true, id.toString(), lane);
+    await this.loadAspects(aspectIds, true, component.id.toString(), lane);
 
     return component;
   }
@@ -898,6 +959,7 @@ export class ScopeMain implements ComponentFactory {
     LoggerAspect,
     EnvsAspect,
     DependencyResolverAspect,
+    GlobalConfigAspect,
   ];
 
   static defaultConfig: ScopeConfig = {
@@ -905,7 +967,7 @@ export class ScopeMain implements ComponentFactory {
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver, globalConfig]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -915,7 +977,8 @@ export class ScopeMain implements ComponentFactory {
       ExpressMain,
       LoggerMain,
       EnvsMain,
-      DependencyResolverMain
+      DependencyResolverMain,
+      GlobalConfigMain
     ],
     config: ScopeConfig,
     [postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
@@ -948,7 +1011,8 @@ export class ScopeMain implements ComponentFactory {
       aspectLoader,
       logger,
       envs,
-      depsResolver
+      depsResolver,
+      globalConfig
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;

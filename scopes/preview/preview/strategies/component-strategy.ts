@@ -75,8 +75,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         entries,
         components,
         outputPath,
-        /* It's a path to the root of the host component. */
-        // hostRootDir, handle this
+        hostRootDir: context.envRuntime.envAspectDefinition.aspectPath,
         hostDependencies: peers,
         aliasHostDependencies: true,
         externalizeHostDependencies: true,

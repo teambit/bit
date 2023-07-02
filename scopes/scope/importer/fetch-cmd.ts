@@ -15,7 +15,7 @@ export class FetchCmd implements Command {
     [
       'l',
       'lanes',
-      'EXPERIMENTAL. fetch component objects from lanes. note, it does not save the remote lanes objects locally, only the refs',
+      'fetch component objects from lanes. note, it does not save the remote lanes objects locally, only the refs',
     ],
     ['c', 'components', 'fetch components'],
     [
