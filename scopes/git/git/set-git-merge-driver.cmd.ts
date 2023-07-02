@@ -1,6 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { GitMergerMain } from './git-merger.main.runtime';
+import { GitMain } from './git.main.runtime';
 
 const COMMAND_NAME = 'set-git-merge-driver';
 
@@ -17,10 +17,10 @@ export class SetGitMergeDriverCmd implements Command {
   commands: Command[] = [];
   // helpUrl = '';
 
-  constructor(private gitMerger: GitMergerMain) {}
+  constructor(private git: GitMain) {}
 
   async report(_args, flags: SetGitMergeDriverFlags) {
-    const res = await this.gitMerger.setGitMergeDriver(flags);
+    const res = await this.git.setGitMergeDriver(flags);
     if (res) {
       return chalk.green('git merge driver was successfully set');
     }

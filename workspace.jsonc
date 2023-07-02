@@ -624,6 +624,9 @@
     "scopes/workspace": {
       "defaultScope": "teambit.workspace"
     },
+    "scopes/git": {
+      "defaultScope": "teambit.git"
+    },
     "scopes/webpack": {
       "defaultScope": "teambit.webpack"
     },

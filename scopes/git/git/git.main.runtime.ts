@@ -5,7 +5,7 @@ import { join } from 'path';
 import gitconfig from 'gitconfig';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { GitMergerAspect } from './git-merger.aspect';
+import { GitAspect } from './git.aspect';
 import { MergeBitmapsCmd } from './merge-bitmaps.cmd';
 import { SetGitMergeDriverCmd } from './set-git-merge-driver.cmd';
 
@@ -23,7 +23,7 @@ const GIT_DRIVER_VALUE = 'bit merge-bitmaps %O %A %B';
 
 const GIT_ATTRIBUTES = '.bitmap merge=bitmap-driver';
 
-export class GitMergerMain {
+export class GitMain {
   constructor(private workspace: Workspace) {}
 
   async mergeBitmaps(ancestor: string, current: string, other: string) {
@@ -106,12 +106,12 @@ export class GitMergerMain {
   static runtime = MainRuntime;
 
   static async provider([cli, workspace]: [CLIMain, Workspace]) {
-    const gitMergerMain = new GitMergerMain(workspace);
-    cli.register(new SetGitMergeDriverCmd(gitMergerMain), new MergeBitmapsCmd(gitMergerMain));
-    return gitMergerMain;
+    const gitMain = new GitMain(workspace);
+    cli.register(new SetGitMergeDriverCmd(gitMain), new MergeBitmapsCmd(gitMain));
+    return gitMain;
   }
 }
 
-GitMergerAspect.addRuntime(GitMergerMain);
+GitAspect.addRuntime(GitMain);
 
-export default GitMergerMain;
+export default GitMain;

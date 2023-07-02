@@ -11,7 +11,7 @@ import type { ComponentMain, Component } from '@teambit/component';
 
 import { isCoreAspect, loadBit } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import GitMergerAspect, { GitMergerMain } from '@teambit/git-merger';
+import GitAspect, { GitMain } from '@teambit/git';
 import { BitError } from '@teambit/bit-error';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import TrackerAspect, { TrackerMain } from '@teambit/tracker';
@@ -82,7 +82,7 @@ export class GeneratorMain {
     private componentAspect: ComponentMain,
     private tracker: TrackerMain,
     private logger: Logger,
-    private gitMerger: GitMergerMain
+    private git: GitMain
   ) {}
 
   /**
@@ -478,7 +478,7 @@ export class GeneratorMain {
     ComponentAspect,
     TrackerAspect,
     LoggerAspect,
-    GitMergerAspect,
+    GitAspect,
   ];
 
   static runtime = MainRuntime;
@@ -495,7 +495,7 @@ export class GeneratorMain {
       componentAspect,
       tracker,
       loggerMain,
-      gitMerger,
+      git,
     ]: [
       Workspace,
       CLIMain,
@@ -507,7 +507,7 @@ export class GeneratorMain {
       ComponentMain,
       TrackerMain,
       LoggerMain,
-      GitMergerMain
+      GitMain
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
@@ -524,7 +524,7 @@ export class GeneratorMain {
       componentAspect,
       tracker,
       logger,
-      gitMerger
+      git
     );
     const commands = [
       new CreateCmd(generator, community.getDocsDomain()),
