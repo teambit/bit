@@ -1,5 +1,5 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
-import fetch, { Response } from 'node-fetch';
+import fetch, { Response } from 'cross-fetch';
 import readLine from 'readline';
 import HttpAgent from 'agentkeepalive';
 
@@ -250,6 +250,7 @@ export class Http implements Network {
       `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
     );
 
+    // @ts-ignore TODO: need to fix this
     const results = await this.readPutCentralStream(res.body);
     if (!results.data) throw new Error(`HTTP results are missing "data" property`);
     if (results.data.isError) {
@@ -289,6 +290,7 @@ export class Http implements Network {
       `Http.deleteViaCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
     );
 
+    // @ts-ignore TODO: need to fix this
     const results = await this.readPutCentralStream(res.body);
     if (!results.data) throw new Error(`HTTP results are missing "data" property`);
     if (results.data.isError) {
@@ -339,6 +341,7 @@ export class Http implements Network {
     const res = await fetch(urlToFetch, opts);
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
+    // @ts-ignore TODO: need to fix this
     const objectListReadable = ObjectList.fromTarToObjectStream(res.body);
 
     return objectListReadable;
@@ -373,7 +376,11 @@ export class Http implements Network {
     throw err;
   }
 
-  private async graphClientRequest(query: string, verb: string = Verb.READ, variables?: Record<string, any>) {
+  private async graphClientRequest(
+    query: string,
+    verb: string = Verb.READ,
+    variables?: Record<string, any>
+  ): Promise<any> {
     logger.debug(`http.graphClientRequest, scope "${this.scopeName}", url "${this.url}", query ${query}`);
     try {
       this.graphClient.setHeader('x-verb', verb);

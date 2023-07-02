@@ -388,7 +388,7 @@ export class LaneImportCmd implements Command {
     [
       'p',
       'pattern <component-pattern>',
-      'EXPERIMENTAL. switch only the specified component-pattern. works only when the workspace is empty',
+      'switch only the specified component-pattern. works only when the workspace is empty',
     ],
   ] as CommandOptions;
   loader = true;
