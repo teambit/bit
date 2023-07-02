@@ -33,7 +33,7 @@
           "identity-obj-proxy": "3.0.0",
           "jest-watch-typeahead": "1.0.0",
           "babel-plugin-named-asset-import": "0.3.7",
-          "babel-loader": "8.2.2",
+          "babel-loader": "9.1.2",
           "babel-preset-react-app": "^10.0.0",
           "style-loader": "^2.0.0",
           "css-loader": "6.2.0",
