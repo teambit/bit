@@ -410,7 +410,7 @@
     },
     "nodeLinker": "hoisted",
     "rootComponents": true,
-    "nodeVersion": "16.16.0",
+    "nodeVersion": "18.16.1",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
@@ -586,6 +586,9 @@
     },
     "scopes/workspace": {
       "defaultScope": "teambit.workspace"
+    },
+    "scopes/git": {
+      "defaultScope": "teambit.git"
     },
     "scopes/webpack": {
       "defaultScope": "teambit.webpack"

@@ -15,6 +15,7 @@ import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable'
 import GitNotFound from '@teambit/legacy/dist/utils/git/exceptions/git-not-found';
 import { resolve, join } from 'path';
 import { ComponentID } from '@teambit/component-id';
+import GitAspect, { GitMain } from '@teambit/git';
 import { InstallAspect, InstallMain } from '@teambit/install';
 import { WorkspaceTemplate, WorkspaceContext } from './workspace-template';
 import { NewOptions } from './new.cmd';
@@ -30,6 +31,7 @@ export class WorkspaceGenerator {
   private importer: ImporterMain;
   private logger: Logger;
   private forking: ForkingMain;
+  private git: GitMain;
   constructor(
     private workspaceName: string,
     private options: NewOptions,
@@ -50,6 +52,7 @@ export class WorkspaceGenerator {
       await init(this.workspacePath, this.options.skipGit, false, false, false, false, false, false, {});
       await this.writeWorkspaceFiles();
       await this.reloadBitInWorkspaceDir();
+      await this.setupGitBitmapMergeDriver();
       await this.forkComponentsFromRemote();
       await this.importComponentsFromRemote();
       await this.install.install(undefined, {
@@ -81,6 +84,11 @@ export class WorkspaceGenerator {
       }
       throw err;
     }
+  }
+
+  private async setupGitBitmapMergeDriver() {
+    if (this.options.skipGit) return;
+    await this.git.setGitMergeDriver({ global: false });
   }
 
   private async buildUI() {
@@ -119,6 +127,7 @@ export class WorkspaceGenerator {
     this.logger = loggerMain.createLogger(GeneratorAspect.id);
     this.importer = this.harmony.get<ImporterMain>(ImporterAspect.id);
     this.forking = this.harmony.get<ForkingMain>(ForkingAspect.id);
+    this.git = this.harmony.get<GitMain>(GitAspect.id);
   }
 
   private async forkComponentsFromRemote() {
