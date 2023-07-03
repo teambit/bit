@@ -925,6 +925,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return componentId.changeVersion(id.version);
   }
 
+  mergeBitmaps(bitmapContent: string, otherBitmapContent: string): string {
+    return this.bitMap.mergeBitmaps(bitmapContent, otherBitmapContent);
+  }
+
   /**
    * This will make sure to fetch the objects prior to load them
    * do not use it if you are not sure you need it.

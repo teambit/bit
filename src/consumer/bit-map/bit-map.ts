@@ -138,6 +138,17 @@ export default class BitMap {
     return componentMap;
   }
 
+  static mergeContent(rawContent: string, otherRawContent: string): string {
+    const parsed = json.parse(rawContent, undefined, true);
+    const parsedOther = json.parse(otherRawContent, undefined, true);
+    const merged = sortObject(Object.assign(parsed, parsedOther));
+    // Delete and re-add it to make sure it will be at the end
+    delete merged[SCHEMA_FIELD];
+    merged[SCHEMA_FIELD] = parsed[SCHEMA_FIELD];
+    const result = `${AUTO_GENERATED_MSG}${BITMAP_PREFIX_MESSAGE}${JSON.stringify(merged, null, 4)}`;
+    return result;
+  }
+
   static async load(consumer: Consumer): Promise<BitMap> {
     const dirPath: PathOsBasedAbsolute = consumer.getPath();
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
