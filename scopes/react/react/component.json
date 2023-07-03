@@ -17,7 +17,7 @@
           "@babel/preset-react": "7.13.13",
           "@typescript-eslint/parser": "5.35.1",
           "@typescript-eslint/eslint-plugin": "5.35.1",
-          "esbuild": "0.14.28",
+          "esbuild": "0.14.29",
           "eslint-plugin-jest": "24.1.5",
           "eslint-plugin-import": "2.22.1",
           "eslint-plugin-react-hooks": "4.2.0",
@@ -63,7 +63,7 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.515"
+          "@teambit/legacy": "1.0.516"
         }
       }
     }
