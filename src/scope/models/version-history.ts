@@ -1,5 +1,5 @@
 import { Graph, Edge, Node } from '@teambit/graph.cleargraph';
-import { compact, difference, uniq, uniqBy } from 'lodash';
+import { compact, difference, uniqBy } from 'lodash';
 import { BitId } from '../../bit-id';
 import getStringifyArgs from '../../utils/string/get-stringify-args';
 import Ref from '../objects/ref';
