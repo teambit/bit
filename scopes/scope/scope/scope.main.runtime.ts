@@ -812,9 +812,9 @@ export class ScopeMain implements ComponentFactory {
     return idsFiltered;
   }
 
-  async getSnapDistance(id: ComponentID): Promise<SnapsDistance> {
+  async getSnapDistance(id: ComponentID, throws = true): Promise<SnapsDistance> {
     const modelComp = await this.legacyScope.getModelComponent(id._legacy);
-    await modelComp.setDivergeData(this.legacyScope.objects);
+    await modelComp.setDivergeData(this.legacyScope.objects, throws);
     return modelComp.getDivergeData();
   }
 

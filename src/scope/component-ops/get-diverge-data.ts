@@ -33,6 +33,8 @@ export async function getDivergeData({
 }): Promise<SnapsDistance> {
   const isOnLane = modelComponent.laneHeadLocal || modelComponent.laneHeadLocal === null;
   const localHead = sourceHead || (isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead());
+  // uncomment the following line to debug diverge-data issues.
+  // if (modelComponent.name === 'x') console.log('getDivergeData, localHead', localHead, 'targetHead', targetHead);
   if (!targetHead) {
     if (localHead) {
       const allLocalHashes = await getAllVersionHashes({
