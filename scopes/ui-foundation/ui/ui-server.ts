@@ -158,7 +158,7 @@ export class UIServer {
 
     // TODO - should use https://github.com/chimurai/http-proxy-middleware
     server.on('upgrade', function (req, socket, head) {
-      const entry = proxyEntries.find((proxy) => proxy.context.some((item) => item === req.url));
+      const entry = proxyEntries.find((proxy) => proxy.context.some((item) => item === req.url.replace(/\/$/, '')));
       if (!entry) return;
       proxServer.ws(req, socket, head, {
         target: entry.target,
