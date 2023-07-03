@@ -52,7 +52,7 @@ export class WorkspaceGenerator {
       await init(this.workspacePath, this.options.skipGit, false, false, false, false, false, false, {});
       await this.writeWorkspaceFiles();
       await this.reloadBitInWorkspaceDir();
-      await this.setupGit();
+      await this.setupGitBitmapMergeDriver();
       await this.forkComponentsFromRemote();
       await this.importComponentsFromRemote();
       await this.install.install(undefined, {
@@ -86,7 +86,7 @@ export class WorkspaceGenerator {
     }
   }
 
-  private async setupGit() {
+  private async setupGitBitmapMergeDriver() {
     if (this.options.skipGit) return;
     await this.git.setGitMergeDriver({ global: false });
   }

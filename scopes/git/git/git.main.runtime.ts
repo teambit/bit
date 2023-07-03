@@ -20,7 +20,7 @@ const GIT_DRIVER_KEY = `${GIT_BASE_KEY}.driver`;
 
 const GIT_NAME_VALUE = 'A custom merge driver used to resolve conflicts in .bitmap files';
 // const binName = process.argv[1];
-const GIT_DRIVER_VALUE = 'bit merge-bitmaps %O %A %B';
+const GIT_DRIVER_VALUE = 'bit git merge-bitmaps %O %A %B';
 
 const GIT_ATTRIBUTES = '.bitmap merge=bitmap-driver';
 
