@@ -95,7 +95,7 @@ export class ComponentStatusLoader {
     }
 
     const lane = await this.consumer.getCurrentLaneObject();
-    await componentFromModel.setDivergeData(this.consumer.scope.objects);
+    await componentFromModel.setDivergeData(this.consumer.scope.objects, false);
     status.staged = await componentFromModel.isLocallyChanged(this.consumer.scope.objects, lane);
     const versionFromFs = componentFromFileSystem.id.version;
     const idStr = id.toString();

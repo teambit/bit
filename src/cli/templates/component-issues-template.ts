@@ -19,6 +19,8 @@ export function getInvalidComponentLabel(error: Error) {
       return `component files were added individually without root directory (invalid on Harmony. re-add as a directory or use "bit move --component" to help with the move)`;
     case 'IgnoredDirectory':
       return `component files or directory were ignored (probably by .gitignore)`;
+    case 'NoCommonSnap':
+      return `component history is unrelated to main (merge main with --resolve-unrelated flag)`;
     default:
       return error.name;
   }
