@@ -11,7 +11,8 @@ import HooksManager from './hooks';
 import { printWarning } from './logger/logger';
 import loader from './cli/loader';
 
-const SUPPORTED_NODE_VERSIONS = '>=18.12.0 <21.0.0';
+const RECOMMENDED_NODE_VERSIONS = '>=18.12.0 <21.0.0';
+const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <21.0.0';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -57,6 +58,15 @@ If you must use legacy versions of Node.js, please use our binary installation m
       )
     );
     process.exit(1);
+  }
+  const isRecommended = semver.satisfies(nodeVersion, RECOMMENDED_NODE_VERSIONS);
+  if (!isRecommended) {
+    // eslint-disable-next-line no-console
+    console.log(
+      chalk.yellow(
+        `warning - use Node ${RECOMMENDED_NODE_VERSIONS} for best performance. Using Node ${nodeVersion} may cause regressions.`
+      )
+    );
   }
 }
 
