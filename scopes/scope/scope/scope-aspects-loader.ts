@@ -9,7 +9,7 @@ import {
   CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR,
   CFG_USE_DATED_CAPSULES,
 } from '@teambit/legacy/dist/constants';
-import { Compiler } from '@teambit/compiler';
+import { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { compact, uniq, difference, groupBy } from 'lodash';
@@ -249,25 +249,29 @@ needed-for: ${neededFor || '<unknown>'}`);
     const distExists = existsSync(join(capsule.path, distDir));
     if (distExists) return;
 
-    const compiledCode = component.filesystem.files.flatMap((file) => {
-      if (!compiler.isFileSupported(file.path)) {
-        return [
-          {
-            outputText: file.contents.toString('utf8'),
-            outputPath: file.path,
-          },
-        ];
-      }
+    const compiledCode = (
+      await Promise.all(
+        component.filesystem.files.flatMap(async (file) => {
+          if (!compiler.isFileSupported(file.path)) {
+            return [
+              {
+                outputText: file.contents.toString('utf8'),
+                outputPath: file.path,
+              },
+            ] as TranspileFileOutputOneFile[];
+          }
 
-      if (compiler.transpileFile) {
-        return compiler.transpileFile(file.contents.toString('utf8'), {
-          filePath: file.path,
-          componentDir: capsule.path,
-        });
-      }
+          if (compiler.transpileFile) {
+            return compiler.transpileFile(file.contents.toString('utf8'), {
+              filePath: file.path,
+              componentDir: capsule.path,
+            });
+          }
 
-      return [];
-    });
+          return [];
+        })
+      )
+    ).flat();
 
     await Promise.all(
       compact(compiledCode).map((compiledFile) => {
