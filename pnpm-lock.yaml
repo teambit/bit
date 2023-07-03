@@ -925,8 +925,8 @@ importers:
         specifier: 2.3.6
         version: 2.3.6
       esbuild:
-        specifier: 0.14.28
-        version: 0.14.28
+        specifier: 0.14.29
+        version: 0.14.29
       eslint:
         specifier: 7.32.0
         version: 7.32.0
@@ -1577,7 +1577,7 @@ importers:
         version: 1.0.1
       terser-webpack-plugin:
         specifier: 5.2.0
-        version: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
+        version: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
@@ -1661,7 +1661,7 @@ importers:
         version: 3.16.0
       webpack:
         specifier: 5.84.1
-        version: 5.84.1(esbuild@0.14.28)
+        version: 5.84.1(esbuild@0.14.29)
       webpack-assets-manifest:
         specifier: 5.1.0
         version: 5.1.0(webpack@5.84.1)
@@ -1830,7 +1830,7 @@ importers:
         version: 2.0.3
       '@types/mini-css-extract-plugin':
         specifier: 2.2.0
-        version: 2.2.0(esbuild@0.14.28)
+        version: 2.2.0(esbuild@0.14.29)
       '@types/minimatch':
         specifier: 3.0.4
         version: 3.0.4
@@ -1887,7 +1887,7 @@ importers:
         version: 8.3.4
       '@types/webpack':
         specifier: 5.28.1
-        version: 5.28.1(esbuild@0.14.28)
+        version: 5.28.1(esbuild@0.14.29)
       '@types/webpack-dev-server':
         specifier: 4.7.2
         version: 4.7.2(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
@@ -4458,7 +4458,7 @@ importers:
         version: file:scopes/mdx/modules/compiler(react@17.0.2)
       '@teambit/mdx.modules.mdx-loader':
         specifier: workspace:*
-        version: file:scopes/mdx/modules/loader(esbuild@0.14.28)
+        version: file:scopes/mdx/modules/loader(esbuild@0.14.29)
       '@teambit/mdx.ui.docs.snippet':
         specifier: workspace:*
         version: file:scopes/mdx/ui/snippet(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -4542,7 +4542,7 @@ importers:
         version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -4722,7 +4722,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.2.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.2.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -4863,10 +4863,10 @@ importers:
         version: file:scopes/workspace/watcher(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2)
+        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.84.1)
@@ -6367,7 +6367,7 @@ importers:
         version: file:scopes/mdx/modules/compiler(react@17.0.2)
       '@teambit/mdx.modules.mdx-loader':
         specifier: workspace:*
-        version: file:scopes/mdx/modules/loader(esbuild@0.14.28)
+        version: file:scopes/mdx/modules/loader(esbuild@0.14.29)
       '@teambit/mdx.ui.docs.snippet':
         specifier: workspace:*
         version: file:scopes/mdx/ui/snippet(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -6451,7 +6451,7 @@ importers:
         version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -6631,7 +6631,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -6772,10 +6772,10 @@ importers:
         version: file:scopes/workspace/watcher(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2)
+        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.84.1)
@@ -8261,7 +8261,7 @@ importers:
         version: file:scopes/mdx/modules/compiler(react@17.0.2)
       '@teambit/mdx.modules.mdx-loader':
         specifier: workspace:*
-        version: file:scopes/mdx/modules/loader(esbuild@0.14.28)
+        version: file:scopes/mdx/modules/loader(esbuild@0.14.29)
       '@teambit/mdx.ui.docs.snippet':
         specifier: workspace:*
         version: file:scopes/mdx/ui/snippet(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -8345,7 +8345,7 @@ importers:
         version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -8525,7 +8525,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -8666,10 +8666,10 @@ importers:
         version: file:scopes/workspace/watcher(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2)
+        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.84.1)
@@ -10155,7 +10155,7 @@ importers:
         version: file:scopes/mdx/modules/compiler(react@17.0.2)
       '@teambit/mdx.modules.mdx-loader':
         specifier: workspace:*
-        version: file:scopes/mdx/modules/loader(esbuild@0.14.28)
+        version: file:scopes/mdx/modules/loader(esbuild@0.14.29)
       '@teambit/mdx.ui.docs.snippet':
         specifier: workspace:*
         version: file:scopes/mdx/ui/snippet(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -10239,7 +10239,7 @@ importers:
         version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -10419,7 +10419,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -10560,10 +10560,10 @@ importers:
         version: file:scopes/workspace/watcher(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2)
+        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.84.1)
@@ -12049,7 +12049,7 @@ importers:
         version: file:scopes/mdx/modules/compiler(react@17.0.2)
       '@teambit/mdx.modules.mdx-loader':
         specifier: workspace:*
-        version: file:scopes/mdx/modules/loader(esbuild@0.14.28)
+        version: file:scopes/mdx/modules/loader(esbuild@0.14.29)
       '@teambit/mdx.ui.docs.snippet':
         specifier: workspace:*
         version: file:scopes/mdx/ui/snippet(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -12133,7 +12133,7 @@ importers:
         version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -12313,7 +12313,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -12454,10 +12454,10 @@ importers:
         version: file:scopes/workspace/watcher(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2)
+        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.84.1)
@@ -13943,7 +13943,7 @@ importers:
         version: file:scopes/mdx/modules/compiler(react@17.0.2)
       '@teambit/mdx.modules.mdx-loader':
         specifier: workspace:*
-        version: file:scopes/mdx/modules/loader(esbuild@0.14.28)
+        version: file:scopes/mdx/modules/loader(esbuild@0.14.29)
       '@teambit/mdx.ui.docs.snippet':
         specifier: workspace:*
         version: file:scopes/mdx/ui/snippet(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -14027,7 +14027,7 @@ importers:
         version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -14207,7 +14207,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -14348,10 +14348,10 @@ importers:
         version: file:scopes/workspace/watcher(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2)
+        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.84.1)
@@ -15837,7 +15837,7 @@ importers:
         version: file:scopes/mdx/modules/compiler(react@17.0.2)
       '@teambit/mdx.modules.mdx-loader':
         specifier: workspace:*
-        version: file:scopes/mdx/modules/loader(esbuild@0.14.28)
+        version: file:scopes/mdx/modules/loader(esbuild@0.14.29)
       '@teambit/mdx.ui.docs.snippet':
         specifier: workspace:*
         version: file:scopes/mdx/ui/snippet(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -15921,7 +15921,7 @@ importers:
         version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -16101,7 +16101,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -16242,10 +16242,10 @@ importers:
         version: file:scopes/workspace/watcher(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2)
+        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.84.1)
@@ -26128,7 +26128,7 @@ importers:
         version: 0.5.0
       webpack:
         specifier: 5.84.1
-        version: 5.84.1(esbuild@0.14.28)
+        version: 5.84.1(esbuild@0.14.29)
     devDependencies:
       '@babel/preset-env':
         specifier: 7.19.4
@@ -26150,7 +26150,7 @@ importers:
         version: 12.20.4
       '@types/webpack':
         specifier: 5.28.1
-        version: 5.28.1(esbuild@0.14.28)
+        version: 5.28.1(esbuild@0.14.29)
       babel-loader:
         specifier: 9.1.2
         version: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
@@ -27241,8 +27241,8 @@ importers:
         specifier: 3.0.2
         version: 3.0.2(webpack@5.84.1)
       esbuild:
-        specifier: 0.14.28
-        version: 0.14.28
+        specifier: 0.14.29
+        version: 0.14.29
       eslint-plugin-import:
         specifier: 2.22.1
         version: 2.22.1(@typescript-eslint/parser@5.35.1)(eslint@7.32.0)
@@ -27356,7 +27356,7 @@ importers:
         version: 2.0.0(webpack@5.84.1)
       terser-webpack-plugin:
         specifier: 5.2.0
-        version: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
+        version: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
       typescript:
         specifier: 4.7.4
         version: 4.7.4
@@ -27365,7 +27365,7 @@ importers:
         version: 4.0.1
       webpack:
         specifier: 5.84.1
-        version: 5.84.1(esbuild@0.14.28)
+        version: 5.84.1(esbuild@0.14.29)
     devDependencies:
       '@teambit/react.content.react-overview':
         specifier: 1.95.0
@@ -27390,7 +27390,7 @@ importers:
         version: 4.4.6
       '@types/mini-css-extract-plugin':
         specifier: 2.2.0
-        version: 2.2.0(esbuild@0.14.28)
+        version: 2.2.0(esbuild@0.14.29)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -27417,7 +27417,7 @@ importers:
         version: 4.0.0
       '@types/webpack':
         specifier: 5.28.1
-        version: 5.28.1(esbuild@0.14.28)
+        version: 5.28.1(esbuild@0.14.29)
 
   scopes/react/react-elements:
     dependencies:
@@ -27507,10 +27507,10 @@ importers:
         version: 2.0.0(webpack@5.84.1)
       terser-webpack-plugin:
         specifier: 5.2.0
-        version: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
+        version: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
       webpack:
         specifier: 5.84.1
-        version: 5.84.1(esbuild@0.14.28)
+        version: 5.84.1(esbuild@0.14.29)
       webpack-manifest-plugin:
         specifier: 4.0.2
         version: 4.0.2(webpack@5.84.1)
@@ -27523,7 +27523,7 @@ importers:
         version: 4.14.165
       '@types/mini-css-extract-plugin':
         specifier: 2.2.0
-        version: 2.2.0(esbuild@0.14.28)
+        version: 2.2.0(esbuild@0.14.29)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -27547,7 +27547,7 @@ importers:
         version: 5.9.5
       '@types/webpack':
         specifier: 5.28.1
-        version: 5.28.1(esbuild@0.14.28)
+        version: 5.28.1(esbuild@0.14.29)
 
   scopes/react/react-native:
     dependencies:
@@ -30333,10 +30333,10 @@ importers:
         version: 2.0.0(webpack@5.84.1)
       terser-webpack-plugin:
         specifier: 5.2.0
-        version: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
+        version: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
       webpack:
         specifier: 5.84.1
-        version: 5.84.1(esbuild@0.14.28)
+        version: 5.84.1(esbuild@0.14.29)
       webpack-dev-server:
         specifier: 4.15.0
         version: 4.15.0(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
@@ -30364,7 +30364,7 @@ importers:
         version: 4.14.165
       '@types/mini-css-extract-plugin':
         specifier: 2.2.0
-        version: 2.2.0(esbuild@0.14.28)
+        version: 2.2.0(esbuild@0.14.29)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -30388,7 +30388,7 @@ importers:
         version: 5.9.5
       '@types/webpack':
         specifier: 5.28.1
-        version: 5.28.1(esbuild@0.14.28)
+        version: 5.28.1(esbuild@0.14.29)
       '@types/webpack-dev-server':
         specifier: 4.7.2
         version: 4.7.2(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
@@ -31579,7 +31579,7 @@ importers:
         version: 4.17.21
       webpack:
         specifier: 5.84.1
-        version: 5.84.1(esbuild@0.14.28)
+        version: 5.84.1(esbuild@0.14.29)
       webpack-merge:
         specifier: 5.8.0
         version: 5.8.0
@@ -31601,7 +31601,7 @@ importers:
         version: 12.20.4
       '@types/webpack':
         specifier: 5.28.1
-        version: 5.28.1(esbuild@0.14.28)
+        version: 5.28.1(esbuild@0.14.29)
       json-formatter-js:
         specifier: 2.3.4
         version: 2.3.4
@@ -31807,7 +31807,7 @@ importers:
         version: 1.1.2
       webpack:
         specifier: 5.84.1
-        version: 5.84.1(esbuild@0.14.28)
+        version: 5.84.1(esbuild@0.14.29)
       webpack-assets-manifest:
         specifier: 5.1.0
         version: 5.1.0(webpack@5.84.1)
@@ -31844,7 +31844,7 @@ importers:
         version: 5.9.5
       '@types/webpack':
         specifier: 5.28.1
-        version: 5.28.1(esbuild@0.14.28)
+        version: 5.28.1(esbuild@0.14.29)
       '@types/webpack-dev-server':
         specifier: 4.7.2
         version: 4.7.2(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
@@ -36349,7 +36349,7 @@ packages:
       webpack-plugin-serve:
         optional: true
     dependencies:
-      '@types/webpack': 5.28.1(esbuild@0.14.28)
+      '@types/webpack': 5.28.1(esbuild@0.14.29)
       ansi-html-community: 0.0.8
       common-path-prefix: 3.0.0
       core-js-pure: 3.27.2
@@ -36360,7 +36360,7 @@ packages:
       react-refresh: 0.10.0
       schema-utils: 3.1.1
       source-map: 0.7.4
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
     dev: false
 
@@ -37972,7 +37972,7 @@ packages:
       '@prerenderer/prerenderer': 1.2.0(@types/express@4.17.13)(debug@4.3.2)
       html-webpack-plugin: 5.3.2(webpack@5.84.1)
       schema-utils: 4.0.0
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     optionalDependencies:
       '@prerenderer/renderer-puppeteer': 1.1.3(puppeteer@13.7.0)
     transitivePeerDependencies:
@@ -44187,12 +44187,12 @@ packages:
   /@types/mime@2.0.3:
     resolution: {integrity: sha512-Jus9s4CDbqwocc5pOAnh8ShfrnMcPHuJYzVcSUU7lrh8Ni5HuIqX3oilL86p3dlTrk0LzHRCgA/GQ7uNCw6l2Q==}
 
-  /@types/mini-css-extract-plugin@2.2.0(esbuild@0.14.28):
+  /@types/mini-css-extract-plugin@2.2.0(esbuild@0.14.29):
     resolution: {integrity: sha512-euW/Y51OoAWsAuqtxIGV7Y++EW4dKHMj7NSxHoTRD6SqK1vziYhGfDWTmtlf4jkjIrzUW88NpVXMfiJESysZAA==}
     dependencies:
       '@types/node': 12.20.4
       tapable: 2.2.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
@@ -44470,12 +44470,12 @@ packages:
       source-map: 0.6.1
     dev: true
 
-  /@types/webpack@5.28.1(esbuild@0.14.28):
+  /@types/webpack@5.28.1(esbuild@0.14.29):
     resolution: {integrity: sha512-qw1MqGZclCoBrpiSe/hokSgQM/su8Ocpl3L/YHE0L6moyaypg4+5F7Uzq7NgaPKPxUxUbQ4fLPLpDWdR27bCZw==}
     dependencies:
       '@types/node': 12.20.4
       tapable: 2.2.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
@@ -47085,7 +47085,7 @@ packages:
       '@babel/core': 7.19.6
       find-cache-dir: 3.3.2
       schema-utils: 4.0.0
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
 
   /babel-plugin-apply-mdx-type-prop@1.6.21(@babel/core@7.11.6):
     resolution: {integrity: sha512-+vQarmm+g+kePH4CMp2iEN/HOx1oEvZeSKCdKCEZlnJOthXzkpaRAbM3ZNCiKqVr9WuoqPNfoXQ0EVppYpIwfg==}
@@ -48614,7 +48614,7 @@ packages:
     dependencies:
       schema-utils: 4.0.0
       serialize-javascript: 6.0.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /compression@1.7.4:
@@ -49050,7 +49050,7 @@ packages:
       postcss-value-parser: 4.2.0
       schema-utils: 3.1.1
       semver: 7.5.2
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /css-loader@6.2.0(webpack@5.84.1):
@@ -49067,7 +49067,7 @@ packages:
       postcss-modules-values: 4.0.0(postcss@8.4.18)
       postcss-value-parser: 4.2.0
       semver: 7.5.2
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /css-minimizer-webpack-plugin@3.0.2(webpack@5.84.1):
@@ -49090,7 +49090,7 @@ packages:
       schema-utils: 3.1.1
       serialize-javascript: 6.0.1
       source-map: 0.6.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /css-prefers-color-scheme@6.0.3(postcss@8.4.18):
@@ -50296,192 +50296,192 @@ packages:
       es6-symbol: 3.1.3
     dev: false
 
-  /esbuild-android-64@0.14.28:
-    resolution: {integrity: sha512-A52C3zq+9tNwCqZ+4kVLBxnk/WnrYM8P2+QNvNE9B6d2OVPs214lp3g6UyO+dKDhUdefhfPCuwkP8j2A/+szNA==}
+  /esbuild-android-64@0.14.29:
+    resolution: {integrity: sha512-tJuaN33SVZyiHxRaVTo1pwW+rn3qetJX/SRuc/83rrKYtyZG0XfsQ1ao1nEudIt9w37ZSNXR236xEfm2C43sbw==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [android]
     requiresBuild: true
     optional: true
 
-  /esbuild-android-arm64@0.14.28:
-    resolution: {integrity: sha512-sm0fDEGElZhMC3HLZeECI2juE4aG7uPfMBMqNUhy9CeX399Pz8rC6e78OXMXInGjSdEAwQmCOHmfsP7uv3Q8rA==}
+  /esbuild-android-arm64@0.14.29:
+    resolution: {integrity: sha512-D74dCv6yYnMTlofVy1JKiLM5JdVSQd60/rQfJSDP9qvRAI0laPXIG/IXY1RG6jobmFMUfL38PbFnCqyI/6fPXg==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [android]
     requiresBuild: true
     optional: true
 
-  /esbuild-darwin-64@0.14.28:
-    resolution: {integrity: sha512-nzDd7mQ44FvsFHtOafZdBgn3Li5SMsnMnoz1J2MM37xJmR3wGNTFph88KypjHgWqwbxCI7MXS1U+sN4qDeeW6Q==}
+  /esbuild-darwin-64@0.14.29:
+    resolution: {integrity: sha512-+CJaRvfTkzs9t+CjGa0Oa28WoXa7EeLutQhxus+fFcu0MHhsBhlmeWHac3Cc/Sf/xPi1b2ccDFfzGYJCfV0RrA==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
     optional: true
 
-  /esbuild-darwin-arm64@0.14.28:
-    resolution: {integrity: sha512-XEq/bLR/glsUl+uGrBimQzOVs/CmwI833fXUhP9xrLI3IJ+rKyrZ5IA8u+1crOEf1LoTn8tV+hInmX6rGjbScw==}
+  /esbuild-darwin-arm64@0.14.29:
+    resolution: {integrity: sha512-5Wgz/+zK+8X2ZW7vIbwoZ613Vfr4A8HmIs1XdzRmdC1kG0n5EG5fvKk/jUxhNlrYPx1gSY7XadQ3l4xAManPSw==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
     optional: true
 
-  /esbuild-freebsd-64@0.14.28:
-    resolution: {integrity: sha512-rTKLgUj/HEcPeE5XZ7IZwWpFx7IWMfprN7QRk/TUJE1s1Ipb58esboIesUpjirJz/BwrgHq+FDG9ChAI8dZAtQ==}
+  /esbuild-freebsd-64@0.14.29:
+    resolution: {integrity: sha512-VTfS7Bm9QA12JK1YXF8+WyYOfvD7WMpbArtDj6bGJ5Sy5xp01c/q70Arkn596aGcGj0TvQRplaaCIrfBG1Wdtg==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [freebsd]
     requiresBuild: true
     optional: true
 
-  /esbuild-freebsd-arm64@0.14.28:
-    resolution: {integrity: sha512-sBffxD1UMOsB7aWMoExmipycjcy3HJGwmqE4GQZUTZvdiH4GhjgUiVdtPyt7kSCdL40JqnWQJ4b1l8Y51oCF4Q==}
+  /esbuild-freebsd-arm64@0.14.29:
+    resolution: {integrity: sha512-WP5L4ejwLWWvd3Fo2J5mlXvG3zQHaw5N1KxFGnUc4+2ZFZknP0ST63i0IQhpJLgEJwnQpXv2uZlU1iWZjFqEIg==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-32@0.14.28:
-    resolution: {integrity: sha512-+Wxidh3fBEQ9kHcCsD4etlBTMb1n6QY2uXv3rFhVn88CY/JP782MhA57/ipLMY4kOLeSKEuFGN4rtjHuhmRMig==}
+  /esbuild-linux-32@0.14.29:
+    resolution: {integrity: sha512-4myeOvFmQBWdI2U1dEBe2DCSpaZyjdQtmjUY11Zu2eQg4ynqLb8Y5mNjNU9UN063aVsCYYfbs8jbken/PjyidA==}
     engines: {node: '>=12'}
     cpu: [ia32]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-64@0.14.28:
-    resolution: {integrity: sha512-7+xgsC4LvR6cnzaBdiljNnPDjbkwzahogN+S9uy9AoYw7ZjPnnXc6sjQAVCbqGb7MEgrWdpa6u/Tao79i4lWxg==}
+  /esbuild-linux-64@0.14.29:
+    resolution: {integrity: sha512-iaEuLhssReAKE7HMwxwFJFn7D/EXEs43fFy5CJeA4DGmU6JHh0qVJD2p/UP46DvUXLRKXsXw0i+kv5TdJ1w5pg==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-arm64@0.14.28:
-    resolution: {integrity: sha512-EjRHgwg+kgXABzyoPGPOPg4d5wZqRnZ/ZAxBDzLY+i6DS8OUfTSlZHWIOZzU4XF7125WxRBg9ULbrFJBl+57Eg==}
+  /esbuild-linux-arm64@0.14.29:
+    resolution: {integrity: sha512-KYf7s8wDfUy+kjKymW3twyGT14OABjGHRkm9gPJ0z4BuvqljfOOUbq9qT3JYFnZJHOgkr29atT//hcdD0Pi7Mw==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-arm@0.14.28:
-    resolution: {integrity: sha512-L5isjmlLbh9E0WVllXiVETbScgMbth/+XkXQii1WwgO1RvLIfaGrVFz8d2n6EH/ImtgYxPYGx+OcvIKQBc91Rg==}
+  /esbuild-linux-arm@0.14.29:
+    resolution: {integrity: sha512-OXa9D9QL1hwrAnYYAHt/cXAuSCmoSqYfTW/0CEY0LgJNyTxJKtqc5mlwjAZAvgyjmha0auS/sQ0bXfGf2wAokQ==}
     engines: {node: '>=12'}
     cpu: [arm]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-mips64le@0.14.28:
-    resolution: {integrity: sha512-krx9SSg7yfiUKk64EmjefOyiEF6nv2bRE4um/LiTaQ6Y/6FP4UF3/Ou/AxZVyR154uSRq63xejcAsmswXAYRsw==}
+  /esbuild-linux-mips64le@0.14.29:
+    resolution: {integrity: sha512-05jPtWQMsZ1aMGfHOvnR5KrTvigPbU35BtuItSSWLI2sJu5VrM8Pr9Owym4wPvA4153DFcOJ1EPN/2ujcDt54g==}
     engines: {node: '>=12'}
     cpu: [mips64el]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-ppc64le@0.14.28:
-    resolution: {integrity: sha512-LD0Xxu9g+DNuhsEBV5QuVZ4uKVBMup0xPIruLweuAf9/mHXFnaCuNXUBF5t0DxKl7GQ5MSioKtnb92oMo+QXEw==}
+  /esbuild-linux-ppc64le@0.14.29:
+    resolution: {integrity: sha512-FYhBqn4Ir9xG+f6B5VIQVbRuM4S6qwy29dDNYFPoxLRnwTEKToIYIUESN1qHyUmIbfO0YB4phG2JDV2JDN9Kgw==}
     engines: {node: '>=12'}
     cpu: [ppc64]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-riscv64@0.14.28:
-    resolution: {integrity: sha512-L/DWfRh2P0vxq4Y+qieSNXKGdMg+e9Qe8jkbN2/8XSGYDTPzO2OcAxSujob4qIh7iSl+cknbXV+BvH0YFR0jbg==}
+  /esbuild-linux-riscv64@0.14.29:
+    resolution: {integrity: sha512-eqZMqPehkb4nZcffnuOpXJQdGURGd6GXQ4ZsDHSWyIUaA+V4FpMBe+5zMPtXRD2N4BtyzVvnBko6K8IWWr36ew==}
     engines: {node: '>=12'}
     cpu: [riscv64]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-s390x@0.14.28:
-    resolution: {integrity: sha512-rrgxmsbmL8QQknWGnAL9bGJRQYLOi2AzXy5OTwfhxnj9eqjo5mSVbJXjgiq5LPUAMQZGdPH5yaNK0obAXS81Zw==}
+  /esbuild-linux-s390x@0.14.29:
+    resolution: {integrity: sha512-o7EYajF1rC/4ho7kpSG3gENVx0o2SsHm7cJ5fvewWB/TEczWU7teDgusGSujxCYcMottE3zqa423VTglNTYhjg==}
     engines: {node: '>=12'}
     cpu: [s390x]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-netbsd-64@0.14.28:
-    resolution: {integrity: sha512-h8wntIyOR8/xMVVM6TvJxxWKh4AjmLK87IPKpuVi8Pq0kyk0RMA+eo4PFGk5j2XK0D7dj8PcSF5NSlP9kN/j0A==}
+  /esbuild-netbsd-64@0.14.29:
+    resolution: {integrity: sha512-/esN6tb6OBSot6+JxgeOZeBk6P8V/WdR3GKBFeFpSqhgw4wx7xWUqPrdx4XNpBVO7X4Ipw9SAqgBrWHlXfddww==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [netbsd]
     requiresBuild: true
     optional: true
 
-  /esbuild-openbsd-64@0.14.28:
-    resolution: {integrity: sha512-HBv18rVapbuDx52/fhZ/c/w6TXyaQAvRxiDDn5Hz/pBcwOs3cdd2WxeIKlWmDoqm2JMx5EVlq4IWgoaRX9mVkw==}
+  /esbuild-openbsd-64@0.14.29:
+    resolution: {integrity: sha512-jUTdDzhEKrD0pLpjmk0UxwlfNJNg/D50vdwhrVcW/D26Vg0hVbthMfb19PJMatzclbK7cmgk1Nu0eNS+abzoHw==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [openbsd]
     requiresBuild: true
     optional: true
 
-  /esbuild-sunos-64@0.14.28:
-    resolution: {integrity: sha512-zlIxePhZxKYheR2vBCgPVvTixgo/ozOfOMoP6RZj8dxzquU1NgeyhjkcRXucbLCtmoNJ+i4PtWwPZTLuDd3bGg==}
+  /esbuild-sunos-64@0.14.29:
+    resolution: {integrity: sha512-EfhQN/XO+TBHTbkxwsxwA7EfiTHFe+MNDfxcf0nj97moCppD9JHPq48MLtOaDcuvrTYOcrMdJVeqmmeQ7doTcg==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [sunos]
     requiresBuild: true
     optional: true
 
-  /esbuild-windows-32@0.14.28:
-    resolution: {integrity: sha512-am9DIJxXlld1BOAY/VlvBQHMUCPL7S3gB/lnXIY3M4ys0gfuRqPf4EvMwZMzYUbFKBY+/Qb8SRgPRRGhwnJ8Kg==}
+  /esbuild-windows-32@0.14.29:
+    resolution: {integrity: sha512-uoyb0YAJ6uWH4PYuYjfGNjvgLlb5t6b3zIaGmpWPOjgpr1Nb3SJtQiK4YCPGhONgfg2v6DcJgSbOteuKXhwqAw==}
     engines: {node: '>=12'}
     cpu: [ia32]
     os: [win32]
     requiresBuild: true
     optional: true
 
-  /esbuild-windows-64@0.14.28:
-    resolution: {integrity: sha512-78PhySDnmRZlsPNp/W/5Fim8iivlBQQxfhBFIqR7xwvfDmCFUSByyMKP7LCHgNtb04yNdop8nJJkJaQ8Xnwgiw==}
+  /esbuild-windows-64@0.14.29:
+    resolution: {integrity: sha512-X9cW/Wl95QjsH8WUyr3NqbmfdU72jCp71cH3pwPvI4CgBM2IeOUDdbt6oIGljPu2bf5eGDIo8K3Y3vvXCCTd8A==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
     requiresBuild: true
     optional: true
 
-  /esbuild-windows-arm64@0.14.28:
-    resolution: {integrity: sha512-VhXGBTo6HELD8zyHXynV6+L2jWx0zkKnGx4TmEdSBK7UVFACtOyfUqpToG0EtnYyRZ0HESBhzPSVpP781ovmvA==}
+  /esbuild-windows-arm64@0.14.29:
+    resolution: {integrity: sha512-+O/PI+68fbUZPpl3eXhqGHTGK7DjLcexNnyJqtLZXOFwoAjaXlS5UBCvVcR3o2va+AqZTj8o6URaz8D2K+yfQQ==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
     optional: true
 
-  /esbuild@0.14.28:
-    resolution: {integrity: sha512-YLNprkCcMVKQ5sekmCKEQ3Obu/L7s6+iij38xNKyBeSmSsTWur4Ky/9zB3XIGT8SCJITG/bZwAR2l7YOAXch4Q==}
+  /esbuild@0.14.29:
+    resolution: {integrity: sha512-SQS8cO8xFEqevYlrHt6exIhK853Me4nZ4aMW6ieysInLa0FMAL+AKs87HYNRtR2YWRcEIqoXAHh+Ytt5/66qpg==}
     engines: {node: '>=12'}
     hasBin: true
     requiresBuild: true
     optionalDependencies:
-      esbuild-android-64: 0.14.28
-      esbuild-android-arm64: 0.14.28
-      esbuild-darwin-64: 0.14.28
-      esbuild-darwin-arm64: 0.14.28
-      esbuild-freebsd-64: 0.14.28
-      esbuild-freebsd-arm64: 0.14.28
-      esbuild-linux-32: 0.14.28
-      esbuild-linux-64: 0.14.28
-      esbuild-linux-arm: 0.14.28
-      esbuild-linux-arm64: 0.14.28
-      esbuild-linux-mips64le: 0.14.28
-      esbuild-linux-ppc64le: 0.14.28
-      esbuild-linux-riscv64: 0.14.28
-      esbuild-linux-s390x: 0.14.28
-      esbuild-netbsd-64: 0.14.28
-      esbuild-openbsd-64: 0.14.28
-      esbuild-sunos-64: 0.14.28
-      esbuild-windows-32: 0.14.28
-      esbuild-windows-64: 0.14.28
-      esbuild-windows-arm64: 0.14.28
+      esbuild-android-64: 0.14.29
+      esbuild-android-arm64: 0.14.29
+      esbuild-darwin-64: 0.14.29
+      esbuild-darwin-arm64: 0.14.29
+      esbuild-freebsd-64: 0.14.29
+      esbuild-freebsd-arm64: 0.14.29
+      esbuild-linux-32: 0.14.29
+      esbuild-linux-64: 0.14.29
+      esbuild-linux-arm: 0.14.29
+      esbuild-linux-arm64: 0.14.29
+      esbuild-linux-mips64le: 0.14.29
+      esbuild-linux-ppc64le: 0.14.29
+      esbuild-linux-riscv64: 0.14.29
+      esbuild-linux-s390x: 0.14.29
+      esbuild-netbsd-64: 0.14.29
+      esbuild-openbsd-64: 0.14.29
+      esbuild-sunos-64: 0.14.29
+      esbuild-windows-32: 0.14.29
+      esbuild-windows-64: 0.14.29
+      esbuild-windows-arm64: 0.14.29
 
   /escalade@3.1.1:
     resolution: {integrity: sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==}
@@ -51209,7 +51209,7 @@ packages:
     peerDependencies:
       webpack: ^5.0.0
     dependencies:
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /express-graphql@0.12.0(graphql@14.7.0):
@@ -51887,7 +51887,7 @@ packages:
       semver: 5.7.1
       tapable: 1.1.3
       typescript: 4.7.4
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
       worker-rpc: 0.1.1
     transitivePeerDependencies:
       - supports-color
@@ -52979,7 +52979,7 @@ packages:
       lodash: 4.17.21
       pretty-error: 3.0.4
       tapable: 2.2.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /htmlparser2@6.1.0:
@@ -55138,7 +55138,7 @@ packages:
     dependencies:
       klona: 2.0.6
       less: 4.1.3
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /less-loader@8.0.0(less@4.1.3)(webpack@5.84.1):
@@ -55150,7 +55150,7 @@ packages:
     dependencies:
       klona: 2.0.6
       less: 4.1.3
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /less@4.1.3:
@@ -55995,7 +55995,7 @@ packages:
       webpack: ^5.0.0
     dependencies:
       schema-utils: 3.1.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /minimalistic-assert@1.0.1:
@@ -56474,7 +56474,7 @@ packages:
     peerDependencies:
       webpack: ^5.0.0
     dependencies:
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /next-path@1.0.0:
@@ -58121,7 +58121,7 @@ packages:
       klona: 2.0.6
       postcss: 8.4.18
       semver: 7.5.2
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /postcss-logical@5.0.4(postcss@8.4.18):
@@ -59163,7 +59163,7 @@ packages:
       strip-ansi: 6.0.0
       text-table: 0.2.0
       typescript: 4.7.4
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     transitivePeerDependencies:
       - eslint
       - supports-color
@@ -60433,7 +60433,7 @@ packages:
       klona: 2.0.6
       neo-async: 2.6.2
       sass: 1.43.4
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /sass-lookup@3.0.0:
@@ -61065,7 +61065,7 @@ packages:
       abab: 2.0.6
       iconv-lite: 0.6.3
       source-map-js: 0.6.2
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /source-map-resolve@0.5.3:
@@ -61683,7 +61683,7 @@ packages:
     dependencies:
       loader-utils: 2.0.4
       schema-utils: 3.1.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /style-to-object@0.3.0:
@@ -62029,7 +62029,7 @@ packages:
       supports-hyperlinks: 2.3.0
     dev: false
 
-  /terser-webpack-plugin@5.2.0(esbuild@0.14.28)(webpack@5.84.1):
+  /terser-webpack-plugin@5.2.0(esbuild@0.14.29)(webpack@5.84.1):
     resolution: {integrity: sha512-FpR4Qe0Yt4knSQ5u2bA1wkM0R8VlVsvhyfSHvomXRivS4vPLk0dJV2IhRBIHRABh7AFutdMeElIA5y1dETwMBg==}
     engines: {node: '>= 10.13.0'}
     peerDependencies:
@@ -62045,17 +62045,17 @@ packages:
       uglify-js:
         optional: true
     dependencies:
-      esbuild: 0.14.28
+      esbuild: 0.14.29
       jest-worker: 27.5.1
       p-limit: 3.1.0
       schema-utils: 3.1.1
       serialize-javascript: 6.0.1
       source-map: 0.6.1
       terser: 5.16.2
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
-  /terser-webpack-plugin@5.3.8(esbuild@0.14.28)(webpack@5.84.1):
+  /terser-webpack-plugin@5.3.8(esbuild@0.14.29)(webpack@5.84.1):
     resolution: {integrity: sha512-WiHL3ElchZMsK27P8uIUh4604IgJyAW47LVXGbEoB21DbQcZ+OuMpGjVYnEUaqcWM6dO8uS2qUbA7LSCWqvsbg==}
     engines: {node: '>= 10.13.0'}
     peerDependencies:
@@ -62072,12 +62072,12 @@ packages:
         optional: true
     dependencies:
       '@jridgewell/trace-mapping': 0.3.17
-      esbuild: 0.14.28
+      esbuild: 0.14.29
       jest-worker: 27.5.1
       schema-utils: 3.1.2
       serialize-javascript: 6.0.1
       terser: 5.17.3
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
 
   /terser@4.8.1:
     resolution: {integrity: sha512-4GnLC0x667eJG0ewJTa6z/yXrbLGv80D9Ru6HIpCQmO+Q4PfEtBFi0ObSckqwL6VyQv/7ENJieXHo2ANmdQwgw==}
@@ -63462,7 +63462,7 @@ packages:
       lodash.has: 4.5.2
       schema-utils: 3.1.1
       tapable: 2.2.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /webpack-dev-middleware@5.3.3(webpack@5.84.1):
@@ -63476,7 +63476,7 @@ packages:
       mime-types: 2.1.35
       range-parser: 1.2.1
       schema-utils: 4.0.0
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
 
   /webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1):
     resolution: {integrity: sha512-HmNB5QeSl1KpulTBQ8UT4FPrByYyaLxpJoQ0+s7EvUrMc16m0ZS1sgb1XGqzmgCPk0c9y+aaXxn11tbLzuM7NQ==}
@@ -63519,7 +63519,7 @@ packages:
       serve-index: 1.9.1
       sockjs: 0.3.24
       spdy: 4.0.2
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-dev-middleware: 5.3.3(webpack@5.84.1)
       ws: 8.13.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     transitivePeerDependencies:
@@ -63535,7 +63535,7 @@ packages:
       webpack: ^4.44.2 || ^5.47.0
     dependencies:
       tapable: 2.2.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-sources: 2.3.1
     dev: false
 
@@ -63566,7 +63566,7 @@ packages:
     resolution: {integrity: sha512-/DyMEOrDgLKKIG0fmvtz+4dUX/3Ghozwgm6iPp8KRhvn+eQf9+Q7GWxVNMk3+uCPWfdXYC4ExGBckIXdFEfH1w==}
     engines: {node: '>=10.13.0'}
 
-  /webpack@5.84.1(esbuild@0.14.28):
+  /webpack@5.84.1(esbuild@0.14.29):
     resolution: {integrity: sha512-ZP4qaZ7vVn/K8WN/p990SGATmrL1qg4heP/MrVneczYtpDGJWlrgZv55vxaV2ul885Kz+25MP2kSXkPe3LZfmg==}
     engines: {node: '>=10.13.0'}
     hasBin: true
@@ -63597,7 +63597,7 @@ packages:
       neo-async: 2.6.2
       schema-utils: 3.1.2
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.8(esbuild@0.14.28)(webpack@5.84.1)
+      terser-webpack-plugin: 5.3.8(esbuild@0.14.29)(webpack@5.84.1)
       watchpack: 2.4.0
       webpack-sources: 3.2.3
     transitivePeerDependencies:
@@ -63950,7 +63950,7 @@ packages:
       pretty-bytes: 5.6.0
       source-map-url: 0.4.1
       upath: 1.2.0
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-sources: 1.4.3
       workbox-build: 6.2.4(@types/babel__core@7.20.0)
     transitivePeerDependencies:
@@ -68938,15 +68938,14 @@ packages:
       - supports-color
     dev: false
 
-  file:scopes/mdx/modules/loader(esbuild@0.14.28):
+  file:scopes/mdx/modules/loader(esbuild@0.14.29):
     resolution: {directory: scopes/mdx/modules/loader, type: directory}
     id: file:scopes/mdx/modules/loader
     name: '@teambit/mdx.modules.mdx-loader'
     dependencies:
-      chai: 4.3.0
       loader-utils: 2.0.4
       memory-fs: 0.5.0
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
@@ -69375,7 +69374,7 @@ packages:
       core-js: 3.13.0
       css-loader: 6.2.0(webpack@5.84.1)
       css-minimizer-webpack-plugin: 3.0.2(webpack@5.84.1)
-      esbuild: 0.14.28
+      esbuild: 0.14.29
       eslint-plugin-import: 2.22.1(@typescript-eslint/parser@5.35.1)(eslint@7.32.0)
       eslint-plugin-jest: 24.1.5(eslint@7.32.0)(typescript@4.7.4)
       eslint-plugin-jsx-a11y: 6.4.1(eslint@7.32.0)
@@ -69413,10 +69412,10 @@ packages:
       sass-loader: 12.1.0(sass@1.43.4)(webpack@5.84.1)
       strip-ansi: 6.0.0
       style-loader: 2.0.0(webpack@5.84.1)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
+      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
       typescript: 4.7.4
       url-join: 4.0.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc/core'
@@ -69452,7 +69451,7 @@ packages:
       - webpack-plugin-serve
     dev: false
 
-  file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4):
+  file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4):
     resolution: {directory: scopes/react/react-elements, type: directory}
     id: file:scopes/react/react-elements
     name: '@teambit/react-elements'
@@ -69488,8 +69487,8 @@ packages:
       resolve-url-loader: 5.0.0
       sass-loader: 12.1.0(sass@1.43.4)(webpack@5.84.1)
       style-loader: 2.0.0(webpack@5.84.1)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
-      webpack: 5.84.1(esbuild@0.14.28)
+      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-manifest-plugin: 4.0.2(webpack@5.84.1)
     transitivePeerDependencies:
       - '@babel/core'
@@ -70591,7 +70590,7 @@ packages:
       - '@types/react'
     dev: false
 
-  file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.2.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5):
+  file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.2.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5):
     resolution: {directory: scopes/ui-foundation/ui, type: directory}
     id: file:scopes/ui-foundation/ui
     name: '@teambit/ui'
@@ -70643,8 +70642,8 @@ packages:
       sass-loader: 12.1.0(sass@1.43.4)(webpack@5.84.1)
       source-map-loader: 3.0.0(webpack@5.84.1)
       style-loader: 2.0.0(webpack@5.84.1)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
-      webpack: 5.84.1(esbuild@0.14.28)
+      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
       webpack-manifest-plugin: 4.0.2(webpack@5.84.1)
       webpack-merge: 5.8.0
@@ -70678,7 +70677,7 @@ packages:
       - webpack-plugin-serve
     dev: false
 
-  file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5):
+  file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5):
     resolution: {directory: scopes/ui-foundation/ui, type: directory}
     id: file:scopes/ui-foundation/ui
     name: '@teambit/ui'
@@ -70730,8 +70729,8 @@ packages:
       sass-loader: 12.1.0(sass@1.43.4)(webpack@5.84.1)
       source-map-loader: 3.0.0(webpack@5.84.1)
       style-loader: 2.0.0(webpack@5.84.1)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
-      webpack: 5.84.1(esbuild@0.14.28)
+      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
       webpack-manifest-plugin: 4.0.2(webpack@5.84.1)
       webpack-merge: 5.8.0
@@ -71221,16 +71220,15 @@ packages:
       - graphql
     dev: false
 
-  file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2):
+  file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2):
     resolution: {directory: scopes/webpack/config-mutator, type: directory}
     id: file:scopes/webpack/config-mutator
     name: '@teambit/webpack.modules.config-mutator'
     dependencies:
       '@teambit/html.modules.inject-html-element': 0.0.4(react@17.0.2)
       html-webpack-plugin: 5.3.2(webpack@5.84.1)
-      json-formatter-js: 2.3.4
       lodash: 4.17.21
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
       - '@swc/core'
@@ -71279,7 +71277,7 @@ packages:
     name: '@teambit/webpack.modules.style-regexps'
     dev: false
 
-  file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5):
+  file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5):
     resolution: {directory: scopes/webpack/webpack, type: directory}
     id: file:scopes/webpack/webpack
     name: '@teambit/webpack'
@@ -71322,7 +71320,7 @@ packages:
       url: 0.11.0
       util: 0.12.3
       vm-browserify: 1.1.2
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-assets-manifest: 5.1.0(webpack@5.84.1)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
       webpack-merge: 5.8.0
