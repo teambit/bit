@@ -537,6 +537,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/generator/generator"
     },
+    "git": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/git/git"
+    },
     "global-config": {
         "scope": "teambit.harmony",
         "version": "0.0.737",
