@@ -135,6 +135,12 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   useDatedDirs?: boolean;
 
   /**
+   * If set, along with useDatedDirs, then we will use the same hash dir for all capsules created with the same
+   * datedDirId
+   */
+  datedDirId?: string;
+
+  /**
    * installation options
    */
   installOptions?: IsolateComponentsInstallOptions;
@@ -193,7 +199,7 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   context?: IsolationContext;
 };
 
-type GetCapsuleDirOpts = Pick<IsolateComponentsOptions, 'name' | 'useHash' | 'rootBaseDir' | 'useDatedDirs'> & {
+type GetCapsuleDirOpts = Pick<IsolateComponentsOptions, 'datedDirId' | 'useHash' | 'rootBaseDir' | 'useDatedDirs'> & {
   baseDir: string;
 };
 
@@ -707,10 +713,10 @@ export class IsolatorMain {
     rootBaseDir?: string,
     useHash = true,
     useDatedDirs = false,
-    name?: string
+    datedDirId?: string
   ): PathOsBasedAbsolute {
     if (typeof getCapsuleDirOpts === 'string') {
-      getCapsuleDirOpts = { baseDir: getCapsuleDirOpts, rootBaseDir, useHash, useDatedDirs, name };
+      getCapsuleDirOpts = { baseDir: getCapsuleDirOpts, rootBaseDir, useHash, useDatedDirs, datedDirId };
     }
     const getCapsuleDirOptsWithDefaults = {
       useHash: true,
@@ -723,13 +729,13 @@ export class IsolatorMain {
       const dateDir = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
       const datedBaseDir = 'dated-capsules';
       let hashDir;
-      const finalName = getCapsuleDirOpts.name;
-      if (finalName && this._datedHashForName.has(finalName)) {
-        hashDir = this._datedHashForName.get(finalName);
+      const finalDatedDirId = getCapsuleDirOpts.datedDirId;
+      if (finalDatedDirId && this._datedHashForName.has(finalDatedDirId)) {
+        hashDir = this._datedHashForName.get(finalDatedDirId);
       } else {
         hashDir = v4();
-        if (finalName) {
-          this._datedHashForName.set(finalName, hashDir);
+        if (finalDatedDirId) {
+          this._datedHashForName.set(finalDatedDirId, hashDir);
         }
       }
       return path.join(capsulesRootBaseDir, datedBaseDir, dateDir, hashDir);
