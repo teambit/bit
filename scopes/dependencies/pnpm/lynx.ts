@@ -304,7 +304,6 @@ export async function install(
         ...rebuildOpts,
         cacheDir,
       } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-      let stopReporting: Function | undefined;
       if (!_opts.hidePackageManagerOutput) {
         stopReporting = initReporter();
       }
