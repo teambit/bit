@@ -409,7 +409,7 @@ export class IsolatorMain {
     let longProcessLogger;
     if (opts.context?.aspects) {
       // const wsPath = opts.host?.path || 'unknown';
-      const wsPath = opts.context.workspaceName || opts.host?.path || 'unknown';
+      const wsPath = opts.context.workspaceName || opts.host?.path || opts.name || 'unknown';
       longProcessLogger = this.logger.createLongProcessLogger(
         `ensuring ${chalk.cyan(components.length.toString())} capsule(s) for all envs and aspects for ${chalk.bold(
           wsPath
