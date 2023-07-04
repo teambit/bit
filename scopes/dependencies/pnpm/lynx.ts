@@ -267,22 +267,9 @@ export async function install(
     depth: options.updateAll ? Infinity : 0,
   };
 
-  let stopReporting;
+  let stopReporting: Function | undefined;
   if (!options.hidePackageManagerOutput) {
-    stopReporting = initDefaultReporter({
-      context: {
-        argv: [],
-      },
-      reportingOptions: {
-        appendOnly: false,
-        throttleProgress: 200,
-      },
-      streamParser,
-      // Linked in core aspects are excluded from the output to reduce noise.
-      // Other @teambit/ dependencies will be shown.
-      // Only those that are symlinked from outside the workspace will be hidden.
-      filterPkgsDiff: (diff) => !diff.name.startsWith('@teambit/') || !diff.from,
-    });
+    stopReporting = initReporter();
   }
   let dependenciesChanged = false;
   try {
@@ -297,9 +284,7 @@ export async function install(
     }
     throw pnpmErrorToBitError(err);
   } finally {
-    if (stopReporting) {
-      stopReporting();
-    }
+    stopReporting?.();
   }
   if (options.rootComponents) {
     const modulesState = await readModulesManifest(path.join(rootDir, 'node_modules'));
@@ -313,17 +298,41 @@ export async function install(
   }
   return {
     dependenciesChanged,
-    rebuild: (rebuildOpts) =>
-      rebuild.handler(
-        {
-          ...opts,
-          ...rebuildOpts,
-          cacheDir,
-        } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-        []
-      ),
+    rebuild: async (rebuildOpts) => {
+      const _opts = {
+        ...opts,
+        ...rebuildOpts,
+        cacheDir,
+      } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      let stopReporting: Function | undefined;
+      if (!_opts.hidePackageManagerOutput) {
+        stopReporting = initReporter();
+      }
+      try {
+        await rebuild.handler(_opts, []);
+      } finally {
+        stopReporting?.();
+      }
+    },
     storeDir: storeController.dir,
   };
+}
+
+function initReporter() {
+  return initDefaultReporter({
+    context: {
+      argv: [],
+    },
+    reportingOptions: {
+      appendOnly: false,
+      throttleProgress: 200,
+    },
+    streamParser,
+    // Linked in core aspects are excluded from the output to reduce noise.
+    // Other @teambit/ dependencies will be shown.
+    // Only those that are symlinked from outside the workspace will be hidden.
+    filterPkgsDiff: (diff) => !diff.name.startsWith('@teambit/') || !diff.from,
+  });
 }
 
 /*
