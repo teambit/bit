@@ -193,7 +193,7 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   context?: IsolationContext;
 };
 
-type GetCapsuleDirOpts = Pick<IsolateComponentsOptions, 'useHash' | 'rootBaseDir' | 'useDatedDirs'> & {
+type GetCapsuleDirOpts = Pick<IsolateComponentsOptions, 'name' | 'useHash' | 'rootBaseDir' | 'useDatedDirs'> & {
   baseDir: string;
 };
 
@@ -223,6 +223,7 @@ export class IsolatorMain {
   ];
   static defaultConfig = {};
   _componentsPackagesVersionCache: { [idStr: string]: string } = {}; // cache packages versions of components
+  _datedHashForName = new Map<string, string>(); // cache dated hash for a specific name
 
   static async provider([dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader]: [
     DependencyResolverMain,
@@ -705,10 +706,11 @@ export class IsolatorMain {
     getCapsuleDirOpts: GetCapsuleDirOpts | string,
     rootBaseDir?: string,
     useHash = true,
-    useDatedDirs = false
+    useDatedDirs = false,
+    name?: string
   ): PathOsBasedAbsolute {
     if (typeof getCapsuleDirOpts === 'string') {
-      getCapsuleDirOpts = { baseDir: getCapsuleDirOpts, rootBaseDir, useHash, useDatedDirs };
+      getCapsuleDirOpts = { baseDir: getCapsuleDirOpts, rootBaseDir, useHash, useDatedDirs, name };
     }
     const getCapsuleDirOptsWithDefaults = {
       useHash: true,
@@ -720,7 +722,16 @@ export class IsolatorMain {
       const date = new Date();
       const dateDir = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
       const datedBaseDir = 'dated-capsules';
-      const hashDir = v4();
+      let hashDir;
+      const finalName = getCapsuleDirOpts.name;
+      if (finalName && this._datedHashForName.has(finalName)) {
+        hashDir = this._datedHashForName.get(finalName);
+      } else {
+        hashDir = v4();
+        if (finalName) {
+          this._datedHashForName.set(finalName, hashDir);
+        }
+      }
       return path.join(capsulesRootBaseDir, datedBaseDir, dateDir, hashDir);
     }
     const dir = getCapsuleDirOptsWithDefaults.useHash

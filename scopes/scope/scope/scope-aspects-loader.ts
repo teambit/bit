@@ -193,6 +193,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       components.map((c) => c.id),
       // includeFromNestedHosts - to support case when you are in a workspace, trying to load aspect defined in the workspace.jsonc but not part of the workspace
       {
+        name: this.scope.name,
         baseDir: this.getAspectCapsulePath(),
         useHash,
         packageManager: this.getAspectsPackageManager(),
@@ -382,6 +383,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const network = await this.isolator.isolateComponents(
       userAspectsIds,
       {
+        name: this.scope.name,
         baseDir: this.getAspectCapsulePath(),
         useHash,
         packageManager: this.getAspectsPackageManager(),
