@@ -158,6 +158,8 @@ export async function getPeerDependencyIssues(
   });
 }
 
+export type RebuildFn = (opts: { pending?: boolean }) => Promise<void>;
+
 export async function install(
   rootDir: string,
   manifestsByPaths: Record<string, ProjectManifest>,
@@ -188,7 +190,7 @@ export async function install(
     Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
-): Promise<{ dependenciesChanged: boolean; rebuild: () => Promise<void>; storeDir: string }> {
+): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string }> {
   let externalDependencies: Set<string> | undefined;
   const readPackage: ReadPackageHook[] = [];
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
@@ -311,10 +313,11 @@ export async function install(
   }
   return {
     dependenciesChanged,
-    rebuild: () =>
+    rebuild: (rebuildOpts) =>
       rebuild.handler(
         {
           ...opts,
+          ...rebuildOpts,
           cacheDir,
         } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         []
