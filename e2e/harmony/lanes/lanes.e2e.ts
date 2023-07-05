@@ -1020,6 +1020,50 @@ describe('bit lane command', function () {
       expect(() => helper.command.import(`${anotherRemote}/lane-b`)).to.not.throw();
     });
   });
+  // eventually, this forked lane history is not connected to main.
+  // lane-a merged+squashed into main and then continue snapping.
+  // on main the "squash" prop points to an older version from lane-a.
+  // on lane-b it's unable to connect its head to main. the missing history exists in lane-a only.
+  describe('multiple scopes - fork the lane, then original lane progresses and squashed to main', () => {
+    let anotherRemote: string;
+    let laneB: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.createLane('lane-b', `--scope ${anotherRemote}`);
+      laneB = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('lane-a', '-x');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.mergeLane('lane-a', '-x');
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(laneB);
+      helper.command.import();
+    });
+    it('should not throw NoCommonSnap on bit status', () => {
+      expect(() => helper.command.status()).not.to.throw();
+    });
+    it('should show the component in the invalid component section', () => {
+      const status = helper.command.statusJson();
+      expect(status.invalidComponents).lengthOf(2);
+      expect(status.invalidComponents[0].error.name).to.equal('NoCommonSnap');
+    });
+    it('should be able to export with no error', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+  });
   describe('snapping and un-tagging on a lane', () => {
     let afterFirstSnap: string;
     before(() => {
