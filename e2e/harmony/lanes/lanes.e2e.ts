@@ -1021,9 +1021,11 @@ describe('bit lane command', function () {
     });
   });
   // eventually, this forked lane history is not connected to main.
-  // lane-a merged+squashed into main and then continue snapping.
-  // on main the "squash" prop points to an older version from lane-a.
-  // on lane-b it's unable to connect its head to main. the missing history exists in lane-a only.
+  // lane-a continue snapping and then merged+squashed into main.
+  // on main the "squash" prop points to a newer version from lane-a, which doesn't exist on lane-b.
+  // on lane-b, getDivergeData compares its head to main, not to lane-a because they're different scopes.
+  // as a result, although it traverses the "squash", it's unable to connect main to lane-b.
+  // the missing history exists on lane-a only.
   describe('multiple scopes - fork the lane, then original lane progresses and squashed to main', () => {
     let anotherRemote: string;
     let laneB: string;
