@@ -10,7 +10,9 @@ describe('install missing dependencies', function () {
   before(async () => {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.fixtures.createComponentBarFoo('const isPositive = require("is-positive");');
+    helper.fixtures.createComponentBarFoo(
+      'const isPositive = require("is-positive");const compiler = require("@teambit/compiler")'
+    );
     helper.fixtures.addComponentBarFooAsDir();
     helper.command.install('--add-missing-deps');
     helper.command.tagAllWithoutBuild();
