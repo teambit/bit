@@ -54,8 +54,9 @@ export class ObjectsWritable extends Writable {
     }
   }
 
-  async _final() {
+  async _final(callback) {
     clearInterval(this.timeoutId);
+    callback();
   }
 
   private async writeObjectToFs(obj: ObjectItem) {

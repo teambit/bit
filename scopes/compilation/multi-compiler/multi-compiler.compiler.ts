@@ -67,26 +67,32 @@ export class MultiCompiler implements Compiler {
   /**
    * the multi-compiler applies all applicable defined compilers on given content.
    */
-  transpileFile(fileContent: string, options: TranspileFileParams): TranspileFileOutput {
-    const outputs = this.compilers.reduce<any>(
-      (files, compiler) => {
+  async transpileFile(fileContent: string, options: TranspileFileParams): Promise<TranspileFileOutput> {
+    const outputs: TranspileFileOutput = await this.compilers.reduce<Promise<TranspileFileOutput>>(
+      async (files: Promise<TranspileFileOutput>, compiler: Compiler) => {
         if (!compiler.transpileFile) {
           return files;
         }
-        return files?.flatMap((file) => {
-          if (!compiler.isFileSupported(file?.outputPath)) return [file];
-          const params = Object.assign({}, options, {
-            filePath: file.outputPath,
-          });
-          const compiledContent = compiler.transpileFile?.(file.outputText, params);
-          if (!compiledContent) return null;
-
-          return compiledContent;
-        });
+        const filesToTranspile = await files;
+        if (!filesToTranspile) return null;
+        const flatMap = (
+          await pMapSeries(filesToTranspile, async (file) => {
+            if (!compiler.isFileSupported(file?.outputPath)) return [file];
+            if (!compiler.transpileFile) return [];
+            const params = Object.assign({}, options, {
+              filePath: file.outputPath,
+            });
+            const compiledContent = await compiler.transpileFile(file.outputText, params);
+            if (compiledContent) {
+              return compiledContent;
+            }
+            return [];
+          })
+        ).flat();
+        return flatMap;
       },
-      [{ outputText: fileContent, outputPath: options.filePath }]
+      Promise.resolve([{ outputText: fileContent, outputPath: options.filePath }] as TranspileFileOutput)
     );
-
     return outputs;
   }
 

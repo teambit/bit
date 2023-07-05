@@ -7,42 +7,6 @@ settings:
 overrides:
   '@types/fs-capacitor': 2.0.0
   signal-exit@4: ^4.0.2
-  '@yarnpkg/core@^4.0.0-rc.45': 4.0.0-rc.45
-  '@yarnpkg/extensions@^2.0.0-rc.24': 2.0.0-rc.24
-  '@yarnpkg/fslib@^3.0.0-rc.45': 3.0.0-rc.45
-  '@yarnpkg/libui@^3.0.0-rc.42': 3.0.0-rc.42
-  '@yarnpkg/libzip@^3.0.0-rc.42': 3.0.0-rc.45
-  '@yarnpkg/libzip@^3.0.0-rc.45': 3.0.0-rc.45
-  '@yarnpkg/nm@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/parsers@^3.0.0-rc.45': 3.0.0-rc.45
-  '@yarnpkg/plugin-compat@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/plugin-compat@^4.0.0-rc.45': 4.0.0-rc.42
-  '@yarnpkg/plugin-constraints@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/plugin-dlx@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/plugin-essentials@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/plugin-exec@^3.0.0-rc.42': 3.0.0-rc.42
-  '@yarnpkg/plugin-file@^3.0.0-rc.42': 3.0.0-rc.42
-  '@yarnpkg/plugin-git@^3.0.0-rc.42': 3.0.0-rc.42
-  '@yarnpkg/plugin-github@^3.0.0-rc.42': 3.0.0-rc.42
-  '@yarnpkg/plugin-http@^3.0.0-rc.42': 3.0.0-rc.42
-  '@yarnpkg/plugin-init@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/plugin-interactive-tools@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/plugin-link@^3.0.0-rc.42': 3.0.0-rc.42
-  '@yarnpkg/plugin-nm@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/plugin-npm': 3.0.0-rc.42
-  '@yarnpkg/plugin-npm-cli@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/plugin-pack': 4.0.0-rc.42
-  '@yarnpkg/plugin-patch@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/plugin-pnp@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/plugin-pnpm@^2.0.0-rc.42': 2.0.0-rc.42
-  '@yarnpkg/plugin-stage@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/plugin-typescript@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/plugin-version@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/plugin-workspace-tools@^4.0.0-rc.42': 4.0.0-rc.42
-  '@yarnpkg/pnp@^4.0.0-rc.42': 4.0.0-rc.45
-  '@yarnpkg/pnp@^4.0.0-rc.45': 4.0.0-rc.45
-  '@yarnpkg/shell@^4.0.0-rc.42': 4.0.0-rc.45
-  '@yarnpkg/shell@^4.0.0-rc.45': 4.0.0-rc.45
 
 importers:
 
@@ -96,6 +60,9 @@ importers:
       '@graphql-modules/core':
         specifier: 0.7.17
         version: 0.7.17(graphql@14.7.0)(reflect-metadata@0.1.13)
+      '@graphql-tools/schema':
+        specifier: ^10.0.0
+        version: 10.0.0(graphql@14.7.0)
       '@jest/test-result':
         specifier: 26.6.2
         version: 26.6.2
@@ -704,7 +671,7 @@ importers:
         version: 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/core':
         specifier: 4.0.0-rc.45
-        version: 4.0.0-rc.45(typanion@3.12.1)
+        version: 4.0.0-rc.45
       '@yarnpkg/fslib':
         specifier: 3.0.0-rc.42
         version: 3.0.0-rc.42
@@ -871,8 +838,8 @@ importers:
         specifier: 7.0.3
         version: 7.0.3
       cross-fetch:
-        specifier: 3.0.6
-        version: 3.0.6
+        specifier: 3.1.5
+        version: 3.1.5
       crypto-browserify:
         specifier: 3.12.0
         version: 3.12.0
@@ -922,8 +889,8 @@ importers:
         specifier: 2.3.6
         version: 2.3.6
       esbuild:
-        specifier: 0.14.28
-        version: 0.14.28
+        specifier: 0.14.29
+        version: 0.14.29
       eslint:
         specifier: 7.32.0
         version: 7.32.0
@@ -1024,17 +991,14 @@ importers:
         specifier: 14.7.0
         version: 14.7.0
       graphql-request:
-        specifier: 3.4.0
-        version: 3.4.0(graphql@14.7.0)
+        specifier: 6.1.0
+        version: 6.1.0(graphql@14.7.0)
       graphql-subscriptions:
         specifier: 1.2.0
         version: 1.2.0(graphql@14.7.0)
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@14.7.0)
-      graphql-tools:
-        specifier: 6.2.4
-        version: 6.2.4(@types/node@12.20.4)(bufferutil@4.0.3)(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)(utf-8-validate@5.0.5)
       graphql-type-json:
         specifier: 0.3.2
         version: 0.3.2(graphql@14.7.0)
@@ -1577,7 +1541,7 @@ importers:
         version: 1.0.1
       terser-webpack-plugin:
         specifier: 5.2.0
-        version: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
+        version: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
       timers-browserify:
         specifier: 2.0.12
         version: 2.0.12
@@ -1661,7 +1625,7 @@ importers:
         version: 3.16.0
       webpack:
         specifier: 5.84.1
-        version: 5.84.1(esbuild@0.14.28)
+        version: 5.84.1(esbuild@0.14.29)
       webpack-assets-manifest:
         specifier: 5.1.0
         version: 5.1.0(webpack@5.84.1)
@@ -1830,7 +1794,7 @@ importers:
         version: 2.0.3
       '@types/mini-css-extract-plugin':
         specifier: 2.2.0
-        version: 2.2.0(esbuild@0.14.28)
+        version: 2.2.0(esbuild@0.14.29)
       '@types/minimatch':
         specifier: 3.0.4
         version: 3.0.4
@@ -1887,7 +1851,7 @@ importers:
         version: 8.3.4
       '@types/webpack':
         specifier: 5.28.1
-        version: 5.28.1(esbuild@0.14.28)
+        version: 5.28.1(esbuild@0.14.29)
       '@types/webpack-dev-server':
         specifier: 4.7.2
         version: 4.7.2(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
@@ -1895,8 +1859,8 @@ importers:
         specifier: 17.0.0
         version: 17.0.0
       babel-loader:
-        specifier: 8.2.2
-        version: 8.2.2(@babel/core@7.19.6)(webpack@5.84.1)
+        specifier: 9.1.2
+        version: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
       chai:
         specifier: 4.3.0
         version: 4.3.0
@@ -4297,6 +4261,9 @@ importers:
       '@teambit/generator.aspect-docs.generator':
         specifier: workspace:*
         version: file:scopes/generator/aspect-docs/generator(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/git':
+        specifier: workspace:*
+        version: file:scopes/git/git(react-dom@17.0.2)(react@17.0.2)
       '@teambit/global-config':
         specifier: workspace:*
         version: file:scopes/harmony/global-config(react-dom@17.0.2)(react@17.0.2)
@@ -4305,7 +4272,7 @@ importers:
         version: file:scopes/component/graph(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graphql':
         specifier: workspace:*
-        version: file:scopes/harmony/graphql(@apollo/client@3.6.9)(@types/node@12.20.4)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13)
+        version: file:scopes/harmony/graphql(@apollo/client@3.6.9)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13)
       '@teambit/harmony-ui-app':
         specifier: workspace:*
         version: file:scopes/ui-foundation/harmony-ui-app/harmony-ui-app(react-dom@17.0.2)(react@17.0.2)
@@ -4458,7 +4425,7 @@ importers:
         version: file:scopes/mdx/modules/compiler(react@17.0.2)
       '@teambit/mdx.modules.mdx-loader':
         specifier: workspace:*
-        version: file:scopes/mdx/modules/loader(esbuild@0.14.28)
+        version: file:scopes/mdx/modules/loader(esbuild@0.14.29)
       '@teambit/mdx.ui.docs.snippet':
         specifier: workspace:*
         version: file:scopes/mdx/ui/snippet(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -4542,7 +4509,7 @@ importers:
         version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -4722,7 +4689,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.2.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.2.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -4863,10 +4830,10 @@ importers:
         version: file:scopes/workspace/watcher(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2)
+        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.84.1)
@@ -5275,6 +5242,8 @@ importers:
       '@teambit/generator':
         injected: true
       '@teambit/generator.aspect-docs.generator':
+        injected: true
+      '@teambit/git':
         injected: true
       '@teambit/global-config':
         injected: true
@@ -6206,6 +6175,9 @@ importers:
       '@teambit/generator.aspect-docs.generator':
         specifier: workspace:*
         version: file:scopes/generator/aspect-docs/generator(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/git':
+        specifier: workspace:*
+        version: file:scopes/git/git(react-dom@17.0.2)(react@17.0.2)
       '@teambit/global-config':
         specifier: workspace:*
         version: file:scopes/harmony/global-config(react-dom@17.0.2)(react@17.0.2)
@@ -6214,7 +6186,7 @@ importers:
         version: file:scopes/component/graph(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graphql':
         specifier: workspace:*
-        version: file:scopes/harmony/graphql(@apollo/client@3.6.9)(@types/node@12.20.4)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13)
+        version: file:scopes/harmony/graphql(@apollo/client@3.6.9)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13)
       '@teambit/harmony-ui-app':
         specifier: workspace:*
         version: file:scopes/ui-foundation/harmony-ui-app/harmony-ui-app(react-dom@17.0.2)(react@17.0.2)
@@ -6367,7 +6339,7 @@ importers:
         version: file:scopes/mdx/modules/compiler(react@17.0.2)
       '@teambit/mdx.modules.mdx-loader':
         specifier: workspace:*
-        version: file:scopes/mdx/modules/loader(esbuild@0.14.28)
+        version: file:scopes/mdx/modules/loader(esbuild@0.14.29)
       '@teambit/mdx.ui.docs.snippet':
         specifier: workspace:*
         version: file:scopes/mdx/ui/snippet(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -6451,7 +6423,7 @@ importers:
         version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -6631,7 +6603,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -6772,10 +6744,10 @@ importers:
         version: file:scopes/workspace/watcher(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2)
+        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.84.1)
@@ -7169,6 +7141,8 @@ importers:
       '@teambit/generator':
         injected: true
       '@teambit/generator.aspect-docs.generator':
+        injected: true
+      '@teambit/git':
         injected: true
       '@teambit/global-config':
         injected: true
@@ -8100,6 +8074,9 @@ importers:
       '@teambit/generator.aspect-docs.generator':
         specifier: workspace:*
         version: file:scopes/generator/aspect-docs/generator(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/git':
+        specifier: workspace:*
+        version: file:scopes/git/git(react-dom@17.0.2)(react@17.0.2)
       '@teambit/global-config':
         specifier: workspace:*
         version: file:scopes/harmony/global-config(react-dom@17.0.2)(react@17.0.2)
@@ -8108,7 +8085,7 @@ importers:
         version: file:scopes/component/graph(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graphql':
         specifier: workspace:*
-        version: file:scopes/harmony/graphql(@apollo/client@3.6.9)(@types/node@12.20.4)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13)
+        version: file:scopes/harmony/graphql(@apollo/client@3.6.9)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13)
       '@teambit/harmony-ui-app':
         specifier: workspace:*
         version: file:scopes/ui-foundation/harmony-ui-app/harmony-ui-app(react-dom@17.0.2)(react@17.0.2)
@@ -8261,7 +8238,7 @@ importers:
         version: file:scopes/mdx/modules/compiler(react@17.0.2)
       '@teambit/mdx.modules.mdx-loader':
         specifier: workspace:*
-        version: file:scopes/mdx/modules/loader(esbuild@0.14.28)
+        version: file:scopes/mdx/modules/loader(esbuild@0.14.29)
       '@teambit/mdx.ui.docs.snippet':
         specifier: workspace:*
         version: file:scopes/mdx/ui/snippet(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -8345,7 +8322,7 @@ importers:
         version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -8525,7 +8502,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -8666,10 +8643,10 @@ importers:
         version: file:scopes/workspace/watcher(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2)
+        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.84.1)
@@ -9063,6 +9040,8 @@ importers:
       '@teambit/generator':
         injected: true
       '@teambit/generator.aspect-docs.generator':
+        injected: true
+      '@teambit/git':
         injected: true
       '@teambit/global-config':
         injected: true
@@ -9994,6 +9973,9 @@ importers:
       '@teambit/generator.aspect-docs.generator':
         specifier: workspace:*
         version: file:scopes/generator/aspect-docs/generator(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/git':
+        specifier: workspace:*
+        version: file:scopes/git/git(react-dom@17.0.2)(react@17.0.2)
       '@teambit/global-config':
         specifier: workspace:*
         version: file:scopes/harmony/global-config(react-dom@17.0.2)(react@17.0.2)
@@ -10002,7 +9984,7 @@ importers:
         version: file:scopes/component/graph(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graphql':
         specifier: workspace:*
-        version: file:scopes/harmony/graphql(@apollo/client@3.6.9)(@types/node@12.20.4)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13)
+        version: file:scopes/harmony/graphql(@apollo/client@3.6.9)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13)
       '@teambit/harmony-ui-app':
         specifier: workspace:*
         version: file:scopes/ui-foundation/harmony-ui-app/harmony-ui-app(react-dom@17.0.2)(react@17.0.2)
@@ -10155,7 +10137,7 @@ importers:
         version: file:scopes/mdx/modules/compiler(react@17.0.2)
       '@teambit/mdx.modules.mdx-loader':
         specifier: workspace:*
-        version: file:scopes/mdx/modules/loader(esbuild@0.14.28)
+        version: file:scopes/mdx/modules/loader(esbuild@0.14.29)
       '@teambit/mdx.ui.docs.snippet':
         specifier: workspace:*
         version: file:scopes/mdx/ui/snippet(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -10239,7 +10221,7 @@ importers:
         version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -10419,7 +10401,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -10560,10 +10542,10 @@ importers:
         version: file:scopes/workspace/watcher(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2)
+        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.84.1)
@@ -10957,6 +10939,8 @@ importers:
       '@teambit/generator':
         injected: true
       '@teambit/generator.aspect-docs.generator':
+        injected: true
+      '@teambit/git':
         injected: true
       '@teambit/global-config':
         injected: true
@@ -11888,6 +11872,9 @@ importers:
       '@teambit/generator.aspect-docs.generator':
         specifier: workspace:*
         version: file:scopes/generator/aspect-docs/generator(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/git':
+        specifier: workspace:*
+        version: file:scopes/git/git(react-dom@17.0.2)(react@17.0.2)
       '@teambit/global-config':
         specifier: workspace:*
         version: file:scopes/harmony/global-config(react-dom@17.0.2)(react@17.0.2)
@@ -11896,7 +11883,7 @@ importers:
         version: file:scopes/component/graph(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graphql':
         specifier: workspace:*
-        version: file:scopes/harmony/graphql(@apollo/client@3.6.9)(@types/node@12.20.4)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13)
+        version: file:scopes/harmony/graphql(@apollo/client@3.6.9)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13)
       '@teambit/harmony-ui-app':
         specifier: workspace:*
         version: file:scopes/ui-foundation/harmony-ui-app/harmony-ui-app(react-dom@17.0.2)(react@17.0.2)
@@ -12049,7 +12036,7 @@ importers:
         version: file:scopes/mdx/modules/compiler(react@17.0.2)
       '@teambit/mdx.modules.mdx-loader':
         specifier: workspace:*
-        version: file:scopes/mdx/modules/loader(esbuild@0.14.28)
+        version: file:scopes/mdx/modules/loader(esbuild@0.14.29)
       '@teambit/mdx.ui.docs.snippet':
         specifier: workspace:*
         version: file:scopes/mdx/ui/snippet(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -12133,7 +12120,7 @@ importers:
         version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -12313,7 +12300,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -12454,10 +12441,10 @@ importers:
         version: file:scopes/workspace/watcher(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2)
+        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.84.1)
@@ -12851,6 +12838,8 @@ importers:
       '@teambit/generator':
         injected: true
       '@teambit/generator.aspect-docs.generator':
+        injected: true
+      '@teambit/git':
         injected: true
       '@teambit/global-config':
         injected: true
@@ -13782,6 +13771,9 @@ importers:
       '@teambit/generator.aspect-docs.generator':
         specifier: workspace:*
         version: file:scopes/generator/aspect-docs/generator(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/git':
+        specifier: workspace:*
+        version: file:scopes/git/git(react-dom@17.0.2)(react@17.0.2)
       '@teambit/global-config':
         specifier: workspace:*
         version: file:scopes/harmony/global-config(react-dom@17.0.2)(react@17.0.2)
@@ -13790,7 +13782,7 @@ importers:
         version: file:scopes/component/graph(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graphql':
         specifier: workspace:*
-        version: file:scopes/harmony/graphql(@apollo/client@3.6.9)(@types/node@12.20.4)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13)
+        version: file:scopes/harmony/graphql(@apollo/client@3.6.9)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13)
       '@teambit/harmony-ui-app':
         specifier: workspace:*
         version: file:scopes/ui-foundation/harmony-ui-app/harmony-ui-app(react-dom@17.0.2)(react@17.0.2)
@@ -13943,7 +13935,7 @@ importers:
         version: file:scopes/mdx/modules/compiler(react@17.0.2)
       '@teambit/mdx.modules.mdx-loader':
         specifier: workspace:*
-        version: file:scopes/mdx/modules/loader(esbuild@0.14.28)
+        version: file:scopes/mdx/modules/loader(esbuild@0.14.29)
       '@teambit/mdx.ui.docs.snippet':
         specifier: workspace:*
         version: file:scopes/mdx/ui/snippet(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -14027,7 +14019,7 @@ importers:
         version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -14207,7 +14199,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -14348,10 +14340,10 @@ importers:
         version: file:scopes/workspace/watcher(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2)
+        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.84.1)
@@ -14745,6 +14737,8 @@ importers:
       '@teambit/generator':
         injected: true
       '@teambit/generator.aspect-docs.generator':
+        injected: true
+      '@teambit/git':
         injected: true
       '@teambit/global-config':
         injected: true
@@ -15676,6 +15670,9 @@ importers:
       '@teambit/generator.aspect-docs.generator':
         specifier: workspace:*
         version: file:scopes/generator/aspect-docs/generator(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/git':
+        specifier: workspace:*
+        version: file:scopes/git/git(react-dom@17.0.2)(react@17.0.2)
       '@teambit/global-config':
         specifier: workspace:*
         version: file:scopes/harmony/global-config(react-dom@17.0.2)(react@17.0.2)
@@ -15684,7 +15681,7 @@ importers:
         version: file:scopes/component/graph(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graphql':
         specifier: workspace:*
-        version: file:scopes/harmony/graphql(@apollo/client@3.6.9)(@types/node@12.20.4)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13)
+        version: file:scopes/harmony/graphql(@apollo/client@3.6.9)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13)
       '@teambit/harmony-ui-app':
         specifier: workspace:*
         version: file:scopes/ui-foundation/harmony-ui-app/harmony-ui-app(react-dom@17.0.2)(react@17.0.2)
@@ -15837,7 +15834,7 @@ importers:
         version: file:scopes/mdx/modules/compiler(react@17.0.2)
       '@teambit/mdx.modules.mdx-loader':
         specifier: workspace:*
-        version: file:scopes/mdx/modules/loader(esbuild@0.14.28)
+        version: file:scopes/mdx/modules/loader(esbuild@0.14.29)
       '@teambit/mdx.ui.docs.snippet':
         specifier: workspace:*
         version: file:scopes/mdx/ui/snippet(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
@@ -15921,7 +15918,7 @@ importers:
         version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -16101,7 +16098,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -16242,10 +16239,10 @@ importers:
         version: file:scopes/workspace/watcher(react-dom@17.0.2)(react@17.0.2)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2)
+        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.84.1)
@@ -16639,6 +16636,8 @@ importers:
       '@teambit/generator':
         injected: true
       '@teambit/generator.aspect-docs.generator':
+        injected: true
+      '@teambit/git':
         injected: true
       '@teambit/global-config':
         injected: true
@@ -23631,7 +23630,7 @@ importers:
         version: 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/core':
         specifier: 4.0.0-rc.45
-        version: 4.0.0-rc.45(typanion@3.12.1)
+        version: 4.0.0-rc.45
       '@yarnpkg/fslib':
         specifier: 3.0.0-rc.42
         version: 3.0.0-rc.42
@@ -24300,6 +24299,55 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+      '@types/react':
+        specifier: ^17.0.8
+        version: 17.0.8
+      '@types/react-dom':
+        specifier: ^17.0.5
+        version: 17.0.18
+      '@types/testing-library__jest-dom':
+        specifier: 5.9.5
+        version: 5.9.5
+
+  scopes/git/git:
+    dependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@teambit/harmony':
+        specifier: 0.4.6
+        version: 0.4.6
+      chalk:
+        specifier: 2.4.2
+        version: 2.4.2
+      core-js:
+        specifier: ^3.0.0
+        version: 3.13.0
+      fs-extra:
+        specifier: 10.0.0
+        version: 10.0.0
+      gitconfig:
+        specifier: 2.0.8
+        version: 2.0.8
+      react:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2
+      react-dom:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2(react@17.0.2)
+    devDependencies:
+      '@types/fs-extra':
+        specifier: 9.0.7
+        version: 9.0.7
+      '@types/jest':
+        specifier: ^26.0.0
+        version: 26.0.20
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -25170,6 +25218,9 @@ importers:
       '@graphql-modules/core':
         specifier: 0.7.17
         version: 0.7.17(graphql@14.7.0)(reflect-metadata@0.1.13)
+      '@graphql-tools/schema':
+        specifier: ^10.0.0
+        version: 10.0.0(graphql@14.7.0)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -25201,8 +25252,8 @@ importers:
         specifier: 2.8.5
         version: 2.8.5
       cross-fetch:
-        specifier: 3.0.6
-        version: 3.0.6
+        specifier: 3.1.5
+        version: 3.1.5
       express:
         specifier: 4.17.1
         version: 4.17.1
@@ -25215,9 +25266,6 @@ importers:
       graphql-subscriptions:
         specifier: 1.2.0
         version: 1.2.0(graphql@14.7.0)
-      graphql-tools:
-        specifier: 6.2.4
-        version: 6.2.4(@types/node@12.20.4)(bufferutil@4.0.3)(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)(utf-8-validate@5.0.5)
       http-proxy:
         specifier: 1.18.1
         version: 1.18.1(debug@4.3.2)
@@ -26128,7 +26176,7 @@ importers:
         version: 0.5.0
       webpack:
         specifier: 5.84.1
-        version: 5.84.1(esbuild@0.14.28)
+        version: 5.84.1(esbuild@0.14.29)
     devDependencies:
       '@babel/preset-env':
         specifier: 7.19.4
@@ -26150,10 +26198,10 @@ importers:
         version: 12.20.4
       '@types/webpack':
         specifier: 5.28.1
-        version: 5.28.1(esbuild@0.14.28)
+        version: 5.28.1(esbuild@0.14.29)
       babel-loader:
-        specifier: 8.2.2
-        version: 8.2.2(@babel/core@7.19.6)(webpack@5.84.1)
+        specifier: 9.1.2
+        version: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
       chai:
         specifier: 4.3.0
         version: 4.3.0
@@ -26752,14 +26800,14 @@ importers:
         specifier: ^3.0.0
         version: 3.13.0
       cross-fetch:
-        specifier: 3.0.6
-        version: 3.0.6
+        specifier: 3.1.5
+        version: 3.1.5
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
       graphql-request:
-        specifier: 3.4.0
-        version: 3.4.0(graphql@14.7.0)
+        specifier: 6.1.0
+        version: 6.1.0(graphql@14.7.0)
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@14.7.0)
@@ -27211,8 +27259,8 @@ importers:
         specifier: 5.35.1
         version: 5.35.1(eslint@7.32.0)(typescript@4.7.4)
       babel-loader:
-        specifier: 8.2.2
-        version: 8.2.2(@babel/core@7.19.6)(webpack@5.84.1)
+        specifier: 9.1.2
+        version: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
       babel-plugin-named-asset-import:
         specifier: 0.3.7
         version: 0.3.7(@babel/core@7.19.6)
@@ -27241,8 +27289,8 @@ importers:
         specifier: 3.0.2
         version: 3.0.2(webpack@5.84.1)
       esbuild:
-        specifier: 0.14.28
-        version: 0.14.28
+        specifier: 0.14.29
+        version: 0.14.29
       eslint-plugin-import:
         specifier: 2.22.1
         version: 2.22.1(@typescript-eslint/parser@5.35.1)(eslint@7.32.0)
@@ -27356,7 +27404,7 @@ importers:
         version: 2.0.0(webpack@5.84.1)
       terser-webpack-plugin:
         specifier: 5.2.0
-        version: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
+        version: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
       typescript:
         specifier: 4.7.4
         version: 4.7.4
@@ -27365,7 +27413,7 @@ importers:
         version: 4.0.1
       webpack:
         specifier: 5.84.1
-        version: 5.84.1(esbuild@0.14.28)
+        version: 5.84.1(esbuild@0.14.29)
     devDependencies:
       '@teambit/react.content.react-overview':
         specifier: 1.95.0
@@ -27390,7 +27438,7 @@ importers:
         version: 4.4.6
       '@types/mini-css-extract-plugin':
         specifier: 2.2.0
-        version: 2.2.0(esbuild@0.14.28)
+        version: 2.2.0(esbuild@0.14.29)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -27417,7 +27465,7 @@ importers:
         version: 4.0.0
       '@types/webpack':
         specifier: 5.28.1
-        version: 5.28.1(esbuild@0.14.28)
+        version: 5.28.1(esbuild@0.14.29)
 
   scopes/react/react-elements:
     dependencies:
@@ -27440,8 +27488,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       babel-loader:
-        specifier: 8.2.2
-        version: 8.2.2(@babel/core@7.19.6)(webpack@5.84.1)
+        specifier: 9.1.2
+        version: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
       babel-preset-react-app:
         specifier: ^10.0.0
         version: 10.0.0
@@ -27507,10 +27555,10 @@ importers:
         version: 2.0.0(webpack@5.84.1)
       terser-webpack-plugin:
         specifier: 5.2.0
-        version: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
+        version: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
       webpack:
         specifier: 5.84.1
-        version: 5.84.1(esbuild@0.14.28)
+        version: 5.84.1(esbuild@0.14.29)
       webpack-manifest-plugin:
         specifier: 4.0.2
         version: 4.0.2(webpack@5.84.1)
@@ -27523,7 +27571,7 @@ importers:
         version: 4.14.165
       '@types/mini-css-extract-plugin':
         specifier: 2.2.0
-        version: 2.2.0(esbuild@0.14.28)
+        version: 2.2.0(esbuild@0.14.29)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -27547,7 +27595,7 @@ importers:
         version: 5.9.5
       '@types/webpack':
         specifier: 5.28.1
-        version: 5.28.1(esbuild@0.14.28)
+        version: 5.28.1(esbuild@0.14.29)
 
   scopes/react/react-native:
     dependencies:
@@ -30239,8 +30287,8 @@ importers:
         specifier: 0.0.3
         version: 0.0.3(react-dom@17.0.2)(react@17.0.2)
       babel-loader:
-        specifier: 8.2.2
-        version: 8.2.2(@babel/core@7.19.6)(webpack@5.84.1)
+        specifier: 9.1.2
+        version: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
       babel-plugin-named-asset-import:
         specifier: 0.3.7
         version: 0.3.7(@babel/core@7.19.6)
@@ -30333,10 +30381,10 @@ importers:
         version: 2.0.0(webpack@5.84.1)
       terser-webpack-plugin:
         specifier: 5.2.0
-        version: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
+        version: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
       webpack:
         specifier: 5.84.1
-        version: 5.84.1(esbuild@0.14.28)
+        version: 5.84.1(esbuild@0.14.29)
       webpack-dev-server:
         specifier: 4.15.0
         version: 4.15.0(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
@@ -30364,7 +30412,7 @@ importers:
         version: 4.14.165
       '@types/mini-css-extract-plugin':
         specifier: 2.2.0
-        version: 2.2.0(esbuild@0.14.28)
+        version: 2.2.0(esbuild@0.14.29)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -30388,7 +30436,7 @@ importers:
         version: 5.9.5
       '@types/webpack':
         specifier: 5.28.1
-        version: 5.28.1(esbuild@0.14.28)
+        version: 5.28.1(esbuild@0.14.29)
       '@types/webpack-dev-server':
         specifier: 4.7.2
         version: 4.7.2(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
@@ -31579,7 +31627,7 @@ importers:
         version: 4.17.21
       webpack:
         specifier: 5.84.1
-        version: 5.84.1(esbuild@0.14.28)
+        version: 5.84.1(esbuild@0.14.29)
       webpack-merge:
         specifier: 5.8.0
         version: 5.8.0
@@ -31601,7 +31649,7 @@ importers:
         version: 12.20.4
       '@types/webpack':
         specifier: 5.28.1
-        version: 5.28.1(esbuild@0.14.28)
+        version: 5.28.1(esbuild@0.14.29)
       json-formatter-js:
         specifier: 2.3.4
         version: 2.3.4
@@ -31807,7 +31855,7 @@ importers:
         version: 1.1.2
       webpack:
         specifier: 5.84.1
-        version: 5.84.1(esbuild@0.14.28)
+        version: 5.84.1(esbuild@0.14.29)
       webpack-assets-manifest:
         specifier: 5.1.0
         version: 5.1.0(webpack@5.84.1)
@@ -31844,7 +31892,7 @@ importers:
         version: 5.9.5
       '@types/webpack':
         specifier: 5.28.1
-        version: 5.28.1(esbuild@0.14.28)
+        version: 5.28.1(esbuild@0.14.29)
       '@types/webpack-dev-server':
         specifier: 4.7.2
         version: 4.7.2(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
@@ -32921,42 +32969,6 @@ packages:
       grapheme-splitter: 1.0.4
     dev: false
 
-  /@ardatan/aggregate-error@0.0.6:
-    resolution: {integrity: sha512-vyrkEHG1jrukmzTPtyWB4NLPauUw5bQeg4uhn8f+1SSynmrOcyvlb1GKQjjgoBzElLdfXCRYX8UnBlhklOHYRQ==}
-    engines: {node: '>=8'}
-    dependencies:
-      tslib: 2.0.3
-    dev: false
-
-  /@ardatan/relay-compiler@12.0.0(graphql@14.7.0):
-    resolution: {integrity: sha512-9anThAaj1dQr6IGmzBMcfzOQKTa5artjuPmw8NYK/fiGEMjADbSguBY2FMDykt+QhilR3wc9VA/3yVju7JHg7Q==}
-    hasBin: true
-    peerDependencies:
-      graphql: '*'
-    dependencies:
-      '@babel/core': 7.19.6
-      '@babel/generator': 7.20.14
-      '@babel/parser': 7.22.4
-      '@babel/runtime': 7.20.0
-      '@babel/traverse': 7.20.13
-      '@babel/types': 7.22.3
-      babel-preset-fbjs: 3.4.0(@babel/core@7.19.6)
-      chalk: 4.1.2
-      fb-watchman: 2.0.2
-      fbjs: 3.0.4
-      glob: 7.1.6
-      graphql: 14.7.0
-      immutable: 3.7.6
-      invariant: 2.2.4
-      nullthrows: 1.1.1
-      relay-runtime: 12.0.0
-      signedsource: 1.0.0
-      yargs: 15.4.1
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-    dev: false
-
   /@babel/cli@7.19.3(@babel/core@7.19.6):
     resolution: {integrity: sha512-643/TybmaCAe101m2tSVHi9UKpETXP9c/Ff4mD2tAwkdP6esKIfaauZFc67vGEM6r9fekbEGid+sZhbEnSe3dg==}
     engines: {node: '>=6.9.0'}
@@ -33451,14 +33463,6 @@ packages:
       '@babel/helper-validator-identifier': 7.19.1
       chalk: 2.4.2
       js-tokens: 4.0.0
-
-  /@babel/parser@7.12.16:
-    resolution: {integrity: sha512-c/+u9cqV6F0+4Hpq01jnJO+GLp2DdT63ppz9Xa+6cHaajM9VFzK/iDXiKK65YtpeVwu+ctfS6iqlMqRgQRzeCw==}
-    engines: {node: '>=6.0.0'}
-    hasBin: true
-    dependencies:
-      '@babel/types': 7.22.3
-    dev: false
 
   /@babel/parser@7.20.13:
     resolution: {integrity: sha512-gFDLKMfpiXCsjt4za2JA9oTMn70CeseCehb11kRZgvd7+F67Hih3OHOK24cRrWECJ/ljfPGac6ygXAs/C8kIvw==}
@@ -34045,16 +34049,6 @@ packages:
       '@babel/helper-plugin-utils': 7.20.2
     dev: false
 
-  /@babel/plugin-syntax-flow@7.18.6(@babel/core@7.19.6):
-    resolution: {integrity: sha512-LUbR+KNTBWCUAqRG9ex5Gnzu2IOkt8jRJbHHXFT9q+L9zm7M/QQbEqXyw1n1pohYvOyWC8CjeyjrSaIwiYjK7A==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.19.6
-      '@babel/helper-plugin-utils': 7.20.2
-    dev: false
-
   /@babel/plugin-syntax-import-assertions@7.20.0(@babel/core@7.19.6):
     resolution: {integrity: sha512-IUh1vakzNoWalR8ch/areW7qFopR2AEw03JlG7BbrDqmQ4X3q9uuipQwSGrUn7oGiemKjtSLDhNtQHzMHr1JdQ==}
     engines: {node: '>=6.9.0'}
@@ -34537,17 +34531,6 @@ packages:
       '@babel/core': 7.12.3
       '@babel/helper-plugin-utils': 7.20.2
       '@babel/plugin-syntax-flow': 7.18.6(@babel/core@7.12.3)
-    dev: false
-
-  /@babel/plugin-transform-flow-strip-types@7.19.0(@babel/core@7.19.6):
-    resolution: {integrity: sha512-sgeMlNaQVbCSpgLSKP4ZZKfsJVnFnNQlUSk6gPYzR/q7tzCgQF2t8RBKAP6cKJeZdveei7Q7Jm527xepI8lNLg==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.19.6
-      '@babel/helper-plugin-utils': 7.20.2
-      '@babel/plugin-syntax-flow': 7.18.6(@babel/core@7.19.6)
     dev: false
 
   /@babel/plugin-transform-for-of@7.18.8(@babel/core@7.12.3):
@@ -35611,22 +35594,6 @@ packages:
       '@babel/parser': 7.22.4
       '@babel/types': 7.22.3
 
-  /@babel/traverse@7.12.13:
-    resolution: {integrity: sha512-3Zb4w7eE/OslI0fTp8c7b286/cQps3+vdLW3UcwC8VSJC6GbKn55aeVVu2QJNuCDoeKyptLOFrPq8WqZZBodyA==}
-    dependencies:
-      '@babel/code-frame': 7.18.6
-      '@babel/generator': 7.20.14
-      '@babel/helper-function-name': 7.19.0
-      '@babel/helper-split-export-declaration': 7.18.6
-      '@babel/parser': 7.22.4
-      '@babel/types': 7.22.3
-      debug: 4.3.2
-      globals: 11.12.0
-      lodash: 4.17.21
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
   /@babel/traverse@7.20.13:
     resolution: {integrity: sha512-kMJXfF0T6DIS9E8cgdLCSAL+cuCK+YEZHWiLK0SXpTo8YRj5lpJu3CDNKiIBCne4m9hhTIqUg6SYTAI39tAiVQ==}
     engines: {node: '>=6.9.0'}
@@ -35643,14 +35610,6 @@ packages:
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
-
-  /@babel/types@7.12.13:
-    resolution: {integrity: sha512-oKrdZTld2im1z8bDwTOQvUbxKwE+854zc16qWZQlcTqMN00pWxHQ4ZeOq0yDMnisOpRykH2/5Qqcrk/OlbAjiQ==}
-    dependencies:
-      '@babel/helper-validator-identifier': 7.19.1
-      lodash: 4.17.21
-      to-fast-properties: 2.0.0
-    dev: false
 
   /@babel/types@7.22.3:
     resolution: {integrity: sha512-P3na3xIQHTKY4L0YOG7pM8M8uoUIB910WQaSiiMCZUC2Cy8XFEQONGABFnHWBa2gpGKODTAJcNhi5Zk0sLRrzg==}
@@ -35942,415 +35901,39 @@ packages:
       - encoding
     dev: false
 
-  /@graphql-tools/batch-delegate@6.2.6(graphql@14.7.0):
-    resolution: {integrity: sha512-QUoE9pQtkdNPFdJHSnBhZtUfr3M7pIRoXoMR+TG7DK2Y62ISKbT/bKtZEUU1/2v5uqd5WVIvw9dF8gHDSJAsSA==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/delegate': 6.2.4(graphql@14.7.0)
-      dataloader: 2.0.0
-      graphql: 14.7.0
-      tslib: 2.0.3
-    dev: false
-
-  /@graphql-tools/batch-execute@7.1.2(graphql@14.7.0):
-    resolution: {integrity: sha512-IuR2SB2MnC2ztA/XeTMTfWcA0Wy7ZH5u+nDkDNLAdX+AaSyDnsQS35sCmHqG0VOGTl7rzoyBWLCKGwSJplgtwg==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/utils': 7.10.0(graphql@14.7.0)
-      dataloader: 2.0.0
-      graphql: 14.7.0
-      tslib: 2.2.0
-      value-or-promise: 1.0.6
-    dev: false
-
-  /@graphql-tools/code-file-loader@6.3.1(graphql@14.7.0):
-    resolution: {integrity: sha512-ZJimcm2ig+avgsEOWWVvAaxZrXXhiiSZyYYOJi0hk9wh5BxZcLUNKkTp6EFnZE/jmGUwuos3pIjUD3Hwi3Bwhg==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/graphql-tag-pluck': 6.5.1(graphql@14.7.0)
-      '@graphql-tools/utils': 7.10.0(graphql@14.7.0)
-      graphql: 14.7.0
-      tslib: 2.1.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
-  /@graphql-tools/delegate@6.2.4(graphql@14.7.0):
-    resolution: {integrity: sha512-mXe6DfoWmq49kPcDrpKHgC2DSWcD5q0YCaHHoXYPAOlnLH8VMTY8BxcE8y/Do2eyg+GLcwAcrpffVszWMwqw0w==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@ardatan/aggregate-error': 0.0.6
-      '@graphql-tools/schema': 6.2.4(graphql@14.7.0)
-      '@graphql-tools/utils': 6.2.4(graphql@14.7.0)
-      dataloader: 2.0.0
-      graphql: 14.7.0
-      is-promise: 4.0.0
-      tslib: 2.0.3
-    dev: false
-
-  /@graphql-tools/delegate@7.1.5(graphql@14.7.0):
-    resolution: {integrity: sha512-bQu+hDd37e+FZ0CQGEEczmRSfQRnnXeUxI/0miDV+NV/zCbEdIJj5tYFNrKT03W6wgdqx8U06d8L23LxvGri/g==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@ardatan/aggregate-error': 0.0.6
-      '@graphql-tools/batch-execute': 7.1.2(graphql@14.7.0)
-      '@graphql-tools/schema': 7.1.5(graphql@14.7.0)
-      '@graphql-tools/utils': 7.10.0(graphql@14.7.0)
-      dataloader: 2.0.0
-      graphql: 14.7.0
-      tslib: 2.2.0
-      value-or-promise: 1.0.6
-    dev: false
-
-  /@graphql-tools/git-loader@6.2.6(graphql@14.7.0):
-    resolution: {integrity: sha512-ooQTt2CaG47vEYPP3CPD+nbA0F+FYQXfzrB1Y1ABN9K3d3O2RK3g8qwslzZaI8VJQthvKwt0A95ZeE4XxteYfw==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/graphql-tag-pluck': 6.5.1(graphql@14.7.0)
-      '@graphql-tools/utils': 7.10.0(graphql@14.7.0)
-      graphql: 14.7.0
-      tslib: 2.1.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
-  /@graphql-tools/github-loader@6.2.5(graphql@14.7.0):
-    resolution: {integrity: sha512-DLuQmYeNNdPo8oWus8EePxWCfCAyUXPZ/p1PWqjrX/NGPyH2ZObdqtDAfRHztljt0F/qkBHbGHCEk2TKbRZTRw==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/graphql-tag-pluck': 6.5.1(graphql@14.7.0)
-      '@graphql-tools/utils': 7.10.0(graphql@14.7.0)
-      cross-fetch: 3.0.6
-      graphql: 14.7.0
-      tslib: 2.0.3
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
-  /@graphql-tools/graphql-file-loader@6.2.7(graphql@14.7.0):
-    resolution: {integrity: sha512-5k2SNz0W87tDcymhEMZMkd6/vs6QawDyjQXWtqkuLTBF3vxjxPD1I4dwHoxgWPIjjANhXybvulD7E+St/7s9TQ==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/import': 6.7.16(graphql@14.7.0)
-      '@graphql-tools/utils': 7.10.0(graphql@14.7.0)
-      graphql: 14.7.0
-      tslib: 2.1.0
-    dev: false
-
-  /@graphql-tools/graphql-tag-pluck@6.5.1(graphql@14.7.0):
-    resolution: {integrity: sha512-7qkm82iFmcpb8M6/yRgzjShtW6Qu2OlCSZp8uatA3J0eMl87TxyJoUmL3M3UMMOSundAK8GmoyNVFUrueueV5Q==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@babel/parser': 7.12.16
-      '@babel/traverse': 7.12.13
-      '@babel/types': 7.12.13
-      '@graphql-tools/utils': 7.10.0(graphql@14.7.0)
-      graphql: 14.7.0
-      tslib: 2.1.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
-  /@graphql-tools/import@6.7.16(graphql@14.7.0):
-    resolution: {integrity: sha512-m07u+8YsBtKg5w5BG04KFTd59PCAPMAy5Dv/NlR4zCiH/Zbpy5PoetokCZKDrFHYUzjPlm8r//vfCG+JTvHw7g==}
+  /@graphql-tools/merge@9.0.0(graphql@14.7.0):
+    resolution: {integrity: sha512-J7/xqjkGTTwOJmaJQJ2C+VDBDOWJL3lKrHJN4yMaRLAJH3PosB7GiPRaSDZdErs0+F77sH2MKs2haMMkywzx7Q==}
+    engines: {node: '>=16.0.0'}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
     dependencies:
-      '@graphql-tools/utils': 9.2.0(graphql@14.7.0)
-      graphql: 14.7.0
-      resolve-from: 5.0.0
-      tslib: 2.5.0
-    dev: false
-
-  /@graphql-tools/json-file-loader@6.2.6(graphql@14.7.0):
-    resolution: {integrity: sha512-CnfwBSY5926zyb6fkDBHnlTblHnHI4hoBALFYXnrg0Ev4yWU8B04DZl/pBRUc459VNgO2x8/mxGIZj2hPJG1EA==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/utils': 7.10.0(graphql@14.7.0)
-      graphql: 14.7.0
-      tslib: 2.0.3
-    dev: false
-
-  /@graphql-tools/links@6.2.5(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18):
-    resolution: {integrity: sha512-XeGDioW7F+HK6HHD/zCeF0HRC9s12NfOXAKv1HC0J7D50F4qqMvhdS/OkjzLoBqsgh/Gm8icRc36B5s0rOA9ig==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/utils': 7.10.0(graphql@14.7.0)
-      apollo-link: 1.2.14(graphql@14.7.0)
-      apollo-upload-client: 14.1.2(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      cross-fetch: 3.0.6
-      form-data: 3.0.0
-      graphql: 14.7.0
-      is-promise: 4.0.0
-      tslib: 2.0.3
-    transitivePeerDependencies:
-      - graphql-ws
-      - react
-      - subscriptions-transport-ws
-    dev: false
-
-  /@graphql-tools/load-files@6.6.1(graphql@14.7.0):
-    resolution: {integrity: sha512-nd4GOjdD68bdJkHfRepILb0gGwF63mJI7uD4oJuuf2Kzeq8LorKa6WfyxUhdMuLmZhnx10zdAlWPfwv1NOAL4Q==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-    dependencies:
-      globby: 11.1.0
-      graphql: 14.7.0
-      tslib: 2.5.0
-      unixify: 1.0.0
-    dev: false
-
-  /@graphql-tools/load@6.2.8(graphql@14.7.0):
-    resolution: {integrity: sha512-JpbyXOXd8fJXdBh2ta0Q4w8ia6uK5FHzrTNmcvYBvflFuWly2LDTk2abbSl81zKkzswQMEd2UIYghXELRg8eTA==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/merge': 6.2.17(graphql@14.7.0)
-      '@graphql-tools/utils': 7.10.0(graphql@14.7.0)
-      globby: 11.0.3
-      graphql: 14.7.0
-      import-from: 3.0.0
-      is-glob: 4.0.1
-      p-limit: 3.1.0
-      tslib: 2.2.0
-      unixify: 1.0.0
-      valid-url: 1.0.9
-    dev: false
-
-  /@graphql-tools/merge@6.2.17(graphql@14.7.0):
-    resolution: {integrity: sha512-G5YrOew39fZf16VIrc49q3c8dBqQDD0ax5LYPiNja00xsXDi0T9zsEWVt06ApjtSdSF6HDddlu5S12QjeN8Tow==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/schema': 8.5.1(graphql@14.7.0)
-      '@graphql-tools/utils': 8.0.2(graphql@14.7.0)
-      graphql: 14.7.0
-      tslib: 2.3.1
-    dev: false
-
-  /@graphql-tools/merge@8.3.1(graphql@14.7.0):
-    resolution: {integrity: sha512-BMm99mqdNZbEYeTPK3it9r9S6rsZsQKtlqJsSBknAclXq2pGEfOxjcIZi+kBSkHZKPKCRrYDd5vY0+rUmIHVLg==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-    dependencies:
-      '@graphql-tools/utils': 8.9.0(graphql@14.7.0)
+      '@graphql-tools/utils': 10.0.1(graphql@14.7.0)
       graphql: 14.7.0
       tslib: 2.5.0
     dev: false
 
-  /@graphql-tools/mock@6.2.4(graphql@14.7.0):
-    resolution: {integrity: sha512-O5Zvq/mcDZ7Ptky0IZ4EK9USmxV6FEVYq0Jxv2TI80kvxbCjt0tbEpZ+r1vIt1gZOXlAvadSHYyzWnUPh+1vkQ==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/schema': 6.2.4(graphql@14.7.0)
-      '@graphql-tools/utils': 6.2.4(graphql@14.7.0)
-      graphql: 14.7.0
-      tslib: 2.0.3
-    dev: false
-
-  /@graphql-tools/module-loader@6.2.7(graphql@14.7.0):
-    resolution: {integrity: sha512-ItAAbHvwfznY9h1H9FwHYDstTcm22Dr5R9GZtrWlpwqj0jaJGcBxsMB9jnK9kFqkbtFYEe4E/NsSnxsS4/vViQ==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/utils': 7.10.0(graphql@14.7.0)
-      graphql: 14.7.0
-      tslib: 2.1.0
-    dev: false
-
-  /@graphql-tools/relay-operation-optimizer@6.5.16(graphql@14.7.0):
-    resolution: {integrity: sha512-g7P11WqrU6h/sRSe6KJULsNUt+5rdwD7mQpnjpKouhXAz/iNKwiUS0BEkkLjkneDkRVvrX0oqBB43VaMaW+gpQ==}
+  /@graphql-tools/schema@10.0.0(graphql@14.7.0):
+    resolution: {integrity: sha512-kf3qOXMFcMs2f/S8Y3A8fm/2w+GaHAkfr3Gnhh2LOug/JgpY/ywgFVxO3jOeSpSEdoYcDKLcXVjMigNbY4AdQg==}
+    engines: {node: '>=16.0.0'}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
     dependencies:
-      '@ardatan/relay-compiler': 12.0.0(graphql@14.7.0)
-      '@graphql-tools/utils': 9.2.0(graphql@14.7.0)
+      '@graphql-tools/merge': 9.0.0(graphql@14.7.0)
+      '@graphql-tools/utils': 10.0.1(graphql@14.7.0)
       graphql: 14.7.0
       tslib: 2.5.0
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
+      value-or-promise: 1.0.12
     dev: false
 
-  /@graphql-tools/resolvers-composition@6.5.16(graphql@14.7.0):
-    resolution: {integrity: sha512-X5OBkdVjy+Yn6+kiEWFCX1ao6jzDw00ojyQvZwNYMxyKU9xE3La2BjUo7gbBUCPag+4SZABy4DgOikiNcqOYNQ==}
+  /@graphql-tools/utils@10.0.1(graphql@14.7.0):
+    resolution: {integrity: sha512-i1FozbDGHgdsFA47V/JvQZ0FE8NAy0Eiz7HGCJO2MkNdZAKNnwei66gOq0JWYVFztwpwbVQ09GkKhq7Kjcq5Cw==}
+    engines: {node: '>=16.0.0'}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
     dependencies:
-      '@graphql-tools/utils': 9.2.0(graphql@14.7.0)
-      graphql: 14.7.0
-      lodash: 4.17.21
-      micromatch: 4.0.5
-      tslib: 2.5.0
-    dev: false
-
-  /@graphql-tools/schema@6.2.4(graphql@14.7.0):
-    resolution: {integrity: sha512-rh+14lSY1q8IPbEv2J9x8UBFJ5NrDX9W5asXEUlPp+7vraLp/Tiox4GXdgyA92JhwpYco3nTf5Bo2JDMt1KnAQ==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/utils': 6.2.4(graphql@14.7.0)
-      graphql: 14.7.0
-      tslib: 2.0.3
-    dev: false
-
-  /@graphql-tools/schema@7.1.5(graphql@14.7.0):
-    resolution: {integrity: sha512-uyn3HSNSckf4mvQSq0Q07CPaVZMNFCYEVxroApOaw802m9DcZPgf9XVPy/gda5GWj9AhbijfRYVTZQgHnJ4CXA==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/utils': 7.10.0(graphql@14.7.0)
-      graphql: 14.7.0
-      tslib: 2.2.0
-      value-or-promise: 1.0.6
-    dev: false
-
-  /@graphql-tools/schema@8.5.1(graphql@14.7.0):
-    resolution: {integrity: sha512-0Esilsh0P/qYcB5DKQpiKeQs/jevzIadNTaT0jeWklPMwNbT7yMX4EqZany7mbeRRlSRwMzNzL5olyFdffHBZg==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-    dependencies:
-      '@graphql-tools/merge': 8.3.1(graphql@14.7.0)
-      '@graphql-tools/utils': 8.9.0(graphql@14.7.0)
+      '@graphql-typed-document-node/core': 3.2.0(graphql@14.7.0)
       graphql: 14.7.0
       tslib: 2.5.0
-      value-or-promise: 1.0.11
-    dev: false
-
-  /@graphql-tools/stitch@6.2.4(graphql@14.7.0):
-    resolution: {integrity: sha512-0C7PNkS7v7iAc001m7c1LPm5FUB0/DYw+s3OyCii6YYYHY8NwdI0roeOyeDGFJkFubWBQfjc3hoSyueKtU73mw==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/batch-delegate': 6.2.6(graphql@14.7.0)
-      '@graphql-tools/delegate': 6.2.4(graphql@14.7.0)
-      '@graphql-tools/merge': 6.2.17(graphql@14.7.0)
-      '@graphql-tools/schema': 6.2.4(graphql@14.7.0)
-      '@graphql-tools/utils': 6.2.4(graphql@14.7.0)
-      '@graphql-tools/wrap': 6.2.4(graphql@14.7.0)
-      graphql: 14.7.0
-      is-promise: 4.0.0
-      tslib: 2.0.3
-    dev: false
-
-  /@graphql-tools/url-loader@6.10.1(@types/node@12.20.4)(bufferutil@4.0.3)(graphql@14.7.0)(utf-8-validate@5.0.5):
-    resolution: {integrity: sha512-DSDrbhQIv7fheQ60pfDpGD256ixUQIR6Hhf9Z5bRjVkXOCvO5XrkwoWLiU7iHL81GB1r0Ba31bf+sl+D4nyyfw==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/delegate': 7.1.5(graphql@14.7.0)
-      '@graphql-tools/utils': 7.10.0(graphql@14.7.0)
-      '@graphql-tools/wrap': 7.0.8(graphql@14.7.0)
-      '@microsoft/fetch-event-source': 2.0.1
-      '@types/websocket': 1.0.2
-      abort-controller: 3.0.0
-      cross-fetch: 3.1.4
-      extract-files: 9.0.0
-      form-data: 4.0.0
-      graphql: 14.7.0
-      graphql-ws: 4.9.0(graphql@14.7.0)
-      is-promise: 4.0.0
-      isomorphic-ws: 4.0.1(ws@7.4.5)
-      lodash: 4.17.21
-      meros: 1.1.4(@types/node@12.20.4)
-      subscriptions-transport-ws: 0.9.18(bufferutil@4.0.3)(graphql@14.7.0)(utf-8-validate@5.0.5)
-      sync-fetch: 0.3.0
-      tslib: 2.2.0
-      valid-url: 1.0.9
-      ws: 7.4.5(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-    transitivePeerDependencies:
-      - '@types/node'
-      - bufferutil
-      - encoding
-      - utf-8-validate
-    dev: false
-
-  /@graphql-tools/utils@6.2.4(graphql@14.7.0):
-    resolution: {integrity: sha512-ybgZ9EIJE3JMOtTrTd2VcIpTXtDrn2q6eiYkeYMKRVh3K41+LZa6YnR2zKERTXqTWqhobROwLt4BZbw2O3Aeeg==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@ardatan/aggregate-error': 0.0.6
-      camel-case: 4.1.1
-      graphql: 14.7.0
-      tslib: 2.0.3
-    dev: false
-
-  /@graphql-tools/utils@7.10.0(graphql@14.7.0):
-    resolution: {integrity: sha512-d334r6bo9mxdSqZW6zWboEnnOOFRrAPVQJ7LkU8/6grglrbcu6WhwCLzHb90E94JI3TD3ricC3YGbUqIi9Xg0w==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@ardatan/aggregate-error': 0.0.6
-      camel-case: 4.1.2
-      graphql: 14.7.0
-      tslib: 2.2.0
-    dev: false
-
-  /@graphql-tools/utils@8.0.2(graphql@14.7.0):
-    resolution: {integrity: sha512-gzkavMOgbhnwkHJYg32Adv6f+LxjbQmmbdD5Hty0+CWxvaiuJq+nU6tzb/7VSU4cwhbNLx/lGu2jbCPEW1McZQ==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      graphql: 14.7.0
-      tslib: 2.3.1
-    dev: false
-
-  /@graphql-tools/utils@8.9.0(graphql@14.7.0):
-    resolution: {integrity: sha512-pjJIWH0XOVnYGXCqej8g/u/tsfV4LvLlj0eATKQu5zwnxd/TiTHq7Cg313qUPTFFHZ3PP5wJ15chYVtLDwaymg==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-    dependencies:
-      graphql: 14.7.0
-      tslib: 2.5.0
-    dev: false
-
-  /@graphql-tools/utils@9.2.0(graphql@14.7.0):
-    resolution: {integrity: sha512-s3lEG1iYkyYEnKCWrIFECX3XH2wmZvbg6Ir3udCvIDynq+ydaO7JQXobclpPtwSJtjlS353haF//6V7mnBQ4bg==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-    dependencies:
-      '@graphql-typed-document-node/core': 3.1.1(graphql@14.7.0)
-      graphql: 14.7.0
-      tslib: 2.5.0
-    dev: false
-
-  /@graphql-tools/wrap@6.2.4(graphql@14.7.0):
-    resolution: {integrity: sha512-cyQgpybolF9DjL2QNOvTS1WDCT/epgYoiA8/8b3nwv5xmMBQ6/6nYnZwityCZ7njb7MMyk7HBEDNNlP9qNJDcA==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/delegate': 6.2.4(graphql@14.7.0)
-      '@graphql-tools/schema': 6.2.4(graphql@14.7.0)
-      '@graphql-tools/utils': 6.2.4(graphql@14.7.0)
-      graphql: 14.7.0
-      is-promise: 4.0.0
-      tslib: 2.0.3
-    dev: false
-
-  /@graphql-tools/wrap@7.0.8(graphql@14.7.0):
-    resolution: {integrity: sha512-1NDUymworsOlb53Qfh7fonDi2STvqCtbeE68ntKY9K/Ju/be2ZNxrFSbrBHwnxWcN9PjISNnLcAyJ1L5tCUyhg==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
-    dependencies:
-      '@graphql-tools/delegate': 7.1.5(graphql@14.7.0)
-      '@graphql-tools/schema': 7.1.5(graphql@14.7.0)
-      '@graphql-tools/utils': 7.10.0(graphql@14.7.0)
-      graphql: 14.7.0
-      tslib: 2.2.0
-      value-or-promise: 1.0.6
     dev: false
 
   /@graphql-typed-document-node/core@3.1.1(graphql@14.7.0):
@@ -36359,6 +35942,14 @@ packages:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     dependencies:
       graphql: 14.7.0
+
+  /@graphql-typed-document-node/core@3.2.0(graphql@14.7.0):
+    resolution: {integrity: sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==}
+    peerDependencies:
+      graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+    dependencies:
+      graphql: 14.7.0
+    dev: false
 
   /@gwhitney/detect-indent@7.0.1:
     resolution: {integrity: sha512-7bQW+gkKa2kKZPeJf6+c6gFK9ARxQfn+FKy9ScTBppyKRWH2KzsmweXUoklqeEiHiNVWaeP5csIdsNq6w7QhzA==}
@@ -36714,10 +36305,6 @@ packages:
     resolution: {integrity: sha512-H1rQc1ZOHANWBvPcW+JpGwr+juXSxM8Q8YCkm3GhZd8REu1fHR3z99CErO1p9pkcfcxZnMdIZdIsXkOHY0NilA==}
     dev: false
 
-  /@microsoft/fetch-event-source@2.0.1:
-    resolution: {integrity: sha512-W6CLUJ2eBMw3Rec70qrsEW0jOm/3twwJv21mrmj2yORiaVmVYGS4sSS5yUwvQc1ZlDLYGPnClVWmUUMagKNsfA==}
-    dev: false
-
   /@monaco-editor/loader@1.3.2(monaco-editor@0.33.0):
     resolution: {integrity: sha512-BTDbpHl3e47r3AAtpfVFTlAi7WXv4UQ/xZmz8atKl4q7epQV5e7+JbigFDViWF71VBi4IIBdcWP57Hj+OWuc9g==}
     peerDependencies:
@@ -36810,7 +36397,7 @@ packages:
       webpack-plugin-serve:
         optional: true
     dependencies:
-      '@types/webpack': 5.28.1(esbuild@0.14.28)
+      '@types/webpack': 5.28.1(esbuild@0.14.29)
       ansi-html-community: 0.0.8
       common-path-prefix: 3.0.0
       core-js-pure: 3.27.2
@@ -36821,7 +36408,7 @@ packages:
       react-refresh: 0.10.0
       schema-utils: 3.1.1
       source-map: 0.7.4
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
     dev: false
 
@@ -37061,7 +36648,6 @@ packages:
       - bluebird
       - domexception
       - supports-color
-      - typanion
     dev: false
 
   /@pnpm/create-cafs-store@4.0.3(@pnpm/logger@5.0.0):
@@ -37388,7 +36974,6 @@ packages:
     transitivePeerDependencies:
       - bluebird
       - supports-color
-      - typanion
     dev: false
 
   /@pnpm/hoist@8.0.7(@pnpm/logger@5.0.0):
@@ -38091,8 +37676,6 @@ packages:
       '@pnpm/error': 5.0.2
       '@pnpm/lockfile-utils': 8.0.2
       '@yarnpkg/nm': 4.0.0-rc.45
-    transitivePeerDependencies:
-      - typanion
     dev: false
 
   /@pnpm/registry-mock@3.4.0:
@@ -38161,7 +37744,7 @@ packages:
       '@pnpm/store-controller-types': 15.0.1
       '@pnpm/types': 9.1.0
       '@pnpm/which-version-is-pinned': 5.0.1
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       encode-registry: 3.0.0
       filenamify: 4.3.0
       get-npm-tarball-url: 2.0.3
@@ -38179,7 +37762,6 @@ packages:
       version-selector-type: 3.0.0
     transitivePeerDependencies:
       - domexception
-      - typanion
     dev: false
 
   /@pnpm/resolve-workspace-range@5.0.1:
@@ -38433,7 +38015,7 @@ packages:
       '@prerenderer/prerenderer': 1.2.0(@types/express@4.17.13)(debug@4.3.2)
       html-webpack-plugin: 5.3.2(webpack@5.84.1)
       schema-utils: 4.0.0
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     optionalDependencies:
       '@prerenderer/renderer-puppeteer': 1.1.3(puppeteer@13.7.0)
     transitivePeerDependencies:
@@ -38742,7 +38324,7 @@ packages:
     dev: false
 
   /@teambit/analytics.timeseries@0.0.25(graphql@14.7.0)(react@17.0.2):
-    resolution: {integrity: sha1-v6T2aEqGAqJ+6pxyfVToHSCgdwo=, tarball: https://node-registry.bit.cloud/tarballs/teambit.analytics/timeseries@0.0.25.tgz}
+    resolution: {integrity: sha1-v6T2aEqGAqJ+6pxyfVToHSCgdwo=, tarball: https://node-registry.bit.cloud/@teambit/analytics.timeseries/-/@teambit-analytics.timeseries-0.0.25.tgz}
     peerDependencies:
       graphql: 14.7.0
       react: 17.0.2
@@ -38838,7 +38420,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   /@teambit/base-react.navigation.router-context@1.23.0(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-wstk3EwVqDvsrgZ1MWrlQuaE2bU=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-react/navigation/router-context@1.23.0.tgz}
+    resolution: {integrity: sha1-wstk3EwVqDvsrgZ1MWrlQuaE2bU=, tarball: https://node-registry.bit.cloud/@teambit/base-react.navigation.router-context/-/@teambit-base-react.navigation.router-context-1.23.0.tgz}
     peerDependencies:
       '@testing-library/react': 12.0.0
       react: ^16.8.0 || ^17.0.0
@@ -38851,7 +38433,7 @@ packages:
     dev: true
 
   /@teambit/base-react.navigation.use-location@1.23.0(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-RnAncyEZdkh94hrIVvUl/aOkzco=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-react/navigation/use-location@1.23.0.tgz}
+    resolution: {integrity: sha1-RnAncyEZdkh94hrIVvUl/aOkzco=, tarball: https://node-registry.bit.cloud/@teambit/base-react.navigation.use-location/-/@teambit-base-react.navigation.use-location-1.23.0.tgz}
     peerDependencies:
       '@testing-library/react': 12.0.0
       react: ^16.8.0 || ^17.0.0
@@ -38922,7 +38504,7 @@ packages:
     dev: false
 
   /@teambit/base-ui.hook.use-click-outside@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-MWkSceL3FJ7qLtW2mGtE9h7+a6Y=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/hook/use-click-outside@1.0.1.tgz}
+    resolution: {integrity: sha1-MWkSceL3FJ7qLtW2mGtE9h7+a6Y=, tarball: https://node-registry.bit.cloud/@teambit/base-ui.hook.use-click-outside/-/@teambit-base-ui.hook.use-click-outside-1.0.1.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -39072,7 +38654,7 @@ packages:
     dev: false
 
   /@teambit/base-ui.surfaces.drawer@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-NGtL6iO8yNoadw8lq3L6rLtvdxw=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/surfaces/drawer@1.0.1.tgz}
+    resolution: {integrity: sha1-NGtL6iO8yNoadw8lq3L6rLtvdxw=, tarball: https://node-registry.bit.cloud/@teambit/base-ui.surfaces.drawer/-/@teambit-base-ui.surfaces.drawer-1.0.1.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -40009,7 +39591,7 @@ packages:
     dev: true
 
   /@teambit/components.blocks.component-card-display@0.0.24(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-OlVc0FyFcCB5yfe3qAG/tJbiAco=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/blocks/component-card-display@0.0.24.tgz}
+    resolution: {integrity: sha1-OlVc0FyFcCB5yfe3qAG/tJbiAco=, tarball: https://node-registry.bit.cloud/@teambit/components.blocks.component-card-display/-/@teambit-components.blocks.component-card-display-0.0.24.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
@@ -40033,7 +39615,7 @@ packages:
     dev: true
 
   /@teambit/components.clients.components-node@0.0.5(graphql@14.7.0):
-    resolution: {integrity: sha1-0yetOPD2nk9MNBEvOc+dNfhjQaE=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/clients/components-node@0.0.5.tgz}
+    resolution: {integrity: sha1-0yetOPD2nk9MNBEvOc+dNfhjQaE=, tarball: https://node-registry.bit.cloud/@teambit/components.clients.components-node/-/@teambit-components.clients.components-node-0.0.5.tgz}
     peerDependencies:
       graphql: ^14.3.0
     dependencies:
@@ -40042,7 +39624,7 @@ packages:
     dev: true
 
   /@teambit/components.clients.components-node@0.0.6(graphql@14.7.0):
-    resolution: {integrity: sha1-QV4RQpjp35zf+ihMEPrtU1ppTt4=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/clients/components-node@0.0.6.tgz}
+    resolution: {integrity: sha1-QV4RQpjp35zf+ihMEPrtU1ppTt4=, tarball: https://node-registry.bit.cloud/@teambit/components.clients.components-node/-/@teambit-components.clients.components-node-0.0.6.tgz}
     peerDependencies:
       graphql: ^14.3.0
     dependencies:
@@ -40051,7 +39633,7 @@ packages:
     dev: true
 
   /@teambit/components.descriptors.component-descriptor@0.0.14(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-ZeYw+0jEa9tTCVUggXlIVFTJxaE=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/descriptors/component-descriptor@0.0.14.tgz}
+    resolution: {integrity: sha1-ZeYw+0jEa9tTCVUggXlIVFTJxaE=, tarball: https://node-registry.bit.cloud/@teambit/components.descriptors.component-descriptor/-/@teambit-components.descriptors.component-descriptor-0.0.14.tgz}
     dependencies:
       '@teambit/component-descriptor': 0.0.3(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.402
@@ -40063,7 +39645,7 @@ packages:
     dev: true
 
   /@teambit/components.descriptors.component-descriptor@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-VoayQSccNGOoiQn0eXOQUTylk6Q=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/descriptors/component-descriptor@0.0.6.tgz}
+    resolution: {integrity: sha1-VoayQSccNGOoiQn0eXOQUTylk6Q=, tarball: https://node-registry.bit.cloud/@teambit/components.descriptors.component-descriptor/-/@teambit-components.descriptors.component-descriptor-0.0.6.tgz}
     dependencies:
       '@teambit/component-descriptor': 0.0.12(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.401
@@ -40075,7 +39657,7 @@ packages:
     dev: true
 
   /@teambit/components.descriptors.component-descriptor@0.0.7(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-HkbSWB5GKqJNAMc3Eo8n3AiRkOo=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/descriptors/component-descriptor@0.0.7.tgz}
+    resolution: {integrity: sha1-HkbSWB5GKqJNAMc3Eo8n3AiRkOo=, tarball: https://node-registry.bit.cloud/@teambit/components.descriptors.component-descriptor/-/@teambit-components.descriptors.component-descriptor-0.0.7.tgz}
     dependencies:
       '@teambit/component-descriptor': 0.0.3(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.401
@@ -40087,7 +39669,7 @@ packages:
     dev: true
 
   /@teambit/components.hooks.use-component-count@0.0.7(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-CjYLTYK0d4z4soJFrz3oU0+z81M=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/hooks/use-component-count@0.0.7.tgz}
+    resolution: {integrity: sha1-CjYLTYK0d4z4soJFrz3oU0+z81M=, tarball: https://node-registry.bit.cloud/@teambit/components.hooks.use-component-count/-/@teambit-components.hooks.use-component-count-0.0.7.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
@@ -40104,7 +39686,7 @@ packages:
     dev: true
 
   /@teambit/components.hooks.use-components@0.0.10(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2):
-    resolution: {integrity: sha1-sSRUFzKDbhghNcEX8/UteRwCjdM=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/hooks/use-components@0.0.10.tgz}
+    resolution: {integrity: sha1-sSRUFzKDbhghNcEX8/UteRwCjdM=, tarball: https://node-registry.bit.cloud/@teambit/components.hooks.use-components/-/@teambit-components.hooks.use-components-0.0.10.tgz}
     dependencies:
       '@teambit/components.clients.components-node': 0.0.5(graphql@14.7.0)
       '@teambit/components.descriptors.component-descriptor': 0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -40134,7 +39716,7 @@ packages:
     dev: true
 
   /@teambit/components.hooks.use-list-components@0.0.7(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-rj+nJVVF4Wp2GAPOkzrVdAt5WKE=, tarball: https://node-registry.bit.cloud/tarballs/teambit.components/hooks/use-list-components@0.0.7.tgz}
+    resolution: {integrity: sha1-rj+nJVVF4Wp2GAPOkzrVdAt5WKE=, tarball: https://node-registry.bit.cloud/@teambit/components.hooks.use-list-components/-/@teambit-components.hooks.use-list-components-0.0.7.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
@@ -40152,7 +39734,7 @@ packages:
     dev: true
 
   /@teambit/defender.content.formatter-overview@1.96.1(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-r+8A4YQj5e9uNgpqwFhEVQ4UpoA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.defender/content/formatter-overview@1.96.1.tgz}
+    resolution: {integrity: sha1-r+8A4YQj5e9uNgpqwFhEVQ4UpoA=, tarball: https://node-registry.bit.cloud/@teambit/defender.content.formatter-overview/-/@teambit-defender.content.formatter-overview-1.96.1.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
@@ -40350,7 +39932,7 @@ packages:
     dev: false
 
   /@teambit/design.inputs.selectors.menu-item@0.0.5(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-d2GR5gucZYaRufqN4h85EwByUkw=, tarball: https://node-registry.bit.cloud/tarballs/teambit.design/inputs/selectors/menu-item@0.0.5.tgz}
+    resolution: {integrity: sha1-d2GR5gucZYaRufqN4h85EwByUkw=, tarball: https://node-registry.bit.cloud/@teambit/design.inputs.selectors.menu-item/-/@teambit-design.inputs.selectors.menu-item-0.0.5.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -40383,7 +39965,7 @@ packages:
     dev: false
 
   /@teambit/design.inputs.selectors.multi-select@0.0.20(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-LqKnnNV56NAPtfqYoh/DleSskIA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.design/inputs/selectors/multi-select@0.0.20.tgz}
+    resolution: {integrity: sha1-LqKnnNV56NAPtfqYoh/DleSskIA=, tarball: https://node-registry.bit.cloud/@teambit/design.inputs.selectors.multi-select/-/@teambit-design.inputs.selectors.multi-select-0.0.20.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -41286,7 +40868,7 @@ packages:
     dev: false
 
   /@teambit/design.ui.tree@0.0.15(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-Kp0MIgNQpp81LGK/hyZsTA0o094=, tarball: https://node-registry.bit.cloud/@teambit/design.ui.tree/-/teambit-design.ui.tree-0.0.15.tgz}
+    resolution: {integrity: sha1-Kp0MIgNQpp81LGK/hyZsTA0o094=, tarball: https://node-registry.bit.cloud/@teambit/design.ui.tree/-/@teambit-design.ui.tree-0.0.15.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41326,7 +40908,7 @@ packages:
     dev: true
 
   /@teambit/docs.entities.doc@0.0.12:
-    resolution: {integrity: sha1-QcOwLxOYF0onRasI3QprayQsvMk=, tarball: https://node-registry.bit.cloud/@teambit/docs.entities.doc/-/teambit-docs.entities.doc-0.0.12.tgz}
+    resolution: {integrity: sha1-QcOwLxOYF0onRasI3QprayQsvMk=, tarball: https://node-registry.bit.cloud/@teambit/docs.entities.doc/-/@teambit-docs.entities.doc-0.0.12.tgz}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@teambit/toolbox.types.serializable': 0.0.491
@@ -41930,7 +41512,7 @@ packages:
     dev: false
 
   /@teambit/evangelist.input.checkbox.indicator@1.0.7(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-NYg/ZeFXH2J0ujDD82H5Bl1vEIk=, tarball: https://node-registry.bit.cloud/@teambit/evangelist.input.checkbox.indicator/-/teambit-evangelist.input.checkbox.indicator-1.0.7.tgz}
+    resolution: {integrity: sha1-NYg/ZeFXH2J0ujDD82H5Bl1vEIk=, tarball: https://node-registry.bit.cloud/@teambit/evangelist.input.checkbox.indicator/-/@teambit-evangelist.input.checkbox.indicator-1.0.7.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -41999,7 +41581,7 @@ packages:
     dev: true
 
   /@teambit/explorer.plugins.env-plugin@0.0.13(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-C1OuYM2sDr31NrxpBce2W8bIQgI=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/plugins/env-plugin@0.0.13.tgz}
+    resolution: {integrity: sha1-C1OuYM2sDr31NrxpBce2W8bIQgI=, tarball: https://node-registry.bit.cloud/@teambit/explorer.plugins.env-plugin/-/@teambit-explorer.plugins.env-plugin-0.0.13.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
@@ -42026,7 +41608,7 @@ packages:
     dev: true
 
   /@teambit/explorer.plugins.preview-plugin@0.0.9(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-ZIn30mCzb51Upzs9EKsOpS5QaCk=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/plugins/preview-plugin@0.0.9.tgz}
+    resolution: {integrity: sha1-ZIn30mCzb51Upzs9EKsOpS5QaCk=, tarball: https://node-registry.bit.cloud/@teambit/explorer.plugins.preview-plugin/-/@teambit-explorer.plugins.preview-plugin-0.0.9.tgz}
     peerDependencies:
       '@testing-library/react': 12.1.3
       react: ^16.8.0 || ^17.0.0
@@ -42108,7 +41690,7 @@ packages:
     dev: true
 
   /@teambit/explorer.ui.component-card-grid@0.0.15(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-nw+ae8xtNXYeGHCfeGh/7kjMHpc=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/ui/component-card-grid@0.0.15.tgz}
+    resolution: {integrity: sha1-nw+ae8xtNXYeGHCfeGh/7kjMHpc=, tarball: https://node-registry.bit.cloud/@teambit/explorer.ui.component-card-grid/-/@teambit-explorer.ui.component-card-grid-0.0.15.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
@@ -42146,7 +41728,7 @@ packages:
     dev: true
 
   /@teambit/explorer.ui.component-card@0.0.14(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-NXxynFuK+QaIgLiPjuVV9PpH1uY=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/ui/component-card@0.0.14.tgz}
+    resolution: {integrity: sha1-NXxynFuK+QaIgLiPjuVV9PpH1uY=, tarball: https://node-registry.bit.cloud/@teambit/explorer.ui.component-card/-/@teambit-explorer.ui.component-card-0.0.14.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
@@ -42370,7 +41952,7 @@ packages:
     dev: false
 
   /@teambit/graphql.hooks.use-query@0.0.1(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-SrTB4E64Ycrvmb/n+SgPPNIdYN8=, tarball: https://node-registry.bit.cloud/tarballs/teambit.graphql/hooks/use-query@0.0.1.tgz}
+    resolution: {integrity: sha1-SrTB4E64Ycrvmb/n+SgPPNIdYN8=, tarball: https://node-registry.bit.cloud/@teambit/graphql.hooks.use-query/-/@teambit-graphql.hooks.use-query-0.0.1.tgz}
     peerDependencies:
       '@apollo/client': 3.3.7
       react: ^16.8.0 || ^17.0.0
@@ -42386,7 +41968,7 @@ packages:
     dev: true
 
   /@teambit/graphql.hooks.use-query@0.0.7(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-OIQYQIPSBBqKXo2ZLc9bzu4P904=, tarball: https://node-registry.bit.cloud/tarballs/teambit.graphql/hooks/use-query@0.0.7.tgz}
+    resolution: {integrity: sha1-OIQYQIPSBBqKXo2ZLc9bzu4P904=, tarball: https://node-registry.bit.cloud/@teambit/graphql.hooks.use-query/-/@teambit-graphql.hooks.use-query-0.0.7.tgz}
     peerDependencies:
       '@apollo/client': 3.3.7
       react: ^16.8.0 || ^17.0.0
@@ -42423,7 +42005,7 @@ packages:
       user-home: 2.0.0
 
   /@teambit/html.modules.create-element-from-string@0.0.104:
-    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: https://node-registry.bit.cloud/@teambit/html.modules.create-element-from-string/-/teambit-html.modules.create-element-from-string-0.0.104.tgz}
+    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: https://node-registry.bit.cloud/@teambit/html.modules.create-element-from-string/-/@teambit-html.modules.create-element-from-string-0.0.104.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -43207,13 +42789,13 @@ packages:
     dev: false
 
   /@teambit/scopes.scope-id@0.0.1:
-    resolution: {integrity: sha1-05xOQrV0zf4O4Y6AJZIsA5tT0kE=, tarball: https://node-registry.bit.cloud/tarballs/teambit.scopes/scope-id@0.0.1.tgz}
+    resolution: {integrity: sha1-05xOQrV0zf4O4Y6AJZIsA5tT0kE=, tarball: https://node-registry.bit.cloud/@teambit/scopes.scope-id/-/@teambit-scopes.scope-id-0.0.1.tgz}
     dependencies:
       '@emotion/hash': 0.8.0
     dev: true
 
   /@teambit/scopes.scope-id@0.0.3:
-    resolution: {integrity: sha1-DudP/eIcKQEx/kKIZW80qqsfp/A=, tarball: https://node-registry.bit.cloud/tarballs/teambit.scopes/scope-id@0.0.3.tgz}
+    resolution: {integrity: sha1-DudP/eIcKQEx/kKIZW80qqsfp/A=, tarball: https://node-registry.bit.cloud/@teambit/scopes.scope-id/-/@teambit-scopes.scope-id-0.0.3.tgz}
     dependencies:
       '@emotion/hash': 0.8.0
     dev: true
@@ -43297,16 +42879,16 @@ packages:
     dev: false
 
   /@teambit/toolbox.string.ellipsis@0.0.172:
-    resolution: {integrity: sha1-nbLwbPi2d8Qeg6aCX2TYlARSRew=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/teambit-toolbox.string.ellipsis-0.0.172.tgz}
+    resolution: {integrity: sha1-nbLwbPi2d8Qeg6aCX2TYlARSRew=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.172.tgz}
     engines: {node: '>=12.22.0'}
     dev: true
 
   /@teambit/toolbox.string.ellipsis@0.0.173:
-    resolution: {integrity: sha1-CY+uj2sRmPejtTCee4HDvLFeeI8=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/teambit-toolbox.string.ellipsis-0.0.173.tgz}
+    resolution: {integrity: sha1-CY+uj2sRmPejtTCee4HDvLFeeI8=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.173.tgz}
     engines: {node: '>=12.22.0'}
 
   /@teambit/toolbox.string.ellipsis@0.0.181:
-    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/teambit-toolbox.string.ellipsis-0.0.181.tgz}
+    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.181.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -43316,17 +42898,17 @@ packages:
     dev: false
 
   /@teambit/toolbox.string.get-initials@0.0.491:
-    resolution: {integrity: sha1-dMkF7hxhtmK2aXz7QCkAAajSrKI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.get-initials/-/teambit-toolbox.string.get-initials-0.0.491.tgz}
+    resolution: {integrity: sha1-dMkF7hxhtmK2aXz7QCkAAajSrKI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.get-initials/-/@teambit-toolbox.string.get-initials-0.0.491.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/toolbox.types.serializable@0.0.483:
-    resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/teambit-toolbox.types.serializable-0.0.483.tgz}
+    resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.483.tgz}
     engines: {node: '>=12.22.0'}
     dev: true
 
   /@teambit/toolbox.types.serializable@0.0.491:
-    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/teambit-toolbox.types.serializable-0.0.491.tgz}
+    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.491.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -43336,7 +42918,7 @@ packages:
     dev: false
 
   /@teambit/toolbox.url.add-avatar-query-params@0.0.492:
-    resolution: {integrity: sha1-dECMYTXTkMlAIUaK22cpmNlTsak=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.url.add-avatar-query-params/-/teambit-toolbox.url.add-avatar-query-params-0.0.492.tgz}
+    resolution: {integrity: sha1-dECMYTXTkMlAIUaK22cpmNlTsak=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.url.add-avatar-query-params/-/@teambit-toolbox.url.add-avatar-query-params-0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -43451,7 +43033,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.get-icon-from-file-name@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.get-icon-from-file-name/-/teambit-ui-foundation.ui.get-icon-from-file-name-0.0.495.tgz}
+    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.get-icon-from-file-name/-/@teambit-ui-foundation.ui.get-icon-from-file-name-0.0.495.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -44062,7 +43644,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.urls.compare-url@1.23.0:
-    resolution: {integrity: sha1-7u6LJFiuBnbQPmwi791Dow7G95I=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/urls/compare-url@1.23.0.tgz}
+    resolution: {integrity: sha1-7u6LJFiuBnbQPmwi791Dow7G95I=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.urls.compare-url/-/@teambit-ui-foundation.urls.compare-url-1.23.0.tgz}
     dependencies:
       url-parse: 1.5.3
     dev: true
@@ -44648,12 +44230,12 @@ packages:
   /@types/mime@2.0.3:
     resolution: {integrity: sha512-Jus9s4CDbqwocc5pOAnh8ShfrnMcPHuJYzVcSUU7lrh8Ni5HuIqX3oilL86p3dlTrk0LzHRCgA/GQ7uNCw6l2Q==}
 
-  /@types/mini-css-extract-plugin@2.2.0(esbuild@0.14.28):
+  /@types/mini-css-extract-plugin@2.2.0(esbuild@0.14.29):
     resolution: {integrity: sha512-euW/Y51OoAWsAuqtxIGV7Y++EW4dKHMj7NSxHoTRD6SqK1vziYhGfDWTmtlf4jkjIrzUW88NpVXMfiJESysZAA==}
     dependencies:
       '@types/node': 12.20.4
       tapable: 2.2.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
@@ -44931,23 +44513,17 @@ packages:
       source-map: 0.6.1
     dev: true
 
-  /@types/webpack@5.28.1(esbuild@0.14.28):
+  /@types/webpack@5.28.1(esbuild@0.14.29):
     resolution: {integrity: sha512-qw1MqGZclCoBrpiSe/hokSgQM/su8Ocpl3L/YHE0L6moyaypg4+5F7Uzq7NgaPKPxUxUbQ4fLPLpDWdR27bCZw==}
     dependencies:
       '@types/node': 12.20.4
       tapable: 2.2.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
       - uglify-js
       - webpack-cli
-
-  /@types/websocket@1.0.2:
-    resolution: {integrity: sha512-B5m9aq7cbbD/5/jThEr33nUY8WEfVi6A2YKCTOvw5Ldy7mtsOkqRvGjnzy6g7iMMDsgu7xREuCzqATLDLQVKcQ==}
-    dependencies:
-      '@types/node': 12.20.4
-    dev: false
 
   /@types/ws@7.4.7:
     resolution: {integrity: sha512-JQbbmxZTZehdc2iszGKs5oC3NFnjeay7mtAWrdt7qNtAVK0g19muApzAy4bm9byz79xa2ZnO/BOBC2R8RC5Lww==}
@@ -45727,7 +45303,7 @@ packages:
     peerDependencies:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42)
       '@yarnpkg/parsers': 3.0.0-rc.42
@@ -45743,7 +45319,7 @@ packages:
       '@yarnpkg/plugin-init': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
       '@yarnpkg/plugin-interactive-tools': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-essentials@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/plugin-link': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-nm': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1)
+      '@yarnpkg/plugin-nm': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
       '@yarnpkg/plugin-npm': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-pack@4.0.0-rc.42)
       '@yarnpkg/plugin-npm-cli': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-npm@3.0.0-rc.42)(@yarnpkg/plugin-pack@4.0.0-rc.42)
       '@yarnpkg/plugin-pack': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
@@ -45754,7 +45330,7 @@ packages:
       '@yarnpkg/plugin-typescript': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-essentials@4.0.0-rc.42)
       '@yarnpkg/plugin-version': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@yarnpkg/plugin-workspace-tools': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)
-      '@yarnpkg/shell': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/shell': 4.0.0-rc.45
       ci-info: 3.7.1
       clipanion: 3.2.0-rc.14
       semver: 7.5.2
@@ -45766,7 +45342,7 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@yarnpkg/core@4.0.0-rc.45(typanion@3.12.1):
+  /@yarnpkg/core@4.0.0-rc.45:
     resolution: {integrity: sha512-FOJHKIa9CuN5vipQA/pxU3q3ab0vPAcjYAW4g5+hihKL0FSH2ygM9mlMHelo850RMoVWoZ+/c+N3AN2oBk7L6A==}
     engines: {node: '>=14.15.0'}
     dependencies:
@@ -45776,7 +45352,7 @@ packages:
       '@yarnpkg/fslib': 3.0.0-rc.45
       '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.45)
       '@yarnpkg/parsers': 3.0.0-rc.45
-      '@yarnpkg/shell': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/shell': 4.0.0-rc.45
       camelcase: 5.3.1
       chalk: 3.0.0
       ci-info: 3.8.0
@@ -45795,8 +45371,6 @@ packages:
       treeify: 1.1.0
       tslib: 2.5.0
       tunnel: 0.0.6
-    transitivePeerDependencies:
-      - typanion
     dev: false
 
   /@yarnpkg/extensions@2.0.0-rc.22(@yarnpkg/core@4.0.0-rc.45):
@@ -45805,7 +45379,7 @@ packages:
     peerDependencies:
       '@yarnpkg/core': ^4.0.0-rc.40
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
     dev: false
 
   /@yarnpkg/extensions@2.0.0-rc.24(@yarnpkg/core@4.0.0-rc.45):
@@ -45814,7 +45388,7 @@ packages:
     peerDependencies:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
     dev: false
 
   /@yarnpkg/fslib@2.10.3:
@@ -45885,26 +45459,22 @@ packages:
     resolution: {integrity: sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==}
     dev: false
 
-  /@yarnpkg/nm@4.0.0-rc.42(typanion@3.12.1):
+  /@yarnpkg/nm@4.0.0-rc.42:
     resolution: {integrity: sha512-VZkSRbMXG8yfImIk0y0KPFRnML3XR3jf/YG5J0Dw7xOBiOKK/jIQ5h2MNczLLenoFPCEgHCao/WwOpr1thmldQ==}
     engines: {node: '>=14.15.0'}
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/pnp': 4.0.0-rc.45
-    transitivePeerDependencies:
-      - typanion
     dev: false
 
   /@yarnpkg/nm@4.0.0-rc.45:
     resolution: {integrity: sha512-cMKhX2znU0JqkPNM5jSrHyS6zIcJrIf1SgzopNtWqzuvpmtpChRMUUS6RJafS8Gzq2iDXAnyb4pn0RIqlwB+Cw==}
     engines: {node: '>=14.15.0'}
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.45
       '@yarnpkg/pnp': 4.0.0-rc.45
-    transitivePeerDependencies:
-      - typanion
     dev: false
 
   /@yarnpkg/parsers@2.5.1:
@@ -45938,7 +45508,7 @@ packages:
       '@yarnpkg/core': ^4.0.0-rc.42
       '@yarnpkg/plugin-patch': ^4.0.0-rc.42
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/extensions': 2.0.0-rc.24(@yarnpkg/core@4.0.0-rc.45)
       '@yarnpkg/plugin-patch': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
     dev: false
@@ -45951,9 +45521,9 @@ packages:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       lodash: 4.17.21
       tau-prolog: 0.2.81
       tslib: 2.5.0
@@ -45967,9 +45537,9 @@ packages:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       tslib: 2.5.0
     dev: false
 
@@ -45982,12 +45552,12 @@ packages:
       '@yarnpkg/plugin-git': ^3.0.0-rc.42
     dependencies:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/parsers': 3.0.0-rc.42
       '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
       ci-info: 3.8.0
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       enquirer: 2.3.6
       lodash: 4.17.21
       micromatch: 4.0.5
@@ -46002,7 +45572,7 @@ packages:
     peerDependencies:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       tslib: 2.5.0
     dev: false
@@ -46013,7 +45583,7 @@ packages:
     peerDependencies:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42)
       tslib: 2.5.0
@@ -46026,9 +45596,9 @@ packages:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
       '@types/semver': 7.3.4
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       git-url-parse: 13.1.0
       lodash: 4.17.21
       semver: 7.5.2
@@ -46042,7 +45612,7 @@ packages:
       '@yarnpkg/core': ^4.0.0-rc.42
       '@yarnpkg/plugin-git': ^3.0.0-rc.42
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
       tslib: 2.5.0
@@ -46054,7 +45624,7 @@ packages:
     peerDependencies:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       tslib: 2.5.0
     dev: false
 
@@ -46066,9 +45636,9 @@ packages:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       tslib: 2.5.0
     dev: false
 
@@ -46081,11 +45651,11 @@ packages:
       '@yarnpkg/plugin-essentials': ^4.0.0-rc.42
     dependencies:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/libui': 3.0.0-rc.42(ink@3.2.0)(react@16.14.0)
       '@yarnpkg/plugin-essentials': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)
       algoliasearch: 4.16.0
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       diff: 5.1.0
       ink: 3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@16.14.0)(utf-8-validate@5.0.5)
       ink-text-input: 4.0.3(ink@3.2.0)(react@16.14.0)
@@ -46104,12 +45674,12 @@ packages:
     peerDependencies:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       tslib: 2.5.0
     dev: false
 
-  /@yarnpkg/plugin-nm@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(typanion@3.12.1):
+  /@yarnpkg/plugin-nm@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
     resolution: {integrity: sha512-esGCHhX1uTswdChdqfwT2yDASObYj0zI6q1ZwstdCNKvoa8dIoEy0JIvCLmOIYgKa6KhsGfp2LY38+yYZT/mNQ==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
@@ -46117,18 +45687,16 @@ packages:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42)
-      '@yarnpkg/nm': 4.0.0-rc.42(typanion@3.12.1)
+      '@yarnpkg/nm': 4.0.0-rc.42
       '@yarnpkg/parsers': 3.0.0-rc.42
       '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
       '@yarnpkg/pnp': 4.0.0-rc.45
       '@zkochan/cmd-shim': 5.4.1
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
     dev: false
 
   /@yarnpkg/plugin-npm-cli@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-npm@3.0.0-rc.42)(@yarnpkg/plugin-pack@4.0.0-rc.42):
@@ -46141,11 +45709,11 @@ packages:
       '@yarnpkg/plugin-pack': ^4.0.0-rc.42
     dependencies:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/plugin-npm': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-pack@4.0.0-rc.42)
       '@yarnpkg/plugin-pack': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       enquirer: 2.3.6
       micromatch: 4.0.5
       semver: 7.5.2
@@ -46160,7 +45728,7 @@ packages:
       '@yarnpkg/core': ^4.0.0-rc.42
       '@yarnpkg/plugin-pack': ^4.0.0-rc.42
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/plugin-pack': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
       enquirer: 2.3.6
@@ -46177,9 +45745,9 @@ packages:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0-rc.14
+      clipanion: 3.2.1
       micromatch: 4.0.5
       tar-stream: 2.2.0
       tslib: 2.5.0
@@ -46193,10 +45761,10 @@ packages:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42)
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       tslib: 2.5.0
     dev: false
 
@@ -46209,11 +45777,11 @@ packages:
     dependencies:
       '@types/semver': 7.3.4
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
       '@yarnpkg/pnp': 4.0.0-rc.45
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       micromatch: 4.0.5
       semver: 7.5.2
       tslib: 2.5.0
@@ -46227,11 +45795,11 @@ packages:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
       '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       p-limit: 2.3.0
       tslib: 2.5.0
     dev: false
@@ -46244,9 +45812,9 @@ packages:
       '@yarnpkg/core': ^4.0.0-rc.42
     dependencies:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       tslib: 2.5.0
     dev: false
 
@@ -46259,7 +45827,7 @@ packages:
       '@yarnpkg/plugin-essentials': ^4.0.0-rc.42
     dependencies:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/plugin-essentials': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)
       '@yarnpkg/plugin-pack': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
@@ -46277,12 +45845,12 @@ packages:
       '@yarnpkg/plugin-git': ^3.0.0-rc.42
     dependencies:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/libui': 3.0.0-rc.42(ink@3.2.0)(react@16.14.0)
       '@yarnpkg/parsers': 3.0.0-rc.42
       '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       ink: 3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@16.14.0)(utf-8-validate@5.0.5)
       lodash: 4.17.21
       react: 16.14.0
@@ -46303,10 +45871,10 @@ packages:
       '@yarnpkg/plugin-git': ^3.0.0-rc.42
     dependencies:
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       micromatch: 4.0.5
       p-limit: 2.3.0
       tslib: 2.5.0
@@ -46346,7 +45914,7 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/shell@4.0.0-rc.45(typanion@3.12.1):
+  /@yarnpkg/shell@4.0.0-rc.45:
     resolution: {integrity: sha512-I8VxA7GKlf6Uov9XaAJR0Xgvoh5+6CRsAB0AhV+/x8HwZzhF2CN8sytpiMJ5v7MtZpYk9kRkZsPypIY+/tkj+A==}
     engines: {node: '>=14.15.0'}
     hasBin: true
@@ -46354,13 +45922,11 @@ packages:
       '@yarnpkg/fslib': 3.0.0-rc.45
       '@yarnpkg/parsers': 3.0.0-rc.45
       chalk: 3.0.0
-      clipanion: 3.2.1(typanion@3.12.1)
+      clipanion: 3.2.1
       cross-spawn: 7.0.3
       fast-glob: 3.2.12
       micromatch: 4.0.5
       tslib: 2.5.0
-    transitivePeerDependencies:
-      - typanion
     dev: false
 
   /@zkochan/cmd-shim@5.4.1:
@@ -47085,23 +46651,6 @@ packages:
       graphql: 14.7.0
     dev: false
 
-  /apollo-upload-client@14.1.2(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18):
-    resolution: {integrity: sha512-ozaW+4tnVz1rpfwiQwG3RCdCcZ93RV/37ZQbRnObcQ9mjb+zur58sGDPVg9Ef3fiujLmiE/Fe9kdgvIMA3VOjA==}
-    engines: {node: ^10.17.0 || ^12.0.0 || >= 13.7.0}
-    peerDependencies:
-      graphql: 14 - 15
-      subscriptions-transport-ws: ^0.9.0
-    dependencies:
-      '@apollo/client': 3.6.9(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@babel/runtime': 7.20.0
-      extract-files: 9.0.0
-      graphql: 14.7.0
-      subscriptions-transport-ws: 0.9.18(bufferutil@4.0.3)(graphql@14.7.0)(utf-8-validate@5.0.5)
-    transitivePeerDependencies:
-      - graphql-ws
-      - react
-    dev: false
-
   /apollo-utilities@1.3.4(graphql@14.7.0):
     resolution: {integrity: sha512-pk2hiWrCXMAy2fRPwEyhvka+mqwzeP60Jr1tRYi5xru+3ko94HI9o6lK0CT33/w4RDlxWchmdhDCrvdr+pHCig==}
     peerDependencies:
@@ -47559,19 +47108,17 @@ packages:
       - supports-color
     dev: false
 
-  /babel-loader@8.2.2(@babel/core@7.19.6)(webpack@5.84.1):
-    resolution: {integrity: sha512-JvTd0/D889PQBtUXJ2PXaKU/pjZDMtHA9V2ecm+eNRmmBCMR09a+fmpGTNwnJtFmFl5Ei7Vy47LjBb+L0wQ99g==}
-    engines: {node: '>= 8.9'}
+  /babel-loader@9.1.2(@babel/core@7.19.6)(webpack@5.84.1):
+    resolution: {integrity: sha512-mN14niXW43tddohGl8HPu5yfQq70iUThvFL/4QzESA7GcZoC0eVOhvWdQ8+3UlSjaDE9MVtsW9mxDY07W7VpVA==}
+    engines: {node: '>= 14.15.0'}
     peerDependencies:
-      '@babel/core': ^7.0.0
-      webpack: '>=2'
+      '@babel/core': ^7.12.0
+      webpack: '>=5'
     dependencies:
       '@babel/core': 7.19.6
       find-cache-dir: 3.3.2
-      loader-utils: 1.4.2
-      make-dir: 3.1.0
-      schema-utils: 2.7.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      schema-utils: 4.0.0
+      webpack: 5.84.1(esbuild@0.14.29)
 
   /babel-plugin-apply-mdx-type-prop@1.6.21(@babel/core@7.11.6):
     resolution: {integrity: sha512-+vQarmm+g+kePH4CMp2iEN/HOx1oEvZeSKCdKCEZlnJOthXzkpaRAbM3ZNCiKqVr9WuoqPNfoXQ0EVppYpIwfg==}
@@ -47673,10 +47220,6 @@ packages:
       '@babel/helper-module-imports': 7.18.6
     dev: false
 
-  /babel-plugin-syntax-trailing-function-commas@7.0.0-beta.0:
-    resolution: {integrity: sha512-Xj9XuRuz3nTSbaTXWv3itLOcxyF4oPD8douBBmj7U9BBC6nEBYfyOJYQMf/8PJAFotC62UY5dFfIGEPr7WswzQ==}
-    dev: false
-
   /babel-plugin-transform-react-remove-prop-types@0.4.24:
     resolution: {integrity: sha512-eqj0hVcJUR57/Ug2zE1Yswsw4LhuqqHhD+8v120T1cl3kjg76QwtyBrdIk4WVwK+lAhBJVYCd/v+4nc4y+8JsA==}
     dev: false
@@ -47712,43 +47255,6 @@ packages:
       '@babel/plugin-syntax-optional-catch-binding': 7.8.3(@babel/core@7.19.6)
       '@babel/plugin-syntax-optional-chaining': 7.8.3(@babel/core@7.19.6)
       '@babel/plugin-syntax-top-level-await': 7.14.5(@babel/core@7.19.6)
-    dev: false
-
-  /babel-preset-fbjs@3.4.0(@babel/core@7.19.6):
-    resolution: {integrity: sha512-9ywCsCvo1ojrw0b+XYk7aFvTH6D9064t0RIL1rtMf3nsa02Xw41MS7sZw216Im35xj/UY0PDBQsa1brUDDF1Ow==}
-    peerDependencies:
-      '@babel/core': ^7.0.0
-    dependencies:
-      '@babel/core': 7.19.6
-      '@babel/plugin-proposal-class-properties': 7.18.6(@babel/core@7.19.6)
-      '@babel/plugin-proposal-object-rest-spread': 7.19.4(@babel/core@7.19.6)
-      '@babel/plugin-syntax-class-properties': 7.12.13(@babel/core@7.19.6)
-      '@babel/plugin-syntax-flow': 7.18.6(@babel/core@7.19.6)
-      '@babel/plugin-syntax-jsx': 7.18.6(@babel/core@7.19.6)
-      '@babel/plugin-syntax-object-rest-spread': 7.8.3(@babel/core@7.19.6)
-      '@babel/plugin-transform-arrow-functions': 7.20.7(@babel/core@7.19.6)
-      '@babel/plugin-transform-block-scoped-functions': 7.18.6(@babel/core@7.19.6)
-      '@babel/plugin-transform-block-scoping': 7.20.14(@babel/core@7.19.6)
-      '@babel/plugin-transform-classes': 7.20.7(@babel/core@7.19.6)
-      '@babel/plugin-transform-computed-properties': 7.20.7(@babel/core@7.19.6)
-      '@babel/plugin-transform-destructuring': 7.20.7(@babel/core@7.19.6)
-      '@babel/plugin-transform-flow-strip-types': 7.19.0(@babel/core@7.19.6)
-      '@babel/plugin-transform-for-of': 7.18.8(@babel/core@7.19.6)
-      '@babel/plugin-transform-function-name': 7.18.9(@babel/core@7.19.6)
-      '@babel/plugin-transform-literals': 7.18.9(@babel/core@7.19.6)
-      '@babel/plugin-transform-member-expression-literals': 7.18.6(@babel/core@7.19.6)
-      '@babel/plugin-transform-modules-commonjs': 7.19.6(@babel/core@7.19.6)
-      '@babel/plugin-transform-object-super': 7.18.6(@babel/core@7.19.6)
-      '@babel/plugin-transform-parameters': 7.20.7(@babel/core@7.19.6)
-      '@babel/plugin-transform-property-literals': 7.18.6(@babel/core@7.19.6)
-      '@babel/plugin-transform-react-display-name': 7.18.6(@babel/core@7.19.6)
-      '@babel/plugin-transform-react-jsx': 7.20.13(@babel/core@7.19.6)
-      '@babel/plugin-transform-shorthand-properties': 7.18.6(@babel/core@7.19.6)
-      '@babel/plugin-transform-spread': 7.20.7(@babel/core@7.19.6)
-      '@babel/plugin-transform-template-literals': 7.18.9(@babel/core@7.19.6)
-      babel-plugin-syntax-trailing-function-commas: 7.0.0-beta.0
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
   /babel-preset-jest@27.5.1(@babel/core@7.19.6):
@@ -47850,6 +47356,7 @@ packages:
 
   /big.js@5.2.2:
     resolution: {integrity: sha512-vyL2OymJxmarO8gxMr0mhChsO9QGwhynfuu4+MHTAW6czfq9humCB7rKpUjDd9YUiDPU4mzpyupFSvOClAwbmQ==}
+    dev: false
 
   /bin-links@4.0.1:
     resolution: {integrity: sha512-bmFEM39CyX336ZGGRsGPlc6jZHriIoHacOQcTt72MktIjpPhZoP4te2jOyUXF3BLILmJ8aNLncoPVeIIFlrDeA==}
@@ -48833,10 +48340,8 @@ packages:
       typanion: 3.12.1
     dev: false
 
-  /clipanion@3.2.1(typanion@3.12.1):
+  /clipanion@3.2.1:
     resolution: {integrity: sha512-dYFdjLb7y1ajfxQopN05mylEpK9ZX0sO1/RfMXdfmwjlIsPkbh4p7A682x++zFPLDCo1x3p82dtljHf5cW2LKA==}
-    peerDependencies:
-      typanion: '*'
     dependencies:
       typanion: 3.12.1
     dev: false
@@ -49140,7 +48645,7 @@ packages:
     dependencies:
       schema-utils: 4.0.0
       serialize-javascript: 6.0.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /compression@1.7.4:
@@ -49444,18 +48949,6 @@ packages:
       cross-spawn: 7.0.3
     dev: false
 
-  /cross-fetch@3.0.6:
-    resolution: {integrity: sha512-KBPUbqgFjzWlVcURG+Svp9TlhA5uliYtiNx/0r8nv0pdypeQCRJ9IaSIc3q/x3q8t3F75cHuwxVql1HFGHCNJQ==}
-    dependencies:
-      node-fetch: 2.6.1
-    dev: false
-
-  /cross-fetch@3.1.4:
-    resolution: {integrity: sha512-1eAtFWdIubi6T4XPy6ei9iUFoKpUkIF971QLN8lIvvvwueI65+Nw5haMNKUwfJxabqlIIDODJKGrQ66gxC0PbQ==}
-    dependencies:
-      node-fetch: 2.6.1
-    dev: false
-
   /cross-fetch@3.1.5:
     resolution: {integrity: sha512-lvb1SBsI0Z7GDwmuid+mU3kWVBwTVUbe7S0H52yaaAdQOXq2YktTCZdlAcNKFzE6QtRz0snpw9bNiPeOIkkQvw==}
     dependencies:
@@ -49582,7 +49075,7 @@ packages:
       postcss-value-parser: 4.2.0
       schema-utils: 3.1.1
       semver: 7.5.2
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /css-loader@6.2.0(webpack@5.84.1):
@@ -49599,7 +49092,7 @@ packages:
       postcss-modules-values: 4.0.0(postcss@8.4.18)
       postcss-value-parser: 4.2.0
       semver: 7.5.2
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /css-minimizer-webpack-plugin@3.0.2(webpack@5.84.1):
@@ -49622,7 +49115,7 @@ packages:
       schema-utils: 3.1.1
       serialize-javascript: 6.0.1
       source-map: 0.6.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /css-prefers-color-scheme@6.0.3(postcss@8.4.18):
@@ -49909,10 +49402,6 @@ packages:
       abab: 2.0.6
       whatwg-mimetype: 2.3.0
       whatwg-url: 8.7.0
-    dev: false
-
-  /dataloader@2.0.0:
-    resolution: {integrity: sha512-YzhyDAwA4TaQIhM5go+vCLmU0UikghC/t9DTQYZR2M/UvZ1MdOhPezSDZcjj9uqQJOMqjLcpWtyW2iNINdlatQ==}
     dev: false
 
   /date-format@0.0.2:
@@ -50561,6 +50050,7 @@ packages:
   /emojis-list@3.0.0:
     resolution: {integrity: sha512-/kyM18EfinwXZbno9FyUGeFh87KC8HRQBQGildHZbEuRyWFOmv1U10o9BBp8XVZDVNNuQKyIGIu5ZYAAXJ0V2Q==}
     engines: {node: '>= 4'}
+    dev: false
 
   /enabled@2.0.0:
     resolution: {integrity: sha512-AKrN98kuwOzMIdAizXGI86UFBoo26CL21UM763y1h/GMSJ4/OHU9k2YlsmBpyScFo/wbLzWQJBMCW4+IO3/+OQ==}
@@ -50831,192 +50321,192 @@ packages:
       es6-symbol: 3.1.3
     dev: false
 
-  /esbuild-android-64@0.14.28:
-    resolution: {integrity: sha512-A52C3zq+9tNwCqZ+4kVLBxnk/WnrYM8P2+QNvNE9B6d2OVPs214lp3g6UyO+dKDhUdefhfPCuwkP8j2A/+szNA==}
+  /esbuild-android-64@0.14.29:
+    resolution: {integrity: sha512-tJuaN33SVZyiHxRaVTo1pwW+rn3qetJX/SRuc/83rrKYtyZG0XfsQ1ao1nEudIt9w37ZSNXR236xEfm2C43sbw==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [android]
     requiresBuild: true
     optional: true
 
-  /esbuild-android-arm64@0.14.28:
-    resolution: {integrity: sha512-sm0fDEGElZhMC3HLZeECI2juE4aG7uPfMBMqNUhy9CeX399Pz8rC6e78OXMXInGjSdEAwQmCOHmfsP7uv3Q8rA==}
+  /esbuild-android-arm64@0.14.29:
+    resolution: {integrity: sha512-D74dCv6yYnMTlofVy1JKiLM5JdVSQd60/rQfJSDP9qvRAI0laPXIG/IXY1RG6jobmFMUfL38PbFnCqyI/6fPXg==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [android]
     requiresBuild: true
     optional: true
 
-  /esbuild-darwin-64@0.14.28:
-    resolution: {integrity: sha512-nzDd7mQ44FvsFHtOafZdBgn3Li5SMsnMnoz1J2MM37xJmR3wGNTFph88KypjHgWqwbxCI7MXS1U+sN4qDeeW6Q==}
+  /esbuild-darwin-64@0.14.29:
+    resolution: {integrity: sha512-+CJaRvfTkzs9t+CjGa0Oa28WoXa7EeLutQhxus+fFcu0MHhsBhlmeWHac3Cc/Sf/xPi1b2ccDFfzGYJCfV0RrA==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
     optional: true
 
-  /esbuild-darwin-arm64@0.14.28:
-    resolution: {integrity: sha512-XEq/bLR/glsUl+uGrBimQzOVs/CmwI833fXUhP9xrLI3IJ+rKyrZ5IA8u+1crOEf1LoTn8tV+hInmX6rGjbScw==}
+  /esbuild-darwin-arm64@0.14.29:
+    resolution: {integrity: sha512-5Wgz/+zK+8X2ZW7vIbwoZ613Vfr4A8HmIs1XdzRmdC1kG0n5EG5fvKk/jUxhNlrYPx1gSY7XadQ3l4xAManPSw==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
     optional: true
 
-  /esbuild-freebsd-64@0.14.28:
-    resolution: {integrity: sha512-rTKLgUj/HEcPeE5XZ7IZwWpFx7IWMfprN7QRk/TUJE1s1Ipb58esboIesUpjirJz/BwrgHq+FDG9ChAI8dZAtQ==}
+  /esbuild-freebsd-64@0.14.29:
+    resolution: {integrity: sha512-VTfS7Bm9QA12JK1YXF8+WyYOfvD7WMpbArtDj6bGJ5Sy5xp01c/q70Arkn596aGcGj0TvQRplaaCIrfBG1Wdtg==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [freebsd]
     requiresBuild: true
     optional: true
 
-  /esbuild-freebsd-arm64@0.14.28:
-    resolution: {integrity: sha512-sBffxD1UMOsB7aWMoExmipycjcy3HJGwmqE4GQZUTZvdiH4GhjgUiVdtPyt7kSCdL40JqnWQJ4b1l8Y51oCF4Q==}
+  /esbuild-freebsd-arm64@0.14.29:
+    resolution: {integrity: sha512-WP5L4ejwLWWvd3Fo2J5mlXvG3zQHaw5N1KxFGnUc4+2ZFZknP0ST63i0IQhpJLgEJwnQpXv2uZlU1iWZjFqEIg==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-32@0.14.28:
-    resolution: {integrity: sha512-+Wxidh3fBEQ9kHcCsD4etlBTMb1n6QY2uXv3rFhVn88CY/JP782MhA57/ipLMY4kOLeSKEuFGN4rtjHuhmRMig==}
+  /esbuild-linux-32@0.14.29:
+    resolution: {integrity: sha512-4myeOvFmQBWdI2U1dEBe2DCSpaZyjdQtmjUY11Zu2eQg4ynqLb8Y5mNjNU9UN063aVsCYYfbs8jbken/PjyidA==}
     engines: {node: '>=12'}
     cpu: [ia32]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-64@0.14.28:
-    resolution: {integrity: sha512-7+xgsC4LvR6cnzaBdiljNnPDjbkwzahogN+S9uy9AoYw7ZjPnnXc6sjQAVCbqGb7MEgrWdpa6u/Tao79i4lWxg==}
+  /esbuild-linux-64@0.14.29:
+    resolution: {integrity: sha512-iaEuLhssReAKE7HMwxwFJFn7D/EXEs43fFy5CJeA4DGmU6JHh0qVJD2p/UP46DvUXLRKXsXw0i+kv5TdJ1w5pg==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-arm64@0.14.28:
-    resolution: {integrity: sha512-EjRHgwg+kgXABzyoPGPOPg4d5wZqRnZ/ZAxBDzLY+i6DS8OUfTSlZHWIOZzU4XF7125WxRBg9ULbrFJBl+57Eg==}
+  /esbuild-linux-arm64@0.14.29:
+    resolution: {integrity: sha512-KYf7s8wDfUy+kjKymW3twyGT14OABjGHRkm9gPJ0z4BuvqljfOOUbq9qT3JYFnZJHOgkr29atT//hcdD0Pi7Mw==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-arm@0.14.28:
-    resolution: {integrity: sha512-L5isjmlLbh9E0WVllXiVETbScgMbth/+XkXQii1WwgO1RvLIfaGrVFz8d2n6EH/ImtgYxPYGx+OcvIKQBc91Rg==}
+  /esbuild-linux-arm@0.14.29:
+    resolution: {integrity: sha512-OXa9D9QL1hwrAnYYAHt/cXAuSCmoSqYfTW/0CEY0LgJNyTxJKtqc5mlwjAZAvgyjmha0auS/sQ0bXfGf2wAokQ==}
     engines: {node: '>=12'}
     cpu: [arm]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-mips64le@0.14.28:
-    resolution: {integrity: sha512-krx9SSg7yfiUKk64EmjefOyiEF6nv2bRE4um/LiTaQ6Y/6FP4UF3/Ou/AxZVyR154uSRq63xejcAsmswXAYRsw==}
+  /esbuild-linux-mips64le@0.14.29:
+    resolution: {integrity: sha512-05jPtWQMsZ1aMGfHOvnR5KrTvigPbU35BtuItSSWLI2sJu5VrM8Pr9Owym4wPvA4153DFcOJ1EPN/2ujcDt54g==}
     engines: {node: '>=12'}
     cpu: [mips64el]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-ppc64le@0.14.28:
-    resolution: {integrity: sha512-LD0Xxu9g+DNuhsEBV5QuVZ4uKVBMup0xPIruLweuAf9/mHXFnaCuNXUBF5t0DxKl7GQ5MSioKtnb92oMo+QXEw==}
+  /esbuild-linux-ppc64le@0.14.29:
+    resolution: {integrity: sha512-FYhBqn4Ir9xG+f6B5VIQVbRuM4S6qwy29dDNYFPoxLRnwTEKToIYIUESN1qHyUmIbfO0YB4phG2JDV2JDN9Kgw==}
     engines: {node: '>=12'}
     cpu: [ppc64]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-riscv64@0.14.28:
-    resolution: {integrity: sha512-L/DWfRh2P0vxq4Y+qieSNXKGdMg+e9Qe8jkbN2/8XSGYDTPzO2OcAxSujob4qIh7iSl+cknbXV+BvH0YFR0jbg==}
+  /esbuild-linux-riscv64@0.14.29:
+    resolution: {integrity: sha512-eqZMqPehkb4nZcffnuOpXJQdGURGd6GXQ4ZsDHSWyIUaA+V4FpMBe+5zMPtXRD2N4BtyzVvnBko6K8IWWr36ew==}
     engines: {node: '>=12'}
     cpu: [riscv64]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-linux-s390x@0.14.28:
-    resolution: {integrity: sha512-rrgxmsbmL8QQknWGnAL9bGJRQYLOi2AzXy5OTwfhxnj9eqjo5mSVbJXjgiq5LPUAMQZGdPH5yaNK0obAXS81Zw==}
+  /esbuild-linux-s390x@0.14.29:
+    resolution: {integrity: sha512-o7EYajF1rC/4ho7kpSG3gENVx0o2SsHm7cJ5fvewWB/TEczWU7teDgusGSujxCYcMottE3zqa423VTglNTYhjg==}
     engines: {node: '>=12'}
     cpu: [s390x]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /esbuild-netbsd-64@0.14.28:
-    resolution: {integrity: sha512-h8wntIyOR8/xMVVM6TvJxxWKh4AjmLK87IPKpuVi8Pq0kyk0RMA+eo4PFGk5j2XK0D7dj8PcSF5NSlP9kN/j0A==}
+  /esbuild-netbsd-64@0.14.29:
+    resolution: {integrity: sha512-/esN6tb6OBSot6+JxgeOZeBk6P8V/WdR3GKBFeFpSqhgw4wx7xWUqPrdx4XNpBVO7X4Ipw9SAqgBrWHlXfddww==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [netbsd]
     requiresBuild: true
     optional: true
 
-  /esbuild-openbsd-64@0.14.28:
-    resolution: {integrity: sha512-HBv18rVapbuDx52/fhZ/c/w6TXyaQAvRxiDDn5Hz/pBcwOs3cdd2WxeIKlWmDoqm2JMx5EVlq4IWgoaRX9mVkw==}
+  /esbuild-openbsd-64@0.14.29:
+    resolution: {integrity: sha512-jUTdDzhEKrD0pLpjmk0UxwlfNJNg/D50vdwhrVcW/D26Vg0hVbthMfb19PJMatzclbK7cmgk1Nu0eNS+abzoHw==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [openbsd]
     requiresBuild: true
     optional: true
 
-  /esbuild-sunos-64@0.14.28:
-    resolution: {integrity: sha512-zlIxePhZxKYheR2vBCgPVvTixgo/ozOfOMoP6RZj8dxzquU1NgeyhjkcRXucbLCtmoNJ+i4PtWwPZTLuDd3bGg==}
+  /esbuild-sunos-64@0.14.29:
+    resolution: {integrity: sha512-EfhQN/XO+TBHTbkxwsxwA7EfiTHFe+MNDfxcf0nj97moCppD9JHPq48MLtOaDcuvrTYOcrMdJVeqmmeQ7doTcg==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [sunos]
     requiresBuild: true
     optional: true
 
-  /esbuild-windows-32@0.14.28:
-    resolution: {integrity: sha512-am9DIJxXlld1BOAY/VlvBQHMUCPL7S3gB/lnXIY3M4ys0gfuRqPf4EvMwZMzYUbFKBY+/Qb8SRgPRRGhwnJ8Kg==}
+  /esbuild-windows-32@0.14.29:
+    resolution: {integrity: sha512-uoyb0YAJ6uWH4PYuYjfGNjvgLlb5t6b3zIaGmpWPOjgpr1Nb3SJtQiK4YCPGhONgfg2v6DcJgSbOteuKXhwqAw==}
     engines: {node: '>=12'}
     cpu: [ia32]
     os: [win32]
     requiresBuild: true
     optional: true
 
-  /esbuild-windows-64@0.14.28:
-    resolution: {integrity: sha512-78PhySDnmRZlsPNp/W/5Fim8iivlBQQxfhBFIqR7xwvfDmCFUSByyMKP7LCHgNtb04yNdop8nJJkJaQ8Xnwgiw==}
+  /esbuild-windows-64@0.14.29:
+    resolution: {integrity: sha512-X9cW/Wl95QjsH8WUyr3NqbmfdU72jCp71cH3pwPvI4CgBM2IeOUDdbt6oIGljPu2bf5eGDIo8K3Y3vvXCCTd8A==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
     requiresBuild: true
     optional: true
 
-  /esbuild-windows-arm64@0.14.28:
-    resolution: {integrity: sha512-VhXGBTo6HELD8zyHXynV6+L2jWx0zkKnGx4TmEdSBK7UVFACtOyfUqpToG0EtnYyRZ0HESBhzPSVpP781ovmvA==}
+  /esbuild-windows-arm64@0.14.29:
+    resolution: {integrity: sha512-+O/PI+68fbUZPpl3eXhqGHTGK7DjLcexNnyJqtLZXOFwoAjaXlS5UBCvVcR3o2va+AqZTj8o6URaz8D2K+yfQQ==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
     optional: true
 
-  /esbuild@0.14.28:
-    resolution: {integrity: sha512-YLNprkCcMVKQ5sekmCKEQ3Obu/L7s6+iij38xNKyBeSmSsTWur4Ky/9zB3XIGT8SCJITG/bZwAR2l7YOAXch4Q==}
+  /esbuild@0.14.29:
+    resolution: {integrity: sha512-SQS8cO8xFEqevYlrHt6exIhK853Me4nZ4aMW6ieysInLa0FMAL+AKs87HYNRtR2YWRcEIqoXAHh+Ytt5/66qpg==}
     engines: {node: '>=12'}
     hasBin: true
     requiresBuild: true
     optionalDependencies:
-      esbuild-android-64: 0.14.28
-      esbuild-android-arm64: 0.14.28
-      esbuild-darwin-64: 0.14.28
-      esbuild-darwin-arm64: 0.14.28
-      esbuild-freebsd-64: 0.14.28
-      esbuild-freebsd-arm64: 0.14.28
-      esbuild-linux-32: 0.14.28
-      esbuild-linux-64: 0.14.28
-      esbuild-linux-arm: 0.14.28
-      esbuild-linux-arm64: 0.14.28
-      esbuild-linux-mips64le: 0.14.28
-      esbuild-linux-ppc64le: 0.14.28
-      esbuild-linux-riscv64: 0.14.28
-      esbuild-linux-s390x: 0.14.28
-      esbuild-netbsd-64: 0.14.28
-      esbuild-openbsd-64: 0.14.28
-      esbuild-sunos-64: 0.14.28
-      esbuild-windows-32: 0.14.28
-      esbuild-windows-64: 0.14.28
-      esbuild-windows-arm64: 0.14.28
+      esbuild-android-64: 0.14.29
+      esbuild-android-arm64: 0.14.29
+      esbuild-darwin-64: 0.14.29
+      esbuild-darwin-arm64: 0.14.29
+      esbuild-freebsd-64: 0.14.29
+      esbuild-freebsd-arm64: 0.14.29
+      esbuild-linux-32: 0.14.29
+      esbuild-linux-64: 0.14.29
+      esbuild-linux-arm: 0.14.29
+      esbuild-linux-arm64: 0.14.29
+      esbuild-linux-mips64le: 0.14.29
+      esbuild-linux-ppc64le: 0.14.29
+      esbuild-linux-riscv64: 0.14.29
+      esbuild-linux-s390x: 0.14.29
+      esbuild-netbsd-64: 0.14.29
+      esbuild-openbsd-64: 0.14.29
+      esbuild-sunos-64: 0.14.29
+      esbuild-windows-32: 0.14.29
+      esbuild-windows-64: 0.14.29
+      esbuild-windows-arm64: 0.14.29
 
   /escalade@3.1.1:
     resolution: {integrity: sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==}
@@ -51744,7 +51234,7 @@ packages:
     peerDependencies:
       webpack: ^5.0.0
     dependencies:
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /express-graphql@0.12.0(graphql@14.7.0):
@@ -52422,7 +51912,7 @@ packages:
       semver: 5.7.1
       tapable: 1.1.3
       typescript: 4.7.4
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
       worker-rpc: 0.1.1
     transitivePeerDependencies:
       - supports-color
@@ -52437,15 +51927,6 @@ packages:
       mime-types: 2.1.35
     dev: false
 
-  /form-data@3.0.0:
-    resolution: {integrity: sha512-CKMFDglpbMi6PyN+brwB9Q/GOw0eAnsrEZDgcsH5Krhz5Od/haKHAX0NmQfha2zPPz0JpWzA7GJHGSnvCRLWsg==}
-    engines: {node: '>= 6'}
-    dependencies:
-      asynckit: 0.4.0
-      combined-stream: 1.0.8
-      mime-types: 2.1.35
-    dev: false
-
   /form-data@3.0.1:
     resolution: {integrity: sha512-RHkBKtLWUVwd7SqRIvCZMEvAMoGUp0XU+seQiZejj0COz3RI3hWP4sCv3gZWWLjJTd7rGwcsF5eKZGii0r/hbg==}
     engines: {node: '>= 6'}
@@ -52453,15 +51934,6 @@ packages:
       asynckit: 0.4.0
       combined-stream: 1.0.8
       mime-types: 2.1.35
-
-  /form-data@4.0.0:
-    resolution: {integrity: sha512-ETEklSGi5t0QMZuiXoA/Q6vcnxcLQP5vdugSpuAyi6SVGi2clPPp+xgEhuMaHC+zGgn31Kd235W35f7Hykkaww==}
-    engines: {node: '>= 6'}
-    dependencies:
-      asynckit: 0.4.0
-      combined-stream: 1.0.8
-      mime-types: 2.1.35
-    dev: false
 
   /format@0.2.2:
     resolution: {integrity: sha512-wzsgA6WOq+09wrU1tsJ09udeR/YZRaeArL9e1wPbFg3GG2yDnC2ldKpxs4xunpFF9DgqCqOIra3bc1HWrJ37Ww==}
@@ -52933,18 +52405,6 @@ packages:
       slash: 3.0.0
     dev: false
 
-  /globby@11.0.3:
-    resolution: {integrity: sha512-ffdmosjA807y7+lA1NM0jELARVmYul/715xiILEjo3hBLPTcirgQNnXECn5g3mtR8TOLCVbkfua1Hpen25/Xcg==}
-    engines: {node: '>=10'}
-    dependencies:
-      array-union: 2.1.0
-      dir-glob: 3.0.1
-      fast-glob: 3.2.12
-      ignore: 5.2.4
-      merge2: 1.4.1
-      slash: 3.0.0
-    dev: false
-
   /globby@11.1.0:
     resolution: {integrity: sha512-jhIXaOzy1sb8IyocaruWSn1TjmnBVs8Ayhcy83rmxNJ8q2uWKCAj3CnJY+KpGSXCueAPc0i05kVvVKtP1t9S3g==}
     engines: {node: '>=10'}
@@ -53041,17 +52501,6 @@ packages:
       - encoding
     dev: false
 
-  /graphql-request@3.4.0(graphql@14.7.0):
-    resolution: {integrity: sha512-acrTzidSlwAj8wBNO7Q/UQHS8T+z5qRGquCQRv9J1InwR01BBWV9ObnoE+JS5nCCEj8wSGS0yrDXVDoRiKZuOg==}
-    peerDependencies:
-      graphql: 14.x || 15.x
-    dependencies:
-      cross-fetch: 3.0.6
-      extract-files: 9.0.0
-      form-data: 3.0.1
-      graphql: 14.7.0
-    dev: false
-
   /graphql-request@4.3.0(graphql@14.7.0):
     resolution: {integrity: sha512-2v6hQViJvSsifK606AliqiNiijb1uwWp6Re7o0RTyH+uRTv/u7Uqm2g4Fjq/LgZIzARB38RZEvVBFOQOVdlBow==}
     peerDependencies:
@@ -53060,6 +52509,18 @@ packages:
       cross-fetch: 3.1.5
       extract-files: 9.0.0
       form-data: 3.0.1
+      graphql: 14.7.0
+    transitivePeerDependencies:
+      - encoding
+    dev: false
+
+  /graphql-request@6.1.0(graphql@14.7.0):
+    resolution: {integrity: sha512-p+XPfS4q7aIpKVcgmnZKhMNqhltk20hfXtkaIkTfjjmiKMJ5xrt5c743cL03y/K7y1rg3WrIC49xGiEQ4mxdNw==}
+    peerDependencies:
+      graphql: 14 - 16
+    dependencies:
+      '@graphql-typed-document-node/core': 3.2.0(graphql@14.7.0)
+      cross-fetch: 3.1.5
       graphql: 14.7.0
     transitivePeerDependencies:
       - encoding
@@ -53125,60 +52586,27 @@ packages:
       - encoding
     dev: false
 
-  /graphql-tools@6.2.4(@types/node@12.20.4)(bufferutil@4.0.3)(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)(utf-8-validate@5.0.5):
-    resolution: {integrity: sha512-yA5E6QRz6IRZ3TrxGkh+xIGeinISZVzb3Mc0Z/3q3gu1MgqnB/3y7Iv3tXuL1DNvoNcJV5WiAU8KYMsvNSF1gQ==}
-    deprecated: This package has been deprecated and now it only exports makeExecutableSchema.\nAnd it will no longer receive updates.\nWe recommend you to migrate to scoped packages such as @graphql-tools/schema, @graphql-tools/utils and etc.\nCheck out https://www.graphql-tools.com to learn what package you should use instead
+  /graphql-tools@9.0.0(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18):
+    resolution: {integrity: sha512-ObOFRyI4gSEN5dkEa1RGO+dYQ8NZg0VbnwpxOgKf0GDbr9WkqMi8mnfkwkvB4boXxCKo/720+d7LusSLSa0I2g==}
+    engines: {node: '>=16.0.0'}
     peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0
+      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
     dependencies:
-      '@graphql-tools/batch-delegate': 6.2.6(graphql@14.7.0)
-      '@graphql-tools/code-file-loader': 6.3.1(graphql@14.7.0)
-      '@graphql-tools/delegate': 6.2.4(graphql@14.7.0)
-      '@graphql-tools/git-loader': 6.2.6(graphql@14.7.0)
-      '@graphql-tools/github-loader': 6.2.5(graphql@14.7.0)
-      '@graphql-tools/graphql-file-loader': 6.2.7(graphql@14.7.0)
-      '@graphql-tools/graphql-tag-pluck': 6.5.1(graphql@14.7.0)
-      '@graphql-tools/import': 6.7.16(graphql@14.7.0)
-      '@graphql-tools/json-file-loader': 6.2.6(graphql@14.7.0)
-      '@graphql-tools/links': 6.2.5(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@graphql-tools/load': 6.2.8(graphql@14.7.0)
-      '@graphql-tools/load-files': 6.6.1(graphql@14.7.0)
-      '@graphql-tools/merge': 6.2.17(graphql@14.7.0)
-      '@graphql-tools/mock': 6.2.4(graphql@14.7.0)
-      '@graphql-tools/module-loader': 6.2.7(graphql@14.7.0)
-      '@graphql-tools/relay-operation-optimizer': 6.5.16(graphql@14.7.0)
-      '@graphql-tools/resolvers-composition': 6.5.16(graphql@14.7.0)
-      '@graphql-tools/schema': 6.2.4(graphql@14.7.0)
-      '@graphql-tools/stitch': 6.2.4(graphql@14.7.0)
-      '@graphql-tools/url-loader': 6.10.1(@types/node@12.20.4)(bufferutil@4.0.3)(graphql@14.7.0)(utf-8-validate@5.0.5)
-      '@graphql-tools/utils': 6.2.4(graphql@14.7.0)
-      '@graphql-tools/wrap': 6.2.4(graphql@14.7.0)
+      '@graphql-tools/schema': 10.0.0(graphql@14.7.0)
       graphql: 14.7.0
-      tslib: 2.0.3
+      tslib: 2.5.0
+    optionalDependencies:
+      '@apollo/client': 3.6.9(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
     transitivePeerDependencies:
-      - '@types/node'
-      - bufferutil
-      - encoding
       - graphql-ws
       - react
       - subscriptions-transport-ws
-      - supports-color
-      - utf-8-validate
     dev: false
 
   /graphql-type-json@0.3.2(graphql@14.7.0):
     resolution: {integrity: sha512-J+vjof74oMlCWXSvt0DOf2APEdZOCdubEvGDUAlqH//VBYcOYsGgRW7Xzorr44LvkjiuvecWc8fChxuZZbChtg==}
     peerDependencies:
       graphql: '>=0.8.0'
-    dependencies:
-      graphql: 14.7.0
-    dev: false
-
-  /graphql-ws@4.9.0(graphql@14.7.0):
-    resolution: {integrity: sha512-sHkK9+lUm20/BGawNEWNtVAeJzhZeBg21VmvmLoT5NdGVeZWv5PdIhkcayQIAgjSyyQ17WMKmbDijIPG2On+Ag==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      graphql: '>=0.11 <=15'
     dependencies:
       graphql: 14.7.0
     dev: false
@@ -53576,7 +53004,7 @@ packages:
       lodash: 4.17.21
       pretty-error: 3.0.4
       tapable: 2.2.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /htmlparser2@6.1.0:
@@ -53901,11 +53329,6 @@ packages:
     resolution: {integrity: sha512-eY+Y0qcsB4TZKwgQzLaE/lqYMlKhv5J9dyd2RhhtGhNo2njPXDqU9XPfcNfa3MIDsdtZt5KlkIsirlo4dHsWdQ==}
     dev: false
 
-  /immutable@3.7.6:
-    resolution: {integrity: sha512-AizQPcaofEtO11RZhPPHBOJRdo/20MKQF9mBLnVkBoyHi1/zXK8fzVdnEpSV9gxqtnh6Qomfp3F0xT5qP/vThw==}
-    engines: {node: '>=0.8.0'}
-    dev: false
-
   /immutable@4.2.2:
     resolution: {integrity: sha512-fTMKDwtbvO5tldky9QZ2fMX7slR0mYpY5nbnFWYp0fOzDhHqhgIw9KoYgxLWsoNTS9ZHGauHj18DTyEw6BK3Og==}
     dev: false
@@ -53916,13 +53339,6 @@ packages:
     dependencies:
       parent-module: 1.0.1
       resolve-from: 4.0.0
-    dev: false
-
-  /import-from@3.0.0:
-    resolution: {integrity: sha512-CiuXOFFSzkU5x/CR0+z7T91Iht4CXgfCxVOFRhh2Zyhg5wOpWvvDLQUsWl+gcN+QscYBjez8hDCt85O7RLDttQ==}
-    engines: {node: '>=8'}
-    dependencies:
-      resolve-from: 5.0.0
     dev: false
 
   /import-lazy@2.1.0:
@@ -54226,12 +53642,6 @@ packages:
       get-intrinsic: 1.2.0
       has: 1.0.3
       side-channel: 1.0.4
-
-  /invariant@2.2.4:
-    resolution: {integrity: sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==}
-    dependencies:
-      loose-envify: 1.4.0
-    dev: false
 
   /ip@2.0.0:
     resolution: {integrity: sha512-WKa+XuLG1A1R0UWhl2+1XQSi+fZWMsYKffMZTTYsiZaUD8k2yDAj5atimTUD2TZkyCkNEeYE5NhFZmupOGtjYQ==}
@@ -54600,10 +54010,6 @@ packages:
     resolution: {integrity: sha512-+lP4/6lKUBfQjZ2pdxThZvLUAafmZb8OAxFb8XXtiQmS35INgr85hdOGoEs124ez1FCnZJt6jau/T+alh58QFQ==}
     dev: false
 
-  /is-promise@4.0.0:
-    resolution: {integrity: sha512-hvpoI6korhJMnej285dSg6nu1+e6uxs7zG3BYAm5byqDsgJNWwxzM6z6iZiAgQR4TJ30JmBTOwqZUw3WlyH3AQ==}
-    dev: false
-
   /is-redirect@1.0.0:
     resolution: {integrity: sha512-cr/SlUEe5zOGmzvj9bUyC4LVvkNVAXu4GytXLNMr1pny+a65MpQ9IJzFHD5vi7FyJgb4qt27+eS3TuQnqB+RQw==}
     engines: {node: '>=0.10.0'}
@@ -54786,14 +54192,6 @@ packages:
     dependencies:
       node-fetch: 1.7.3
       whatwg-fetch: 3.6.2
-    dev: false
-
-  /isomorphic-ws@4.0.1(ws@7.4.5):
-    resolution: {integrity: sha512-BhBvN2MBpWTaSHdWRb/bwdZJ1WaehQ2L1KngkCkfLUGF0mAWAT1sQUQacEmQ0jXkFw/czDXPNQSL5u2/Krsz1w==}
-    peerDependencies:
-      ws: '*'
-    dependencies:
-      ws: 7.4.5(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     dev: false
 
   /isstream@0.1.2:
@@ -55554,6 +54952,7 @@ packages:
     hasBin: true
     dependencies:
       minimist: 1.2.7
+    dev: false
 
   /json5@2.2.3:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
@@ -55764,7 +55163,7 @@ packages:
     dependencies:
       klona: 2.0.6
       less: 4.1.3
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /less-loader@8.0.0(less@4.1.3)(webpack@5.84.1):
@@ -55776,7 +55175,7 @@ packages:
     dependencies:
       klona: 2.0.6
       less: 4.1.3
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /less@4.1.3:
@@ -55878,7 +55277,7 @@ packages:
         optional: true
     dependencies:
       cli-truncate: 2.1.0
-      colorette: 2.0.19
+      colorette: 2.0.20
       enquirer: 2.3.6
       log-update: 4.0.0
       p-map: 4.0.0
@@ -55931,14 +55330,6 @@ packages:
   /loader-runner@4.3.0:
     resolution: {integrity: sha512-3R/1M+yS3j5ou80Me59j7F9IMs4PXs3VqRrm0TU3AbKPxlmpoY1TNscJV/oGJXo8qCatFGTfDbY6W6ipGOYXfg==}
     engines: {node: '>=6.11.5'}
-
-  /loader-utils@1.4.2:
-    resolution: {integrity: sha512-I5d00Pd/jwMD2QCduo657+YM/6L3KZu++pmX9VFncxaxvHcru9jx1lBaFft+r4Mt2jK0Yhp41XlRAihzPxHNCg==}
-    engines: {node: '>=4.0.0'}
-    dependencies:
-      big.js: 5.2.2
-      emojis-list: 3.0.0
-      json5: 1.0.2
 
   /loader-utils@2.0.0:
     resolution: {integrity: sha512-rP4F0h2RaWSvPEkD7BLDFQnvSf+nK+wr3ESUjNTyAGobqrijmW92zc+SO6d4p4B1wh7+B/Jg1mkQe5NYUEHtHQ==}
@@ -56508,18 +55899,6 @@ packages:
     engines: {node: '>= 8'}
     dev: false
 
-  /meros@1.1.4(@types/node@12.20.4):
-    resolution: {integrity: sha512-E9ZXfK9iQfG9s73ars9qvvvbSIkJZF5yOo9j4tcwM5tN8mUKfj/EKN5PzOr3ZH0y5wL7dLAHw3RVEfpQV9Q7VQ==}
-    engines: {node: '>=12'}
-    peerDependencies:
-      '@types/node': '>=12'
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-    dependencies:
-      '@types/node': 12.20.4
-    dev: false
-
   /methods@1.1.2:
     resolution: {integrity: sha512-iclAHeNqNm68zFtnZ0e+1L2yUIdvzNoauKU4WBA3VvH/vPFieF7qfRlwUZU+DA9P9bPXIS90ulxoUoCH23sV2w==}
     engines: {node: '>= 0.6'}
@@ -56641,7 +56020,7 @@ packages:
       webpack: ^5.0.0
     dependencies:
       schema-utils: 3.1.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /minimalistic-assert@1.0.1:
@@ -56685,6 +56064,7 @@ packages:
 
   /minimist@1.2.7:
     resolution: {integrity: sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==}
+    dev: false
 
   /minio@7.0.32:
     resolution: {integrity: sha512-txa7Vr0N24MKzeAybP/wY1jxbLnfGHXwZYyfFXuMW55HX2+HOcKEIgH4hU6Qj/kiMgyXs/ozHjAuLIDrR8nwLg==}
@@ -57119,7 +56499,7 @@ packages:
     peerDependencies:
       webpack: ^5.0.0
     dependencies:
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /next-path@1.0.0:
@@ -57164,11 +56544,6 @@ packages:
     dependencies:
       encoding: 0.1.13
       is-stream: registry.npmjs.org/is-stream@1.1.0
-    dev: false
-
-  /node-fetch@2.6.1:
-    resolution: {integrity: sha512-V4aYg89jEoVRxRb2fJdAg8FHvI7cEyYdVAh94HH0UIK8oJxUfkjlDQN9RbMx+bEjP7+ggMiFRprSti032Oipxw==}
-    engines: {node: 4.x || >=6.0.0}
     dev: false
 
   /node-fetch@2.6.7:
@@ -57561,10 +56936,6 @@ packages:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
     dependencies:
       boolbase: 1.0.0
-    dev: false
-
-  /nullthrows@1.1.1:
-    resolution: {integrity: sha512-2vPPEi+Z7WqML2jZYddDIfy5Dqb0r2fze2zTxNNknZaFpVHU3mFB3R+DWeJWGVx0ecvttSGlJTI+WG+8Z4cDWw==}
     dev: false
 
   /number-is-nan@1.0.1:
@@ -58770,7 +58141,7 @@ packages:
       klona: 2.0.6
       postcss: 8.4.18
       semver: 7.5.2
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /postcss-logical@5.0.4(postcss@8.4.18):
@@ -59812,7 +59183,7 @@ packages:
       strip-ansi: 6.0.0
       text-table: 0.2.0
       typescript: 4.7.4
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     transitivePeerDependencies:
       - eslint
       - supports-color
@@ -60529,16 +59900,6 @@ packages:
     resolution: {integrity: sha512-0O6i4fKjsx8qhz57zorG+LrIDnF9pSvP5s7H9R1Nb5nSqih5dvRyKzNKs6MxhL3bv4iwsz4DuDwAyw+c47QFIA==}
     dev: false
 
-  /relay-runtime@12.0.0:
-    resolution: {integrity: sha512-QU6JKr1tMsry22DXNy9Whsq5rmvwr3LSZiiWV/9+DFpuTWvp+WFhobWMc8TC4OjKFfNhEZy7mOiqUAn5atQtug==}
-    dependencies:
-      '@babel/runtime': 7.20.0
-      fbjs: 3.0.4
-      invariant: 2.2.4
-    transitivePeerDependencies:
-      - encoding
-    dev: false
-
   /remark-admonitions@1.2.1:
     resolution: {integrity: sha512-Ji6p68VDvD+H1oS95Fdx9Ar5WA2wcDA4kwrrhVU7fGctC6+d3uiMICu7w7/2Xld+lnU7/gi+432+rRbup5S8ow==}
     dependencies:
@@ -61092,7 +60453,7 @@ packages:
       klona: 2.0.6
       neo-async: 2.6.2
       sass: 1.43.4
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /sass-lookup@3.0.0:
@@ -61139,14 +60500,6 @@ packages:
     dependencies:
       loose-envify: 1.4.0
       object-assign: 4.1.1
-
-  /schema-utils@2.7.1:
-    resolution: {integrity: sha512-SHiNtMOUGWBQJwzISiVYKu82GiV4QYGePp3odlY1tuKO7gPtphAT5R/py0fA6xtbgLL/RvtJZnU9b8s0F1q0Xg==}
-    engines: {node: '>= 8.9.0'}
-    dependencies:
-      '@types/json-schema': 7.0.11
-      ajv: 6.12.6
-      ajv-keywords: 3.5.2(ajv@6.12.6)
 
   /schema-utils@3.1.1:
     resolution: {integrity: sha512-Y5PQxS4ITlC+EahLuXaY86TXfR7Dc5lw294alXOq86JAHCihAIZfqv8nNCWvaEJvaC51uN9hbLGeV0cFBdH+Fw==}
@@ -61497,10 +60850,6 @@ packages:
     engines: {node: '>=14'}
     dev: false
 
-  /signedsource@1.0.0:
-    resolution: {integrity: sha512-6+eerH9fEnNmi/hyM1DXcRK3pWdoMQtlkQ+ns0ntzunjKqp5i3sKCc80ym8Fib3iaYhdJUOPdhlJWj1tvge2Ww==}
-    dev: false
-
   /simple-swizzle@0.2.2:
     resolution: {integrity: sha512-JA//kQgZtbuY83m+xT+tXJkmJncGMTFT+C+g2h2R9uxkYIrE2yy9sgmcLhCnw57/WSD+Eh3J97FPEDFnbXnDUg==}
     dependencies:
@@ -61736,7 +61085,7 @@ packages:
       abab: 2.0.6
       iconv-lite: 0.6.3
       source-map-js: 0.6.2
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /source-map-resolve@0.5.3:
@@ -62354,7 +61703,7 @@ packages:
     dependencies:
       loader-utils: 2.0.4
       schema-utils: 3.1.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /style-to-object@0.3.0:
@@ -62566,16 +61915,6 @@ packages:
       rename-overwrite: 4.0.3
     dev: false
 
-  /sync-fetch@0.3.0:
-    resolution: {integrity: sha512-dJp4qg+x4JwSEW1HibAuMi0IIrBI3wuQr2GimmqB7OXR50wmwzfdusG+p39R9w3R6aFtZ2mzvxvWKQ3Bd/vx3g==}
-    engines: {node: '>=8'}
-    dependencies:
-      buffer: 5.7.1
-      node-fetch: 2.6.7
-    transitivePeerDependencies:
-      - encoding
-    dev: false
-
   /synckit@0.1.6:
     resolution: {integrity: sha512-5pk9meINInVUZ4nKn5942/x/mY5OE9SVzkOFIxiCDnellaz1cwTd4m7Xl1ibz1F3AxnZ8NxQMEbF7eMWMGECGg==}
     engines: {node: '>=4.0'}
@@ -62710,7 +62049,7 @@ packages:
       supports-hyperlinks: 2.3.0
     dev: false
 
-  /terser-webpack-plugin@5.2.0(esbuild@0.14.28)(webpack@5.84.1):
+  /terser-webpack-plugin@5.2.0(esbuild@0.14.29)(webpack@5.84.1):
     resolution: {integrity: sha512-FpR4Qe0Yt4knSQ5u2bA1wkM0R8VlVsvhyfSHvomXRivS4vPLk0dJV2IhRBIHRABh7AFutdMeElIA5y1dETwMBg==}
     engines: {node: '>= 10.13.0'}
     peerDependencies:
@@ -62726,17 +62065,17 @@ packages:
       uglify-js:
         optional: true
     dependencies:
-      esbuild: 0.14.28
+      esbuild: 0.14.29
       jest-worker: 27.5.1
       p-limit: 3.1.0
       schema-utils: 3.1.1
       serialize-javascript: 6.0.1
       source-map: 0.6.1
       terser: 5.16.2
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
-  /terser-webpack-plugin@5.3.8(esbuild@0.14.28)(webpack@5.84.1):
+  /terser-webpack-plugin@5.3.8(esbuild@0.14.29)(webpack@5.84.1):
     resolution: {integrity: sha512-WiHL3ElchZMsK27P8uIUh4604IgJyAW47LVXGbEoB21DbQcZ+OuMpGjVYnEUaqcWM6dO8uS2qUbA7LSCWqvsbg==}
     engines: {node: '>= 10.13.0'}
     peerDependencies:
@@ -62753,12 +62092,12 @@ packages:
         optional: true
     dependencies:
       '@jridgewell/trace-mapping': 0.3.17
-      esbuild: 0.14.28
+      esbuild: 0.14.29
       jest-worker: 27.5.1
       schema-utils: 3.1.2
       serialize-javascript: 6.0.1
       terser: 5.17.3
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
 
   /terser@4.8.1:
     resolution: {integrity: sha512-4GnLC0x667eJG0ewJTa6z/yXrbLGv80D9Ru6HIpCQmO+Q4PfEtBFi0ObSckqwL6VyQv/7ENJieXHo2ANmdQwgw==}
@@ -63102,22 +62441,6 @@ packages:
 
   /tslib@2.0.0:
     resolution: {integrity: sha512-lTqkx847PI7xEDYJntxZH89L2/aXInsyF2luSafe/+0fHOMjlBNXdH6th7f70qxLDhul7KZK0zC8V5ZIyHl0/g==}
-    dev: false
-
-  /tslib@2.0.3:
-    resolution: {integrity: sha512-uZtkfKblCEQtZKBF6EBXVZeQNl82yqtDQdv+eck8u7tdPxjLu2/lp5/uPW+um2tpuxINHWy3GhiccY7QgEaVHQ==}
-    dev: false
-
-  /tslib@2.1.0:
-    resolution: {integrity: sha512-hcVC3wYEziELGGmEEXue7D75zbwIIVUMWAVbHItGPx0ziyXxrOMQx4rQEVEV45Ut/1IotuEvwqPopzIOkDMf0A==}
-    dev: false
-
-  /tslib@2.2.0:
-    resolution: {integrity: sha512-gS9GVHRU+RGn5KQM2rllAlR3dU6m7AcpJKdtH8gFvQiC4Otgk98XnmMU+nZenHt/+VhnBPWwgrJsyrdcw6i23w==}
-    dev: false
-
-  /tslib@2.3.1:
-    resolution: {integrity: sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==}
     dev: false
 
   /tslib@2.5.0:
@@ -63530,13 +62853,6 @@ packages:
     resolution: {integrity: sha512-8rMeVYWSIyccIJscb9NdCfZKSRBKYTeVnwmiRYT2ulE3qd1RaDQ0xQDP+rI3ccIWbhu/zuo5cgN8z73belNZgw==}
     dev: false
 
-  /unixify@1.0.0:
-    resolution: {integrity: sha512-6bc58dPYhCMHHuwxldQxO3RRNZ4eCogZ/st++0+fcC1nr0jiGUtAdBJ2qzmLQWSxbtz42pWt4QQMiZ9HvZf5cg==}
-    engines: {node: '>=0.10.0'}
-    dependencies:
-      normalize-path: 2.1.1
-    dev: false
-
   /unpipe@1.0.0:
     resolution: {integrity: sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==}
     engines: {node: '>= 0.8'}
@@ -63861,10 +63177,6 @@ packages:
       source-map: 0.7.4
     dev: false
 
-  /valid-url@1.0.9:
-    resolution: {integrity: sha512-QQDsV8OnSf5Uc30CKSwG9lnhMPe6exHtTXLRYX8uMwKENy640pU+2BgBL0LRbDh/eYRahNCS7aewCx0wf3NYVA==}
-    dev: false
-
   /validate-npm-package-license@3.0.4:
     resolution: {integrity: sha512-DpKm2Ui/xN7/HQKCtpZxoRWBhZ9Z0kqtygG8XCgNQ8ZlDnxuQmWhj566j8fN4Cu3/JmbhsDo7fcAJq4s9h27Ew==}
     dependencies:
@@ -63897,13 +63209,8 @@ packages:
     engines: {node: '>= 0.10'}
     dev: false
 
-  /value-or-promise@1.0.11:
-    resolution: {integrity: sha512-41BrgH+dIbCFXClcSapVs5M6GkENd3gQOJpEfPDNa71LsUGMXDL0jMWpI/Rh7WhX+Aalfz2TTS3Zt5pUsbnhLg==}
-    engines: {node: '>=12'}
-    dev: false
-
-  /value-or-promise@1.0.6:
-    resolution: {integrity: sha512-9r0wQsWD8z/BxPOvnwbPf05ZvFngXyouE9EKB+5GbYix+BYnAwrIChCUyFIinfbf2FL/U71z+CPpbnmTdxrwBg==}
+  /value-or-promise@1.0.12:
+    resolution: {integrity: sha512-Z6Uz+TYwEqE7ZN50gwn+1LCVo9ZVrpxRPOhOLnncYkY1ZzOYtrX8Fwf/rFktZ8R5mJms6EZf5TqNOMeZmnPq9Q==}
     engines: {node: '>=12'}
     dev: false
 
@@ -64175,7 +63482,7 @@ packages:
       lodash.has: 4.5.2
       schema-utils: 3.1.1
       tapable: 2.2.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
   /webpack-dev-middleware@5.3.3(webpack@5.84.1):
@@ -64189,7 +63496,7 @@ packages:
       mime-types: 2.1.35
       range-parser: 1.2.1
       schema-utils: 4.0.0
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
 
   /webpack-dev-server@4.15.0(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1):
     resolution: {integrity: sha512-HmNB5QeSl1KpulTBQ8UT4FPrByYyaLxpJoQ0+s7EvUrMc16m0ZS1sgb1XGqzmgCPk0c9y+aaXxn11tbLzuM7NQ==}
@@ -64232,7 +63539,7 @@ packages:
       serve-index: 1.9.1
       sockjs: 0.3.24
       spdy: 4.0.2
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-dev-middleware: 5.3.3(webpack@5.84.1)
       ws: 8.13.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     transitivePeerDependencies:
@@ -64248,7 +63555,7 @@ packages:
       webpack: ^4.44.2 || ^5.47.0
     dependencies:
       tapable: 2.2.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-sources: 2.3.1
     dev: false
 
@@ -64279,7 +63586,7 @@ packages:
     resolution: {integrity: sha512-/DyMEOrDgLKKIG0fmvtz+4dUX/3Ghozwgm6iPp8KRhvn+eQf9+Q7GWxVNMk3+uCPWfdXYC4ExGBckIXdFEfH1w==}
     engines: {node: '>=10.13.0'}
 
-  /webpack@5.84.1(esbuild@0.14.28):
+  /webpack@5.84.1(esbuild@0.14.29):
     resolution: {integrity: sha512-ZP4qaZ7vVn/K8WN/p990SGATmrL1qg4heP/MrVneczYtpDGJWlrgZv55vxaV2ul885Kz+25MP2kSXkPe3LZfmg==}
     engines: {node: '>=10.13.0'}
     hasBin: true
@@ -64310,7 +63617,7 @@ packages:
       neo-async: 2.6.2
       schema-utils: 3.1.2
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.8(esbuild@0.14.28)(webpack@5.84.1)
+      terser-webpack-plugin: 5.3.8(esbuild@0.14.29)(webpack@5.84.1)
       watchpack: 2.4.0
       webpack-sources: 3.2.3
     transitivePeerDependencies:
@@ -64663,7 +63970,7 @@ packages:
       pretty-bytes: 5.6.0
       source-map-url: 0.4.1
       upath: 1.2.0
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-sources: 1.4.3
       workbox-build: 6.2.4(@types/babel__core@7.20.0)
     transitivePeerDependencies:
@@ -64801,22 +64108,6 @@ packages:
 
   /ws@7.4.2(bufferutil@4.0.3)(utf-8-validate@5.0.5):
     resolution: {integrity: sha512-T4tewALS3+qsrpGI/8dqNMLIVdq/g/85U98HPMa6F0m6xTbvhXU6RCQLqPH3+SlomNV/LdY6RXEbBpMH6EOJnA==}
-    engines: {node: '>=8.3.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: ^5.0.2
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
-    dependencies:
-      bufferutil: 4.0.3
-      utf-8-validate: 5.0.5
-    dev: false
-
-  /ws@7.4.5(bufferutil@4.0.3)(utf-8-validate@5.0.5):
-    resolution: {integrity: sha512-xzyu3hFvomRfXKH8vOFMU3OguG6oOvhXMo3xsGy3xWExqaM2dxBbVxuD99O7m3ZUFMvvscsZDqxfgMaRr/Nr1g==}
     engines: {node: '>=8.3.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -68572,7 +67863,6 @@ packages:
       - domexception
       - graphql
       - supports-color
-      - typanion
       - utf-8-validate
     dev: false
 
@@ -68631,7 +67921,6 @@ packages:
       - bluebird
       - domexception
       - supports-color
-      - typanion
     dev: false
 
   file:scopes/dependencies/yarn(@types/react@17.0.8)(@yarnpkg/plugin-pack@4.0.0-rc.42)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5):
@@ -68647,7 +67936,7 @@ packages:
       '@pnpm/types': 9.1.0
       '@teambit/harmony': 0.4.6
       '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45(typanion@3.12.1)
+      '@yarnpkg/core': 4.0.0-rc.45
       '@yarnpkg/fslib': 3.0.0-rc.42
       '@yarnpkg/parsers': 3.0.0-rc.42
       '@yarnpkg/plugin-npm': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-pack@4.0.0-rc.42)
@@ -68665,7 +67954,6 @@ packages:
       - '@types/react'
       - '@yarnpkg/plugin-pack'
       - bufferutil
-      - typanion
       - utf-8-validate
     dev: false
 
@@ -68904,6 +68192,24 @@ packages:
       vinyl: 2.2.1
     transitivePeerDependencies:
       - graphql
+    dev: false
+
+  file:scopes/git/git(react-dom@17.0.2)(react@17.0.2):
+    resolution: {directory: scopes/git/git, type: directory}
+    id: file:scopes/git/git
+    name: '@teambit/git'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@babel/runtime': 7.20.0
+      '@teambit/harmony': 0.4.6
+      chalk: 2.4.2
+      core-js: 3.13.0
+      fs-extra: 10.0.0
+      gitconfig: 2.0.8
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
     dev: false
 
   file:scopes/harmony/api-server(react-dom@17.0.2)(react@17.0.2):
@@ -69259,7 +68565,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/harmony/graphql(@apollo/client@3.6.9)(@types/node@12.20.4)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13):
+  file:scopes/harmony/graphql(@apollo/client@3.6.9)(debug@4.3.2)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(reflect-metadata@0.1.13):
     resolution: {directory: scopes/harmony/graphql, type: directory}
     id: file:scopes/harmony/graphql
     name: '@teambit/graphql'
@@ -69272,6 +68578,7 @@ packages:
       '@apollo/client': 3.6.9(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.11.0)
       '@babel/runtime': 7.20.0
       '@graphql-modules/core': 0.7.17(graphql@14.7.0)(reflect-metadata@0.1.13)
+      '@graphql-tools/schema': 10.0.0(graphql@14.7.0)
       '@teambit/harmony': 0.4.6
       apollo-link: 1.2.14(graphql@14.7.0)
       apollo-link-context: 1.0.20(graphql@14.7.0)
@@ -69282,12 +68589,12 @@ packages:
       bufferutil: 4.0.3
       core-js: 3.13.0
       cors: 2.8.5
-      cross-fetch: 3.0.6
+      cross-fetch: 3.1.5
       express: 4.17.1
       express-graphql: 0.12.0(graphql@14.7.0)
       graphql: 14.7.0
       graphql-subscriptions: 1.2.0(graphql@14.7.0)
-      graphql-tools: 6.2.4(@types/node@12.20.4)(bufferutil@4.0.3)(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)(utf-8-validate@5.0.5)
+      graphql-tools: 9.0.0(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
       http-proxy: 1.18.1(debug@4.3.2)
       lodash.pick: 4.4.0
       node-fetch: 2.6.7
@@ -69297,10 +68604,8 @@ packages:
       utf-8-validate: 5.0.5
       ws: 7.4.2(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     transitivePeerDependencies:
-      - '@types/node'
       - debug
       - encoding
-      - graphql-ws
       - reflect-metadata
       - supports-color
     dev: false
@@ -69668,15 +68973,14 @@ packages:
       - supports-color
     dev: false
 
-  file:scopes/mdx/modules/loader(esbuild@0.14.28):
+  file:scopes/mdx/modules/loader(esbuild@0.14.29):
     resolution: {directory: scopes/mdx/modules/loader, type: directory}
     id: file:scopes/mdx/modules/loader
     name: '@teambit/mdx.modules.mdx-loader'
     dependencies:
-      chai: 4.3.0
       loader-utils: 2.0.4
       memory-fs: 0.5.0
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
@@ -69919,9 +69223,9 @@ packages:
       '@teambit/harmony': 0.4.6
       camelcase: 6.2.0
       core-js: 3.13.0
-      cross-fetch: 3.0.6
+      cross-fetch: 3.1.5
       fs-extra: 10.0.0
-      graphql-request: 3.4.0(graphql@14.7.0)
+      graphql-request: 6.1.0(graphql@14.7.0)
       graphql-tag: 2.12.1(graphql@14.7.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
@@ -69932,6 +69236,7 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     transitivePeerDependencies:
+      - encoding
       - graphql
     dev: false
 
@@ -70094,7 +69399,7 @@ packages:
       '@testing-library/jest-dom': 5.16.2
       '@typescript-eslint/eslint-plugin': 5.35.1(@typescript-eslint/parser@5.35.1)(eslint@7.32.0)(typescript@4.7.4)
       '@typescript-eslint/parser': 5.35.1(eslint@7.32.0)(typescript@4.7.4)
-      babel-loader: 8.2.2(@babel/core@7.19.6)(webpack@5.84.1)
+      babel-loader: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
       babel-plugin-named-asset-import: 0.3.7(@babel/core@7.19.6)
       babel-plugin-transform-typescript-metadata: 0.3.1(@babel/core@7.19.6)
       babel-preset-jest: 27.5.1(@babel/core@7.19.6)
@@ -70104,7 +69409,7 @@ packages:
       core-js: 3.13.0
       css-loader: 6.2.0(webpack@5.84.1)
       css-minimizer-webpack-plugin: 3.0.2(webpack@5.84.1)
-      esbuild: 0.14.28
+      esbuild: 0.14.29
       eslint-plugin-import: 2.22.1(@typescript-eslint/parser@5.35.1)(eslint@7.32.0)
       eslint-plugin-jest: 24.1.5(eslint@7.32.0)(typescript@4.7.4)
       eslint-plugin-jsx-a11y: 6.4.1(eslint@7.32.0)
@@ -70142,10 +69447,10 @@ packages:
       sass-loader: 12.1.0(sass@1.43.4)(webpack@5.84.1)
       strip-ansi: 6.0.0
       style-loader: 2.0.0(webpack@5.84.1)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
+      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
       typescript: 4.7.4
       url-join: 4.0.1
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc/core'
@@ -70181,7 +69486,7 @@ packages:
       - webpack-plugin-serve
     dev: false
 
-  file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4):
+  file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4):
     resolution: {directory: scopes/react/react-elements, type: directory}
     id: file:scopes/react/react-elements
     name: '@teambit/react-elements'
@@ -70195,7 +69500,7 @@ packages:
       '@mdx-js/react': 1.6.22(react@17.0.2)
       '@svgr/webpack': 5.5.0
       '@teambit/harmony': 0.4.6
-      babel-loader: 8.2.2(@babel/core@7.19.6)(webpack@5.84.1)
+      babel-loader: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
       babel-preset-react-app: 10.0.0
       core-js: 3.13.0
       css-loader: 6.2.0(webpack@5.84.1)
@@ -70217,8 +69522,8 @@ packages:
       resolve-url-loader: 5.0.0
       sass-loader: 12.1.0(sass@1.43.4)(webpack@5.84.1)
       style-loader: 2.0.0(webpack@5.84.1)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
-      webpack: 5.84.1(esbuild@0.14.28)
+      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-manifest-plugin: 4.0.2(webpack@5.84.1)
     transitivePeerDependencies:
       - '@babel/core'
@@ -71320,7 +70625,7 @@ packages:
       - '@types/react'
     dev: false
 
-  file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.2.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5):
+  file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.2.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5):
     resolution: {directory: scopes/ui-foundation/ui, type: directory}
     id: file:scopes/ui-foundation/ui
     name: '@teambit/ui'
@@ -71341,7 +70646,7 @@ packages:
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
       '@teambit/react.rendering.ssr': 0.0.3(react-dom@17.0.2)(react@17.0.2)
-      babel-loader: 8.2.2(@babel/core@7.19.6)(webpack@5.84.1)
+      babel-loader: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
       babel-plugin-named-asset-import: 0.3.7(@babel/core@7.19.6)
       babel-preset-react-app: 10.0.0
       chalk: 2.4.2
@@ -71372,8 +70677,8 @@ packages:
       sass-loader: 12.1.0(sass@1.43.4)(webpack@5.84.1)
       source-map-loader: 3.0.0(webpack@5.84.1)
       style-loader: 2.0.0(webpack@5.84.1)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
-      webpack: 5.84.1(esbuild@0.14.28)
+      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
       webpack-manifest-plugin: 4.0.2(webpack@5.84.1)
       webpack-merge: 5.8.0
@@ -71407,7 +70712,7 @@ packages:
       - webpack-plugin-serve
     dev: false
 
-  file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5):
+  file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5):
     resolution: {directory: scopes/ui-foundation/ui, type: directory}
     id: file:scopes/ui-foundation/ui
     name: '@teambit/ui'
@@ -71428,7 +70733,7 @@ packages:
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
       '@teambit/react.rendering.ssr': 0.0.3(react-dom@17.0.2)(react@17.0.2)
-      babel-loader: 8.2.2(@babel/core@7.19.6)(webpack@5.84.1)
+      babel-loader: 9.1.2(@babel/core@7.19.6)(webpack@5.84.1)
       babel-plugin-named-asset-import: 0.3.7(@babel/core@7.19.6)
       babel-preset-react-app: 10.0.0
       chalk: 2.4.2
@@ -71459,8 +70764,8 @@ packages:
       sass-loader: 12.1.0(sass@1.43.4)(webpack@5.84.1)
       source-map-loader: 3.0.0(webpack@5.84.1)
       style-loader: 2.0.0(webpack@5.84.1)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.28)(webpack@5.84.1)
-      webpack: 5.84.1(esbuild@0.14.28)
+      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
       webpack-manifest-plugin: 4.0.2(webpack@5.84.1)
       webpack-merge: 5.8.0
@@ -71950,16 +71255,15 @@ packages:
       - graphql
     dev: false
 
-  file:scopes/webpack/config-mutator(esbuild@0.14.28)(react@17.0.2):
+  file:scopes/webpack/config-mutator(esbuild@0.14.29)(react@17.0.2):
     resolution: {directory: scopes/webpack/config-mutator, type: directory}
     id: file:scopes/webpack/config-mutator
     name: '@teambit/webpack.modules.config-mutator'
     dependencies:
       '@teambit/html.modules.inject-html-element': 0.0.4(react@17.0.2)
       html-webpack-plugin: 5.3.2(webpack@5.84.1)
-      json-formatter-js: 2.3.4
       lodash: 4.17.21
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
       - '@swc/core'
@@ -72008,7 +71312,7 @@ packages:
     name: '@teambit/webpack.modules.style-regexps'
     dev: false
 
-  file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.28)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5):
+  file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5):
     resolution: {directory: scopes/webpack/webpack, type: directory}
     id: file:scopes/webpack/webpack
     name: '@teambit/webpack'
@@ -72051,7 +71355,7 @@ packages:
       url: 0.11.0
       util: 0.12.3
       vm-browserify: 1.1.2
-      webpack: 5.84.1(esbuild@0.14.28)
+      webpack: 5.84.1(esbuild@0.14.29)
       webpack-assets-manifest: 5.1.0(webpack@5.84.1)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.2)(utf-8-validate@5.0.5)(webpack@5.84.1)
       webpack-merge: 5.8.0
