@@ -158,6 +158,8 @@ export async function getPeerDependencyIssues(
   });
 }
 
+export type RebuildFn = (opts: { pending?: boolean }) => Promise<void>;
+
 export async function install(
   rootDir: string,
   manifestsByPaths: Record<string, ProjectManifest>,
@@ -188,7 +190,7 @@ export async function install(
     Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
-): Promise<{ dependenciesChanged: boolean; rebuild: () => Promise<void>; storeDir: string }> {
+): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string }> {
   let externalDependencies: Set<string> | undefined;
   const readPackage: ReadPackageHook[] = [];
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
@@ -265,22 +267,9 @@ export async function install(
     depth: options.updateAll ? Infinity : 0,
   };
 
-  let stopReporting;
+  let stopReporting: Function | undefined;
   if (!options.hidePackageManagerOutput) {
-    stopReporting = initDefaultReporter({
-      context: {
-        argv: [],
-      },
-      reportingOptions: {
-        appendOnly: false,
-        throttleProgress: 200,
-      },
-      streamParser,
-      // Linked in core aspects are excluded from the output to reduce noise.
-      // Other @teambit/ dependencies will be shown.
-      // Only those that are symlinked from outside the workspace will be hidden.
-      filterPkgsDiff: (diff) => !diff.name.startsWith('@teambit/') || !diff.from,
-    });
+    stopReporting = initReporter();
   }
   let dependenciesChanged = false;
   try {
@@ -295,9 +284,7 @@ export async function install(
     }
     throw pnpmErrorToBitError(err);
   } finally {
-    if (stopReporting) {
-      stopReporting();
-    }
+    stopReporting?.();
   }
   if (options.rootComponents) {
     const modulesState = await readModulesManifest(path.join(rootDir, 'node_modules'));
@@ -311,16 +298,40 @@ export async function install(
   }
   return {
     dependenciesChanged,
-    rebuild: () =>
-      rebuild.handler(
-        {
-          ...opts,
-          cacheDir,
-        } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-        []
-      ),
+    rebuild: async (rebuildOpts) => {
+      const _opts = {
+        ...opts,
+        ...rebuildOpts,
+        cacheDir,
+      } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      if (!_opts.hidePackageManagerOutput) {
+        stopReporting = initReporter();
+      }
+      try {
+        await rebuild.handler(_opts, []);
+      } finally {
+        stopReporting?.();
+      }
+    },
     storeDir: storeController.dir,
   };
+}
+
+function initReporter() {
+  return initDefaultReporter({
+    context: {
+      argv: [],
+    },
+    reportingOptions: {
+      appendOnly: false,
+      throttleProgress: 200,
+    },
+    streamParser,
+    // Linked in core aspects are excluded from the output to reduce noise.
+    // Other @teambit/ dependencies will be shown.
+    // Only those that are symlinked from outside the workspace will be hidden.
+    filterPkgsDiff: (diff) => !diff.name.startsWith('@teambit/') || !diff.from,
+  });
 }
 
 /*

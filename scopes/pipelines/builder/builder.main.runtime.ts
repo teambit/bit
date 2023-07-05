@@ -8,7 +8,6 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
-import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy/dist/constants';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import AspectAspect from '@teambit/aspect';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
@@ -292,7 +291,7 @@ export class BuilderMain {
     builderOptions?: BuilderServiceOptions
   ): Promise<TaskResultsList> {
     const ids = components.map((c) => c.id);
-    const capsulesBaseDir = this.getComponentsCapsulesBaseDir();
+    const capsulesBaseDir = this.buildService.getComponentsCapsulesBaseDir();
     const baseIsolateOpts = {
       baseDir: capsulesBaseDir,
       useHash: !capsulesBaseDir,
@@ -312,10 +311,6 @@ export class BuilderMain {
     };
     const buildResult = await envs.runOnce(this.buildService, builderServiceOptions);
     return buildResult;
-  }
-
-  getComponentsCapsulesBaseDir(): string | undefined {
-    return this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
   }
 
   async runTagTasks(components: Component[], builderOptions: BuilderServiceOptions): Promise<TaskResultsList> {
@@ -424,10 +419,20 @@ export class BuilderMain {
       'getBuildPipe',
       'build',
       artifactFactory,
-      scope
+      scope,
+      globalConfig
     );
     envs.registerService(buildService);
-    const tagService = new BuilderService(isolator, logger, tagTaskSlot, 'getTagPipe', 'tag', artifactFactory, scope);
+    const tagService = new BuilderService(
+      isolator,
+      logger,
+      tagTaskSlot,
+      'getTagPipe',
+      'tag',
+      artifactFactory,
+      scope,
+      globalConfig
+    );
     const snapService = new BuilderService(
       isolator,
       logger,
@@ -435,7 +440,8 @@ export class BuilderMain {
       'getSnapPipe',
       'snap',
       artifactFactory,
-      scope
+      scope,
+      globalConfig
     );
     const builder = new BuilderMain(
       envs,
