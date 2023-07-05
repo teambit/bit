@@ -262,7 +262,8 @@ export class LanesMain {
     if (alias) {
       throwForInvalidLaneName(alias);
     }
-    scope = scope || this.workspace.defaultScope;
+    const currentLaneId = this.workspace.getCurrentLaneId();
+    scope = scope || currentLaneId.isDefault() ? this.workspace.defaultScope : currentLaneId.scope;
     const laneObj = await createLane(this.workspace.consumer, name, scope);
     const laneId = LaneId.from(name, scope);
     this.setCurrentLane(laneId, alias, false);
