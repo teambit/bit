@@ -320,6 +320,11 @@ export class InstallMain {
         ...options.linkedRootDeps,
       })
     );
+    Object.values(omit(componentsAndManifests.manifests, [this.workspace.path])).forEach((manifest) => {
+      if ((manifest as ProjectManifest).name) {
+        rootDeps.add((manifest as ProjectManifest).name!);
+      }
+    });
     const addedNewPkgs = await this._addMissingPackagesToRootPolicy(rootDeps);
     if (!addedNewPkgs) {
       return { componentsAndManifests, mergedRootPolicy };
