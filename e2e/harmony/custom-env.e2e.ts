@@ -366,6 +366,22 @@ describe('custom env', function () {
         expect(env).to.equal(`${envId}@0.0.1`);
       });
     });
+    describe('core-env was set in previous tag and another non-core env is set now', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.command.setEnv('comp1', 'teambit.mdx/mdx');
+        helper.command.tagAllWithoutBuild();
+        // it's important to have here a non-core env. otherwise, the issue won't be shown.
+        helper.command.setEnv('comp1', envId);
+        helper.command.status(); // run any command to get rid of pnpm output so the next command will be a valid json.
+      });
+      it('bit status should not show it as an issue', () => {
+        helper.command.expectStatusToNotHaveIssue(IssuesClasses.MultipleEnvs.name);
+      });
+    });
     after(() => {
       npmCiRegistry.destroy();
     });
