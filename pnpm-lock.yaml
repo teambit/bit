@@ -649,8 +649,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@types/sass':
-        specifier: 1.16.0
-        version: 1.16.0
+        specifier: 1.45.0
+        version: 1.45.0
       '@types/socket.io-client':
         specifier: 1.4.35
         version: 1.4.35
@@ -1456,11 +1456,11 @@ importers:
         specifier: 12.0.1
         version: 12.0.1
       sass:
-        specifier: 1.43.4
-        version: 1.43.4
+        specifier: 1.63.6
+        version: 1.63.6
       sass-loader:
-        specifier: 12.1.0
-        version: 12.1.0(sass@1.43.4)(webpack@5.84.1)
+        specifier: 13.3.2
+        version: 13.3.2(sass@1.63.6)(webpack@5.84.1)
       sass-lookup:
         specifier: 3.0.0
         version: 3.0.0
@@ -4506,10 +4506,10 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -4689,7 +4689,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.2.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.2.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -6420,10 +6420,10 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -6603,7 +6603,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -8319,10 +8319,10 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -8502,7 +8502,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -10218,10 +10218,10 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -10401,7 +10401,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -12117,10 +12117,10 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -12300,7 +12300,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -14016,10 +14016,10 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -14199,7 +14199,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -15915,10 +15915,10 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
-        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)
+        version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
       '@teambit/react-native':
         specifier: workspace:*
         version: file:scopes/react/react-native(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react-native-web@0.16.5)(react@17.0.2)
@@ -16098,7 +16098,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5)
       '@teambit/ui-foundation.cli.ui-server-console':
         specifier: workspace:*
         version: file:scopes/ui-foundation/cli/ui-server-console(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -27393,9 +27393,12 @@ importers:
       sanitize.css:
         specifier: 12.0.1
         version: 12.0.1
+      sass:
+        specifier: 1.63.6
+        version: 1.63.6
       sass-loader:
-        specifier: 12.1.0
-        version: 12.1.0(sass@1.43.4)(webpack@5.84.1)
+        specifier: 13.3.2
+        version: 13.3.2(sass@1.63.6)(webpack@5.84.1)
       strip-ansi:
         specifier: 6.0.0
         version: 6.0.0
@@ -27548,8 +27551,8 @@ importers:
         specifier: 5.0.0
         version: 5.0.0
       sass-loader:
-        specifier: 12.1.0
-        version: 12.1.0(sass@1.43.4)(webpack@5.84.1)
+        specifier: 13.3.2
+        version: 13.3.2(sass@1.63.6)(webpack@5.84.1)
       style-loader:
         specifier: 2.0.0
         version: 2.0.0(webpack@5.84.1)
@@ -30370,9 +30373,12 @@ importers:
       sanitize.css:
         specifier: 12.0.1
         version: 12.0.1
+      sass:
+        specifier: 1.63.6
+        version: 1.63.6
       sass-loader:
-        specifier: 12.1.0
-        version: 12.1.0(sass@1.43.4)(webpack@5.84.1)
+        specifier: 13.3.2
+        version: 13.3.2(sass@1.63.6)(webpack@5.84.1)
       source-map-loader:
         specifier: 3.0.0
         version: 3.0.0(webpack@5.84.1)
@@ -37222,7 +37228,7 @@ packages:
     dev: false
 
   /@pnpm/network.agent@0.0.3:
-    resolution: {integrity: sha1-g28zSZMRCjzekv8O3yavci0Lt4c=, tarball: https://node-registry.bit.cloud/@pnpm/network.agent/-/@pnpm-network.agent-0.0.3.tgz}
+    resolution: {integrity: sha1-g28zSZMRCjzekv8O3yavci0Lt4c=, tarball: https://node-registry.bit.cloud/@pnpm/network.agent/-/pnpm-network.agent-0.0.3.tgz}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@pnpm/network.proxy-agent': 0.0.3
@@ -39289,7 +39295,7 @@ packages:
     dev: false
 
   /@teambit/component.modules.component-url@0.0.128(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-E5szS9hGfk/lAwEma3/ViMkm32A=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.128.tgz}
+    resolution: {integrity: sha1-E5szS9hGfk/lAwEma3/ViMkm32A=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/teambit-component.modules.component-url-0.0.128.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: 17.0.2
@@ -39303,7 +39309,7 @@ packages:
     dev: false
 
   /@teambit/component.modules.component-url@0.0.140(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-cmcWwISlL+PSKta3Q4HkpLTARBc=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.140.tgz}
+    resolution: {integrity: sha1-cmcWwISlL+PSKta3Q4HkpLTARBc=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/teambit-component.modules.component-url-0.0.140.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: 17.0.2
@@ -39317,7 +39323,7 @@ packages:
     dev: false
 
   /@teambit/component.modules.component-url@0.0.151(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-/dj3W/oKQC/p0X74zRJ+Mov/bec=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.151.tgz}
+    resolution: {integrity: sha1-/dj3W/oKQC/p0X74zRJ+Mov/bec=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/teambit-component.modules.component-url-0.0.151.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: 17.0.2
@@ -39344,7 +39350,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.badges.component-count@0.0.10(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-/KG3gyg1xt3Gk+7z1Yf2Ww9qd50=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.badges.component-count/-/@teambit-component.ui.badges.component-count-0.0.10.tgz}
+    resolution: {integrity: sha1-/KG3gyg1xt3Gk+7z1Yf2Ww9qd50=, tarball: https://node-registry.bit.cloud/tarballs/teambit.component/ui/badges/component-count@0.0.10.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39376,7 +39382,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.hooks.use-component-compare-url@0.0.3(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-mNono316l0rxMgrR/xuTDv4Rp/E=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.hooks.use-component-compare-url/-/@teambit-component.ui.component-compare.hooks.use-component-compare-url-0.0.3.tgz}
+    resolution: {integrity: sha1-mNono316l0rxMgrR/xuTDv4Rp/E=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.hooks.use-component-compare-url/-/teambit-component.ui.component-compare.hooks.use-component-compare-url-0.0.3.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39406,7 +39412,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.models.component-compare-change-type@0.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-2Er9FIkcKdYqxW2aeyZ5Gd370Kc=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-change-type/-/@teambit-component.ui.component-compare.models.component-compare-change-type-0.0.1.tgz}
+    resolution: {integrity: sha1-2Er9FIkcKdYqxW2aeyZ5Gd370Kc=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-change-type/-/teambit-component.ui.component-compare.models.component-compare-change-type-0.0.1.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39418,7 +39424,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.models.component-compare-hooks@0.0.4(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-kVPksYnom+gsZNPMZVx6uJqAHlI=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-hooks/-/@teambit-component.ui.component-compare.models.component-compare-hooks-0.0.4.tgz}
+    resolution: {integrity: sha1-kVPksYnom+gsZNPMZVx6uJqAHlI=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-hooks/-/teambit-component.ui.component-compare.models.component-compare-hooks-0.0.4.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39497,7 +39503,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.models.component-compare-state@0.0.2(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KOvqyfEiwlEHJBWwxZZtLxWBc74=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-state/-/@teambit-component.ui.component-compare.models.component-compare-state-0.0.2.tgz}
+    resolution: {integrity: sha1-KOvqyfEiwlEHJBWwxZZtLxWBc74=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-state/-/teambit-component.ui.component-compare.models.component-compare-state-0.0.2.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39523,7 +39529,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.utils.lazy-loading@0.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-K4iYPn+ng7gCPPwwQ3C3vdAWzDE=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.utils.lazy-loading/-/@teambit-component.ui.component-compare.utils.lazy-loading-0.0.1.tgz}
+    resolution: {integrity: sha1-K4iYPn+ng7gCPPwwQ3C3vdAWzDE=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.utils.lazy-loading/-/teambit-component.ui.component-compare.utils.lazy-loading-0.0.1.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39536,7 +39542,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.deprecation-icon@0.0.494(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-h1I4/6SkzcVxwWznLLLEW4M8r6g=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.deprecation-icon/-/@teambit-component.ui.deprecation-icon-0.0.494.tgz}
+    resolution: {integrity: sha1-h1I4/6SkzcVxwWznLLLEW4M8r6g=, tarball: https://node-registry.bit.cloud/tarballs/teambit.component/ui/deprecation-icon@0.0.494.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39553,7 +39559,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.deprecation-icon@0.0.500(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KGzcqsYSN1S/mTpBE7Ohs8qm414=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.deprecation-icon/-/@teambit-component.ui.deprecation-icon-0.0.500.tgz}
+    resolution: {integrity: sha1-KGzcqsYSN1S/mTpBE7Ohs8qm414=, tarball: https://node-registry.bit.cloud/tarballs/teambit.component/ui/deprecation-icon@0.0.500.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41173,7 +41179,7 @@ packages:
     dev: false
 
   /@teambit/documenter.ui.heading@4.1.6(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-nCoruiI/7n5xcXd4GEMdtuU5nIU=, tarball: https://node-registry.bit.cloud/@teambit/documenter.ui.heading/-/@teambit-documenter.ui.heading-4.1.6.tgz}
+    resolution: {integrity: sha1-nCoruiI/7n5xcXd4GEMdtuU5nIU=, tarball: https://node-registry.bit.cloud/tarballs/teambit.documenter/ui/heading@4.1.6.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -41238,8 +41244,8 @@ packages:
   /@teambit/documenter.ui.linked-heading@4.1.8(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-LGpmPIXZSWsXbYgkS/WR1VxJcCg=, tarball: https://node-registry.bit.cloud/@teambit/documenter.ui.linked-heading/-/@teambit-documenter.ui.linked-heading-4.1.8.tgz}
     peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
+      react: '*'
+      react-dom: '*'
     dependencies:
       '@teambit/documenter.ui.anchor': 4.0.8(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.heading': 4.1.6(react-dom@17.0.2)(react@17.0.2)
@@ -41450,7 +41456,7 @@ packages:
     dev: false
 
   /@teambit/envs.ui.env-icon@0.0.486(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-w7KPvgzoXLcmnBjlu8gNuRffmsA=, tarball: https://node-registry.bit.cloud/@teambit/envs.ui.env-icon/-/@teambit-envs.ui.env-icon-0.0.486.tgz}
+    resolution: {integrity: sha1-w7KPvgzoXLcmnBjlu8gNuRffmsA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.envs/ui/env-icon@0.0.486.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41462,7 +41468,7 @@ packages:
     dev: false
 
   /@teambit/envs.ui.env-icon@0.0.492(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-WSxQWxQY/fhy5bqXSjp3fz3XUDY=, tarball: https://node-registry.bit.cloud/@teambit/envs.ui.env-icon/-/@teambit-envs.ui.env-icon-0.0.492.tgz}
+    resolution: {integrity: sha1-WSxQWxQY/fhy5bqXSjp3fz3XUDY=, tarball: https://node-registry.bit.cloud/tarballs/teambit.envs/ui/env-icon@0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41794,7 +41800,7 @@ packages:
     dev: true
 
   /@teambit/explorer.ui.gallery.component-card@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-gkm3X+OtPpzJSabL3xj7V6z75XA=, tarball: https://node-registry.bit.cloud/@teambit/explorer.ui.gallery.component-card/-/@teambit-explorer.ui.gallery.component-card-0.0.495.tgz}
+    resolution: {integrity: sha1-gkm3X+OtPpzJSabL3xj7V6z75XA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/ui/gallery/component-card@0.0.495.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41825,7 +41831,7 @@ packages:
     dev: false
 
   /@teambit/explorer.ui.gallery.component-card@0.0.507(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-p3EePsVfQINlcsiNPimNv3dK1Po=, tarball: https://node-registry.bit.cloud/@teambit/explorer.ui.gallery.component-card/-/@teambit-explorer.ui.gallery.component-card-0.0.507.tgz}
+    resolution: {integrity: sha1-p3EePsVfQINlcsiNPimNv3dK1Po=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/ui/gallery/component-card@0.0.507.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -42005,7 +42011,7 @@ packages:
       user-home: 2.0.0
 
   /@teambit/html.modules.create-element-from-string@0.0.104:
-    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: https://node-registry.bit.cloud/@teambit/html.modules.create-element-from-string/-/@teambit-html.modules.create-element-from-string-0.0.104.tgz}
+    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: https://node-registry.bit.cloud/tarballs/teambit.html/modules/create-element-from-string@0.0.104.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -42523,7 +42529,7 @@ packages:
     dev: false
 
   /@teambit/preview.ui.preview-placeholder@0.0.496(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-MgSJUaYFpLjSPyLWttgR63sM/Xg=, tarball: https://node-registry.bit.cloud/@teambit/preview.ui.preview-placeholder/-/@teambit-preview.ui.preview-placeholder-0.0.496.tgz}
+    resolution: {integrity: sha1-MgSJUaYFpLjSPyLWttgR63sM/Xg=, tarball: https://node-registry.bit.cloud/tarballs/teambit.preview/ui/preview-placeholder@0.0.496.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -42771,7 +42777,7 @@ packages:
     dev: false
 
   /@teambit/scope.ui.scope-title@0.0.508(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-2lOC51kJif9bWAma5M4yaPPo/U4=, tarball: https://node-registry.bit.cloud/@teambit/scope.ui.scope-title/-/@teambit-scope.ui.scope-title-0.0.508.tgz}
+    resolution: {integrity: sha1-2lOC51kJif9bWAma5M4yaPPo/U4=, tarball: https://node-registry.bit.cloud/@teambit/scope.ui.scope-title/-/teambit-scope.ui.scope-title-0.0.508.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -42879,16 +42885,16 @@ packages:
     dev: false
 
   /@teambit/toolbox.string.ellipsis@0.0.172:
-    resolution: {integrity: sha1-nbLwbPi2d8Qeg6aCX2TYlARSRew=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.172.tgz}
+    resolution: {integrity: sha1-nbLwbPi2d8Qeg6aCX2TYlARSRew=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/string/ellipsis@0.0.172.tgz}
     engines: {node: '>=12.22.0'}
     dev: true
 
   /@teambit/toolbox.string.ellipsis@0.0.173:
-    resolution: {integrity: sha1-CY+uj2sRmPejtTCee4HDvLFeeI8=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.173.tgz}
+    resolution: {integrity: sha1-CY+uj2sRmPejtTCee4HDvLFeeI8=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/string/ellipsis@0.0.173.tgz}
     engines: {node: '>=12.22.0'}
 
   /@teambit/toolbox.string.ellipsis@0.0.181:
-    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.181.tgz}
+    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/string/ellipsis@0.0.181.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -42898,17 +42904,17 @@ packages:
     dev: false
 
   /@teambit/toolbox.string.get-initials@0.0.491:
-    resolution: {integrity: sha1-dMkF7hxhtmK2aXz7QCkAAajSrKI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.get-initials/-/@teambit-toolbox.string.get-initials-0.0.491.tgz}
+    resolution: {integrity: sha1-dMkF7hxhtmK2aXz7QCkAAajSrKI=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/string/get-initials@0.0.491.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/toolbox.types.serializable@0.0.483:
-    resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.483.tgz}
+    resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/types/serializable@0.0.483.tgz}
     engines: {node: '>=12.22.0'}
     dev: true
 
   /@teambit/toolbox.types.serializable@0.0.491:
-    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.491.tgz}
+    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/types/serializable@0.0.491.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -42918,7 +42924,7 @@ packages:
     dev: false
 
   /@teambit/toolbox.url.add-avatar-query-params@0.0.492:
-    resolution: {integrity: sha1-dECMYTXTkMlAIUaK22cpmNlTsak=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.url.add-avatar-query-params/-/@teambit-toolbox.url.add-avatar-query-params-0.0.492.tgz}
+    resolution: {integrity: sha1-dECMYTXTkMlAIUaK22cpmNlTsak=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/url/add-avatar-query-params@0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -43033,7 +43039,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.get-icon-from-file-name@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.get-icon-from-file-name/-/@teambit-ui-foundation.ui.get-icon-from-file-name-0.0.495.tgz}
+    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/get-icon-from-file-name@0.0.495.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43046,7 +43052,7 @@ packages:
       vscode-icons-js: 11.0.0
 
   /@teambit/ui-foundation.ui.global-loader@0.0.474(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-7X0x1qLPQV7ySEUh5Rs1iXt+AX4=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.474.tgz}
+    resolution: {integrity: sha1-7X0x1qLPQV7ySEUh5Rs1iXt+AX4=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/global-loader@0.0.474.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@teambit/legacy': 1.0.183
@@ -43061,7 +43067,7 @@ packages:
     dev: true
 
   /@teambit/ui-foundation.ui.global-loader@0.0.487(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-t9IdwYuJBCHPUYK73ELRUHQHPVs=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.487.tgz}
+    resolution: {integrity: sha1-t9IdwYuJBCHPUYK73ELRUHQHPVs=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/global-loader@0.0.487.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43074,7 +43080,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.global-loader@0.0.493(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-0DiiKiGSijunFyRRRSMD4R2iQMk=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.493.tgz}
+    resolution: {integrity: sha1-0DiiKiGSijunFyRRRSMD4R2iQMk=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/global-loader@0.0.493.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43087,7 +43093,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.global-loader@0.0.497(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-5fU/29iOW7vvZBaoyaRiSUCyl2I=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.497.tgz}
+    resolution: {integrity: sha1-5fU/29iOW7vvZBaoyaRiSUCyl2I=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/global-loader@0.0.497.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43116,7 +43122,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.hooks.use-data-query@0.0.496(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-oL6ZvMzY0Y/1C9rivf+CdsmJFdI=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.hooks.use-data-query/-/@teambit-ui-foundation.ui.hooks.use-data-query-0.0.496.tgz}
+    resolution: {integrity: sha1-oL6ZvMzY0Y/1C9rivf+CdsmJFdI=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/hooks/use-data-query@0.0.496.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@apollo/client': ^3.6.0
@@ -43132,7 +43138,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.hooks.use-data-query@0.0.500(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-mKHB9+tWg+S+JJ5s4peW17vUf3s=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.hooks.use-data-query/-/@teambit-ui-foundation.ui.hooks.use-data-query-0.0.500.tgz}
+    resolution: {integrity: sha1-mKHB9+tWg+S+JJ5s4peW17vUf3s=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/hooks/use-data-query@0.0.500.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@apollo/client': ^3.6.0
@@ -43148,7 +43154,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.is-browser@0.0.486(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KCR60Lp5r8XU/qN5aU6JnKyCo0U=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.is-browser/-/@teambit-ui-foundation.ui.is-browser-0.0.486.tgz}
+    resolution: {integrity: sha1-KCR60Lp5r8XU/qN5aU6JnKyCo0U=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/is-browser@0.0.486.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43160,7 +43166,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.is-browser@0.0.492(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-K8F9fjln4vfhtryfNuzr8RulqLo=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.is-browser/-/@teambit-ui-foundation.ui.is-browser-0.0.492.tgz}
+    resolution: {integrity: sha1-K8F9fjln4vfhtryfNuzr8RulqLo=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/is-browser@0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43307,7 +43313,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.notification-context@0.0.487(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-WvEy3IkkGkdqrKLZvWO5ay+2LH4=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.notification-context/-/@teambit-ui-foundation.ui.notifications.notification-context-0.0.487.tgz}
+    resolution: {integrity: sha1-WvEy3IkkGkdqrKLZvWO5ay+2LH4=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/notifications/notification-context@0.0.487.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43320,7 +43326,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.notification-context@0.0.493(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-LqvYMR2i+ZTOqyqWpBg/tXCzdgU=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.notification-context/-/@teambit-ui-foundation.ui.notifications.notification-context-0.0.493.tgz}
+    resolution: {integrity: sha1-LqvYMR2i+ZTOqyqWpBg/tXCzdgU=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/notifications/notification-context@0.0.493.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43333,7 +43339,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.notification-context@0.0.496(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-x23R91AzUscSV2WS2yZC2LY8CHE=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.notification-context/-/@teambit-ui-foundation.ui.notifications.notification-context-0.0.496.tgz}
+    resolution: {integrity: sha1-x23R91AzUscSV2WS2yZC2LY8CHE=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/notifications/notification-context@0.0.496.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43346,7 +43352,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.store@0.0.486(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-ZQ4iOfpuzj+jE12XS3b51WELT7I=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.store/-/@teambit-ui-foundation.ui.notifications.store-0.0.486.tgz}
+    resolution: {integrity: sha1-ZQ4iOfpuzj+jE12XS3b51WELT7I=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/notifications/store@0.0.486.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43358,7 +43364,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.store@0.0.492(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-8IWuSf9Qt6QHdudIbjqQ7IHiMFg=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.store/-/@teambit-ui-foundation.ui.notifications.store-0.0.492.tgz}
+    resolution: {integrity: sha1-8IWuSf9Qt6QHdudIbjqQ7IHiMFg=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/notifications/store@0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43370,7 +43376,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.store@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-SciOZ58oyKDy8q/0nvQ4OpvuPz8=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.store/-/@teambit-ui-foundation.ui.notifications.store-0.0.495.tgz}
+    resolution: {integrity: sha1-SciOZ58oyKDy8q/0nvQ4OpvuPz8=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/notifications/store@0.0.495.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43402,7 +43408,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.react-router.slot-router@0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
-    resolution: {integrity: sha1-uUc0/zKzRjSFXhWhBUDlDnIJuO0=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.react-router.slot-router/-/@teambit-ui-foundation.ui.react-router.slot-router-0.0.501.tgz}
+    resolution: {integrity: sha1-uUc0/zKzRjSFXhWhBUDlDnIJuO0=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/react-router/slot-router@0.0.501.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43422,7 +43428,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.react-router.use-query@0.0.496(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-rCJcyZss+uCe7COvKqfs0UQ0TME=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.react-router.use-query/-/@teambit-ui-foundation.ui.react-router.use-query-0.0.496.tgz}
+    resolution: {integrity: sha1-rCJcyZss+uCe7COvKqfs0UQ0TME=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/react-router/use-query@0.0.496.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43545,8 +43551,8 @@ packages:
     resolution: {integrity: sha1-bU5bUChvqZ6FgR2iDflWJU+hU8U=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.tree.drawer/-/@teambit-ui-foundation.ui.tree.drawer-0.0.512.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
+      react: '*'
+      react-dom: '*'
     dependencies:
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
@@ -43677,7 +43683,7 @@ packages:
     dev: true
 
   /@teambit/workspace.ui.load-preview@0.0.489(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-e9OonGao9UxvvbCfsJKdGTPbXIg=, tarball: https://node-registry.bit.cloud/@teambit/workspace.ui.load-preview/-/@teambit-workspace.ui.load-preview-0.0.489.tgz}
+    resolution: {integrity: sha1-e9OonGao9UxvvbCfsJKdGTPbXIg=, tarball: https://node-registry.bit.cloud/tarballs/teambit.workspace/ui/load-preview@0.0.489.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -43691,7 +43697,7 @@ packages:
     dev: false
 
   /@teambit/workspace.ui.load-preview@0.0.499(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-lvfO7zmO9ZnlI+NPWAFOW3ViZwo=, tarball: https://node-registry.bit.cloud/@teambit/workspace.ui.load-preview/-/@teambit-workspace.ui.load-preview-0.0.499.tgz}
+    resolution: {integrity: sha1-lvfO7zmO9ZnlI+NPWAFOW3ViZwo=, tarball: https://node-registry.bit.cloud/tarballs/teambit.workspace/ui/load-preview@0.0.499.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@testing-library/react': ^12.1.5
@@ -43725,7 +43731,7 @@ packages:
     dev: false
 
   /@teambit/workspace.ui.workspace-component-card@0.0.510(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-bO15xcj1TSQ5iEfw8QBu6GxTigM=, tarball: https://node-registry.bit.cloud/@teambit/workspace.ui.workspace-component-card/-/@teambit-workspace.ui.workspace-component-card-0.0.510.tgz}
+    resolution: {integrity: sha1-bO15xcj1TSQ5iEfw8QBu6GxTigM=, tarball: https://node-registry.bit.cloud/tarballs/teambit.workspace/ui/workspace-component-card@0.0.510.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -44371,10 +44377,11 @@ packages:
   /@types/retry@0.12.0:
     resolution: {integrity: sha512-wWKOClTTiizcZhXnPY4wikVAwmdYHp8q6DmC+EJUzAMsycb7HB32Kh9RN4+0gExjmPmZSAQjgURXIGATPegAvA==}
 
-  /@types/sass@1.16.0:
-    resolution: {integrity: sha512-2XZovu4NwcqmtZtsBR5XYLw18T8cBCnU2USFHTnYLLHz9fkhnoEMoDsqShJIOFsFhn5aJHjweiUUdTrDGujegA==}
+  /@types/sass@1.45.0:
+    resolution: {integrity: sha512-jn7qwGFmJHwUSphV8zZneO3GmtlgLsmhs/LQyVvQbIIa+fzGMUiHI4HXJZL3FT8MJmgXWbLGiVVY7ElvHq6vDA==}
+    deprecated: This is a stub types definition. sass provides its own type definitions, so you do not need this installed.
     dependencies:
-      '@types/node': 12.20.4
+      sass: 1.63.6
     dev: false
 
   /@types/scheduler@0.16.2:
@@ -60434,13 +60441,14 @@ packages:
     resolution: {integrity: sha512-QbusSBnWHaRBZeTxsJyknwI0q+q6m1NtLBmB76JfW/rdVN7Ws6Zz70w65+430/ouVcdNVT3qwrDgrM6PaYyRtw==}
     dev: false
 
-  /sass-loader@12.1.0(sass@1.43.4)(webpack@5.84.1):
-    resolution: {integrity: sha512-FVJZ9kxVRYNZTIe2xhw93n3xJNYZADr+q69/s98l9nTCrWASo+DR2Ot0s5xTKQDDEosUkatsGeHxcH4QBp5bSg==}
-    engines: {node: '>= 12.13.0'}
+  /sass-loader@13.3.2(sass@1.63.6)(webpack@5.84.1):
+    resolution: {integrity: sha512-CQbKl57kdEv+KDLquhC+gE3pXt74LEAzm+tzywcA0/aHZuub8wTErbjAoNI57rPUWRYRNC5WUnNl8eGJNbDdwg==}
+    engines: {node: '>= 14.15.0'}
     peerDependencies:
       fibers: '>= 3.1.0'
-      node-sass: ^4.0.0 || ^5.0.0 || ^6.0.0
+      node-sass: ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0
       sass: ^1.3.0
+      sass-embedded: '*'
       webpack: ^5.0.0
     peerDependenciesMeta:
       fibers:
@@ -60449,10 +60457,11 @@ packages:
         optional: true
       sass:
         optional: true
+      sass-embedded:
+        optional: true
     dependencies:
-      klona: 2.0.6
       neo-async: 2.6.2
-      sass: 1.43.4
+      sass: 1.63.6
       webpack: 5.84.1(esbuild@0.14.29)
     dev: false
 
@@ -60472,12 +60481,14 @@ packages:
       commander: 10.0.1
     dev: false
 
-  /sass@1.43.4:
-    resolution: {integrity: sha512-/ptG7KE9lxpGSYiXn7Ar+lKOv37xfWsZRtFYal2QHNigyVQDx685VFT/h7ejVr+R8w7H4tmUgtulsKl5YpveOg==}
-    engines: {node: '>=8.9.0'}
+  /sass@1.63.6:
+    resolution: {integrity: sha512-MJuxGMHzaOW7ipp+1KdELtqKbfAWbH7OLIdoSMnVe3EXPMTmxTmlaZDCTsgIpPCs3w99lLo9/zDKkOrJuT5byw==}
+    engines: {node: '>=14.0.0'}
     hasBin: true
     dependencies:
-      chokidar: 3.5.3
+      chokidar: 3.5.1
+      immutable: 4.2.2
+      source-map-js: 1.0.2
     dev: false
 
   /sax@1.2.1:
@@ -69364,7 +69375,7 @@ packages:
       - utf-8-validate
     dev: false
 
-  file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
+  file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@types/express@4.17.13)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@14.7.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
     resolution: {directory: scopes/react/react, type: directory}
     id: file:scopes/react/react
     name: '@teambit/react'
@@ -69444,7 +69455,8 @@ packages:
       react-refresh: 0.10.0
       resolve-url-loader: 5.0.0
       sanitize.css: 12.0.1
-      sass-loader: 12.1.0(sass@1.43.4)(webpack@5.84.1)
+      sass: 1.63.6
+      sass-loader: 13.3.2(sass@1.63.6)(webpack@5.84.1)
       strip-ansi: 6.0.0
       style-loader: 2.0.0(webpack@5.84.1)
       terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
@@ -69472,7 +69484,7 @@ packages:
       - node-notifier
       - node-sass
       - puppeteer
-      - sass
+      - sass-embedded
       - sockjs-client
       - supports-color
       - ts-node
@@ -69486,7 +69498,7 @@ packages:
       - webpack-plugin-serve
     dev: false
 
-  file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4):
+  file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4):
     resolution: {directory: scopes/react/react-elements, type: directory}
     id: file:scopes/react/react-elements
     name: '@teambit/react-elements'
@@ -69520,7 +69532,7 @@ packages:
       react-dev-utils: 11.0.4(eslint@7.32.0)(typescript@4.7.4)(webpack@5.84.1)
       react-dom: 17.0.2(react@17.0.2)
       resolve-url-loader: 5.0.0
-      sass-loader: 12.1.0(sass@1.43.4)(webpack@5.84.1)
+      sass-loader: 13.3.2(sass@1.63.6)(webpack@5.84.1)
       style-loader: 2.0.0(webpack@5.84.1)
       terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
       webpack: 5.84.1(esbuild@0.14.29)
@@ -69536,6 +69548,7 @@ packages:
       - fibers
       - node-sass
       - sass
+      - sass-embedded
       - supports-color
       - typescript
       - uglify-js
@@ -70625,7 +70638,7 @@ packages:
       - '@types/react'
     dev: false
 
-  file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.2.2)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5):
+  file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.2.2)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5):
     resolution: {directory: scopes/ui-foundation/ui, type: directory}
     id: file:scopes/ui-foundation/ui
     name: '@teambit/ui'
@@ -70674,7 +70687,8 @@ packages:
       react-router-dom: 6.2.2(react-dom@17.0.2)(react@17.0.2)
       resolve-url-loader: 5.0.0
       sanitize.css: 12.0.1
-      sass-loader: 12.1.0(sass@1.43.4)(webpack@5.84.1)
+      sass: 1.63.6
+      sass-loader: 13.3.2(sass@1.63.6)(webpack@5.84.1)
       source-map-loader: 3.0.0(webpack@5.84.1)
       style-loader: 2.0.0(webpack@5.84.1)
       terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
@@ -70699,7 +70713,7 @@ packages:
       - fibers
       - node-sass
       - react-refresh
-      - sass
+      - sass-embedded
       - sockjs-client
       - supports-color
       - type-fest
@@ -70712,7 +70726,7 @@ packages:
       - webpack-plugin-serve
     dev: false
 
-  file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(sass@1.43.4)(typescript@4.7.4)(utf-8-validate@5.0.5):
+  file:scopes/ui-foundation/ui(@apollo/client@3.6.9)(@babel/core@7.19.6)(@testing-library/react@12.1.5)(@types/babel__core@7.20.0)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react-refresh@0.10.0)(react-router-dom@6.3.0)(react@17.0.2)(typescript@4.7.4)(utf-8-validate@5.0.5):
     resolution: {directory: scopes/ui-foundation/ui, type: directory}
     id: file:scopes/ui-foundation/ui
     name: '@teambit/ui'
@@ -70761,7 +70775,8 @@ packages:
       react-router-dom: 6.3.0(react-dom@17.0.2)(react@17.0.2)
       resolve-url-loader: 5.0.0
       sanitize.css: 12.0.1
-      sass-loader: 12.1.0(sass@1.43.4)(webpack@5.84.1)
+      sass: 1.63.6
+      sass-loader: 13.3.2(sass@1.63.6)(webpack@5.84.1)
       source-map-loader: 3.0.0(webpack@5.84.1)
       style-loader: 2.0.0(webpack@5.84.1)
       terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.84.1)
@@ -70786,7 +70801,7 @@ packages:
       - fibers
       - node-sass
       - react-refresh
-      - sass
+      - sass-embedded
       - sockjs-client
       - supports-color
       - type-fest
