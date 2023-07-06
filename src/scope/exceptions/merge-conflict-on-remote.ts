@@ -10,7 +10,7 @@ export default class MergeConflictOnRemote extends BitError {
   constructor(idsAndVersionsWithConflicts: IdAndVersions[], idsNeedUpdate: IdAndLane[]) {
     let output = '';
     if (idsAndVersionsWithConflicts.length) {
-      output += `error: merge conflict occurred when exporting the component(s) ${idsAndVersionsWithConflicts
+      output += `error: versions conflict occurred when exporting the component(s) ${idsAndVersionsWithConflicts
         .map((i) => `${chalk.bold(i.id)} (version(s): ${i.versions.join(', ')})`)
         .join(', ')} to the remote scope.
 to resolve this conflict and merge your remote and local changes, please do the following:

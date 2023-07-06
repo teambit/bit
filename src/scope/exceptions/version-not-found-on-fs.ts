@@ -6,7 +6,7 @@ export class VersionNotFoundOnFS extends BitError {
     const msg = `error: version "${chalk.bold(version)}" of component ${chalk.bold(
       componentId
     )} was not found on the filesystem.
-try running "bit import". if it doesn't help, try running "bit import ${componentId} --objects"`;
+try running "bit import". if it doesn't help, try running "bit import ${componentId} --objects --all-history"`;
     super(msg);
   }
 }
