@@ -323,6 +323,7 @@ export class MergeLanesMain {
         modelComponent,
         sourceHead: toLaneHead,
         targetHead: fromLaneHead,
+        throwForNoCommonSnap: true,
       });
       const modifiedVersion = shouldSquash
         ? await squashOneComp(DEFAULT_LANE, fromLaneId, id, divergeData, log, this.scope.legacyScope, fromVersionObj)
