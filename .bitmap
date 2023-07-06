@@ -1317,6 +1317,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/ui/aspect-box"
     },
+    "ui/avatar": {
+        "scope": "teambit.design",
+        "version": "1.0.20",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/avatar",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "ui/badges/component-count": {
         "scope": "teambit.component",
         "version": "0.0.10",
