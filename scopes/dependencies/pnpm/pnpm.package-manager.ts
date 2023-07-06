@@ -54,9 +54,9 @@ export class PnpmPackageManager implements PackageManager {
     if (installOptions.nmSelfReferences) {
       Object.values(manifests).forEach((manifest) => {
         if (manifest.name) {
-          manifest.dependencies = {
+          manifest.devDependencies = {
             [manifest.name]: 'link:.',
-            ...manifest.dependencies,
+            ...manifest.devDependencies,
           };
         }
       });
