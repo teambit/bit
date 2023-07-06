@@ -223,7 +223,14 @@ export class UiMain {
 
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
     const ssr = uiRoot.buildOptions?.ssr || false;
-    const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name);
+    const mainEntry = await this.generateRoot(
+      await uiRoot.resolveAspects(UIRuntime.name),
+      name,
+      undefined,
+      undefined,
+      undefined,
+      uiRoot.path
+    );
     const outputPath = customOutputPath || uiRoot.path;
 
     const browserConfig = createWebpackConfig(outputPath, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
@@ -446,10 +453,12 @@ export class UiMain {
       config || this.harmony.config.toObject(),
       ignoreVersion
     );
-    const filepath = resolve(join(path || __dirname, `${runtimeName}.root${sha1(contents)}.js`));
-    if (fs.existsSync(filepath)) return filepath;
+    const filename = `${runtimeName}.root${sha1(contents)}.js`;
+    const relativeFilepath = `./node_modules/.cache/bit/teambit.ui/${filename}`;
+    const filepath = resolve(join(path || __dirname, relativeFilepath));
+    if (fs.existsSync(filepath)) return relativeFilepath;
     fs.outputFileSync(filepath, contents);
-    return filepath;
+    return relativeFilepath;
   }
 
   private async selectPort() {
@@ -570,7 +579,16 @@ export class UiMain {
 
     const config = createWebpackConfig(
       uiRoot.path,
-      [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
+      [
+        await this.generateRoot(
+          await uiRoot.resolveAspects(UIRuntime.name),
+          name,
+          undefined,
+          undefined,
+          undefined,
+          uiRoot.path
+        ),
+      ],
       uiRoot.name,
       await this.publicDir(uiRoot)
     );

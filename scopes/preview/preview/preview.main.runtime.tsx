@@ -187,7 +187,9 @@ export class PreviewMain {
   ) {}
 
   get tempFolder(): string {
-    return this.workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR;
+    const path = this.workspace?.path;
+    const folder = this.workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR;
+    return relative(path || '', folder);
   }
 
   getComponentBundleSize(component: Component): ComponentPreviewSize | undefined {
@@ -585,7 +587,7 @@ export class PreviewMain {
       this.writeHash.set(targetPath, hash);
     }
 
-    return targetPath;
+    return `./${targetPath}`;
   }
 
   private executionRefs = new Map<string, ExecutionRef>();
@@ -603,12 +605,7 @@ export class PreviewMain {
     const previewRuntime = await this.writePreviewRuntime(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
 
-    // HACK
-    // return [...linkFiles, previewRuntime];
-    return [
-      ...linkFiles.map((f) => `./${relative(process.cwd(), f)}`),
-      previewRuntime.replace(/^.*?\/?node_modules\//, './node_modules/'),
-    ];
+    return [...linkFiles, previewRuntime];
   }
 
   private updateLinkFiles(components: Component[] = [], context: ExecutionContext) {
@@ -644,7 +641,9 @@ export class PreviewMain {
             return file.path;
           }
           const distRelativePath = compilerInstance.getDistPathBySrcPath(file.relative);
-          return join(this.workspace.path, modulePath, distRelativePath);
+          const moduleName = modulePath.replace(/^.*node_modules\//, '');
+          const importPath = `${moduleName}/${distRelativePath}`;
+          return importPath;
         });
         // return files.map((file) => file.path);
       });
@@ -664,7 +663,14 @@ export class PreviewMain {
     const [name, uiRoot] = this.getUi();
     const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
     const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
-    const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
+    const filePath = await this.ui.generateRoot(
+      filteredAspects,
+      name,
+      'preview',
+      PreviewAspect.id,
+      undefined,
+      uiRoot.path
+    );
     return filePath;
   }
 

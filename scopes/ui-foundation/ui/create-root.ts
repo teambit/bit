@@ -73,19 +73,13 @@ ${getImportStatements(defs, 'runtimePath', 'Runtime')}`;
 }
 
 function getImportStatements(aspectDefs: AspectDefinition[], pathProp: string, suffix: string): string {
-  return (
-    aspectDefs
-      // HACK
-      // .map(
-      //   (aspectDef) =>
-      //     `import ${getIdentifier(aspectDef, suffix, pathProp)} from '${toWindowsCompatiblePath(aspectDef[pathProp])}';`
-      // )
-      .map((aspectDef) => {
-        const url = aspectDef[pathProp].replace(/^.+\/node_modules\//, '');
-        return `import ${getIdentifier(aspectDef, suffix, pathProp)} from '${url}';`;
-      })
-      .join('\n')
-  );
+  return aspectDefs
+    .map((aspectDef) => {
+      // convert to relative path
+      const url = aspectDef[pathProp].replace(/^.+(?=@teambit)/, '');
+      return `import ${getIdentifier(aspectDef, suffix, pathProp)} from '${url}';`;
+    })
+    .join('\n');
 }
 
 function getIdentifiers(aspectDefs: AspectDefinition[], suffix: string): string[] {
