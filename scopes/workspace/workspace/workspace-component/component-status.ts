@@ -43,7 +43,8 @@ export class ComponentStatus {
     readonly isOutdated: boolean,
 
     /**
-     *  the component is not authored and not imported.
+     * @deprecated this was relevant for legacy only. can be deleted if it's not used elsewhere
+     * the component is not authored and not imported.
      */
     readonly nested?: boolean
   ) {}
@@ -60,8 +61,7 @@ export class ComponentStatus {
       !!status.staged,
       !status.notExist,
       !status.missingFromScope,
-      isOutdated,
-      !!status.nested
+      isOutdated
     );
   }
 }

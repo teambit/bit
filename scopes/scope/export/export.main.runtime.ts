@@ -721,14 +721,7 @@ export class ExportMain {
     }
     loader.start(BEFORE_EXPORT); // show single export
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
-    const statuses = await consumer.getManyComponentsStatuses(parsedIds);
-    statuses.forEach(({ id, status }) => {
-      if (status.nested) {
-        throw new GeneralError(
-          `unable to export "${id.toString()}", the component is not fully available. please use "bit import" first`
-        );
-      }
-    });
+
     return filterNonScopeIfNeeded(BitIds.fromArray(parsedIds));
   }
 
