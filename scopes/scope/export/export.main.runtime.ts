@@ -156,8 +156,14 @@ export class ExportMain {
     if (laneObject?.readmeComponent) {
       _throwForUnsnappedLaneReadme(laneObject);
     }
-    if (!params.forkLaneNewScope && laneObject?.forkedFrom && laneObject.forkedFrom.scope !== laneObject.scope) {
-      throw new Error(`error: the current lane ${laneObject.id.toString()} was forked from ${laneObject.forkedFrom.toString()}
+
+    if (
+      !params.forkLaneNewScope &&
+      laneObject?.forkedFrom &&
+      laneObject.isNew &&
+      laneObject.forkedFrom.scope !== laneObject.scope
+    ) {
+      throw new BitError(`error: the current lane ${laneObject.id.toString()} was forked from ${laneObject.forkedFrom.toString()}
 and is about to export to a different scope (${laneObject.scope}) than the original lane ${laneObject.forkedFrom.scope}.
 on large lanes with long history graph, it results in exporting lots of objects to the new scope, some of them might be missing locally.
 if you can use the same scope as the original name, change it now by running "bit lane change-scope ${
