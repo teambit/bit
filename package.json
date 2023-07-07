@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.507",
+  "version": "1.0.513",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -205,7 +205,7 @@
     "resolve-dependency-path": "2.0.0",
     "sass": "1.43.4",
     "sass-lookup": "3.0.0",
-    "semver": "7.3.4",
+    "semver": "7.5.2",
     "serialize-error": "5.0.0",
     "ssh2": "1.4.0",
     "ssri": "10.0.1",

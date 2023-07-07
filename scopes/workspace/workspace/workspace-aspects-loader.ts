@@ -1,3 +1,5 @@
+import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy/dist/constants';
+import { GlobalConfigMain } from '@teambit/global-config';
 import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { Graph } from '@teambit/graph.cleargraph';
@@ -17,7 +19,7 @@ import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-
 import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import pMapSeries from 'p-map-series';
-import { difference, compact, groupBy } from 'lodash';
+import { difference, compact, groupBy, partition } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
@@ -54,6 +56,7 @@ export class WorkspaceAspectsLoader {
     private envs: EnvsMain,
     private dependencyResolver: DependencyResolverMain,
     private logger: Logger,
+    private globalConfig: GlobalConfigMain,
     private harmony: Harmony,
     private onAspectsResolveSlot: OnAspectsResolveSlot,
     private onRootAspectAddedSlot: OnRootAspectAddedSlot,
@@ -94,7 +97,10 @@ export class WorkspaceAspectsLoader {
     this.logger.info(`${loggerPrefix} loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts, null, 2)}`);
-    const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
+    const [localAspects, nonLocalAspects] = partition(ids, (id) => id.startsWith('file:'));
+    this.workspace.localAspects = localAspects;
+    await this.aspectLoader.loadAspectFromPath(this.workspace.localAspects);
+    const notLoadedIds = nonLocalAspects.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
@@ -363,10 +369,26 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
         return coreAspect.runtimePath;
       });
     }
-    const allDefs = wsAspectDefs.concat(coreAspectDefs).concat(scopeAspectsDefs).concat(installedAspectsDefs);
+    const localResolved = await this.aspectLoader.resolveLocalAspects(this.workspace.localAspects, runtimeName);
+    const allDefsExceptLocal = [...wsAspectDefs, ...coreAspectDefs, ...scopeAspectsDefs, ...installedAspectsDefs];
+    const withoutLocalAspects = allDefsExceptLocal.filter((aspectId) => {
+      return !localResolved.find((localAspect) => {
+        return localAspect.id === aspectId.component?.id?.toStringWithoutVersion();
+      });
+    });
+    const allDefs = [...withoutLocalAspects, ...localResolved];
     const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
     const filteredDefs = this.aspectLoader.filterAspectDefs(allDefs, idsToFilter, runtimeName, mergedOpts);
     return filteredDefs;
+  }
+
+  shouldUseHashForCapsules(): boolean {
+    return !this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
+  }
+
+  getCapsulePath() {
+    const defaultPath = this.workspace.path;
+    return this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR) || defaultPath;
   }
 
   private logFoundWorkspaceVsScope(loggerPrefix: string, workspaceIds: ComponentID[], nonWorkspaceIds: ComponentID[]) {
@@ -422,7 +444,9 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const configuredAspects = this.aspectLoader.getConfiguredAspects();
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const userAspectsIds: string[] = difference(configuredAspects, coreAspectsIds);
-    const componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(userAspectsIds);
+    const componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(
+      userAspectsIds.filter((id) => !id.startsWith('file:'))
+    );
     const aspectsComponents = await this.importAndGetAspects(componentIdsToResolve);
     let componentsToGetPackages = aspectsComponents;
     if (options.externalsOnly) {

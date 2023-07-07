@@ -1028,7 +1028,7 @@ export class EnvsMain {
     const logger = loggerAspect.createLogger(EnvsAspect.id);
     const envs = new EnvsMain(config, context, envSlot, logger, servicesRegistry, component, loggerAspect, worker);
     component.registerShowFragments([new EnvFragment(envs)]);
-    issues.registerAddComponentsIssues(envs.addNonLoadedEnvAsComponentIssues.bind(envs));
+    if (issues) issues.registerAddComponentsIssues(envs.addNonLoadedEnvAsComponentIssues.bind(envs));
 
     const envsCmd = new EnvsCmd(envs, component);
     envsCmd.commands = [new ListEnvsCmd(envs, component), new GetEnvCmd(envs, component)];

@@ -1,3 +1,4 @@
+import { v4 } from 'uuid';
 import { MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
@@ -6,6 +7,7 @@ import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain, ComponentFactory } from '@teambit/component';
 import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
+import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import { GraphAspect, GraphMain } from '@teambit/graph';
 import {
   DependencyResolverAspect,
@@ -123,6 +125,16 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   alwaysNew?: boolean;
 
   /**
+   * If this is true -
+   * the isolator will check if there are missing capsules in the base dir
+   * if yes, it will create the capsule in a special dir inside a dir with the current date (without time)
+   * then inside that dir, it will create a dir with a random hash
+   * at the end of the process it will move missing capsules from the temp dir to the base dir so they can be used in
+   * the next iteration
+   */
+  useDatedDirs?: boolean;
+
+  /**
    * installation options
    */
   installOptions?: IsolateComponentsInstallOptions;
@@ -159,16 +171,25 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * relevant for tagging from scope, where we tag an existing snap without any code-changes.
    * the idea is to have all build artifacts from the previous snap and run deploy pipeline on top of it.
    */
-  populateArtifactsFromParent?: boolean;
+  populateArtifactsFrom?: ComponentID[];
 
   /**
    * Force specific host to get the component from.
    */
   host?: ComponentFactory;
 
+  /**
+   * Dir where to read the package manager config from
+   * usually used when running package manager in the capsules dir to use the config
+   * from the workspace dir
+   */
   packageManagerConfigRootDir?: string;
 
   context?: IsolationContext;
+};
+
+type GetCapsuleDirOpts = Pick<IsolateComponentsOptions, 'useHash' | 'rootBaseDir' | 'useDatedDirs'> & {
+  baseDir: string;
 };
 
 type CapsulePackageJsonData = {
@@ -230,7 +251,7 @@ export class IsolatorMain {
   // TODO: we should think of another way to provide it (maybe a new opts) then take the scope internally from the host
   async isolateComponents(
     seeders: ComponentID[],
-    opts: IsolateComponentsOptions = {},
+    opts: IsolateComponentsOptions,
     legacyScope?: LegacyScope
   ): Promise<Network> {
     const host = this.componentAspect.getHost();
@@ -251,11 +272,23 @@ export class IsolatorMain {
       return comp.id;
     });
     opts.baseDir = opts.baseDir || host.path;
-    const capsuleList = await this.createCapsules(componentsToIsolate, opts, legacyScope);
-    const capsuleDir = this.getCapsulesRootDir(opts.baseDir, opts.rootBaseDir, opts.useHash);
+    const shouldUseDatedDirs = this.shouldUseDatedDirs(componentsToIsolate, opts);
+    const capsuleDir = this.getCapsulesRootDir({
+      ...opts,
+      useDatedDirs: shouldUseDatedDirs,
+      baseDir: opts.baseDir || '',
+    });
+    const capsuleList = await this.createCapsules(componentsToIsolate, capsuleDir, opts, legacyScope);
     this.logger.debug(
       `creating network with base dir: ${opts.baseDir}, rootBaseDir: ${opts.rootBaseDir}. final capsule-dir: ${capsuleDir}. capsuleList: ${capsuleList.length}`
     );
+    if (shouldUseDatedDirs) {
+      const targetCapsuleDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: false, baseDir: opts.baseDir || '' });
+      this.registerMoveCapsuleOnProcessExit(capsuleDir, targetCapsuleDir);
+      // TODO: ideally this should be inside the on process exit hook
+      // but this is an async op which make it a bit hard
+      await this.relinkCoreAspectsInCapsuleDir(targetCapsuleDir);
+    }
     return new Network(capsuleList, seedersWithVersions, capsuleDir);
   }
 
@@ -283,6 +316,61 @@ export class IsolatorMain {
     return existingComps;
   }
 
+  private registerMoveCapsuleOnProcessExit(datedCapsuleDir: string, targetCapsuleDir: string): void {
+    this.logger.info(`registering process.on(exit) to move capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
+    process.on('exit', () => {
+      this.logger.info(`start moving capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
+      const allDirs = fs
+        .readdirSync(datedCapsuleDir, { withFileTypes: true })
+        .filter((dir) => dir.isDirectory() && dir.name !== 'node_modules');
+      allDirs.forEach((dir) => {
+        const targetDir = path.join(targetCapsuleDir, dir.name);
+        if (!fs.pathExistsSync(path.join(targetCapsuleDir, dir.name))) {
+          const sourceDir = path.join(datedCapsuleDir, dir.name);
+          this.logger.info(`moving specific capsule from ${sourceDir} to ${targetDir}`);
+          fs.moveSync(sourceDir, targetDir);
+        }
+      });
+    });
+  }
+
+  /**
+   * Re-create the core aspects links in the real capsule dir
+   * This is required mainly for the first time when that folder is empty
+   */
+  private async relinkCoreAspectsInCapsuleDir(capsulesDir: string): Promise<void> {
+    const linkingOptions = {
+      linkTeambitBit: true,
+      linkCoreAspects: true,
+    };
+    const linker = this.dependencyResolver.getLinker({
+      rootDir: capsulesDir,
+      linkingOptions,
+      linkingContext: { inCapsule: true },
+    });
+    const { linkedRootDeps } = await linker.calculateLinkedDeps(capsulesDir, ComponentMap.create([]), linkingOptions);
+    return createLinks(capsulesDir, linkedRootDeps);
+  }
+
+  private shouldUseDatedDirs(componentsToIsolate: Component[], opts: IsolateComponentsOptions): boolean {
+    if (!opts.useDatedDirs) return false;
+    // No need to use the dated dirs in case we anyway create new capsule for each one
+    if (opts.alwaysNew) return false;
+    // if (opts.skipIfExists) return false;
+    // no point to use dated dir in case of getExistingAsIs as it will be just always empty
+    if (opts.getExistingAsIs) return false;
+    // Do not use the dated dirs in case we don't use nesting, as the capsules
+    // will not work after moving to the real dir
+    if (!opts.installOptions?.useNesting) return false;
+    // Getting the real capsule dir to check if all capsules exists
+    const realCapsulesDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: false, baseDir: opts.baseDir || '' });
+    const allCapsulesExists = componentsToIsolate.every((component) => {
+      const capsuleDir = path.join(realCapsulesDir, Capsule.getCapsuleDirName(component));
+      return fs.existsSync(capsuleDir);
+    });
+    return !allCapsulesExists;
+  }
+
   /**
    *
    * @param originalCapsule the capsule that contains the original component
@@ -306,11 +394,11 @@ export class IsolatorMain {
    */
   private async createCapsules(
     components: Component[],
+    capsulesDir: string,
     opts: IsolateComponentsOptions,
     legacyScope?: Scope
   ): Promise<CapsuleList> {
     this.logger.debug(`createCapsules, ${components.length} components`);
-    const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir, opts.useHash);
 
     let longProcessLogger;
     if (opts.context?.aspects) {
@@ -561,7 +649,7 @@ export class IsolatorMain {
         const capsule = capsuleList.getCapsule(component.id);
         if (!capsule) return;
         const scope =
-          (await CapsuleList.capsuleUsePreviouslySavedDists(component)) || opts?.populateArtifactsFromParent
+          (await CapsuleList.capsuleUsePreviouslySavedDists(component)) || opts?.populateArtifactsFrom
             ? legacyScope
             : undefined;
         const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(component, allIds, scope, opts);
@@ -586,7 +674,7 @@ export class IsolatorMain {
 
   async list(workspacePath: string): Promise<ListResults> {
     try {
-      const workspaceCapsuleFolder = this.getCapsulesRootDir(workspacePath);
+      const workspaceCapsuleFolder = this.getCapsulesRootDir({ baseDir: workspacePath });
       const capsules = await fs.readdir(workspaceCapsuleFolder);
       const capsuleFullPaths = capsules.map((c) => path.join(workspaceCapsuleFolder, c));
       return {
@@ -601,14 +689,41 @@ export class IsolatorMain {
     }
   }
 
-  getCapsulesRootDir(baseDir: string, rootBaseDir?: string, useHash = true): PathOsBasedAbsolute {
-    const capsulesRootBaseDir = rootBaseDir || this.getRootDirOfAllCapsules();
-    const dir = useHash ? hash(baseDir) : baseDir;
+  /** @deprecated use the new function signature with an object parameter instead */
+  getCapsulesRootDir(baseDir: string, rootBaseDir?: string, useHash?: boolean): PathOsBasedAbsolute;
+  getCapsulesRootDir(getCapsuleDirOpts: GetCapsuleDirOpts): PathOsBasedAbsolute;
+  getCapsulesRootDir(
+    getCapsuleDirOpts: GetCapsuleDirOpts | string,
+    rootBaseDir?: string,
+    useHash = true,
+    useDatedDirs = false
+  ): PathOsBasedAbsolute {
+    if (typeof getCapsuleDirOpts === 'string') {
+      getCapsuleDirOpts = { baseDir: getCapsuleDirOpts, rootBaseDir, useHash, useDatedDirs };
+    }
+    const getCapsuleDirOptsWithDefaults = {
+      useHash: true,
+      useDatedDirs: false,
+      ...getCapsuleDirOpts,
+    };
+    const capsulesRootBaseDir = getCapsuleDirOptsWithDefaults.rootBaseDir || this.getRootDirOfAllCapsules();
+    if (getCapsuleDirOptsWithDefaults.useDatedDirs) {
+      const date = new Date();
+      const dateDir = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      const datedBaseDir = 'dated-capsules';
+      const hashDir = v4();
+      return path.join(capsulesRootBaseDir, datedBaseDir, dateDir, hashDir);
+    }
+    const dir = getCapsuleDirOptsWithDefaults.useHash
+      ? hash(getCapsuleDirOptsWithDefaults.baseDir)
+      : getCapsuleDirOptsWithDefaults.baseDir;
     return path.join(capsulesRootBaseDir, dir);
   }
 
   async deleteCapsules(capsuleBaseDir: string | null): Promise<string> {
-    const dirToDelete = capsuleBaseDir ? this.getCapsulesRootDir(capsuleBaseDir) : this.getRootDirOfAllCapsules();
+    const dirToDelete = capsuleBaseDir
+      ? this.getCapsulesRootDir({ baseDir: capsuleBaseDir })
+      : this.getRootDirOfAllCapsules();
     await fs.remove(dirToDelete);
     return dirToDelete;
   }
@@ -744,7 +859,7 @@ export class IsolatorMain {
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
     dataToPersist.addFile(packageJson.toVinylFile());
-    const artifacts = await this.getArtifacts(component, legacyScope, opts?.populateArtifactsFromParent);
+    const artifacts = await this.getArtifacts(component, legacyScope, opts?.populateArtifactsFrom);
     dataToPersist.addManyFiles(artifacts);
     return dataToPersist;
   }
@@ -798,25 +913,28 @@ export class IsolatorMain {
   private async getArtifacts(
     component: Component,
     legacyScope?: Scope,
-    fetchParentArtifacts = false
+    populateArtifactsFrom?: ComponentID[]
   ): Promise<AbstractVinyl[]> {
     const legacyComp: ConsumerComponent = component.state._consumer;
     if (!legacyScope) {
-      if (fetchParentArtifacts) throw new Error(`unable to fetch from parent, the legacyScope was not provided`);
+      if (populateArtifactsFrom) throw new Error(`unable to fetch from parent, the legacyScope was not provided`);
       // when capsules are written via the workspace, do not write artifacts, they get created by
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return [];
     }
-    if (legacyComp.buildStatus !== 'succeed' && !fetchParentArtifacts) {
+    if (legacyComp.buildStatus !== 'succeed' && !populateArtifactsFrom) {
       // this is important for "bit sign" when on lane to not go to the original scope
       return [];
     }
     const artifactFilesToFetch = async () => {
-      if (fetchParentArtifacts) {
-        const parent = component.head?.parents[0];
-        if (!parent)
-          throw new Error(`unable to fetch artifacts from parent. parent is missing for ${component.id.toString()}`);
-        const compParent = await legacyScope.getConsumerComponent(legacyComp.id.changeVersion(parent.toString()));
+      if (populateArtifactsFrom) {
+        const found = populateArtifactsFrom.find((id) => id.isEqual(component.id, { ignoreVersion: true }));
+        if (!found) {
+          throw new Error(
+            `getArtifacts: unable to find where to populate the artifacts from for ${component.id.toString()}`
+          );
+        }
+        const compParent = await legacyScope.getConsumerComponent(found._legacy);
         return getArtifactFilesExcludeExtension(compParent.extensions, 'teambit.pkg/pkg');
       }
       const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];

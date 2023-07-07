@@ -195,8 +195,9 @@ describe('import functionality on Harmony', function () {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeImport);
         helper.command.importComponent('foo');
       });
-      it('should throw when importing the child', () => {
-        expect(() => helper.command.importComponent('foo/bar')).to.throw('unable to add');
+      it('should not throw when importing the child and should increment its base-path and preserve the suffix', () => {
+        expect(() => helper.command.importComponent('foo/bar')).to.not.throw();
+        expect(path.join(helper.scopes.localPath, helper.scopes.remoteWithoutOwner, 'foo_1/bar')).to.be.a.directory();
       });
     });
     describe('import the child dir first and then the parent', () => {
@@ -204,8 +205,9 @@ describe('import functionality on Harmony', function () {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeImport);
         helper.command.importComponent('foo/bar');
       });
-      it('should throw when importing the child', () => {
-        expect(() => helper.command.importComponent('foo -O')).to.throw('unable to add');
+      it('should not throw when importing the parent and should increment the path', () => {
+        expect(() => helper.command.importComponent('foo -O')).to.not.throw('unable to add');
+        expect(path.join(helper.scopes.localPath, helper.scopes.remoteWithoutOwner, 'foo_1')).to.be.a.directory();
       });
     });
   });

@@ -231,7 +231,6 @@ export async function install(
     allProjects,
     autoInstallPeers: false,
     confirmModulesPurge: false,
-    excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     storeDir: storeController.dir,
     dedupePeerDependents: true,
     dir: rootDir,
@@ -257,6 +256,7 @@ export async function install(
       optionalDependencies: options?.includeOptionalDeps !== false,
     },
     ...options,
+    excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     peerDependencyRules: {
       allowAny: ['*'],
       ignoreMissing: ['*'],

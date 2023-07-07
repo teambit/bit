@@ -20,25 +20,27 @@
         "@mdx-js/react": "1.6.22",
         "@monaco-editor/react": "4.4.6",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
-        "@pnpm/client": "0.0.0-20230605-20230605142810",
+        "@pnpm/client": "10.0.10",
         "@pnpm/colorize-semver-diff": "1.0.1",
-        "@pnpm/config": "0.0.0-20230605-20230605142810",
-        "@pnpm/core": "0.0.0-20230605-20230605142810",
-        "@pnpm/default-reporter": "0.0.0-20230605-20230605142810",
-        "@pnpm/error": "0.0.0-20230605-20230605142810",
+        "@pnpm/config": "18.4.2",
+        "@pnpm/core": "10.2.5",
+        "@pnpm/default-reporter": "12.2.5",
+        "@pnpm/dependency-path": "2.1.2",
+        "@pnpm/error": "5.0.2",
         "@pnpm/fetch": "7.0.2",
+        "@pnpm/lockfile-file": "8.1.1",
         "@pnpm/logger": "5.0.0",
-        "@pnpm/modules-yaml": "12.1.0",
+        "@pnpm/modules-yaml": "12.1.1",
         "@pnpm/network.agent": "0.1.0",
         "@pnpm/network.ca-file": "1.0.2",
-        "@pnpm/package-store": "0.0.0-20230605-20230605142810",
-        "@pnpm/parse-overrides": "0.0.0-20230605-20230605142810",
+        "@pnpm/package-store": "16.0.6",
+        "@pnpm/parse-overrides": "4.0.2",
         "@pnpm/pick-registry-for-package": "5.0.1",
-        "@pnpm/plugin-commands-rebuild": "^9.0.1",
+        "@pnpm/plugin-commands-rebuild": "^9.0.5",
         "@pnpm/registry-mock": "3.4.0",
         "@pnpm/semver-diff": "1.1.0",
-        "@pnpm/sort-packages": "5.0.2",
-        "@pnpm/store-connection-manager": "0.0.0-20230605-20230605142810",
+        "@pnpm/sort-packages": "5.0.3",
+        "@pnpm/store-connection-manager": "6.0.15",
         "@pnpm/types": "9.1.0",
         "@pnpm/workspace.pkgs-graph": "2.0.4",
         "@prerenderer/prerenderer": "^1.2.0",
@@ -169,7 +171,6 @@
         "@teambit/evangelist.input.checkbox.label": "1.0.3",
         "@teambit/evangelist.surfaces.dropdown": "1.0.2",
         "@teambit/evangelist.surfaces.tooltip": "1.0.1",
-        "@teambit/explorer.ui.command-bar": "2.0.3",
         "@teambit/explorer.ui.gallery.base-component-card": "^0.0.503",
         "@teambit/explorer.ui.gallery.component-grid": "^0.0.496",
         "@teambit/explorer.ui.search.search-input": "^1.95.7",
@@ -391,7 +392,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.507",
+        "@teambit/legacy": "1.0.513",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "browserslist": "4.16.3",
@@ -405,7 +406,8 @@
     },
     "linkCoreAspects": false,
     "overrides": {
-      "@types/fs-capacitor": "2.0.0"
+      "@types/fs-capacitor": "2.0.0",
+      "signal-exit@4": "^4.0.2"
     },
     "nodeLinker": "hoisted",
     "rootComponents": true,
@@ -483,7 +485,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.507"
+            "@teambit/legacy": "1.0.513"
           }
         }
       },
@@ -744,7 +746,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.507"
+            "@teambit/legacy": "1.0.513"
           }
         }
       }
@@ -834,7 +836,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.507",
+            "@teambit/legacy": "1.0.513",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -969,7 +971,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.507"
+            "@teambit/legacy": "1.0.513"
           }
         }
       }

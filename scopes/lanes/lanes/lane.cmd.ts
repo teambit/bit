@@ -3,11 +3,12 @@ import chalk from 'chalk';
 import yn from 'yn';
 import { ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
-import { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { BitError } from '@teambit/bit-error';
 import { approveOperation } from '@teambit/legacy/dist/prompts';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 import { SwitchCmd } from './switch.cmd';
 
@@ -326,6 +327,57 @@ export class LaneRemoveCmd implements Command {
   }
 }
 
+export type RemoveCompsOpts = { workspaceOnly?: boolean; updateMain?: boolean };
+
+export class LaneRemoveCompCmd implements Command {
+  name = 'remove-comp <component-pattern>';
+  arguments = [
+    {
+      name: 'component-pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
+  ];
+  description = `remove components when on a lane`;
+  extendedDescription = `in case the components are part of the lane and the lane is exported, it marks the components as removed,
+and then after snap+export, the remote-lane gets updated as well. upon lane-merge, these components are skipped.
+
+in case the components are not part of the lane or the lane is new, it simply removes the components from the workspace`;
+  group = 'collaborate';
+  alias = 'rc';
+  options = [
+    ['', 'workspace-only', 'do not mark the components as removed. instead, remove them from the workspace only'],
+    ['', 'update-main', 'NOT IMPLEMENTED YET. mark as removed on main after merging this lane into main'],
+  ] as CommandOptions;
+  loader = true;
+  migration = true;
+
+  constructor(private workspace: Workspace, private lanes: LanesMain) {}
+
+  async report([componentsPattern]: [string], removeCompsOpts: RemoveCompsOpts): Promise<string> {
+    if (removeCompsOpts.updateMain) throw new Error('not implemented yet');
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    if (this.workspace.isOnMain()) {
+      throw new Error(`error: you're checked out to main, please use "bit remove" instead`);
+    }
+    const { removedFromWs, markedRemoved } = await this.lanes.removeComps(componentsPattern, removeCompsOpts);
+    const getMarkedRemovedStr = () => {
+      if (!markedRemoved.length) return '';
+      return `${chalk.green('successfully marked the following components as removed:')}
+${markedRemoved.join('\n')}
+
+${chalk.bold('to update the remote, please snap and then export. to revert, please use "bit recover"')}
+`;
+    };
+    const getRemovedFromWsStr = () => {
+      if (!removedFromWs.length) return '';
+      return `\n${chalk.green('successfully removed the following components from the workspace:')}
+(either: these components were not part of the lane, so there was no need to mark them as removed or --workspace-only was used)
+${removedFromWs.join('\n')}`;
+    };
+    return getMarkedRemovedStr() + getRemovedFromWsStr();
+  }
+}
+
 export class LaneImportCmd implements Command {
   name = 'import <lane>';
   description = `import a remote lane to your workspace`;
@@ -355,7 +407,7 @@ export class LaneImportCmd implements Command {
 export class LaneCmd implements Command {
   name = 'lane [lane-name]';
   description = 'manage lanes';
-  alias = '';
+  alias = 'l';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
     ['j', 'json', 'show lanes details in json format'],
