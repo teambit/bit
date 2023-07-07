@@ -75,6 +75,7 @@ type ExportParams = {
   includeNonStaged?: boolean;
   resumeExportId?: string | undefined;
   ignoreMissingArtifacts?: boolean;
+  forkLaneNewScope?: boolean;
 };
 
 export class ExportMain {
@@ -154,6 +155,26 @@ export class ExportMain {
     // validate lane readme component and ensure it has been snapped
     if (laneObject?.readmeComponent) {
       _throwForUnsnappedLaneReadme(laneObject);
+    }
+
+    if (
+      !params.forkLaneNewScope &&
+      laneObject?.forkedFrom &&
+      laneObject.isNew &&
+      laneObject.forkedFrom.scope !== laneObject.scope
+    ) {
+      throw new BitError(`error: the current lane ${laneObject
+        .id()
+        .toString()} was forked from ${laneObject.forkedFrom.toString()}
+and is about to export to a different scope (${laneObject.scope}) than the original lane (${
+        laneObject.forkedFrom.scope
+      }).
+on large lanes with long history graph, it results in exporting lots of objects to the new scope, some of them might be missing locally.
+if you can use the same scope as the original name, change it now by running "bit lane change-scope ${
+        laneObject.name
+      } ${laneObject.forkedFrom.scope}".
+otherwise, re-run the export with "--fork-lane-new-scope" flag.
+if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
     }
     const isOnMain = consumer.isOnMain();
     const { exported, updatedLocally, newIdsOnRemote } = await this.exportMany({
