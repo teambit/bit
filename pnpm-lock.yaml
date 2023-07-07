@@ -564,6 +564,9 @@ importers:
       '@teambit/lanes.ui.menus':
         specifier: ^0.0.36
         version: 0.0.36(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/lanes.ui.models':
+        specifier: 0.0.72
+        version: 0.0.72(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.viewed-lane':
         specifier: ^0.0.37
         version: 0.0.37(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -964,7 +967,7 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       fuse.js:
-        specifier: 6.6.2
+        specifier: ^6.6.2
         version: 6.6.2
       get-tsconfig:
         specifier: 4.2.0
@@ -1956,7 +1959,7 @@ importers:
         specifier: ^3.0.0
         version: 3.13.0
       fuse.js:
-        specifier: 6.6.2
+        specifier: ^6.6.2
         version: 6.6.2
       memoize-one:
         specifier: 6.0.0
@@ -3212,6 +3215,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/lanes.ui.models':
+        specifier: 0.0.72
+        version: 0.0.72(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       classnames:
         specifier: 2.2.6
         version: 2.2.6
@@ -3304,9 +3310,6 @@ importers:
       '@teambit/design.inputs.input-text':
         specifier: ^1.0.21
         version: 1.0.21(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/design.inputs.toggle-button':
-        specifier: ^0.0.9
-        version: 0.0.9(@testing-library/react@12.1.5)(react@17.0.2)
       '@teambit/design.ui.avatar':
         specifier: ^1.0.16
         version: 1.0.16(react-dom@17.0.2)(react@17.0.2)
@@ -3319,9 +3322,6 @@ importers:
       '@teambit/design.ui.time-ago':
         specifier: ^0.0.366
         version: 0.0.366(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/design.ui.tooltip':
-        specifier: ^0.0.361
-        version: 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@teambit/evangelist.elements.icon':
         specifier: 1.0.2
         version: registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
@@ -3573,6 +3573,9 @@ importers:
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
       path-to-regexp:
         specifier: 6.2.0
         version: 6.2.0
@@ -3589,49 +3592,9 @@ importers:
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-      '@types/node':
-        specifier: 12.20.4
-        version: 12.20.4
-      '@types/react':
-        specifier: ^17.0.8
-        version: 17.0.8
-      '@types/react-dom':
-        specifier: ^17.0.5
-        version: 17.0.18
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-
-  components/ui/models_1:
-    dependencies:
-      '@teambit/base-ui.utils.string.affix':
-        specifier: 1.0.0
-        version: registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-id':
-        specifier: ^0.0.427
-        version: 0.0.427
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
-      path-to-regexp:
-        specifier: 6.2.0
-        version: 6.2.0
-      react:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2
-      react-dom:
-        specifier: ^16.8.0 || ^17.0.0
-        version: 17.0.2(react@17.0.2)
-    devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
+      '@types/lodash':
+        specifier: 4.14.165
+        version: 4.14.165
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -4371,7 +4334,7 @@ importers:
         version: file:components/ui/compare/lane-compare-state(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.gallery':
         specifier: workspace:*
-        version: file:components/ui/gallery(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/gallery(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.icons.lane-icon':
         specifier: workspace:*
         version: file:components/ui/icons/lane-icon(react-dom@17.0.2)(react@17.0.2)
@@ -4390,9 +4353,6 @@ importers:
       '@teambit/lanes.ui.menus.use-lanes-menu':
         specifier: workspace:*
         version: file:components/ui/menus/use-lanes-menu(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.models':
-        specifier: workspace:*
-        version: file:components/ui/models_1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model':
         specifier: workspace:*
         version: file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
@@ -5328,8 +5288,6 @@ importers:
       '@teambit/lanes.ui.menus.lanes-overview-menu':
         injected: true
       '@teambit/lanes.ui.menus.use-lanes-menu':
-        injected: true
-      '@teambit/lanes.ui.models':
         injected: true
       '@teambit/lanes.ui.models.lanes-model':
         injected: true
@@ -6285,7 +6243,7 @@ importers:
         version: file:components/ui/compare/lane-compare-state(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.gallery':
         specifier: workspace:*
-        version: file:components/ui/gallery(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/gallery(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.icons.lane-icon':
         specifier: workspace:*
         version: file:components/ui/icons/lane-icon(react-dom@17.0.2)(react@17.0.2)
@@ -6304,9 +6262,6 @@ importers:
       '@teambit/lanes.ui.menus.use-lanes-menu':
         specifier: workspace:*
         version: file:components/ui/menus/use-lanes-menu(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.models':
-        specifier: workspace:*
-        version: file:components/ui/models_1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model':
         specifier: workspace:*
         version: file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
@@ -7227,8 +7182,6 @@ importers:
       '@teambit/lanes.ui.menus.lanes-overview-menu':
         injected: true
       '@teambit/lanes.ui.menus.use-lanes-menu':
-        injected: true
-      '@teambit/lanes.ui.models':
         injected: true
       '@teambit/lanes.ui.models.lanes-model':
         injected: true
@@ -8184,7 +8137,7 @@ importers:
         version: file:components/ui/compare/lane-compare-state(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.gallery':
         specifier: workspace:*
-        version: file:components/ui/gallery(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/gallery(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.icons.lane-icon':
         specifier: workspace:*
         version: file:components/ui/icons/lane-icon(react-dom@17.0.2)(react@17.0.2)
@@ -8203,9 +8156,6 @@ importers:
       '@teambit/lanes.ui.menus.use-lanes-menu':
         specifier: workspace:*
         version: file:components/ui/menus/use-lanes-menu(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.models':
-        specifier: workspace:*
-        version: file:components/ui/models_1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model':
         specifier: workspace:*
         version: file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
@@ -9126,8 +9076,6 @@ importers:
       '@teambit/lanes.ui.menus.lanes-overview-menu':
         injected: true
       '@teambit/lanes.ui.menus.use-lanes-menu':
-        injected: true
-      '@teambit/lanes.ui.models':
         injected: true
       '@teambit/lanes.ui.models.lanes-model':
         injected: true
@@ -10083,7 +10031,7 @@ importers:
         version: file:components/ui/compare/lane-compare-state(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.gallery':
         specifier: workspace:*
-        version: file:components/ui/gallery(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/gallery(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.icons.lane-icon':
         specifier: workspace:*
         version: file:components/ui/icons/lane-icon(react-dom@17.0.2)(react@17.0.2)
@@ -10102,9 +10050,6 @@ importers:
       '@teambit/lanes.ui.menus.use-lanes-menu':
         specifier: workspace:*
         version: file:components/ui/menus/use-lanes-menu(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.models':
-        specifier: workspace:*
-        version: file:components/ui/models_1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model':
         specifier: workspace:*
         version: file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
@@ -11025,8 +10970,6 @@ importers:
       '@teambit/lanes.ui.menus.lanes-overview-menu':
         injected: true
       '@teambit/lanes.ui.menus.use-lanes-menu':
-        injected: true
-      '@teambit/lanes.ui.models':
         injected: true
       '@teambit/lanes.ui.models.lanes-model':
         injected: true
@@ -11982,7 +11925,7 @@ importers:
         version: file:components/ui/compare/lane-compare-state(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.gallery':
         specifier: workspace:*
-        version: file:components/ui/gallery(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/gallery(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.icons.lane-icon':
         specifier: workspace:*
         version: file:components/ui/icons/lane-icon(react-dom@17.0.2)(react@17.0.2)
@@ -12001,9 +11944,6 @@ importers:
       '@teambit/lanes.ui.menus.use-lanes-menu':
         specifier: workspace:*
         version: file:components/ui/menus/use-lanes-menu(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.models':
-        specifier: workspace:*
-        version: file:components/ui/models_1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model':
         specifier: workspace:*
         version: file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
@@ -12924,8 +12864,6 @@ importers:
       '@teambit/lanes.ui.menus.lanes-overview-menu':
         injected: true
       '@teambit/lanes.ui.menus.use-lanes-menu':
-        injected: true
-      '@teambit/lanes.ui.models':
         injected: true
       '@teambit/lanes.ui.models.lanes-model':
         injected: true
@@ -13881,7 +13819,7 @@ importers:
         version: file:components/ui/compare/lane-compare-state(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.gallery':
         specifier: workspace:*
-        version: file:components/ui/gallery(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/gallery(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.icons.lane-icon':
         specifier: workspace:*
         version: file:components/ui/icons/lane-icon(react-dom@17.0.2)(react@17.0.2)
@@ -13900,9 +13838,6 @@ importers:
       '@teambit/lanes.ui.menus.use-lanes-menu':
         specifier: workspace:*
         version: file:components/ui/menus/use-lanes-menu(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.models':
-        specifier: workspace:*
-        version: file:components/ui/models_1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model':
         specifier: workspace:*
         version: file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
@@ -14823,8 +14758,6 @@ importers:
       '@teambit/lanes.ui.menus.lanes-overview-menu':
         injected: true
       '@teambit/lanes.ui.menus.use-lanes-menu':
-        injected: true
-      '@teambit/lanes.ui.models':
         injected: true
       '@teambit/lanes.ui.models.lanes-model':
         injected: true
@@ -15780,7 +15713,7 @@ importers:
         version: file:components/ui/compare/lane-compare-state(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.gallery':
         specifier: workspace:*
-        version: file:components/ui/gallery(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/gallery(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.icons.lane-icon':
         specifier: workspace:*
         version: file:components/ui/icons/lane-icon(react-dom@17.0.2)(react@17.0.2)
@@ -15799,9 +15732,6 @@ importers:
       '@teambit/lanes.ui.menus.use-lanes-menu':
         specifier: workspace:*
         version: file:components/ui/menus/use-lanes-menu(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/lanes.ui.models':
-        specifier: workspace:*
-        version: file:components/ui/models_1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.models.lanes-model':
         specifier: workspace:*
         version: file:components/ui/models/lanes-model(react-dom@17.0.2)(react@17.0.2)
@@ -16722,8 +16652,6 @@ importers:
       '@teambit/lanes.ui.menus.lanes-overview-menu':
         injected: true
       '@teambit/lanes.ui.menus.use-lanes-menu':
-        injected: true
-      '@teambit/lanes.ui.models':
         injected: true
       '@teambit/lanes.ui.models.lanes-model':
         injected: true
@@ -25810,6 +25738,9 @@ importers:
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -25823,6 +25754,9 @@ importers:
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
+      '@types/lodash':
+        specifier: 4.14.165
+        version: 4.14.165
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -25896,6 +25830,9 @@ importers:
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
+      fuse.js:
+        specifier: ^6.6.2
+        version: 6.6.2
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@14.7.0)
@@ -39157,6 +39094,21 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: true
 
+  /@teambit/component-descriptor@0.0.301(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-/S8sJuIplMyGf+clxVVSdOxDjUatHjiqDc/wbUhgCkpAOJOzgzKXtZqYJQiKGWoDjcGBPRvb6iS6nU5CBnmTSQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      '@teambit/legacy': 1.0.513
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@babel/runtime': 7.20.0
+      '@teambit/legacy': link:node_modules/@teambit/legacy
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
   /@teambit/component-descriptor@0.0.46(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-OZuUsAOChiGdqU2fc8G/N1I6QisbeRw4UdeUjuLYdXqRVUEYPAzsjiyit+jRonP8/als9SDoXCO2xz/nckAOFw==}
     engines: {node: '>=12.22.0'}
@@ -41242,7 +41194,7 @@ packages:
     dev: false
 
   /@teambit/documenter.ui.linked-heading@4.1.8(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-LGpmPIXZSWsXbYgkS/WR1VxJcCg=, tarball: https://node-registry.bit.cloud/@teambit/documenter.ui.linked-heading/-/@teambit-documenter.ui.linked-heading-4.1.8.tgz}
+    resolution: {integrity: sha1-LGpmPIXZSWsXbYgkS/WR1VxJcCg=, tarball: https://node-registry.bit.cloud/tarballs/teambit.documenter/ui/linked-heading@4.1.8.tgz}
     peerDependencies:
       react: '*'
       react-dom: '*'
@@ -41546,7 +41498,7 @@ packages:
     dev: false
 
   /@teambit/evangelist.input.checkbox.label@1.0.10(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-ub516a6yD7zFu3GeZXNeH97ULNo=, tarball: https://node-registry.bit.cloud/@teambit/evangelist.input.checkbox.label/-/@teambit-evangelist.input.checkbox.label-1.0.10.tgz}
+    resolution: {integrity: sha1-ub516a6yD7zFu3GeZXNeH97ULNo=, tarball: https://node-registry.bit.cloud/tarballs/teambit.evangelist/input/checkbox/label@1.0.10.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -42348,6 +42300,24 @@ packages:
       - '@teambit/legacy'
     dev: false
 
+  /@teambit/lanes.ui.models@0.0.72(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha1-zf6NMFUz0hkMUlINOi8v1nC5d2c=, tarball: https://node-registry.bit.cloud/@teambit/lanes.ui.models/-/@teambit-lanes.ui.models-0.0.72.tgz}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-id': 0.0.427
+      '@teambit/scope.models.scope-model': 0.0.390(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      core-js: 3.13.0
+      path-to-regexp: 6.2.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@teambit/legacy'
+    dev: false
+
   /@teambit/lanes.ui.viewed-lane@0.0.37(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-Jf6uIOO5As4EcHtoPwPqmiyX1s4=, tarball: https://node-registry.bit.cloud/@teambit/lanes.ui.viewed-lane/-/@teambit-lanes.ui.viewed-lane-0.0.37.tgz}
     engines: {node: '>=12.22.0'}
@@ -42684,6 +42654,18 @@ packages:
     dependencies:
       '@teambit/component-descriptor': 0.0.146(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.417
+    transitivePeerDependencies:
+      - '@teambit/legacy'
+      - react
+      - react-dom
+    dev: false
+
+  /@teambit/scope.models.scope-model@0.0.390(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha1-+Xnkj9FJiQvO8DyITpBIETdLVE4=, tarball: https://node-registry.bit.cloud/@teambit/scope.models.scope-model/-/@teambit-scope.models.scope-model-0.0.390.tgz}
+    engines: {node: '>=12.22.0'}
+    dependencies:
+      '@teambit/component-descriptor': 0.0.301(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component-id': 0.0.427
     transitivePeerDependencies:
       - '@teambit/legacy'
       - react
@@ -64957,7 +64939,7 @@ packages:
       semver: 7.5.2
     dev: false
 
-  file:components/ui/gallery(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
+  file:components/ui/gallery(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: components/ui/gallery, type: directory}
     id: file:components/ui/gallery
     name: '@teambit/lanes.ui.gallery'
@@ -64971,12 +64953,14 @@ packages:
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
+      '@teambit/lanes.ui.models': 0.0.72(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       lodash.flatten: 4.4.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     transitivePeerDependencies:
+      - '@teambit/legacy'
       - '@testing-library/react'
       - '@types/react'
     dev: false
@@ -65017,6 +65001,7 @@ packages:
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
+      fuse.js: 6.6.2
       lodash: 4.17.21
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -65048,6 +65033,7 @@ packages:
       '@teambit/evangelist.elements.icon': registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
+      fuse.js: 6.6.2
       lodash: 4.17.21
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -65163,22 +65149,7 @@ packages:
       '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.427
       core-js: 3.13.0
-      path-to-regexp: 6.2.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  file:components/ui/models_1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {directory: components/ui/models_1, type: directory}
-    id: file:components/ui/models_1
-    name: '@teambit/lanes.ui.models'
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/component-id': 0.0.427
-      core-js: 3.13.0
+      lodash: 4.17.21
       path-to-regexp: 6.2.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -68817,6 +68788,7 @@ packages:
       '@apollo/client': 3.6.9(graphql@14.7.0)(react@17.0.2)(subscriptions-transport-ws@0.11.0)
       '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
+      lodash: 4.17.21
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     transitivePeerDependencies:
@@ -68860,6 +68832,7 @@ packages:
       chai: 4.3.0
       chalk: 2.4.2
       core-js: 3.13.0
+      fuse.js: 6.6.2
       graphql-tag: 2.12.1(graphql@14.7.0)
       lodash: 4.17.21
       p-map-series: 2.1.0
@@ -68891,6 +68864,7 @@ packages:
       chai: 4.3.0
       chalk: 2.4.2
       core-js: 3.13.0
+      fuse.js: 6.6.2
       graphql-tag: 2.12.1(graphql@14.7.0)
       lodash: 4.17.21
       p-map-series: 2.1.0
