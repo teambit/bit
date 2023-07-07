@@ -1011,10 +1011,10 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.command.createLane('lane-b', `--scope ${anotherRemote}`);
+      helper.command.createLane('lane-b', `--scope ${anotherRemote} --fork-lane-new-scope`);
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
       // previously, it was errored here because the remote didn't have comp2, so it couldn't merge the lane.
-      helper.command.export();
+      helper.command.export('--fork-lane-new-scope');
     });
     it('should be able to import the forked lane with no errors', () => {
       expect(() => helper.command.import(`${anotherRemote}/lane-b`)).to.not.throw();
@@ -1041,7 +1041,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
-      helper.command.createLane('lane-b', `--scope ${anotherRemote}`);
+      helper.command.createLane('lane-b', `--scope ${anotherRemote} --fork-lane-new-scope`);
       laneB = helper.scopeHelper.cloneLocalScope();
       helper.command.switchLocalLane('lane-a', '-x');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
@@ -1063,7 +1063,7 @@ describe('bit lane command', function () {
       expect(status.invalidComponents[0].error.name).to.equal('NoCommonSnap');
     });
     it('should be able to export with no error', () => {
-      expect(() => helper.command.export()).to.not.throw();
+      expect(() => helper.command.export('--fork-lane-new-scope')).to.not.throw();
     });
   });
   describe('snapping and un-tagging on a lane', () => {

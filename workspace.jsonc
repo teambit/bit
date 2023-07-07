@@ -727,7 +727,7 @@
             "@babel/preset-react": "7.18.6",
             "@babel/preset-env": "7.19.4",
             "resolve-url-loader": "5.0.0",
-            "sass-loader": "12.1.0",
+            "sass-loader": "13.3.2",
             "@svgr/webpack": "5.5.0",
             "new-url-loader": "0.1.1",
             "less": "^4.1.1",
