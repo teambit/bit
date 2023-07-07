@@ -156,12 +156,18 @@ export type UseLanes = (
   targetLanes?: LanesModel,
   skip?: boolean,
   options?: UseLanesOptions,
-  useContext?: boolean
+  useContext?: boolean,
+  scope?: string
 ) => UseLanesResult;
 
-type UseRootLanes = (viewedLaneId?: LaneId, skip?: boolean, options?: UseLanesOptions) => UseRootLanesResult;
+type UseRootLanes = (
+  viewedLaneId?: LaneId,
+  skip?: boolean,
+  options?: UseLanesOptions,
+  scope?: string
+) => UseRootLanesResult;
 
-const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => {
+const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}, scope) => {
   const { ids, offset, limit, sort } = options;
 
   const { data, fetchMore, loading } = useDataQuery<LanesQuery>(GET_LANES, {
@@ -180,11 +186,11 @@ const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}) => {
 
   const lanesModel = useMemo(() => {
     if (!loading && !!data) {
-      const newLanesModel = LanesModel.from({ data });
+      const newLanesModel = LanesModel.from({ data, scope });
       return newLanesModel;
     }
     return undefined;
-  }, [loading, data, viewedLaneId?.toString()]);
+  }, [loading, data, viewedLaneId?.toString(), scope]);
 
   const hasMore = useMemo(() => {
     if (loading) return true;
@@ -274,13 +280,13 @@ export const useSearchLanes: SearchLanes = (search, skip) => {
   };
 };
 
-export const useLanes: UseLanes = (targetLanes, skip, optionsFromProps, useContextFromProps = true) => {
+export const useLanes: UseLanes = (targetLanes, skip, optionsFromProps, useContextFromProps = true, scope) => {
   const context = useLanesContext() || {};
   const options = optionsFromProps || context?.options;
   const isSameOptions = isEqual(options, context?.options);
   const useContext = useContextFromProps && !!context && isSameOptions;
   const shouldSkip = skip || !!targetLanes || useContext;
-  const rootLanesData = useRootLanes(context?.lanesModel?.viewedLane?.id, shouldSkip, options);
+  const rootLanesData = useRootLanes(context?.lanesModel?.viewedLane?.id, shouldSkip, options, scope);
   const searchResult = useSearchLanes(options?.search, shouldSkip);
 
   if (targetLanes) {

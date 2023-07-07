@@ -32,9 +32,9 @@ export type LaneQueryLaneOwner = {
  */
 export type LaneQueryResult = {
   id: { name: string; scope: string };
-  isMerged: boolean;
+  isMerged?: boolean;
   displayName?: string;
-  laneComponentIds: Array<ComponentIdObj>;
+  laneComponentIds?: Array<ComponentIdObj>;
   readmeComponent?: ComponentModelProps;
   hash: string;
   createdAt?: string;
@@ -141,7 +141,7 @@ export class LanesModel {
   static mapToLaneModel(laneData: LaneQueryResult): LaneModel {
     const {
       id,
-      laneComponentIds,
+      laneComponentIds = [],
       readmeComponent,
       hash,
       createdAt,
@@ -245,13 +245,27 @@ export class LanesModel {
     return { byName, byId };
   }
 
-  static from({ data }: { data: LanesQuery }): LanesModel {
+  static from({
+    data,
+    scope,
+    viewedLaneId,
+  }: {
+    data: LanesQuery;
+    scope?: string;
+    // @deprecated
+    host?: string;
+    viewedLaneId?: LaneId;
+  }): LanesModel {
     const lanes = data?.lanes?.list?.map((lane) => LanesModel.mapToLaneModel(lane)) || [];
     const currentLane = data?.lanes?.current ? LanesModel.mapToLaneModel(data.lanes.current) : undefined;
-    const defaultLane = data?.lanes?.default ? LanesModel.mapToLaneModel(data.lanes.default) : undefined;
-    const viewedLane = data?.lanes?.viewedLane
-      ? LanesModel.mapToLaneModel(data.lanes.viewedLane[0])
-      : currentLane || defaultLane;
+    const defaultLane = data?.lanes?.default
+      ? LanesModel.mapToLaneModel(data.lanes.default)
+      : (scope && LanesModel.mapToLaneModel({ id: { name: 'main', scope }, hash: '' })) ||
+        lanes.find((lane) => lane.id.isDefault()) ||
+        undefined;
+    const viewedLane = viewedLaneId
+      ? lanes.find((lane) => lane.id.isEqual(viewedLaneId))
+      : (data?.lanes?.viewedLane && LanesModel.mapToLaneModel(data.lanes.viewedLane[0])) || currentLane || defaultLane;
     const lanesModel = new LanesModel({ lanes, currentLane, defaultLane, viewedLane });
     return lanesModel;
   }

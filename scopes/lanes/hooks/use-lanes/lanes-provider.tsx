@@ -15,6 +15,7 @@ export type LanesProviderProps = {
   skipNetworkCall?: boolean;
   ignoreDerivingFromUrl?: IgnoreDerivingFromUrl[];
   options?: UseLaneOptions;
+  useScope?: () => { scope?: string };
 };
 
 export function LanesProvider({
@@ -24,9 +25,11 @@ export function LanesProvider({
   ignoreDerivingFromUrl: ignoreDerivingFromUrlFromProps,
   skipNetworkCall,
   options: optionsFromProps = {},
+  useScope,
 }: LanesProviderProps) {
   const [lanesState, setLanesState] = useState<LanesModel | undefined>();
   const [viewedLaneId, setViewedLaneId] = useState<LaneId | undefined>(viewedIdFromProps);
+  const { scope } = useScope?.() || {};
 
   const skip = skipNetworkCall || !!targetLanes;
 
@@ -44,7 +47,9 @@ export function LanesProvider({
   const { lanesModel, loading, hasMore, fetchMoreLanes, offset, limit } = useLanes(
     targetLanes,
     skipNetworkCall,
-    options
+    options,
+    undefined,
+    scope
   );
 
   useEffect(() => {
