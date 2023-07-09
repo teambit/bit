@@ -51,6 +51,7 @@ export class ExportCmd implements Command {
       'ignore-missing-artifacts',
       "EXPERIMENTAL. don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote",
     ],
+    ['', 'fork-lane-new-scope', 'allow exporting a forked lane into a different scope than the original scope'],
     ['j', 'json', 'show output in json format'],
   ] as CommandOptions;
   loader = true;
@@ -69,6 +70,7 @@ export class ExportCmd implements Command {
       originDirectly = false,
       ignoreMissingArtifacts = false,
       resume,
+      forkLaneNewScope = false,
     }: any
   ): Promise<string> {
     const { componentsIds, nonExistOnBitMap, removedIds, missingScope, exportedLanes, ejectResults } =
@@ -80,6 +82,7 @@ export class ExportCmd implements Command {
         originDirectly,
         resumeExportId: resume,
         ignoreMissingArtifacts,
+        forkLaneNewScope,
       });
     if (isEmpty(componentsIds) && isEmpty(nonExistOnBitMap) && isEmpty(missingScope)) {
       return chalk.yellow('nothing to export');
