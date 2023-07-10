@@ -7,7 +7,7 @@ import chalk from 'chalk';
 import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
 import pMapSeries from 'p-map-series';
 import yesno from 'yesno';
-import { compact, flatMap } from 'lodash';
+import { compact, flatMap, pick } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { WorkspaceAspect } from '@teambit/workspace';
@@ -17,7 +17,7 @@ import type { EnvsMain } from '@teambit/envs';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import type { LoggerMain } from '@teambit/logger';
 import { WorkspaceConfigFilesAspect } from './workspace-config-files.aspect';
-import { ConfigFile, ConfigWriterEntry, ExtendingConfigFile } from './config-writer-entry';
+import { ConfigFile, ConfigWriterEntry, ExtendingConfigFile, MergeConfigFilesFunc } from './config-writer-entry';
 import { WsConfigCleanCmd, WsConfigCmd, WsConfigListCmd, WsConfigWriteCmd } from './ws-config.cmd';
 import { DedupedPaths, dedupePaths } from './dedup-paths';
 import WriteConfigFilesFailed from './exceptions/write-failed';
@@ -25,10 +25,42 @@ import { WorkspaceConfigFilesService } from './workspace-config-files.service';
 
 export type ConfigWriterSlot = SlotRegistry<ConfigWriterEntry[]>;
 
-export type ConfigWritersList = Array<{
+export type EnvConfigWriter = {
   envId: string;
+  executionContext: ExecutionContext;
   configWriters: ConfigWriterEntry[];
-}>;
+};
+
+export type EnvConfigWriterEntry = {
+  envId: string;
+  configWriter: ConfigWriterEntry;
+  executionContext: ExecutionContext;
+};
+
+export type WriterIdsToEnvEntriesMap = {
+  [writerId: string]: EnvConfigWriterEntry[];
+};
+
+type MergedRealConfigFiles = {
+  [hash: string]: {
+    envIds: string[];
+    realConfigFile: Required<ConfigFile>;
+  };
+};
+
+type WrittenRealConfigFiles = {
+  [hash: string]: {
+    envIds: string[];
+    writtenRealConfigFile: WrittenConfigFile;
+  };
+};
+
+export type EnvConfigWritersList = Array<EnvConfigWriter>;
+
+type EnvCalculatedRealConfigFiles = {
+  envId: string;
+  realConfigFiles: Required<ConfigFile>[];
+};
 
 export type CleanConfigFilesOptions = {
   silent?: boolean; // no prompt
@@ -76,6 +108,13 @@ export type EnvsWrittenConfigFiles = Array<EnvsWrittenConfigFile>;
 
 export type EnvsWrittenExtendingConfigFile = { envIds: string[]; extendingConfigFile: WrittenExtendingConfigFile };
 export type EnvsWrittenExtendingConfigFiles = Array<EnvsWrittenExtendingConfigFile>;
+
+export type AspectWritersResults = {
+  aspectId: string;
+  writersResult: OneConfigFileWriterResult[];
+  totalWrittenFiles: number;
+  totalExtendingConfigFiles: number;
+};
 
 export type OneConfigFileWriterResult = {
   name: string;
@@ -165,14 +204,24 @@ export class WorkspaceConfigFilesMain {
    * It returns a list of all the config writers that have been registered with the config writer slot
    * @returns An array of objects with aspectId and configWriter properties.
    */
-  async listConfigWriters(): Promise<ConfigWritersList> {
+  async listConfigWriters(): Promise<EnvConfigWritersList> {
     const execContexts = await this.getExecContext();
 
-    const result: ConfigWritersList = execContexts.map((execContext) => {
-      const configWriters = this.getConfigWriters(execContext);
-      return { envId: execContext.envRuntime.id, configWriters };
+    const result: EnvConfigWritersList = execContexts.map((executionContext) => {
+      const configWriters = this.getConfigWriters(executionContext);
+      return { envId: executionContext.envRuntime.id, executionContext, configWriters };
     });
     return result;
+  }
+
+  private groupByWriterId(writerList: EnvConfigWritersList): WriterIdsToEnvEntriesMap {
+    return writerList.reduce((acc, envConfigWriter: EnvConfigWriter) => {
+      envConfigWriter.configWriters.forEach((configWriter: ConfigWriterEntry) => {
+        acc[configWriter.id] = acc[configWriter.id] || [];
+        acc[configWriter.id].push({ configWriter, envId: envConfigWriter.envId });
+      });
+      return acc;
+    }, {});
   }
 
   private async write(
@@ -181,142 +230,124 @@ export class WorkspaceConfigFilesMain {
   ): Promise<EnvWritersResults[]> {
     const envCompDirsMap = this.getEnvComponentsDirsMap(envsExecutionContext);
     const configsRootDir = this.getConfigsRootDir();
-    const results = await pMapSeries(envsExecutionContext, async (envExecutionContext) => {
-      return this.handleOneEnv(envCompDirsMap, configsRootDir, envExecutionContext, opts);
-    });
+    const configWriters = await this.listConfigWriters();
+    const writerIdsToEnvEntriesMap = this.groupByWriterId(configWriters);
+    const filteredWriterIdsToEnvEntriesMap = opts.writers
+      ? pick(writerIdsToEnvEntriesMap, opts.writers)
+      : writerIdsToEnvEntriesMap;
+    const results = await pMapSeries(
+      Object.entries(filteredWriterIdsToEnvEntriesMap),
+      async ([writerId, envEntries]) => {
+        return this.handleOneIdWriter(writerId, envEntries, envCompDirsMap, configsRootDir, opts);
+      }
+    );
     return results;
   }
 
-  private async handleOneEnv(
+  private async handleOneIdWriter(
+    writerId: string,
+    envEntries: EnvConfigWriterEntry[],
     envCompsDirsMap: EnvCompsDirsMap,
     configsRootDir: string,
-    envExecutionContext: ExecutionContext,
     opts: WriteConfigFilesOptions
-  ): Promise<EnvWritersResults> {
-    const configWriters: ConfigWriterEntry[] = this.getConfigWriters(envExecutionContext);
-
-    const results = await pMapSeries(configWriters, async (configWriter) => {
-      if (opts.writers && !(opts.writers.includes(configWriter.name) || opts.writers.includes(configWriter.cliName)))
-        return undefined;
-      return this.handleOneConfigFileWriter(configWriter, envCompsDirsMap, configsRootDir, envExecutionContext, opts);
-    });
-    const compactResults = compact(results);
-    const totalWrittenFiles = compactResults.reduce((acc, curr) => {
-      return acc + curr.totalWrittenFiles;
-    }, 0);
-    const totalExtendingConfigFiles = compactResults.reduce((acc, curr) => {
-      return acc + curr.totalExtendingConfigFiles;
-    }, 0);
-    return {
-      envId: envExecutionContext.envRuntime.id,
-      writersResult: compactResults,
-      totalWrittenFiles,
-      totalExtendingConfigFiles,
-    };
-  }
-
-  private async handleOneConfigFileWriter(
-    configWriter: ConfigWriterEntry,
-    envCompsDirsMap: EnvCompsDirsMap,
-    configsRootDir: string,
-    envExecutionContext: ExecutionContext,
-    opts: WriteConfigFilesOptions
-  ): Promise<OneConfigFileWriterResult> {
-    const writtenConfigFilesMap: WrittenConfigFilesMap = {};
-    const extendingConfigFilesMap: ExtendingConfigFilesMap = {};
-    const envId = envExecutionContext.envRuntime.id.toString();
-    const envMapValue = envCompsDirsMap[envId];
-    const writtenConfigFiles = await this.handleRealConfigFiles(
-      envId,
-      envMapValue,
-      envExecutionContext,
-      configWriter,
-      configsRootDir,
-      writtenConfigFilesMap,
-      opts
-    );
-    if (writtenConfigFiles) {
-      this.buildExtendingConfigFilesMap(
-        configWriter,
-        writtenConfigFiles,
-        envId,
-        extendingConfigFilesMap,
-        envCompsDirsMap,
-        configsRootDir,
-        opts
-      );
-    }
-    if (!writtenConfigFilesMap || Object.keys(writtenConfigFilesMap).length === 0) {
-      return {
-        name: configWriter.name,
-        configFiles: [],
-        totalConfigFiles: 0,
-        totalWrittenFiles: 0,
-        extendingConfigFiles: [],
-        totalExtendingConfigFiles: 0,
-      };
-    }
-
-    const fileHashPerDedupedPaths = dedupePaths(extendingConfigFilesMap, envCompsDirsMap);
-    const extendingConfigFiles = await this.writeExtendingConfigFiles(
-      extendingConfigFilesMap,
-      fileHashPerDedupedPaths,
-      opts
-    );
-    if (configWriter.postProcessExtendingConfigFiles) {
-      await configWriter.postProcessExtendingConfigFiles({
-        workspaceDir: this.workspace.path,
-        configsRootDir,
-        writtenExtendingConfigFiles: extendingConfigFiles,
-        envCompsDirsMap,
-        dryRun: !!opts.dryRun,
-      });
-    }
-    const totalExtendingConfigFiles = extendingConfigFiles.reduce(
-      (acc, curr) => acc + curr.extendingConfigFile.filePaths.length,
-      0
-    );
-    const configFiles = Object.values(writtenConfigFilesMap);
-    const totalConfigFiles = Object.keys(writtenConfigFilesMap).length;
-    const totalWrittenFiles = totalConfigFiles + totalExtendingConfigFiles;
-    const result: OneConfigFileWriterResult = {
-      name: configWriter.name,
-      configFiles,
-      totalWrittenFiles,
-      totalConfigFiles: Object.keys(writtenConfigFilesMap).length,
-      extendingConfigFiles,
-      totalExtendingConfigFiles,
-    };
-    return result;
+  ): Promise<AspectWritersResults> {
+    const writtenRealConfigFiles = await this.handleRealConfigFiles(envEntries, envCompsDirsMap, configsRootDir, opts);
+    throw new Error('stop');
+    // const compactResults = compact(results);
+    // const totalWrittenFiles = compactResults.reduce((acc, curr) => {
+    //   return acc + curr.totalWrittenFiles;
+    // }, 0);
+    // const totalExtendingConfigFiles = compactResults.reduce((acc, curr) => {
+    //   return acc + curr.totalExtendingConfigFiles;
+    // }, 0);
+    // return { aspectId, writersResult: compactResults, totalWrittenFiles, totalExtendingConfigFiles };
   }
 
   private async handleRealConfigFiles(
-    envId: string,
-    envMapValue: EnvMapValue,
-    executionContext: ExecutionContext,
-    configWriter: ConfigWriterEntry,
+    envEntries: EnvConfigWriterEntry[],
+    envCompsDirsMap: EnvCompsDirsMap,
     configsRootDir: string,
-    writtenConfigFilesMap: WrittenConfigFilesMap,
     opts: WriteConfigFilesOptions
-  ): Promise<WrittenConfigFile[] | undefined> {
-    const calculatedConfigFiles = configWriter.calcConfigFiles(executionContext, envMapValue.env, configsRootDir);
-    if (!calculatedConfigFiles) return undefined;
-    const writtenConfigFiles = await Promise.all(
-      calculatedConfigFiles.map(async (configFile) => {
-        const writtenConfigFile = await this.writeConfigFile(configFile, configsRootDir, opts);
-        if (!writtenConfigFilesMap[writtenConfigFile.hash]) {
-          writtenConfigFilesMap[writtenConfigFile.hash] = { configFile: writtenConfigFile, envIds: [] };
-        }
-        writtenConfigFilesMap[writtenConfigFile.hash].envIds.push(envId);
-        return writtenConfigFile;
+  ): Promise<WrittenRealConfigFiles | undefined> {
+    const allEnvsCalculatedRealConfigFiles: EnvCalculatedRealConfigFiles[] = await pMapSeries(
+      envEntries,
+      async (envConfigFileEntry) => {
+        const envMapVal = envCompsDirsMap[envConfigFileEntry.envId];
+        const realConfigFiles = await this.calculateOneEnvRealConfigFiles(
+          envConfigFileEntry,
+          envMapVal,
+          configsRootDir
+        );
+        const realConfigFilesWithHash = this.ensureHashOnConfigFiles(compact(realConfigFiles));
+        return {
+          envId: envConfigFileEntry.envId,
+          realConfigFiles: realConfigFilesWithHash,
+        };
+      }
+    );
+    // Find the first merge function exists
+    const mergeFunc = envEntries.find((envEntry) => !!envEntry.configWriter.mergeConfigFiles)?.configWriter
+      .mergeConfigFiles;
+    const mergedRealConfigFiles = this.mergeRealConfigFiles(allEnvsCalculatedRealConfigFiles, mergeFunc);
+    const writtenConfigFilesMap: WrittenRealConfigFiles = {};
+    await Promise.all(
+      Object.entries(mergedRealConfigFiles).map(async ([hash, { envIds, realConfigFile }]) => {
+        const writtenRealConfigFile = await this.writeConfigFile(realConfigFile, configsRootDir, opts);
+        writtenConfigFilesMap[hash] = {
+          envIds,
+          writtenRealConfigFile,
+        };
       })
     );
-    if (configWriter.postProcessConfigFiles) {
-      await configWriter.postProcessConfigFiles(writtenConfigFiles, executionContext, envMapValue, {
-        dryRun: !!opts.dryRun,
+    console.log(
+      '🚀 ~ file: workspace-config-files.main.runtime.ts:303 ~ WorkspaceConfigFilesMain ~ writtenConfigFilesMap:',
+      writtenConfigFilesMap
+    );
+    return writtenConfigFilesMap;
+  }
+
+  private ensureHashOnConfigFiles(configFiles: ConfigFile[]): Array<Required<ConfigFile>> {
+    return configFiles.map((configFile): Required<ConfigFile> => {
+      if (!configFile.hash) {
+        const hash = sha1(configFile.content);
+        return { ...configFile, hash };
+      }
+      return configFile as Required<ConfigFile>;
+    });
+  }
+
+  private async calculateOneEnvRealConfigFiles(
+    envConfigFileEntry: EnvConfigWriterEntry,
+    envMapValue: EnvMapValue,
+    configsRootDir: string
+  ) {
+    const { configWriter, executionContext } = envConfigFileEntry;
+    const calculatedConfigFiles = configWriter.calcConfigFiles(executionContext, envMapValue, configsRootDir);
+    return calculatedConfigFiles;
+  }
+
+  private mergeRealConfigFiles(
+    multiEnvCalculatedRealConfigFiles: EnvCalculatedRealConfigFiles[],
+    mergeFunc?: MergeConfigFilesFunc
+  ): MergedRealConfigFiles {
+    const mergedConfigFiles = multiEnvCalculatedRealConfigFiles.reduce((acc, curr: EnvCalculatedRealConfigFiles) => {
+      curr.realConfigFiles.forEach((realConfigFile) => {
+        const currentValue = acc[realConfigFile.hash];
+        if (currentValue) {
+          currentValue.envIds.push(curr.envId);
+          if (currentValue && mergeFunc) {
+            const mergedConfigFileContent = mergeFunc(currentValue.realConfigFile, realConfigFile);
+            currentValue.realConfigFile.content = mergedConfigFileContent;
+            realConfigFile.content = mergedConfigFileContent;
+            acc[realConfigFile.hash].realConfigFile = realConfigFile;
+          }
+        } else {
+          acc[realConfigFile.hash] = { envIds: [curr.envId], realConfigFile };
+        }
       });
-    }
-    return writtenConfigFiles;
+      return acc;
+    }, {});
+    return mergedConfigFiles;
   }
 
   private async writeConfigFile(
@@ -429,8 +460,8 @@ export class WorkspaceConfigFilesMain {
     };
   }
 
-  private getConfigsRootDir() {
-    return this.getCacheDir(this.workspace.path);
+  private getConfigsRootDir(userConfiguredDir?: string): string {
+    return userConfiguredDir ? join(this.workspace.path, userConfiguredDir) : this.getCacheDir(this.workspace.path);
   }
 
   private getCacheDir(rootDir): string {
@@ -479,9 +510,7 @@ export class WorkspaceConfigFilesMain {
     const execContext = await this.getExecContext();
     const configWriters = this.getFlatConfigWriters(execContext);
     const filteredConfigWriters = writers
-      ? configWriters.filter(
-          (configWriter) => writers.includes(configWriter.name) || writers.includes(configWriter.cliName)
-        )
+      ? configWriters.filter((configWriter) => writers.includes(configWriter.name) || writers.includes(configWriter.id))
       : configWriters;
     const paths = filteredConfigWriters
       .map((configWriter) => {
