@@ -1,8 +1,8 @@
 import chalk from 'chalk';
-import { ConfigWritersList } from '../workspace-config-files.main.runtime';
+import { EnvConfigWritersList } from '../workspace-config-files.main.runtime';
 import { ConfigWriterEntry } from '../config-writer-entry';
 
-export function formatListOutput(result: ConfigWritersList): string {
+export function formatListOutput(result: EnvConfigWritersList): string {
   return Object.values(result)
     .map((item) => getEnvOutput(item.envId, item.configWriters))
     .join('\n\n');
