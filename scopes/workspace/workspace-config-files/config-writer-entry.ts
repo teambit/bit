@@ -1,10 +1,5 @@
 import { Environment, ExecutionContext } from '@teambit/envs';
-import {
-  EnvCompsDirsMap,
-  EnvMapValue,
-  EnvsWrittenExtendingConfigFiles,
-  WrittenConfigFile,
-} from './workspace-config-files.main.runtime';
+import { EnvMapValue, WrittenConfigFile } from './workspace-config-files.main.runtime';
 
 export type ConfigFile = {
   /**
@@ -23,7 +18,7 @@ export type ConfigFile = {
   hash?: string;
 };
 
-export type ExtendingConfigFile = ConfigFile & {
+export type ExtendingConfigFileAdditionalProp = {
   /**
    * the config file that this config file extends.
    */
@@ -35,24 +30,24 @@ export type ExtendingConfigFile = ConfigFile & {
   useAbsPaths?: boolean;
 };
 
+export type ExtendingConfigFile = ConfigFile & ExtendingConfigFileAdditionalProp;
+
 export type PostProcessExtendingConfigFilesArgs = {
   workspaceDir: string;
   configsRootDir: string;
-  writtenExtendingConfigFiles: EnvsWrittenExtendingConfigFiles;
-  envCompsDirsMap: EnvCompsDirsMap;
-  dryRun: boolean;
+  extendingConfigFile: ExtendingConfigFile;
+  /**
+   * Paths that the file will be written to.
+   */
+  paths: string[];
+  envMapValue: EnvMapValue;
 };
 
 export type GenerateExtendingConfigFilesArgs = {
   workspaceDir: string;
   configsRootDir: string;
   writtenConfigFiles: WrittenConfigFile[];
-  envCompsDirsMap: EnvCompsDirsMap;
-  dryRun: boolean;
-};
-
-export type PostProcessConfigFilesOptions = {
-  dryRun: boolean;
+  envMapValue: EnvMapValue;
 };
 
 export type MergeConfigFilesFunc = (configFile: ConfigFile, configFile2: ConfigFile) => string;
@@ -110,13 +105,13 @@ export interface ConfigWriterEntry {
   generateExtendingFile(args: GenerateExtendingConfigFilesArgs): ExtendingConfigFile | undefined;
 
   /**
-   * This enables the writer to do some post processing after the extending config files were written.
-   * this is important in case when we need to change a config file / extending config file after it was written based on all
-   * the environments in the ws
+   * This enables the writer to do some post processing after the extending config files were calculated and deduped.
+   * this is important in case when we need to change a config file / extending config file after it was calculated
+   * based on all the environments in the ws
    * or based on other config files that were written.
    * @param args
    */
-  postProcessExtendingConfigFiles?(args: PostProcessExtendingConfigFilesArgs): Promise<void>;
+  postProcessExtendingConfigFiles?(args: PostProcessExtendingConfigFilesArgs): Promise<string | undefined>;
 
   /**
    * Find all the files that are relevant for the config type.
