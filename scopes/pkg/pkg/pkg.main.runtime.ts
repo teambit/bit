@@ -75,6 +75,11 @@ export type ComponentPkgExtensionData = {
   pkgJson?: Record<string, any>;
 
   /**
+   * integrity of the tar file
+   */
+  integrity?: string;
+
+  /**
    * Checksum of the tar file
    */
   checksum?: string;
