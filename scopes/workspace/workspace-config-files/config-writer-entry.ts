@@ -55,17 +55,20 @@ export type PostProcessConfigFilesOptions = {
   dryRun: boolean;
 };
 
+export type MergeConfigFilesFunc = (configFile: ConfigFile, configFile2: ConfigFile) => string;
 export interface ConfigWriterEntry {
+  /**
+   * Id is used for few things:
+   * 1. merge/post process different configs files (from different envs) together.
+   * 2. filter the config writer by the cli when using --writers flag.
+   */
+  id: string;
+
   /**
    * Name of the config writer.
    * used for outputs and logging.
    */
   name: string;
-
-  /**
-   * Name that is used to filter the config writer by the cli when using --writers flag.
-   */
-  cliName: string;
 
   /**
    * Get's the component env and return the config file content
@@ -85,18 +88,13 @@ export interface ConfigWriterEntry {
   calcConfigFiles(executionContext: ExecutionContext, env: Environment, dir: string): ConfigFile[] | undefined;
 
   /**
-   * This enables the writer to do some post processing after the config files were written.
-   * this is important in case when we need to change a config file after it was written based on all
-   * the environments in the ws
-   * or based on other config files that were written.
-   * @param writtenConfigFiles
+   * Provide a function that knows how to merge 2 config files together.
+   * This is used when 2 different envs generate the same config file hash.
+   * sometime we want to merge the 2 config files together.
+   * @param configFile
+   * @param configFile2
    */
-  postProcessConfigFiles?(
-    writtenConfigFiles: WrittenConfigFile[],
-    executionContext: ExecutionContext,
-    envMapValue: EnvMapValue,
-    options: PostProcessConfigFilesOptions
-  ): Promise<void>;
+  mergeConfigFiles?: MergeConfigFilesFunc;
 
   /**
    * This will be used to generate an extending file content.
