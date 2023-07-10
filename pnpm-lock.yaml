@@ -36466,7 +36466,7 @@ packages:
     dev: false
 
   /@teambit/base-react.navigation.link@1.23.0(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-dkmFy935I+/7kialZCzjASBEjs0=, tarball: https://node-registry.bit.cloud/@teambit/base-react.navigation.link/-/@teambit-base-react.navigation.link-1.23.0.tgz}
+    resolution: {integrity: sha1-dkmFy935I+/7kialZCzjASBEjs0=, tarball: http://node-registry.v2.bit.cloud/@teambit/base-react.navigation.link/-/@teambit-base-react.navigation.link-1.23.0.tgz}
     peerDependencies:
       '@testing-library/react': 12.0.0
       react: ^16.8.0 || ^17.0.0
@@ -37290,7 +37290,7 @@ packages:
     dev: false
 
   /@teambit/component.modules.component-url@0.0.128(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-E5szS9hGfk/lAwEma3/ViMkm32A=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.128.tgz}
+    resolution: {integrity: sha1-E5szS9hGfk/lAwEma3/ViMkm32A=, tarball: http://node-registry.v2.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.128.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: 17.0.2
@@ -37304,7 +37304,7 @@ packages:
     dev: false
 
   /@teambit/component.modules.component-url@0.0.140(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-cmcWwISlL+PSKta3Q4HkpLTARBc=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.140.tgz}
+    resolution: {integrity: sha1-cmcWwISlL+PSKta3Q4HkpLTARBc=, tarball: http://node-registry.v2.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.140.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: 17.0.2
@@ -37318,7 +37318,7 @@ packages:
     dev: false
 
   /@teambit/component.modules.component-url@0.0.151(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-/dj3W/oKQC/p0X74zRJ+Mov/bec=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.151.tgz}
+    resolution: {integrity: sha1-/dj3W/oKQC/p0X74zRJ+Mov/bec=, tarball: http://node-registry.v2.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.151.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: 17.0.2
@@ -37345,7 +37345,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.badges.component-count@0.0.10(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-/KG3gyg1xt3Gk+7z1Yf2Ww9qd50=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.badges.component-count/-/@teambit-component.ui.badges.component-count-0.0.10.tgz}
+    resolution: {integrity: sha1-/KG3gyg1xt3Gk+7z1Yf2Ww9qd50=, tarball: http://node-registry.v2.bit.cloud/@teambit/component.ui.badges.component-count/-/@teambit-component.ui.badges.component-count-0.0.10.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -37377,7 +37377,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.hooks.use-component-compare-url@0.0.3(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-mNono316l0rxMgrR/xuTDv4Rp/E=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.hooks.use-component-compare-url/-/@teambit-component.ui.component-compare.hooks.use-component-compare-url-0.0.3.tgz}
+    resolution: {integrity: sha1-mNono316l0rxMgrR/xuTDv4Rp/E=, tarball: http://node-registry.v2.bit.cloud/@teambit/component.ui.component-compare.hooks.use-component-compare-url/-/@teambit-component.ui.component-compare.hooks.use-component-compare-url-0.0.3.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -37407,7 +37407,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.models.component-compare-change-type@0.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-2Er9FIkcKdYqxW2aeyZ5Gd370Kc=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-change-type/-/@teambit-component.ui.component-compare.models.component-compare-change-type-0.0.1.tgz}
+    resolution: {integrity: sha1-2Er9FIkcKdYqxW2aeyZ5Gd370Kc=, tarball: http://node-registry.v2.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-change-type/-/@teambit-component.ui.component-compare.models.component-compare-change-type-0.0.1.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -37419,7 +37419,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.models.component-compare-hooks@0.0.4(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-kVPksYnom+gsZNPMZVx6uJqAHlI=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-hooks/-/@teambit-component.ui.component-compare.models.component-compare-hooks-0.0.4.tgz}
+    resolution: {integrity: sha1-kVPksYnom+gsZNPMZVx6uJqAHlI=, tarball: http://node-registry.v2.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-hooks/-/@teambit-component.ui.component-compare.models.component-compare-hooks-0.0.4.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -37475,7 +37475,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.models.component-compare-state@0.0.2(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KOvqyfEiwlEHJBWwxZZtLxWBc74=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-state/-/@teambit-component.ui.component-compare.models.component-compare-state-0.0.2.tgz}
+    resolution: {integrity: sha1-KOvqyfEiwlEHJBWwxZZtLxWBc74=, tarball: http://node-registry.v2.bit.cloud/@teambit/component.ui.component-compare.models.component-compare-state/-/@teambit-component.ui.component-compare.models.component-compare-state-0.0.2.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -37501,7 +37501,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.component-compare.utils.lazy-loading@0.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-K4iYPn+ng7gCPPwwQ3C3vdAWzDE=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.component-compare.utils.lazy-loading/-/@teambit-component.ui.component-compare.utils.lazy-loading-0.0.1.tgz}
+    resolution: {integrity: sha1-K4iYPn+ng7gCPPwwQ3C3vdAWzDE=, tarball: http://node-registry.v2.bit.cloud/@teambit/component.ui.component-compare.utils.lazy-loading/-/@teambit-component.ui.component-compare.utils.lazy-loading-0.0.1.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -37514,7 +37514,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.deprecation-icon@0.0.494(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-h1I4/6SkzcVxwWznLLLEW4M8r6g=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.deprecation-icon/-/@teambit-component.ui.deprecation-icon-0.0.494.tgz}
+    resolution: {integrity: sha1-h1I4/6SkzcVxwWznLLLEW4M8r6g=, tarball: http://node-registry.v2.bit.cloud/@teambit/component.ui.deprecation-icon/-/@teambit-component.ui.deprecation-icon-0.0.494.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -37531,7 +37531,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.deprecation-icon@0.0.500(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KGzcqsYSN1S/mTpBE7Ohs8qm414=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.deprecation-icon/-/@teambit-component.ui.deprecation-icon-0.0.500.tgz}
+    resolution: {integrity: sha1-KGzcqsYSN1S/mTpBE7Ohs8qm414=, tarball: http://node-registry.v2.bit.cloud/@teambit/component.ui.deprecation-icon/-/@teambit-component.ui.deprecation-icon-0.0.500.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -38328,7 +38328,7 @@ packages:
     dev: false
 
   /@teambit/design.ui.icon-button@1.1.15(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-t2miG1hmgZa2WhYHCra9krURC9U=, tarball: https://node-registry.bit.cloud/@teambit/design.ui.icon-button/-/@teambit-design.ui.icon-button-1.1.15.tgz}
+    resolution: {integrity: sha1-t2miG1hmgZa2WhYHCra9krURC9U=, tarball: http://node-registry.v2.bit.cloud/@teambit/design.ui.icon-button/-/@teambit-design.ui.icon-button-1.1.15.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
@@ -38859,7 +38859,7 @@ packages:
     dev: false
 
   /@teambit/docs.entities.doc@0.0.2:
-    resolution: {integrity: sha1-Ljj4ksQWmKMbUZy58m0cB7MnSWo=, tarball: https://node-registry.bit.cloud/@teambit/docs.entities.doc/-/@teambit-docs.entities.doc-0.0.2.tgz}
+    resolution: {integrity: sha1-Ljj4ksQWmKMbUZy58m0cB7MnSWo=, tarball: http://node-registry.v2.bit.cloud/@teambit/docs.entities.doc/-/@teambit-docs.entities.doc-0.0.2.tgz}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@teambit/toolbox.types.serializable': 0.0.483
@@ -39117,7 +39117,7 @@ packages:
     dev: false
 
   /@teambit/documenter.ui.heading@4.1.6(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-nCoruiI/7n5xcXd4GEMdtuU5nIU=, tarball: https://node-registry.bit.cloud/@teambit/documenter.ui.heading/-/@teambit-documenter.ui.heading-4.1.6.tgz}
+    resolution: {integrity: sha1-nCoruiI/7n5xcXd4GEMdtuU5nIU=, tarball: http://node-registry.v2.bit.cloud/@teambit/documenter.ui.heading/-/@teambit-documenter.ui.heading-4.1.6.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -39394,7 +39394,7 @@ packages:
     dev: false
 
   /@teambit/envs.ui.env-icon@0.0.486(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-w7KPvgzoXLcmnBjlu8gNuRffmsA=, tarball: https://node-registry.bit.cloud/@teambit/envs.ui.env-icon/-/@teambit-envs.ui.env-icon-0.0.486.tgz}
+    resolution: {integrity: sha1-w7KPvgzoXLcmnBjlu8gNuRffmsA=, tarball: http://node-registry.v2.bit.cloud/@teambit/envs.ui.env-icon/-/@teambit-envs.ui.env-icon-0.0.486.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39406,7 +39406,7 @@ packages:
     dev: false
 
   /@teambit/envs.ui.env-icon@0.0.492(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-WSxQWxQY/fhy5bqXSjp3fz3XUDY=, tarball: https://node-registry.bit.cloud/@teambit/envs.ui.env-icon/-/@teambit-envs.ui.env-icon-0.0.492.tgz}
+    resolution: {integrity: sha1-WSxQWxQY/fhy5bqXSjp3fz3XUDY=, tarball: http://node-registry.v2.bit.cloud/@teambit/envs.ui.env-icon/-/@teambit-envs.ui.env-icon-0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39714,7 +39714,7 @@ packages:
     dev: true
 
   /@teambit/explorer.ui.gallery.component-card@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-gkm3X+OtPpzJSabL3xj7V6z75XA=, tarball: https://node-registry.bit.cloud/@teambit/explorer.ui.gallery.component-card/-/@teambit-explorer.ui.gallery.component-card-0.0.495.tgz}
+    resolution: {integrity: sha1-gkm3X+OtPpzJSabL3xj7V6z75XA=, tarball: http://node-registry.v2.bit.cloud/@teambit/explorer.ui.gallery.component-card/-/@teambit-explorer.ui.gallery.component-card-0.0.495.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39745,7 +39745,7 @@ packages:
     dev: false
 
   /@teambit/explorer.ui.gallery.component-card@0.0.507(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-p3EePsVfQINlcsiNPimNv3dK1Po=, tarball: https://node-registry.bit.cloud/@teambit/explorer.ui.gallery.component-card/-/@teambit-explorer.ui.gallery.component-card-0.0.507.tgz}
+    resolution: {integrity: sha1-p3EePsVfQINlcsiNPimNv3dK1Po=, tarball: http://node-registry.v2.bit.cloud/@teambit/explorer.ui.gallery.component-card/-/@teambit-explorer.ui.gallery.component-card-0.0.507.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39914,7 +39914,7 @@ packages:
     dev: false
 
   /@teambit/html.modules.create-element-from-string@0.0.104:
-    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: https://node-registry.bit.cloud/@teambit/html.modules.create-element-from-string/-/@teambit-html.modules.create-element-from-string-0.0.104.tgz}
+    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: http://node-registry.v2.bit.cloud/@teambit/html.modules.create-element-from-string/-/@teambit-html.modules.create-element-from-string-0.0.104.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -39945,7 +39945,7 @@ packages:
     dev: false
 
   /@teambit/lanes.hooks.use-lane-components@0.0.149(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-QnNvne623/kMU2CO4PdxzQk1JKo=, tarball: https://node-registry.bit.cloud/@teambit/lanes.hooks.use-lane-components/-/@teambit-lanes.hooks.use-lane-components-0.0.149.tgz}
+    resolution: {integrity: sha1-QnNvne623/kMU2CO4PdxzQk1JKo=, tarball: http://node-registry.v2.bit.cloud/@teambit/lanes.hooks.use-lane-components/-/@teambit-lanes.hooks.use-lane-components-0.0.149.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@apollo/client': ^3.6.0
@@ -40432,7 +40432,7 @@ packages:
     dev: false
 
   /@teambit/preview.ui.preview-placeholder@0.0.496(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-MgSJUaYFpLjSPyLWttgR63sM/Xg=, tarball: https://node-registry.bit.cloud/@teambit/preview.ui.preview-placeholder/-/@teambit-preview.ui.preview-placeholder-0.0.496.tgz}
+    resolution: {integrity: sha1-MgSJUaYFpLjSPyLWttgR63sM/Xg=, tarball: http://node-registry.v2.bit.cloud/@teambit/preview.ui.preview-placeholder/-/@teambit-preview.ui.preview-placeholder-0.0.496.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -40582,7 +40582,7 @@ packages:
     dev: false
 
   /@teambit/scope.models.scope-model@0.0.235(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-Ivlq0sF9GaNYn7ubwN/99AzJJLE=, tarball: https://node-registry.bit.cloud/@teambit/scope.models.scope-model/-/@teambit-scope.models.scope-model-0.0.235.tgz}
+    resolution: {integrity: sha1-Ivlq0sF9GaNYn7ubwN/99AzJJLE=, tarball: http://node-registry.v2.bit.cloud/@teambit/scope.models.scope-model/-/@teambit-scope.models.scope-model-0.0.235.tgz}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@teambit/component-descriptor': 0.0.146(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -40612,7 +40612,7 @@ packages:
     dev: false
 
   /@teambit/scope.ui.hooks.use-scope@0.0.240(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-ArQ+DdQNq/Aw2rjpUZcWpcveyck=, tarball: https://node-registry.bit.cloud/@teambit/scope.ui.hooks.use-scope/-/@teambit-scope.ui.hooks.use-scope-0.0.240.tgz}
+    resolution: {integrity: sha1-ArQ+DdQNq/Aw2rjpUZcWpcveyck=, tarball: http://node-registry.v2.bit.cloud/@teambit/scope.ui.hooks.use-scope/-/@teambit-scope.ui.hooks.use-scope-0.0.240.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@apollo/client': ^3.6.0
@@ -40680,7 +40680,7 @@ packages:
     dev: false
 
   /@teambit/scope.ui.scope-title@0.0.508(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-2lOC51kJif9bWAma5M4yaPPo/U4=, tarball: https://node-registry.bit.cloud/@teambit/scope.ui.scope-title/-/@teambit-scope.ui.scope-title-0.0.508.tgz}
+    resolution: {integrity: sha1-2lOC51kJif9bWAma5M4yaPPo/U4=, tarball: http://node-registry.v2.bit.cloud/@teambit/scope.ui.scope-title/-/@teambit-scope.ui.scope-title-0.0.508.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -40788,46 +40788,46 @@ packages:
     dev: false
 
   /@teambit/toolbox.string.ellipsis@0.0.172:
-    resolution: {integrity: sha1-nbLwbPi2d8Qeg6aCX2TYlARSRew=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.172.tgz}
+    resolution: {integrity: sha1-nbLwbPi2d8Qeg6aCX2TYlARSRew=, tarball: http://node-registry.v2.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.172.tgz}
     engines: {node: '>=12.22.0'}
     dev: true
 
   /@teambit/toolbox.string.ellipsis@0.0.173:
-    resolution: {integrity: sha1-CY+uj2sRmPejtTCee4HDvLFeeI8=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.173.tgz}
+    resolution: {integrity: sha1-CY+uj2sRmPejtTCee4HDvLFeeI8=, tarball: http://node-registry.v2.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.173.tgz}
     engines: {node: '>=12.22.0'}
 
   /@teambit/toolbox.string.ellipsis@0.0.181:
-    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.181.tgz}
+    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=, tarball: http://node-registry.v2.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.181.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/toolbox.string.get-initials@0.0.483:
-    resolution: {integrity: sha1-7BsxTG+qhcTHltoBu9McFKOq0/Y=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.get-initials/-/@teambit-toolbox.string.get-initials-0.0.483.tgz}
+    resolution: {integrity: sha1-7BsxTG+qhcTHltoBu9McFKOq0/Y=, tarball: http://node-registry.v2.bit.cloud/@teambit/toolbox.string.get-initials/-/@teambit-toolbox.string.get-initials-0.0.483.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/toolbox.string.get-initials@0.0.491:
-    resolution: {integrity: sha1-dMkF7hxhtmK2aXz7QCkAAajSrKI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.get-initials/-/@teambit-toolbox.string.get-initials-0.0.491.tgz}
+    resolution: {integrity: sha1-dMkF7hxhtmK2aXz7QCkAAajSrKI=, tarball: http://node-registry.v2.bit.cloud/@teambit/toolbox.string.get-initials/-/@teambit-toolbox.string.get-initials-0.0.491.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/toolbox.types.serializable@0.0.483:
-    resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.483.tgz}
+    resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=, tarball: http://node-registry.v2.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.483.tgz}
     engines: {node: '>=12.22.0'}
     dev: true
 
   /@teambit/toolbox.types.serializable@0.0.491:
-    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.491.tgz}
+    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=, tarball: http://node-registry.v2.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.491.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/toolbox.url.add-avatar-query-params@0.0.483:
-    resolution: {integrity: sha1-oyxnM4oFZ2iiNiqxDPWHI2v7IeE=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.url.add-avatar-query-params/-/@teambit-toolbox.url.add-avatar-query-params-0.0.483.tgz}
+    resolution: {integrity: sha1-oyxnM4oFZ2iiNiqxDPWHI2v7IeE=, tarball: http://node-registry.v2.bit.cloud/@teambit/toolbox.url.add-avatar-query-params/-/@teambit-toolbox.url.add-avatar-query-params-0.0.483.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/toolbox.url.add-avatar-query-params@0.0.492:
-    resolution: {integrity: sha1-dECMYTXTkMlAIUaK22cpmNlTsak=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.url.add-avatar-query-params/-/@teambit-toolbox.url.add-avatar-query-params-0.0.492.tgz}
+    resolution: {integrity: sha1-dECMYTXTkMlAIUaK22cpmNlTsak=, tarball: http://node-registry.v2.bit.cloud/@teambit/toolbox.url.add-avatar-query-params/-/@teambit-toolbox.url.add-avatar-query-params-0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -40898,7 +40898,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.empty-component-gallery@0.0.502(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-nbagGhpo63WfemtMvlC2tuGRsok=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.empty-component-gallery/-/@teambit-ui-foundation.ui.empty-component-gallery-0.0.502.tgz}
+    resolution: {integrity: sha1-nbagGhpo63WfemtMvlC2tuGRsok=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.empty-component-gallery/-/@teambit-ui-foundation.ui.empty-component-gallery-0.0.502.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -40942,7 +40942,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.get-icon-from-file-name@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.get-icon-from-file-name/-/@teambit-ui-foundation.ui.get-icon-from-file-name-0.0.495.tgz}
+    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.get-icon-from-file-name/-/@teambit-ui-foundation.ui.get-icon-from-file-name-0.0.495.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -40955,7 +40955,7 @@ packages:
       vscode-icons-js: 11.0.0
 
   /@teambit/ui-foundation.ui.global-loader@0.0.474(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-7X0x1qLPQV7ySEUh5Rs1iXt+AX4=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.474.tgz}
+    resolution: {integrity: sha1-7X0x1qLPQV7ySEUh5Rs1iXt+AX4=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.474.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@teambit/legacy': 1.0.183
@@ -40970,7 +40970,7 @@ packages:
     dev: true
 
   /@teambit/ui-foundation.ui.global-loader@0.0.487(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-t9IdwYuJBCHPUYK73ELRUHQHPVs=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.487.tgz}
+    resolution: {integrity: sha1-t9IdwYuJBCHPUYK73ELRUHQHPVs=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.487.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -40983,7 +40983,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.global-loader@0.0.493(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-0DiiKiGSijunFyRRRSMD4R2iQMk=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.493.tgz}
+    resolution: {integrity: sha1-0DiiKiGSijunFyRRRSMD4R2iQMk=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.493.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -40996,7 +40996,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.global-loader@0.0.497(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-5fU/29iOW7vvZBaoyaRiSUCyl2I=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.497.tgz}
+    resolution: {integrity: sha1-5fU/29iOW7vvZBaoyaRiSUCyl2I=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.global-loader/-/@teambit-ui-foundation.ui.global-loader-0.0.497.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41025,7 +41025,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.hooks.use-data-query@0.0.496(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-oL6ZvMzY0Y/1C9rivf+CdsmJFdI=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.hooks.use-data-query/-/@teambit-ui-foundation.ui.hooks.use-data-query-0.0.496.tgz}
+    resolution: {integrity: sha1-oL6ZvMzY0Y/1C9rivf+CdsmJFdI=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.hooks.use-data-query/-/@teambit-ui-foundation.ui.hooks.use-data-query-0.0.496.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@apollo/client': ^3.6.0
@@ -41041,7 +41041,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.hooks.use-data-query@0.0.500(@apollo/client@3.6.9)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-mKHB9+tWg+S+JJ5s4peW17vUf3s=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.hooks.use-data-query/-/@teambit-ui-foundation.ui.hooks.use-data-query-0.0.500.tgz}
+    resolution: {integrity: sha1-mKHB9+tWg+S+JJ5s4peW17vUf3s=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.hooks.use-data-query/-/@teambit-ui-foundation.ui.hooks.use-data-query-0.0.500.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@apollo/client': ^3.6.0
@@ -41057,7 +41057,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.is-browser@0.0.486(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KCR60Lp5r8XU/qN5aU6JnKyCo0U=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.is-browser/-/@teambit-ui-foundation.ui.is-browser-0.0.486.tgz}
+    resolution: {integrity: sha1-KCR60Lp5r8XU/qN5aU6JnKyCo0U=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.is-browser/-/@teambit-ui-foundation.ui.is-browser-0.0.486.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41069,7 +41069,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.is-browser@0.0.492(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-K8F9fjln4vfhtryfNuzr8RulqLo=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.is-browser/-/@teambit-ui-foundation.ui.is-browser-0.0.492.tgz}
+    resolution: {integrity: sha1-K8F9fjln4vfhtryfNuzr8RulqLo=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.is-browser/-/@teambit-ui-foundation.ui.is-browser-0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41081,7 +41081,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.keycap@0.0.486(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-8os8TC+l8rJUXtJe4ehMT7H6+98=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.keycap/-/@teambit-ui-foundation.ui.keycap-0.0.486.tgz}
+    resolution: {integrity: sha1-8os8TC+l8rJUXtJe4ehMT7H6+98=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.keycap/-/@teambit-ui-foundation.ui.keycap-0.0.486.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41095,7 +41095,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.keycap@0.0.492(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-/XlMitYklsPYhMXE0hPJZw+1JHM=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.keycap/-/@teambit-ui-foundation.ui.keycap-0.0.492.tgz}
+    resolution: {integrity: sha1-/XlMitYklsPYhMXE0hPJZw+1JHM=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.keycap/-/@teambit-ui-foundation.ui.keycap-0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41197,7 +41197,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.notification-context@0.0.487(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-WvEy3IkkGkdqrKLZvWO5ay+2LH4=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.notification-context/-/@teambit-ui-foundation.ui.notifications.notification-context-0.0.487.tgz}
+    resolution: {integrity: sha1-WvEy3IkkGkdqrKLZvWO5ay+2LH4=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.notifications.notification-context/-/@teambit-ui-foundation.ui.notifications.notification-context-0.0.487.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41210,7 +41210,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.notification-context@0.0.493(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-LqvYMR2i+ZTOqyqWpBg/tXCzdgU=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.notification-context/-/@teambit-ui-foundation.ui.notifications.notification-context-0.0.493.tgz}
+    resolution: {integrity: sha1-LqvYMR2i+ZTOqyqWpBg/tXCzdgU=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.notifications.notification-context/-/@teambit-ui-foundation.ui.notifications.notification-context-0.0.493.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41223,7 +41223,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.notification-context@0.0.496(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-x23R91AzUscSV2WS2yZC2LY8CHE=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.notification-context/-/@teambit-ui-foundation.ui.notifications.notification-context-0.0.496.tgz}
+    resolution: {integrity: sha1-x23R91AzUscSV2WS2yZC2LY8CHE=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.notifications.notification-context/-/@teambit-ui-foundation.ui.notifications.notification-context-0.0.496.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41236,7 +41236,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.store@0.0.486(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-ZQ4iOfpuzj+jE12XS3b51WELT7I=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.store/-/@teambit-ui-foundation.ui.notifications.store-0.0.486.tgz}
+    resolution: {integrity: sha1-ZQ4iOfpuzj+jE12XS3b51WELT7I=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.notifications.store/-/@teambit-ui-foundation.ui.notifications.store-0.0.486.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41248,7 +41248,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.store@0.0.492(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-8IWuSf9Qt6QHdudIbjqQ7IHiMFg=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.store/-/@teambit-ui-foundation.ui.notifications.store-0.0.492.tgz}
+    resolution: {integrity: sha1-8IWuSf9Qt6QHdudIbjqQ7IHiMFg=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.notifications.store/-/@teambit-ui-foundation.ui.notifications.store-0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41260,7 +41260,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.notifications.store@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-SciOZ58oyKDy8q/0nvQ4OpvuPz8=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.notifications.store/-/@teambit-ui-foundation.ui.notifications.store-0.0.495.tgz}
+    resolution: {integrity: sha1-SciOZ58oyKDy8q/0nvQ4OpvuPz8=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.notifications.store/-/@teambit-ui-foundation.ui.notifications.store-0.0.495.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41292,7 +41292,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.react-router.slot-router@0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
-    resolution: {integrity: sha1-uUc0/zKzRjSFXhWhBUDlDnIJuO0=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.react-router.slot-router/-/@teambit-ui-foundation.ui.react-router.slot-router-0.0.501.tgz}
+    resolution: {integrity: sha1-uUc0/zKzRjSFXhWhBUDlDnIJuO0=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.react-router.slot-router/-/@teambit-ui-foundation.ui.react-router.slot-router-0.0.501.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41312,7 +41312,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.react-router.use-query@0.0.496(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-rCJcyZss+uCe7COvKqfs0UQ0TME=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.react-router.use-query/-/@teambit-ui-foundation.ui.react-router.use-query-0.0.496.tgz}
+    resolution: {integrity: sha1-rCJcyZss+uCe7COvKqfs0UQ0TME=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.react-router.use-query/-/@teambit-ui-foundation.ui.react-router.use-query-0.0.496.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41432,7 +41432,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.tree.drawer@0.0.512(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-bU5bUChvqZ6FgR2iDflWJU+hU8U=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.tree.drawer/-/@teambit-ui-foundation.ui.tree.drawer-0.0.512.tgz}
+    resolution: {integrity: sha1-bU5bUChvqZ6FgR2iDflWJU+hU8U=, tarball: http://node-registry.v2.bit.cloud/@teambit/ui-foundation.ui.tree.drawer/-/@teambit-ui-foundation.ui.tree.drawer-0.0.512.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41567,7 +41567,7 @@ packages:
     dev: true
 
   /@teambit/workspace.ui.load-preview@0.0.489(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-e9OonGao9UxvvbCfsJKdGTPbXIg=, tarball: https://node-registry.bit.cloud/@teambit/workspace.ui.load-preview/-/@teambit-workspace.ui.load-preview-0.0.489.tgz}
+    resolution: {integrity: sha1-e9OonGao9UxvvbCfsJKdGTPbXIg=, tarball: http://node-registry.v2.bit.cloud/@teambit/workspace.ui.load-preview/-/@teambit-workspace.ui.load-preview-0.0.489.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41581,7 +41581,7 @@ packages:
     dev: false
 
   /@teambit/workspace.ui.load-preview@0.0.499(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-lvfO7zmO9ZnlI+NPWAFOW3ViZwo=, tarball: https://node-registry.bit.cloud/@teambit/workspace.ui.load-preview/-/@teambit-workspace.ui.load-preview-0.0.499.tgz}
+    resolution: {integrity: sha1-lvfO7zmO9ZnlI+NPWAFOW3ViZwo=, tarball: http://node-registry.v2.bit.cloud/@teambit/workspace.ui.load-preview/-/@teambit-workspace.ui.load-preview-0.0.499.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@testing-library/react': ^12.1.5
@@ -41615,7 +41615,7 @@ packages:
     dev: false
 
   /@teambit/workspace.ui.workspace-component-card@0.0.510(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-bO15xcj1TSQ5iEfw8QBu6GxTigM=, tarball: https://node-registry.bit.cloud/@teambit/workspace.ui.workspace-component-card/-/@teambit-workspace.ui.workspace-component-card-0.0.510.tgz}
+    resolution: {integrity: sha1-bO15xcj1TSQ5iEfw8QBu6GxTigM=, tarball: http://node-registry.v2.bit.cloud/@teambit/workspace.ui.workspace-component-card/-/@teambit-workspace.ui.workspace-component-card-0.0.510.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -68955,7 +68955,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.constants.storage@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-4fOXti4IhPVuW3fyq8NfYtlqT4mcBUt3587/3kBx2DAcAZE0FOrICpHyCOiUgr7q/0pKy7TZJQxxsL0PfzOwbA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.constants.storage/-/base-ui.constants.storage-1.0.0.tgz}
+    resolution: {integrity: sha512-4fOXti4IhPVuW3fyq8NfYtlqT4mcBUt3587/3kBx2DAcAZE0FOrICpHyCOiUgr7q/0pKy7TZJQxxsL0PfzOwbA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.constants.storage/-/base-ui.constants.storage-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.constants.storage/1.0.0
     name: '@teambit/base-ui.constants.storage'
     version: 1.0.0
@@ -68968,7 +68968,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.css-components.elevation@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-6hC8vHh0PmHU8fOUM81NXLML7rx9SYpzKkEMz1eS5sIrY/cFIdhLKupo01sARPVwcWTQ0VkVYI1fOO3Q4vi3yg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.elevation/-/base-ui.css-components.elevation-1.0.0.tgz}
+    resolution: {integrity: sha512-6hC8vHh0PmHU8fOUM81NXLML7rx9SYpzKkEMz1eS5sIrY/cFIdhLKupo01sARPVwcWTQ0VkVYI1fOO3Q4vi3yg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.elevation/-/base-ui.css-components.elevation-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.css-components.elevation/1.0.0
     name: '@teambit/base-ui.css-components.elevation'
     version: 1.0.0
@@ -68982,7 +68982,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.css-components.roundness@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-92TAw5Cs4wg2h+Ad9/XmY2p5yRlV8a4dIPL776A1OXw/JXR6NIePUl61VtCrW9v0EJanSJywBtka3AWG+PKOmg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.roundness/-/base-ui.css-components.roundness-1.0.0.tgz}
+    resolution: {integrity: sha512-92TAw5Cs4wg2h+Ad9/XmY2p5yRlV8a4dIPL776A1OXw/JXR6NIePUl61VtCrW9v0EJanSJywBtka3AWG+PKOmg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.roundness/-/base-ui.css-components.roundness-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.css-components.roundness/1.0.0
     name: '@teambit/base-ui.css-components.roundness'
     version: 1.0.0
@@ -68996,7 +68996,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.elements.icon@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-qaoHLbt6wNXzgST7N3oE+1hI/PttCzrSLQ9B7d/7yKKxUbHbhjoMX0+wViJxlQq3PYnb8LOHDzwvylfZoeBgKQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.elements.icon/-/base-ui.elements.icon-1.0.0.tgz}
+    resolution: {integrity: sha512-qaoHLbt6wNXzgST7N3oE+1hI/PttCzrSLQ9B7d/7yKKxUbHbhjoMX0+wViJxlQq3PYnb8LOHDzwvylfZoeBgKQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.elements.icon/-/base-ui.elements.icon-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.elements.icon/1.0.0
     name: '@teambit/base-ui.elements.icon'
     version: 1.0.0
@@ -69011,7 +69011,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.elements.image@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-33kB66RvIaSRipV7mwL/IMwwOEThFRF4myHPFBSaF8rXmmJLKInm6bN1dWZ77gKcRlOtwJWq/UJMStC/EWtksA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.elements.image/-/base-ui.elements.image-1.0.0.tgz}
+    resolution: {integrity: sha512-33kB66RvIaSRipV7mwL/IMwwOEThFRF4myHPFBSaF8rXmmJLKInm6bN1dWZ77gKcRlOtwJWq/UJMStC/EWtksA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.elements.image/-/base-ui.elements.image-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.elements.image/1.0.0
     name: '@teambit/base-ui.elements.image'
     version: 1.0.0
@@ -69026,7 +69026,7 @@ packages:
     dev: true
 
   registry.npmjs.org/@teambit/base-ui.graph.tree.indent@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-I1b8AryymAz574SX8FoVAwfCwPU6r0PMkJ6MvonSazXjYvG2ZBQmIlFb4/3O1d9p/aHiD82IF+D3nce6NJwdHQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.graph.tree.indent/-/base-ui.graph.tree.indent-1.0.0.tgz}
+    resolution: {integrity: sha512-I1b8AryymAz574SX8FoVAwfCwPU6r0PMkJ6MvonSazXjYvG2ZBQmIlFb4/3O1d9p/aHiD82IF+D3nce6NJwdHQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.graph.tree.indent/-/base-ui.graph.tree.indent-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.graph.tree.indent/1.0.0
     name: '@teambit/base-ui.graph.tree.indent'
     version: 1.0.0
@@ -69040,7 +69040,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.graph.tree.inflate-paths@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-GAsT6a06E6Loj0n3UlHpoynSLTD56IAGX3dspM4fq0H5JaOzEb88EGemhN2Ksk9C9MgzqpLzRNBttenJ6TnAyQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.graph.tree.inflate-paths/-/base-ui.graph.tree.inflate-paths-1.0.0.tgz}
+    resolution: {integrity: sha512-GAsT6a06E6Loj0n3UlHpoynSLTD56IAGX3dspM4fq0H5JaOzEb88EGemhN2Ksk9C9MgzqpLzRNBttenJ6TnAyQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.graph.tree.inflate-paths/-/base-ui.graph.tree.inflate-paths-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.graph.tree.inflate-paths/1.0.0
     name: '@teambit/base-ui.graph.tree.inflate-paths'
     version: 1.0.0
@@ -69056,7 +69056,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.graph.tree.recursive-tree@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-jPsjiwd51/yqQ/gj4nSHn2uX0bILV/5UdC0F5/WEpMb9IVNJaTmUAwZA9wAFIjydvH+fkWCT1c2Ua2/7xkvrdw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.graph.tree.recursive-tree/-/base-ui.graph.tree.recursive-tree-1.0.0.tgz}
+    resolution: {integrity: sha512-jPsjiwd51/yqQ/gj4nSHn2uX0bILV/5UdC0F5/WEpMb9IVNJaTmUAwZA9wAFIjydvH+fkWCT1c2Ua2/7xkvrdw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.graph.tree.recursive-tree/-/base-ui.graph.tree.recursive-tree-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.graph.tree.recursive-tree/1.0.0
     name: '@teambit/base-ui.graph.tree.recursive-tree'
     version: 1.0.0
@@ -69071,7 +69071,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.graph.tree.root-node@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-gMhF1QwT9L6Rbvuj5tUh9rav5szd0RymBrfOfDmeseexQ1YvYPwzTpuf9P5Kqr7VFvuaaSGtgHOJZTkEFKXzhw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.graph.tree.root-node/-/base-ui.graph.tree.root-node-1.0.0.tgz}
+    resolution: {integrity: sha512-gMhF1QwT9L6Rbvuj5tUh9rav5szd0RymBrfOfDmeseexQ1YvYPwzTpuf9P5Kqr7VFvuaaSGtgHOJZTkEFKXzhw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.graph.tree.root-node/-/base-ui.graph.tree.root-node-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.graph.tree.root-node/1.0.0
     name: '@teambit/base-ui.graph.tree.root-node'
     version: 1.0.0
@@ -69086,7 +69086,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.graph.tree.tree-context@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-2Z2eVFVYTl0xpAYMUDuWnz2eI6xlocmNqHAFGhcJKA7gQ0Wd8q7URISZ3gYS8dgj8p2v4B/MnVKHoFLtLQSeKQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.graph.tree.tree-context/-/base-ui.graph.tree.tree-context-1.0.0.tgz}
+    resolution: {integrity: sha512-2Z2eVFVYTl0xpAYMUDuWnz2eI6xlocmNqHAFGhcJKA7gQ0Wd8q7URISZ3gYS8dgj8p2v4B/MnVKHoFLtLQSeKQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.graph.tree.tree-context/-/base-ui.graph.tree.tree-context-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.graph.tree.tree-context/1.0.0
     name: '@teambit/base-ui.graph.tree.tree-context'
     version: 1.0.0
@@ -69100,7 +69100,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.hook.use-click-outside@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-We1J6M2/jBAAIN7/zilrIJKeGILSpkR7/FSSidsiacfm/SqIn+BMuse1GXvd4ThOhvAgFUUbj0fZ4NDyQhu3BQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.hook.use-click-outside/-/base-ui.hook.use-click-outside-1.0.0.tgz}
+    resolution: {integrity: sha512-We1J6M2/jBAAIN7/zilrIJKeGILSpkR7/FSSidsiacfm/SqIn+BMuse1GXvd4ThOhvAgFUUbj0fZ4NDyQhu3BQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.hook.use-click-outside/-/base-ui.hook.use-click-outside-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.hook.use-click-outside/1.0.0
     name: '@teambit/base-ui.hook.use-click-outside'
     version: 1.0.0
@@ -69114,7 +69114,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.input.checkbox.hidden@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-gGUqZs+n0F2EeJaSryGkNfE1MOslKdKqNveI6jgphoYhhQ2WEOiZaDtsxTKIAzi/tbnEe5kZlC+uAk0q7jo6Ug==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.input.checkbox.hidden/-/base-ui.input.checkbox.hidden-1.0.1.tgz}
+    resolution: {integrity: sha512-gGUqZs+n0F2EeJaSryGkNfE1MOslKdKqNveI6jgphoYhhQ2WEOiZaDtsxTKIAzi/tbnEe5kZlC+uAk0q7jo6Ug==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.input.checkbox.hidden/-/base-ui.input.checkbox.hidden-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.input.checkbox.hidden/1.0.1
     name: '@teambit/base-ui.input.checkbox.hidden'
     version: 1.0.1
@@ -69129,7 +69129,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.input.checkbox.indicator@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-yYnwY1ax6nF+HopiSmZe/4tPigdUb5CI2JstC67L+30fitfhtWDL1bO+A3OTJU62yV4XMGtALQbkulMDqazJwg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.input.checkbox.indicator/-/base-ui.input.checkbox.indicator-1.0.0.tgz}
+    resolution: {integrity: sha512-yYnwY1ax6nF+HopiSmZe/4tPigdUb5CI2JstC67L+30fitfhtWDL1bO+A3OTJU62yV4XMGtALQbkulMDqazJwg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.input.checkbox.indicator/-/base-ui.input.checkbox.indicator-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.input.checkbox.indicator/1.0.0
     name: '@teambit/base-ui.input.checkbox.indicator'
     version: 1.0.0
@@ -69144,7 +69144,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.input.checkbox.label@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-5TXD6JGVLxd8vcRZ/PeoyUVp9W20AQFzlamauZt0PGKaWNl7CrGiOsnCAl9wiDO2yWu/gPwelTI3ThjoaIv+rQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.input.checkbox.label/-/base-ui.input.checkbox.label-1.0.1.tgz}
+    resolution: {integrity: sha512-5TXD6JGVLxd8vcRZ/PeoyUVp9W20AQFzlamauZt0PGKaWNl7CrGiOsnCAl9wiDO2yWu/gPwelTI3ThjoaIv+rQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.input.checkbox.label/-/base-ui.input.checkbox.label-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.input.checkbox.label/1.0.1
     name: '@teambit/base-ui.input.checkbox.label'
     version: 1.0.1
@@ -69160,7 +69160,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.layout.breakpoints@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-F7+aHFncCH4iHtClKX9i7Yj6+SBQjQTQkrzxX9Jq4/r4QGEIVVbJ6Tjwa+abI2ef8Ww0fpPpLCP+ithPJWHQtA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.layout.breakpoints/-/base-ui.layout.breakpoints-1.0.0.tgz}
+    resolution: {integrity: sha512-F7+aHFncCH4iHtClKX9i7Yj6+SBQjQTQkrzxX9Jq4/r4QGEIVVbJ6Tjwa+abI2ef8Ww0fpPpLCP+ithPJWHQtA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.layout.breakpoints/-/base-ui.layout.breakpoints-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.layout.breakpoints/1.0.0
     name: '@teambit/base-ui.layout.breakpoints'
     version: 1.0.0
@@ -69174,7 +69174,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.layout.grid-component@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-CIqH04NFmVRkfFdA3MA94FJ6Z2PXETUBPyRneu9Aik1SQhQJsXUyoIoZHloL1/6K6B4F/TfESPVXn7hsPNzI3A==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.layout.grid-component/-/base-ui.layout.grid-component-1.0.0.tgz}
+    resolution: {integrity: sha512-CIqH04NFmVRkfFdA3MA94FJ6Z2PXETUBPyRneu9Aik1SQhQJsXUyoIoZHloL1/6K6B4F/TfESPVXn7hsPNzI3A==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.layout.grid-component/-/base-ui.layout.grid-component-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.layout.grid-component/1.0.0
     name: '@teambit/base-ui.layout.grid-component'
     version: 1.0.0
@@ -69190,7 +69190,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.layout.page-frame@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-X+lWlURlRu528ink+3e7eqQt866UMYGI3DdPC7FAJ3v1CW0p0+O95K+/mxNmYvQLtW4y2iJ+2rrv/el27d6/Xw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.layout.page-frame/-/base-ui.layout.page-frame-1.0.0.tgz}
+    resolution: {integrity: sha512-X+lWlURlRu528ink+3e7eqQt866UMYGI3DdPC7FAJ3v1CW0p0+O95K+/mxNmYvQLtW4y2iJ+2rrv/el27d6/Xw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.layout.page-frame/-/base-ui.layout.page-frame-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.layout.page-frame/1.0.0
     name: '@teambit/base-ui.layout.page-frame'
     version: 1.0.0
@@ -69204,7 +69204,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.loaders.loader-ribbon@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-qhCYlHvLy+U1E9a3kXMnZz7dba2PKMsputdJgE3PldsNG01gH0udyrPeOT6Re/fuWHfzXVU2zN6zDWwi+Pygdw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.loaders.loader-ribbon/-/base-ui.loaders.loader-ribbon-1.0.0.tgz}
+    resolution: {integrity: sha512-qhCYlHvLy+U1E9a3kXMnZz7dba2PKMsputdJgE3PldsNG01gH0udyrPeOT6Re/fuWHfzXVU2zN6zDWwi+Pygdw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.loaders.loader-ribbon/-/base-ui.loaders.loader-ribbon-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.loaders.loader-ribbon/1.0.0
     name: '@teambit/base-ui.loaders.loader-ribbon'
     version: 1.0.0
@@ -69219,7 +69219,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.routing.compare-url@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-57vlN0+yBZFGsX5JLo237OQ3Bu8eeJ+vEVbeQuioJsuvS0zEhI8EyobYssEfyaCMsbpDpbpL6HkfSvuQB0Vtmw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.compare-url/-/base-ui.routing.compare-url-1.0.0.tgz}
+    resolution: {integrity: sha512-57vlN0+yBZFGsX5JLo237OQ3Bu8eeJ+vEVbeQuioJsuvS0zEhI8EyobYssEfyaCMsbpDpbpL6HkfSvuQB0Vtmw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.compare-url/-/base-ui.routing.compare-url-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.routing.compare-url/1.0.0
     name: '@teambit/base-ui.routing.compare-url'
     version: 1.0.0
@@ -69233,7 +69233,7 @@ packages:
       url-parse: 1.5.1
 
   registry.npmjs.org/@teambit/base-ui.routing.link@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-kJkoNmZqsrXWFyDBM8DXH5IKa7GumBvm9l7mcs8kjawFmBtP+LnunV/KJozwQtuNTjmizMYwq8+6IWAV365RLA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.link/-/base-ui.routing.link-1.0.0.tgz}
+    resolution: {integrity: sha512-kJkoNmZqsrXWFyDBM8DXH5IKa7GumBvm9l7mcs8kjawFmBtP+LnunV/KJozwQtuNTjmizMYwq8+6IWAV365RLA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.link/-/base-ui.routing.link-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.routing.link/1.0.0
     name: '@teambit/base-ui.routing.link'
     version: 1.0.0
@@ -69249,7 +69249,7 @@ packages:
     dev: true
 
   registry.npmjs.org/@teambit/base-ui.routing.native-link@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-yrkm02UxkeCBWyLQC9MG7Jl6JbQrsIBz+9c57mZqAjEcVvQWY2mB3lEY+pNZAuIyOg55/DTqKR1bKQKl6ZAdzg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.native-link/-/base-ui.routing.native-link-1.0.0.tgz}
+    resolution: {integrity: sha512-yrkm02UxkeCBWyLQC9MG7Jl6JbQrsIBz+9c57mZqAjEcVvQWY2mB3lEY+pNZAuIyOg55/DTqKR1bKQKl6ZAdzg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.native-link/-/base-ui.routing.native-link-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.routing.native-link/1.0.0
     name: '@teambit/base-ui.routing.native-link'
     version: 1.0.0
@@ -69262,7 +69262,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.routing.native-nav-link@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-elXAzsYT7e7Y6/2n5Xv0iYS48ITG2KDBcrtUifxSlVob3zyRbaX18M6wPrHyD9z9XXwqyxEJreTKL1Gt9IdEaA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.native-nav-link/-/base-ui.routing.native-nav-link-1.0.0.tgz}
+    resolution: {integrity: sha512-elXAzsYT7e7Y6/2n5Xv0iYS48ITG2KDBcrtUifxSlVob3zyRbaX18M6wPrHyD9z9XXwqyxEJreTKL1Gt9IdEaA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.native-nav-link/-/base-ui.routing.native-nav-link-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.routing.native-nav-link/1.0.0
     name: '@teambit/base-ui.routing.native-nav-link'
     version: 1.0.0
@@ -69279,7 +69279,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.routing.nav-link@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-B6r0oNgTs/tR7v8MiOrwCQko/Vpjb1Zo/XmcgGMYEFe7UpTeD29pTM8DvCw9QU/VOnRnurUVGbrNfkrKfDrXdw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.nav-link/-/base-ui.routing.nav-link-1.0.0.tgz}
+    resolution: {integrity: sha512-B6r0oNgTs/tR7v8MiOrwCQko/Vpjb1Zo/XmcgGMYEFe7UpTeD29pTM8DvCw9QU/VOnRnurUVGbrNfkrKfDrXdw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.nav-link/-/base-ui.routing.nav-link-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.routing.nav-link/1.0.0
     name: '@teambit/base-ui.routing.nav-link'
     version: 1.0.0
@@ -69295,7 +69295,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.routing.routing-provider@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-18qOybF12VyqLHbbrHGuzgZx3YRMahiedOMkSDO7fOHQUqCUok0c8LkY3BEenaL3nK0Buy1ih3wNT9GiSWy2MA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.routing-provider/-/base-ui.routing.routing-provider-1.0.0.tgz}
+    resolution: {integrity: sha512-18qOybF12VyqLHbbrHGuzgZx3YRMahiedOMkSDO7fOHQUqCUok0c8LkY3BEenaL3nK0Buy1ih3wNT9GiSWy2MA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.routing-provider/-/base-ui.routing.routing-provider-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.routing.routing-provider/1.0.0
     name: '@teambit/base-ui.routing.routing-provider'
     version: 1.0.0
@@ -69311,7 +69311,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.styles.flex-center@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-kO9scMrQ5AI2+vi9Xc/VMQryBhlcR+RAAsM32mmPQ6cEbE4R1clN9SIASj2BZ2gTca+nQI37+sFvXdefviz4iw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.styles.flex-center/-/base-ui.styles.flex-center-1.0.0.tgz}
+    resolution: {integrity: sha512-kO9scMrQ5AI2+vi9Xc/VMQryBhlcR+RAAsM32mmPQ6cEbE4R1clN9SIASj2BZ2gTca+nQI37+sFvXdefviz4iw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.styles.flex-center/-/base-ui.styles.flex-center-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.styles.flex-center/1.0.0
     name: '@teambit/base-ui.styles.flex-center'
     version: 1.0.0
@@ -69325,7 +69325,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.abs-container@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-Gzoj5H/OeIetATQt/zf9qmW2mqEovCNbuqR5JE9Isovjt6oHhXnB0tUC2+bXBn7OIiLySTOg63R7CymWC43w6g==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.abs-container/-/base-ui.surfaces.abs-container-1.0.0.tgz}
+    resolution: {integrity: sha512-Gzoj5H/OeIetATQt/zf9qmW2mqEovCNbuqR5JE9Isovjt6oHhXnB0tUC2+bXBn7OIiLySTOg63R7CymWC43w6g==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.abs-container/-/base-ui.surfaces.abs-container-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.abs-container/1.0.0
     name: '@teambit/base-ui.surfaces.abs-container'
     version: 1.0.0
@@ -69341,7 +69341,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.background@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-VHPPrzqkHUiYkbief6QtxCbTXUcCh69xMtkbrAsIJXZjrAAN1GhNX2PrErEEaCRIXW1joo06zekyth0+vT1HUg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.background/-/base-ui.surfaces.background-1.0.1.tgz}
+    resolution: {integrity: sha512-VHPPrzqkHUiYkbief6QtxCbTXUcCh69xMtkbrAsIJXZjrAAN1GhNX2PrErEEaCRIXW1joo06zekyth0+vT1HUg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.background/-/base-ui.surfaces.background-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.background/1.0.1
     name: '@teambit/base-ui.surfaces.background'
     version: 1.0.1
@@ -69355,7 +69355,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.card@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-taJIr7LqtuyIrERv9FeT3+91mSrY8WF+AbtfHttb6J8pE4xV0FaqxVXbKT9wRw06XDi5RUo6LXKMZOldkgR8Gw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.card/-/base-ui.surfaces.card-1.0.1.tgz}
+    resolution: {integrity: sha512-taJIr7LqtuyIrERv9FeT3+91mSrY8WF+AbtfHttb6J8pE4xV0FaqxVXbKT9wRw06XDi5RUo6LXKMZOldkgR8Gw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.card/-/base-ui.surfaces.card-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.card/1.0.1
     name: '@teambit/base-ui.surfaces.card'
     version: 1.0.1
@@ -69373,7 +69373,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.drawer@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-4eSIGZGllXif9vXmZjMbV++HjA9EU2MzHL9gud+4NXZgj8JCoplqbvkk1Ptbhvs4BLDwPuujY28+dlAosOpXXQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.drawer/-/base-ui.surfaces.drawer-1.0.0.tgz}
+    resolution: {integrity: sha512-4eSIGZGllXif9vXmZjMbV++HjA9EU2MzHL9gud+4NXZgj8JCoplqbvkk1Ptbhvs4BLDwPuujY28+dlAosOpXXQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.drawer/-/base-ui.surfaces.drawer-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.drawer/1.0.0
     name: '@teambit/base-ui.surfaces.drawer'
     version: 1.0.0
@@ -69391,7 +69391,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-sbN1AgGvc3lzoeWg7KQrYD9lCa4V9s0EctfZSrPCwy/UcHGePgMipBOWJkcNwuq8GGhzSTzH8rP8McWCLUGdew==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/-/base-ui.surfaces.split-pane.hover-splitter-1.0.0.tgz}
+    resolution: {integrity: sha512-sbN1AgGvc3lzoeWg7KQrYD9lCa4V9s0EctfZSrPCwy/UcHGePgMipBOWJkcNwuq8GGhzSTzH8rP8McWCLUGdew==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/-/base-ui.surfaces.split-pane.hover-splitter-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter/1.0.0
     name: '@teambit/base-ui.surfaces.split-pane.hover-splitter'
     version: 1.0.0
@@ -69407,7 +69407,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.layout@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-Ib4sVeQYp3NU8zz6lhhvQ8B9AHb8bSGDaG5qZP36bXI8N+b9a0G+gCX2kFFmFPuAx74HOYnKz3B5xUPH5yTT0Q==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.layout/-/base-ui.surfaces.split-pane.layout-1.0.0.tgz}
+    resolution: {integrity: sha512-Ib4sVeQYp3NU8zz6lhhvQ8B9AHb8bSGDaG5qZP36bXI8N+b9a0G+gCX2kFFmFPuAx74HOYnKz3B5xUPH5yTT0Q==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.layout/-/base-ui.surfaces.split-pane.layout-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.layout/1.0.0
     name: '@teambit/base-ui.surfaces.split-pane.layout'
     version: 1.0.0
@@ -69421,7 +69421,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.pane@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-OUzOlgCzt5pkAN9FcoXzlB+TUuH+5+Hh0EE/7X488rFTDHS6lW3pEgKPsqg1XUw30ivthOdVq7cwnpnB1seRhw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.pane/-/base-ui.surfaces.split-pane.pane-1.0.0.tgz}
+    resolution: {integrity: sha512-OUzOlgCzt5pkAN9FcoXzlB+TUuH+5+Hh0EE/7X488rFTDHS6lW3pEgKPsqg1XUw30ivthOdVq7cwnpnB1seRhw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.pane/-/base-ui.surfaces.split-pane.pane-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.pane/1.0.0
     name: '@teambit/base-ui.surfaces.split-pane.pane'
     version: 1.0.0
@@ -69437,7 +69437,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.split-pane@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-Zomx0m2Gsf9Dl+A3YwyZy1qJO3q6LtI7BTeEWsBLrub9fO0IXMTMjelsK918oAZ3xJ+LOXnEgYYVh+A9CQm2Qg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.split-pane/-/base-ui.surfaces.split-pane.split-pane-1.0.0.tgz}
+    resolution: {integrity: sha512-Zomx0m2Gsf9Dl+A3YwyZy1qJO3q6LtI7BTeEWsBLrub9fO0IXMTMjelsK918oAZ3xJ+LOXnEgYYVh+A9CQm2Qg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.split-pane/-/base-ui.surfaces.split-pane.split-pane-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.split-pane/1.0.0
     name: '@teambit/base-ui.surfaces.split-pane.split-pane'
     version: 1.0.0
@@ -69455,7 +69455,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.splitter@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-5/oGHEUOQQnQUi2911fLb/rdFLLDoMy1G4fQ4DNkqoHcahi1a26tCtKlV+7FAI1LsFdk0V+wRp6WY+kX+Qbsxw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.splitter/-/base-ui.surfaces.split-pane.splitter-1.0.0.tgz}
+    resolution: {integrity: sha512-5/oGHEUOQQnQUi2911fLb/rdFLLDoMy1G4fQ4DNkqoHcahi1a26tCtKlV+7FAI1LsFdk0V+wRp6WY+kX+Qbsxw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.splitter/-/base-ui.surfaces.split-pane.splitter-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.splitter/1.0.0
     name: '@teambit/base-ui.surfaces.split-pane.splitter'
     version: 1.0.0
@@ -69470,7 +69470,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.text.heading@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-P6N4Mx5YUuCnkVXwpG5UK2/5b56aXJCHq2LRiqambZM/lZbLX2qO+CNolRjYztRf2cXea6/ToUdjAn+BPcwXXA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.heading/-/base-ui.text.heading-1.0.1.tgz}
+    resolution: {integrity: sha512-P6N4Mx5YUuCnkVXwpG5UK2/5b56aXJCHq2LRiqambZM/lZbLX2qO+CNolRjYztRf2cXea6/ToUdjAn+BPcwXXA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.heading/-/base-ui.text.heading-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.text.heading/1.0.1
     name: '@teambit/base-ui.text.heading'
     version: 1.0.1
@@ -69484,7 +69484,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.text.muted-text@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-xawuhA+NqttmKRqj0xoDqNAVCmryIUQBpJjIp8LC/0iT7Xo/QAcm5EmrpalCFLhNbcUnQzPK/bwXETz+jFAcrA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.muted-text/-/base-ui.text.muted-text-1.0.1.tgz}
+    resolution: {integrity: sha512-xawuhA+NqttmKRqj0xoDqNAVCmryIUQBpJjIp8LC/0iT7Xo/QAcm5EmrpalCFLhNbcUnQzPK/bwXETz+jFAcrA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.muted-text/-/base-ui.text.muted-text-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.text.muted-text/1.0.1
     name: '@teambit/base-ui.text.muted-text'
     version: 1.0.1
@@ -69499,7 +69499,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.text.paragraph@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-cs1ugxwYUCTFBNF+QSlq206u5ZcfJts3LluDO42hi5R1iQ/o1lyhQhmQ9VgTWE1mXuwGrSzkJ02/S7vigxTzJg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.paragraph/-/base-ui.text.paragraph-1.0.1.tgz}
+    resolution: {integrity: sha512-cs1ugxwYUCTFBNF+QSlq206u5ZcfJts3LluDO42hi5R1iQ/o1lyhQhmQ9VgTWE1mXuwGrSzkJ02/S7vigxTzJg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.paragraph/-/base-ui.text.paragraph-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.text.paragraph/1.0.1
     name: '@teambit/base-ui.text.paragraph'
     version: 1.0.1
@@ -69516,7 +69516,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.text.text-sizes@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-mCoVLxG3Hm4hgeHJeNnde/4YxpUTvNPNsKbGozErigUrBTf5cKFvLnDYXlEzGOGwNrs9hqIG/nmm3um9E9/5bg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.text-sizes/-/base-ui.text.text-sizes-1.0.0.tgz}
+    resolution: {integrity: sha512-mCoVLxG3Hm4hgeHJeNnde/4YxpUTvNPNsKbGozErigUrBTf5cKFvLnDYXlEzGOGwNrs9hqIG/nmm3um9E9/5bg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.text-sizes/-/base-ui.text.text-sizes-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.text.text-sizes/1.0.0
     name: '@teambit/base-ui.text.text-sizes'
     version: 1.0.0
@@ -69530,7 +69530,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.text.themed-text@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-YG/xgNwXuFkTDopsmThwea4zHjHZ5yRlN43s81kdqKAjqouHEcNZzte39A/ZA398Cx+TUrlwbKuBHxMMiijv2w==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.themed-text/-/base-ui.text.themed-text-1.0.1.tgz}
+    resolution: {integrity: sha512-YG/xgNwXuFkTDopsmThwea4zHjHZ5yRlN43s81kdqKAjqouHEcNZzte39A/ZA398Cx+TUrlwbKuBHxMMiijv2w==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.text.themed-text/-/base-ui.text.themed-text-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.text.themed-text/1.0.1
     name: '@teambit/base-ui.text.themed-text'
     version: 1.0.1
@@ -69545,7 +69545,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.theme.accent-color@1.1.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-IASK1+zcJmULcWGbw57lm8kFH/SkKRZEsqYj/QaxyIKjvnrS/uBXUNDGRqgmkR/IC3Fl8rQlbFxELwASTiSNZg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.accent-color/-/base-ui.theme.accent-color-1.1.0.tgz}
+    resolution: {integrity: sha512-IASK1+zcJmULcWGbw57lm8kFH/SkKRZEsqYj/QaxyIKjvnrS/uBXUNDGRqgmkR/IC3Fl8rQlbFxELwASTiSNZg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.accent-color/-/base-ui.theme.accent-color-1.1.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.accent-color/1.1.0
     name: '@teambit/base-ui.theme.accent-color'
     version: 1.1.0
@@ -69560,7 +69560,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.theme.brand-definition@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-1IapashD5oxvRsw5On5eHzx3d4Cf2+u+ajb31ATcnFfaGVEvC/V3bFQ6t3VNnyI2ewOYiEuxGJOboxfZi7M+IA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.brand-definition/-/base-ui.theme.brand-definition-1.0.0.tgz}
+    resolution: {integrity: sha512-1IapashD5oxvRsw5On5eHzx3d4Cf2+u+ajb31ATcnFfaGVEvC/V3bFQ6t3VNnyI2ewOYiEuxGJOboxfZi7M+IA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.brand-definition/-/base-ui.theme.brand-definition-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.brand-definition/1.0.0
     name: '@teambit/base-ui.theme.brand-definition'
     version: 1.0.0
@@ -69573,7 +69573,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.color-definition@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-9JYKPLhxJhsPfA4PkSvoWGlQEb2dlG2uWiCxQuKoRVzM2YivIfEv63BMO8/4xnvGtJsPR/lOrBKDKahjN6jS8g==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.color-definition/-/base-ui.theme.color-definition-1.0.1.tgz}
+    resolution: {integrity: sha512-9JYKPLhxJhsPfA4PkSvoWGlQEb2dlG2uWiCxQuKoRVzM2YivIfEv63BMO8/4xnvGtJsPR/lOrBKDKahjN6jS8g==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.color-definition/-/base-ui.theme.color-definition-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.color-definition/1.0.1
     name: '@teambit/base-ui.theme.color-definition'
     version: 1.0.1
@@ -69587,7 +69587,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.colors@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-3lKvT0eFMwkOGydNHu8TU2xlRHWHQVzx2Uxk50sICGlIjAcEyIZ1E655qvF8B/KPSES81rj/nozWklslhVBMeQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.colors/-/base-ui.theme.colors-1.0.0.tgz}
+    resolution: {integrity: sha512-3lKvT0eFMwkOGydNHu8TU2xlRHWHQVzx2Uxk50sICGlIjAcEyIZ1E655qvF8B/KPSES81rj/nozWklslhVBMeQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.colors/-/base-ui.theme.colors-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.colors/1.0.0
     name: '@teambit/base-ui.theme.colors'
     version: 1.0.0
@@ -69600,7 +69600,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.dark-theme@1.0.2(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-Y/fLbxyb8XW7qZ4wAgl2cEmWXceOfaXN/GcfrVZEBqmM6YerlAkNq9RW3bcN9OuhSVekDjApwbDtELsE9WStdA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.dark-theme/-/base-ui.theme.dark-theme-1.0.2.tgz}
+    resolution: {integrity: sha512-Y/fLbxyb8XW7qZ4wAgl2cEmWXceOfaXN/GcfrVZEBqmM6YerlAkNq9RW3bcN9OuhSVekDjApwbDtELsE9WStdA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.dark-theme/-/base-ui.theme.dark-theme-1.0.2.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.dark-theme/1.0.2
     name: '@teambit/base-ui.theme.dark-theme'
     version: 1.0.2
@@ -69614,7 +69614,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.fonts.book@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-yc8/+nkHE8XZs+boxJ0jc8PXMy6bCLpCfDMTuvweD1LshIFhOK01Eiv1Uxxo8IyD8abUZt4gi1LRMKwVqlGnjw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.fonts.book/-/base-ui.theme.fonts.book-1.0.0.tgz}
+    resolution: {integrity: sha512-yc8/+nkHE8XZs+boxJ0jc8PXMy6bCLpCfDMTuvweD1LshIFhOK01Eiv1Uxxo8IyD8abUZt4gi1LRMKwVqlGnjw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.fonts.book/-/base-ui.theme.fonts.book-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.fonts.book/1.0.0
     name: '@teambit/base-ui.theme.fonts.book'
     version: 1.0.0
@@ -69627,7 +69627,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.fonts.roboto@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-a1DUqAJDdyqGIX4s87zW0unmmlvNI+U1vNT2zgm4hfoAQayOFQHwUlA6lRfu/fomyXYFsKhWNwhSu0lIhNsmqA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.fonts.roboto/-/base-ui.theme.fonts.roboto-1.0.0.tgz}
+    resolution: {integrity: sha512-a1DUqAJDdyqGIX4s87zW0unmmlvNI+U1vNT2zgm4hfoAQayOFQHwUlA6lRfu/fomyXYFsKhWNwhSu0lIhNsmqA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.fonts.roboto/-/base-ui.theme.fonts.roboto-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.fonts.roboto/1.0.0
     name: '@teambit/base-ui.theme.fonts.roboto'
     version: 1.0.0
@@ -69640,7 +69640,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.heading-margin-definition@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-gPKAXOWOlBqsQ88z15yOffJOwV1nqtnSTiF/a00OUoL/Pm41yATnzM+CpxaKT4g6LFfoQvnZJHVPKQ/u3loDoA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.heading-margin-definition/-/base-ui.theme.heading-margin-definition-1.0.0.tgz}
+    resolution: {integrity: sha512-gPKAXOWOlBqsQ88z15yOffJOwV1nqtnSTiF/a00OUoL/Pm41yATnzM+CpxaKT4g6LFfoQvnZJHVPKQ/u3loDoA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.heading-margin-definition/-/base-ui.theme.heading-margin-definition-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.heading-margin-definition/1.0.0
     name: '@teambit/base-ui.theme.heading-margin-definition'
     version: 1.0.0
@@ -69653,7 +69653,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.shadow-definition@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-z58KOqj95gjmW48IK53NMlp/NZKhJ3iSQnrFCJ1d46XmimfIe2oQdxFW/B69W+Dc8AyM1ES/pbqLVAmE38uxAw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.shadow-definition/-/base-ui.theme.shadow-definition-1.0.0.tgz}
+    resolution: {integrity: sha512-z58KOqj95gjmW48IK53NMlp/NZKhJ3iSQnrFCJ1d46XmimfIe2oQdxFW/B69W+Dc8AyM1ES/pbqLVAmE38uxAw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.shadow-definition/-/base-ui.theme.shadow-definition-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.shadow-definition/1.0.0
     name: '@teambit/base-ui.theme.shadow-definition'
     version: 1.0.0
@@ -69666,7 +69666,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.size-definition@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-cOexDIzZvG37G76bn0P6SPfR68UKh4ZlH10fZKJsBcIEs4s9Ne5+zPqhDyjgKCHZVOqIj/0I4EVBFIb8o06L2w==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.size-definition/-/base-ui.theme.size-definition-1.0.0.tgz}
+    resolution: {integrity: sha512-cOexDIzZvG37G76bn0P6SPfR68UKh4ZlH10fZKJsBcIEs4s9Ne5+zPqhDyjgKCHZVOqIj/0I4EVBFIb8o06L2w==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.size-definition/-/base-ui.theme.size-definition-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.size-definition/1.0.0
     name: '@teambit/base-ui.theme.size-definition'
     version: 1.0.0
@@ -69679,7 +69679,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.theme.sizes@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-A2PoEhZ/8GYSeypqIMGK0Hu/bcpfDdquxQtkXZ34bIpXdYaYGn0tHIJTAuxJTInWM+qLMBAHQ32p3qkm86IuDQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.sizes/-/base-ui.theme.sizes-1.0.0.tgz}
+    resolution: {integrity: sha512-A2PoEhZ/8GYSeypqIMGK0Hu/bcpfDdquxQtkXZ34bIpXdYaYGn0tHIJTAuxJTInWM+qLMBAHQ32p3qkm86IuDQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.sizes/-/base-ui.theme.sizes-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.sizes/1.0.0
     name: '@teambit/base-ui.theme.sizes'
     version: 1.0.0
@@ -69693,7 +69693,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.theme.theme-provider@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-PywTliIBJswoOi8LU4HT8BI9dR6/OEZh7nej4Nvyv7U5alVKIgUbSF+whl8vprVjyrDDVJ3QtSdwujvbPhmmAw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.theme-provider/-/base-ui.theme.theme-provider-1.0.1.tgz}
+    resolution: {integrity: sha512-PywTliIBJswoOi8LU4HT8BI9dR6/OEZh7nej4Nvyv7U5alVKIgUbSF+whl8vprVjyrDDVJ3QtSdwujvbPhmmAw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.theme.theme-provider/-/base-ui.theme.theme-provider-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.theme.theme-provider/1.0.1
     name: '@teambit/base-ui.theme.theme-provider'
     version: 1.0.1
@@ -69713,7 +69713,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.utils.composer@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-2w+T+WdEJWxWbGcqRueoww08xeDrPyWxDnWFho4N7WsxKS6zaHp/u29b18KV34VDJV9hdHcrXzhUoaLXd8pFSA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.composer/-/base-ui.utils.composer-1.0.0.tgz}
+    resolution: {integrity: sha512-2w+T+WdEJWxWbGcqRueoww08xeDrPyWxDnWFho4N7WsxKS6zaHp/u29b18KV34VDJV9hdHcrXzhUoaLXd8pFSA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.composer/-/base-ui.utils.composer-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.utils.composer/1.0.0
     name: '@teambit/base-ui.utils.composer'
     version: 1.0.0
@@ -69727,7 +69727,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.utils.is-browser@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-xvMmDLJFXqO0WwEYtM+zipMFQ7yaQLxDWmUynehfrBERSA8ZaeVfR8DiTPV/X3nRM/OD2Cym4f6UZPhcXLXJeg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.is-browser/-/base-ui.utils.is-browser-1.0.0.tgz}
+    resolution: {integrity: sha512-xvMmDLJFXqO0WwEYtM+zipMFQ7yaQLxDWmUynehfrBERSA8ZaeVfR8DiTPV/X3nRM/OD2Cym4f6UZPhcXLXJeg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.is-browser/-/base-ui.utils.is-browser-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.utils.is-browser/1.0.0
     name: '@teambit/base-ui.utils.is-browser'
     version: 1.0.0
@@ -69740,7 +69740,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-cuXL6MNfP7XPJtJZUVUCj50JJpzF/+pS0RRlnWE1B/rNB9tKyu+QfdZQ+kmSAGwQMT1ZfTufo50Gow/suzZavw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.string.affix/-/base-ui.utils.string.affix-1.0.0.tgz}
+    resolution: {integrity: sha512-cuXL6MNfP7XPJtJZUVUCj50JJpzF/+pS0RRlnWE1B/rNB9tKyu+QfdZQ+kmSAGwQMT1ZfTufo50Gow/suzZavw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.string.affix/-/base-ui.utils.string.affix-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.utils.string.affix/1.0.0
     name: '@teambit/base-ui.utils.string.affix'
     version: 1.0.0
@@ -69754,7 +69754,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.utils.sub-paths@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-SZiCFSzGezESxWl0m4I3WJfX0pmVgjcobOhPL4tGlCmXHqdICQ69nExY7XJsjvNJ57H54UnF/DNEBaSZv2FBdQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.sub-paths/-/base-ui.utils.sub-paths-1.0.0.tgz}
+    resolution: {integrity: sha512-SZiCFSzGezESxWl0m4I3WJfX0pmVgjcobOhPL4tGlCmXHqdICQ69nExY7XJsjvNJ57H54UnF/DNEBaSZv2FBdQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.utils.sub-paths/-/base-ui.utils.sub-paths-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.utils.sub-paths/1.0.0
     name: '@teambit/base-ui.utils.sub-paths'
     version: 1.0.0
@@ -69769,7 +69769,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-ku7UpvjuRW6hu5Uz01g0tBa6hgArnF2WpgotayCe5LL2GBoNs0KTGRPoa16zFVtqmt21eWxIKrZZq4TvL1ZsoQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/component.instructions.exporting-components/-/component.instructions.exporting-components-0.0.6.tgz}
+    resolution: {integrity: sha512-ku7UpvjuRW6hu5Uz01g0tBa6hgArnF2WpgotayCe5LL2GBoNs0KTGRPoa16zFVtqmt21eWxIKrZZq4TvL1ZsoQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/component.instructions.exporting-components/-/component.instructions.exporting-components-0.0.6.tgz}
     id: registry.npmjs.org/@teambit/component.instructions.exporting-components/0.0.6
     name: '@teambit/component.instructions.exporting-components'
     version: 0.0.6
@@ -69787,7 +69787,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/design.theme.icons-font@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-dCfQMPt3JfXboNOf21tM23kjsZkj6lW8apc4lJerC9vOn5TjU22PgC68SQ7xgF276rjIC896DVwGzsJijwjWpw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/design.theme.icons-font/-/design.theme.icons-font-1.0.0.tgz}
+    resolution: {integrity: sha512-dCfQMPt3JfXboNOf21tM23kjsZkj6lW8apc4lJerC9vOn5TjU22PgC68SQ7xgF276rjIC896DVwGzsJijwjWpw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/design.theme.icons-font/-/design.theme.icons-font-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/design.theme.icons-font/1.0.0
     name: '@teambit/design.theme.icons-font'
     version: 1.0.0
@@ -69801,7 +69801,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/design.ui.styles.ellipsis@0.0.344(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-SwTlVagmcCvedxD9hrq+1pt9MxkYY+GfYAyF4BUsTjKYAv37ZqOX8dqNgmkKhKlTBXSAw70rfGDQ5BBE8Ptipw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/design.ui.styles.ellipsis/-/design.ui.styles.ellipsis-0.0.344.tgz}
+    resolution: {integrity: sha512-SwTlVagmcCvedxD9hrq+1pt9MxkYY+GfYAyF4BUsTjKYAv37ZqOX8dqNgmkKhKlTBXSAw70rfGDQ5BBE8Ptipw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/design.ui.styles.ellipsis/-/design.ui.styles.ellipsis-0.0.344.tgz}
     id: registry.npmjs.org/@teambit/design.ui.styles.ellipsis/0.0.344
     name: '@teambit/design.ui.styles.ellipsis'
     version: 0.0.344
@@ -69817,7 +69817,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-5XbZTdEgwo05Qsu7+NO635JU6yRS6Z6fKwQGg/zjbOTouetsyeXgmu01NMAAEyEYFZvyjxZE1RRoIA9hx7H1zw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.theme.theme-compositions/-/documenter.theme.theme-compositions-4.1.1.tgz}
+    resolution: {integrity: sha512-5XbZTdEgwo05Qsu7+NO635JU6yRS6Z6fKwQGg/zjbOTouetsyeXgmu01NMAAEyEYFZvyjxZE1RRoIA9hx7H1zw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.theme.theme-compositions/-/documenter.theme.theme-compositions-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.theme.theme-compositions/4.1.1
     name: '@teambit/documenter.theme.theme-compositions'
     version: 4.1.1
@@ -69832,7 +69832,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/documenter.theme.theme-context@4.0.3(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-y3A4sldyzVLvaOQX0rOg9LAVWUx1OwjzIiBCyAwiNSTTsl42emPChOWePDGycBkN+fPkQVokAUKimqMk/h/aNw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.theme.theme-context/-/documenter.theme.theme-context-4.0.3.tgz}
+    resolution: {integrity: sha512-y3A4sldyzVLvaOQX0rOg9LAVWUx1OwjzIiBCyAwiNSTTsl42emPChOWePDGycBkN+fPkQVokAUKimqMk/h/aNw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.theme.theme-context/-/documenter.theme.theme-context-4.0.3.tgz}
     id: registry.npmjs.org/@teambit/documenter.theme.theme-context/4.0.3
     name: '@teambit/documenter.theme.theme-context'
     version: 4.0.3
@@ -69848,7 +69848,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/documenter.ui.consumable-link@4.0.3(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-htTNbT54hIBaF7sCXMLus56Rw3AfZpJwgS1B2K8UQg4hBN93/iEFAP6ZOhfR9xYoA7ejImhdxyMUxYJmrwPF2w==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.consumable-link/-/documenter.ui.consumable-link-4.0.3.tgz}
+    resolution: {integrity: sha512-htTNbT54hIBaF7sCXMLus56Rw3AfZpJwgS1B2K8UQg4hBN93/iEFAP6ZOhfR9xYoA7ejImhdxyMUxYJmrwPF2w==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.consumable-link/-/documenter.ui.consumable-link-4.0.3.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.consumable-link/4.0.3
     name: '@teambit/documenter.ui.consumable-link'
     version: 4.0.3
@@ -69866,7 +69866,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.copied-message@4.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-gbfQTP1HRL5bkg1+mc94UTrGgI6tFkR4h7fkgQuxH+53JOLF6odEwLYhfJ2qZFju5dtL1Ag0rsCIGdeM9fP04A==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.copied-message/-/documenter.ui.copied-message-4.0.1.tgz}
+    resolution: {integrity: sha512-gbfQTP1HRL5bkg1+mc94UTrGgI6tFkR4h7fkgQuxH+53JOLF6odEwLYhfJ2qZFju5dtL1Ag0rsCIGdeM9fP04A==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.copied-message/-/documenter.ui.copied-message-4.0.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.copied-message/4.0.1
     name: '@teambit/documenter.ui.copied-message'
     version: 4.0.1
@@ -69881,7 +69881,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.copied-message@4.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-PbXQD3l6iydMLDoWtOTNj9HBpgUMK2melalxXRAAudCwG5Tk0cdWMAgKOLIa8lT7ObMBUcdy9Ed7LCcIWEOIQg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.copied-message/-/documenter.ui.copied-message-4.1.1.tgz}
+    resolution: {integrity: sha512-PbXQD3l6iydMLDoWtOTNj9HBpgUMK2melalxXRAAudCwG5Tk0cdWMAgKOLIa8lT7ObMBUcdy9Ed7LCcIWEOIQg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.copied-message/-/documenter.ui.copied-message-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.copied-message/4.1.1
     name: '@teambit/documenter.ui.copied-message'
     version: 4.1.1
@@ -69896,7 +69896,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.copy-box@4.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-G1RaI94h1TuMe+wpBOUnLhP82/LNV1QY5IyFqLbarYtRsddhQePNu+R7PmKhKBwbPHPyAbeFr6qWVybUXDbvXw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.copy-box/-/documenter.ui.copy-box-4.0.1.tgz}
+    resolution: {integrity: sha512-G1RaI94h1TuMe+wpBOUnLhP82/LNV1QY5IyFqLbarYtRsddhQePNu+R7PmKhKBwbPHPyAbeFr6qWVybUXDbvXw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.copy-box/-/documenter.ui.copy-box-4.0.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.copy-box/4.0.1
     name: '@teambit/documenter.ui.copy-box'
     version: 4.0.1
@@ -69915,7 +69915,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.copy-box@4.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-7mzL2LeRxV6O6QyQl+q0yCNL+DsHVVHgkzJoE1favbn+di5BUdw+4XmZeI5LxeLq2WSrc6pmMwln97CkTGvLHg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.copy-box/-/documenter.ui.copy-box-4.1.1.tgz}
+    resolution: {integrity: sha512-7mzL2LeRxV6O6QyQl+q0yCNL+DsHVVHgkzJoE1favbn+di5BUdw+4XmZeI5LxeLq2WSrc6pmMwln97CkTGvLHg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.copy-box/-/documenter.ui.copy-box-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.copy-box/4.1.1
     name: '@teambit/documenter.ui.copy-box'
     version: 4.1.1
@@ -69934,7 +69934,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.heading@4.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-VmHd/0lSMKfUuGllXbCnqZehQ0pcTgio8q9mcbsPs9S36bZW4w5BS9oywVSo47dzLOOV3S/C1gUIdy6P468miw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.heading/-/documenter.ui.heading-4.1.1.tgz}
+    resolution: {integrity: sha512-VmHd/0lSMKfUuGllXbCnqZehQ0pcTgio8q9mcbsPs9S36bZW4w5BS9oywVSo47dzLOOV3S/C1gUIdy6P468miw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.heading/-/documenter.ui.heading-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.heading/4.1.1
     name: '@teambit/documenter.ui.heading'
     version: 4.1.1
@@ -69950,7 +69950,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.highlighted-text@4.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-lYt7PwLDWG49/PSgDOQmRzI0oS9GjGageLFdxxLBS29YRBRGhopphOxGnRtBONCxH67ZxLblkzduu7gRl5fvjg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.highlighted-text/-/documenter.ui.highlighted-text-4.1.1.tgz}
+    resolution: {integrity: sha512-lYt7PwLDWG49/PSgDOQmRzI0oS9GjGageLFdxxLBS29YRBRGhopphOxGnRtBONCxH67ZxLblkzduu7gRl5fvjg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.highlighted-text/-/documenter.ui.highlighted-text-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.highlighted-text/4.1.1
     name: '@teambit/documenter.ui.highlighted-text'
     version: 4.1.1
@@ -69965,7 +69965,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.inline-code@0.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-HVTX7QiTyeY4lEiFFEf2oyjTbTpkao4FxaD8RQXt/k4dhdxVVyP2Z/WpYWhEpdssMYzEdVHR5VMFvrcby/4RjQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.inline-code/-/documenter.ui.inline-code-0.1.1.tgz}
+    resolution: {integrity: sha512-HVTX7QiTyeY4lEiFFEf2oyjTbTpkao4FxaD8RQXt/k4dhdxVVyP2Z/WpYWhEpdssMYzEdVHR5VMFvrcby/4RjQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.inline-code/-/documenter.ui.inline-code-0.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.inline-code/0.1.1
     name: '@teambit/documenter.ui.inline-code'
     version: 0.1.1
@@ -69980,7 +69980,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.label-list@4.0.3(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-BnAlcBLZfgkDgBq8oco2NFnk2yqEHdAYEckhVPNrBsdKiA5CXgXjEWUHkKAsMNn3xbJ7ept7xAlS4RPrLNDlaA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.label-list/-/documenter.ui.label-list-4.0.3.tgz}
+    resolution: {integrity: sha512-BnAlcBLZfgkDgBq8oco2NFnk2yqEHdAYEckhVPNrBsdKiA5CXgXjEWUHkKAsMNn3xbJ7ept7xAlS4RPrLNDlaA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.label-list/-/documenter.ui.label-list-4.0.3.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.label-list/4.0.3
     name: '@teambit/documenter.ui.label-list'
     version: 4.0.3
@@ -69996,7 +69996,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.label@4.0.3(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-5MgPgotrW7JBalA1y6iAMF9YQDyXLS5JGt24+spK0MYWsGPV+g79NirYzH5yl6k7fTehvWJ9zMS4pdT3a4lR9g==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.label/-/documenter.ui.label-4.0.3.tgz}
+    resolution: {integrity: sha512-5MgPgotrW7JBalA1y6iAMF9YQDyXLS5JGt24+spK0MYWsGPV+g79NirYzH5yl6k7fTehvWJ9zMS4pdT3a4lR9g==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.label/-/documenter.ui.label-4.0.3.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.label/4.0.3
     name: '@teambit/documenter.ui.label'
     version: 4.0.3
@@ -70011,7 +70011,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.paragraph@4.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-6SGnp4qO/AOG+sETJ/uStgFt6UY5s3E/55nX7RO7BIJEEVSi+kGU3xze2z10ruK/hKXJ6//JLwP7t5Sld8zj7g==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.paragraph/-/documenter.ui.paragraph-4.1.1.tgz}
+    resolution: {integrity: sha512-6SGnp4qO/AOG+sETJ/uStgFt6UY5s3E/55nX7RO7BIJEEVSi+kGU3xze2z10ruK/hKXJ6//JLwP7t5Sld8zj7g==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.paragraph/-/documenter.ui.paragraph-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.paragraph/4.1.1
     name: '@teambit/documenter.ui.paragraph'
     version: 4.1.1
@@ -70028,7 +70028,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.section@4.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-PwMUmernBbCKKHm4AdXfBTlanIrkF6bE/Uyjg2AobIMf5taLw0L9RiQ2lAjUnSn9Mq4VFId/TrcjdA1p7jqlmQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.section/-/documenter.ui.section-4.1.1.tgz}
+    resolution: {integrity: sha512-PwMUmernBbCKKHm4AdXfBTlanIrkF6bE/Uyjg2AobIMf5taLw0L9RiQ2lAjUnSn9Mq4VFId/TrcjdA1p7jqlmQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.section/-/documenter.ui.section-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.section/4.1.1
     name: '@teambit/documenter.ui.section'
     version: 4.1.1
@@ -70042,7 +70042,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/documenter.ui.separator@4.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-ItYHPk2tfpOCb8GvNTBzLCOWD3hXRQrnG1ZhKnvcKkBqRb351+MLWQy0vVo971pFIgI4ei6DV3fM62eJ8/oxXA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.separator/-/documenter.ui.separator-4.1.1.tgz}
+    resolution: {integrity: sha512-ItYHPk2tfpOCb8GvNTBzLCOWD3hXRQrnG1ZhKnvcKkBqRb351+MLWQy0vVo971pFIgI4ei6DV3fM62eJ8/oxXA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.separator/-/documenter.ui.separator-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.separator/4.1.1
     name: '@teambit/documenter.ui.separator'
     version: 4.1.1
@@ -70056,7 +70056,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/documenter.ui.sub-title@4.1.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-kY3gW8069pk9dg3N6HUKXJ+QffI+TrSpqrI7jPUDOO4TndRreZnIdwDsoc5dN+4uhBxocq0kmFTM4qPHlCTsBg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.sub-title/-/documenter.ui.sub-title-4.1.1.tgz}
+    resolution: {integrity: sha512-kY3gW8069pk9dg3N6HUKXJ+QffI+TrSpqrI7jPUDOO4TndRreZnIdwDsoc5dN+4uhBxocq0kmFTM4qPHlCTsBg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.sub-title/-/documenter.ui.sub-title-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.sub-title/4.1.1
     name: '@teambit/documenter.ui.sub-title'
     version: 4.1.1
@@ -70073,7 +70073,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.table-column@4.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-sGMLD+Lu2snQ1g1xUXYHqhbUcH3iOp0CUc69T76SNt3cQBabNGb5T9yg0A/7JYN4Ams1IKJ8Anws8+T64huSDg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.table-column/-/documenter.ui.table-column-4.0.0.tgz}
+    resolution: {integrity: sha512-sGMLD+Lu2snQ1g1xUXYHqhbUcH3iOp0CUc69T76SNt3cQBabNGb5T9yg0A/7JYN4Ams1IKJ8Anws8+T64huSDg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.table-column/-/documenter.ui.table-column-4.0.0.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.table-column/4.0.0
     name: '@teambit/documenter.ui.table-column'
     version: 4.0.0
@@ -70088,7 +70088,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/evangelist.css-components.fade-in-out@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-oi5xKYxUqVUXP3Ae6eZS2LSaVe9sthO4nA3f95SnFnJ8O5HAX4O/xGi4WCYoxNPDo1muzp5/mfJkdmyRiILLRA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.css-components.fade-in-out/-/evangelist.css-components.fade-in-out-1.0.1.tgz}
+    resolution: {integrity: sha512-oi5xKYxUqVUXP3Ae6eZS2LSaVe9sthO4nA3f95SnFnJ8O5HAX4O/xGi4WCYoxNPDo1muzp5/mfJkdmyRiILLRA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.css-components.fade-in-out/-/evangelist.css-components.fade-in-out-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/evangelist.css-components.fade-in-out/1.0.1
     name: '@teambit/evangelist.css-components.fade-in-out'
     version: 1.0.1
@@ -70102,7 +70102,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-OoqGwKyhQDETfLYTebBOGUeISdix6eyj9cT3iQoVMtZlcIGOJlQqccDsFbjnhOUMFoI9IbtqTaGL7ymCGbA8rw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.elements.icon/-/evangelist.elements.icon-1.0.2.tgz}
+    resolution: {integrity: sha512-OoqGwKyhQDETfLYTebBOGUeISdix6eyj9cT3iQoVMtZlcIGOJlQqccDsFbjnhOUMFoI9IbtqTaGL7ymCGbA8rw==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.elements.icon/-/evangelist.elements.icon-1.0.2.tgz}
     id: registry.npmjs.org/@teambit/evangelist.elements.icon/1.0.2
     name: '@teambit/evangelist.elements.icon'
     version: 1.0.2
@@ -70117,7 +70117,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/evangelist.input.checkbox.indicator@1.0.2(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-Qc41v9xhW/LVJFSw8bErKpMHlqx10lwmBtp95avVPJvhlaUnrplrJph3ueqhLmQVe6TxnCBPsi849t+7Q7UKzg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.input.checkbox.indicator/-/evangelist.input.checkbox.indicator-1.0.2.tgz}
+    resolution: {integrity: sha512-Qc41v9xhW/LVJFSw8bErKpMHlqx10lwmBtp95avVPJvhlaUnrplrJph3ueqhLmQVe6TxnCBPsi849t+7Q7UKzg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.input.checkbox.indicator/-/evangelist.input.checkbox.indicator-1.0.2.tgz}
     id: registry.npmjs.org/@teambit/evangelist.input.checkbox.indicator/1.0.2
     name: '@teambit/evangelist.input.checkbox.indicator'
     version: 1.0.2
@@ -70134,7 +70134,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/evangelist.input.checkbox.label@1.0.3(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-xuSc5KUViJovRp1paYkOyzFYxO5JKJsoN6RTjbS4iB2oJWYRmAL8VJwJ4zOc5Cze4fJV9aZu6fYhm/3bLRy8jQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.input.checkbox.label/-/evangelist.input.checkbox.label-1.0.3.tgz}
+    resolution: {integrity: sha512-xuSc5KUViJovRp1paYkOyzFYxO5JKJsoN6RTjbS4iB2oJWYRmAL8VJwJ4zOc5Cze4fJV9aZu6fYhm/3bLRy8jQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.input.checkbox.label/-/evangelist.input.checkbox.label-1.0.3.tgz}
     id: registry.npmjs.org/@teambit/evangelist.input.checkbox.label/1.0.3
     name: '@teambit/evangelist.input.checkbox.label'
     version: 1.0.3
@@ -70150,7 +70150,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/evangelist.surfaces.dropdown@1.0.2(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-6KHnfU91AZXEJDAqwIA1pafnuyOh1QdMIPHLPNm0m8LXJ6krngjIYcXBfhaAn0DRzmx+V1W7A0E+EFMalAfBCg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.surfaces.dropdown/-/evangelist.surfaces.dropdown-1.0.2.tgz}
+    resolution: {integrity: sha512-6KHnfU91AZXEJDAqwIA1pafnuyOh1QdMIPHLPNm0m8LXJ6krngjIYcXBfhaAn0DRzmx+V1W7A0E+EFMalAfBCg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.surfaces.dropdown/-/evangelist.surfaces.dropdown-1.0.2.tgz}
     id: registry.npmjs.org/@teambit/evangelist.surfaces.dropdown/1.0.2
     name: '@teambit/evangelist.surfaces.dropdown'
     version: 1.0.2
@@ -70171,7 +70171,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/evangelist.surfaces.tooltip@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-tHsYDm7xB2FAlPeHonfAHzFgTtY5ij7ldNZaHMpw87Ecn28J2vtmmCCpfI4/9q/aZiFa6NTtDFsqFEkRUjr3yA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.surfaces.tooltip/-/evangelist.surfaces.tooltip-1.0.1.tgz}
+    resolution: {integrity: sha512-tHsYDm7xB2FAlPeHonfAHzFgTtY5ij7ldNZaHMpw87Ecn28J2vtmmCCpfI4/9q/aZiFa6NTtDFsqFEkRUjr3yA==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/evangelist.surfaces.tooltip/-/evangelist.surfaces.tooltip-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/evangelist.surfaces.tooltip/1.0.1
     name: '@teambit/evangelist.surfaces.tooltip'
     version: 1.0.1
@@ -70191,7 +70191,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-AoIdyGYo1JmN+3UCoyMJMYiI/CJ6P4x84TQFOJnqxrExxZgZbNx004df3cIsj92mljubGGGXTxd94loqon2G7w==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context/-/mdx.ui.mdx-scope-context-0.0.368.tgz}
+    resolution: {integrity: sha512-AoIdyGYo1JmN+3UCoyMJMYiI/CJ6P4x84TQFOJnqxrExxZgZbNx004df3cIsj92mljubGGGXTxd94loqon2G7w==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context/-/mdx.ui.mdx-scope-context-0.0.368.tgz}
     id: registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context/0.0.368
     name: '@teambit/mdx.ui.mdx-scope-context'
     version: 0.0.368
@@ -70207,7 +70207,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-6GzCl0ZnmpfQ923yuCahI4mXZ8wSQCeF6D4+xtCq8tk+W5GHb12ZSlHBCD5xAZsc7i7VRUUZcTdhbc8L2RhMpg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/react.instructions.react.adding-compositions/-/react.instructions.react.adding-compositions-0.0.6.tgz}
+    resolution: {integrity: sha512-6GzCl0ZnmpfQ923yuCahI4mXZ8wSQCeF6D4+xtCq8tk+W5GHb12ZSlHBCD5xAZsc7i7VRUUZcTdhbc8L2RhMpg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/react.instructions.react.adding-compositions/-/react.instructions.react.adding-compositions-0.0.6.tgz}
     id: registry.npmjs.org/@teambit/react.instructions.react.adding-compositions/0.0.6
     name: '@teambit/react.instructions.react.adding-compositions'
     version: 0.0.6
@@ -70225,7 +70225,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/react.instructions.react.adding-tests@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-OoNj8YPPc7I9a3TtUche2IdCHe2d/5hgZbjmZXWSPJVM69JCSzxhUNXaQRbiOuCI7m7+O2bBzMS4G2UboJ5Nmg==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/react.instructions.react.adding-tests/-/react.instructions.react.adding-tests-0.0.6.tgz}
+    resolution: {integrity: sha512-OoNj8YPPc7I9a3TtUche2IdCHe2d/5hgZbjmZXWSPJVM69JCSzxhUNXaQRbiOuCI7m7+O2bBzMS4G2UboJ5Nmg==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/react.instructions.react.adding-tests/-/react.instructions.react.adding-tests-0.0.6.tgz}
     id: registry.npmjs.org/@teambit/react.instructions.react.adding-tests/0.0.6
     name: '@teambit/react.instructions.react.adding-tests'
     version: 0.0.6
@@ -70243,7 +70243,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/toolbox.network.agent@0.0.116(@teambit/legacy@node_modules+@teambit+legacy):
-    resolution: {integrity: sha512-WYK7V5bs7S3djNjGepUhhrKcgESo7hULAUOa+6k000Z0QUaa6BfMqJ0X6aicMRJO7d8HD4wIcR0TEfc7Sa2S1Q==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/toolbox.network.agent/-/toolbox.network.agent-0.0.116.tgz}
+    resolution: {integrity: sha512-WYK7V5bs7S3djNjGepUhhrKcgESo7hULAUOa+6k000Z0QUaa6BfMqJ0X6aicMRJO7d8HD4wIcR0TEfc7Sa2S1Q==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/toolbox.network.agent/-/toolbox.network.agent-0.0.116.tgz}
     id: registry.npmjs.org/@teambit/toolbox.network.agent/0.0.116
     name: '@teambit/toolbox.network.agent'
     version: 0.0.116
@@ -70259,7 +70259,7 @@ packages:
     dev: false
 
   registry.npmjs.org/is-stream@1.1.0:
-    resolution: {integrity: sha512-uQPm8kcs47jx38atAcWTVxyltQYoPT68y9aWYdV6yWXSyW8mzSat0TL6CiWdZeCdF3KrAvpVtnHbTv4RN+rqdQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/is-stream/-/is-stream-1.1.0.tgz}
+    resolution: {integrity: sha512-uQPm8kcs47jx38atAcWTVxyltQYoPT68y9aWYdV6yWXSyW8mzSat0TL6CiWdZeCdF3KrAvpVtnHbTv4RN+rqdQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/is-stream/-/is-stream-1.1.0.tgz}
     name: is-stream
     version: 1.1.0
     engines: {node: '>=0.10.0'}
