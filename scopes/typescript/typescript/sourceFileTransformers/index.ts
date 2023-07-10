@@ -8,3 +8,4 @@ export { variableNamesTransformer } from './variable';
 export { functionNamesTransformer } from './function';
 export { typeAliasNamesTransformer } from './typeAlias';
 export { importPathTransformer } from './import-path';
+export { transformSourceFile } from './transform';

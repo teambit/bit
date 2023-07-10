@@ -11,6 +11,48 @@ export const importPathTransformer: SourceFileTransformer = (mapping: Record<str
             moduleSpecifier = moduleSpecifier.replace(oldName, newName);
           }
         }
+
+        if (node.importClause?.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
+          const transformedBindings = node.importClause.namedBindings.elements.map((element) => {
+            const elementName = element.name.text;
+            const newElementName = mapping[elementName] || elementName;
+
+            if (element.propertyName && element.propertyName.text === elementName) {
+              return ts.factory.updateImportSpecifier(
+                element,
+                false,
+                element.propertyName,
+                ts.factory.createIdentifier(newElementName)
+              );
+            }
+            if (element.name.text === elementName) {
+              return ts.factory.updateImportSpecifier(
+                element,
+                false,
+                element.propertyName,
+                ts.factory.createIdentifier(newElementName)
+              );
+            }
+            return element;
+          });
+
+          const updatedImportClause = ts.factory.updateImportClause(
+            node.importClause,
+            false,
+            node.importClause.name,
+            ts.factory.createNamedImports(transformedBindings)
+          );
+
+          return ts.factory.updateImportDeclaration(
+            node,
+            node.decorators,
+            node.modifiers,
+            updatedImportClause,
+            ts.factory.createStringLiteral(moduleSpecifier),
+            undefined
+          );
+        }
+
         return ts.factory.updateImportDeclaration(
           node,
           node.decorators,

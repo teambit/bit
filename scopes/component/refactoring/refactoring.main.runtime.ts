@@ -6,16 +6,18 @@ import replacePackageName from '@teambit/legacy/dist/utils/string/replace-packag
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import PkgAspect, { PkgMain } from '@teambit/pkg';
+import { Formatter } from '@teambit/formatter';
+import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import {
   SourceFileTransformer,
-  TypescriptAspect,
-  TypescriptMain,
   classNamesTransformer,
   functionNamesTransformer,
   importPathTransformer,
   interfaceNamesTransformer,
   typeAliasNamesTransformer,
   variableNamesTransformer,
+  transformSourceFile,
 } from '@teambit/typescript';
 import { RefactoringAspect } from './refactoring.aspect';
 import { DependencyNameRefactorCmd, RefactorCmd } from './refactor.cmd';
@@ -23,7 +25,7 @@ import { DependencyNameRefactorCmd, RefactorCmd } from './refactor.cmd';
 export type MultipleStringsReplacement = Array<{ oldStr: string; newStr: string }>;
 
 export class RefactoringMain {
-  constructor(private componentMain: ComponentMain, private pkg: PkgMain, private tsMain: TypescriptMain) {}
+  constructor(private componentMain: ComponentMain, private pkg: PkgMain, private envs: EnvsMain) {}
 
   /**
    * refactor the dependency name of a component.
@@ -53,38 +55,18 @@ export class RefactoringMain {
    * replaces the old-name inside the source code of the given component with the new name.
    * helpful when renaming/forking an aspect/env where the component-name is used as the class-name and variable-name.
    */
-
-  RefactoringAspect;
-  // name: refactoring-aspect
-  // ClassName: RefactoringAspect
-  // variableName: refactoringAspect
   async refactorVariableAndClasses(component: Component, sourceId: ComponentID, targetId: ComponentID) {
-    // replace this AST replace
-    // await this.replaceMultipleStrings(
-    //   [component],
-    //   [
-    //     {
-    //       oldStr: sourceId.name,
-    //       newStr: targetId.name,
-    //     },
-    //     {
-    //       oldStr: camelCase(sourceId.name),
-    //       newStr: camelCase(targetId.name),
-    //     },
-    //     {
-    //       oldStr: camelCase(sourceId.name, { pascalCase: true }),
-    //       newStr: camelCase(targetId.name, { pascalCase: true }),
-    //     },
-    //   ]
-    // );
-
-    // transform kebabCase importPaths
+    // transform kebabCase importPaths and PascalCase importNames
     await this.replaceMultipleStrings(
       [component],
       [
         {
           oldStr: sourceId.name,
           newStr: targetId.name,
+        },
+        {
+          oldStr: camelCase(sourceId.name, { pascalCase: true }),
+          newStr: camelCase(targetId.name, { pascalCase: true }),
         },
       ],
       [importPathTransformer]
@@ -109,6 +91,10 @@ export class RefactoringMain {
         {
           oldStr: camelCase(sourceId.name, { pascalCase: true }),
           newStr: camelCase(targetId.name, { pascalCase: true }),
+        },
+        {
+          oldStr: camelCase(`${sourceId.name}Props`, { pascalCase: true }),
+          newStr: camelCase(`${targetId.name}Props`, { pascalCase: true }),
         },
       ],
       [classNamesTransformer, functionNamesTransformer, interfaceNamesTransformer, typeAliasNamesTransformer]
@@ -220,6 +206,13 @@ export class RefactoringMain {
     transformers: SourceFileTransformer[]
   ): Promise<boolean> {
     const mapping = stringsToReplace.reduce((acc, { oldStr, newStr }) => ({ ...acc, [oldStr]: newStr }), {});
+    const env = this.envs.getEnv(comp).env;
+    const formatter: Formatter | undefined = env.getFormatter?.(null, [
+      (config: PrettierConfigMutator) => {
+        config.setKey('parser', 'typescript');
+        return config;
+      },
+    ]);
 
     const changed = await Promise.all(
       comp.filesystem.files.map(async (file) => {
@@ -228,7 +221,7 @@ export class RefactoringMain {
         const strContent = file.contents.toString();
         let newContent = strContent;
         const transformerFactories = transformers.map((t) => t(mapping));
-        newContent = this.tsMain.transformSourceFile(file.path, strContent, transformerFactories);
+        newContent = await transformSourceFile(file.path, strContent, transformerFactories, formatter);
         if (strContent !== newContent) {
           file.contents = Buffer.from(newContent);
           return true;
@@ -240,10 +233,10 @@ export class RefactoringMain {
   }
 
   static slots = [];
-  static dependencies = [ComponentAspect, PkgAspect, CLIAspect, TypescriptAspect];
+  static dependencies = [ComponentAspect, PkgAspect, CLIAspect, EnvsAspect];
   static runtime = MainRuntime;
-  static async provider([componentMain, pkg, cli, tsMain]: [ComponentMain, PkgMain, CLIMain, TypescriptMain]) {
-    const refactoringMain = new RefactoringMain(componentMain, pkg, tsMain);
+  static async provider([componentMain, pkg, cli, envMain]: [ComponentMain, PkgMain, CLIMain, EnvsMain]) {
+    const refactoringMain = new RefactoringMain(componentMain, pkg, envMain);
     const subCommands = [new DependencyNameRefactorCmd(refactoringMain, componentMain)];
     const refactorCmd = new RefactorCmd();
     refactorCmd.commands = subCommands;

@@ -1,5 +1,4 @@
 import ts from 'typescript';
-import fs from 'fs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Compiler, CompilerAspect, CompilerMain } from '@teambit/compiler';
@@ -256,40 +255,6 @@ export class TypescriptMain {
       .flat()
       .map((f) => f.path);
     return files.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
-  }
-
-  /**
-   * Transforms a TypeScript source file using the provided transformer.
-   *
-   * @param sourceFilePath Path to the TypeScript source file.
-   * @param transformer The transformers to be applied on the source file.
-   * @returns The transformed source file as a string.
-   */
-  transformSourceFile(
-    sourceFilePath: string,
-    sourceFileContent: string,
-    transformers: ts.TransformerFactory<ts.SourceFile>[]
-  ): string {
-    // console.log("🚀 ~ file: typescript.main.runtime.ts:270 ~ TypescriptMain ~ transformSourceFile ~ transformers:", transformers)
-    // const sourceFileContent = fs.readFileSync(sourceFilePath, 'utf8');
-    const sourceFile = ts.createSourceFile(
-      sourceFilePath,
-      sourceFileContent,
-      ts.ScriptTarget.Latest,
-      true,
-      ts.ScriptKind.TSX
-    );
-
-    const result: ts.TransformationResult<ts.SourceFile> = ts.transform<ts.SourceFile>(sourceFile, transformers);
-
-    const transformedSourceFile: ts.SourceFile = result.transformed[0] as ts.SourceFile;
-
-    const printer: ts.Printer = ts.createPrinter({
-      newLine: ts.NewLineKind.LineFeed,
-      removeComments: false,
-    });
-    const presult = printer.printFile(transformedSourceFile);
-    return presult;
   }
 
   async cleanTsconfigJson(options: TsconfigWriterOptions = {}) {
