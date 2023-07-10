@@ -7,7 +7,6 @@ import pMapSeries from 'p-map-series';
 import yesno from 'yesno';
 import { flatMap, pick } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Slot, SlotRegistry } from '@teambit/harmony';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { Workspace } from '@teambit/workspace';
 import { Environment, EnvsAspect, ExecutionContext } from '@teambit/envs';
@@ -20,8 +19,6 @@ import { WsConfigCleanCmd, WsConfigCmd, WsConfigListCmd, WsConfigWriteCmd } from
 import WriteConfigFilesFailed from './exceptions/write-failed';
 import { WorkspaceConfigFilesService } from './workspace-config-files.service';
 import { handleRealConfigFiles, handleExtendingConfigFiles } from './writers';
-
-export type ConfigWriterSlot = SlotRegistry<ConfigWriterEntry[]>;
 
 export type EnvConfigWriter = {
   envId: string;
@@ -97,12 +94,7 @@ export type WriteConfigFilesResult = {
 };
 
 export class WorkspaceConfigFilesMain {
-  constructor(
-    readonly configWriterSlot: ConfigWriterSlot,
-    private workspace: Workspace,
-    private envs: EnvsMain,
-    private logger: Logger
-  ) {}
+  constructor(private workspace: Workspace, private envs: EnvsMain, private logger: Logger) {}
 
   /**
    * It writes the configuration files for the workspace
@@ -315,26 +307,18 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
     await Promise.all(paths.map((f) => fs.remove(join(this.workspace.path, f))));
   }
 
-  registerConfigWriter(...configWriterEntries: ConfigWriterEntry[]) {
-    this.configWriterSlot.register(configWriterEntries);
-  }
-
-  static slots = [Slot.withType<ConfigWriterEntry[]>()];
+  static slots = [];
   // define your aspect dependencies here.
   // in case you need to use another aspect API.
   static dependencies = [CLIAspect, WorkspaceAspect, EnvsAspect, LoggerAspect];
 
   static runtime = MainRuntime;
 
-  static async provider(
-    [cli, workspace, envs, loggerAspect]: [CLIMain, Workspace, EnvsMain, LoggerMain],
-    _config,
-    [configWriterSlot]: [ConfigWriterSlot]
-  ) {
+  static async provider([cli, workspace, envs, loggerAspect]: [CLIMain, Workspace, EnvsMain, LoggerMain], _config) {
     const logger = loggerAspect.createLogger(WorkspaceConfigFilesAspect.id);
     envs.registerService(new WorkspaceConfigFilesService(logger));
 
-    const workspaceConfigFilesMain = new WorkspaceConfigFilesMain(configWriterSlot, workspace, envs, logger);
+    const workspaceConfigFilesMain = new WorkspaceConfigFilesMain(workspace, envs, logger);
     const wsConfigCmd = new WsConfigCmd();
     wsConfigCmd.commands = [
       new WsConfigWriteCmd(workspaceConfigFilesMain),
