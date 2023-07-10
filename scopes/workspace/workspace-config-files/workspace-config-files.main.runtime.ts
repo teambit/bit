@@ -299,10 +299,7 @@ export class WorkspaceConfigFilesMain {
         };
       })
     );
-    console.log(
-      '🚀 ~ file: workspace-config-files.main.runtime.ts:303 ~ WorkspaceConfigFilesMain ~ writtenConfigFilesMap:',
-      writtenConfigFilesMap
-    );
+
     return writtenConfigFilesMap;
   }
 
