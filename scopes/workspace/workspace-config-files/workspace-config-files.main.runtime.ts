@@ -20,6 +20,13 @@ import WriteConfigFilesFailed from './exceptions/write-failed';
 import { WorkspaceConfigFilesService } from './workspace-config-files.service';
 import { handleRealConfigFiles, handleExtendingConfigFiles } from './writers';
 
+/**
+ * Configs that can be configured in the workspace.jsonc file
+ */
+export type WorkspaceConfigFilesAspectConfig = {
+  configsRootDir?: string;
+};
+
 export type EnvConfigWriter = {
   envId: string;
   executionContext: ExecutionContext;
@@ -94,7 +101,12 @@ export type WriteConfigFilesResult = {
 };
 
 export class WorkspaceConfigFilesMain {
-  constructor(private workspace: Workspace, private envs: EnvsMain, private logger: Logger) {}
+  constructor(
+    private workspace: Workspace,
+    private envs: EnvsMain,
+    private logger: Logger,
+    private config: WorkspaceConfigFilesAspectConfig
+  ) {}
 
   /**
    * It writes the configuration files for the workspace
@@ -217,7 +229,8 @@ export class WorkspaceConfigFilesMain {
     // return { aspectId, writersResult: compactResults, totalWrittenFiles, totalExtendingConfigFiles };
   }
 
-  private getConfigsRootDir(userConfiguredDir?: string): string {
+  private getConfigsRootDir(): string {
+    const userConfiguredDir = this.config.configsRootDir;
     return userConfiguredDir ? join(this.workspace.path, userConfiguredDir) : this.getCacheDir(this.workspace.path);
   }
 
@@ -314,11 +327,14 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
 
   static runtime = MainRuntime;
 
-  static async provider([cli, workspace, envs, loggerAspect]: [CLIMain, Workspace, EnvsMain, LoggerMain], _config) {
+  static async provider(
+    [cli, workspace, envs, loggerAspect]: [CLIMain, Workspace, EnvsMain, LoggerMain],
+    config: WorkspaceConfigFilesAspectConfig
+  ) {
     const logger = loggerAspect.createLogger(WorkspaceConfigFilesAspect.id);
     envs.registerService(new WorkspaceConfigFilesService(logger));
 
-    const workspaceConfigFilesMain = new WorkspaceConfigFilesMain(workspace, envs, logger);
+    const workspaceConfigFilesMain = new WorkspaceConfigFilesMain(workspace, envs, logger, config);
     const wsConfigCmd = new WsConfigCmd();
     wsConfigCmd.commands = [
       new WsConfigWriteCmd(workspaceConfigFilesMain),
