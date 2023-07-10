@@ -1,6 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { importPathTransformer } from '@teambit/typescript';
+import { importTransformer, exportTransformer } from '@teambit/typescript';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { ComponentIdObj } from '@teambit/component-id';
 import { ComponentDependency, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -124,7 +124,8 @@ export class ForkingMain {
     const allComponents = await this.workspace.list();
     if (options.refactor) {
       const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, stringsToReplace, [
-        importPathTransformer,
+        importTransformer,
+        exportTransformer,
       ]);
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
     }
@@ -209,7 +210,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
           newStr: targetCompId.toStringWithoutVersion(),
         },
       ],
-      [importPathTransformer]
+      [importTransformer, exportTransformer]
     );
     if (!options?.preserve) {
       await this.refactoring.refactorVariableAndClasses(component, sourceId, targetCompId);

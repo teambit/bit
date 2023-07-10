@@ -5,13 +5,17 @@ export function interfaceNamesTransformer(nameMapping: Record<string, string>): 
     const { factory } = context;
     const visit: ts.Visitor = (node) => {
       if (ts.isInterfaceDeclaration(node)) {
-        const newName = nameMapping[node.name.text];
+        const oldName = node.name.text;
+        const newName = Object.keys(nameMapping).find((key) => oldName.startsWith(key) || oldName.endsWith(key));
         if (newName) {
+          const replacedName = oldName.startsWith(newName)
+            ? oldName.replace(newName, nameMapping[newName])
+            : oldName.replace(new RegExp(`${newName}$`), nameMapping[newName]);
           return factory.updateInterfaceDeclaration(
             node,
             node.decorators,
             node.modifiers,
-            factory.createIdentifier(newName),
+            factory.createIdentifier(replacedName),
             node.typeParameters,
             node.heritageClauses,
             node.members

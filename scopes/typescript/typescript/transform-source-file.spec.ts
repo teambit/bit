@@ -3,7 +3,7 @@ import {
   transformSourceFile,
   classNamesTransformer,
   functionNamesTransformer,
-  importPathTransformer,
+  importTransformer,
   interfaceNamesTransformer,
   typeAliasNamesTransformer,
   variableNamesTransformer,
@@ -48,7 +48,7 @@ describe('transformSourceFile', () => {
       expectedCode: 'function newFunctionName() {}',
     },
     {
-      transformer: importPathTransformer,
+      transformer: importTransformer,
       sourceCode: 'import { Test } from "./test";',
       nameMapping: { './test': './newTest' },
       expectedCode: 'import { Test } from "./newTest";',

@@ -14,7 +14,7 @@ import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { importPathTransformer } from '@teambit/typescript';
+import { importTransformer, exportTransformer } from '@teambit/typescript';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { isValidIdChunk, InvalidName } from '@teambit/legacy-bit-id';
 import { RenameCmd, RenameOptions } from './rename.cmd';
@@ -152,7 +152,8 @@ make sure this argument is the name only, without the scope-name. to change the 
         };
       });
       const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace, [
-        importPathTransformer,
+        importTransformer,
+        exportTransformer,
       ]);
       await this.renameScopeOfAspectIdsInWorkspaceConfig(
         componentsUsingOldScope.map((c) => c.id),
@@ -242,7 +243,8 @@ make sure this argument is the name only, without the scope-name. to change the 
         };
       });
       const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace, [
-        importPathTransformer,
+        importTransformer,
+        exportTransformer,
       ]);
       await this.renameOwnerOfAspectIdsInWorkspaceConfig(
         componentsUsingOldScope.map((c) => c.id),

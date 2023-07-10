@@ -16,12 +16,13 @@ export const functionNamesTransformer: SourceFileTransformer = (mapping: Record<
 
     const visit: ts.Visitor = (node) => {
       if (ts.isFunctionDeclaration(node) || ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
-        const newName = node.name && mapping[node.name.text];
-
+        const functionName = node.name?.getText() ?? '';
+        const newName = Object.entries(mapping).find(([key]) => functionName.includes(key))?.[1] ?? functionName;
         const parameters = node.parameters.map((param) => {
           const newParamType = param.type ? ts.visitNode(param.type, updateTypeReference) : param.type;
           if (ts.isIdentifier(param.name)) {
-            const newParamName = mapping[param.name.text];
+            const oldName = param.name.getText();
+            const newParamName = Object.keys(mapping).find((key) => oldName.includes(key));
             if (newParamName) {
               return ts.factory.updateParameterDeclaration(
                 param,

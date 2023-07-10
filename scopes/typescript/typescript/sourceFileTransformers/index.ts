@@ -7,5 +7,7 @@ export { interfaceNamesTransformer } from './interface';
 export { variableNamesTransformer } from './variable';
 export { functionNamesTransformer } from './function';
 export { typeAliasNamesTransformer } from './typeAlias';
-export { importPathTransformer } from './import-path';
+export { importTransformer } from './import';
+export { identifierTransformer } from './identifier';
+export { exportTransformer } from './export';
 export { transformSourceFile } from './transform';

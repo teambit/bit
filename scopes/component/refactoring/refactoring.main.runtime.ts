@@ -13,11 +13,13 @@ import {
   SourceFileTransformer,
   classNamesTransformer,
   functionNamesTransformer,
-  importPathTransformer,
+  importTransformer,
+  exportTransformer,
   interfaceNamesTransformer,
   typeAliasNamesTransformer,
   variableNamesTransformer,
   transformSourceFile,
+  identifierTransformer,
 } from '@teambit/typescript';
 import { RefactoringAspect } from './refactoring.aspect';
 import { DependencyNameRefactorCmd, RefactorCmd } from './refactor.cmd';
@@ -69,7 +71,7 @@ export class RefactoringMain {
           newStr: camelCase(targetId.name, { pascalCase: true }),
         },
       ],
-      [importPathTransformer]
+      [importTransformer, exportTransformer]
     );
 
     // transform camelCase variable and function names
@@ -97,7 +99,14 @@ export class RefactoringMain {
           newStr: camelCase(`${targetId.name}Props`, { pascalCase: true }),
         },
       ],
-      [classNamesTransformer, functionNamesTransformer, interfaceNamesTransformer, typeAliasNamesTransformer]
+      [
+        classNamesTransformer,
+        functionNamesTransformer,
+        interfaceNamesTransformer,
+        typeAliasNamesTransformer,
+        variableNamesTransformer,
+        identifierTransformer,
+      ]
     );
   }
 
