@@ -13,7 +13,26 @@ import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
 import { ImporterMain } from './importer.main.runtime';
-import { ImportOptions, ImportDetails, ImportStatus } from './import-components';
+import { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
+
+type ImportFlags = {
+  path?: string;
+  objects?: boolean;
+  displayDependencies?: boolean;
+  override?: boolean;
+  verbose?: boolean;
+  json?: boolean;
+  conf?: string;
+  skipDependencyInstallation?: boolean;
+  merge?: MergeStrategy;
+  saveInLane?: boolean;
+  dependencies?: boolean;
+  dependents?: boolean;
+  allHistory?: boolean;
+  fetchDeps?: boolean;
+  trackOnly?: boolean;
+  includeDeprecated?: boolean;
+};
 
 export class ImportCmd implements Command {
   name = 'import [component-patterns...]';
@@ -74,15 +93,68 @@ export class ImportCmd implements Command {
 
   constructor(private importer: ImporterMain) {}
 
-  async report(
-    [ids = []]: [string[]],
+  async report([ids = []]: [string[]], importFlags: ImportFlags): Promise<any> {
+    const {
+      importDetails,
+      importedIds,
+      importedDeps,
+      installationError,
+      compilationError,
+      missingIds,
+      cancellationMessage,
+    } = await this.getImportResults(ids, importFlags);
+    if (!importedIds.length && !missingIds?.length) {
+      return chalk.yellow(cancellationMessage || 'nothing to import');
+    }
+
+    const summaryPrefix =
+      importedIds.length === 1
+        ? 'successfully imported one component'
+        : `successfully imported ${importedIds.length} components`;
+
+    let upToDateCount = 0;
+    const importedComponents = importedIds.map((bitId) => {
+      const details = importDetails.find((c) => c.id === bitId.toStringWithoutVersion());
+      if (!details) throw new Error(`missing details of component ${bitId.toString()}`);
+      if (details.status === 'up to date') {
+        upToDateCount += 1;
+      }
+      return formatPlainComponentItemWithVersions(bitId, details);
+    });
+    const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date`;
+    const summary = `${summaryPrefix}${upToDateStr}`;
+    const importOutput = [...compact(importedComponents), chalk.green(summary)].join('\n');
+    const importedDepsOutput =
+      importFlags.displayDependencies && importedDeps.length
+        ? immutableUnshift(
+            R.uniq(importedDeps.map(formatPlainComponentItem)),
+            chalk.green(`\n\nsuccessfully imported ${importedDeps.length} component dependencies`)
+          ).join('\n')
+        : '';
+
+    const output =
+      importOutput +
+      importedDepsOutput +
+      formatMissingComponents(missingIds) +
+      installationErrorOutput(installationError) +
+      compilationErrorOutput(compilationError);
+
+    return output;
+  }
+
+  async json([ids]: [string[]], importFlags: ImportFlags) {
+    const { importDetails, installationError } = await this.getImportResults(ids, importFlags);
+
+    return { importDetails, installationError };
+  }
+
+  private async getImportResults(
+    ids: string[],
     {
       path,
       objects = false,
-      displayDependencies = false,
       override = false,
       verbose = false,
-      json = false,
       conf,
       skipDependencyInstallation = false,
       merge,
@@ -93,25 +165,8 @@ export class ImportCmd implements Command {
       fetchDeps = false,
       trackOnly = false,
       includeDeprecated = false,
-    }: {
-      path?: string;
-      objects?: boolean;
-      displayDependencies?: boolean;
-      override?: boolean;
-      verbose?: boolean;
-      json?: boolean;
-      conf?: string;
-      skipDependencyInstallation?: boolean;
-      merge?: MergeStrategy;
-      saveInLane?: boolean;
-      dependencies?: boolean;
-      dependents?: boolean;
-      allHistory?: boolean;
-      fetchDeps?: boolean;
-      trackOnly?: boolean;
-      includeDeprecated?: boolean;
-    }
-  ): Promise<any> {
+    }: ImportFlags
+  ): Promise<ImportResult> {
     if (objects && merge) {
       throw new GeneralError('you cant use --objects and --merge flags combined');
     }
@@ -154,50 +209,7 @@ export class ImportCmd implements Command {
       trackOnly,
       includeDeprecated,
     };
-    const importResults = await this.importer.import(importOptions, this._packageManagerArgs);
-    const { importDetails, importedIds, importedDeps, installationError, compilationError, missingIds } = importResults;
-
-    if (json) {
-      return JSON.stringify({ importDetails, installationError }, null, 4);
-    }
-
-    if (!importedIds.length && !missingIds?.length) {
-      return chalk.yellow(importResults.cancellationMessage || 'nothing to import');
-    }
-
-    const summaryPrefix =
-      importedIds.length === 1
-        ? 'successfully imported one component'
-        : `successfully imported ${importedIds.length} components`;
-
-    let upToDateCount = 0;
-    const importedComponents = importedIds.map((bitId) => {
-      const details = importDetails.find((c) => c.id === bitId.toStringWithoutVersion());
-      if (!details) throw new Error(`missing details of component ${bitId.toString()}`);
-      if (details.status === 'up to date') {
-        upToDateCount += 1;
-      }
-      return formatPlainComponentItemWithVersions(bitId, details);
-    });
-    const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date`;
-    const summary = `${summaryPrefix}${upToDateStr}`;
-    const importOutput = [...compact(importedComponents), chalk.green(summary)].join('\n');
-    const importedDepsOutput =
-      displayDependencies && importedDeps.length
-        ? immutableUnshift(
-            R.uniq(importedDeps.map(formatPlainComponentItem)),
-            chalk.green(`\n\nsuccessfully imported ${importedDeps.length} component dependencies`)
-          ).join('\n')
-        : '';
-
-    const output =
-      importOutput +
-      importedDepsOutput +
-      formatMissingComponents(missingIds) +
-      installationErrorOutput(installationError) +
-      compilationErrorOutput(compilationError);
-
-    return output;
+    return this.importer.import(importOptions, this._packageManagerArgs);
   }
 }
 
