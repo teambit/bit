@@ -1,6 +1,7 @@
 import { Formatter } from '@teambit/formatter';
 import ts from 'typescript';
 import * as path from 'path';
+import { EmptyLineEncoder } from './empty-line-encoder';
 
 /**
  * Transforms a TypeScript source file using the provided transformer.
@@ -15,12 +16,22 @@ export async function transformSourceFile(
   sourceFilePath: string,
   sourceFileContent: string,
   transformers: ts.TransformerFactory<ts.SourceFile>[],
-  formatter?: Formatter
+  formatter?: Formatter,
+  updates?: Record<string, string>
 ): Promise<string> {
   const ext = path.extname(sourceFilePath);
   if (ext !== '.ts' && ext !== '.tsx') {
-    return sourceFileContent;
+    if (!updates) return sourceFileContent;
+    let transformed = sourceFileContent;
+    Object.entries(updates).forEach(([oldStr, newStr]) => {
+      const oldStringRegex = new RegExp(oldStr, 'g');
+      transformed = transformed.replace(oldStringRegex, newStr);
+    });
+    return transformed;
   }
+
+  const encoder = new EmptyLineEncoder();
+  sourceFileContent = encoder.encode(sourceFileContent);
 
   const sourceFile = ts.createSourceFile(
     sourceFilePath,
@@ -38,7 +49,13 @@ export async function transformSourceFile(
     removeComments: false,
   });
 
-  const transformedSourceFileStr = printer.printFile(transformedSourceFile);
+  let transformedSourceFileStr = printer.printFile(transformedSourceFile);
+  transformedSourceFileStr = encoder.decode(transformedSourceFileStr);
+  // Remove trailing empty line markers
+  const emptyLineComment = `\\s*\\/\\*${encoder.emptyLineMarker}\\*\\/\\s*$`;
+  const regex = new RegExp(emptyLineComment, 'g');
+  transformedSourceFileStr = transformedSourceFileStr.replace(regex, '');
+
   const formattedSourceFileStr = await formatter?.formatSnippet(transformedSourceFileStr);
   return formattedSourceFileStr || transformedSourceFileStr;
 }

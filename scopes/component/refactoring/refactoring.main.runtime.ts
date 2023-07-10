@@ -205,7 +205,7 @@ export class RefactoringMain {
     stringsToReplace: MultipleStringsReplacement,
     transformers: SourceFileTransformer[]
   ): Promise<boolean> {
-    const mapping = stringsToReplace.reduce((acc, { oldStr, newStr }) => ({ ...acc, [oldStr]: newStr }), {});
+    const updates = stringsToReplace.reduce((acc, { oldStr, newStr }) => ({ ...acc, [oldStr]: newStr }), {});
     const env = this.envs.getEnv(comp).env;
     const formatter: Formatter | undefined = env.getFormatter?.(null, [
       (config: PrettierConfigMutator) => {
@@ -220,8 +220,8 @@ export class RefactoringMain {
         if (isBinary) return false;
         const strContent = file.contents.toString();
         let newContent = strContent;
-        const transformerFactories = transformers.map((t) => t(mapping));
-        newContent = await transformSourceFile(file.path, strContent, transformerFactories, formatter);
+        const transformerFactories = transformers.map((t) => t(updates));
+        newContent = await transformSourceFile(file.path, strContent, transformerFactories, formatter, updates);
         if (strContent !== newContent) {
           file.contents = Buffer.from(newContent);
           return true;
