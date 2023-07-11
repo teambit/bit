@@ -201,7 +201,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     }
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
     await http.pushToCentralHub(objectList, {
-      persist: true,
+      origin: 'sign',
       sign: true,
       signComponents: signComponents.map((id) => id.toString()),
       idsHashMaps,
