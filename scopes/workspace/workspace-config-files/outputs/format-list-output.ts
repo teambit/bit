@@ -14,7 +14,7 @@ function getEnvOutput(envId: string, configWriters: ConfigWriterEntry[]): string
   if (!configWriters.length) return `${title}\n${space}${chalk.yellow('no config writers found')}`;
   const entries = configWriters
     .map((configWriter) => {
-      return `${configWriter.name} (${configWriter.cliName})`;
+      return `${configWriter.name} (${configWriter.id})`;
     })
     .join(`\n${space}`);
   return `${title}\n${space}${entries}`;
