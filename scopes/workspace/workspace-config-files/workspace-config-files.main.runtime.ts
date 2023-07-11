@@ -81,20 +81,16 @@ type OneConfigWriterIdResult = {
   totalExtendingConfigFiles: number;
 };
 
-type EnvWritersResults = {
-  envId: string;
-  writersResult: OneConfigFileWriterResult[];
+type WriteResults = {
+  writersResult: OneConfigWriterIdResult[];
   totalWrittenFiles: number;
+  totalRealConfigFiles: number;
   totalExtendingConfigFiles: number;
 };
 
 type WriteConfigFilesResult = {
   cleanResults?: string[];
-  writeResults: {
-    totalWrittenFiles: number;
-    totalExtendingConfigFiles: number;
-    aspectsWritersResults: EnvWritersResults[];
-  };
+  writeResults: WriteResults;
   wsDir: string;
 };
 
@@ -124,22 +120,19 @@ export class WorkspaceConfigFilesMain {
     let cleanResults: string[] | undefined;
     if (options.clean) {
       cleanResults = await this.clean(options);
+      console.log(
+        '🚀 ~ file: workspace-config-files.main.runtime.ts:123 ~ WorkspaceConfigFilesMain ~ writeConfigFiles ~ cleanResults:',
+        cleanResults
+      );
     }
 
-    let aspectsWritersResults;
+    let writeResults;
     try {
-      aspectsWritersResults = await this.write(execContext, options);
+      writeResults = await this.write(execContext, options);
     } catch (err) {
       this.logger.info('writeConfigFiles failed', err);
       throw new WriteConfigFilesFailed();
     }
-    const totalWrittenFiles = aspectsWritersResults.reduce((acc, curr) => {
-      return acc + curr.totalWrittenFiles;
-    }, 0);
-    const totalExtendingConfigFiles = aspectsWritersResults.reduce((acc, curr) => {
-      return acc + curr.totalExtendingConfigFiles;
-    }, 0);
-    const writeResults = { aspectsWritersResults, totalWrittenFiles, totalExtendingConfigFiles };
 
     return { writeResults, cleanResults, wsDir: this.workspace.path };
   }
@@ -180,10 +173,7 @@ export class WorkspaceConfigFilesMain {
     }, {});
   }
 
-  private async write(
-    envsExecutionContext: ExecutionContext[],
-    opts: WriteConfigFilesOptions
-  ): Promise<EnvWritersResults[]> {
+  private async write(envsExecutionContext: ExecutionContext[], opts: WriteConfigFilesOptions): Promise<WriteResults> {
     const envCompDirsMap = this.getEnvComponentsDirsMap(envsExecutionContext);
     const configsRootDir = this.getConfigsRootDir();
     const configWriters = await this.listConfigWriters();
@@ -191,16 +181,20 @@ export class WorkspaceConfigFilesMain {
     const filteredWriterIdsToEnvEntriesMap = opts.writers
       ? pick(writerIdsToEnvEntriesMap, opts.writers)
       : writerIdsToEnvEntriesMap;
+    let totalRealConfigFiles = 0;
+    let totalExtendingConfigFiles = 0;
     const results = await pMapSeries(
       Object.entries(filteredWriterIdsToEnvEntriesMap),
       async ([writerId, envEntries]) => {
-        return this.handleOneIdWriter(writerId, envEntries, envCompDirsMap, configsRootDir, opts);
+        const oneResult = await this.handleOneIdWriter(writerId, envEntries, envCompDirsMap, configsRootDir, opts);
+        totalRealConfigFiles += oneResult.totalRealConfigFiles;
+        totalExtendingConfigFiles += oneResult.totalExtendingConfigFiles;
+        return oneResult;
       }
     );
-    console.log('🚀 ~ file: workspace-config-files.main.runtime.ts:195 ~ WorkspaceConfigFilesMain ~ results:', results);
-    throw new Error('stop');
 
-    return results;
+    const totalWrittenFiles = totalRealConfigFiles + totalExtendingConfigFiles;
+    return { writersResult: results, totalWrittenFiles, totalRealConfigFiles, totalExtendingConfigFiles };
   }
 
   private async handleOneIdWriter(
@@ -221,7 +215,6 @@ export class WorkspaceConfigFilesMain {
     );
 
     const writtenRealConfigFiles = Object.values(writtenRealConfigFilesMap);
-    // const compactResults = compact(results);
     const totalRealConfigFiles = writtenRealConfigFiles.length;
     const totalExtendingConfigFiles = writtenExtendingConfigFiles.length;
     const totalWrittenFiles = totalRealConfigFiles + totalExtendingConfigFiles;
