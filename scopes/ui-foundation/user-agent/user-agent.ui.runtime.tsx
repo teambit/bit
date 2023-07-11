@@ -21,20 +21,22 @@ export class UserAgentUI {
   static async provider([uiUi]: [UiUI]) {
     const userAgentUi = new UserAgentUI();
 
-    uiUi.registerRenderHooks<UserAgentRenderCtx, undefined>({
-      serverInit: ({ browser }) => {
-        const userAgent = new UAParser(browser.headers['user-agent']);
-        return {
-          userAgent,
-        };
-      },
-      browserInit: () => {
-        return {
-          userAgent: new UAParser(window.navigator.userAgent),
-        };
-      },
-      reactContext: UserAgentReactContext,
-    });
+    if (uiUi) {
+      uiUi.registerRenderHooks<UserAgentRenderCtx, undefined>({
+        serverInit: ({ browser }) => {
+          const userAgent = new UAParser(browser.headers['user-agent']);
+          return {
+            userAgent,
+          };
+        },
+        browserInit: () => {
+          return {
+            userAgent: new UAParser(window.navigator.userAgent),
+          };
+        },
+        reactContext: UserAgentReactContext,
+      });
+    }
 
     return userAgentUi;
   }

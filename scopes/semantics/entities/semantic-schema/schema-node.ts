@@ -16,7 +16,12 @@ export abstract class SchemaNode {
   abstract toString(): string;
 
   toObject() {
-    return instanceToPlain(this);
+    // rey
+    return {
+      ...this,
+      signature: this.signature,
+      doc: this.doc?.toObject(),
+    };
   }
 }
 

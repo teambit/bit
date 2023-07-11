@@ -121,6 +121,10 @@ export class SchemaExtractorContext {
     return computedSchema;
   }
 
+  async transformSchemaNode(schema: SchemaNode) {
+    return this.extractor.transformAPI(schema, this);
+  }
+
   /**
    * returns the location of a node in a source file.
    */
@@ -473,8 +477,13 @@ export class SchemaExtractorContext {
     if (transformer === undefined) {
       return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
+
     const schemaNode = await this.visit(definitionNode);
-    return schemaNode || this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
+    if (!schemaNode) {
+      return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
+    }
+    const apiTransformer = this.extractor.getAPITransformer(schemaNode);
+    return apiTransformer ? apiTransformer.transform(schemaNode, this) : schemaNode;
   }
 
   private getCompIdByPkgName(pkgName: string): ComponentID | undefined {

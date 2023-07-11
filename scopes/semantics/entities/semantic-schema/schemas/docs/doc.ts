@@ -24,4 +24,11 @@ export class DocSchema extends SchemaNode {
   findTag(tagName: TagName) {
     return this.tags?.find((tag) => tag.tagName === tagName);
   }
+
+  // have explicit toObject at SchemaNode
+  // toObject() {
+  //   return {
+
+  //   }
+  // }
 }

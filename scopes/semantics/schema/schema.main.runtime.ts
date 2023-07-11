@@ -1,11 +1,12 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
+import { ClassConstructor } from 'class-transformer';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
-import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
+import { APISchema, Export, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Formatter } from '@teambit/formatter';
@@ -16,6 +17,7 @@ import { SchemaCommand } from './schema.cmd';
 import { schemaSchema } from './schema.graphql';
 import { SchemaTask, SCHEMA_TASK_NAME } from './schema.task';
 import { SchemaService } from './schema.service';
+import { registerSchemaClass } from '../entities/semantic-schema/class-transformers/schema-obj-to-class';
 
 export type ParserSlot = SlotRegistry<Parser>;
 
@@ -52,6 +54,10 @@ export class SchemaMain {
    */
   getDefaultParser(): Parser {
     return this.parserSlot.get(this.config.defaultParser) as Parser;
+  }
+
+  registerSchemaClass(schema: ClassConstructor<SchemaNode>) {
+    registerSchemaClass(schema);
   }
 
   /**
