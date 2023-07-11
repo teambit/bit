@@ -18,7 +18,12 @@ import { ConfigWriterEntry } from './config-writer-entry';
 import { WsConfigCleanCmd, WsConfigCmd, WsConfigListCmd, WsConfigWriteCmd } from './ws-config.cmd';
 import WriteConfigFilesFailed from './exceptions/write-failed';
 import { WorkspaceConfigFilesService } from './workspace-config-files.service';
-import { handleRealConfigFiles, handleExtendingConfigFiles } from './writers';
+import {
+  handleRealConfigFiles,
+  handleExtendingConfigFiles,
+  EnvsWrittenExtendingConfigFiles,
+  EnvsWrittenRealConfigFiles,
+} from './writers';
 
 /**
  * Configs that can be configured in the workspace.jsonc file
@@ -67,30 +72,23 @@ export type EnvCompsDirsMap = { [envId: string]: EnvMapValue };
 export type EnvsWrittenConfigFile = { envIds: string[]; configFile: WrittenConfigFile };
 export type EnvsWrittenConfigFiles = Array<EnvsWrittenConfigFile>;
 
-export type AspectWritersResults = {
-  aspectId: string;
-  writersResult: OneConfigFileWriterResult[];
+type OneConfigWriterIdResult = {
+  writerId: string;
   totalWrittenFiles: number;
-  totalExtendingConfigFiles: number;
-};
-
-export type OneConfigFileWriterResult = {
-  name: string;
-  totalWrittenFiles: number;
-  configFiles: EnvsWrittenConfigFiles;
-  totalConfigFiles: number;
+  realConfigFiles: EnvsWrittenRealConfigFiles;
+  totalRealConfigFiles: number;
   extendingConfigFiles: EnvsWrittenExtendingConfigFiles;
   totalExtendingConfigFiles: number;
 };
 
-export type EnvWritersResults = {
+type EnvWritersResults = {
   envId: string;
   writersResult: OneConfigFileWriterResult[];
   totalWrittenFiles: number;
   totalExtendingConfigFiles: number;
 };
 
-export type WriteConfigFilesResult = {
+type WriteConfigFilesResult = {
   cleanResults?: string[];
   writeResults: {
     totalWrittenFiles: number;
@@ -199,6 +197,9 @@ export class WorkspaceConfigFilesMain {
         return this.handleOneIdWriter(writerId, envEntries, envCompDirsMap, configsRootDir, opts);
       }
     );
+    console.log('🚀 ~ file: workspace-config-files.main.runtime.ts:195 ~ WorkspaceConfigFilesMain ~ results:', results);
+    throw new Error('stop');
+
     return results;
   }
 
@@ -208,25 +209,30 @@ export class WorkspaceConfigFilesMain {
     envCompsDirsMap: EnvCompsDirsMap,
     configsRootDir: string,
     opts: WriteConfigFilesOptions
-  ): Promise<AspectWritersResults> {
-    const writtenRealConfigFiles = await handleRealConfigFiles(envEntries, envCompsDirsMap, configsRootDir, opts);
+  ): Promise<OneConfigWriterIdResult> {
+    const writtenRealConfigFilesMap = await handleRealConfigFiles(envEntries, envCompsDirsMap, configsRootDir, opts);
     const writtenExtendingConfigFiles = await handleExtendingConfigFiles(
       envEntries,
       envCompsDirsMap,
-      writtenRealConfigFiles,
+      writtenRealConfigFilesMap,
       configsRootDir,
       this.workspace.path,
       opts
     );
-    throw new Error('stop');
+
+    const writtenRealConfigFiles = Object.values(writtenRealConfigFilesMap);
     // const compactResults = compact(results);
-    // const totalWrittenFiles = compactResults.reduce((acc, curr) => {
-    //   return acc + curr.totalWrittenFiles;
-    // }, 0);
-    // const totalExtendingConfigFiles = compactResults.reduce((acc, curr) => {
-    //   return acc + curr.totalExtendingConfigFiles;
-    // }, 0);
-    // return { aspectId, writersResult: compactResults, totalWrittenFiles, totalExtendingConfigFiles };
+    const totalRealConfigFiles = writtenRealConfigFiles.length;
+    const totalExtendingConfigFiles = writtenExtendingConfigFiles.length;
+    const totalWrittenFiles = totalRealConfigFiles + totalExtendingConfigFiles;
+    return {
+      writerId,
+      totalWrittenFiles,
+      realConfigFiles: writtenRealConfigFiles,
+      totalRealConfigFiles,
+      extendingConfigFiles: writtenExtendingConfigFiles,
+      totalExtendingConfigFiles,
+    };
   }
 
   private getConfigsRootDir(): string {

@@ -19,11 +19,15 @@ type MergedRealConfigFilesByHash = {
   };
 };
 
+export type EnvsWrittenRealConfigFiles = Array<EnvsWrittenRealConfigFile>;
+
+export type EnvsWrittenRealConfigFile = {
+  envIds: string[];
+  writtenRealConfigFile: WrittenConfigFile;
+};
+
 export type WrittenRealConfigFilesByHash = {
-  [hash: string]: {
-    envIds: string[];
-    writtenRealConfigFile: WrittenConfigFile;
-  };
+  [hash: string]: EnvsWrittenRealConfigFile;
 };
 
 export type WrittenConfigFile = Required<ConfigFile> & {
