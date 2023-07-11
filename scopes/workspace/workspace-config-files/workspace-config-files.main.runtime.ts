@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
 import pMapSeries from 'p-map-series';
 import yesno from 'yesno';
-import { flatMap, pick } from 'lodash';
+import { flatMap, pick, uniq } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { Workspace } from '@teambit/workspace';
@@ -69,9 +69,6 @@ export type CompPathExtendingHashMap = { [compPath: string]: string };
 export type EnvMapValue = { env: Environment; id: string[]; paths: string[] };
 export type EnvCompsDirsMap = { [envId: string]: EnvMapValue };
 
-export type EnvsWrittenConfigFile = { envIds: string[]; configFile: WrittenConfigFile };
-export type EnvsWrittenConfigFiles = Array<EnvsWrittenConfigFile>;
-
 type OneConfigWriterIdResult = {
   writerId: string;
   totalWrittenFiles: number;
@@ -120,10 +117,6 @@ export class WorkspaceConfigFilesMain {
     let cleanResults: string[] | undefined;
     if (options.clean) {
       cleanResults = await this.clean(options);
-      console.log(
-        '🚀 ~ file: workspace-config-files.main.runtime.ts:123 ~ WorkspaceConfigFilesMain ~ writeConfigFiles ~ cleanResults:',
-        cleanResults
-      );
     }
 
     let writeResults;
@@ -279,24 +272,27 @@ export class WorkspaceConfigFilesMain {
     const execContext = await this.getExecContext();
     const configWriters = this.getFlatConfigWriters(execContext);
     const filteredConfigWriters = writers
-      ? configWriters.filter((configWriter) => writers.includes(configWriter.name) || writers.includes(configWriter.id))
+      ? configWriters.filter((configWriter) => writers.includes(configWriter.id))
       : configWriters;
-    const paths = filteredConfigWriters
-      .map((configWriter) => {
-        const patterns = configWriter.patterns;
-        const currPaths = globby.sync(patterns, {
-          cwd: this.workspace.path,
-          dot: true,
-          onlyFiles: true,
-          ignore: ['**/node_modules/**'],
-        });
-        const filteredPaths = currPaths.filter((path) => {
-          const fullPath = join(this.workspace.path, path);
-          return configWriter.isBitGenerated ? configWriter.isBitGenerated(fullPath) : true;
-        });
-        return filteredPaths;
-      })
-      .flat();
+
+    const paths = uniq(
+      filteredConfigWriters
+        .map((configWriter) => {
+          const patterns = configWriter.patterns;
+          const currPaths = globby.sync(patterns, {
+            cwd: this.workspace.path,
+            dot: true,
+            onlyFiles: true,
+            ignore: ['**/node_modules/**'],
+          });
+          const filteredPaths = currPaths.filter((path) => {
+            const fullPath = join(this.workspace.path, path);
+            return configWriter.isBitGenerated ? configWriter.isBitGenerated(fullPath) : true;
+          });
+          return filteredPaths;
+        })
+        .flat()
+    );
     if (dryRun) return paths;
     if (!silent) await this.promptForCleaning(paths);
     await this.deleteFiles(paths);
