@@ -13,7 +13,7 @@ bit lane diff to => diff between the current lane (or default-lane when in scope
 bit lane diff from to => diff between "from" lane and "to" lane.`;
   alias = '';
   options = [
-    ['', 'pattern <component-pattern>', 'EXPERIMENTAL. show lane-diff for the specified component-pattern only'],
+    ['', 'pattern <component-pattern>', 'show lane-diff for the specified component-pattern only'],
   ] as CommandOptions;
   loader = true;
   private = true;

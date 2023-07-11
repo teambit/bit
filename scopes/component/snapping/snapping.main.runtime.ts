@@ -265,8 +265,7 @@ export class SnappingMain {
       })
     );
     const componentIds = tagDataPerComp.map((t) => t.componentId);
-    const components = await this.scope.import(componentIds);
-
+    await this.scope.import(componentIds);
     const deps = compact(tagDataPerComp.map((t) => t.dependencies).flat()).map((dep) => dep.changeVersion(LATEST));
     const additionalComponentIdsToFetch = await Promise.all(
       componentIds.map(async (id) => {
@@ -293,6 +292,7 @@ if you're willing to lose the history from the head to the specified version, us
       })
     );
     const bitIds = componentIds.map((c) => c._legacy);
+    const components = await this.scope.getMany(componentIds);
     await Promise.all(
       components.map(async (comp) => {
         const tagData = tagDataPerComp.find((t) => t.componentId.isEqual(comp.id, { ignoreVersion: true }));
@@ -387,7 +387,8 @@ if you're willing to lose the history from the head to the specified version, us
       this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
     }
 
-    const components = await this.scope.import(componentIdsLatest, { lane });
+    await this.scope.import(componentIdsLatest, { lane });
+    const components = await this.scope.getMany(componentIdsLatest);
     await Promise.all(
       components.map(async (comp) => {
         const snapData = snapDataPerComp.find((t) => {

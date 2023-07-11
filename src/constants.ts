@@ -215,6 +215,7 @@ export const CENTRAL_BIT_HUB_URL = `https://${getSymphonyUrl()}/exporter`;
 
 // export const CENTRAL_BIT_HUB_URL_IMPORTER = `http://localhost:5001/importer/api/fetch`;
 export const CENTRAL_BIT_HUB_URL_IMPORTER = `https://${getSymphonyUrl()}/importer/api/fetch`;
+export const CENTRAL_BIT_HUB_URL_IMPORTER_V2 = `https://api.v2.bit.cloud/importer/api/fetch`;
 
 export const CENTRAL_BIT_HUB_NAME = getCloudDomain();
 

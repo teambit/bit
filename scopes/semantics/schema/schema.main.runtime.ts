@@ -93,6 +93,7 @@ export class SchemaMain {
    * @param shouldDisposeResourcesOnceDone for long-running processes, such as bit-start/bit-watch, this is not
    * relevant. for calling the API only to get a schema for one component, this is needed to ensure the ts-server is
    * not kept alive. otherwise, the process will never end.
+   *
    */
   async getSchema(
     component: Component,

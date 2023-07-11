@@ -14,3 +14,4 @@ export type { SchemaNodeTransformer, SchemaTransformer } from './schema-transfor
 export { expandIncludeExclude } from './expand-include-exclude';
 export { GLOBAL_TYPES_DIR } from './ts-config-writer';
 export { SchemaExtractorContext } from './schema-extractor-context';
+export * from './sourceFileTransformers';

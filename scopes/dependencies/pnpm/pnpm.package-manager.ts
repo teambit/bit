@@ -20,6 +20,7 @@ import { ProjectManifest } from '@pnpm/types';
 import { join } from 'path';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
+import type { RebuildFn } from './lynx';
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
@@ -30,7 +31,7 @@ export class PnpmPackageManager implements PackageManager {
   async install(
     { rootDir, manifests }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
-  ): Promise<{ dependenciesChanged: boolean; rebuild: () => Promise<void>; storeDir: string }> {
+  ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string }> {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
@@ -53,9 +54,9 @@ export class PnpmPackageManager implements PackageManager {
     if (installOptions.nmSelfReferences) {
       Object.values(manifests).forEach((manifest) => {
         if (manifest.name) {
-          manifest.dependencies = {
+          manifest.devDependencies = {
             [manifest.name]: 'link:.',
-            ...manifest.dependencies,
+            ...manifest.devDependencies,
           };
         }
       });
