@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Compiler, CompilerAspect, CompilerMain } from '@teambit/compiler';
+import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
 import { PackageJsonProps } from '@teambit/pkg';
@@ -12,7 +12,6 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
-import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import WatcherAspect, { WatcherMain, WatchOptions } from '@teambit/watcher';
 import type { Component } from '@teambit/component';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
@@ -317,28 +316,13 @@ export class TypescriptMain {
     DependencyResolverAspect,
     EnvsAspect,
     WatcherAspect,
-    WorkspaceConfigFilesAspect,
-    CompilerAspect,
     ScopeAspect,
     BuilderAspect,
   ];
   static slots = [Slot.withType<SchemaTransformer[]>()];
 
   static async provider(
-    [
-      schema,
-      loggerExt,
-      aspectLoader,
-      workspace,
-      cli,
-      depResolver,
-      envs,
-      watcher,
-      workspaceConfigFiles,
-      compiler,
-      scope,
-      builder,
-    ]: [
+    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs, watcher, scope, builder]: [
       SchemaMain,
       LoggerMain,
       AspectLoaderMain,
@@ -347,8 +331,6 @@ export class TypescriptMain {
       DependencyResolverMain,
       EnvsMain,
       WatcherMain,
-      WorkspaceConfigFilesMain,
-      CompilerMain,
       ScopeMain,
       BuilderMain
     ],
