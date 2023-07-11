@@ -1321,7 +1321,10 @@
         "scope": "teambit.design",
         "version": "1.0.21",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/avatar"
+        "rootDir": "components/ui/avatar",
+        "config": {
+            "teambit.pkg/pkg": {}
+        }
     },
     "ui/badges/component-count": {
         "scope": "teambit.component",
