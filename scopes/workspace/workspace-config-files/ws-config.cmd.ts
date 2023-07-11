@@ -1,6 +1,5 @@
 /* eslint-disable max-classes-per-file */
 
-import { omit } from 'lodash';
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceConfigFilesMain, WriteConfigFilesResult } from './workspace-config-files.main.runtime';
@@ -106,7 +105,7 @@ export class WsConfigWriteCmd implements Command {
       return {
         wsDir,
         cleanResults,
-        writeResults: { totalWrittenFiles: writeResults.totalWrittenFiles, writersResult: updatedWriteResults },
+        writeResults: updatedWriteResults,
       };
     }
     return { wsDir, cleanResults, writeResults };

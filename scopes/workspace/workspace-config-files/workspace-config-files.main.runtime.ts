@@ -69,7 +69,7 @@ export type CompPathExtendingHashMap = { [compPath: string]: string };
 export type EnvMapValue = { env: Environment; id: string[]; paths: string[] };
 export type EnvCompsDirsMap = { [envId: string]: EnvMapValue };
 
-type OneConfigWriterIdResult = {
+export type OneConfigWriterIdResult = {
   writerId: string;
   totalWrittenFiles: number;
   realConfigFiles: EnvsWrittenRealConfigFiles;
@@ -78,14 +78,14 @@ type OneConfigWriterIdResult = {
   totalExtendingConfigFiles: number;
 };
 
-type WriteResults = {
+export type WriteResults = {
   writersResult: OneConfigWriterIdResult[];
   totalWrittenFiles: number;
   totalRealConfigFiles: number;
   totalExtendingConfigFiles: number;
 };
 
-type WriteConfigFilesResult = {
+export type WriteConfigFilesResult = {
   cleanResults?: string[];
   writeResults: WriteResults;
   wsDir: string;

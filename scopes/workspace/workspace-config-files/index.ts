@@ -2,9 +2,11 @@ import { WorkspaceConfigFilesAspect } from './workspace-config-files.aspect';
 
 export type {
   WorkspaceConfigFilesMain,
-  WrittenConfigFile,
+  WriteConfigFilesResult,
   EnvCompsDirsMap,
   EnvMapValue,
+  OneConfigWriterIdResult,
+  WriteResults,
 } from './workspace-config-files.main.runtime';
 export type {
   ConfigWriterEntry,
