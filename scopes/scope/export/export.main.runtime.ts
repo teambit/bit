@@ -36,6 +36,7 @@ import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import { ExportOrigin } from '@teambit/legacy/dist/scope/network/http/http';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import {
@@ -108,20 +109,6 @@ export class ExportMain {
     }
     this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
     return exportResults;
-  }
-
-  async exportObjectList(
-    manyObjectsPerRemote: ObjectsPerRemote[],
-    scopeRemotes: Remotes,
-    centralHubOptions?: Record<string, any>
-  ) {
-    const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
-    if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes)) {
-      const objectList = this.transformToOneObjectListWithScopeData(manyObjectsPerRemote);
-      await http.pushToCentralHub(objectList, centralHubOptions);
-    } else {
-      await this.pushToRemotesCarefully(manyObjectsPerRemote);
-    }
   }
 
   private async exportComponents({ ids, includeNonStaged, originDirectly, ...params }: ExportParams): Promise<{
@@ -228,6 +215,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     isOnMain = true,
     exportHeadsOnly, // relevant when exporting from bare-scope, especially when re-exporting existing versions, the normal calculation based on getDivergeData won't work
     filterOutExistingVersions, // go to the remote and check whether the version exists there. if so, don't export it
+    exportOrigin = 'export',
   }: {
     scope: Scope;
     ids: BitIds;
@@ -241,6 +229,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     isOnMain?: boolean;
     exportHeadsOnly?: boolean;
     filterOutExistingVersions?: boolean;
+    exportOrigin?: ExportOrigin;
   }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
     this.logger.debug(`scope.exportMany, ids: ${ids.toString()}`);
     const scopeRemotes: Remotes = await getScopeRemotes(scope);
@@ -426,7 +415,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const pushAllToCentralHub = async () => {
       const objectList = this.transformToOneObjectListWithScopeData(manyObjectsPerRemote);
       const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
-      const pushResults = await http.pushToCentralHub(objectList);
+      const pushResults = await http.pushToCentralHub(objectList, { origin: exportOrigin });
       const { failedScopes, successIds, errors } = pushResults;
       if (failedScopes.length) {
         throw new PersistFailed(failedScopes, errors);

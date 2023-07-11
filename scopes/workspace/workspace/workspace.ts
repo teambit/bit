@@ -676,8 +676,8 @@ export class Workspace implements ComponentFactory {
 
   async triggerOnComponentChange(
     id: ComponentID,
-    files: string[],
-    removedFiles: string[],
+    files: PathOsBasedAbsolute[],
+    removedFiles: PathOsBasedAbsolute[],
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);

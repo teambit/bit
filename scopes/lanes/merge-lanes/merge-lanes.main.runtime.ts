@@ -359,6 +359,7 @@ export class MergeLanesMain {
         // all artifacts must be pushed. they're all considered "external" in this case, because it's running from a
         // bare-scope, but we don't want to ignore them, otherwise, they'll be missing from the component-scopes.
         ignoreMissingExternalArtifacts: false,
+        exportOrigin: 'lane-merge',
       });
       exportedIds = exported.map((id) => id.toString());
     }

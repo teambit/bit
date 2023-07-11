@@ -7,3 +7,4 @@ export { TypescriptAspect } from './typescript.aspect';
 export type { TypescriptCompilerInterface } from './typescript-compiler-interface';
 export { expandIncludeExclude } from './expand-include-exclude';
 export { GLOBAL_TYPES_DIR } from './ts-config-writer';
+export * from './sourceFileTransformers';
