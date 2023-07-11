@@ -4,6 +4,7 @@ import { CompFiles, Workspace, FilesStatus } from '@teambit/workspace';
 import { PathLinux, PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy/dist/utils/path';
 import pMap from 'p-map';
 import { SnappingMain } from '@teambit/snapping';
+import { LanesMain } from '@teambit/lanes';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -18,8 +19,8 @@ type InitSCMEntry = {
 
 type DataToInitSCM = { [compId: string]: InitSCMEntry };
 
-export class APIForVSCode {
-  constructor(private workspace: Workspace, private snapping: SnappingMain) {}
+export class APIForIDE {
+  constructor(private workspace: Workspace, private snapping: SnappingMain, private lanes: LanesMain) {}
 
   async listIdsWithPaths() {
     const ids = await this.workspace.listIds();
@@ -33,6 +34,17 @@ export class APIForVSCode {
     const compId = await this.workspace.resolveComponentId(id);
     const comp = await this.workspace.get(compId);
     return path.join(this.workspace.componentDir(compId), comp.state._consumer.mainFile);
+  }
+
+  async importLane(
+    laneName: string,
+    { skipDependencyInstallation }: { skipDependencyInstallation?: boolean }
+  ): Promise<string[]> {
+    const results = await this.lanes.switchLanes(laneName, {
+      skipDependencyInstallation,
+      getAll: true,
+    });
+    return (results.components || []).map((c) => c.id.toString());
   }
 
   async getCompFiles(id: string): Promise<{ dirAbs: string; filesRelative: PathOsBasedRelative[] }> {
