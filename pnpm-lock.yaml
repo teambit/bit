@@ -3923,6 +3923,9 @@ importers:
       '@teambit/code.ui.code-compare':
         specifier: workspace:*
         version: file:scopes/code/ui/code-compare(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.code-editor':
+        specifier: workspace:*
+        version: file:scopes/code/ui/code-editor(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-tab-page':
         specifier: workspace:*
         version: file:scopes/code/ui/code-tab-page(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -5010,6 +5013,8 @@ importers:
       '@teambit/code':
         injected: true
       '@teambit/code.ui.code-compare':
+        injected: true
+      '@teambit/code.ui.code-editor':
         injected: true
       '@teambit/code.ui.code-tab-page':
         injected: true
@@ -5827,6 +5832,9 @@ importers:
       '@teambit/code.ui.code-compare':
         specifier: workspace:*
         version: file:scopes/code/ui/code-compare(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.code-editor':
+        specifier: workspace:*
+        version: file:scopes/code/ui/code-editor(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-tab-page':
         specifier: workspace:*
         version: file:scopes/code/ui/code-tab-page(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -6914,6 +6922,8 @@ importers:
       '@teambit/code':
         injected: true
       '@teambit/code.ui.code-compare':
+        injected: true
+      '@teambit/code.ui.code-editor':
         injected: true
       '@teambit/code.ui.code-tab-page':
         injected: true
@@ -7731,6 +7741,9 @@ importers:
       '@teambit/code.ui.code-compare':
         specifier: workspace:*
         version: file:scopes/code/ui/code-compare(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.code-editor':
+        specifier: workspace:*
+        version: file:scopes/code/ui/code-editor(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-tab-page':
         specifier: workspace:*
         version: file:scopes/code/ui/code-tab-page(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -8818,6 +8831,8 @@ importers:
       '@teambit/code':
         injected: true
       '@teambit/code.ui.code-compare':
+        injected: true
+      '@teambit/code.ui.code-editor':
         injected: true
       '@teambit/code.ui.code-tab-page':
         injected: true
@@ -9635,6 +9650,9 @@ importers:
       '@teambit/code.ui.code-compare':
         specifier: workspace:*
         version: file:scopes/code/ui/code-compare(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.code-editor':
+        specifier: workspace:*
+        version: file:scopes/code/ui/code-editor(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-tab-page':
         specifier: workspace:*
         version: file:scopes/code/ui/code-tab-page(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -10722,6 +10740,8 @@ importers:
       '@teambit/code':
         injected: true
       '@teambit/code.ui.code-compare':
+        injected: true
+      '@teambit/code.ui.code-editor':
         injected: true
       '@teambit/code.ui.code-tab-page':
         injected: true
@@ -11539,6 +11559,9 @@ importers:
       '@teambit/code.ui.code-compare':
         specifier: workspace:*
         version: file:scopes/code/ui/code-compare(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.code-editor':
+        specifier: workspace:*
+        version: file:scopes/code/ui/code-editor(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-tab-page':
         specifier: workspace:*
         version: file:scopes/code/ui/code-tab-page(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -12626,6 +12649,8 @@ importers:
       '@teambit/code':
         injected: true
       '@teambit/code.ui.code-compare':
+        injected: true
+      '@teambit/code.ui.code-editor':
         injected: true
       '@teambit/code.ui.code-tab-page':
         injected: true
@@ -13443,6 +13468,9 @@ importers:
       '@teambit/code.ui.code-compare':
         specifier: workspace:*
         version: file:scopes/code/ui/code-compare(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/code.ui.code-editor':
+        specifier: workspace:*
+        version: file:scopes/code/ui/code-editor(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-tab-page':
         specifier: workspace:*
         version: file:scopes/code/ui/code-tab-page(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -14530,6 +14558,8 @@ importers:
       '@teambit/code':
         injected: true
       '@teambit/code.ui.code-compare':
+        injected: true
+      '@teambit/code.ui.code-editor':
         injected: true
       '@teambit/code.ui.code-tab-page':
         injected: true
@@ -16470,6 +16500,52 @@ importers:
       '@types/lodash.flatten':
         specifier: 4.4.6
         version: 4.4.6
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+      '@types/react':
+        specifier: ^17.0.8
+        version: 17.0.8
+      '@types/react-dom':
+        specifier: ^17.0.5
+        version: 17.0.18
+      '@types/testing-library__jest-dom':
+        specifier: 5.9.5
+        version: 5.9.5
+
+  scopes/code/ui/code-editor:
+    dependencies:
+      '@monaco-editor/react':
+        specifier: 4.4.6
+        version: 4.4.6(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.theme.dark-theme':
+        specifier: 1.0.2
+        version: registry.npmjs.org/@teambit/base-ui.theme.dark-theme@1.0.2(react-dom@17.0.2)(react@17.0.2)
+      classnames:
+        specifier: 2.2.6
+        version: 2.2.6
+      core-js:
+        specifier: ^3.0.0
+        version: 3.13.0
+      react:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2
+      react-dom:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2(react@17.0.2)
+    devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@types/classnames':
+        specifier: 2.2.11
+        version: 2.2.11
+      '@types/jest':
+        specifier: ^26.0.0
+        version: 26.0.20
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -25387,6 +25463,12 @@ importers:
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
+      chalk:
+        specifier: 2.4.2
+        version: 2.4.2
+      class-transformer:
+        specifier: 0.5.1
+        version: 0.5.1
       comment-json:
         specifier: 3.0.3
         version: 3.0.3
@@ -26816,6 +26898,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      class-transformer:
+        specifier: 0.5.1
+        version: 0.5.1
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -37290,7 +37375,7 @@ packages:
     dev: false
 
   /@teambit/component.modules.component-url@0.0.128(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-E5szS9hGfk/lAwEma3/ViMkm32A=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/teambit-component.modules.component-url-0.0.128.tgz}
+    resolution: {integrity: sha1-E5szS9hGfk/lAwEma3/ViMkm32A=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.128.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: 17.0.2
@@ -37304,7 +37389,7 @@ packages:
     dev: false
 
   /@teambit/component.modules.component-url@0.0.140(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-cmcWwISlL+PSKta3Q4HkpLTARBc=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/teambit-component.modules.component-url-0.0.140.tgz}
+    resolution: {integrity: sha1-cmcWwISlL+PSKta3Q4HkpLTARBc=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.140.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: 17.0.2
@@ -37318,7 +37403,7 @@ packages:
     dev: false
 
   /@teambit/component.modules.component-url@0.0.151(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-/dj3W/oKQC/p0X74zRJ+Mov/bec=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/teambit-component.modules.component-url-0.0.151.tgz}
+    resolution: {integrity: sha1-/dj3W/oKQC/p0X74zRJ+Mov/bec=, tarball: https://node-registry.bit.cloud/@teambit/component.modules.component-url/-/@teambit-component.modules.component-url-0.0.151.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: 17.0.2
@@ -37345,7 +37430,7 @@ packages:
     dev: false
 
   /@teambit/component.ui.badges.component-count@0.0.10(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-/KG3gyg1xt3Gk+7z1Yf2Ww9qd50=, tarball: https://node-registry.bit.cloud/tarballs/teambit.component/ui/badges/component-count@0.0.10.tgz}
+    resolution: {integrity: sha1-/KG3gyg1xt3Gk+7z1Yf2Ww9qd50=, tarball: https://node-registry.bit.cloud/@teambit/component.ui.badges.component-count/-/@teambit-component.ui.badges.component-count-0.0.10.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39182,8 +39267,8 @@ packages:
   /@teambit/documenter.ui.linked-heading@4.1.8(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-LGpmPIXZSWsXbYgkS/WR1VxJcCg=, tarball: https://node-registry.bit.cloud/@teambit/documenter.ui.linked-heading/-/@teambit-documenter.ui.linked-heading-4.1.8.tgz}
     peerDependencies:
-      react: '*'
-      react-dom: '*'
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/documenter.ui.anchor': 4.0.8(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.heading': 4.1.6(react-dom@17.0.2)(react@17.0.2)
@@ -39714,7 +39799,7 @@ packages:
     dev: true
 
   /@teambit/explorer.ui.gallery.component-card@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-gkm3X+OtPpzJSabL3xj7V6z75XA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/ui/gallery/component-card@0.0.495.tgz}
+    resolution: {integrity: sha1-gkm3X+OtPpzJSabL3xj7V6z75XA=, tarball: https://node-registry.bit.cloud/@teambit/explorer.ui.gallery.component-card/-/@teambit-explorer.ui.gallery.component-card-0.0.495.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39745,7 +39830,7 @@ packages:
     dev: false
 
   /@teambit/explorer.ui.gallery.component-card@0.0.507(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-p3EePsVfQINlcsiNPimNv3dK1Po=, tarball: https://node-registry.bit.cloud/tarballs/teambit.explorer/ui/gallery/component-card@0.0.507.tgz}
+    resolution: {integrity: sha1-p3EePsVfQINlcsiNPimNv3dK1Po=, tarball: https://node-registry.bit.cloud/@teambit/explorer.ui.gallery.component-card/-/@teambit-explorer.ui.gallery.component-card-0.0.507.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -39914,7 +39999,7 @@ packages:
     dev: false
 
   /@teambit/html.modules.create-element-from-string@0.0.104:
-    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: https://node-registry.bit.cloud/@teambit/html.modules.create-element-from-string/-/@teambit-html.modules.create-element-from-string-0.0.104.tgz}
+    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: https://node-registry.bit.cloud/tarballs/teambit.html/modules/create-element-from-string@0.0.104.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -40432,7 +40517,7 @@ packages:
     dev: false
 
   /@teambit/preview.ui.preview-placeholder@0.0.496(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-MgSJUaYFpLjSPyLWttgR63sM/Xg=, tarball: https://node-registry.bit.cloud/tarballs/teambit.preview/ui/preview-placeholder@0.0.496.tgz}
+    resolution: {integrity: sha1-MgSJUaYFpLjSPyLWttgR63sM/Xg=, tarball: https://node-registry.bit.cloud/@teambit/preview.ui.preview-placeholder/-/@teambit-preview.ui.preview-placeholder-0.0.496.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -40680,7 +40765,7 @@ packages:
     dev: false
 
   /@teambit/scope.ui.scope-title@0.0.508(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-2lOC51kJif9bWAma5M4yaPPo/U4=, tarball: https://node-registry.bit.cloud/@teambit/scope.ui.scope-title/-/teambit-scope.ui.scope-title-0.0.508.tgz}
+    resolution: {integrity: sha1-2lOC51kJif9bWAma5M4yaPPo/U4=, tarball: https://node-registry.bit.cloud/@teambit/scope.ui.scope-title/-/@teambit-scope.ui.scope-title-0.0.508.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -40788,46 +40873,46 @@ packages:
     dev: false
 
   /@teambit/toolbox.string.ellipsis@0.0.172:
-    resolution: {integrity: sha1-nbLwbPi2d8Qeg6aCX2TYlARSRew=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.172.tgz}
+    resolution: {integrity: sha1-nbLwbPi2d8Qeg6aCX2TYlARSRew=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/string/ellipsis@0.0.172.tgz}
     engines: {node: '>=12.22.0'}
     dev: true
 
   /@teambit/toolbox.string.ellipsis@0.0.173:
-    resolution: {integrity: sha1-CY+uj2sRmPejtTCee4HDvLFeeI8=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.173.tgz}
+    resolution: {integrity: sha1-CY+uj2sRmPejtTCee4HDvLFeeI8=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/string/ellipsis@0.0.173.tgz}
     engines: {node: '>=12.22.0'}
 
   /@teambit/toolbox.string.ellipsis@0.0.181:
-    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.181.tgz}
+    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/string/ellipsis@0.0.181.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/toolbox.string.get-initials@0.0.483:
-    resolution: {integrity: sha1-7BsxTG+qhcTHltoBu9McFKOq0/Y=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.get-initials/-/@teambit-toolbox.string.get-initials-0.0.483.tgz}
+    resolution: {integrity: sha1-7BsxTG+qhcTHltoBu9McFKOq0/Y=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/string/get-initials@0.0.483.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/toolbox.string.get-initials@0.0.491:
-    resolution: {integrity: sha1-dMkF7hxhtmK2aXz7QCkAAajSrKI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.get-initials/-/@teambit-toolbox.string.get-initials-0.0.491.tgz}
+    resolution: {integrity: sha1-dMkF7hxhtmK2aXz7QCkAAajSrKI=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/string/get-initials@0.0.491.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/toolbox.types.serializable@0.0.483:
-    resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.483.tgz}
+    resolution: {integrity: sha1-bUTnjhsNOvMScS8+fSEk80Bvq3E=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/types/serializable@0.0.483.tgz}
     engines: {node: '>=12.22.0'}
     dev: true
 
   /@teambit/toolbox.types.serializable@0.0.491:
-    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.491.tgz}
+    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/types/serializable@0.0.491.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/toolbox.url.add-avatar-query-params@0.0.483:
-    resolution: {integrity: sha1-oyxnM4oFZ2iiNiqxDPWHI2v7IeE=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.url.add-avatar-query-params/-/@teambit-toolbox.url.add-avatar-query-params-0.0.483.tgz}
+    resolution: {integrity: sha1-oyxnM4oFZ2iiNiqxDPWHI2v7IeE=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/url/add-avatar-query-params@0.0.483.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
   /@teambit/toolbox.url.add-avatar-query-params@0.0.492:
-    resolution: {integrity: sha1-dECMYTXTkMlAIUaK22cpmNlTsak=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.url.add-avatar-query-params/-/@teambit-toolbox.url.add-avatar-query-params-0.0.492.tgz}
+    resolution: {integrity: sha1-dECMYTXTkMlAIUaK22cpmNlTsak=, tarball: https://node-registry.bit.cloud/tarballs/teambit.toolbox/url/add-avatar-query-params@0.0.492.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -40942,7 +41027,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.get-icon-from-file-name@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.get-icon-from-file-name/-/@teambit-ui-foundation.ui.get-icon-from-file-name-0.0.495.tgz}
+    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/get-icon-from-file-name@0.0.495.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41292,7 +41377,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.react-router.slot-router@0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
-    resolution: {integrity: sha1-uUc0/zKzRjSFXhWhBUDlDnIJuO0=, tarball: https://node-registry.bit.cloud/tarballs/teambit.ui-foundation/ui/react-router/slot-router@0.0.501.tgz}
+    resolution: {integrity: sha1-uUc0/zKzRjSFXhWhBUDlDnIJuO0=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.react-router.slot-router/-/@teambit-ui-foundation.ui.react-router.slot-router-0.0.501.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -41615,7 +41700,7 @@ packages:
     dev: false
 
   /@teambit/workspace.ui.workspace-component-card@0.0.510(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-bO15xcj1TSQ5iEfw8QBu6GxTigM=, tarball: https://node-registry.bit.cloud/tarballs/teambit.workspace/ui/workspace-component-card@0.0.510.tgz}
+    resolution: {integrity: sha1-bO15xcj1TSQ5iEfw8QBu6GxTigM=, tarball: https://node-registry.bit.cloud/@teambit/workspace.ui.workspace-component-card/-/@teambit-workspace.ui.workspace-component-card-0.0.510.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -63495,6 +63580,24 @@ packages:
       - monaco-editor
     dev: false
 
+  file:scopes/code/ui/code-editor(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {directory: scopes/code/ui/code-editor, type: directory}
+    id: file:scopes/code/ui/code-editor
+    name: '@teambit/code.ui.code-editor'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@monaco-editor/react': 4.4.6(monaco-editor@0.33.0)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.theme.dark-theme': registry.npmjs.org/@teambit/base-ui.theme.dark-theme@1.0.2(react-dom@17.0.2)(react@17.0.2)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - monaco-editor
+    dev: false
+
   file:scopes/code/ui/code-tab-page(@apollo/client@3.6.9)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
     resolution: {directory: scopes/code/ui/code-tab-page, type: directory}
     id: file:scopes/code/ui/code-tab-page
@@ -66880,6 +66983,8 @@ packages:
       babel-preset-jest: 27.5.1(@babel/core@7.19.6)
       babel-preset-react-app: 10.0.0
       camelcase: 6.2.0
+      chalk: 2.4.2
+      class-transformer: 0.5.1
       comment-json: 3.0.3
       core-js: 3.13.0
       css-loader: 6.2.0(webpack@5.84.1)
@@ -67451,6 +67556,7 @@ packages:
       '@teambit/harmony': 0.4.6
       chai: 4.3.0
       chai-subset: 1.6.0
+      class-transformer: 0.5.1
       core-js: 3.13.0
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@14.7.0)
