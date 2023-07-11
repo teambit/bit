@@ -206,6 +206,7 @@ a lane created from another lane has all the components of the original lane.`;
       'alias <name>',
       'a local alias to refer to this lane, defaults to the `<lane-name>` (can be added later with "bit lane alias")',
     ],
+    ['', 'fork-lane-new-scope', 'allow forking a lane into a different scope than the original lane'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -388,7 +389,7 @@ export class LaneImportCmd implements Command {
     [
       'p',
       'pattern <component-pattern>',
-      'EXPERIMENTAL. switch only the specified component-pattern. works only when the workspace is empty',
+      'switch only the specified component-pattern. works only when the workspace is empty',
     ],
   ] as CommandOptions;
   loader = true;

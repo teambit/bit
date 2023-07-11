@@ -1,14 +1,17 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import LanesAspect, { LanesMain } from '@teambit/lanes';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
+import { Component } from '@teambit/component';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ApiServerAspect } from './api-server.aspect';
 import { CLIRoute } from './cli.route';
 import { ServerCmd } from './server.cmd';
-import { VSCodeRoute } from './vscode.route';
-import { APIForVSCode } from './api-for-vscode';
+import { IDERoute } from './ide.route';
+import { APIForIDE } from './api-for-ide';
+import { SSEEventsRoute, sendEventsToClients } from './sse-events.route';
 
 export class ApiServerMain {
   constructor(
@@ -24,6 +27,25 @@ export class ApiServerMain {
     if (!this.workspace) {
       throw new Error(`unable to run bit-server, the current directory ${process.cwd()} is not a workspace`);
     }
+
+    this.workspace.registerOnComponentChange(
+      async (
+        component: Component,
+        files: string[], // os absolute paths
+        removedFiles?: string[] // os absolute paths
+      ) => {
+        sendEventsToClients('onComponentChange', {
+          id: component.id.toStringWithoutVersion(),
+          files,
+          removedFiles,
+        });
+      }
+    );
+
+    this.workspace.registerOnBitmapChange(async () => {
+      sendEventsToClients('onBitmapChange', {});
+    });
+
     this.watcher
       .watch({
         preCompile: false,
@@ -39,26 +61,36 @@ export class ApiServerMain {
     });
   }
 
-  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ExpressAspect, WatcherAspect, SnappingAspect];
+  static dependencies = [
+    CLIAspect,
+    WorkspaceAspect,
+    LoggerAspect,
+    ExpressAspect,
+    WatcherAspect,
+    SnappingAspect,
+    LanesAspect,
+  ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, loggerMain, express, watcher, snapping]: [
+  static async provider([cli, workspace, loggerMain, express, watcher, snapping, lanes]: [
     CLIMain,
     Workspace,
     LoggerMain,
     ExpressMain,
     WatcherMain,
-    SnappingMain
+    SnappingMain,
+    LanesMain
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher);
     cli.register(new ServerCmd(apiServer));
 
     const cliRoute = new CLIRoute(logger, cli);
-    const apiForVscode = new APIForVSCode(workspace, snapping);
-    const vscodeRoute = new VSCodeRoute(logger, apiForVscode);
+    const apiForIDE = new APIForIDE(workspace, snapping, lanes);
+    const vscodeRoute = new IDERoute(logger, apiForIDE);
+    const sseEventsRoute = new SSEEventsRoute(logger, cli);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.
     if (workspace) {
-      express.register([cliRoute, vscodeRoute]);
+      express.register([cliRoute, vscodeRoute, sseEventsRoute]);
     }
 
     return apiServer;

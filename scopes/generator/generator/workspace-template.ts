@@ -1,4 +1,5 @@
 import type { Component } from '@teambit/component';
+import { ComponentConfig } from './component-template';
 
 export interface WorkspaceFile {
   /**
@@ -57,6 +58,20 @@ export interface ForkComponentInfo {
    * a new component name. if not specified, use the original id (without the scope)
    */
   targetName?: string;
+
+  /**
+   * env to use for the component.
+   */
+  env?: string;
+
+  /**
+   * component config. gets saved in the .bitmap file and overrides the workspace.jsonc config.
+   * for example, you can set the env that will be used for this component as follows:
+   * "teambit.envs/envs": {
+   *    "env": "teambit.harmony/aspect"
+   * },
+   */
+  config?: ComponentConfig;
 }
 
 /**

@@ -15,6 +15,7 @@
         "@babel/preset-typescript": "7.18.6",
         "@babel/types": "7.22.3",
         "@graphql-modules/core": "0.7.17",
+        "@graphql-tools/schema": "^10.0.0",
         "@jest/test-result": "26.6.2",
         "@mdx-js/mdx": "1.6.21",
         "@mdx-js/react": "1.6.22",
@@ -112,7 +113,6 @@
         "@teambit/design.themes.dark-theme": "1.91.4",
         "@teambit/design.themes.theme-toggler": "0.1.3",
         "@teambit/design.ui.alert-card": "^0.0.26",
-        "@teambit/design.ui.avatar": "^1.0.16",
         "@teambit/design.ui.brand.logo": "1.96.2",
         "@teambit/design.ui.cli-snippet": "^0.0.359",
         "@teambit/design.ui.contributors": "^0.0.514",
@@ -234,7 +234,7 @@
         "@types/webpack": "5.28.1",
         "@types/webpack-dev-server": "4.7.2",
         "@yarnpkg/cli": "4.0.0-rc.42",
-        "@yarnpkg/core": "^4.0.0-rc.42",
+        "@yarnpkg/core": "4.0.0-rc.45",
         "@yarnpkg/fslib": "3.0.0-rc.42",
         "@yarnpkg/parsers": "3.0.0-rc.42",
         "@yarnpkg/plugin-npm": "3.0.0-rc.42",
@@ -265,7 +265,6 @@
         "cors": "2.8.5",
         "credentials-by-uri": "2.0.0",
         "cross-env": "7.0.3",
-        "cross-fetch": "3.0.6",
         "css-minimizer-webpack-plugin": "3.0.2",
         "dagre": "0.8.5",
         "didyoumean": "1.2.1",
@@ -288,7 +287,6 @@
         "graceful-fs": "4.2.10",
         "graphql-subscriptions": "1.2.0",
         "graphql-tag": "2.12.1",
-        "graphql-tools": "6.2.4",
         "graphql-type-json": "0.3.2",
         "history": "^5.2.0",
         "html-escaper": "3.0.0",
@@ -393,7 +391,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.513",
+        "@teambit/legacy": "1.0.520",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "browserslist": "4.16.3",
@@ -412,7 +410,7 @@
     },
     "nodeLinker": "hoisted",
     "rootComponents": true,
-    "nodeVersion": "16.16.0",
+    "nodeVersion": "18.16.1",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
@@ -486,7 +484,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.513"
+            "@teambit/legacy": "1.0.520"
           }
         }
       },
@@ -588,6 +586,9 @@
     },
     "scopes/workspace": {
       "defaultScope": "teambit.workspace"
+    },
+    "scopes/git": {
+      "defaultScope": "teambit.git"
     },
     "scopes/webpack": {
       "defaultScope": "teambit.webpack"
@@ -723,11 +724,11 @@
             "css-loader": "6.2.0",
             "postcss": "8.4.18",
             "postcss-loader": "7.0.1",
-            "babel-loader": "8.2.2",
+            "babel-loader": "9.1.2",
             "@babel/preset-react": "7.18.6",
             "@babel/preset-env": "7.19.4",
             "resolve-url-loader": "5.0.0",
-            "sass-loader": "12.1.0",
+            "sass-loader": "13.3.2",
             "@svgr/webpack": "5.5.0",
             "new-url-loader": "0.1.1",
             "less": "^4.1.1",
@@ -747,7 +748,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.513"
+            "@teambit/legacy": "1.0.520"
           }
         }
       }
@@ -758,7 +759,7 @@
           "devDependencies": {
             "@babel/preset-react": "7.18.6",
             "@babel/preset-env": "7.19.4",
-            "babel-loader": "8.2.2"
+            "babel-loader": "9.1.2"
           }
         }
       }
@@ -806,7 +807,7 @@
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
           "bvm": {
-            "node": "16.16.0"
+            "node": "18.16.1"
           },
           "bin": {
             "bbit": "bin/bit"
@@ -837,7 +838,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.513",
+            "@teambit/legacy": "1.0.520",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -972,7 +973,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.513"
+            "@teambit/legacy": "1.0.520"
           }
         }
       }

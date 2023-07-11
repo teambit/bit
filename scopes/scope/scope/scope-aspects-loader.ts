@@ -9,7 +9,7 @@ import {
   CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR,
   CFG_USE_DATED_CAPSULES,
 } from '@teambit/legacy/dist/constants';
-import { Compiler } from '@teambit/compiler';
+import { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { compact, uniq, difference, groupBy } from 'lodash';
@@ -172,11 +172,12 @@ needed-for: ${neededFor || '<unknown>'}`);
     await this.aspectLoader.loadAspectFromPath(localAspects);
     const componentIds = await this.scope.resolveMultipleComponentIds(aspectIds);
     if (!componentIds || !componentIds.length) return [];
-    const components = await this.scope.import(componentIds, {
+    await this.scope.import(componentIds, {
       reFetchUnBuiltVersion: false,
       preferDependencyGraph: true,
       lane,
     });
+    const components = await this.scope.getMany(componentIds);
 
     return components;
   }
@@ -192,8 +193,10 @@ needed-for: ${neededFor || '<unknown>'}`);
       components.map((c) => c.id),
       // includeFromNestedHosts - to support case when you are in a workspace, trying to load aspect defined in the workspace.jsonc but not part of the workspace
       {
+        datedDirId: this.scope.name,
         baseDir: this.getAspectCapsulePath(),
         useHash,
+        packageManager: this.getAspectsPackageManager(),
         useDatedDirs,
         skipIfExists: opts?.skipIfExists ?? true,
         seedersOnly: true,
@@ -247,25 +250,29 @@ needed-for: ${neededFor || '<unknown>'}`);
     const distExists = existsSync(join(capsule.path, distDir));
     if (distExists) return;
 
-    const compiledCode = component.filesystem.files.flatMap((file) => {
-      if (!compiler.isFileSupported(file.path)) {
-        return [
-          {
-            outputText: file.contents.toString('utf8'),
-            outputPath: file.path,
-          },
-        ];
-      }
+    const compiledCode = (
+      await Promise.all(
+        component.filesystem.files.flatMap(async (file) => {
+          if (!compiler.isFileSupported(file.path)) {
+            return [
+              {
+                outputText: file.contents.toString('utf8'),
+                outputPath: file.path,
+              },
+            ] as TranspileFileOutputOneFile[];
+          }
 
-      if (compiler.transpileFile) {
-        return compiler.transpileFile(file.contents.toString('utf8'), {
-          filePath: file.path,
-          componentDir: capsule.path,
-        });
-      }
+          if (compiler.transpileFile) {
+            return compiler.transpileFile(file.contents.toString('utf8'), {
+              filePath: file.path,
+              componentDir: capsule.path,
+            });
+          }
 
-      return [];
-    });
+          return [];
+        })
+      )
+    ).flat();
 
     await Promise.all(
       compact(compiledCode).map((compiledFile) => {
@@ -360,6 +367,10 @@ needed-for: ${neededFor || '<unknown>'}`);
     return !this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR);
   }
 
+  getAspectsPackageManager(): string | undefined {
+    return this.scope.aspectsPackageManager;
+  }
+
   private async resolveUserAspects(
     runtimeName?: string,
     userAspectsIds?: ComponentID[],
@@ -372,8 +383,10 @@ needed-for: ${neededFor || '<unknown>'}`);
     const network = await this.isolator.isolateComponents(
       userAspectsIds,
       {
+        datedDirId: this.scope.name,
         baseDir: this.getAspectCapsulePath(),
         useHash,
+        packageManager: this.getAspectsPackageManager(),
         useDatedDirs,
         skipIfExists: true,
         // for some reason this needs to be false, otherwise tagging components in some workspaces

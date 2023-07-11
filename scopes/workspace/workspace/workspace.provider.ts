@@ -61,6 +61,9 @@ export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
 
 export type OnComponentRemoveSlot = SlotRegistry<OnComponentRemove>;
 
+export type OnBitmapChange = () => Promise<void>;
+export type OnBitmapChangeSlot = SlotRegistry<OnBitmapChange>;
+
 export type OnAspectsResolve = (aspectsComponents: Component[]) => Promise<void>;
 export type OnAspectsResolveSlot = SlotRegistry<OnAspectsResolve>;
 
@@ -92,13 +95,15 @@ export default async function provideWorkspace(
     onComponentRemoveSlot,
     onAspectsResolveSlot,
     onRootAspectAddedSlot,
+    onBitmapChangeSlot,
   ]: [
     OnComponentLoadSlot,
     OnComponentChangeSlot,
     OnComponentAddSlot,
     OnComponentRemoveSlot,
     OnAspectsResolveSlot,
-    OnRootAspectAddedSlot
+    OnRootAspectAddedSlot,
+    OnBitmapChangeSlot
   ],
   harmony: Harmony
 ) {
@@ -127,7 +132,8 @@ export default async function provideWorkspace(
     onComponentRemoveSlot,
     onAspectsResolveSlot,
     onRootAspectAddedSlot,
-    graphql
+    graphql,
+    onBitmapChangeSlot
   );
 
   const configMergeFile = workspace.getConflictMergeFile();

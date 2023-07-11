@@ -89,6 +89,10 @@ export type ScopeConfig = {
   description?: string;
   icon?: string;
   backgroundIconColor?: string;
+  /**
+   * Set a different package manager for the aspects capsules
+   */
+  aspectsPackageManager?: string;
 };
 
 export class ScopeMain implements ComponentFactory {
@@ -172,6 +176,10 @@ export class ScopeMain implements ComponentFactory {
 
   get isGlobalScope(): boolean {
     return this.path === GLOBAL_SCOPE;
+  }
+
+  get aspectsPackageManager(): string | undefined {
+    return this.config.aspectsPackageManager;
   }
 
   // We need to reload the aspects with their new version since:
@@ -513,7 +521,6 @@ export class ScopeMain implements ComponentFactory {
     ids: ComponentID[],
     {
       useCache = true,
-      throwIfNotExist = false,
       reFetchUnBuiltVersion = true,
       preferDependencyGraph = false,
       lane,
@@ -522,7 +529,6 @@ export class ScopeMain implements ComponentFactory {
        * if the component exists locally, don't go to the server to search for updates.
        */
       useCache?: boolean;
-      throwIfNotExist?: boolean;
       /**
        * if the Version objects exists locally, but its `buildStatus` is Pending or Failed, reach the remote to find
        * whether the version was already built there.
@@ -538,7 +544,7 @@ export class ScopeMain implements ComponentFactory {
        */
       preferDependencyGraph?: boolean;
     } = {}
-  ): Promise<Component[]> {
+  ): Promise<void> {
     const legacyIds = ids.map((id) => {
       const legacyId = id._legacy;
       if (legacyId.scope === this.name) return legacyId.changeScope(null);
@@ -556,8 +562,6 @@ export class ScopeMain implements ComponentFactory {
       lane,
       preferDependencyGraph,
     });
-
-    return this.getMany(ids, throwIfNotExist);
   }
 
   async get(id: ComponentID): Promise<Component | undefined> {
@@ -808,9 +812,9 @@ export class ScopeMain implements ComponentFactory {
     return idsFiltered;
   }
 
-  async getSnapDistance(id: ComponentID): Promise<SnapsDistance> {
+  async getSnapDistance(id: ComponentID, throws = true): Promise<SnapsDistance> {
     const modelComp = await this.legacyScope.getModelComponent(id._legacy);
-    await modelComp.setDivergeData(this.legacyScope.objects);
+    await modelComp.setDivergeData(this.legacyScope.objects, throws);
     return modelComp.getDivergeData();
   }
 

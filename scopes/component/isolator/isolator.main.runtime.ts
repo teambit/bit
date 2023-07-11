@@ -135,6 +135,12 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   useDatedDirs?: boolean;
 
   /**
+   * If set, along with useDatedDirs, then we will use the same hash dir for all capsules created with the same
+   * datedDirId
+   */
+  datedDirId?: string;
+
+  /**
    * installation options
    */
   installOptions?: IsolateComponentsInstallOptions;
@@ -171,12 +177,17 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * relevant for tagging from scope, where we tag an existing snap without any code-changes.
    * the idea is to have all build artifacts from the previous snap and run deploy pipeline on top of it.
    */
-  populateArtifactsFromParent?: boolean;
+  populateArtifactsFrom?: ComponentID[];
 
   /**
    * Force specific host to get the component from.
    */
   host?: ComponentFactory;
+
+  /**
+   * Use specific package manager for the isolation process (override the package manager from the dep resolver config)
+   */
+  packageManager?: string;
 
   /**
    * Dir where to read the package manager config from
@@ -188,7 +199,7 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   context?: IsolationContext;
 };
 
-type GetCapsuleDirOpts = Pick<IsolateComponentsOptions, 'useHash' | 'rootBaseDir' | 'useDatedDirs'> & {
+type GetCapsuleDirOpts = Pick<IsolateComponentsOptions, 'datedDirId' | 'useHash' | 'rootBaseDir' | 'useDatedDirs'> & {
   baseDir: string;
 };
 
@@ -218,6 +229,7 @@ export class IsolatorMain {
   ];
   static defaultConfig = {};
   _componentsPackagesVersionCache: { [idStr: string]: string } = {}; // cache packages versions of components
+  _datedHashForName = new Map<string, string>(); // cache dated hash for a specific name
 
   static async provider([dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader]: [
     DependencyResolverMain,
@@ -403,7 +415,7 @@ export class IsolatorMain {
     let longProcessLogger;
     if (opts.context?.aspects) {
       // const wsPath = opts.host?.path || 'unknown';
-      const wsPath = opts.context.workspaceName || opts.host?.path || 'unknown';
+      const wsPath = opts.context.workspaceName || opts.host?.path || opts.name || 'unknown';
       longProcessLogger = this.logger.createLongProcessLogger(
         `ensuring ${chalk.cyan(components.length.toString())} capsule(s) for all envs and aspects for ${chalk.bold(
           wsPath
@@ -466,6 +478,7 @@ export class IsolatorMain {
             await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
               cachePackagesOnCapsulesRoot,
               linkedDependencies,
+              packageManager: opts.packageManager,
             });
           })
         );
@@ -479,6 +492,7 @@ export class IsolatorMain {
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
           cachePackagesOnCapsulesRoot,
           linkedDependencies,
+          packageManager: opts.packageManager,
         });
       }
       if (installLongProcessLogger) {
@@ -516,12 +530,14 @@ export class IsolatorMain {
     opts: {
       cachePackagesOnCapsulesRoot?: boolean;
       linkedDependencies?: Record<string, Record<string, string>>;
+      packageManager?: string;
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({
       rootDir: capsulesDir,
       cacheRootDirectory: opts.cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
       installingContext: { inCapsule: true },
+      packageManager: opts.packageManager,
     });
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace
@@ -649,7 +665,7 @@ export class IsolatorMain {
         const capsule = capsuleList.getCapsule(component.id);
         if (!capsule) return;
         const scope =
-          (await CapsuleList.capsuleUsePreviouslySavedDists(component)) || opts?.populateArtifactsFromParent
+          (await CapsuleList.capsuleUsePreviouslySavedDists(component)) || opts?.populateArtifactsFrom
             ? legacyScope
             : undefined;
         const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(component, allIds, scope, opts);
@@ -696,10 +712,11 @@ export class IsolatorMain {
     getCapsuleDirOpts: GetCapsuleDirOpts | string,
     rootBaseDir?: string,
     useHash = true,
-    useDatedDirs = false
+    useDatedDirs = false,
+    datedDirId?: string
   ): PathOsBasedAbsolute {
     if (typeof getCapsuleDirOpts === 'string') {
-      getCapsuleDirOpts = { baseDir: getCapsuleDirOpts, rootBaseDir, useHash, useDatedDirs };
+      getCapsuleDirOpts = { baseDir: getCapsuleDirOpts, rootBaseDir, useHash, useDatedDirs, datedDirId };
     }
     const getCapsuleDirOptsWithDefaults = {
       useHash: true,
@@ -711,7 +728,16 @@ export class IsolatorMain {
       const date = new Date();
       const dateDir = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
       const datedBaseDir = 'dated-capsules';
-      const hashDir = v4();
+      let hashDir;
+      const finalDatedDirId = getCapsuleDirOpts.datedDirId;
+      if (finalDatedDirId && this._datedHashForName.has(finalDatedDirId)) {
+        hashDir = this._datedHashForName.get(finalDatedDirId);
+      } else {
+        hashDir = v4();
+        if (finalDatedDirId) {
+          this._datedHashForName.set(finalDatedDirId, hashDir);
+        }
+      }
       return path.join(capsulesRootBaseDir, datedBaseDir, dateDir, hashDir);
     }
     const dir = getCapsuleDirOptsWithDefaults.useHash
@@ -859,7 +885,7 @@ export class IsolatorMain {
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
     dataToPersist.addFile(packageJson.toVinylFile());
-    const artifacts = await this.getArtifacts(component, legacyScope, opts?.populateArtifactsFromParent);
+    const artifacts = await this.getArtifacts(component, legacyScope, opts?.populateArtifactsFrom);
     dataToPersist.addManyFiles(artifacts);
     return dataToPersist;
   }
@@ -913,25 +939,28 @@ export class IsolatorMain {
   private async getArtifacts(
     component: Component,
     legacyScope?: Scope,
-    fetchParentArtifacts = false
+    populateArtifactsFrom?: ComponentID[]
   ): Promise<AbstractVinyl[]> {
     const legacyComp: ConsumerComponent = component.state._consumer;
     if (!legacyScope) {
-      if (fetchParentArtifacts) throw new Error(`unable to fetch from parent, the legacyScope was not provided`);
+      if (populateArtifactsFrom) throw new Error(`unable to fetch from parent, the legacyScope was not provided`);
       // when capsules are written via the workspace, do not write artifacts, they get created by
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return [];
     }
-    if (legacyComp.buildStatus !== 'succeed' && !fetchParentArtifacts) {
+    if (legacyComp.buildStatus !== 'succeed' && !populateArtifactsFrom) {
       // this is important for "bit sign" when on lane to not go to the original scope
       return [];
     }
     const artifactFilesToFetch = async () => {
-      if (fetchParentArtifacts) {
-        const parent = component.head?.parents[0];
-        if (!parent)
-          throw new Error(`unable to fetch artifacts from parent. parent is missing for ${component.id.toString()}`);
-        const compParent = await legacyScope.getConsumerComponent(legacyComp.id.changeVersion(parent.toString()));
+      if (populateArtifactsFrom) {
+        const found = populateArtifactsFrom.find((id) => id.isEqual(component.id, { ignoreVersion: true }));
+        if (!found) {
+          throw new Error(
+            `getArtifacts: unable to find where to populate the artifacts from for ${component.id.toString()}`
+          );
+        }
+        const compParent = await legacyScope.getConsumerComponent(found._legacy);
         return getArtifactFilesExcludeExtension(compParent.extensions, 'teambit.pkg/pkg');
       }
       const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];

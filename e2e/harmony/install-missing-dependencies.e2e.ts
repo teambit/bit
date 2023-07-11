@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import rimraf from 'rimraf';
 import path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -10,7 +11,9 @@ describe('install missing dependencies', function () {
   before(async () => {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.fixtures.createComponentBarFoo('const isPositive = require("is-positive");');
+    helper.fixtures.createComponentBarFoo(
+      'const isPositive = require("is-positive");const compiler = require("@teambit/compiler")'
+    );
     helper.fixtures.addComponentBarFooAsDir();
     helper.command.install('--add-missing-deps');
     helper.command.tagAllWithoutBuild();
@@ -21,7 +24,11 @@ describe('install missing dependencies', function () {
     helper.command.importComponent('bar/foo');
     helper.fixtures.populateComponents(2);
     helper.fs.outputFile(`comp1/index.js`, `const isOdd = require("is-odd")`);
-    helper.fs.outputFile(`comp2/index.js`, `const isEven = require("is-even")`);
+    helper.fs.outputFile(
+      `comp2/index.js`,
+      `const comp1 = require("@${helper.scopes.remote}/comp1");const isEven = require("is-even")`
+    );
+    rimraf.sync(path.join(helper.fixtures.scopes.localPath, 'node_modules'));
     helper.command.install('--add-missing-deps');
   });
   after(() => {

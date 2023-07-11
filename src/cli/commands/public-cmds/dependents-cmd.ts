@@ -13,7 +13,7 @@ export default class Dependents implements LegacyCommand {
       description: 'component name or component id',
     },
   ];
-  description = 'EXPERIMENTAL. show dependents of the given component';
+  description = 'show dependents of the given component';
   group: Group = 'info';
   alias = '';
   opts = [] as CommandOptions;
