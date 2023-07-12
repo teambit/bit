@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { DedupedPaths, dedupePaths } from './dedup-paths';
-import { ExtendingConfigFilesMap } from './workspace-config-files.main.runtime';
+import { ExtendingConfigFilesMap } from './writers';
 
 const envCompsDirsMap = {
   'teambit.harmony/node': {
