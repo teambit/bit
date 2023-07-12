@@ -24,8 +24,6 @@ export class SchemaRegistry {
       // for backward and forward compatibility, to not break the users, it's better to return an unknown schema than throwing.
       return UnknownSchemaFactory.create(obj.location || { path: '', line: 0, character: 0 }, obj.__schema, obj);
     }
-    console.log('🚀 ~ file: schema-registry.ts:24 ~ SchemaRegistry ~ fromObject ~ SchemaClass:', SchemaClass);
-
     return SchemaClass.fromObject(obj);
   }
 }

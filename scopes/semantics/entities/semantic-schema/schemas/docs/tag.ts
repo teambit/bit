@@ -22,13 +22,12 @@ export class TagSchema extends SchemaNode {
 
   toObject() {
     return {
+      __schema: this.__schema,
       location: this.location,
       name: this.name,
       signature: this.signature,
-      __schema: this.__schema,
       tagName: this.tagName,
       comment: this.comment,
-      doc: undefined,
     };
   }
 }

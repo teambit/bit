@@ -1,3 +1,6 @@
+import { pickBy } from 'lodash';
+import { DocSchema } from './schemas';
+
 /**
  * a convenient abstract class for all schema to extend.
  * the reason for having it as an abstract class and not an interface, for now, is mostly for the `__schema` prop.
@@ -6,7 +9,7 @@
 export abstract class SchemaNode {
   readonly __schema = this.constructor.name;
   abstract readonly location: SchemaLocation;
-  readonly doc?: SchemaNode;
+  readonly doc?: DocSchema;
   readonly signature?: string;
   readonly name?: string;
 
@@ -15,14 +18,17 @@ export abstract class SchemaNode {
     throw new Error(`Method 'fromObject' not implemented in subclass.`);
   }
 
-  toObject() {
-    return {
-      __schema: this.__schema,
-      location: this.location,
-      doc: this.doc ? this.doc.toObject() : undefined,
-      signature: this.signature,
-      name: this.name,
-    };
+  toObject(): Record<string, any> {
+    return pickBy(
+      {
+        __schema: this.__schema,
+        location: this.location,
+        doc: this.doc ? this.doc.toObject() : undefined,
+        signature: this.signature,
+        name: this.name,
+      },
+      (v) => v !== undefined
+    );
   }
 
   abstract toString(): string;

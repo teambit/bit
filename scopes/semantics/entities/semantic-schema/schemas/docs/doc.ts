@@ -1,4 +1,5 @@
 import { SchemaLocation, SchemaNode } from '../../schema-node';
+import { SchemaRegistry } from '../../schema-registry';
 import { TagName, TagSchema } from './tag';
 
 export class DocSchema extends SchemaNode {
@@ -25,20 +26,19 @@ export class DocSchema extends SchemaNode {
 
   toObject() {
     return {
+      __schema: this.__schema,
       name: this.name,
       location: this.location,
       signature: this.signature,
-      __schema: this.__schema,
       raw: this.raw,
       comment: this.comment,
       tags: this.tags ? this.tags.map((tag) => tag.toObject()) : undefined,
-      doc: undefined,
     };
   }
 
   static fromObject(obj: Record<string, any>): DocSchema {
     const location = obj.location;
-    const tags = obj.tags ? obj.tags.map((tag: any) => TagSchema.fromObject(tag)) : undefined;
+    const tags = obj.tags ? obj.tags.map((tag: any) => SchemaRegistry.fromObject(tag)) : undefined;
     return new DocSchema(location, obj.raw, obj.comment, tags);
   }
 }

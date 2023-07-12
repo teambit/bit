@@ -28,7 +28,6 @@ export class TypeSchema extends SchemaNode {
       ...super.toObject(),
       name: this.name,
       type: this.type.toObject(),
-      doc: this.doc?.toObject(),
       signature: this.signature,
     };
   }

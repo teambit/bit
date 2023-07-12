@@ -208,9 +208,7 @@ export class SchemaMain {
     envs.registerService(new SchemaService());
 
     // register all default schema classes
-    console.log('🚀 ~ file: schema.main.runtime.ts:206 ~ SchemaMain ~ Object.values ~ Schemas:', Schemas);
     Object.values(Schemas).forEach((Schema) => {
-      console.log(`Registering schema: ${Schema.name}`);
       schema.registerSchemaClass(Schema);
     });
 
