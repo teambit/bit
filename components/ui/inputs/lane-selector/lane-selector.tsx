@@ -140,7 +140,7 @@ export function LaneSelector(props: LaneSelectorProps) {
     }
   }, [allLanes.length]);
 
-  const multipleLanes = nonMainLanes.length >= 1;
+  const multipleLanes = React.useMemo(() => nonMainLanes.length >= 1, [nonMainLanes.length]);
   const searchIconRef = useRef<string>(DEFAULT_SEARCH_ICON);
   const searchedLanes = searchLanes?.(search);
 
@@ -250,17 +250,18 @@ export function LaneSelector(props: LaneSelectorProps) {
   };
 
   const LaneList = React.useMemo(() => {
+    if (!multipleLanes && !dropdownOpen) return null;
+
     return (
       <React.Fragment key={'lane-selector-dropdown-root'}>
-        {multipleLanes && dropdownOpen && (
-          <div className={styles.toolbar}>
-            {/* {multipleLanes && groupByScope && (
+        <div className={styles.toolbar}>
+          {/* {multipleLanes && groupByScope && (
               <div className={styles.groupBy}>
                 <LaneGroup />
               </div>
             )} */}
-            <LaneSearch />
-            {/* <div className={styles.sort}>
+          <LaneSearch />
+          {/* <div className={styles.sort}>
               <ToggleButton
                 className={classnames(styles.sortToggle)}
                 defaultIndex={sortOptions.indexOf(sortBy)}
@@ -290,25 +291,22 @@ export function LaneSelector(props: LaneSelectorProps) {
                 }}
               />
             </div> */}
-          </div>
-        )}
-        {multipleLanes && dropdownOpen && (
-          <LaneSelectorList
-            ref={containerRef}
-            hasMore={search ? false : hasMoreState}
-            fetchMore={fetchMore}
-            nonMainLanes={searchedLanes?.lanes && searchedLanes?.lanes.length > 0 ? searchedLanes.lanes : filteredLanes}
-            search={search}
-            groupByScope={groupScope}
-            scopeIconLookup={scopeIconLookup}
-            selectedLaneId={selectedLaneId}
-            loading={loading}
-            mainLane={mainLane}
-            getHref={getHref}
-            onLaneSelected={onLaneSelectedHandler}
-            mainIcon={mainIcon}
-          />
-        )}
+        </div>
+        <LaneSelectorList
+          ref={containerRef}
+          hasMore={search ? false : hasMoreState}
+          fetchMore={fetchMore}
+          nonMainLanes={searchedLanes?.lanes && searchedLanes?.lanes.length > 0 ? searchedLanes.lanes : filteredLanes}
+          search={search}
+          groupByScope={groupScope}
+          scopeIconLookup={scopeIconLookup}
+          selectedLaneId={selectedLaneId}
+          loading={loading}
+          mainLane={mainLane}
+          getHref={getHref}
+          onLaneSelected={onLaneSelectedHandler}
+          mainIcon={mainIcon}
+        />
       </React.Fragment>
     );
   }, [
@@ -331,9 +329,10 @@ export function LaneSelector(props: LaneSelectorProps) {
         clickPlaceholderToggles={multipleLanes}
         clickToggles={multipleLanes}
         open={dropdownOpen}
-        onPlaceholderToggle={() => {
+        onPlaceholderToggle={React.useCallback(() => {
+          if (!multipleLanes) return;
           setDropdownOpen((v) => !v);
-        }}
+        }, [multipleLanes])}
         placeholderContent={
           <LanePlaceholder
             loading={loading}
