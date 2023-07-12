@@ -313,8 +313,8 @@ importers:
         specifier: 0.0.6
         version: registry.npmjs.org/@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/defender.eslint-linter':
-        specifier: ^1.0.0
-        version: 1.0.0(@teambit/legacy@node_modules+@teambit+legacy)
+        specifier: ^1.0.1
+        version: 1.0.1(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/defender.prettier-formatter':
         specifier: ^1.0.0
         version: 1.0.0(@teambit/legacy@node_modules+@teambit+legacy)
@@ -3877,7 +3877,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.8)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -5781,7 +5781,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.8)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -7685,7 +7685,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.8)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -9589,7 +9589,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.8)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -11493,7 +11493,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.8)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -13397,7 +13397,7 @@ importers:
         version: file:scopes/harmony/application(@types/react@17.0.8)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/aspect':
         specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/aspect-loader':
         specifier: workspace:*
         version: file:scopes/harmony/aspect-loader(react-dom@17.0.2)(react@17.0.2)
@@ -22617,12 +22617,21 @@ importers:
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
+      '@teambit/defender.eslint-linter':
+        specifier: ^1.0.1
+        version: 1.0.1(@teambit/legacy@node_modules+@teambit+legacy)
+      '@teambit/defender.prettier-formatter':
+        specifier: ^1.0.0
+        version: 1.0.0(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/design.ui.empty-box':
         specifier: ^0.0.363
         version: 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
+      '@teambit/typescript.typescript-compiler':
+        specifier: ^2.0.0
+        version: 2.0.0(@teambit/legacy@node_modules+@teambit+legacy)
       babel-plugin-transform-typescript-metadata:
         specifier: 0.3.1
         version: 0.3.1(@babel/core@7.19.6)
@@ -25345,6 +25354,12 @@ importers:
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
+      '@teambit/defender.eslint-linter':
+        specifier: ^1.0.1
+        version: 1.0.1(@teambit/legacy@node_modules+@teambit+legacy)
+      '@teambit/defender.prettier-formatter':
+        specifier: ^1.0.0
+        version: 1.0.0(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/design.ui.input.option-button':
         specifier: 1.0.0
         version: 1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -25363,6 +25378,9 @@ importers:
       '@teambit/react.rendering.ssr':
         specifier: 0.0.3
         version: 0.0.3(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/typescript.typescript-compiler':
+        specifier: ^2.0.0
+        version: 2.0.0(@teambit/legacy@node_modules+@teambit+legacy)
       '@testing-library/jest-dom':
         specifier: 5.16.2
         version: 5.16.2
@@ -37759,8 +37777,8 @@ packages:
       - '@teambit/legacy'
     dev: true
 
-  /@teambit/defender.eslint-linter@1.0.0(@teambit/legacy@node_modules+@teambit+legacy):
-    resolution: {integrity: sha1-98Zi0IKBvqNXkOHVMsq9mv8MXBY=, tarball: https://node-registry.bit.cloud/@teambit/defender.eslint-linter/-/@teambit-defender.eslint-linter-1.0.0.tgz}
+  /@teambit/defender.eslint-linter@1.0.1(@teambit/legacy@node_modules+@teambit+legacy):
+    resolution: {integrity: sha1-bFEw5JZ6hemOj0Rftc+DHzM7KDs=, tarball: https://node-registry.bit.cloud/@teambit/defender.eslint-linter/-/@teambit-defender.eslint-linter-1.0.1.tgz}
     peerDependencies:
       '@teambit/legacy': ^1.0.520
     dependencies:
@@ -39220,8 +39238,8 @@ packages:
   /@teambit/documenter.ui.linked-heading@4.1.8(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-LGpmPIXZSWsXbYgkS/WR1VxJcCg=, tarball: https://node-registry.bit.cloud/@teambit/documenter.ui.linked-heading/-/@teambit-documenter.ui.linked-heading-4.1.8.tgz}
     peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
+      react: '*'
+      react-dom: '*'
     dependencies:
       '@teambit/documenter.ui.anchor': 4.0.8(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.heading': 4.1.6(react-dom@17.0.2)(react@17.0.2)
@@ -65889,7 +65907,7 @@ packages:
       - utf-8-validate
     dev: false
 
-  file:scopes/harmony/aspect(@babel/core@7.19.6)(react-dom@17.0.2)(react@17.0.2):
+  file:scopes/harmony/aspect(@babel/core@7.19.6)(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/harmony/aspect, type: directory}
     id: file:scopes/harmony/aspect
     name: '@teambit/aspect'
@@ -65907,8 +65925,11 @@ packages:
       '@babel/preset-typescript': 7.18.6(@babel/core@7.19.6)
       '@babel/runtime': 7.20.0
       '@teambit/component-id': 0.0.427
+      '@teambit/defender.eslint-linter': 1.0.1(@teambit/legacy@node_modules+@teambit+legacy)
+      '@teambit/defender.prettier-formatter': 1.0.0(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/design.ui.empty-box': 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
+      '@teambit/typescript.typescript-compiler': 2.0.0(@teambit/legacy@node_modules+@teambit+legacy)
       babel-plugin-transform-typescript-metadata: 0.3.1(@babel/core@7.19.6)
       chalk: 2.4.2
       core-js: 3.13.0
@@ -65922,6 +65943,7 @@ packages:
     transitivePeerDependencies:
       - '@babel/core'
       - '@babel/traverse'
+      - '@teambit/legacy'
       - supports-color
     dev: false
 
@@ -66960,12 +66982,15 @@ packages:
       '@prerenderer/webpack-plugin': 5.2.0(@types/express@4.17.13)(debug@4.3.2)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(webpack@5.84.1)
       '@svgr/webpack': 5.5.0
       '@teambit/component-id': 0.0.427
+      '@teambit/defender.eslint-linter': 1.0.1(@teambit/legacy@node_modules+@teambit+legacy)
+      '@teambit/defender.prettier-formatter': 1.0.0(@teambit/legacy@node_modules+@teambit+legacy)
       '@teambit/design.ui.input.option-button': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
       '@teambit/react.instructions.react.adding-compositions': registry.npmjs.org/@teambit/react.instructions.react.adding-compositions@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.instructions.react.adding-tests': registry.npmjs.org/@teambit/react.instructions.react.adding-tests@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react.rendering.ssr': 0.0.3(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/typescript.typescript-compiler': 2.0.0(@teambit/legacy@node_modules+@teambit+legacy)
       '@testing-library/jest-dom': 5.16.2
       '@typescript-eslint/eslint-plugin': 5.35.1(@typescript-eslint/parser@5.35.1)(eslint@7.32.0)(typescript@4.7.4)
       '@typescript-eslint/parser': 5.35.1(eslint@7.32.0)(typescript@4.7.4)
