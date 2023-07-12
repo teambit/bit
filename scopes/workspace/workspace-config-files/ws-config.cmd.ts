@@ -1,6 +1,5 @@
 /* eslint-disable max-classes-per-file */
 
-import { omit } from 'lodash';
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceConfigFilesMain, WriteConfigFilesResult } from './workspace-config-files.main.runtime';
@@ -90,14 +89,23 @@ export class WsConfigWriteCmd implements Command {
     });
 
     if (dryRun) {
-      const aspectsWritersResults = dryRunWithContent
-        ? writeResults.aspectsWritersResults
-        : writeResults.aspectsWritersResults.map((s) => omit(s, ['content']));
-      // return JSON.stringify({ cleanResults, writeResults: writeJson }, undefined, 2);
+      const updatedWriteResults = writeResults;
+      if (!dryRunWithContent) {
+        updatedWriteResults.writersResult = updatedWriteResults.writersResult.map((oneWriterResult) => {
+          oneWriterResult.realConfigFiles.forEach((realConfigFile) => {
+            realConfigFile.writtenRealConfigFile.content = '';
+          });
+          oneWriterResult.extendingConfigFiles.forEach((extendingConfigFile) => {
+            extendingConfigFile.extendingConfigFile.content = '';
+          });
+          return oneWriterResult;
+        });
+      }
+
       return {
         wsDir,
         cleanResults,
-        writeResults: { totalWrittenFiles: writeResults.totalWrittenFiles, aspectsWritersResults },
+        writeResults: updatedWriteResults,
       };
     }
     return { wsDir, cleanResults, writeResults };
