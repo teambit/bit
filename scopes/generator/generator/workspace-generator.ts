@@ -17,6 +17,8 @@ import { resolve, join } from 'path';
 import { ComponentID } from '@teambit/component-id';
 import GitAspect, { GitMain } from '@teambit/git';
 import { InstallAspect, InstallMain } from '@teambit/install';
+import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+
 import { WorkspaceTemplate, WorkspaceContext } from './workspace-template';
 import { NewOptions } from './new.cmd';
 import { GeneratorAspect } from './generator.aspect';
@@ -32,6 +34,8 @@ export class WorkspaceGenerator {
   private logger: Logger;
   private forking: ForkingMain;
   private git: GitMain;
+  private wsConfigFiles: WorkspaceConfigFilesMain;
+
   constructor(
     private workspaceName: string,
     private options: NewOptions,
@@ -62,6 +66,7 @@ export class WorkspaceGenerator {
         copyPeerToRuntimeOnComponents: false,
         updateExisting: false,
       });
+      await this.wsConfigFiles.writeConfigFiles({});
       // await this.buildUI(); // disabled for now. it takes too long
     } catch (err: any) {
       this.logger.error(`failed generating a new workspace, will delete the dir ${this.workspacePath}`, err);
@@ -128,6 +133,7 @@ export class WorkspaceGenerator {
     this.importer = this.harmony.get<ImporterMain>(ImporterAspect.id);
     this.forking = this.harmony.get<ForkingMain>(ForkingAspect.id);
     this.git = this.harmony.get<GitMain>(GitAspect.id);
+    this.wsConfigFiles = this.harmony.get<WorkspaceConfigFilesMain>(WorkspaceConfigFilesAspect.id);
   }
 
   private async forkComponentsFromRemote() {
