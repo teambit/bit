@@ -322,7 +322,7 @@ export class InstallMain {
     );
     Object.values(omit(componentsAndManifests.manifests, [this.workspace.path])).forEach((manifest) => {
       if ((manifest as ProjectManifest).name) {
-        rootDeps.add((manifest as ProjectManifest).name!);
+        rootDeps.add((manifest as ProjectManifest).name!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
       }
     });
     const addedNewPkgs = await this._addMissingPackagesToRootPolicy(rootDeps);
