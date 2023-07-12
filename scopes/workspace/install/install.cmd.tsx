@@ -7,7 +7,6 @@ import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { InstallMain, WorkspaceInstallOptions } from './install.main.runtime';
 
 type InstallCmdOptions = {
-  variants: string;
   type: WorkspaceDependencyLifecycleType;
   skipDedupe: boolean;
   skipImport: boolean;
@@ -41,7 +40,6 @@ export default class InstallCmd implements Command {
   alias = 'in';
   group = 'development';
   options = [
-    ['v', 'variants <variants>', 'add packages to specific variants'],
     ['t', 'type [lifecycleType]', '"runtime" (default) or "peer" (dev is not a valid option)'],
     ['u', 'update', 'update all dependencies'],
     [
@@ -89,7 +87,6 @@ export default class InstallCmd implements Command {
     }
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const installOpts: WorkspaceInstallOptions = {
-      variants: options.variants,
       lifecycleType: options.addMissingPeers ? 'peer' : options.type,
       dedupe: !options.skipDedupe,
       import: !options.skipImport,
