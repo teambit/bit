@@ -334,6 +334,7 @@ if you're willing to lose the history from the head to the specified version, us
         ids: legacyIds,
         idsWithFutureScope: legacyIds,
         allVersions: false,
+        exportOrigin: 'tag',
       });
     }
 
