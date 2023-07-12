@@ -4,6 +4,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { SnappingMain } from './snapping.main.runtime';
+import { BasicTagSnapParams } from './tag-model-component';
 
 export type SnapDataPerCompRaw = {
   componentId: string;
@@ -14,15 +15,11 @@ export type SnapDataPerCompRaw = {
 
 type SnapFromScopeOptions = {
   push?: boolean;
-  message?: string;
   lane?: string;
   ignoreIssues?: string;
-  build?: boolean;
-  skipTests?: boolean;
   disableSnapPipeline?: boolean;
-  ignoreBuildErrors?: boolean;
   forceDeploy?: boolean;
-};
+} & BasicTagSnapParams;
 
 export class SnapFromScopeCmd implements Command {
   name = '_snap <data>';

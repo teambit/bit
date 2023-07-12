@@ -9,6 +9,7 @@ import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { SnappingMain, SnapResults } from './snapping.main.runtime';
 import { outputIdsIfExists } from './tag-cmd';
+import { BasicTagSnapParams } from './tag-model-component';
 
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
@@ -80,21 +81,17 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       unmodified = false,
       failFast = false,
     }: {
-      message?: string;
       all?: boolean;
       force?: boolean;
       unmerged?: boolean;
       editor?: string;
       ignoreIssues?: string;
-      build?: boolean;
-      skipTests?: boolean;
       skipAutoSnap?: boolean;
       disableSnapPipeline?: boolean;
       forceDeploy?: boolean;
-      ignoreBuildErrors?: boolean;
       unmodified?: boolean;
       failFast?: boolean;
-    }
+    } & BasicTagSnapParams
   ) {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     const disableTagAndSnapPipelines = disableSnapPipeline;
