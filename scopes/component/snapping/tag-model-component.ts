@@ -51,7 +51,7 @@ export type BasicTagParams = {
   soft?: boolean;
   persist: boolean;
   disableTagAndSnapPipelines?: boolean;
-  forceDeploy?: boolean;
+  ignoreBuildErrors?: boolean;
   preReleaseId?: string;
   editor?: string;
   unmodified?: boolean;
@@ -193,7 +193,7 @@ export async function tagModelComponent({
   persist,
   isSnap = false,
   disableTagAndSnapPipelines,
-  forceDeploy,
+  ignoreBuildErrors,
   incrementBy,
   packageManagerConfigRootDir,
   dependencyResolver,
@@ -330,7 +330,7 @@ export async function tagModelComponent({
     const onTagOpts: OnTagOpts = {
       disableTagAndSnapPipelines,
       throwOnError: true,
-      forceDeploy,
+      forceDeploy: ignoreBuildErrors,
       isSnap,
       populateArtifactsFrom,
     };

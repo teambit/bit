@@ -20,6 +20,7 @@ type SnapFromScopeOptions = {
   build?: boolean;
   skipTests?: boolean;
   disableSnapPipeline?: boolean;
+  ignoreBuildErrors?: boolean;
   forceDeploy?: boolean;
 };
 
@@ -44,7 +45,8 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "f
     ['', 'build', 'run the build pipeline'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
-    ['', 'force-deploy', 'run the deploy pipeline although the build failed'],
+    ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
+    ['', 'ignore-build-errors', 'run the snap pipeline although the build pipeline failed'],
     [
       'i',
       'ignore-issues [issues]',
@@ -81,12 +83,16 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       build = false,
       skipTests = false,
       disableSnapPipeline = false,
+      ignoreBuildErrors = false,
       forceDeploy = false,
     }: SnapFromScopeOptions
   ) {
     const disableTagAndSnapPipelines = disableSnapPipeline;
-    if (disableTagAndSnapPipelines && forceDeploy) {
-      throw new BitError('you can use either force-deploy or disable-snap-pipeline, but not both');
+    if (forceDeploy) {
+      ignoreBuildErrors = true;
+    }
+    if (disableTagAndSnapPipelines && ignoreBuildErrors) {
+      throw new BitError('you can use either ignore-build-errors or disable-snap-pipeline, but not both');
     }
 
     const snapDataPerCompRaw = this.parseData(data);
@@ -99,7 +105,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       build,
       skipTests,
       disableTagAndSnapPipelines,
-      forceDeploy,
+      ignoreBuildErrors,
     });
 
     return results;
