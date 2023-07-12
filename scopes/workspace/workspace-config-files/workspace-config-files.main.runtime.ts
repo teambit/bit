@@ -209,7 +209,10 @@ export class WorkspaceConfigFilesMain {
 
     const writtenRealConfigFiles = Object.values(writtenRealConfigFilesMap);
     const totalRealConfigFiles = writtenRealConfigFiles.length;
-    const totalExtendingConfigFiles = writtenExtendingConfigFiles.length;
+    const totalExtendingConfigFiles = writtenExtendingConfigFiles.reduce(
+      (acc, curr) => acc + curr.extendingConfigFile.filePaths.length,
+      0
+    );
     const totalWrittenFiles = totalRealConfigFiles + totalExtendingConfigFiles;
     return {
       writerId,
