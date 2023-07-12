@@ -1,4 +1,4 @@
-import { Location } from '../schema-node';
+import { SchemaLocation } from '../schema-node';
 import { ParameterSchema } from './parameter';
 import { FunctionLikeSchema, Modifier } from './function-like';
 import { DocSchema } from './docs';
@@ -6,7 +6,7 @@ import { ThisTypeSchema } from './this-type';
 
 export class ConstructorSchema extends FunctionLikeSchema {
   constructor(
-    location: Location,
+    location: SchemaLocation,
     params: ParameterSchema[],
     returns: ThisTypeSchema,
     signature: string,

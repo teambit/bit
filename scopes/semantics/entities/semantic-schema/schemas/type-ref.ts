@@ -1,9 +1,7 @@
-import { Transform } from 'class-transformer';
 import { ComponentID } from '@teambit/component';
 import chalk from 'chalk';
-import { Location, SchemaNode } from '../schema-node';
-import { schemaObjArrayToInstances } from '../class-transformers';
-import { componentIdTransformer } from '../class-transformers/comp-id-transformer';
+import { SchemaLocation, SchemaNode } from '../schema-node';
+import { SchemaRegistry } from '../schema-registry';
 
 export type PlainTypeRefSchema = {
   name: string;
@@ -19,17 +17,14 @@ export type PlainTypeRefSchema = {
  * 4. a reference to a package.
  */
 export class TypeRefSchema extends SchemaNode {
-  @Transform(schemaObjArrayToInstances)
   /**
    *  optional type arguments, e.g. type Foo = Bar<X, Y>. The X and Y are type arguments.
    */
   typeArgs?: SchemaNode[];
-
-  @Transform(componentIdTransformer)
   readonly componentId?: ComponentID;
 
   constructor(
-    readonly location: Location,
+    readonly location: SchemaLocation,
     /**
      * name of the reference to type.
      */
@@ -49,6 +44,11 @@ export class TypeRefSchema extends SchemaNode {
   ) {
     super();
     this.componentId = componentId;
+  }
+
+  withTypeArgs(typeArgs: SchemaNode[]) {
+    this.typeArgs = typeArgs;
+    return this;
   }
 
   toString() {
@@ -77,5 +77,26 @@ export class TypeRefSchema extends SchemaNode {
    */
   isFromThisComponent() {
     return !this.componentId && !this.packageName;
+  }
+
+  toObject() {
+    return {
+      ...super.toObject(),
+      name: this.name,
+      componentId: this.componentId ? this.componentId.toObject() : undefined,
+      packageName: this.packageName,
+      internalFilePath: this.internalFilePath,
+      typeArgs: this.typeArgs?.map((type) => type.toObject()),
+    };
+  }
+
+  static fromObject(obj: Record<string, any>): TypeRefSchema {
+    const location = obj.location;
+    const name = obj.name;
+    const componentId = obj.componentId ? ComponentID.fromObject(obj.componentId) : undefined;
+    const packageName = obj.packageName;
+    const internalFilePath = obj.internalFilePath;
+    const typeArgs = obj.typeArgs?.map((type: any) => SchemaRegistry.fromObject(type));
+    return new TypeRefSchema(location, name, componentId, packageName, internalFilePath).withTypeArgs(typeArgs);
   }
 }

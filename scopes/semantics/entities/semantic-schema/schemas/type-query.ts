@@ -1,14 +1,13 @@
-import { Transform } from 'class-transformer';
-import { Location, SchemaNode } from '../schema-node';
-import { schemaObjToInstance } from '../class-transformers';
+import { SchemaLocation, SchemaNode } from '../schema-node';
+import { SchemaRegistry } from '../schema-registry';
 
 /**
  * e.g. `typeof Foo`
  */
 export class TypeQuerySchema extends SchemaNode {
-  @Transform(schemaObjToInstance)
   readonly type: SchemaNode;
-  constructor(readonly location: Location, type: SchemaNode, readonly signature: string) {
+
+  constructor(readonly location: SchemaLocation, type: SchemaNode, readonly signature: string) {
     super();
     this.type = type;
   }
@@ -18,5 +17,20 @@ export class TypeQuerySchema extends SchemaNode {
 
   toString() {
     return `typeof ${this.type.toString()}`;
+  }
+
+  toObject() {
+    return {
+      ...super.toObject(),
+      type: this.type.toObject(),
+      signature: this.signature,
+    };
+  }
+
+  static fromObject(obj: Record<string, any>): TypeQuerySchema {
+    const location = obj.location;
+    const type = SchemaRegistry.fromObject(obj.type);
+    const signature = obj.signature;
+    return new TypeQuerySchema(location, type, signature);
   }
 }

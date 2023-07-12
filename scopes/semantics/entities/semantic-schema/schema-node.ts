@@ -1,6 +1,3 @@
-import { instanceToPlain } from 'class-transformer';
-import { DocSchema } from './schemas';
-
 /**
  * a convenient abstract class for all schema to extend.
  * the reason for having it as an abstract class and not an interface, for now, is mostly for the `__schema` prop.
@@ -8,24 +5,30 @@ import { DocSchema } from './schemas';
  */
 export abstract class SchemaNode {
   readonly __schema = this.constructor.name;
-  abstract readonly location: Location;
-  readonly doc?: DocSchema;
+  abstract readonly location: SchemaLocation;
+  readonly doc?: SchemaNode;
   readonly signature?: string;
   readonly name?: string;
 
-  abstract toString(): string;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  static fromObject(obj: Record<string, any>): SchemaNode {
+    throw new Error(`Method 'fromObject' not implemented in subclass.`);
+  }
 
   toObject() {
-    // rey
     return {
-      ...this,
+      __schema: this.__schema,
+      location: this.location,
+      doc: this.doc ? this.doc.toObject() : undefined,
       signature: this.signature,
-      doc: this.doc?.toObject(),
+      name: this.name,
     };
   }
+
+  abstract toString(): string;
 }
 
-export type Location = {
+export type SchemaLocation = {
   /**
    * file-path relative to the component root-dir. normalized to Linux.
    */

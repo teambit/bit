@@ -4,23 +4,19 @@ import {
   Modifier,
   ParameterSchema,
   SchemaNode,
+  SchemaRegistry,
   TagName,
-  schemaObjToInstance,
 } from '@teambit/semantics.entities.semantic-schema';
-import { Transform } from 'class-transformer';
 import chalk from 'chalk';
 
 /**
  * function-like can be a function, method, arrow-function, variable-function, etc.
  */
 export class ReactSchema extends SchemaNode {
-  @Transform(schemaObjToInstance)
   readonly returnType: SchemaNode;
 
-  @Transform(schemaObjToInstance)
   readonly props: ParameterSchema;
 
-  @Transform(schemaObjToInstance)
   readonly doc?: DocSchema;
 
   constructor(
@@ -58,5 +54,30 @@ export class ReactSchema extends SchemaNode {
   private modifiersToString() {
     const modifiersToPrint = this.modifiers.filter((modifier) => modifier !== 'export');
     return modifiersToPrint.length ? `${modifiersToPrint.join(' ')} ` : '';
+  }
+
+  toObject() {
+    return {
+      ...super.toObject(),
+      name: this.name,
+      props: this.props.toObject(),
+      returnType: this.returnType.toObject(),
+      signature: this.signature,
+      modifiers: this.modifiers,
+      doc: this.doc?.toObject(),
+      typeParams: this.typeParams,
+    };
+  }
+
+  static fromObject(obj: Record<string, any>): ReactSchema {
+    const location = obj.location;
+    const name = obj.name;
+    const props = ParameterSchema.fromObject(obj.props);
+    const returnType = SchemaRegistry.fromObject(obj.returnType);
+    const signature = obj.signature;
+    const modifiers = obj.modifiers;
+    const doc = obj.doc ? DocSchema.fromObject(obj.doc) : undefined;
+    const typeParams = obj.typeParams;
+    return new ReactSchema(location, name, props, returnType, signature, modifiers, doc, typeParams);
   }
 }

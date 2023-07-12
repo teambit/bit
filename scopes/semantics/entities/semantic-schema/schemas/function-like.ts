@@ -1,10 +1,9 @@
-import { Transform } from 'class-transformer';
 import chalk from 'chalk';
-import { Location, SchemaNode } from '../schema-node';
-import { schemaObjArrayToInstances, schemaObjToInstance } from '../class-transformers';
+import { SchemaLocation, SchemaNode } from '../schema-node';
 import { ParameterSchema } from './parameter';
 import { DocSchema } from './docs';
 import { TagName } from './docs/tag';
+import { SchemaRegistry } from '../schema-registry';
 
 export type Modifier =
   | 'static'
@@ -21,17 +20,12 @@ export type Modifier =
  * function-like can be a function, method, arrow-function, variable-function, etc.
  */
 export class FunctionLikeSchema extends SchemaNode {
-  @Transform(schemaObjToInstance)
   readonly returnType: SchemaNode;
-
-  @Transform(schemaObjArrayToInstances)
   readonly params: ParameterSchema[];
-
-  @Transform(schemaObjToInstance)
   readonly doc?: DocSchema;
 
   constructor(
-    readonly location: Location,
+    readonly location: SchemaLocation,
     readonly name: string,
     params: ParameterSchema[],
     returnType: SchemaNode,
@@ -60,6 +54,32 @@ export class FunctionLikeSchema extends SchemaNode {
 
   isPrivate(): boolean {
     return Boolean(this.modifiers.find((m) => m === 'private') || this.doc?.hasTag(TagName.private));
+  }
+
+  toObject() {
+    return {
+      ...super.toObject(),
+      name: this.name,
+      params: this.params.map((param) => param.toObject()),
+      returnType: this.returnType.toObject(),
+      signature: this.signature,
+      modifiers: this.modifiers,
+      doc: this.doc?.toObject(),
+      typeParams: this.typeParams,
+    };
+  }
+
+  static fromObject(obj: Record<string, any>) {
+    return new FunctionLikeSchema(
+      obj.location,
+      obj.name,
+      obj.params.map((param: Record<string, any>) => ParameterSchema.fromObject(param)),
+      SchemaRegistry.fromObject(obj.returnType),
+      obj.signature,
+      obj.modifiers,
+      obj.doc ? DocSchema.fromObject(obj.doc) : undefined,
+      obj.typeParams
+    );
   }
 
   private modifiersToString() {

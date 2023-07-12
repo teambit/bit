@@ -1,15 +1,13 @@
-import { Transform } from 'class-transformer';
-import { Location, SchemaNode } from '../../schema-node';
+import { SchemaLocation, SchemaNode } from '../../schema-node';
+import { SchemaRegistry } from '../../schema-registry';
 import { TagName, TagSchema } from './tag';
-import { schemaObjToInstance } from '../../class-transformers';
 
 /**
  * e.g. `@param myParam {string} some comment`
  */
 export class PropertyLikeTagSchema extends TagSchema {
-  @Transform(schemaObjToInstance)
   readonly type?: SchemaNode;
-  constructor(readonly location: Location, readonly name: string, readonly comment?: string, type?: SchemaNode) {
+  constructor(readonly location: SchemaLocation, readonly name: string, readonly comment?: string, type?: SchemaNode) {
     super(location, TagName.parameter, comment);
     this.type = type;
   }
@@ -18,5 +16,21 @@ export class PropertyLikeTagSchema extends TagSchema {
     const comment = this.comment ? ` ${this.comment}` : '';
     const type = this.type ? ` {${this.type.toString()}} ` : '';
     return `@${this.tagName} ${this.name}${type} ${comment}`;
+  }
+
+  toObject() {
+    return {
+      ...super.toObject(),
+      name: this.name,
+      type: this.type?.toObject(),
+    };
+  }
+
+  static fromObject(obj: Record<string, any>): PropertyLikeTagSchema {
+    const location = obj.location;
+    const name = obj.name;
+    const comment = obj.comment;
+    const type = obj.type ? SchemaRegistry.fromObject(obj.type) : undefined;
+    return new PropertyLikeTagSchema(location, name, comment, type);
   }
 }

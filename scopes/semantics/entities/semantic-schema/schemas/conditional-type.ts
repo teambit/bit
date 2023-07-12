@@ -1,25 +1,18 @@
-import { Transform } from 'class-transformer';
-import { Location, SchemaNode } from '../schema-node';
-import { schemaObjToInstance } from '../class-transformers';
+import { SchemaLocation, SchemaNode } from '../schema-node';
+import { SchemaRegistry } from '../schema-registry';
 
 /**
  * e.g. `T extends U ? Y : N`
  *
  */
 export class ConditionalTypeSchema extends SchemaNode {
-  @Transform(schemaObjToInstance)
   readonly checkType: SchemaNode;
-
-  @Transform(schemaObjToInstance)
   readonly extendsType: SchemaNode;
-
-  @Transform(schemaObjToInstance)
   readonly trueType: SchemaNode;
-
-  @Transform(schemaObjToInstance)
   readonly falseType: SchemaNode;
+
   constructor(
-    readonly location: Location,
+    readonly location: SchemaLocation,
     checkType: SchemaNode,
     extendsType: SchemaNode,
     trueType: SchemaNode,
@@ -34,5 +27,24 @@ export class ConditionalTypeSchema extends SchemaNode {
 
   toString() {
     return `${this.checkType.toString()} extends ${this.extendsType.toString()} ? ${this.trueType.toString()} : ${this.falseType.toString()}`;
+  }
+
+  toObject() {
+    return {
+      ...super.toObject(),
+      checkType: this.checkType.toObject(),
+      extendsType: this.extendsType.toObject(),
+      trueType: this.trueType.toObject(),
+      falseType: this.falseType.toObject(),
+    };
+  }
+
+  static fromObject(obj: Record<string, any>): ConditionalTypeSchema {
+    const location = obj.location;
+    const checkType = SchemaRegistry.fromObject(obj.checkType);
+    const extendsType = SchemaRegistry.fromObject(obj.extendsType);
+    const trueType = SchemaRegistry.fromObject(obj.trueType);
+    const falseType = SchemaRegistry.fromObject(obj.falseType);
+    return new ConditionalTypeSchema(location, checkType, extendsType, trueType, falseType);
   }
 }

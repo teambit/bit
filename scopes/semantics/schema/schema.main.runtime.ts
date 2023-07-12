@@ -1,12 +1,17 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
-import { ClassConstructor } from 'class-transformer';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
-import { APISchema, Export, SchemaNode, registerSchemaClass } from '@teambit/semantics.entities.semantic-schema';
+import {
+  APISchema,
+  Export,
+  Schemas,
+  SchemaNodeConstructor,
+  SchemaRegistry,
+} from '@teambit/semantics.entities.semantic-schema';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Formatter } from '@teambit/formatter';
@@ -55,8 +60,8 @@ export class SchemaMain {
     return this.parserSlot.get(this.config.defaultParser) as Parser;
   }
 
-  registerSchemaClass(schema: ClassConstructor<SchemaNode>) {
-    registerSchemaClass(schema);
+  registerSchemaClass(schema: SchemaNodeConstructor) {
+    SchemaRegistry.register(schema);
   }
 
   /**
@@ -202,10 +207,12 @@ export class SchemaMain {
     graphql.register(schemaSchema(schema));
     envs.registerService(new SchemaService());
 
-    // workspace.onComponentLoad(async (component) => {
-    //   const apiSchema = await schema.getSchema(component);
-    //   return {};
-    // });
+    // register all default schema classes
+    console.log('🚀 ~ file: schema.main.runtime.ts:206 ~ SchemaMain ~ Object.values ~ Schemas:', Schemas);
+    Object.values(Schemas).forEach((Schema) => {
+      console.log(`Registering schema: ${Schema.name}`);
+      schema.registerSchemaClass(Schema);
+    });
 
     return schema;
   }

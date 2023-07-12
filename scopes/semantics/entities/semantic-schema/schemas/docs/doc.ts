@@ -1,12 +1,10 @@
-import { Transform } from 'class-transformer';
-import { schemaObjArrayToInstances } from '../../class-transformers';
-import { Location, SchemaNode } from '../../schema-node';
+import { SchemaLocation, SchemaNode } from '../../schema-node';
 import { TagName, TagSchema } from './tag';
 
 export class DocSchema extends SchemaNode {
-  @Transform(schemaObjArrayToInstances)
   readonly tags?: TagSchema[];
-  constructor(readonly location: Location, readonly raw: string, readonly comment?: string, tags?: TagSchema[]) {
+
+  constructor(readonly location: SchemaLocation, readonly raw: string, readonly comment?: string, tags?: TagSchema[]) {
     super();
     this.tags = tags;
   }
@@ -25,10 +23,22 @@ export class DocSchema extends SchemaNode {
     return this.tags?.find((tag) => tag.tagName === tagName);
   }
 
-  // have explicit toObject at SchemaNode
-  // toObject() {
-  //   return {
+  toObject() {
+    return {
+      name: this.name,
+      location: this.location,
+      signature: this.signature,
+      __schema: this.__schema,
+      raw: this.raw,
+      comment: this.comment,
+      tags: this.tags ? this.tags.map((tag) => tag.toObject()) : undefined,
+      doc: undefined,
+    };
+  }
 
-  //   }
-  // }
+  static fromObject(obj: Record<string, any>): DocSchema {
+    const location = obj.location;
+    const tags = obj.tags ? obj.tags.map((tag: any) => TagSchema.fromObject(tag)) : undefined;
+    return new DocSchema(location, obj.raw, obj.comment, tags);
+  }
 }
