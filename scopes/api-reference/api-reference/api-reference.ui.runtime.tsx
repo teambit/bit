@@ -19,6 +19,7 @@ import { typeLiteralRenderer } from '@teambit/api-reference.renderers.type-liter
 import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
 import { inferenceTypeRenderer } from '@teambit/api-reference.renderers.inference-type';
 import { typeArrayRenderer } from '@teambit/api-reference.renderers.type-array';
+import { SchemaNodeConstructor, SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';
 
 import { APIReferenceAspect } from './api-reference.aspect';
 
@@ -30,6 +31,14 @@ export class APIReferenceUI {
 
   getAPIPage() {
     return <APIRefPage host={this.host} rendererSlot={this.apiNodeRendererSlot} />;
+  }
+
+  registerSchemaClass(schema: SchemaNodeConstructor) {
+    SchemaRegistry.register(schema);
+  }
+
+  getSchemaClasses() {
+    return SchemaRegistry.schemas;
   }
 
   apiNodeRenderers: APINodeRenderer[] = [
@@ -62,6 +71,10 @@ export class APIReferenceUI {
     const apiReferenceSection = new APIRefSection(apiReferenceUI);
     componentUI.registerNavigation(apiReferenceSection.navigationLink, apiReferenceSection.order);
     componentUI.registerRoute(apiReferenceSection.route);
+    // register all default schema classes
+    Object.values(Schemas).forEach((Schema) => {
+      apiReferenceUI.registerSchemaClass(Schema);
+    });
     return apiReferenceUI;
   }
 
