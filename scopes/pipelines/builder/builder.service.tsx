@@ -211,7 +211,12 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
   getDescriptor(env: EnvDefinition) {
     // @ts-ignore
     const tasks = Object.keys(pipeNames).map((pipeFuncName: PipeFunctionNames) => {
-      const tasksQueue = this.getTasksNamesByPipeFunc(env, pipeFuncName);
+      let tasksQueue: string[];
+      try {
+        tasksQueue = this.getTasksNamesByPipeFunc(env, pipeFuncName);
+      } catch (err: any) {
+        tasksQueue = [`<failed getting task-queue, error: ${err.message}>`];
+      }
       return { pipeName: pipeNames[pipeFuncName], tasks: tasksQueue };
     });
     return tasks as BuilderDescriptor;
