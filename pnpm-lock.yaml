@@ -89,7 +89,7 @@ importers:
         version: 18.4.3(@pnpm/logger@5.0.0)
       '@pnpm/core':
         specifier: 10.2.8
-        version: 10.2.8(@pnpm/logger@5.0.0)(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)
+        version: 10.2.8(@pnpm/logger@5.0.0)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
       '@pnpm/default-reporter':
         specifier: 12.2.6
         version: 12.2.6(@pnpm/logger@5.0.0)
@@ -573,6 +573,9 @@ importers:
       '@teambit/lanes.ui.viewed-lane':
         specifier: ^0.0.37
         version: 0.0.37(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/legacy':
+        specifier: link:/Users/zoltan/.bvm/versions/0.1.91/bit-0.1.91/node_modules/@teambit/legacy
+        version: link:../../../.bvm/versions/0.1.91/bit-0.1.91/node_modules/@teambit/legacy
       '@teambit/legacy-bit-id':
         specifier: ^0.0.423
         version: 0.0.423
@@ -676,23 +679,23 @@ importers:
         specifier: 5.35.1
         version: 5.35.1(typescript@4.7.4)
       '@yarnpkg/cli':
-        specifier: 4.0.0-rc.42
-        version: 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        specifier: 3.2.1
+        version: 3.2.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core':
-        specifier: 4.0.0-rc.45
-        version: 4.0.0-rc.45
+        specifier: ^3.2.2
+        version: 3.5.2
       '@yarnpkg/fslib':
-        specifier: 3.0.0-rc.42
-        version: 3.0.0-rc.42
+        specifier: 2.6.2
+        version: 2.6.2
       '@yarnpkg/parsers':
-        specifier: 3.0.0-rc.42
-        version: 3.0.0-rc.42
+        specifier: 2.5.1
+        version: 2.5.1
       '@yarnpkg/plugin-npm':
-        specifier: 3.0.0-rc.42
-        version: 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-pack@4.0.0-rc.42)
+        specifier: 2.7.1
+        version: 2.7.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.1.0)
       '@yarnpkg/plugin-pack':
-        specifier: 4.0.0-rc.42
-        version: 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
+        specifier: 3.1.0
+        version: 3.1.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
       agentkeepalive:
         specifier: 4.1.4
         version: 4.1.4
@@ -4182,7 +4185,7 @@ importers:
         version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
       '@teambit/dependency-resolver':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@types/react@17.0.8)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/deprecation':
         specifier: workspace:*
         version: file:scopes/component/deprecation(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
@@ -4467,7 +4470,7 @@ importers:
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
       '@teambit/pnpm':
         specifier: workspace:*
-        version: file:scopes/dependencies/pnpm(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/dependencies/pnpm(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/prettier':
         specifier: workspace:*
         version: file:scopes/defender/prettier(react-dom@17.0.2)(react@17.0.2)
@@ -4872,7 +4875,7 @@ importers:
         version: file:scopes/workspace/ui/workspace-component-card(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
-        version: file:scopes/dependencies/yarn(@types/react@17.0.8)(@yarnpkg/plugin-pack@4.0.0-rc.42)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.1.0)(react-dom@17.0.2)(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -6081,7 +6084,7 @@ importers:
         version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
       '@teambit/dependency-resolver':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@types/react@17.0.8)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/deprecation':
         specifier: workspace:*
         version: file:scopes/component/deprecation(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
@@ -6366,7 +6369,7 @@ importers:
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
       '@teambit/pnpm':
         specifier: workspace:*
-        version: file:scopes/dependencies/pnpm(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/dependencies/pnpm(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/prettier':
         specifier: workspace:*
         version: file:scopes/defender/prettier(react-dom@17.0.2)(react@17.0.2)
@@ -6771,7 +6774,7 @@ importers:
         version: file:scopes/workspace/ui/workspace-component-card(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
-        version: file:scopes/dependencies/yarn(@types/react@17.0.8)(@yarnpkg/plugin-pack@4.0.0-rc.42)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.1.0)(react-dom@17.0.2)(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -7980,7 +7983,7 @@ importers:
         version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
       '@teambit/dependency-resolver':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@types/react@17.0.8)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/deprecation':
         specifier: workspace:*
         version: file:scopes/component/deprecation(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
@@ -8265,7 +8268,7 @@ importers:
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
       '@teambit/pnpm':
         specifier: workspace:*
-        version: file:scopes/dependencies/pnpm(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/dependencies/pnpm(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/prettier':
         specifier: workspace:*
         version: file:scopes/defender/prettier(react-dom@17.0.2)(react@17.0.2)
@@ -8670,7 +8673,7 @@ importers:
         version: file:scopes/workspace/ui/workspace-component-card(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
-        version: file:scopes/dependencies/yarn(@types/react@17.0.8)(@yarnpkg/plugin-pack@4.0.0-rc.42)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.1.0)(react-dom@17.0.2)(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -9879,7 +9882,7 @@ importers:
         version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
       '@teambit/dependency-resolver':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@types/react@17.0.8)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/deprecation':
         specifier: workspace:*
         version: file:scopes/component/deprecation(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
@@ -10164,7 +10167,7 @@ importers:
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
       '@teambit/pnpm':
         specifier: workspace:*
-        version: file:scopes/dependencies/pnpm(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/dependencies/pnpm(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/prettier':
         specifier: workspace:*
         version: file:scopes/defender/prettier(react-dom@17.0.2)(react@17.0.2)
@@ -10569,7 +10572,7 @@ importers:
         version: file:scopes/workspace/ui/workspace-component-card(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
-        version: file:scopes/dependencies/yarn(@types/react@17.0.8)(@yarnpkg/plugin-pack@4.0.0-rc.42)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.1.0)(react-dom@17.0.2)(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -11778,7 +11781,7 @@ importers:
         version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
       '@teambit/dependency-resolver':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@types/react@17.0.8)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/deprecation':
         specifier: workspace:*
         version: file:scopes/component/deprecation(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
@@ -12063,7 +12066,7 @@ importers:
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
       '@teambit/pnpm':
         specifier: workspace:*
-        version: file:scopes/dependencies/pnpm(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/dependencies/pnpm(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/prettier':
         specifier: workspace:*
         version: file:scopes/defender/prettier(react-dom@17.0.2)(react@17.0.2)
@@ -12468,7 +12471,7 @@ importers:
         version: file:scopes/workspace/ui/workspace-component-card(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
-        version: file:scopes/dependencies/yarn(@types/react@17.0.8)(@yarnpkg/plugin-pack@4.0.0-rc.42)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.1.0)(react-dom@17.0.2)(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -13677,7 +13680,7 @@ importers:
         version: file:scopes/dependencies/modules/packages-excluder(react@17.0.2)
       '@teambit/dependency-resolver':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@types/react@17.0.8)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/deprecation':
         specifier: workspace:*
         version: file:scopes/component/deprecation(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)
@@ -13962,7 +13965,7 @@ importers:
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
       '@teambit/pnpm':
         specifier: workspace:*
-        version: file:scopes/dependencies/pnpm(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/dependencies/pnpm(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/prettier':
         specifier: workspace:*
         version: file:scopes/defender/prettier(react-dom@17.0.2)(react@17.0.2)
@@ -14367,7 +14370,7 @@ importers:
         version: file:scopes/workspace/ui/workspace-component-card(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
-        version: file:scopes/dependencies/yarn(@types/react@17.0.8)(@yarnpkg/plugin-pack@4.0.0-rc.42)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.1.0)(react-dom@17.0.2)(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -21407,7 +21410,7 @@ importers:
         version: 7.20.0
       '@pnpm/core':
         specifier: 10.2.8
-        version: 10.2.8(@pnpm/logger@5.0.0)(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)
+        version: 10.2.8(@pnpm/logger@5.0.0)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
       '@pnpm/network.ca-file':
         specifier: 1.0.2
         version: 1.0.2
@@ -21559,7 +21562,7 @@ importers:
         version: 18.4.3(@pnpm/logger@5.0.0)
       '@pnpm/core':
         specifier: 10.2.8
-        version: 10.2.8(@pnpm/logger@5.0.0)(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)
+        version: 10.2.8(@pnpm/logger@5.0.0)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
       '@pnpm/default-reporter':
         specifier: 12.2.6
         version: 12.2.6(@pnpm/logger@5.0.0)
@@ -21673,20 +21676,20 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@yarnpkg/cli':
-        specifier: 4.0.0-rc.42
-        version: 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+        specifier: 3.2.1
+        version: 3.2.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core':
-        specifier: 4.0.0-rc.45
-        version: 4.0.0-rc.45
+        specifier: ^3.2.2
+        version: 3.5.2
       '@yarnpkg/fslib':
-        specifier: 3.0.0-rc.42
-        version: 3.0.0-rc.42
+        specifier: 2.6.2
+        version: 2.6.2
       '@yarnpkg/parsers':
-        specifier: 3.0.0-rc.42
-        version: 3.0.0-rc.42
+        specifier: 2.5.1
+        version: 2.5.1
       '@yarnpkg/plugin-npm':
-        specifier: 3.0.0-rc.42
-        version: 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-pack@4.0.0-rc.42)
+        specifier: 2.7.1
+        version: 2.7.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.1.0)
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -30805,96 +30808,6 @@ importers:
 
 packages:
 
-  /@algolia/cache-browser-local-storage@4.16.0:
-    resolution: {integrity: sha512-jVrk0YB3tjOhD5/lhBtYCVCeLjZmVpf2kdi4puApofytf/R0scjWz0GdozlW4HhU+Prxmt/c9ge4QFjtv5OAzQ==}
-    dependencies:
-      '@algolia/cache-common': 4.16.0
-    dev: false
-
-  /@algolia/cache-common@4.16.0:
-    resolution: {integrity: sha512-4iHjkSYQYw46pITrNQgXXhvUmcekI8INz1m+SzmqLX8jexSSy4Ky4zfGhZzhhhLHXUP3+x/PK/c0qPjxEvRwKQ==}
-    dev: false
-
-  /@algolia/cache-in-memory@4.16.0:
-    resolution: {integrity: sha512-p7RYykvA6Ip6QENxrh99nOD77otVh1sJRivcgcVpnjoZb5sIN3t33eUY1DpB9QSBizcrW+qk19rNkdnZ43a+PQ==}
-    dependencies:
-      '@algolia/cache-common': 4.16.0
-    dev: false
-
-  /@algolia/client-account@4.16.0:
-    resolution: {integrity: sha512-eydcfpdIyuWoKgUSz5iZ/L0wE/Wl7958kACkvTHLDNXvK/b8Z1zypoJavh6/km1ZNQmFpeYS2jrmq0kUSFn02w==}
-    dependencies:
-      '@algolia/client-common': 4.16.0
-      '@algolia/client-search': 4.16.0
-      '@algolia/transporter': 4.16.0
-    dev: false
-
-  /@algolia/client-analytics@4.16.0:
-    resolution: {integrity: sha512-cONWXH3BfilgdlCofUm492bJRWtpBLVW/hsUlfoFtiX1u05xoBP7qeiDwh9RR+4pSLHLodYkHAf5U4honQ55Qg==}
-    dependencies:
-      '@algolia/client-common': 4.16.0
-      '@algolia/client-search': 4.16.0
-      '@algolia/requester-common': 4.16.0
-      '@algolia/transporter': 4.16.0
-    dev: false
-
-  /@algolia/client-common@4.16.0:
-    resolution: {integrity: sha512-QVdR4019ukBH6f5lFr27W60trRxQF1SfS1qo0IP6gjsKhXhUVJuHxOCA6ArF87jrNkeuHEoRoDU+GlvaecNo8g==}
-    dependencies:
-      '@algolia/requester-common': 4.16.0
-      '@algolia/transporter': 4.16.0
-    dev: false
-
-  /@algolia/client-personalization@4.16.0:
-    resolution: {integrity: sha512-irtLafssDGPuhYqIwxqOxiWlVYvrsBD+EMA1P9VJtkKi3vSNBxiWeQ0f0Tn53cUNdSRNEssfoEH84JL97SV2SQ==}
-    dependencies:
-      '@algolia/client-common': 4.16.0
-      '@algolia/requester-common': 4.16.0
-      '@algolia/transporter': 4.16.0
-    dev: false
-
-  /@algolia/client-search@4.16.0:
-    resolution: {integrity: sha512-xsfrAE1jO/JDh1wFrRz+alVyW+aA6qnkzmbWWWZWEgVF3EaFqzIf9r1l/aDtDdBtNTNhX9H3Lg31+BRtd5izQA==}
-    dependencies:
-      '@algolia/client-common': 4.16.0
-      '@algolia/requester-common': 4.16.0
-      '@algolia/transporter': 4.16.0
-    dev: false
-
-  /@algolia/logger-common@4.16.0:
-    resolution: {integrity: sha512-U9H8uCzSDuePJmbnjjTX21aPDRU6x74Tdq3dJmdYu2+pISx02UeBJm4kSgc9RW5jcR5j35G9gnjHY9Q3ngWbyQ==}
-    dev: false
-
-  /@algolia/logger-console@4.16.0:
-    resolution: {integrity: sha512-+qymusiM+lPZKrkf0tDjCQA158eEJO2IU+Nr/sJ9TFyI/xkFPjNPzw/Qbc8Iy/xcOXGlc6eMgmyjtVQqAWq6UA==}
-    dependencies:
-      '@algolia/logger-common': 4.16.0
-    dev: false
-
-  /@algolia/requester-browser-xhr@4.16.0:
-    resolution: {integrity: sha512-gK+kvs6LHl/PaOJfDuwjkopNbG1djzFLsVBklGBsSU6h6VjFkxIpo6Qq80IK14p9cplYZfhfaL12va6Q9p3KVQ==}
-    dependencies:
-      '@algolia/requester-common': 4.16.0
-    dev: false
-
-  /@algolia/requester-common@4.16.0:
-    resolution: {integrity: sha512-3Zmcs/iMubcm4zqZ3vZG6Zum8t+hMWxGMzo0/uY2BD8o9q5vMxIYI0c4ocdgQjkXcix189WtZNkgjSOBzSbkdw==}
-    dev: false
-
-  /@algolia/requester-node-http@4.16.0:
-    resolution: {integrity: sha512-L8JxM2VwZzh8LJ1Zb8TFS6G3icYsCKZsdWW+ahcEs1rGWmyk9SybsOe1MLnjonGBaqPWJkn9NjS7mRdjEmBtKA==}
-    dependencies:
-      '@algolia/requester-common': 4.16.0
-    dev: false
-
-  /@algolia/transporter@4.16.0:
-    resolution: {integrity: sha512-H9BVB2EAjT65w7XGBNf5drpsW39x2aSZ942j4boSAAJPPlLmjtj5IpAP7UAtsV8g9Beslonh0bLa1XGmE/P0BA==}
-    dependencies:
-      '@algolia/cache-common': 4.16.0
-      '@algolia/logger-common': 4.16.0
-      '@algolia/requester-common': 4.16.0
-    dev: false
-
   /@ampproject/remapping@2.2.0:
     resolution: {integrity: sha512-qRmjj8nj9qmLTQXXmaR1cck3UXSRMPrbsLJAasZpF+t3riI71BXed5ebIOYwQntykeZuhjsdweEc9BxH5Jc26w==}
     engines: {node: '>=6.0.0'}
@@ -33656,6 +33569,14 @@ packages:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
     dev: false
 
+  /@chevrotain/types@9.1.0:
+    resolution: {integrity: sha512-3hbCD1CThkv9gnaSIPq0GUXwKni68e0ph6jIHwCvcWiQ4JB2xi8bFxBain0RF04qHUWuDjgnZLj4rLgimuGO+g==}
+    dev: false
+
+  /@chevrotain/utils@9.1.0:
+    resolution: {integrity: sha512-llLJZ8OAlZrjGlBvamm6Zdo/HmGAcCLq5gx7cSwUX8No+n/8ip+oaC4x33IdZIif8+Rh5dQUIZXmfbSghiOmNQ==}
+    dev: false
+
   /@colors/colors@1.5.0:
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
     engines: {node: '>=0.1.90'}
@@ -34618,7 +34539,7 @@ packages:
       '@pnpm/types': 9.1.0
     dev: false
 
-  /@pnpm/core@10.2.8(@pnpm/logger@5.0.0)(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2):
+  /@pnpm/core@10.2.8(@pnpm/logger@5.0.0)(@yarnpkg/core@3.5.2)(bluebird@3.7.2):
     resolution: {integrity: sha512-PfSEE2Xuq/pUJvuWr7KUGH0NbND8fZX4bqxpE9Fdgy3DkSMpQy1sTD+L3beYTSMgg++HhqxdA/G/Xjm4/6cxUg==}
     engines: {node: '>=16.14'}
     peerDependencies:
@@ -34636,7 +34557,7 @@ packages:
       '@pnpm/graph-sequencer': 1.1.1
       '@pnpm/headless': 21.0.6(@pnpm/logger@5.0.0)(bluebird@3.7.2)
       '@pnpm/hoist': 8.0.8(@pnpm/logger@5.0.0)
-      '@pnpm/hooks.read-package-hook': 3.0.3(@yarnpkg/core@4.0.0-rc.45)
+      '@pnpm/hooks.read-package-hook': 3.0.3(@yarnpkg/core@3.5.2)
       '@pnpm/hooks.types': 1.0.1
       '@pnpm/lifecycle': 15.0.4(@pnpm/logger@5.0.0)(bluebird@3.7.2)
       '@pnpm/link-bins': 9.0.4(@pnpm/logger@5.0.0)
@@ -35055,7 +34976,7 @@ packages:
       symlink-dir: 5.1.1
     dev: false
 
-  /@pnpm/hooks.read-package-hook@3.0.3(@yarnpkg/core@4.0.0-rc.45):
+  /@pnpm/hooks.read-package-hook@3.0.3(@yarnpkg/core@3.5.2):
     resolution: {integrity: sha512-RvcpxQDQvjcv6+vdbKIbSfhbjmm5MILCoOtavtq844AhbaedFswYMw2QZOnWTChZrdkorS123WiCBEQcr0TnVQ==}
     engines: {node: '>=16.14'}
     dependencies:
@@ -35064,7 +34985,7 @@ packages:
       '@pnpm/parse-overrides': 4.0.2
       '@pnpm/parse-wanted-dependency': 5.0.0
       '@pnpm/types': 9.1.0
-      '@yarnpkg/extensions': 2.0.0-rc.22(@yarnpkg/core@4.0.0-rc.45)
+      '@yarnpkg/extensions': 2.0.0-rc.22(@yarnpkg/core@3.5.2)
       normalize-path: 3.0.0
       ramda: /@pnpm/ramda@0.28.1
       semver: 7.5.2
@@ -43283,49 +43204,78 @@ packages:
   /@xtuc/long@4.2.2:
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
 
-  /@yarnpkg/cli@4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5):
-    resolution: {integrity: sha512-UIX8MHy8sIUdxPUbol4R9+pXTM8uRN+H8T5uWctlR7qGnZsY3QCUyYEAC4Ud/19fMqHw/6DXvx6BUEmx6L9m4Q==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/cli@3.2.1(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-yyxDEg4Y6z9RErREFDXa2ZFMy7dc5l3TF7WsfIZdw7/B1ZbBO7PdcHxenGZE62zO6PO17SrKZgJlwv1xVbUpcQ==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
+      '@yarnpkg/core': ^3.2.1
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42)
-      '@yarnpkg/parsers': 3.0.0-rc.42
-      '@yarnpkg/plugin-compat': 4.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-patch@4.0.0-rc.42)
-      '@yarnpkg/plugin-constraints': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-dlx': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-essentials': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)
-      '@yarnpkg/plugin-exec': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-file': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-github': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)
-      '@yarnpkg/plugin-http': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-init': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-interactive-tools': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-essentials@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/plugin-link': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-nm': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-npm': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-pack@4.0.0-rc.42)
-      '@yarnpkg/plugin-npm-cli': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-npm@3.0.0-rc.42)(@yarnpkg/plugin-pack@4.0.0-rc.42)
-      '@yarnpkg/plugin-pack': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-patch': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-pnpm': 2.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-typescript': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-essentials@4.0.0-rc.42)
-      '@yarnpkg/plugin-version': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/plugin-workspace-tools': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)
-      '@yarnpkg/shell': 4.0.0-rc.45
-      ci-info: 3.7.1
-      clipanion: 3.2.0-rc.14
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.6.2
+      '@yarnpkg/libzip': 2.3.0
+      '@yarnpkg/parsers': 2.5.1
+      '@yarnpkg/plugin-compat': 3.1.13(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-patch@3.2.4)
+      '@yarnpkg/plugin-dlx': 3.1.4(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-essentials': 3.3.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-git@2.6.6)
+      '@yarnpkg/plugin-file': 2.3.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-git': 2.6.6(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-github': 2.3.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-git@2.6.6)
+      '@yarnpkg/plugin-http': 2.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-init': 3.2.1(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-link': 2.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-nm': 3.1.5(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-npm': 2.7.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0)
+      '@yarnpkg/plugin-npm-cli': 3.4.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-npm@2.7.1)(@yarnpkg/plugin-pack@3.2.0)
+      '@yarnpkg/plugin-pack': 3.2.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-patch': 3.2.4(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-pnp': 3.2.11(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-pnpm': 1.1.3(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/shell': 3.2.5
+      chalk: 3.0.0
+      ci-info: 3.8.0
+      clipanion: 3.2.1
       semver: 7.5.2
-      tslib: 2.5.0
+      tslib: 1.14.1
       typanion: 3.12.1
-    transitivePeerDependencies:
-      - '@types/react'
-      - bufferutil
-      - utf-8-validate
+      yup: 0.32.11
+    dev: false
+
+  /@yarnpkg/core@3.5.2:
+    resolution: {integrity: sha512-IaKWHArtc0JAUXuDN2sSV57+yjemVsz//k8NjHT02AmUlCM7dOmIT/FeGfcVFZ6Zy8ZSwEwyzQLf3nxx5alzQg==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
+    dependencies:
+      '@arcanis/slice-ansi': 1.1.1
+      '@types/semver': 7.3.4
+      '@types/treeify': 1.0.0
+      '@yarnpkg/fslib': 2.10.3
+      '@yarnpkg/json-proxy': 2.1.1
+      '@yarnpkg/libzip': 2.3.0
+      '@yarnpkg/parsers': 2.5.1
+      '@yarnpkg/pnp': 3.3.4
+      '@yarnpkg/shell': 3.2.5
+      camelcase: 5.3.1
+      chalk: 3.0.0
+      ci-info: 3.8.0
+      clipanion: 3.2.0-rc.4
+      cross-spawn: 7.0.3
+      diff: 5.1.0
+      globby: 11.0.1
+      got: 11.8.6
+      json-file-plus: 3.3.1
+      lodash: 4.17.21
+      micromatch: 4.0.5
+      mkdirp: 0.5.6
+      p-limit: 2.3.0
+      pluralize: 7.0.0
+      pretty-bytes: 5.6.0
+      semver: 7.5.2
+      stream-to-promise: 2.2.0
+      strip-ansi: 6.0.0
+      tar: 6.1.11
+      tinylogic: 1.0.3
+      treeify: 1.1.0
+      tslib: 1.14.1
+      tunnel: 0.0.6
     dev: false
 
   /@yarnpkg/core@4.0.0-rc.45:
@@ -43342,7 +43292,7 @@ packages:
       camelcase: 5.3.1
       chalk: 3.0.0
       ci-info: 3.8.0
-      clipanion: 3.2.0
+      clipanion: 3.2.1
       cross-spawn: 7.0.3
       diff: 5.1.0
       globby: 11.0.1
@@ -43359,22 +43309,22 @@ packages:
       tunnel: 0.0.6
     dev: false
 
-  /@yarnpkg/extensions@2.0.0-rc.22(@yarnpkg/core@4.0.0-rc.45):
+  /@yarnpkg/extensions@1.1.2(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-44UF1cEWbwA9tzod4TjOsa/Aeuk13KAXiUbR5jMHYPTX8Ad2dpAmE1oTCrAkCbMq6GYyrCJ2YzNVAzU1vFBcdQ==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
+    peerDependencies:
+      '@yarnpkg/core': ^3.3.1
+    dependencies:
+      '@yarnpkg/core': 3.5.2
+    dev: false
+
+  /@yarnpkg/extensions@2.0.0-rc.22(@yarnpkg/core@3.5.2):
     resolution: {integrity: sha512-8Xh1hdaRtZq68kbUIlvq7jWgG/ofe0skwbC0d6l+ymRFxinv517DirRK430Vhg1HvM6eCO91PEYD7Cl0HwZ2OQ==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
       '@yarnpkg/core': ^4.0.0-rc.40
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45
-    dev: false
-
-  /@yarnpkg/extensions@2.0.0-rc.24(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-+mOmpZz2UfU8tGEAU4EMBpxQpbqwbOZif7MJfbQuxWpIM0TWUGF77WW+vXr+UesHiyOdhxQTEKpuM6H/HlSoPg==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45
+      '@yarnpkg/core': 3.5.2
     dev: false
 
   /@yarnpkg/fslib@2.10.3:
@@ -43385,11 +43335,12 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/fslib@3.0.0-rc.42:
-    resolution: {integrity: sha512-kMHeTgaDRUJVBym5lEswzG2hAS9vB+d2wSC8v4Be7didRiBGGq83IaynJRU9bpUJDDcMMBCpG7a1PERNIg+n9Q==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/fslib@2.6.2:
+    resolution: {integrity: sha512-cg8RfRD9ZJW+0/ER2TKXJbqvtk1707XeZ1MAWHpRXRqz/SJqmM3ujy1CfnG832lgzzkZK1315cIBwqFloopq6A==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     dependencies:
-      tslib: 2.5.0
+      '@yarnpkg/libzip': 2.3.0
+      tslib: 1.14.1
     dev: false
 
   /@yarnpkg/fslib@3.0.0-rc.45:
@@ -43399,16 +43350,12 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@yarnpkg/libui@3.0.0-rc.42(ink@3.2.0)(react@16.14.0):
-    resolution: {integrity: sha512-0LmP0WCMmhOCzR2vUUT8n5h8KXgkXZChEIyuYBcDUcKJ37fcwNCKC2J3Kk8+Wtcs8/4vG+el4nujNyw5qpkFmQ==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      ink: ^3.0.8
-      react: ^16.8.4
+  /@yarnpkg/json-proxy@2.1.1:
+    resolution: {integrity: sha512-meUiCAgCYpXTH1qJfqfz+dX013ohW9p2dKfwIzUYAFutH+lsz1eHPBIk72cuCV84adh9gX6j66ekBKH/bIhCQw==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     dependencies:
-      ink: 3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@16.14.0)(utf-8-validate@5.0.5)
-      react: 16.14.0
-      tslib: 2.5.0
+      '@yarnpkg/fslib': 2.6.2
+      tslib: 1.14.1
     dev: false
 
   /@yarnpkg/libzip@2.3.0:
@@ -43417,17 +43364,6 @@ packages:
     dependencies:
       '@types/emscripten': 1.39.6
       tslib: 1.14.1
-    dev: false
-
-  /@yarnpkg/libzip@3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42):
-    resolution: {integrity: sha512-ZsYi6Y01yMJOLnJ5ISZgOFvCEXzp4EScrM91D7bvCx0lIfH3DZ40H4M5nGNeVFk7jXUHOXuJkNYlNoXixSconA==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/fslib': ^3.0.0-rc.45
-    dependencies:
-      '@types/emscripten': 1.39.6
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      tslib: 2.5.0
     dev: false
 
   /@yarnpkg/libzip@3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.45):
@@ -43443,6 +43379,15 @@ packages:
 
   /@yarnpkg/lockfile@1.1.0:
     resolution: {integrity: sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==}
+    dev: false
+
+  /@yarnpkg/nm@3.1.0:
+    resolution: {integrity: sha512-C6ra9oOmWwbMdjnj0VmO5Rp5drN+pCmw3heGly+ZBCj6bXCRqZHvkfSvtpGf6i48RYfR5HQLLxneamX9nJKqJA==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
+    dependencies:
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.10.3
+      '@yarnpkg/pnp': 3.3.4
     dev: false
 
   /@yarnpkg/nm@4.0.0-rc.45:
@@ -43462,14 +43407,6 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/parsers@3.0.0-rc.42:
-    resolution: {integrity: sha512-eW9Mbegmb5bJjwawJM9ghjUjUqciNMhC6L7XrQPF/clXS5bbP66MstsgCT5hy9VlfUh/CfBT+0Wucf531dMjHA==}
-    engines: {node: '>=14.15.0'}
-    dependencies:
-      js-yaml: 3.14.1
-      tslib: 2.5.0
-    dev: false
-
   /@yarnpkg/parsers@3.0.0-rc.45:
     resolution: {integrity: sha512-Aj0aHBV/crFQTpKQvL6k1xNiOhnlfVLu06LunelQAvl1MTeWrSi8LD9UJJDCFJiG4kx8NysUE6Tx0KZyPQUzIw==}
     engines: {node: '>=14.15.0'}
@@ -43478,384 +43415,304 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@yarnpkg/plugin-compat@4.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-patch@4.0.0-rc.42):
-    resolution: {integrity: sha512-raYmm3Mi2xwwtSeDXB2GzFMTQmXpZ2u8OXyS8Hy27l67agme9pzCuy7IEXQH2fKUnUaqmMw7DjeV+wxsJeeHUA==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-compat@3.1.13(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-patch@3.2.4):
+    resolution: {integrity: sha512-B2Nt2XEHDFlplNcBQ47W+LS9hncKRPqxPbTOfzbNrHmvyTMCXiRF/vG0PjjJos8LW9QkZDtzhCiMMnJQm+vWIA==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-patch': ^4.0.0-rc.42
+      '@yarnpkg/core': ^3.5.2
+      '@yarnpkg/plugin-patch': ^3.2.4
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/extensions': 2.0.0-rc.24(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-patch': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/extensions': 1.1.2(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-patch': 3.2.4(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
     dev: false
 
-  /@yarnpkg/plugin-constraints@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-HaOWrD1C0+ySooMLouc4O6yRmCM+DPR4aMblr/DyB35Gb8UcGKQ0xWXj+hByTu8irK24sGC6snJiyHyna4FPhg==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-dlx@3.1.4(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-aabYrLLzO84SRIhlsWWa4MRb1gA4wLbl0jLbLD1/SSDBq3hrEaIkgZpxBFgOGV8Gc80Nub56MmCi8OmhqbL8Eg==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
+      '@yarnpkg/cli': ^3.2.3
+      '@yarnpkg/core': ^3.2.4
     dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.1
-      lodash: 4.17.21
-      tau-prolog: 0.2.81
-      tslib: 2.5.0
+      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.10.3
+      '@yarnpkg/json-proxy': 2.1.1
+      clipanion: 3.2.0-rc.4
+      tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-dlx@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-Td1QZJy/kJaP8ovdWncXs02N/8BHPzo/Et+71YwvJ4+uPUjwM9h+rU8yYB7zoTU19bl3yJpjV1ye55wSC234+Q==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-essentials@3.3.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-git@2.6.6):
+    resolution: {integrity: sha512-l7CVyPpwSr3LaeXIWl+a7ioUzqpioB51m5gyEYpxTiMPdQ94zZdOb3lx8v+uvL9agvMTiZe8RlwyYB1tencJvw==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
+      '@yarnpkg/cli': ^3.3.0
+      '@yarnpkg/core': ^3.3.0
+      '@yarnpkg/plugin-git': ^2.6.3
     dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.1
-      tslib: 2.5.0
-    dev: false
-
-  /@yarnpkg/plugin-essentials@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42):
-    resolution: {integrity: sha512-5DVngmRjR+8+OHKoMyPlHLowusbVjBj4cVghnieJTXXrJ+9rjsFrk05Wfwt/esJ1ENUB0r34zjSMYaELdl791g==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-git': ^3.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/parsers': 3.0.0-rc.42
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
+      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.10.3
+      '@yarnpkg/json-proxy': 2.1.1
+      '@yarnpkg/parsers': 2.5.1
+      '@yarnpkg/plugin-git': 2.6.6(@yarnpkg/core@3.5.2)
       ci-info: 3.8.0
-      clipanion: 3.2.1
+      clipanion: 3.2.0-rc.4
       enquirer: 2.3.6
       lodash: 4.17.21
       micromatch: 4.0.5
       semver: 7.5.2
-      tslib: 2.5.0
+      tslib: 1.14.1
       typanion: 3.12.1
     dev: false
 
-  /@yarnpkg/plugin-exec@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-3tK0XxcZmEWYeN7OjGV80tI1qM9uDf3eeqVwdUDdrRriYs7pFMyNnqyI48+TQKwJJz2fAWpyNH9dzm/PlQIDEA==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-file@2.3.1(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-LSQA9x33LkuvNuBsGrBgM51kgdygEUWn1v1oEHlOFo7o5DTnjmQNB9TnFeZx1PddhAZvLB2IlrEhFh+bcuo8tw==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
+      '@yarnpkg/core': ^3.2.1
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      tslib: 2.5.0
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.6.2
+      tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-file@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-lctt+ERyDmcZOnMVd/QrEY5lp2ghgfvvA4CxSxy+4lj3hsGdN27xQm/0KrcB6zbyISOTPPpzZLVAC/Td5bswZA==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-git@2.6.6(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-qlMcswk1Np4hAEIM82CYOrNjlAxDulgNLnnE1fK6342QiOM0Y4DGv+cmU4sRmoD9ocuN15KDHpaI4xxURox92Q==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42)
-      tslib: 2.5.0
-    dev: false
-
-  /@yarnpkg/plugin-git@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-zVEc3V88laVovZweVR3ndyU4KDBwlhOYaR1zDuZE8J4N4ykNQ68T5MKMSjhdvtwak0tGIHyJixu+LRiXvjVSeg==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
+      '@yarnpkg/core': ^3.5.2
     dependencies:
       '@types/semver': 7.3.4
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.1
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.10.3
+      clipanion: 3.2.0-rc.4
       git-url-parse: 13.1.0
       lodash: 4.17.21
       semver: 7.5.2
-      tslib: 2.5.0
+      tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-github@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42):
-    resolution: {integrity: sha512-X4Zfpu56VgnMJWLi+NRwNyRpCpl5HLBa4HUaZ+uQwSn17bNVpapKY0vIj3NCQLw9x9inyesbTIvNC61F3UEfyA==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-github@2.3.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-git@2.6.6):
+    resolution: {integrity: sha512-jlcDFAIojQUIGu8c0f5BJdEw6NeIUNM5hUMBlA/UlhKYn0FoTkYrH7vhIx4whMe6Sy1ICv4gbE4YVH+7nlrLEQ==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-git': ^3.0.0-rc.42
+      '@yarnpkg/core': ^3.2.1
+      '@yarnpkg/plugin-git': ^2.6.1
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
-      tslib: 2.5.0
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.6.2
+      '@yarnpkg/plugin-git': 2.6.6(@yarnpkg/core@3.5.2)
+      tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-http@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-oD0RwaeLZWyWGncw0I/KoUMb+XZaRoWx7R+/vN23eM11RAj7pUKELZLBPnS71Byn23NhkUoe8H52DE43m86fJA==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-http@2.2.1(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-zUs4HoImxaPkJGLyn7saNmQEGA+LBKjZE+/jHZeR/m35IV1FJrsJnazC9WMgZfDbgoRRqgPmtszkdiNazCx7rQ==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
+      '@yarnpkg/core': ^3.2.1
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45
-      tslib: 2.5.0
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.6.2
+      tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-init@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-bNW7RHrVfa3fzVah+V+MUHzdw49Zp12HxEGDrN6j5xZ3zXGOi+CsE6WzNcBUhL06QgZwxEkfZceZZ+6OjPU0zg==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-init@3.2.1(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-fD6yHVHc2WZdIKfjSDKJBVtc2CibsZPkXCt4w0v0aiOditMHDSruUSRVkMjobEtuQp/BC+PuKMtXqjFKUKASzA==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
+      '@yarnpkg/cli': ^3.4.1
+      '@yarnpkg/core': ^3.4.0
     dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.1
-      tslib: 2.5.0
+      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.10.3
+      clipanion: 3.2.0-rc.4
+      lodash: 4.17.21
+      tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-interactive-tools@4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-essentials@4.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5):
-    resolution: {integrity: sha512-hKyvrd0aX5i37AbMEj5Fv4K7LPkcH4+s+Yo1Y6n9bsd+1ZTdDPJx1du4QiFyh6W+OAs4RLhqbE4ZieA1LeQuNg==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-link@2.2.1(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-1mHJqe97J6HHpxFEAkmcFH0Bl4TgMuLCWzCMi8Eh3DwlSTVo2CbMz8MuaovOA/350TcfwgUkyGAwskR6pm/OIQ==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-essentials': ^4.0.0-rc.42
+      '@yarnpkg/core': ^3.2.1
     dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/libui': 3.0.0-rc.42(ink@3.2.0)(react@16.14.0)
-      '@yarnpkg/plugin-essentials': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)
-      algoliasearch: 4.16.0
-      clipanion: 3.2.1
-      diff: 5.1.0
-      ink: 3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@16.14.0)(utf-8-validate@5.0.5)
-      ink-text-input: 4.0.3(ink@3.2.0)(react@16.14.0)
-      react: 16.14.0
-      semver: 7.5.2
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - '@types/react'
-      - bufferutil
-      - utf-8-validate
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.6.2
+      tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-link@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-fu6YFYJR++eY2NJfz7u7sX14DhJz+phJwV08x0ijlKAYwZwvnqP87t1K9GVeCFFKpcGbMnmP0yyCzeYpdRXtrQ==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-nm@3.1.5(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-PfUXTq8Wkrilcce5z7lena6ch2hGxe012Md5pyzrzMdY1hnohQ3w5GixaNDJwc7wVjdis1smgJaJcltVTXxnuQ==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
+      '@yarnpkg/cli': ^3.3.0
+      '@yarnpkg/core': ^3.3.0
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      tslib: 2.5.0
-    dev: false
-
-  /@yarnpkg/plugin-nm@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-esGCHhX1uTswdChdqfwT2yDASObYj0zI6q1ZwstdCNKvoa8dIoEy0JIvCLmOIYgKa6KhsGfp2LY38+yYZT/mNQ==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42)
-      '@yarnpkg/nm': 4.0.0-rc.45
-      '@yarnpkg/parsers': 3.0.0-rc.42
-      '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/pnp': 4.0.0-rc.45
+      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.10.3
+      '@yarnpkg/libzip': 2.3.0
+      '@yarnpkg/nm': 3.1.0
+      '@yarnpkg/parsers': 2.5.1
+      '@yarnpkg/plugin-pnp': 3.2.11(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/pnp': 3.3.4
       '@zkochan/cmd-shim': 5.4.1
-      clipanion: 3.2.1
-      tslib: 2.5.0
+      clipanion: 3.2.0-rc.4
+      micromatch: 4.0.5
+      tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-npm-cli@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-npm@3.0.0-rc.42)(@yarnpkg/plugin-pack@4.0.0-rc.42):
-    resolution: {integrity: sha512-cb8hb3PiiggNuuurToLRRUOcjfwXP35+8y4hu0y7JNvbEJod1MG3ZAiXa+Sdp1etiq5Q9vtfx4rt4ZjiqFd6fw==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-npm-cli@3.4.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-npm@2.7.1)(@yarnpkg/plugin-pack@3.2.0):
+    resolution: {integrity: sha512-ZRC0R7aVDlVOzgjoSgtpy1Yz5nqT0UH9m9aNB6p2vuoqX+4RLMmfzdNLvKTlLi9jp4P6lgbDuhBy/pImraKqlg==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-npm': ^3.0.0-rc.42
-      '@yarnpkg/plugin-pack': ^4.0.0-rc.42
+      '@yarnpkg/cli': ^3.6.0
+      '@yarnpkg/core': ^3.5.2
+      '@yarnpkg/plugin-npm': ^2.7.4
+      '@yarnpkg/plugin-pack': ^3.2.0
     dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-npm': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-pack@4.0.0-rc.42)
-      '@yarnpkg/plugin-pack': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      clipanion: 3.2.1
+      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.10.3
+      '@yarnpkg/plugin-npm': 2.7.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0)
+      '@yarnpkg/plugin-pack': 3.2.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      clipanion: 3.2.0-rc.4
       enquirer: 2.3.6
       micromatch: 4.0.5
       semver: 7.5.2
-      tslib: 2.5.0
+      tslib: 1.14.1
       typanion: 3.12.1
     dev: false
 
-  /@yarnpkg/plugin-npm@3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-pack@4.0.0-rc.42):
-    resolution: {integrity: sha512-hUW7oTjrpaScuiaiwSG1GlpDaV43KG8ziFqbCDklY+uQXuH2f1hcosrgmzwBCf1eco59CEGCWHjndT1DiC3prA==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-npm@2.7.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.1.0):
+    resolution: {integrity: sha512-Lnlblj8rmxeY3BWLrPYORxpFTAD8HYomKWYEFw6+kCBJ/H5wBzQxOLrWVkZ2uHLwamnvBRfd3mXKiqI55Z8DhQ==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-pack': ^4.0.0-rc.42
+      '@yarnpkg/core': ^3.2.1
+      '@yarnpkg/plugin-pack': ^3.1.2
     dependencies:
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-pack': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.6.2
+      '@yarnpkg/plugin-pack': 3.1.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
       enquirer: 2.3.6
       semver: 7.5.2
       ssri: 6.0.2
-      tslib: 2.5.0
+      tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-pack@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-o47CMYYU3uiTnr/+CRjViWe0rKkDdVBweo46zFe2neZ/PAZitBsL8FsXqKGTRWUMiueWCA/O60mLOnHLBy0BUQ==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-npm@2.7.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0):
+    resolution: {integrity: sha512-Lnlblj8rmxeY3BWLrPYORxpFTAD8HYomKWYEFw6+kCBJ/H5wBzQxOLrWVkZ2uHLwamnvBRfd3mXKiqI55Z8DhQ==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
+      '@yarnpkg/core': ^3.2.1
+      '@yarnpkg/plugin-pack': ^3.1.2
     dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.6.2
+      '@yarnpkg/plugin-pack': 3.2.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      enquirer: 2.3.6
+      semver: 7.5.2
+      ssri: 6.0.2
+      tslib: 1.14.1
+    dev: false
+
+  /@yarnpkg/plugin-pack@3.1.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-iLexQO+U+6D8MKWuQ6prU8DgMX4tQRZZXNBAOuQg67lToI1HqnUnfQeGxArGxr9CF6tqIlU/CtbQVCH04/U5XQ==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
+    peerDependencies:
+      '@yarnpkg/cli': ^3.1.0
+      '@yarnpkg/core': ^3.1.0
+    dependencies:
+      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.6.2
       clipanion: 3.2.1
       micromatch: 4.0.5
       tar-stream: 2.2.0
-      tslib: 2.5.0
+      tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-patch@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-pNbVItXxYL5c5/FyknpYhUYcnA0tRN1ooJW02XjbmUqJKMTyz3HEg0BFIdmt3aJsMIHiQMF1/KycRyUdUecpYw==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-pack@3.2.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-5k4PqWQlF2mVfRU+wObzcv6Lu+3QeltJaAW8+EZf2N7Nz4oxcFRm8DSy/bO78NGPPt1d4OCJJkMaqPa4BRLNEw==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
+      '@yarnpkg/cli': ^3.5.0
+      '@yarnpkg/core': ^3.5.0
     dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/libzip': 3.0.0-rc.45(@yarnpkg/fslib@3.0.0-rc.42)
-      clipanion: 3.2.1
-      tslib: 2.5.0
+      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.10.3
+      clipanion: 3.2.0-rc.4
+      micromatch: 4.0.5
+      tar-stream: 2.2.0
+      tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-pnp@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-q4TU2Pmgd+J3b3kTzIKAAVtzjFmD67m1Ym3ZVgqkDXN0jK+/KsN0FqGhDnKHMKgVpGNn4hFkZ1Om0nCi2r2mqQ==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-patch@3.2.4(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-1SfpDDV8XYMOxowD3SID755pBa25afIP4Mb+heeRmh5EnTvwKGq8naHDF8hnC+ppurPZQWXqKpgVUZo2Jo28BQ==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
+      '@yarnpkg/cli': ^3.3.0
+      '@yarnpkg/core': ^3.3.0
+    dependencies:
+      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.10.3
+      '@yarnpkg/libzip': 2.3.0
+      clipanion: 3.2.0-rc.4
+      tslib: 1.14.1
+    dev: false
+
+  /@yarnpkg/plugin-pnp@3.2.11(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-7nekW+8G7unWc+jy9x3zDvWddwU6XXbxN+ZkLMmYJL+bWsC6MwtNhF1cic4CYffeQmYfuzNInLKcPCqqaGIS8A==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
+    peerDependencies:
+      '@yarnpkg/cli': ^3.6.1
+      '@yarnpkg/core': ^3.5.2
     dependencies:
       '@types/semver': 7.3.4
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/pnp': 4.0.0-rc.45
-      clipanion: 3.2.1
+      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.10.3
+      '@yarnpkg/plugin-stage': 3.1.3(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/pnp': 3.3.4
+      clipanion: 3.2.0-rc.4
       micromatch: 4.0.5
       semver: 7.5.2
-      tslib: 2.5.0
+      tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-pnpm@2.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-u5xKQSoqG9JbhHpCCvH9VoW8a5oWYN7aQqCzsQNOuti2WGhtBJb2wUaLKvhlXxhUlcCsHadSbG4ZV1wrSjTUQQ==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-pnpm@1.1.3(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-Dj1ZqO65fiKUJgNB83Uk2ny4zFQvalRp+LeibUkI7VJoZrufbJgs6B0FuMJZSOFxhx0EQa87NFafnkCFHtDMLw==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
+      '@yarnpkg/cli': ^3.3.1
+      '@yarnpkg/core': ^3.3.1
     dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-pnp': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      '@yarnpkg/plugin-stage': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      clipanion: 3.2.1
+      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.10.3
+      '@yarnpkg/plugin-pnp': 3.2.11(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-stage': 3.1.3(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      clipanion: 3.2.0-rc.4
       p-limit: 2.3.0
-      tslib: 2.5.0
+      tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-stage@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45):
-    resolution: {integrity: sha512-MyJerfEYavT9HedFN8uSufZpDBSsMnXz31U8M5NjOl88IRnyfQk0KSu2AvKHPyykDWFrzlk0IY5ogUH0a3IlJA==}
-    engines: {node: '>=14.15.0'}
+  /@yarnpkg/plugin-stage@3.1.3(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-eh2yKS+xdQqA8NpHKHy5a2eQZjhK1yPNbg1A7emNQVAHdCwQaYtaO3M5YK6JAMcC4SYfvHkRm1zLxN2cqMmAJQ==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
+      '@yarnpkg/cli': ^3.2.3
+      '@yarnpkg/core': ^3.2.4
     dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      clipanion: 3.2.1
-      tslib: 2.5.0
-    dev: false
-
-  /@yarnpkg/plugin-typescript@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-essentials@4.0.0-rc.42):
-    resolution: {integrity: sha512-kkRMDLjlDyf+cLEQFEv2CZ4N41FcCBIyAu+JT2L3P7SPvl3eYfcZKwyvDRHXpVYdu34Aiioc/MBQgIS+h8KPow==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-essentials': ^4.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-essentials': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)
-      '@yarnpkg/plugin-pack': 4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)
-      algoliasearch: 4.16.0
-      semver: 7.5.2
-      tslib: 2.5.0
-    dev: false
-
-  /@yarnpkg/plugin-version@4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42)(bufferutil@4.0.3)(utf-8-validate@5.0.5):
-    resolution: {integrity: sha512-iHrNBUroGfExYQF4/tMn0loLH2l+TWv8QeLYG03GP/5wLz9meISq5W9o49UEVbL4NZSeG5dOvFZgGHrsSE6Xdg==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-git': ^3.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/libui': 3.0.0-rc.42(ink@3.2.0)(react@16.14.0)
-      '@yarnpkg/parsers': 3.0.0-rc.42
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
-      clipanion: 3.2.1
-      ink: 3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@16.14.0)(utf-8-validate@5.0.5)
-      lodash: 4.17.21
-      react: 16.14.0
-      semver: 7.5.2
-      tslib: 2.5.0
-    transitivePeerDependencies:
-      - '@types/react'
-      - bufferutil
-      - utf-8-validate
-    dev: false
-
-  /@yarnpkg/plugin-workspace-tools@4.0.0-rc.42(@yarnpkg/cli@4.0.0-rc.42)(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-git@3.0.0-rc.42):
-    resolution: {integrity: sha512-+J4sG16ojCVeZmEP/B9D7fRr2KqbPtIrFECnatBw65e5dt/UpWG0xxVF+YDKu/EZlggTDe/5VXfDZs9CHwV0fQ==}
-    engines: {node: '>=14.15.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^4.0.0-rc.42
-      '@yarnpkg/core': ^4.0.0-rc.42
-      '@yarnpkg/plugin-git': ^3.0.0-rc.42
-    dependencies:
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/plugin-git': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)
-      clipanion: 3.2.1
-      micromatch: 4.0.5
-      p-limit: 2.3.0
-      tslib: 2.5.0
-      typanion: 3.12.1
+      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.10.3
+      clipanion: 3.2.0-rc.4
+      tslib: 1.14.1
     dev: false
 
   /@yarnpkg/pnp@2.3.2:
@@ -43863,8 +43720,16 @@ packages:
     engines: {node: '>=10.19.0'}
     dependencies:
       '@types/node': 13.13.52
-      '@yarnpkg/fslib': 2.10.3
+      '@yarnpkg/fslib': 2.6.2
       tslib: 1.14.1
+    dev: false
+
+  /@yarnpkg/pnp@3.3.4:
+    resolution: {integrity: sha512-fbDEY2WlbrwSuQbwL9xD9eTUzIZUE/Pk3hNiw4PTqUbAF9H5m1Dh3qRQDe10pnacpIMvfNfgLe0XidlEd/SoLA==}
+    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
+    dependencies:
+      '@types/node': 13.13.52
+      '@yarnpkg/fslib': 2.10.3
     dev: false
 
   /@yarnpkg/pnp@4.0.0-rc.45:
@@ -44180,25 +44045,6 @@ packages:
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
       uri-js: 4.4.1
-
-  /algoliasearch@4.16.0:
-    resolution: {integrity: sha512-HAjKJ6bBblaXqO4dYygF4qx251GuJ6zCZt+qbJ+kU7sOC+yc84pawEjVpJByh+cGP2APFCsao2Giz50cDlKNPA==}
-    dependencies:
-      '@algolia/cache-browser-local-storage': 4.16.0
-      '@algolia/cache-common': 4.16.0
-      '@algolia/cache-in-memory': 4.16.0
-      '@algolia/client-account': 4.16.0
-      '@algolia/client-analytics': 4.16.0
-      '@algolia/client-common': 4.16.0
-      '@algolia/client-personalization': 4.16.0
-      '@algolia/client-search': 4.16.0
-      '@algolia/logger-common': 4.16.0
-      '@algolia/logger-console': 4.16.0
-      '@algolia/requester-browser-xhr': 4.16.0
-      '@algolia/requester-common': 4.16.0
-      '@algolia/requester-node-http': 4.16.0
-      '@algolia/transporter': 4.16.0
-    dev: false
 
   /amdefine@1.0.1:
     resolution: {integrity: sha512-S2Hw0TtNkMJhIabBwIojKL9YHO5T0n5eNqWJ7Lrlel/zDbftQpxpapi8tZs3X1HWa+u+QeydGmzzNU0m09+Rcg==}
@@ -46083,6 +45929,14 @@ packages:
       optimist: 0.3.7
     dev: false
 
+  /chevrotain@9.1.0:
+    resolution: {integrity: sha512-A86/55so63HCfu0dgGg3j9u8uuuBOrSqly1OhBZxRu2x6sAKILLzfVjbGMw45kgier6lz45EzcjjWtTRgoT84Q==}
+    dependencies:
+      '@chevrotain/types': 9.1.0
+      '@chevrotain/utils': 9.1.0
+      regexp-to-ast: 0.5.0
+    dev: false
+
   /chokidar@3.5.1:
     resolution: {integrity: sha512-9+s+Od+W0VJJzawDma/gvBNQqkTiqYTWLuZoyAsivsI4AaWTCzHG06/TMjsf1cYe9Cb97UCEhjz7HvnPk2p/tw==}
     engines: {node: '>= 8.10.0'}
@@ -46131,11 +45985,6 @@ packages:
 
   /ci-info@2.0.0:
     resolution: {integrity: sha512-5tK7EtrZ0N+OLFMthtqOj4fI2Jeb88C4CAZPu25LDVUgXJ0A3Js4PMGqrn0JU1W0Mh1/Z8wZzYPxqUrXeBboCQ==}
-    dev: false
-
-  /ci-info@3.7.1:
-    resolution: {integrity: sha512-4jYS4MOAaCIStSRwiuxc4B8MYhIe676yO1sYGzARnjXkWpmzZMMYxY6zu8WYWDhSuth5zhrQ1rhNSibyyvv4/w==}
-    engines: {node: '>=8'}
     dev: false
 
   /ci-info@3.8.0:
@@ -46306,12 +46155,6 @@ packages:
 
   /clipanion@3.2.0:
     resolution: {integrity: sha512-XaPQiJQZKbyaaDbv5yR/cAt/ORfZfENkr4wGQj+Go/Uf/65ofTQBCPirgWFeJctZW24V3mxrFiEnEmqBflrJYA==}
-    dependencies:
-      typanion: 3.12.1
-    dev: false
-
-  /clipanion@3.2.0-rc.14:
-    resolution: {integrity: sha512-lj5zydbH786t6gpXe6oNX7CM5YKhd0CDhcXG8pKyRa2Nz5cgj1yhnNKxDi/MyPYwjyvAG5oVBeDdYCGUAgD8lQ==}
     dependencies:
       typanion: 3.12.1
     dev: false
@@ -48066,6 +47909,12 @@ packages:
     requiresBuild: true
     dependencies:
       iconv-lite: 0.6.3
+    dev: false
+
+  /end-of-stream@1.1.0:
+    resolution: {integrity: sha512-EoulkdKF/1xa92q25PbjuDcgJ9RDHYU2Rs3SCIvs2/dSQ3BpmxneNHmA/M7fe60M3PrV7nNGTTNbkK62l6vXiQ==}
+    dependencies:
+      once: 1.3.3
     dev: false
 
   /end-of-stream@1.4.4:
@@ -50385,10 +50234,6 @@ packages:
       define-properties: 1.1.4
     dev: false
 
-  /globalyzer@0.1.0:
-    resolution: {integrity: sha512-40oNTM9UfG6aBmuKxk/giHn5nQ8RVz/SS4Ir6zgzOv9/qC3kKZ9v4etGTcJbEl/NyVQH7FGU7d+X1egr57Md2Q==}
-    dev: false
-
   /globby@11.0.1:
     resolution: {integrity: sha512-iH9RmgwCmUJHi2z5o2l3eTtGBtXek1OYlHrbcxOYugyHLmAsZrPj43OtHThd62Buh/Vv6VyCBD2bdyWcGNQqoQ==}
     engines: {node: '>=10'}
@@ -50411,10 +50256,6 @@ packages:
       ignore: 5.2.4
       merge2: 1.4.1
       slash: 3.0.0
-    dev: false
-
-  /globrex@0.1.2:
-    resolution: {integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==}
     dev: false
 
   /gopd@1.0.1:
@@ -51435,59 +51276,6 @@ packages:
       react: 17.0.2
     dev: false
 
-  /ink-text-input@4.0.3(ink@3.2.0)(react@16.14.0):
-    resolution: {integrity: sha512-eQD01ik9ltmNoHmkeQ2t8LszYkv2XwuPSUz3ie/85qer6Ll/j0QSlSaLNl6ENHZakBHdCBVZY04iOXcLLXA0PQ==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      ink: ^3.0.0-3
-      react: ^16.5.2 || ^17.0.0
-    dependencies:
-      chalk: 4.1.2
-      ink: 3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@16.14.0)(utf-8-validate@5.0.5)
-      react: 16.14.0
-      type-fest: 0.15.1
-    dev: false
-
-  /ink@3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@16.14.0)(utf-8-validate@5.0.5):
-    resolution: {integrity: sha512-firNp1q3xxTzoItj/eOOSZQnYSlyrWks5llCTVX37nJ59K3eXbQ8PtzCguqo8YI19EELo5QxaKnJd4VxzhU8tg==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      '@types/react': '>=16.8.0'
-      react: '>=16.8.0'
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-    dependencies:
-      '@types/react': 17.0.8
-      ansi-escapes: 4.3.2
-      auto-bind: 4.0.0
-      chalk: 4.1.2
-      cli-boxes: 2.2.1
-      cli-cursor: 3.1.0
-      cli-truncate: 2.1.0
-      code-excerpt: 3.0.0
-      indent-string: 4.0.0
-      is-ci: 2.0.0
-      lodash: 4.17.21
-      patch-console: 1.0.0
-      react: 16.14.0
-      react-devtools-core: 4.27.1(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      react-reconciler: 0.26.2(react@16.14.0)
-      scheduler: 0.20.2
-      signal-exit: 3.0.7
-      slice-ansi: 3.0.0
-      stack-utils: 2.0.6
-      string-width: 4.2.3
-      type-fest: 0.12.0
-      widest-line: 3.1.0
-      wrap-ansi: 6.2.0
-      ws: 7.5.9(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      yoga-layout-prebuilt: 1.10.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-    dev: false
-
   /ink@3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5):
     resolution: {integrity: sha512-firNp1q3xxTzoItj/eOOSZQnYSlyrWks5llCTVX37nJ59K3eXbQ8PtzCguqo8YI19EELo5QxaKnJd4VxzhU8tg==}
     engines: {node: '>=10'}
@@ -52151,6 +51939,10 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       is-docker: 2.2.1
+
+  /is@3.3.0:
+    resolution: {integrity: sha512-nW24QBoPcFGGHJGUwnfpI7Yc5CdqWNdsyHQszVE/z2pKHXzh7FZ5GWhJqSyaQ9wMkQnsTx+kAI8bHlCX4tKdbg==}
+    dev: false
 
   /isarray@0.0.1:
     resolution: {integrity: sha512-D2S+3GLxWH+uhrNEcoh/fnmYeP8E8/zHl644d/jdA0g2uyXvy3sb0qxotE+ne0LtccHknQzWwZEzhak7oJ0COQ==}
@@ -52900,6 +52692,17 @@ packages:
 
   /json-buffer@3.0.1:
     resolution: {integrity: sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==}
+    dev: false
+
+  /json-file-plus@3.3.1:
+    resolution: {integrity: sha512-wo0q1UuiV5NsDPQDup1Km8IwEeqe+olr8tkWxeJq9Bjtcp7DZ0l+yrg28fSC3DEtrE311mhTZ54QGS6oiqnZEA==}
+    engines: {node: '>= 0.4'}
+    dependencies:
+      is: 3.3.0
+      node.extend: 2.0.2
+      object.assign: 4.1.4
+      promiseback: 2.0.3
+      safer-buffer: 2.1.2
     dev: false
 
   /json-formatter-js@2.3.4:
@@ -54634,9 +54437,12 @@ packages:
       '@babel/parser': 7.22.4
     dev: false
 
-  /node-watch@0.7.3:
-    resolution: {integrity: sha512-3l4E8uMPY1HdMMryPRUAl+oIHtXtyiTlIiESNSVSNxcPfzAFzeTbXFQkZfAwBbo0B1qMSG8nUABx+Gd+YrbKrQ==}
-    engines: {node: '>=6'}
+  /node.extend@2.0.2:
+    resolution: {integrity: sha512-pDT4Dchl94/+kkgdwyS2PauDFjZG0Hk0IcHIB+LkW27HLDtdoeMxHTxZh39DYbPP8UflWXWj9JcdDozF+YDOpQ==}
+    engines: {node: '>=0.4.0'}
+    dependencies:
+      has: 1.0.3
+      is: 3.3.0
     dev: false
 
   /nopt@1.0.10:
@@ -55098,6 +54904,12 @@ packages:
   /on-headers@1.0.2:
     resolution: {integrity: sha512-pZAE+FJLoyITytdqK0U5s+FIpjN0JP3OzFi/u8Rx+EV5/W+JTWGXG8xFzevE7AjBfDqHv/8vL8qQsIhHnqRkrA==}
     engines: {node: '>= 0.8'}
+
+  /once@1.3.3:
+    resolution: {integrity: sha512-6vaNInhu+CHxtONf3zw3vq4SP2DOQhjBvIa3rNcG0+P7eKWlYH6Peu7rHizSloRU2EwMz6GraLieis9Ac9+p1w==}
+    dependencies:
+      wrappy: 1.0.2
+    dev: false
 
   /once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
@@ -56780,6 +56592,13 @@ packages:
     engines: {node: '>=0.4.0'}
     dev: false
 
+  /promise-deferred@2.0.3:
+    resolution: {integrity: sha512-n10XaoznCzLfyPFOlEE8iurezHpxrYzyjgq/1eW9Wk1gJwur/N7BdBmjJYJpqMeMcXK4wEbzo2EvZQcqjYcKUQ==}
+    engines: {node: '>= 0.4'}
+    dependencies:
+      promise: 7.3.1
+    dev: false
+
   /promise-inflight@1.0.1(bluebird@3.7.2):
     resolution: {integrity: sha512-6zWPyEOFaQBJYcGMHBKTKJ3u6TBsnMFOIZSa6ce1e/ZrrsOlnHRHbabMjLiBYKp+n44X9eUI6VUPaukCXHuG4g==}
     peerDependencies:
@@ -56820,6 +56639,14 @@ packages:
     resolution: {integrity: sha512-rZPNPKTOYVNEEKFaq1HqTgOwZD+4/YHS5ukLzQCypkj+OkYx7iv0mA91lJlpPPZ8vMau3IIGj5Qlwrx+8iiSmg==}
     dependencies:
       asap: 2.0.6
+    dev: false
+
+  /promiseback@2.0.3:
+    resolution: {integrity: sha512-VZXdCwS0ppVNTIRfNsCvVwJAaP2b+pxQF7lM8DMWfmpNWyTxB6O5YNbzs+8z0ki/KIBHKHk308NTIl4kJUem3w==}
+    engines: {node: '>= 0.4'}
+    dependencies:
+      is-callable: 1.2.7
+      promise-deferred: 2.0.3
     dev: false
 
   /prompt@1.1.0:
@@ -57046,16 +56873,6 @@ packages:
   /quick-lru@5.1.1:
     resolution: {integrity: sha512-WuyALRjWPDGtt/wzJiadO5AXY+8hZ80hVpe6MyivgraREW751X3SbhRvG3eLKOYN+8VEvqLcf3wdnt44Z4S4SA==}
     engines: {node: '>=10'}
-    dev: false
-
-  /qunit@2.19.4:
-    resolution: {integrity: sha512-aqUzzUeCqlleWYKlpgfdHHw9C6KxkB9H3wNfiBg5yHqQMzy0xw/pbCRHYFkjl8MsP/t8qkTQE+JTYL71azgiew==}
-    engines: {node: '>=10'}
-    hasBin: true
-    dependencies:
-      commander: 7.2.0
-      node-watch: 0.7.3
-      tiny-glob: 0.2.9
     dev: false
 
   /raf@3.4.1:
@@ -57355,18 +57172,6 @@ packages:
       - encoding
     dev: false
 
-  /react-reconciler@0.26.2(react@16.14.0):
-    resolution: {integrity: sha512-nK6kgY28HwrMNwDnMui3dvm3rCFjZrcGiuwLc5COUipBK5hWHLOxMJhSnSomirqWwjPBJKV1QcbkI0VJr7Gl1Q==}
-    engines: {node: '>=0.10.0'}
-    peerDependencies:
-      react: ^17.0.2
-    dependencies:
-      loose-envify: 1.4.0
-      object-assign: 4.1.1
-      react: 16.14.0
-      scheduler: 0.20.2
-    dev: false
-
   /react-reconciler@0.26.2(react@17.0.2):
     resolution: {integrity: sha512-nK6kgY28HwrMNwDnMui3dvm3rCFjZrcGiuwLc5COUipBK5hWHLOxMJhSnSomirqWwjPBJKV1QcbkI0VJr7Gl1Q==}
     engines: {node: '>=0.10.0'}
@@ -57530,15 +57335,6 @@ packages:
     dependencies:
       envify: 3.4.1
       fbjs: 0.6.1
-    dev: false
-
-  /react@16.14.0:
-    resolution: {integrity: sha512-0X2CImDkJGApiAlcf0ODKIneSwBPhqJawOa5wCtKbu7ZECrmS26NvtSILynQ66cgkT/RJ4LidJOc3bUESwmU8g==}
-    engines: {node: '>=0.10.0'}
-    dependencies:
-      loose-envify: 1.4.0
-      object-assign: 4.1.1
-      prop-types: 15.8.1
     dev: false
 
   /react@17.0.2:
@@ -57713,11 +57509,6 @@ packages:
     dependencies:
       picomatch: 2.3.1
 
-  /readline-sync@1.4.9:
-    resolution: {integrity: sha512-mp5h1N39kuKbCRGebLPIKTBOhuDw55GaNg5S+K9TW9uDAS1wIHpGUc2YokdUMZJb8GqS49sWmWEDijaESYh0Hg==}
-    engines: {node: '>= 0.8.0'}
-    dev: false
-
   /real-require@0.1.0:
     resolution: {integrity: sha512-r/H9MzAWtrv8aSVjPCMFpDMl5q66GqtmmRkRjpHTsp4zBAa+snZyiQNlMONiUmEJcsnaw0wCauJ2GWODr/aFkg==}
     engines: {node: '>= 12.13.0'}
@@ -57825,6 +57616,10 @@ packages:
 
   /regex-parser@2.2.11:
     resolution: {integrity: sha512-jbD/FT0+9MBU2XAZluI7w2OBs1RBi6p9M83nkoZayQXXU9e8Robt69FcZc7wU4eJD/YFTjn1JdCk3rbMJajz8Q==}
+    dev: false
+
+  /regexp-to-ast@0.5.0:
+    resolution: {integrity: sha512-tlbJqcMHnPKI9zSrystikWKwHkBqu2a/Sgw01h3zFjvYrMxEDYHzzoMZnUrbIfpTFEsoRnnviOXNCzFiSc54Qw==}
     dev: false
 
   /regexp.prototype.flags@1.4.3:
@@ -59419,6 +59214,20 @@ packages:
     resolution: {integrity: sha512-AiisoFqQ0vbGcZgQPY1cdP2I76glaVA/RauYR4G4thNFgkTqr90yXTo4LYX60Jl+sIlPNHHdGSwo01AvbKUSVQ==}
     dev: false
 
+  /stream-to-array@2.3.0:
+    resolution: {integrity: sha512-UsZtOYEn4tWU2RGLOXr/o/xjRBftZRlG3dEWoaHr8j4GuypJ3isitGbVyjQKAuMu+xbiop8q224TjiZWc4XTZA==}
+    dependencies:
+      any-promise: 1.3.0
+    dev: false
+
+  /stream-to-promise@2.2.0:
+    resolution: {integrity: sha512-HAGUASw8NT0k8JvIVutB2Y/9iBk7gpgEyAudXwNJmZERdMITGdajOa4VJfD/kNiA3TppQpTP4J+CtcHwdzKBAw==}
+    dependencies:
+      any-promise: 1.3.0
+      end-of-stream: 1.1.0
+      stream-to-array: 2.3.0
+    dev: false
+
   /streamsearch@0.1.2:
     resolution: {integrity: sha512-jos8u++JKm0ARcSUTAZXOVC0mSox7Bhn6sBgty73P1f3JGf7yG2clTbBNHUdde/kdvP2FESam+vM6l8jBrNxHA==}
     engines: {node: '>=0.8.0'}
@@ -59985,13 +59794,6 @@ packages:
       yallist: 4.0.0
     dev: false
 
-  /tau-prolog@0.2.81:
-    resolution: {integrity: sha512-cHSdGumv+GfRweqE3Okd81+ZH1Ux6PoJ+WPjzoAFVar0SRoUxW93vPvWTbnTtlz++IpSEQ0yUPWlLBcTMQ8uOg==}
-    dependencies:
-      qunit: 2.19.4
-      readline-sync: 1.4.9
-    dev: false
-
   /temp-dir@2.0.0:
     resolution: {integrity: sha512-aoBAniQmmwtcKp/7BzsH8Cxzv8OL736p7v1ihGb5e9DJ9kTwGWHrQrVB5+lfVDzfGrdRzXch+ig7LHaY1JTOrg==}
     engines: {node: '>=8'}
@@ -60224,11 +60026,10 @@ packages:
       next-tick: 1.1.0
     dev: false
 
-  /tiny-glob@0.2.9:
-    resolution: {integrity: sha512-g/55ssRPUjShh+xkfx9UPDXqhckHEsHr4Vd9zX55oSdGZc/MD0m3sferOkwWtp98bv+kcVfEHtRJgBVJzelrzg==}
+  /tinylogic@1.0.3:
+    resolution: {integrity: sha512-9CpbvSIqfBt1TN/GZYkVjRK0d0TRlo2jdx2cXB2vO5aFy1wx6KGdqfS0MeAcMuR0o5JAeK/zAZkgR0fCyOP21w==}
     dependencies:
-      globalyzer: 0.1.0
-      globrex: 0.1.2
+      chevrotain: 9.1.0
     dev: false
 
   /tinylogic@2.0.0:
@@ -60526,11 +60327,6 @@ packages:
 
   /type-fest@0.12.0:
     resolution: {integrity: sha512-53RyidyjvkGpnWPMF9bQgFtWp+Sl8O2Rp13VavmJgfAP9WWG6q6TkrKU8iyJdnwnfgHI6k2hTlgqH4aSdjoTbg==}
-    engines: {node: '>=10'}
-    dev: false
-
-  /type-fest@0.15.1:
-    resolution: {integrity: sha512-n+UXrN8i5ioo7kqT/nF8xsEzLaqFra7k32SEsSPwvXVGyAcRgV/FUQN/sgfptJTR1oRmmq7z4IXMFSM7im7C9A==}
     engines: {node: '>=10'}
     dev: false
 
@@ -65472,7 +65268,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5):
+  file:scopes/dependencies/dependency-resolver(@pnpm/logger@5.0.0)(@types/react@17.0.8)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5):
     resolution: {directory: scopes/dependencies/dependency-resolver, type: directory}
     id: file:scopes/dependencies/dependency-resolver
     name: '@teambit/dependency-resolver'
@@ -65481,7 +65277,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@pnpm/core': 10.2.8(@pnpm/logger@5.0.0)(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)
+      '@pnpm/core': 10.2.8(@pnpm/logger@5.0.0)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
       '@pnpm/network.ca-file': 1.0.2
       '@pnpm/types': 9.1.0
       '@teambit/component-id': 0.0.427
@@ -65531,7 +65327,7 @@ packages:
       react: 17.0.2
     dev: false
 
-  file:scopes/dependencies/pnpm(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2):
+  file:scopes/dependencies/pnpm(@yarnpkg/core@3.5.2)(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/dependencies/pnpm, type: directory}
     id: file:scopes/dependencies/pnpm
     name: '@teambit/pnpm'
@@ -65542,7 +65338,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@pnpm/client': 10.0.12(@pnpm/logger@5.0.0)(bluebird@3.7.2)
       '@pnpm/config': 18.4.3(@pnpm/logger@5.0.0)
-      '@pnpm/core': 10.2.8(@pnpm/logger@5.0.0)(@yarnpkg/core@4.0.0-rc.45)(bluebird@3.7.2)
+      '@pnpm/core': 10.2.8(@pnpm/logger@5.0.0)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
       '@pnpm/default-reporter': 12.2.6(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path': 2.1.2
       '@pnpm/error': 5.0.2
@@ -65573,7 +65369,7 @@ packages:
       - supports-color
     dev: false
 
-  file:scopes/dependencies/yarn(@types/react@17.0.8)(@yarnpkg/plugin-pack@4.0.0-rc.42)(bufferutil@4.0.3)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5):
+  file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.1.0)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/dependencies/yarn, type: directory}
     id: file:scopes/dependencies/yarn
     name: '@teambit/yarn'
@@ -65585,11 +65381,11 @@ packages:
       '@pnpm/parse-overrides': 4.0.2
       '@pnpm/types': 9.1.0
       '@teambit/harmony': 0.4.6
-      '@yarnpkg/cli': 4.0.0-rc.42(@types/react@17.0.8)(@yarnpkg/core@4.0.0-rc.45)(bufferutil@4.0.3)(utf-8-validate@5.0.5)
-      '@yarnpkg/core': 4.0.0-rc.45
-      '@yarnpkg/fslib': 3.0.0-rc.42
-      '@yarnpkg/parsers': 3.0.0-rc.42
-      '@yarnpkg/plugin-npm': 3.0.0-rc.42(@yarnpkg/core@4.0.0-rc.45)(@yarnpkg/plugin-pack@4.0.0-rc.42)
+      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/core': 3.5.2
+      '@yarnpkg/fslib': 2.6.2
+      '@yarnpkg/parsers': 2.5.1
+      '@yarnpkg/plugin-npm': 2.7.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.1.0)
       core-js: 3.13.0
       fs-extra: 10.0.0
       lodash: 4.17.21
@@ -65597,14 +65393,10 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
       symlink-dir: 5.1.1
-      user-home: 2.0.0
       version-selector-type: 3.0.0
       yaml: 1.10.2
     transitivePeerDependencies:
-      - '@types/react'
       - '@yarnpkg/plugin-pack'
-      - bufferutil
-      - utf-8-validate
     dev: false
 
   file:scopes/docs/docs(graphql@14.7.0)(react-dom@17.0.2)(react@17.0.2):
