@@ -25,6 +25,8 @@ import { APIReferenceAspect } from './api-reference.aspect';
 
 export type APINodeRendererSlot = SlotRegistry<APINodeRenderer[]>;
 export class APIReferenceUI {
+  constructor(private host: string, private apiNodeRendererSlot: APINodeRendererSlot) {}
+
   static dependencies = [ComponentAspect];
   static runtime = UIRuntime;
   static slots = [Slot.withType<APINodeRenderer[]>()];
@@ -39,6 +41,10 @@ export class APIReferenceUI {
 
   getSchemaClasses() {
     return SchemaRegistry.schemas;
+  }
+
+  registerAPINodeRenderer(apiNodeRenderers: APINodeRenderer[]) {
+    this.apiNodeRendererSlot.register(apiNodeRenderers);
   }
 
   apiNodeRenderers: APINodeRenderer[] = [
@@ -77,12 +83,6 @@ export class APIReferenceUI {
     });
     return apiReferenceUI;
   }
-
-  registerAPINodeRenderer(apiNodeRenderers: APINodeRenderer[]) {
-    this.apiNodeRendererSlot.register(apiNodeRenderers);
-  }
-
-  constructor(private host: string, private apiNodeRendererSlot: APINodeRendererSlot) {}
 }
 
 export default APIReferenceUI;

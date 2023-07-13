@@ -1089,6 +1089,19 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/parameter"
     },
+    "renderers/react": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.api-reference",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/react",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "renderers/schema-node-member-summary": {
         "scope": "teambit.api-reference",
         "version": "0.0.16",
