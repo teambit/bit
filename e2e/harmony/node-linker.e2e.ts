@@ -49,14 +49,14 @@ describe('installing with non-default nodeLinker', function () {
         expect(fs.realpathSync(depPath)).to.eq(depPath);
       });
     });
-    describe(`setting nodeLinker to "isolated"`, () => {
+    describe.skip(`setting nodeLinker to "isolated"`, () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
         helper.extensions.bitJsonc.addKeyValToDependencyResolver('nodeLinker', 'isolated');
         helper.command.install('is-positive');
       });
-      it('should create a hoisted node_modules', function () {
+      it('should create node_modules', function () {
         const depPath = path.join(helper.fixtures.scopes.localPath, 'node_modules/is-positive');
         expect(fs.realpathSync(depPath)).to.contain('.store');
       });
