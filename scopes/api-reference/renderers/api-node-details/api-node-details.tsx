@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
+import * as _ from 'lodash';
 import { H6 } from '@teambit/documenter.ui.heading';
 import { CodeEditor } from '@teambit/code.ui.code-editor';
 import { useLocation } from '@teambit/base-react.navigation.link';
@@ -131,7 +132,7 @@ export function APINodeDetails({
     return displayedLines;
   };
 
-  const updateEditorHeight =
+  const _updateEditorHeight =
     (
       setHeight: React.Dispatch<React.SetStateAction<string | undefined>>,
       editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | undefined>
@@ -172,6 +173,8 @@ export function APINodeDetails({
       setHeight(() => `${contentHeight}px`);
       return undefined;
     };
+
+  const updateEditorHeight = _.throttle<typeof _updateEditorHeight>(_updateEditorHeight, 150) as _.DebouncedFunc<any>;
 
   const handleEditorDidMount: (
     monacoRef: React.MutableRefObject<Monaco | undefined>,
