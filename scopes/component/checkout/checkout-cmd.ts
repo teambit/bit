@@ -68,6 +68,7 @@ export class CheckoutCmd implements Command {
       workspaceOnly = false,
       verbose = false,
       skipDependencyInstallation = false,
+      revert = false,
     }: {
       interactiveMerge?: boolean;
       ours?: boolean;
@@ -77,6 +78,7 @@ export class CheckoutCmd implements Command {
       workspaceOnly?: boolean;
       verbose?: boolean;
       skipDependencyInstallation?: boolean;
+      revert?: boolean;
     }
   ) {
     const checkoutProps: CheckoutProps = {
@@ -87,6 +89,7 @@ export class CheckoutCmd implements Command {
       isLane: false,
       skipNpmInstall: skipDependencyInstallation,
       workspaceOnly,
+      revert,
     };
     const {
       components,

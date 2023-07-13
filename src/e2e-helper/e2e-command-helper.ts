@@ -522,6 +522,10 @@ export default class CommandHelper {
     return JSON.parse(status);
   }
 
+  revert(pattern: string, to: string, flags = '') {
+    return this.runCmd(`bit revert ${pattern} ${to} ${flags}`);
+  }
+
   stash() {
     return this.runCmd('bit stash');
   }
