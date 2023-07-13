@@ -275,7 +275,7 @@ to do that, re-run the command without the "--scope" flag. it will create the la
 if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-new-scope" flag.`);
     }
     scope = scope || (currentLaneId.isDefault() ? this.workspace.defaultScope : currentLaneId.scope);
-    const laneObj = await createLane(this.workspace.consumer, name, scope);
+    const laneObj = await createLane(this.workspace, name, scope);
     const laneId = LaneId.from(name, scope);
     this.setCurrentLane(laneId, alias, false);
     const trackLaneData = {
