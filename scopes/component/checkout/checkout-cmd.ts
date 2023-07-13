@@ -105,6 +105,7 @@ export class CheckoutCmd implements Command {
     const isHead = to === 'head';
     const isReset = to === 'reset';
     const isLatest = to === 'latest';
+    const isMain = to === 'main';
     // components that failed for no legitimate reason. e.g. merge-conflict.
     const realFailedComponents = (failedComponents || []).filter((f) => !f.unchangedLegitimately);
     // components that weren't checked out for legitimate reasons, e.g. up-to-date.
@@ -144,12 +145,13 @@ once ready, snap/tag the components to persist the changes`;
       return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
     };
     const getSuccessfulOutput = () => {
+      const switchedOrReverted = revert ? 'reverted' : 'switched';
       if (!components || !components.length) return '';
       if (components.length === 1) {
         const component = components[0];
         const componentName = isReset ? component.id.toString() : component.id.toStringWithoutVersion();
         if (isReset) return `successfully reset ${chalk.bold(componentName)}\n`;
-        const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(
+        const title = `successfully ${switchedOrReverted} ${chalk.bold(componentName)} to version ${chalk.bold(
           // @ts-ignore version is defined when !isReset
           isHead || isLatest ? component.id.version : version
         )}\n`;
@@ -163,11 +165,12 @@ once ready, snap/tag the components to persist the changes`;
       const getVerOutput = () => {
         if (isHead) return 'their head version';
         if (isLatest) return 'their latest version';
+        if (isMain) return 'their main version';
         // @ts-ignore version is defined when !isReset
         return `version ${chalk.bold(version)}`;
       };
       const versionOutput = getVerOutput();
-      const title = `successfully switched the following components to ${versionOutput}\n\n`;
+      const title = `successfully ${switchedOrReverted} the following components to ${versionOutput}\n\n`;
       const showVersion = isHead || isReset;
       const componentsStr = applyVersionReport(components, true, showVersion);
       return chalk.underline(title) + componentsStr;
@@ -185,8 +188,8 @@ once ready, snap/tag the components to persist the changes`;
       const notCheckedOutLegitimately = notCheckedOutComponents.length;
       const failedToCheckOut = realFailedComponents.length;
       const newLines = '\n\n';
-      const title = chalk.bold.underline('Checkout Summary');
-      const checkedOutStr = `\nTotal CheckedOut: ${chalk.bold(checkedOut.toString())}`;
+      const title = chalk.bold.underline('Summary');
+      const checkedOutStr = `\nTotal Changed: ${chalk.bold(checkedOut.toString())}`;
       const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(notCheckedOutLegitimately.toString())}`;
       const failedToCheckOutStr = `\nTotal Failed: ${chalk.bold(failedToCheckOut.toString())}`;
       const newOnLaneNum = newFromLane?.length || 0;

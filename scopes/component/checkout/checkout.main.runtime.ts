@@ -62,7 +62,7 @@ export type ComponentStatusBeforeMergeAttempt = ComponentStatusBase & {
   };
 };
 
-type CheckoutTo = 'head' | 'reset' | string;
+type CheckoutTo = 'head' | 'reset' | 'main' | string;
 
 export class CheckoutMain {
   constructor(
@@ -305,7 +305,7 @@ export class CheckoutMain {
     checkoutProps: CheckoutProps
   ): Promise<ComponentStatusBeforeMergeAttempt> {
     const consumer = this.workspace.consumer;
-    const { version, head: headVersion, reset, revert, latest: latestVersion, versionPerId } = checkoutProps;
+    const { version, head: headVersion, reset, revert, main, latest: latestVersion, versionPerId } = checkoutProps;
     const repo = consumer.scope.objects;
     const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
     const componentStatus: ComponentStatusBeforeMergeAttempt = { id: component.id };
@@ -317,6 +317,9 @@ export class CheckoutMain {
     if (!componentModel) {
       return returnFailure(`component ${component.id.toString()} is new, no version to checkout`, true);
     }
+    if (main && !componentModel.head) {
+      return returnFailure(`component ${component.id.toString()} is not available on main`);
+    }
     const unmerged = repo.unmergedComponents.getEntry(component.name);
     if (!reset && unmerged) {
       return returnFailure(
@@ -325,8 +328,9 @@ export class CheckoutMain {
     }
     const getNewVersion = async (): Promise<string> => {
       if (reset) return component.id.version as string;
-
       if (headVersion) return componentModel.headIncludeRemote(repo);
+      // we verified previously that head exists in case of "main"
+      if (main) return componentModel.head?.toString() as string;
       if (latestVersion) {
         const latest = componentModel.latestVersionIfExist();
         return latest || componentModel.headIncludeRemote(repo);
@@ -335,8 +339,8 @@ export class CheckoutMain {
         return versionPerId.find((id) => id._legacy.isEqualWithoutVersion(component.id))?.version as string;
       }
 
-      // @ts-ignore if !reset the version is defined
-      return version;
+      // if all above are false, the version is defined
+      return version as string;
     };
     const newVersion = await getNewVersion();
     if (version && !headVersion) {
