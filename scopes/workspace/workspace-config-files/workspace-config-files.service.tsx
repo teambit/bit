@@ -15,14 +15,12 @@ type PkgTransformationMap = ServiceTransformationMap & {
 
 export class WorkspaceConfigFilesService implements EnvService<any> {
   name = 'WorkspaceConfigFiles';
-  private alreadyShownWarning = {};
 
   constructor(private logger: Logger) {}
 
   transform(env: Env, envContext: EnvContext): PkgTransformationMap | undefined {
     // Old env
     if (!env?.workspaceConfig) {
-      this.printWarningIfFirstTime(envContext.envId.toString());
       return undefined;
     }
 
@@ -45,13 +43,5 @@ export class WorkspaceConfigFilesService implements EnvService<any> {
         return configWriterList?.compute(envContext);
       },
     };
-  }
-
-  private printWarningIfFirstTime(envId: string) {
-    const message = `the ${envId} env does not implement the workspaceConfig API. Please update your base env, or implement the workspaceConfig API.`;
-    if (!this.alreadyShownWarning[envId]) {
-      this.alreadyShownWarning[envId] = true;
-      this.logger.consoleWarning(message);
-    }
   }
 }

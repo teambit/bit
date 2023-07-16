@@ -73,8 +73,10 @@ export class WsConfigWriteCmd implements Command {
     if (flags.dryRunWithContent) {
       throw new Error(`use --json flag along with --dry-run-with-content`);
     }
-    if (flags.verbose) return verboseFormatWriteOutput(results, flags);
-    return formatWriteOutput(results, flags);
+    const envsNotImplementing = this.workspaceConfigFilesMain.getEnvsNotImplementing();
+    const warning = getWarningForNonImplementingEnvs(envsNotImplementing);
+    const output = flags.verbose ? verboseFormatWriteOutput(results, flags) : formatWriteOutput(results, flags);
+    return warning + output;
   }
 
   async json(_args, flags: WriteConfigCmdFlags) {
@@ -132,7 +134,10 @@ export class WsConfigCleanCmd implements Command {
 
   async report(_args, flags: CleanConfigCmdFlags) {
     const results = await this.json(_args, flags);
-    return formatCleanOutput(results, flags);
+    const envsNotImplementing = this.workspaceConfigFilesMain.getEnvsNotImplementing();
+    const warning = getWarningForNonImplementingEnvs(envsNotImplementing);
+    const output = formatCleanOutput(results, flags);
+    return warning + output;
   }
 
   async json(_args, flags: WriteConfigCmdFlags) {
@@ -157,11 +162,25 @@ export class WsConfigListCmd implements Command {
 
   async report() {
     const results = await this.json();
-    return formatListOutput(results);
+    const envsNotImplementing = this.workspaceConfigFilesMain.getEnvsNotImplementing();
+    const warning = getWarningForNonImplementingEnvs(envsNotImplementing);
+    const output = formatListOutput(results);
+    return warning + output;
   }
 
   async json() {
     const cleanResults = await this.workspaceConfigFilesMain.listConfigWriters();
     return cleanResults;
   }
+}
+
+function getWarningForNonImplementingEnvs(envsNotImplementing: string[]) {
+  if (!envsNotImplementing.length) return '';
+  const message =
+    chalk.yellow(`Bit cannot determine the correct contents for the config files to write. this may result in incorrect content.
+The following environments need to add support for config files: ${chalk.cyan(envsNotImplementing.join(', '))}.
+Read here how to correct and improve dev-ex - LINK
+
+`);
+  return message;
 }
