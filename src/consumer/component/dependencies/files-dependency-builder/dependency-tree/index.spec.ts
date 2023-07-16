@@ -16,13 +16,6 @@ require('typescript');
 require('../../../../../constants');
 require('../../../../../utils');
 require('../../../../../utils/is-relative-import');
-require('../detectives/detective-css-and-preprocessors');
-require('../detectives/detective-typescript');
-require('../detectives/detective-css');
-require('../detectives/detective-sass');
-require('../detectives/detective-scss');
-require('../detectives/detective-less');
-require('../detectives/parser-helper');
 require('../dependency-tree/Config');
 require('../precinct');
 require('../filing-cabinet');
@@ -870,60 +863,6 @@ describe('dependencyTree', function () {
         visited,
       });
       expect(visited[filename].missing).to.be.undefined;
-    });
-  });
-  describe('resolve config when the dependency is "."', () => {
-    it('should not set the dependency with isCustomResolveUsed=true', () => {
-      mockfs({
-        [`${__dirname}/src`]: {
-          'foo.js': "require('.');",
-          'index.js': 'module.exports = {}',
-        },
-      });
-      const directory = path.normalize(`${__dirname}/src`);
-      const filename = path.normalize(`${directory}/foo.js`);
-      const config = {
-        filename,
-        directory,
-        pathMap: [],
-        resolveConfig: { aliases: { something: 'anything' } },
-      };
-      dependencyTree(config);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const pathMapRecord = config.pathMap.find((f) => f.file === filename);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(pathMapRecord.dependencies).to.have.lengthOf(1);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const dependency = pathMapRecord.dependencies[0];
-      expect(dependency).to.not.have.property('isCustomResolveUsed');
-    });
-  });
-  describe('resolve config when the dependency is ".."', () => {
-    it('should not set the dependency with isCustomResolveUsed=true', () => {
-      mockfs({
-        [`${__dirname}/src`]: {
-          'index.js': 'module.exports = {}',
-          bar: {
-            'foo.js': "require('..');",
-          },
-        },
-      });
-      const directory = path.normalize(`${__dirname}/src`);
-      const filename = path.normalize(`${directory}/bar/foo.js`);
-      const config = {
-        filename,
-        directory,
-        pathMap: [],
-        resolveConfig: { aliases: { something: 'anything' } },
-      };
-      dependencyTree(config);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const pathMapRecord = config.pathMap.find((f) => f.file === filename);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(pathMapRecord.dependencies).to.have.lengthOf(1);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const dependency = pathMapRecord.dependencies[0];
-      expect(dependency).to.not.have.property('isCustomResolveUsed');
     });
   });
 });

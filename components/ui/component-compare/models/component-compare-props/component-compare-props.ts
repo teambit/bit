@@ -7,6 +7,7 @@ import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import { MaybeLazyLoaded } from '@teambit/component.ui.component-compare.utils.lazy-loading';
 import { UseComponentType } from '@teambit/component';
 import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
+import { StateAndHooks } from '@teambit/component.ui.component-compare.context';
 
 export interface TabItem {
   id: string;
@@ -21,6 +22,8 @@ export interface TabItem {
 export type ComponentCompareProps = {
   state?: ComponentCompareState;
   hooks?: ComponentCompareHooks;
+  baseContext?: StateAndHooks;
+  compareContext?: StateAndHooks;
   tabs?: MaybeLazyLoaded<TabItem[]>;
   routes?: MaybeLazyLoaded<RouteProps[]>;
   host: string;
@@ -29,4 +32,5 @@ export type ComponentCompareProps = {
   customUseComponent?: UseComponentType;
   changes?: ChangeType[] | null;
   Loader?: ComponentType;
+  isFullScreen?: boolean;
 } & HTMLAttributes<HTMLDivElement>;

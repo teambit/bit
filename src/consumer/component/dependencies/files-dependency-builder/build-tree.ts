@@ -11,7 +11,6 @@ import {
   DependencyTreeParams,
   FileObject,
   ImportSpecifier,
-  ResolveModulesConfig,
   DependenciesTree,
   DependenciesTreeItem,
 } from './types/dependency-tree-type';
@@ -114,7 +113,6 @@ function updateTreeWithPathMap(tree: DependenciesTree, pathMapAbsolute: PathMapI
         throw new Error(`updateTreeWithPathMap: dependencyPathMap is missing for ${fileObject.file}`);
       }
       fileObject.importSource = dependencyPathMap.importSource;
-      fileObject.isCustomResolveUsed = dependencyPathMap.isCustomResolveUsed;
       if (dependencyPathMap.linkFile) {
         fileObject.isLink = true;
         fileObject.linkDependencies = dependencyPathMap.realDependencies;
@@ -131,30 +129,6 @@ function updateTreeWithPathMap(tree: DependenciesTree, pathMapAbsolute: PathMapI
       return fileObject;
     });
   });
-}
-
-/**
- * config aliases are passed later on to webpack-enhancer and it expects them to have the full path
- */
-function getResolveConfigAbsolute(
-  workspacePath: string,
-  resolveConfig: ResolveModulesConfig | null | undefined
-): ResolveModulesConfig | null | undefined {
-  if (!resolveConfig) return resolveConfig;
-  const resolveConfigAbsolute = R.clone(resolveConfig);
-  if (resolveConfig.modulesDirectories) {
-    resolveConfigAbsolute.modulesDirectories = resolveConfig.modulesDirectories.map((moduleDirectory) => {
-      return path.isAbsolute(moduleDirectory) ? moduleDirectory : path.join(workspacePath, moduleDirectory);
-    });
-  }
-  if (resolveConfigAbsolute.aliases) {
-    Object.keys(resolveConfigAbsolute.aliases).forEach((alias) => {
-      if (!path.isAbsolute(resolveConfigAbsolute.aliases[alias])) {
-        resolveConfigAbsolute.aliases[alias] = path.join(workspacePath, resolveConfigAbsolute.aliases[alias]);
-      }
-    });
-  }
-  return resolveConfigAbsolute;
 }
 
 function mergeManuallyFoundPackagesToTree(
@@ -221,11 +195,10 @@ export async function getDependencyTree({
   workspacePath,
   filePaths,
   bindingPrefix,
-  resolveModulesConfig,
   visited = {},
   cacheProjectAst,
+  envDetectors,
 }: DependencyTreeParams): Promise<{ tree: DependenciesTree }> {
-  const resolveConfigAbsolute = getResolveConfigAbsolute(workspacePath, resolveModulesConfig);
   const config = {
     baseDir: componentDir,
     includeNpm: true,
@@ -233,8 +206,8 @@ export async function getDependencyTree({
     webpackConfig: null,
     visited,
     nonExistent: [],
-    resolveConfig: resolveConfigAbsolute,
     cacheProjectAst,
+    envDetectors,
   };
   // This is important because without this, madge won't know to resolve files if we run the
   // CMD not from the root dir

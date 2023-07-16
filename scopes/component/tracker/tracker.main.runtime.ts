@@ -1,5 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import EnvsAspect from '@teambit/envs';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AddCmd } from './add-cmd';
 import AddComponents, { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
@@ -16,10 +18,7 @@ export type TrackData = {
 };
 
 export class TrackerMain {
-  constructor(private workspace: Workspace) {}
-  static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect];
-  static runtime = MainRuntime;
+  constructor(private workspace: Workspace, private logger: Logger) {}
 
   /**
    * add a new component to the .bitmap file.
@@ -50,11 +49,30 @@ export class TrackerMain {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const addContext: AddContext = { workspace: this.workspace };
     addProps.shouldHandleOutOfSync = true;
+    if (addProps.env) {
+      const config = {};
+      await this.addEnvToConfig(addProps.env, config);
+      addProps.config = config;
+    }
     const addComponents = new AddComponents(addContext, addProps);
     const addResults = await addComponents.add();
     await this.workspace.consumer.onDestroy();
 
     return addResults;
+  }
+
+  async addEnvToConfig(env: string, config: { [aspectName: string]: any }) {
+    const userEnvId = await this.workspace.resolveComponentId(env);
+    let userEnvIdWithPotentialVersion: string;
+    try {
+      userEnvIdWithPotentialVersion = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(userEnvId);
+    } catch (err) {
+      // the env needs to be without version
+      userEnvIdWithPotentialVersion = userEnvId.toStringWithoutVersion();
+    }
+    config[userEnvIdWithPotentialVersion] = {};
+    config[EnvsAspect.id] = config[EnvsAspect.id] || {};
+    config[EnvsAspect.id].env = userEnvId.toStringWithoutVersion();
   }
 
   /**
@@ -71,7 +89,9 @@ export class TrackerMain {
     if (isSelfHosted) return scopeName;
     const wsDefaultScope = this.workspace.defaultScope;
     if (!wsDefaultScope.includes('.')) {
-      throw new Error(`the entered scope has no owner nor the defaultScope in workspace.jsonc`);
+      this.logger.warn(`the entered scope ${scopeName} has no owner nor the defaultScope in workspace.jsonc`);
+      // it's possible that the user entered a non-exist scope just to test the command and will change it later.
+      return scopeName;
     }
     const [owner] = wsDefaultScope.split('.');
     return `${owner}.${scopeName}`;
@@ -87,8 +107,12 @@ export class TrackerMain {
     return remotes.isHub(scopeName);
   }
 
-  static async provider([cli, workspace]: [CLIMain, Workspace]) {
-    const trackerMain = new TrackerMain(workspace);
+  static slots = [];
+  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect];
+  static runtime = MainRuntime;
+  static async provider([cli, workspace, loggerMain]: [CLIMain, Workspace, LoggerMain]) {
+    const logger = loggerMain.createLogger(TrackerAspect.id);
+    const trackerMain = new TrackerMain(workspace, logger);
     cli.register(new AddCmd(trackerMain));
     return trackerMain;
   }

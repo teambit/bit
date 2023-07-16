@@ -7,12 +7,17 @@ import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
+import EnvsAspect from '@teambit/envs';
 /**
  * consider extracting to a new component.
  * (pro: making Workspace aspect smaller. con: it's an implementation details of the workspace)
  */
 export class BitMap {
   constructor(private legacyBitMap: LegacyBitMap, private consumer: Consumer) {}
+
+  mergeBitmaps(bitmapContent: string, otherBitmapContent: string): string {
+    return LegacyBitMap.mergeContent(bitmapContent, otherBitmapContent);
+  }
 
   /**
    * adds component config to the .bitmap file.
@@ -49,6 +54,10 @@ export class BitMap {
     this.legacyBitMap.markAsChanged();
 
     return true; // changes have been made
+  }
+
+  markAsChanged() {
+    this.legacyBitMap.markAsChanged();
   }
 
   removeComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist: boolean): boolean {
@@ -162,6 +171,31 @@ export class BitMap {
     }
   }
 
+  /**
+   * helpful when reaming an aspect and this aspect is used in the config of other components.
+   */
+  renameAspectInConfig(sourceId: ComponentID, targetId: ComponentID) {
+    this.legacyBitMap.components.forEach((componentMap) => {
+      const config = componentMap.config;
+      if (!config) return;
+      Object.keys(config).forEach((aspectId) => {
+        if (aspectId === sourceId.toString()) {
+          config[targetId.toString()] = config[aspectId];
+          delete config[aspectId];
+          this.markAsChanged();
+        }
+        if (aspectId === EnvsAspect.id) {
+          const envConfig = config[aspectId];
+          if (envConfig !== REMOVE_EXTENSION_SPECIAL_SIGN && envConfig.env === sourceId.toString()) {
+            envConfig.env = targetId.toString();
+            this.markAsChanged();
+          }
+        }
+      });
+      componentMap.config = config;
+    });
+  }
+
   removeComponent(id: ComponentID) {
     this.legacyBitMap.removeComponent(id._legacy);
   }
@@ -188,5 +222,14 @@ export class BitMap {
    */
   hasChanged(): boolean {
     return this.legacyBitMap.hasChanged;
+  }
+
+  takeSnapshot(): ComponentMap[] {
+    return this.legacyBitMap.components.map((comp) => comp.clone());
+  }
+
+  restoreFromSnapshot(componentMaps: ComponentMap[]) {
+    this.legacyBitMap.components = componentMaps;
+    this.legacyBitMap._invalidateCache();
   }
 }

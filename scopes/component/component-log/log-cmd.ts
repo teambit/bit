@@ -13,7 +13,7 @@ export default class LogCmd implements Command {
   alias = '';
   options = [
     ['r', 'remote', 'show log of a remote component'],
-    ['', 'parents', 'EXPERIMENTAL. show parents and lanes data'],
+    ['', 'parents', 'show parents and lanes data'],
     ['o', 'one-line', 'show each log entry in one line'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
@@ -22,9 +22,7 @@ export default class LogCmd implements Command {
   skipWorkspace = true;
   arguments = [{ name: 'id', description: 'component-id or component-name' }];
 
-  constructor(private componentLog: ComponentLogMain, docsDomain: string) {
-    this.extendedDescription = `https://${docsDomain}/reference/cli-reference#log`;
-  }
+  constructor(private componentLog: ComponentLogMain) {}
 
   async report(
     [id]: [string],

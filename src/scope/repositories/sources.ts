@@ -1,5 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import { isHash } from '@teambit/component-version';
+import pMap from 'p-map';
 import { BitId, BitIds } from '../../bit-id';
 import { BuildStatus } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
@@ -14,8 +15,8 @@ import {
 } from '../component-ops/traverse-versions';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { ModelComponent, Symlink, Version } from '../models';
-import Lane from '../models/lane';
+import { ModelComponent, Source, Symlink, Version } from '../models';
+import Lane, { LaneComponent } from '../models/lane';
 import { ComponentProps } from '../models/model-component';
 import { BitObject, Ref } from '../objects';
 import Repository from '../objects/repository';
@@ -42,6 +43,11 @@ export type LaneTree = {
 export type ComponentDef = {
   id: BitId;
   component: ModelComponent | null | undefined;
+};
+
+export type ComponentExistence = {
+  id: BitId;
+  exists: Boolean;
 };
 
 export type MergeResult = {
@@ -85,6 +91,14 @@ export default class SourceRepository {
       },
       { concurrency }
     );
+  }
+
+  async existMany(ids: BitId[] | BitIds): Promise<ComponentExistence[]> {
+    if (!ids.length) return [];
+    const concurrency = concurrentComponentsLimit();
+    logger.trace(`sources.getMany, Ids: ${ids.join(', ')}`);
+    logger.debug(`sources.getMany, ${ids.length} Ids`);
+    return pMapPool(ids, async (id) => this.exists(id), { concurrency });
   }
 
   /**
@@ -161,6 +175,33 @@ export default class SourceRepository {
     return returnComponent(version as Version);
   }
 
+  /**
+   * if the id has a version and the Version object doesn't exist, it returns false.
+   */
+  async exists(bitId: BitId): Promise<ComponentExistence> {
+    const emptyComponent = ModelComponent.fromBitId(bitId);
+    const component: ModelComponent | undefined = await this._findComponent(emptyComponent);
+    const isExists = async () => {
+      if (!component) return false;
+      if (!bitId.hasVersion()) return true;
+      const ver = bitId.version as string;
+      const isSnap = isHash(ver);
+      if (isSnap) {
+        return this.objects().has(new Ref(ver));
+      }
+      const versionHash = component.versionsIncludeOrphaned[ver];
+      if (!versionHash) {
+        return false;
+      }
+      return this.objects().has(new Ref(ver));
+    };
+    const exists = await isExists();
+    return {
+      id: bitId,
+      exists,
+    };
+  }
+
   isUnBuiltInCache(bitId: BitId): boolean {
     return Boolean(this.cacheUnBuiltIds.get(bitId.toString()));
   }
@@ -224,7 +265,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * @see model-components.toConsumerComponent() for the opposite action. (converting Version to
    * ConsumerComponent).
    */
-  async consumerComponentToVersion(consumerComponent: ConsumerComponent): Promise<{ version: Version; files: any }> {
+  async consumerComponentToVersion(consumerComponent: ConsumerComponent): Promise<{
+    version: Version;
+    files: any;
+    flattenedEdges?: Source;
+  }> {
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const files = consumerComponent.files.map((file) => {
       return {
@@ -234,14 +279,18 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         test: file.test,
       };
     });
+
+    const flattenedEdges = Version.flattenedEdgeToSource(consumerComponent.flattenedEdges);
+
     const version: Version = Version.fromComponent({
       component: clonedComponent,
       files: files as any,
+      flattenedEdges,
     });
     // $FlowFixMe it's ok to override the pendingVersion attribute
     consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
 
-    return { version, files };
+    return { version, files, flattenedEdges };
   }
 
   put({ component, objects }: ComponentTree): ModelComponent {
@@ -547,72 +596,85 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
     const mergeErrors: ComponentNeedsUpdate[] = [];
     const isExport = !isImport;
 
-    await Promise.all(
-      lane.components.map(async (component) => {
-        const modelComponent =
-          (await this.get(component.id)) ||
-          componentObjects?.find((c) => c.toBitId().isEqualWithoutVersion(component.id));
-        if (!modelComponent) {
-          throw new Error(`unable to merge lane ${lane.name}, the component ${component.id.toString()} was not found`);
-        }
-        const existingComponent = existingLane ? existingLane.components.find((c) => c.id.isEqual(component.id)) : null;
-        if (!existingComponent) {
-          if (isExport) {
-            if (!sentVersionHashes?.includes(component.head.toString())) {
-              // during export, the remote might got a lane when some components were not sent from the client. ignore them.
-              return;
-            }
-            if (!versionParents) throw new Error('mergeLane, versionParents must be set during export');
-            const subsetOfVersionParents = getSubsetOfVersionParents(versionParents, component.head);
-            if (existingLane) existingLane.addComponent(component);
-            mergeResults.push({
-              mergedComponent: modelComponent,
-              mergedVersions: subsetOfVersionParents.map((h) => h.hash.toString()),
-            });
+    const mergeLaneComponent = async (component: LaneComponent) => {
+      const modelComponent =
+        (await this.get(component.id)) ||
+        componentObjects?.find((c) => c.toBitId().isEqualWithoutVersion(component.id));
+      if (!modelComponent) {
+        throw new Error(`unable to merge lane ${lane.name}, the component ${component.id.toString()} was not found`);
+      }
+      const existingComponent = existingLane ? existingLane.components.find((c) => c.id.isEqual(component.id)) : null;
+      if (!existingComponent) {
+        if (isExport) {
+          if (existingLane) existingLane.addComponent(component);
+          if (!sentVersionHashes?.includes(component.head.toString())) {
+            // during export, the remote might got a lane when some components were not sent from the client. ignore them.
             return;
           }
-
-          const allVersions = await getAllVersionHashes({
-            modelComponent,
-            repo,
-            startFrom: component.head,
-            versionObjects,
+          if (!versionParents) throw new Error('mergeLane, versionParents must be set during export');
+          const subsetOfVersionParents = getSubsetOfVersionParents(versionParents, component.head);
+          mergeResults.push({
+            mergedComponent: modelComponent,
+            mergedVersions: subsetOfVersionParents.map((h) => h.hash.toString()),
           });
-          if (existingLane) existingLane.addComponent(component);
-          mergeResults.push({ mergedComponent: modelComponent, mergedVersions: allVersions.map((h) => h.toString()) });
           return;
         }
-        if (existingComponent.head.isEqual(component.head)) {
+        const subsetOfVersionParents = versionParents
+          ? getSubsetOfVersionParents(versionParents, component.head)
+          : undefined;
+        const allVersions = await getAllVersionHashes({
+          modelComponent,
+          repo,
+          startFrom: component.head,
+          versionParentsFromObjects: subsetOfVersionParents,
+        });
+        if (existingLane) existingLane.addComponent(component);
+        mergeResults.push({ mergedComponent: modelComponent, mergedVersions: allVersions.map((h) => h.toString()) });
+        return;
+      }
+      if (existingComponent.head.isEqual(component.head)) {
+        mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
+        return;
+      }
+      const subsetOfVersionParents = versionParents
+        ? getSubsetOfVersionParents(versionParents, component.head)
+        : undefined;
+      const divergeResults = await getDivergeData({
+        repo,
+        modelComponent,
+        targetHead: component.head,
+        sourceHead: existingComponent.head,
+        versionParentsFromObjects: subsetOfVersionParents,
+      });
+      if (divergeResults.isDiverged()) {
+        if (isImport) {
+          // do not update the local lane. later, suggest to snap-merge.
           mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
           return;
         }
-        const divergeResults = await getDivergeData({
-          repo,
-          modelComponent,
-          targetHead: component.head,
-          sourceHead: existingComponent.head,
-          versionObjects,
+        mergeErrors.push(new ComponentNeedsUpdate(component.id.toString(), existingComponent.head.toString()));
+        return;
+      }
+      if (divergeResults.isTargetAhead()) {
+        existingComponent.head = component.head;
+        mergeResults.push({
+          mergedComponent: modelComponent,
+          mergedVersions: divergeResults.snapsOnTargetOnly.map((h) => h.toString()),
         });
-        if (divergeResults.isDiverged()) {
-          if (isImport) {
-            // do not update the local lane. later, suggest to snap-merge.
-            mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
-            return;
-          }
-          mergeErrors.push(new ComponentNeedsUpdate(component.id.toString(), existingComponent.head.toString()));
-          return;
-        }
-        if (divergeResults.isTargetAhead()) {
-          existingComponent.head = component.head;
-          mergeResults.push({
-            mergedComponent: modelComponent,
-            mergedVersions: divergeResults.snapsOnTargetOnly.map((h) => h.toString()),
-          });
-          return;
-        }
-        // local is ahead, nothing to merge.
-        mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
-      })
+        return;
+      }
+      // local is ahead, nothing to merge.
+      mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
+    };
+
+    await pMap(
+      lane.components,
+      async (component) => {
+        logger.profile(`mergeLaneComponent-${component.id.toString()}`);
+        await mergeLaneComponent(component);
+        logger.profile(`mergeLaneComponent-${component.id.toString()}`);
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
 
     return { mergeResults, mergeErrors, mergeLane: existingLane || lane };

@@ -32,7 +32,7 @@ export class LinkCommand implements Command {
     [
       '',
       'target <dir>',
-      'EXPERIMENTAL. link to an external directory (similar to npm-link) so other projects could use these components',
+      'link to an external directory (similar to npm-link) so other projects could use these components',
     ],
     ['', 'skip-fetching-objects', 'skip fetch missing objects from remotes before linking'],
   ] as CommandOptions;
@@ -47,12 +47,8 @@ export class LinkCommand implements Command {
     /**
      * logger extension.
      */
-    private logger: Logger,
-
-    private docsDomain: string
-  ) {
-    this.extendedDescription = `https://${this.docsDomain}/workspace/component-links`;
-  }
+    private logger: Logger
+  ) {}
 
   async report([ids]: [string[]], opts: LinkCommandOpts) {
     const startTime = Date.now();

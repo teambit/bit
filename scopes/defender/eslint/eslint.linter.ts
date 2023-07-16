@@ -8,9 +8,8 @@ import objectHash from 'object-hash';
 import { ComponentMap } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { ESLintOptions } from './eslint.main.runtime';
-import { EslintLinterInterface } from './eslint-linter-interface';
 
-export class ESLintLinter implements EslintLinterInterface, Linter {
+export class ESLintLinter implements Linter {
   constructor(
     private logger: Logger,
 
@@ -24,13 +23,6 @@ export class ESLintLinter implements EslintLinterInterface, Linter {
 
   id = 'eslint-linter';
   displayName = 'ESlint';
-
-  generateIdeConfig(){
-    return {
-      eslintConfig: this.options.config.overrideConfig || {},
-      tsconfig: this.options.tsConfig,
-    }
-  }
 
   displayConfig() {
     return JSON.stringify(this.options, null, 2);

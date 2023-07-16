@@ -11,6 +11,7 @@ import { EnvContext } from '@teambit/envs';
 import { Formatter } from '@teambit/formatter';
 import { Logger } from '@teambit/logger';
 import AspectLoaderAspect, { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
+import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { compact, flatten } from 'lodash';
 import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
@@ -26,9 +27,11 @@ export class TypeScriptExtractor implements SchemaExtractor {
     private tsconfig: any,
     private schemaTransformerSlot: SchemaTransformerSlot,
     private tsMain: TypescriptMain,
-    private rootPath: string,
+    private rootTsserverPath: string,
+    private rootContextPath: string,
     private depResolver: DependencyResolverMain,
     private workspace: Workspace | undefined,
+    private scope: ScopeMain,
     private aspectLoader: AspectLoaderMain,
     private logger: Logger
   ) {}
@@ -52,7 +55,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
   async extract(component: Component, formatter?: Formatter): Promise<APISchema> {
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
-    const compatibleExts = ['.tsx', '.jsx', '.ts', '.js'];
+    const compatibleExts = ['.tsx', '.ts'];
     const internalFiles = component.filesystem.files.filter(
       (file) => compatibleExts.includes(file.extname) && file.path !== mainFile.path
     );
@@ -116,7 +119,15 @@ export class TypeScriptExtractor implements SchemaExtractor {
     formatter?: Formatter
   ): Promise<SchemaExtractorContext> {
     const componentDeps = await this.getComponentDeps(component);
-    return new SchemaExtractorContext(tsserver, component, this, componentDeps, formatter);
+    return new SchemaExtractorContext(
+      tsserver,
+      component,
+      this,
+      componentDeps,
+      this.rootContextPath,
+      this.workspace?.path || this.scope.path,
+      formatter
+    );
   }
 
   private async getComponentDeps(component: Component): Promise<ComponentDependency[]> {
@@ -135,7 +146,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
         return tsserver;
       }
 
-      this.tsserver = await this.tsMain.initTsserverClient(this.rootPath);
+      this.tsserver = await this.tsMain.initTsserverClient(this.rootTsserverPath);
       return this.tsserver;
     }
 
@@ -152,17 +163,17 @@ export class TypeScriptExtractor implements SchemaExtractor {
   }
 
   async getComponentIDByPath(file: string) {
-    if (!this.workspace) {
-      return null;
-    }
     const coreAspectIds = this.aspectLoader.getCoreAspectIds();
     const matchingCoreAspect = coreAspectIds.find((c) => file === getCoreAspectPackageName(c));
 
     if (matchingCoreAspect) {
-      return this.workspace.resolveComponentId(matchingCoreAspect);
+      return (this.workspace || this.scope).resolveComponentId(matchingCoreAspect);
     }
 
-    return this.workspace.getComponentIdByPath(file);
+    if (this.workspace) {
+      return this.workspace.getComponentIdByPath(file);
+    }
+    return null;
   }
 
   /**
@@ -188,14 +199,17 @@ export class TypeScriptExtractor implements SchemaExtractor {
       const aspectLoaderMain = context.getAspect<AspectLoaderMain>(AspectLoaderAspect.id);
 
       // When loading the env from a scope you don't have a workspace
-      const wsPath = tsMain.workspace?.path || '';
+      const rootPath = tsMain.workspace?.path || tsMain.scope.path || '';
+
       return new TypeScriptExtractor(
         tsconfig,
         tsMain.schemaTransformerSlot,
         tsMain,
-        wsPath,
+        rootPath,
+        rootPath,
         tsMain.depResolver,
         tsMain.workspace,
+        tsMain.scope,
         aspectLoaderMain,
         context.createLogger(options.name)
       );

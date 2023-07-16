@@ -13,7 +13,7 @@ import {
   CheckoutProps,
   deleteFilesIfNeeded,
   markFilesToBeRemovedIfNeeded,
-} from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
+} from '@teambit/checkout';
 import {
   FailedComponents,
   getMergeStrategyInteractive,
@@ -30,6 +30,7 @@ import { throwForStagedComponents } from './create-lane';
 export type SwitchProps = {
   laneName: string;
   ids?: BitId[];
+  pattern?: string;
   existingOnWorkspaceOnly: boolean;
   remoteLane?: Lane;
   localTrackedLane?: string;
@@ -38,7 +39,7 @@ export type SwitchProps = {
 
 export class LaneSwitcher {
   private consumer: Consumer;
-  private laneIdToSwitch: LaneId; // populated by `this.populateSwitchProps()`
+  private laneIdToSwitchTo: LaneId; // populated by `this.populateSwitchProps()`
   private laneToSwitchTo: Lane | undefined; // populated by `this.populateSwitchProps()`, if default-lane, it's undefined
   constructor(
     private workspace: Workspace,
@@ -79,9 +80,12 @@ export class LaneSwitcher {
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
     // which can be an issue when some components are also dependencies of others
-    const componentsResults = await mapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
-      return applyVersion(this.consumer, id, componentFromFS, mergeResults, this.checkoutProps);
-    });
+    const componentsResults = await mapSeries(
+      succeededComponents,
+      ({ id, currentComponent: componentFromFS, mergeResults }) => {
+        return applyVersion(this.consumer, id, componentFromFS, mergeResults, this.checkoutProps);
+      }
+    );
 
     markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
 
@@ -98,7 +102,7 @@ export class LaneSwitcher {
     const { installationError, compilationError } = await this.Lanes.componentWriter.writeMany(
       manyComponentsWriterOpts
     );
-    await deleteFilesIfNeeded(componentsResults, this.consumer);
+    await deleteFilesIfNeeded(componentsResults, this.workspace);
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
@@ -118,10 +122,22 @@ export class LaneSwitcher {
     } else {
       await this.populatePropsAccordingToRemoteLane(laneId);
     }
+
+    if (this.switchProps.pattern) {
+      if (this.consumer.bitMap.getAllBitIdsFromAllLanes().length) {
+        // if the workspace is not empty, it's possible that it has components from lane-x, and is now switching
+        // partially to lane-y, while lane-y has the same components as lane-x. in which case, the user ends up with
+        // an invalid state of components from lane-x and lane-y together.
+        throw new BitError('error: use --pattern only when the workspace is empty');
+      }
+      const allIds = await this.workspace.resolveMultipleComponentIds(this.switchProps.ids || []);
+      const patternIds = this.workspace.scope.filterIdsFromPoolIdsByPattern(this.switchProps.pattern, allIds);
+      this.switchProps.ids = patternIds.map((id) => id._legacy);
+    }
   }
 
   private async populatePropsAccordingToRemoteLane(remoteLaneId: LaneId) {
-    this.laneIdToSwitch = remoteLaneId;
+    this.laneIdToSwitchTo = remoteLaneId;
     this.logger.debug(`populatePropsAccordingToRemoteLane, remoteLaneId: ${remoteLaneId.toString()}`);
     if (this.consumer.getCurrentLaneId().isEqual(remoteLaneId)) {
       throw new BitError(`already checked out to "${remoteLaneId.toString()}"`);
@@ -140,7 +156,7 @@ export class LaneSwitcher {
       throw new BitError(`already checked out to "${this.switchProps.laneName}"`);
     }
     this.switchProps.ids = await this.consumer.getIdsOfDefaultLane();
-    this.laneIdToSwitch = LaneId.from(DEFAULT_LANE, this.consumer.scope.name);
+    this.laneIdToSwitchTo = LaneId.from(DEFAULT_LANE, this.consumer.scope.name);
   }
 
   private populatePropsAccordingToLocalLane(localLane: Lane) {
@@ -148,7 +164,7 @@ export class LaneSwitcher {
       throw new BitError(`already checked out to "${this.switchProps.laneName}"`);
     }
     this.switchProps.ids = localLane.components.map((c) => c.id.changeVersion(c.head.toString()));
-    this.laneIdToSwitch = localLane.toLaneId();
+    this.laneIdToSwitchTo = localLane.toLaneId();
     this.laneToSwitchTo = localLane;
   }
 
@@ -168,18 +184,18 @@ export class LaneSwitcher {
   }
 
   private async saveLanesData() {
-    const localLaneName = this.switchProps.alias || this.laneIdToSwitch.name;
+    const localLaneName = this.switchProps.alias || this.laneIdToSwitchTo.name;
     if (this.switchProps.remoteLane) {
       if (!this.switchProps.localTrackedLane) {
         this.consumer.scope.lanes.trackLane({
           localLane: localLaneName,
-          remoteLane: this.laneIdToSwitch.name,
-          remoteScope: this.laneIdToSwitch.scope,
+          remoteLane: this.laneIdToSwitchTo.name,
+          remoteScope: this.laneIdToSwitchTo.scope,
         });
       }
     }
 
-    this.consumer.setCurrentLane(this.laneIdToSwitch, !this.laneToSwitchTo?.isNew);
+    this.consumer.setCurrentLane(this.laneIdToSwitchTo, !this.laneToSwitchTo?.isNew);
     this.consumer.bitMap.syncWithLanes(this.laneToSwitchTo);
   }
 }
@@ -214,13 +230,13 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
     if (switchProps.existingOnWorkspaceOnly) {
       return returnFailure(`component ${id.toStringWithoutVersion()} is not in the workspace`, true);
     }
-    return { componentFromFS: undefined, componentFromModel: componentOnLane, id, mergeResults: null };
+    return { componentFromModel: componentOnLane, id };
   }
   if (!existingBitMapId.hasVersion()) {
     // happens when switching from main to a lane and a component was snapped on the lane.
     // in the .bitmap file, the version is "latest" or empty. so we just need to write the component according to the
     // model. we don't care about the componentFromFS
-    return { componentFromFS: undefined, componentFromModel: componentOnLane, id, mergeResults: null };
+    return { componentFromModel: componentOnLane, id };
   }
   const currentlyUsedVersion = existingBitMapId.version;
   if (currentlyUsedVersion === version) {
@@ -262,5 +278,5 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
     });
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  return { componentFromFS: component, componentFromModel: componentOnLane, id, mergeResults };
+  return { currentComponent: component, componentFromModel: componentOnLane, id, mergeResults };
 }

@@ -26,6 +26,7 @@ export interface ManyComponentsWriterParams {
   verbose?: boolean;
   resetConfig?: boolean;
   skipWritingToFs?: boolean;
+  skipUpdatingBitMap?: boolean;
 }
 
 export type ComponentWriterResults = { installationError?: Error; compilationError?: Error };
@@ -48,6 +49,7 @@ export class ComponentWriterMain {
     await this.populateComponentsFilesToWrite(opts);
     this.moveComponentsIfNeeded(opts);
     await this.persistComponentsData(opts);
+    if (!opts.skipUpdatingBitMap) await this.consumer.writeBitMap();
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     if (!opts.skipDependencyInstallation) {
@@ -55,7 +57,6 @@ export class ComponentWriterMain {
       // no point to compile if the installation is not running. the environment is not ready.
       compilationError = await this.compileGracefully();
     }
-    await this.consumer.writeBitMap();
     this.logger.debug('writeMany, completed!');
     return { installationError, compilationError };
   }
@@ -134,13 +135,9 @@ export class ComponentWriterMain {
     const parentsOfOthersComps = componentWriterInstances.filter(({ writeToPath }) =>
       allDirs.find((d) => d.startsWith(`${writeToPath}/`))
     );
-    if (!parentsOfOthersComps.length) {
-      return;
-    }
-    const parentsOfOthersCompsDirs = parentsOfOthersComps.map((c) => c.writeToPath);
-
-    const incrementPath = (p: string, number: number) => `${p}_${number}`;
     const existingRootDirs = Object.keys(this.consumer.bitMap.getAllTrackDirs());
+    const incrementPath = (p: string, number: number) => `${p}_${number}`;
+    const parentsOfOthersCompsDirs = parentsOfOthersComps.map((c) => c.writeToPath);
     const allPaths: PathLinuxRelative[] = [...existingRootDirs, ...parentsOfOthersCompsDirs];
     const incrementRecursively = (p: string) => {
       let num = 1;
@@ -151,11 +148,33 @@ export class ComponentWriterMain {
       return newPath;
     };
 
+    // this is when writing multiple components and some of them are parents of the others.
     // change the paths of all these parents root-dir to not collide with the children root-dir
     parentsOfOthersComps.forEach((componentWriter) => {
       if (existingRootDirs.includes(componentWriter.writeToPath)) return; // component already exists.
       const newPath = incrementRecursively(componentWriter.writeToPath);
       componentWriter.writeToPath = newPath;
+    });
+
+    // this part is when a component's rootDir we about to write is a children of an existing rootDir.
+    // e.g. we're now writing "foo", when an existing component has "foo/bar" as the rootDir.
+    // in this case, we change "foo" to be "foo_1".
+    componentWriterInstances.forEach((componentWriter) => {
+      const existingParent = existingRootDirs.find((d) => d.startsWith(`${componentWriter.writeToPath}/`));
+      if (!existingParent) return;
+      if (existingRootDirs.includes(componentWriter.writeToPath)) return; // component already exists.
+      const newPath = incrementRecursively(componentWriter.writeToPath);
+      componentWriter.writeToPath = newPath;
+    });
+
+    // this part if when for example an existing rootDir is "comp1" and currently written component is "comp1/foo".
+    // obviously we don't want to change existing dirs. we change the "comp1/foo" to be "comp1_1/foo".
+    componentWriterInstances.forEach((componentWriter) => {
+      const existingChildren = existingRootDirs.find((d) => componentWriter.writeToPath.startsWith(`${d}/`));
+      if (!existingChildren) return;
+      // we increment the existing one, because it is used to replace the base-path of the current component
+      const newPath = incrementRecursively(existingChildren);
+      componentWriter.writeToPath = componentWriter.writeToPath.replace(existingChildren, newPath);
     });
   }
 
@@ -185,6 +204,7 @@ export class ComponentWriterMain {
       component,
       writeToPath: componentRootDir,
       writeConfig: opts.writeConfig,
+      skipUpdatingBitMap: opts.skipUpdatingBitMap,
       ...getParams(),
     };
   }

@@ -14,7 +14,7 @@ import { Version } from '.';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import GeneralError from '../../error/general-error';
 
-export type Log = { date: string; username?: string; email?: string };
+export type Log = { date: string; username?: string; email?: string; profileImage?: string };
 
 export type LaneProps = {
   name: string;
@@ -88,11 +88,21 @@ export default class Lane extends BitObject {
   static from(props: LaneProps): Lane {
     return new Lane(props);
   }
-  static create(name: string, scope: string, forkedFrom?: LaneId) {
+  static create(
+    name: string,
+    scope: string,
+    forkedFrom?: LaneId,
+    bitCloudUser?: {
+      username?: string;
+      email?: string;
+      profileImage?: string;
+    }
+  ) {
     const log = {
       date: Date.now().toString(),
-      username: globalConfig.getSync(CFG_USER_NAME_KEY),
-      email: globalConfig.getSync(CFG_USER_EMAIL_KEY),
+      username: globalConfig.getSync(CFG_USER_NAME_KEY) || bitCloudUser?.username,
+      email: globalConfig.getSync(CFG_USER_EMAIL_KEY) || bitCloudUser?.email,
+      profileImage: bitCloudUser?.profileImage,
     };
     return new Lane({ name, scope, hash: sha1(v4()), log, forkedFrom });
   }
@@ -122,7 +132,7 @@ export default class Lane extends BitObject {
     return Buffer.from(str);
   }
   addComponent(component: LaneComponent) {
-    const existsComponent = this.getComponentByName(component.id);
+    const existsComponent = this.getComponent(component.id);
     if (existsComponent) {
       existsComponent.id = component.id;
       existsComponent.head = component.head;
@@ -205,9 +215,9 @@ export default class Lane extends BitObject {
   }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
-    // validate that the head
+    const bitIds = this.toBitIds();
     this.components.forEach((component) => {
-      if (this.components.filter((c) => c.id.name === component.id.name).length > 1) {
+      if (bitIds.filterWithoutVersion(component.id).length > 1) {
         throw new ValidationError(`${message}, the following component is duplicated "${component.id.name}"`);
       }
       if (!isHash(component.head.hash)) {

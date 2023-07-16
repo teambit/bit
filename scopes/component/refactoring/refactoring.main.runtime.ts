@@ -1,17 +1,33 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { isBinaryFile } from 'isbinaryfile';
+import camelCase from 'camelcase';
 import { compact } from 'lodash';
 import replacePackageName from '@teambit/legacy/dist/utils/string/replace-package-name';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import PkgAspect, { PkgMain } from '@teambit/pkg';
+import { Formatter } from '@teambit/formatter';
+import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import {
+  SourceFileTransformer,
+  classNamesTransformer,
+  functionNamesTransformer,
+  importTransformer,
+  exportTransformer,
+  interfaceNamesTransformer,
+  typeAliasNamesTransformer,
+  variableNamesTransformer,
+  transformSourceFile,
+  identifierTransformer,
+} from '@teambit/typescript';
 import { RefactoringAspect } from './refactoring.aspect';
 import { DependencyNameRefactorCmd, RefactorCmd } from './refactor.cmd';
 
 export type MultipleStringsReplacement = Array<{ oldStr: string; newStr: string }>;
 
 export class RefactoringMain {
-  constructor(private componentMain: ComponentMain, private pkg: PkgMain) {}
+  constructor(private componentMain: ComponentMain, private pkg: PkgMain, private envs: EnvsMain) {}
 
   /**
    * refactor the dependency name of a component.
@@ -38,18 +54,84 @@ export class RefactoringMain {
   }
 
   /**
+   * replaces the old-name inside the source code of the given component with the new name.
+   * helpful when renaming/forking an aspect/env where the component-name is used as the class-name and variable-name.
+   */
+  async refactorVariableAndClasses(component: Component, sourceId: ComponentID, targetId: ComponentID) {
+    // transform kebabCase importPaths and PascalCase importNames
+    await this.replaceMultipleStrings(
+      [component],
+      [
+        {
+          oldStr: sourceId.name,
+          newStr: targetId.name,
+        },
+        {
+          oldStr: camelCase(sourceId.name, { pascalCase: true }),
+          newStr: camelCase(targetId.name, { pascalCase: true }),
+        },
+      ],
+      [importTransformer, exportTransformer]
+    );
+
+    // transform camelCase variable and function names
+    await this.replaceMultipleStrings(
+      [component],
+      [
+        {
+          oldStr: camelCase(sourceId.name),
+          newStr: camelCase(targetId.name),
+        },
+      ],
+      [variableNamesTransformer, functionNamesTransformer]
+    );
+
+    // transform PascalCase ClassNames
+    await this.replaceMultipleStrings(
+      [component],
+      [
+        {
+          oldStr: camelCase(sourceId.name, { pascalCase: true }),
+          newStr: camelCase(targetId.name, { pascalCase: true }),
+        },
+        {
+          oldStr: camelCase(`${sourceId.name}Props`, { pascalCase: true }),
+          newStr: camelCase(`${targetId.name}Props`, { pascalCase: true }),
+        },
+      ],
+      [
+        classNamesTransformer,
+        functionNamesTransformer,
+        interfaceNamesTransformer,
+        typeAliasNamesTransformer,
+        variableNamesTransformer,
+        identifierTransformer,
+      ]
+    );
+  }
+
+  refactorFilenames(component: Component, sourceId: ComponentID, targetId: ComponentID) {
+    component.filesystem.files.forEach((file) => {
+      if (file.relative.includes(sourceId.name)) {
+        file.updatePaths({ newRelative: file.relative.replace(sourceId.name, targetId.name) });
+      }
+    });
+  }
+
+  /**
    * rename multiple packages dependencies.
    * this method changes the source code of the component, but doesn't write to the filesystem.
    */
   async replaceMultipleStrings(
     components: Component[],
-    stringsToReplace: MultipleStringsReplacement
+    stringsToReplace: MultipleStringsReplacement = [],
+    transformers: SourceFileTransformer[]
   ): Promise<{
     changedComponents: Component[];
   }> {
     const changedComponents = await Promise.all(
       components.map(async (comp) => {
-        const hasChanged = await this.replaceMultipleStringsInOneComp(comp, stringsToReplace);
+        const hasChanged = await this.replaceMultipleStringsInOneComp(comp, stringsToReplace, transformers);
         return hasChanged ? comp : null;
       })
     );
@@ -129,18 +211,26 @@ export class RefactoringMain {
 
   private async replaceMultipleStringsInOneComp(
     comp: Component,
-    stringsToReplace: MultipleStringsReplacement
+    stringsToReplace: MultipleStringsReplacement,
+    transformers: SourceFileTransformer[]
   ): Promise<boolean> {
+    const updates = stringsToReplace.reduce((acc, { oldStr, newStr }) => ({ ...acc, [oldStr]: newStr }), {});
+    const env = this.envs.getEnv(comp).env;
+    const formatter: Formatter | undefined = env.getFormatter?.(null, [
+      (config: PrettierConfigMutator) => {
+        config.setKey('parser', 'typescript');
+        return config;
+      },
+    ]);
+
     const changed = await Promise.all(
       comp.filesystem.files.map(async (file) => {
         const isBinary = await isBinaryFile(file.contents);
         if (isBinary) return false;
         const strContent = file.contents.toString();
         let newContent = strContent;
-        stringsToReplace.forEach(({ oldStr, newStr }) => {
-          const oldStringRegex = new RegExp(oldStr, 'g');
-          newContent = newContent.replace(oldStringRegex, newStr);
-        });
+        const transformerFactories = transformers.map((t) => t(updates));
+        newContent = await transformSourceFile(file.path, strContent, transformerFactories, formatter, updates);
         if (strContent !== newContent) {
           file.contents = Buffer.from(newContent);
           return true;
@@ -152,10 +242,10 @@ export class RefactoringMain {
   }
 
   static slots = [];
-  static dependencies = [ComponentAspect, PkgAspect, CLIAspect];
+  static dependencies = [ComponentAspect, PkgAspect, CLIAspect, EnvsAspect];
   static runtime = MainRuntime;
-  static async provider([componentMain, pkg, cli]: [ComponentMain, PkgMain, CLIMain]) {
-    const refactoringMain = new RefactoringMain(componentMain, pkg);
+  static async provider([componentMain, pkg, cli, envMain]: [ComponentMain, PkgMain, CLIMain, EnvsMain]) {
+    const refactoringMain = new RefactoringMain(componentMain, pkg, envMain);
     const subCommands = [new DependencyNameRefactorCmd(refactoringMain, componentMain)];
     const refactorCmd = new RefactorCmd();
     refactorCmd.commands = subCommands;

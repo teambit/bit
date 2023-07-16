@@ -1,5 +1,12 @@
-import { catVersionHistory } from '../../../api/scope/lib/cat-version-history';
+import { catVersionHistory, generateVersionHistoryGraph } from '../../../api/scope/lib/cat-version-history';
+import VisualDependencyGraph from '../../../scope/graph/vizgraph';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
+
+const colorPerEdgeType = {
+  parent: 'green',
+  unrelated: 'red',
+  squashed: 'blue',
+};
 
 export class CatVersionHistoryCmd implements LegacyCommand {
   name = 'cat-version-history [id]';
@@ -9,9 +16,18 @@ export class CatVersionHistoryCmd implements LegacyCommand {
   opts = [
     // json is also the default for this command. it's only needed to suppress the logger.console
     ['j', 'json', 'json format'],
+    ['g', 'graph', `generate graph image (arrows color: ${JSON.stringify(colorPerEdgeType)})`],
   ] as CommandOptions;
 
-  action([id]: [string]): Promise<any> {
+  async action([id]: [string], { graph }: { graph: boolean }): Promise<any> {
+    if (graph) {
+      const graphHistory = await generateVersionHistoryGraph(id);
+      const visualDependencyGraph = await VisualDependencyGraph.loadFromClearGraph(graphHistory, {
+        colorPerEdgeType,
+      });
+      const result = await visualDependencyGraph.image();
+      return `image created at ${result}`;
+    }
     return catVersionHistory(id);
   }
 

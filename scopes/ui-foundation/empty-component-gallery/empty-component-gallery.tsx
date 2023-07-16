@@ -8,17 +8,18 @@ import styles from './empty-component-gallery.module.scss';
 
 export type EmptyComponentGalleryProps = {
   name: string;
+  title?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 /**
  * page to be shown when workspace/scope has no components
  */
-export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryProps) {
+export function EmptyComponentGallery({ name, children, title }: EmptyComponentGalleryProps) {
   // TODO: get the docs domain from the community aspect and pass it here as a prop
   return (
     <div className={styles.emptyComponentGallery}>
       <div className={styles.title}>
-        <span>Export components to</span>&nbsp;
+        <span>{title}</span>&nbsp;
         <span>{name}</span>
       </div>
       <img src="https://static.bit.dev/harmony/no-components.svg" />
@@ -27,7 +28,7 @@ export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryP
         <span>New to Bit?</span> &nbsp;
         <Link
           external
-          href={`${links.docs}/getting-started/installing-bit/installing-bit`}
+          href={`${links.docs}/getting-started/composing/creating-components`}
           className={styles.purpleLink}
         >
           <span className={styles.text}>Start tutorial</span>

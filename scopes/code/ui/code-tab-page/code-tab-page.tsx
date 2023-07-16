@@ -16,7 +16,10 @@ import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon
 import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { TreeNode } from '@teambit/design.ui.tree';
 import { affix } from '@teambit/base-ui.utils.string.affix';
-import { useComponentArtifacts } from '@teambit/component.ui.artifacts.queries.use-component-artifacts';
+import {
+  useComponentArtifactFileContent,
+  useComponentArtifacts,
+} from '@teambit/component.ui.artifacts.queries.use-component-artifacts';
 import {
   ArtifactFile,
   getArtifactFileDetailsFromUrl,
@@ -26,26 +29,40 @@ import { FILE_SIZE_THRESHOLD } from '@teambit/component.ui.artifacts.artifacts-t
 
 import styles from './code-tab-page.module.scss';
 
-type CodePageProps = {
+export type CodePageProps = {
   fileIconSlot?: FileIconSlot;
   host: string;
+  codeViewClassName?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
+export function CodePage({ className, fileIconSlot, host, codeViewClassName }: CodePageProps) {
   const urlParams = useCodeParams();
   const component = useContext(ComponentContext);
   const { mainFile, fileTree = [], dependencies, devFiles } = useCode(component.id);
   const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString());
 
   const currentFile = urlParams.file || mainFile;
-  const currentArtifactFile = getArtifactFileDetailsFromUrl(artifacts, currentFile)?.artifactFile;
-  const currentArtifactFileContent = getCurrentArtifactFileContent(currentArtifactFile);
+  const currentArtifact = getArtifactFileDetailsFromUrl(artifacts, currentFile);
+  const currentArtifactFile = currentArtifact?.artifactFile;
+  const { data: currentArtifactFileData, loading } = useComponentArtifactFileContent(
+    host,
+    {
+      componentId: component.id.toString(),
+      taskId: currentArtifact?.taskId,
+      filePath: currentArtifactFile?.path,
+    },
+    !currentArtifact
+  );
 
+  const currentArtifactFileContent = getArtifactFileContent(
+    (currentArtifactFileData && currentArtifactFileData[0]?.files?.[0]) || undefined
+  );
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
   const icon = getFileIcon(fileIconMatchers, currentFile);
+  const loadingArtifactFileContent = loading !== undefined ? loading : !!currentFile && !currentArtifact;
 
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
@@ -55,6 +72,8 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
           currentFile={currentFile}
           icon={icon}
           currentFileContent={currentArtifactFileContent}
+          loading={loadingArtifactFileContent}
+          codeSnippetClassName={codeViewClassName}
         />
       </Pane>
       <HoverSplitter className={styles.splitter}>
@@ -101,7 +120,7 @@ export function generateIcon(fileIconMatchers: FileIconMatch[]) {
   };
 }
 
-function getCurrentArtifactFileContent(file?: ArtifactFile | undefined): string | undefined {
+function getArtifactFileContent(file?: ArtifactFile | undefined): string | undefined {
   if (!file) return undefined;
   if (isBinaryPath(file.path) || (file.size ?? 0) > FILE_SIZE_THRESHOLD) return undefined;
   return file.content;

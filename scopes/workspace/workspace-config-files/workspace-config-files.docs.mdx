@@ -6,16 +6,11 @@ labels: ['core aspect', 'cli', 'configuration', 'workspace']
 This aspect provides the ability to write configuration files in the workspace.
 It provides an API to write configuration files in the workspace, and also provides cli commands to write configuration files.
 
-### Register configuration writers
-
-This aspect provides a `registerConfigWriter` function to register configuration writers.
-It accpets an array of `ConfigWriterEntry`.
-See the exported interface for more details.
-
 ### Commands
 
 Main command is `bit ws-config` which has the following sub commands:
+
 - `bit ws-config write` - write configuration files according to the components' envs
 - `bit ws-config clean` - remove all configuration files from the workspace
 - `bit ws-config list` - list all registered configuration writers.
-this is useful for filtering used configuration writers when using the `--writers` flag in the write/clean commands.
+  this is useful for filtering used configuration writers when using the `--writers` flag in the write/clean commands.

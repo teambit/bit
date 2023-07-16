@@ -1,11 +1,11 @@
 import chalk from 'chalk';
 import yn from 'yn';
 import { Command, CommandOptions } from '@teambit/cli';
+import { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import { removePrompt } from '@teambit/legacy/dist/prompts';
 import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 import RemovedLocalObjects from '@teambit/legacy/dist/scope/removed-local-objects';
-import loader from '@teambit/legacy/dist/cli/loader';
 import paintRemoved from '@teambit/legacy/dist/cli/templates/remove-template';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { RemoveMain } from './remove.main.runtime';
@@ -13,6 +13,13 @@ import { RemoveMain } from './remove.main.runtime';
 export class RemoveCmd implements Command {
   name = 'remove <component-pattern>';
   description = 'remove component(s) from the workspace, or a remote scope';
+  extendedDescription = `to remove components from your local workspace only, use "bit remove" (with no flags).
+
+to remove a component from the remote scope, use "bit remove --delete", to mark the components as deleted.
+once tagged/snapped and exported, the remote scope will be updated and it'll be marked as deleted there as well.
+
+to remove components from lanes, use "bit lane remove-comp".
+`;
   arguments = [
     {
       name: 'component-pattern',
@@ -24,15 +31,15 @@ export class RemoveCmd implements Command {
   skipWorkspace = true;
   alias = 'rm';
   options = [
-    ['', 'soft', 'EXPERIMENTAL. mark the component as deleted. after tag/snap and export the remote will be updated'],
+    ['', 'delete', 'mark the component as deleted. after tag/snap and export the remote will be updated'],
     [
-      'r',
-      'remote',
-      'remove a component completely from a remote scope (Careful! this is a permanent change. prefer --soft and tag+export)',
+      '',
+      'hard',
+      'remove a component completely from a remote scope. careful! this is a permanent change that could corrupt dependents. prefer --delete',
     ],
-    ['', 'from-lane', 'revert to main if exists on currently checked out lane, otherwise, remove it'],
+    // this option is confusing and probably not in use. if needed, move this to "bit lane remove-comp" command.
+    // ['', 'from-lane', 'revert to main if exists on currently checked out lane, otherwise, remove it'],
     ['t', 'track', 'keep tracking component in .bitmap (default = false), helps transform a tagged-component to new'],
-    ['d', 'delete-files', 'DEPRECATED (this is now the default). delete local component files'],
     ['', 'keep-files', 'keep component files (just untrack the component)'],
     [
       'f',
@@ -45,57 +52,52 @@ export class RemoveCmd implements Command {
   migration = true;
   remoteOp = true;
 
-  constructor(private remove: RemoveMain) {}
+  constructor(private remove: RemoveMain, private workspace?: Workspace) {}
 
   async report(
     [componentsPattern]: [string],
     {
-      soft = false,
+      delete: softDelete = false,
       force = false,
-      remote = false,
+      hard = false,
       fromLane = false,
       track = false,
-      deleteFiles = false,
       silent = false,
       keepFiles = false,
     }: {
-      force: boolean;
-      remote: boolean;
-      track: boolean;
-      fromLane: boolean;
-      deleteFiles: boolean;
-      silent: boolean;
-      keepFiles: boolean;
-      soft: boolean;
+      delete?: boolean;
+      force?: boolean;
+      hard?: boolean;
+      track?: boolean;
+      fromLane?: boolean;
+      silent?: boolean;
+      keepFiles?: boolean;
     }
   ) {
-    if (soft) {
-      if (remote)
+    if (!hard && this.workspace?.isOnLane()) {
+      throw new BitError(
+        `error: unable to remove components when on a lane, please run "bit lane remove-comp" instead`
+      );
+    }
+
+    if (softDelete) {
+      if (hard)
         throw new BitError(
-          `error: --remote and --soft cannot be used together. soft delete can only be done locally, after tag/snap and export it updates the remote`
+          `error: --hard and --delete cannot be used together. soft delete can only be done locally, after tag/snap and export it updates the remote`
         );
-      if (track) throw new BitError(`error: please use either --soft or --track, not both`);
-      if (keepFiles) throw new BitError(`error: please use either --soft or --keep-files, not both`);
-      if (fromLane) throw new BitError(`error: please use either --soft or --from-lane, not both`);
-      const removedCompIds = await this.remove.softRemove(componentsPattern);
+      if (track) throw new BitError(`error: please use either --delete or --track, not both`);
+      if (keepFiles) throw new BitError(`error: please use either --delete or --keep-files, not both`);
+      if (fromLane) throw new BitError(`error: please use either --delete or --from-lane, not both`);
+      const removedCompIds = await this.remove.markRemoveOnMain(componentsPattern);
       return `${chalk.green('successfully soft-removed the following components:')}
 ${removedCompIds.join('\n')}
 
-${chalk.bold('to update the remote, please tag/snap and then export')}`;
+${chalk.bold('to update the remote, please tag/snap and then export. to revert, please use "bit recover"')}`;
     }
 
-    if (deleteFiles) {
-      loader.stop();
-      // eslint-disable-next-line no-console
-      console.warn(
-        chalk.yellow(
-          '--delete-files flag is deprecated. by default the files are deleted, unless --keep-files was provided'
-        )
-      );
-    }
     if (!silent) {
-      const willDeleteFiles = !remote && !keepFiles;
-      const removePromptResult = await removePrompt(willDeleteFiles, remote)();
+      const willDeleteFiles = !hard && !keepFiles;
+      const removePromptResult = await removePrompt(willDeleteFiles, hard)();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (!yn(removePromptResult.shouldRemove)) {
         throw new BitError('the operation has been canceled');
@@ -107,7 +109,7 @@ ${chalk.bold('to update the remote, please tag/snap and then export')}`;
     }: {
       localResult: RemovedLocalObjects;
       remoteResult: RemovedObjects[];
-    } = await this.remove.remove({ componentsPattern, remote, force, track, deleteFiles: !keepFiles, fromLane });
+    } = await this.remove.remove({ componentsPattern, remote: hard, force, track, deleteFiles: !keepFiles, fromLane });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return paintRemoved(localResult, false) + this.paintArray(remoteResult);
   }

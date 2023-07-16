@@ -6,7 +6,7 @@ import protocol from 'typescript/lib/protocol';
 import { CheckTypes } from '@teambit/watcher';
 import type { Position } from 'vscode-languageserver-types';
 import commandExists from 'command-exists';
-import { findPathToModule, findPathToYarnSdk } from './modules-resolver';
+import { findPathToModule } from './modules-resolver';
 import { ProcessBasedTsServer } from './process-based-tsserver';
 import { CommandTypes, EventName } from './tsp-command-types';
 import { getTsserverExecutable } from './utils';
@@ -20,8 +20,10 @@ export type TsserverClientOpts = {
 };
 
 export class TsserverClient {
-  private tsServer: ProcessBasedTsServer;
+  private tsServer: ProcessBasedTsServer | null;
   public lastDiagnostics: protocol.DiagnosticEventBody[] = [];
+  private serverRunning = false;
+
   constructor(
     /**
      * absolute root path of the project.
@@ -41,19 +43,40 @@ export class TsserverClient {
    * this methods returns pretty fast. if checkTypes is enabled, it runs the process in the background and
    * doesn't wait for it.
    */
-  init() {
-    this.tsServer = new ProcessBasedTsServer({
-      logger: this.logger,
-      tsserverPath: this.findTsserverPath(),
-      logToConsole: this.options.verbose,
-      onEvent: this.onTsserverEvent.bind(this),
-    });
-    this.tsServer.start();
-    if (this.files.length) {
-      this.files.forEach((file) => this.open(file));
+  async init(): Promise<void> {
+    try {
+      this.tsServer = new ProcessBasedTsServer({
+        logger: this.logger,
+        tsserverPath: this.findTsserverPath(),
+        logToConsole: this.options.verbose,
+        onEvent: this.onTsserverEvent.bind(this),
+      });
+
+      this.tsServer
+        .start()
+        .then(() => {
+          this.serverRunning = true;
+        })
+        .catch((err) => {
+          this.logger.error('TsserverClient.init failed', err);
+        });
+
+      if (this.files.length) {
+        const openPromises = this.files.map((file) => this.open(file));
+        await Promise.all(openPromises.map((promise) => promise.catch((error) => error)));
+        const failedFiles = openPromises.filter((promise) => promise instanceof Error);
+        if (failedFiles.length > 0) {
+          this.logger.error('TsserverClient.init failed to open files:', failedFiles);
+        }
+        if (failedFiles.length > 0) {
+          this.logger.error('TsserverClient.init failed to open files:', failedFiles);
+        }
+        this.checkTypesIfNeeded();
+      }
+      this.logger.debug('TsserverClient.init completed');
+    } catch (err) {
+      this.logger.error('TsserverClient.init failed', err);
     }
-    this.checkTypesIfNeeded();
-    this.logger.debug('TsserverClient.init completed');
   }
 
   private checkTypesIfNeeded(files = this.files) {
@@ -93,7 +116,15 @@ export class TsserverClient {
   }
 
   killTsServer() {
-    this.tsServer.kill();
+    if (this.tsServer && this.serverRunning) {
+      this.tsServer.kill();
+      this.tsServer = null;
+      this.serverRunning = false;
+    }
+  }
+
+  isServerRunning() {
+    return this.serverRunning;
   }
 
   /**
@@ -108,14 +139,14 @@ export class TsserverClient {
    */
   async getDiagnostic(files = this.files): Promise<any> {
     this.lastDiagnostics = [];
-    return this.tsServer.request(CommandTypes.Geterr, { delay: 0, files });
+    return this.tsServer?.request(CommandTypes.Geterr, { delay: 0, files });
   }
 
   /**
    * avoid using this method, it takes longer than `getDiagnostic()` and shows errors from paths outside the project
    */
   async getDiagnosticAllProject(requestedByFile: string): Promise<any> {
-    return this.tsServer.request(CommandTypes.GeterrForProject, { file: requestedByFile, delay: 0 });
+    return this.tsServer?.request(CommandTypes.GeterrForProject, { file: requestedByFile, delay: 0 });
   }
 
   /**
@@ -123,8 +154,8 @@ export class TsserverClient {
    */
   async getQuickInfo(file: string, position: Position): Promise<protocol.QuickInfoResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
-    this.openIfNeeded(absFile);
-    return this.tsServer.request(CommandTypes.Quickinfo, {
+    await this.openIfNeeded(absFile);
+    return this.tsServer?.request(CommandTypes.Quickinfo, {
       file: absFile,
       line: position.line,
       offset: position.character,
@@ -136,8 +167,8 @@ export class TsserverClient {
    */
   async getTypeDefinition(file: string, position: Position): Promise<protocol.TypeDefinitionResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
-    this.openIfNeeded(absFile);
-    return this.tsServer.request(CommandTypes.TypeDefinition, {
+    await this.openIfNeeded(absFile);
+    return this.tsServer?.request(CommandTypes.TypeDefinition, {
       file: absFile,
       line: position.line,
       offset: position.character,
@@ -146,15 +177,16 @@ export class TsserverClient {
 
   async getDefinition(file: string, position: Position) {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
-    this.openIfNeeded(absFile);
-    const response = await this.tsServer.request(CommandTypes.Definition, {
+    await this.openIfNeeded(absFile);
+    const response = await this.tsServer?.request(CommandTypes.Definition, {
       file: absFile,
       line: position.line,
       offset: position.character,
     });
 
-    if (!response.success) {
+    if (!response?.success) {
       // TODO: we need a function to handle responses properly here for all.
+      this.logger.warn(`For file ${absFile} tsserver failed to request definition info`);
       return response;
     }
 
@@ -166,8 +198,8 @@ export class TsserverClient {
    */
   async getReferences(file: string, position: Position): Promise<protocol.ReferencesResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
-    this.openIfNeeded(absFile);
-    return this.tsServer.request(CommandTypes.References, {
+    await this.openIfNeeded(absFile);
+    return this.tsServer?.request(CommandTypes.References, {
       file: absFile,
       line: position.line,
       offset: position.character,
@@ -179,9 +211,9 @@ export class TsserverClient {
    */
   async getSignatureHelp(file: string, position: Position): Promise<protocol.SignatureHelpResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
-    this.openIfNeeded(absFile);
+    await this.openIfNeeded(absFile);
 
-    return this.tsServer.request(CommandTypes.SignatureHelp, {
+    return this.tsServer?.request(CommandTypes.SignatureHelp, {
       file: absFile,
       line: position.line,
       offset: position.character,
@@ -191,30 +223,30 @@ export class TsserverClient {
   private async configure(
     configureArgs: protocol.ConfigureRequestArguments = {}
   ): Promise<protocol.ConfigureResponse | undefined> {
-    return this.tsServer.request(CommandTypes.Configure, configureArgs);
+    return this.tsServer?.request(CommandTypes.Configure, configureArgs);
   }
 
   /**
    * ask tsserver to open a file if it was not opened before.
    * @param file absolute path of the file
    */
-  openIfNeeded(file: string) {
+  async openIfNeeded(file: string) {
     if (this.files.includes(file)) {
       return;
     }
-    this.open(file);
+    await this.open(file);
     this.files.push(file);
   }
 
-  private open(file: string) {
-    this.tsServer.notify(CommandTypes.Open, {
+  private async open(file: string) {
+    return this.tsServer?.notify(CommandTypes.Open, {
       file,
       projectRootPath: this.projectPath,
     });
   }
 
-  close(file: string) {
-    this.tsServer.notify(CommandTypes.Close, {
+  async close(file: string) {
+    await this.tsServer?.notify(CommandTypes.Close, {
       file,
     });
     this.files = this.files.filter((openFile) => openFile !== file);
@@ -228,7 +260,7 @@ export class TsserverClient {
    */
   async changed(file: string) {
     // tell tsserver that all content was removed
-    this.tsServer.notify(CommandTypes.Change, {
+    await this.tsServer?.notify(CommandTypes.Change, {
       file,
       line: 1,
       offset: 1,
@@ -240,7 +272,7 @@ export class TsserverClient {
     const content = await fs.readFile(file, 'utf-8');
 
     // tell tsserver that all file content was added
-    this.tsServer.notify(CommandTypes.Change, {
+    await this.tsServer?.notify(CommandTypes.Change, {
       file,
       line: 1,
       offset: 1,
@@ -284,26 +316,23 @@ export class TsserverClient {
     if (this.options.tsServerPath) {
       return this.options.tsServerPath;
     }
+
     const tsServerPath = path.join('typescript', 'lib', 'tsserver.js');
-    // 1) look into .yarn/sdks of workspace root
-    const sdk = findPathToYarnSdk(this.projectPath, tsServerPath);
-    if (sdk) {
-      return sdk;
-    }
-    // 2) look into node_modules of workspace root
-    const executable = findPathToModule(this.projectPath, tsServerPath);
-    if (executable) {
-      return executable;
-    }
-    // 3) use globally installed tsserver
-    if (commandExists.sync(getTsserverExecutable())) {
-      return getTsserverExecutable();
-    }
-    // 4) look into node_modules of typescript-language-server
+
+    /**
+     * (1) find it in the bit directory
+     */
     const bundled = findPathToModule(__dirname, tsServerPath);
+
     if (bundled) {
       return bundled;
     }
+
+    // (2) use globally installed tsserver
+    if (commandExists.sync(getTsserverExecutable())) {
+      return getTsserverExecutable();
+    }
+
     throw new Error(`Couldn't find '${getTsserverExecutable()}' executable or 'tsserver.js' module`);
   }
 }

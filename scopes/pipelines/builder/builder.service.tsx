@@ -1,7 +1,9 @@
+import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy/dist/constants';
 import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import React from 'react';
 import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
+import { GlobalConfigMain } from '@teambit/global-config';
 import { Text, Newline } from 'ink';
 import { Logger } from '@teambit/logger';
 import { IsolatorMain } from '@teambit/isolator';
@@ -28,6 +30,8 @@ export type BuilderServiceOptions = {
   skipTests?: boolean;
   previousTasksResults?: TaskResults[];
   dev?: boolean;
+  exitOnFirstFailedTask?: boolean;
+  capsulesBaseDir?: string;
 };
 
 type BuilderTransformationMap = ServiceTransformationMap & {
@@ -78,7 +82,8 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
      */
     private displayPipeName: PipeName,
     private artifactFactory: ArtifactFactory,
-    private scope: ScopeMain
+    private scope: ScopeMain,
+    private globalConfig: GlobalConfigMain
   ) {}
 
   /**
@@ -99,16 +104,24 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     const longProcessLogger = this.logger.createLongProcessLogger(title);
     this.logger.consoleTitle(title);
     const envsBuildContext: EnvsBuildContext = {};
+    const capsulesBaseDir = this.getComponentsCapsulesBaseDir();
+
+    const baseDir = options.capsulesBaseDir || capsulesBaseDir;
+    const useHash = !baseDir;
+    const isolateOptions = {
+      baseDir,
+      useHash,
+      getExistingAsIs: true,
+      seedersOnly: options.seedersOnly,
+    };
+
     await pMapSeries(envsExecutionContext, async (executionContext) => {
       const componentIds = executionContext.components.map((component) => component.id);
       const { originalSeeders } = options;
       const originalSeedersOfThisEnv = componentIds.filter((compId) =>
         originalSeeders ? originalSeeders.find((seeder) => compId.isEqual(seeder)) : true
       );
-      const capsuleNetwork = await this.isolator.isolateComponents(componentIds, {
-        getExistingAsIs: true,
-        seedersOnly: options.seedersOnly,
-      });
+      const capsuleNetwork = await this.isolator.isolateComponents(componentIds, isolateOptions);
       capsuleNetwork._originalSeeders = originalSeedersOfThisEnv;
       this.logger.console(
         `generated graph for env "${executionContext.id}", originalSeedersOfThisEnv: ${originalSeedersOfThisEnv.length}, graphOfThisEnv: ${capsuleNetwork.seedersCapsules.length}, graph total: ${capsuleNetwork.graphCapsules.length}`
@@ -127,13 +140,18 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
       envsBuildContext,
       this.logger,
       this.artifactFactory,
-      options.previousTasksResults
+      options.previousTasksResults,
+      { exitOnFirstFailedTask: options.exitOnFirstFailedTask }
     );
     const buildResults = await buildPipe.execute();
     longProcessLogger.end();
     buildResults.hasErrors() ? this.logger.consoleFailure() : this.logger.consoleSuccess();
 
     return buildResults;
+  }
+
+  getComponentsCapsulesBaseDir(): string | undefined {
+    return this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
   }
 
   render(env: EnvDefinition) {
@@ -193,7 +211,12 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
   getDescriptor(env: EnvDefinition) {
     // @ts-ignore
     const tasks = Object.keys(pipeNames).map((pipeFuncName: PipeFunctionNames) => {
-      const tasksQueue = this.getTasksNamesByPipeFunc(env, pipeFuncName);
+      let tasksQueue: string[];
+      try {
+        tasksQueue = this.getTasksNamesByPipeFunc(env, pipeFuncName);
+      } catch (err: any) {
+        tasksQueue = [`<failed getting task-queue, error: ${err.message}>`];
+      }
       return { pipeName: pipeNames[pipeFuncName], tasks: tasksQueue };
     });
     return tasks as BuilderDescriptor;

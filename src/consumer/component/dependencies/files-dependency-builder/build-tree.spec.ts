@@ -17,7 +17,6 @@ describe('buildTree', () => {
       filePaths,
       bindingPrefix: '@bit',
       visited,
-      resolveModulesConfig: undefined,
     };
     it('when no files are passed should return an empty tree', async () => {
       const results = await buildTree.getDependencyTree(dependencyTreeParams);

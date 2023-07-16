@@ -17,14 +17,9 @@ import { CommandNotFound } from './exceptions/command-not-found';
 // couldn't make the other solutions to work but it worth another try in the future
 const yargs = require('yargs');
 
-
 export class CLIParser {
-  constructor(
-    private commands: Command[],
-    private groups: GroupsType,
-    public parser = yargs,
-    private docsDomain: string
-  ) {}
+  public parser = yargs;
+  constructor(private commands: Command[], private groups: GroupsType, private docsDomain: string) {}
 
   async parse(args = process.argv.slice(2)) {
     this.throwForNonExistsCommand(args[0]);

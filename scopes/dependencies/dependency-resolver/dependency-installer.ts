@@ -23,6 +23,10 @@ const DEFAULT_INSTALL_OPTIONS: InstallOptions = {
   installTeambitBit: false,
 };
 
+export type DepInstallerContext = {
+  inCapsule?: boolean;
+};
+
 export type InstallArgs = {
   rootDir: string | undefined;
   rootPolicy: WorkspacePolicy;
@@ -36,6 +40,7 @@ export type InstallOptions = {
   packageManagerConfigRootDir?: string;
   resolveVersionsFromDependenciesOnly?: boolean;
   linkedDependencies?: Record<string, Record<string, string>>;
+  forceTeambitHarmonyLink?: boolean;
 };
 
 export type GetComponentManifestsOptions = {
@@ -44,6 +49,7 @@ export type GetComponentManifestsOptions = {
   rootDir: string;
   resolveVersionsFromDependenciesOnly?: boolean;
   referenceLocalPackages?: boolean;
+  hasRootComponents?: boolean;
 } & Pick<
   PackageManagerInstallOptions,
   'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents' | 'copyPeerToRuntimeOnRoot' | 'installPeersFromEnvs'
@@ -86,7 +92,13 @@ export class DependencyInstaller {
 
     private engineStrict?: boolean,
 
-    private peerDependencyRules?: PeerDependencyRules
+    private peerDependencyRules?: PeerDependencyRules,
+
+    private neverBuiltDependencies?: string[],
+
+    private preferOffline?: boolean,
+
+    private installingContext: DepInstallerContext = {}
   ) {}
 
   async install(
@@ -125,7 +137,7 @@ export class DependencyInstaller {
     componentDirectoryMap: ComponentMap<string>,
     options: InstallOptions = DEFAULT_INSTALL_OPTIONS,
     packageManagerOptions: PackageManagerInstallOptions = DEFAULT_PM_INSTALL_OPTIONS
-  ) {
+  ): Promise<{ dependenciesChanged: boolean }> {
     const args = {
       componentDirectoryMap,
       options,
@@ -140,26 +152,39 @@ export class DependencyInstaller {
       throw new RootDirNotDefined();
     }
     if (options.linkedDependencies) {
-      const directDeps = new Set<string>();
-      Object.values(manifests).forEach((manifest) => {
-        for (const depName of Object.keys({ ...manifest.dependencies, ...manifest.devDependencies })) {
-          directDeps.add(depName);
-        }
-      });
-      if (options.linkedDependencies[finalRootDir]) {
+      manifests = JSON.parse(JSON.stringify(manifests));
+      const linkedDependencies = JSON.parse(
+        JSON.stringify(options.linkedDependencies)
+      ) as typeof options.linkedDependencies;
+      if (linkedDependencies[finalRootDir]) {
+        const directDeps = new Set<string>();
+        Object.values(manifests).forEach((manifest) => {
+          for (const depName of Object.keys({ ...manifest.dependencies, ...manifest.devDependencies })) {
+            directDeps.add(depName);
+          }
+        });
         for (const manifest of Object.values(manifests)) {
           if (manifest.name && directDeps.has(manifest.name)) {
-            delete options.linkedDependencies[finalRootDir][manifest.name];
+            delete linkedDependencies[finalRootDir][manifest.name];
           }
         }
+        if (options.forceTeambitHarmonyLink && manifests[finalRootDir].dependencies?.['@teambit/harmony']) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          delete manifests[finalRootDir].dependencies!['@teambit/harmony'];
+        }
       }
-      Object.entries(options.linkedDependencies).forEach(([dir, linkedDeps]) => {
+      Object.entries(linkedDependencies).forEach(([dir, linkedDeps]) => {
         if (!manifests[dir]) {
           manifests[dir] = {};
         }
-        manifests[dir].dependencies = Object.assign({}, manifests[dir].dependencies, linkedDeps);
+        manifests[dir].dependencies = {
+          ...linkedDeps,
+          ...manifests[dir].dependencies,
+        };
       });
     }
+    const hidePackageManagerOutput = !!(this.installingContext.inCapsule && process.env.VERBOSE_PM_OUTPUT !== 'true');
+
     // Make sure to take other default if passed options with only one option
     const calculatedPmOpts = {
       ...DEFAULT_PM_INSTALL_OPTIONS,
@@ -171,6 +196,9 @@ export class DependencyInstaller {
       engineStrict: this.engineStrict,
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
       peerDependencyRules: this.peerDependencyRules,
+      hidePackageManagerOutput,
+      neverBuiltDependencies: ['core-js', ...(this.neverBuiltDependencies ?? [])],
+      preferOffline: this.preferOffline,
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {
@@ -196,8 +224,18 @@ export class DependencyInstaller {
       await this.cleanCompsNodeModules(componentDirectoryMap);
     }
 
+    const messagePrefix = 'running package installation';
+    const messageSuffix = `using ${this.packageManager.name}`;
+    const message = this.installingContext?.inCapsule
+      ? `(capsule) ${messagePrefix} in root dir ${this.rootDir} ${messageSuffix}`
+      : `${messagePrefix} ${messageSuffix}`;
+    if (!hidePackageManagerOutput) {
+      this.logger.setStatusLine(message);
+    }
+    const startTime = process.hrtime();
+
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
-    await this.packageManager.install(
+    const installResult = await this.packageManager.install(
       {
         rootDir: finalRootDir,
         manifests,
@@ -205,8 +243,18 @@ export class DependencyInstaller {
       },
       calculatedPmOpts
     );
+    if (!hidePackageManagerOutput) {
+      this.logger.consoleSuccess(`done ${message}`, startTime);
+    }
     await this.runPrePostSubscribers(this.postInstallSubscriberList, 'post', args);
-    return componentDirectoryMap;
+    return installResult;
+  }
+
+  public async pruneModules(rootDir: string): Promise<void> {
+    if (!this.packageManager.pruneModules) {
+      return;
+    }
+    await this.packageManager.pruneModules(rootDir);
   }
 
   /**
@@ -224,6 +272,7 @@ export class DependencyInstaller {
     installPeersFromEnvs,
     resolveVersionsFromDependenciesOnly,
     referenceLocalPackages,
+    hasRootComponents,
   }: GetComponentManifestsOptions) {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
@@ -232,6 +281,7 @@ export class DependencyInstaller {
       dependencyFilterFn,
       resolveVersionsFromDependenciesOnly,
       referenceLocalPackages,
+      hasRootComponents,
     };
     const workspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
       undefined,
@@ -239,7 +289,11 @@ export class DependencyInstaller {
       rootPolicy,
       rootDir,
       componentDirectoryMap.components,
-      options
+      options,
+      this.installingContext
+    );
+    const packageNames = componentDirectoryMap.components.map((component) =>
+      this.dependencyResolver.getPackageName(component)
     );
     const manifests: Record<string, ProjectManifest> = componentDirectoryMap
       .toArray()
@@ -248,7 +302,10 @@ export class DependencyInstaller {
         const manifest = workspaceManifest.componentsManifestsMap.get(packageName);
         if (manifest) {
           acc[dir] = manifest.toJson({ copyPeerToRuntime: copyPeerToRuntimeOnComponents });
-          acc[dir].defaultPeerDependencies = fromPairs(manifest.envPolicy.selfPolicy.toNameVersionTuple());
+          const selfPolicyWithoutLocal = manifest.envPolicy.selfPolicy.filter(
+            (dep) => !packageNames.includes(dep.dependencyId)
+          );
+          acc[dir].defaultPeerDependencies = fromPairs(selfPolicyWithoutLocal.toNameVersionTuple());
         }
         return acc;
       }, {});
@@ -274,14 +331,17 @@ export class DependencyInstaller {
     type: 'pre' | 'post',
     args: InstallArgs
   ): Promise<void> {
-    let message = 'running pre install subscribers';
-    if (type === 'post') {
-      message = 'running post install subscribers';
+    const message = this.installingContext?.inCapsule
+      ? `(capsule) running ${type} install subscribers in root dir ${this.rootDir}`
+      : `running ${type} install subscribers`;
+    if (!this.installingContext?.inCapsule) {
+      this.logger.setStatusLine(message);
     }
-    this.logger.setStatusLine(message);
     await mapSeries(subscribers, async (subscriber) => {
       return subscriber(this, args);
     });
-    this.logger.consoleSuccess(message);
+    if (!this.installingContext?.inCapsule) {
+      this.logger.consoleSuccess(message);
+    }
   }
 }

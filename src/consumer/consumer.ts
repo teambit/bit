@@ -304,16 +304,13 @@ export default class Consumer {
     return Promise.all(componentsP);
   }
 
-  /**
-   * For legacy, it loads all the dependencies. For Harmony, it's not needed.
-   */
   async loadComponentFromModelImportIfNeeded(id: BitId, throwIfNotExist = true): Promise<Component> {
     const scopeComponentsImporter = this.scope.scopeImporter;
     const getModelComponent = async (): Promise<ModelComponent> => {
       if (throwIfNotExist) return this.scope.getModelComponent(id);
       const modelComponent = await this.scope.getModelComponentIfExist(id);
       if (modelComponent) return modelComponent;
-      await scopeComponentsImporter.importMany({ ids: new BitIds(id) });
+      await scopeComponentsImporter.importMany({ ids: new BitIds(id), preferDependencyGraph: true });
       return this.scope.getModelComponent(id);
     };
     const modelComponent = await getModelComponent();
@@ -333,19 +330,6 @@ export default class Consumer {
 
   async loadComponents(ids: BitIds, throwOnFailure = true, loadOpts?: ComponentLoadOptions): Promise<LoadManyResult> {
     return this.componentLoader.loadMany(ids, throwOnFailure, loadOpts);
-  }
-
-  async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
-    if (saveDependenciesAsComponents === undefined) {
-      saveDependenciesAsComponents = this.config._saveDependenciesAsComponents;
-    }
-    const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
-      return {
-        id: bitId, // if it doesn't go to the hub, it can't import dependencies as packages
-        saveDependenciesAsComponents: false,
-      };
-    });
-    return shouldDependenciesSavedAsComponents;
   }
 
   async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<Component[]> {
@@ -585,15 +569,12 @@ export default class Consumer {
     await Scope.reset(this.scope.path, true);
   }
 
-  static locateProjectScope(projectPath: string) {
-    if (fs.existsSync(path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR))) {
-      return path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR);
-    }
-    if (fs.existsSync(path.join(projectPath, BIT_HIDDEN_DIR))) {
-      return path.join(projectPath, BIT_HIDDEN_DIR);
-    }
-    return undefined;
+  async resetLaneNew() {
+    this.bitMap.resetLaneComponentsToNew();
+    this.bitMap.laneId = undefined;
+    await Scope.reset(this.scope.path, true);
   }
+
   static async load(currentPath: PathOsBasedAbsolute): Promise<Consumer> {
     const consumerInfo = await getConsumerInfo(currentPath);
     if (!consumerInfo) {
@@ -611,8 +592,7 @@ export default class Consumer {
       await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
     }
     const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
-    const scopePath = Consumer.locateProjectScope(consumerInfo.path);
-    const scope = consumer?.scope || (await Scope.load(scopePath as string));
+    const scope = consumer?.scope || (await Scope.load(consumerInfo.path));
     consumer = new Consumer({
       projectPath: consumerInfo.path,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -732,8 +712,9 @@ export default class Consumer {
       await fs.ensureDir(baseDir);
       const backupPath = path.join(baseDir, `.bitmap-${this.currentDateAndTimeToFileName()}`);
       await fs.copyFile(this.bitMap.mapPath, backupPath);
-    } catch (err) {
-      // it's nice to have. don't kill the process if something goes wrong.
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return; // no such file or directory, meaning the .bitmap file doesn't exist (yet)
+      // it's a nice to have feature. don't kill the process if something goes wrong.
       logger.error(`failed to backup bitmap`, err);
     }
   }

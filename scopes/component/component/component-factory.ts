@@ -10,13 +10,33 @@ import { State } from './state';
 import { Snap } from './snap';
 
 export type ResolveAspectsOptions = FilterAspectsOptions & {
-  throwOnError?: boolean
-  useScopeAspectsCapsule?: boolean
+  throwOnError?: boolean;
+  useScopeAspectsCapsule?: boolean;
+  workspaceName?: string;
+  skipDeps?: boolean;
+  resolveEnvsFromRoots?: boolean;
 };
 
 export type LoadAspectsOptions = {
-  [key: string]: any
-}
+  /* `throwOnError` is an optional parameter that can be passed to the loadAspects method in the `ComponentFactory` interface. If
+  set to `true`, it will cause the method to throw an error if an error occurs during its execution. If set to `false`
+  or not provided, the method will print a warning instead of throwing it. */
+  throwOnError?: boolean;
+  /* `hideMissingModuleError` is an optional parameter that can be passed to the `loadAspects` method in the
+  `ComponentFactory` interface. If set to `true`, it will prevent the method from throwing/printing an error if a required module
+  is missing during the loading of an aspect. Instead, it will continue loading the other
+  aspects. If set to `false` or not provided, the method will print/throw an error if a required module is missing.
+  (considering throwOnError as well) */
+  hideMissingModuleError?: boolean;
+
+  /* The `ignoreErrors` property is an optional boolean parameter that can be passed to the `LoadAspectsOptions` object in
+  the `ComponentFactory` interface. If set to `true`, it will cause the `loadAspects` method to ignore any errors that
+  occur during the loading of aspects and continue loading the other aspects. If set to `false` or not provided, the
+  method will print/throw an error if a required module is missing or if any other error occurs during the loading of
+  aspects. */
+  ignoreErrors?: boolean;
+  [key: string]: any;
+};
 
 export type FilterAspectsOptions = {
   /**
@@ -60,6 +80,14 @@ export interface ComponentFactory {
    * returns a component by ID.
    */
   get(id: ComponentID): Promise<Component | undefined>;
+
+  /**
+   * returns the legacy representation of a component with minimal loading.
+   * when loaded from the workspace, it won't run any Harmony hooks and even won't load dependencies.
+   * it's good to get raw aspects data or some basic properties.
+   * use carefully. prefer using `get()` instead.
+   */
+  getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined>;
 
   /**
    * returns many components by ids.

@@ -1,5 +1,5 @@
-import React, { ReactNode, useState, useEffect, useCallback } from 'react';
-import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import React, { ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
+import { UseLaneOptions, useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { useLocation, Location } from '@teambit/base-react.navigation.link';
@@ -14,6 +14,8 @@ export type LanesProviderProps = {
   targetLanes?: LanesModel;
   skipNetworkCall?: boolean;
   ignoreDerivingFromUrl?: IgnoreDerivingFromUrl[];
+  options?: UseLaneOptions;
+  useScope?: () => { scope?: string };
 };
 
 export function LanesProvider({
@@ -22,11 +24,48 @@ export function LanesProvider({
   targetLanes,
   ignoreDerivingFromUrl: ignoreDerivingFromUrlFromProps,
   skipNetworkCall,
+  options: optionsFromProps = {},
+  useScope,
 }: LanesProviderProps) {
-  const { lanesModel, loading } = useLanes(targetLanes, skipNetworkCall);
-
-  const [lanesState, setLanesState] = useState<LanesModel | undefined>(lanesModel);
+  const [lanesState, setLanesState] = useState<LanesModel | undefined>();
   const [viewedLaneId, setViewedLaneId] = useState<LaneId | undefined>(viewedIdFromProps);
+  const { scope } = useScope?.() || {};
+
+  const skip = skipNetworkCall || !!targetLanes;
+
+  const options = useMemo(
+    () => ({
+      skip,
+      ids: optionsFromProps.ids ?? (viewedLaneId ? [viewedLaneId.toString()] : undefined),
+      offset: optionsFromProps.offset ?? 0,
+      limit: optionsFromProps.limit ?? 10,
+      ...optionsFromProps,
+    }),
+    [skip, optionsFromProps.ids, optionsFromProps.ids?.length, viewedLaneId?.toString()]
+  );
+
+  const { lanesModel, loading, hasMore, fetchMoreLanes, offset, limit } = useLanes(
+    targetLanes,
+    skipNetworkCall,
+    options,
+    undefined,
+    scope
+  );
+
+  useEffect(() => {
+    if (!loading && lanesModel) setLanesState(lanesModel);
+  }, [lanesModel, loading]);
+
+  const updateViewedLane = useCallback(
+    (lane?: LaneId) => {
+      setViewedLaneId(lane);
+      setLanesState((state) => {
+        state?.setViewedOrDefaultLane(lane);
+        return state;
+      });
+    },
+    [lanesModel]
+  );
 
   const location = useLocation();
   const query = useQuery();
@@ -37,39 +76,48 @@ export function LanesProvider({
   }, []);
 
   useEffect(() => {
-    if (viewedIdFromProps) setViewedLaneId(viewedIdFromProps);
+    if (viewedIdFromProps) updateViewedLane(viewedIdFromProps);
   }, [viewedIdFromProps?.toString()]);
 
   useEffect(() => {
     if (ignoreDerivingFromUrl(location)) return;
 
-    // const onHomeRoute = location?.pathname === '/';
     const viewedLaneIdFromUrl =
       (location?.pathname && LanesModel.getLaneIdFromPathname(location?.pathname, query)) || undefined;
 
     const viewedLaneIdToSet =
-      viewedLaneIdFromUrl || lanesModel?.currentLane?.id || lanesModel?.lanes.find((lane) => lane.id.isDefault())?.id;
+      viewedLaneIdFromUrl ||
+      viewedLaneId ||
+      lanesModel?.currentLane?.id ||
+      lanesModel?.lanes.find((lane) => lane.id.isDefault())?.id;
 
-    setViewedLaneId(viewedLaneIdToSet);
+    updateViewedLane(viewedLaneIdToSet);
   }, [location?.pathname]);
 
   useEffect(() => {
-    if (viewedLaneId === undefined && lanesModel?.currentLane?.id) {
-      setViewedLaneId(lanesModel.currentLane.id);
-      lanesModel?.setViewedOrDefaultLane(lanesModel.currentLane.id);
-      setLanesState(lanesModel);
-      return;
-    }
-    lanesModel?.setViewedOrDefaultLane(viewedLaneId);
-    setLanesState(lanesModel);
-  }, [loading, lanesModel?.lanes.length]);
-
-  lanesState?.setViewedOrDefaultLane(viewedLaneId);
+    setLanesState((existing) => {
+      if (!loading && lanesModel?.lanes.length) {
+        const state = new LanesModel({ ...lanesModel });
+        if (viewedLaneId === undefined && lanesModel?.currentLane?.id) {
+          state.setViewedOrDefaultLane(lanesModel?.currentLane?.id);
+        } else {
+          state.setViewedOrDefaultLane(viewedLaneId);
+        }
+        return state;
+      }
+      return existing;
+    });
+  }, [loading, lanesModel?.lanes.length, viewedLaneId]);
 
   const lanesContextModel: LanesContextModel = {
     lanesModel: lanesState,
-    updateLanesModel: setLanesState,
-    updateViewedLane: setViewedLaneId,
+    updateViewedLane,
+    loading,
+    hasMore,
+    fetchMoreLanes,
+    options,
+    offset,
+    limit,
   };
 
   return <LanesContext.Provider value={lanesContextModel}>{children}</LanesContext.Provider>;

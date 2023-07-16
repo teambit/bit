@@ -1,5 +1,6 @@
 import { Environment, ExecutionContext } from '@teambit/envs';
-import { EnvCompsDirsMap, EnvMapValue, EnvsWrittenExtendingConfigFiles, WrittenConfigFile } from './workspace-config-files.main.runtime';
+import { EnvMapValue } from './workspace-config-files.main.runtime';
+import { WrittenConfigFile } from './writers';
 
 export type ConfigFile = {
   /**
@@ -18,31 +19,52 @@ export type ConfigFile = {
   hash?: string;
 };
 
-export type ExtendingConfigFile = ConfigFile & {
+export type ExtendingConfigFileAdditionalProp = {
   /**
-   * Name of the config file that this config file extends.
+   * the config file that this config file extends.
    */
-  extendingTarget: string;
-}
+  extendingTarget: WrittenConfigFile;
+
+  /**
+   * When replacing the config file name with the actual path of the config file, use absolute paths.
+   */
+  useAbsPaths?: boolean;
+};
+
+export type ExtendingConfigFile = ConfigFile & ExtendingConfigFileAdditionalProp;
 
 export type PostProcessExtendingConfigFilesArgs = {
-  workspaceDir: string,
-  configsRootDir: string,
-  writtenExtendingConfigFiles: EnvsWrittenExtendingConfigFiles,
-  envCompsDirsMap: EnvCompsDirsMap
-}
+  workspaceDir: string;
+  configsRootDir: string;
+  extendingConfigFile: ExtendingConfigFile;
+  /**
+   * Paths that the file will be written to.
+   */
+  paths: string[];
+  envMapValue: EnvMapValue;
+};
 
+export type GenerateExtendingConfigFilesArgs = {
+  workspaceDir: string;
+  configsRootDir: string;
+  writtenConfigFiles: WrittenConfigFile[];
+  envMapValue: EnvMapValue;
+};
+
+export type MergeConfigFilesFunc = (configFile: ConfigFile, configFile2: ConfigFile) => string;
 export interface ConfigWriterEntry {
+  /**
+   * Id is used for few things:
+   * 1. merge/post process different configs files (from different envs) together.
+   * 2. filter the config writer by the cli when using --writers flag.
+   */
+  id: string;
+
   /**
    * Name of the config writer.
    * used for outputs and logging.
    */
-  name: string
-
-  /**
-   * Name that is used to filter the config writer by the cli when using --writers flag.
-   */
-  cliName: string;
+  name: string;
 
   /**
    * Get's the component env and return the config file content
@@ -62,35 +84,35 @@ export interface ConfigWriterEntry {
   calcConfigFiles(executionContext: ExecutionContext, env: Environment, dir: string): ConfigFile[] | undefined;
 
   /**
-   * This enables the writer to do some post processing after the config files were written.
-   * this is important in case when we need to change a config file after it was written based on all
-   * the environments in the ws
-   * or based on other config files that were written.
-   * @param writtenConfigFiles
+   * Provide a function that knows how to merge 2 config files together.
+   * This is used when 2 different envs generate the same config file hash.
+   * sometime we want to merge the 2 config files together.
+   * @param configFile
+   * @param configFile2
    */
-  postProcessConfigFiles?(
-    writtenConfigFiles: WrittenConfigFile[],
-    executionContext: ExecutionContext,
-    envMapValue: EnvMapValue
-  ): Promise<void>;
+  mergeConfigFiles?: MergeConfigFilesFunc;
 
   /**
    * This will be used to generate an extending file content.
    * For example, the tsconfig.json file will extend the real tsconfig.{hash}.json file (that were coming from the env).
    * That way we can avoid writing the same config file multiple times.
    * It also reduces the risk of the user manually change the config file and then the changes will be lost.
+   * This function support returning a file with content with a dsl using `{}` to replace the config file name.
+   * for example:
+   * content = `{
+   *   "extends": {configFile.name},
+   * }`
    */
-  generateExtendingFile(writtenConfigFiles: WrittenConfigFile[]): ExtendingConfigFile | undefined;
-
+  generateExtendingFile(args: GenerateExtendingConfigFilesArgs): ExtendingConfigFile | undefined;
 
   /**
-   * This enables the writer to do some post processing after the extending config files were written.
-   * this is important in case when we need to change a config file / extending config file after it was written based on all
-   * the environments in the ws
+   * This enables the writer to do some post processing after the extending config files were calculated and deduped.
+   * this is important in case when we need to change a config file / extending config file after it was calculated
+   * based on all the environments in the ws
    * or based on other config files that were written.
    * @param args
    */
-  postProcessExtendingConfigFiles?(args: PostProcessExtendingConfigFilesArgs): Promise<void>;
+  postProcessExtendingConfigFiles?(args: PostProcessExtendingConfigFilesArgs): Promise<string | undefined>;
 
   /**
    * Find all the files that are relevant for the config type.

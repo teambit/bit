@@ -3,9 +3,17 @@ import { ComponentCompareState } from '@teambit/component.ui.component-compare.m
 import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
 import { createContext, useContext } from 'react';
 
-export type ComponentCompareContextType = ComponentCompareModel & { state?: ComponentCompareState } & {
+export type StateAndHooks = {
+  state?: ComponentCompareState;
   hooks?: ComponentCompareHooks;
 };
+
+export type ComponentCompareContextType = ComponentCompareModel &
+  StateAndHooks & {
+    baseContext?: StateAndHooks;
+    compareContext?: StateAndHooks;
+    isFullScreen?: boolean;
+  };
 
 export const ComponentCompareContext = createContext<ComponentCompareContextType | undefined>(undefined);
 

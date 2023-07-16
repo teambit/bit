@@ -22,6 +22,7 @@ import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
 import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
 import { Component } from '@teambit/component';
+import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import { ComponentID } from '@teambit/component-id';
@@ -41,16 +42,19 @@ import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
 
-export type BasicTagParams = {
+export type BasicTagSnapParams = {
   message: string;
-  ignoreNewestVersion?: boolean;
   skipTests?: boolean;
-  skipAutoTag?: boolean;
   build?: boolean;
+  ignoreBuildErrors?: boolean;
+};
+
+export type BasicTagParams = BasicTagSnapParams & {
+  ignoreNewestVersion?: boolean;
+  skipAutoTag?: boolean;
   soft?: boolean;
   persist: boolean;
   disableTagAndSnapPipelines?: boolean;
-  forceDeploy?: boolean;
   preReleaseId?: string;
   editor?: string;
   unmodified?: boolean;
@@ -121,7 +125,7 @@ async function setFutureVersions(
           return modelComponent.getVersionToAdd(
             exactVersionOrReleaseType.releaseType,
             exactVersionOrReleaseType.exactVersion,
-            undefined,
+            incrementBy,
             tagData.prereleaseId
           );
         }
@@ -178,7 +182,7 @@ export async function tagModelComponent({
   consumerComponents,
   ids,
   tagDataPerComp,
-  skipBuildPipeline = false,
+  populateArtifactsFrom,
   message,
   editor,
   exactVersion,
@@ -192,11 +196,12 @@ export async function tagModelComponent({
   persist,
   isSnap = false,
   disableTagAndSnapPipelines,
-  forceDeploy,
+  ignoreBuildErrors,
   incrementBy,
   packageManagerConfigRootDir,
   dependencyResolver,
   copyLogFromPreviousSnap = false,
+  exitOnFirstFailedTask = false,
 }: {
   workspace?: Workspace;
   scope: ScopeMain;
@@ -205,7 +210,7 @@ export async function tagModelComponent({
   consumerComponents: ConsumerComponent[];
   ids: BitIds;
   tagDataPerComp?: TagDataPerComp[];
-  skipBuildPipeline?: boolean;
+  populateArtifactsFrom?: ComponentID[];
   copyLogFromPreviousSnap?: boolean;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
@@ -213,11 +218,13 @@ export async function tagModelComponent({
   isSnap?: boolean;
   packageManagerConfigRootDir?: string;
   dependencyResolver: DependencyResolverMain;
+  exitOnFirstFailedTask?: boolean;
 } & BasicTagParams): Promise<{
   taggedComponents: ConsumerComponent[];
   autoTaggedResults: AutoTagResult[];
   publishedPackages: string[];
   stagedConfig?: StagedConfig;
+  removedComponents?: BitIds;
 }> {
   const consumer = workspace?.consumer;
   const legacyScope = scope.legacyScope;
@@ -326,18 +333,17 @@ export async function tagModelComponent({
     const onTagOpts: OnTagOpts = {
       disableTagAndSnapPipelines,
       throwOnError: true,
-      forceDeploy,
-      skipTests,
+      forceDeploy: ignoreBuildErrors,
       isSnap,
-      skipBuildPipeline,
-      combineBuildDataFromParent: skipBuildPipeline,
+      populateArtifactsFrom,
     };
     const seedersOnly = !workspace; // if tag from scope, build only the given components
     const isolateOptions = { packageManagerConfigRootDir, seedersOnly };
+    const builderOptions = { exitOnFirstFailedTask, skipTests };
 
     await scope.reloadAspectsWithNewVersion(allComponentsToTag);
     harmonyComps = await (workspace || scope).getManyByLegacy(allComponentsToTag);
-    const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions);
+    const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions, builderOptions);
     const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
 
     snapping._updateComponentsByTagResult(allComponentsToTag, buildResult);
@@ -346,8 +352,9 @@ export async function tagModelComponent({
     await mapSeries(allComponentsToTag, (consumerComponent) => snapping._enrichComp(consumerComponent));
   }
 
+  let removedComponents: BitIds | undefined;
   if (!soft) {
-    await removeDeletedComponentsFromBitmap(allComponentsToTag, workspace);
+    removedComponents = await removeDeletedComponentsFromBitmap(allComponentsToTag, workspace);
     await legacyScope.objects.persist();
     await removeMergeConfigFromComponents(unmergedComps, allComponentsToTag, workspace);
     if (workspace) {
@@ -358,21 +365,29 @@ export async function tagModelComponent({
     }
   }
 
-  return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages, stagedConfig };
+  return {
+    taggedComponents: componentsToTag,
+    autoTaggedResults: autoTagData,
+    publishedPackages,
+    stagedConfig,
+    removedComponents,
+  };
 }
 
-async function removeDeletedComponentsFromBitmap(comps: ConsumerComponent[], workspace?: Workspace) {
+async function removeDeletedComponentsFromBitmap(
+  comps: ConsumerComponent[],
+  workspace?: Workspace
+): Promise<BitIds | undefined> {
   if (!workspace) {
-    return;
+    return undefined;
   }
-  await Promise.all(
-    comps.map(async (comp) => {
-      if (comp.removed) {
-        const compId = await workspace.resolveComponentId(comp.id);
-        workspace.bitMap.removeComponent(compId);
-      }
-    })
-  );
+  const removedComps = comps.filter((comp) => comp.isRemoved());
+  if (!removedComps.length) return undefined;
+  const compBitIdsToRemove = BitIds.fromArray(removedComps.map((c) => c.id));
+  await deleteComponentsFiles(workspace.consumer, compBitIdsToRemove);
+  await workspace.consumer.cleanFromBitMap(compBitIdsToRemove);
+
+  return compBitIdsToRemove;
 }
 
 async function removeMergeConfigFromComponents(
@@ -424,6 +439,7 @@ async function addComponentsToScope(
 
 function emptyBuilderData(components: ConsumerComponent[]) {
   components.forEach((component) => {
+    component.extensions = component.extensions.clone();
     const existingBuilder = component.extensions.findCoreExtension(Extensions.builder);
     if (existingBuilder) existingBuilder.data = {};
   });
@@ -437,9 +453,11 @@ async function addLogToComponents(
   messagePerComponent: MessagePerComponent[],
   copyLogFromPreviousSnap = false
 ) {
-  const username = await globalConfig.get(CFG_USER_NAME_KEY);
-  const bitCloudUsername = await getBitCloudUsername();
-  const email = await globalConfig.get(CFG_USER_EMAIL_KEY);
+  // @ts-ignore this happens when running `bit tag -m ""`.
+  if (message === true) {
+    message = '';
+  }
+  const basicLog = await getBasicLog();
   const getLog = (component: ConsumerComponent): Log => {
     const nextVersion = persist ? component.componentMap?.nextVersion : null;
     const msgFromEditor = messagePerComponent.find((item) => item.id.isEqualWithoutVersion(component.id))?.msg;
@@ -451,15 +469,15 @@ async function addLogToComponents(
         );
       }
       currentLog.message = msgFromEditor || message || currentLog.message;
-      currentLog.date = Date.now().toString();
+      currentLog.date = basicLog.date;
       return currentLog;
     }
 
     return {
-      username: nextVersion?.username || bitCloudUsername || username,
-      email: nextVersion?.email || email,
+      username: nextVersion?.username || basicLog.username,
+      email: nextVersion?.email || basicLog.email,
       message: nextVersion?.message || msgFromEditor || message,
-      date: Date.now().toString(),
+      date: basicLog.date,
     };
   };
 
@@ -477,7 +495,18 @@ async function addLogToComponents(
   });
 }
 
-async function getBitCloudUsername(): Promise<string | undefined> {
+export async function getBasicLog(): Promise<Log> {
+  const username = (await getBitCloudUsername()) || (await globalConfig.get(CFG_USER_NAME_KEY));
+  const email = await globalConfig.get(CFG_USER_EMAIL_KEY);
+  return {
+    username,
+    email,
+    message: '',
+    date: Date.now().toString(),
+  };
+}
+
+export async function getBitCloudUsername(): Promise<string | undefined> {
   const token = await globalConfig.get(CFG_USER_TOKEN_KEY);
   if (!token) return '';
   try {
@@ -491,6 +520,35 @@ async function getBitCloudUsername(): Promise<string | undefined> {
     const user = object.payload;
     const username = user.username;
     return username;
+  } catch (error) {
+    return undefined;
+  }
+}
+
+export type BitCloudUser = {
+  username?: string;
+  name?: string;
+  displayName?: string;
+  profileImage?: string;
+};
+
+export async function getBitCloudUser(): Promise<BitCloudUser | undefined> {
+  const token = await globalConfig.get(CFG_USER_TOKEN_KEY);
+  if (!token) return undefined;
+
+  try {
+    const res = await fetch(`https://api.${getCloudDomain()}/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    const object = await res.json();
+    const user = object.payload;
+
+    return {
+      ...user,
+    };
   } catch (error) {
     return undefined;
   }

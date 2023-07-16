@@ -5,10 +5,16 @@ import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-
 import { LanesMain } from './lanes.main.runtime';
 
 export class SwitchCmd implements Command {
-  name = 'switch <lane>';
+  name = 'switch <lane> [pattern]';
   description = `switch to the specified lane`;
   private = true;
   alias = '';
+  arguments = [
+    {
+      name: 'lane',
+      description: 'lane-name or lane-id (if not exists locally) to switch to',
+    },
+  ];
   options = [
     [
       'n',
@@ -22,6 +28,11 @@ export class SwitchCmd implements Command {
     ],
     ['a', 'get-all', 'checkout all components in a lane include ones that do not exist in the workspace'],
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    [
+      'p',
+      'pattern <component-pattern>',
+      'switch only the specified component-pattern. works only when the workspace is empty',
+    ],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
   loader = true;
@@ -35,6 +46,7 @@ export class SwitchCmd implements Command {
       merge,
       getAll = false,
       skipDependencyInstallation = false,
+      pattern,
       json = false,
     }: {
       alias?: string;
@@ -42,6 +54,7 @@ export class SwitchCmd implements Command {
       getAll?: boolean;
       skipDependencyInstallation?: boolean;
       override?: boolean;
+      pattern?: string;
       json?: boolean;
     }
   ) {
@@ -49,6 +62,7 @@ export class SwitchCmd implements Command {
       alias,
       merge,
       getAll,
+      pattern,
       skipDependencyInstallation,
     });
     if (json) {

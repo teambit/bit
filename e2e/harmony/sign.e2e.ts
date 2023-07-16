@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import { Extensions } from '@teambit/legacy/dist/constants';
 import { BUILD_ON_CI } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -39,6 +40,15 @@ describe('sign command', function () {
     it('should save updated versions on the remotes', () => {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, helper.scopes.remotePath);
       expect(comp1.buildStatus).to.equal('succeed');
+      expect(comp1.modified).to.have.lengthOf(1);
+    });
+    it('should have extracted the schema correctly', () => {
+      const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, helper.scopes.remotePath);
+      const builderArtifacts = comp1.extensions.find((e) => e.name === Extensions.builder).data.artifacts;
+      const schemaArtifact = builderArtifacts.find(
+        (a) => a.task.id === 'teambit.semantics/schema' && a.task.name === 'ExtractSchema'
+      );
+      expect(schemaArtifact).to.not.be.undefined;
     });
     describe('running bit import on the workspace', () => {
       before(() => {

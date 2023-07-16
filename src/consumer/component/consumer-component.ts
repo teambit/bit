@@ -6,11 +6,12 @@ import { IssuesList } from '@teambit/component-issues';
 import BitId from '../../bit-id/bit-id';
 import BitIds from '../../bit-id/bit-ids';
 import {
-  BASE_WEB_DOMAIN,
+  getCloudDomain,
   BIT_WORKSPACE_TMP_DIRNAME,
   BuildStatus,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_LANGUAGE,
+  Extensions,
 } from '../../constants';
 import GeneralError from '../../error/general-error';
 import docsParser from '../../jsdoc/parser';
@@ -127,7 +128,7 @@ export default class Component {
   modelComponent?: ModelComponent; // populated when loadedFromFileSystem is true and it exists in the model
   issues: IssuesList;
   deprecated: boolean;
-  removed?: boolean; // was it soft-removed
+  private removed?: boolean; // was it soft-removed. to get this data please use isRemoved() method.
   defaultScope: string | null;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _isModified: boolean;
@@ -271,9 +272,22 @@ export default class Component {
     }
   }
 
+  /**
+   * whether the component is soft removed
+   */
+  isRemoved() {
+    return this.extensions.findCoreExtension(Extensions.remove)?.config?.removed || this.removed;
+  }
+
+  setRemoved() {
+    this.removed = true;
+  }
+
   _getHomepage() {
     // TODO: Validate somehow that this scope is really on bitsrc (maybe check if it contains . ?)
-    const homepage = this.scope ? `https://${BASE_WEB_DOMAIN}/${this.scope.replace('.', '/')}/${this.name}` : undefined;
+    const homepage = this.scope
+      ? `https://${getCloudDomain()}/${this.scope.replace('.', '/')}/${this.name}`
+      : undefined;
     return homepage;
   }
 

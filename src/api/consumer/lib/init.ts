@@ -12,6 +12,7 @@ export default async function init(
   noGit = false,
   reset = false,
   resetNew = false,
+  resetLaneNew = false,
   resetHard = false,
   resetScope = false,
   force = false,
@@ -26,6 +27,9 @@ export default async function init(
   }
   if (resetNew) {
     await consumer.resetNew();
+  }
+  if (resetLaneNew) {
+    await consumer.resetLaneNew();
   }
   if (resetScope) {
     await Scope.reset(consumer.scope.path, true);

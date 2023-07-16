@@ -26,7 +26,7 @@ export function replaceTerserPlugin({ prerender = false }: { prerender: boolean 
   return (configMutator: WebpackConfigMutator) => {
     if (!configMutator.raw.optimization?.minimizer) return configMutator;
 
-    remove(configMutator.raw.optimization?.minimizer, (minimizer) => {
+    remove(configMutator.raw.optimization?.minimizer, (minimizer: any) => {
       return minimizer.constructor.name === 'TerserPlugin';
     });
 

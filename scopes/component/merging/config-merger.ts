@@ -4,7 +4,6 @@ import { Logger } from '@teambit/logger';
 import { isHash } from '@teambit/component-version';
 import {
   DependencyResolverAspect,
-  isRange,
   SerializedDependency,
   VariantPolicy,
   VariantPolicyEntry,
@@ -85,7 +84,7 @@ export class ConfigMerger {
   }
 
   merge(): ConfigMergeResult {
-    this.logger.trace(`************** start config-merger for ${this.compIdStr} **************`);
+    this.logger.debug(`\n************** start config-merger for ${this.compIdStr} **************`);
     this.populateEnvs();
     const results = this.currentAspects.map((currentExt) => {
       const id = currentExt.stringId;
@@ -127,7 +126,7 @@ export class ConfigMerger {
       return { id, mergedConfig: this.getConfig(otherExt) };
     });
     const envResult = [this.envStrategy()] || [];
-    this.logger.trace(`*** end config-merger for ${this.compIdStr} ***\n`);
+    this.logger.debug(`*** end config-merger for ${this.compIdStr} ***\n`);
     return new ConfigMergeResult(
       this.compIdStr,
       this.currentLabel,
@@ -236,7 +235,7 @@ export class ConfigMerger {
 
   private depResolverStrategy(params: MergeStrategyParams): MergeStrategyResult | undefined {
     if (params.id !== DependencyResolverAspect.id) return undefined;
-    this.logger.trace('start depResolverStrategy');
+    this.logger.trace(`start depResolverStrategy for ${this.compIdStr}`);
     const { currentExt, otherExt, baseExt } = params;
 
     const currentConfig = this.getConfig(currentExt);
@@ -257,9 +256,10 @@ export class ConfigMerger {
         const getPolicyVer = () => {
           if (d.__type === 'package') return undefined; // for packages, the policy is already the version
           if (existingPolicy) return existingPolicy.value.version; // currently it's missing, will be implemented by @Gilad
-          if (!semver.valid(d.version)) return d.version; // could be a hash
-          // default to `^` or ~ if starts with zero, until we save the policy from the workspace during tag/snap.
-          return d.version.startsWith('0.') ? `~${d.version}` : `^${d.version}`;
+          return d.version;
+          // if (!semver.valid(d.version)) return d.version; // could be a hash
+          // // default to `^` or ~ if starts with zero, until we save the policy from the workspace during tag/snap.
+          // return d.version.startsWith('0.') ? `~${d.version}` : `^${d.version}`;
         };
         return {
           ...d,
@@ -439,43 +439,46 @@ export class ConfigMerger {
       });
     };
 
-    this.logger.trace(
+    this.logger.debug(
       `currentData, ${currentAllData.length}\n${currentAllData
         .map((d) => `${d.__type} ${d.id} ${d.version}`)
         .join('\n')}`
     );
-    this.logger.trace(
+    this.logger.debug(
       `otherData, ${otherData.length}\n${otherData.map((d) => `${d.__type} ${d.id} ${d.version}`).join('\n')}`
     );
-    this.logger.trace(
+    this.logger.debug(
       `baseData, ${baseData.length}\n${baseData.map((d) => `${d.__type} ${d.id} ${d.version}`).join('\n')}`
     );
 
     // eslint-disable-next-line complexity
     currentAndOtherData.forEach((depData) => {
+      this.logger.trace(`depData.id, ${depData.id}`);
       if (this.isEnv(depData.id)) {
         // ignore the envs
         return;
       }
       const currentDep = currentAllData.find((d) => d.id === depData.id);
       const otherDep = otherData.find((d) => d.id === depData.id);
+      const baseDep = baseData.find((d) => d.id === depData.id);
+
       this.logger.trace(`currentDep`, currentDep);
       this.logger.trace(`otherDep`, otherDep);
+      this.logger.trace(`baseDep`, baseDep);
       if (!otherDep) {
         return;
       }
       if (!currentDep) {
+        if (baseDep) {
+          // exists in other and base, so it was removed from current
+          return;
+        }
         // only on other
         addSerializedDepToPolicy(otherDep);
         return;
       }
 
-      if (
-        currentDep.policy &&
-        otherDep.policy &&
-        isRange(currentDep.policy, currentDep.id) &&
-        isRange(otherDep.policy, otherDep.id)
-      ) {
+      if (currentDep.policy && otherDep.policy) {
         if (semver.satisfies(currentDep.version, otherDep.policy)) {
           return;
         }
@@ -483,17 +486,17 @@ export class ConfigMerger {
           return;
         }
       }
-      const currentId = currentDep.id;
+
       const currentVer = currentDep.policy || currentDep.version;
       const otherVer = otherDep.policy || otherDep.version;
       if (currentVer === otherVer) {
         return;
       }
-      const baseDep = baseData.find((d) => d.id === currentId);
       const baseVer = baseDep?.policy || baseDep?.version;
       if (baseVer && baseVer === otherVer) {
         return;
       }
+      const currentId = currentDep.id;
       if (currentDep.__type === 'component' && this.isIdInWorkspace(currentId)) {
         // dependencies that exist in the workspace, should be ignored. they'll be resolved later to the version in the ws.
         return;
@@ -521,6 +524,9 @@ export class ConfigMerger {
 
     const config = Object.keys(mergedPolicy).length ? { policy: mergedPolicy } : undefined;
     const conflict = hasConflict ? conflictedPolicy : undefined;
+
+    this.logger.debug('final mergedConfig', config);
+    this.logger.debug('final conflict', conflict);
 
     return { id: params.id, mergedConfig: config, conflict };
   }

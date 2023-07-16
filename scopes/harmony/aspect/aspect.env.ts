@@ -10,6 +10,12 @@ import { Bundler, BundlerContext } from '@teambit/bundler';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { Tester } from '@teambit/tester';
 import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
+import { BUNDLE_UI_DIR } from '@teambit/ui';
+import { ConfigWriterEntry } from '@teambit/workspace-config-files';
+import { PrettierConfigWriter } from '@teambit/defender.prettier-formatter';
+import { TypescriptConfigWriter } from '@teambit/typescript.typescript-compiler';
+import { EslintConfigWriter } from '@teambit/defender.eslint-linter';
+import { Logger } from '@teambit/logger';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -19,7 +25,7 @@ export const AspectEnvType = 'aspect';
  * a component environment built for Aspects .
  */
 export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
-  constructor(private reactEnv: ReactEnv, private aspectLoader: AspectLoaderMain) {}
+  constructor(private reactEnv: ReactEnv, private aspectLoader: AspectLoaderMain, private logger: Logger) {}
 
   icon = 'https://static.bit.dev/extensions-icons/default.svg';
 
@@ -67,7 +73,11 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
     // ignores only .ts files in the root directory, so d.ts files inside dists are unaffected.
     // without this change, the package has "index.ts" file in the root, causing typescript to parse it instead of the
     // d.ts files. (changing the "types" prop in the package.json file doesn't help).
-    const patterns = ['/*.ts', `${CAPSULE_ARTIFACTS_DIR}/`];
+
+    // Ignores all the contents inside the artifacts directory.
+    // Asterisk (*) is needed in order to ignore all other contents of the artifacts directory,
+    // especially when specific folders are excluded from the ignore e.g. in combination with `!artifacts/ui-bundle`.
+    const patterns = ['/*.ts', `${CAPSULE_ARTIFACTS_DIR}/*`];
 
     // In order to load the env preview template from core aspects we need it to be in the package of the core envs
     // This is because we don't have the core envs in the local scope so we load it from the package itself in the bvm installation
@@ -75,6 +85,9 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
     // we want to make sure to add it for the core envs
     if (context && this.aspectLoader.isCoreEnv(context.component.id.toStringWithoutVersion())) {
       patterns.push(`!${CAPSULE_ARTIFACTS_DIR}/env-template`);
+    }
+    if (context && this.aspectLoader.isCoreAspect(context.component.id.toStringWithoutVersion())) {
+      patterns.push(`!${CAPSULE_ARTIFACTS_DIR}/${BUNDLE_UI_DIR}`);
     }
     return patterns;
   }
@@ -112,5 +125,30 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
         'react-dom': '^16.8.0 || ^17.0.0',
       },
     };
+  }
+
+  workspaceConfig(): ConfigWriterEntry[] {
+    return [
+      TypescriptConfigWriter.create(
+        {
+          tsconfig: require.resolve('./typescript/tsconfig.json'),
+          // types: resolveTypes(__dirname, ["./types"]),
+        },
+        this.logger
+      ),
+      EslintConfigWriter.create(
+        {
+          configPath: require.resolve('./eslint/eslintrc.js'),
+          tsconfig: require.resolve('./typescript/tsconfig.json'),
+        },
+        this.logger
+      ),
+      PrettierConfigWriter.create(
+        {
+          configPath: require.resolve('./prettier/prettier.config.js'),
+        },
+        this.logger
+      ),
+    ];
   }
 }

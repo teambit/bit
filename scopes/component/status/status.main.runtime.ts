@@ -3,6 +3,7 @@ import pMapSeries from 'p-map-series';
 import { LaneId } from '@teambit/lane-id';
 import { IssuesList } from '@teambit/component-issues';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import LanesAspect, { LanesMain } from '@teambit/lanes';
 import { ComponentID } from '@teambit/component-id';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -18,6 +19,7 @@ import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-di
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
+import MiniStatusCmd from './mini-status-cmd';
 
 type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
 
@@ -41,6 +43,12 @@ export type StatusResult = {
   unavailableOnMain: ComponentID[];
   currentLaneId: LaneId;
   forkedLaneId?: LaneId;
+  workspaceIssues: string[];
+};
+
+export type MiniStatusResults = {
+  modified: ComponentID[];
+  newComps: ComponentID[];
 };
 
 export class StatusMain {
@@ -48,7 +56,8 @@ export class StatusMain {
     private workspace: Workspace,
     private issues: IssuesMain,
     private insights: InsightsMain,
-    private remove: RemoveMain
+    private remove: RemoveMain,
+    private lanes: LanesMain
   ) {}
 
   async status({ lanes }: { lanes?: boolean }): Promise<StatusResult> {
@@ -114,10 +123,11 @@ export class StatusMain {
     const softTaggedComponents = componentsList.listSoftTaggedComponents();
     const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toBitId());
     const pendingUpdatesFromMain = lanes ? await componentsList.listUpdatesFromMainPending() : [];
-    const updatesFromForked = lanes ? await componentsList.listUpdatesFromForked() : [];
+    const updatesFromForked = lanes ? await this.lanes.listUpdatesFromForked(componentsList) : [];
     const currentLaneId = consumer.getCurrentLaneId();
     const currentLane = await consumer.getCurrentLaneObject();
     const forkedLaneId = currentLane?.forkedFrom;
+    const workspaceIssues = this.workspace.getWorkspaceIssues();
     Analytics.setExtraData('new_components', newComponents.length);
     Analytics.setExtraData('staged_components', stagedComponents.length);
     Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithIssues.length);
@@ -175,7 +185,20 @@ export class StatusMain {
       unavailableOnMain,
       currentLaneId,
       forkedLaneId,
+      workspaceIssues: workspaceIssues.map((err) => err.message),
     };
+  }
+
+  async statusMini(componentPattern?: string): Promise<MiniStatusResults> {
+    const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : await this.workspace.listIds();
+    const comps = await pMapSeries(ids, (id) => this.workspace.getFilesModification(id));
+    const modified: ComponentID[] = [];
+    const newComps: ComponentID[] = [];
+    comps.forEach((comp) => {
+      if (!comp.id.hasVersion()) newComps.push(comp.id);
+      if (comp.isModified()) modified.push(comp.id);
+    });
+    return { modified, newComps };
   }
 
   private async addRemovedStagedIfNeeded(stagedComponents: ModelComponent[]) {
@@ -193,17 +216,18 @@ export class StatusMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, InsightsAspect, IssuesAspect, RemoveAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, InsightsAspect, IssuesAspect, RemoveAspect, LanesAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, insights, issues, remove]: [
+  static async provider([cli, workspace, insights, issues, remove, lanes]: [
     CLIMain,
     Workspace,
     InsightsMain,
     IssuesMain,
-    RemoveMain
+    RemoveMain,
+    LanesMain
   ]) {
-    const statusMain = new StatusMain(workspace, issues, insights, remove);
-    cli.register(new StatusCmd(statusMain));
+    const statusMain = new StatusMain(workspace, issues, insights, remove, lanes);
+    cli.register(new StatusCmd(statusMain), new MiniStatusCmd(statusMain));
     return statusMain;
   }
 }

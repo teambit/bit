@@ -4,5 +4,4 @@ export { TypescriptCompiler } from './typescript.compiler';
 export type { TypescriptMain, TsConfigTransformer } from './typescript.main.runtime';
 export type { TypeScriptCompilerOptions, TsCompilerOptionsWithoutTsConfig } from './compiler-options';
 export { TypescriptAspect } from './typescript.aspect';
-export type { TypescriptCompilerInterface } from './typescript-compiler-interface';
-export { expandIncludeExclude } from './expand-include-exclude';
+export * from './sourceFileTransformers';

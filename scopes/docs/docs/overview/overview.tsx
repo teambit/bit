@@ -28,14 +28,19 @@ export type TitleBadge = {
 
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
+export type OverviewOptions = () => { queryParams?: string };
+
+export type OverviewOptionsSlot = SlotRegistry<OverviewOptions>;
+
 export type OverviewProps = {
   titleBadges: TitleBadgeSlot;
+  overviewOptions: OverviewOptionsSlot;
 };
 
-export function Overview({ titleBadges }: OverviewProps) {
+export function Overview({ titleBadges, overviewOptions }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
-
+  const overviewProps = flatten(overviewOptions.values())[0];
   const showHeader = !component.preview?.legacyHeader;
   const [isLoading, setLoading] = useState(true);
 
@@ -52,6 +57,8 @@ export function Overview({ titleBadges }: OverviewProps) {
   const isScaling = component.preview?.isScaling;
 
   const iframeQueryParams = `skipIncludes=${component.preview?.skipIncludes || 'false'}`;
+
+  const overviewPropsValues = overviewProps && overviewProps();
 
   return (
     <div className={styles.overviewWrapper}>
@@ -79,13 +86,13 @@ export function Overview({ titleBadges }: OverviewProps) {
         <ComponentPreview
           onLoad={() => setLoading(false)}
           component={component}
-          style={{ width: '100%', height: '100%' }}
+          style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
           previewName="overview"
           pubsub={true}
-          queryParams={[iframeQueryParams]}
+          queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
           viewport={null}
           fullContentHeight
-          scrolling="no"
+          disableScroll={true}
         />
         {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
         {component.preview?.skipIncludes && (

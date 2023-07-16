@@ -2,8 +2,8 @@ import { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain, CommandList } from '@teambit/cli';
+import { DependencyResolverAspect, DependencyResolverMain, VariantPolicy } from '@teambit/dependency-resolver';
 import type { ComponentMain, Component, ComponentID } from '@teambit/component';
-import { DependencyResolverMain, VariantPolicy } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony, SlotRegistry } from '@teambit/harmony';
@@ -17,6 +17,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { BitId } from '@teambit/legacy-bit-id';
+import { GlobalConfigMain } from '@teambit/global-config';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { DependencyResolver as LegacyDependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { EXT_NAME } from './constants';
@@ -48,7 +49,8 @@ export type WorkspaceDeps = [
   UiMain,
   BundlerMain,
   AspectLoaderMain,
-  EnvsMain
+  EnvsMain,
+  GlobalConfigMain
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -58,6 +60,9 @@ export type OnComponentChangeSlot = SlotRegistry<OnComponentChange>;
 export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
 
 export type OnComponentRemoveSlot = SlotRegistry<OnComponentRemove>;
+
+export type OnBitmapChange = () => Promise<void>;
+export type OnBitmapChangeSlot = SlotRegistry<OnBitmapChange>;
 
 export type OnAspectsResolve = (aspectsComponents: Component[]) => Promise<void>;
 export type OnAspectsResolveSlot = SlotRegistry<OnAspectsResolve>;
@@ -80,6 +85,7 @@ export default async function provideWorkspace(
     bundler,
     aspectLoader,
     envs,
+    globalConfig,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   [
@@ -89,13 +95,15 @@ export default async function provideWorkspace(
     onComponentRemoveSlot,
     onAspectsResolveSlot,
     onRootAspectAddedSlot,
+    onBitmapChangeSlot,
   ]: [
     OnComponentLoadSlot,
     OnComponentChangeSlot,
     OnComponentAddSlot,
     OnComponentRemoveSlot,
     OnAspectsResolveSlot,
-    OnRootAspectAddedSlot
+    OnRootAspectAddedSlot,
+    OnBitmapChangeSlot
   ],
   harmony: Harmony
 ) {
@@ -119,12 +127,17 @@ export default async function provideWorkspace(
     onComponentLoadSlot,
     onComponentChangeSlot,
     envs,
+    globalConfig,
     onComponentAddSlot,
     onComponentRemoveSlot,
     onAspectsResolveSlot,
     onRootAspectAddedSlot,
-    graphql
+    graphql,
+    onBitmapChangeSlot
   );
+
+  const configMergeFile = workspace.getConflictMergeFile();
+  await configMergeFile.loadIfNeeded();
 
   const getWorkspacePolicyFromPackageJson = () => {
     const packageJson = workspace.consumer.packageJson?.packageJsonObject || {};
@@ -132,7 +145,27 @@ export default async function provideWorkspace(
     return policyFromPackageJson;
   };
 
-  dependencyResolver.registerRootPolicy(getWorkspacePolicyFromPackageJson());
+  const getWorkspacePolicyFromMergeConfig = () => {
+    const wsConfigMerge = workspace.getWorkspaceJsonConflictFromMergeConfig();
+    const policy = wsConfigMerge.data?.[DependencyResolverAspect.id]?.policy || {};
+    ['dependencies', 'peerDependencies'].forEach((depField) => {
+      if (!policy[depField]) return;
+      policy[depField] = policy[depField].reduce((acc, current) => {
+        acc[current.name] = current.version;
+        return acc;
+      }, {});
+    });
+    const wsPolicy = dependencyResolver.getWorkspacePolicyFromConfigObject(policy);
+    return wsPolicy;
+  };
+
+  const getRootPolicy = () => {
+    const pkgJsonPolicy = getWorkspacePolicyFromPackageJson();
+    const configMergePolicy = getWorkspacePolicyFromMergeConfig();
+    return dependencyResolver.mergeWorkspacePolices([pkgJsonPolicy, configMergePolicy]);
+  };
+
+  dependencyResolver.registerRootPolicy(getRootPolicy());
 
   consumer.onCacheClear.push(() => workspace.clearCache());
 
@@ -195,7 +228,7 @@ export default async function provideWorkspace(
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
-  const capsuleCmd = new CapsuleCmd();
+  const capsuleCmd = new CapsuleCmd(isolator, workspace);
   capsuleCmd.commands = [
     new CapsuleListCmd(isolator, workspace),
     new CapsuleCreateCmd(workspace, isolator),
@@ -207,12 +240,23 @@ export default async function provideWorkspace(
   cli.register(...commands);
   component.registerHost(workspace);
 
-  cli.registerOnStart(async () => {
+  cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string) => {
+    if (currentCommand === 'mini-status' || currentCommand === 'ms') {
+      return; // mini-status should be super fast.
+    }
+    if (currentCommand === 'install') {
+      workspace.inInstallContext = true;
+    }
     await workspace.importCurrentLaneIfMissing();
+    const loadAspectsOpts = {
+      runSubscribers: false,
+      skipDeps: !config.autoLoadAspectsDeps,
+    };
     const aspects = await workspace.loadAspects(
       aspectLoader.getNotLoadedConfiguredExtensions(),
       undefined,
-      'workspace.cli.registerOnStart'
+      'teambit.workspace/workspace (cli.registerOnStart)',
+      loadAspectsOpts
     );
     // clear aspect cache.
     const componentIds = await workspace.resolveMultipleComponentIds(aspects);

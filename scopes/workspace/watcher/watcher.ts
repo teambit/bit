@@ -1,6 +1,7 @@
 import { PubsubMain } from '@teambit/pubsub';
+import fs from 'fs-extra';
 import { dirname, sep } from 'path';
-import { difference } from 'lodash';
+import { compact, difference, partition } from 'lodash';
 import { ComponentID } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -33,11 +34,19 @@ export type EventMessages = {
   onAll: Function;
   onStart: Function;
   onReady: Function;
-  onChange: Function;
-  onAdd: Function;
-  onUnlink: Function;
+  onChange: OnFileEventFunc;
+  onAdd: OnFileEventFunc;
+  onUnlink: OnFileEventFunc;
   onError: Function;
 };
+
+export type OnFileEventFunc = (
+  filePaths: string[],
+  buildResults: OnComponentEventResult[],
+  verbose: boolean,
+  duration: number,
+  failureMsg?: string
+) => void;
 
 export type WatchOptions = {
   msgs?: EventMessages;
@@ -70,13 +79,14 @@ export class Watcher {
 
   async watchAll(opts: WatchOptions) {
     const { msgs, ...watchOpts } = opts;
-    // TODO: run build in the beginning of process (it's work like this in other envs)
     const pathsToWatch = await this.getPathsToWatch();
     const componentIds = Object.values(this.trackDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
     await this.createWatcher(pathsToWatch);
     const watcher = this.fsWatcher;
     msgs?.onStart(this.workspace);
+
+    await this.workspace.scope.watchScopeInternalFiles();
 
     return new Promise((resolve, reject) => {
       // prefix your command with "BIT_LOG=*" to see all watch events
@@ -109,9 +119,14 @@ export class Watcher {
         msgs?.onAdd(files, results, this.verbose, duration, failureMsg);
       });
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      watcher.on('unlink', async (p) => {
-        msgs?.onUnlink(p);
-        await this.handleChange(p);
+      watcher.on('unlink', async (filePath) => {
+        const startTime = new Date().getTime();
+        const { files, results, debounced, failureMsg } = await this.handleChange(filePath, opts?.initiator);
+        if (debounced) {
+          return;
+        }
+        const duration = new Date().getTime() - startTime;
+        msgs?.onUnlink(files, results, this.verbose, duration, failureMsg);
       });
       watcher.on('error', (err) => {
         msgs?.onError(err);
@@ -160,7 +175,7 @@ export class Watcher {
     initiator?: CompilationInitiator
   ): Promise<{
     results: OnComponentEventResult[];
-    files?: string[];
+    files: string[];
     failureMsg?: string;
     debounced?: boolean;
   }> {
@@ -186,7 +201,7 @@ export class Watcher {
       if (this.changedFilesPerComponent[compIdStr]) {
         this.changedFilesPerComponent[compIdStr].push(filePath);
         loader.stop();
-        return { results: [], debounced: true };
+        return { results: [], files: [], debounced: true };
       }
       this.changedFilesPerComponent[compIdStr] = [filePath];
       await this.sleep(DEBOUNCE_WAIT_MS);
@@ -212,15 +227,9 @@ export class Watcher {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  /**
-   * if a file was added/remove, once the component is loaded, it changes .bitmap, and then the
-   * entire cache is invalidated and the consumer is reloaded.
-   * when a file just changed, no need to reload the consumer, it is enough to just delete the
-   * component from the cache (both, workspace and consumer)
-   */
   private async triggerCompChanges(
     componentId: ComponentID,
-    files: string[],
+    files: PathOsBasedAbsolute[],
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
     let updatedComponentId: ComponentID | undefined = componentId;
@@ -242,12 +251,18 @@ export class Watcher {
         `unable to find componentMap for ${updatedComponentId.toString()}, make sure this component is in .bitmap`
       );
     }
-    const compFiles = files.filter((filePath) => {
+    const compFilesRelativeToWorkspace = componentMap.getFilesRelativeToConsumer();
+    const [compFiles, nonCompFiles] = partition(files, (filePath) => {
       const relativeFile = this.getRelativePathLinux(filePath);
-      const isCompFile = Boolean(componentMap.getFilesRelativeToConsumer().find((p) => p === relativeFile));
-      return isCompFile;
+      return Boolean(compFilesRelativeToWorkspace.find((p) => p === relativeFile));
     });
-    if (!compFiles.length) {
+    // nonCompFiles are either, files that were removed from the filesystem or existing files that are ignored.
+    // the compiler takes care of removedFiles differently, e.g. removes dists dir and old symlinks.
+    const removedFiles = compact(
+      await Promise.all(nonCompFiles.map(async (filePath) => ((await fs.pathExists(filePath)) ? null : filePath)))
+    );
+
+    if (!compFiles.length && !removedFiles.length) {
       logger.debug(
         `the following files are part of the component ${componentId.toStringWithoutVersion()} but configured to be ignored:\n${files.join(
           '\n'
@@ -255,7 +270,13 @@ export class Watcher {
       );
       return [];
     }
-    const buildResults = await this.executeWatchOperationsOnComponent(updatedComponentId, compFiles, true, initiator);
+    const buildResults = await this.executeWatchOperationsOnComponent(
+      updatedComponentId,
+      compFiles,
+      removedFiles,
+      true,
+      initiator
+    );
     return buildResults;
   }
 
@@ -266,13 +287,14 @@ export class Watcher {
     const previewsTrackDirs = { ...this.trackDirs };
     await this.workspace._reloadConsumer();
     await this.setTrackDirs();
+    await this.workspace.triggerOnBitmapChange();
     const newDirs: string[] = difference(Object.keys(this.trackDirs), Object.keys(previewsTrackDirs));
     const removedDirs: string[] = difference(Object.keys(previewsTrackDirs), Object.keys(this.trackDirs));
     const results: OnComponentEventResult[] = [];
     if (newDirs.length) {
-      this.fsWatcher.add(newDirs);
+      this.fsWatcher.add(newDirs.map((dir) => this.consumer.toAbsolutePath(dir)));
       const addResults = await mapSeries(newDirs, async (dir) =>
-        this.executeWatchOperationsOnComponent(this.trackDirs[dir], [], false)
+        this.executeWatchOperationsOnComponent(this.trackDirs[dir], [], [], false)
       );
       results.push(...addResults.flat());
     }
@@ -280,6 +302,7 @@ export class Watcher {
       await this.fsWatcher.unwatch(removedDirs);
       await mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsTrackDirs[dir]));
     }
+
     return results;
   }
 
@@ -292,6 +315,7 @@ export class Watcher {
   private async executeWatchOperationsOnComponent(
     componentId: ComponentID,
     files: string[],
+    removedFiles: string[] = [],
     isChange = true,
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
@@ -310,21 +334,10 @@ export class Watcher {
       this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentAddEvent(idStr, 'OnComponentAdd'));
     }
 
-    // the try/catch is probably not needed here because this gets called by `handleChange()` which already has a try/catch
-    // I left it here commented out for now just in case, but it should be removed as soon as we're more confident
-
-    // let buildResults: OnComponentEventResult[];
-    // try {
     const buildResults = isChange
-      ? await this.workspace.triggerOnComponentChange(componentId, files, initiator)
+      ? await this.workspace.triggerOnComponentChange(componentId, files, removedFiles, initiator)
       : await this.workspace.triggerOnComponentAdd(componentId);
-    // } catch (err: any) {
-    //   // do not exit the watch process on errors, just print them
-    //   const msg = `found an issue during onComponentChange or onComponentAdd hooks for ${idStr}`;
-    //   logger.error(msg, err);
-    //   logger.console(`\n${msg}: ${err.message || err}`);
-    //   return [];
-    // }
+
     return buildResults;
   }
 

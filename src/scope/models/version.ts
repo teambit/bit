@@ -58,7 +58,9 @@ export type VersionProps = {
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
   flattenedDependencies?: BitIds;
+  _flattenedEdges?: DepEdge[];
   flattenedEdges?: DepEdge[];
+  flattenedEdgesRef?: Ref;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies?: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -77,6 +79,7 @@ export type VersionProps = {
   buildStatus?: BuildStatus;
   componentId?: BitId;
   bitVersion?: string;
+  modified?: Log[];
 };
 
 /**
@@ -90,7 +93,22 @@ export default class Version extends BitObject {
   dependencies: Dependencies;
   devDependencies: Dependencies;
   flattenedDependencies: BitIds;
-  flattenedEdges: DepEdge[];
+  flattenedEdgesRef?: Ref; // ref to a BitObject Source file, which is a JSON object containing the flattened edge
+  _flattenedEdges?: DepEdge[]; // caching for the flattenedEdges
+  /**
+   * @deprecated
+   * to get the flattenedEdges, please use `this.getFlattenedEdges()`.
+   * this function handles the backward compatibility and provides the flattened edges regardless whether it was saved
+   * the `flattenedEdgesRef` introduced or after.
+   *
+   * the reason this is left here is not for backward compatibility, but for forward compatibility. meaning, if a
+   * Version object created by the new version is parsed by an old version that doesn't support the flattenedEdgesRef,
+   * then, it'll be able to still get the flattenedEdges by this prop.
+   * this is causing duplication currently. the data is kept in both, `this.flattenedEdges` and the file stored in `flattenedEdgesRef`.
+   * so it'll be best to delete this prop as soon as all scopes are deployed with the new version.
+   * (around August 2023 should be safe)
+   */
+  private flattenedEdges: DepEdge[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies: { [key: string]: string };
   devPackageDependencies: { [key: string]: string };
@@ -107,6 +125,7 @@ export default class Version extends BitObject {
   buildStatus?: BuildStatus;
   componentId?: BitId; // can help debugging errors when validating Version object
   bitVersion?: string;
+  modified: Log[] = []; // currently mutation could happen as a result of either "squash" or "sign".
 
   constructor(props: VersionProps) {
     super();
@@ -118,6 +137,7 @@ export default class Version extends BitObject {
     this.docs = props.docs;
     this.flattenedDependencies = props.flattenedDependencies || new BitIds();
     this.flattenedEdges = props.flattenedEdges || [];
+    this.flattenedEdgesRef = props.flattenedEdgesRef;
     this.packageDependencies = props.packageDependencies || {};
     this.devPackageDependencies = props.devPackageDependencies || {};
     this.peerPackageDependencies = props.peerPackageDependencies || {};
@@ -134,7 +154,35 @@ export default class Version extends BitObject {
     this.buildStatus = props.buildStatus;
     this.componentId = props.componentId;
     this.bitVersion = props.bitVersion;
+    this.modified = props.modified || [];
     this.validateVersion();
+  }
+
+  /**
+   * use only this method to get the flattened edges (graph of flattened dependencies).
+   * it's backward compatible with the previous way this was stored on the Version object itself.
+   */
+  async getFlattenedEdges(repo: Repository): Promise<DepEdge[]> {
+    const getWithBackwardCompatibility = async (): Promise<DepEdge[]> => {
+      if (this.flattenedEdgesRef) {
+        // it's possible that there is a ref but the file is not there.
+        // it can happen if the remote-scope uses an older version that doesn't know to collect this ref.
+        // in which case, the client will get the Version object with the ref prop, but not the Source object.
+        const throws = false;
+        const flattenedEdgesSource = (await repo.load(this.flattenedEdgesRef, throws)) as Source | undefined;
+        if (flattenedEdgesSource) {
+          const flattenedEdgesJson = JSON.parse(flattenedEdgesSource.contents.toString());
+          return flattenedEdgesJson.map((item) => Version.depEdgeFromObject(item));
+        }
+      }
+      return this.flattenedEdges || [];
+    };
+
+    if (!this._flattenedEdges) {
+      this._flattenedEdges = await getWithBackwardCompatibility();
+    }
+
+    return this._flattenedEdges;
   }
 
   validateVersion() {
@@ -229,6 +277,11 @@ export default class Version extends BitObject {
     return new Dependencies(this.extensions.extensionsBitIds.map((id) => new Dependency(id, [])));
   }
 
+  lastModified(): string {
+    if (!this.modified || !this.modified.length) return this.log.date;
+    return this.modified[this.modified.length - 1].date;
+  }
+
   getAllFlattenedDependencies(): BitIds {
     return BitIds.fromArray([...this.flattenedDependencies]);
   }
@@ -293,6 +346,7 @@ export default class Version extends BitObject {
       const artifacts = getRefsFromExtensions(this.extensions);
       allRefs.push(...artifacts);
     }
+    if (this.flattenedEdgesRef) allRefs.push(this.flattenedEdgesRef);
     return allRefs;
   }
 
@@ -310,6 +364,27 @@ export default class Version extends BitObject {
     return repo.loadManyRaw(refs);
   }
 
+  static depEdgeToObject(depEdge: DepEdge): Record<string, any> {
+    return {
+      source: depEdge.source.serialize(),
+      target: depEdge.target.serialize(),
+      type: depEdge.type,
+    };
+  }
+  static depEdgeFromObject(depEdgeObj: Record<string, any>): DepEdge {
+    return {
+      source: new BitId(depEdgeObj.source),
+      target: new BitId(depEdgeObj.target),
+      type: depEdgeObj.type,
+    };
+  }
+  static flattenedEdgeToSource(flattenedEdges?: DepEdge[]): Source | undefined {
+    if (!flattenedEdges) return undefined;
+    const flattenedEdgesObj = flattenedEdges.map((f) => Version.depEdgeToObject(f));
+    const flattenedEdgesBuffer = Buffer.from(JSON.stringify(flattenedEdgesObj));
+    return Source.from(flattenedEdgesBuffer);
+  }
+
   toObject() {
     const _convertFileToObject = (file) => {
       return {
@@ -319,13 +394,7 @@ export default class Version extends BitObject {
         test: file.test,
       };
     };
-    const depEdgeToObject = (depEdge: DepEdge) => {
-      return {
-        source: depEdge.source.serialize(),
-        target: depEdge.target.serialize(),
-        type: depEdge.type,
-      };
-    };
+
     return pickBy(
       {
         files: this.files ? this.files.map(_convertFileToObject) : null,
@@ -342,7 +411,8 @@ export default class Version extends BitObject {
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
         flattenedDependencies: this.flattenedDependencies.map((dep) => dep.serialize()),
-        flattenedEdges: this.flattenedEdges.map((f) => depEdgeToObject(f)),
+        flattenedEdges: this.flattenedEdgesRef ? undefined : this.flattenedEdges.map((f) => Version.depEdgeToObject(f)),
+        flattenedEdgesRef: this.flattenedEdgesRef?.toString(),
         extensions: this.extensions.toModelObjects(),
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
@@ -361,6 +431,7 @@ export default class Version extends BitObject {
           ? { head: this.unrelated.head.toString(), laneId: this.unrelated.laneId.toObject() }
           : undefined,
         bitVersion: this.bitVersion,
+        modified: this.modified,
       },
       (val) => !!val
     );
@@ -395,6 +466,7 @@ export default class Version extends BitObject {
       devDependencies,
       flattenedDependencies,
       flattenedEdges,
+      flattenedEdgesRef,
       flattenedDevDependencies,
       devPackageDependencies,
       peerPackageDependencies,
@@ -407,6 +479,7 @@ export default class Version extends BitObject {
       squashed,
       unrelated,
       bitVersion,
+      modified,
     } = contentParsed;
 
     const _getDependencies = (deps = []): Dependency[] => {
@@ -442,14 +515,6 @@ export default class Version extends BitObject {
 
     const _getFlattenedDependencies = (deps = []): BitId[] => {
       return deps.map((dep) => BitId.parseBackwardCompatible(dep));
-    };
-
-    const _getDepEdge = (depEdgeObj): DepEdge => {
-      return {
-        source: new BitId(depEdgeObj.source),
-        target: new BitId(depEdgeObj.target),
-        type: depEdgeObj.type,
-      };
     };
 
     const _groupFlattenedDependencies = () => {
@@ -496,7 +561,9 @@ export default class Version extends BitObject {
       bindingPrefix: bindingPrefix || null,
       schema: schema || undefined,
       log: {
-        message: log.message,
+        // workaround for a bug where the log.message was saved as boolean when running `bit tag -m ""`
+        // the bug was fixed since v0.1.27, but old objects might still have this bug
+        message: typeof log.message !== 'string' ? '' : log.message,
         date: log.date,
         username: log.username,
         email: log.email,
@@ -505,7 +572,9 @@ export default class Version extends BitObject {
       dependencies: _getDependencies(dependencies),
       devDependencies: _getDependencies(devDependencies),
       flattenedDependencies: _groupFlattenedDependencies(),
-      flattenedEdges: flattenedEdges?.map((f) => _getDepEdge(f)) || [],
+      // backward compatibility. before introducing `flattenedEdgesRef`, we only had `flattenedEdges`. see getFlattenedEdges() for more info.
+      flattenedEdges: flattenedEdgesRef ? [] : flattenedEdges?.map((f) => Version.depEdgeFromObject(f)) || [],
+      flattenedEdgesRef: flattenedEdgesRef ? Ref.from(flattenedEdgesRef) : undefined,
       devPackageDependencies,
       peerPackageDependencies,
       packageDependencies,
@@ -520,6 +589,7 @@ export default class Version extends BitObject {
       extensions: _getExtensions(extensions),
       buildStatus,
       bitVersion,
+      modified,
     });
   }
 
@@ -534,7 +604,15 @@ export default class Version extends BitObject {
    * Create version model object from consumer component
    * @param {*} param0
    */
-  static fromComponent({ component, files }: { component: ConsumerComponent; files: Array<SourceFileModel> }) {
+  static fromComponent({
+    component,
+    files,
+    flattenedEdges,
+  }: {
+    component: ConsumerComponent;
+    files: Array<SourceFileModel>;
+    flattenedEdges?: Source;
+  }) {
     const parseFile = (file) => {
       return {
         file: file.file.hash(),
@@ -558,7 +636,9 @@ export default class Version extends BitObject {
       devPackageDependencies: component.devPackageDependencies,
       peerPackageDependencies: component.peerPackageDependencies,
       flattenedDependencies: component.flattenedDependencies,
+      // it's safe to remove this line once the version.flattenedEdges prop is deleted
       flattenedEdges: component.flattenedEdges,
+      flattenedEdgesRef: flattenedEdges?.hash(),
       schema: component.schema,
       overrides: component.overrides.componentOverridesData,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -612,8 +692,13 @@ export default class Version extends BitObject {
     this.parents.push(ref);
   }
 
-  setSquashed(squashData: SquashData) {
+  setSquashed(squashData: SquashData, log: Log) {
     this.squashed = squashData;
+    this.addModifiedLog(log);
+  }
+
+  addModifiedLog(log: Log) {
+    this.modified.push(log);
   }
 
   addAsOnlyParent(ref: Ref) {

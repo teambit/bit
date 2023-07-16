@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useContext } from 'react';
 import { Route, RouteProps } from 'react-router-dom';
 import { Slot, Harmony, SlotRegistry } from '@teambit/harmony';
 import { LaneCompare, LaneCompareProps as DefaultLaneCompareProps } from '@teambit/lanes.ui.compare.lane-compare';
@@ -6,9 +6,9 @@ import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
 import { LanesAspect } from '@teambit/lanes';
 import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
-import ScopeAspect, { ScopeUI } from '@teambit/scope';
+import ScopeAspect, { ScopeContext, ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
-import ComponentAspect, { ComponentID, ComponentUI, useIdFromLocation } from '@teambit/component';
+import ComponentAspect, { ComponentUI, useIdFromLocation, ComponentID } from '@teambit/component';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { LaneOverview, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.lane-overview';
 import {
@@ -16,6 +16,7 @@ import {
   LanesOrderedNavigationSlot,
   LanesOverviewMenu,
 } from '@teambit/lanes.ui.menus.lanes-overview-menu';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { UseLaneMenu } from '@teambit/lanes.ui.menus.use-lanes-menu';
 import { LanesHost, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LanesProvider, useLanes, IgnoreDerivingFromUrl } from '@teambit/lanes.hooks.use-lanes';
@@ -24,9 +25,56 @@ import { LaneId } from '@teambit/lane-id';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
 import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
 import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
+import { ScopeIcon } from '@teambit/scope.ui.scope-icon';
+
+import styles from './lanes.ui.module.scss';
 
 export type LaneCompareProps = Partial<DefaultLaneCompareProps>;
 export type LaneProviderIgnoreSlot = SlotRegistry<IgnoreDerivingFromUrl>;
+export function useComponentFilters() {
+  const idFromLocation = useIdFromLocation();
+  const { lanesModel, loading } = useLanes();
+  const laneFromUrl = useViewedLaneFromUrl();
+  const laneComponentId =
+    idFromLocation && !laneFromUrl?.isDefault()
+      ? lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl) ?? null
+      : null;
+
+  if (laneComponentId === null || loading) {
+    return {
+      loading: true,
+    };
+  }
+
+  return {
+    loading: false,
+    log: {
+      head: laneComponentId.version,
+    },
+  };
+}
+export function useLaneComponentIdFromUrl(): ComponentID | undefined | null {
+  const idFromLocation = useIdFromLocation();
+  const { lanesModel, loading } = useLanes();
+  const laneFromUrl = useViewedLaneFromUrl();
+  const query = useQuery();
+  const componentVersion = query.get('version');
+
+  if (componentVersion && laneFromUrl) {
+    const componentId = ComponentID.fromString(`${idFromLocation}@${componentVersion}`);
+    return componentId;
+  }
+  const laneComponentId =
+    idFromLocation && !laneFromUrl?.isDefault()
+      ? lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl) ?? null
+      : null;
+
+  return loading ? undefined : laneComponentId;
+}
+
+export function useComponentId() {
+  return useLaneComponentIdFromUrl()?.toString();
+}
 
 export class LanesUI {
   static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, ComponentCompareAspect];
@@ -109,47 +157,29 @@ export class LanesUI {
   //   return <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />;
   // }
 
-  getLaneComponentIdFromUrl = () => {
-    const idFromLocation = useIdFromLocation();
-    const { lanesModel } = useLanes();
-    const laneFromUrl = useViewedLaneFromUrl();
-    const laneComponentId =
-      idFromLocation && !laneFromUrl?.isDefault()
-        ? lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl)
-        : undefined;
-    return laneComponentId;
-  };
-
-  useComponentId = () => {
-    return this.getLaneComponentIdFromUrl()?.toString();
-  };
-
-  useComponentFilters = () => {
-    const laneComponentId = this.getLaneComponentIdFromUrl();
-
-    return {
-      log: laneComponentId && {
-        logHead: laneComponentId.version,
-      },
-    };
-  };
-
   getLaneComponent() {
     return this.componentUI.getComponentUI(this.host, {
-      componentId: this.useComponentId,
-      useComponentFilters: this.useComponentFilters,
+      componentId: useComponentId,
+      useComponentFilters,
     });
   }
 
   getLaneComponentMenu() {
     return this.componentUI.getMenu(this.host, {
-      componentId: this.useComponentId,
-      useComponentFilters: this.useComponentFilters,
+      componentId: useComponentId,
+      useComponentFilters,
     });
   }
 
   getLaneOverview() {
-    return <LaneOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />;
+    return (
+      <LaneOverview
+        routeSlot={this.routeSlot}
+        overviewSlot={this.overviewSlot}
+        host={this.lanesHost}
+        useLanes={useLanes}
+      />
+    );
   }
 
   getLanesComparePage() {
@@ -226,7 +256,26 @@ export class LanesUI {
   }
 
   getLanesSwitcher() {
-    const LanesSwitcher = <LaneSwitcher groupByScope={this.lanesHost === 'workspace'} />;
+    const mainIcon = () => {
+      const scope = useContext(ScopeContext);
+      return (
+        <ScopeIcon
+          size={24}
+          scopeImage={scope.icon}
+          bgColor={scope.backgroundIconColor}
+          className={styles.mainLaneIcon}
+        />
+      );
+    };
+
+    const LanesSwitcher = (
+      <LaneSwitcher
+        groupByScope={this.lanesHost === 'workspace'}
+        mainIcon={this.lanesHost === 'scope' ? mainIcon : undefined}
+        useLanes={useLanes}
+      />
+    );
+
     return LanesSwitcher;
   }
 

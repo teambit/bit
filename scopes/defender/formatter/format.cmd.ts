@@ -33,6 +33,7 @@ export type JsonFormatDataResults = Omit<FormatResults, 'results'> & { results: 
 export type JsonFormatResults = {
   duration: TimerResponse;
   data: JsonFormatDataResults;
+  code: number;
   componentsIdsToFormat: string[];
 };
 
@@ -54,7 +55,7 @@ export class FormatCmd implements Command {
   ) {}
 
   async report([components = []]: [string[]], formatterOptions: FormatCmdOptions) {
-    const { duration, data, componentsIdsToFormat } = await this.json([components], formatterOptions);
+    const { duration, data, code, componentsIdsToFormat } = await this.json([components], formatterOptions);
 
     const title = chalk.bold(
       `formatting total of ${chalk.cyan(
@@ -69,7 +70,10 @@ export class FormatCmd implements Command {
       seconds.toString()
     )}.`;
 
-    return `${title}\n\n${componentsOutputs}\n\n${summery}`;
+    return {
+      data: `${title}\n\n${componentsOutputs}\n\n${summery}`,
+      code,
+    };
   }
 
   async json([components = []]: [string[]], formatterCmdOptions: FormatCmdOptions): Promise<JsonFormatResults> {
@@ -83,11 +87,21 @@ export class FormatCmd implements Command {
       : await this.formatter.format(componentsToFormat, opts);
     const jsonFormatterResults = toJsonFormatResults(formatterResults);
     const timerResponse = timer.stop();
+    const statusCode = this.getStatusCode(jsonFormatterResults, formatterCmdOptions.check);
+
     return {
       duration: timerResponse,
       data: jsonFormatterResults,
+      code: statusCode,
       componentsIdsToFormat: componentsToFormat.map((comp) => comp.id.toString()),
     };
+  }
+
+  private getStatusCode(results: JsonFormatDataResults, check = false): number {
+    if (!check) return 0;
+    const hasIssues = results.results.some((comp) => comp.results.some((file) => file.hasIssues));
+    if (hasIssues) return 1;
+    return 0;
   }
 
   private async getIdsToFormat(components: string[], changed = false): Promise<ComponentID[]> {

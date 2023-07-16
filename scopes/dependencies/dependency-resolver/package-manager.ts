@@ -20,11 +20,15 @@ export type PackageManagerInstallOptions = {
 
   copyPeerToRuntimeOnComponents?: boolean;
 
+  excludeLinksFromLockfile?: boolean;
+
   installPeersFromEnvs?: boolean;
 
   dependencyFilterFn?: DepsFilterFn;
 
   overrides?: Record<string, string>;
+
+  lockfileOnly?: boolean;
 
   nodeLinker?: 'hoisted' | 'isolated';
 
@@ -51,6 +55,18 @@ export type PackageManagerInstallOptions = {
   includeOptionalDeps?: boolean;
 
   updateAll?: boolean;
+
+  hidePackageManagerOutput?: boolean;
+
+  pruneNodeModules?: boolean;
+
+  hasRootComponents?: boolean;
+
+  neverBuiltDependencies?: string[];
+
+  preferOffline?: boolean;
+
+  nmSelfReferences?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -79,10 +95,19 @@ export interface InstallationContext {
 
 export interface PackageManager {
   /**
+   * Name of the package manager
+   */
+  name: string;
+  /**
    * install dependencies
    * @param componentDirectoryMap
    */
-  install(context: InstallationContext, options: PackageManagerInstallOptions): Promise<void>;
+  install(
+    context: InstallationContext,
+    options: PackageManagerInstallOptions
+  ): Promise<{ dependenciesChanged: boolean }>;
+
+  pruneModules?(rootDir: string): Promise<void>;
 
   resolveRemoteVersion(
     packageName: string,

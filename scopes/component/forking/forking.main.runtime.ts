@@ -1,19 +1,20 @@
+import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import camelCase from 'camelcase';
-import { ComponentDependency, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { BitId } from '@teambit/legacy-bit-id';
-import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { uniqBy } from 'lodash';
+import { importTransformer, exportTransformer } from '@teambit/typescript';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { ComponentIdObj } from '@teambit/component-id';
+import { ComponentDependency, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ComponentConfig } from '@teambit/generator';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
-import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
-import pMapSeries from 'p-map-series';
-import PkgAspect, { PkgMain } from '@teambit/pkg';
-import { BitError } from '@teambit/bit-error';
+import { InstallAspect, InstallMain } from '@teambit/install';
+import { BitId } from '@teambit/legacy-bit-id';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
-import { InstallMain, InstallAspect } from '@teambit/install';
+import PkgAspect, { PkgMain } from '@teambit/pkg';
+import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { uniqBy } from 'lodash';
+import pMapSeries from 'p-map-series';
 import { ForkCmd, ForkOptions } from './fork.cmd';
 import { ForkingAspect } from './forking.aspect';
 import { ForkingFragment } from './forking.fragment';
@@ -32,8 +33,10 @@ type MultipleForkInfo = {
 
 type MultipleComponentsToFork = Array<{
   sourceId: string;
-  targetId?: string; // if not specify, it'll be the same as the source
-  path?: string; // if not specify, use the default component path
+  targetId?: string; // if not specified, it'll be the same as the source
+  path?: string; // if not specified, use the default component path
+  env?: string; // if not specified, use the default env
+  config?: ComponentConfig; // if specified, adds to/overrides the existing config
 }>;
 
 type MultipleForkOptions = {
@@ -87,12 +90,17 @@ export class ForkingMain {
 
   async forkMultipleFromRemote(componentsToFork: MultipleComponentsToFork, options: MultipleForkOptions = {}) {
     const { scope } = options;
-    const results = await pMapSeries(componentsToFork, async ({ sourceId, targetId, path }) => {
+    const results = await pMapSeries(componentsToFork, async ({ sourceId, targetId, path, env, config }) => {
       const sourceCompId = await this.workspace.resolveComponentId(sourceId);
       const sourceIdWithScope = sourceCompId._legacy.scope
         ? sourceCompId
         : ComponentID.fromLegacy(BitId.parse(sourceId, true));
-      const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, { scope, path });
+      const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, {
+        scope,
+        path,
+        env,
+        config,
+      });
       return { targetCompId, sourceId, component };
     });
     await this.refactorMultipleAndInstall(results, options);
@@ -115,7 +123,10 @@ export class ForkingMain {
       .flat();
     const allComponents = await this.workspace.list();
     if (options.refactor) {
-      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, stringsToReplace);
+      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, stringsToReplace, [
+        importTransformer,
+        exportTransformer,
+      ]);
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
     }
     const forkedComponents = results.map((result) => result.component);
@@ -198,31 +209,12 @@ the reason is that the refactor changes the components using ${sourceId.toString
           oldStr: sourceId.toStringWithoutVersion(),
           newStr: targetCompId.toStringWithoutVersion(),
         },
-      ]
+      ],
+      [importTransformer, exportTransformer]
     );
     if (!options?.preserve) {
-      await this.refactoring.replaceMultipleStrings(
-        [component],
-        [
-          {
-            oldStr: sourceId.name,
-            newStr: targetCompId.name,
-          },
-          {
-            oldStr: camelCase(sourceId.name),
-            newStr: camelCase(targetCompId.name),
-          },
-          {
-            oldStr: camelCase(sourceId.name, { pascalCase: true }),
-            newStr: camelCase(targetCompId.name, { pascalCase: true }),
-          },
-        ]
-      );
-      component.filesystem.files.forEach((file) => {
-        if (file.relative.includes(sourceId.name)) {
-          file.updatePaths({ newRelative: file.relative.replace(sourceId.name, targetCompId.name) });
-        }
-      });
+      await this.refactoring.refactorVariableAndClasses(component, sourceId, targetCompId);
+      this.refactoring.refactorFilenames(component, sourceId, targetCompId);
     }
     const config = await this.getConfig(component, options);
     await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, options, config);
@@ -269,6 +261,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
   }
 
   private async getConfig(comp: Component, options?: ForkOptions) {
+    const config = options?.config || {};
     const fromExisting = options?.skipConfig
       ? {}
       : await this.newComponentHelper.getConfigFromExistingToNewComponent(comp);
@@ -276,6 +269,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
     return {
       ...fromExisting,
       ...linkToOriginal,
+      ...config,
     };
   }
 

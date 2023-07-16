@@ -6,6 +6,9 @@ import { BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { merge, cloneDeep } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
+import { PrettierConfigWriter } from '@teambit/defender.prettier-formatter';
+import { TypescriptConfigWriter } from '@teambit/typescript.typescript-compiler';
+import { EslintConfigWriter } from '@teambit/defender.eslint-linter';
 import { CompilerMain } from '@teambit/compiler';
 import {
   BuilderEnv,
@@ -37,12 +40,12 @@ import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Logger } from '@teambit/logger';
+import { ConfigWriterEntry } from '@teambit/workspace-config-files';
+
 // ensure reactEnv depends on compositions-app
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { CompositionsApp } from '@teambit/react.ui.compositions-app';
 // ensure reactEnv depends on docs-app
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import DocsApps from '@teambit/react.ui.docs-app';
 import type { ReactMainConfig } from './react.main.runtime';
 import { ReactAspect } from './react.aspect';
 // webpack configs for both components and envs
@@ -308,15 +311,20 @@ export class ReactEnv
   /**
    * get a schema generator instance configured with the correct tsconfig.
    */
-  getSchemaExtractor(tsconfig: TsConfigSourceFile): SchemaExtractor {
-    return this.tsAspect.createSchemaExtractor(this.getTsConfig(tsconfig));
+  getSchemaExtractor(tsconfig: TsConfigSourceFile, tsserverPath?: string, contextPath?: string): SchemaExtractor {
+    return this.tsAspect.createSchemaExtractor(this.getTsConfig(tsconfig), tsserverPath, contextPath);
   }
 
   /**
    * returns and configures the React component dev server.
    * required for `bit start`
    */
-  getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
+  getDevServer(
+    context: DevServerContext,
+    transformers: WebpackConfigTransformer[] = [],
+    webpackModulePath?: string,
+    webpackDevServerModulePath?: string
+  ): DevServer {
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
     const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
@@ -326,16 +334,26 @@ export class ReactEnv
       return merged;
     };
 
-    return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
+    return this.webpack.createDevServer(
+      context,
+      [defaultTransformer, ...transformers],
+      webpackModulePath,
+      webpackDevServerModulePath
+    );
   }
 
-  async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
-    return this.createComponentsWebpackBundler(context, transformers);
+  async getBundler(
+    context: BundlerContext,
+    transformers: WebpackConfigTransformer[] = [],
+    webpackModulePath?: string
+  ): Promise<Bundler> {
+    return this.createComponentsWebpackBundler(context, transformers, webpackModulePath);
   }
 
   async createComponentsWebpackBundler(
     context: BundlerContext,
-    transformers: WebpackConfigTransformer[] = []
+    transformers: WebpackConfigTransformer[] = [],
+    webpackModulePath?: string
   ): Promise<Bundler> {
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(context.development);
@@ -346,12 +364,13 @@ export class ReactEnv
       return merged;
     };
     const mergedTransformers = [defaultTransformer, ...transformers];
-    return this.createWebpackBundler(context, mergedTransformers);
+    return this.createWebpackBundler(context, mergedTransformers, webpackModulePath);
   }
 
   async createTemplateWebpackBundler(
     context: BundlerContext,
-    transformers: WebpackConfigTransformer[] = []
+    transformers: WebpackConfigTransformer[] = [],
+    webpackModulePath?: string
   ): Promise<Bundler> {
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(context.development);
@@ -362,14 +381,15 @@ export class ReactEnv
       return merged;
     };
     const mergedTransformers = [defaultTransformer, ...transformers];
-    return this.createWebpackBundler(context, mergedTransformers);
+    return this.createWebpackBundler(context, mergedTransformers, webpackModulePath);
   }
 
   private async createWebpackBundler(
     context: BundlerContext,
-    transformers: WebpackConfigTransformer[] = []
+    transformers: WebpackConfigTransformer[] = [],
+    webpackModulePath?: string
   ): Promise<Bundler> {
-    return this.webpack.createBundler(context, transformers);
+    return this.webpack.createBundler(context, transformers, undefined, webpackModulePath);
   }
 
   getAdditionalHostDependencies(): string[] {
@@ -535,6 +555,31 @@ export class ReactEnv
   createCjsCompilerTask(transformers: Function[] = [], tsModule = ts) {
     const tsCompiler = this.createTsCjsCompiler('build', transformers as TsConfigTransformer[], tsModule);
     return this.compiler.createTask('TSCompiler', tsCompiler);
+  }
+
+  workspaceConfig(): ConfigWriterEntry[] {
+    return [
+      TypescriptConfigWriter.create(
+        {
+          tsconfig: require.resolve('./typescript/tsconfig.cjs.json'),
+          // types: resolveTypes(__dirname, ["./types"]),
+        },
+        this.logger
+      ),
+      EslintConfigWriter.create(
+        {
+          configPath: require.resolve('./eslint/eslintrc.js'),
+          tsconfig: require.resolve('./typescript/tsconfig.cjs.json'),
+        },
+        this.logger
+      ),
+      PrettierConfigWriter.create(
+        {
+          configPath: require.resolve('./prettier/prettier.config.js'),
+        },
+        this.logger
+      ),
+    ];
   }
 
   async __getDescriptor() {

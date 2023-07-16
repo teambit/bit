@@ -421,4 +421,154 @@ describe('merge config scenarios', function () {
       });
     });
   });
+  // for this test, there are two workspace.
+  // 1. includes a component "bar/foo" which is used as a package for the another workspace.
+  // 2. has a component "comp1", which uses bar.foo pkg in different versions.
+  // we maintain two "Helper" instances to gradually update both workspaces.
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'diverge with different component dependencies versions',
+    () => {
+      let npmCiRegistry: NpmCiRegistry;
+      let beforeDiverge: string;
+      let beforeMerges: string;
+      let barPkgName: string;
+      let barCompName: string;
+      let pkgHelper: Helper;
+      before(async () => {
+        pkgHelper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        pkgHelper.scopeHelper.setNewLocalAndRemoteScopes();
+        pkgHelper.fixtures.createComponentBarFoo();
+        pkgHelper.fixtures.addComponentBarFooAsDir();
+        npmCiRegistry = new NpmCiRegistry(pkgHelper);
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        await npmCiRegistry.init();
+        pkgHelper.command.tagAllComponents();
+        barPkgName = pkgHelper.general.getPackageNameByCompName('bar/foo');
+        barCompName = `${pkgHelper.scopes.remote}/bar/foo`;
+        pkgHelper.command.export();
+
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.addRemoteScope(pkgHelper.scopes.remotePath);
+        helper.fixtures.populateComponents(1, false);
+        helper.fs.outputFile('comp1/index.js', `require("${barPkgName}");`);
+        helper.command.install(barPkgName);
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+        beforeDiverge = helper.scopeHelper.cloneLocalScope();
+
+        pkgHelper.command.tagAllComponents('--unmodified'); // 0.0.2
+        pkgHelper.command.export();
+
+        helper.command.createLane();
+        helper.command.install(`${barPkgName}@0.0.2`);
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.export();
+
+        // add another tag on main to make it diverged from the lane.
+        helper.scopeHelper.getClonedLocalScope(beforeDiverge);
+        helper.command.tagAllWithoutBuild('--unmodified');
+        helper.command.export();
+
+        beforeMerges = helper.scopeHelper.cloneLocalScope();
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      describe('when the dep was updated on the lane only, not on main', () => {
+        describe('when the dep is in workspace.jsonc', () => {
+          before(() => {
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+          });
+          it('should change workspace.jsonc with the updated dependency', () => {
+            const policy = helper.bitJsonc.getPolicyFromDependencyResolver();
+            expect(policy.dependencies[barPkgName]).to.equal('0.0.2');
+          });
+        });
+        describe('when the dep is not in the workspace.jsonc', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(beforeMerges);
+            helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: {} });
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+          });
+          it('should auto-update the dependency according to the lane, because only there it was changed', () => {
+            const deps = helper.command.getCompDepsIdsFromData('comp1');
+            expect(deps).to.include(`${barCompName}@0.0.2`);
+            expect(deps).to.not.include(`${barCompName}@0.0.1`);
+          });
+        });
+      });
+      describe('when the dep was updated in both, the lane and main so there is a conflict', () => {
+        let afterExport: string;
+        before(() => {
+          pkgHelper.command.tagAllComponents('--unmodified'); // 0.0.3
+          pkgHelper.command.export();
+
+          // on main
+          helper.scopeHelper.getClonedLocalScope(beforeMerges);
+          helper.command.install(`${barPkgName}@0.0.3`);
+          // by default, it is saved as ^0.0.3 to the workspace.jsonc
+          helper.command.tagAllWithoutBuild();
+          helper.command.export();
+          afterExport = helper.scopeHelper.cloneLocalScope();
+        });
+        describe('when the dep is in workspace.jsonc', () => {
+          before(() => {
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+          });
+          it('should not change workspace.jsonc with the lane version', () => {
+            const policy = helper.bitJsonc.getPolicyFromDependencyResolver();
+            expect(policy.dependencies[barPkgName]).to.equal('^0.0.3');
+          });
+          it('should show the versions as a workspace conflict in the merge-conflict file', () => {
+            const conflictFile = helper.general.getConfigMergePath();
+            const conflictFileContent = fs.readFileSync(conflictFile).toString();
+            expect(conflictFileContent).to.have.string('WORKSPACE');
+            expect(conflictFileContent).to.have.string('0.0.2');
+            expect(conflictFileContent).to.have.string('^0.0.3');
+          });
+          it('should block the tag until the conflicts are resolved', () => {
+            expect(() => helper.command.snapAllComponentsWithoutBuild()).to.throw(
+              'the workspace has the following issues'
+            );
+          });
+          it('bit status should show it as a workspace issue', () => {
+            const status = helper.command.statusJson();
+            expect(status.workspaceIssues).to.have.lengthOf(1);
+          });
+          describe('resolving the conflict as theirs', () => {
+            before(() => {
+              helper.general.fixMergeConfigConflict('theirs');
+            });
+            it('should install the version from the merge-config file and not from the workspace.jsonc file', () => {
+              helper.command.install();
+              const deps = helper.command.getCompDepsIdsFromData('comp1');
+              expect(deps).to.include(`${barCompName}@0.0.2`);
+              expect(deps).to.not.include(`${barCompName}@0.0.3`);
+            });
+            it('bit status should not show a workspace issue anymore', () => {
+              const status = helper.command.statusJson();
+              expect(status.workspaceIssues).to.have.lengthOf(0);
+            });
+          });
+        });
+        describe('when the dep is not in the workspace.jsonc', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(afterExport);
+            helper.bitJsonc.addPolicyToDependencyResolver({ dependencies: {} });
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+          });
+          it('bit status should not show a workspace issue', () => {
+            const status = helper.command.statusJson();
+            expect(status.workspaceIssues).to.have.lengthOf(0);
+          });
+          it('bit status should show it as a component conflict', () => {
+            const status = helper.command.statusJson();
+            expect(status.componentsWithIssues).to.have.lengthOf(1);
+            expect(status.componentsWithIssues[0].id).to.includes('comp1');
+            expect(status.componentsWithIssues[0].issues[0].type).to.equal(IssuesClasses.MergeConfigHasConflict.name);
+          });
+        });
+      });
+    }
+  );
 });

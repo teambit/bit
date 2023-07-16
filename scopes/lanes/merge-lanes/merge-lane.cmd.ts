@@ -22,7 +22,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
     },
     {
       name: 'pattern',
-      description: 'EXPERIMENTAL. partially merge the lane with the specified component-pattern',
+      description: 'partially merge the lane with the specified component-pattern',
     },
   ];
   alias = '';
@@ -36,7 +36,8 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
-    ['', 'no-squash', 'EXPERIMENTAL. relevant for merging lanes into main, which by default squash.'],
+    ['', 'no-squash', 'relevant for merging lanes into main, which by default squash'],
+    ['', 'squash', 'EXPERIMENTAL. relevant for merging a lane into another lane, which by default does not squash'],
     [
       '',
       'ignore-config-changes',
@@ -45,15 +46,11 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
     ['', 'verbose', 'show details of components that were not merged legitimately'],
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
     ['', 'skip-fetch', 'use the current target-lane if exits locally without updating it from the remote'],
-    [
-      '',
-      'include-deps',
-      'EXPERIMENTAL. relevant for "--pattern" and "--workspace". merge also dependencies of the given components',
-    ],
+    ['', 'include-deps', 'relevant for "--pattern" and "--workspace". merge also dependencies of the given components'],
     [
       '',
       'resolve-unrelated [merge-strategy]',
-      'EXPERIMENTAL. relevant when a component on a lane and the component on main has nothing in common. merge-strategy can be "ours" (default) or "theirs"',
+      'relevant when a component on a lane and the component on main has nothing in common. merge-strategy can be "ours" (default) or "theirs"',
     ],
   ] as CommandOptions;
   loader = true;
@@ -71,6 +68,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       manual = false,
       build,
       workspace: existingOnWorkspaceOnly = false,
+      squash = false,
       noSnap = false,
       tag = false,
       message: snapMessage = '',
@@ -92,6 +90,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       tag: boolean;
       message: string;
       keepReadme?: boolean;
+      squash?: boolean;
       noSquash: boolean;
       skipDependencyInstallation?: boolean;
       skipFetch: boolean;
@@ -126,6 +125,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       noSnap,
       snapMessage,
       keepReadme,
+      squash,
       noSquash,
       tag,
       pattern,

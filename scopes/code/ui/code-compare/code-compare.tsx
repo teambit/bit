@@ -45,7 +45,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   const anyFileHasDiffStatus = useRef<boolean>(false);
 
   const fileTree = useMemo(() => {
-    const allFiles = uniq(baseFileTree.concat(compareFileTree));
+    const allFiles = uniq<string>(baseFileTree.concat(compareFileTree));
     anyFileHasDiffStatus.current = false;
     // sort by diff status
     return !fileCompareDataByName
@@ -96,12 +96,13 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   const sidebarIconUrl = isSidebarOpen
     ? 'https://static.bit.dev/design-system-assets/Icons/sidebar-close.svg'
     : 'https://static.bit.dev/design-system-assets/Icons/sidebar-open.svg';
+  const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
 
   return (
     <ThemeSwitcher themes={[DarkTheme]} className={classNames(styles.themeContainer, className)}>
       <SplitPane
-        layout={Layout.row}
-        size={isSidebarOpen ? 200 : 32}
+        layout={sidebarOpenness}
+        size={200}
         className={classNames(styles.componentCompareCodeContainer, className)}
       >
         <Pane className={classNames(styles.left, !isSidebarOpen && styles.collapsed)}>

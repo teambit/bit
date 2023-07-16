@@ -74,6 +74,12 @@ export class ComponentUI {
     if (isBrowser) this.registerPubSub();
   }
 
+  get routes() {
+    return this.routeSlot
+      .toArray()
+      .map(([key, routes]) => [key, Array.isArray(routes) ? [...flatten(routes)] : [routes]] as [string, RouteProps[]]);
+  }
+
   /**
    * the current visible component
    */
@@ -139,20 +145,30 @@ export class ComponentUI {
     },
   ];
 
-  private bitMethod: ConsumePlugin = (comp, options) => {
-    const version = comp.version === comp.latest ? '' : `@${comp.version}`;
-    const packageVersion = comp.version === comp.latest ? '' : `@${this.formatToInstallableVersion(comp.version)}`;
+  private bitMethod: ConsumePlugin = ({
+    options,
+    id: componentId,
+    packageName: packageNameFromProps,
+    latest: latestFromProps,
+    componentModel,
+  }) => {
+    const packageName = packageNameFromProps || componentModel?.packageName;
+    const latest = latestFromProps || componentModel?.id.version;
+
+    const version = componentId.version === latest ? '' : `@${componentId.version}`;
+    const packageVersion =
+      componentId.version === latest ? '' : `@${this.formatToInstallableVersion(componentId.version)}`;
 
     return {
       Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
-      Component: (
+      Component: !options?.hide ? (
         <Import
-          componentId={`${comp.id.toString({ ignoreVersion: true })}${version}`}
-          packageName={`${comp.packageName}${packageVersion}`}
-          componentName={comp.id.name}
-          showInstallMethod={!options?.currentLane}
+          componentId={`${componentId.toString({ ignoreVersion: true })}${version}`}
+          packageName={`${packageName}${packageVersion}`}
+          componentName={componentId.name}
+          showInstallMethod={!options?.disableInstall}
         />
-      ),
+      ) : null,
       order: 0,
     };
   };
@@ -187,6 +203,7 @@ export class ComponentUI {
         useComponent={options.useComponent}
         componentIdStr={options.componentId}
         useComponentFilters={options.useComponentFilters}
+        overriddenRoutes={options.routes}
       />
     );
   }
@@ -194,6 +211,7 @@ export class ComponentUI {
   getMenu(host: string, options: GetComponentsOptions = {}) {
     return (
       <ComponentMenu
+        className={options.className}
         skipRightSide={options.skipRightSide}
         navigationSlot={this.navSlot}
         consumeMethodSlot={this.consumeMethodSlot}
@@ -204,6 +222,7 @@ export class ComponentUI {
         path={options.path}
         componentIdStr={options.componentId}
         useComponentFilters={options.useComponentFilters}
+        RightNode={options.RightNode}
       />
     );
   }

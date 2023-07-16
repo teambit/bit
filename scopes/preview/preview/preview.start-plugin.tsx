@@ -28,12 +28,12 @@ export class PreviewStartPlugin implements StartPlugin {
   async initiate(options: StartPluginOptions) {
     this.listenToDevServers();
 
-    const components = await this.workspace.byPattern(options.pattern || '');
+    const components = await this.workspace.getComponentsByUserInput(!options.pattern, options.pattern);
     // TODO: logic for creating preview servers must be refactored to this aspect from the DevServer aspect.
     const previewServers = await this.bundler.devServer(components);
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     previewServers.forEach((server) => server.listen());
-    // DON'T add wait! this promise never resolve so it's stop all the start process!
+    // DON'T add wait! this promise never resolves, so it would stop the start process!
     this.watcher
       .watch({
         spawnTSServer: true,

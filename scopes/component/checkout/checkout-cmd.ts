@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import { BitError } from '@teambit/bit-error';
 import { Command, CommandOptions } from '@teambit/cli';
 import {
   ApplyVersionResults,
@@ -7,6 +6,7 @@ import {
   conflictSummaryReport,
   installationErrorOutput,
   compilationErrorOutput,
+  getRemovedOutput,
 } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
@@ -51,8 +51,6 @@ export class CheckoutCmd implements Command {
       'when on a lane, avoid introducing new components from the remote lane that do not exist locally',
     ],
     ['v', 'verbose', 'showing verbose output for inspection'],
-    ['', 'reset', 'DEPRECATED. run "bit checkout reset" instead'],
-    ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
   ] as CommandOptions;
   loader = true;
@@ -66,35 +64,23 @@ export class CheckoutCmd implements Command {
       ours = false,
       theirs = false,
       manual = false,
-      reset = false,
       all = false,
       workspaceOnly = false,
       verbose = false,
-      skipNpmInstall = false,
       skipDependencyInstallation = false,
+      revert = false,
     }: {
       interactiveMerge?: boolean;
       ours?: boolean;
       theirs?: boolean;
       manual?: boolean;
-      reset?: boolean;
       all?: boolean;
       workspaceOnly?: boolean;
       verbose?: boolean;
-      skipNpmInstall?: boolean;
       skipDependencyInstallation?: boolean;
+      revert?: boolean;
     }
   ) {
-    if (reset) {
-      throw new BitError(`--reset flag has been removed. please run "bit checkout reset" instead`);
-    }
-    if (skipNpmInstall) {
-      // eslint-disable-next-line no-console
-      console.log(
-        chalk.yellow(`"--skip-npm-install" has been deprecated, please use "--skip-dependency-installation" instead`)
-      );
-      skipDependencyInstallation = true;
-    }
     const checkoutProps: CheckoutProps = {
       promptMergeOptions: interactiveMerge,
       mergeStrategy: getMergeStrategy(ours, theirs, manual),
@@ -103,11 +89,13 @@ export class CheckoutCmd implements Command {
       isLane: false,
       skipNpmInstall: skipDependencyInstallation,
       workspaceOnly,
+      revert,
     };
     const {
       components,
       version,
       failedComponents,
+      removedComponents,
       leftUnresolvedConflicts,
       newFromLane,
       newFromLaneAdded,
@@ -117,6 +105,7 @@ export class CheckoutCmd implements Command {
     const isHead = to === 'head';
     const isReset = to === 'reset';
     const isLatest = to === 'latest';
+    const isMain = to === 'main';
     // components that failed for no legitimate reason. e.g. merge-conflict.
     const realFailedComponents = (failedComponents || []).filter((f) => !f.unchangedLegitimately);
     // components that weren't checked out for legitimate reasons, e.g. up-to-date.
@@ -156,12 +145,13 @@ once ready, snap/tag the components to persist the changes`;
       return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
     };
     const getSuccessfulOutput = () => {
+      const switchedOrReverted = revert ? 'reverted' : 'switched';
       if (!components || !components.length) return '';
       if (components.length === 1) {
         const component = components[0];
         const componentName = isReset ? component.id.toString() : component.id.toStringWithoutVersion();
         if (isReset) return `successfully reset ${chalk.bold(componentName)}\n`;
-        const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(
+        const title = `successfully ${switchedOrReverted} ${chalk.bold(componentName)} to version ${chalk.bold(
           // @ts-ignore version is defined when !isReset
           isHead || isLatest ? component.id.version : version
         )}\n`;
@@ -175,11 +165,12 @@ once ready, snap/tag the components to persist the changes`;
       const getVerOutput = () => {
         if (isHead) return 'their head version';
         if (isLatest) return 'their latest version';
+        if (isMain) return 'their main version';
         // @ts-ignore version is defined when !isReset
         return `version ${chalk.bold(version)}`;
       };
       const versionOutput = getVerOutput();
-      const title = `successfully switched the following components to ${versionOutput}\n\n`;
+      const title = `successfully ${switchedOrReverted} the following components to ${versionOutput}\n\n`;
       const showVersion = isHead || isReset;
       const componentsStr = applyVersionReport(components, true, showVersion);
       return chalk.underline(title) + componentsStr;
@@ -197,8 +188,8 @@ once ready, snap/tag the components to persist the changes`;
       const notCheckedOutLegitimately = notCheckedOutComponents.length;
       const failedToCheckOut = realFailedComponents.length;
       const newLines = '\n\n';
-      const title = chalk.bold.underline('Checkout Summary');
-      const checkedOutStr = `\nTotal CheckedOut: ${chalk.bold(checkedOut.toString())}`;
+      const title = chalk.bold.underline('Summary');
+      const checkedOutStr = `\nTotal Changed: ${chalk.bold(checkedOut.toString())}`;
       const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(notCheckedOutLegitimately.toString())}`;
       const failedToCheckOutStr = `\nTotal Failed: ${chalk.bold(failedToCheckOut.toString())}`;
       const newOnLaneNum = newFromLane?.length || 0;
@@ -214,6 +205,7 @@ once ready, snap/tag the components to persist the changes`;
       getFailureOutput() +
       getNotCheckedOutOutput() +
       getSuccessfulOutput() +
+      getRemovedOutput(removedComponents) +
       getNewOnLaneOutput() +
       getConflictSummary() +
       getSummary() +

@@ -1,22 +1,21 @@
 import cliSpinners from 'cli-spinners';
-import os from 'os';
 import * as path from 'path';
 import format from 'string-format';
+import { homedir, platform } from 'os';
 
 import { PathOsBased } from './utils/path';
 import { getSync } from './api/consumer/lib/global-config';
 
-const userHome = require('user-home');
 const packageFile = require('../package.json');
 
-export const IS_WINDOWS = os.platform() === 'win32';
+export const IS_WINDOWS = platform() === 'win32';
 
 function getDirectory(): PathOsBased {
   if (process.platform === 'win32' && process.env.LOCALAPPDATA) {
     return path.join(process.env.LOCALAPPDATA, 'Bit');
   }
 
-  return path.join(userHome, '.bit');
+  return path.join(homedir(), '.bit');
 }
 
 export const CACHE_GLOBALS_ENV = 'BIT_GLOBALS_DIR';
@@ -27,7 +26,7 @@ function getCacheDirectory(): PathOsBased {
     return fromEnvVar;
   }
   if (process.platform === 'darwin' || process.platform === 'linux') {
-    return path.join(userHome, 'Library', 'Caches', 'Bit');
+    return path.join(homedir(), 'Library', 'Caches', 'Bit');
   }
 
   return getDirectory();
@@ -214,13 +213,17 @@ export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_W
 
 export const CENTRAL_BIT_HUB_URL = `https://${getSymphonyUrl()}/exporter`;
 
+// export const CENTRAL_BIT_HUB_URL_IMPORTER = `http://localhost:5001/importer/api/fetch`;
+export const CENTRAL_BIT_HUB_URL_IMPORTER = `https://${getSymphonyUrl()}/importer/api/fetch`;
+export const CENTRAL_BIT_HUB_URL_IMPORTER_V2 = `https://api.v2.bit.cloud/importer/api/fetch`;
+
 export const CENTRAL_BIT_HUB_NAME = getCloudDomain();
 
 // END URLS
 
 export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
 
-export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
+export const DEFAULT_SSH_KEY_FILE = `${homedir()}/.ssh/id_rsa`;
 
 export const DEFAULT_BIT_ENV = 'production';
 
@@ -337,6 +340,33 @@ export const CFG_FEATURE_TOGGLE = 'features';
 export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
 export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
+
+export const CFG_ISOLATED_SCOPE_CAPSULES = 'isolated_scope_capsules';
+
+/**
+ * Name of the directory where the capsules for building components are stored
+ * This is used for the components capsules for bit build / tag / snap / sign
+ * This directory is relative to the capsules root directory
+ */
+export const CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR = 'capsules_build_components_base_dir';
+
+/**
+ * Name of the directory where the capsules for aspects for regular scope are stored
+ * This directory is relative to the capsules root directory
+ */
+export const CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR = 'capsules_scopes_aspects_base_dir';
+/**
+ * Name of the directory where the capsules for aspects for the global scope are stored
+ * This directory is relative to the capsules root directory
+ */
+export const CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR = 'capsules_global_scope_aspects_base_dir';
+
+export const CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS = 'default_resolve_envs_from_roots';
+
+/**
+ * whether to generate non existing capsules for scope aspects in a temp dated dir
+ */
+export const CFG_USE_DATED_CAPSULES = 'use_dated_capsules';
 
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';

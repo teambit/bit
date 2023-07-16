@@ -66,6 +66,10 @@ export class Logger implements IBitLogger {
     }
   }
 
+  /**
+   * @deprecated
+   * try using consoleWarning. if not possible, rename this method to a clearer one
+   */
   consoleWarn(message?: string, ...meta: any[]) {
     if (message) this.warn(message, ...meta);
     if (!loader.isStarted && logger.shouldWriteToConsole) {
@@ -76,6 +80,10 @@ export class Logger implements IBitLogger {
     }
   }
 
+  /**
+   * @deprecated
+   * try using consoleFailure. if not possible, rename this method to a clearer one
+   */
   consoleError(message?: string, ...meta: any[]) {
     if (message) this.error(message, ...meta);
     if (!loader.isStarted && logger.shouldWriteToConsole) {
@@ -96,9 +104,9 @@ export class Logger implements IBitLogger {
   /**
    * print to the screen with a green `✔` prefix. if message is empty, print the last logged message.
    */
-  consoleSuccess(message?: string) {
+  consoleSuccess(message?: string, startTime?: [number, number]) {
     if (message) this.info(message);
-    loader.succeed(message);
+    loader.succeed(message, startTime);
   }
 
   /**

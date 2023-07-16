@@ -19,24 +19,31 @@ import { readModulesManifest } from '@pnpm/modules-yaml';
 import { ProjectManifest } from '@pnpm/types';
 import { join } from 'path';
 import { readConfig } from './read-config';
+import { pnpmPruneModules } from './pnpm-prune-modules';
+import type { RebuildFn } from './lynx';
 
 export class PnpmPackageManager implements PackageManager {
-  private readConfig = memoize(readConfig);
+  readonly name = 'pnpm';
+
+  public readConfig = memoize(readConfig);
   constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
 
   async install(
     { rootDir, manifests }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
-  ): Promise<void> {
+  ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string }> {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
 
     this.logger.debug(`running installation in root dir ${rootDir}`);
     this.logger.debug('components manifests for installation', manifests);
-    this.logger.setStatusLine('installing dependencies using pnpm');
-    // turn off the logger because it interrupts the pnpm output
-    this.logger.off();
+    if (!installOptions.hidePackageManagerOutput) {
+      // this.logger.setStatusLine('installing dependencies using pnpm');
+      // turn off the logger because it interrupts the pnpm output
+      // this.logger.console('-------------------------PNPM OUTPUT-------------------------');
+      this.logger.off();
+    }
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
@@ -44,7 +51,17 @@ export class PnpmPackageManager implements PackageManager {
     if (!installOptions.useNesting) {
       manifests = await extendWithComponentsFromDir(rootDir, manifests);
     }
-    await install(
+    if (installOptions.nmSelfReferences) {
+      Object.values(manifests).forEach((manifest) => {
+        if (manifest.name) {
+          manifest.devDependencies = {
+            [manifest.name]: 'link:.',
+            ...manifest.devDependencies,
+          };
+        }
+      });
+    }
+    const { dependenciesChanged, rebuild, storeDir } = await install(
       rootDir,
       manifests,
       config.storeDir,
@@ -54,13 +71,19 @@ export class PnpmPackageManager implements PackageManager {
       networkConfig,
       {
         engineStrict: installOptions.engineStrict ?? config.engineStrict,
+        excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
+        lockfileOnly: installOptions.lockfileOnly,
+        neverBuiltDependencies: installOptions.neverBuiltDependencies,
         nodeLinker: installOptions.nodeLinker,
         nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
         includeOptionalDeps: installOptions.includeOptionalDeps,
         overrides: installOptions.overrides,
         hoistPattern: config.hoistPattern,
-        publicHoistPattern: ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
+        publicHoistPattern: config.shamefullyHoist
+          ? ['*']
+          : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
+        preferOffline: installOptions.preferOffline,
         rootComponents: installOptions.rootComponents,
         rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
         peerDependencyRules: installOptions.peerDependencyRules,
@@ -68,13 +91,17 @@ export class PnpmPackageManager implements PackageManager {
         sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
         pnpmHomeDir: config.pnpmHomeDir,
         updateAll: installOptions.updateAll,
+        hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
       },
       this.logger
     );
-    this.logger.on();
-    // Make a divider row to improve output
-    this.logger.console('-------------------------');
-    this.logger.consoleSuccess('installing dependencies using pnpm');
+    if (!installOptions.hidePackageManagerOutput) {
+      this.logger.on();
+      // Make a divider row to improve output
+      // this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
+      // this.logger.consoleSuccess('installing dependencies using pnpm');
+    }
+    return { dependenciesChanged, rebuild, storeDir };
   }
 
   async getPeerDependencyIssues(
@@ -185,5 +212,9 @@ export class PnpmPackageManager implements PackageManager {
 
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
     return Object.fromEntries(manifests.map((manifest) => [manifest.name, 'workspace:*']));
+  }
+
+  async pruneModules(rootDir: string): Promise<void> {
+    return pnpmPruneModules(rootDir);
   }
 }

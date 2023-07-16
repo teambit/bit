@@ -28,7 +28,7 @@ import Consumer from '../consumer/consumer';
 import GeneralError from '../error/general-error';
 import logger from '../logger/logger';
 import getMigrationVersions, { MigrationResult } from '../migration/migration-helper';
-import { pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
+import { pathHasAll, findScopePath, readDirSyncIgnoreDsStore } from '../utils';
 import { PathOsBasedAbsolute } from '../utils/path';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
@@ -42,7 +42,7 @@ import { ModelComponent, Symlink, Version } from './models';
 import Lane from './models/lane';
 import { ComponentLog } from './models/model-component';
 import { BitObject, BitRawObject, Ref, Repository } from './objects';
-import { ComponentItem, IndexType } from './objects/components-index';
+import { ComponentItem, IndexType } from './objects/scope-index';
 import RemovedObjects from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
@@ -343,6 +343,7 @@ once done, to continue working, please run "bit cc"`
 
   /**
    * returns null if we can't determine whether it's on the lane or not.
+   * if throwForDivergeDataErr is false, it also returns null when divergeData wasn't able to get Version objects or failed for whatever reason.
    *
    * sadly, there are not good tests for this. it pretty complex to create them as it involves multiple scopes and
    * packages installations. be careful when changing this.
@@ -350,14 +351,16 @@ once done, to continue working, please run "bit cc"`
    * it's needed for importing artifacts to know whether the artifact could be found on the origin scope or on the
    * lane-scope
    */
-  async isIdOnLane(id: BitId, lane?: Lane | null): Promise<boolean | null> {
+  async isIdOnLane(id: BitId, lane?: Lane | null, throwForDivergeDataErr = true): Promise<boolean | null> {
     if (!lane) return false;
 
+    // it's important to remove the version here before passing it to the `getModelComponent` function.
+    // otherwise, in case this version doesn't exist, it'll throw a ComponentNotFound error.
+    const component = await this.getModelComponent(id.changeVersion(undefined));
     // it's possible that main was merged to the lane, so the ref in the lane object is actually a tag.
     // in which case, we prefer to go to main instead of the lane.
     // for some reason (needs to check why) the tag-artifacts which got created using merge+tag from-scope
     // exist only on main and not on the lane-scope.
-    const component = await this.getModelComponent(id);
     if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
     if (component.head.toString() === id.version) return false; // it's on main
     if (isTag(id.version)) return false; // tags can be on main only
@@ -373,6 +376,7 @@ once done, to continue working, please run "bit cc"`
     const divergeData = await getDivergeData({
       repo: this.objects,
       modelComponent: component,
+      throws: throwForDivergeDataErr,
       targetHead: component.head, // target is main
       sourceHead: Ref.from(laneIdWithDifferentVersion.version as string), // source is lane
     });
@@ -383,6 +387,35 @@ once done, to continue working, please run "bit cc"`
     if (foundOnMain) return false;
     // we don't have enough data to determine whether it's on the lane or not.
     return null;
+  }
+
+  async isPartOfLaneHistory(id: BitId, lane: Lane) {
+    if (!id.version) throw new Error(`isIdOnGivenLane expects id with version, got ${id.toString()}`);
+    const laneIds = lane.toBitIds();
+    if (laneIds.has(id)) return true; // in the lane with the same version
+    const laneIdWithDifferentVersion = laneIds.searchWithoutVersion(id);
+    if (!laneIdWithDifferentVersion) return false; // not in the lane at all
+
+    // component is in the lane object but with a different version.
+    // we have to figure out whether this version is part of the lane history
+    const component = await this.getModelComponent(id);
+    const laneVersionRef = Ref.from(laneIdWithDifferentVersion.version as string);
+    const verHistory = await component.getAndPopulateVersionHistory(this.objects, laneVersionRef);
+    const verRef = component.getRef(id.version);
+    if (!verRef) throw new Error(`isIdOnGivenLane unable to find ref for ${id.toString()}`);
+    return verHistory.isRefPartOfHistory(laneVersionRef, verRef);
+  }
+
+  async isPartOfMainHistory(id: BitId) {
+    if (!id.version) throw new Error(`isIdOnMain expects id with version, got ${id.toString()}`);
+    if (isTag(id.version)) return true; // tags can be on main only
+    const component = await this.getModelComponent(id);
+    if (!component.head) return false; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
+    if (component.head.toString() === id.version) return true; // it's on main
+
+    const verHistory = await component.getAndPopulateVersionHistory(this.objects, component.head);
+    const verRef = Ref.from(id.version);
+    return verHistory.isRefPartOfHistory(component.head, verRef);
   }
 
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
@@ -753,18 +786,10 @@ once done, to continue working, please run "bit cc"`
   }
 
   static async load(absPath: string, useCache = true): Promise<Scope> {
-    let scopePath = propogateUntil(absPath);
-    let isBare = true;
+    let scopePath = findScopePath(absPath);
     if (!scopePath) throw new ScopeNotFound(absPath);
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
-      isBare = false;
-    }
-    if (
-      scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR)) ||
-      scopePath.endsWith(pathLib.join(BIT_HIDDEN_DIR))
-    ) {
-      isBare = false;
     }
     if (useCache && Scope.scopeCache[scopePath]) {
       logger.debug(`scope.load, found scope at ${scopePath} from cache`);
@@ -779,6 +804,8 @@ once done, to continue working, please run "bit cc"`
       scopeJson = Scope.ensureScopeJson(scopePath);
     }
     const objects = await Repository.load({ scopePath, scopeJson });
+    const isBare =
+      !scopePath.endsWith(pathLib.join(BIT_HIDDEN_DIR)) && !scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR));
     const scope = new Scope({ path: scopePath, scopeJson, objects, isBare });
     Scope.scopeCache[scopePath] = scope;
     return scope;

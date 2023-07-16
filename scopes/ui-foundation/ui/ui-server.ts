@@ -5,6 +5,7 @@ import { Logger } from '@teambit/logger';
 import express, { Express } from 'express';
 import fallback from 'express-history-api-fallback';
 import { Port } from '@teambit/toolbox.network.get-port';
+import { stripTrailingChar } from '@teambit/legacy/dist/utils';
 import { Server } from 'http';
 import httpProxy from 'http-proxy';
 import { join } from 'path';
@@ -30,6 +31,10 @@ export type UIServerProps = {
 };
 
 export type StartOptions = {
+  /**
+   * Absolute path to the ui bundle (generated during the bit build).
+   */
+  bundleUiRoot?: string;
   /**
    * port range for the UI server to bind. default is a port range of 4000-4200.
    */
@@ -91,10 +96,11 @@ export class UIServer {
   /**
    * start a UI server.
    */
-  async start({ portRange }: StartOptions = {}) {
+  async start({ bundleUiRoot, portRange }: StartOptions = {}) {
     const app = this.expressExtension.createApp();
     const publicDir = `/${this.publicDir}`;
-    const root = join(this.uiRoot.path, publicDir);
+    const defaultRoot = join(this.uiRoot.path, publicDir);
+    const root = bundleUiRoot || defaultRoot;
     const server = await this.graphql.createServer({ app });
 
     // set up proxy, for things like preview, e.g. '/preview/teambit.react/react'
@@ -153,7 +159,9 @@ export class UIServer {
 
     // TODO - should use https://github.com/chimurai/http-proxy-middleware
     server.on('upgrade', function (req, socket, head) {
-      const entry = proxyEntries.find((proxy) => proxy.context.some((item) => item === req.url));
+      const entry = proxyEntries.find((proxy) =>
+        proxy.context.some((item) => item === stripTrailingChar(req.url, '/'))
+      );
       if (!entry) return;
       proxServer.ws(req, socket, head, {
         target: entry.target,
@@ -163,7 +171,8 @@ export class UIServer {
     proxyEntries.forEach((entry) => {
       entry.context.forEach((route) => {
         app.use(`${route}/*`, (req, res) => {
-          proxServer.web(req, res, { ...entry, target: `${entry.target}/${req.originalUrl}` });
+          req.url = req.originalUrl;
+          proxServer.web(req, res, entry);
         });
       });
     });

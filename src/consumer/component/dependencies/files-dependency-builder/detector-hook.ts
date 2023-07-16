@@ -7,19 +7,20 @@ export type FileContext = {
 
 export type DependencyContext = {
   /**
-   * path of the imported file.
+   * name of the dependency.
+   * e.g. `lodash` in `import _ from 'lodash'`
    */
-  filepath: string;
+  dependency: string;
 
   /**
-   * extension of the file.
+   * name of the file.
    */
-  ext: string;
+  filename: string;
 
   /**
-   * content of the file.
+   * directory of the file.
    */
-  content?: string;
+  directory: string;
 };
 
 export interface DependencyDetector {
@@ -27,6 +28,13 @@ export interface DependencyDetector {
    * determine whether to apply on given file.
    */
   isSupported(context: FileContext): boolean;
+
+  /**
+   * determine what type of content the detector is for.
+   * by default, the type is the extension name of the file (without the dot)
+   * if no type provided.
+   */
+  type?: string;
 
   /**
    * detect file dependencies. list of file dependencies of the module.

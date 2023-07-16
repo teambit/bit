@@ -15,7 +15,10 @@ import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable'
 import GitNotFound from '@teambit/legacy/dist/utils/git/exceptions/git-not-found';
 import { resolve, join } from 'path';
 import { ComponentID } from '@teambit/component-id';
+import GitAspect, { GitMain } from '@teambit/git';
 import { InstallAspect, InstallMain } from '@teambit/install';
+import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+
 import { WorkspaceTemplate, WorkspaceContext } from './workspace-template';
 import { NewOptions } from './new.cmd';
 import { GeneratorAspect } from './generator.aspect';
@@ -30,6 +33,9 @@ export class WorkspaceGenerator {
   private importer: ImporterMain;
   private logger: Logger;
   private forking: ForkingMain;
+  private git: GitMain;
+  private wsConfigFiles: WorkspaceConfigFilesMain;
+
   constructor(
     private workspaceName: string,
     private options: NewOptions,
@@ -47,9 +53,10 @@ export class WorkspaceGenerator {
     try {
       process.chdir(this.workspacePath);
       await this.initGit();
-      await init(this.workspacePath, this.options.skipGit, false, false, false, false, false, {});
+      await init(this.workspacePath, this.options.skipGit, false, false, false, false, false, false, {});
       await this.writeWorkspaceFiles();
       await this.reloadBitInWorkspaceDir();
+      await this.setupGitBitmapMergeDriver();
       await this.forkComponentsFromRemote();
       await this.importComponentsFromRemote();
       await this.install.install(undefined, {
@@ -59,8 +66,10 @@ export class WorkspaceGenerator {
         copyPeerToRuntimeOnComponents: false,
         updateExisting: false,
       });
+      await this.wsConfigFiles.writeConfigFiles({});
       // await this.buildUI(); // disabled for now. it takes too long
     } catch (err: any) {
+      this.logger.error(`failed generating a new workspace, will delete the dir ${this.workspacePath}`, err);
       await fs.remove(this.workspacePath);
       throw err;
     }
@@ -82,22 +91,31 @@ export class WorkspaceGenerator {
     }
   }
 
+  private async setupGitBitmapMergeDriver() {
+    if (this.options.skipGit) return;
+    await this.git.setGitMergeDriver({ global: false });
+  }
+
   private async buildUI() {
     const uiMain = this.harmony.get<UiMain>(UIAspect.id);
     await uiMain.createRuntime({});
   }
 
-  /**
-   * writes the generated template files to the default directory set in the workspace config
-   */
-  private async writeWorkspaceFiles(): Promise<void> {
-    const workspaceContext: WorkspaceContext = {
+  private getWorkspaceContext(): WorkspaceContext {
+    return {
       name: this.workspaceName,
       defaultScope: this.options.defaultScope,
       empty: this.options.empty,
       aspectComponent: this.aspectComponent,
       template: this.template,
     };
+  }
+
+  /**
+   * writes the generated template files to the default directory set in the workspace config
+   */
+  private async writeWorkspaceFiles(): Promise<void> {
+    const workspaceContext = this.getWorkspaceContext();
     const templateFiles = await this.template.generateFiles(workspaceContext);
     await Promise.all(
       templateFiles.map(async (templateFile) => {
@@ -114,16 +132,22 @@ export class WorkspaceGenerator {
     this.logger = loggerMain.createLogger(GeneratorAspect.id);
     this.importer = this.harmony.get<ImporterMain>(ImporterAspect.id);
     this.forking = this.harmony.get<ForkingMain>(ForkingAspect.id);
+    this.git = this.harmony.get<GitMain>(GitAspect.id);
+    this.wsConfigFiles = this.harmony.get<WorkspaceConfigFilesMain>(WorkspaceConfigFilesAspect.id);
   }
 
   private async forkComponentsFromRemote() {
     if (this.options.empty) return;
-    const componentsToFork = this.template?.importComponents?.() || this.template?.fork?.() || [];
+    const workspaceContext = this.getWorkspaceContext();
+    const componentsToFork =
+      this.template?.importComponents?.(workspaceContext) || this.template?.fork?.(workspaceContext) || [];
     if (!componentsToFork.length) return;
-    const componentsToForkRestructured = componentsToFork.map(({ id, targetName, path }) => ({
+    const componentsToForkRestructured = componentsToFork.map(({ id, targetName, path, env, config }) => ({
       sourceId: id,
       targetId: targetName,
       path,
+      env,
+      config,
     }));
     await this.forking.forkMultipleFromRemote(componentsToForkRestructured, {
       scope: this.workspace.defaultScope,
@@ -136,7 +160,8 @@ export class WorkspaceGenerator {
 
   private async importComponentsFromRemote() {
     if (this.options.empty) return;
-    const componentsToImport = this.template?.import?.() || [];
+    const workspaceContext = this.getWorkspaceContext();
+    const componentsToImport = this.template?.import?.(workspaceContext) || [];
 
     if (!componentsToImport.length) return;
 

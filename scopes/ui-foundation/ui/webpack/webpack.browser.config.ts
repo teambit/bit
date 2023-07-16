@@ -10,25 +10,25 @@ import { html } from './html';
 import createBaseConfig from './webpack.base.config';
 
 export default function createWebpackConfig(
-  workspaceDir: string,
+  outputDir: string,
   entryFiles: string[],
   title: string,
   publicDir: string
 ): Configuration {
-  const baseConfig = createBaseConfig(workspaceDir, entryFiles);
-  const browserConfig = createBrowserConfig(workspaceDir, title, publicDir);
+  const baseConfig = createBaseConfig(outputDir, entryFiles);
+  const browserConfig = createBrowserConfig(outputDir, title, publicDir);
 
   const combined = merge(baseConfig, browserConfig);
 
   return combined;
 }
 
-function createBrowserConfig(workspaceDir: string, title: string, publicDir: string) {
+function createBrowserConfig(outputDir: string, title: string, publicDir: string) {
   const browserConfig: Configuration = {
     // target: 'web', // already default
 
     output: {
-      path: path.resolve(workspaceDir, publicDir),
+      path: path.resolve(outputDir, publicDir),
       // webpack uses `publicPath` to determine where the app is being served from.
       // It requires a trailing slash, or the file assets will get an incorrect path.
       // We inferred the "public path" (such as / or /my-project) from homepage.

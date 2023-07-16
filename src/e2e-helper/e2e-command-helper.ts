@@ -179,6 +179,9 @@ export default class CommandHelper {
   renameScopeOwner(oldScope: string, newScope: string, flags = '') {
     return this.runCmd(`bit scope rename-owner ${oldScope} ${newScope} ${flags}`);
   }
+  envs() {
+    return this.runCmd(`bit envs`);
+  }
   setEnv(compId: string, envId: string) {
     return this.runCmd(`bit envs set ${compId} ${envId}`);
   }
@@ -202,7 +205,16 @@ export default class CommandHelper {
     return this.runCmd(`bit remove ${id} --silent ${flags}`);
   }
   softRemoveComponent(id: string, flags = '') {
-    return this.runCmd(`bit remove ${id} --silent --soft ${flags}`);
+    return this.runCmd(`bit remove ${id} --silent --delete ${flags}`);
+  }
+  removeComponentFromRemote(id: string, flags = '') {
+    return this.runCmd(`bit remove ${id} --silent --hard ${flags}`);
+  }
+  removeLaneComp(id: string, flags = '') {
+    return this.runCmd(`bit lane remove-comp ${id} ${flags}`);
+  }
+  recover(id: string, flags = '') {
+    return this.runCmd(`bit recover ${id} ${flags}`);
   }
   deprecateComponent(id: string, flags = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
@@ -510,6 +522,18 @@ export default class CommandHelper {
     return JSON.parse(status);
   }
 
+  revert(pattern: string, to: string, flags = '') {
+    return this.runCmd(`bit revert ${pattern} ${to} ${flags}`);
+  }
+
+  stash() {
+    return this.runCmd('bit stash');
+  }
+
+  stashLoad() {
+    return this.runCmd('bit stash load');
+  }
+
   isDeprecated(compName: string): boolean {
     const deprecationData = this.showAspectConfig(compName, Extensions.deprecation);
     return deprecationData.config.deprecate;
@@ -588,6 +612,11 @@ export default class CommandHelper {
     return show.find((_) => _.title === 'configuration').json.find((_) => _.id === aspectId);
   }
 
+  getCompDepsIdsFromData(compId: string): string[] {
+    const aspectConf = this.showAspectConfig(compId, Extensions.dependencyResolver);
+    return aspectConf.data.dependencies.map((dep) => dep.id);
+  }
+
   showComponentParsedHarmonyByTitle(compId: string, title: string) {
     const show = this.showComponentParsedHarmony(compId);
     return show.find((_) => _.title === title).json;
@@ -615,6 +644,9 @@ export default class CommandHelper {
   }
   checkoutHead(values = '') {
     return this.runCmd(`bit checkout head ${values}`);
+  }
+  checkoutLatest(values = '') {
+    return this.runCmd(`bit checkout latest ${values}`);
   }
   checkoutReset(values = '') {
     return this.runCmd(`bit checkout reset ${values}`);

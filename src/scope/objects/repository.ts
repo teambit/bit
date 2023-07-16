@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import { Mutex } from 'async-mutex';
 import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
+import { BitError } from '@teambit/bit-error';
 import { isHash } from '@teambit/component-version';
 import * as path from 'path';
 import pMap from 'p-map';
@@ -15,7 +16,7 @@ import RemoteLanes from '../lanes/remote-lanes';
 import UnmergedComponents from '../lanes/unmerged-components';
 import ScopeMeta from '../models/scopeMeta';
 import { ScopeJson } from '../scope-json';
-import ScopeIndex, { IndexType } from './components-index';
+import ScopeIndex, { IndexType } from './scope-index';
 import BitObject from './object';
 import { ObjectItem, ObjectList } from './object-list';
 import BitRawObject from './raw-object';
@@ -39,7 +40,6 @@ export default class Repository {
   onRead: ContentTransformer;
   onPersist: ContentTransformer;
   scopePath: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   scopeIndex: ScopeIndex;
   private cache: InMemoryCache<BitObject>;
   remoteLanes!: RemoteLanes;
@@ -83,7 +83,14 @@ export default class Repository {
 
   static onPostObjectsPersist: () => Promise<void>;
 
-  // if current scope index difference with <scope_folder>/index.json content, reload it
+  async reLoadScopeIndex() {
+    this.scopeIndex = await this.loadOptionallyCreateScopeIndex();
+  }
+
+  /**
+   * current scope index difference with <scope_folder>/index.json content, reload it
+   * @deprecated use Scope aspect `watchSystemFiles` instead, it's way more efficient.
+   */
   public async reloadScopeIndexIfNeed(force = false) {
     const latestScopeIndex = await this.loadOptionallyCreateScopeIndex();
     if (force) {
@@ -490,15 +497,28 @@ export default class Repository {
     if (removed) await this.scopeIndex.write();
   }
 
-  async restoreFromTrash(refs: Ref[]) {
-    logger.debug(`Repository.restoreFromTrash: ${refs.length} objects`);
+  async getFromTrash(refs: Ref[]): Promise<BitObject[]> {
     const objectsFromTrash = await Promise.all(
       refs.map(async (ref) => {
         const trashObjPath = path.join(this.getTrashDir(), this.hashPath(ref));
-        const buffer = await fs.readFile(trashObjPath);
+        let buffer: Buffer;
+        try {
+          buffer = await fs.readFile(trashObjPath);
+        } catch (err: any) {
+          if (err.code === 'ENOENT') {
+            throw new BitError(`unable to find the object ${ref.toString()} in the trash`);
+          }
+          throw err;
+        }
         return BitObject.parseObject(buffer, trashObjPath);
       })
     );
+    return objectsFromTrash;
+  }
+
+  async restoreFromTrash(refs: Ref[]) {
+    logger.debug(`Repository.restoreFromTrash: ${refs.length} objects`);
+    const objectsFromTrash = await this.getFromTrash(refs);
     await this.writeObjectsToTheFS(objectsFromTrash);
   }
 

@@ -28,6 +28,7 @@ import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import type { CompositionsMenuSlot } from './compositions.ui.runtime';
+import { ComponentCompositionProps } from './ui/composition-preview';
 
 export type MenuBarWidget = {
   location: 'start' | 'end';
@@ -68,9 +69,11 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
 
   const compositionUrl = toPreviewUrl(component, 'compositions');
   const isScaling = component?.preview?.isScaling;
-  const compositionIdentifierParam = isScaling
-    ? `name=${currentComposition?.identifier}`
-    : currentComposition?.identifier;
+  const includesEnvTemplates = component?.preview?.includesEnvTemplate;
+  const compositionIdentifierParam =
+    isScaling && includesEnvTemplates === false
+      ? `name=${currentComposition?.identifier}`
+      : currentComposition?.identifier;
   const currentCompositionFullUrl = toPreviewUrl(component, 'compositions', compositionIdentifierParam);
 
   const [compositionParams, setCompositionParams] = useState<Record<string, any>>({});
@@ -114,6 +117,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
               <TabPanel className={styles.tabContent}>
                 <CompositionsPanel
                   isScaling={isScaling}
+                  includesEnvTemplate={component.preview?.includesEnvTemplate}
                   onSelectComposition={(composition) => {
                     if (!currentComposition || !location) return;
                     if (location.pathname.includes(currentComposition.identifier.toLowerCase())) {
@@ -156,9 +160,15 @@ export type CompositionContentProps = {
   selected?: Composition;
   queryParams?: string | string[];
   emptyState?: EmptyStateSlot;
-};
+} & ComponentCompositionProps;
 
-export function CompositionContent({ component, selected, queryParams, emptyState }: CompositionContentProps) {
+export function CompositionContent({
+  component,
+  selected,
+  queryParams,
+  emptyState,
+  ...componentCompositionProps
+}: CompositionContentProps) {
   const env = component.environment?.id;
   const EmptyStateTemplate = emptyState?.get(env || ''); // || defaultTemplate;
 
@@ -219,6 +229,7 @@ export function CompositionContent({ component, selected, queryParams, emptyStat
       fullContentHeight
       pubsub={true}
       queryParams={queryParams}
+      {...componentCompositionProps}
     />
   );
 }

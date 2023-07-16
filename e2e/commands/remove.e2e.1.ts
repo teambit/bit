@@ -90,7 +90,7 @@ describe('bit remove command', function () {
     describe('with --remote flag', () => {
       let output;
       before(() => {
-        output = helper.command.removeComponent(`${helper.scopes.remote}/bar/foo --remote`);
+        output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/bar/foo`);
       });
       it('should show a successful message', () => {
         expect(output).to.have.string(`removed components from the remote scope: ${helper.scopes.remote}/bar/foo`);
@@ -110,13 +110,13 @@ describe('bit remove command', function () {
       helper.command.export();
     });
     it('should not remove component with dependencies when -f flag is false', () => {
-      const output = helper.command.removeComponent(`${helper.scopes.remote}/${componentName}`, '--remote');
+      const output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/${componentName}`);
       expect(output).to.have.string(
         `error: unable to delete ${helper.scopes.remote}/${componentName}, because the following components depend on it:`
       );
     });
     it('should remove component with dependencies when -f flag is true', () => {
-      const output = helper.command.removeComponent(`${helper.scopes.remote}/${componentName}`, '--remote -f');
+      const output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/${componentName}`, '-f');
       expect(output).to.have.string('removed components');
       expect(output).to.have.string(`${helper.scopes.remote}/${componentName}`);
     });
@@ -240,9 +240,7 @@ describe('bit remove command', function () {
       expect(list).to.have.lengthOf(1);
       expect(list[0].id).to.not.have.string('comp2');
     });
-    // @todo. not very easy to implement. coz before tag, when it's loaded from the workspace it fails and then
-    // it loads it from the scope. however, the removed data is not in the scope yet. only in the bitmap.
-    it.skip('bit show should show the component as removed', () => {
+    it('bit show should show the component as removed', () => {
       const removeData = helper.command.showAspectConfig('comp2', Extensions.remove);
       expect(removeData.config.removed).to.be.true;
     });
@@ -383,7 +381,7 @@ describe('bit remove command', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponentsWithoutBuild();
-      helper.command.removeComponent('comp1', '--soft');
+      helper.command.softRemoveComponent('comp1');
       helper.command.snapAllComponentsWithoutBuild('--ignore-issues="*"');
     });
     it('should show it as removed', () => {
@@ -392,15 +390,21 @@ describe('bit remove command', function () {
       expect(removeAspect.config.removed).to.be.true;
     });
   });
-  describe('soft-remove when a lane is new', () => {
+  describe('remove when a lane is new', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
+      helper.command.removeLaneComp('comp1');
     });
-    it('should throw an error suggesting to remove without --soft', () => {
-      expect(() => helper.command.softRemoveComponent('comp1')).to.throw();
+    it('should remove the components from the local lane', () => {
+      const laneComps = helper.command.showOneLane('dev');
+      expect(laneComps).to.not.have.string('comp1');
+    });
+    it('should remove the components from the workspace', () => {
+      const list = helper.command.list();
+      expect(list).to.not.have.string('comp1');
     });
   });
 
@@ -411,7 +415,7 @@ describe('bit remove command', function () {
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.command.softRemoveComponent('comp2');
+      helper.command.removeLaneComp('comp2');
     });
     it('should not throwing an error upon import', () => {
       expect(() => helper.command.importComponent('comp2')).to.not.throw();

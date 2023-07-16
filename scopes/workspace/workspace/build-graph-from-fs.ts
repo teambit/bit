@@ -121,7 +121,7 @@ export class GraphFromFsBuilder {
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,
-      lanes: this.currentLane ? [this.currentLane] : [],
+      lane: this.currentLane || undefined,
     });
     allDepsNotImported.map((id) => this.importedIds.push(id.toString()));
   }

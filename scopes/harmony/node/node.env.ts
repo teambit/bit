@@ -5,6 +5,8 @@ import { ReactMain } from '@teambit/react';
 import { Tester } from '@teambit/tester';
 import { BuildTask } from '@teambit/builder';
 import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
+import { SchemaExtractor } from '@teambit/schema';
+import { TsConfigSourceFile } from 'typescript';
 
 export const NodeEnvType = 'node';
 
@@ -60,6 +62,14 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
 
   getPackageJsonProps() {
     return this.tsAspect.getCjsPackageJsonProps();
+  }
+
+  getSchemaExtractor(tsconfig: TsConfigSourceFile, tsserverPath?: string, contextPath?: string): SchemaExtractor {
+    return this.tsAspect.createSchemaExtractor(
+      this.reactAspect.reactEnv.getTsConfig(tsconfig),
+      tsserverPath,
+      contextPath
+    );
   }
 
   async __getDescriptor() {

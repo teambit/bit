@@ -47,6 +47,7 @@ import { UIAspect } from '@teambit/ui/ui.aspect';
 import { VariantsAspect } from '@teambit/variants/variants.aspect';
 import { WebpackAspect } from '@teambit/webpack/webpack.aspect';
 import { WorkspaceAspect } from '@teambit/workspace/workspace.aspect';
+import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files/workspace-config-files.aspect';
 import { InstallAspect } from '@teambit/install/install.aspect';
 import { LinterAspect } from '@teambit/linter/linter.aspect';
 import { FormatterAspect } from '@teambit/formatter/formatter.aspect';
@@ -99,7 +100,8 @@ import { ComponentWriterAspect } from '@teambit/component-writer/component-write
 import { TrackerAspect } from '@teambit/tracker/tracker.aspect';
 import { MoverAspect } from '@teambit/mover/mover.aspect';
 import { WatcherAspect } from '@teambit/watcher/watcher.aspect';
-import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files/workspace-config-files.aspect';
+import { StashAspect } from '@teambit/stash/stash.aspect';
+import { GitAspect } from '@teambit/git/git.aspect';
 
 import { AspectMain } from '@teambit/aspect/aspect.main.runtime';
 import { AspectLoaderMain } from '@teambit/aspect-loader/aspect-loader.main.runtime';
@@ -193,6 +195,8 @@ import { TrackerMain } from '@teambit/tracker/tracker.main.runtime';
 import { MoverMain } from '@teambit/mover/mover.main.runtime';
 import { WatcherMain } from '@teambit/watcher/watcher.main.runtime';
 import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files/workspace-config-files.main.runtime';
+import { StashMain } from '@teambit/stash/stash.main.runtime';
+import { GitMain } from '@teambit/git/git.main.runtime';
 
 import { BitMain } from './bit.main.runtime';
 import { BitAspect } from './bit.aspect';
@@ -299,6 +303,8 @@ export const manifestsMap = {
   [TrackerAspect.id]: TrackerAspect,
   [MoverAspect.id]: MoverAspect,
   [WatcherAspect.id]: WatcherAspect,
+  [StashAspect.id]: StashAspect,
+  [GitAspect.id]: GitAspect,
 };
 
 export const runtimesMap = {
@@ -393,6 +399,8 @@ export const runtimesMap = {
   [MoverAspect.id]: MoverMain,
   [WatcherAspect.id]: WatcherMain,
   [WorkspaceConfigFilesAspect.id]: WorkspaceConfigFilesMain,
+  [StashAspect.id]: StashMain,
+  [GitAspect.id]: GitMain,
   [BitAspect.id]: BitMain,
 };
 

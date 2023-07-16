@@ -43,22 +43,19 @@ export function pathHasAll(patterns: string[]): (absPath: string) => boolean {
 }
 
 /**
- * propogates the FS from given path and until passing pattern function test.
- * @name propogateUntil
- * @param {string} fromPath
- * @param {(path: string) => boolean} pattern
- * @returns {string|null} first path to pass the test.
- * @example
- * ```js
- *  propogateUntil('/usr/local/var', (path) => path.includes('/usr'));
- *  // => '/usr/local/var'
- * ```
+ * search for a scope path by walking up parent directories until reaching root.
+ * @param fromPath (e.g. /tmp/workspace)
+ * @returns absolute scope-path if found (e.g. /tmp/workspace/.bit or /tmp/workspace/.git/bit)
  */
-export function propogateUntil(fromPath: string): string | undefined {
+export function findScopePath(fromPath: string): string | undefined {
   if (!fromPath) return undefined;
   if (!fs.existsSync(fromPath)) return undefined;
   const filePath = findUp.sync(
-    [OBJECTS_DIR, path.join(BIT_HIDDEN_DIR, OBJECTS_DIR), path.join(DOT_GIT_DIR, BIT_GIT_DIR, OBJECTS_DIR)],
+    [
+      OBJECTS_DIR, // for bare-scope
+      path.join(BIT_HIDDEN_DIR, OBJECTS_DIR),
+      path.join(DOT_GIT_DIR, BIT_GIT_DIR, OBJECTS_DIR),
+    ],
     { cwd: fromPath, type: 'directory' }
   );
   if (!filePath) return undefined;

@@ -1,12 +1,12 @@
 import mapSeries from 'p-map-series';
-import { SlotRegistry, Slot } from '@teambit/harmony';
+import { SlotRegistry, Slot, Harmony } from '@teambit/harmony';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { isSnap } from '@teambit/component-version';
 import { Component, ComponentID } from '@teambit/component';
-import { SnappingAspect, SnappingMain } from '@teambit/snapping';
+import { getBasicLog, SnappingAspect, SnappingMain } from '@teambit/snapping';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy/dist/constants';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
@@ -14,6 +14,7 @@ import { PostSign } from '@teambit/legacy/dist/scope/actions';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
+import Version, { Log } from '@teambit/legacy/dist/scope/models/version';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import { LaneId } from '@teambit/lane-id';
@@ -37,7 +38,8 @@ export class SignMain {
     private builder: BuilderMain,
     private onPostSignSlot: OnPostSignSlot,
     private lanes: LanesMain,
-    private snapping: SnappingMain
+    private snapping: SnappingMain,
+    private harmony: Harmony
   ) {}
 
   /**
@@ -56,6 +58,7 @@ export class SignMain {
     laneIdStr?: string,
     rebuild?: boolean
   ): Promise<SignResult | null> {
+    this.throwIfOnWorkspace();
     let lane: Lane | undefined;
     if (isMultiple) {
       const longProcessLogger = this.logger.createLongProcessLogger('import objects');
@@ -115,6 +118,28 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     };
   }
 
+  /**
+   * this command intended to be used from a bare-scope, where it imports the components to be signed and sign them.
+   * if running from the workspace, it can lead to unexpected results. for example, the lane object is imported without
+   * its components, which fails "bit lane list" with a ComponentNotFound error.
+   */
+  private throwIfOnWorkspace() {
+    if (this.isOnWorkspace()) {
+      throw new Error(
+        'sign command is not available from a workspace, please create a new bare-scope and run it from there'
+      );
+    }
+  }
+
+  private isOnWorkspace(): boolean {
+    try {
+      this.harmony.get('teambit.workspace/workspace');
+      return true;
+    } catch (err: any) {
+      return false;
+    }
+  }
+
   public registerOnPostSign(fn: OnPostSign) {
     this.onPostSignSlot.register(fn);
   }
@@ -138,18 +163,32 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
   }
 
   private async saveExtensionsDataIntoScope(components: ConsumerComponent[], buildStatus: BuildStatus) {
+    const modifiedLog = await this.getModifiedLog(buildStatus);
     await mapSeries(components, async (component) => {
       component.buildStatus = buildStatus;
-      await this.snapping._enrichComp(component);
+      await this.snapping._enrichComp(component, modifiedLog);
     });
     await this.scope.legacyScope.objects.persist();
   }
 
+  private async getModifiedLog(buildStatus: BuildStatus): Promise<Log> {
+    const log = await getBasicLog();
+    return { ...log, message: `sign. buildStatus: ${buildStatus}` };
+  }
+
   private async exportExtensionsDataIntoScopes(components: ConsumerComponent[], buildStatus: BuildStatus, lane?: Lane) {
     const objectList = new ObjectList();
+    const modifiedLog = await this.getModifiedLog(buildStatus);
+    const idsHashMaps = {};
     const signComponents = await mapSeries(components, async (component) => {
       component.buildStatus = buildStatus;
-      const objects = await this.snapping._getObjectsToEnrichComp(component);
+      const objects = await this.snapping._getObjectsToEnrichComp(component, modifiedLog);
+      const versionHash = objects
+        .find((obj) => obj instanceof Version)
+        ?.hash()
+        .toString();
+      if (!versionHash) throw new Error(`Version object is missing for ${component.id.toString()}`);
+      idsHashMaps[versionHash] = component.id.toString();
       const scopeName = component.scope as string;
       const objectToMerge = await ObjectList.fromBitObjects(objects);
       objectToMerge.addScopeName(scopeName);
@@ -162,9 +201,10 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     }
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
     await http.pushToCentralHub(objectList, {
-      persist: true,
+      origin: 'sign',
       sign: true,
       signComponents: signComponents.map((id) => id.toString()),
+      idsHashMaps,
     });
   }
 
@@ -209,11 +249,12 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       SnappingMain
     ],
     _,
-    [onPostSignSlot]: [OnPostSignSlot]
+    [onPostSignSlot]: [OnPostSignSlot],
+    harmony
   ) {
     const logger = loggerMain.createLogger(SignAspect.id);
-    const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes, snapping);
-    cli.register(new SignCmd(signMain));
+    const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes, snapping, harmony);
+    cli.register(new SignCmd(signMain, logger));
     return signMain;
   }
 }

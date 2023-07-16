@@ -86,7 +86,7 @@ export type ComponentProps = {
   schema?: string | undefined;
 };
 
-const VERSION_ZERO = '0.0.0';
+export const VERSION_ZERO = '0.0.0';
 
 /**
  * we can't rename the class as ModelComponent because old components are already saved in the model
@@ -298,12 +298,29 @@ export default class Component extends BitObject {
     }
   }
 
+  /**
+   * this is used (among others) by `bit status` to check whether snaps are local (staged), for `bit reset` to remove them
+   * and for `bit export` to push them. for "merge pending" status, use `this.getDivergeDataForMergePending()`.
+   */
   getDivergeData(): SnapsDistance {
     if (!this.divergeData)
       throw new Error(
         `getDivergeData() expects divergeData to be populate, please use this.setDivergeData() for id: ${this.id()}`
       );
     return this.divergeData;
+  }
+
+  /**
+   * don't use modelComponent.getDivergeData() because in some scenarios when on a lane, it compares the head
+   * on the lane against the head on the main, which could show the component as diverged incorrectly.
+   */
+  async getDivergeDataForMergePending(repo: Repository) {
+    return getDivergeData({
+      repo,
+      modelComponent: this,
+      targetHead: (this.laneId ? this.laneHeadRemote : this.remoteHead) || null,
+      throws: false,
+    });
   }
 
   async populateLocalAndRemoteHeads(repo: Repository, lane: Lane | null) {
@@ -320,7 +337,9 @@ export default class Component extends BitObject {
 
     const calculateRemote = async () => {
       if (this.laneHeadRemote) return this.laneHeadRemote;
-      if (lane.isNew && lane.forkedFrom) {
+      if (lane.isNew && lane.forkedFrom && lane.forkedFrom.scope === lane.scope) {
+        // the last check is to make sure that if this lane will be exported to a different scope than the original
+        // lane, all snaps of the original lane will be considered as local and will be exported later on.
         const headFromFork = await repo.remoteLanes.getRef(lane.forkedFrom, this.toBitId());
         if (headFromFork) return headFromFork;
       }
@@ -491,11 +510,11 @@ export default class Component extends BitObject {
       logger.info(`collectLogs is unable to find some objects for ${this.id()}. will try to import them`);
       try {
         const lane = await scope.getCurrentLaneObject();
-        await scope.scopeImporter.importManyDeltaWithoutDeps({
-          ids: BitIds.fromArray([this.toBitId()]),
+        await scope.scopeImporter.importWithoutDeps(BitIds.fromArray([this.toBitId()]).toVersionLatest(), {
+          cache: false,
+          includeVersionHistory: true,
           collectParents: true,
-          fromHead: true,
-          lane,
+          lane: lane || undefined,
         });
         versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
       } catch (err) {

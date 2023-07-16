@@ -179,7 +179,7 @@ export class TesterMain {
    * @returns
    */
   getPatterns() {
-    return { name: 'tests', pattern: this.patterns };
+    return this.patterns;
   }
 
   getComponentDevPatterns(component: Component) {
@@ -187,7 +187,7 @@ export class TesterMain {
     const componentPatterns: string[] = env.getTestsDevPatterns
       ? env.getTestsDevPatterns(component)
       : this.getPatterns();
-    return componentPatterns;
+    return { name: 'tests', pattern: componentPatterns };
   }
 
   getDevPatternToRegister() {

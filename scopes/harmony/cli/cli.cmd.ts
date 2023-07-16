@@ -3,6 +3,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
+import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import readline from 'readline';
 import { CLIParser } from './cli-parser';
 import { CLIMain } from './cli.main.runtime';
@@ -10,7 +11,7 @@ import { GenerateCommandsDoc, GenerateOpts } from './generate-doc-md';
 
 export class CliGenerateCmd implements Command {
   name = 'generate';
-  description = 'EXPERIMENTAL. generate an .md file with all commands details';
+  description = 'generate an .md file with all commands details';
   alias = '';
   loader = false;
   group = 'general';
@@ -20,12 +21,20 @@ export class CliGenerateCmd implements Command {
       'metadata',
       'metadata/front-matter to place at the top of the .md file, enter as an object e.g. --metadata.id=cli --metadata.title=commands',
     ],
+    ['', 'docs', 'generate the cli-reference.docs.mdx file'],
     ['j', 'json', 'output the commands info as JSON'],
   ] as CommandOptions;
 
   constructor(private cliMain: CLIMain) {}
 
-  async report(args, { metadata }: GenerateOpts): Promise<string> {
+  async report(args, { metadata, docs }: GenerateOpts & { docs?: boolean }): Promise<string> {
+    if (docs) {
+      return `---
+description: 'Bit command synopses. Bit version: ${getHarmonyVersion()}'
+labels: ['cli', 'mdx', 'docs']
+---
+      `;
+    }
     return new GenerateCommandsDoc(this.cliMain.commands, { metadata }).generate();
   }
 
@@ -54,7 +63,7 @@ export class CliCmd implements Command {
       completer: (line, cb) => completer(line, cb, this.cliMain),
     });
 
-    const cliParser = new CLIParser(this.cliMain.commands, this.cliMain.groups, undefined, this.docsDomain);
+    const cliParser = new CLIParser(this.cliMain.commands, this.cliMain.groups, this.docsDomain);
 
     rl.prompt();
 

@@ -5,6 +5,8 @@ RUN chown -R user /usr/local/
 USER user
 
 RUN npm i @teambit/bvm -g
+RUN bvm config set RELEASE_TYPE nightly
+
 RUN bvm upgrade
 ENV PATH=$PATH:/home/user/bin
 ENV BIT_GLOBALS_DIR=/tmp/bit
