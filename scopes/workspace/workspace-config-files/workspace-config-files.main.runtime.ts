@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
 import pMapSeries from 'p-map-series';
 import yesno from 'yesno';
-import { flatMap, pick, uniq } from 'lodash';
+import { flatMap, isFunction, pick, uniq } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { Workspace } from '@teambit/workspace';
@@ -92,6 +92,8 @@ export type WriteConfigFilesResult = {
 };
 
 export class WorkspaceConfigFilesMain {
+  private envsNotImplementing = {};
+
   constructor(
     private workspace: Workspace,
     private envs: EnvsMain,
@@ -256,7 +258,11 @@ export class WorkspaceConfigFilesMain {
   }
 
   private getConfigWriters(envExecutionContext: ExecutionContext): ConfigWriterEntry[] {
-    return envExecutionContext.env.workspaceConfig ? envExecutionContext.env.workspaceConfig() : [];
+    if (envExecutionContext.env.workspaceConfig && isFunction(envExecutionContext.env.workspaceConfig)) {
+      return envExecutionContext.env.workspaceConfig();
+    }
+    this.addToEnvsNotImplementing(envExecutionContext.env.id);
+    return [];
   }
 
   private getFlatConfigWriters(envsExecutionContext: ExecutionContext[]): ConfigWriterEntry[] {
@@ -300,6 +306,14 @@ export class WorkspaceConfigFilesMain {
     if (!silent) await this.promptForCleaning(paths);
     await this.deleteFiles(paths);
     return paths;
+  }
+
+  private addToEnvsNotImplementing(envId: string) {
+    this.envsNotImplementing[envId] = true;
+  }
+
+  getEnvsNotImplementing() {
+    return Object.keys(this.envsNotImplementing);
   }
 
   private async promptForCleaning(paths: string[]) {
