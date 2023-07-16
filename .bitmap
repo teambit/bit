@@ -11,51 +11,27 @@
 {
     "api-reference": {
         "scope": "teambit.api-reference",
-        "version": "0.0.212",
+        "version": "0.0.213",
         "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/api-reference",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/api-reference/api-reference"
     },
     "api-server": {
         "scope": "teambit.harmony",
-        "version": "0.0.118",
+        "version": "0.0.119",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/api-server",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/api-server"
     },
     "application": {
         "scope": "teambit.harmony",
-        "version": "0.0.748",
+        "version": "0.0.749",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/application",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/application"
     },
     "aspect": {
         "scope": "teambit.harmony",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/aspect",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/aspect"
     },
     "aspect-docs/babel": {
         "scope": "teambit.compilation",
@@ -185,27 +161,15 @@
     },
     "aspect-loader": {
         "scope": "teambit.harmony",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/aspect-loader",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/aspect-loader"
     },
     "babel": {
         "scope": "teambit.compilation",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/babel",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/compilation/babel"
     },
     "babel/bit-react-transformer": {
         "scope": "teambit.react",
@@ -215,27 +179,15 @@
     },
     "bit": {
         "scope": "teambit.harmony",
-        "version": "0.1.93",
+        "version": "0.2.0",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/bit",
-        "nextVersion": {
-            "version": "minor",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/bit"
     },
     "bit-custom-aspect": {
         "scope": "teambit.harmony",
-        "version": "0.0.443",
+        "version": "0.0.444",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/bit-custom-aspect",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/bit-custom-aspect"
     },
     "bit-error": {
         "scope": "teambit.harmony",
@@ -251,15 +203,9 @@
     },
     "builder": {
         "scope": "teambit.pipelines",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/pipelines/builder",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/pipelines/builder"
     },
     "builder-data": {
         "scope": "teambit.pipelines",
@@ -269,15 +215,9 @@
     },
     "bundler": {
         "scope": "teambit.compilation",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/bundler",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/compilation/bundler"
     },
     "cache": {
         "scope": "teambit.harmony",
@@ -287,27 +227,15 @@
     },
     "changelog": {
         "scope": "teambit.component",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/changelog",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/changelog"
     },
     "checkout": {
         "scope": "teambit.component",
-        "version": "0.0.275",
+        "version": "0.0.276",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/checkout",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/checkout"
     },
     "clear-cache": {
         "scope": "teambit.workspace",
@@ -365,27 +293,15 @@
     },
     "code": {
         "scope": "teambit.component",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/code",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/code"
     },
     "command-bar": {
         "scope": "teambit.explorer",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/explorer/command-bar",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/explorer/command-bar"
     },
     "community": {
         "scope": "teambit.community",
@@ -395,39 +311,21 @@
     },
     "compiler": {
         "scope": "teambit.compilation",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/compiler",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/compilation/compiler"
     },
     "component": {
         "scope": "teambit.component",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/component"
     },
     "component-compare": {
         "scope": "teambit.component",
-        "version": "0.0.354",
+        "version": "0.0.355",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-compare",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/component-compare"
     },
     "component-descriptor": {
         "scope": "teambit.component",
@@ -443,15 +341,9 @@
     },
     "component-log": {
         "scope": "teambit.component",
-        "version": "0.0.483",
+        "version": "0.0.484",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-log",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/component-log"
     },
     "component-package-version": {
         "scope": "teambit.component",
@@ -461,27 +353,15 @@
     },
     "component-sizer": {
         "scope": "teambit.component",
-        "version": "0.0.479",
+        "version": "0.0.480",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-sizer",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/component-sizer"
     },
     "component-tree": {
         "scope": "teambit.component",
-        "version": "0.0.894",
+        "version": "0.0.895",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-tree",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/component-tree"
     },
     "component-version": {
         "scope": "teambit.component",
@@ -491,15 +371,9 @@
     },
     "component-writer": {
         "scope": "teambit.component",
-        "version": "0.0.142",
+        "version": "0.0.143",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-writer",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/component-writer"
     },
     "composition-card": {
         "scope": "teambit.compositions",
@@ -509,15 +383,9 @@
     },
     "compositions": {
         "scope": "teambit.compositions",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compositions/compositions",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/compositions/compositions"
     },
     "config": {
         "scope": "teambit.harmony",
@@ -527,111 +395,57 @@
     },
     "content/cli-reference": {
         "scope": "teambit.harmony",
-        "version": "1.95.174",
+        "version": "1.95.175",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/cli-reference",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/cli-reference"
     },
     "dependencies": {
         "scope": "teambit.dependencies",
-        "version": "0.0.299",
+        "version": "0.0.300",
         "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/dependencies",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/dependencies/dependencies"
     },
     "dependency-resolver": {
         "scope": "teambit.dependencies",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/dependency-resolver",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/dependencies/dependency-resolver"
     },
     "deprecation": {
         "scope": "teambit.component",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/deprecation",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/deprecation"
     },
     "dev-files": {
         "scope": "teambit.component",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/dev-files",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/dev-files"
     },
     "diagnostic": {
         "scope": "teambit.harmony",
-        "version": "0.0.399",
+        "version": "0.0.400",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/diagnostic",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/diagnostic"
     },
     "docs": {
         "scope": "teambit.docs",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/docs/docs",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/docs/docs"
     },
     "eject": {
         "scope": "teambit.workspace",
-        "version": "0.0.577",
+        "version": "0.0.578",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/eject",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/workspace/eject"
     },
     "elements": {
         "scope": "teambit.web-components",
-        "version": "0.0.559",
+        "version": "0.0.560",
         "mainFile": "index.ts",
-        "rootDir": "scopes/web-components/elements",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/web-components/elements"
     },
     "entities/lane-diff": {
         "scope": "teambit.lanes",
@@ -647,39 +461,21 @@
     },
     "env": {
         "scope": "teambit.envs",
-        "version": "0.0.479",
+        "version": "0.0.480",
         "mainFile": "index.ts",
-        "rootDir": "scopes/envs/env",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/envs/env"
     },
     "envs": {
         "scope": "teambit.envs",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/envs/envs",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/envs/envs"
     },
     "eslint": {
         "scope": "teambit.defender",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/eslint",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/defender/eslint"
     },
     "eslint-config-bit-react": {
         "scope": "teambit.react",
@@ -695,27 +491,15 @@
     },
     "explorer/api-reference-explorer": {
         "scope": "teambit.api-reference",
-        "version": "0.0.9",
+        "version": "0.0.10",
         "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/explorer/api-reference-explorer",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/api-reference/explorer/api-reference-explorer"
     },
     "export": {
         "scope": "teambit.scope",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/export",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/scope/export"
     },
     "express": {
         "scope": "teambit.harmony",
@@ -725,27 +509,15 @@
     },
     "forking": {
         "scope": "teambit.component",
-        "version": "0.0.510",
+        "version": "0.0.511",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/forking",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/forking"
     },
     "formatter": {
         "scope": "teambit.defender",
-        "version": "0.0.657",
+        "version": "0.0.658",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/formatter",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/defender/formatter"
     },
     "fs/hard-link-directory": {
         "scope": "teambit.toolbox",
@@ -761,27 +533,15 @@
     },
     "generator": {
         "scope": "teambit.generator",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/generator/generator",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/generator/generator"
     },
     "git": {
         "scope": "teambit.git",
-        "version": "0.0.11",
+        "version": "0.0.12",
         "mainFile": "index.ts",
-        "rootDir": "scopes/git/git",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/git/git"
     },
     "global-config": {
         "scope": "teambit.harmony",
@@ -791,39 +551,21 @@
     },
     "graph": {
         "scope": "teambit.component",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/graph",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/graph"
     },
     "graphql": {
         "scope": "teambit.harmony",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/graphql",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/graphql"
     },
     "harmony-ui-app": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.748",
+        "version": "0.0.749",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app"
     },
     "hooks/use-api": {
         "scope": "teambit.api-reference",
@@ -869,87 +611,45 @@
     },
     "html": {
         "scope": "teambit.html",
-        "version": "0.0.674",
+        "version": "0.0.675",
         "mainFile": "index.ts",
-        "rootDir": "scopes/html/html",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/html/html"
     },
     "importer": {
         "scope": "teambit.scope",
-        "version": "0.0.535",
+        "version": "0.0.536",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/importer",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/scope/importer"
     },
     "insights": {
         "scope": "teambit.explorer",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/explorer/insights",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/explorer/insights"
     },
     "install": {
         "scope": "teambit.workspace",
-        "version": "0.0.200",
+        "version": "0.0.201",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/install",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/workspace/install"
     },
     "isolator": {
         "scope": "teambit.component",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/isolator",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/isolator"
     },
     "issues": {
         "scope": "teambit.component",
-        "version": "0.0.414",
+        "version": "0.0.415",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/issues",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/issues"
     },
     "jest": {
         "scope": "teambit.defender",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/jest",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/defender/jest"
     },
     "lane-id": {
         "scope": "teambit.lanes",
@@ -959,15 +659,9 @@
     },
     "lanes": {
         "scope": "teambit.lanes",
-        "version": "0.0.678",
+        "version": "0.0.679",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/lanes",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/lanes/lanes"
     },
     "legacy-component-log": {
         "scope": "teambit.component",
@@ -977,27 +671,15 @@
     },
     "linter": {
         "scope": "teambit.defender",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/linter",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/defender/linter"
     },
     "lister": {
         "scope": "teambit.component",
-        "version": "0.0.342",
+        "version": "0.0.343",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/lister",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/lister"
     },
     "logger": {
         "scope": "teambit.harmony",
@@ -1007,51 +689,27 @@
     },
     "mdx": {
         "scope": "teambit.mdx",
-        "version": "0.0.1086",
+        "version": "0.0.1087",
         "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/mdx",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/mdx/mdx"
     },
     "merge-lanes": {
         "scope": "teambit.lanes",
-        "version": "0.0.283",
+        "version": "0.0.284",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/merge-lanes",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/lanes/merge-lanes"
     },
     "merging": {
         "scope": "teambit.component",
-        "version": "0.0.421",
+        "version": "0.0.422",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/merging",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/merging"
     },
     "mocha": {
         "scope": "teambit.defender",
-        "version": "0.0.443",
+        "version": "0.0.444",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/mocha",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/defender/mocha"
     },
     "model/composition-id": {
         "scope": "teambit.compositions",
@@ -1211,39 +869,21 @@
     },
     "mover": {
         "scope": "teambit.component",
-        "version": "0.0.137",
+        "version": "0.0.138",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/mover",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/mover"
     },
     "multi-compiler": {
         "scope": "teambit.compilation",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/multi-compiler",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/compilation/multi-compiler"
     },
     "multi-tester": {
         "scope": "teambit.defender",
-        "version": "0.0.275",
+        "version": "0.0.276",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/multi-tester",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/defender/multi-tester"
     },
     "network/agent": {
         "scope": "teambit.toolbox",
@@ -1259,39 +899,21 @@
     },
     "new-component-helper": {
         "scope": "teambit.component",
-        "version": "0.0.510",
+        "version": "0.0.511",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/new-component-helper",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/new-component-helper"
     },
     "node": {
         "scope": "teambit.harmony",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/node",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/node"
     },
     "notifications": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/notifications/aspect",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/ui-foundation/notifications/aspect"
     },
     "panels": {
         "scope": "teambit.ui-foundation",
@@ -1331,15 +953,9 @@
     },
     "pkg": {
         "scope": "teambit.pkg",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/pkg/pkg",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/pkg/pkg"
     },
     "plugins/inject-head-webpack-plugin": {
         "scope": "teambit.webpack",
@@ -1349,27 +965,15 @@
     },
     "pnpm": {
         "scope": "teambit.dependencies",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/pnpm",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/dependencies/pnpm"
     },
     "prettier": {
         "scope": "teambit.defender",
-        "version": "0.0.657",
+        "version": "0.0.658",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/prettier",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/defender/prettier"
     },
     "prettier/config-mutator": {
         "scope": "teambit.defender",
@@ -1379,123 +983,63 @@
     },
     "preview": {
         "scope": "teambit.preview",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/preview/preview",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/preview/preview"
     },
     "pubsub": {
         "scope": "teambit.harmony",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/pubsub",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/pubsub"
     },
     "react": {
         "scope": "teambit.react",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/react",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/react/react"
     },
     "react-elements": {
         "scope": "teambit.react",
-        "version": "0.0.559",
+        "version": "0.0.560",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/react-elements",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/react/react-elements"
     },
     "react-native": {
         "scope": "teambit.react",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/react-native",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/react/react-native"
     },
     "react-router": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/react-router/react-router",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/ui-foundation/react-router/react-router"
     },
     "readme": {
         "scope": "teambit.mdx",
-        "version": "0.0.390",
+        "version": "0.0.391",
         "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/readme",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/mdx/readme"
     },
     "refactoring": {
         "scope": "teambit.component",
-        "version": "0.0.403",
+        "version": "0.0.404",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/refactoring",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/refactoring"
     },
     "remove": {
         "scope": "teambit.component",
-        "version": "0.0.283",
+        "version": "0.0.284",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/remove",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/remove"
     },
     "renaming": {
         "scope": "teambit.component",
-        "version": "0.0.510",
+        "version": "0.0.511",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/renaming",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/renaming"
     },
     "renderers/api-node-details": {
         "scope": "teambit.api-reference",
@@ -1607,39 +1151,21 @@
     },
     "schema": {
         "scope": "teambit.semantics",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/semantics/schema",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/semantics/schema"
     },
     "scope": {
         "scope": "teambit.scope",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/scope",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/scope/scope"
     },
     "sections/api-reference-page": {
         "scope": "teambit.api-reference",
-        "version": "0.0.24",
+        "version": "0.0.25",
         "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/sections/api-reference-page",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/api-reference/sections/api-reference-page"
     },
     "sections/api-reference-section": {
         "scope": "teambit.api-reference",
@@ -1649,63 +1175,33 @@
     },
     "sidebar": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/sidebar",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/ui-foundation/sidebar"
     },
     "sign": {
         "scope": "teambit.scope",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/sign",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/scope/sign"
     },
     "snapping": {
         "scope": "teambit.component",
-        "version": "0.0.421",
+        "version": "0.0.422",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/snapping",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/snapping"
     },
     "stash": {
         "scope": "teambit.component",
-        "version": "0.0.44",
+        "version": "0.0.45",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/stash",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/stash"
     },
     "status": {
         "scope": "teambit.component",
-        "version": "0.0.418",
+        "version": "0.0.419",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/status",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/status"
     },
     "string/capitalize": {
         "scope": "teambit.toolbox",
@@ -1733,15 +1229,9 @@
     },
     "tester": {
         "scope": "teambit.defender",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/tester",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/defender/tester"
     },
     "testing/load-aspect": {
         "scope": "teambit.harmony",
@@ -1775,15 +1265,9 @@
     },
     "tracker": {
         "scope": "teambit.component",
-        "version": "0.0.137",
+        "version": "0.0.138",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/tracker",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/tracker"
     },
     "ts-server": {
         "scope": "teambit.typescript",
@@ -1799,39 +1283,21 @@
     },
     "typescript": {
         "scope": "teambit.typescript",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/typescript/typescript",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/typescript/typescript"
     },
     "ui": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/ui",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/ui-foundation/ui"
     },
     "ui/artifacts/artifacts-tree": {
         "scope": "teambit.component",
-        "version": "0.0.17",
+        "version": "0.0.18",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/component-artifacts/artifacts-tree",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/ui/component-artifacts/artifacts-tree"
     },
     "ui/artifacts/models/component-artifacts-model": {
         "scope": "teambit.component",
@@ -1871,39 +1337,21 @@
     },
     "ui/code-compare": {
         "scope": "teambit.code",
-        "version": "0.0.229",
+        "version": "0.0.230",
         "mainFile": "index.ts",
-        "rootDir": "scopes/code/ui/code-compare",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/code/ui/code-compare"
     },
     "ui/code-tab-page": {
         "scope": "teambit.code",
-        "version": "0.0.618",
+        "version": "0.0.619",
         "mainFile": "index.ts",
-        "rootDir": "scopes/code/ui/code-tab-page",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/code/ui/code-tab-page"
     },
     "ui/code-tab-tree": {
         "scope": "teambit.code",
-        "version": "0.0.604",
+        "version": "0.0.605",
         "mainFile": "index.ts",
-        "rootDir": "scopes/code/ui/code-tab-tree",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/code/ui/code-tab-tree"
     },
     "ui/code-view": {
         "scope": "teambit.code",
@@ -1955,15 +1403,9 @@
     },
     "ui/component-compare/blank-state": {
         "scope": "teambit.component",
-        "version": "0.0.2",
+        "version": "0.0.3",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/blank-state",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "components/ui/component-compare/blank-state"
     },
     "ui/component-compare/changelog": {
         "scope": "teambit.component",
@@ -1979,15 +1421,9 @@
     },
     "ui/component-compare/compare-aspects/compare-aspects": {
         "scope": "teambit.component",
-        "version": "0.0.92",
+        "version": "0.0.93",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/compare-aspects/compare-aspects",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "components/ui/component-compare/compare-aspects/compare-aspects"
     },
     "ui/component-compare/compare-aspects/context": {
         "scope": "teambit.component",
@@ -1997,15 +1433,9 @@
     },
     "ui/component-compare/compare-aspects/hooks/use-compare-aspects": {
         "scope": "teambit.component",
-        "version": "0.0.65",
+        "version": "0.0.66",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/compare-aspects/hooks/use-compare-aspects",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "components/ui/component-compare/compare-aspects/hooks/use-compare-aspects"
     },
     "ui/component-compare/compare-aspects/models/component-compare-aspects-model": {
         "scope": "teambit.component",
@@ -2117,15 +1547,9 @@
     },
     "ui/component-drawer": {
         "scope": "teambit.component",
-        "version": "0.0.300",
+        "version": "0.0.301",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-drawer",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/component-drawer"
     },
     "ui/component-filters/component-filter-context": {
         "scope": "teambit.component",
@@ -2513,27 +1937,15 @@
     },
     "ui/notifications/notification": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.509",
+        "version": "0.0.510",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/notifications/ui/notification",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/ui-foundation/notifications/ui/notification"
     },
     "ui/notifications/notification-center": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.514",
+        "version": "0.0.515",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/notifications/ui/notification-center",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/ui-foundation/notifications/ui/notification-center"
     },
     "ui/notifications/notification-context": {
         "scope": "teambit.ui-foundation",
@@ -2609,7 +2021,7 @@
     },
     "ui/scope-details": {
         "scope": "teambit.scope",
-        "version": "0.0.517",
+        "version": "0.0.518",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/ui/scope-details"
     },
@@ -2621,21 +2033,15 @@
     },
     "ui/scope-title": {
         "scope": "teambit.scope",
-        "version": "0.0.508",
+        "version": "0.0.509",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/ui/scope-title"
     },
     "ui/side-bar": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.817",
+        "version": "0.0.818",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/uis/side-bar",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/ui-foundation/uis/side-bar"
     },
     "ui/status": {
         "scope": "teambit.workspace",
@@ -2645,15 +2051,9 @@
     },
     "ui/test-compare": {
         "scope": "teambit.defender",
-        "version": "0.0.202",
+        "version": "0.0.203",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/ui/test-compare",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/defender/ui/test-compare"
     },
     "ui/test-compare-section": {
         "scope": "teambit.defender",
@@ -2669,15 +2069,9 @@
     },
     "ui/test-page": {
         "scope": "teambit.defender",
-        "version": "0.0.18",
+        "version": "0.0.19",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/ui/test-page",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/defender/ui/test-page"
     },
     "ui/test-row": {
         "scope": "teambit.defender",
@@ -2705,15 +2099,9 @@
     },
     "ui/tree/file-tree": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.513",
+        "version": "0.0.514",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/tree/file-tree",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/ui-foundation/tree/file-tree"
     },
     "ui/tree/folder-tree-node": {
         "scope": "teambit.ui-foundation",
@@ -2801,15 +2189,9 @@
     },
     "update-dependencies": {
         "scope": "teambit.scope",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/update-dependencies",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/scope/update-dependencies"
     },
     "url/add-avatar-query-params": {
         "scope": "teambit.toolbox",
@@ -2825,15 +2207,9 @@
     },
     "user-agent": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.792",
+        "version": "0.0.793",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/user-agent",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/ui-foundation/user-agent"
     },
     "utils/code-editor-options": {
         "scope": "teambit.api-reference",
@@ -2873,27 +2249,15 @@
     },
     "watcher": {
         "scope": "teambit.workspace",
-        "version": "0.0.118",
+        "version": "0.0.119",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/watcher",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/workspace/watcher"
     },
     "webpack": {
         "scope": "teambit.webpack",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/webpack/webpack",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/webpack/webpack"
     },
     "worker": {
         "scope": "teambit.harmony",
@@ -2903,39 +2267,21 @@
     },
     "workspace": {
         "scope": "teambit.workspace",
-        "version": "0.0.1106",
+        "version": "0.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/workspace",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/workspace/workspace"
     },
     "workspace-config-files": {
         "scope": "teambit.workspace",
-        "version": "0.0.86",
+        "version": "0.0.87",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/workspace-config-files",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/workspace/workspace-config-files"
     },
     "yarn": {
         "scope": "teambit.dependencies",
-        "version": "0.0.1107",
+        "version": "0.0.1108",
         "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/yarn",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/dependencies/yarn"
     },
     "$schema-version": "15.0.0"
 }
