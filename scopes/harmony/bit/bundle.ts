@@ -32,6 +32,7 @@ function bundle() {
       '@surma/rollup-plugin-off-main-thread',
       '@babel/preset-react',
       'ink',
+      'canvas',
       'style-loader',
       'mini-css-extract-plugin',
       '@pmmmwh/react-refresh-webpack-plugin',
