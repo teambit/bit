@@ -19,7 +19,7 @@ import {
   typeAliasNamesTransformer,
   variableNamesTransformer,
   transformSourceFile,
-  identifierTransformer,
+  expressionStatementTransformer,
 } from '@teambit/typescript';
 import { RefactoringAspect } from './refactoring.aspect';
 import { DependencyNameRefactorCmd, RefactorCmd } from './refactor.cmd';
@@ -105,7 +105,7 @@ export class RefactoringMain {
         interfaceNamesTransformer,
         typeAliasNamesTransformer,
         variableNamesTransformer,
-        identifierTransformer,
+        expressionStatementTransformer,
       ]
     );
   }
