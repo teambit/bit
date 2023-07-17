@@ -1,6 +1,6 @@
 import * as Schemas from './schemas';
 
-export { SchemaNode } from './schema-node';
+export { SchemaNode, ISchemaNode } from './schema-node';
 export { APISchema } from './api-schema';
 export { Export, StaticProperties } from './export';
 export type { SchemaLocation as Location } from './schema-node';

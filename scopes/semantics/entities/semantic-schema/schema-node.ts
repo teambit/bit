@@ -1,12 +1,24 @@
 import { pickBy } from 'lodash';
 import { DocSchema } from './schemas';
 
+export interface ISchemaNode {
+  __schema: string;
+  location: SchemaLocation;
+  doc?: DocSchema;
+  signature?: string;
+  name?: string;
+  toObject(): Record<string, any>;
+  toString(): string;
+  getChildren(): SchemaNode[];
+  findNode(predicate: (node: SchemaNode) => boolean, visitedNodes?: Set<SchemaNode>): SchemaNode | undefined;
+}
+
 /**
  * a convenient abstract class for all schema to extend.
  * the reason for having it as an abstract class and not an interface, for now, is mostly for the `__schema` prop.
  * this way it won't need to be implemented in each one of the subclasses.
  */
-export abstract class SchemaNode {
+export abstract class SchemaNode implements ISchemaNode {
   readonly __schema = this.constructor.name;
   abstract readonly location: SchemaLocation;
   readonly doc?: DocSchema;
