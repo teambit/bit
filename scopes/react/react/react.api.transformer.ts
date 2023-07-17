@@ -29,26 +29,26 @@ export class ReactAPITransformer implements SchemaNodeTransformer {
       'React.ReactChild',
       'React.ReactFragment',
       'React.ReactPortal',
-    ].includes(node.returnType?.name ?? node.returnType.toString());
+    ].includes(this.getReturnTypeName(node));
     if (!returnsPotentialReactElement) return false;
     return true;
   }
 
   async transform(node: FunctionLikeSchema): Promise<SchemaNode> {
-    console.log(
-      '🚀 ~ file: react.api.transformer.ts:38 ~ ReactAPITransformer ~ transform ~ node.returnType:',
-      node.returnType
-    );
-
     return new ReactSchema(
       node.location,
       node.name,
       node.params[0] as ParameterSchema<TypeRefSchema>,
-      new TypeRefSchema(node.returnType.location, node.returnType.name ?? '', undefined, 'react'),
+      new TypeRefSchema(node.returnType.location, this.getReturnTypeName(node), undefined, 'react'),
       node.signature,
       node.modifiers,
       node.doc,
       node.typeParams
     );
+  }
+
+  private getReturnTypeName(node: FunctionLikeSchema): string {
+    const returnType = node.returnType;
+    return returnType.name ?? returnType.toString();
   }
 }
