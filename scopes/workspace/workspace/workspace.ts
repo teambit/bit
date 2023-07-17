@@ -521,8 +521,15 @@ export class Workspace implements ComponentFactory {
     );
     const getCompIdByIdStr = (idStr: string): ComponentID => {
       const compId = flattenedBitIdCompIdMap[idStr];
-      if (!compId)
-        throw new Error(`id ${idStr} exists in flattenedEdges but not in flattened of ${component.id.toString()}`);
+      if (!compId) {
+        const suggestWrongSnap = isHash(component.id.version)
+          ? `\nplease check that .bitmap has the correct versions of ${component.id.toStringWithoutVersion()}.
+it's possible that the version ${component.id.version} belong to ${idStr.split('@')[0]}`
+          : '';
+        throw new Error(
+          `id ${idStr} exists in flattenedEdges but not in flattened of ${component.id.toString()}.${suggestWrongSnap}`
+        );
+      }
       return compId;
     };
     const nodes = Object.values(flattenedBitIdCompIdMap);
