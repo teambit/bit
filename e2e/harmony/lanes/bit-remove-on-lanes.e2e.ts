@@ -435,4 +435,25 @@ describe('bit lane command', function () {
       expect(() => helper.command.importLane('dev')).to.not.throw();
     });
   });
+  describe('soft remove on lane-a, then re-creating the component on lane-b', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.removeLaneComp('comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane('lane-b');
+    });
+    it('the forked lane should not include the soft-removed components', () => {
+      // don't use this `const lane = helper.command.showOneLaneParsed('lane-b');` as it filters out removed-components already.
+      // cat-lane shows the real object.
+      const lane = helper.command.catLane('lane-b');
+      expect(lane.components).to.have.lengthOf(1);
+    });
+  });
 });
