@@ -23,13 +23,14 @@ export class FunctionLikeSchema extends SchemaNode {
   readonly returnType: SchemaNode;
   readonly params: ParameterSchema[];
   readonly doc?: DocSchema;
+  readonly signature?: string | undefined;
 
   constructor(
     readonly location: SchemaLocation,
     readonly name: string,
     params: ParameterSchema[],
     returnType: SchemaNode,
-    readonly signature: string,
+    signature: string,
     readonly modifiers: Modifier[] = [],
     doc?: DocSchema,
     readonly typeParams?: string[] // generics e.g. <T>myFunction
@@ -38,6 +39,11 @@ export class FunctionLikeSchema extends SchemaNode {
     this.params = params;
     this.returnType = returnType;
     this.doc = doc;
+    this.signature = signature || FunctionLikeSchema.createSignature(this.name, this.params, this.returnType);
+  }
+
+  getChildren() {
+    return [...this.params, this.returnType];
   }
 
   toString() {
@@ -54,6 +60,21 @@ export class FunctionLikeSchema extends SchemaNode {
 
   isPrivate(): boolean {
     return Boolean(this.modifiers.find((m) => m === 'private') || this.doc?.hasTag(TagName.private));
+  }
+
+  generateSignature(): string {
+    return FunctionLikeSchema.createSignature(this.name, this.params, this.returnType);
+  }
+
+  static createSignature(name: string, params: ParameterSchema[], returnType: SchemaNode): string {
+    const paramsStr = params
+      .map((param) => {
+        let type = param.type.toString();
+        if (param.isSpread) type = `...${type}`;
+        return `${param.name}${param.isOptional ? '?' : ''}: ${type}`;
+      })
+      .join(', ');
+    return `${name}(${paramsStr}): ${returnType.toString()}`;
   }
 
   toObject() {

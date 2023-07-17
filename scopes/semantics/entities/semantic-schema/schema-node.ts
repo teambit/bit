@@ -32,6 +32,24 @@ export abstract class SchemaNode {
   }
 
   abstract toString(): string;
+
+  getChildren(): SchemaNode[] {
+    return [this];
+  }
+
+  findNode(predicate: (node: SchemaNode) => boolean, visitedNodes = new Set<SchemaNode>()): SchemaNode | undefined {
+    if (predicate(this)) return this;
+    if (visitedNodes.has(this)) return undefined;
+
+    visitedNodes.add(this);
+
+    for (const child of this.getChildren()) {
+      const foundNode = child.findNode(predicate, visitedNodes);
+      if (foundNode) return foundNode;
+    }
+
+    return undefined;
+  }
 }
 
 export type SchemaLocation = {

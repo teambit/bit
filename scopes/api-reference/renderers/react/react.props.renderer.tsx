@@ -1,24 +1,17 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-import { ParameterSchema } from '@teambit/semantics.entities.semantic-schema';
+import { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
+import { ParameterSchema, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import { TableRow } from '@teambit/documenter.ui.table-row';
 
-import styles from './parameter.renderer.module.scss';
+import styles from './react.props.renderer.module.scss';
 
-export const parameterRenderer: APINodeRenderer = {
-  predicate: (node) => node.__schema === ParameterSchema.name,
-  Component: ParameterComponent,
-  nodeType: 'Parameters',
-  default: true,
-};
-
-function ParameterComponent(props: APINodeRenderProps) {
+export function ReactPropsComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
     renderers,
   } = props;
 
-  const paramNode = api as ParameterSchema;
+  const paramNode = api as ParameterSchema<TypeRefSchema>;
 
   const { name, isOptional, doc, type, defaultValue, objectBindingNodes } = paramNode;
 

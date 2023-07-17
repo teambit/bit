@@ -1,11 +1,13 @@
 import {
   DocSchema,
+  FunctionLikeSchema,
   Location,
   Modifier,
   ParameterSchema,
   SchemaNode,
   SchemaRegistry,
   TagName,
+  TypeRefSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import chalk from 'chalk';
 
@@ -19,12 +21,14 @@ export class ReactSchema extends SchemaNode {
 
   readonly doc?: DocSchema;
 
+  readonly signature?: string | undefined;
+
   constructor(
     readonly location: Location,
     readonly name: string,
-    props: ParameterSchema,
-    returnType: SchemaNode,
-    readonly signature: string,
+    props: ParameterSchema<TypeRefSchema>,
+    returnType: TypeRefSchema,
+    signature?: string,
     readonly modifiers: Modifier[] = [],
     doc?: DocSchema,
     readonly typeParams?: string[]
@@ -33,6 +37,11 @@ export class ReactSchema extends SchemaNode {
     this.props = props;
     this.returnType = returnType;
     this.doc = doc;
+    this.signature = signature || FunctionLikeSchema.createSignature(name, [props], returnType);
+  }
+
+  getChildren() {
+    return [this.props, this.returnType];
   }
 
   toString() {
@@ -72,7 +81,7 @@ export class ReactSchema extends SchemaNode {
   static fromObject(obj: Record<string, any>): ReactSchema {
     const location = obj.location;
     const name = obj.name;
-    const props = ParameterSchema.fromObject(obj.props);
+    const props = ParameterSchema.fromObject<TypeRefSchema>(obj.props);
     const returnType = SchemaRegistry.fromObject(obj.returnType);
     const signature = obj.signature;
     const modifiers = obj.modifiers;

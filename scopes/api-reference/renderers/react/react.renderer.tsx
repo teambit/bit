@@ -31,6 +31,7 @@ function ReactComponent(props: APINodeRenderProps) {
   }
 
   const paramRenderer = renderers.find((renderer) => renderer.predicate(reactProps));
+
   const ParamComponent = paramRenderer?.Component ? (
     <paramRenderer.Component
       {...props}
@@ -67,7 +68,7 @@ function ReactComponent(props: APINodeRenderProps) {
       )}
       {
         <div className={styles.container}>
-          <div className={styles.title}>Parameters</div>
+          <div className={styles.title}>Props</div>
           <div className={styles.table}>
             <HeadingRow colNumber={4} headings={['name', 'type', 'default', 'description']} />
             {ParamComponent}

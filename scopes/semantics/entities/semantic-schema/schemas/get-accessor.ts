@@ -12,6 +12,10 @@ export class GetAccessorSchema extends SchemaNode {
     return this.signature;
   }
 
+  getChildren() {
+    return this.type.getChildren?.() ?? [];
+  }
+
   toString() {
     return `get ${chalk.bold(this.name)}(): ${this.type.toString()}`;
   }

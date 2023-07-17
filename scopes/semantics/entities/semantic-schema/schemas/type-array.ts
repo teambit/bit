@@ -9,6 +9,10 @@ export class TypeArraySchema extends SchemaNode {
     this.type = type;
   }
 
+  getChildren() {
+    return [this.type];
+  }
+
   toString() {
     return `${this.type.toString()}[]`;
   }

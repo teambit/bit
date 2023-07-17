@@ -8,6 +8,10 @@ export class TypeOperatorSchema extends SchemaNode {
     this.type = type;
   }
 
+  getChildren() {
+    return [this.type];
+  }
+
   toString() {
     return `${this.name} ${this.type.toString()}`;
   }

@@ -23,6 +23,10 @@ export class VariableLikeSchema extends SchemaNode {
     this.doc = doc;
   }
 
+  getChildren() {
+    return [this.type];
+  }
+
   toString() {
     return `${chalk.bold(this.name)}${this.isOptional ? '?' : ''}: ${this.type.toString()}`;
   }

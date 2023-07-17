@@ -1,20 +1,39 @@
-.container {
-  display: flex;
-  padding: 16px 0px;
-}
-
 .node,
 .nodeLink {
   display: flex;
   font-family: Roboto mono;
-  font-size: var(--bit-p-xxs);
+  font-size: var(--bit-p-xs);
   word-break: normal;
+  position: relative;
+  line-height: 1.2em;
 }
 
 .node {
-  color: rgb(57, 115, 0);
+  color: rgb(79, 79, 79); /* a more subtle color */
 }
 
 .nodeLink {
   color: #4646c6;
+}
+
+.package::before {
+  content: '📦';
+  display: inline-block;
+  height: 8px;
+  width: 8px;
+  margin-right: 10px;
+  text-decoration: none;
+}
+
+.internalType {
+  font-style: italic;
+}
+
+.internalType::before {
+  content: '🔒';
+  display: inline-block;
+  height: 8px;
+  width: 8px;
+  margin-right: 6px;
+  text-decoration: none;
 }

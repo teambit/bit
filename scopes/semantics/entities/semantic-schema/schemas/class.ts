@@ -23,6 +23,10 @@ export class ClassSchema extends SchemaNode {
     this.doc = doc;
   }
 
+  getChildren() {
+    return this.members;
+  }
+
   toString() {
     const membersStr = this.members.map((m) => `* ${m.toString()}`).join('\n');
     return `${chalk.bold.underline(this.name)}\n${membersStr}`;

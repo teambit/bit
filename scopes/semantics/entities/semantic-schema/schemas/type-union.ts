@@ -10,6 +10,9 @@ export class TypeUnionSchema extends SchemaNode {
   toString() {
     return `${this.types.map((type) => type.toString()).join(' | ')}`;
   }
+  getChildren() {
+    return this.types.map((type) => type.getChildren?.() ?? []).flat();
+  }
   toObject() {
     return {
       ...super.toObject(),

@@ -23,6 +23,10 @@ export class TypeSchema extends SchemaNode {
     return `${chalk.bold(this.name)}: ${this.type.toString()}`;
   }
 
+  getChildren() {
+    return this.type.getChildren?.() ?? [];
+  }
+
   toObject() {
     return {
       ...super.toObject(),

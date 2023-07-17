@@ -109,7 +109,12 @@ export class SchemaExtractorContext {
     }
   }
 
-  async computeSchema(node: Node) {
+  findComputedSchemaByName(name: string) {
+    const computed = Array.from(this.computed.values());
+    return computed.filter((schema) => schema.name === name);
+  }
+
+  async computeSchema(node: Node): Promise<SchemaNode> {
     const location = this.getLocation(node);
     const key = this.getComputedNodeKey(location);
     const existingComputedSchema = this.computed.get(key);

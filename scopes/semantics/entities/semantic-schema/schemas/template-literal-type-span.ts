@@ -9,6 +9,10 @@ export class TemplateLiteralTypeSpanSchema extends SchemaNode {
     this.type = type;
   }
 
+  getChildren() {
+    return [this.type];
+  }
+
   toString() {
     return `${this.type.toString()} ${this.literal}`;
   }

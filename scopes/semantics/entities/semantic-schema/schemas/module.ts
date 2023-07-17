@@ -13,6 +13,10 @@ export class ModuleSchema extends SchemaNode {
     this.internals = internals;
   }
 
+  getChildren() {
+    return [...this.exports, ...this.internals];
+  }
+
   flatExportsRecursively() {
     this.exports = this.exports.reduce((acc, exp) => {
       if (exp instanceof ModuleSchema) {

@@ -11,6 +11,11 @@ export class TypeQuerySchema extends SchemaNode {
     super();
     this.type = type;
   }
+
+  getChildren() {
+    return [this.type];
+  }
+
   getSignature() {
     return this.signature;
   }

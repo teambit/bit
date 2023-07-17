@@ -110,6 +110,9 @@ function TypeRefComponent(props: APINodeRenderProps) {
       name={typeRefNode.name}
       external={!!exportedTypeUrlFromAnotherComp}
       url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp}
+      exported={typeRefNode.isExported()}
+      internal={typeRefNode.isInternalReference()}
+      packageName={typeRefNode.packageName}
     />
   );
 }
@@ -119,22 +122,35 @@ function TypeRefName({
   url,
   external,
   children,
+  internal,
+  exported,
+  packageName,
 }: {
   name: string;
   url?: string;
   external?: boolean;
   children?: React.ReactChild;
+  internal?: boolean;
+  exported?: boolean;
+  packageName?: string;
 }) {
+  const className = classnames(styles.node, {
+    [styles.internalType]: internal,
+    [styles.exportedType]: exported,
+    [styles.package]: !!packageName,
+  });
+
   if (url) {
     return (
-      <Link href={url} external={external} className={classnames(styles.node, styles.nodeLink)}>
+      <Link href={url} external={external} className={classnames(className, styles.nodeLink)}>
         {name}
         {children}
       </Link>
     );
   }
+
   return (
-    <div className={classnames(styles.node)}>
+    <div className={className}>
       {name}
       {children}
     </div>
