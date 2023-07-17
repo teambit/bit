@@ -679,23 +679,23 @@ importers:
         specifier: 5.35.1
         version: 5.35.1(typescript@4.7.4)
       '@yarnpkg/cli':
-        specifier: 3.2.1
-        version: 3.2.1(@yarnpkg/core@3.5.2)
+        specifier: 3.6.1
+        version: 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core':
-        specifier: ^3.2.2
+        specifier: 3.5.2
         version: 3.5.2
       '@yarnpkg/fslib':
-        specifier: 2.6.2
-        version: 2.6.2
+        specifier: 2.10.3
+        version: 2.10.3
       '@yarnpkg/parsers':
         specifier: 2.5.1
         version: 2.5.1
       '@yarnpkg/plugin-npm':
-        specifier: 2.7.1
-        version: 2.7.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.1.0)
+        specifier: 2.7.4
+        version: 2.7.4(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0)
       '@yarnpkg/plugin-pack':
-        specifier: 3.1.0
-        version: 3.1.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+        specifier: 3.2.0
+        version: 3.2.0(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
       agentkeepalive:
         specifier: 4.1.4
         version: 4.1.4
@@ -4875,7 +4875,7 @@ importers:
         version: file:scopes/workspace/ui/workspace-component-card(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
-        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.1.0)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -6774,7 +6774,7 @@ importers:
         version: file:scopes/workspace/ui/workspace-component-card(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
-        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.1.0)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -8673,7 +8673,7 @@ importers:
         version: file:scopes/workspace/ui/workspace-component-card(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
-        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.1.0)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -10572,7 +10572,7 @@ importers:
         version: file:scopes/workspace/ui/workspace-component-card(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
-        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.1.0)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -12471,7 +12471,7 @@ importers:
         version: file:scopes/workspace/ui/workspace-component-card(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
-        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.1.0)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -14370,7 +14370,7 @@ importers:
         version: file:scopes/workspace/ui/workspace-component-card(react-dom@17.0.2)(react@17.0.2)
       '@teambit/yarn':
         specifier: workspace:*
-        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.1.0)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2)
     dependenciesMeta:
       '@teambit/api-reference':
         injected: true
@@ -21676,20 +21676,20 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@yarnpkg/cli':
-        specifier: 3.2.1
-        version: 3.2.1(@yarnpkg/core@3.5.2)
+        specifier: 3.6.1
+        version: 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core':
-        specifier: ^3.2.2
+        specifier: 3.5.2
         version: 3.5.2
       '@yarnpkg/fslib':
-        specifier: 2.6.2
-        version: 2.6.2
+        specifier: 2.10.3
+        version: 2.10.3
       '@yarnpkg/parsers':
         specifier: 2.5.1
         version: 2.5.1
       '@yarnpkg/plugin-npm':
-        specifier: 2.7.1
-        version: 2.7.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.1.0)
+        specifier: 2.7.4
+        version: 2.7.4(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0)
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -43204,36 +43204,36 @@ packages:
   /@xtuc/long@4.2.2:
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
 
-  /@yarnpkg/cli@3.2.1(@yarnpkg/core@3.5.2):
-    resolution: {integrity: sha512-yyxDEg4Y6z9RErREFDXa2ZFMy7dc5l3TF7WsfIZdw7/B1ZbBO7PdcHxenGZE62zO6PO17SrKZgJlwv1xVbUpcQ==}
+  /@yarnpkg/cli@3.6.1(@yarnpkg/core@3.5.2):
+    resolution: {integrity: sha512-LKFCc2aWkSGUZiqz8ZMBoSfZBXf6cH2AT4PDVklEa+SAVanjAAg7T+PjllMD3+DECkLisVLW+wyoKqcTxnC/Ag==}
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/core': ^3.2.1
+      '@yarnpkg/core': ^3.5.2
     dependencies:
       '@yarnpkg/core': 3.5.2
-      '@yarnpkg/fslib': 2.6.2
+      '@yarnpkg/fslib': 2.10.3
       '@yarnpkg/libzip': 2.3.0
       '@yarnpkg/parsers': 2.5.1
       '@yarnpkg/plugin-compat': 3.1.13(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-patch@3.2.4)
-      '@yarnpkg/plugin-dlx': 3.1.4(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
-      '@yarnpkg/plugin-essentials': 3.3.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-git@2.6.6)
+      '@yarnpkg/plugin-dlx': 3.1.4(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-essentials': 3.3.0(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-git@2.6.6)
       '@yarnpkg/plugin-file': 2.3.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/plugin-git': 2.6.6(@yarnpkg/core@3.5.2)
       '@yarnpkg/plugin-github': 2.3.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-git@2.6.6)
       '@yarnpkg/plugin-http': 2.2.1(@yarnpkg/core@3.5.2)
-      '@yarnpkg/plugin-init': 3.2.1(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-init': 3.2.1(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
       '@yarnpkg/plugin-link': 2.2.1(@yarnpkg/core@3.5.2)
-      '@yarnpkg/plugin-nm': 3.1.5(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
-      '@yarnpkg/plugin-npm': 2.7.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0)
-      '@yarnpkg/plugin-npm-cli': 3.4.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-npm@2.7.1)(@yarnpkg/plugin-pack@3.2.0)
-      '@yarnpkg/plugin-pack': 3.2.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
-      '@yarnpkg/plugin-patch': 3.2.4(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
-      '@yarnpkg/plugin-pnp': 3.2.11(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
-      '@yarnpkg/plugin-pnpm': 1.1.3(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-nm': 3.1.5(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-npm': 2.7.4(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0)
+      '@yarnpkg/plugin-npm-cli': 3.4.0(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-npm@2.7.4)(@yarnpkg/plugin-pack@3.2.0)
+      '@yarnpkg/plugin-pack': 3.2.0(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-patch': 3.2.4(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-pnp': 3.2.11(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-pnpm': 1.1.3(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
       '@yarnpkg/shell': 3.2.5
       chalk: 3.0.0
       ci-info: 3.8.0
-      clipanion: 3.2.1
+      clipanion: 3.2.0-rc.4
       semver: 7.5.2
       tslib: 1.14.1
       typanion: 3.12.1
@@ -43335,14 +43335,6 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/fslib@2.6.2:
-    resolution: {integrity: sha512-cg8RfRD9ZJW+0/ER2TKXJbqvtk1707XeZ1MAWHpRXRqz/SJqmM3ujy1CfnG832lgzzkZK1315cIBwqFloopq6A==}
-    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
-    dependencies:
-      '@yarnpkg/libzip': 2.3.0
-      tslib: 1.14.1
-    dev: false
-
   /@yarnpkg/fslib@3.0.0-rc.45:
     resolution: {integrity: sha512-XarEtHTbeO4+rgZQObn16+uFzb1dXiVHuoqDNGoMywwBm/FF7DeCqSANeKiNYbi79WMgoLk8l3lO4g0vRYkJBg==}
     engines: {node: '>=14.15.0'}
@@ -43354,7 +43346,7 @@ packages:
     resolution: {integrity: sha512-meUiCAgCYpXTH1qJfqfz+dX013ohW9p2dKfwIzUYAFutH+lsz1eHPBIk72cuCV84adh9gX6j66ekBKH/bIhCQw==}
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     dependencies:
-      '@yarnpkg/fslib': 2.6.2
+      '@yarnpkg/fslib': 2.10.3
       tslib: 1.14.1
     dev: false
 
@@ -43424,17 +43416,17 @@ packages:
     dependencies:
       '@yarnpkg/core': 3.5.2
       '@yarnpkg/extensions': 1.1.2(@yarnpkg/core@3.5.2)
-      '@yarnpkg/plugin-patch': 3.2.4(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-patch': 3.2.4(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
     dev: false
 
-  /@yarnpkg/plugin-dlx@3.1.4(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+  /@yarnpkg/plugin-dlx@3.1.4(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2):
     resolution: {integrity: sha512-aabYrLLzO84SRIhlsWWa4MRb1gA4wLbl0jLbLD1/SSDBq3hrEaIkgZpxBFgOGV8Gc80Nub56MmCi8OmhqbL8Eg==}
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
       '@yarnpkg/cli': ^3.2.3
       '@yarnpkg/core': ^3.2.4
     dependencies:
-      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/cli': 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core': 3.5.2
       '@yarnpkg/fslib': 2.10.3
       '@yarnpkg/json-proxy': 2.1.1
@@ -43442,7 +43434,7 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-essentials@3.3.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-git@2.6.6):
+  /@yarnpkg/plugin-essentials@3.3.0(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-git@2.6.6):
     resolution: {integrity: sha512-l7CVyPpwSr3LaeXIWl+a7ioUzqpioB51m5gyEYpxTiMPdQ94zZdOb3lx8v+uvL9agvMTiZe8RlwyYB1tencJvw==}
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
@@ -43450,7 +43442,7 @@ packages:
       '@yarnpkg/core': ^3.3.0
       '@yarnpkg/plugin-git': ^2.6.3
     dependencies:
-      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/cli': 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core': 3.5.2
       '@yarnpkg/fslib': 2.10.3
       '@yarnpkg/json-proxy': 2.1.1
@@ -43473,7 +43465,7 @@ packages:
       '@yarnpkg/core': ^3.2.1
     dependencies:
       '@yarnpkg/core': 3.5.2
-      '@yarnpkg/fslib': 2.6.2
+      '@yarnpkg/fslib': 2.10.3
       tslib: 1.14.1
     dev: false
 
@@ -43501,7 +43493,7 @@ packages:
       '@yarnpkg/plugin-git': ^2.6.1
     dependencies:
       '@yarnpkg/core': 3.5.2
-      '@yarnpkg/fslib': 2.6.2
+      '@yarnpkg/fslib': 2.10.3
       '@yarnpkg/plugin-git': 2.6.6(@yarnpkg/core@3.5.2)
       tslib: 1.14.1
     dev: false
@@ -43513,18 +43505,18 @@ packages:
       '@yarnpkg/core': ^3.2.1
     dependencies:
       '@yarnpkg/core': 3.5.2
-      '@yarnpkg/fslib': 2.6.2
+      '@yarnpkg/fslib': 2.10.3
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-init@3.2.1(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+  /@yarnpkg/plugin-init@3.2.1(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2):
     resolution: {integrity: sha512-fD6yHVHc2WZdIKfjSDKJBVtc2CibsZPkXCt4w0v0aiOditMHDSruUSRVkMjobEtuQp/BC+PuKMtXqjFKUKASzA==}
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
       '@yarnpkg/cli': ^3.4.1
       '@yarnpkg/core': ^3.4.0
     dependencies:
-      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/cli': 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core': 3.5.2
       '@yarnpkg/fslib': 2.10.3
       clipanion: 3.2.0-rc.4
@@ -43539,24 +43531,24 @@ packages:
       '@yarnpkg/core': ^3.2.1
     dependencies:
       '@yarnpkg/core': 3.5.2
-      '@yarnpkg/fslib': 2.6.2
+      '@yarnpkg/fslib': 2.10.3
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-nm@3.1.5(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+  /@yarnpkg/plugin-nm@3.1.5(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2):
     resolution: {integrity: sha512-PfUXTq8Wkrilcce5z7lena6ch2hGxe012Md5pyzrzMdY1hnohQ3w5GixaNDJwc7wVjdis1smgJaJcltVTXxnuQ==}
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
       '@yarnpkg/cli': ^3.3.0
       '@yarnpkg/core': ^3.3.0
     dependencies:
-      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/cli': 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core': 3.5.2
       '@yarnpkg/fslib': 2.10.3
       '@yarnpkg/libzip': 2.3.0
       '@yarnpkg/nm': 3.1.0
       '@yarnpkg/parsers': 2.5.1
-      '@yarnpkg/plugin-pnp': 3.2.11(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-pnp': 3.2.11(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
       '@yarnpkg/pnp': 3.3.4
       '@zkochan/cmd-shim': 5.4.1
       clipanion: 3.2.0-rc.4
@@ -43564,7 +43556,7 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-npm-cli@3.4.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-npm@2.7.1)(@yarnpkg/plugin-pack@3.2.0):
+  /@yarnpkg/plugin-npm-cli@3.4.0(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-npm@2.7.4)(@yarnpkg/plugin-pack@3.2.0):
     resolution: {integrity: sha512-ZRC0R7aVDlVOzgjoSgtpy1Yz5nqT0UH9m9aNB6p2vuoqX+4RLMmfzdNLvKTlLi9jp4P6lgbDuhBy/pImraKqlg==}
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
@@ -43573,11 +43565,11 @@ packages:
       '@yarnpkg/plugin-npm': ^2.7.4
       '@yarnpkg/plugin-pack': ^3.2.0
     dependencies:
-      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/cli': 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core': 3.5.2
       '@yarnpkg/fslib': 2.10.3
-      '@yarnpkg/plugin-npm': 2.7.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0)
-      '@yarnpkg/plugin-pack': 3.2.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-npm': 2.7.4(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0)
+      '@yarnpkg/plugin-pack': 3.2.0(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
       clipanion: 3.2.0-rc.4
       enquirer: 2.3.6
       micromatch: 4.0.5
@@ -43586,62 +43578,30 @@ packages:
       typanion: 3.12.1
     dev: false
 
-  /@yarnpkg/plugin-npm@2.7.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.1.0):
-    resolution: {integrity: sha512-Lnlblj8rmxeY3BWLrPYORxpFTAD8HYomKWYEFw6+kCBJ/H5wBzQxOLrWVkZ2uHLwamnvBRfd3mXKiqI55Z8DhQ==}
+  /@yarnpkg/plugin-npm@2.7.4(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0):
+    resolution: {integrity: sha512-0QOWQgBpQ4mRnHAOJm+8L2DCawjPCpiCyCpQWp/jJSOMMdJysaKlGI1xwkUnIAAdYUB4ZjT6xx5wGb/1AP+Xzg==}
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
-      '@yarnpkg/core': ^3.2.1
-      '@yarnpkg/plugin-pack': ^3.1.2
+      '@yarnpkg/core': ^3.5.2
+      '@yarnpkg/plugin-pack': ^3.2.0
     dependencies:
       '@yarnpkg/core': 3.5.2
-      '@yarnpkg/fslib': 2.6.2
-      '@yarnpkg/plugin-pack': 3.1.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/fslib': 2.10.3
+      '@yarnpkg/plugin-pack': 3.2.0(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
       enquirer: 2.3.6
       semver: 7.5.2
       ssri: 6.0.2
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-npm@2.7.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0):
-    resolution: {integrity: sha512-Lnlblj8rmxeY3BWLrPYORxpFTAD8HYomKWYEFw6+kCBJ/H5wBzQxOLrWVkZ2uHLwamnvBRfd3mXKiqI55Z8DhQ==}
-    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
-    peerDependencies:
-      '@yarnpkg/core': ^3.2.1
-      '@yarnpkg/plugin-pack': ^3.1.2
-    dependencies:
-      '@yarnpkg/core': 3.5.2
-      '@yarnpkg/fslib': 2.6.2
-      '@yarnpkg/plugin-pack': 3.2.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
-      enquirer: 2.3.6
-      semver: 7.5.2
-      ssri: 6.0.2
-      tslib: 1.14.1
-    dev: false
-
-  /@yarnpkg/plugin-pack@3.1.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
-    resolution: {integrity: sha512-iLexQO+U+6D8MKWuQ6prU8DgMX4tQRZZXNBAOuQg67lToI1HqnUnfQeGxArGxr9CF6tqIlU/CtbQVCH04/U5XQ==}
-    engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
-    peerDependencies:
-      '@yarnpkg/cli': ^3.1.0
-      '@yarnpkg/core': ^3.1.0
-    dependencies:
-      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
-      '@yarnpkg/core': 3.5.2
-      '@yarnpkg/fslib': 2.6.2
-      clipanion: 3.2.1
-      micromatch: 4.0.5
-      tar-stream: 2.2.0
-      tslib: 1.14.1
-    dev: false
-
-  /@yarnpkg/plugin-pack@3.2.0(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+  /@yarnpkg/plugin-pack@3.2.0(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2):
     resolution: {integrity: sha512-5k4PqWQlF2mVfRU+wObzcv6Lu+3QeltJaAW8+EZf2N7Nz4oxcFRm8DSy/bO78NGPPt1d4OCJJkMaqPa4BRLNEw==}
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
       '@yarnpkg/cli': ^3.5.0
       '@yarnpkg/core': ^3.5.0
     dependencies:
-      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/cli': 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core': 3.5.2
       '@yarnpkg/fslib': 2.10.3
       clipanion: 3.2.0-rc.4
@@ -43650,14 +43610,14 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-patch@3.2.4(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+  /@yarnpkg/plugin-patch@3.2.4(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2):
     resolution: {integrity: sha512-1SfpDDV8XYMOxowD3SID755pBa25afIP4Mb+heeRmh5EnTvwKGq8naHDF8hnC+ppurPZQWXqKpgVUZo2Jo28BQ==}
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
       '@yarnpkg/cli': ^3.3.0
       '@yarnpkg/core': ^3.3.0
     dependencies:
-      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/cli': 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core': 3.5.2
       '@yarnpkg/fslib': 2.10.3
       '@yarnpkg/libzip': 2.3.0
@@ -43665,7 +43625,7 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-pnp@3.2.11(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+  /@yarnpkg/plugin-pnp@3.2.11(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2):
     resolution: {integrity: sha512-7nekW+8G7unWc+jy9x3zDvWddwU6XXbxN+ZkLMmYJL+bWsC6MwtNhF1cic4CYffeQmYfuzNInLKcPCqqaGIS8A==}
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
@@ -43673,10 +43633,10 @@ packages:
       '@yarnpkg/core': ^3.5.2
     dependencies:
       '@types/semver': 7.3.4
-      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/cli': 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core': 3.5.2
       '@yarnpkg/fslib': 2.10.3
-      '@yarnpkg/plugin-stage': 3.1.3(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-stage': 3.1.3(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
       '@yarnpkg/pnp': 3.3.4
       clipanion: 3.2.0-rc.4
       micromatch: 4.0.5
@@ -43684,31 +43644,31 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-pnpm@1.1.3(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+  /@yarnpkg/plugin-pnpm@1.1.3(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2):
     resolution: {integrity: sha512-Dj1ZqO65fiKUJgNB83Uk2ny4zFQvalRp+LeibUkI7VJoZrufbJgs6B0FuMJZSOFxhx0EQa87NFafnkCFHtDMLw==}
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
       '@yarnpkg/cli': ^3.3.1
       '@yarnpkg/core': ^3.3.1
     dependencies:
-      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/cli': 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core': 3.5.2
       '@yarnpkg/fslib': 2.10.3
-      '@yarnpkg/plugin-pnp': 3.2.11(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
-      '@yarnpkg/plugin-stage': 3.1.3(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-pnp': 3.2.11(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
+      '@yarnpkg/plugin-stage': 3.1.3(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
       clipanion: 3.2.0-rc.4
       p-limit: 2.3.0
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/plugin-stage@3.1.3(@yarnpkg/cli@3.2.1)(@yarnpkg/core@3.5.2):
+  /@yarnpkg/plugin-stage@3.1.3(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2):
     resolution: {integrity: sha512-eh2yKS+xdQqA8NpHKHy5a2eQZjhK1yPNbg1A7emNQVAHdCwQaYtaO3M5YK6JAMcC4SYfvHkRm1zLxN2cqMmAJQ==}
     engines: {node: '>=12 <14 || 14.2 - 14.9 || >14.10.0'}
     peerDependencies:
       '@yarnpkg/cli': ^3.2.3
       '@yarnpkg/core': ^3.2.4
     dependencies:
-      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/cli': 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core': 3.5.2
       '@yarnpkg/fslib': 2.10.3
       clipanion: 3.2.0-rc.4
@@ -43720,7 +43680,7 @@ packages:
     engines: {node: '>=10.19.0'}
     dependencies:
       '@types/node': 13.13.52
-      '@yarnpkg/fslib': 2.6.2
+      '@yarnpkg/fslib': 2.10.3
       tslib: 1.14.1
     dev: false
 
@@ -65369,7 +65329,7 @@ packages:
       - supports-color
     dev: false
 
-  file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.1.0)(react-dom@17.0.2)(react@17.0.2):
+  file:scopes/dependencies/yarn(@yarnpkg/plugin-pack@3.2.0)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/dependencies/yarn, type: directory}
     id: file:scopes/dependencies/yarn
     name: '@teambit/yarn'
@@ -65381,11 +65341,11 @@ packages:
       '@pnpm/parse-overrides': 4.0.2
       '@pnpm/types': 9.1.0
       '@teambit/harmony': 0.4.6
-      '@yarnpkg/cli': 3.2.1(@yarnpkg/core@3.5.2)
+      '@yarnpkg/cli': 3.6.1(@yarnpkg/core@3.5.2)
       '@yarnpkg/core': 3.5.2
-      '@yarnpkg/fslib': 2.6.2
+      '@yarnpkg/fslib': 2.10.3
       '@yarnpkg/parsers': 2.5.1
-      '@yarnpkg/plugin-npm': 2.7.1(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.1.0)
+      '@yarnpkg/plugin-npm': 2.7.4(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0)
       core-js: 3.13.0
       fs-extra: 10.0.0
       lodash: 4.17.21
