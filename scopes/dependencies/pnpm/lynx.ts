@@ -305,7 +305,9 @@ export async function install(
         cacheDir,
       } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
       if (!_opts.hidePackageManagerOutput) {
-        stopReporting = initReporter();
+        stopReporting = initReporter({
+          appendOnly: true,
+        });
       }
       try {
         await rebuild.handler(_opts, []);
@@ -317,13 +319,13 @@ export async function install(
   };
 }
 
-function initReporter() {
+function initReporter(opts?: { appendOnly: boolean }) {
   return initDefaultReporter({
     context: {
       argv: [],
     },
     reportingOptions: {
-      appendOnly: false,
+      appendOnly: opts?.appendOnly ?? false,
       throttleProgress: 200,
     },
     streamParser,
