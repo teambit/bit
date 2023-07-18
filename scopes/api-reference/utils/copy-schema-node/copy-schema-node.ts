@@ -9,5 +9,6 @@ export function copySchemaNode(source: ISchemaNode, update: Partial<ISchemaNode>
     toObject: update.toObject || source.toObject,
     getNodes: update.getNodes || source.getNodes,
     findNode: update.findNode || source.findNode,
+    getAllNodesRecursively: update.getAllNodesRecursively || source.getAllNodesRecursively,
   };
 }
