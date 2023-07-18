@@ -34,7 +34,6 @@ export function VariableNodeSummary({
   ...rest
 }: VariableNodeSummaryProps) {
   const { __schema, doc } = node;
-  console.log('🚀 ~ file: variable-node-summary.tsx:36 ~ node:', node);
   const { renderers } = apiNodeRendererProps;
   const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
 
@@ -53,7 +52,7 @@ export function VariableNodeSummary({
       key={`${__schema}-${name}`}
       className={classnames(className, styles.row)}
       headings={headings}
-      colNumber={5}
+      colNumber={4}
       customRow={{
         name: (
           <div id={name} className={classnames(trackedElementClassName, groupElementClassName, styles.name)}>
@@ -65,9 +64,11 @@ export function VariableNodeSummary({
       row={{
         name,
         description: doc?.comment || '',
-        required: !isOptional,
+        required: isOptional !== undefined && !isOptional,
         type: '',
-        defaultValue,
+        default: {
+          value: defaultValue || '',
+        },
       }}
     />
   );

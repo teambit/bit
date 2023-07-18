@@ -1,6 +1,6 @@
 import React from 'react';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-import { ParameterSchema } from '@teambit/semantics.entities.semantic-schema';
+import { InferenceTypeSchema, ParameterSchema } from '@teambit/semantics.entities.semantic-schema';
 import { TableRow } from '@teambit/documenter.ui.table-row';
 
 import styles from './parameter.renderer.module.scss';
@@ -15,14 +15,15 @@ export const parameterRenderer: APINodeRenderer = {
 function ParameterComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
+    apiRefModel,
     renderers,
   } = props;
 
   const paramNode = api as ParameterSchema;
 
   const { name, isOptional, doc, type, defaultValue, objectBindingNodes } = paramNode;
-
   const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
+  const typeRef = type.name ? apiRefModel.apiByName.get(type.name) : undefined;
 
   const customTypeRow = (typeRenderer && (
     <typeRenderer.Component
@@ -46,6 +47,7 @@ function ParameterComponent(props: APINodeRenderProps) {
               metadata={{ [type.__schema]: { columnView: true } }}
             />
           )) || <div className={styles.node}>{bindingNode.toString()}</div>;
+          const typeRefCorrespondingNode = typeRef?.api.findNode((node) => node.name === bindingNode.name);
 
           return (
             <TableRow
@@ -56,10 +58,16 @@ function ParameterComponent(props: APINodeRenderProps) {
                 type: customBindingNodeTypeRow,
               }}
               row={{
-                name: bindingNode.name || '',
-                description: bindingNode.doc?.comment || '',
-                required: false, // currently we don't have this information
+                name: bindingNode.name || typeRefCorrespondingNode?.name || '',
+                description: bindingNode.doc?.comment || typeRefCorrespondingNode?.doc?.comment || '',
+                required:
+                  (typeRefCorrespondingNode as any)?.isOptional !== undefined &&
+                  !(typeRefCorrespondingNode as any)?.isOptional,
                 type: '',
+                // infer defaultValue
+                default: {
+                  value: (bindingNode as InferenceTypeSchema).defaultValue || '',
+                },
               }}
             />
           );
