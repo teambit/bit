@@ -95,7 +95,7 @@ export class MDXMain {
       react.overrideCompiler(mdxCompiler),
       react.overrideDependencies({
         dependencies: {
-          '@teambit/mdx.ui.mdx-scope-context': '0.0.368',
+          '@teambit/mdx.ui.mdx-scope-context': '0.0.498',
           '@mdx-js/react': '1.6.22',
         },
       }),

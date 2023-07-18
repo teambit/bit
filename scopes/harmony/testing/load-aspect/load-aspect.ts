@@ -1,6 +1,6 @@
 import { resolve, join } from 'path';
 import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
-import { propogateUntil as propagateUntil } from '@teambit/legacy/dist/utils';
+import { findScopePath } from '@teambit/legacy/dist/utils';
 import { readdirSync } from 'fs';
 import { Harmony, Aspect } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
@@ -88,7 +88,7 @@ function getMainFilePath(aspect: any, id: ComponentID) {
 
 export async function getConfig(cwd = process.cwd()) {
   const consumerInfo = await getConsumerInfo(cwd);
-  const scopePath = propagateUntil(cwd);
+  const scopePath = findScopePath(cwd);
   const globalConfigOpts = {
     name: '.bitrc.jsonc',
   };

@@ -1673,4 +1673,13 @@ describe('bit lane command', function () {
       expect(bitMapVer).to.equal(headOnLaneB);
     });
   });
+  describe('creating a new lane to a different scope than main', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+    });
+    it('should not throw even when --fork-lane-new-scope was not used', () => {
+      expect(() => helper.command.createLane('dev', '--scope some-scope')).to.not.throw();
+    });
+  });
 });

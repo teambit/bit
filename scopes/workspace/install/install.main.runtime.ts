@@ -59,7 +59,6 @@ export type WorkspaceLinkResults = {
 export type WorkspaceInstallOptions = {
   addMissingDeps?: boolean;
   addMissingPeers?: boolean;
-  variants?: string;
   lifecycleType?: WorkspaceDependencyLifecycleType;
   dedupe?: boolean;
   import?: boolean;
@@ -161,7 +160,7 @@ export class InstallMain {
   }
 
   private async _addPackages(packages: string[], options?: WorkspaceInstallOptions) {
-    if (!options?.variants && (options?.lifecycleType as string) === 'dev') {
+    if ((options?.lifecycleType as string) === 'dev') {
       throw new DependencyTypeNotSupportedInPolicy(options?.lifecycleType as string);
     }
     this.logger.debug(`installing the following packages: ${packages.join()}`);
@@ -189,13 +188,9 @@ export class InstallMain {
         });
       }
     });
-    if (!options?.variants) {
-      this.dependencyResolver.addToRootPolicy(newWorkspacePolicyEntries, {
-        updateExisting: options?.updateExisting ?? false,
-      });
-    } else {
-      // TODO: implement
-    }
+    this.dependencyResolver.addToRootPolicy(newWorkspacePolicyEntries, {
+      updateExisting: options?.updateExisting ?? false,
+    });
     await this.dependencyResolver.persistConfig(this.workspace.path);
   }
 

@@ -62,7 +62,7 @@ export enum Verb {
   READ = 'read',
 }
 
-export type ExportOrigin = 'export' | 'sign' | 'update-dependencies' | 'lane-merge';
+export type ExportOrigin = 'export' | 'sign' | 'update-dependencies' | 'lane-merge' | 'tag';
 
 export type PushCentralOptions = {
   origin: ExportOrigin;

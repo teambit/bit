@@ -21,11 +21,11 @@
         "@mdx-js/react": "1.6.22",
         "@monaco-editor/react": "4.4.6",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
-        "@pnpm/client": "10.0.10",
+        "@pnpm/client": "10.0.12",
         "@pnpm/colorize-semver-diff": "1.0.1",
-        "@pnpm/config": "18.4.2",
-        "@pnpm/core": "10.2.5",
-        "@pnpm/default-reporter": "12.2.5",
+        "@pnpm/config": "18.4.3",
+        "@pnpm/core": "10.2.8",
+        "@pnpm/default-reporter": "12.2.6",
         "@pnpm/dependency-path": "2.1.2",
         "@pnpm/error": "5.0.2",
         "@pnpm/fetch": "7.0.2",
@@ -34,14 +34,14 @@
         "@pnpm/modules-yaml": "12.1.1",
         "@pnpm/network.agent": "0.1.0",
         "@pnpm/network.ca-file": "1.0.2",
-        "@pnpm/package-store": "16.0.6",
+        "@pnpm/package-store": "16.0.7",
         "@pnpm/parse-overrides": "4.0.2",
         "@pnpm/pick-registry-for-package": "5.0.1",
-        "@pnpm/plugin-commands-rebuild": "^9.0.5",
+        "@pnpm/plugin-commands-rebuild": "^9.1.0",
         "@pnpm/registry-mock": "3.4.0",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/sort-packages": "5.0.3",
-        "@pnpm/store-connection-manager": "6.0.15",
+        "@pnpm/store-connection-manager": "6.0.17",
         "@pnpm/types": "9.1.0",
         "@pnpm/workspace.pkgs-graph": "2.0.4",
         "@prerenderer/prerenderer": "^1.2.0",
@@ -101,6 +101,8 @@
         "@teambit/defender.content.formatter-overview": "1.96.1",
         "@teambit/defender.content.linter-overview": "1.95.0",
         "@teambit/defender.content.tester-overview": "1.95.0",
+        "@teambit/defender.eslint-linter": "^1.0.1",
+        "@teambit/defender.prettier-formatter": "^1.0.0",
         "@teambit/design.elements.icon": "1.0.5",
         "@teambit/design.inputs.dropdown": "1.2.16",
         "@teambit/design.inputs.input-text": "^1.0.21",
@@ -194,6 +196,7 @@
         "@teambit/react.ui.component-highlighter": "0.2.1",
         "@teambit/scope.content.scope-overview": "1.95.0",
         "@teambit/scope.ui.scope-icon": "0.0.91",
+        "@teambit/typescript.typescript-compiler": "^2.0.0",
         "@teambit/workspace.content.variants": "1.95.9",
         "@teambit/workspace.content.workspace-overview": "1.95.0",
         "@testing-library/jest-dom": "5.16.2",
@@ -233,12 +236,12 @@
         "@types/url-parse": "1.4.3",
         "@types/webpack": "5.28.1",
         "@types/webpack-dev-server": "4.7.2",
-        "@yarnpkg/cli": "3.2.1",
-        "@yarnpkg/core": "^3.2.2",
-        "@yarnpkg/fslib": "2.6.2",
+        "@yarnpkg/cli": "3.6.1",
+        "@yarnpkg/core": "3.5.2",
+        "@yarnpkg/fslib": "2.10.3",
         "@yarnpkg/parsers": "2.5.1",
-        "@yarnpkg/plugin-npm": "2.7.1",
-        "@yarnpkg/plugin-pack": "3.1.0",
+        "@yarnpkg/plugin-npm": "2.7.4",
+        "@yarnpkg/plugin-pack": "3.2.0",
         "agentkeepalive": "4.1.4",
         "ansi-to-html": "0.6.14",
         "apollo-link-context": "1.0.20",
@@ -282,6 +285,7 @@
         "filenamify": "4.2.0",
         "find-root": "1.1.0",
         "flatted": "3.1.0",
+        "fuse.js": "^6.6.2",
         "get-tsconfig": "4.2.0",
         "graceful-fs": "4.2.10",
         "graphql-subscriptions": "1.2.0",
@@ -390,12 +394,12 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.520",
+        "@teambit/legacy": "1.0.522",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
-        "graphql": "14.7.0",
+        "graphql": "15.8.0",
         "mz": "2.7.0",
         "react": "17.0.2",
         "react-dom": "17.0.2",
@@ -483,7 +487,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.520"
+            "@teambit/legacy": "1.0.522"
           }
         }
       },
@@ -747,7 +751,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.520"
+            "@teambit/legacy": "1.0.522"
           }
         }
       }
@@ -837,8 +841,8 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.520",
-            "graphql": "14.7.0",
+            "@teambit/legacy": "1.0.522",
+            "graphql": "15.8.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
             "monaco-editor": "0.33.0",
@@ -972,7 +976,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.520"
+            "@teambit/legacy": "1.0.522"
           }
         }
       }
