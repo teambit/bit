@@ -92,7 +92,6 @@ export class ParameterTransformer implements SchemaTransformer {
     context: SchemaExtractorContext
   ): Promise<SchemaNode[] | undefined> {
     if (param.name.kind !== SyntaxKind.ObjectBindingPattern) return undefined;
-
     return pMapSeries(param.name.elements, async (elem: BindingElement) => {
       const existing = paramType.findNode((node) => {
         return node.name === elem.name.getText().trim();
@@ -100,8 +99,8 @@ export class ParameterTransformer implements SchemaTransformer {
       if (existing) return existing;
       const info = await context.getQuickInfo(elem.name);
       const parsed = info ? parseTypeFromQuickInfo(info) : elem.getText();
-
-      return new InferenceTypeSchema(context.getLocation(elem.name), parsed, elem.name.getText());
+      const defaultValue = elem.initializer ? elem.initializer.getText() : undefined;
+      return new InferenceTypeSchema(context.getLocation(elem.name), parsed, elem.name.getText(), defaultValue);
     });
   }
 }

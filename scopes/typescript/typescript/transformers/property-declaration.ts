@@ -28,6 +28,7 @@ export class PropertyDeclarationTransformer implements SchemaTransformer {
     const type = await context.resolveType(node, typeStr);
     const isOptional = Boolean(node.questionToken);
     const doc = await context.jsDocToDocSchema(node);
-    return new VariableLikeSchema(context.getLocation(node), name, displaySig, type, isOptional, doc);
+    const defaultValue = node.initializer ? node.initializer.getText() : undefined;
+    return new VariableLikeSchema(context.getLocation(node), name, displaySig, type, isOptional, doc, defaultValue);
   }
 }

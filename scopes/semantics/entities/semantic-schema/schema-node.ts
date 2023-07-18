@@ -49,9 +49,15 @@ export abstract class SchemaNode implements ISchemaNode {
     return [this];
   }
 
-  getAllNodesRecursively(): SchemaNode[] {
+  getAllNodesRecursively(visitedNodes = new Set<SchemaNode>()): SchemaNode[] {
+    if (visitedNodes.has(this)) {
+      return [];
+    }
+
+    visitedNodes.add(this);
+
     const nodes = this.getNodes();
-    return nodes.concat(nodes.flatMap((node) => node.getAllNodesRecursively()));
+    return [this, ...nodes.flatMap((node) => node.getAllNodesRecursively(visitedNodes))];
   }
 
   findNode(predicate: (node: SchemaNode) => boolean, visitedNodes = new Set<SchemaNode>()): SchemaNode | undefined {

@@ -4,7 +4,12 @@ import { SchemaLocation, SchemaNode } from '../schema-node';
  * where there is no explicit type, the type is taken from the "quickinfo" of tsserver
  */
 export class InferenceTypeSchema extends SchemaNode {
-  constructor(readonly location: SchemaLocation, readonly type: string, readonly name?: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly type: string,
+    readonly name?: string,
+    readonly defaultValue?: string
+  ) {
     super();
   }
 
@@ -18,8 +23,8 @@ export class InferenceTypeSchema extends SchemaNode {
   toObject() {
     return {
       ...super.toObject(),
-      name: this.name,
       type: this.type,
+      defaultValue: this.defaultValue,
     };
   }
 
@@ -27,6 +32,7 @@ export class InferenceTypeSchema extends SchemaNode {
     const location = obj.location;
     const type = obj.type;
     const name = obj.name;
-    return new InferenceTypeSchema(location, type, name);
+    const defaultValue = obj.defaultValue;
+    return new InferenceTypeSchema(location, type, name, defaultValue);
   }
 }

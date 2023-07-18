@@ -16,7 +16,8 @@ export class VariableLikeSchema extends SchemaNode {
     readonly signature: string,
     type: SchemaNode,
     readonly isOptional: boolean,
-    doc?: DocSchema
+    doc?: DocSchema,
+    readonly defaultValue?: string
   ) {
     super();
     this.type = type;
@@ -39,6 +40,7 @@ export class VariableLikeSchema extends SchemaNode {
       type: this.type.toObject(),
       isOptional: this.isOptional,
       doc: this.doc?.toObject(),
+      defaultValue: this.defaultValue,
     };
   }
 
@@ -49,6 +51,7 @@ export class VariableLikeSchema extends SchemaNode {
     const type = SchemaRegistry.fromObject(obj.type);
     const isOptional = obj.isOptional;
     const doc = obj.doc ? DocSchema.fromObject(obj.doc) : undefined;
-    return new VariableLikeSchema(location, name, signature, type, isOptional, doc);
+    const defaultValue = obj.defaultValue;
+    return new VariableLikeSchema(location, name, signature, type, isOptional, doc, defaultValue);
   }
 }

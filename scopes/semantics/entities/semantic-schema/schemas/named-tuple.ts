@@ -6,6 +6,10 @@ export class NamedTupleSchema extends SchemaNode {
     super();
   }
 
+  getNodes() {
+    return [this.type];
+  }
+
   toString() {
     return `${this.name}: ${this.type.toString()}`;
   }
