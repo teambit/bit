@@ -12,7 +12,7 @@ export type VariableNodeSummaryProps = {
   node: SchemaNode;
   headings: string[];
   name: string;
-  type: SchemaNode;
+  type?: SchemaNode;
   isOptional?: boolean;
   apiNodeRendererProps: APINodeRenderProps;
   defaultValue?: string;
@@ -35,7 +35,7 @@ export function VariableNodeSummary({
 }: VariableNodeSummaryProps) {
   const { __schema, doc } = node;
   const { renderers } = apiNodeRendererProps;
-  const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
+  const typeRenderer = type && renderers.find((renderer) => renderer.predicate(type));
 
   const customTypeRow = (typeRenderer && (
     <typeRenderer.Component
@@ -44,7 +44,7 @@ export function VariableNodeSummary({
       depth={(apiNodeRendererProps.depth ?? 0) + 1}
       metadata={{ [type.__schema]: { columnView: true } }}
     />
-  )) || <div className={classnames(styles.node, styles.codeSnippet)}>{type.toString()}</div>;
+  )) || <div className={classnames(styles.node, styles.codeSnippet)}>{type?.toString()}</div>;
 
   return (
     <TableRow

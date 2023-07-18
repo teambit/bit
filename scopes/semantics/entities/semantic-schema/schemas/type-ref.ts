@@ -108,7 +108,12 @@ export class TypeRefSchema extends SchemaNode {
   static fromObject(obj: Record<string, any>): TypeRefSchema {
     const location = obj.location;
     const name = obj.name;
-    const componentId = obj.componentId ? ComponentID.fromObject(obj.componentId) : undefined;
+    let componentId;
+    try {
+      componentId = obj.componentId ? ComponentID.fromObject(obj.componentId) : undefined;
+    } catch (e) {
+      componentId = undefined;
+    }
     const packageName = obj.packageName;
     const internalFilePath = obj.internalFilePath;
     const typeArgs = obj.typeArgs?.map((type: any) => SchemaRegistry.fromObject(type));
