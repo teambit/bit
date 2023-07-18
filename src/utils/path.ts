@@ -16,7 +16,8 @@ export function pathJoinLinux(...paths): PathLinux {
   return normalize(path.join(...paths));
 }
 export function pathNormalizeToLinux(pathToNormalize?: PathOsBased): PathLinux {
-  return pathToNormalize ? normalize(pathToNormalize) : pathToNormalize;
+  if (!pathToNormalize) return pathToNormalize;
+  return normalize(pathToNormalize);
 }
 export function pathRelativeLinux(from: PathOsBased, to: PathOsBased): PathLinux {
   return normalize(path.relative(from, to));
