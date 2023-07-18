@@ -12,8 +12,8 @@ export class ParenthesizedTypeSchema extends SchemaNode {
     this.type = type;
   }
 
-  getChildren() {
-    return this.type.getChildren?.() ?? [];
+  getNodes() {
+    return [this.type];
   }
 
   toString() {

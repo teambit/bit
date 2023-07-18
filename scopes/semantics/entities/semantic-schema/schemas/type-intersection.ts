@@ -9,8 +9,8 @@ export class TypeIntersectionSchema extends SchemaNode {
     this.types = types;
   }
 
-  getChildren() {
-    return this.types.map((type) => type.getChildren?.() ?? []).flat();
+  getNodes() {
+    return this.types;
   }
 
   toString() {

@@ -25,7 +25,7 @@ export class ConditionalTypeSchema extends SchemaNode {
     this.falseType = falseType;
   }
 
-  getChildren() {
+  getNodes() {
     return [this.checkType, this.extendsType, this.trueType, this.falseType];
   }
 

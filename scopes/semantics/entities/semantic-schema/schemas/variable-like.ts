@@ -23,7 +23,7 @@ export class VariableLikeSchema extends SchemaNode {
     this.doc = doc;
   }
 
-  getChildren() {
+  getNodes() {
     return [this.type];
   }
 

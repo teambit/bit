@@ -12,8 +12,8 @@ export class GetAccessorSchema extends SchemaNode {
     return this.signature;
   }
 
-  getChildren() {
-    return this.type.getChildren?.() ?? [];
+  getNodes() {
+    return [this.type];
   }
 
   toString() {

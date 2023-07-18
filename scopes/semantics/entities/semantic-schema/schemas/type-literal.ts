@@ -12,7 +12,7 @@ export class TypeLiteralSchema extends SchemaNode {
     this.members = members;
   }
 
-  getChildren() {
+  getNodes() {
     return this.members;
   }
 

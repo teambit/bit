@@ -40,7 +40,7 @@ export class ReactSchema extends SchemaNode {
     this.signature = signature || FunctionLikeSchema.createSignature(name, [props], returnType);
   }
 
-  getChildren() {
+  getNodes() {
     return [this.props, this.returnType];
   }
 

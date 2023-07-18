@@ -7,7 +7,7 @@ export function copySchemaNode(source: ISchemaNode, update: Partial<ISchemaNode>
     location: update.location || source.location,
     toString: update.toString || source.toString,
     toObject: update.toObject || source.toObject,
-    getChildren: update.getChildren || source.getChildren,
+    getNodes: update.getNodes || source.getNodes,
     findNode: update.findNode || source.findNode,
   };
 }

@@ -8,7 +8,7 @@ export class TypeOperatorSchema extends SchemaNode {
     this.type = type;
   }
 
-  getChildren() {
+  getNodes() {
     return [this.type];
   }
 

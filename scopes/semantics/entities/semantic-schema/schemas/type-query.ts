@@ -12,7 +12,7 @@ export class TypeQuerySchema extends SchemaNode {
     this.type = type;
   }
 
-  getChildren() {
+  getNodes() {
     return [this.type];
   }
 

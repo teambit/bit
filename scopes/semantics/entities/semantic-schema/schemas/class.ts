@@ -23,7 +23,7 @@ export class ClassSchema extends SchemaNode {
     this.doc = doc;
   }
 
-  getChildren() {
+  getNodes() {
     return this.members;
   }
 

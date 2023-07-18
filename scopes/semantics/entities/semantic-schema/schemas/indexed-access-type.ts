@@ -11,7 +11,7 @@ export class IndexedAccessSchema extends SchemaNode {
     this.indexType = indexType;
   }
 
-  getChildren() {
+  getNodes() {
     return [this.objectType, this.indexType];
   }
 

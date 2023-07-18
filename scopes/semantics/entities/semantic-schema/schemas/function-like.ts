@@ -42,7 +42,7 @@ export class FunctionLikeSchema extends SchemaNode {
     this.signature = signature || FunctionLikeSchema.createSignature(this.name, this.params, this.returnType);
   }
 
-  getChildren() {
+  getNodes() {
     return [...this.params, this.returnType];
   }
 

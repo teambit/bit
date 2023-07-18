@@ -9,7 +9,7 @@ export interface ISchemaNode {
   name?: string;
   toObject(): Record<string, any>;
   toString(): string;
-  getChildren(): SchemaNode[];
+  getNodes(): SchemaNode[];
   findNode(predicate: (node: SchemaNode) => boolean, visitedNodes?: Set<SchemaNode>): SchemaNode | undefined;
 }
 
@@ -45,8 +45,13 @@ export abstract class SchemaNode implements ISchemaNode {
 
   abstract toString(): string;
 
-  getChildren(): SchemaNode[] {
+  getNodes(): SchemaNode[] {
     return [this];
+  }
+
+  getAllNodesRecursively(): SchemaNode[] {
+    const nodes = this.getNodes();
+    return nodes.concat(nodes.flatMap((node) => node.getAllNodesRecursively()));
   }
 
   findNode(predicate: (node: SchemaNode) => boolean, visitedNodes = new Set<SchemaNode>()): SchemaNode | undefined {
@@ -55,7 +60,7 @@ export abstract class SchemaNode implements ISchemaNode {
 
     visitedNodes.add(this);
 
-    for (const child of this.getChildren()) {
+    for (const child of this.getNodes()) {
       const foundNode = child.findNode(predicate, visitedNodes);
       if (foundNode) return foundNode;
     }

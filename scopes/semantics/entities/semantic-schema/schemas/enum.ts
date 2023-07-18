@@ -19,7 +19,7 @@ export class EnumSchema extends SchemaNode {
     this.members = members;
   }
 
-  getChildren() {
+  getNodes() {
     return this.members;
   }
 

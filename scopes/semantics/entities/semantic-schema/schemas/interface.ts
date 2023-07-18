@@ -22,7 +22,7 @@ export class InterfaceSchema extends SchemaNode {
     this.doc = doc;
   }
 
-  getChildren() {
+  getNodes() {
     return this.members;
   }
 

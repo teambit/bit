@@ -13,7 +13,7 @@ export class ModuleSchema extends SchemaNode {
     this.internals = internals;
   }
 
-  getChildren() {
+  getNodes() {
     return [...this.exports, ...this.internals];
   }
 
