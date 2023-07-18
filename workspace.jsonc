@@ -196,7 +196,7 @@
         "@teambit/react.ui.component-highlighter": "0.2.1",
         "@teambit/scope.content.scope-overview": "1.95.0",
         "@teambit/scope.ui.scope-icon": "0.0.91",
-        "@teambit/typescript.typescript-compiler": "2.0.0",
+        "@teambit/typescript.typescript-compiler": "2.0.1",
         "@teambit/workspace.content.variants": "1.95.9",
         "@teambit/workspace.content.workspace-overview": "1.95.0",
         "@testing-library/jest-dom": "5.16.2",
