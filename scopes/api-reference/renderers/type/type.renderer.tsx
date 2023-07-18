@@ -17,7 +17,6 @@ function TypeComponent(props: APINodeRenderProps) {
     renderers,
   } = props;
   const typeNode = api as TypeSchema;
-  console.log('🚀 ~ file: type.renderer.tsx:20 ~ TypeComponent ~ typeNode:', typeNode);
   const { type } = typeNode;
 
   const subTypeRenderer = renderers.find((renderer) => renderer.predicate(type));

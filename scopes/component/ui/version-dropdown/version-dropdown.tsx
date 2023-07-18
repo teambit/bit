@@ -82,10 +82,10 @@ function _VersionDropdown({
   const [open, setOpen] = useState(false);
 
   React.useEffect(() => {
-    if (loading || currentVersion) {
+    if (loading && open) {
       setOpen(false);
     }
-  }, [loading, currentVersion]);
+  }, [loading]);
 
   const handlePlaceholderClicked = (e: React.MouseEvent<HTMLDivElement>) => {
     if (loading) return;
