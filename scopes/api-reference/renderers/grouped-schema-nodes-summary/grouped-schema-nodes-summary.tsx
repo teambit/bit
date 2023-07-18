@@ -64,7 +64,7 @@ export function GroupedSchemaNodesSummary({
                       groupElementClassName={typeId}
                       headings={headings}
                       apiRefModel={apiRefModel}
-                      name={(member as any).name || 'constructor'}
+                      name={(member as any).name || (type === 'constructors' ? 'constructor' : '')}
                       params={(member as any).params || [(member as any).param]}
                       returnType={(member as any).returnType}
                     />
@@ -90,7 +90,7 @@ export function GroupedSchemaNodesSummary({
                     headings={headings}
                     groupElementClassName={typeId}
                     apiNodeRendererProps={apiNodeRendererProps}
-                    name={(member as any).name}
+                    name={member.name || member.signature || ''}
                     type={(member as any).type}
                     isOptional={(member as any).isOptional}
                     defaultValue={(member as any).defaultValue}

@@ -13,18 +13,30 @@ export function sortSignatureType(
 }
 
 export function groupByNodeSignatureType(nodes: SchemaNode[]): Map<string | undefined, SchemaNode[]> {
-  return nodes.reduce((accum, next) => {
+  return nodes.reduce((acc, next) => {
     const { signature, __schema } = next;
-    if (!signature) return accum;
+    if (!signature) return acc;
     let type: string | undefined;
+
     if (__schema === ConstructorSchema.name) {
       type = pluralize('constructor');
-    } else {
+    }
+
+    if (!type && signature.startsWith('(') && signature.includes('):')) {
+      type = pluralize('method');
+    }
+
+    if (!type && signature.startsWith('[') && signature.includes(']:')) {
+      type = pluralize('property');
+    }
+
+    if (!type) {
       const extractedType = signature.split(') ')[0].split('(')[1];
       type = extractedType ? pluralize(extractedType) : undefined;
     }
-    const existing = accum.get(type) || [];
-    accum.set(type, existing.concat(next));
-    return accum;
+
+    const existing = acc.get(type) || [];
+    acc.set(type, existing.concat(next));
+    return acc;
   }, new Map<string | undefined, SchemaNode[]>());
 }
