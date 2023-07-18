@@ -1,11 +1,22 @@
 .node {
   display: flex;
-  font-family: Roboto mono;
-  font-size: var(--bit-p-xxs);
+  flex-direction: column;
+  gap: 24px;
+  font-size: var(--bit-p-m);
   word-break: normal;
-  color: rgb(57, 115, 0);
+  color: var(--bit-text-color);
+  padding-bottom: 10px;
 }
 
-.separator {
-  padding: 0px 4px;
+.typeTitle {
+  font-size: var(--bit-p-sm);
+  color: var(--bit-accent-primary-color);
+  margin-bottom: 16px;
+  margin-top: 10px;
+}
+
+.typeBody {
+  padding: 8px;
+  border-radius: 5px;
+  font-family: Roboto mono;
 }

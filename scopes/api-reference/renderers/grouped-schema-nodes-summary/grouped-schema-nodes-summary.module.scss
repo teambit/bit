@@ -7,13 +7,13 @@
 
 .groupNodesContainer {
   display: flex;
-  flex-direction: column;
+  width: 100%;
 }
 
 .table {
-  > div {
-    grid-gap: 16px 24px;
-  }
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 .paddingTop {
@@ -21,5 +21,25 @@
 }
 
 .row {
-  grid-template-columns: 1fr 1fr 2fr;
+  display: flex;
+  justify-content: space-between;
+  overflow-wrap: break-word;
+  width: 100%;
+}
+
+.row > div {
+  flex: 1;
+  text-align: left;
+}
+
+.name {
+  word-break: normal;
+}
+
+.codeSnippet {
+  background-color: #f5f5f5;
+  padding: 5px;
+  border-radius: 3px;
+  font-family: 'Courier New', Courier, monospace;
+  color: #008000;
 }

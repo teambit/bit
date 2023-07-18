@@ -15,6 +15,7 @@ export type VariableNodeSummaryProps = {
   type: SchemaNode;
   isOptional?: boolean;
   apiNodeRendererProps: APINodeRenderProps;
+  defaultValue?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
 /**
@@ -29,9 +30,11 @@ export function VariableNodeSummary({
   isOptional,
   type,
   apiNodeRendererProps,
+  defaultValue,
   ...rest
 }: VariableNodeSummaryProps) {
   const { __schema, doc } = node;
+  console.log('🚀 ~ file: variable-node-summary.tsx:36 ~ node:', node);
   const { renderers } = apiNodeRendererProps;
   const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
 
@@ -42,7 +45,7 @@ export function VariableNodeSummary({
       depth={(apiNodeRendererProps.depth ?? 0) + 1}
       metadata={{ [type.__schema]: { columnView: true } }}
     />
-  )) || <div className={styles.node}>{type.toString()}</div>;
+  )) || <div className={classnames(styles.node, styles.codeSnippet)}>{type.toString()}</div>;
 
   return (
     <TableRow
@@ -50,7 +53,7 @@ export function VariableNodeSummary({
       key={`${__schema}-${name}`}
       className={classnames(className, styles.row)}
       headings={headings}
-      colNumber={3}
+      colNumber={5}
       customRow={{
         name: (
           <div id={name} className={classnames(trackedElementClassName, groupElementClassName, styles.name)}>
@@ -64,6 +67,7 @@ export function VariableNodeSummary({
         description: doc?.comment || '',
         required: !isOptional,
         type: '',
+        defaultValue,
       }}
     />
   );

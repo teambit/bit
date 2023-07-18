@@ -31,6 +31,7 @@ export function GroupedSchemaNodesSummary({
 
   const groupedNodes = hasNodes ? Array.from(groupByNodeSignatureType(nodes).entries()).sort(sortSignatureType) : [];
   const { apiRefModel } = apiNodeRendererProps;
+
   return (
     <div {...rest} className={classnames(styles.groupNodesContainer, className)}>
       {groupedNodes.map(([type, groupedMembersByType], index) => {
@@ -38,59 +39,65 @@ export function GroupedSchemaNodesSummary({
         const headings =
           type === 'methods' || type === 'constructors' || type === 'enum members' || type === 'setters'
             ? ['name', 'signature', 'description']
-            : ['name', 'type', 'description'];
+            : ['name', 'type', 'default', 'description'];
 
         return (
-          <div key={`${typeId}`} className={classnames(styles.table, index !== 0 && styles.paddingTop)}>
+          <div key={`${typeId}`} className={classnames(index !== 0 && styles.paddingTop)}>
             {type && (
               <div id={typeId} className={classnames(styles.groupName, trackedElementClassName)}>
                 {type}
               </div>
             )}
-            <HeadingRow className={classnames(styles.row)} colNumber={3} headings={headings} />
-            {groupedMembersByType.map((member) => {
-              if (type === 'methods' || type === 'constructors' || type === 'setters') {
+            <div className={styles.table}>
+              <HeadingRow
+                className={classnames(styles.row)}
+                colNumber={headings.length === 4 ? 4 : 3}
+                headings={headings}
+              />
+              {groupedMembersByType.map((member) => {
+                if (type === 'methods' || type === 'constructors' || type === 'setters') {
+                  return (
+                    <FunctionNodeSummary
+                      key={`${member.__schema}-${member.name}`}
+                      node={member}
+                      apiNodeRendererProps={apiNodeRendererProps}
+                      groupElementClassName={typeId}
+                      headings={headings}
+                      apiRefModel={apiRefModel}
+                      name={(member as any).name || 'constructor'}
+                      params={(member as any).params || [(member as any).param]}
+                      returnType={(member as any).returnType}
+                    />
+                  );
+                }
+                if (type === 'enum members') {
+                  return (
+                    <EnumMemberSummary
+                      key={`${member.__schema}-${member.name}`}
+                      headings={headings}
+                      apiNodeRendererProps={apiNodeRendererProps}
+                      groupElementClassName={typeId}
+                      name={(member as EnumMemberSchema).name}
+                      node={member as EnumMemberSchema}
+                    />
+                  );
+                }
+
                 return (
-                  <FunctionNodeSummary
+                  <VariableNodeSummary
                     key={`${member.__schema}-${member.name}`}
                     node={member}
-                    apiNodeRendererProps={apiNodeRendererProps}
-                    groupElementClassName={typeId}
                     headings={headings}
-                    apiRefModel={apiRefModel}
-                    name={(member as any).name || 'constructor'}
-                    params={(member as any).params || [(member as any).param]}
-                    returnType={(member as any).returnType}
+                    groupElementClassName={typeId}
+                    apiNodeRendererProps={apiNodeRendererProps}
+                    name={(member as any).name}
+                    type={(member as any).type}
+                    isOptional={(member as any).isOptional}
+                    defaultValue={(member as any).defaultValue}
                   />
                 );
-              }
-              if (type === 'enum members') {
-                return (
-                  <EnumMemberSummary
-                    key={`${member.__schema}-${member.name}`}
-                    headings={headings}
-                    apiNodeRendererProps={apiNodeRendererProps}
-                    groupElementClassName={typeId}
-                    name={(member as EnumMemberSchema).name}
-                    node={member as EnumMemberSchema}
-                  />
-                );
-              }
-
-              return (
-                // @todo refactor this the member type should not be any
-                <VariableNodeSummary
-                  key={`${member.__schema}-${member.name}`}
-                  node={member}
-                  headings={headings}
-                  groupElementClassName={typeId}
-                  apiNodeRendererProps={apiNodeRendererProps}
-                  name={(member as any).name}
-                  type={(member as any).type}
-                  isOptional={(member as any).isOptional}
-                />
-              );
-            })}
+              })}
+            </div>
           </div>
         );
       })}

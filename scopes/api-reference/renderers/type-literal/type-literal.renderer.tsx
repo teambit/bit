@@ -23,9 +23,9 @@ function TypeLiteralComponent(props: APINodeRenderProps) {
     return <div className={styles.node}>{typeLiteralNode.toString()}</div>;
   }
 
-  const members = typeLiteralNode.members.map((member) => {
-    if (member.signature) return member;
-    return copySchemaNode(member, { signature: member.toString() });
+  const members = typeLiteralNode.getNodes().map((node) => {
+    if (node.signature) return node;
+    return copySchemaNode(node, { signature: node.toString() });
   });
 
   return <GroupedSchemaNodesSummary nodes={members} apiNodeRendererProps={props} />;
