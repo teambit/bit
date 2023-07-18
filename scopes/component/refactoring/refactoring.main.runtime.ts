@@ -6,7 +6,6 @@ import replacePackageName from '@teambit/legacy/dist/utils/string/replace-packag
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import PkgAspect, { PkgMain } from '@teambit/pkg';
-import { Formatter } from '@teambit/formatter';
 import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import {
@@ -19,15 +18,22 @@ import {
   typeAliasNamesTransformer,
   variableNamesTransformer,
   transformSourceFile,
-  identifierTransformer,
+  expressionStatementTransformer,
 } from '@teambit/typescript';
+import PrettierAspect, { PrettierMain } from '@teambit/prettier';
+import { Formatter } from '@teambit/formatter';
 import { RefactoringAspect } from './refactoring.aspect';
 import { DependencyNameRefactorCmd, RefactorCmd } from './refactor.cmd';
 
 export type MultipleStringsReplacement = Array<{ oldStr: string; newStr: string }>;
 
 export class RefactoringMain {
-  constructor(private componentMain: ComponentMain, private pkg: PkgMain, private envs: EnvsMain) {}
+  constructor(
+    private componentMain: ComponentMain,
+    private pkg: PkgMain,
+    private envs: EnvsMain,
+    private prettierMain: PrettierMain
+  ) {}
 
   /**
    * refactor the dependency name of a component.
@@ -105,7 +111,7 @@ export class RefactoringMain {
         interfaceNamesTransformer,
         typeAliasNamesTransformer,
         variableNamesTransformer,
-        identifierTransformer,
+        expressionStatementTransformer,
       ]
     );
   }
@@ -209,20 +215,44 @@ export class RefactoringMain {
     return changed.some((c) => c);
   }
 
+  private getDefaultFormatter(): Formatter {
+    return this.prettierMain.createFormatter(
+      { check: false },
+      {
+        config: {
+          parser: 'typescript',
+          trailingComma: 'es5',
+          tabWidth: 2,
+          singleQuote: true,
+        },
+      }
+    );
+  }
+
   private async replaceMultipleStringsInOneComp(
     comp: Component,
     stringsToReplace: MultipleStringsReplacement,
     transformers: SourceFileTransformer[]
   ): Promise<boolean> {
     const updates = stringsToReplace.reduce((acc, { oldStr, newStr }) => ({ ...acc, [oldStr]: newStr }), {});
-    const env = this.envs.getEnv(comp).env;
-    const formatter: Formatter | undefined = env.getFormatter?.(null, [
-      (config: PrettierConfigMutator) => {
-        config.setKey('parser', 'typescript');
-        return config;
-      },
-    ]);
-
+    let formatter: Formatter | undefined;
+    // We might not be able to load the real env during bit new for example
+    try {
+      const env = this.envs.getEnv(comp).env;
+      formatter = env.getFormatter?.(null, [
+        (config: PrettierConfigMutator) => {
+          config.setKey('parser', 'typescript');
+          return config;
+        },
+      ]);
+      // We only need the env for the formatter, so we can dispose it right away
+    } catch (err) {
+      // ignore
+      // TODO: log the error
+    }
+    if (!formatter) {
+      formatter = this.getDefaultFormatter();
+    }
     const changed = await Promise.all(
       comp.filesystem.files.map(async (file) => {
         const isBinary = await isBinaryFile(file.contents);
@@ -242,10 +272,16 @@ export class RefactoringMain {
   }
 
   static slots = [];
-  static dependencies = [ComponentAspect, PkgAspect, CLIAspect, EnvsAspect];
+  static dependencies = [ComponentAspect, PkgAspect, CLIAspect, EnvsAspect, PrettierAspect];
   static runtime = MainRuntime;
-  static async provider([componentMain, pkg, cli, envMain]: [ComponentMain, PkgMain, CLIMain, EnvsMain]) {
-    const refactoringMain = new RefactoringMain(componentMain, pkg, envMain);
+  static async provider([componentMain, pkg, cli, envMain, prettierMain]: [
+    ComponentMain,
+    PkgMain,
+    CLIMain,
+    EnvsMain,
+    PrettierMain
+  ]) {
+    const refactoringMain = new RefactoringMain(componentMain, pkg, envMain, prettierMain);
     const subCommands = [new DependencyNameRefactorCmd(refactoringMain, componentMain)];
     const refactorCmd = new RefactorCmd();
     refactorCmd.commands = subCommands;

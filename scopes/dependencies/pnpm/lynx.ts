@@ -158,7 +158,7 @@ export async function getPeerDependencyIssues(
   });
 }
 
-export type RebuildFn = (opts: { pending?: boolean }) => Promise<void>;
+export type RebuildFn = (opts: { pending?: boolean; skipIfHasSideEffectsCache?: boolean }) => Promise<void>;
 
 export async function install(
   rootDir: string,

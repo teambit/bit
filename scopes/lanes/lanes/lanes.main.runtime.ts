@@ -268,14 +268,14 @@ export class LanesMain {
     }
     const currentLaneId = this.workspace.getCurrentLaneId();
     const currentLaneScope = currentLaneId.isDefault() ? undefined : currentLaneId.scope;
-    if (!forkLaneNewScope && scope && currentLaneScope !== scope) {
+    if (!forkLaneNewScope && !currentLaneId.isDefault() && scope && currentLaneScope !== scope) {
       throw new BitError(`you're about to create a lane forked from ${currentLaneId.toString()} and assign it to a different scope "${scope}".
 if the lane components have a large history, it would be best to stick with the same scope as the current lane.
 to do that, re-run the command without the "--scope" flag. it will create the lane and set the scope to "${currentLaneScope}"
 if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-new-scope" flag.`);
     }
     scope = scope || (currentLaneId.isDefault() ? this.workspace.defaultScope : currentLaneId.scope);
-    const laneObj = await createLane(this.workspace.consumer, name, scope);
+    const laneObj = await createLane(this.workspace, name, scope);
     const laneId = LaneId.from(name, scope);
     this.setCurrentLane(laneId, alias, false);
     const trackLaneData = {

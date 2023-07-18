@@ -6,6 +6,9 @@ import { BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { merge, cloneDeep } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
+import { PrettierConfigWriter } from '@teambit/defender.prettier-formatter';
+import { TypescriptConfigWriter } from '@teambit/typescript.typescript-compiler';
+import { EslintConfigWriter } from '@teambit/defender.eslint-linter';
 import { CompilerMain } from '@teambit/compiler';
 import {
   BuilderEnv,
@@ -37,6 +40,8 @@ import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Logger } from '@teambit/logger';
+import { ConfigWriterEntry } from '@teambit/workspace-config-files';
+
 // ensure reactEnv depends on compositions-app
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { CompositionsApp } from '@teambit/react.ui.compositions-app';
@@ -552,6 +557,31 @@ export class ReactEnv
   createCjsCompilerTask(transformers: Function[] = [], tsModule = ts) {
     const tsCompiler = this.createTsCjsCompiler('build', transformers as TsConfigTransformer[], tsModule);
     return this.compiler.createTask('TSCompiler', tsCompiler);
+  }
+
+  workspaceConfig(): ConfigWriterEntry[] {
+    return [
+      TypescriptConfigWriter.create(
+        {
+          tsconfig: require.resolve('./typescript/tsconfig.cjs.json'),
+          // types: resolveTypes(__dirname, ["./types"]),
+        },
+        this.logger
+      ),
+      EslintConfigWriter.create(
+        {
+          configPath: require.resolve('./eslint/eslintrc.js'),
+          tsconfig: require.resolve('./typescript/tsconfig.cjs.json'),
+        },
+        this.logger
+      ),
+      PrettierConfigWriter.create(
+        {
+          configPath: require.resolve('./prettier/prettier.config.js'),
+        },
+        this.logger
+      ),
+    ];
   }
 
   async __getDescriptor() {

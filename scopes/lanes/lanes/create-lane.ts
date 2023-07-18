@@ -8,15 +8,18 @@ import { isHash } from '@teambit/component-version';
 import { getBitCloudUser } from '@teambit/snapping';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { Workspace } from '@teambit/workspace';
+import { compact } from 'lodash';
 
 const MAX_LANE_NAME_LENGTH = 800;
 
 export async function createLane(
-  consumer: Consumer,
+  workspace: Workspace,
   laneName: string,
   scopeName: string,
   remoteLane?: Lane
 ): Promise<Lane> {
+  const consumer = workspace.consumer;
   const lanes = await consumer.scope.listLanes();
   if (lanes.find((lane) => lane.name === laneName)) {
     throw new BitError(`lane "${laneName}" already exists, to switch to this lane, please use "bit switch" command`);
@@ -32,14 +35,19 @@ export async function createLane(
     if (!currentLaneObject) return [];
     const laneComponents = currentLaneObject.components;
     const workspaceIds = consumer.bitMap.getAllBitIds();
-    const laneComponentWithBitmapHead = laneComponents.map(({ id, head }) => {
-      const bitmapHead = workspaceIds.searchWithoutVersion(id);
-      if (bitmapHead && isHash(bitmapHead.version)) {
-        return { id, head: Ref.from(bitmapHead.version as string) };
-      }
-      return { id, head };
-    });
-    return laneComponentWithBitmapHead;
+    const laneComponentWithBitmapHead = await Promise.all(
+      laneComponents.map(async ({ id, head }) => {
+        const compId = await workspace.resolveComponentId(id.changeVersion(head.toString()));
+        const isRemoved = await workspace.scope.isComponentRemoved(compId);
+        if (isRemoved) return null;
+        const bitmapHead = workspaceIds.searchWithoutVersion(id);
+        if (bitmapHead && isHash(bitmapHead.version)) {
+          return { id, head: Ref.from(bitmapHead.version as string) };
+        }
+        return { id, head };
+      })
+    );
+    return compact(laneComponentWithBitmapHead);
   };
 
   const forkedFrom = await getLaneOrigin(consumer);

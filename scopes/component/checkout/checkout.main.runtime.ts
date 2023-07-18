@@ -32,17 +32,20 @@ import {
   deleteFilesIfNeeded,
   ComponentStatusBase,
 } from './checkout-version';
+import { RevertCmd } from './revert-cmd';
 
 export type CheckoutProps = {
   version?: string; // if reset/head/latest is true, the version is undefined
   ids?: ComponentID[];
   head?: boolean;
   latest?: boolean;
+  main?: boolean; // relevant for "revert" only
   promptMergeOptions?: boolean;
   mergeStrategy?: MergeStrategy | null;
   verbose?: boolean;
   skipNpmInstall?: boolean;
   reset?: boolean; // remove local changes. if set, the version is undefined.
+  revert?: boolean;
   all?: boolean; // checkout all ids
   isLane?: boolean;
   workspaceOnly?: boolean;
@@ -59,7 +62,7 @@ export type ComponentStatusBeforeMergeAttempt = ComponentStatusBase & {
   };
 };
 
-type CheckoutTo = 'head' | 'reset' | string;
+type CheckoutTo = 'head' | 'reset' | 'main' | string;
 
 export class CheckoutMain {
   constructor(
@@ -202,7 +205,8 @@ export class CheckoutMain {
     componentPattern: string,
     checkoutProps: CheckoutProps
   ): Promise<ApplyVersionResults> {
-    this.logger.setStatusLine(BEFORE_CHECKOUT);
+    const { revert } = checkoutProps;
+    this.logger.setStatusLine(revert ? 'reverting components...' : BEFORE_CHECKOUT);
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     await this.importer.importCurrentObjects(); // important. among others, it fetches the remote lane object and its new components.
@@ -237,6 +241,7 @@ export class CheckoutMain {
     if (to === HEAD) checkoutProps.head = true;
     else if (to === LATEST) checkoutProps.latest = true;
     else if (to === 'reset') checkoutProps.reset = true;
+    else if (to === 'main') checkoutProps.main = true;
     else {
       if (!BitId.isValidVersion(to)) throw new BitError(`the specified version "${to}" is not a valid version`);
       checkoutProps.version = to;
@@ -261,6 +266,9 @@ export class CheckoutMain {
     }
     if (checkoutProps.workspaceOnly && !checkoutProps.head) {
       throw new BitError(`--workspace-only flag can only be used with "head" (bit checkout head --workspace-only)`);
+    }
+    if (checkoutProps.revert) {
+      checkoutProps.skipUpdatingBitmap = true;
     }
     const idsOnWorkspace = componentPattern
       ? await this.workspace.idsByPattern(componentPattern)
@@ -297,7 +305,7 @@ export class CheckoutMain {
     checkoutProps: CheckoutProps
   ): Promise<ComponentStatusBeforeMergeAttempt> {
     const consumer = this.workspace.consumer;
-    const { version, head: headVersion, reset, latest: latestVersion, versionPerId } = checkoutProps;
+    const { version, head: headVersion, reset, revert, main, latest: latestVersion, versionPerId } = checkoutProps;
     const repo = consumer.scope.objects;
     const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
     const componentStatus: ComponentStatusBeforeMergeAttempt = { id: component.id };
@@ -309,6 +317,9 @@ export class CheckoutMain {
     if (!componentModel) {
       return returnFailure(`component ${component.id.toString()} is new, no version to checkout`, true);
     }
+    if (main && !componentModel.head) {
+      return returnFailure(`component ${component.id.toString()} is not available on main`);
+    }
     const unmerged = repo.unmergedComponents.getEntry(component.name);
     if (!reset && unmerged) {
       return returnFailure(
@@ -317,8 +328,9 @@ export class CheckoutMain {
     }
     const getNewVersion = async (): Promise<string> => {
       if (reset) return component.id.version as string;
-
       if (headVersion) return componentModel.headIncludeRemote(repo);
+      // we verified previously that head exists in case of "main"
+      if (main) return componentModel.head?.toString() as string;
       if (latestVersion) {
         const latest = componentModel.latestVersionIfExist();
         return latest || componentModel.headIncludeRemote(repo);
@@ -327,8 +339,8 @@ export class CheckoutMain {
         return versionPerId.find((id) => id._legacy.isEqualWithoutVersion(component.id))?.version as string;
       }
 
-      // @ts-ignore if !reset the version is defined
-      return version;
+      // if all above are false, the version is defined
+      return version as string;
     };
     const newVersion = await getNewVersion();
     if (version && !headVersion) {
@@ -374,7 +386,7 @@ export class CheckoutMain {
 
     const newId = component.id.changeVersion(newVersion);
 
-    if (reset || !isModified) {
+    if (reset || !isModified || revert) {
       // if the component is not modified, no need to try merge the files, they will be written later on according to the
       // checked out version. same thing when no version is specified, it'll be reset to the model-version later.
       return { currentComponent: component, componentFromModel: componentVersion, id: newId };
@@ -439,7 +451,7 @@ export class CheckoutMain {
   ]) {
     const logger = loggerMain.createLogger(CheckoutAspect.id);
     const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer, remove);
-    cli.register(new CheckoutCmd(checkoutMain));
+    cli.register(new CheckoutCmd(checkoutMain), new RevertCmd(checkoutMain));
     return checkoutMain;
   }
 }
