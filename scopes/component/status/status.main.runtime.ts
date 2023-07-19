@@ -6,10 +6,8 @@ import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/work
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import { ComponentID } from '@teambit/component-id';
 import { Component } from '@teambit/component';
-import { compact } from 'lodash';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BEFORE_STATUS } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
