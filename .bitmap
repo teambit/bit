@@ -633,6 +633,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/install"
     },
+    "ipc-events": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/ipc-events"
+    },
     "isolator": {
         "scope": "teambit.component",
         "version": "0.0.1110",
