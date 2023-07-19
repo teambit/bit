@@ -3,7 +3,7 @@ import { BuilderMain, BuildTask, BuildContext, ComponentResult, TaskResults } fr
 import { ComponentID } from '@teambit/component';
 import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
-import { BUILD_TASK } from './build.task';
+import { BUILD_TASK } from './build-application.task';
 import { AppDeployContext } from './app-deploy-context';
 
 export const DEPLOY_TASK = 'deploy_application';
