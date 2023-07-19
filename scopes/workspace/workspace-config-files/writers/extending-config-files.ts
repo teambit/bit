@@ -1,3 +1,4 @@
+import normalize from 'normalize-path';
 import format from 'string-format';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import fs from 'fs-extra';
@@ -214,7 +215,7 @@ async function writeExtendingConfigFiles(
           const filePath = join(workspaceDir, path, name);
           const targetPath = configFile.useAbsPaths
             ? configFile.extendingTarget.filePath
-            : `./${relative(dirname(filePath), configFile.extendingTarget.filePath)}`;
+            : normalize(`./${relative(dirname(filePath), configFile.extendingTarget.filePath)}`);
           const content = configFile.content.replace(`{${configFile.extendingTarget.name}}`, targetPath);
           if (!opts.dryRun) {
             await fs.outputFile(filePath, content);

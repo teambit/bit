@@ -36,6 +36,7 @@ import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
 const installsRunning: Record<string, Promise<any>> = {};
+const cafsLocker = new Map<string, number>();
 
 type RegistriesMap = {
   default: string;
@@ -58,6 +59,7 @@ async function createStoreController(
   const opts: CreateStoreControllerOptions = {
     dir: options.rootDir,
     cacheDir: options.cacheDir,
+    cafsLocker,
     storeDir: options.storeDir,
     rawConfig: authConfig,
     verifyStoreIntegrity: true,
@@ -305,7 +307,9 @@ export async function install(
         cacheDir,
       } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
       if (!_opts.hidePackageManagerOutput) {
-        stopReporting = initReporter();
+        stopReporting = initReporter({
+          appendOnly: true,
+        });
       }
       try {
         await rebuild.handler(_opts, []);
@@ -317,13 +321,13 @@ export async function install(
   };
 }
 
-function initReporter() {
+function initReporter(opts?: { appendOnly: boolean }) {
   return initDefaultReporter({
     context: {
       argv: [],
     },
     reportingOptions: {
-      appendOnly: false,
+      appendOnly: opts?.appendOnly ?? false,
       throttleProgress: 200,
     },
     streamParser,
