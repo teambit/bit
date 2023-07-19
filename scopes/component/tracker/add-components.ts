@@ -27,7 +27,6 @@ import {
   DuplicateIds,
   EmptyDirectory,
   ExcludedMainFile,
-  MainFileIsDir,
   NoFiles,
   PathsNotExist,
 } from '@teambit/legacy/dist/consumer/component-ops/add-components/exceptions';
@@ -243,6 +242,7 @@ export default class AddComponents {
       }
       return file;
     });
+
     // @ts-ignore it can't be null due to the filter function
     const componentFiles: ComponentMapFile[] = (await Promise.all(componentFilesP)).filter((file) => file);
     if (!componentFiles.length) return { id: component.componentId, files: [] };
@@ -437,25 +437,7 @@ you can add the directory these files are located at and it'll change the root d
     if (this.alternateCwd) {
       mainFile = path.join(this.alternateCwd, mainFile);
     }
-    const mainFileRelativeToConsumer = this.consumer.getPathRelativeToConsumer(mainFile);
-    const mainPath = this.consumer.toAbsolutePath(mainFileRelativeToConsumer);
-    if (fs.existsSync(mainPath)) {
-      const shouldIgnore = this.gitIgnore.ignores(mainFileRelativeToConsumer);
-      if (shouldIgnore) throw new ExcludedMainFile(mainFileRelativeToConsumer);
-      if (isDir(mainPath)) {
-        throw new MainFileIsDir(mainPath);
-      }
-      const foundFile = this._findMainFileInFiles(mainFileRelativeToConsumer, files);
-      if (foundFile) {
-        return foundFile.relativePath;
-      }
-      files.push({
-        relativePath: pathNormalizeToLinux(mainFileRelativeToConsumer),
-        test: false,
-        name: path.basename(mainFileRelativeToConsumer),
-      });
-      return mainFileRelativeToConsumer;
-    }
+
     return mainFile;
   }
 
