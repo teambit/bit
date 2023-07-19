@@ -15,8 +15,8 @@ export type PathAbsolute = string;
 export function pathJoinLinux(...paths): PathLinux {
   return normalize(path.join(...paths));
 }
-export function pathNormalizeToLinux(pathToNormalize?: PathOsBased): PathLinux {
-  return pathToNormalize ? normalize(pathToNormalize) : pathToNormalize;
+export function pathNormalizeToLinux(pathToNormalize: PathOsBased = ''): PathLinux {
+  return normalize(pathToNormalize);
 }
 export function pathRelativeLinux(from: PathOsBased, to: PathOsBased): PathLinux {
   return normalize(path.relative(from, to));
