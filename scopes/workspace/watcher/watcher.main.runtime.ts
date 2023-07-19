@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { SlotRegistry, Slot } from '@teambit/harmony';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { Component } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -14,11 +15,20 @@ export type OnPreWatch = (components: Component[], watchOpts: WatchOptions) => P
 export type OnPreWatchSlot = SlotRegistry<OnPreWatch>;
 
 export class WatcherMain {
-  constructor(private workspace: Workspace, private pubsub: PubsubMain, private onPreWatchSlot: OnPreWatchSlot) {}
+  constructor(
+    private workspace: Workspace,
+    private scope: ScopeMain,
+    private pubsub: PubsubMain,
+    private onPreWatchSlot: OnPreWatchSlot
+  ) {}
 
   async watch(opts: WatchOptions) {
     const watcher = new Watcher(this.workspace, this.pubsub, this);
     await watcher.watchAll(opts);
+  }
+
+  async watchScopeInternalFiles() {
+    await this.scope.watchScopeInternalFiles();
   }
 
   async triggerOnPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
@@ -35,16 +45,16 @@ export class WatcherMain {
   }
 
   static slots = [Slot.withType<OnPreWatch>()];
-  static dependencies = [CLIAspect, WorkspaceAspect, PubsubAspect, LoggerAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, ScopeAspect, PubsubAspect, LoggerAspect];
   static runtime = MainRuntime;
 
   static async provider(
-    [cli, workspace, pubsub, loggerMain]: [CLIMain, Workspace, PubsubMain, LoggerMain],
+    [cli, workspace, scope, pubsub, loggerMain]: [CLIMain, Workspace, ScopeMain, PubsubMain, LoggerMain],
     _,
     [onPreWatchSlot]: [OnPreWatchSlot]
   ) {
     const logger = loggerMain.createLogger(WatcherAspect.id);
-    const watcherMain = new WatcherMain(workspace, pubsub, onPreWatchSlot);
+    const watcherMain = new WatcherMain(workspace, scope, pubsub, onPreWatchSlot);
     const watchCmd = new WatchCommand(pubsub, logger, watcherMain);
     cli.register(watchCmd);
     return watcherMain;

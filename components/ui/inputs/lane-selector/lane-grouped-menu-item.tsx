@@ -12,7 +12,7 @@ export type LaneGroupedMenuItemProps = {
   current: LaneModel[];
   scope: string;
   getHref?: (laneId: LaneId) => string;
-  onLaneSelected?: (laneId: LaneId) => void;
+  onLaneSelected?: (laneId: LaneId, lane: LaneModel) => void;
   icon?: React.ReactNode;
   timestamp?: (lane: LaneModel) => Date | undefined;
   innerRefs?: (laneId: LaneId) => React.RefObject<HTMLDivElement> | undefined;

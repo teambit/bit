@@ -59,7 +59,6 @@ export type WorkspaceLinkResults = {
 export type WorkspaceInstallOptions = {
   addMissingDeps?: boolean;
   addMissingPeers?: boolean;
-  variants?: string;
   lifecycleType?: WorkspaceDependencyLifecycleType;
   dedupe?: boolean;
   import?: boolean;
@@ -161,7 +160,7 @@ export class InstallMain {
   }
 
   private async _addPackages(packages: string[], options?: WorkspaceInstallOptions) {
-    if (!options?.variants && (options?.lifecycleType as string) === 'dev') {
+    if ((options?.lifecycleType as string) === 'dev') {
       throw new DependencyTypeNotSupportedInPolicy(options?.lifecycleType as string);
     }
     this.logger.debug(`installing the following packages: ${packages.join()}`);
@@ -189,13 +188,9 @@ export class InstallMain {
         });
       }
     });
-    if (!options?.variants) {
-      this.dependencyResolver.addToRootPolicy(newWorkspacePolicyEntries, {
-        updateExisting: options?.updateExisting ?? false,
-      });
-    } else {
-      // TODO: implement
-    }
+    this.dependencyResolver.addToRootPolicy(newWorkspacePolicyEntries, {
+      updateExisting: options?.updateExisting ?? false,
+    });
     await this.dependencyResolver.persistConfig(this.workspace.path);
   }
 
@@ -218,12 +213,20 @@ export class InstallMain {
       dependencyFilterFn: depsFilterFn,
       nodeLinker: this.dependencyResolver.nodeLinker(),
     };
+    const linkOpts = {
+      linkTeambitBit: true,
+      linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
+      linkDepsResolvedFromEnv: !hasRootComponents,
+      linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
+    };
+    const { linkedRootDeps } = await this.calculateLinks(linkOpts);
     // eslint-disable-next-line prefer-const
     let { mergedRootPolicy, componentsAndManifests: current } = await this._getComponentsManifestsAndRootPolicy(
       installer,
       {
         ...calcManifestsOpts,
         addMissingDeps: options?.addMissingDeps,
+        linkedRootDeps,
       }
     );
 
@@ -239,14 +242,6 @@ export class InstallMain {
     const prevManifests = new Set<string>();
     // TODO: this make duplicate
     // this.logger.consoleSuccess();
-    // TODO: add the links results to the output
-    const linkOpts = {
-      linkTeambitBit: true,
-      linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
-      linkDepsResolvedFromEnv: !hasRootComponents,
-      linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
-    };
-    const { linkedRootDeps } = await this.calculateLinks(linkOpts);
     const linkedDependencies = {
       [this.workspace.path]: linkedRootDeps,
     };
@@ -305,6 +300,7 @@ export class InstallMain {
     installer: DependencyInstaller,
     options: GetComponentsAndManifestsOptions & {
       addMissingDeps?: boolean;
+      linkedRootDeps: Record<string, string>;
     }
   ): Promise<{ componentsAndManifests: ComponentsAndManifests; mergedRootPolicy: WorkspacePolicy }> {
     const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
@@ -312,9 +308,19 @@ export class InstallMain {
     if (!options?.addMissingDeps) {
       return { componentsAndManifests, mergedRootPolicy };
     }
-    const addedNewPkgs = await this._addMissingPackagesToRootPolicy(
-      componentsAndManifests.manifests[this.workspace.path]
+    const rootDeps = new Set(
+      Object.keys({
+        ...componentsAndManifests.manifests[this.workspace.path].devDependencies,
+        ...componentsAndManifests.manifests[this.workspace.path].dependencies,
+        ...options.linkedRootDeps,
+      })
     );
+    Object.values(omit(componentsAndManifests.manifests, [this.workspace.path])).forEach((manifest) => {
+      if ((manifest as ProjectManifest).name) {
+        rootDeps.add((manifest as ProjectManifest).name!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+      }
+    });
+    const addedNewPkgs = await this._addMissingPackagesToRootPolicy(rootDeps);
     if (!addedNewPkgs) {
       return { componentsAndManifests, mergedRootPolicy };
     }
@@ -341,23 +347,19 @@ export class InstallMain {
   }
 
   private async _addMissingPackagesToRootPolicy(
-    rootManifest: ProjectManifest,
+    rootDeps: Set<string>,
     options?: WorkspaceInstallOptions
   ): Promise<boolean> {
-    const packages = await this._getMissingPackagesWithoutRootDeps(rootManifest);
+    const packages = await this._getMissingPackagesWithoutRootDeps(rootDeps);
     if (packages && packages.length) {
       await this._addPackages(packages, options);
     }
     return packages.length > 0;
   }
 
-  private async _getMissingPackagesWithoutRootDeps(rootManifest: ProjectManifest) {
+  private async _getMissingPackagesWithoutRootDeps(rootDeps: Set<string>) {
     const packages = await this._getAllMissingPackages();
-    const rootDeps = {
-      ...rootManifest?.devDependencies,
-      ...rootManifest?.dependencies,
-    };
-    return packages.filter((pkg) => !rootDeps[pkg]);
+    return packages.filter((pkg) => !rootDeps.has(pkg));
   }
 
   private async _getAllMissingPackages(): Promise<string[]> {

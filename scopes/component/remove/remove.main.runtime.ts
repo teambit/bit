@@ -232,7 +232,13 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     const removed = comps.filter((c) => this.isRemoved(c));
     const staged = await Promise.all(
       removed.map(async (c) => {
-        const snapDistance = await this.workspace.scope.getSnapDistance(c.id);
+        const snapDistance = await this.workspace.scope.getSnapDistance(c.id, false);
+        if (snapDistance.err) {
+          this.logger.warn(
+            `getRemovedStagedFromLane unable to get snapDistance for ${c.id.toString()} due to ${snapDistance.err.name}`
+          );
+          // todo: not clear what should be done here. should we consider it as removed-staged or not.
+        }
         if (snapDistance.isSourceAhead()) return c.id;
         return undefined;
       })

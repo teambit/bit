@@ -1,5 +1,5 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
-import fetch, { Response } from 'node-fetch';
+import fetch, { Response } from 'cross-fetch';
 import readLine from 'readline';
 import HttpAgent from 'agentkeepalive';
 
@@ -43,6 +43,7 @@ import {
   CFG_NETWORK_KEY,
   CFG_NETWORK_STRICT_SSL,
   CENTRAL_BIT_HUB_URL_IMPORTER,
+  CENTRAL_BIT_HUB_URL_IMPORTER_V2,
 } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
@@ -54,12 +55,25 @@ import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
 import loader from '../../../cli/loader';
 import { UnexpectedNetworkError } from '../exceptions';
-import { CLOUD_IMPORTER, isFeatureEnabled } from '../../../api/consumer/lib/feature-toggle';
+import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '../../../api/consumer/lib/feature-toggle';
 
 export enum Verb {
   WRITE = 'write',
   READ = 'read',
 }
+
+export type ExportOrigin = 'export' | 'sign' | 'update-dependencies' | 'lane-merge' | 'tag';
+
+export type PushCentralOptions = {
+  origin: ExportOrigin;
+  signComponents?: string[]; // relevant for bit-sign.
+  idsHashMaps?: { [hash: string]: string }; // relevant for bit-sign. keys are the component hash, values are component-ids as strings
+
+  /**
+   * @deprecated prefer using "origin"
+   */
+  sign?: boolean;
+};
 
 export type ProxyConfig = {
   httpProxy?: string;
@@ -230,7 +244,7 @@ export class Http implements Network {
 
   async pushToCentralHub(
     objectList: ObjectList,
-    options: Record<string, any> = {}
+    options: PushCentralOptions
   ): Promise<{
     successIds: string[];
     failedScopes: string[];
@@ -250,6 +264,7 @@ export class Http implements Network {
       `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
     );
 
+    // @ts-ignore TODO: need to fix this
     const results = await this.readPutCentralStream(res.body);
     if (!results.data) throw new Error(`HTTP results are missing "data" property`);
     if (results.data.isError) {
@@ -289,6 +304,7 @@ export class Http implements Network {
       `Http.deleteViaCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
     );
 
+    // @ts-ignore TODO: need to fix this
     const results = await this.readPutCentralStream(res.body);
     if (!results.data) throw new Error(`HTTP results are missing "data" property`);
     if (results.data.isError) {
@@ -319,10 +335,13 @@ export class Http implements Network {
 
   async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectItemsStream> {
     const route = 'api/scope/fetch';
-    const isCloudImporterEnabled = isFeatureEnabled(CLOUD_IMPORTER);
-    const urlToFetch = isCloudImporterEnabled
-      ? `${CENTRAL_BIT_HUB_URL_IMPORTER}/${this.scopeName}`
-      : `${this.url}/${route}`;
+    const getImporterUrl = () => {
+      if (isFeatureEnabled(CLOUD_IMPORTER)) return CENTRAL_BIT_HUB_URL_IMPORTER;
+      if (isFeatureEnabled(CLOUD_IMPORTER_V2)) return CENTRAL_BIT_HUB_URL_IMPORTER_V2;
+      return undefined;
+    };
+    const importerUrl = getImporterUrl();
+    const urlToFetch = importerUrl ? `${importerUrl}/${this.scopeName}` : `${this.url}/${route}`;
     const scopeData = `scopeName: ${this.scopeName}, url: ${urlToFetch}`;
     logger.debug(`Http.fetch, ${scopeData}`);
     const body = JSON.stringify({
@@ -339,6 +358,7 @@ export class Http implements Network {
     const res = await fetch(urlToFetch, opts);
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
+    // @ts-ignore TODO: need to fix this
     const objectListReadable = ObjectList.fromTarToObjectStream(res.body);
 
     return objectListReadable;
@@ -373,7 +393,11 @@ export class Http implements Network {
     throw err;
   }
 
-  private async graphClientRequest(query: string, verb: string = Verb.READ, variables?: Record<string, any>) {
+  private async graphClientRequest(
+    query: string,
+    verb: string = Verb.READ,
+    variables?: Record<string, any>
+  ): Promise<any> {
     logger.debug(`http.graphClientRequest, scope "${this.scopeName}", url "${this.url}", query ${query}`);
     try {
       this.graphClient.setHeader('x-verb', verb);

@@ -9,6 +9,7 @@ import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { SnappingMain, SnapResults } from './snapping.main.runtime';
 import { outputIdsIfExists } from './tag-cmd';
+import { BasicTagSnapParams } from './tag-model-component';
 
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
@@ -36,7 +37,8 @@ export class SnapCmd implements Command {
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
     ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
-    ['', 'force-deploy', 'run the deploy pipeline although the build failed'],
+    ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
+    ['', 'ignore-build-errors', 'run the snap pipeline although the build pipeline failed'],
     [
       'i',
       'ignore-issues [issues]',
@@ -75,30 +77,24 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       skipAutoSnap = false,
       disableSnapPipeline = false,
       forceDeploy = false,
+      ignoreBuildErrors = false,
       unmodified = false,
       failFast = false,
     }: {
-      message?: string;
       all?: boolean;
       force?: boolean;
       unmerged?: boolean;
       editor?: string;
       ignoreIssues?: string;
-      build?: boolean;
-      skipTests?: boolean;
       skipAutoSnap?: boolean;
       disableSnapPipeline?: boolean;
       forceDeploy?: boolean;
       unmodified?: boolean;
       failFast?: boolean;
-    }
+    } & BasicTagSnapParams
   ) {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     const disableTagAndSnapPipelines = disableSnapPipeline;
-    if (disableTagAndSnapPipelines && forceDeploy) {
-      throw new BitError('you can use either force-deploy or disable-snap-pipeline, but not both');
-    }
-
     if (all) {
       this.logger.consoleWarning(
         `--all is deprecated, please omit it. "bit snap" by default will snap all new and modified components`
@@ -115,6 +111,13 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
         `--message will be mandatory in the next few releases. make sure to add a message with your snap`
       );
     }
+    if (forceDeploy) {
+      this.logger.consoleWarning(`--force-deploy is deprecated, use --ignore-build-errors instead`);
+      ignoreBuildErrors = true;
+    }
+    if (disableTagAndSnapPipelines && ignoreBuildErrors) {
+      throw new BitError('you can use either ignore-build-error or disable-snap-pipeline, but not both');
+    }
 
     const results = await this.snapping.snap({
       pattern,
@@ -126,7 +129,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       skipTests,
       skipAutoSnap,
       disableTagAndSnapPipelines,
-      forceDeploy,
+      ignoreBuildErrors,
       unmodified,
       exitOnFirstFailedTask: failFast,
     });

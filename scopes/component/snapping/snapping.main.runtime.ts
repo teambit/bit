@@ -133,7 +133,7 @@ export class SnappingMain {
     unmodified = false,
     soft = false,
     persist = false,
-    forceDeploy = false,
+    ignoreBuildErrors = false,
     incrementBy = 1,
     disableTagAndSnapPipelines = false,
     failFast = false,
@@ -150,8 +150,8 @@ export class SnappingMain {
     failFast?: boolean;
   } & Partial<BasicTagParams>): Promise<TagResults | null> {
     if (soft) build = false;
-    if (disableTagAndSnapPipelines && forceDeploy) {
-      throw new BitError('you can use either force-deploy or disable-tag-pipeline, but not both');
+    if (disableTagAndSnapPipelines && ignoreBuildErrors) {
+      throw new BitError('you can use either ignore-build-errors or disable-tag-pipeline, but not both');
     }
     if (editor && persist) {
       throw new BitError('you can use either --editor or --persist, but not both');
@@ -208,7 +208,7 @@ export class SnappingMain {
         build,
         persist,
         disableTagAndSnapPipelines,
-        forceDeploy,
+        ignoreBuildErrors,
         incrementBy,
         packageManagerConfigRootDir: this.workspace.path,
         dependencyResolver: this.dependencyResolver,
@@ -334,6 +334,7 @@ if you're willing to lose the history from the head to the specified version, us
         ids: legacyIds,
         idsWithFutureScope: legacyIds,
         allVersions: false,
+        exportOrigin: 'tag',
       });
     }
 
@@ -457,7 +458,7 @@ if you're willing to lose the history from the head to the specified version, us
     skipAutoSnap = false,
     build,
     disableTagAndSnapPipelines = false,
-    forceDeploy = false,
+    ignoreBuildErrors = false,
     unmodified = false,
     exitOnFirstFailedTask = false,
   }: {
@@ -471,7 +472,7 @@ if you're willing to lose the history from the head to the specified version, us
     skipTests?: boolean;
     skipAutoSnap?: boolean;
     disableTagAndSnapPipelines?: boolean;
-    forceDeploy?: boolean;
+    ignoreBuildErrors?: boolean;
     unmodified?: boolean;
     exitOnFirstFailedTask?: boolean;
   }): Promise<SnapResults | null> {
@@ -506,7 +507,7 @@ if you're willing to lose the history from the head to the specified version, us
       build,
       isSnap: true,
       disableTagAndSnapPipelines,
-      forceDeploy,
+      ignoreBuildErrors,
       packageManagerConfigRootDir: this.workspace.path,
       dependencyResolver: this.dependencyResolver,
       exitOnFirstFailedTask,

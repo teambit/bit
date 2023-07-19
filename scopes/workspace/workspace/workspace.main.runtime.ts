@@ -17,7 +17,7 @@ import GlobalConfigAspect from '@teambit/global-config';
 import { EXT_NAME } from './constants';
 import { OnComponentAdd, OnComponentChange, OnComponentRemove, OnComponentLoad } from './on-component-events';
 import { WorkspaceAspect } from './workspace.aspect';
-import workspaceProvider, { OnAspectsResolve, OnRootAspectAdded } from './workspace.provider';
+import workspaceProvider, { OnAspectsResolve, OnBitmapChange, OnRootAspectAdded } from './workspace.provider';
 
 export const WorkspaceMain = {
   name: EXT_NAME,
@@ -45,6 +45,7 @@ export const WorkspaceMain = {
     Slot.withType<OnComponentRemove>(),
     Slot.withType<OnAspectsResolve>(),
     Slot.withType<OnRootAspectAdded>(),
+    Slot.withType<OnBitmapChange>(),
   ],
   provider: workspaceProvider,
   defineRuntime: 'browser',

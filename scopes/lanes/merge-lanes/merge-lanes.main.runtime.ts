@@ -323,6 +323,7 @@ export class MergeLanesMain {
         modelComponent,
         sourceHead: toLaneHead,
         targetHead: fromLaneHead,
+        throwForNoCommonSnap: true,
       });
       const modifiedVersion = shouldSquash
         ? await squashOneComp(DEFAULT_LANE, fromLaneId, id, divergeData, log, this.scope.legacyScope, fromVersionObj)
@@ -358,6 +359,7 @@ export class MergeLanesMain {
         // all artifacts must be pushed. they're all considered "external" in this case, because it's running from a
         // bare-scope, but we don't want to ignore them, otherwise, they'll be missing from the component-scopes.
         ignoreMissingExternalArtifacts: false,
+        exportOrigin: 'lane-merge',
       });
       exportedIds = exported.map((id) => id.toString());
     }

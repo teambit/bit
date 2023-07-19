@@ -1,15 +1,10 @@
 import chalk from 'chalk';
 import { relative } from 'path';
-import {
-  AspectWritersResults,
-  EnvsWrittenExtendingConfigFile,
-  EnvsWrittenExtendingConfigFiles,
-  OneConfigFileWriterResult,
-  WriteConfigFilesResult,
-} from '../workspace-config-files.main.runtime';
+import { OneConfigWriterIdResult, WriteConfigFilesResult, WriteResults } from '../workspace-config-files.main.runtime';
 import type { WriteConfigCmdFlags } from '../ws-config.cmd';
 import { formatCleanOutput } from './format-clean-output';
 import { SUMMARY, WRITE_TITLE } from './write-outputs-texts';
+import { EnvsWrittenExtendingConfigFile, EnvsWrittenExtendingConfigFiles } from '../writers';
 
 export function formatWriteOutput(writeConfigFilesResult: WriteConfigFilesResult, flags: WriteConfigCmdFlags): string {
   const { cleanResults, writeResults, wsDir } = writeConfigFilesResult;
@@ -22,31 +17,23 @@ export function formatWriteOutput(writeConfigFilesResult: WriteConfigFilesResult
   return `${cleanWriteOutput}\n\n${SUMMARY}`;
 }
 
-function getWriteResultsOutput(writeResults: WriteConfigFilesResult['writeResults'], wsDir: string, isDryRun: boolean) {
+function getWriteResultsOutput(writeResults: WriteResults, wsDir: string, isDryRun: boolean) {
   const totalExtendingConfigFiles = writeResults.totalExtendingConfigFiles;
 
   const writeTitle = isDryRun
     ? chalk.green(`${totalExtendingConfigFiles} files will be written`)
     : chalk.green(WRITE_TITLE(totalExtendingConfigFiles));
-  const writeOutput = writeResults.aspectsWritersResults
-    .map((aspectWritersResults) => getOneAspectOutput(aspectWritersResults, wsDir))
+  const writeOutput = writeResults.writersResult
+    .map((writerResult) => getOneWriterOutput(writerResult, wsDir))
     .join('\n\n');
   return `${writeTitle}\n${writeOutput}`;
 }
-function getOneAspectOutput(aspectWritersResults: AspectWritersResults, wsDir: string): string {
+function getOneWriterOutput(writerResult: OneConfigWriterIdResult, wsDir: string): string {
   const title = chalk.blue(
-    `${aspectWritersResults.totalExtendingConfigFiles} ${chalk.bold(
-      aspectWritersResults.aspectId.toString()
-    )} configurations added`
+    `${writerResult.totalExtendingConfigFiles} ${chalk.bold(writerResult.writerId.toString())} configurations added`
   );
-  const writersOutput = aspectWritersResults.writersResult
-    .map((oneWritersResults) => getOneWriterOutput(oneWritersResults, wsDir))
-    .join('\n\n');
+  const writersOutput = getExtendingConfigFilesOutput(writerResult.extendingConfigFiles, wsDir);
   return `${title}\n${writersOutput}`;
-}
-function getOneWriterOutput(oneWritersResults: OneConfigFileWriterResult, wsDir: string): string {
-  const extendingConfigFilesOutput = getExtendingConfigFilesOutput(oneWritersResults.extendingConfigFiles, wsDir);
-  return `${extendingConfigFilesOutput}`;
 }
 
 function getExtendingConfigFilesOutput(extendingConfigFiles: EnvsWrittenExtendingConfigFiles, wsDir: string): string {

@@ -79,7 +79,6 @@ export class Watcher {
 
   async watchAll(opts: WatchOptions) {
     const { msgs, ...watchOpts } = opts;
-    // TODO: run build in the beginning of process (it's work like this in other envs)
     const pathsToWatch = await this.getPathsToWatch();
     const componentIds = Object.values(this.trackDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
@@ -230,7 +229,7 @@ export class Watcher {
 
   private async triggerCompChanges(
     componentId: ComponentID,
-    files: string[],
+    files: PathOsBasedAbsolute[],
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
     let updatedComponentId: ComponentID | undefined = componentId;
@@ -288,11 +287,12 @@ export class Watcher {
     const previewsTrackDirs = { ...this.trackDirs };
     await this.workspace._reloadConsumer();
     await this.setTrackDirs();
+    await this.workspace.triggerOnBitmapChange();
     const newDirs: string[] = difference(Object.keys(this.trackDirs), Object.keys(previewsTrackDirs));
     const removedDirs: string[] = difference(Object.keys(previewsTrackDirs), Object.keys(this.trackDirs));
     const results: OnComponentEventResult[] = [];
     if (newDirs.length) {
-      this.fsWatcher.add(newDirs);
+      this.fsWatcher.add(newDirs.map((dir) => this.consumer.toAbsolutePath(dir)));
       const addResults = await mapSeries(newDirs, async (dir) =>
         this.executeWatchOperationsOnComponent(this.trackDirs[dir], [], [], false)
       );
@@ -302,6 +302,7 @@ export class Watcher {
       await this.fsWatcher.unwatch(removedDirs);
       await mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsTrackDirs[dir]));
     }
+
     return results;
   }
 

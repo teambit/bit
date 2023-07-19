@@ -135,6 +135,12 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   useDatedDirs?: boolean;
 
   /**
+   * If set, along with useDatedDirs, then we will use the same hash dir for all capsules created with the same
+   * datedDirId
+   */
+  datedDirId?: string;
+
+  /**
    * installation options
    */
   installOptions?: IsolateComponentsInstallOptions;
@@ -193,7 +199,7 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   context?: IsolationContext;
 };
 
-type GetCapsuleDirOpts = Pick<IsolateComponentsOptions, 'useHash' | 'rootBaseDir' | 'useDatedDirs'> & {
+type GetCapsuleDirOpts = Pick<IsolateComponentsOptions, 'datedDirId' | 'useHash' | 'rootBaseDir' | 'useDatedDirs'> & {
   baseDir: string;
 };
 
@@ -223,6 +229,7 @@ export class IsolatorMain {
   ];
   static defaultConfig = {};
   _componentsPackagesVersionCache: { [idStr: string]: string } = {}; // cache packages versions of components
+  _datedHashForName = new Map<string, string>(); // cache dated hash for a specific name
 
   static async provider([dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader]: [
     DependencyResolverMain,
@@ -408,7 +415,7 @@ export class IsolatorMain {
     let longProcessLogger;
     if (opts.context?.aspects) {
       // const wsPath = opts.host?.path || 'unknown';
-      const wsPath = opts.context.workspaceName || opts.host?.path || 'unknown';
+      const wsPath = opts.context.workspaceName || opts.host?.path || opts.name || 'unknown';
       longProcessLogger = this.logger.createLongProcessLogger(
         `ensuring ${chalk.cyan(components.length.toString())} capsule(s) for all envs and aspects for ${chalk.bold(
           wsPath
@@ -705,10 +712,11 @@ export class IsolatorMain {
     getCapsuleDirOpts: GetCapsuleDirOpts | string,
     rootBaseDir?: string,
     useHash = true,
-    useDatedDirs = false
+    useDatedDirs = false,
+    datedDirId?: string
   ): PathOsBasedAbsolute {
     if (typeof getCapsuleDirOpts === 'string') {
-      getCapsuleDirOpts = { baseDir: getCapsuleDirOpts, rootBaseDir, useHash, useDatedDirs };
+      getCapsuleDirOpts = { baseDir: getCapsuleDirOpts, rootBaseDir, useHash, useDatedDirs, datedDirId };
     }
     const getCapsuleDirOptsWithDefaults = {
       useHash: true,
@@ -720,7 +728,16 @@ export class IsolatorMain {
       const date = new Date();
       const dateDir = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
       const datedBaseDir = 'dated-capsules';
-      const hashDir = v4();
+      let hashDir;
+      const finalDatedDirId = getCapsuleDirOpts.datedDirId;
+      if (finalDatedDirId && this._datedHashForName.has(finalDatedDirId)) {
+        hashDir = this._datedHashForName.get(finalDatedDirId);
+      } else {
+        hashDir = v4();
+        if (finalDatedDirId) {
+          this._datedHashForName.set(finalDatedDirId, hashDir);
+        }
+      }
       return path.join(capsulesRootBaseDir, datedBaseDir, dateDir, hashDir);
     }
     const dir = getCapsuleDirOptsWithDefaults.useHash

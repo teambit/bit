@@ -10,10 +10,9 @@ import PrettierLib, { Options as PrettierModuleOptions } from 'prettier';
 import mapSeries from 'p-map-series';
 import { Logger } from '@teambit/logger';
 import { ExecutionContext } from '@teambit/envs';
-import { PrettierFormatterInterface } from './prettier-formatter-interface';
 // import { PrettierOptions } from './prettier.main.runtime';
 
-export class PrettierFormatter implements Formatter, PrettierFormatterInterface {
+export class PrettierFormatter implements Formatter {
   constructor(
     private logger: Logger,
 
@@ -30,10 +29,6 @@ export class PrettierFormatter implements Formatter, PrettierFormatterInterface 
 
   displayConfig() {
     return JSON.stringify(this.options, null, 2);
-  }
-
-  generateIdeConfig() {
-    return { prettierConfig: this.options };
   }
 
   async format(context: FormatterContext): Promise<FormatResults> {

@@ -7,7 +7,6 @@ import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { InstallMain, WorkspaceInstallOptions } from './install.main.runtime';
 
 type InstallCmdOptions = {
-  variants: string;
   type: WorkspaceDependencyLifecycleType;
   skipDedupe: boolean;
   skipImport: boolean;
@@ -41,7 +40,6 @@ export default class InstallCmd implements Command {
   alias = 'in';
   group = 'development';
   options = [
-    ['v', 'variants <variants>', 'add packages to specific variants'],
     ['t', 'type [lifecycleType]', '"runtime" (default) or "peer" (dev is not a valid option)'],
     ['u', 'update', 'update all dependencies'],
     [
@@ -89,7 +87,6 @@ export default class InstallCmd implements Command {
     }
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const installOpts: WorkspaceInstallOptions = {
-      variants: options.variants,
       lifecycleType: options.addMissingPeers ? 'peer' : options.type,
       dedupe: !options.skipDedupe,
       import: !options.skipImport,
@@ -138,22 +135,16 @@ function formatOutput({
 }
 
 export function getAnotherInstallRequiredOutput(recurringInstall = false, oldNonLoadedEnvs: string[] = []): string {
-  // oldNonLoadedEnvs = ['my-org.my-scope/envs/my-react-env']
   if (!oldNonLoadedEnvs.length) return '';
   const oldNonLoadedEnvsStr = oldNonLoadedEnvs.join(', ');
-  const firstPart = `The following environments are not loaded: ${chalk.cyan(
-    oldNonLoadedEnvsStr
-  )} and doesn't contain env.jsonc file`;
-  const docsLink = `Read more about how to fix this issue in:`;
-  const installAgain = `Please run "bit install" again to make sure all dependencies installed correctly`;
+  const firstPart = `Bit is unable to install all dependencies. Please run "${chalk.cyan('bit install')}" again `;
   const flag = chalk.cyan(`--${recurringInstallFlagName}`);
-  const suggestRecurringInstall = `You can add the ${flag} flag to automatically run "bit install" again. but it is recommended to fix this issue`;
-  let msg = `${firstPart}\n${installAgain}\n${suggestRecurringInstall}\n${docsLink}`;
+  const suggestRecurringInstall = recurringInstall ? '' : `(or use the "${flag}" option next time).`;
+  const envsStr = `The following environments need to add support for "dependency policy" to fix the warning: ${chalk.cyan(
+    oldNonLoadedEnvsStr
+  )}`;
+  const docsLink = `Read more about how to fix this issue in: https://bit.dev/blog/using-a-static-dependency-policy-in-a-legacy-env-lihfbt9b`;
 
-  if (recurringInstall) {
-    const autoInstallAgain =
-      'bit run install again for you to make sure all dependencies installed correctly, but it is recommended to fix this issue';
-    msg = `${firstPart}\n${autoInstallAgain}\n${docsLink}`;
-  }
+  const msg = `${firstPart}${suggestRecurringInstall}\n${envsStr}\n${docsLink}`;
   return chalk.yellow(msg);
 }

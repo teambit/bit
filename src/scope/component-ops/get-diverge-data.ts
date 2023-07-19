@@ -22,6 +22,7 @@ export async function getDivergeData({
   sourceHead, // if empty, use the local head (if on lane - lane head. if on main - component head)
   targetHead,
   throws = true, // otherwise, save the error instance in the `SnapsDistance` object,
+  throwForNoCommonSnap = false, // by default, save the error in `SnapsDistance` obj.
   versionParentsFromObjects, // relevant for remote-scope where during export the data is not in the repo yet.
 }: {
   repo: Repository;
@@ -29,10 +30,13 @@ export async function getDivergeData({
   sourceHead?: Ref | null;
   targetHead: Ref | null;
   throws?: boolean;
+  throwForNoCommonSnap?: boolean;
   versionParentsFromObjects?: VersionParents[];
 }): Promise<SnapsDistance> {
   const isOnLane = modelComponent.laneHeadLocal || modelComponent.laneHeadLocal === null;
   const localHead = sourceHead || (isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead());
+  // uncomment the following line to debug diverge-data issues.
+  // if (modelComponent.name === 'x') console.log('getDivergeData, localHead', localHead, 'targetHead', targetHead);
   if (!targetHead) {
     if (localHead) {
       const allLocalHashes = await getAllVersionHashes({
@@ -193,7 +197,7 @@ bit import ${modelComponent.id()} --objects`);
       return new SnapsDistance(snapsOnSource, snapsOnTarget, undefined);
     }
     const err = new NoCommonSnap(modelComponent.id());
-    if (throws) throw err;
+    if (throwForNoCommonSnap) throw err;
     return new SnapsDistance(snapsOnSource, snapsOnTarget, undefined, err);
   }
 

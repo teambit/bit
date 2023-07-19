@@ -1,6 +1,6 @@
 import React, { HTMLAttributes, useRef } from 'react';
-import { useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
-import { LaneSelector, LaneSelectorSortBy } from '@teambit/lanes.ui.inputs.lane-selector';
+import { UseLanes, useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LaneSelector } from '@teambit/lanes.ui.inputs.lane-selector';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { LaneId } from '@teambit/lane-id';
@@ -11,27 +11,39 @@ import styles from './lane-switcher.module.scss';
 
 export type LaneSwitcherProps = {
   groupByScope?: boolean;
-  sortBy?: LaneSelectorSortBy;
-  sortOptions?: LaneSelectorSortBy[];
+  // sortBy?: LaneSelectorSortBy;
+  // sortOptions?: LaneSelectorSortBy[];
   mainIcon?: () => React.ReactNode;
   scopeIcon?: (scopeName: string) => React.ReactNode;
-  useLanes?: () => { loading?: boolean; lanesModel?: LanesModel };
+  useLanes?: UseLanes;
   getHref?: (lane: LaneId) => string;
+  searchLanes?: (search?: string) => LanesModel | undefined | null;
 } & HTMLAttributes<HTMLDivElement>;
+
+function defaultSearchLanes(useLanes: UseLanes) {
+  return function (search?: string) {
+    const { searchResult } = useLanes(undefined, undefined, { search });
+    if (searchResult?.loading) return undefined;
+    if (!searchResult?.lanesModel) return null;
+    return searchResult.lanesModel;
+  };
+}
 
 export function LaneSwitcher({
   className,
   groupByScope = false,
   mainIcon,
   scopeIcon,
-  sortBy,
-  sortOptions,
+  // sortBy,
+  // sortOptions,
   useLanes = defaultUseLanes,
+  searchLanes = defaultSearchLanes(useLanes),
   getHref = LanesModel.getLaneUrl,
   ...rest
 }: LaneSwitcherProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { lanesModel, loading } = useLanes();
+  const { lanesModel, loading, fetchMoreLanes, hasMore, offset, limit } = useLanes();
+
   const mainLane = lanesModel?.getDefaultLane();
   const nonMainLanes = lanesModel?.getNonMainLanes() || [];
 
@@ -57,13 +69,16 @@ export function LaneSwitcher({
             nonMainLanes={nonMainLanes}
             mainLane={mainLane}
             mainIcon={mainIcon?.()}
-            scopeIcon={scopeIcon}
             groupByScope={groupByScope}
-            sortBy={sortBy}
-            sortOptions={sortOptions}
+            // sortBy={sortBy}
+            // sortOptions={sortOptions}
             scopeIconLookup={scopeIconLookup}
             getHref={getHref}
             loading={loading}
+            fetchMoreLanes={fetchMoreLanes}
+            hasMore={hasMore}
+            initialOffset={(offset ?? 0) + (limit ?? 0)}
+            searchLanes={searchLanes}
             {...rest}
           />
         }
