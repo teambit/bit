@@ -8,13 +8,14 @@ import {
   ArtifactDefinition,
   CAPSULE_ARTIFACTS_DIR,
 } from '@teambit/builder';
+import { compact } from 'lodash';
 import { Capsule } from '@teambit/isolator';
 import { Component } from '@teambit/component';
+
 import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
 import { AppBuildContext } from './app-build-context';
 import { Application } from './application';
-import { compact } from 'lodash';
 
 export const BUILD_TASK = 'build_application';
 export const ARTIFACTS_DIR_NAME = 'apps';
@@ -68,6 +69,7 @@ export class AppsBuildTask implements BuildTask {
         if (!result.artifacts) result.artifacts = [];
         result.artifacts.push(...(merged.artifacts || []));
       }
+      return undefined;
     });
 
     return result;
