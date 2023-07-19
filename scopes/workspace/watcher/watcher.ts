@@ -1,6 +1,6 @@
 import { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
-import { dirname, sep } from 'path';
+import { dirname, sep, basename } from 'path';
 import { compact, difference, partition } from 'lodash';
 import { ComponentID } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
@@ -64,6 +64,7 @@ export class Watcher {
   private changedFilesPerComponent: { [componentId: string]: string[] } = {};
   private watchQueue = new WatchQueue();
   private bitMapChangesInProgress = false;
+  private ipcEventsDir: string;
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
@@ -71,7 +72,9 @@ export class Watcher {
     private trackDirs: { [dir: PathLinux]: ComponentID } = {},
     private verbose = false,
     private multipleWatchers: WatcherProcessData[] = []
-  ) {}
+  ) {
+    this.ipcEventsDir = this.watcherMain.ipcEvents.eventsDir;
+  }
 
   get consumer(): Consumer {
     return this.workspace.consumer;
@@ -189,6 +192,14 @@ export class Watcher {
       }
       if (this.bitMapChangesInProgress) {
         await this.watchQueue.onIdle();
+      }
+      if (dirname(filePath) === this.ipcEventsDir) {
+        const eventName = basename(filePath);
+        if (eventName !== 'onPostInstall') {
+          this.watcherMain.logger.warn(`eventName ${eventName} is not recognized, please handle it`);
+        }
+        await this.watcherMain.ipcEvents.triggerGotEvent(eventName as 'onPostInstall');
+        return { results: [], files: [filePath] };
       }
       const componentId = this.getComponentIdByPath(filePath);
       if (!componentId) {
@@ -423,6 +434,7 @@ export class Watcher {
     await this.setTrackDirs();
     const paths = [...Object.keys(this.trackDirs), BIT_MAP];
     const pathsAbsolute = paths.map((dir) => this.consumer.toAbsolutePath(dir));
+    pathsAbsolute.push(this.ipcEventsDir);
     return pathsAbsolute;
   }
 }

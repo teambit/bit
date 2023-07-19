@@ -5,8 +5,11 @@ import { IssuesList } from '@teambit/component-issues';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import { ComponentID } from '@teambit/component-id';
+import { Component } from '@teambit/component';
+import { compact } from 'lodash';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import loader from '@teambit/legacy/dist/cli/loader';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BEFORE_STATUS } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -19,7 +22,7 @@ import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-di
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
-import MiniStatusCmd from './mini-status-cmd';
+import MiniStatusCmd, { MiniStatusOpts } from './mini-status-cmd';
 
 type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
 
@@ -49,6 +52,7 @@ export type StatusResult = {
 export type MiniStatusResults = {
   modified: ComponentID[];
   newComps: ComponentID[];
+  compWithIssues?: Component[];
 };
 
 export class StatusMain {
@@ -189,16 +193,28 @@ export class StatusMain {
     };
   }
 
-  async statusMini(componentPattern?: string): Promise<MiniStatusResults> {
+  async statusMini(componentPattern?: string, opts: MiniStatusOpts = {}): Promise<MiniStatusResults> {
     const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : await this.workspace.listIds();
-    const comps = await pMapSeries(ids, (id) => this.workspace.getFilesModification(id));
+    const compFiles = await pMapSeries(ids, (id) => this.workspace.getFilesModification(id));
     const modified: ComponentID[] = [];
     const newComps: ComponentID[] = [];
-    comps.forEach((comp) => {
+    compFiles.forEach((comp) => {
       if (!comp.id.hasVersion()) newComps.push(comp.id);
       if (comp.isModified()) modified.push(comp.id);
     });
-    return { modified, newComps };
+    const loadOpts = {
+      loadDocs: false,
+      loadCompositions: false,
+    };
+    const comps = opts.showIssues ? await this.workspace.getMany(ids, loadOpts) : [];
+    if (opts.showIssues) {
+      const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
+      await this.issues.triggerAddComponentIssues(comps, issuesToIgnore);
+      this.issues.removeIgnoredIssuesFromComponents(comps);
+    }
+    const compWithIssues = comps.filter((c) => !c.state.issues.isEmpty());
+
+    return { modified, newComps, compWithIssues };
   }
 
   private async addRemovedStagedIfNeeded(stagedComponents: ModelComponent[]) {

@@ -119,6 +119,16 @@ export class IssuesList {
     return new IssuesList(this.issues.filter((issue) => issue.isTagBlocker));
   }
 
+  toReadableByIDE() {
+    return this.issues.map((issue) => ({
+      type: issue.constructor.name,
+      description: issue.description,
+      solution: issue.solution,
+      isTagBlocker: issue.isTagBlocker,
+      data: issue.dataToString(),
+    }));
+  }
+
   serialize() {
     return this.issues.map((issue) => ({ type: issue.constructor.name, data: issue.serialize() }));
   }

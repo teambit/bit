@@ -675,6 +675,12 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized.clear();
   }
 
+  clearAllComponentsCache() {
+    this.componentLoader.clearCache();
+    this.consumer.componentLoader.clearComponentsCache();
+    this.componentList = new ComponentsList(this.consumer);
+  }
+
   clearComponentCache(id: ComponentID) {
     this.componentLoader.clearComponentCache(id);
     this.consumer.componentLoader.clearOneComponentCache(id._legacy);
