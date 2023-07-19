@@ -434,6 +434,8 @@ export class Watcher {
     await this.setTrackDirs();
     const paths = [...Object.keys(this.trackDirs), BIT_MAP];
     const pathsAbsolute = paths.map((dir) => this.consumer.toAbsolutePath(dir));
+    // otherwise, if the dir is not there, chokidar triggers 'onReady' event twice for some unclear reason.
+    await fs.ensureDir(this.ipcEventsDir);
     pathsAbsolute.push(this.ipcEventsDir);
     return pathsAbsolute;
   }
