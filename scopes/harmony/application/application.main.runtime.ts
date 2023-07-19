@@ -142,16 +142,26 @@ export class ApplicationMain {
     return flatten(this.appTypeSlot.values());
   }
 
+  /**
+   * @deprecated use `listAppsComponents` instead.
+   * @returns
+   */
   async listAppsFromComponents() {
+    return this.listAppsComponents;
+  }
+
+  async listAppsComponents() {
     const components = await this.componentAspect.getHost().list();
     const appTypesPatterns = this.getAppPatterns();
-    const apps = components.filter((component) => {
-      // has app plugin from registered types.
-      const files = component.filesystem.byGlob(appTypesPatterns);
-      return !!files.length;
-    });
+    const appsComponents = components.filter((component) => this.hasAppTypePattern(component, appTypesPatterns));
+    return appsComponents;
+  }
 
-    return apps;
+  private hasAppTypePattern(component: Component, appTypesPatterns?: string[]): boolean {
+    const patterns = appTypesPatterns || this.getAppPatterns();
+    // has app plugin from registered types.
+    const files = component.filesystem.byGlob(patterns);
+    return !!files.length;
   }
 
   getAppPatterns() {
@@ -164,13 +174,14 @@ export class ApplicationMain {
   }
 
   async loadApps(): Promise<Application[]> {
-    const apps = await this.listAppsFromComponents();
+    const apps = await this.listAppsComponents();
     const appTypesPatterns = this.getAppPatterns();
 
     const pluginsToLoad = apps.flatMap((appComponent) => {
       const files = appComponent.filesystem.byGlob(appTypesPatterns);
       return files.map((file) => file.path);
     });
+
     // const app = require(appPath);
     const appManifests = compact(
       pluginsToLoad.map((pluginPath) => {
@@ -186,6 +197,29 @@ export class ApplicationMain {
     );
 
     return appManifests;
+  }
+
+  async loadAppsFromComponent(component: Component, rootDir: string): Promise<Application[] | undefined> {
+    const appTypesPatterns = this.getAppPatterns();
+    const isApp = this.hasAppTypePattern(component, appTypesPatterns);
+    if (!isApp) return undefined;
+
+    const allPluginDefs = this.aspectLoader.getPluginDefs();
+
+    const appsPluginDefs = allPluginDefs.filter((pluginDef) => {
+      return appTypesPatterns.includes(pluginDef.pattern.toString());
+    });
+    // const fileResolver = this.aspectLoader.pluginFileResolver(component, rootDir);
+
+    const plugins = this.aspectLoader.getPluginsFromDefs(component, rootDir, appsPluginDefs);
+    let loadedPlugins;
+    if (plugins.has()) {
+      loadedPlugins = await plugins.load(MainRuntime.name);
+      await this.aspectLoader.loadExtensionsByManifests([loadedPlugins], { seeders: [component.id.toString()] });
+    }
+
+    const listAppsById = this.listAppsById(component.id);
+    return listAppsById;
   }
 
   /**
