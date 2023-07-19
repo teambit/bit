@@ -36,6 +36,7 @@ import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
 const installsRunning: Record<string, Promise<any>> = {};
+const cafsLocker = new Map<string, number>();
 
 type RegistriesMap = {
   default: string;
@@ -58,6 +59,7 @@ async function createStoreController(
   const opts: CreateStoreControllerOptions = {
     dir: options.rootDir,
     cacheDir: options.cacheDir,
+    cafsLocker,
     storeDir: options.storeDir,
     rawConfig: authConfig,
     verifyStoreIntegrity: true,
