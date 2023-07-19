@@ -515,7 +515,7 @@ export class InstallMain {
       compact(
         await Promise.all(
           (
-            await this.app.listAppsFromComponents()
+            await this.app.listAppsComponents()
           ).map(async (app) => {
             const appPkgName = this.dependencyResolver.getPackageName(app);
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
@@ -712,7 +712,7 @@ export class InstallMain {
 
   private async _linkAllComponentsToBitRoots(compDirMap: ComponentMap<string>) {
     const envs = await this._getAllUsedEnvIds();
-    const apps = (await this.app.listAppsFromComponents()).map((component) => component.id.toString());
+    const apps = (await this.app.listAppsComponents()).map((component) => component.id.toString());
     await Promise.all(
       [...envs, ...apps].map(async (id) => {
         await fs.mkdirp(getRootComponentDir(this.workspace.path, id.toString()));

@@ -146,11 +146,11 @@ export class ApplicationMain {
    * @deprecated use `listAppsComponents` instead.
    * @returns
    */
-  async listAppsFromComponents() {
-    return this.listAppsComponents;
+  async listAppsFromComponents(): Promise<Component[]> {
+    return this.listAppsComponents();
   }
 
-  async listAppsComponents() {
+  async listAppsComponents(): Promise<Component[]> {
     const components = await this.componentAspect.getHost().list();
     const appTypesPatterns = this.getAppPatterns();
     const appsComponents = components.filter((component) => this.hasAppTypePattern(component, appTypesPatterns));
