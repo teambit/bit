@@ -83,6 +83,16 @@ export type OnPostDeleteSlot = SlotRegistry<OnPostDelete>;
 export type OnPostExportSlot = SlotRegistry<OnPostExport>;
 export type OnPostObjectsPersistSlot = SlotRegistry<OnPostObjectsPersist>;
 export type OnPreFetchObjectsSlot = SlotRegistry<OnPreFetchObjects>;
+export type LoadOptions = {
+  /**
+   * In case the component we are loading is app, whether to load it as app (in a scope aspects capsule)
+   */
+  loadApps?: boolean;
+  /**
+   * In case the component we are loading is env, whether to load it as env (in a scope aspects capsule)
+   */
+  loadEnvs?: boolean;
+};
 
 export type ScopeConfig = {
   httpTimeOut: number;
@@ -674,8 +684,12 @@ export class ScopeMain implements ComponentFactory {
    * important! you probably want to use `getMany`, which returns the components from the scope.
    * this method loads all aspects of the loaded components. (which hurts performance)
    */
-  async loadMany(ids: ComponentID[], lane?: Lane): Promise<Component[]> {
-    const components = await mapSeries(ids, (id) => this.load(id, lane));
+  async loadMany(
+    ids: ComponentID[],
+    lane?: Lane,
+    opts: LoadOptions = { loadApps: true, loadEnvs: true }
+  ): Promise<Component[]> {
+    const components = await mapSeries(ids, (id) => this.load(id, lane, opts));
     return compact(components);
   }
 
@@ -881,23 +895,31 @@ export class ScopeMain implements ComponentFactory {
   /**
    * get a component and load its aspect
    */
-  async load(id: ComponentID, lane?: Lane): Promise<Component | undefined> {
+  async load(
+    id: ComponentID,
+    lane?: Lane,
+    opts: LoadOptions = { loadApps: true, loadEnvs: true }
+  ): Promise<Component | undefined> {
     const component = await this.get(id);
     if (!component) return undefined;
-    return this.loadCompAspects(component, lane);
+    return this.loadCompAspects(component, lane, opts);
   }
 
-  async loadCompAspects(component: Component, lane?: Lane): Promise<Component> {
+  async loadCompAspects(
+    component: Component,
+    lane?: Lane,
+    opts: LoadOptions = { loadApps: true, loadEnvs: true }
+  ): Promise<Component> {
     const aspectIds = component.state.aspects.ids;
     // load components from type aspects as aspects.
     // important! previously, this was running for any aspect, not only apps. (the if statement was `this.aspectLoader.isAspectComponent(component)`)
     // Ran suggests changing it and if it breaks something, we'll document is and fix it.
     const appData = component.state.aspects.get('teambit.harmony/application');
-    if (appData?.data?.appName) {
+    if (opts.loadApps && appData?.data?.appName) {
       aspectIds.push(component.id.toString());
     }
     const envsData = component.state.aspects.get(EnvsAspect.id);
-    if (envsData?.data?.services || envsData?.data?.self) {
+    if ((opts.loadEnvs && envsData?.data?.services) || envsData?.data?.self) {
       aspectIds.push(component.id.toString());
     }
     await this.loadAspects(aspectIds, true, component.id.toString(), lane);
