@@ -98,7 +98,7 @@ export class WorkspaceComponentLoader {
     if (fromCache && useCache) {
       return fromCache;
     }
-    const consumerComponent = legacyComponent || (await this.getConsumerComponent(id));
+    const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, loadOpts));
     // in case of out-of-sync, the id may changed during the load process
     const updatedId = consumerComponent ? ComponentID.fromLegacy(consumerComponent.id, id.scope) : id;
     const component = await this.loadOne(updatedId, consumerComponent, loadOpts);
@@ -208,11 +208,16 @@ export class WorkspaceComponentLoader {
     return undefined;
   }
 
-  async getConsumerComponent(id: ComponentID): Promise<ConsumerComponent | undefined> {
+  async getConsumerComponent(
+    id: ComponentID,
+    loadOpts: ComponentLoadOptions = {}
+  ): Promise<ConsumerComponent | undefined> {
+    loadOpts.originatedFromHarmony = true;
     try {
       const { components, removedComponents } = await this.workspace.consumer.loadComponents(
         BitIds.fromArray([id._legacy]),
-        true
+        true,
+        loadOpts
       );
       return components?.[0] || removedComponents?.[0];
     } catch (err: any) {

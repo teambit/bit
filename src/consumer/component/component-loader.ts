@@ -22,6 +22,7 @@ import loader from '../../cli/loader';
 export type ComponentLoadOptions = {
   loadDocs?: boolean;
   loadCompositions?: boolean;
+  originatedFromHarmony?: boolean;
 };
 export type LoadManyResult = {
   components: Component[];
