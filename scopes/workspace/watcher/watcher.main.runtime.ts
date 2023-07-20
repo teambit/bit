@@ -3,7 +3,8 @@ import { SlotRegistry, Slot } from '@teambit/harmony';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { Component } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import IpcEventsAspect, { IpcEventsMain } from '@teambit/ipc-events';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import pMapSeries from 'p-map-series';
@@ -19,7 +20,9 @@ export class WatcherMain {
     private workspace: Workspace,
     private scope: ScopeMain,
     private pubsub: PubsubMain,
-    private onPreWatchSlot: OnPreWatchSlot
+    private onPreWatchSlot: OnPreWatchSlot,
+    readonly ipcEvents: IpcEventsMain,
+    readonly logger: Logger
   ) {}
 
   async watch(opts: WatchOptions) {
@@ -45,16 +48,23 @@ export class WatcherMain {
   }
 
   static slots = [Slot.withType<OnPreWatch>()];
-  static dependencies = [CLIAspect, WorkspaceAspect, ScopeAspect, PubsubAspect, LoggerAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, ScopeAspect, PubsubAspect, LoggerAspect, IpcEventsAspect];
   static runtime = MainRuntime;
 
   static async provider(
-    [cli, workspace, scope, pubsub, loggerMain]: [CLIMain, Workspace, ScopeMain, PubsubMain, LoggerMain],
+    [cli, workspace, scope, pubsub, loggerMain, ipcEvents]: [
+      CLIMain,
+      Workspace,
+      ScopeMain,
+      PubsubMain,
+      LoggerMain,
+      IpcEventsMain
+    ],
     _,
     [onPreWatchSlot]: [OnPreWatchSlot]
   ) {
     const logger = loggerMain.createLogger(WatcherAspect.id);
-    const watcherMain = new WatcherMain(workspace, scope, pubsub, onPreWatchSlot);
+    const watcherMain = new WatcherMain(workspace, scope, pubsub, onPreWatchSlot, ipcEvents, logger);
     const watchCmd = new WatchCommand(pubsub, logger, watcherMain);
     cli.register(watchCmd);
     return watcherMain;
