@@ -90,7 +90,7 @@ export class WorkspaceComponentLoader {
     loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
     const bitIdWithVersion: BitId = getLatestVersionNumber(
-      this.workspace.consumer.bitmapIdsFromCurrentLane,
+      this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved,
       componentId._legacy
     );
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
