@@ -16,6 +16,7 @@ import pMapSeries from 'p-map-series';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { linkToNodeModulesWithCodemod, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
+import IpcEventsAspect, { IpcEventsMain } from '@teambit/ipc-events';
 import { IssuesClasses } from '@teambit/component-issues';
 import {
   GetComponentManifestsOptions,
@@ -76,9 +77,11 @@ export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExistin
 
 type PreLink = (linkOpts?: WorkspaceLinkOptions) => Promise<void>;
 type PreInstall = (installOpts?: WorkspaceInstallOptions) => Promise<void>;
+type PostInstall = () => Promise<void>;
 
 type PreLinkSlot = SlotRegistry<PreLink>;
 type PreInstallSlot = SlotRegistry<PreInstall>;
+type PostInstallSlot = SlotRegistry<PostInstall>;
 
 type GetComponentsAndManifestsOptions = Omit<
   GetComponentManifestsOptions,
@@ -106,7 +109,11 @@ export class InstallMain {
 
     private preLinkSlot: PreLinkSlot,
 
-    private preInstallSlot: PreInstallSlot
+    private preInstallSlot: PreInstallSlot,
+
+    private postInstallSlot: PostInstallSlot,
+
+    private ipcEvents: IpcEventsMain
   ) {}
   /**
    * Install dependencies for all components in the workspace
@@ -148,6 +155,9 @@ export class InstallMain {
     await pMapSeries(this.preInstallSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
     const res = await this._installModules(options);
     this.workspace.inInstallContext = false;
+
+    await this.ipcEvents.publishIpcEvent('onPostInstall');
+
     return res;
   }
 
@@ -157,6 +167,10 @@ export class InstallMain {
 
   registerPreInstall(fn: PreInstall) {
     this.preInstallSlot.register(fn);
+  }
+
+  registerPostInstall(fn: PostInstall) {
+    this.postInstallSlot.register(fn);
   }
 
   private async _addPackages(packages: string[], options?: WorkspaceInstallOptions) {
@@ -515,7 +529,7 @@ export class InstallMain {
       compact(
         await Promise.all(
           (
-            await this.app.listAppsFromComponents()
+            await this.app.listAppsComponents()
           ).map(async (app) => {
             const appPkgName = this.dependencyResolver.getPackageName(app);
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
@@ -712,7 +726,7 @@ export class InstallMain {
 
   private async _linkAllComponentsToBitRoots(compDirMap: ComponentMap<string>) {
     const envs = await this._getAllUsedEnvIds();
-    const apps = (await this.app.listAppsFromComponents()).map((component) => component.id.toString());
+    const apps = (await this.app.listAppsComponents()).map((component) => component.id.toString());
     await Promise.all(
       [...envs, ...apps].map(async (id) => {
         await fs.mkdirp(getRootComponentDir(this.workspace.path, id.toString()));
@@ -791,7 +805,7 @@ export class InstallMain {
     }
   }
 
-  static slots = [Slot.withType<PreLinkSlot>(), Slot.withType<PreInstallSlot>()];
+  static slots = [Slot.withType<PreLinkSlot>(), Slot.withType<PreInstallSlot>(), Slot.withType<PostInstallSlot>()];
   static dependencies = [
     DependencyResolverAspect,
     WorkspaceAspect,
@@ -802,12 +816,13 @@ export class InstallMain {
     IssuesAspect,
     EnvsAspect,
     ApplicationAspect,
+    IpcEventsAspect,
   ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [dependencyResolver, workspace, loggerExt, variants, cli, compiler, issues, envs, app]: [
+    [dependencyResolver, workspace, loggerExt, variants, cli, compiler, issues, envs, app, ipcEvents]: [
       DependencyResolverMain,
       Workspace,
       LoggerMain,
@@ -816,12 +831,18 @@ export class InstallMain {
       CompilerMain,
       IssuesMain,
       EnvsMain,
-      ApplicationMain
+      ApplicationMain,
+      IpcEventsMain
     ],
     _,
-    [preLinkSlot, preInstallSlot]: [PreLinkSlot, PreInstallSlot]
+    [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot]
   ) {
-    const logger = loggerExt.createLogger('teambit.bit/install');
+    const logger = loggerExt.createLogger(InstallAspect.id);
+    ipcEvents.registerGotEventSlot(async (eventName) => {
+      if (eventName !== 'onPostInstall') return;
+      workspace.clearAllComponentsCache();
+      await pMapSeries(postInstallSlot.values(), (fn) => fn());
+    });
     const installExt = new InstallMain(
       dependencyResolver,
       logger,
@@ -831,7 +852,9 @@ export class InstallMain {
       envs,
       app,
       preLinkSlot,
-      preInstallSlot
+      preInstallSlot,
+      postInstallSlot,
+      ipcEvents
     );
     if (issues) {
       issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));

@@ -86,7 +86,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
 
     // using `loadMany` instead of `getMany` to make sure component aspects are loaded.
     this.logger.setStatusLine(`loading ${componentsToSign.length} components and their aspects...`);
-    const components = await this.scope.loadMany(componentsToSign, lane);
+    const components = await this.scope.loadMany(componentsToSign, lane, { loadApps: false, loadEnvs: false });
     this.logger.clearStatusLine();
     // it's enough to check the first component whether it's a snap or tag, because it can't be a mix of both
     const shouldRunSnapPipeline = isSnap(components[0].id.version);

@@ -8,6 +8,6 @@ export { variableNamesTransformer } from './variable';
 export { functionNamesTransformer } from './function';
 export { typeAliasNamesTransformer } from './typeAlias';
 export { importTransformer } from './import';
-export { identifierTransformer } from './identifier';
+export { expressionStatementTransformer } from './expression-statement';
 export { exportTransformer } from './export';
 export { transformSourceFile } from './transform';

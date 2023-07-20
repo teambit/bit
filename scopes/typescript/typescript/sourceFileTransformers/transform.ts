@@ -65,8 +65,15 @@ export async function transformSourceFile(
   const regex = new RegExp(emptyLineComment, 'g');
   transformedSourceFileStr = transformedSourceFileStr.replace(regex, '');
 
-  const formattedSourceFileStr = await formatter?.formatSnippet(transformedSourceFileStr);
-  return formattedSourceFileStr || transformedSourceFileStr;
+  try {
+    const formattedSourceFileStr = await formatter?.formatSnippet(transformedSourceFileStr);
+    return formattedSourceFileStr || transformedSourceFileStr;
+  } catch {
+    // We can ignore if the formatter fails
+    // TODO: log the error
+    // ignore
+  }
+  return transformedSourceFileStr;
 }
 
 // function createMarkingTransformer<T extends ts.Node>(innerTransformer: ts.TransformerFactory<T>)

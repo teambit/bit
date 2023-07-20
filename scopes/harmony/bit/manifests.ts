@@ -102,6 +102,7 @@ import { MoverAspect } from '@teambit/mover/mover.aspect';
 import { WatcherAspect } from '@teambit/watcher/watcher.aspect';
 import { StashAspect } from '@teambit/stash/stash.aspect';
 import { GitAspect } from '@teambit/git/git.aspect';
+import { IpcEventsAspect } from '@teambit/ipc-events.aspect';
 
 import { AspectMain } from '@teambit/aspect/aspect.main.runtime';
 import { AspectLoaderMain } from '@teambit/aspect-loader/aspect-loader.main.runtime';
@@ -197,6 +198,7 @@ import { WatcherMain } from '@teambit/watcher/watcher.main.runtime';
 import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files/workspace-config-files.main.runtime';
 import { StashMain } from '@teambit/stash/stash.main.runtime';
 import { GitMain } from '@teambit/git/git.main.runtime';
+import { IpcEventsMain } from '@teambit/ipc-events.main.runtime';
 
 import { BitMain } from './bit.main.runtime';
 import { BitAspect } from './bit.aspect';
@@ -305,6 +307,7 @@ export const manifestsMap = {
   [WatcherAspect.id]: WatcherAspect,
   [StashAspect.id]: StashAspect,
   [GitAspect.id]: GitAspect,
+  [IpcEventsAspect.id]: IpcEventsAspect,
 };
 
 export const runtimesMap = {
@@ -401,6 +404,7 @@ export const runtimesMap = {
   [WorkspaceConfigFilesAspect.id]: WorkspaceConfigFilesMain,
   [StashAspect.id]: StashMain,
   [GitAspect.id]: GitMain,
+  [IpcEventsAspect.id]: IpcEventsMain,
   [BitAspect.id]: BitMain,
 };
 
