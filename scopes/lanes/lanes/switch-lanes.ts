@@ -10,7 +10,7 @@ import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import {
   applyVersion,
   ComponentStatus,
-  CheckoutProps,
+  CheckoutPropsLegacy,
   deleteFilesIfNeeded,
   markFilesToBeRemovedIfNeeded,
 } from '@teambit/checkout';
@@ -45,7 +45,7 @@ export class LaneSwitcher {
     private workspace: Workspace,
     private logger: Logger,
     private switchProps: SwitchProps,
-    private checkoutProps: CheckoutProps,
+    private checkoutProps: CheckoutPropsLegacy,
     private Lanes: LanesMain
   ) {
     this.consumer = this.workspace.consumer;
