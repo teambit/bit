@@ -28,13 +28,17 @@ function bundle() {
     // inject: [join(__dirname, './import-meta-url.js')],
 
     external: [
+      'jest.worker',
+      'yoga-layout',
       'yoga-layout-prebuilt',
       '@surma/rollup-plugin-off-main-thread',
       '@babel/preset-react',
       'ink',
+      'rrweb-cssom',
       'canvas',
       'style-loader',
       'mini-css-extract-plugin',
+      '@prerenderer/renderer-jsdom',
       '@pmmmwh/react-refresh-webpack-plugin',
       '@teambit/react.babel.bit-react-transformer',
       'source-map-loader',
