@@ -104,7 +104,7 @@ import { StashAspect } from '@teambit/stash/stash.aspect';
 import { GitAspect } from '@teambit/git/git.aspect';
 import { IpcEventsAspect } from '@teambit/ipc-events/ipc-events.aspect';
 
-import { AspectMain } from '@teambit/aspect/aspect.main.runtime';
+// import { AspectMain } from '@teambit/aspect/aspect.main.runtime';
 import { AspectLoaderMain } from '@teambit/aspect-loader/aspect-loader.main.runtime';
 import { BuilderMain } from '@teambit/builder/builder.main.runtime';
 import { BundlerMain } from '@teambit/bundler/bundler.main.runtime';
@@ -127,16 +127,16 @@ import { GraphMain } from '@teambit/graph/graph.main.runtime';
 import { GraphqlMain } from '@teambit/graphql/graphql.main.runtime';
 import { InsightsMain } from '@teambit/insights/insights.main.runtime';
 import { IsolatorMain } from '@teambit/isolator/isolator.main.runtime';
-import { JestMain } from '@teambit/jest/jest.main.runtime';
+// import { JestMain } from '@teambit/jest/jest.main.runtime';
 import { LoggerMain } from '@teambit/logger/logger.main.runtime';
-import { NodeMain } from '@teambit/node/node.main.runtime';
+// import { NodeMain } from '@teambit/node/node.main.runtime';
 import { PanelUIMain } from '@teambit/panels/panel-ui.main.runtime';
 import { PkgMain } from '@teambit/pkg/pkg.main.runtime';
 import { PnpmMain } from '@teambit/pnpm/pnpm.main.runtime';
-import { PreviewMain } from '@teambit/preview/preview.main.runtime';
+// import { PreviewMain } from '@teambit/preview/preview.main.runtime';
 import { ComponentSizerMain } from '@teambit/component-sizer/component-sizer.main.runtime';
-import { ReactMain } from '@teambit/react/react.main.runtime';
-import { ReactNativeMain } from '@teambit/react-native/react-native.main.runtime';
+// import { ReactMain } from '@teambit/react/react.main.runtime';
+// import { ReactNativeMain } from '@teambit/react-native/react-native.main.runtime';
 import { ReactElementsMain } from '@teambit/react-elements/react-elements.main.runtime';
 import { ElementsMain } from '@teambit/elements/elements.main.runtime';
 import { SchemaMain } from '@teambit/schema/schema.main.runtime';
@@ -168,7 +168,7 @@ import { UpdateDependenciesMain } from '@teambit/update-dependencies/update-depe
 import { ExportMain } from '@teambit/export/export.main.runtime';
 import { ImporterMain } from '@teambit/importer/importer.main.runtime';
 import { EjectMain } from '@teambit/eject/eject.main.runtime';
-import { HtmlMain } from '@teambit/html/html.main.runtime';
+// import { HtmlMain } from '@teambit/html/html.main.runtime';
 import { LanesMain } from '@teambit/lanes/lanes.main.runtime';
 import { ForkingMain } from '@teambit/forking/forking.main.runtime';
 import { RenamingMain } from '@teambit/renaming/renaming.main.runtime';
@@ -203,115 +203,118 @@ import { IpcEventsMain } from '@teambit/ipc-events/ipc-events.main.runtime';
 import { BitMain } from './bit.main.runtime';
 import { BitAspect } from './bit.aspect';
 
-export const manifestsMap = {
-  [AspectLoaderAspect.id]: AspectLoaderAspect,
-  [CLIAspect.id]: CLIAspect,
-  [DevFilesAspect.id]: DevFilesAspect,
-  [WorkspaceAspect.id]: WorkspaceAspect,
-  [WorkspaceConfigFilesAspect.id]: WorkspaceConfigFilesAspect,
-  [InstallAspect.id]: InstallAspect,
-  [ESLintAspect.id]: ESLintAspect,
-  [PrettierAspect.id]: PrettierAspect,
-  [CompilerAspect.id]: CompilerAspect,
-  [LinterAspect.id]: LinterAspect,
-  [FormatterAspect.id]: FormatterAspect,
-  [ComponentAspect.id]: ComponentAspect,
-  [MDXAspect.id]: MDXAspect,
-  [ReadmeAspect.id]: ReadmeAspect,
-  [PreviewAspect.id]: PreviewAspect,
-  [ComponentSizerAspect.id]: ComponentSizerAspect,
-  [DocsAspect.id]: DocsAspect,
-  [YarnAspect.id]: YarnAspect,
-  [CompositionsAspect.id]: CompositionsAspect,
-  [GlobalConfigAspect.id]: GlobalConfigAspect,
-  [GraphqlAspect.id]: GraphqlAspect,
-  [PnpmAspect.id]: PnpmAspect,
-  [MultiCompilerAspect.id]: MultiCompilerAspect,
-  [UIAspect.id]: UIAspect,
-  [GeneratorAspect.id]: GeneratorAspect,
-  [EnvsAspect.id]: EnvsAspect,
-  [EnvAspect.id]: EnvAspect,
-  [GraphAspect.id]: GraphAspect,
-  [PubsubAspect.id]: PubsubAspect,
-  [DependencyResolverAspect.id]: DependencyResolverAspect,
-  [InsightsAspect.id]: InsightsAspect,
-  [IsolatorAspect.id]: IsolatorAspect,
-  [LoggerAspect.id]: LoggerAspect,
-  [PkgAspect.id]: PkgAspect,
-  [ReactAspect.id]: ReactAspect,
-  [ReactNativeAspect.id]: ReactNativeAspect,
-  [ReactElementsAspect.id]: ReactElementsAspect,
-  [ElementsAspect.id]: ElementsAspect,
-  [WorkerAspect.id]: WorkerAspect,
-  // [StencilAspect.id]: StencilAspect,
-  [ScopeAspect.id]: ScopeAspect,
-  [TesterAspect.id]: TesterAspect,
-  [MultiTesterAspect.id]: MultiTesterAspect,
-  [BuilderAspect.id]: BuilderAspect,
-  [VariantsAspect.id]: VariantsAspect,
-  [DeprecationAspect.id]: DeprecationAspect,
-  [ExpressAspect.id]: ExpressAspect,
-  [AspectAspect.id]: AspectAspect,
-  [WebpackAspect.id]: WebpackAspect,
-  [SchemaAspect.id]: SchemaAspect,
-  [ReactRouterAspect.id]: ReactRouterAspect,
-  [TypescriptAspect.id]: TypescriptAspect,
-  [PanelUiAspect.id]: PanelUiAspect,
-  [BabelAspect.id]: BabelAspect,
-  [NodeAspect.id]: NodeAspect,
-  [NotificationsAspect.id]: NotificationsAspect,
-  [BundlerAspect.id]: BundlerAspect,
-  [JestAspect.id]: JestAspect,
-  [CacheAspect.id]: CacheAspect,
-  [ChangelogAspect.id]: ChangelogAspect,
-  [CodeAspect.id]: CodeAspect,
-  [CommandBarAspect.id]: CommandBarAspect,
-  [SidebarAspect.id]: SidebarAspect,
-  [ComponentTreeAspect.id]: ComponentTreeAspect,
-  [SignAspect.id]: SignAspect,
-  [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
-  [ExportAspect.id]: ExportAspect,
-  [ImporterAspect.id]: ImporterAspect,
-  [HarmonyUiAppAspect.id]: HarmonyUiAppAspect,
-  [UserAgentAspect.id]: UserAgentAspect,
-  [ApplicationAspect.id]: ApplicationAspect,
-  [EjectAspect.id]: EjectAspect,
-  [HtmlAspect.id]: HtmlAspect,
-  [LanesAspect.id]: LanesAspect,
-  [ForkingAspect.id]: ForkingAspect,
-  [RenamingAspect.id]: RenamingAspect,
-  [NewComponentHelperAspect.id]: NewComponentHelperAspect,
-  [ComponentLogAspect.id]: ComponentLogAspect,
-  [ClearCacheAspect.id]: ClearCacheAspect,
-  [MochaAspect.id]: MochaAspect,
-  [BitCustomAspectAspect.id]: BitCustomAspectAspect,
-  [DiagnosticAspect.id]: DiagnosticAspect,
-  [StatusAspect.id]: StatusAspect,
-  [CommunityAspect.id]: CommunityAspect,
-  [CloudAspect.id]: CloudAspect,
-  [SnappingAspect.id]: SnappingAspect,
-  [MergingAspect.id]: MergingAspect,
-  [IssuesAspect.id]: IssuesAspect,
-  [RefactoringAspect.id]: RefactoringAspect,
-  [ComponentCompareAspect.id]: ComponentCompareAspect,
-  [ListerAspect.id]: ListerAspect,
-  [DependenciesAspect.id]: DependenciesAspect,
-  [RemoveAspect.id]: RemoveAspect,
-  [MergeLanesAspect.id]: MergeLanesAspect,
-  [CheckoutAspect.id]: CheckoutAspect,
-  [ComponentWriterAspect.id]: ComponentWriterAspect,
-  [APIReferenceAspect.id]: APIReferenceAspect,
-  [ApiServerAspect.id]: ApiServerAspect,
-  [TrackerAspect.id]: TrackerAspect,
-  [MoverAspect.id]: MoverAspect,
-  [WatcherAspect.id]: WatcherAspect,
-  [StashAspect.id]: StashAspect,
-  [GitAspect.id]: GitAspect,
-  [IpcEventsAspect.id]: IpcEventsAspect,
-};
+export function getManifestsMap() {
+  const manifestsMap = {
+    [AspectLoaderAspect.id]: AspectLoaderAspect,
+    [CLIAspect.id]: CLIAspect,
+    [DevFilesAspect.id]: DevFilesAspect,
+    [WorkspaceAspect.id]: WorkspaceAspect,
+    [WorkspaceConfigFilesAspect.id]: WorkspaceConfigFilesAspect,
+    [InstallAspect.id]: InstallAspect,
+    [ESLintAspect.id]: ESLintAspect,
+    [PrettierAspect.id]: PrettierAspect,
+    [CompilerAspect.id]: CompilerAspect,
+    [LinterAspect.id]: LinterAspect,
+    [FormatterAspect.id]: FormatterAspect,
+    [ComponentAspect.id]: ComponentAspect,
+    [MDXAspect.id]: MDXAspect,
+    [ReadmeAspect.id]: ReadmeAspect,
+    [PreviewAspect.id]: PreviewAspect,
+    [ComponentSizerAspect.id]: ComponentSizerAspect,
+    [DocsAspect.id]: DocsAspect,
+    [YarnAspect.id]: YarnAspect,
+    [CompositionsAspect.id]: CompositionsAspect,
+    [GlobalConfigAspect.id]: GlobalConfigAspect,
+    [GraphqlAspect.id]: GraphqlAspect,
+    [PnpmAspect.id]: PnpmAspect,
+    [MultiCompilerAspect.id]: MultiCompilerAspect,
+    [UIAspect.id]: UIAspect,
+    [GeneratorAspect.id]: GeneratorAspect,
+    [EnvsAspect.id]: EnvsAspect,
+    [EnvAspect.id]: EnvAspect,
+    [GraphAspect.id]: GraphAspect,
+    [PubsubAspect.id]: PubsubAspect,
+    [DependencyResolverAspect.id]: DependencyResolverAspect,
+    [InsightsAspect.id]: InsightsAspect,
+    [IsolatorAspect.id]: IsolatorAspect,
+    [LoggerAspect.id]: LoggerAspect,
+    [PkgAspect.id]: PkgAspect,
+    [ReactAspect.id]: ReactAspect,
+    [ReactNativeAspect.id]: ReactNativeAspect,
+    [ReactElementsAspect.id]: ReactElementsAspect,
+    [ElementsAspect.id]: ElementsAspect,
+    [WorkerAspect.id]: WorkerAspect,
+    // [StencilAspect.id]: StencilAspect,
+    [ScopeAspect.id]: ScopeAspect,
+    [TesterAspect.id]: TesterAspect,
+    [MultiTesterAspect.id]: MultiTesterAspect,
+    [BuilderAspect.id]: BuilderAspect,
+    [VariantsAspect.id]: VariantsAspect,
+    [DeprecationAspect.id]: DeprecationAspect,
+    [ExpressAspect.id]: ExpressAspect,
+    [AspectAspect.id]: AspectAspect,
+    [WebpackAspect.id]: WebpackAspect,
+    [SchemaAspect.id]: SchemaAspect,
+    [ReactRouterAspect.id]: ReactRouterAspect,
+    [TypescriptAspect.id]: TypescriptAspect,
+    [PanelUiAspect.id]: PanelUiAspect,
+    [BabelAspect.id]: BabelAspect,
+    [NodeAspect.id]: NodeAspect,
+    [NotificationsAspect.id]: NotificationsAspect,
+    [BundlerAspect.id]: BundlerAspect,
+    [JestAspect.id]: JestAspect,
+    [CacheAspect.id]: CacheAspect,
+    [ChangelogAspect.id]: ChangelogAspect,
+    [CodeAspect.id]: CodeAspect,
+    [CommandBarAspect.id]: CommandBarAspect,
+    [SidebarAspect.id]: SidebarAspect,
+    [ComponentTreeAspect.id]: ComponentTreeAspect,
+    [SignAspect.id]: SignAspect,
+    [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
+    [ExportAspect.id]: ExportAspect,
+    [ImporterAspect.id]: ImporterAspect,
+    [HarmonyUiAppAspect.id]: HarmonyUiAppAspect,
+    [UserAgentAspect.id]: UserAgentAspect,
+    [ApplicationAspect.id]: ApplicationAspect,
+    [EjectAspect.id]: EjectAspect,
+    [HtmlAspect.id]: HtmlAspect,
+    [LanesAspect.id]: LanesAspect,
+    [ForkingAspect.id]: ForkingAspect,
+    [RenamingAspect.id]: RenamingAspect,
+    [NewComponentHelperAspect.id]: NewComponentHelperAspect,
+    [ComponentLogAspect.id]: ComponentLogAspect,
+    [ClearCacheAspect.id]: ClearCacheAspect,
+    [MochaAspect.id]: MochaAspect,
+    [BitCustomAspectAspect.id]: BitCustomAspectAspect,
+    [DiagnosticAspect.id]: DiagnosticAspect,
+    [StatusAspect.id]: StatusAspect,
+    [CommunityAspect.id]: CommunityAspect,
+    [CloudAspect.id]: CloudAspect,
+    [SnappingAspect.id]: SnappingAspect,
+    [MergingAspect.id]: MergingAspect,
+    [IssuesAspect.id]: IssuesAspect,
+    [RefactoringAspect.id]: RefactoringAspect,
+    [ComponentCompareAspect.id]: ComponentCompareAspect,
+    [ListerAspect.id]: ListerAspect,
+    [DependenciesAspect.id]: DependenciesAspect,
+    [RemoveAspect.id]: RemoveAspect,
+    [MergeLanesAspect.id]: MergeLanesAspect,
+    [CheckoutAspect.id]: CheckoutAspect,
+    [ComponentWriterAspect.id]: ComponentWriterAspect,
+    [APIReferenceAspect.id]: APIReferenceAspect,
+    [ApiServerAspect.id]: ApiServerAspect,
+    [TrackerAspect.id]: TrackerAspect,
+    [MoverAspect.id]: MoverAspect,
+    [WatcherAspect.id]: WatcherAspect,
+    [StashAspect.id]: StashAspect,
+    [GitAspect.id]: GitAspect,
+    [IpcEventsAspect.id]: IpcEventsAspect,
+  };
+  return manifestsMap;
+}
 
 export const runtimesMap = {
-  [AspectAspect.id]: AspectMain,
+  // [AspectAspect.id]: AspectMain,
   [AspectLoaderAspect.id]: AspectLoaderMain,
   [BuilderAspect.id]: BuilderMain,
   [BundlerAspect.id]: BundlerMain,
@@ -334,16 +337,16 @@ export const runtimesMap = {
   [GraphqlAspect.id]: GraphqlMain,
   [InsightsAspect.id]: InsightsMain,
   [IsolatorAspect.id]: IsolatorMain,
-  [JestAspect.id]: JestMain,
+  // [JestAspect.id]: JestMain,
   [LoggerAspect.id]: LoggerMain,
-  [NodeAspect.id]: NodeMain,
+  // [NodeAspect.id]: NodeMain,
   [PanelUiAspect.id]: PanelUIMain,
   [PkgAspect.id]: PkgMain,
   [PnpmAspect.id]: PnpmMain,
-  [PreviewAspect.id]: PreviewMain,
+  // [PreviewAspect.id]: PreviewMain,
   [ComponentSizerAspect.id]: ComponentSizerMain,
-  [ReactAspect.id]: ReactMain,
-  [ReactNativeAspect.id]: ReactNativeMain,
+  // [ReactAspect.id]: ReactMain,
+  // [ReactNativeAspect.id]: ReactNativeMain,
   [ReactElementsAspect.id]: ReactElementsMain,
   [ElementsAspect.id]: ElementsMain,
   [SchemaAspect.id]: SchemaMain,
@@ -374,7 +377,7 @@ export const runtimesMap = {
   [ExportAspect.id]: ExportMain,
   [ImporterAspect.id]: ImporterMain,
   [EjectAspect.id]: EjectMain,
-  [HtmlAspect.id]: HtmlMain,
+  // [HtmlAspect.id]: HtmlMain,
   [LanesAspect.id]: LanesMain,
   [ForkingAspect.id]: ForkingMain,
   [RenamingAspect.id]: RenamingMain,
@@ -408,15 +411,15 @@ export const runtimesMap = {
   [BitAspect.id]: BitMain,
 };
 
-console.log(runtimesMap);
-
 export function isCoreAspect(id: string) {
+  const manifestsMap = getManifestsMap();
   const _reserved = [BitAspect.id, ConfigAspect.id];
   if (_reserved.includes(id)) return true;
   return !!manifestsMap[id];
 }
 
 export function getAllCoreAspectsIds(): string[] {
+  const manifestsMap = getManifestsMap();
   const _reserved = [BitAspect.id, ConfigAspect.id];
   return [...Object.keys(manifestsMap), ..._reserved];
 }

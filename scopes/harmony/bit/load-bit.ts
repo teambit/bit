@@ -50,10 +50,12 @@ import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
-import { manifestsMap } from './manifests';
+import { getManifestsMap } from './manifests';
 import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
 import { BitConfig } from './bit.provider';
+
+const manifestsMap = getManifestsMap();
 
 async function loadLegacyConfig(config: any) {
   const harmony = await Harmony.load([ConfigAspect], ConfigRuntime.name, config.toObject());
@@ -214,6 +216,8 @@ function shouldRunAsDaemon() {
 }
 
 export async function loadBit(path = process.cwd()) {
+  console.log('🚀 ~ file: load-bit.ts:218 ~ loadBit ~ path:', path);
+
   clearGlobalsIfNeeded();
   logger.info(`*** Loading Bit *** argv:\n${process.argv.join('\n')}`);
   const config = await getConfig(path);
@@ -233,8 +237,10 @@ export async function loadBit(path = process.cwd()) {
   if (shouldRunAsDaemon()) {
     logger.isDaemon = true;
   }
-  // console.log('aspectsToLoad', aspectsToLoad)
+  console.log('aspectsToLoad');
   const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
+
+  console.log('after load', aspectsToLoad);
 
   // await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
   await harmony.run();
