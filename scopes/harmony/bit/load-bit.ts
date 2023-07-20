@@ -25,7 +25,7 @@ import {
 } from '@teambit/aspect-loader';
 import json from 'comment-json';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { ConfigAspect, ConfigRuntime } from '@teambit/config';
+import { ConfigRuntime, getConfigAspect } from '@teambit/config';
 import { Harmony, RuntimeDefinition, Extension } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
 import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
@@ -58,8 +58,10 @@ import { BitConfig } from './bit.provider';
 const manifestsMap = getManifestsMap();
 
 async function loadLegacyConfig(config: any) {
-  const harmony = await Harmony.load([ConfigAspect], ConfigRuntime.name, config.toObject());
-  await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+  const aspectsToLoad = [getConfigAspect()];
+  const harmony = await Harmony.load(aspectsToLoad, ConfigRuntime.name, config.toObject());
+  // await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+  await harmony.run();
 }
 
 async function getConfig(cwd = process.cwd()) {
@@ -216,8 +218,6 @@ function shouldRunAsDaemon() {
 }
 
 export async function loadBit(path = process.cwd()) {
-  console.log('🚀 ~ file: load-bit.ts:218 ~ loadBit ~ path:', path);
-
   clearGlobalsIfNeeded();
   logger.info(`*** Loading Bit *** argv:\n${process.argv.join('\n')}`);
   const config = await getConfig(path);
@@ -237,13 +237,11 @@ export async function loadBit(path = process.cwd()) {
   if (shouldRunAsDaemon()) {
     logger.isDaemon = true;
   }
-  console.log('aspectsToLoad');
   const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
-
-  console.log('after load', aspectsToLoad);
 
   // await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
   await harmony.run();
+
   if (loadCLIOnly) return harmony;
   loader.start('loading aspects...');
   const aspectLoader = harmony.get<AspectLoaderMain>('teambit.harmony/aspect-loader');

@@ -88,6 +88,7 @@ export class ConfigMain {
     return config;
   }
 
+  // static runtime = ConfigRuntime;
   static runtime = MainRuntime;
   static slots = [];
   static dependencies = [];
@@ -113,8 +114,12 @@ export class ConfigMain {
     return configMain;
   }
 }
-
 ConfigAspect.addRuntime(ConfigMain);
+
+// Required for esbuild to work properly
+export function getConfigAspect() {
+  return ConfigAspect;
+}
 
 function onLegacyWorkspaceConfigIsExist(): WorkspaceConfigIsExistFunction {
   return async (dirPath: PathOsBased): Promise<boolean | undefined> => {
