@@ -1,5 +1,6 @@
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
+import path from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import semver from 'semver';
 import multimatch from 'multimatch';
@@ -948,6 +949,10 @@ export class ScopeMain implements ComponentFactory {
 
   private async extensionDataEntryToAspectEntry(dataEntry: ExtensionDataEntry): Promise<AspectEntry> {
     return new AspectEntry(await this.resolveComponentId(dataEntry.id), dataEntry);
+  }
+
+  getLastMergedPath() {
+    return path.join(this.path, 'last-merged');
   }
 
   async isModified(): Promise<boolean> {

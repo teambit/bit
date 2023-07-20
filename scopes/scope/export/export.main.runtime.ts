@@ -1,3 +1,4 @@
+import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import R from 'ramda';
@@ -183,6 +184,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     // ideally we should delete the staged-snaps only for the exported snaps. however, it's not easy, and it's ok to
     // delete them all because this file is mainly an optimization for the import process.
     await this.workspace.scope.legacyScope.stagedSnaps.deleteFile();
+    await fs.remove(this.workspace.scope.getLastMergedPath());
     Analytics.setExtraData('num_components', exported.length);
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
     // export and eject operations to function independently. we don't want to lose the changes to

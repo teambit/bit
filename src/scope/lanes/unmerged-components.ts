@@ -99,6 +99,11 @@ export default class UnmergedComponents {
     return true;
   }
 
+  removeAllComponents() {
+    this.unmerged = [];
+    this.hasChanged = true;
+  }
+
   async write() {
     if (!this.hasChanged) return;
     await fs.outputFile(this.filePath, JSON.stringify(this.toObject(), null, 2));
