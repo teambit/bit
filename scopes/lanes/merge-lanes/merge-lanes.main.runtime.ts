@@ -304,7 +304,15 @@ export class MergeLanesMain {
     checkoutProps.ids = await this.workspace.listIds();
     const checkoutResults = await this.checkout.checkout(checkoutProps);
 
-    return checkoutResults;
+    const restoredItems = [
+      `${path.basename(this.workspace.consumer.bitMap.mapPath)} file`,
+      `${path.basename(this.workspace.consumer.config.path)} file`,
+    ];
+    if (currentLane) {
+      restoredItems.push(`${currentLane.id()} lane object`);
+    }
+
+    return { checkoutResults, restoredItems };
   }
 
   private async getLastMergedLaneContentIfExists(): Promise<Buffer | null> {

@@ -44,9 +44,13 @@ also, checkout the workspace components according to the restored lane`;
       verbose,
       skipNpmInstall: skipDependencyInstallation,
     };
-    const results = await this.mergeLanes.abortLaneMerge(checkoutProps);
+    const { checkoutResults, restoredItems } = await this.mergeLanes.abortLaneMerge(checkoutProps);
 
-    return checkoutOutput(results, checkoutProps);
+    const checkoutOutputStr = checkoutOutput(checkoutResults, checkoutProps);
+    const restoredItemsTitle = chalk.underline('The following have been restored:');
+    const restoredItemsOutput = restoredItems.map((item) => `[-] ${item}`).join('\n');
+
+    return `${checkoutOutputStr}\n\n${restoredItemsTitle}\n${restoredItemsOutput}`;
   }
 
   private async prompt() {
