@@ -24113,6 +24113,9 @@ importers:
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
+      fs-extra:
+        specifier: 10.0.0
+        version: 10.0.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -24125,7 +24128,16 @@ importers:
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
+      tempy:
+        specifier: 1.0.1
+        version: 1.0.1
+      yesno:
+        specifier: 0.4.0
+        version: 0.4.0
     devDependencies:
+      '@types/fs-extra':
+        specifier: 9.0.7
+        version: 9.0.7
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -26248,6 +26260,9 @@ importers:
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
+      fs-extra:
+        specifier: 10.0.0
+        version: 10.0.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -26264,6 +26279,9 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
+      '@types/fs-extra':
+        specifier: 9.0.7
+        version: 9.0.7
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -55262,7 +55280,7 @@ packages:
     resolution: {integrity: sha512-NhZ4CsKx7cYm2vSrBAr2PvFOe6sWDf0UYLRqA6svUYg7+/TSfVAu49jYC4BvQ4Sms9SZgdqGBgroqfDhJdTyKQ==}
     dependencies:
       encoding: 0.1.13
-      is-stream: registry.npmjs.org/is-stream@1.1.0
+      is-stream: 1.1.0
     dev: false
 
   /node-fetch@2.6.7:
@@ -67219,10 +67237,13 @@ packages:
       '@teambit/legacy-bit-id': 0.0.423
       chalk: 2.4.2
       core-js: 3.13.0
+      fs-extra: 10.0.0
       lodash: 4.17.21
       p-map-series: 2.1.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+      tempy: 1.0.1
+      yesno: 0.4.0
     dev: false
 
   file:scopes/mdx/aspect-docs/mdx(react-dom@17.0.2)(react@17.0.2):
@@ -68062,6 +68083,7 @@ packages:
       '@teambit/harmony': 0.4.6
       chalk: 2.4.2
       core-js: 3.13.0
+      fs-extra: 10.0.0
       lodash: 4.17.21
       p-map-series: 2.1.0
       ramda: 0.27.1
@@ -71053,11 +71075,4 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     transitivePeerDependencies:
       - '@teambit/legacy'
-    dev: false
-
-  registry.npmjs.org/is-stream@1.1.0:
-    resolution: {integrity: sha512-uQPm8kcs47jx38atAcWTVxyltQYoPT68y9aWYdV6yWXSyW8mzSat0TL6CiWdZeCdF3KrAvpVtnHbTv4RN+rqdQ==, registry: https://node-registry.v2.bit.cloud/, tarball: https://registry.npmjs.org/is-stream/-/is-stream-1.1.0.tgz}
-    name: is-stream
-    version: 1.1.0
-    engines: {node: '>=0.10.0'}
     dev: false
