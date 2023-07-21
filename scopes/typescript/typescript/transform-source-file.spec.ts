@@ -7,6 +7,7 @@ import {
   interfaceNamesTransformer,
   typeAliasNamesTransformer,
   variableNamesTransformer,
+  exportTransformer,
 } from './sourceFileTransformers';
 
 function normalizeFormatting(code: string): string {
@@ -70,6 +71,48 @@ describe('transformSourceFile', () => {
       sourceCode: 'let testVariable = "test";',
       nameMapping: { testVariable: 'newVariableName' },
       expectedCode: 'let newVariableName = "test";',
+    },
+    {
+      transformer: importTransformer,
+      sourceCode: 'import { Component } from "@xxx/ui-library";',
+      nameMapping: { '@xxx/ui-library': '@abc/ui-library' },
+      expectedCode: 'import { Component } from "@abc/ui-library";',
+    },
+    {
+      transformer: importTransformer,
+      sourceCode: 'import * as UI from "@xxx/ui-library";',
+      nameMapping: { '@xxx/ui-library': '@abc/ui-library' },
+      expectedCode: 'import * as UI from "@abc/ui-library";',
+    },
+    {
+      transformer: importTransformer,
+      sourceCode: 'import UI from "@xxx/ui-library";',
+      nameMapping: { '@xxx/ui-library': '@abc/ui-library' },
+      expectedCode: 'import UI from "@abc/ui-library";',
+    },
+    {
+      transformer: importTransformer,
+      sourceCode: 'const UI = require("@xxx/ui-library");',
+      nameMapping: { '@xxx/ui-library': '@abc/ui-library' },
+      expectedCode: 'const UI = require("@abc/ui-library");',
+    },
+    {
+      transformer: exportTransformer,
+      sourceCode: 'export { Component } from "@xxx/ui-library";',
+      nameMapping: { '@xxx/ui-library': '@abc/ui-library' },
+      expectedCode: 'export { Component } from "@abc/ui-library";',
+    },
+    {
+      transformer: exportTransformer,
+      sourceCode: 'export * from "@xxx/ui-library";',
+      nameMapping: { '@xxx/ui-library': '@abc/ui-library' },
+      expectedCode: 'export * from "@abc/ui-library";',
+    },
+    {
+      transformer: exportTransformer,
+      sourceCode: 'export { default as UI } from "@xxx/ui-library";',
+      nameMapping: { '@xxx/ui-library': '@abc/ui-library' },
+      expectedCode: 'export { default as UI } from "@abc/ui-library";',
     },
   ];
 
