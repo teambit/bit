@@ -6,6 +6,8 @@ import pMap from 'p-map';
 import { SnappingMain } from '@teambit/snapping';
 import { LanesMain } from '@teambit/lanes';
 import { InstallMain } from '@teambit/install';
+import { ExportMain } from '@teambit/export';
+import { CheckoutMain } from '@teambit/checkout';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -25,7 +27,9 @@ export class APIForIDE {
     private workspace: Workspace,
     private snapping: SnappingMain,
     private lanes: LanesMain,
-    private installer: InstallMain
+    private installer: InstallMain,
+    private exporter: ExportMain,
+    private checkout: CheckoutMain
   ) {}
 
   async listIdsWithPaths() {
@@ -112,6 +116,30 @@ export class APIForIDE {
 
   async install() {
     return this.installer.install(undefined, { optimizeReportForNonTerminal: true });
+  }
+
+  async export() {
+    const { componentsIds, removedIds, exportedLanes } = await this.exporter.export();
+    return {
+      componentsIds: componentsIds.map((c) => c.toString()),
+      removedIds: removedIds.map((c) => c.toString()),
+      exportedLanes: exportedLanes.map((l) => l.id()),
+    };
+  }
+
+  async checkoutHead() {
+    const { components, failedComponents } = await this.checkout.checkout({
+      head: true,
+      skipNpmInstall: true,
+      ids: await this.workspace.listIds(),
+    });
+    const skipped = failedComponents?.filter((f) => f.unchangedLegitimately).map((f) => f.id.toString());
+    const failed = failedComponents?.filter((f) => !f.unchangedLegitimately).map((f) => f.id.toString());
+    return {
+      succeed: components?.map((c) => c.id.toString()),
+      skipped,
+      failed,
+    };
   }
 
   async getDataToInitSCM(): Promise<DataToInitSCM> {

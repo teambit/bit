@@ -13,6 +13,8 @@ import { ServerCmd } from './server.cmd';
 import { IDERoute } from './ide.route';
 import { APIForIDE } from './api-for-ide';
 import { SSEEventsRoute, sendEventsToClients } from './sse-events.route';
+import { ExportAspect, ExportMain } from '@teambit/export';
+import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
 
 export class ApiServerMain {
   constructor(
@@ -76,9 +78,22 @@ export class ApiServerMain {
     SnappingAspect,
     LanesAspect,
     InstallAspect,
+    ExportAspect,
+    CheckoutAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, loggerMain, express, watcher, snapping, lanes, installer]: [
+  static async provider([
+    cli,
+    workspace,
+    loggerMain,
+    express,
+    watcher,
+    snapping,
+    lanes,
+    installer,
+    exporter,
+    checkout,
+  ]: [
     CLIMain,
     Workspace,
     LoggerMain,
@@ -86,14 +101,16 @@ export class ApiServerMain {
     WatcherMain,
     SnappingMain,
     LanesMain,
-    InstallMain
+    InstallMain,
+    ExportMain,
+    CheckoutMain
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer);
     cli.register(new ServerCmd(apiServer));
 
     const cliRoute = new CLIRoute(logger, cli);
-    const apiForIDE = new APIForIDE(workspace, snapping, lanes, installer);
+    const apiForIDE = new APIForIDE(workspace, snapping, lanes, installer, exporter, checkout);
     const vscodeRoute = new IDERoute(logger, apiForIDE);
     const sseEventsRoute = new SSEEventsRoute(logger, cli);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.
