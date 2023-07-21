@@ -93,7 +93,7 @@ export class ApiServerMain {
     cli.register(new ServerCmd(apiServer));
 
     const cliRoute = new CLIRoute(logger, cli);
-    const apiForIDE = new APIForIDE(workspace, snapping, lanes);
+    const apiForIDE = new APIForIDE(workspace, snapping, lanes, installer);
     const vscodeRoute = new IDERoute(logger, apiForIDE);
     const sseEventsRoute = new SSEEventsRoute(logger, cli);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.
