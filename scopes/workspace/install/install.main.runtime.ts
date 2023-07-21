@@ -71,6 +71,7 @@ export type WorkspaceInstallOptions = {
   includeOptionalDeps?: boolean;
   updateAll?: boolean;
   recurringInstall?: boolean;
+  optimizeReportForNonTerminal?: boolean;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -252,6 +253,7 @@ export class InstallMain {
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       rootComponents: hasRootComponents,
       updateAll: options?.updateAll,
+      optimizeReportForNonTerminal: options?.optimizeReportForNonTerminal,
     };
     const prevManifests = new Set<string>();
     // TODO: this make duplicate

@@ -67,6 +67,11 @@ export type PackageManagerInstallOptions = {
   preferOffline?: boolean;
 
   nmSelfReferences?: boolean;
+
+  /**
+   * e.g. when running `bit install` through the web or the IDE, not from the CLI.
+   */
+  optimizeReportForNonTerminal?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
