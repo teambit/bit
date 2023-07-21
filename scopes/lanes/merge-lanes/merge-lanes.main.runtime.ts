@@ -413,9 +413,7 @@ export class MergeLanesMain {
         mergedPreviously.push(id);
         return undefined;
       }
-      // this might be confusing, we pass the toLaneHead as the sourceHead and the fromLaneHead as the targetHead.
-      // this is because normally, in the workspace, we merge another lane (target) into the current lane (source).
-      // so effectively, in the workspace, we merge fromLane=target into toLane=source.
+
       const divergeData = await getDivergeData({
         repo,
         modelComponent,
@@ -424,7 +422,16 @@ export class MergeLanesMain {
         throwForNoCommonSnap: true,
       });
       const modifiedVersion = shouldSquash
-        ? await squashOneComp(DEFAULT_LANE, fromLaneId, id, divergeData, log, this.scope.legacyScope, fromVersionObj)
+        ? await squashOneComp(
+            DEFAULT_LANE,
+            fromLaneId,
+            id,
+            divergeData,
+            log,
+            this.scope.legacyScope,
+            fromVersionObj,
+            options.snapMessage
+          )
         : undefined;
       const objects: BitObject[] = [];
       if (modifiedVersion) objects.push(modifiedVersion);
@@ -674,7 +681,8 @@ async function squashOneComp(
   divergeData: SnapsDistance,
   log: Log,
   scope: LegacyScope,
-  componentFromModel?: Version
+  componentFromModel?: Version,
+  messageTitle?: string
 ): Promise<Version | undefined> {
   if (divergeData.isDiverged()) {
     throw new BitError(`unable to squash because ${id.toString()} is diverged in history.
@@ -698,6 +706,20 @@ alternatively, use "--no-squash" flag to keep the entire history of "${otherLane
   if (remoteSnaps.length === 0) {
     throw new Error(`remote is ahead but it has no snaps. it's impossible`);
   }
+  const getAllMessages = async () => {
+    if (!messageTitle) return [];
+    await scope.scopeImporter.importManyObjects({ [otherLaneId.scope]: remoteSnaps.map((s) => s.toString()) });
+    const versionObjects = (await Promise.all(remoteSnaps.map((s) => scope.objects.load(s)))) as Version[];
+    return compact(versionObjects).map((v) => v.log.message);
+  };
+  const getFinalMessage = async (): Promise<string | undefined> => {
+    if (!messageTitle) return undefined;
+    const allMessage = await getAllMessages();
+    const allMessageStr = compact(allMessage)
+      .map((m) => `[*] ${m}`)
+      .join('\n');
+    return `${messageTitle}\n${allMessageStr}`;
+  };
   // no need to check this case. even if it has only one snap ahead, we want to do the "squash", and run "addAsOnlyParent"
   // to make sure it doesn't not have two parents.
   // if (remoteSnaps.length === 1) {
@@ -730,7 +752,8 @@ alternatively, use "--no-squash" flag to keep the entire history of "${otherLane
 
   await doSquash();
 
-  componentFromModel.setSquashed({ previousParents: currentParents, laneId: otherLaneId }, log);
+  const finalMessage = await getFinalMessage();
+  componentFromModel.setSquashed({ previousParents: currentParents, laneId: otherLaneId }, log, finalMessage);
   return componentFromModel;
 }
 
