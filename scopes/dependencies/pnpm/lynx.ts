@@ -177,6 +177,7 @@ export async function install(
     rootComponents?: boolean;
     rootComponentsForCapsules?: boolean;
     includeOptionalDeps?: boolean;
+    reportOptions?: { appendOnly: boolean };
     hidePackageManagerOutput?: boolean;
   } & Pick<
     InstallOptions,
@@ -271,7 +272,7 @@ export async function install(
 
   let stopReporting: Function | undefined;
   if (!options.hidePackageManagerOutput) {
-    stopReporting = initReporter();
+    stopReporting = initReporter(options.reportOptions);
   }
   let dependenciesChanged = false;
   try {
