@@ -111,7 +111,7 @@ export class APIForIDE {
   }
 
   async install() {
-    return this.installer.install();
+    return this.installer.install(undefined, { optimizeReportForNonTerminal: true });
   }
 
   async getDataToInitSCM(): Promise<DataToInitSCM> {
