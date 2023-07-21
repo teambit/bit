@@ -10,6 +10,7 @@ type Flags = {
   keepReadme?: boolean;
   noSquash: boolean;
   includeDeps?: boolean;
+  title?: string;
 };
 
 /**
@@ -34,6 +35,11 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
   alias = '';
   options = [
     ['', 'pattern <string>', 'partially merge the lane with the specified component-pattern'],
+    [
+      '',
+      'title <string>',
+      'if provided, it replaces the original message with this title and append squashed snaps messages',
+    ],
     ['', 'push', 'export the updated objects to the original scopes once done'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'no-squash', 'relevant for merging lanes into main, which by default squash.'],
@@ -49,7 +55,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
 
   async report(
     [fromLane, toLane]: [string, string],
-    { pattern, push = false, keepReadme = false, noSquash = false, includeDeps = false }: Flags
+    { pattern, push = false, keepReadme = false, noSquash = false, includeDeps = false, title }: Flags
   ): Promise<string> {
     if (includeDeps && !pattern) {
       throw new BitError(`"--include-deps" flag is relevant only for --pattern flag`);
@@ -64,6 +70,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
         noSquash,
         pattern,
         includeDeps,
+        snapMessage: title,
       }
     );
 

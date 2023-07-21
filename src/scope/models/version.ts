@@ -692,9 +692,18 @@ export default class Version extends BitObject {
     this.parents.push(ref);
   }
 
-  setSquashed(squashData: SquashData, log: Log) {
+  setSquashed(squashData: SquashData, log: Log, replaceMessage?: string) {
     this.squashed = squashData;
     this.addModifiedLog(log);
+    if (replaceMessage) {
+      this.addModifiedLog({
+        username: undefined,
+        email: undefined,
+        date: Date.now().toString(),
+        message: `squashing: replacing the original log.message, which was: "${this.log.message || '<empty>'}"`,
+      });
+      this.log.message = replaceMessage;
+    }
   }
 
   addModifiedLog(log: Log) {
