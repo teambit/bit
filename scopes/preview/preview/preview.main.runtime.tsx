@@ -587,7 +587,9 @@ export class PreviewMain {
       this.writeHash.set(targetPath, hash);
     }
 
-    return `./${targetPath}`;
+    // 1. in workspace: node_modules/xxx -> ./node_modules/xxx
+    // 2. in capsule: /<capsule-root>/xxx -> /<capsule-root>/xxx
+    return targetPath.match(/^node_modules/) ? `./${targetPath}` : targetPath;
   }
 
   private executionRefs = new Map<string, ExecutionRef>();
