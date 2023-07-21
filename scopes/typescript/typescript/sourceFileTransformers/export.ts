@@ -11,6 +11,7 @@ export const exportTransformer: SourceFileTransformer = (mapping: Record<string,
             moduleSpecifier = moduleSpecifier.replace(oldName, newName);
           }
         }
+        let updatedExportClause;
 
         if (node.exportClause && ts.isNamedExports(node.exportClause)) {
           const transformedElements = node.exportClause.elements.map((element) => {
@@ -30,18 +31,18 @@ export const exportTransformer: SourceFileTransformer = (mapping: Record<string,
             );
           });
 
-          const updatedExportClause = ts.factory.updateNamedExports(node.exportClause, transformedElements);
-
-          return ts.factory.updateExportDeclaration(
-            node,
-            node.decorators,
-            node.modifiers,
-            node.isTypeOnly,
-            updatedExportClause,
-            node.moduleSpecifier ? ts.factory.createStringLiteral(moduleSpecifier || '') : undefined,
-            undefined
-          );
+          updatedExportClause = ts.factory.updateNamedExports(node.exportClause, transformedElements);
         }
+
+        return ts.factory.updateExportDeclaration(
+          node,
+          node.decorators,
+          node.modifiers,
+          node.isTypeOnly,
+          updatedExportClause,
+          node.moduleSpecifier ? ts.factory.createStringLiteral(moduleSpecifier || '') : undefined,
+          undefined
+        );
       }
 
       if (ts.isExportAssignment(node)) {
