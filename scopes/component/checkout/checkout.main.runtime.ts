@@ -1,7 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
@@ -61,8 +60,6 @@ export type ComponentStatusBeforeMergeAttempt = ComponentStatusBase & {
     componentModel: ModelComponent;
   };
 };
-
-type CheckoutTo = 'head' | 'reset' | 'main' | string;
 
 export class CheckoutMain {
   constructor(
@@ -200,18 +197,14 @@ export class CheckoutMain {
     };
   }
 
-  async checkoutByCLIValues(
-    to: CheckoutTo,
-    componentPattern: string,
-    checkoutProps: CheckoutProps
-  ): Promise<ApplyVersionResults> {
-    const { revert } = checkoutProps;
+  async checkoutByCLIValues(componentPattern: string, checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
+    const { revert, head } = checkoutProps;
     this.logger.setStatusLine(revert ? 'reverting components...' : BEFORE_CHECKOUT);
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     await this.importer.importCurrentObjects(); // important. among others, it fetches the remote lane object and its new components.
-    if (to === 'head') await this.makeLaneComponentsAvailableOnMain();
-    await this.parseValues(to, componentPattern, checkoutProps);
+    if (head) await this.makeLaneComponentsAvailableOnMain();
+    await this.parseValues(componentPattern, checkoutProps);
     const checkoutResults = await this.checkout(checkoutProps);
     await consumer.onDestroy();
     return checkoutResults;
@@ -237,15 +230,7 @@ export class CheckoutMain {
     this.workspace.bitMap.makeComponentsAvailableOnMain(unavailableOnMain);
   }
 
-  private async parseValues(to: CheckoutTo, componentPattern: string, checkoutProps: CheckoutProps) {
-    if (to === HEAD) checkoutProps.head = true;
-    else if (to === LATEST) checkoutProps.latest = true;
-    else if (to === 'reset') checkoutProps.reset = true;
-    else if (to === 'main') checkoutProps.main = true;
-    else {
-      if (!BitId.isValidVersion(to)) throw new BitError(`the specified version "${to}" is not a valid version`);
-      checkoutProps.version = to;
-    }
+  private async parseValues(componentPattern: string, checkoutProps: CheckoutProps) {
     if (checkoutProps.head && !componentPattern) {
       if (checkoutProps.all) {
         this.logger.console(`"--all" is deprecated for "bit checkout ${HEAD}", please omit it.`);

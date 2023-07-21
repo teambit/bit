@@ -14,8 +14,8 @@ import { UiMain } from '@teambit/ui';
 import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import LegacyComponentLoader, { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { BitId } from '@teambit/legacy-bit-id';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
@@ -170,7 +170,8 @@ export default async function provideWorkspace(
   consumer.onCacheClear.push(() => workspace.clearCache());
 
   LegacyComponentLoader.registerOnComponentLoadSubscriber(
-    async (legacyComponent: ConsumerComponent, opts?: { loadDocs?: boolean }) => {
+    async (legacyComponent: ConsumerComponent, opts?: ComponentLoadOptions) => {
+      if (opts?.originatedFromHarmony) return legacyComponent;
       const id = await workspace.resolveComponentId(legacyComponent.id);
       const newComponent = await workspace.get(id, legacyComponent, true, true, opts);
       return newComponent.state._consumer;
