@@ -4,6 +4,8 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
+import { ExportAspect, ExportMain } from '@teambit/export';
+import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import { Component } from '@teambit/component';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
@@ -13,8 +15,6 @@ import { ServerCmd } from './server.cmd';
 import { IDERoute } from './ide.route';
 import { APIForIDE } from './api-for-ide';
 import { SSEEventsRoute, sendEventsToClients } from './sse-events.route';
-import { ExportAspect, ExportMain } from '@teambit/export';
-import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
 
 export class ApiServerMain {
   constructor(
