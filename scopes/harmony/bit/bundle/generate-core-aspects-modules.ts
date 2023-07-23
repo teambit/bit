@@ -17,7 +17,7 @@ export function generateCoreAspectsModules(bundleDir: string, appName: string) {
 }
 
 async function handleOneAspect(bundleDir: string, name: string, packageName: string, appName: string) {
-  const dirPath = join(bundleDir, packageName);
+  const dirPath = join(bundleDir, 'node_modules', packageName);
   await fs.ensureDir(dirPath);
   const indexFilePath = join(dirPath, 'index.js');
   const indexFileContent = getIndexContent(name, appName);
