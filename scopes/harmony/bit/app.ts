@@ -17,7 +17,7 @@ import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
 import { runCLI } from './load-bit';
 
 // Export APIs from all core aspects to be used in the bundled app
-// export * from './core-aspects-exports';
+export * from './core-aspects-exports';
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 initApp();
