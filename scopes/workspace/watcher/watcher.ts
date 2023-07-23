@@ -1,6 +1,6 @@
 import { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
-import { dirname, sep, basename } from 'path';
+import { dirname, basename } from 'path';
 import { compact, difference, partition } from 'lodash';
 import { ComponentID } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
