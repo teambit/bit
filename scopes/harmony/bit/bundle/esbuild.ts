@@ -2,10 +2,9 @@ import { build } from 'esbuild';
 import ignorePlugin from 'esbuild-plugin-ignore';
 import { join } from 'path';
 
-export function runEsbuild() {
-  const appFile = `bit.app`;
+export function runEsbuild(outDir: string, appFile: string) {
   // const _outfile = join('/Users/giladshoham/dev/temp/bundle-bit/output', `${appFile}.js`);
-  const _outfile = join('/Users/giladshoham/dev/bit/bit/bundle', `${appFile}.js`);
+  const _outfile = join(outDir, appFile);
   // const _outfile = join('/Users/giladshoham/dev/temp/bundle-bit/output', `test-app.js`);
   return build({
     define: {
@@ -134,6 +133,8 @@ export function runEsbuild() {
       ignorePlugin([
         // { resourceRegExp: /(.*)\.ui\.runtime\.*/g },
         { resourceRegExp: /\.(s[ac]ss|css)$/ },
+        { resourceRegExp: /\.(mdx)$/ },
+        { resourceRegExp: /\.(md)$/ },
         // { resourceRegExp: new RegExp('^@swc/core') },
         { resourceRegExp: new RegExp('^jest-resolve') },
         { resourceRegExp: new RegExp('^@vue/compiler-sfc') },
