@@ -107,4 +107,4 @@ scopes/component/component-issues/dist/
 scopes/component/component-version/dist/
 
 # bundle output
-bundle
+/bundle
