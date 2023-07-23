@@ -23,6 +23,8 @@ function generateExports(): string {
     const packageName = getCoreAspectPackageName(id);
     return generateOneExport(name, packageName);
   });
+  exportsLines.push(generateOneExport('legacy', '@teambit/legacy'));
+  exportsLines.push(generateOneExport('harmony', '@teambit/harmony'));
   return exportsLines.join('\n');
 }
 

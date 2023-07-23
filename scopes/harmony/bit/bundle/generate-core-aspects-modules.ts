@@ -7,15 +7,16 @@ import { coreAspectsIds } from '../core-aspects-ids';
 
 export function generateCoreAspectsModules(bundleDir: string, appName: string) {
   const generateOneAspectP = coreAspectsIds.map((id) => {
-    return handleOneAspect(bundleDir, id, appName);
+    const name = getCoreAspectName(id);
+    const packageName = getCoreAspectPackageName(id);
+    return handleOneAspect(bundleDir, name, packageName, appName);
   });
+  generateOneAspectP.push(handleOneAspect(bundleDir, 'legacy', '@teambit/legacy', appName));
+  generateOneAspectP.push(handleOneAspect(bundleDir, 'harmony', '@teambit/harmony', appName));
   return Promise.all(generateOneAspectP);
 }
 
-async function handleOneAspect(bundleDir: string, id: string, appName: string) {
-  const name = getCoreAspectName(id);
-  const packageName = getCoreAspectPackageName(id);
-
+async function handleOneAspect(bundleDir: string, name: string, packageName: string, appName: string) {
   const dirPath = join(bundleDir, packageName);
   await fs.ensureDir(dirPath);
   const indexFilePath = join(dirPath, 'index.js');
