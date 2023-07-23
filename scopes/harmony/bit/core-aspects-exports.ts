@@ -102,3 +102,5 @@ export * as watcher from '@teambit/watcher';
 export * as stash from '@teambit/stash';
 export * as git from '@teambit/git';
 export * as ipcEvents from '@teambit/ipc-events';
+export * as legacy from '@teambit/legacy';
+export * as harmony from '@teambit/harmony';
