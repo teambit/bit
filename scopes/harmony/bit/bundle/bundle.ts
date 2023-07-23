@@ -1,6 +1,8 @@
 import { runEsbuild } from './esbuild';
+import { generateCoreAspectsBarrelFile } from './generate-core-aspects-exports';
 
 async function runBundle() {
+  await generateCoreAspectsBarrelFile();
   const esbuildRes = await runEsbuild();
   return esbuildRes;
 }
