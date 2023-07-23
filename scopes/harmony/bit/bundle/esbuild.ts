@@ -2,7 +2,7 @@ import { build } from 'esbuild';
 import ignorePlugin from 'esbuild-plugin-ignore';
 import { join } from 'path';
 
-function bundle() {
+export function runEsbuild() {
   const appFile = `bit.app`;
   // const _outfile = join('/Users/giladshoham/dev/temp/bundle-bit/output', `${appFile}.js`);
   const _outfile = join('/Users/giladshoham/dev/bit/bit/bundle', `${appFile}.js`);
@@ -28,7 +28,7 @@ function bundle() {
     // inject: [join(__dirname, './import-meta-url.js')],
 
     external: [
-      'jest.worker',
+      // 'jest.worker',
       'yoga-layout',
       'yoga-layout-prebuilt',
       '@surma/rollup-plugin-off-main-thread',
@@ -175,5 +175,3 @@ function bundle() {
     loader: { '.png': 'binary', '.node': 'binary' },
   });
 }
-
-bundle().then((res) => console.log(JSON.stringify(res, null, 2)));
