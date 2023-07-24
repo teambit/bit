@@ -60,7 +60,14 @@ function getTargetDirName(resolveDir: string): string {
   }
   return parts[1].split('/').join('.');
 }
-function handleModulePath(args: OnResolveArgs, bundleDir: string) {
+async function handleModulePath(args: OnResolveArgs, bundleDir: string) {
+  const resolvedFilePath = require.resolve(args.path);
+  console.log('🚀 ~ file: config-files-esbuild-plugin.ts:65 ~ handleModulePath ~ resolvedFilePath:', resolvedFilePath);
+  const parsed = parse(args.path);
+  const targetDir = join(bundleDir, 'node_modules', parsed.dir);
+  console.log('🚀 ~ file: config-files-esbuild-plugin.ts:67 ~ handleModulePath ~ targetDir:', targetDir);
+  await fs.ensureDir(targetDir);
+  await fs.copyFile(resolvedFilePath, join(targetDir, basename(resolvedFilePath)));
   return {
     // Keep the path as-is
     path: args.path,
