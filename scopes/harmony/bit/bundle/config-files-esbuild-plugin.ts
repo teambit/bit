@@ -10,9 +10,12 @@ type ParsedArgs = {
 
 function handleConfigFile(args: OnResolveArgs, bundleDir: string) {
   console.log('im here', args);
+  if (args.path.includes('html-docs-app')) {
+    console.log('this is me', args);
+  }
   if (
     args.kind === 'require-resolve' &&
-    args.importer.includes('/scopes/') &&
+    (args.importer.includes('/scopes/') || args.importer.includes('node_modules/@teambit')) &&
     // ignore templates we want to keep it as is
     !args.importer.includes('/templates/')
   ) {
@@ -29,7 +32,7 @@ function handleConfigFile(args: OnResolveArgs, bundleDir: string) {
 async function handleRelativePath(args: OnResolveArgs, bundleDir: string) {
   const parsed = parse(args.path);
   console.log('parsed', parsed);
-  const { componentName, relativePath, scopeName } = parseArgs(args);
+  const { componentName, relativePath, scopeName } = await parseArgs(args);
   // const packageDirName = getPackageDirName(args.resolveDir);
   const packageDirName = `@teambit/${componentName}`;
   // const origFilePath = join(args.resolveDir, args.path);
@@ -68,7 +71,30 @@ async function handleRelativePath(args: OnResolveArgs, bundleDir: string) {
   };
 }
 
-function parseArgs(args: OnResolveArgs): ParsedArgs {
+async function parseArgs(args: OnResolveArgs): Promise<ParsedArgs> {
+  if (args.resolveDir.includes('/scopes/')) {
+    return parseArgsFromSrc(args);
+  }
+  return parseArgsFromNodeModules(args);
+}
+async function parseArgsFromNodeModules(args: OnResolveArgs): Promise<ParsedArgs> {
+  const resolveDir = args.resolveDir;
+  const filePath = args.path;
+  const parts = resolveDir.split('/@teambit/');
+  const idParts = parts[1].split('/');
+  const componentName = idParts[0];
+  const relativePath = filePath;
+  const packageJsonPath = join(parts[0], '@teambit', componentName, 'package.json');
+  const jsonValue = await fs.readJson(packageJsonPath);
+  const scopeName = jsonValue.componentId.scope.replace('teambit.', '');
+  return {
+    scopeName,
+    componentName,
+    relativePath: relativePath.replace('./', ''),
+  };
+}
+
+function parseArgsFromSrc(args: OnResolveArgs): ParsedArgs {
   const resolveDir = args.resolveDir;
   const filePath = args.path;
   const parts = resolveDir.split('/scopes/');
@@ -85,7 +111,7 @@ function parseArgs(args: OnResolveArgs): ParsedArgs {
   return {
     scopeName,
     componentName,
-    relativePath,
+    relativePath: relativePath.replace('./', ''),
   };
 }
 
@@ -116,6 +142,12 @@ export const configFilesEsbuildPlugin = (bundleDir: string) => {
       build.onResolve({ filter: /jest.config$/ }, (args) => {
         return handleConfigFile(args, bundleDir);
       });
+      build.onResolve({ filter: /jest.cjs.config$/ }, (args) => {
+        return handleConfigFile(args, bundleDir);
+      });
+      build.onResolve({ filter: /jest.base.config$/ }, (args) => {
+        return handleConfigFile(args, bundleDir);
+      });
 
       build.onResolve({ filter: /jest.worker$/ }, (args) => {
         return handleConfigFile(args, bundleDir);
@@ -141,7 +173,7 @@ export const configFilesEsbuildPlugin = (bundleDir: string) => {
       build.onResolve({ filter: /webpackHotDevClient$/ }, (args) => {
         return handleConfigFile(args, bundleDir);
       });
-      build.onResolve({ filter: /\/mount$/ }, (args) => {
+      build.onResolve({ filter: /mount$/ }, (args) => {
         return handleConfigFile(args, bundleDir);
       });
       build.onResolve({ filter: /html-docs-app$/ }, (args) => {
@@ -150,43 +182,15 @@ export const configFilesEsbuildPlugin = (bundleDir: string) => {
       build.onResolve({ filter: /\/preview.preview.runtime$/ }, (args) => {
         return handleConfigFile(args, bundleDir);
       });
-
-      // We also want to intercept all import paths inside downloaded
-      // files and resolve them against the original URL. All of these
-      // files will be in the "http-url" namespace. Make sure to keep
-      // the newly resolved URL in the "http-url" namespace so imports
-      // inside it will also be resolved as URLs recursively.
-      // build.onResolve({ filter: /.*/, namespace: 'http-url' }, args => ({
-      //   path: new URL(args.path, args.importer).toString(),
-      //   namespace: 'http-url',
-      // }))
-
-      // When a URL is loaded, we want to actually download the content
-      // from the internet. This has just enough logic to be able to
-      // handle the example import from unpkg.com but in reality this
-      // would probably need to be more complex.
-      // build.onLoad({ filter: /.*/, namespace: 'http-url' }, async (args) => {
-      //   let contents = await new Promise((resolve, reject) => {
-      //     function fetch(url) {
-      //       console.log(`Downloading: ${url}`)
-      //       let lib = url.startsWith('https') ? https : http
-      //       let req = lib.get(url, res => {
-      //         if ([301, 302, 307].includes(res.statusCode)) {
-      //           fetch(new URL(res.headers.location, url).toString())
-      //           req.abort()
-      //         } else if (res.statusCode === 200) {
-      //           let chunks = []
-      //           res.on('data', chunk => chunks.push(chunk))
-      //           res.on('end', () => resolve(Buffer.concat(chunks)))
-      //         } else {
-      //           reject(new Error(`GET ${url} failed: status ${res.statusCode}`))
-      //         }
-      //       }).on('error', reject)
-      //     }
-      //     fetch(args.path)
-      //   })
-      //   return { contents }
-      // })
+      build.onResolve({ filter: /setupTests$/ }, (args) => {
+        return handleConfigFile(args, bundleDir);
+      });
+      build.onResolve({ filter: /css-transform$/ }, (args) => {
+        return handleConfigFile(args, bundleDir);
+      });
+      build.onResolve({ filter: /file-transform$/ }, (args) => {
+        return handleConfigFile(args, bundleDir);
+      });
     },
   };
 };
