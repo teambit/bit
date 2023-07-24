@@ -1,6 +1,7 @@
 import { Section } from '@teambit/component';
 import { TesterUI } from '@teambit/tester';
 import { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
+import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
 
 export class TestCompareSection implements Section, TabItem {
   constructor(private tester: TesterUI) {}
@@ -18,5 +19,6 @@ export class TestCompareSection implements Section, TabItem {
   };
 
   order = 50;
-  id = 'test';
+  id = 'tests';
+  changeType = ChangeType.TESTS;
 }
