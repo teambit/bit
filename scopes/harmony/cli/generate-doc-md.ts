@@ -1,4 +1,4 @@
-import { Command } from '@teambit/legacy/dist/cli/command';
+import { Command, CommandArg } from '@teambit/legacy/dist/cli/command';
 import { CommandOptions } from '@teambit/legacy/dist/cli/legacy-command';
 import { pick } from 'lodash';
 import { getCommandId } from './get-command-id';
@@ -86,6 +86,7 @@ bit COMMAND SUB_COMMAND --help
     if (cmd.commands && cmd.commands.length > 0) {
       result += this.generateSubCommands(cmd.commands, cmd);
     }
+    result += this.generateArguments(cmd.arguments);
     result += this.generateOptions(cmd.options);
     result += `---  \n`;
 
@@ -103,9 +104,22 @@ bit COMMAND SUB_COMMAND --help
       ret += `**Description**: ${this.formatDescription(subCommand)}`;
 
       ret += '\n';
+      ret += this.generateArguments(subCommand.arguments);
       ret += this.generateOptions(subCommand.options);
     });
     return ret;
+  }
+
+  private generateArguments(args?: CommandArg[]): string {
+    if (!args || !args.length) return '';
+    let output = `| **Arg** | **Description** |  \n`;
+    output += `|---|:-----:|\n`;
+    args.forEach((arg) => {
+      const { name, description } = arg;
+      output += `|\`${name}\`|${(description || '').replaceAll('\n', ' ')}|\n`;
+    });
+    output += `\n`;
+    return output;
   }
 
   private generateOptions(options: CommandOptions): string {
