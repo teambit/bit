@@ -153,8 +153,17 @@ export class ReactEnv
    * @returns
    */
   createCjsJestTester(jestConfigPath?: string, jestModulePath?: string): Tester {
-    const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
-    const defaultConfig = join(pathToSource, './jest/jest.cjs.config.js');
+    // const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
+    // const defaultConfig = join(pathToSource, './jest/jest.cjs.config.js');
+    // TODO: this is a hack to make sure the jest config is copied to the bundle folder
+    // we should make it a better way
+    // Force esbuild to copy this file
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const baseConfigPath = require.resolve('./jest/jest.base.config');
+    // Force esbuild to copy require.resolve from this file
+    // eslint-disable-next-line global-require
+    const baseConfig = require('./jest/jest.base.config');
+    const defaultConfig = require.resolve('./jest/jest.cjs.config');
     const config = jestConfigPath || defaultConfig;
     return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
   }
