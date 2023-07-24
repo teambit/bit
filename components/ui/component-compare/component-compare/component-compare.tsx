@@ -152,6 +152,16 @@ export function ComponentCompare(props: ComponentCompareProps) {
     return _fieldCompareDataByName;
   }, [compCompareLoading, loading, compCompareId]);
 
+  const testCompareDataByName = useMemo(() => {
+    if (loading || compCompareLoading) return undefined;
+    if (!compCompareLoading && !componentCompareData) return null;
+    const _testCompareDataByName = new Map<string, FileCompareResult>();
+    (componentCompareData?.tests || []).forEach((testCompareData) => {
+      _testCompareDataByName.set(testCompareData.fileName, testCompareData);
+    });
+    return _testCompareDataByName;
+  }, [compCompareLoading, loading, compCompareId]);
+
   const componentCompareModel = {
     compare: compare && {
       model: compare,
@@ -170,11 +180,13 @@ export function ComponentCompare(props: ComponentCompareProps) {
     compareContext,
     fieldCompareDataByName,
     fileCompareDataByName,
+    testCompareDataByName,
     isFullScreen,
   };
 
   const changes =
-    changesFromProps || deriveChangeType(baseId, compare?.id, fileCompareDataByName, fieldCompareDataByName);
+    changesFromProps ||
+    deriveChangeType(baseId, compare?.id, fileCompareDataByName, fieldCompareDataByName, testCompareDataByName);
 
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
@@ -292,7 +304,8 @@ function deriveChangeType(
   baseId?: ComponentID,
   compareId?: ComponentID,
   fileCompareDataByName?: Map<string, FileCompareResult> | null,
-  fieldCompareDataByName?: Map<string, FieldCompareResult> | null
+  fieldCompareDataByName?: Map<string, FieldCompareResult> | null,
+  testCompareDataByName?: Map<string, FileCompareResult> | null
 ): ChangeType[] | undefined | null {
   if (!baseId && !compareId) return null;
   if (!baseId?.version) return [ChangeType.NEW];
@@ -300,9 +313,11 @@ function deriveChangeType(
   if (fileCompareDataByName === null || fieldCompareDataByName === null) return null;
   if (fileCompareDataByName === undefined || fieldCompareDataByName === undefined) return undefined;
 
+  const fileCompareData = [...fileCompareDataByName.values()];
+
   if (
     fieldCompareDataByName.size === 0 &&
-    (fileCompareDataByName.size === 0 || [...fileCompareDataByName.values()].every((f) => f.status === 'UNCHANGED'))
+    (fileCompareDataByName.size === 0 || fileCompareData.every((f) => f.status === 'UNCHANGED'))
   ) {
     return [ChangeType.NONE];
   }
@@ -310,7 +325,11 @@ function deriveChangeType(
   const changed: ChangeType[] = [];
   const DEPS_FIELD = ['dependencies', 'devDependencies', 'extensionDependencies'];
 
-  if (fileCompareDataByName.size > 0 && [...fileCompareDataByName.values()].some((f) => f.status !== 'UNCHANGED')) {
+  if (testCompareDataByName?.size) {
+    changed.push(ChangeType.TESTS);
+  }
+
+  if (fileCompareDataByName.size > 0 && fileCompareData.some((f) => f.status !== 'UNCHANGED')) {
     changed.push(ChangeType.SOURCE_CODE);
   }
 
