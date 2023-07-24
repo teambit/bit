@@ -143,9 +143,9 @@ export class ImportCmd implements Command {
   }
 
   async json([ids]: [string[]], importFlags: ImportFlags) {
-    const { importDetails, installationError } = await this.getImportResults(ids, importFlags);
+    const { importDetails, installationError, missingIds } = await this.getImportResults(ids, importFlags);
 
-    return { importDetails, installationError };
+    return { importDetails, installationError, missingIds };
   }
 
   private async getImportResults(
