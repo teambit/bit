@@ -1,6 +1,12 @@
-import { ParsedPath, basename, format, join, parse } from 'path';
+import { basename, dirname, join, parse } from 'path';
 import { OnResolveArgs } from 'esbuild';
 import fs from 'fs-extra';
+
+type ParsedArgs = {
+  scopeName: string;
+  componentName: string;
+  relativePath: string;
+};
 
 function handleConfigFile(args: OnResolveArgs, bundleDir: string) {
   console.log('im here', args);
@@ -23,14 +29,18 @@ function handleConfigFile(args: OnResolveArgs, bundleDir: string) {
 async function handleRelativePath(args: OnResolveArgs, bundleDir: string) {
   const parsed = parse(args.path);
   console.log('parsed', parsed);
-  const packageDirName = getPackageDirName(args.resolveDir);
+  const { componentName, relativePath, scopeName } = parseArgs(args);
+  // const packageDirName = getPackageDirName(args.resolveDir);
+  const packageDirName = `@teambit/${componentName}`;
   // const origFilePath = join(args.resolveDir, args.path);
-  const relativePath = getFilePathRelativeToPackage(args.resolveDir, args.path);
+  // const relativePath = getFilePathRelativeToPackage(args.resolveDir, args.path);
   // TODO: dist is hard coded now which is not great
   const origFilePath = join(packageDirName, 'dist', relativePath);
   console.log('🚀 ~ file: config-files-esbuild-plugin.ts:27 ~ handleRelativePath ~ origFilePath:', origFilePath);
-  const targetDirName = getTargetDirName(args.resolveDir);
-  const targetDir = join(bundleDir, targetDirName, parsed.dir);
+  // const targetDirName = getTargetDirName(args.resolveDir);
+  const targetDirName = `${scopeName}.${componentName}`;
+  // const targetDir = join(bundleDir, targetDirName, parsed.dir);
+  const targetDir = join(bundleDir, targetDirName, dirname(relativePath));
   console.log('🚀 ~ file: config-files-esbuild-plugin.ts:28 ~ handleRelativePath ~ targetDir:', targetDir);
   await fs.ensureDir(targetDir);
   const resolvedFilePath = require.resolve(origFilePath);
@@ -47,7 +57,8 @@ async function handleRelativePath(args: OnResolveArgs, bundleDir: string) {
     basename(resolvedFilePath)
   );
   await fs.copyFile(resolvedFilePath, join(targetDir, basename(resolvedFilePath)));
-  const newPath = replaceRelativePath(targetDirName, parsed);
+  // const newPath = replaceRelativePath(targetDirName, parsed);
+  const newPath = `./${targetDirName}/${relativePath}`;
   console.log('🚀 ~ file: config-files-esbuild-plugin.ts:38 ~ handleRelativePath ~ newPath:', newPath);
 
   return {
@@ -57,39 +68,27 @@ async function handleRelativePath(args: OnResolveArgs, bundleDir: string) {
   };
 }
 
-function getFilePathRelativeToPackage(resolveDir: string, filePath: string): string {
+function parseArgs(args: OnResolveArgs): ParsedArgs {
+  const resolveDir = args.resolveDir;
+  const filePath = args.path;
   const parts = resolveDir.split('/scopes/');
   if (parts.length !== 2) {
     throw new Error('unable to find scopes dir');
   }
   const idParts = parts[1].split('/');
-  // [0] is the scope name [1] is the component name
-  // array from index 2 to the end is the internal path
-  const relativePath = idParts.slice(2).join('/');
-  return join(relativePath, filePath);
+  const scopeName = idParts[0];
+  const componentName = idParts[1];
+  let relativePath = filePath;
+  if (idParts.length > 2) {
+    relativePath = join(idParts.slice(2).join('/'), filePath);
+  }
+  return {
+    scopeName,
+    componentName,
+    relativePath,
+  };
 }
 
-function getPackageDirName(resolveDir: string): string {
-  // TODO: consider taking it from the bit show package name
-  // based on the root dir from the bitmap
-  // for now doing it like this to make it faster
-  const parts = resolveDir.split('/scopes/');
-  if (parts.length !== 2) {
-    throw new Error('unable to find scopes dir');
-  }
-  const idParts = parts[1].split('/');
-  // [0] is the scope name
-  const name = idParts[1];
-  return `@teambit/${name}`;
-}
-
-function getTargetDirName(resolveDir: string): string {
-  const parts = resolveDir.split('/scopes/');
-  if (parts.length !== 2) {
-    throw new Error('unable to find scopes dir');
-  }
-  return parts[1].split('/').join('.');
-}
 async function handleModulePath(args: OnResolveArgs, bundleDir: string) {
   const resolvedFilePath = require.resolve(args.path);
   console.log('🚀 ~ file: config-files-esbuild-plugin.ts:65 ~ handleModulePath ~ resolvedFilePath:', resolvedFilePath);
@@ -104,18 +103,6 @@ async function handleModulePath(args: OnResolveArgs, bundleDir: string) {
     namespace: 'bit-config-file',
     external: true,
   };
-}
-function replaceRelativePath(targetDirName: string, parsedPath: ParsedPath) {
-  if (parsedPath.dir === '.') {
-    return `./${targetDirName}/${parsedPath.base}`;
-  }
-  const relativePath = parsedPath.dir.split('/').slice(1).join('/');
-  console.log('🚀 ~ file: config-files-esbuild-plugin.ts:110 ~ replaceRelativePath ~ parsedPath.dir:', parsedPath.dir);
-  console.log('🚀 ~ file: config-files-esbuild-plugin.ts:110 ~ replaceRelativePath ~ relativePath:', relativePath);
-  // parsedPath.dir = `./${targetDirName}/${parsedPath.dir.replace('./', '')}`;
-  parsedPath.dir = `./${targetDirName}/${relativePath}`;
-  const formatted = format(parsedPath);
-  return formatted;
 }
 
 export const configFilesEsbuildPlugin = (bundleDir: string) => {
