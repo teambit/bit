@@ -52,7 +52,7 @@ export function VariableNodeSummary({
       key={`${__schema}-${name}`}
       className={classnames(className, styles.row)}
       headings={headings}
-      colNumber={4}
+      colNumber={headings.length as any}
       customRow={{
         name: (
           <div id={name} className={classnames(trackedElementClassName, groupElementClassName, styles.name)}>
@@ -66,9 +66,11 @@ export function VariableNodeSummary({
         description: doc?.comment || '',
         required: isOptional !== undefined && !isOptional,
         type: '',
-        default: {
-          value: defaultValue || '',
-        },
+        default:
+          (defaultValue && {
+            value: defaultValue,
+          }) ||
+          undefined,
       }}
     />
   );

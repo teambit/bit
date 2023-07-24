@@ -104,6 +104,7 @@ function TypeRefComponent(props: APINodeRenderProps) {
     );
   }
 
+  console.log('🚀 ~ file: type-ref.renderer.tsx:111 ~ TypeRefComponent ~ typeRefNode:', typeRefNode);
   return (
     <TypeRefName
       key={`typeRef-${typeRefNode.name}`}
@@ -116,6 +117,8 @@ function TypeRefComponent(props: APINodeRenderProps) {
     />
   );
 }
+
+const LinkContext = React.createContext(false);
 
 function TypeRefName({
   name,
@@ -140,12 +143,17 @@ function TypeRefName({
     [styles.package]: !!packageName,
   });
 
-  if (url) {
+  // Check if current component is nested within a Link.
+  const withinLink = React.useContext(LinkContext);
+
+  if (url && !withinLink) {
     return (
-      <Link href={url} external={external} className={classnames(className, styles.nodeLink)}>
-        {name}
-        {children}
-      </Link>
+      <LinkContext.Provider value={true}>
+        <Link href={url} external={external} className={classnames(className, styles.nodeLink)}>
+          {name}
+          {children}
+        </Link>
+      </LinkContext.Provider>
     );
   }
 

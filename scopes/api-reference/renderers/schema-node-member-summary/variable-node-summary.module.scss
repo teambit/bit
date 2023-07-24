@@ -4,7 +4,8 @@
 
 .node {
   display: flex;
+  font-family: Roboto mono;
   font-size: var(--bit-p-xxs);
   word-break: normal;
-  overflow-wrap: break-word;
+  color: rgb(57, 115, 0);
 }

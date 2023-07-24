@@ -402,8 +402,11 @@ export class SchemaExtractorContext {
     if (headTypeDefinition) {
       return headTypeDefinition;
     }
+
     const definition = await this.tsserver.getDefinition(node.getSourceFile().fileName, this.getLocation(node));
-    return head(definition?.body);
+    const headDefinition = head(definition?.body);
+
+    return headDefinition;
   }
 
   // when we can't figure out the component/package/type of this node, we'll use the typeStr as the type.
@@ -448,13 +451,10 @@ export class SchemaExtractorContext {
     }
 
     const definition = await this.getDefinition(node);
+
     if (!definition) {
       return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
-
-    const file = this.findFileInComponent(definition.file);
-
-    if (!file) return this.getTypeRefForExternalPath(typeStr, definition.file, location);
 
     if (this.isDefInSameLocation(node, definition)) {
       return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
@@ -480,13 +480,17 @@ export class SchemaExtractorContext {
     const transformer = this.extractor.getTransformer(definitionNode, this);
 
     if (transformer === undefined) {
+      const file = this.findFileInComponent(definition.file);
+      if (!file) return this.getTypeRefForExternalPath(typeStr, definition.file, location);
       return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
 
     const schemaNode = await this.visit(definitionNode);
+
     if (!schemaNode) {
       return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
+
     const apiTransformer = this.extractor.getAPITransformer(schemaNode);
     return apiTransformer ? apiTransformer.transform(schemaNode, this) : schemaNode;
   }

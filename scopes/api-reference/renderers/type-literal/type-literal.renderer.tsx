@@ -28,5 +28,13 @@ function TypeLiteralComponent(props: APINodeRenderProps) {
     return copySchemaNode(node, { signature: node.toString() });
   });
 
-  return <GroupedSchemaNodesSummary nodes={members} apiNodeRendererProps={props} />;
+  return (
+    <GroupedSchemaNodesSummary
+      nodes={members}
+      apiNodeRendererProps={props}
+      headings={{
+        properties: ['name', 'type', 'description'],
+      }}
+    />
+  );
 }

@@ -37,8 +37,11 @@ function ParameterComponent(props: APINodeRenderProps) {
   if (objectBindingNodes) {
     return (
       <React.Fragment key={`${name}-param`}>
-        {objectBindingNodes.map((bindingNode) => {
+        {objectBindingNodes.map((_bindingNode) => {
+          const typeRefCorrespondingNode = typeRef?.api.findNode((node) => node.name === _bindingNode.name);
+          const bindingNode = typeRefCorrespondingNode || _bindingNode;
           const bindingNodeRenderer = renderers.find((renderer) => renderer.predicate(bindingNode));
+
           const customBindingNodeTypeRow = (bindingNodeRenderer && (
             <bindingNodeRenderer.Component
               {...props}
@@ -47,7 +50,11 @@ function ParameterComponent(props: APINodeRenderProps) {
               metadata={{ [type.__schema]: { columnView: true } }}
             />
           )) || <div className={styles.node}>{bindingNode.toString()}</div>;
-          const typeRefCorrespondingNode = typeRef?.api.findNode((node) => node.name === bindingNode.name);
+
+          console.log(
+            '🚀 ~ file: parameter.renderer.tsx:54 ~ {objectBindingNodes.map ~ typeRefCorrespondingNode:',
+            typeRefCorrespondingNode
+          );
 
           return (
             <TableRow
@@ -58,15 +65,15 @@ function ParameterComponent(props: APINodeRenderProps) {
                 type: customBindingNodeTypeRow,
               }}
               row={{
-                name: bindingNode.name || typeRefCorrespondingNode?.name || '',
-                description: bindingNode.doc?.comment || typeRefCorrespondingNode?.doc?.comment || '',
+                name: bindingNode.name || '',
+                description: bindingNode.doc?.comment || '',
                 required:
                   (typeRefCorrespondingNode as any)?.isOptional !== undefined &&
                   !(typeRefCorrespondingNode as any)?.isOptional,
                 type: '',
                 // infer defaultValue
                 default: {
-                  value: (bindingNode as InferenceTypeSchema).defaultValue || '',
+                  value: (_bindingNode as InferenceTypeSchema).defaultValue || '',
                 },
               }}
             />
