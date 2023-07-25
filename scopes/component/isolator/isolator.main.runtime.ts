@@ -58,7 +58,6 @@ import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-d
 import { Network } from './network';
 
 export type ListResults = {
-  workspace: string;
   capsules: string[];
 };
 
@@ -67,7 +66,7 @@ export type ListResults = {
  */
 export type IsolationContext = {
   /**
-   * Whether the isolation done for aspets (as opposed to regular components)
+   * Whether the isolation done for aspects (as opposed to regular components)
    */
   aspects?: boolean;
 
@@ -785,18 +784,17 @@ export class IsolatorMain {
     return ComponentMap.create(tuples);
   }
 
-  async list(workspacePath: string): Promise<ListResults> {
+  async list(rootDir: string): Promise<ListResults> {
     try {
-      const workspaceCapsuleFolder = this.getCapsulesRootDir({ baseDir: workspacePath });
-      const capsules = await fs.readdir(workspaceCapsuleFolder);
-      const capsuleFullPaths = capsules.map((c) => path.join(workspaceCapsuleFolder, c));
+      const capsules = await fs.readdir(rootDir);
+      const withoutNodeModules = capsules.filter((c) => c !== 'node_modules');
+      const capsuleFullPaths = withoutNodeModules.map((c) => path.join(rootDir, c));
       return {
-        workspace: workspacePath,
         capsules: capsuleFullPaths,
       };
     } catch (e: any) {
       if (e.code === 'ENOENT') {
-        return { workspace: workspacePath, capsules: [] };
+        return { capsules: [] };
       }
       throw e;
     }
@@ -844,10 +842,8 @@ export class IsolatorMain {
     return path.join(capsulesRootBaseDir, dir);
   }
 
-  async deleteCapsules(capsuleBaseDir: string | null): Promise<string> {
-    const dirToDelete = capsuleBaseDir
-      ? this.getCapsulesRootDir({ baseDir: capsuleBaseDir })
-      : this.getRootDirOfAllCapsules();
+  async deleteCapsules(rootDir?: string): Promise<string> {
+    const dirToDelete = rootDir || this.getRootDirOfAllCapsules();
     await fs.remove(dirToDelete);
     return dirToDelete;
   }
