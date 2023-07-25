@@ -16,8 +16,16 @@ export default function createSymlinkOrCopy(
   destPath: PathOsBased,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentId?: string | null | undefined = '',
-  avoidHardLink = false
+  avoidHardLink = false,
+  skipIfSymlinkValid = false
 ) {
+  if (skipIfSymlinkValid && fs.existsSync(destPath)) {
+    const realDestination = fs.realpathSync(destPath);
+    if (realDestination === srcPath) {
+      logger.trace(`createSymlinkOrCopy, skip creating symlink, it already exists on ${destPath}`);
+      return;
+    }
+  }
   logger.trace(`createSymlinkOrCopy, deleting ${destPath}`);
   fs.removeSync(destPath); // in case a symlink already generated or when linking a component, when a component has been moved
   fs.ensureDirSync(path.dirname(destPath));
