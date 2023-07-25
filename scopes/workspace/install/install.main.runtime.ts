@@ -300,7 +300,7 @@ export class InstallMain {
       // We need to clear cache before creating the new component manifests.
       this.workspace.consumer.componentLoader.clearComponentsCache();
       // We don't want to clear the failed to load envs because we want to show the warning at the end
-      this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+      await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
       current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);

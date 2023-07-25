@@ -108,7 +108,7 @@ export class ExportMain {
         this.logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
       });
     }
-    this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
+    await this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
     return exportResults;
   }
 
@@ -317,7 +317,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
       const modelComponents = await mapSeries(bitIds, (id) => scope.getModelComponent(id));
       // super important! otherwise, the processModelComponent() changes objects in memory, while the key remains the same
-      scope.objects.clearCache();
+      scope.objects.clearObjectsFromCache();
 
       const refsToPotentialExportPerComponent = await mapSeries(modelComponents, async (modelComponent) => {
         const refs = await getVersionsToExport(modelComponent);
