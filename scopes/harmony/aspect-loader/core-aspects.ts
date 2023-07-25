@@ -1,3 +1,4 @@
+import path from 'path';
 import { BitError } from '@teambit/bit-error';
 import { existsSync, readdir } from 'fs-extra';
 import { join, resolve } from 'path';
@@ -22,9 +23,17 @@ function getAspectDirFromPath(id: string, pathsToResolveAspects?: string[]): str
   return dirPath;
 }
 
-export function getAspectDir(id: string): string {
+export function getAspectDir(id: string, currentBitDir?: string | null): string {
   const aspectName = getCoreAspectName(id);
   let dirPath;
+
+  if (currentBitDir) {
+    dirPath = resolve(currentBitDir, 'node_modules/@teambit', aspectName);
+    if (!existsSync(dirPath)) {
+      throw new Error(`unable to find ${aspectName} in ${dirPath}`);
+    }
+    return dirPath;
+  }
 
   try {
     dirPath = getAspectDirFromPath(id);

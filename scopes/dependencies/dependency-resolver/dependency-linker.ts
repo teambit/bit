@@ -11,6 +11,7 @@ import { BitError } from '@teambit/bit-error';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
+import { findCurrentBvmDir } from '@teambit/bvm.path';
 import {
   MainAspectNotLinkable,
   RootDirNotDefined,
@@ -103,6 +104,8 @@ type NestedModuleFolderEntry = {
 };
 
 export class DependencyLinker {
+  private _currentBitDir: string | null;
+
   constructor(
     private dependencyResolver: DependencyResolverMain,
 
@@ -119,7 +122,9 @@ export class DependencyLinker {
     private linkingOptions?: LinkingOptions,
 
     private linkingContext: DepLinkerContext = {}
-  ) {}
+  ) {
+    this._currentBitDir = findCurrentBvmDir(process.argv[1]);
+  }
 
   async calculateLinkedDeps(
     rootDir: string | undefined,
@@ -532,7 +537,7 @@ export class DependencyLinker {
     const isAspectDirExist = fs.pathExistsSync(aspectDir);
     if (!isAspectDirExist) {
       this.logger.debug(`linkCoreAspect: aspectDir ${aspectDir} does not exist, linking it to ${target}`);
-      aspectDir = getAspectDir(id);
+      aspectDir = getAspectDir(id, this._currentBitDir);
       return { aspectId: id, linkDetail: { packageName, from: aspectDir, to: target } };
     }
 
