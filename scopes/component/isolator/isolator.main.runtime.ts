@@ -363,11 +363,35 @@ export class IsolatorMain {
         // We delete the ready file path first, as the move might take a long time, so we don't want to move
         // the ready file indicator before the capsule is ready in the new location
         this.removeCapsuleReadyFileSync(sourceDir);
-        fs.moveSync(sourceDir, targetDir);
+        this.moveWithTempName(sourceDir, targetDir);
         // Mark the capsule as ready in the new location
         this.writeCapsuleReadyFileSync(targetDir);
       });
     });
+  }
+
+  /**
+   * The function moves a directory from a source location to a target location using a temporary directory.
+   * This is using temp dir because sometime the source dir and target dir might be in different FS
+   * (for example different mounts) which means the move might take a long time
+   * during the time of moving, another process will see that the capsule is not ready and will try to remove then
+   * move it again, which lead to the first process throwing an error
+   * @param sourceDir - The source directory from where the files or directories will be moved.
+   * @param targetDir - The target directory where the source directory will be moved to.
+   */
+  private moveWithTempName(sourceDir, targetDir): void {
+    const tempDir = `${targetDir}-${v4()}`;
+    this.logger.console(`moving capsule from ${sourceDir} to a temp dir ${tempDir}`);
+    fs.moveSync(sourceDir, tempDir);
+    // This might exist if in the time when we move to the temp dir, another process created the target dir already
+    if (fs.existsSync(targetDir)) {
+      this.logger.console(`skip moving capsule from temp dir to real dir as it's already exist: ${targetDir}`);
+      // Clean leftovers
+      fs.removeSync(tempDir);
+      return;
+    }
+    this.logger.console(`moving capsule from a temp dir ${tempDir} to the target dir ${targetDir}`);
+    fs.moveSync(tempDir, targetDir);
   }
 
   /**
