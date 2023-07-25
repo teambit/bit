@@ -280,8 +280,8 @@ importers:
         specifier: 0.1.6
         version: 0.1.6
       '@teambit/bvm.path':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.2
+        version: 0.0.2
       '@teambit/capsule':
         specifier: 0.0.12
         version: 0.0.12
@@ -21450,6 +21450,9 @@ importers:
       '@pnpm/types':
         specifier: 9.2.0
         version: 9.2.0
+      '@teambit/bvm.path':
+        specifier: ^0.0.2
+        version: 0.0.2
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -37486,8 +37489,8 @@ packages:
       - supports-color
     dev: false
 
-  /@teambit/bvm.path@0.0.1:
-    resolution: {integrity: sha512-mxoSxna5mIBlr3cUMHPYvkVAUhRIA+GVXP7v638ruht1i7qDG/YylLn8Bcyth3TJlWR06XkQjGkx6nfmX2y3vg==, tarball: https://node-registry.bit.cloud/@teambit/bvm.path/-/@teambit-bvm.path-0.0.1.tgz}
+  /@teambit/bvm.path@0.0.2:
+    resolution: {integrity: sha512-4FkpIL+jGdhvIf9MPz3CdDOJDMTvCgpmKwYAUwWpgvEYNCteJdY6xDYkW65pV2QI1JT2su4ElnuXYkgIzr4inw==, tarball: https://node-registry.bit.cloud/@teambit/bvm.path/-/@teambit-bvm.path-0.0.2.tgz}
     dev: false
 
   /@teambit/capsule@0.0.12:
@@ -66336,6 +66339,7 @@ packages:
       '@pnpm/core': 10.2.12(@pnpm/logger@5.0.0)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
       '@pnpm/network.ca-file': 1.0.2
       '@pnpm/types': 9.2.0
+      '@teambit/bvm.path': 0.0.2
       '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
       '@teambit/legacy-bit-id': 0.0.423
