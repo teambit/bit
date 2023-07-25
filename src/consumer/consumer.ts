@@ -128,9 +128,9 @@ export default class Consumer {
     return this.bitMap.getAllBitIdsFromAllLanes();
   }
 
-  clearCache() {
+  async clearCache() {
     this.componentLoader.clearComponentsCache();
-    this.onCacheClear.forEach((func) => func());
+    await Promise.all(this.onCacheClear.map((func) => func()));
   }
 
   getTmpFolder(fullPath = false): PathOsBased {
