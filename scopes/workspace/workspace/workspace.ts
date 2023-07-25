@@ -664,13 +664,13 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     return workspaceAspectsLoader.getConfiguredUserAspectsPackages(options);
   }
 
-  clearCache(options: ClearCacheOptions = {}) {
+  async clearCache(options: ClearCacheOptions = {}) {
     this.aspectLoader.resetFailedLoadAspects();
     if (!options.skipClearFailedToLoadEnvs) this.envs.resetFailedToLoadEnvs();
     this.logger.debug('clearing the workspace and scope caches');
     delete this._cachedListIds;
     this.componentLoader.clearCache();
-    this.scope.clearCache();
+    await this.scope.clearCache();
     this.componentList = new ComponentsList(this.consumer);
     this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized.clear();
   }
@@ -1446,7 +1446,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async _reloadConsumer() {
     this.consumer = await loadConsumer(this.path, true);
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
-    this.clearCache();
+    await this.clearCache();
   }
 
   getComponentPackagePath(component: Component) {

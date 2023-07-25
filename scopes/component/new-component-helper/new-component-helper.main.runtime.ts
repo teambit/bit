@@ -74,7 +74,7 @@ export class NewComponentHelperMain {
     }
 
     await this.workspace.bitMap.write();
-    this.workspace.clearCache();
+    await this.workspace.clearCache();
     // this takes care of compiling the component as well
     await this.workspace.triggerOnComponentAdd(targetId);
   }

@@ -154,7 +154,7 @@ export class WorkspaceGenerator {
       refactor: true,
       install: false,
     });
-    this.workspace.clearCache();
+    await this.workspace.clearCache();
     await this.compileComponents();
   }
 
@@ -177,7 +177,7 @@ export class WorkspaceGenerator {
     });
 
     await this.workspace.bitMap.write();
-    this.workspace.clearCache();
+    await this.workspace.clearCache();
     await this.compileComponents();
   }
 
