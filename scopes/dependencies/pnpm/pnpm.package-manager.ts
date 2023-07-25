@@ -92,6 +92,7 @@ export class PnpmPackageManager implements PackageManager {
         pnpmHomeDir: config.pnpmHomeDir,
         updateAll: installOptions.updateAll,
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
+        reportOptions: installOptions.optimizeReportForNonTerminal ? { appendOnly: true } : undefined,
       },
       this.logger
     );

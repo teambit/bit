@@ -51,6 +51,7 @@ export default class BitMap {
   markAsChangedBinded: Function;
   _cacheIdsAll: BitIds | undefined;
   _cacheIdsLane: BitIds | undefined;
+  _cacheIdsLaneIncludeRemoved: BitIds | undefined;
   _cacheIdsAllStr: { [idStr: string]: BitId } | undefined;
   _cacheIdsAllStrWithoutScope: { [idStr: string]: BitId } | undefined;
   _cacheIdsAllStrWithoutVersion: { [idStr: string]: BitId } | undefined;
@@ -408,6 +409,16 @@ export default class BitMap {
     return this._cacheIdsLane;
   }
 
+  getAllIdsAvailableOnLaneIncludeRemoved(): BitIds {
+    if (!this._cacheIdsLaneIncludeRemoved) {
+      const idsFromBitMap = this.getAllIdsAvailableOnLane();
+      const removedIds = this.getRemoved();
+      this._cacheIdsLaneIncludeRemoved = BitIds.fromArray([...idsFromBitMap, ...removedIds]);
+      Object.freeze(this._cacheIdsLaneIncludeRemoved);
+    }
+    return this._cacheIdsLaneIncludeRemoved;
+  }
+
   getRemoved(): BitIds {
     const components = this.components
       .filter((c) => c.isRemoved())
@@ -726,6 +737,7 @@ export default class BitMap {
     this.pathsLowerCase = {};
     this._cacheIdsAll = undefined;
     this._cacheIdsLane = undefined;
+    this._cacheIdsLaneIncludeRemoved = undefined;
     this.allTrackDirs = undefined;
     this._cacheIdsAllStr = undefined;
     this._cacheIdsAllStrWithoutScope = undefined;
