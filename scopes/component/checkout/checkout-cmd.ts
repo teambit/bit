@@ -7,6 +7,7 @@ import {
   installationErrorOutput,
   compilationErrorOutput,
   getRemovedOutput,
+  getAddedOutput,
 } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy/dist/constants';
 import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
@@ -113,6 +114,7 @@ export function checkoutOutput(checkoutResults: ApplyVersionResults, checkoutPro
     version,
     failedComponents,
     removedComponents,
+    addedComponents,
     leftUnresolvedConflicts,
     newFromLane,
     newFromLaneAdded,
@@ -222,6 +224,7 @@ once ready, snap/tag the components to persist the changes`;
     getNotCheckedOutOutput() +
     getSuccessfulOutput() +
     getRemovedOutput(removedComponents) +
+    getAddedOutput(addedComponents) +
     getNewOnLaneOutput() +
     getConflictSummary() +
     getSummary() +
