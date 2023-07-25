@@ -67,6 +67,9 @@ export class Pipeline {
       if (matchIndex !== -1) {
         // Replace task at index using native splice
         this._tasks.splice(matchIndex, 1, task);
+      } else {
+        // Add task if there's no existing task to replace
+        this._tasks.push(task);
       }
     });
     return this;
