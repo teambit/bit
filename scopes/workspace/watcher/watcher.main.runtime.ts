@@ -1,7 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
-import { Component } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
 import IpcEventsAspect, { IpcEventsMain } from '@teambit/ipc-events';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -12,7 +11,7 @@ import { WatchCommand } from './watch.cmd';
 import { Watcher, WatchOptions } from './watcher';
 import { WatcherAspect } from './watcher.aspect';
 
-export type OnPreWatch = (components: Component[], watchOpts: WatchOptions) => Promise<void>;
+export type OnPreWatch = (componentIds: ComponentID[], watchOpts: WatchOptions) => Promise<void>;
 export type OnPreWatchSlot = SlotRegistry<OnPreWatch>;
 
 export class WatcherMain {
@@ -35,10 +34,9 @@ export class WatcherMain {
   }
 
   async triggerOnPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
-    const components = await this.workspace.getMany(componentIds);
     const preWatchFunctions = this.onPreWatchSlot.values();
     await pMapSeries(preWatchFunctions, async (func) => {
-      await func(components, watchOpts);
+      await func(componentIds, watchOpts);
     });
   }
 
