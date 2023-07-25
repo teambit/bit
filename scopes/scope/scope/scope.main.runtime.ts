@@ -289,10 +289,10 @@ export class ScopeMain implements ComponentFactory {
     return scopeAspectsLoader;
   }
 
-  clearCache() {
+  async clearCache() {
     this.logger.debug('clearing the components and the legacy cache');
     this.componentLoader.clearCache();
-    this.legacyScope.objects.clearCache();
+    await this.legacyScope.objects.clearCache();
   }
 
   builderDataMapToLegacyOnTagResults(builderDataComponentMap: ComponentMap<RawBuilderData>): LegacyOnTagResult[] {

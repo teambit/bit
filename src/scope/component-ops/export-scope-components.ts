@@ -127,7 +127,7 @@ export async function mergeObjects(
       R.prop('id'),
       componentsNeedUpdate.map((c) => ({ id: c.id, lane: c.lane }))
     );
-    scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
+    scope.objects.clearObjectsFromCache(); // just in case this error is caught. we don't want to persist anything by mistake.
     throw new MergeConflictOnRemote(idsAndVersionsWithConflicts, idsOfNeedUpdateComps);
   }
   if (throwForMissingDeps) await throwForMissingLocalDependencies(scope, versions, components, lanesObjects);
@@ -185,7 +185,7 @@ async function throwForMissingLocalDependencies(
             (await scope.getModelComponentIfExist(depId)) ||
             components.find((c) => c.toBitId().isEqualWithoutVersion(depId));
           if (!existingModelComponent) {
-            scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
+            scope.objects.clearObjectsFromCache(); // just in case this error is caught. we don't want to persist anything by mistake.
             throw new ComponentNotFound(depId.toString(), getOriginCompWithVer().toString());
           }
           const versionRef = existingModelComponent.getRef(depId.version as string);
@@ -195,7 +195,7 @@ async function throwForMissingLocalDependencies(
             (await scope.objects.has(versionRef)) ||
             versions.find((v) => v.hash().isEqual(versionRef));
           if (!objectExist) {
-            scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
+            scope.objects.clearObjectsFromCache(); // just in case this error is caught. we don't want to persist anything by mistake.
             throw new ComponentNotFound(depId.toString(), getOriginCompWithVer().toString());
           }
         })
