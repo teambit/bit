@@ -221,6 +221,11 @@ const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
   copyPeerToRuntimeOnRoot: true,
 };
 
+/**
+ * File name to indicate that the capsule is ready (all packages are installed and links are created)
+ */
+const CAPSULE_READY_FILE = '.bit-capsule-ready';
+
 export class IsolatorMain {
   static runtime = MainRuntime;
   static dependencies = [
@@ -340,14 +345,57 @@ export class IsolatorMain {
         .readdirSync(datedCapsuleDir, { withFileTypes: true })
         .filter((dir) => dir.isDirectory() && dir.name !== 'node_modules');
       allDirs.forEach((dir) => {
-        const targetDir = path.join(targetCapsuleDir, dir.name);
-        if (!fs.pathExistsSync(path.join(targetCapsuleDir, dir.name))) {
-          const sourceDir = path.join(datedCapsuleDir, dir.name);
-          this.logger.info(`moving specific capsule from ${sourceDir} to ${targetDir}`);
-          fs.moveSync(sourceDir, targetDir);
+        const sourceDir = path.join(datedCapsuleDir, dir.name);
+        const sourceCapsuleReadyFile = this.getCapsuleReadyFilePath(sourceDir);
+        if (!fs.pathExistsSync(sourceCapsuleReadyFile)) {
+          // Capsule is not ready, don't copy it to the cache
+          this.logger.console(`skipping moving capsule to cache as it is not ready ${sourceDir}`);
+          return;
         }
+        const targetDir = path.join(targetCapsuleDir, dir.name);
+        if (fs.pathExistsSync(path.join(targetCapsuleDir, dir.name))) {
+          const targetCapsuleReadyFile = this.getCapsuleReadyFilePath(targetDir);
+          if (fs.pathExistsSync(targetCapsuleReadyFile)) {
+            // Capsule is already in the cache, no need to move it
+            this.logger.console(`skipping moving capsule to cache as it is already exist at ${targetDir}`);
+            return;
+          }
+          this.logger.console(`cleaning target capsule location as it's not ready at: ${targetDir}`);
+          fs.removeSync(targetDir);
+        }
+        this.logger.console(`moving specific capsule from ${sourceDir} to ${targetDir}`);
+        // We delete the ready file path first, as the move might take a long time, so we don't want to move
+        // the ready file indicator before the capsule is ready in the new location
+        this.removeCapsuleReadyFileSync(sourceDir);
+        this.moveWithTempName(sourceDir, targetDir);
+        // Mark the capsule as ready in the new location
+        this.writeCapsuleReadyFileSync(targetDir);
       });
     });
+  }
+
+  /**
+   * The function moves a directory from a source location to a target location using a temporary directory.
+   * This is using temp dir because sometime the source dir and target dir might be in different FS
+   * (for example different mounts) which means the move might take a long time
+   * during the time of moving, another process will see that the capsule is not ready and will try to remove then
+   * move it again, which lead to the first process throwing an error
+   * @param sourceDir - The source directory from where the files or directories will be moved.
+   * @param targetDir - The target directory where the source directory will be moved to.
+   */
+  private moveWithTempName(sourceDir, targetDir): void {
+    const tempDir = `${targetDir}-${v4()}`;
+    this.logger.console(`moving capsule from ${sourceDir} to a temp dir ${tempDir}`);
+    fs.moveSync(sourceDir, tempDir);
+    // This might exist if in the time when we move to the temp dir, another process created the target dir already
+    if (fs.existsSync(targetDir)) {
+      this.logger.console(`skip moving capsule from temp dir to real dir as it's already exist: ${targetDir}`);
+      // Clean leftovers
+      fs.removeSync(tempDir);
+      return;
+    }
+    this.logger.console(`moving capsule from a temp dir ${tempDir} to the target dir ${targetDir}`);
+    fs.moveSync(tempDir, targetDir);
   }
 
   /**
@@ -365,7 +413,9 @@ export class IsolatorMain {
       linkingContext: { inCapsule: true },
     });
     const { linkedRootDeps } = await linker.calculateLinkedDeps(capsulesDir, ComponentMap.create([]), linkingOptions);
-    return createLinks(capsulesDir, linkedRootDeps);
+    // This links are in the global cache which used by many process
+    // we don't want to delete and re-create the links if they already exist and valid
+    return createLinks(capsulesDir, linkedRootDeps, { skipIfSymlinkValid: true });
   }
 
   private shouldUseDatedDirs(componentsToIsolate: Component[], opts: IsolateComponentsOptions): boolean {
@@ -380,11 +430,22 @@ export class IsolatorMain {
     if (!opts.installOptions?.useNesting) return false;
     // Getting the real capsule dir to check if all capsules exists
     const realCapsulesDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: false, baseDir: opts.baseDir || '' });
+    // validate all capsules in the real location exists and valid
     const allCapsulesExists = componentsToIsolate.every((component) => {
       const capsuleDir = path.join(realCapsulesDir, Capsule.getCapsuleDirName(component));
-      return fs.existsSync(capsuleDir);
+      const readyFilePath = this.getCapsuleReadyFilePath(capsuleDir);
+      return fs.existsSync(capsuleDir) && fs.existsSync(readyFilePath);
     });
-    return !allCapsulesExists;
+    if (allCapsulesExists) {
+      this.logger.console(
+        `All required capsules already exists and valid in the real (cached) location: ${realCapsulesDir}`
+      );
+      return false;
+    }
+    this.logger.console(
+      `Missing required capsules in the real (cached) location: ${realCapsulesDir}, using dated (temp) dir`
+    );
+    return true;
   }
 
   /**
@@ -516,6 +577,7 @@ export class IsolatorMain {
         );
       capsuleWithPackageData.capsule.fs.writeFileSync(PACKAGE_JSON, JSON.stringify(currentPackageJson, null, 2));
     });
+    await this.markCapsulesAsReady(capsuleList);
     // Only show this message if at least one new capsule created
     if (longProcessLogger && capsuleList.length) {
       longProcessLogger.end();
@@ -525,6 +587,37 @@ export class IsolatorMain {
     }
 
     return allCapsuleList;
+  }
+
+  private async markCapsulesAsReady(capsuleList: CapsuleList): Promise<void> {
+    await Promise.all(
+      capsuleList.map(async (capsule) => {
+        return this.markCapsuleAsReady(capsule);
+      })
+    );
+  }
+
+  private async markCapsuleAsReady(capsule: Capsule): Promise<void> {
+    const readyFilePath = this.getCapsuleReadyFilePath(capsule.path);
+    return fs.writeFile(readyFilePath, '');
+  }
+
+  private removeCapsuleReadyFileSync(capsulePath: string): void {
+    const readyFilePath = this.getCapsuleReadyFilePath(capsulePath);
+    const exist = fs.pathExistsSync(readyFilePath);
+    if (!exist) return;
+    fs.removeSync(readyFilePath);
+  }
+
+  private writeCapsuleReadyFileSync(capsulePath: string): void {
+    const readyFilePath = this.getCapsuleReadyFilePath(capsulePath);
+    const exist = fs.pathExistsSync(readyFilePath);
+    if (exist) return;
+    fs.writeFileSync(readyFilePath, '');
+  }
+
+  private getCapsuleReadyFilePath(capsulePath: string): string {
+    return path.join(capsulePath, CAPSULE_READY_FILE);
   }
 
   private async installInCapsules(
