@@ -60,7 +60,7 @@ export class APIForIDE {
   async getCompFiles(id: string): Promise<{ dirAbs: string; filesRelative: PathOsBasedRelative[] }> {
     const compId = await this.workspace.resolveComponentId(id);
     const comp = await this.workspace.get(compId);
-    const dirAbs = this.workspace.componentDir(compId);
+    const dirAbs = this.workspace.componentDir(comp.id);
     const filesRelative = comp.state.filesystem.files.map((file) => file.relative);
     return { dirAbs, filesRelative };
   }
@@ -112,6 +112,10 @@ export class APIForIDE {
       })
     );
     return results;
+  }
+
+  async warmWorkspaceCache() {
+    await this.workspace.warmCache();
   }
 
   async install() {
