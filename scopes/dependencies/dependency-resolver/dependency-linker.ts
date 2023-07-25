@@ -585,6 +585,9 @@ export class DependencyLinker {
 
     const packageName = `@teambit/${name}`;
     const target = path.join(rootDir, 'node_modules', packageName);
+    if (this._currentBitDir) {
+      return { packageName, from: path.join(this._currentBitDir, 'node_modules', packageName), to: target };
+    }
     const isDistDirExist = fs.pathExistsSync(distDir);
     if (!isDistDirExist) {
       const newDir = getDistDirForDevEnv(packageName);
