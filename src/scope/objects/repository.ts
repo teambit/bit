@@ -366,8 +366,13 @@ export default class Repository {
     this.cache.delete(ref.toString());
   }
 
-  clearCache() {
+  async clearCache() {
     logger.debug('repository.clearCache');
+    this.cache.deleteAll();
+    await this.reLoadScopeIndex();
+  }
+  clearObjectsFromCache() {
+    logger.debug('repository.clearObjectsFromCache');
     this.cache.deleteAll();
   }
 
