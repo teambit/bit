@@ -25,7 +25,11 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
-import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy/dist/constants';
+import {
+  DEPENDENCIES_FIELDS,
+  PACKAGE_JSON,
+  CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR,
+} from '@teambit/legacy/dist/constants';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import {
@@ -727,7 +731,8 @@ export class IsolatorMain {
     if (getCapsuleDirOptsWithDefaults.useDatedDirs) {
       const date = new Date();
       const dateDir = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-      const datedBaseDir = 'dated-capsules';
+      const defaultDatedBaseDir = 'dated-capsules';
+      const datedBaseDir = this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || defaultDatedBaseDir;
       let hashDir;
       const finalDatedDirId = getCapsuleDirOpts.datedDirId;
       if (finalDatedDirId && this._datedHashForName.has(finalDatedDirId)) {
