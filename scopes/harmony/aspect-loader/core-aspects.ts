@@ -1,4 +1,3 @@
-import path from 'path';
 import { BitError } from '@teambit/bit-error';
 import { existsSync, readdir } from 'fs-extra';
 import { join, resolve } from 'path';
