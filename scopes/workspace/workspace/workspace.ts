@@ -586,7 +586,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   async getFilesModification(id: ComponentID): Promise<CompFiles> {
-    const bitMapEntry = this.bitMap.getBitmapEntry(id);
+    const bitMapEntry = this.bitMap.getBitmapEntry(id, { ignoreVersion: true });
     const compDir = bitMapEntry.getComponentDir();
     const compDirAbs = path.join(this.path, compDir);
     const sourceFilesVinyls = bitMapEntry.files.map((file) => {
@@ -685,6 +685,10 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.componentLoader.clearComponentCache(id);
     this.consumer.componentLoader.clearOneComponentCache(id._legacy);
     this.componentList = new ComponentsList(this.consumer);
+  }
+
+  async warmCache() {
+    await this.list();
   }
 
   async triggerOnComponentChange(
