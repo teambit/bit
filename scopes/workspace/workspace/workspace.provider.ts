@@ -109,7 +109,11 @@ export default async function provideWorkspace(
 ) {
   const bitConfig: any = harmony.config.get('teambit.harmony/bit');
   const consumer = await getConsumer(bitConfig.cwd);
-  if (!consumer) return undefined;
+  if (!consumer) {
+    const capsuleCmd = getCapsulesCommands(isolator, scope, undefined);
+    cli.register(capsuleCmd);
+    return undefined;
+  }
   // TODO: get the 'workspace' name in a better way
   const logger = loggerExt.createLogger(EXT_NAME);
   const workspace = new Workspace(
@@ -229,12 +233,7 @@ export default async function provideWorkspace(
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
-  const capsuleCmd = new CapsuleCmd(isolator, workspace);
-  capsuleCmd.commands = [
-    new CapsuleListCmd(isolator, workspace),
-    new CapsuleCreateCmd(workspace, isolator),
-    new CapsuleDeleteCmd(isolator, workspace),
-  ];
+  const capsuleCmd = getCapsulesCommands(isolator, scope, workspace);
   const commands: CommandList = [new EjectConfCmd(workspace), capsuleCmd, new UseCmd(workspace)];
 
   commands.push(new PatternCommand(workspace));
@@ -278,6 +277,16 @@ export default async function provideWorkspace(
   scopeCommand?.commands?.push(new ScopeSetCmd(workspace));
 
   return workspace;
+}
+
+function getCapsulesCommands(isolator: IsolatorMain, scope: ScopeMain, workspace?: Workspace) {
+  const capsuleCmd = new CapsuleCmd(isolator, workspace, scope);
+  capsuleCmd.commands = [
+    new CapsuleListCmd(isolator, workspace, scope),
+    new CapsuleCreateCmd(workspace, scope, isolator),
+    new CapsuleDeleteCmd(isolator, scope, workspace),
+  ];
+  return capsuleCmd;
 }
 
 /**
