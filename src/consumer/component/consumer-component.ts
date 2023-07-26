@@ -617,7 +617,8 @@ async function getLoadedFiles(
   bitDir: string
 ): Promise<SourceFile[]> {
   if (componentMap.noFilesError) {
-    throw new ComponentNotFoundInPath(bitDir, componentMap.noFilesError);
+    logger.error(`rethrowing an error of ${componentMap.noFilesError.message}`);
+    throw componentMap.noFilesError;
   }
   await componentMap.trackDirectoryChangesHarmony(consumer, id);
   const sourceFiles = componentMap.files.map((file) => {
