@@ -11,12 +11,13 @@ import logger from '../../logger/logger';
 import { buildComponentsGraphCombined } from '../graph/components-graph';
 import Graph from '../graph/graph';
 import VersionDependencies from '../version-dependencies';
+import { Lane } from '../models';
 
 export class FlattenedDependenciesGetter {
   private dependenciesGraph: Graph;
   private versionDependencies: VersionDependencies[];
   private cache: { [idStr: string]: BitIds } = {};
-  constructor(private scope: Scope, private components: Component[]) {}
+  constructor(private scope: Scope, private components: Component[], private lane?: Lane) {}
 
   /**
    * to get the flattened dependencies of a component, we iterate over the direct dependencies and
@@ -58,6 +59,7 @@ export class FlattenedDependenciesGetter {
       ids: BitIds.fromArray(bitIds),
       cache: true,
       throwForDependencyNotFound: true,
+      lane: this.lane,
     });
   }
 
