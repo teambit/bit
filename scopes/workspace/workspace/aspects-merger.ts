@@ -4,7 +4,6 @@ import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-com
 import { BitId } from '@teambit/legacy-bit-id';
 import { EnvsAspect } from '@teambit/envs';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
-import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { partition, mergeWith, merge } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
@@ -13,12 +12,10 @@ import { MergeConflictFile } from './merge-conflict-file';
 import { WorkspaceLoadAspectsOptions } from './workspace-aspects-loader';
 
 export class AspectsMerger {
-  private consumer: Consumer;
   private warnedAboutMisconfiguredEnvs: string[] = []; // cache env-ids that have been errored about not having "env" type
   readonly mergeConflictFile: MergeConflictFile;
   private mergeConfigDepsResolverDataCache: { [compIdStr: string]: Record<string, any> } = {};
   constructor(private workspace: Workspace, private harmony: Harmony) {
-    this.consumer = workspace.consumer;
     this.mergeConflictFile = new MergeConflictFile(workspace.path);
   }
 
@@ -51,7 +48,7 @@ export class AspectsMerger {
     const mergeFromScope = true;
     const errors: Error[] = [];
 
-    const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
+    const bitMapEntry = this.workspace.consumer.bitMap.getComponentIfExist(componentId._legacy);
     const bitMapExtensions = bitMapEntry?.config;
 
     let configMerge: Record<string, any> | undefined;
