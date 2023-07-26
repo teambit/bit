@@ -13,7 +13,7 @@ type Options = { ids: string[] };
  */
 export class PostSign implements Action<Options> {
   async execute(scope: Scope, options: Options, authData?: AuthData): Promise<void> {
-    scope.objects.clearCache();
+    await scope.objects.clearCache();
     if (PostSign.onPutHook) {
       PostSign.onPutHook(options.ids, [], authData).catch((err) => {
         logger.error('fatal: onPutHook encountered an error (this error does not stop the process)', err);

@@ -89,8 +89,9 @@ export class ForkingMain {
   }
 
   async forkMultipleFromRemote(componentsToFork: MultipleComponentsToFork, options: MultipleForkOptions = {}) {
+    const componentsToForkSorted = this.sortComponentsToFork(componentsToFork);
     const { scope } = options;
-    const results = await pMapSeries(componentsToFork, async ({ sourceId, targetId, path, env, config }) => {
+    const results = await pMapSeries(componentsToForkSorted, async ({ sourceId, targetId, path, env, config }) => {
       const sourceCompId = await this.workspace.resolveComponentId(sourceId);
       const sourceIdWithScope = sourceCompId._legacy.scope
         ? sourceCompId
@@ -104,6 +105,20 @@ export class ForkingMain {
       return { targetCompId, sourceId, component };
     });
     await this.refactorMultipleAndInstall(results, options);
+  }
+
+  /**
+   * sort the components to fork so that components without "env" prop will be forked first.
+   * this way, if some components are envs, their "env" prop is empty and will be forked first, then components that
+   * depends on them.
+   * otherwise, forking the components first result in errors when loading them as their envs are missing at that point
+   */
+  private sortComponentsToFork(componentsToFork: MultipleComponentsToFork) {
+    return componentsToFork.sort((a, b) => {
+      if (a.env && b.env) return 0;
+      if (a.env) return 1;
+      return -1;
+    });
   }
 
   private async refactorMultipleAndInstall(results: MultipleForkInfo[], options: MultipleForkOptions = {}) {

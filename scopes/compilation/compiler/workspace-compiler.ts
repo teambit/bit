@@ -294,16 +294,16 @@ export class WorkspaceCompiler {
     };
   }
 
-  async onPreWatch(components: Component[], watchOpts: WatchOptions) {
+  async onPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
     if (watchOpts.preCompile) {
       const start = Date.now();
-      this.logger.console(`compiling ${components.length} components`);
+      this.logger.console(`compiling ${componentIds.length} components`);
       await this.compileComponents(
-        components.map((c) => c.id._legacy),
+        componentIds.map((id) => id._legacy),
         { initiator: CompilationInitiator.PreWatch }
       );
       const end = Date.now() - start;
-      this.logger.consoleSuccess(`compiled ${components.length} components successfully (${end / 1000} sec)`);
+      this.logger.consoleSuccess(`compiled ${componentIds.length} components successfully (${end / 1000} sec)`);
     }
   }
 
