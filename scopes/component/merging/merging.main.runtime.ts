@@ -89,6 +89,7 @@ export type ApplyVersionResults = {
   version?: string;
   failedComponents?: FailedComponents[];
   removedComponents?: BitId[];
+  addedComponents?: ComponentID[]; // relevant when restoreMissingComponents is true (e.g. bit lane merge-abort)
   resolvedComponents?: ConsumerComponent[]; // relevant for bit merge --resolve
   abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
   mergeSnapResults?: {
