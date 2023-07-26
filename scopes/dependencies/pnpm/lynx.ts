@@ -165,6 +165,7 @@ export type RebuildFn = (opts: { pending?: boolean; skipIfHasSideEffectsCache?: 
 export interface ReportOptions {
   appendOnly?: boolean;
   throttleProgress?: number;
+  hideAddedPkgsProgress?: boolean;
 }
 
 export async function install(
@@ -277,7 +278,10 @@ export async function install(
 
   let stopReporting: Function | undefined;
   if (!options.hidePackageManagerOutput) {
-    stopReporting = initReporter(options.reportOptions);
+    stopReporting = initReporter({
+      ...options.reportOptions,
+      hideAddedPkgsProgress: options.lockfileOnly,
+    });
   }
   let dependenciesChanged = false;
   try {
@@ -335,6 +339,7 @@ function initReporter(opts?: ReportOptions) {
     reportingOptions: {
       appendOnly: opts?.appendOnly ?? false,
       throttleProgress: opts?.throttleProgress ?? 200,
+      hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
     },
     streamParser,
     // Linked in core aspects are excluded from the output to reduce noise.
