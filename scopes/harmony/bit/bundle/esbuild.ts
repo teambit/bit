@@ -2,6 +2,7 @@ import { build } from 'esbuild';
 import ignorePlugin from 'esbuild-plugin-ignore';
 import { join } from 'path';
 import { configFilesEsbuildPlugin } from './config-files-esbuild-plugin';
+import { timeEsbuildPlugin } from './esbuild-plugin-time';
 
 export function runEsbuild(outDir: string, appFile: string) {
   // const _outfile = join('/Users/giladshoham/dev/temp/bundle-bit/output', `${appFile}.js`);
@@ -179,6 +180,7 @@ export function runEsbuild(outDir: string, appFile: string) {
         // { resourceRegExp: new RegExp('^browserify-zlib') },
       ]),
       configFilesEsbuildPlugin(outDir),
+      timeEsbuildPlugin('Bit bundle'),
     ],
     loader: { '.png': 'binary', '.node': 'binary' },
   });
