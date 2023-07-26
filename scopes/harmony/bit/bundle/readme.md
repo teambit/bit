@@ -12,6 +12,9 @@ node <path to repo>/bit/bundle/bit.app.js
 
 ## structure
 
+1. generate-npmrc.ts - generate an npmrc file with the bit registry
+   (so you can install external packages with regular pcaakge manager)
+1. create-package-json.ts - generate a package.json file with all external packages
 1. bundle.ts - main file to generate the bundle
-2. esbuild.ts - running the esbuild bundler
-3. generate-core-aspects-exports - This will generate a file that exports all the core aspects
+1. esbuild.ts - running the esbuild bundler
+1. generate-core-aspects-exports - This will generate a file that exports all the core aspects
