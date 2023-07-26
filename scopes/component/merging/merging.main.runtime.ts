@@ -89,7 +89,6 @@ export type ApplyVersionResults = {
   version?: string;
   failedComponents?: FailedComponents[];
   removedComponents?: BitId[];
-  addedComponents?: ComponentID[]; // relevant when restoreMissingComponents is true (e.g. bit lane merge-abort)
   resolvedComponents?: ConsumerComponent[]; // relevant for bit merge --resolve
   abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
   mergeSnapResults?: {
@@ -108,7 +107,6 @@ export type ApplyVersionResults = {
 };
 
 export class MergingMain {
-  private consumer: Consumer;
   constructor(
     private workspace: Workspace,
     private install: InstallMain,
@@ -119,9 +117,7 @@ export class MergingMain {
     private importer: ImporterMain,
     private config: ConfigMain,
     private remove: RemoveMain
-  ) {
-    this.consumer = this.workspace?.consumer;
-  }
+  ) {}
 
   async merge(
     ids: string[],
@@ -540,7 +536,7 @@ export class MergingMain {
       })
       .flat();
 
-    await this.consumer.scope.scopeImporter.importManyIfMissingWithoutDeps({
+    await this.workspace.consumer.scope.scopeImporter.importManyIfMissingWithoutDeps({
       ids: BitIds.fromArray(toImport),
       lane: otherLane || undefined,
     });
@@ -551,7 +547,7 @@ export class MergingMain {
     const compStatusNeedMerge = componentStatusBeforeMergeAttempt.filter((c) => c.mergeProps);
 
     const getComponentsStatusNeedMerge = async (): Promise<ComponentMergeStatus[]> => {
-      const tmp = new Tmp(this.consumer.scope);
+      const tmp = new Tmp(this.workspace.consumer.scope);
       try {
         const componentsStatus = await Promise.all(
           compStatusNeedMerge.map((compStatus) =>
@@ -592,7 +588,7 @@ export class MergingMain {
     const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id.name);
     if (unmerged) {
       return returnUnmerged(
-        `component ${id.toStringWithoutVersion()} is in during-merge state a previous merge, please snap/tag it first (or use bit merge --resolve/--abort / bit lane merge-abort)`
+        `component ${id.toStringWithoutVersion()} is in during-merge state a previous merge, please snap/tag it first (or use bit merge --resolve/--abort)`
       );
     }
     const repo = consumer.scope.objects;
@@ -751,7 +747,7 @@ export class MergingMain {
     const { id, divergeData, currentComponent, mergeProps } = componentMergeStatusBeforeMergeAttempt;
     if (!mergeProps) throw new Error(`getDivergedMergeStatus, mergeProps is missing for ${id.toString()}`);
     const { otherLaneHead, currentId, modelComponent } = mergeProps;
-    const repo = this.consumer.scope.objects;
+    const repo = this.workspace.consumer.scope.objects;
     if (!divergeData) throw new Error(`getDivergedMergeStatus, divergeData is missing for ${id.toString()}`);
     if (!currentComponent) throw new Error(`getDivergedMergeStatus, currentComponent is missing for ${id.toString()}`);
 
@@ -785,7 +781,7 @@ other:   ${otherLaneHead.toString()}`);
     const configMergeResult = configMerger.merge();
 
     const mergeResults = await threeWayMerge({
-      consumer: this.consumer,
+      consumer: this.workspace.consumer,
       otherComponent,
       otherLabel,
       currentComponent,
@@ -949,7 +945,7 @@ other:   ${otherLaneHead.toString()}`);
       bitIds.map(async (bitId) => {
         const remoteScopeName = laneId.isDefault() ? bitId.scope : laneId.scope;
         const remoteLaneId = LaneId.from(laneId.name, remoteScopeName as string);
-        const remoteHead = await this.consumer.scope.objects.remoteLanes.getRef(remoteLaneId, bitId);
+        const remoteHead = await this.workspace.consumer.scope.objects.remoteLanes.getRef(remoteLaneId, bitId);
         const laneIdStr = remoteLaneId.toString();
         if (!remoteHead) {
           throw new BitError(`unable to find a remote head of "${bitId.toStringWithoutVersion()}" in "${laneIdStr}"`);
