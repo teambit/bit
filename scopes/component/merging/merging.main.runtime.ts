@@ -589,8 +589,7 @@ export class MergingMain {
     const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id.name);
     if (unmerged) {
       return returnUnmerged(
-        `component ${id.toStringWithoutVersion()} is in during-merge state a previous merge, please snap/tag it first (or use bit merge --resolve/--abort/ 
-        bit lane merge-abort)`
+        `component ${id.toStringWithoutVersion()} is in during-merge state a previous merge, please snap/tag it first (or use bit merge --resolve/--abort/ bit lane merge-abort)`
       );
     }
     const repo = consumer.scope.objects;
