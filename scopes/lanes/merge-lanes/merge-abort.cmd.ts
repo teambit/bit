@@ -44,13 +44,21 @@ also, checkout the workspace components according to the restored lane`;
       verbose,
       skipNpmInstall: skipDependencyInstallation,
     };
-    const { checkoutResults, restoredItems } = await this.mergeLanes.abortLaneMerge(checkoutProps);
+    const { checkoutResults, restoredItems, checkoutError } = await this.mergeLanes.abortLaneMerge(checkoutProps);
 
-    const checkoutOutputStr = checkoutOutput(checkoutResults, checkoutProps);
-    const restoredItemsTitle = chalk.underline('The following have been restored:');
-    const restoredItemsOutput = restoredItems.map((item) => `[-] ${item}`).join('\n');
+    const getCheckoutErrorStr = () => {
+      if (!checkoutError) return '';
+      const errMsg = `\n\nFailed changing the component files to the pre-merge due to an error:
+${checkoutError.message}
+please fix the error and then run "bit checkout reset --all" to revert the components to the pre-merge state`;
+      return chalk.red(errMsg);
+    };
 
-    return `${checkoutOutputStr}\n\n${restoredItemsTitle}\n${restoredItemsOutput}`;
+    const checkoutOutputStr = checkoutResults ? checkoutOutput(checkoutResults, checkoutProps) : '';
+    const restoredItemsTitle = chalk.green('The following have been restored successfully:');
+    const restoredItemsOutput = restoredItems.map((item) => `[√] ${item}`).join('\n');
+
+    return `${checkoutOutputStr}\n\n${restoredItemsTitle}\n${restoredItemsOutput}${getCheckoutErrorStr()}`;
   }
 
   private async prompt() {
