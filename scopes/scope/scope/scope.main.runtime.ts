@@ -21,7 +21,7 @@ import {
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
+import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
@@ -261,6 +261,15 @@ export class ScopeMain implements ComponentFactory {
   ): Promise<RequireableComponent[]> {
     const scopeAspectsLoader = this.getScopeAspectsLoader();
     return scopeAspectsLoader.getResolvedAspects(components, opts);
+  }
+
+  getIsolateAspectsOpts(opts?: {
+    skipIfExists?: boolean;
+    packageManagerConfigRootDir?: string;
+    workspaceName?: string;
+  }): IsolateComponentsOptions {
+    const scopeAspectsLoader = this.getScopeAspectsLoader();
+    return scopeAspectsLoader.getIsolateOpts(opts);
   }
 
   getAspectCapsulePath() {
