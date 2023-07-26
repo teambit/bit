@@ -89,6 +89,7 @@ export type ApplyVersionResults = {
   version?: string;
   failedComponents?: FailedComponents[];
   removedComponents?: BitId[];
+  addedComponents?: ComponentID[]; // relevant when restoreMissingComponents is true (e.g. bit lane merge-abort)
   resolvedComponents?: ConsumerComponent[]; // relevant for bit merge --resolve
   abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
   mergeSnapResults?: {
@@ -588,7 +589,8 @@ export class MergingMain {
     const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id.name);
     if (unmerged) {
       return returnUnmerged(
-        `component ${id.toStringWithoutVersion()} is in during-merge state a previous merge, please snap/tag it first (or use bit merge --resolve/--abort)`
+        `component ${id.toStringWithoutVersion()} is in during-merge state a previous merge, please snap/tag it first (or use bit merge --resolve/--abort/ 
+        bit lane merge-abort)`
       );
     }
     const repo = consumer.scope.objects;
