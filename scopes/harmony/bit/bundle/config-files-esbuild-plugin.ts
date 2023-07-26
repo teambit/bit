@@ -9,10 +9,6 @@ type ParsedArgs = {
 };
 
 function handleConfigFile(args: OnResolveArgs, bundleDir: string) {
-  console.log('im here', args);
-  if (args.path.includes('html-docs-app')) {
-    console.log('this is me', args);
-  }
   if (
     args.kind === 'require-resolve' &&
     (args.importer.includes('/scopes/') || args.importer.includes('node_modules/@teambit')) &&
@@ -31,7 +27,6 @@ function handleConfigFile(args: OnResolveArgs, bundleDir: string) {
 
 async function handleRelativePath(args: OnResolveArgs, bundleDir: string) {
   const parsed = parse(args.path);
-  console.log('parsed', parsed);
   const { componentName, relativePath, scopeName } = await parseArgs(args);
   // const packageDirName = getPackageDirName(args.resolveDir);
   const packageDirName = `@teambit/${componentName}`;
@@ -39,31 +34,15 @@ async function handleRelativePath(args: OnResolveArgs, bundleDir: string) {
   // const relativePath = getFilePathRelativeToPackage(args.resolveDir, args.path);
   // TODO: dist is hard coded now which is not great
   const origFilePath = join(packageDirName, 'dist', relativePath);
-  console.log('🚀 ~ file: config-files-esbuild-plugin.ts:27 ~ handleRelativePath ~ origFilePath:', origFilePath);
   // const targetDirName = getTargetDirName(args.resolveDir);
   const targetDirName = `${scopeName}.${componentName}`;
   // const targetDir = join(bundleDir, targetDirName, parsed.dir);
   const targetDir = join(bundleDir, targetDirName, dirname(relativePath));
-  console.log('🚀 ~ file: config-files-esbuild-plugin.ts:28 ~ handleRelativePath ~ targetDir:', targetDir);
   await fs.ensureDir(targetDir);
   const resolvedFilePath = require.resolve(origFilePath);
-  console.log(
-    '🚀 ~ file: config-files-esbuild-plugin.ts:32 ~ handleRelativePath ~ resolvedFilePath:',
-    resolvedFilePath
-  );
-  console.log(
-    '🚀 ~ file: config-files-esbuild-plugin.ts:33 ~ handleRelativePath ~ join(targetDir, parsed.base):',
-    join(targetDir, parsed.base)
-  );
-  console.log(
-    '🚀 ~ file: config-files-esbuild-plugin.ts:36 ~ handleRelativePath ~ basename(resolvedFilePath):',
-    basename(resolvedFilePath)
-  );
   await fs.copyFile(resolvedFilePath, join(targetDir, basename(resolvedFilePath)));
   // const newPath = replaceRelativePath(targetDirName, parsed);
   const newPath = `./${targetDirName}/${relativePath}`;
-  console.log('🚀 ~ file: config-files-esbuild-plugin.ts:38 ~ handleRelativePath ~ newPath:', newPath);
-
   return {
     path: newPath,
     namespace: 'bit-config-file',
@@ -117,10 +96,8 @@ function parseArgsFromSrc(args: OnResolveArgs): ParsedArgs {
 
 async function handleModulePath(args: OnResolveArgs, bundleDir: string) {
   const resolvedFilePath = require.resolve(args.path);
-  console.log('🚀 ~ file: config-files-esbuild-plugin.ts:65 ~ handleModulePath ~ resolvedFilePath:', resolvedFilePath);
   const parsed = parse(args.path);
   const targetDir = join(bundleDir, 'node_modules', parsed.dir);
-  console.log('🚀 ~ file: config-files-esbuild-plugin.ts:67 ~ handleModulePath ~ targetDir:', targetDir);
   await fs.ensureDir(targetDir);
   await fs.copyFile(resolvedFilePath, join(targetDir, basename(resolvedFilePath)));
   return {
