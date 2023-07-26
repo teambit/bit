@@ -301,8 +301,16 @@ export class MergeLanesMain {
     const configMergeFile = this.workspace.getConflictMergeFile();
     await configMergeFile.delete();
 
+    let checkoutResults: ApplyVersionResults | undefined;
+    let checkoutError: Error | undefined;
     checkoutProps.ids = await this.workspace.listIds();
-    const checkoutResults = await this.checkout.checkout(checkoutProps);
+    checkoutProps.restoreMissingComponents = true;
+    try {
+      checkoutResults = await this.checkout.checkout(checkoutProps);
+    } catch (err: any) {
+      this.logger.error(`merge-abort got an error during the checkout stage`, err);
+      checkoutError = err;
+    }
 
     const restoredItems = [
       `${path.basename(this.workspace.consumer.bitMap.mapPath)} file`,
@@ -312,7 +320,7 @@ export class MergeLanesMain {
       restoredItems.push(`${currentLane.id()} lane object`);
     }
 
-    return { checkoutResults, restoredItems };
+    return { checkoutResults, restoredItems, checkoutError };
   }
 
   private async getLastMergedLaneContentIfExists(): Promise<Buffer | null> {
