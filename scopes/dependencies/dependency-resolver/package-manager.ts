@@ -72,6 +72,12 @@ export type PackageManagerInstallOptions = {
    * e.g. when running `bit install` through the web or the IDE, not from the CLI.
    */
   optimizeReportForNonTerminal?: boolean;
+
+  /**
+   * Sets the frequency of updating the progress output in milliseconds.
+   * E.g., if this is set to 1000, then the progress will be updated every second.
+   */
+  throttleProgress?: number;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
