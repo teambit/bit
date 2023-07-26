@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { compact } from 'lodash';
 import { WILDCARD_HELP, AUTO_SNAPPED_MSG, MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import {
@@ -302,5 +303,12 @@ export function getRemovedOutput(removedComponents?: BitId[]) {
   if (!removedComponents?.length) return '';
   const title = `the following ${removedComponents.length} component(s) have been removed`;
   const body = removedComponents.join('\n');
+  return `\n\n${chalk.underline(title)}\n${body}\n\n`;
+}
+
+export function getAddedOutput(addedComponents?: ComponentID[]) {
+  if (!addedComponents?.length) return '';
+  const title = `the following ${addedComponents.length} component(s) have been added`;
+  const body = addedComponents.join('\n');
   return `\n\n${chalk.underline(title)}\n${body}\n\n`;
 }

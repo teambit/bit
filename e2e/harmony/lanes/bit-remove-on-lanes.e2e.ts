@@ -248,9 +248,21 @@ describe('bit lane command', function () {
         const staged = status.stagedComponents.map((c) => c.id);
         expect(staged).to.include(`${helper.scopes.remote}/comp2`);
       });
+      describe('abort the lane-merge', () => {
+        let abortOutput: string;
+        before(() => {
+          abortOutput = helper.command.mergeAbortLane('-x');
+        });
+        it('should indicate that a component has been added', () => {
+          expect(abortOutput).to.have.string('have been added');
+        });
+        it('should add the previously removed component', () => {
+          expect(path.join(helper.scopes.localPath, 'comp2')).to.be.a.directory();
+        });
+      });
     });
   });
-  describe('soft remove on lane when a forked lane changed it and is now merging this lane', () => {
+  describe('soft remove on lane when a forked lane changed it (diverged) and is now merging this lane', () => {
     let beforeRemoveScope: string;
     let beforeMerge: string;
     let output;
