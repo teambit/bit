@@ -1,12 +1,13 @@
 import ts from 'typescript';
 import { SourceFileTransformer } from '.';
+import { replaceName } from './replaceName';
 
 export const functionNamesTransformer: SourceFileTransformer = (mapping: Record<string, string>) => {
   return (context) => {
     const updateTypeReference: ts.Visitor = (node) => {
       if (ts.isTypeReferenceNode(node)) {
         const typeName = node.typeName.getText();
-        const newTypeName = mapping[typeName];
+        const newTypeName = replaceName(typeName, mapping);
         if (newTypeName) {
           return ts.factory.updateTypeReferenceNode(node, ts.factory.createIdentifier(newTypeName), node.typeArguments);
         }
