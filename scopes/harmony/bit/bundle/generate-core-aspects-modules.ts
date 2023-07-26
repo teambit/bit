@@ -31,7 +31,7 @@ async function handleOneAspect(bundleDir: string, name: string, packageName: str
   const dirPath = join(bundleDir, 'node_modules', packageName);
   await fs.ensureDir(dirPath);
   await generateIndexFile(dirPath, name, appName);
-  await copyPackageJson(dirPath, packageName);
+  await generatePackageJson(dirPath, packageName);
 }
 
 async function generateIndexFile(dirPath: string, name: string, appName: string) {
@@ -40,10 +40,12 @@ async function generateIndexFile(dirPath: string, name: string, appName: string)
   return fs.outputFile(indexFilePath, indexFileContent);
 }
 
-async function copyPackageJson(dirPath: string, packageName: string) {
+async function generatePackageJson(dirPath: string, packageName: string) {
   const packageJsonPath = join(wsRootDir, 'node_modules', packageName, 'package.json');
   const targetPath = join(dirPath, 'package.json');
-  return fs.copyFile(packageJsonPath, targetPath);
+  const origPackageJson = await fs.readJson(packageJsonPath);
+  origPackageJson.main = 'index.js';
+  return fs.writeJson(targetPath, origPackageJson, { spaces: 2 });
 }
 
 function getIndexContent(name: string, appName: string) {
