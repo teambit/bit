@@ -320,6 +320,23 @@ export class CheckoutMain {
     const consumer = this.workspace.consumer;
     const { version, head: headVersion, reset, revert, main, latest: latestVersion, versionPerId } = checkoutProps;
     const repo = consumer.scope.objects;
+
+    let existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
+    const getComponent = async () => {
+      try {
+        return await consumer.loadComponent(id);
+      } catch (err) {
+        if (checkoutProps.allowAddingComponentsFromScope && !existingBitMapId) return undefined;
+        throw err;
+      }
+    };
+    const component = await getComponent();
+    if (component) {
+      // the component might fix an out-of-sync issue and as a result, the id has changed
+      id = component.id;
+      existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
+    }
+
     const componentModel = await consumer.scope.getModelComponentIfExist(id);
     const componentStatus: ComponentStatusBeforeMergeAttempt = { id };
     const returnFailure = (msg: string, unchangedLegitimately = false) => {
@@ -339,16 +356,7 @@ export class CheckoutMain {
         `component ${id.toStringWithoutVersion()} is in during-merge state, please snap/tag it first (or use bit merge --resolve/--abort)`
       );
     }
-    const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
-    const getComponent = async () => {
-      try {
-        return await consumer.loadComponent(id);
-      } catch (err) {
-        if (checkoutProps.allowAddingComponentsFromScope && !existingBitMapId) return undefined;
-        throw err;
-      }
-    };
-    const component = await getComponent();
+
     const getNewVersion = async (): Promise<string> => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (reset) return component!.id.version as string;
