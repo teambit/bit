@@ -68,14 +68,18 @@ export class LaneSwitcher {
     const laneId = await this.consumer.scope.lanes.parseLaneIdFromString(this.switchProps.laneName);
 
     const localLane = await this.consumer.scope.loadLane(laneId);
-    this.switchProps.ids = await this.consumer.getIdsOfDefaultLane();
+    const mainIds = await this.consumer.getIdsOfDefaultLane();
     if (laneId.isDefault()) {
       await this.populatePropsAccordingToDefaultLane();
+      this.switchProps.ids = mainIds;
     } else {
       const ids = localLane
         ? this.populatePropsAccordingToLocalLane(localLane)
         : await this.populatePropsAccordingToRemoteLane(laneId);
-      this.switchProps.ids.push(...ids);
+      this.switchProps.ids = ids;
+      mainIds.forEach((id) => {
+        if (!ids.find((i) => i.isEqualWithoutVersion(id))) this.switchProps.ids?.push(id);
+      });
     }
 
     if (this.switchProps.pattern) {
