@@ -67,7 +67,6 @@ export class WorkspaceGenerator {
         copyPeerToRuntimeOnComponents: false,
         updateExisting: false,
       });
-      console.log('compiling components');
       // compile the components again now that we have the dependencies installed
       await this.compileComponents(true);
       // await this.wsConfigFiles.writeConfigFiles({});
