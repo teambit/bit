@@ -237,23 +237,27 @@ export class WorkspaceCompiler {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
       this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
       this.watcher.registerOnPreWatch(this.onPreWatch.bind(this));
-      this.ui.registerPreStart(this.onPreStart.bind(this));
     }
+    this.ui.registerPreStart(this.onPreStart.bind(this));
     if (this.aspectLoader) {
       this.aspectLoader.registerOnAspectLoadErrorSlot(this.onAspectLoadFail.bind(this));
     }
   }
 
   async onPreStart(preStartOpts: PreStartOpts): Promise<void> {
-    if (preStartOpts.skipCompilation) {
-      return;
+    if (this.workspace) {
+      if (preStartOpts.skipCompilation) {
+        return;
+      }
+      await this.compileComponents([], {
+        changed: true,
+        verbose: false,
+        deleteDistDir: false,
+        initiator: CompilationInitiator.PreStart,
+      });
+    } else {
+      await this.watcher.watchScopeInternalFiles();
     }
-    await this.compileComponents([], {
-      changed: true,
-      verbose: false,
-      deleteDistDir: false,
-      initiator: CompilationInitiator.PreStart,
-    });
   }
 
   async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {
@@ -290,16 +294,16 @@ export class WorkspaceCompiler {
     };
   }
 
-  async onPreWatch(components: Component[], watchOpts: WatchOptions) {
+  async onPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
     if (watchOpts.preCompile) {
       const start = Date.now();
-      this.logger.console(`compiling ${components.length} components`);
+      this.logger.console(`compiling ${componentIds.length} components`);
       await this.compileComponents(
-        components.map((c) => c.id._legacy),
+        componentIds.map((id) => id._legacy),
         { initiator: CompilationInitiator.PreWatch }
       );
       const end = Date.now() - start;
-      this.logger.consoleSuccess(`compiled ${components.length} components successfully (${end / 1000} sec)`);
+      this.logger.consoleSuccess(`compiled ${componentIds.length} components successfully (${end / 1000} sec)`);
     }
   }
 

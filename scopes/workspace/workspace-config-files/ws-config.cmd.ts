@@ -1,6 +1,5 @@
 /* eslint-disable max-classes-per-file */
 
-import { omit } from 'lodash';
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceConfigFilesMain, WriteConfigFilesResult } from './workspace-config-files.main.runtime';
@@ -74,8 +73,10 @@ export class WsConfigWriteCmd implements Command {
     if (flags.dryRunWithContent) {
       throw new Error(`use --json flag along with --dry-run-with-content`);
     }
-    if (flags.verbose) return verboseFormatWriteOutput(results, flags);
-    return formatWriteOutput(results, flags);
+    const envsNotImplementing = this.workspaceConfigFilesMain.getEnvsNotImplementing();
+    const warning = getWarningForNonImplementingEnvs(envsNotImplementing);
+    const output = flags.verbose ? verboseFormatWriteOutput(results, flags) : formatWriteOutput(results, flags);
+    return warning + output;
   }
 
   async json(_args, flags: WriteConfigCmdFlags) {
@@ -90,14 +91,23 @@ export class WsConfigWriteCmd implements Command {
     });
 
     if (dryRun) {
-      const aspectsWritersResults = dryRunWithContent
-        ? writeResults.aspectsWritersResults
-        : writeResults.aspectsWritersResults.map((s) => omit(s, ['content']));
-      // return JSON.stringify({ cleanResults, writeResults: writeJson }, undefined, 2);
+      const updatedWriteResults = writeResults;
+      if (!dryRunWithContent) {
+        updatedWriteResults.writersResult = updatedWriteResults.writersResult.map((oneWriterResult) => {
+          oneWriterResult.realConfigFiles.forEach((realConfigFile) => {
+            realConfigFile.writtenRealConfigFile.content = '';
+          });
+          oneWriterResult.extendingConfigFiles.forEach((extendingConfigFile) => {
+            extendingConfigFile.extendingConfigFile.content = '';
+          });
+          return oneWriterResult;
+        });
+      }
+
       return {
         wsDir,
         cleanResults,
-        writeResults: { totalWrittenFiles: writeResults.totalWrittenFiles, aspectsWritersResults },
+        writeResults: updatedWriteResults,
       };
     }
     return { wsDir, cleanResults, writeResults };
@@ -124,7 +134,10 @@ export class WsConfigCleanCmd implements Command {
 
   async report(_args, flags: CleanConfigCmdFlags) {
     const results = await this.json(_args, flags);
-    return formatCleanOutput(results, flags);
+    const envsNotImplementing = this.workspaceConfigFilesMain.getEnvsNotImplementing();
+    const warning = getWarningForNonImplementingEnvs(envsNotImplementing);
+    const output = formatCleanOutput(results, flags);
+    return warning + output;
   }
 
   async json(_args, flags: WriteConfigCmdFlags) {
@@ -149,11 +162,25 @@ export class WsConfigListCmd implements Command {
 
   async report() {
     const results = await this.json();
-    return formatListOutput(results);
+    const envsNotImplementing = this.workspaceConfigFilesMain.getEnvsNotImplementing();
+    const warning = getWarningForNonImplementingEnvs(envsNotImplementing);
+    const output = formatListOutput(results);
+    return warning + output;
   }
 
   async json() {
     const cleanResults = await this.workspaceConfigFilesMain.listConfigWriters();
     return cleanResults;
   }
+}
+
+function getWarningForNonImplementingEnvs(envsNotImplementing: string[]) {
+  if (!envsNotImplementing.length) return '';
+  const message =
+    chalk.yellow(`Bit cannot determine the correct contents for the config files to write. this may result in incorrect content.
+The following environments need to add support for config files: ${chalk.cyan(envsNotImplementing.join(', '))}.
+Read here how to correct and improve dev-ex - LINK
+
+`);
+  return message;
 }

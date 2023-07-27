@@ -781,20 +781,24 @@ describe('merge lanes', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
-      helper.command.tagWithoutBuild('comp2');
+      helper.command.tagWithoutBuild('comp2', '-m "first tag"');
       comp2HeadOnMain = helper.command.getHead('comp2');
       helper.command.export();
       helper.command.createLane();
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified -m "first snap on lane dev"');
       comp2PreviousHeadOnLane = helper.command.getHeadOfLane('dev', 'comp2');
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified -m "second snap on lane dev"');
       comp1HeadOnLane = helper.command.getHeadOfLane('dev', 'comp1');
       comp2HeadOnLane = helper.command.getHeadOfLane('dev', 'comp2');
       helper.command.export();
       bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
       beforeMerging = helper.scopeHelper.cloneScope(bareMerge.scopePath);
-      helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`);
+      helper.command.mergeLaneFromScope(
+        bareMerge.scopePath,
+        `${helper.scopes.remote}/dev`,
+        '--title "this is the title of the CR"'
+      );
     });
     it('should merge to main', () => {
       expect(helper.command.getHead(`${helper.scopes.remote}/comp1`, bareMerge.scopePath)).to.equal(comp1HeadOnLane);
@@ -806,6 +810,11 @@ describe('merge lanes', function () {
       const parent = cat.parents[0];
       expect(parent).to.not.equal(comp2PreviousHeadOnLane);
       expect(parent).to.equal(comp2HeadOnMain);
+    });
+    it('should squash the messages because --title is provided', () => {
+      const versionObj = helper.command.catComponent(`${helper.scopes.remote}/comp2@latest`, bareMerge.scopePath);
+      const msg = versionObj.log.message;
+      expect(msg).to.include('this is the title of the CR\n[*] second snap on lane dev\n[*] first snap on lane dev');
     });
     it('should not export by default', () => {
       const comp1OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp1`, bareMerge.scopePath);

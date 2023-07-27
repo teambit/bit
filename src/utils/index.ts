@@ -9,7 +9,7 @@ import calculateFileInfo from './fs/file-info';
 import getWithoutExt from './fs/fs-no-ext';
 import getExt from './fs/get-ext';
 import isDirEmpty from './fs/is-dir-empty';
-import { pathHas, pathHasAll, propogateUntil } from './fs/propogate-until';
+import { pathHas, pathHasAll, findScopePath } from './fs/propogate-until';
 import readDirIgnoreDsStore, { readDirSyncIgnoreDsStore } from './fs/read-dir-ignore-ds-store';
 import glob from './glob';
 import retrieveIgnoreList from './ignore/ignore';
@@ -78,7 +78,7 @@ export {
   isBitUrl,
   isDir,
   resolveHomePath,
-  propogateUntil,
+  findScopePath,
   pathHas,
   pathHasAll,
   isDirEmpty,

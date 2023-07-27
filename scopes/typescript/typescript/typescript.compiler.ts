@@ -7,9 +7,8 @@ import path from 'path';
 import ts from 'typescript';
 import { BitError } from '@teambit/bit-error';
 import { TypeScriptCompilerOptions } from './compiler-options';
-import { TypescriptCompilerInterface } from './typescript-compiler-interface';
 
-export class TypescriptCompiler implements Compiler, TypescriptCompilerInterface {
+export class TypescriptCompiler implements Compiler {
   distDir: string;
   distGlobPatterns: string[];
   shouldCopyNonSupportedFiles: boolean;
@@ -33,13 +32,6 @@ export class TypescriptCompiler implements Compiler, TypescriptCompilerInterface
 
   displayName = 'TypeScript';
   deleteDistDir = false;
-
-  generateIdeConfig() {
-    return {
-      tsconfig: this.options.tsconfig,
-      globalTypesPaths: this.options.types,
-    };
-  }
 
   displayConfig() {
     return this.stringifyTsconfig(this.options.tsconfig);

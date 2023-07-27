@@ -121,18 +121,12 @@ export default class Consumer {
   }
 
   get bitmapIdsFromCurrentLaneIncludeRemoved(): BitIds {
-    const idsFromBitMap = this.bitMap.getAllIdsAvailableOnLane();
-    const removedIds = this.bitMap.getRemoved();
-    return BitIds.fromArray([...idsFromBitMap, ...removedIds]);
+    return this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
   }
 
-  get bitMapIdsFromAllLanes(): BitIds {
-    return this.bitMap.getAllBitIdsFromAllLanes();
-  }
-
-  clearCache() {
+  async clearCache() {
     this.componentLoader.clearComponentsCache();
-    this.onCacheClear.forEach((func) => func());
+    await Promise.all(this.onCacheClear.map((func) => func()));
   }
 
   getTmpFolder(fullPath = false): PathOsBased {
@@ -575,15 +569,6 @@ export default class Consumer {
     await Scope.reset(this.scope.path, true);
   }
 
-  static locateProjectScope(projectPath: string) {
-    if (fs.existsSync(path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR))) {
-      return path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR);
-    }
-    if (fs.existsSync(path.join(projectPath, BIT_HIDDEN_DIR))) {
-      return path.join(projectPath, BIT_HIDDEN_DIR);
-    }
-    return undefined;
-  }
   static async load(currentPath: PathOsBasedAbsolute): Promise<Consumer> {
     const consumerInfo = await getConsumerInfo(currentPath);
     if (!consumerInfo) {
@@ -601,8 +586,7 @@ export default class Consumer {
       await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
     }
     const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
-    const scopePath = Consumer.locateProjectScope(consumerInfo.path);
-    const scope = consumer?.scope || (await Scope.load(scopePath as string));
+    const scope = consumer?.scope || (await Scope.load(consumerInfo.path));
     consumer = new Consumer({
       projectPath: consumerInfo.path,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

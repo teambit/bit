@@ -62,6 +62,19 @@ export enum Verb {
   READ = 'read',
 }
 
+export type ExportOrigin = 'export' | 'sign' | 'update-dependencies' | 'lane-merge' | 'tag';
+
+export type PushCentralOptions = {
+  origin: ExportOrigin;
+  signComponents?: string[]; // relevant for bit-sign.
+  idsHashMaps?: { [hash: string]: string }; // relevant for bit-sign. keys are the component hash, values are component-ids as strings
+
+  /**
+   * @deprecated prefer using "origin"
+   */
+  sign?: boolean;
+};
+
 export type ProxyConfig = {
   httpProxy?: string;
   httpsProxy?: string;
@@ -231,7 +244,7 @@ export class Http implements Network {
 
   async pushToCentralHub(
     objectList: ObjectList,
-    options: Record<string, any> = {}
+    options: PushCentralOptions
   ): Promise<{
     successIds: string[];
     failedScopes: string[];

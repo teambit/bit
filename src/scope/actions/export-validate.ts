@@ -40,10 +40,10 @@ export class ExportValidate implements Action<Options> {
       await mergeObjects(scope, bitObjectList, true); // if fails, it throws merge-conflict/component-not-found
       logger.profile('export-validate.mergeObjects');
     } catch (err) {
-      scope.objects.clearCache(); // we don't want to persist anything by mistake.
+      scope.objects.clearObjectsFromCache(); // we don't want to persist anything by mistake.
       throw err;
     }
-    scope.objects.clearCache();
+    scope.objects.clearObjectsFromCache();
   }
 
   private async importAndThrowForMissingHistoryOnLane(bitObjectList: BitObjectList) {

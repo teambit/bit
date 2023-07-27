@@ -17,6 +17,8 @@ import { resolve, join } from 'path';
 import { ComponentID } from '@teambit/component-id';
 import GitAspect, { GitMain } from '@teambit/git';
 import { InstallAspect, InstallMain } from '@teambit/install';
+import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+
 import { WorkspaceTemplate, WorkspaceContext } from './workspace-template';
 import { NewOptions } from './new.cmd';
 import { GeneratorAspect } from './generator.aspect';
@@ -32,6 +34,8 @@ export class WorkspaceGenerator {
   private logger: Logger;
   private forking: ForkingMain;
   private git: GitMain;
+  private wsConfigFiles: WorkspaceConfigFilesMain;
+
   constructor(
     private workspaceName: string,
     private options: NewOptions,
@@ -55,6 +59,7 @@ export class WorkspaceGenerator {
       await this.setupGitBitmapMergeDriver();
       await this.forkComponentsFromRemote();
       await this.importComponentsFromRemote();
+      await this.workspace.clearCache();
       await this.install.install(undefined, {
         dedupe: true,
         import: false,
@@ -62,6 +67,9 @@ export class WorkspaceGenerator {
         copyPeerToRuntimeOnComponents: false,
         updateExisting: false,
       });
+      // compile the components again now that we have the dependencies installed
+      await this.compileComponents(true);
+      // await this.wsConfigFiles.writeConfigFiles({});
       // await this.buildUI(); // disabled for now. it takes too long
     } catch (err: any) {
       this.logger.error(`failed generating a new workspace, will delete the dir ${this.workspacePath}`, err);
@@ -128,6 +136,7 @@ export class WorkspaceGenerator {
     this.importer = this.harmony.get<ImporterMain>(ImporterAspect.id);
     this.forking = this.harmony.get<ForkingMain>(ForkingAspect.id);
     this.git = this.harmony.get<GitMain>(GitAspect.id);
+    this.wsConfigFiles = this.harmony.get<WorkspaceConfigFilesMain>(WorkspaceConfigFilesAspect.id);
   }
 
   private async forkComponentsFromRemote() {
@@ -148,8 +157,6 @@ export class WorkspaceGenerator {
       refactor: true,
       install: false,
     });
-    this.workspace.clearCache();
-    await this.compileComponents();
   }
 
   private async importComponentsFromRemote() {
@@ -171,11 +178,12 @@ export class WorkspaceGenerator {
     });
 
     await this.workspace.bitMap.write();
-    this.workspace.clearCache();
-    await this.compileComponents();
   }
 
-  private async compileComponents() {
+  private async compileComponents(clearCache = true) {
+    if (clearCache) {
+      await this.workspace.clearCache();
+    }
     const compiler = this.harmony.get<CompilerMain>(CompilerAspect.id);
     await compiler.compileOnWorkspace();
   }

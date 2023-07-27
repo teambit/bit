@@ -521,8 +521,15 @@ export class Workspace implements ComponentFactory {
     );
     const getCompIdByIdStr = (idStr: string): ComponentID => {
       const compId = flattenedBitIdCompIdMap[idStr];
-      if (!compId)
-        throw new Error(`id ${idStr} exists in flattenedEdges but not in flattened of ${component.id.toString()}`);
+      if (!compId) {
+        const suggestWrongSnap = isHash(component.id.version)
+          ? `\nplease check that .bitmap has the correct versions of ${component.id.toStringWithoutVersion()}.
+it's possible that the version ${component.id.version} belong to ${idStr.split('@')[0]}`
+          : '';
+        throw new Error(
+          `id ${idStr} exists in flattenedEdges but not in flattened of ${component.id.toString()}.${suggestWrongSnap}`
+        );
+      }
       return compId;
     };
     const nodes = Object.values(flattenedBitIdCompIdMap);
@@ -579,7 +586,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async getFilesModification(id: ComponentID): Promise<CompFiles> {
-    const bitMapEntry = this.bitMap.getBitmapEntry(id);
+    const bitMapEntry = this.bitMap.getBitmapEntry(id, { ignoreVersion: true });
     const compDir = bitMapEntry.getComponentDir();
     const compDirAbs = path.join(this.path, compDir);
     const sourceFilesVinyls = bitMapEntry.files.map((file) => {
@@ -657,15 +664,21 @@ export class Workspace implements ComponentFactory {
     return workspaceAspectsLoader.getConfiguredUserAspectsPackages(options);
   }
 
-  clearCache(options: ClearCacheOptions = {}) {
+  async clearCache(options: ClearCacheOptions = {}) {
     this.aspectLoader.resetFailedLoadAspects();
     if (!options.skipClearFailedToLoadEnvs) this.envs.resetFailedToLoadEnvs();
     this.logger.debug('clearing the workspace and scope caches');
     delete this._cachedListIds;
     this.componentLoader.clearCache();
-    this.scope.clearCache();
+    await this.scope.clearCache();
     this.componentList = new ComponentsList(this.consumer);
     this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized.clear();
+  }
+
+  clearAllComponentsCache() {
+    this.componentLoader.clearCache();
+    this.consumer.componentLoader.clearComponentsCache();
+    this.componentList = new ComponentsList(this.consumer);
   }
 
   clearComponentCache(id: ComponentID) {
@@ -674,10 +687,14 @@ export class Workspace implements ComponentFactory {
     this.componentList = new ComponentsList(this.consumer);
   }
 
+  async warmCache() {
+    await this.list();
+  }
+
   async triggerOnComponentChange(
     id: ComponentID,
-    files: string[],
-    removedFiles: string[],
+    files: PathOsBasedAbsolute[],
+    removedFiles: PathOsBasedAbsolute[],
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
@@ -1433,7 +1450,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async _reloadConsumer() {
     this.consumer = await loadConsumer(this.path, true);
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
-    this.clearCache();
+    await this.clearCache();
   }
 
   getComponentPackagePath(component: Component) {

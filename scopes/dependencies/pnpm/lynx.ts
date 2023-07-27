@@ -36,6 +36,7 @@ import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
 const installsRunning: Record<string, Promise<any>> = {};
+const cafsLocker = new Map<string, number>();
 
 type RegistriesMap = {
   default: string;
@@ -58,6 +59,7 @@ async function createStoreController(
   const opts: CreateStoreControllerOptions = {
     dir: options.rootDir,
     cacheDir: options.cacheDir,
+    cafsLocker,
     storeDir: options.storeDir,
     rawConfig: authConfig,
     verifyStoreIntegrity: true,
@@ -158,7 +160,13 @@ export async function getPeerDependencyIssues(
   });
 }
 
-export type RebuildFn = (opts: { pending?: boolean }) => Promise<void>;
+export type RebuildFn = (opts: { pending?: boolean; skipIfHasSideEffectsCache?: boolean }) => Promise<void>;
+
+export interface ReportOptions {
+  appendOnly?: boolean;
+  throttleProgress?: number;
+  hideAddedPkgsProgress?: boolean;
+}
 
 export async function install(
   rootDir: string,
@@ -175,6 +183,7 @@ export async function install(
     rootComponents?: boolean;
     rootComponentsForCapsules?: boolean;
     includeOptionalDeps?: boolean;
+    reportOptions?: ReportOptions;
     hidePackageManagerOutput?: boolean;
   } & Pick<
     InstallOptions,
@@ -269,7 +278,10 @@ export async function install(
 
   let stopReporting: Function | undefined;
   if (!options.hidePackageManagerOutput) {
-    stopReporting = initReporter();
+    stopReporting = initReporter({
+      ...options.reportOptions,
+      hideAddedPkgsProgress: options.lockfileOnly,
+    });
   }
   let dependenciesChanged = false;
   try {
@@ -305,7 +317,9 @@ export async function install(
         cacheDir,
       } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
       if (!_opts.hidePackageManagerOutput) {
-        stopReporting = initReporter();
+        stopReporting = initReporter({
+          appendOnly: true,
+        });
       }
       try {
         await rebuild.handler(_opts, []);
@@ -317,14 +331,15 @@ export async function install(
   };
 }
 
-function initReporter() {
+function initReporter(opts?: ReportOptions) {
   return initDefaultReporter({
     context: {
       argv: [],
     },
     reportingOptions: {
-      appendOnly: false,
-      throttleProgress: 200,
+      appendOnly: opts?.appendOnly ?? false,
+      throttleProgress: opts?.throttleProgress ?? 200,
+      hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
     },
     streamParser,
     // Linked in core aspects are excluded from the output to reduce noise.

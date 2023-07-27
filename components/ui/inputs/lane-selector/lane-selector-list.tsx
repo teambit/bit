@@ -1,27 +1,40 @@
-import React, { HTMLAttributes, useMemo, useRef, useEffect, useState } from 'react';
+import React, { HTMLAttributes, useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import classnames from 'classnames';
-import { compact } from 'lodash';
+import { compact, isFunction } from 'lodash';
 import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneId } from '@teambit/lane-id';
-import { LaneDropdownItems, LaneSelectorProps, LaneSelectorSortBy, GroupedLaneDropdownItem } from './lane-selector';
+import { FetchMoreLanesResult } from '@teambit/lanes.hooks.use-lanes';
+import { LaneDropdownItems, GroupedLaneDropdownItem } from './lane-selector';
 import { LaneMenuItem } from './lane-menu-item';
 import { LaneGroupedMenuItem } from './lane-grouped-menu-item';
 
 import styles from './lane-selector-list.module.scss';
 
-export type ListNavigatorCmd = 'Up' | 'Down' | 'Enter';
-
 export type LaneSelectorListProps = {
+  selectedLaneId?: LaneId;
+  mainLane?: LaneModel;
+  nonMainLanes: LaneModel[];
+  className?: string;
+  groupByScope?: boolean;
+  getHref?: (laneId: LaneId) => string;
+  onLaneSelected?: (selectedLaneId: LaneId, selectedLane: LaneModel) => void;
   search?: string;
-  listNavigator?: {
-    command?: ListNavigatorCmd;
-    update?: number;
-  };
-} & LaneSelectorProps &
-  HTMLAttributes<HTMLDivElement>;
+  mainIcon?: React.ReactNode;
+  scopeIconLookup?: Map<string, React.ReactNode>;
+  loading?: boolean;
+  hasMore: boolean;
+  fetchMore: () => Promise<FetchMoreLanesResult | undefined>;
+  fetchMoreLanes?: () => Promise<FetchMoreLanesResult | undefined>;
+  initialOffset?: number;
+  forwardedRef?: React.Ref<HTMLDivElement>;
+} & HTMLAttributes<HTMLDivElement>;
 
-export function LaneSelectorList({
+export const LaneSelectorList = React.forwardRef<HTMLDivElement, LaneSelectorListProps>(function _(props, ref) {
+  return <_LaneSelectorList {...props} forwardedRef={ref} />;
+});
+
+export function _LaneSelectorList({
   selectedLaneId: selectedLaneIdFromProps,
   mainLane,
   nonMainLanes,
@@ -32,23 +45,39 @@ export function LaneSelectorList({
   search = '',
   mainIcon,
   scopeIconLookup,
-  sortBy,
-  sortOptions,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  scopeIcon,
-  listNavigator,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  forceCloseOnEnter,
   loading,
+  hasMore,
+  fetchMore,
+  forwardedRef,
   ...rest
 }: LaneSelectorListProps) {
   const navigate = useNavigate();
+  const observer = useRef<IntersectionObserver | null>(null);
+  const laneDOMRefs = useRef<Map<string, React.RefObject<HTMLDivElement>>>(new Map());
+  const laneRefs = useRef<LaneId[]>([]);
+  const lastLaneDomRef = useRef<HTMLDivElement | null>(null);
+
+  const lastLaneElementRef = useCallback(
+    (node) => {
+      if (loading) return;
+      observer.current?.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          fetchMore().catch(() => {});
+        }
+      });
+      if (node) {
+        observer.current.observe(node);
+        lastLaneDomRef.current = node;
+      }
+    },
+    [loading, hasMore, fetchMore]
+  );
+
   const selectedNonMainLane =
     (!!selectedLaneIdFromProps &&
       nonMainLanes.find((nonMainLane) => nonMainLane.id.isEqual(selectedLaneIdFromProps))) ||
     undefined;
-  const laneDOMRefs = useRef<Map<string, React.RefObject<HTMLDivElement>>>(new Map());
-  const laneRefs = useRef<LaneId[]>([]);
 
   const [selectedLaneId, setSelectedLaneId] = useState<LaneId | undefined>(selectedLaneIdFromProps);
 
@@ -63,99 +92,147 @@ export function LaneSelectorList({
 
     if (nonMainLanes.length === 0) return [];
 
-    const lanesToRenderFn = () => {
-      const mainLaneToRender =
-        search === '' || mainLane?.id.name.toLowerCase().includes(search.toLowerCase()) ? mainLane : undefined;
+    const isSearchMatch = (lane?: LaneModel) =>
+      search === '' || lane?.id.name.toLowerCase().includes(search.toLowerCase());
 
-      if (selectedNonMainLane) {
-        const nonMainLanesWithoutSelected = nonMainLanes.filter(
-          (nonMainLane) => !nonMainLane.id.isEqual(selectedNonMainLane.id)
-        );
-        return compact([selectedNonMainLane, mainLaneToRender, ...nonMainLanesWithoutSelected]);
-      }
-
-      return compact([mainLaneToRender, ...nonMainLanes]);
+    const createLaneRefs = (lanes: LaneModel[]) => {
+      lanes.forEach((lane, index) => {
+        const isLastLane = index === lanes.length - 1;
+        const ref: any = isLastLane ? lastLaneElementRef : React.createRef<HTMLDivElement>();
+        laneDOMRefs.current.set(lane.id.toString(), ref);
+        laneRefs.current.push(lane.id);
+      });
     };
 
     if (groupByScope) {
       const groupedNonMainLanes = LanesModel.groupLanesByScope(nonMainLanes);
-      if (selectedNonMainLane) {
-        const groupedSelected = groupedNonMainLanes.get(selectedNonMainLane.id.scope) ?? [];
-        groupedNonMainLanes.delete(selectedNonMainLane.id.scope);
-        const grouped: GroupedLaneDropdownItem[] = [
-          [selectedNonMainLane.id.scope, groupedSelected],
-          ['', (mainLane && [mainLane]) || []],
-          ...groupedNonMainLanes.entries(),
-        ];
-        return grouped;
-      }
-      const grouped: GroupedLaneDropdownItem[] = [
-        ['', (mainLane && [mainLane]) || []],
-        ...groupedNonMainLanes.entries(),
-      ];
+      let grouped: GroupedLaneDropdownItem[] = [];
 
-      grouped.forEach(([, lanes]) => {
-        lanes.forEach((lane) => {
-          laneDOMRefs.current.set(lane.id.toString(), React.createRef<HTMLDivElement>());
-          laneRefs.current.push(lane.id);
-        });
-      });
+      if (selectedNonMainLane) {
+        const selectedScopeLanes = groupedNonMainLanes.get(selectedNonMainLane.id.scope) ?? [];
+        const selectedScopeLanesWithoutSelected = selectedScopeLanes.filter(
+          (lane) => !lane.id.isEqual(selectedNonMainLane.id)
+        );
+        groupedNonMainLanes.set(selectedNonMainLane.id.scope, selectedScopeLanesWithoutSelected);
+
+        const selectedGroup = [selectedNonMainLane.id.scope, [selectedNonMainLane]] as GroupedLaneDropdownItem;
+        const mainGroup = mainLane ? (['', [mainLane]] as GroupedLaneDropdownItem) : undefined;
+
+        const remainingGroups = Array.from(groupedNonMainLanes.entries()).map(
+          ([scope, lanes]) => [scope, lanes] as GroupedLaneDropdownItem
+        );
+
+        grouped = compact([selectedGroup, mainGroup, ...remainingGroups]);
+      } else {
+        const mainGroup = mainLane ? (['', [mainLane]] as GroupedLaneDropdownItem) : undefined;
+        const remainingGroups = Array.from(groupedNonMainLanes.entries()).map(
+          ([scope, lanes]) => [scope, lanes] as GroupedLaneDropdownItem
+        );
+
+        grouped = compact([mainGroup, ...remainingGroups]);
+      }
+
+      grouped.forEach(([, lanes]) => createLaneRefs(lanes));
 
       return grouped;
     }
-    const lanesToRender = lanesToRenderFn();
-    lanesToRender.forEach((lane) => {
-      laneDOMRefs.current.set(lane.id.toString(), React.createRef<HTMLDivElement>());
-      laneRefs.current.push(lane.id);
-    });
+
+    let lanesToRender = nonMainLanes;
+
+    if (mainLane && isSearchMatch(mainLane)) {
+      lanesToRender.unshift(mainLane);
+    }
+
+    if (selectedNonMainLane) {
+      lanesToRender = lanesToRender.filter((lane) => !lane.id.isEqual(selectedNonMainLane.id));
+      lanesToRender.unshift(selectedNonMainLane);
+    }
+
+    createLaneRefs(lanesToRender);
+
     return lanesToRender;
   }, [
     nonMainLanes.length,
     search,
-    sortBy,
     groupByScope,
-    selectedLaneId?.toString(),
     selectedNonMainLane?.id.toString(),
+    lastLaneElementRef,
+    mainLane?.id.name,
   ]);
 
   useEffect(() => {
-    const selectedIndex = selectedLaneId
-      ? laneRefs.current.findIndex((lane) => lane.toString() === selectedLaneId.toString())
-      : undefined;
-
-    switch (listNavigator?.command) {
-      case 'Enter': {
-        selectedLaneId && onLaneSelected?.(selectedLaneId);
-        selectedLaneId && navigate(getHref(selectedLaneId));
-        break;
-      }
-      case 'Up': {
-        const updatedIndex =
-          (selectedIndex !== undefined &&
-            (laneRefs.current[selectedIndex - 1] ? selectedIndex - 1 : laneRefs.current.length - 1)) ||
-          0;
-        setSelectedLaneId(laneRefs.current[updatedIndex]);
-        break;
-      }
-
-      case 'Down': {
-        const updatedIndex =
-          (selectedIndex !== undefined && (laneRefs.current[selectedIndex + 1] ? selectedIndex + 1 : 0)) || 0;
-        setSelectedLaneId(laneRefs.current[updatedIndex]);
-
-        break;
-      }
-      default:
-        break;
+    if (selectedLaneId) {
+      setTimeout(() => {
+        const lastLaneRef = laneRefs.current.slice(-1)[0];
+        if (selectedLaneId.toString() === lastLaneRef?.toString()) {
+          lastLaneDomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          return;
+        }
+        const selectedLaneElement = laneDOMRefs.current.get(selectedLaneId.toString())?.current;
+        selectedLaneElement?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 0);
     }
-  }, [listNavigator?.update, listNavigator?.command]);
+  }, [selectedLaneId?.toString(), laneDropdownItems]);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'Enter': {
+          setSelectedLaneId((currentSelectedLaneId) => {
+            const selectedLane =
+              (currentSelectedLaneId &&
+                nonMainLanes.find((nonMainLane) => nonMainLane.id.isEqual(currentSelectedLaneId))) ||
+              mainLane;
+            currentSelectedLaneId && selectedLane && onLaneSelected?.(currentSelectedLaneId, selectedLane);
+            currentSelectedLaneId && selectedLane && navigate(getHref(currentSelectedLaneId));
+            return currentSelectedLaneId;
+          });
+          break;
+        }
+        case 'ArrowUp': {
+          setSelectedLaneId((currentSelectedLaneId) => {
+            const selectedIndex = currentSelectedLaneId
+              ? laneRefs.current.findIndex((lane) => lane.toString() === currentSelectedLaneId.toString())
+              : undefined;
+            const updatedIndex =
+              (selectedIndex !== undefined &&
+                (laneRefs.current[selectedIndex - 1] ? selectedIndex - 1 : laneRefs.current.length - 1)) ||
+              0;
+            return laneRefs.current[updatedIndex];
+          });
+          break;
+        }
+
+        case 'ArrowDown': {
+          setSelectedLaneId((currentSelectedLaneId) => {
+            const selectedIndex = currentSelectedLaneId
+              ? laneRefs.current.findIndex((lane) => lane.toString() === currentSelectedLaneId.toString())
+              : undefined;
+            const updatedIndex =
+              (selectedIndex !== undefined && (laneRefs.current[selectedIndex + 1] ? selectedIndex + 1 : 0)) || 0;
+            return laneRefs.current[updatedIndex];
+          });
+          break;
+        }
+        default:
+          break;
+      }
+    },
+    [nonMainLanes, nonMainLanes.length, laneRefs.current.length]
+  );
 
   useEffect(() => {
-    if (selectedLaneId) {
-      const selectedLaneElement = laneDOMRefs.current.get(selectedLaneId.toString())?.current;
-      selectedLaneElement?.scrollIntoView({ block: 'nearest' });
+    const containerElement = forwardedRef && !isFunction(forwardedRef) ? forwardedRef?.current : undefined;
+
+    if (containerElement) {
+      containerElement?.addEventListener('keydown', handleKeyDown);
     }
-  }, [selectedLaneId?.toString()]);
+    return () => {
+      if (containerElement) {
+        containerElement?.removeEventListener('keydown', handleKeyDown);
+      }
+    };
+  }, [forwardedRef]);
 
   if (loading) return null;
 
@@ -172,9 +249,7 @@ export function LaneSelectorList({
               selected={selectedLaneId}
               current={lanesByScope}
               icon={scopeIconLookup?.get(scope)}
-              timestamp={(lane) =>
-                sortOptions?.includes(LaneSelectorSortBy.UPDATED) ? lane.updatedAt : lane.createdAt
-              }
+              timestamp={(lane) => lane.updatedAt || lane.createdAt}
               innerRefs={(laneId) => {
                 return laneDOMRefs.current.get(laneId.toString());
               }}
@@ -190,7 +265,8 @@ export function LaneSelectorList({
             getHref={getHref}
             selected={selectedLaneId}
             current={lane}
-            timestamp={sortOptions?.includes(LaneSelectorSortBy.UPDATED) ? lane.updatedAt : lane.createdAt}
+            timestamp={lane.updatedAt || lane.createdAt}
+            // timestamp={sortOptions?.includes(LaneSelectorSortBy.UPDATED) ? lane.updatedAt : lane.createdAt}
             icon={(lane.id.isDefault() && mainIcon) || undefined}
           ></LaneMenuItem>
         ))}

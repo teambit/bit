@@ -522,6 +522,10 @@ export default class CommandHelper {
     return JSON.parse(status);
   }
 
+  revert(pattern: string, to: string, flags = '') {
+    return this.runCmd(`bit revert ${pattern} ${to} ${flags}`);
+  }
+
   stash() {
     return this.runCmd('bit stash');
   }
@@ -663,6 +667,9 @@ export default class CommandHelper {
   }
   mergeLane(laneName: string, options = '') {
     return this.runCmd(`bit lane merge ${laneName} ${options}`);
+  }
+  mergeAbortLane(options = '') {
+    return this.runCmd(`bit lane merge-abort ${options} --silent`);
   }
   mergeLaneFromScope(cwd: string, laneName: string, options = '') {
     return this.runCmd(`bit _merge-lane ${laneName} ${options}`, cwd);

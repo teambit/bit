@@ -14,6 +14,7 @@ import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { importTransformer, exportTransformer } from '@teambit/typescript';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { isValidIdChunk, InvalidName } from '@teambit/legacy-bit-id';
 import { RenameCmd, RenameOptions } from './rename.cmd';
@@ -150,7 +151,10 @@ make sure this argument is the name only, without the scope-name. to change the 
           }),
         };
       });
-      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace);
+      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace, [
+        importTransformer,
+        exportTransformer,
+      ]);
       await this.renameScopeOfAspectIdsInWorkspaceConfig(
         componentsUsingOldScope.map((c) => c.id),
         newScope
@@ -174,7 +178,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       })
     );
 
-    this.workspace.clearCache();
+    await this.workspace.clearCache();
     await this.workspace._reloadConsumer();
 
     const newComps = await this.workspace.getMany(newIds);
@@ -238,7 +242,10 @@ make sure this argument is the name only, without the scope-name. to change the 
           }),
         };
       });
-      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace);
+      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace, [
+        importTransformer,
+        exportTransformer,
+      ]);
       await this.renameOwnerOfAspectIdsInWorkspaceConfig(
         componentsUsingOldScope.map((c) => c.id),
         oldOwner,

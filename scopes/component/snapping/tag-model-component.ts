@@ -42,16 +42,19 @@ import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
 
-export type BasicTagParams = {
+export type BasicTagSnapParams = {
   message: string;
-  ignoreNewestVersion?: boolean;
   skipTests?: boolean;
-  skipAutoTag?: boolean;
   build?: boolean;
+  ignoreBuildErrors?: boolean;
+};
+
+export type BasicTagParams = BasicTagSnapParams & {
+  ignoreNewestVersion?: boolean;
+  skipAutoTag?: boolean;
   soft?: boolean;
   persist: boolean;
   disableTagAndSnapPipelines?: boolean;
-  forceDeploy?: boolean;
   preReleaseId?: string;
   editor?: string;
   unmodified?: boolean;
@@ -193,7 +196,7 @@ export async function tagModelComponent({
   persist,
   isSnap = false,
   disableTagAndSnapPipelines,
-  forceDeploy,
+  ignoreBuildErrors,
   incrementBy,
   packageManagerConfigRootDir,
   dependencyResolver,
@@ -310,6 +313,7 @@ export async function tagModelComponent({
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
     await snapping._addFlattenedDependenciesToComponents(allComponentsToTag);
+    await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer);
@@ -330,7 +334,7 @@ export async function tagModelComponent({
     const onTagOpts: OnTagOpts = {
       disableTagAndSnapPipelines,
       throwOnError: true,
-      forceDeploy,
+      forceDeploy: ignoreBuildErrors,
       isSnap,
       populateArtifactsFrom,
     };

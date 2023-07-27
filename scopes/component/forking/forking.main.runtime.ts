@@ -1,5 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { importTransformer, exportTransformer } from '@teambit/typescript';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { ComponentIdObj } from '@teambit/component-id';
 import { ComponentDependency, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -88,8 +89,9 @@ export class ForkingMain {
   }
 
   async forkMultipleFromRemote(componentsToFork: MultipleComponentsToFork, options: MultipleForkOptions = {}) {
+    const componentsToForkSorted = this.sortComponentsToFork(componentsToFork);
     const { scope } = options;
-    const results = await pMapSeries(componentsToFork, async ({ sourceId, targetId, path, env, config }) => {
+    const results = await pMapSeries(componentsToForkSorted, async ({ sourceId, targetId, path, env, config }) => {
       const sourceCompId = await this.workspace.resolveComponentId(sourceId);
       const sourceIdWithScope = sourceCompId._legacy.scope
         ? sourceCompId
@@ -103,6 +105,20 @@ export class ForkingMain {
       return { targetCompId, sourceId, component };
     });
     await this.refactorMultipleAndInstall(results, options);
+  }
+
+  /**
+   * sort the components to fork so that components without "env" prop will be forked first.
+   * this way, if some components are envs, their "env" prop is empty and will be forked first, then components that
+   * depends on them.
+   * otherwise, forking the components first result in errors when loading them as their envs are missing at that point
+   */
+  private sortComponentsToFork(componentsToFork: MultipleComponentsToFork) {
+    return componentsToFork.sort((a, b) => {
+      if (a.env && b.env) return 0;
+      if (a.env) return 1;
+      return -1;
+    });
   }
 
   private async refactorMultipleAndInstall(results: MultipleForkInfo[], options: MultipleForkOptions = {}) {
@@ -122,7 +138,10 @@ export class ForkingMain {
       .flat();
     const allComponents = await this.workspace.list();
     if (options.refactor) {
-      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, stringsToReplace);
+      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, stringsToReplace, [
+        importTransformer,
+        exportTransformer,
+      ]);
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
     }
     const forkedComponents = results.map((result) => result.component);
@@ -205,7 +224,8 @@ the reason is that the refactor changes the components using ${sourceId.toString
           oldStr: sourceId.toStringWithoutVersion(),
           newStr: targetCompId.toStringWithoutVersion(),
         },
-      ]
+      ],
+      [importTransformer, exportTransformer]
     );
     if (!options?.preserve) {
       await this.refactoring.refactorVariableAndClasses(component, sourceId, targetCompId);

@@ -248,9 +248,21 @@ describe('bit lane command', function () {
         const staged = status.stagedComponents.map((c) => c.id);
         expect(staged).to.include(`${helper.scopes.remote}/comp2`);
       });
+      describe('abort the lane-merge', () => {
+        let abortOutput: string;
+        before(() => {
+          abortOutput = helper.command.mergeAbortLane('-x');
+        });
+        it('should indicate that a component has been added', () => {
+          expect(abortOutput).to.have.string('have been added');
+        });
+        it('should add the previously removed component', () => {
+          expect(path.join(helper.scopes.localPath, 'comp2')).to.be.a.directory();
+        });
+      });
     });
   });
-  describe('soft remove on lane when a forked lane changed it and is now merging this lane', () => {
+  describe('soft remove on lane when a forked lane changed it (diverged) and is now merging this lane', () => {
     let beforeRemoveScope: string;
     let beforeMerge: string;
     let output;
@@ -433,6 +445,27 @@ describe('bit lane command', function () {
     // the export was pushing this object to the remote, and then when importing, the snapped-version was missing.
     it('should be able to import the lane with no errors', () => {
       expect(() => helper.command.importLane('dev')).to.not.throw();
+    });
+  });
+  describe('soft remove on lane-a, then re-creating the component on lane-b', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.removeLaneComp('comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane('lane-b');
+    });
+    it('the forked lane should not include the soft-removed components', () => {
+      // don't use this `const lane = helper.command.showOneLaneParsed('lane-b');` as it filters out removed-components already.
+      // cat-lane shows the real object.
+      const lane = helper.command.catLane('lane-b');
+      expect(lane.components).to.have.lengthOf(1);
     });
   });
 });

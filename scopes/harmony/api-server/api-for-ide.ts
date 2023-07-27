@@ -4,6 +4,10 @@ import { CompFiles, Workspace, FilesStatus } from '@teambit/workspace';
 import { PathLinux, PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy/dist/utils/path';
 import pMap from 'p-map';
 import { SnappingMain } from '@teambit/snapping';
+import { LanesMain } from '@teambit/lanes';
+import { InstallMain } from '@teambit/install';
+import { ExportMain } from '@teambit/export';
+import { CheckoutMain } from '@teambit/checkout';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -18,8 +22,15 @@ type InitSCMEntry = {
 
 type DataToInitSCM = { [compId: string]: InitSCMEntry };
 
-export class APIForVSCode {
-  constructor(private workspace: Workspace, private snapping: SnappingMain) {}
+export class APIForIDE {
+  constructor(
+    private workspace: Workspace,
+    private snapping: SnappingMain,
+    private lanes: LanesMain,
+    private installer: InstallMain,
+    private exporter: ExportMain,
+    private checkout: CheckoutMain
+  ) {}
 
   async listIdsWithPaths() {
     const ids = await this.workspace.listIds();
@@ -35,10 +46,21 @@ export class APIForVSCode {
     return path.join(this.workspace.componentDir(compId), comp.state._consumer.mainFile);
   }
 
+  async importLane(
+    laneName: string,
+    { skipDependencyInstallation }: { skipDependencyInstallation?: boolean }
+  ): Promise<string[]> {
+    const results = await this.lanes.switchLanes(laneName, {
+      skipDependencyInstallation,
+      getAll: true,
+    });
+    return (results.components || []).map((c) => c.id.toString());
+  }
+
   async getCompFiles(id: string): Promise<{ dirAbs: string; filesRelative: PathOsBasedRelative[] }> {
     const compId = await this.workspace.resolveComponentId(id);
     const comp = await this.workspace.get(compId);
-    const dirAbs = this.workspace.componentDir(compId);
+    const dirAbs = this.workspace.componentDir(comp.id);
     const filesRelative = comp.state.filesystem.files.map((file) => file.relative);
     return { dirAbs, filesRelative };
   }
@@ -90,6 +112,38 @@ export class APIForVSCode {
       })
     );
     return results;
+  }
+
+  async warmWorkspaceCache() {
+    await this.workspace.warmCache();
+  }
+
+  async install() {
+    return this.installer.install(undefined, { optimizeReportForNonTerminal: true });
+  }
+
+  async export() {
+    const { componentsIds, removedIds, exportedLanes } = await this.exporter.export();
+    return {
+      componentsIds: componentsIds.map((c) => c.toString()),
+      removedIds: removedIds.map((c) => c.toString()),
+      exportedLanes: exportedLanes.map((l) => l.id()),
+    };
+  }
+
+  async checkoutHead() {
+    const { components, failedComponents } = await this.checkout.checkout({
+      head: true,
+      skipNpmInstall: true,
+      ids: await this.workspace.listIds(),
+    });
+    const skipped = failedComponents?.filter((f) => f.unchangedLegitimately).map((f) => f.id.toString());
+    const failed = failedComponents?.filter((f) => !f.unchangedLegitimately).map((f) => f.id.toString());
+    return {
+      succeed: components?.map((c) => c.id.toString()),
+      skipped,
+      failed,
+    };
   }
 
   async getDataToInitSCM(): Promise<DataToInitSCM> {
