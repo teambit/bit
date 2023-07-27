@@ -30,7 +30,6 @@ import ComponentMap, {
 import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 import GeneralError from '../../error/general-error';
-import { Lane } from '../../scope/models';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
@@ -682,20 +681,9 @@ export default class BitMap {
     return componentMap;
   }
 
-  syncWithLane(lane: Lane) {
-    this.laneId = lane.toLaneId();
-    const laneIds = lane.toBitIds();
+  syncWithIds(ids: BitIds) {
     this.components.forEach((componentMap) => {
-      componentMap.isAvailableOnCurrentLane = laneIds.hasWithoutVersion(componentMap.id);
-    });
-    this._invalidateCache();
-    this.markAsChanged();
-  }
-  syncWithMain(idsOfDefaultLane: BitIds) {
-    this.laneId = undefined;
-    this.isLaneExported = false;
-    this.components.forEach((componentMap) => {
-      componentMap.isAvailableOnCurrentLane = idsOfDefaultLane.hasWithoutVersion(componentMap.id);
+      componentMap.isAvailableOnCurrentLane = ids.hasWithoutVersion(componentMap.id);
     });
     this._invalidateCache();
     this.markAsChanged();

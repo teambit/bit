@@ -29,6 +29,7 @@ import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-w
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import { MergingMain, MergingAspect } from '@teambit/merging';
+import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
@@ -130,7 +131,8 @@ export class LanesMain {
     private exporter: ExportMain,
     private componentCompare: ComponentCompareMain,
     readonly componentWriter: ComponentWriterMain,
-    private remove: RemoveMain
+    private remove: RemoveMain,
+    readonly checkout: CheckoutMain
   ) {}
 
   async getLanes({
@@ -1033,6 +1035,7 @@ please create a new lane instead, which will include all components of this lane
     ComponentCompareAspect,
     ComponentWriterAspect,
     RemoveAspect,
+    CheckoutAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1049,6 +1052,7 @@ please create a new lane instead, which will include all components of this lane
     componentCompare,
     componentWriter,
     remove,
+    checkout,
   ]: [
     CLIMain,
     ScopeMain,
@@ -1062,7 +1066,8 @@ please create a new lane instead, which will include all components of this lane
     ExpressMain,
     ComponentCompareMain,
     ComponentWriterMain,
-    RemoveMain
+    RemoveMain,
+    CheckoutMain
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(
@@ -1075,7 +1080,8 @@ please create a new lane instead, which will include all components of this lane
       exporter,
       componentCompare,
       componentWriter,
-      remove
+      remove,
+      checkout
     );
     const switchCmd = new SwitchCmd(lanesMain);
     const laneCmd = new LaneCmd(lanesMain, workspace, scope);

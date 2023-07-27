@@ -23,11 +23,11 @@ describe('bit lane command', function () {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
         helper.command.createLane();
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
         helper.command.exportLane();
 
         helper.scopeHelper.reInitLocalScope();
