@@ -5,6 +5,7 @@ import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
 import { BUILD_TASK } from './build-application.task';
 import { AppDeployContext } from './app-deploy-context';
+import { Application } from './application';
 
 export const DEPLOY_TASK = 'deploy_application';
 
@@ -23,18 +24,8 @@ export class DeployTask implements BuildTask {
       if (!capsule || !capsule?.component) return undefined;
       const buildTask = this.getBuildTask(context.previousTasksResults, context.envRuntime.id);
       if (!buildTask) return undefined;
-      const componentResults = buildTask.componentsResults.find((res) =>
-        res.component.id.isEqual(capsule.component.id, { ignoreVersion: true })
-      );
-      /**
-       * @guysaar223
-       * @ram8
-       * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
-       * or create new deploy context on builder
-       */
-      // @ts-ignore
-      const _metadata = componentResults?._metadata?.deployContext || {};
-      const appDeployContext: AppDeployContext = Object.assign(context, _metadata, {
+      const _metadata = this.getBuildMetadata(buildTask, capsule.component.id, app);
+      const appDeployContext: AppDeployContext = Object.assign(context, _metadata.deployContext, {
         capsule,
         appComponent: capsule.component,
       });
@@ -55,6 +46,24 @@ export class DeployTask implements BuildTask {
     return {
       componentsResults: _componentsResults,
     };
+  }
+
+  private getBuildMetadata(buildTask: TaskResults, componentId: ComponentID, app: Application) {
+    const componentResults = buildTask.componentsResults.find((res) =>
+      res.component.id.isEqual(componentId, { ignoreVersion: true })
+    );
+    /**
+     * @guysaar223
+     * @ram8
+     * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
+     * or create new deploy context on builder
+     */
+    // @ts-ignore
+    const metadata = componentResults?._metadata.buildDeployContexts.find(
+      (ctx) => ctx.name === app.name && ctx.appType === app.applicationType
+    );
+
+    return metadata;
   }
 
   private getBuildTask(taskResults: TaskResults[], runtime: string) {
