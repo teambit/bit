@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
-import { partition } from 'lodash';
+import { compact, partition } from 'lodash';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
@@ -629,7 +629,7 @@ export default class Consumer {
     logger.debug(`consumer.cleanFromBitMapWhenOnLane, cleaning ${ids.toString()} from`);
     const [idsOnLane, idsOnMain] = partition(ids, (id) => {
       const componentMap = this.bitMap.getComponent(id, { ignoreVersion: true });
-      return componentMap.onLanesOnly;
+      return componentMap.isAvailableOnCurrentLane;
     });
     if (idsOnLane.length) {
       await this.cleanFromBitMap(BitIds.fromArray(idsOnLane));
@@ -671,25 +671,22 @@ export default class Consumer {
   }
 
   async getIdsOfDefaultLane(): Promise<BitIds> {
-    const ids = this.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+    const ids = this.bitMap.getAllBitIds();
     const bitIds = await Promise.all(
       ids.map(async (id) => {
         if (!id.hasVersion()) return id;
         const modelComponent = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
-        if (modelComponent) {
-          const head = modelComponent.getHeadAsTagIfExist();
-          if (head) {
-            return id.changeVersion(head);
-          }
-          throw new Error(`model-component on main should have head. the head on ${id.toString()} is missing`);
+        if (!modelComponent) {
+          throw new Error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing, please run bit-import`);
         }
-        if (!id.hasVersion()) {
-          return id;
+        const head = modelComponent.getHeadAsTagIfExist();
+        if (head) {
+          return id.changeVersion(head);
         }
-        throw new Error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing, please run bit-import`);
+        return undefined;
       })
     );
-    return BitIds.fromArray(bitIds);
+    return BitIds.fromArray(compact(bitIds));
   }
 
   async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {

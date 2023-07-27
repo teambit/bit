@@ -40,7 +40,6 @@ export type ComponentMapData = {
   trackDir?: PathLinux;
   wrapDir?: PathLinux;
   exported?: boolean;
-  onLanesOnly: boolean;
   isAvailableOnCurrentLane?: boolean;
   nextVersion?: NextVersion;
   config?: Config;
@@ -64,7 +63,6 @@ export default class ComponentMap {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   markBitMapChangedCb: Function;
   exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
-  onLanesOnly? = false; // whether a component is available only on lanes and not on main
   isAvailableOnCurrentLane? = true; // if a component was created on another lane, it might not be available on the current lane
   nextVersion?: NextVersion; // for soft-tag (harmony only), this data is used in the CI to persist
   recentlyTracked?: boolean; // eventually the timestamp is saved in the filesystem cache so it won't be re-tracked if not changed
@@ -80,7 +78,6 @@ export default class ComponentMap {
     rootDir,
     trackDir,
     wrapDir,
-    onLanesOnly,
     isAvailableOnCurrentLane,
     nextVersion,
     config,
@@ -92,7 +89,6 @@ export default class ComponentMap {
     this.rootDir = rootDir;
     this.trackDir = trackDir;
     this.wrapDir = wrapDir;
-    this.onLanesOnly = onLanesOnly;
     this.isAvailableOnCurrentLane = typeof isAvailableOnCurrentLane === 'undefined' ? true : isAvailableOnCurrentLane;
     this.nextVersion = nextVersion;
     this.config = config;
@@ -113,7 +109,6 @@ export default class ComponentMap {
       trackDir: this.trackDir,
       wrapDir: this.wrapDir,
       exported: this.exported,
-      onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
       isAvailableOnCurrentLane: this.isAvailableOnCurrentLane,
       nextVersion: this.nextVersion,
       config: this.configToObject(),

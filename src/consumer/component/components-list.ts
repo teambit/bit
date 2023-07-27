@@ -523,7 +523,7 @@ export default class ComponentsList {
     const currentLane = await this.consumer.getCurrentLaneObject();
     const isIdOnCurrentLane = (componentMap: ComponentMap): boolean => {
       if (componentMap.isRemoved()) return false;
-      if (!componentMap.onLanesOnly) return true; // component is on main, always show it
+      if (componentMap.isAvailableOnCurrentLane) return true;
       if (!currentLane) return false; // if !currentLane the user is on main, don't show it.
       return Boolean(currentLane.getComponent(componentMap.id));
     };

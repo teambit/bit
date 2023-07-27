@@ -196,7 +196,11 @@ export class LaneSwitcher {
     }
 
     this.consumer.setCurrentLane(this.laneIdToSwitchTo, !this.laneToSwitchTo?.isNew);
-    this.consumer.bitMap.syncWithLanes(this.laneToSwitchTo);
+    if (this.laneToSwitchTo) this.consumer.bitMap.syncWithLane(this.laneToSwitchTo);
+    else {
+      const idsOfDefaultLane = await this.consumer.getIdsOfDefaultLane();
+      this.consumer.bitMap.syncWithMain(idsOfDefaultLane);
+    }
   }
 }
 
