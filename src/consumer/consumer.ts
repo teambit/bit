@@ -124,10 +124,6 @@ export default class Consumer {
     return this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
   }
 
-  get bitMapIdsFromAllLanes(): BitIds {
-    return this.bitMap.getAllBitIdsFromAllLanes();
-  }
-
   async clearCache() {
     this.componentLoader.clearComponentsCache();
     await Promise.all(this.onCacheClear.map((func) => func()));
