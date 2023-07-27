@@ -14,7 +14,6 @@ import { throwForStagedComponents } from './create-lane';
 export type SwitchProps = {
   laneName: string;
   ids?: BitId[];
-  unavailableIds: BitId[];
   pattern?: string;
   existingOnWorkspaceOnly: boolean;
   remoteLane?: Lane;
