@@ -166,5 +166,9 @@ export function configFactory(
     snapshot: {
       managedPaths,
     },
+
+    watchOptions: {
+      poll: true,
+    },
   };
 }

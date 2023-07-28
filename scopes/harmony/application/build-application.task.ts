@@ -106,7 +106,7 @@ export class AppsBuildTask implements BuildTask {
          * or create new deploy context on builder
          */
         // @ts-ignore
-        _metadata: { deployContext },
+        _metadata: { deployContext, name: app.name, appType: app.applicationType },
       },
     };
   }
@@ -120,7 +120,9 @@ export class AppsBuildTask implements BuildTask {
         errors: [],
         warnings: [],
         // @ts-ignore
-        _metadata: {},
+        _metadata: {
+          buildDeployContexts: [],
+        },
       },
     };
     appsResults.forEach((appResult) => {
@@ -131,6 +133,12 @@ export class AppsBuildTask implements BuildTask {
       merged.componentResult.warnings = (merged.componentResult.warnings || []).concat(
         appResult.componentResult.warnings || []
       );
+      // @ts-ignore
+      merged.componentResult._metadata.buildDeployContexts = ( // @ts-ignore
+        merged.componentResult._metadata.buildDeployContexts || []
+      )
+        // @ts-ignore
+        .concat(appResult.componentResult._metadata || []);
     });
     return merged;
   }

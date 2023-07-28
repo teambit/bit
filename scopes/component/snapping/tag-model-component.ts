@@ -313,6 +313,7 @@ export async function tagModelComponent({
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
     await snapping._addFlattenedDependenciesToComponents(allComponentsToTag);
+    await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer);
