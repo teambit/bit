@@ -15,6 +15,7 @@ import { OnMount, Monaco } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 import styles from './api-node-details.module.scss';
+import { P } from 'pino';
 
 const INDEX_THRESHOLD_WIDTH = 600;
 
@@ -115,6 +116,7 @@ export function APINodeDetails({
     }
 
     const lineCount = model.getLineCount();
+    console.log('🚀 ~ file: api-node-details.tsx:119 ~ getDisplayedLineCount ~ lineCount:', lineCount);
 
     let displayedLines = 0;
 
@@ -168,13 +170,17 @@ export function APINodeDetails({
         return undefined;
       }
 
-      domNode.style.height = `${contentHeight}px`;
+      const newHeight = `${contentHeight}px`;
+      if (domNode.style.height === newHeight) {
+        return undefined;
+      }
+      domNode.style.height = newHeight;
       signatureEditorRef.current?.layout();
-      setHeight(() => `${contentHeight}px`);
+      setHeight(() => newHeight);
       return undefined;
     };
 
-  const updateEditorHeight = _.throttle<typeof _updateEditorHeight>(_updateEditorHeight, 150) as _.DebouncedFunc<any>;
+  const updateEditorHeight = _.throttle<typeof _updateEditorHeight>(_updateEditorHeight, 300) as _.DebouncedFunc<any>;
 
   const handleEditorDidMount: (
     monacoRef: React.MutableRefObject<Monaco | undefined>,
@@ -183,61 +189,52 @@ export function APINodeDetails({
     setHeight: React.Dispatch<React.SetStateAction<string | undefined>>,
     onMount?: (monaco: Monaco, editor: monaco.editor.IStandaloneCodeEditor) => void,
     onUnMount?: () => void
-  ) => OnMount = (monacoRef, editorRef, containerRef, setHeight, onMount, unMount) => (editor, _monaco) => {
-    /**
-     * disable syntax check
-     * ts cant validate all types because imported files aren't available to the editor
-     */
-    monacoRef.current = _monaco;
-    editorRef.current = editor;
+  ) => OnMount = React.useCallback(
+    (monacoRef, editorRef, containerRef, setHeight, onMount, unMount) => (editor, _monaco) => {
+      /**
+       * disable syntax check
+       * ts cant validate all types because imported files aren't available to the editor
+       */
+      monacoRef.current = _monaco;
+      editorRef.current = editor;
 
-    monacoRef.current.languages?.typescript?.typescriptDefaults?.setDiagnosticsOptions({
-      noSemanticValidation: true,
-      noSyntaxValidation: true,
-    });
-
-    monacoRef.current?.languages.typescript.typescriptDefaults.setCompilerOptions({
-      jsx: monacoRef.current.languages.typescript.JsxEmit.Preserve,
-      target: monacoRef.current.languages.typescript.ScriptTarget.ES2020,
-      esModuleInterop: true,
-    });
-
-    monaco.editor.defineTheme('bit', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [],
-      colors: {
-        'scrollbar.shadow': '#222222',
-        'diffEditor.insertedTextBackground': '#1C4D2D',
-        'diffEditor.removedTextBackground': '#761E24',
-        'editor.selectionBackground': '#5A5A5A',
-        'editor.overviewRulerBorder': '#6a57fd',
-        'editor.lineHighlightBorder': '#6a57fd',
-      },
-    });
-
-    monaco.editor.setTheme('bit');
-
-    onMount?.(monacoRef.current, editorRef.current);
-
-    const containerElement = containerRef.current;
-
-    let resizeObserver: ResizeObserver | undefined;
-
-    if (containerElement) {
-      resizeObserver = new ResizeObserver(() => {
-        setTimeout(() => updateEditorHeight(setHeight, editorRef)());
+      monacoRef.current.languages?.typescript?.typescriptDefaults?.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSyntaxValidation: true,
       });
-      resizeObserver.observe(containerElement);
-    }
 
-    updateEditorHeight(setHeight, editorRef)();
+      monacoRef.current?.languages.typescript.typescriptDefaults.setCompilerOptions({
+        jsx: monacoRef.current.languages.typescript.JsxEmit.Preserve,
+        target: monacoRef.current.languages.typescript.ScriptTarget.ES2020,
+        esModuleInterop: true,
+      });
 
-    editor.onDidDispose(() => {
-      containerElement && resizeObserver?.unobserve(containerElement);
-      unMount?.();
-    });
-  };
+      monaco.editor.defineTheme('bit', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [],
+        colors: {
+          'scrollbar.shadow': '#222222',
+          'diffEditor.insertedTextBackground': '#1C4D2D',
+          'diffEditor.removedTextBackground': '#761E24',
+          'editor.selectionBackground': '#5A5A5A',
+          'editor.overviewRulerBorder': '#6a57fd',
+          'editor.lineHighlightBorder': '#6a57fd',
+        },
+      });
+
+      monaco.editor.setTheme('bit');
+
+      onMount?.(monacoRef.current, editorRef.current);
+
+      updateEditorHeight(setHeight, editorRef)();
+
+      editor.onDidDispose(() => {
+        unMount?.();
+      });
+    },
+    []
+  );
 
   React.useLayoutEffect(() => {
     if (signatureMonacoRef.current) updateEditorHeight(setSignatureHeight, signatureEditorRef)();
@@ -265,11 +262,6 @@ export function APINodeDetails({
             key={`${signature}-${currentQueryParams}-api-signature-editor`}
             className={classnames(styles.apiNodeDetailsSignatureContainer, styles.codeEditorContainer)}
             ref={signatureContainerRef}
-            style={{
-              minHeight: signatureHeightStyle,
-              maxHeight: signatureHeightStyle,
-              height: signatureHeightStyle,
-            }}
           >
             <CodeEditor
               options={defaultCodeEditorOptions}

@@ -15,6 +15,7 @@ function TypeComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
     renderers,
+    metadata,
   } = props;
   const typeNode = api as TypeSchema;
   const { type } = typeNode;
@@ -23,12 +24,26 @@ function TypeComponent(props: APINodeRenderProps) {
 
   const subTypeRenderer = renderers.find((renderer) => renderer.predicate(type));
 
+  if (metadata?.[api.__schema]?.columnView) {
+    return (
+      (subTypeRenderer && (
+        <subTypeRenderer.Component
+          {...props}
+          apiNode={{ ...props.apiNode, api: type, renderer: subTypeRenderer }}
+          depth={(props.depth ?? 0) + 1}
+          metadata={{ [type.__schema]: { columnView: true } }}
+        />
+      )) ||
+      null
+    );
+  }
+
   return (
     <APINodeDetails {...props} options={{ hideIndex: true }}>
       {subTypeRenderer && (
         <subTypeRenderer.Component
           {...props}
-          apiNode={{ ...props.apiNode, api: type }}
+          apiNode={{ ...props.apiNode, api: type, renderer: subTypeRenderer }}
           depth={(props.depth ?? 0) + 1}
         />
       )}

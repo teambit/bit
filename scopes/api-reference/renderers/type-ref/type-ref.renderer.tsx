@@ -27,6 +27,9 @@ function TypeRefComponent(props: APINodeRenderProps) {
     renderers,
   } = props;
   const typeRefNode = api as TypeRefSchema;
+  if (!typeRefNode.isFromThisComponent) {
+    console.trace('dddd ssssssssssssssssssssssssssssssssssssssssss');
+  }
 
   if (depth === 0) {
     return (

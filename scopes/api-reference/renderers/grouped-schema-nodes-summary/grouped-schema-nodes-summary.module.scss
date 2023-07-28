@@ -1,20 +1,18 @@
 .groupName {
   padding-bottom: 16px;
-  font-size: var(--bit-p-md);
+  font-size: var(--bit-p-lg);
   font-weight: 500;
   text-transform: capitalize;
 }
 
 .groupNodesContainer {
   display: flex;
-  width: 100%;
   flex-direction: column;
 }
 
 .table {
   display: flex;
   flex-direction: column;
-  width: 100%;
 }
 
 .paddingTop {
@@ -25,7 +23,6 @@
   display: flex;
   justify-content: space-between;
   overflow-wrap: break-word;
-  width: 100%;
 }
 
 .row > div {
@@ -38,9 +35,13 @@
 }
 
 .codeSnippet {
-  background-color: #f5f5f5;
-  padding: 5px;
-  border-radius: 3px;
-  font-family: 'Courier New', Courier, monospace;
-  color: #008000;
+  font-size: var(--bit-p-xs);
+  word-break: normal;
+  position: relative;
+  line-height: 1.2em;
+  background-color: var(--surface01-color, #fffbff);
+  padding: 4px;
+  border-radius: 4px;
+  word-break: keep-all;
+  flex-wrap: wrap;
 }

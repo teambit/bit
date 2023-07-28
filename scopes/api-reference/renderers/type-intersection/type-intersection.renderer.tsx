@@ -87,6 +87,7 @@ function TypeIntersectionComponent(props: APINodeRenderProps) {
     <div key={`${api.__schema}-${api.name}`} className={styles.node}>
       {typeNode.types.map((type, index) => {
         const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
+        console.log('🚀 ~ file: type-intersection.renderer.tsx:90 ~ {typeNode.types.map ~ typeRenderer:', typeRenderer);
         if (typeRenderer) {
           return (
             <div key={`typeIntersectionMember-container-${type.toString()}-${index}}`}>

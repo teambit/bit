@@ -7,6 +7,8 @@ export function sortSignatureType(
 ): 0 | 1 | -1 {
   if (!aType) return -1;
   if (!bType) return 1;
+  if (aType === 'properties') return -1;
+  if (bType === 'properties') return -1;
   if (aType < bType) return -1;
   if (aType > bType) return 1;
   return 0;

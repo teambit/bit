@@ -31,7 +31,18 @@ function ReactComponent(props: APINodeRenderProps) {
   }
 
   const paramRenderer = renderers.find((renderer) => renderer.predicate(reactProps));
-
+  const paramRef = reactProps.type;
+  const paramRefRenderer = paramRef && renderers.find((renderer) => renderer.predicate(paramRef));
+  const PropsRefComponent =
+    paramRef && paramRefRenderer?.Component ? (
+      <paramRefRenderer.Component
+        {...props}
+        key={`props-ref-${reactProps.name}`}
+        depth={(props.depth ?? 0) + 1}
+        apiNode={{ ...props.apiNode, renderer: paramRefRenderer, api: paramRef }}
+        metadata={{ [paramRef.__schema]: { columnView: true } }}
+      />
+    ) : null;
   const ParamComponent = paramRenderer?.Component ? (
     <paramRenderer.Component
       {...props}
@@ -69,10 +80,8 @@ function ReactComponent(props: APINodeRenderProps) {
       {
         <div className={styles.container}>
           <div className={styles.title}>Props</div>
-          <div className={styles.table}>
-            <HeadingRow colNumber={4} headings={['name', 'type', 'default', 'description']} />
-            {ParamComponent}
-          </div>
+          <div className={styles.paramRef}>{PropsRefComponent}</div>
+          {ParamComponent}
         </div>
       }
       <div className={styles.container}>

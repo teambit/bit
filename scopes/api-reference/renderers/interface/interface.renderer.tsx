@@ -14,7 +14,7 @@ export const interfaceRenderer: APINodeRenderer = {
 
 function InterfaceComponent(props: APINodeRenderProps) {
   const {
-    apiNode: { api },
+    apiNode: { schema: api },
   } = props;
   const interfaceNode = api as InterfaceSchema;
   const { extendsNodes, signature, members } = interfaceNode;

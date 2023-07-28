@@ -3,6 +3,8 @@ import { VariableLikeSchema } from '@teambit/semantics.entities.semantic-schema'
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 
+import styles from './variable.renderer.module.scss';
+
 export const variableRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === VariableLikeSchema.name,
   Component: VariableComponent,
@@ -13,11 +15,9 @@ export const variableRenderer: APINodeRenderer = {
 
 function VariableComponent(props: APINodeRenderProps) {
   const api = props.apiNode.api as VariableLikeSchema;
-  console.log('🚀 ~ file: variable.renderer.tsx:15 ~ VariableComponent ~ props:', props);
   if (props.depth) {
     const type = api.type;
     const typeRenderer = props.renderers.find((renderer) => renderer.predicate(type));
-    console.log('🚀 ~ file: variable.renderer.tsx:20 ~ VariableComponent ~ typeRenderer:', typeRenderer);
     return typeRenderer ? (
       <typeRenderer.Component
         {...props}
@@ -26,7 +26,7 @@ function VariableComponent(props: APINodeRenderProps) {
         metadata={{ [type.__schema]: { columnView: true } }}
       />
     ) : (
-      <div className={'node'}>{type.toString()}</div>
+      <div className={styles.node}>{type.toString()}</div>
     );
   }
   return <APINodeDetails {...props} />;

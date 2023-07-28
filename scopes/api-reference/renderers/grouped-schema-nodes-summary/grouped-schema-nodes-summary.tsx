@@ -20,6 +20,7 @@ export type GroupedSchemaNodesSummaryProps = {
   nodes: SchemaNode[];
   apiNodeRendererProps: APINodeRenderProps;
   headings?: Record<string, string[]>;
+  skipGrouping?: boolean;
   skipNode?(type: string, members: SchemaNode[]): boolean;
   renderTable?(type: string, member: SchemaNode, headings?: string[]): React.ReactNode;
 } & HTMLAttributes<HTMLDivElement>;
@@ -38,6 +39,7 @@ export function GroupedSchemaNodesSummary({
   apiNodeRendererProps,
   headings: headingsFromProps = {},
   skipNode,
+  skipGrouping,
   renderTable = (type, member, _headings = []) => {
     const typeId = type && encodeURIComponent(type);
 
@@ -77,7 +79,13 @@ export function GroupedSchemaNodesSummary({
     ...headingsFromProps,
   };
 
-  const groupedNodes = hasNodes ? Array.from(groupByNodeSignatureType(nodes).entries()).sort(sortSignatureType) : [];
+  const groupedNodes =
+    !skipGrouping && hasNodes
+      ? Array.from(groupByNodeSignatureType(nodes).entries()).sort(sortSignatureType)
+      : (hasNodes && [['', nodes] as [string, SchemaNode[]]]) || [];
+
+  console.log('🚀 ~ file: grouped-schema-nodes-summary.tsx:83 ~ groupedNodes:', groupedNodes);
+
   const { apiRefModel } = apiNodeRendererProps;
 
   return (
@@ -105,14 +113,12 @@ export function GroupedSchemaNodesSummary({
                   headings={_headings}
                 />
                 {groupedMembersByType.map((member) => {
-                  if (!type) return null;
-                  return renderTable(type, member, _headings);
+                  return renderTable(type ?? '', member, _headings);
                 })}
               </div>
             )}
             {skipRenderingTable &&
               groupedMembersByType.map((member) => {
-                console.log('🚀 ~ file: grouped-schema-nodes-summary.tsx:115 ~ {groupedNodes.map ~ member:', member);
                 if (!type) return null;
                 return (
                   <FunctionNodeSummary

@@ -7,7 +7,7 @@ import styles from './react.props.renderer.module.scss';
 
 export function ReactPropsComponent(props: APINodeRenderProps) {
   const {
-    apiNode: { api },
+    apiNode: { schema: api },
     renderers,
   } = props;
 
@@ -20,7 +20,7 @@ export function ReactPropsComponent(props: APINodeRenderProps) {
   const customTypeRow = (typeRenderer && (
     <typeRenderer.Component
       {...props}
-      apiNode={{ ...props.apiNode, api: type, renderer: typeRenderer }}
+      apiNode={{ ...props.apiNode, schema: type, renderer: typeRenderer }}
       depth={(props.depth ?? 0) + 1}
       metadata={{ [type.__schema]: { columnView: true } }}
     />
@@ -34,7 +34,7 @@ export function ReactPropsComponent(props: APINodeRenderProps) {
           const customBindingNodeTypeRow = (bindingNodeRenderer && (
             <bindingNodeRenderer.Component
               {...props}
-              apiNode={{ ...props.apiNode, api: bindingNode, renderer: bindingNodeRenderer }}
+              apiNode={{ ...props.apiNode, schema: bindingNode, renderer: bindingNodeRenderer }}
               depth={(props.depth ?? 0) + 1}
               metadata={{ [type.__schema]: { columnView: true } }}
             />

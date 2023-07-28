@@ -1,7 +1,6 @@
 .node,
 .nodeLink {
   display: flex;
-  font-family: Roboto mono;
   font-size: var(--bit-p-xs);
   word-break: normal;
   position: relative;
@@ -14,6 +13,7 @@
 
 .nodeLink {
   color: #4646c6;
+  font-size: var(--bit-p-xs);
 }
 
 .package::before {
