@@ -73,6 +73,7 @@ export function configFactory(
 
     stats: {
       errorDetails: true,
+      logging: 'error',
     },
 
     devServer: {
@@ -108,6 +109,7 @@ export function configFactory(
 
       client: {
         overlay: false,
+        logging: 'error',
       },
 
       setupMiddlewares: (middlewares, devServer) => {
