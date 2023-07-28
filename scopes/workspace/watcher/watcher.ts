@@ -402,7 +402,6 @@ export class Watcher {
       // (windows-style backslashes are converted to forward slashes)
       ignored: ['**/node_modules/**', '**/package.json'],
       persistent: true,
-      useFsEvents: false,
     });
   }
 
