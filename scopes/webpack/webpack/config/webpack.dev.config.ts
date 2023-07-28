@@ -25,6 +25,7 @@ export function configFactory(
   entryFiles: string[],
   publicRoot: string,
   publicPath: string,
+  managedPaths: RegExp[],
   pubsub: PubsubMain,
   title?: string,
   favicon?: string
@@ -159,5 +160,9 @@ export function configFactory(
         options: { pubsub, devServerID },
       }),
     ],
+
+    snapshot: {
+      managedPaths,
+    },
   };
 }

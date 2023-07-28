@@ -263,6 +263,7 @@ export default async function provideWorkspace(
     componentIds.forEach((id) => {
       workspace.clearComponentCache(id);
     });
+    await workspace.setManagedPathRegExps();
   });
 
   // add sub-commands "set" and "unset" to envs command.

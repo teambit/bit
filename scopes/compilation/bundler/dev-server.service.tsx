@@ -56,9 +56,6 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
   name = 'dev server';
 
   constructor(
-    /**
-     * browser runtime slot
-     */
     private pubsub: PubsubMain,
 
     private dependencyResolver: DependencyResolverMain,
