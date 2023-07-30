@@ -1464,6 +1464,9 @@ importers:
       rewire:
         specifier: 4.0.1
         version: 4.0.1
+      rimraf:
+        specifier: 3.0.2
+        version: 3.0.2
       sanitize.css:
         specifier: 12.0.1
         version: 12.0.1
@@ -1608,6 +1611,9 @@ importers:
       util:
         specifier: 0.12.3
         version: 0.12.3
+      v8-compile-cache:
+        specifier: 2.3.0
+        version: 2.3.0
       validate-npm-package-name:
         specifier: 3.0.0
         version: 3.0.0
