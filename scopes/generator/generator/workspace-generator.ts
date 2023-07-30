@@ -61,7 +61,6 @@ export class WorkspaceGenerator {
       await this.importComponentsFromRemote();
       await this.workspace.clearCache();
       await this.install.install(undefined, {
-        compile: true,
         dedupe: true,
         import: false,
         copyPeerToRuntimeOnRoot: true,
