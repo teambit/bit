@@ -60,6 +60,7 @@ export class WorkspaceGenerator {
       await this.forkComponentsFromRemote();
       await this.importComponentsFromRemote();
       await this.install.install(undefined, {
+        compile: true,
         dedupe: true,
         import: false,
         copyPeerToRuntimeOnRoot: true,
