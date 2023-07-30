@@ -1461,6 +1461,9 @@ importers:
       rewire:
         specifier: 4.0.1
         version: 4.0.1
+      rimraf:
+        specifier: 3.0.2
+        version: 3.0.2
       sanitize.css:
         specifier: 12.0.1
         version: 12.0.1
@@ -1605,6 +1608,9 @@ importers:
       util:
         specifier: 0.12.3
         version: 0.12.3
+      v8-compile-cache:
+        specifier: 2.3.0
+        version: 2.3.0
       validate-npm-package-name:
         specifier: 3.0.0
         version: 3.0.0
@@ -70167,7 +70173,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.routing.native-link': registry.npmjs.org/@teambit/base-ui.routing.native-link@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.routing.native-link': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.routing.routing-provider': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
@@ -70186,6 +70192,7 @@ packages:
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+    dev: false
 
   registry.npmjs.org/@teambit/base-ui.routing.native-nav-link@1.0.0(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-elXAzsYT7e7Y6/2n5Xv0iYS48ITG2KDBcrtUifxSlVob3zyRbaX18M6wPrHyD9z9XXwqyxEJreTKL1Gt9IdEaA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.native-nav-link/-/base-ui.routing.native-nav-link-1.0.0.tgz}
