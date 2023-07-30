@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { replaceName } from './replaceName';
 
 export function interfaceNamesTransformer(nameMapping: Record<string, string>): ts.TransformerFactory<ts.SourceFile> {
   return (context) => {
@@ -6,19 +7,31 @@ export function interfaceNamesTransformer(nameMapping: Record<string, string>): 
     const visit: ts.Visitor = (node) => {
       if (ts.isInterfaceDeclaration(node)) {
         const oldName = node.name.text;
-        const newName = Object.keys(nameMapping).find((key) => oldName.startsWith(key) || oldName.endsWith(key));
+        const newName = replaceName(oldName, nameMapping);
         if (newName) {
-          const replacedName = oldName.startsWith(newName)
-            ? oldName.replace(newName, nameMapping[newName])
-            : oldName.replace(new RegExp(`${newName}$`), nameMapping[newName]);
+          const newMembers = node.members.map((member) => {
+            if (ts.isPropertySignature(member) && ts.isIdentifier(member.name)) {
+              const memberName = member.name.text;
+              if (nameMapping[memberName]) {
+                return factory.updatePropertySignature(
+                  member,
+                  member.modifiers,
+                  factory.createIdentifier(nameMapping[memberName]),
+                  member.questionToken,
+                  member.type
+                );
+              }
+            }
+            return member;
+          });
           return factory.updateInterfaceDeclaration(
             node,
             node.decorators,
             node.modifiers,
-            factory.createIdentifier(replacedName),
+            factory.createIdentifier(newName),
             node.typeParameters,
             node.heritageClauses,
-            node.members
+            newMembers
           );
         }
       }

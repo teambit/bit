@@ -11,3 +11,4 @@ export { importTransformer } from './import';
 export { expressionStatementTransformer } from './expression-statement';
 export { exportTransformer } from './export';
 export { transformSourceFile } from './transform';
+export { typeReferenceTransformer } from './type-reference';

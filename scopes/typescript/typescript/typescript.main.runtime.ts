@@ -13,7 +13,7 @@ import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import WatcherAspect, { WatcherMain, WatchOptions } from '@teambit/watcher';
-import type { Component } from '@teambit/component';
+import type { Component, ComponentID } from '@teambit/component';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
@@ -283,13 +283,13 @@ export class TypescriptMain {
     return { writeResults, cleanResults };
   }
 
-  private async onPreWatch(components: Component[], watchOpts: WatchOptions) {
+  private async onPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
     const workspace = this.workspace;
     if (!workspace || !watchOpts.spawnTSServer) {
       return;
     }
     const { verbose, checkTypes } = watchOpts;
-    const files = checkTypes ? this.getSupportedFilesForTsserver(components) : [];
+    const files = checkTypes ? this.getSupportedFilesForTsserver(await workspace.getMany(componentIds)) : [];
     const printTypeErrors = Boolean(checkTypes);
     await this.initTsserverClientFromWorkspace({ verbose, checkTypes, printTypeErrors }, files);
   }

@@ -1,7 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
@@ -23,6 +22,7 @@ import { Version, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ComponentID } from '@teambit/component-id';
+import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
 import {
@@ -45,12 +45,13 @@ export type CheckoutProps = {
   verbose?: boolean;
   skipNpmInstall?: boolean;
   reset?: boolean; // remove local changes. if set, the version is undefined.
-  revert?: boolean;
+  revert?: boolean; // change the files according to the given version, but don't change the bitmap version and don't try to merge
   all?: boolean; // checkout all ids
   isLane?: boolean;
   workspaceOnly?: boolean;
   versionPerId?: ComponentID[]; // if given, the ComponentID.version is the version to checkout to.
   skipUpdatingBitmap?: boolean; // needed for stash
+  restoreMissingComponents?: boolean; // in case .bitmap has a component and it's missing from the workspace, restore it (from model)
 };
 
 export type ComponentStatusBeforeMergeAttempt = ComponentStatusBase & {
@@ -61,8 +62,6 @@ export type ComponentStatusBeforeMergeAttempt = ComponentStatusBase & {
     componentModel: ModelComponent;
   };
 };
-
-type CheckoutTo = 'head' | 'reset' | 'main' | string;
 
 export class CheckoutMain {
   constructor(
@@ -77,6 +76,7 @@ export class CheckoutMain {
     const consumer = this.workspace.consumer;
     const { version, ids, promptMergeOptions } = checkoutProps;
     await this.syncNewComponents(checkoutProps);
+    const addedComponents = await this.restoreMissingComponents(checkoutProps);
     const bitIds = BitIds.fromArray(ids?.map((id) => id._legacy) || []);
     const { components } = await consumer.loadComponents(bitIds);
 
@@ -190,6 +190,7 @@ export class CheckoutMain {
     return {
       components: appliedVersionComponents,
       removedComponents: componentIdsToRemove,
+      addedComponents,
       version,
       failedComponents,
       leftUnresolvedConflicts,
@@ -200,18 +201,42 @@ export class CheckoutMain {
     };
   }
 
-  async checkoutByCLIValues(
-    to: CheckoutTo,
-    componentPattern: string,
-    checkoutProps: CheckoutProps
-  ): Promise<ApplyVersionResults> {
-    const { revert } = checkoutProps;
+  /**
+   * if .bitmap entry exists but the rootDir is missing from the filesystem, find the component in the scope and restore it.
+   * returns the restored component ids.
+   */
+  async restoreMissingComponents(checkoutProps: CheckoutProps): Promise<ComponentID[] | undefined> {
+    if (!checkoutProps.restoreMissingComponents) return undefined;
+    const ids = checkoutProps.ids || [];
+    const missing: ComponentID[] = [];
+    await Promise.all(
+      ids.map(async (id) => {
+        const bitMapEntry = this.workspace.bitMap.getBitmapEntry(id, { ignoreVersion: true });
+        if (bitMapEntry.noFilesError && bitMapEntry.noFilesError instanceof ComponentNotFoundInPath) {
+          delete bitMapEntry.noFilesError;
+          missing.push(id);
+        }
+      })
+    );
+    if (!missing.length) return undefined;
+    const comps = await this.workspace.scope.getMany(missing);
+    await this.componentWriter.writeMany({
+      components: comps.map((c) => c.state._consumer),
+      skipDependencyInstallation: true,
+      skipUpdatingBitMap: true,
+    });
+
+    return missing;
+  }
+
+  async checkoutByCLIValues(componentPattern: string, checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
+    const { revert, head } = checkoutProps;
     this.logger.setStatusLine(revert ? 'reverting components...' : BEFORE_CHECKOUT);
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     await this.importer.importCurrentObjects(); // important. among others, it fetches the remote lane object and its new components.
-    if (to === 'head') await this.makeLaneComponentsAvailableOnMain();
-    await this.parseValues(to, componentPattern, checkoutProps);
+    if (head) await this.makeLaneComponentsAvailableOnMain();
+    await this.parseValues(componentPattern, checkoutProps);
     const checkoutResults = await this.checkout(checkoutProps);
     await consumer.onDestroy();
     return checkoutResults;
@@ -237,15 +262,7 @@ export class CheckoutMain {
     this.workspace.bitMap.makeComponentsAvailableOnMain(unavailableOnMain);
   }
 
-  private async parseValues(to: CheckoutTo, componentPattern: string, checkoutProps: CheckoutProps) {
-    if (to === HEAD) checkoutProps.head = true;
-    else if (to === LATEST) checkoutProps.latest = true;
-    else if (to === 'reset') checkoutProps.reset = true;
-    else if (to === 'main') checkoutProps.main = true;
-    else {
-      if (!BitId.isValidVersion(to)) throw new BitError(`the specified version "${to}" is not a valid version`);
-      checkoutProps.version = to;
-    }
+  private async parseValues(componentPattern: string, checkoutProps: CheckoutProps) {
     if (checkoutProps.head && !componentPattern) {
       if (checkoutProps.all) {
         this.logger.console(`"--all" is deprecated for "bit checkout ${HEAD}", please omit it.`);

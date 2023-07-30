@@ -138,7 +138,7 @@ export class ScopeUI {
         badgeSlot={this.scopeBadgeSlot}
         overviewLineSlot={this.overviewSlot}
         context={this.getContext()}
-        onSidebarTogglerChange={this.setSidebarToggle}
+        onSidebarTogglerChange={options.onSidebarToggle || this.setSidebarToggle}
         cornerSlot={this.cornerSlot}
         paneClassName={options.paneClassName}
         PaneWrapper={options.PaneWrapper}

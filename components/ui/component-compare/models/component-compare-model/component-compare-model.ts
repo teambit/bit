@@ -15,6 +15,7 @@ export type ComponentCompareModel = {
   logsByVersion: Map<string, LegacyComponentLog>;
   fileCompareDataByName?: Map<string, FileCompareResult> | null;
   fieldCompareResultByName?: Map<string, FieldCompareResult> | null;
+  testsCompareResultByName?: Map<string, FileCompareResult> | null;
 };
 
 export type FileCompareResult = {
@@ -34,4 +35,5 @@ export type ComponentCompareQueryResponse = {
   id: string;
   code: Array<FileCompareResult>;
   aspects: Array<FieldCompareResult>;
+  tests: Array<FileCompareResult>;
 };

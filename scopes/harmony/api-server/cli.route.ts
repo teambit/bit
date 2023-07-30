@@ -22,7 +22,7 @@ export class CLIRoute implements Route {
   route = '/cli/:cmd';
 
   middlewares = [
-    async (req: Request, res: Response, next) => {
+    async (req: Request, res: Response) => {
       this.logger.debug(`cli server: got request for ${req.params.cmd}`);
       try {
         const command = this.cli.getCommand(req.params.cmd);
@@ -42,7 +42,11 @@ export class CLIRoute implements Route {
       } catch (err: any) {
         this.logger.error(`command "${req.params.cmd}" had failed`, err);
         this.logger.consoleFailure(`command "${req.params.cmd}" had failed. ${err.message}`);
-        next(err);
+        res.status(500);
+        res.jsonp({
+          message: err.message,
+          error: err,
+        });
       }
     },
   ];

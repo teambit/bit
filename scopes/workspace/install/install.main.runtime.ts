@@ -71,6 +71,7 @@ export type WorkspaceInstallOptions = {
   includeOptionalDeps?: boolean;
   updateAll?: boolean;
   recurringInstall?: boolean;
+  optimizeReportForNonTerminal?: boolean;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -252,6 +253,7 @@ export class InstallMain {
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       rootComponents: hasRootComponents,
       updateAll: options?.updateAll,
+      optimizeReportForNonTerminal: options?.optimizeReportForNonTerminal,
     };
     const prevManifests = new Set<string>();
     // TODO: this make duplicate
@@ -298,7 +300,7 @@ export class InstallMain {
       // We need to clear cache before creating the new component manifests.
       this.workspace.consumer.componentLoader.clearComponentsCache();
       // We don't want to clear the failed to load envs because we want to show the warning at the end
-      this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+      await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
       current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
@@ -529,7 +531,7 @@ export class InstallMain {
       compact(
         await Promise.all(
           (
-            await this.app.listAppsFromComponents()
+            await this.app.listAppsComponents()
           ).map(async (app) => {
             const appPkgName = this.dependencyResolver.getPackageName(app);
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
@@ -726,7 +728,7 @@ export class InstallMain {
 
   private async _linkAllComponentsToBitRoots(compDirMap: ComponentMap<string>) {
     const envs = await this._getAllUsedEnvIds();
-    const apps = (await this.app.listAppsFromComponents()).map((component) => component.id.toString());
+    const apps = (await this.app.listAppsComponents()).map((component) => component.id.toString());
     await Promise.all(
       [...envs, ...apps].map(async (id) => {
         await fs.mkdirp(getRootComponentDir(this.workspace.path, id.toString()));

@@ -22,6 +22,7 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
         id: String!
         code(fileName: String): [FileCompareResult!]!
         aspects(aspectName: String): [FieldCompareResult!]!
+        tests(fileName: String): [FileCompareResult!]
       }
 
       extend type ComponentHost {
@@ -44,6 +45,20 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
           }
 
           return result.code.map((c) => ({
+            ...c,
+            fileName: c.filePath,
+            baseContent: c.fromContent,
+            compareContent: c.toContent,
+          }));
+        },
+        tests: (result: ComponentCompareResult, { fileName }: { fileName?: string }) => {
+          if (fileName) {
+            return result.tests
+              .filter((testFile) => testFile.filePath === fileName)
+              .map((c) => ({ ...c, fileName: c.filePath, baseContent: c.fromContent, compareContent: c.toContent }));
+          }
+
+          return result.tests.map((c) => ({
             ...c,
             fileName: c.filePath,
             baseContent: c.fromContent,

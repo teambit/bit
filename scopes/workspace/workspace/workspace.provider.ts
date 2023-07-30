@@ -14,8 +14,8 @@ import { UiMain } from '@teambit/ui';
 import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import LegacyComponentLoader, { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { BitId } from '@teambit/legacy-bit-id';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
@@ -109,7 +109,11 @@ export default async function provideWorkspace(
 ) {
   const bitConfig: any = harmony.config.get('teambit.harmony/bit');
   const consumer = await getConsumer(bitConfig.cwd);
-  if (!consumer) return undefined;
+  if (!consumer) {
+    const capsuleCmd = getCapsulesCommands(isolator, scope, undefined);
+    cli.register(capsuleCmd);
+    return undefined;
+  }
   // TODO: get the 'workspace' name in a better way
   const logger = loggerExt.createLogger(EXT_NAME);
   const workspace = new Workspace(
@@ -170,7 +174,8 @@ export default async function provideWorkspace(
   consumer.onCacheClear.push(() => workspace.clearCache());
 
   LegacyComponentLoader.registerOnComponentLoadSubscriber(
-    async (legacyComponent: ConsumerComponent, opts?: { loadDocs?: boolean }) => {
+    async (legacyComponent: ConsumerComponent, opts?: ComponentLoadOptions) => {
+      if (opts?.originatedFromHarmony) return legacyComponent;
       const id = await workspace.resolveComponentId(legacyComponent.id);
       const newComponent = await workspace.get(id, legacyComponent, true, true, opts);
       return newComponent.state._consumer;
@@ -228,12 +233,7 @@ export default async function provideWorkspace(
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
-  const capsuleCmd = new CapsuleCmd(isolator, workspace);
-  capsuleCmd.commands = [
-    new CapsuleListCmd(isolator, workspace),
-    new CapsuleCreateCmd(workspace, isolator),
-    new CapsuleDeleteCmd(isolator, workspace),
-  ];
+  const capsuleCmd = getCapsulesCommands(isolator, scope, workspace);
   const commands: CommandList = [new EjectConfCmd(workspace), capsuleCmd, new UseCmd(workspace)];
 
   commands.push(new PatternCommand(workspace));
@@ -277,6 +277,16 @@ export default async function provideWorkspace(
   scopeCommand?.commands?.push(new ScopeSetCmd(workspace));
 
   return workspace;
+}
+
+function getCapsulesCommands(isolator: IsolatorMain, scope: ScopeMain, workspace?: Workspace) {
+  const capsuleCmd = new CapsuleCmd(isolator, workspace, scope);
+  capsuleCmd.commands = [
+    new CapsuleListCmd(isolator, workspace, scope),
+    new CapsuleCreateCmd(workspace, scope, isolator),
+    new CapsuleDeleteCmd(isolator, scope, workspace),
+  ];
+  return capsuleCmd;
 }
 
 /**

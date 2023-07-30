@@ -19,6 +19,7 @@ import {
   variableNamesTransformer,
   transformSourceFile,
   expressionStatementTransformer,
+  typeReferenceTransformer,
 } from '@teambit/typescript';
 import PrettierAspect, { PrettierMain } from '@teambit/prettier';
 import { Formatter } from '@teambit/formatter';
@@ -106,11 +107,12 @@ export class RefactoringMain {
         },
       ],
       [
-        classNamesTransformer,
+        typeReferenceTransformer,
+        typeAliasNamesTransformer,
         functionNamesTransformer,
         interfaceNamesTransformer,
-        typeAliasNamesTransformer,
         variableNamesTransformer,
+        classNamesTransformer,
         expressionStatementTransformer,
       ]
     );
@@ -250,6 +252,7 @@ export class RefactoringMain {
       // ignore
       // TODO: log the error
     }
+
     if (!formatter) {
       formatter = this.getDefaultFormatter();
     }

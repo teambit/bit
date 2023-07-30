@@ -20,7 +20,6 @@
     "strict": true,
     "moduleResolution": "node",
     "noImplicitAny": false,
-    "rootDir": ".",
     "preserveConstEnums": true,
     "resolveJsonModule": true
   },

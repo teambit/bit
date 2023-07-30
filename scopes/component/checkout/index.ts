@@ -1,11 +1,11 @@
 import { CheckoutAspect } from './checkout.aspect';
 
-export type { CheckoutMain } from './checkout.main.runtime';
+export type { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
 export default CheckoutAspect;
 export { CheckoutAspect };
 
 export {
-  CheckoutProps,
+  CheckoutProps as CheckoutPropsLegacy,
   ComponentStatus,
   applyModifiedVersion,
   applyVersion,
@@ -14,3 +14,4 @@ export {
   ComponentStatusBase,
   ApplyVersionWithComps,
 } from './checkout-version';
+export { checkoutOutput } from './checkout-cmd';

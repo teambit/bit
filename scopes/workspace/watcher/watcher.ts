@@ -1,6 +1,6 @@
 import { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
-import { dirname, sep, basename } from 'path';
+import { dirname, basename } from 'path';
 import { compact, difference, partition } from 'lodash';
 import { ComponentID } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
@@ -398,21 +398,10 @@ export class Watcher {
   private async createWatcher(pathsToWatch: string[]) {
     this.fsWatcher = chokidar.watch(pathsToWatch, {
       ignoreInitial: true,
-      // Using the function way since the regular way not working as expected
-      // It might be solved when upgrading to chokidar > 3.0.0
-      // See:
-      // https://github.com/paulmillr/chokidar/issues/773
-      // https://github.com/paulmillr/chokidar/issues/492
-      // https://github.com/paulmillr/chokidar/issues/724
-      ignored: (path) => {
-        // Ignore package.json temporarily since it cerates endless loop since it's re-written after each build
-        if (path.includes(`${sep}node_modules${sep}`) || path.includes(`${sep}package.json`)) {
-          return true;
-        }
-        return false;
-      },
+      // `chokidar` matchers have Bash-parity, so Windows-style backslackes are not supported as separators.
+      // (windows-style backslashes are converted to forward slashes)
+      ignored: ['**/node_modules/**', '**/package.json'],
       persistent: true,
-      useFsEvents: false,
     });
   }
 

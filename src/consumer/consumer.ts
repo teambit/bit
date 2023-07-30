@@ -121,18 +121,12 @@ export default class Consumer {
   }
 
   get bitmapIdsFromCurrentLaneIncludeRemoved(): BitIds {
-    const idsFromBitMap = this.bitMap.getAllIdsAvailableOnLane();
-    const removedIds = this.bitMap.getRemoved();
-    return BitIds.fromArray([...idsFromBitMap, ...removedIds]);
+    return this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
   }
 
-  get bitMapIdsFromAllLanes(): BitIds {
-    return this.bitMap.getAllBitIdsFromAllLanes();
-  }
-
-  clearCache() {
+  async clearCache() {
     this.componentLoader.clearComponentsCache();
-    this.onCacheClear.forEach((func) => func());
+    await Promise.all(this.onCacheClear.map((func) => func()));
   }
 
   getTmpFolder(fullPath = false): PathOsBased {

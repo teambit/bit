@@ -1,3 +1,4 @@
+import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import R from 'ramda';
@@ -107,7 +108,7 @@ export class ExportMain {
         this.logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
       });
     }
-    this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
+    await this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
     return exportResults;
   }
 
@@ -183,6 +184,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     // ideally we should delete the staged-snaps only for the exported snaps. however, it's not easy, and it's ok to
     // delete them all because this file is mainly an optimization for the import process.
     await this.workspace.scope.legacyScope.stagedSnaps.deleteFile();
+    await fs.remove(this.workspace.scope.getLastMergedPath());
     Analytics.setExtraData('num_components', exported.length);
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
     // export and eject operations to function independently. we don't want to lose the changes to
@@ -315,7 +317,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
       const modelComponents = await mapSeries(bitIds, (id) => scope.getModelComponent(id));
       // super important! otherwise, the processModelComponent() changes objects in memory, while the key remains the same
-      scope.objects.clearCache();
+      scope.objects.clearObjectsFromCache();
 
       const refsToPotentialExportPerComponent = await mapSeries(modelComponents, async (modelComponent) => {
         const refs = await getVersionsToExport(modelComponent);
@@ -731,14 +733,9 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     }
     loader.start(BEFORE_EXPORT); // show single export
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
-    const statuses = await consumer.getManyComponentsStatuses(parsedIds);
-    statuses.forEach(({ id, status }) => {
-      if (status.nested) {
-        throw new GeneralError(
-          `unable to export "${id.toString()}", the component is not fully available. please use "bit import" first`
-        );
-      }
-    });
+    // load the components for fixing any out-of-sync issues.
+    await consumer.loadComponents(BitIds.fromArray(parsedIds));
+
     return filterNonScopeIfNeeded(BitIds.fromArray(parsedIds));
   }
 

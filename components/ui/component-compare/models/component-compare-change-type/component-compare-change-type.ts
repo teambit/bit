@@ -4,4 +4,5 @@ export enum ChangeType {
   DEPENDENCY = 'DEPENDENCY',
   ASPECTS = 'ASPECTS',
   NONE = 'NONE',
+  TESTS = 'TESTS',
 }

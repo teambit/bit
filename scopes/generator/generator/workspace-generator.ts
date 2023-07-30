@@ -59,6 +59,7 @@ export class WorkspaceGenerator {
       await this.setupGitBitmapMergeDriver();
       await this.forkComponentsFromRemote();
       await this.importComponentsFromRemote();
+      await this.workspace.clearCache();
       await this.install.install(undefined, {
         compile: true,
         dedupe: true,
@@ -67,6 +68,8 @@ export class WorkspaceGenerator {
         copyPeerToRuntimeOnComponents: false,
         updateExisting: false,
       });
+      // compile the components again now that we have the dependencies installed
+      await this.compileComponents(true);
       // await this.wsConfigFiles.writeConfigFiles({});
       // await this.buildUI(); // disabled for now. it takes too long
     } catch (err: any) {
@@ -155,8 +158,6 @@ export class WorkspaceGenerator {
       refactor: true,
       install: false,
     });
-    this.workspace.clearCache();
-    await this.compileComponents();
   }
 
   private async importComponentsFromRemote() {
@@ -178,11 +179,12 @@ export class WorkspaceGenerator {
     });
 
     await this.workspace.bitMap.write();
-    this.workspace.clearCache();
-    await this.compileComponents();
   }
 
-  private async compileComponents() {
+  private async compileComponents(clearCache = true) {
+    if (clearCache) {
+      await this.workspace.clearCache();
+    }
     const compiler = this.harmony.get<CompilerMain>(CompilerAspect.id);
     await compiler.compileOnWorkspace();
   }
