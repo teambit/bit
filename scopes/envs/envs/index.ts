@@ -13,7 +13,13 @@ export { ExecutionContext } from './context';
 export { EnvService, ConcreteService, reduceServiceHandlersFactories } from './services';
 export { EnvRuntime } from './runtime/env-runtime';
 export type { Env } from './env-interface';
-export type { EnvsMain, EnvTransformer, Descriptor } from './environments.main.runtime';
+export type {
+  EnvsMain,
+  EnvTransformer,
+  Descriptor,
+  RegularCompDescriptor,
+  EnvCompDescriptor,
+} from './environments.main.runtime';
 export { EnvsAspect };
 export { EnvsExecutionResult } from './runtime/envs-execution-result';
 export type { EnvServiceList } from './env-service-list';
