@@ -1,28 +1,76 @@
 import ts from 'typescript';
+import { replaceName } from './replaceName';
 
 export function classNamesTransformer(nameMapping: Record<string, string>): ts.TransformerFactory<ts.SourceFile> {
   return (context) => {
     const { factory } = context;
+
     const visit: ts.Visitor = (node) => {
       if (ts.isClassDeclaration(node) && node.name) {
         const oldName = node.name.text;
-        const newName = Object.keys(nameMapping).find((key) => oldName.startsWith(key) || oldName.endsWith(key));
+        const newName = replaceName(oldName, nameMapping);
+
         if (newName) {
-          const replacedName = oldName.startsWith(newName)
-            ? oldName.replace(newName, nameMapping[newName])
-            : oldName.replace(new RegExp(`${newName}$`), nameMapping[newName]);
+          const updatedMembers = node.members.map((member) => {
+            if (ts.isPropertyDeclaration(member)) {
+              const oldMemberName = member.name.getText();
+              const newMemberName = replaceName(oldMemberName, nameMapping);
+              return factory.updatePropertyDeclaration(
+                member,
+                member.decorators,
+                member.modifiers,
+                newMemberName ? ts.factory.createIdentifier(newMemberName) : member.name,
+                member.questionToken,
+                member.type,
+                member.initializer
+              );
+            }
+
+            if (ts.isMethodDeclaration(member)) {
+              const oldMemberName = member.name.getText();
+              const newMemberName = replaceName(oldMemberName, nameMapping);
+
+              const updatedParameters = member.parameters.map((param) => {
+                return ts.factory.updateParameterDeclaration(
+                  param,
+                  param.decorators,
+                  param.modifiers,
+                  param.dotDotDotToken,
+                  param.name,
+                  param.questionToken,
+                  param.type,
+                  param.initializer
+                );
+              });
+
+              return factory.updateMethodDeclaration(
+                member,
+                member.decorators,
+                member.modifiers,
+                member.asteriskToken,
+                newMemberName ? ts.factory.createIdentifier(newMemberName) : member.name,
+                member.questionToken,
+                member.typeParameters,
+                updatedParameters,
+                member.type,
+                member.body
+              );
+            }
+            return member;
+          });
+
           return factory.updateClassDeclaration(
             node,
             node.decorators,
             node.modifiers,
-            factory.createIdentifier(replacedName),
+            factory.createIdentifier(newName),
             node.typeParameters,
             node.heritageClauses,
-            node.members
+            updatedMembers
           );
         }
       }
-      return ts.visitEachChild(node, (child) => visit(child), context);
+      return ts.visitEachChild(node, visit, context);
     };
     return (node) => ts.visitNode(node, visit);
   };

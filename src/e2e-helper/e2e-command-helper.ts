@@ -668,6 +668,9 @@ export default class CommandHelper {
   mergeLane(laneName: string, options = '') {
     return this.runCmd(`bit lane merge ${laneName} ${options}`);
   }
+  mergeAbortLane(options = '') {
+    return this.runCmd(`bit lane merge-abort ${options} --silent`);
+  }
   mergeLaneFromScope(cwd: string, laneName: string, options = '') {
     return this.runCmd(`bit _merge-lane ${laneName} ${options}`, cwd);
   }

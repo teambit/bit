@@ -14,6 +14,7 @@ import componentsDiff, {
   FieldsDiff,
   FileDiff,
 } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
+import { TesterMain, TesterAspect } from '@teambit/tester';
 import ComponentAspect, { ComponentMain } from '@teambit/component';
 import { componentCompareSchema } from './component-compare.graphql';
 import { ComponentCompareAspect } from './component-compare.aspect';
@@ -23,6 +24,7 @@ export type ComponentCompareResult = {
   id: string;
   code: FileDiff[];
   fields: FieldsDiff[];
+  tests: FileDiff[];
 };
 
 export class ComponentCompareMain {
@@ -30,12 +32,12 @@ export class ComponentCompareMain {
     private componentAspect: ComponentMain,
     private scope: ScopeMain,
     private logger: Logger,
+    private tester: TesterMain,
     private workspace?: Workspace
   ) {}
 
   async compare(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
     const host = this.componentAspect.getHost();
-    this.componentAspect.getHost();
     const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
     const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(compareCompId._legacy);
 
@@ -60,10 +62,25 @@ export class ComponentCompareMain {
       {}
     );
 
+    const baseComponent = await host.get(baseCompId);
+    const compareComponent = await host.get(compareCompId);
+
+    const baseTestFiles =
+      (baseComponent && (await this.tester.getTestFiles(baseComponent).map((file) => file.relative))) || [];
+    const compareTestFiles =
+      (compareComponent && (await this.tester.getTestFiles(compareComponent).map((file) => file.relative))) || [];
+
+    const allTestFiles = [...baseTestFiles, ...compareTestFiles];
+
+    const testFilesDiff = (diff.filesDiff || []).filter(
+      (fileDiff: FileDiff) => allTestFiles.includes(fileDiff.filePath) && fileDiff.status !== 'UNCHANGED'
+    );
+
     const compareResult = {
       id: `${baseCompId}-${compareCompId}`,
       code: diff.filesDiff || [],
       fields: diff.fieldsDiff || [],
+      tests: testFilesDiff,
     };
 
     return compareResult;
@@ -136,18 +153,27 @@ export class ComponentCompareMain {
   }
 
   static slots = [];
-  static dependencies = [GraphqlAspect, ComponentAspect, ScopeAspect, LoggerAspect, CLIAspect, WorkspaceAspect];
+  static dependencies = [
+    GraphqlAspect,
+    ComponentAspect,
+    ScopeAspect,
+    LoggerAspect,
+    CLIAspect,
+    WorkspaceAspect,
+    TesterAspect,
+  ];
   static runtime = MainRuntime;
-  static async provider([graphql, component, scope, loggerMain, cli, workspace]: [
+  static async provider([graphql, component, scope, loggerMain, cli, workspace, tester]: [
     GraphqlMain,
     ComponentMain,
     ScopeMain,
     LoggerMain,
     CLIMain,
-    Workspace
+    Workspace,
+    TesterMain
   ]) {
     const logger = loggerMain.createLogger(ComponentCompareAspect.id);
-    const componentCompareMain = new ComponentCompareMain(component, scope, logger, workspace);
+    const componentCompareMain = new ComponentCompareMain(component, scope, logger, tester, workspace);
     cli.register(new DiffCmd(componentCompareMain));
     graphql.register(componentCompareSchema(componentCompareMain));
     return componentCompareMain;

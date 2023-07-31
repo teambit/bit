@@ -178,7 +178,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       })
     );
 
-    this.workspace.clearCache();
+    await this.workspace.clearCache();
     await this.workspace._reloadConsumer();
 
     const newComps = await this.workspace.getMany(newIds);
