@@ -46,6 +46,8 @@ export class DevFilesMain {
   constructor(
     private envs: EnvsMain,
 
+    private workspace: Workspace,
+
     private devPatternSlot: DevPatternSlot,
 
     /**
@@ -113,7 +115,7 @@ export class DevFilesMain {
     const fromEnvJsonFile = await this.computeDevPatternsFromEnvJsoncFile(envId);
     let fromEnvFunc;
     if (!fromEnvJsonFile) {
-      const envDef = await this.envs.calculateEnv(component);
+      const envDef = await this.envs.calculateEnv(component, { skipWarnings: !!this.workspace.inInstallContext });
       fromEnvFunc = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns(component) : [];
     }
     const envPatterns = fromEnvJsonFile || fromEnvFunc || {};
@@ -218,7 +220,7 @@ export class DevFilesMain {
     config: DevFilesConfig,
     [devPatternSlot]: [DevPatternSlot]
   ) {
-    const devFiles = new DevFilesMain(envs, devPatternSlot, config);
+    const devFiles = new DevFilesMain(envs, workspace, devPatternSlot, config);
     componentAspect.registerShowFragments([new DevFilesFragment(devFiles)]);
 
     if (workspace) {

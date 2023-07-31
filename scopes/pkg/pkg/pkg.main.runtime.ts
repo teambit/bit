@@ -317,7 +317,7 @@ export class PkgMain {
       if (files.length) merged.files = files;
       return merged;
     };
-    const env = this.envs.calculateEnv(component)?.env;
+    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace.inInstallContext })?.env;
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
       const propsFromEnv = env.getPackageJsonProps();
       newProps = mergeToNewProps(propsFromEnv);
