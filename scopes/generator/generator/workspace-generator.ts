@@ -67,10 +67,10 @@ export class WorkspaceGenerator {
         copyPeerToRuntimeOnComponents: false,
         updateExisting: false,
       });
+
       // compile the components again now that we have the dependencies installed
       await this.compileComponents(true);
-      // await this.wsConfigFiles.writeConfigFiles({});
-      // await this.buildUI(); // disabled for now. it takes too long
+      await this.wsConfigFiles.writeConfigFiles({});
     } catch (err: any) {
       this.logger.error(`failed generating a new workspace, will delete the dir ${this.workspacePath}`, err);
       await fs.remove(this.workspacePath);
