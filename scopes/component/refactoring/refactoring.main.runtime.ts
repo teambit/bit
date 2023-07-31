@@ -6,7 +6,6 @@ import replacePackageName from '@teambit/legacy/dist/utils/string/replace-packag
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import PkgAspect, { PkgMain } from '@teambit/pkg';
-import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import {
   SourceFileTransformer,

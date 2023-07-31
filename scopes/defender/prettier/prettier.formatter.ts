@@ -50,7 +50,7 @@ export class PrettierFormatter implements Formatter {
 
     parser = parser || 'babel';
 
-    const optsWithFilePath = Object.assign({}, this.options, { filepath: filePath, parser: parser });
+    const optsWithFilePath = Object.assign({}, this.options, { filepath: filePath, parser });
 
     return this.prettierModule.format(snippet, optsWithFilePath);
   }
