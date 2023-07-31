@@ -59,7 +59,7 @@ export async function transformSourceFile(
   transformedSourceFileStr = transformedSourceFileStr.replace(regex, '');
 
   try {
-    const formattedSourceFileStr = await formatter?.formatSnippet(transformedSourceFileStr);
+    const formattedSourceFileStr = await formatter?.formatSnippet(transformedSourceFileStr, sourceFilePath);
     return formattedSourceFileStr || transformedSourceFileStr;
   } catch {
     // We can ignore if the formatter fails
