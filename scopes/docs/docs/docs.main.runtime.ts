@@ -141,7 +141,7 @@ export class DocsMain {
   }
 
   getComponentDevPatterns(component: Component) {
-    const env = this.envs.calculateEnv(component).env;
+    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace.inInstallContext }).env;
     const componentEnvDocsDevPatterns: string[] = env.getDocsDevPatterns ? env.getDocsDevPatterns(component) : [];
     const componentPatterns = componentEnvDocsDevPatterns.concat(this.getPatterns());
     return { name: 'docs', pattern: componentPatterns };

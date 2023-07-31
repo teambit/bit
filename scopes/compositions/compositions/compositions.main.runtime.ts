@@ -117,7 +117,7 @@ export class CompositionsMain {
   }
 
   getComponentDevPatterns(component: Component) {
-    const env = this.envs.calculateEnv(component).env;
+    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace.inInstallContext }).env;
     const componentEnvCompositionsDevPatterns: string[] = env.getCompositionsDevPatterns
       ? env.getCompositionsDevPatterns(component)
       : [];
