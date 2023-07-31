@@ -45,7 +45,10 @@ type CombinationWithTotal = {
  * @param {PackageNameIndex} depIdIndex
  * @returns {DedupedDependencies}
  */
-export function hoistDependencies(depIdIndex: PackageNameIndex): DedupedDependencies {
+export function hoistDependencies(
+  depIdIndex: PackageNameIndex,
+  options?: { dedupePeerDependencies?: boolean }
+): DedupedDependencies {
   const result: DedupedDependencies = getEmptyDedupedDependencies();
 
   // TODO: handle git urls
@@ -57,7 +60,7 @@ export function hoistDependencies(depIdIndex: PackageNameIndex): DedupedDependen
     toContinue = addOneOccurrenceToRoot(result, packageName, indexItem.componentItems);
     if (!toContinue) return;
     toContinue = handlePeersOnly(result, packageName, indexItem.componentItems);
-    if (!toContinue) return;
+    if (!toContinue && !options?.dedupePeerDependencies) return;
     const groupedByRangeOrVersion = groupByRangeOrVersion(indexItem.componentItems);
     if (groupedByRangeOrVersion.versions.length > 0 && groupedByRangeOrVersion.ranges.length === 0) {
       handleExactVersionsOnly(result, packageName, indexItem.componentItems);

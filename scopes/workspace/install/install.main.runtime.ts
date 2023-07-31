@@ -284,7 +284,7 @@ export class InstallMain {
         },
         pmInstallOptions
       );
-      if (options?.compile) {
+      if (options?.compile ?? true) {
         const compileStartTime = process.hrtime();
         const compileOutputMessage = `compiling components`;
         this.logger.setStatusLine(compileOutputMessage);

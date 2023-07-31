@@ -56,6 +56,9 @@ export class WorkspaceGenerator {
       await init(this.workspacePath, this.options.skipGit, false, false, false, false, false, false, {});
       await this.writeWorkspaceFiles();
       await this.reloadBitInWorkspaceDir();
+      // Setting the workspace to be in install context to prevent errors during the workspace generation
+      // the workspace will be in install context until the end of the generation install process
+      this.workspace.inInstallContext = true;
       await this.setupGitBitmapMergeDriver();
       await this.forkComponentsFromRemote();
       await this.importComponentsFromRemote();
@@ -67,10 +70,10 @@ export class WorkspaceGenerator {
         copyPeerToRuntimeOnComponents: false,
         updateExisting: false,
       });
+
       // compile the components again now that we have the dependencies installed
       await this.compileComponents(true);
-      // await this.wsConfigFiles.writeConfigFiles({});
-      // await this.buildUI(); // disabled for now. it takes too long
+      await this.wsConfigFiles.writeConfigFiles({});
     } catch (err: any) {
       this.logger.error(`failed generating a new workspace, will delete the dir ${this.workspacePath}`, err);
       await fs.remove(this.workspacePath);
