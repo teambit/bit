@@ -237,25 +237,7 @@ export class RefactoringMain {
     transformers: SourceFileTransformer[]
   ): Promise<boolean> {
     const updates = stringsToReplace.reduce((acc, { oldStr, newStr }) => ({ ...acc, [oldStr]: newStr }), {});
-    let formatter: Formatter | undefined;
-    // We might not be able to load the real env during bit new for example
-    try {
-      const env = this.envs.getEnv(comp).env;
-      formatter = env.getFormatter?.(null, [
-        (config: PrettierConfigMutator) => {
-          config.setKey('parser', 'typescript');
-          return config;
-        },
-      ]);
-      // We only need the env for the formatter, so we can dispose it right away
-    } catch (err) {
-      // ignore
-      // TODO: log the error
-    }
 
-    if (!formatter) {
-      formatter = this.getDefaultFormatter();
-    }
     const changed = await Promise.all(
       comp.filesystem.files.map(async (file) => {
         const isBinary = await isBinaryFile(file.contents);
@@ -263,7 +245,7 @@ export class RefactoringMain {
         const strContent = file.contents.toString();
         let newContent = strContent;
         const transformerFactories = transformers.map((t) => t(updates));
-        newContent = await transformSourceFile(file.path, strContent, transformerFactories, formatter, updates);
+        newContent = await transformSourceFile(file.path, strContent, transformerFactories, undefined, updates);
         if (strContent !== newContent) {
           file.contents = Buffer.from(newContent);
           return true;
