@@ -239,6 +239,22 @@ export class Workspace implements ComponentFactory {
       }
     );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
+
+    this.registerOnComponentAdd(async () => {
+      await this.setComponentPathsRegExps();
+      return {
+        results: this.componentPathsRegExps,
+        toString: () => this.componentPathsRegExps.join(),
+      };
+    });
+
+    this.registerOnComponentRemove(async () => {
+      await this.setComponentPathsRegExps();
+      return {
+        results: this.componentPathsRegExps,
+        toString: () => this.componentPathsRegExps.join(),
+      };
+    });
   }
 
   private validateConfig() {
@@ -726,7 +742,6 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     });
 
     await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
-    await this.setComponentPathsRegExps();
     return results;
   }
 
@@ -739,7 +754,6 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     });
 
     await this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { componentIds: [id.toObject()] } });
-    await this.setComponentPathsRegExps();
     return results;
   }
 
