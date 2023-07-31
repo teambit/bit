@@ -1,3 +1,4 @@
+import rimraf from 'rimraf';
 import { v4 } from 'uuid';
 import { MainRuntime } from '@teambit/cli';
 import semver from 'semver';
@@ -360,7 +361,7 @@ export class IsolatorMain {
             return;
           }
           this.logger.console(`cleaning target capsule location as it's not ready at: ${targetDir}`);
-          fs.removeSync(targetDir);
+          rimraf.sync(targetDir);
         }
         this.logger.console(`moving specific capsule from ${sourceDir} to ${targetDir}`);
         // We delete the ready file path first, as the move might take a long time, so we don't want to move
@@ -390,7 +391,7 @@ export class IsolatorMain {
     if (fs.existsSync(targetDir)) {
       this.logger.console(`skip moving capsule from temp dir to real dir as it's already exist: ${targetDir}`);
       // Clean leftovers
-      fs.removeSync(tempDir);
+      rimraf.sync(tempDir);
       return;
     }
     this.logger.console(`moving capsule from a temp dir ${tempDir} to the target dir ${targetDir}`);
