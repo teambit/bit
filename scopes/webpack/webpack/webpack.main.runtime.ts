@@ -95,7 +95,7 @@ export class WebpackMain {
       context.id,
       context.rootPath,
       context.publicPath,
-      this.workspace.managedPathRegExps,
+      this.workspace.getComponentPathsRegExps(),
       context.title
     ) as any;
     const wdsPath = webpackDevServerModulePath || require.resolve('webpack-dev-server');
@@ -198,7 +198,7 @@ export class WebpackMain {
     devServerID: string,
     publicRoot: string,
     publicPath: string,
-    managedPaths: RegExp[],
+    componentPathsRegExps: RegExp[],
     title?: string
   ) {
     return devServerConfigFactory(
@@ -207,7 +207,7 @@ export class WebpackMain {
       entry,
       publicRoot,
       publicPath,
-      managedPaths,
+      componentPathsRegExps,
       this.pubsub,
       title
     );

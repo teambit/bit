@@ -150,12 +150,12 @@ export class Workspace implements ComponentFactory {
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
   private componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized;
-  localAspects: string[] = [];
   /**
-   * Managed paths are calculated from the component package names of the workspace
+   * Components paths are calculated from the component package names of the workspace
    * They are used in webpack configuration to only track changes from these paths inside `node_modules`
    */
-  managedPathRegExps: RegExp[] = [];
+  private componentPathsRegExps: RegExp[] = [];
+  localAspects: string[] = [];
   constructor(
     /**
      * private pubsub.
@@ -726,7 +726,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     });
 
     await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
-    await this.setManagedPathRegExps();
+    await this.setComponentPathsRegExps();
     return results;
   }
 
@@ -739,7 +739,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     });
 
     await this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { componentIds: [id.toObject()] } });
-    await this.setManagedPathRegExps();
+    await this.setComponentPathsRegExps();
     return results;
   }
 
@@ -1792,10 +1792,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return { updated, alreadyUpToDate };
   }
 
-  async setManagedPathRegExps() {
+  getComponentPathsRegExps() {
+    return this.componentPathsRegExps;
+  }
+
+  async setComponentPathsRegExps() {
     const workspaceComponents = await this.list();
     const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
-    this.managedPathRegExps = workspacePackageNames.map((packageName) => {
+    this.componentPathsRegExps = workspacePackageNames.map((packageName) => {
       const packageNameRegex = packageName.replace('/', '[\\/]');
       return new RegExp(`^(.+?[\\/]node_modules[\\/](?!(${packageNameRegex}))(@.+?[\\/])?.+?)[\\/]`);
     });

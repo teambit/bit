@@ -25,7 +25,7 @@ export function configFactory(
   entryFiles: string[],
   publicRoot: string,
   publicPath: string,
-  managedPaths: RegExp[],
+  componentPathsRegExps: RegExp[],
   pubsub: PubsubMain,
   title?: string,
   favicon?: string
@@ -164,7 +164,7 @@ export function configFactory(
     ],
 
     snapshot: {
-      managedPaths,
+      managedPaths: componentPathsRegExps,
     },
 
     watchOptions: {
