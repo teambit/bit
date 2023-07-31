@@ -35,20 +35,12 @@ export type PackageNameIndex = Map<PackageName, PackageNameIndexItem>;
 export function indexByDepId(
   rootPolicy: WorkspacePolicy,
   componentDependenciesMap: ComponentDependenciesMap,
-  options?: {
-    hoistedDepFields?: ManifestDependenciesKeysNames[];
-    dedupePeerDependencies?: boolean;
-  }
+  hoistedDepFields?: ManifestDependenciesKeysNames[]
 ): PackageNameIndex {
   const result: PackageNameIndex = new Map();
   componentDependenciesMap.forEach((depsObject, compPackageName) => {
-    if (options?.hoistedDepFields) {
-      depsObject = pick(options.hoistedDepFields, depsObject);
-    } else if (options?.dedupePeerDependencies) {
-      depsObject.dependencies = {
-        ...depsObject.peerDependencies,
-        ...depsObject.dependencies,
-      };
+    if (hoistedDepFields) {
+      depsObject = pick(hoistedDepFields, depsObject);
     }
     forEachObjIndexed(addSpecificLifeCycleDepsToIndex(result, compPackageName), depsObject);
   });

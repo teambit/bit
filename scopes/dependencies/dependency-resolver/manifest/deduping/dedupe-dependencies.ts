@@ -46,8 +46,8 @@ export function dedupeDependencies(
     dedupePeerDependencies?: boolean;
   }
 ): DedupedDependencies {
-  const indexedByDepId = indexByDepId(rootPolicy, componentDependenciesMap, options);
-  const dedupedDependenciesWithoutRootOriginal = hoistDependencies(indexedByDepId);
+  const indexedByDepId = indexByDepId(rootPolicy, componentDependenciesMap, options?.hoistedDepFields);
+  const dedupedDependenciesWithoutRootOriginal = hoistDependencies(indexedByDepId, options);
   const result = mergeWithRootDeps(rootPolicy.toManifest(), dedupedDependenciesWithoutRootOriginal);
   return result;
 }
