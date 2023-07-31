@@ -397,7 +397,6 @@
         "@teambit/legacy": "1.0.532",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
-        "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "15.8.0",
         "mz": "2.7.0",
