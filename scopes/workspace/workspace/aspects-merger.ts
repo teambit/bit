@@ -37,6 +37,7 @@ export class AspectsMerger {
     componentId: ComponentID,
     componentFromScope?: Component,
     excludeOrigins: ExtensionsOrigin[] = [],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     legacyComponent?: ConsumerComponent
   ): Promise<{
     extensions: ExtensionDataList;
@@ -161,9 +162,9 @@ export class AspectsMerger {
       setDataListAsSpecific(extensionDataList);
       await addExtensionsToMerge(extensionDataList, 'BitmapFile');
     }
-    if (legacyComponent) {
-      await addExtensionsToMerge(legacyComponent.extensions, 'Legacy');
-    }
+    // if (legacyComponent) {
+    //   await addExtensionsToMerge(legacyComponent.extensions, 'Legacy');
+    // }
     // config-merge is after the .bitmap. because normally if you have config set in .bitmap, you won't
     // be able to lane-merge. (unless you specify --ignore-config-changes).
     // so, if there is config in .bitmap, it probably happened after lane-merge.
