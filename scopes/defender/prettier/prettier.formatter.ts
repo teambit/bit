@@ -35,8 +35,24 @@ export class PrettierFormatter implements Formatter {
     return this.run(context);
   }
 
-  async formatSnippet(snippet: string): Promise<string> {
-    return this.prettierModule.format(snippet, this.options);
+  async formatSnippet(snippet: string, filePath?: string): Promise<string> {
+    let parser;
+
+    if (filePath) {
+      const ext = filePath.split('.').pop();
+      const supportInfo = this.prettierModule.getSupportInfo();
+      const language = supportInfo.languages.find((lang) => lang.extensions && lang.extensions.includes(`.${ext}`));
+
+      if (language) {
+        parser = language.parsers[0];
+      }
+    }
+
+    parser = parser || 'babel';
+
+    const optsWithFilePath = Object.assign({}, this.options, { filepath: filePath, parser });
+
+    return this.prettierModule.format(snippet, optsWithFilePath);
   }
 
   async check(context: FormatterContext): Promise<FormatResults> {
