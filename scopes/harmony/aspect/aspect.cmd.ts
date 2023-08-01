@@ -114,7 +114,7 @@ export class UpdateAspectCmd implements Command {
         `all ${alreadyUpToDate.length} component(s) that use this aspect are already up to date. nothing to update`
       );
     }
-    return chalk.yellow(`unable to find any component that use ${chalk.bold(aspectId)}`);
+    return chalk.yellow(`unable to find any components in this workspace that use ${chalk.bold(aspectId)}`);
   }
 }
 
@@ -124,8 +124,7 @@ export class UnsetAspectCmd implements Command {
   arguments = [
     {
       name: 'pattern',
-      description:
-        'the components to target. use component name, component id, or component pattern. use component pattern to select multiple components. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button". wrap the pattern with quotes',
+      description: `the components to target. ${COMPONENT_PATTERN_HELP}`,
     },
     {
       name: 'aspect-id',
@@ -139,22 +138,23 @@ export class UnsetAspectCmd implements Command {
 
   async report([pattern, aspectId]: [string, string]) {
     const results = await this.aspect.unsetAspectsFromComponents(pattern, aspectId);
-    if (!results.length) return chalk.yellow(`unable to find any matching for ${chalk.bold(pattern)} pattern`);
+    if (!results.length)
+      return chalk.yellow(`unable to find any matching components for ${chalk.bold(pattern)} pattern`);
     return chalk.green(`the following component(s) have been successfully updated:\n${results.join('\n')}`);
   }
 }
 
 export class GetAspectCmd implements Command {
   name = 'get <component-name>';
-  description = 'list the aspects set on a component, as well as their config and data';
+  description = 'list the aspects set on a component, as well as their configs and data';
   arguments = [
     {
       name: 'component-name',
-      description: 'the component name or component id',
+      description: 'the component name or component id to fetch aspects for',
     },
   ];
   options = [
-    ['d', 'debug', 'show the origins were the aspects were taken from'],
+    ['d', 'debug', 'show the origins where the aspects were taken from'],
     ['j', 'json', 'format as json'],
   ] as CommandOptions;
   group = 'development';
@@ -191,7 +191,7 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
       const afterMergeTitle = chalk.green.bold('After merging the origins above');
       const afterMergeOutput = `${afterMergeTitle}\n${extensionsDetailsToString(mergedExtensions)}`;
 
-      const afterFinalMergeTitle = chalk.green.bold('Final - After merging the origin above and the loaded data');
+      const afterFinalMergeTitle = chalk.green.bold('Final - After merging the origins above and the loaded data');
       const afterFinalMergeOutput = `${afterFinalMergeTitle}\n${extensionsDetailsToString(aspects.toLegacy())}`;
 
       return `${beforeMergeOutput}\n\n${afterMergeOutput}\n\n\n${afterFinalMergeOutput}`;
