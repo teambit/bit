@@ -22,18 +22,18 @@ export class MergeCmd implements Command {
   extendedDescription = `merge changes of the remote head into local. when on a lane, merge the remote head of the lane into the local.
 if no ids are specified, all pending-merge components will be merged. (run "bit status" to list them).
 optionally use '--abort' to revert the last merge. to revert a lane merge, use "bit lane merge-abort" command.
-${WILDCARD_HELP('merge')}`;
+${WILDCARD_HELP('merge')}`; // @david does this command auto-snap by default? If so we must document it here
   alias = '';
   options = [
-    ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
-    ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
-    ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
-    ['', 'abort', 'in case of an unresolved merge, revert to the state before the merge began'],
+    ['', 'ours', 'in case of a conflict, keep the local modification'],
+    ['', 'theirs', 'in case of a conflict, override the local modification with the specified version'],
+    ['', 'manual', 'in case of a conflict, leave files in conflict state to resolve manually later'],
+    ['', 'abort', 'in case of an unresolved merge, revert to pre-merge state'],
     ['', 'resolve', 'mark an unresolved merge as resolved and create a new snap with the changes'],
-    ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
+    ['', 'no-snap', 'do not auto snap even if the merge completed without conflicts'], // @david please review this change
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
-    ['', 'verbose', 'show details of components that were not merged legitimately'],
-    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['', 'verbose', 'show details of components that were not merged successfully'],
+    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'], // @david what imported components?
     ['m', 'message <message>', 'override the default message for the auto snap'],
   ] as CommandOptions;
   loader = true;
@@ -133,7 +133,7 @@ export function mergeReport({
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
     const title = `\n\nfiles with conflicts summary\n`;
-    const suggestion = `\n\nthe merge process wasn't completed due to the conflicts above. fix them manually and then run "bit install".
+    const suggestion = `\n\nmerge process not completed due to the conflicts above. fix conflicts manually and then run "bit install".
 once ready, snap/tag the components to complete the merge.`;
     return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
   };
@@ -151,9 +151,7 @@ once ready, snap/tag the components to complete the merge.`;
   const getSnapsOutput = () => {
     if (mergeSnapError) {
       return `
-${chalk.bold(
-  'snapping the merged components had failed with the following error, please fix the issues and snap manually'
-)}
+${chalk.bold('snapping merged components failed with the following error, please fix the issues and snap manually')}
 ${mergeSnapError.message}
 `;
     }
@@ -177,7 +175,7 @@ ${mergeSnapError.message}
 
     return `\n${chalk.underline(
       'merge-snapped components'
-    )}\n(${'components that snapped as a result of the merge'})\n${outputComponents(snappedComponents)}\n`;
+    )}\n(${'components snapped as a result of the merge'})\n${outputComponents(snappedComponents)}\n`;
   };
 
   const getWorkspaceDepsOutput = () => {
@@ -196,7 +194,7 @@ ${mergeSnapError.message}
 
   const getFailureOutput = () => {
     if (!failedComponents || !failedComponents.length) return '';
-    const title = '\nthe merge has been skipped on the following component(s)';
+    const title = '\n merge skipped for the following component(s)';
     const body = compact(
       failedComponents.map((failedComponent) => {
         if (!verbose && failedComponent.unchangedLegitimately) return null;
@@ -205,7 +203,7 @@ ${mergeSnapError.message}
       })
     ).join('\n');
     if (!body) {
-      return `${chalk.bold(`\nthe merge has been skipped on ${failedComponents.length} component(s) legitimately`)}
+      return `${chalk.bold(`\n merge skipped legitimately for ${failedComponents.length} component(s)`)}
 (use --verbose to list them next time)`;
     }
     return `\n${chalk.underline(title)}\n${body}\n\n`;
@@ -285,8 +283,7 @@ export function conflictSummaryReport(components: ApplyVersionResult[]): string 
 export function installationErrorOutput(installationError?: Error) {
   if (!installationError) return '';
   const title = chalk.underline('Installation Error');
-  const subTitle =
-    'The following error had been caught from the package manager, please fix the issue and run "bit install"';
+  const subTitle = 'The following error was thrown by the package manager, please fix the issue and run "bit install"';
   const body = chalk.red(installationError.message);
   return `\n\n${title}\n${subTitle}\n${body}`;
 }
@@ -294,7 +291,7 @@ export function installationErrorOutput(installationError?: Error) {
 export function compilationErrorOutput(compilationError?: Error) {
   if (!compilationError) return '';
   const title = chalk.underline('Compilation Error');
-  const subTitle = 'The following error had been caught from the compiler, please fix the issue and run "bit compile"';
+  const subTitle = 'The following error was thrown by the compiler, please fix the issue and run "bit compile"';
   const body = chalk.red(compilationError.message);
   return `\n\n${title}\n${subTitle}\n${body}`;
 }

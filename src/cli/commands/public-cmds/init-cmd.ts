@@ -40,7 +40,7 @@ export default class Init implements LegacyCommand {
     [
       '',
       'reset-lane-new',
-      'same as reset-new, but it only reset components belong to lanes. main components are left intact',
+      'same as reset-new, but it only resets components belong to lanes. main components are left intact',
     ],
     [
       '',
@@ -50,11 +50,11 @@ export default class Init implements LegacyCommand {
     [
       '',
       'reset-scope',
-      'removes local scope (.bit or .git/bit). snaps that were not exported will be lost. workspace left intact',
+      'removes local scope (.bit or .git/bit). tags/snaps that have not been exported will be lost. workspace is left intact',
     ],
-    ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
-    ['', 'default-scope <default-scope>', 'set up default scope for all components in the workspace'],
-    ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
+    ['d', 'default-directory <default-directory>', 'set the default directory to import components into'],
+    ['', 'default-scope <default-scope>', 'set the default scope for components in the workspace'],
+    ['p', 'package-manager <package-manager>', 'set the package manager (npm or yarn) to be used in the workspace'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
     ['', 'harmony', 'DEPRECATED. no need for this flag. Harmony is the default now'],
     ['I', 'interactive', 'EXPERIMENTAL. start an interactive process'],
@@ -91,7 +91,8 @@ export default class Init implements LegacyCommand {
         };
       });
     }
-    if (reset && resetHard) throw new GeneralError('please use --reset or --reset-hard. not both');
+    if (reset && resetHard)
+      throw new GeneralError('cannot use both --reset or --reset-hard, please use only one of them');
     const workspaceConfigFileProps: WorkspaceConfigProps = {
       componentsDefaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
       defaultScope: defaultScope ?? getSync(CFG_INIT_DEFAULT_SCOPE),
@@ -128,7 +129,7 @@ export default class Init implements LegacyCommand {
 
     let initMessage = `${chalk.green('successfully initialized a bit workspace.')}`;
 
-    if (!created) initMessage = `${chalk.grey('successfully reinitialized a bit workspace.')}`;
+    if (!created) initMessage = `${chalk.grey('successfully re-initialized a bit workspace.')}`;
     if (reset) initMessage = `${chalk.grey('your bit workspace has been reset successfully.')}`;
     if (resetHard) initMessage = `${chalk.grey('your bit workspace has been hard-reset successfully.')}`;
     if (resetScope) initMessage = `${chalk.grey('your local scope has been reset successfully.')}`;

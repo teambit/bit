@@ -33,7 +33,7 @@ export class CheckoutCmd implements Command {
   group = 'development';
   extendedDescription = `
   \`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
-  \`bit checkout head [component-pattern]\` => checkout to the last snap/tag, omit [component-pattern] to checkout head for all
+  \`bit checkout head [component-pattern]\` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all
   \`bit checkout latest [component-pattern]\` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all
   \`bit checkout reset [component-pattern]\` => remove local modifications from the specified ids (or all components when --all is used)`;
   alias = 'U';
@@ -43,18 +43,18 @@ export class CheckoutCmd implements Command {
       'interactive-merge',
       'when a component is modified and the merge process found conflicts, display options to resolve them',
     ],
-    ['o', 'ours', 'in case of a conflict, override the used version with the current modification'],
-    ['t', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
-    ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
+    ['o', 'ours', 'in case of merge conflict, override incoming version with the current modification'],
+    ['t', 'theirs', 'in case of merge conflict, override the current modifications with incoming version'],
+    ['m', 'manual', 'in case of merge conflict, leave the files in conflict state to resolve them manually later'],
     ['r', 'reset', 'revert changes that were not snapped/tagged'],
     ['a', 'all', 'all components'],
     [
       'e',
       'workspace-only',
-      'when on a lane, avoid introducing new components from the remote lane that do not exist locally',
+      "when on a lane, don't import components from the remote lane that are not already in the workspace", // @david what's the connection between the `bit checkout` command and lanes?
     ],
     ['v', 'verbose', 'showing verbose output for inspection'],
-    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not auto-install dependencies of the imported components'],
   ] as CommandOptions;
   loader = true;
 
@@ -149,7 +149,7 @@ export function checkoutOutput(checkoutResults: ApplyVersionResults, checkoutPro
         )} components (use --verbose to get more details)\n`
       );
     }
-    const title = 'the checkout was not needed on the following component(s)';
+    const title = 'checkout was not required for the following component(s)';
     const body = notCheckedOutComponents
       .map((failedComponent) => `${failedComponent.id.toString()} - ${failedComponent.failureMessage}`)
       .join('\n');
@@ -197,7 +197,7 @@ once ready, snap/tag the components to persist the changes`;
     if (!newFromLane?.length) return '';
     const title = newFromLaneAdded
       ? `successfully added the following components from the lane`
-      : `the following components introduced on the lane and were not added. omit --workspace-only flag to add them`;
+      : `the following components exist on the lane but were not added to the workspace. omit --workspace-only flag to add them`;
     const body = newFromLane.join('\n');
     return `\n\n${chalk.underline(title)}\n${body}`;
   };

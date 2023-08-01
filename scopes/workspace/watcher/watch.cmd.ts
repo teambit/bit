@@ -21,13 +21,13 @@ export type WatchCmdOpts = {
 
 export class WatchCommand implements Command {
   name = 'watch';
-  description = 'automatically recompile modified components (on save)';
+  description = 'watch for component changes and automatically recompile modified components (on save)';
   helpUrl = 'reference/compiling/compiler-overview';
   alias = '';
   group = 'development';
   options = [
     ['v', 'verbose', 'show npm verbose output for inspection and print the stack trace'],
-    ['', 'skip-pre-compilation', 'skip the compilation step before starting to watch'],
+    ['', 'skip-pre-compilation', 'skip compilation before starting to watch'],
     [
       't',
       'check-types [string]',

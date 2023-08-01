@@ -13,13 +13,13 @@ import { BasicTagSnapParams } from './tag-model-component';
 
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
-  description = 'create an immutable and exportable component snapshot (no release version)';
+  description = 'create an immutable and exportable component snapshot (non-release version)';
   extendedDescription: string;
   group = 'development';
   arguments = [
     {
       name: 'component-pattern',
-      description: `${COMPONENT_PATTERN_HELP}. By default, all new and modified components are snapped.`,
+      description: `${COMPONENT_PATTERN_HELP}. By default, only new and modified components are snapped (add --unmodified to snap all components in the workspace).`,
     },
   ];
   helpUrl = 'docs/components/snaps';
@@ -32,13 +32,13 @@ export class SnapCmd implements Command {
     [
       '',
       'editor [editor]',
-      'open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
+      'open an editor to write a snap message per component. optionally specify the editor-name (defaults to vim).',
     ],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
     ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
     ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
-    ['', 'ignore-build-errors', 'run the snap pipeline although the build pipeline failed'],
+    ['', 'ignore-build-errors', 'run the snap pipeline even when the build pipeline fails'],
     [
       'i',
       'ignore-issues [issues]',
@@ -46,11 +46,11 @@ export class SnapCmd implements Command {
 [${Object.keys(IssuesClasses).join(', ')}]
 to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
     ],
-    ['a', 'all', 'DEPRECATED (not needed anymore, it is the default now). snap all new and modified components'],
+    ['a', 'all', 'DEPRECATED (not needed anymore, now the default). snap all new and modified components'],
     [
       '',
       'fail-fast',
-      'stop pipeline execution on the first failed task (by default a task is skipped only when its dependent failed)',
+      'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
     [
       'f',
@@ -97,12 +97,12 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     const disableTagAndSnapPipelines = disableSnapPipeline;
     if (all) {
       this.logger.consoleWarning(
-        `--all is deprecated, please omit it. "bit snap" by default will snap all new and modified components`
+        `--all is deprecated, please omit it. "bit snap" will by default snap all new and modified components`
       );
     }
     if (force) {
       this.logger.consoleWarning(
-        `--force is deprecated, use either --skip-tests or --unmodified depending on the use case`
+        `--force is deprecated, use either --skip-tests, --ignore-build-errors or --unmodified depending on the use case`
       );
       if (pattern) unmodified = true;
     }
@@ -116,7 +116,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       ignoreBuildErrors = true;
     }
     if (disableTagAndSnapPipelines && ignoreBuildErrors) {
-      throw new BitError('you can use either ignore-build-error or disable-snap-pipeline, but not both');
+      throw new BitError('you can use either ignore-build-errors or disable-snap-pipeline, but not both');
     }
 
     const results = await this.snapping.snap({

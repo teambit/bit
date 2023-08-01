@@ -12,7 +12,7 @@ import { EnvOverview } from './components/env-overview';
 
 export class ListEnvsCmd implements Command {
   name = 'list';
-  description = 'list all envs available in the workspace';
+  description = 'list all envs available in the workspace'; // @david can we provide a bit more detail on what defines an 'available' env
   options = [];
   group = 'development';
 
@@ -31,19 +31,19 @@ type GetEnvOpts = {
 
 export class GetEnvCmd implements Command {
   name = 'get <component-name>';
-  description = "show information about a component's env";
+  description = "show config information from a component's env";
   arguments = [
     {
       name: 'component-name',
-      description: "the 'component name' or 'component id' of the component its env you'd like to inspect",
+      description: "the 'component name' or 'component id' of the component whose env you'd like to inspect",
     },
   ];
-  examples: [{ cmd: 'get ui/button'; description: 'show information about the env configured for ui/button' }];
+  examples: [{ cmd: 'get ui/button'; description: 'show config information from the env configured for ui/button' }];
   options = [
     [
       '',
       'services <string>',
-      'show information about the specific services only. for multiple services, separate by a comma and wrap with quotes',
+      'show information about the specific services only. for multiple services, separate by a comma and wrap with quotes', // @david do we provide a list anywhere for what values can be used here?
     ],
   ] as CommandOptions;
   group = 'development';

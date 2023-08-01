@@ -22,14 +22,14 @@ type LaneOptions = {
 
 export class LaneListCmd implements Command {
   name = 'list';
-  description = `list lanes`;
+  description = `list locally imported/created lanes`;
   alias = '';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
-    ['j', 'json', 'show lanes details in a json format'],
-    ['r', 'remote <remote-scope-name>', 'show remote lanes'],
-    ['', 'merged', 'show merged lanes'],
-    ['', 'not-merged', 'show lanes that are not merged'],
+    ['j', 'json', "show lanes' details in a json format"],
+    ['r', 'remote <remote-scope-name>', 'show remote lanes'], // @david does this show all lanes in the whole organisation?
+    ['', 'merged', 'show merged lanes'], // @david again, is this all the merged lanes in the whole org, ever?
+    ['', 'not-merged', 'show lanes that are not merged'], // @david isn't this the default, at least for the remote flag?
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -96,7 +96,7 @@ export class LaneListCmd implements Command {
         footer += 'You can use --merged and --not-merged to see which of the lanes is fully merged.';
       } else {
         footer +=
-          "to get more info on all lanes in workspace use 'bit lane list --details' or 'bit lane show <lane-name>' for a specific lane.";
+          "to get more info on all lanes in local scope use 'bit lane list --details', or 'bit lane show <lane-name>' for a specific lane.";
       }
       if (!remote && this.workspace) footer += `\nswitch lanes using 'bit switch <name>'.`;
 
@@ -134,7 +134,7 @@ export class LaneShowCmd implements Command {
   alias = '';
   options = [
     ['j', 'json', 'show the lane details in json format'],
-    ['r', 'remote', 'show the lane from remote'],
+    ['r', 'remote', 'show the lane from remote'], // @david what does this mean?
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -192,13 +192,13 @@ export class LaneCreateCmd implements Command {
   ];
   description = `creates a new lane and switches to it`;
   extendedDescription = `a lane created from main (default-lane) is empty until components are snapped.
-a lane created from another lane has all the components of the original lane.`;
+a lane created from another lane contains all the components of the original lane.`;
   alias = '';
   options = [
     [
       's',
       'scope <scope-name>',
-      'remote scope where this lane will be exported to, default to the defaultScope (can be changed later with "bit lane change-scope")',
+      'remote scope to which this lane will be exported, default to the workspace.json\'s defaultScope (can be changed up to first export of the lane with "bit lane change-scope")',
     ],
     ['', 'remote-scope <scope-name>', 'DEPRECATED. use --scope'],
     [
@@ -206,7 +206,7 @@ a lane created from another lane has all the components of the original lane.`;
       'alias <name>',
       'a local alias to refer to this lane, defaults to the `<lane-name>` (can be added later with "bit lane alias")',
     ],
-    ['', 'fork-lane-new-scope', 'allow forking a lane into a different scope than the original lane'],
+    ['', 'fork-lane-new-scope', 'allow forking a lane into a different scope to the original lane'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -221,9 +221,9 @@ a lane created from another lane has all the components of the original lane.`;
       ? `the remote scope ${chalk.bold(createLaneOptions.scope)}`
       : `the default-scope ${chalk.bold(
           result.laneId.scope
-        )}. to change it, please run "bit lane change-scope" command`;
+        )}. you change the lane's scope, before it is exported, with the "bit lane change-scope" command`;
     const title = chalk.green(
-      `successfully added and checked out to a new lane ${chalk.bold(result.alias || result.laneId.name)}
+      `successfully added and checked out to the new lane ${chalk.bold(result.alias || result.laneId.name)}
       ${currentLane !== null ? chalk.yellow(`\nnote - your new lane will be based on lane ${currentLane.name}`) : ''}
       `
     );
@@ -235,8 +235,8 @@ a lane created from another lane has all the components of the original lane.`;
 export class LaneAliasCmd implements Command {
   name = 'alias <lane-name> <alias>';
   description = 'adds an alias to a lane';
-  extendedDescription = `an alias is a name that can be used to refer to a lane. it is saved locally and never reach the remote.
-it is useful when having multiple lanes with the same name, but with different remote scopes.`;
+  extendedDescription = `an alias is a name that can be used locally to refer to a lane. it is saved locally and never reaches the remote.
+it is useful e.g. when having multiple lanes with the same name, but with different remote scopes.`;
   alias = '';
   options = [] as CommandOptions;
   loader = true;
@@ -246,13 +246,13 @@ it is useful when having multiple lanes with the same name, but with different r
 
   async report([laneName, alias]: [string, string, string]): Promise<string> {
     const { laneId } = await this.lanes.aliasLane(laneName, alias);
-    return `successfully added the alias ${chalk.bold(alias)} to the lane ${chalk.bold(laneId.toString())}`;
+    return `successfully added the alias ${chalk.bold(alias)} for lane ${chalk.bold(laneId.toString())}`;
   }
 }
 
 export class LaneChangeScopeCmd implements Command {
   name = 'change-scope <lane-name> <remote-scope-name>';
-  description = `changes the remote scope of a lane`;
+  description = `changes the remote scope of a lane. NOTE: available only before the lane is exported to the remote`;
   alias = '';
   options = [] as CommandOptions;
   loader = true;
@@ -281,10 +281,8 @@ export class LaneRenameCmd implements Command {
     const { exported, exportErr } = await this.lanes.rename(currentName, newName);
     const exportedStr = exported
       ? `and have been exported successfully to the remote`
-      : `however if failed to export the renamed lane to the remote, due to an error: ${
-          exportErr?.message || 'unknown'
-        }`;
-    return `the lane ${chalk.bold(currentName)} has been changed to ${chalk.bold(newName)}, ${exportedStr}`;
+      : `however failed exporting the renamed lane to the remote, due to an error: ${exportErr?.message || 'unknown'}`;
+    return `the lane ${chalk.bold(currentName)}'s name has been changed to ${chalk.bold(newName)}, ${exportedStr}`;
   }
 }
 
@@ -295,7 +293,7 @@ export class LaneRemoveCmd implements Command {
   group = 'collaborate';
   alias = '';
   options = [
-    ['r', 'remote', 'remove a remote lane (in the lane arg, use remote/lane-id syntax)'],
+    ['r', 'remote', 'remove a remote lane (in the lane arg, use remote/lane-id syntax)'], // @david please add an example of the syntax here
     ['f', 'force', 'removes the lane even when the lane was not merged yet'],
     ['s', 'silent', 'skip confirmation'],
   ] as CommandOptions;
@@ -320,7 +318,7 @@ export class LaneRemoveCmd implements Command {
       const removePromptResult = await approveOperation();
       // @ts-ignore
       if (!yn(removePromptResult.shouldProceed)) {
-        throw new BitError('the operation has been canceled');
+        throw new BitError('the operation has been canceled'); // @david can we be more specific - i know this comes from legacy, but is there any more information we can add to this specific error point?
       }
     }
     const laneResults = await this.lanes.removeLanes(names, { remote, force });
@@ -339,15 +337,24 @@ export class LaneRemoveCompCmd implements Command {
     },
   ];
   description = `remove components when on a lane`;
-  extendedDescription = `in case the components are part of the lane and the lane is exported, it marks the components as removed,
-and then after snap+export, the remote-lane gets updated as well. upon lane-merge, these components are skipped.
+  extendedDescription = `in case the components are part of the lane and the lane is exported, it marks the components as
+removed from the lane, and then after snap+export, the remote-lane gets updated as well.
+upon lane-merge, these removed components are skipped and any changes for removed components won't be merged to main.
 
-in case the components are not part of the lane or the lane is new, it simply removes the components from the workspace`;
+in case the components are not yet part of the lane or the lane is new, it simply removes the components from the workspace`;
   group = 'collaborate';
   alias = 'rc';
   options = [
-    ['', 'workspace-only', 'do not mark the components as removed. instead, remove them from the workspace only'],
-    ['', 'update-main', 'NOT IMPLEMENTED YET. mark as removed on main after merging this lane into main'],
+    [
+      '',
+      'workspace-only',
+      'do not mark the components as removed from the lane. instead, remove them from the workspace only',
+    ],
+    [
+      '',
+      'update-main',
+      'NOT IMPLEMENTED YET. remove, i.e. delete, component/s on the main lane after merging this lane into main',
+    ],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -385,11 +392,11 @@ export class LaneImportCmd implements Command {
   arguments = [{ name: 'lane', description: 'the remote lane name' }];
   alias = '';
   options = [
-    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not install dependencies of the imported components'],
     [
       'p',
       'pattern <component-pattern>',
-      'switch only the specified component-pattern. works only when the workspace is empty',
+      'switch only the specified component-pattern. works only when the workspace is empty', // @david it's not clear what this command does
     ],
   ] as CommandOptions;
   loader = true;
@@ -406,15 +413,15 @@ export class LaneImportCmd implements Command {
 }
 
 export class LaneCmd implements Command {
-  name = 'lane [lane-name]';
+  name = 'lane [lane-name]'; // @david is the lane-name argument required?
   description = 'manage lanes';
   alias = 'l';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
     ['j', 'json', 'show lanes details in json format'],
     ['r', 'remote <string>', 'show remote lanes'],
-    ['', 'merged', 'show merged lanes'],
-    ['', 'not-merged', 'show not merged lanes'],
+    ['', 'merged', 'show merged lanes'], // @david is this show ONLY merged lanes, or does the default just not show merged lanes
+    ['', 'not-merged', 'show un-merged lanes'], // @david same for this (i assume that only one of these could be the default)
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -457,7 +464,7 @@ export class LaneRemoveReadmeCmd implements Command {
 
 export class LaneAddReadmeCmd implements Command {
   name = 'add-readme <component-name> [lane-name]';
-  description = 'EXPERIMENTAL. adds a readme component to a lane';
+  description = 'EXPERIMENTAL. sets an existing component as the readme of a lane';
   arguments = [
     { name: 'component-id', description: "the component name or id of the component to use as the lane's readme" },
     { name: 'lane-name', description: 'the lane to attach the readme to (defaults to the current lane)' },

@@ -21,11 +21,11 @@ type GraphOpt = {
 
 export class GraphCmd implements Command {
   name = 'graph [id]';
-  description = 'generate an image file with the dependencies graph';
+  description = 'generate an image file with the dependencies graph'; // @david, graph for a single component? For a scope? For the workspace?
   group = 'discover';
   alias = '';
   options = [
-    ['i', 'image <image>', 'image path. use one of the following extensions: [gif, png, svg, pdf]'],
+    ['i', 'image <image>', 'image path and format. use one of the following extensions: [gif, png, svg, pdf]'],
     ['r', 'remote [remoteName]', 'remote name (name is optional, leave empty when id is specified)'],
     ['', 'all-versions', 'enter all components versions into the graph, not only latest'],
     [

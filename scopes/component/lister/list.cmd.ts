@@ -16,16 +16,16 @@ type ListFlags = {
 
 export class ListCmd implements Command {
   name = 'list [remote-scope]';
-  description = 'list components on a workspace, local scope or a remote scope.';
+  description = 'list components on a workspace, local scope or a remote scope.'; // @david what's the difference between workspac and local scope? Can we just remove local scope in this description?
   group = 'discover';
-  extendedDescription = `https://${BASE_DOCS_DOMAIN}/reference/cli-reference#list`;
+  helpUrl = 'reference/cli-reference#list';
   alias = 'ls';
   options = [
-    ['i', 'ids', 'show only component ids unformatted'],
+    ['i', 'ids', 'show only component ids, unformatted'],
     ['s', 'scope', 'show only components stored in the local scope, including indirect dependencies'],
-    ['o', 'outdated', 'show latest versions from remotes'],
+    ['o', 'outdated', 'show latest versions from remotes'], // @david description and flag name don't match up. Is this correct?
     ['j', 'json', 'show the output in JSON format'],
-    ['n', 'namespace <string>', 'show only specified namespace by using wildcards'],
+    ['n', 'namespace <string>', 'show only components in the specified namespace by using wildcards'], // @david e.g.?
   ] as CommandOptions;
   loader = true;
   migration = true;
