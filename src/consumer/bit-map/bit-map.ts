@@ -39,7 +39,7 @@ export type GetBitMapComponentOptions = {
 };
 
 export const LANE_KEY = '_bit_lane';
-export const CURRENT_BITMAP_SCHEMA = '15.0.0';
+export const CURRENT_BITMAP_SCHEMA = '16.0.0';
 export const SCHEMA_FIELD = '$schema-version';
 
 export default class BitMap {
@@ -256,6 +256,7 @@ export default class BitMap {
           rootDir: component.rootDir,
           exported: false,
           files: component.files,
+          onLanesOnly: false,
         })
     );
   }
@@ -269,6 +270,7 @@ export default class BitMap {
         rootDir: component.rootDir,
         exported: false,
         files: component.files,
+        onLanesOnly: false,
       });
     });
   }
@@ -617,6 +619,7 @@ export default class BitMap {
     defaultScope,
     mainFile,
     rootDir,
+    onLanesOnly,
     config,
   }: {
     componentId: BitId;
@@ -624,6 +627,7 @@ export default class BitMap {
     defaultScope?: string;
     mainFile: PathLinux;
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative;
+    onLanesOnly?: boolean;
     config?: Config;
   }): ComponentMap {
     const componentIdStr = componentId.toString();
@@ -638,6 +642,7 @@ export default class BitMap {
         if (!this.laneId) {
           // happens when merging from another lane to main and main is empty
           componentMap.isAvailableOnCurrentLane = true;
+          componentMap.onLanesOnly = false;
         }
         componentMap.id = componentId;
         return componentMap;
@@ -657,6 +662,9 @@ export default class BitMap {
     if (rootDir) {
       componentMap.rootDir = pathNormalizeToLinux(rootDir);
       this.throwForExistingParentDir(componentMap);
+    }
+    if (onLanesOnly) {
+      componentMap.onLanesOnly = onLanesOnly;
     }
     if (defaultScope) {
       componentMap.defaultScope = defaultScope;
@@ -684,6 +692,7 @@ export default class BitMap {
   syncWithIds(ids: BitIds) {
     this.components.forEach((componentMap) => {
       componentMap.isAvailableOnCurrentLane = ids.hasWithoutVersion(componentMap.id);
+      if (!componentMap.isAvailableOnCurrentLane) componentMap.onLanesOnly = true;
     });
     this._invalidateCache();
     this.markAsChanged();
@@ -756,10 +765,12 @@ export default class BitMap {
     if (this.laneId && !updateScopeOnly && !newId.hasVersion()) {
       // component was un-snapped and is back to "new".
       componentMap.isAvailableOnCurrentLane = true;
+      componentMap.onLanesOnly = false;
     }
     if (revertToMain) {
       // happens during "bit remove" when on a lane
       componentMap.isAvailableOnCurrentLane = true;
+      componentMap.onLanesOnly = false;
     }
     if (updateScopeOnly) {
       // in case it had defaultScope, no need for it anymore.

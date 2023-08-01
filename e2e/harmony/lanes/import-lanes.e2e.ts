@@ -89,6 +89,11 @@ describe('import lanes', function () {
         expect(bitMap.comp1.isAvailableOnCurrentLane).to.be.true;
         expect(bitMap.comp2.isAvailableOnCurrentLane).to.be.true;
       });
+      it('.bitmap should set the onLanesOnly for forward compatibility', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.onLanesOnly).to.be.true;
+        expect(bitMap.comp2.onLanesOnly).to.be.true;
+      });
       it('should save the lane object with the same hash as the original lane', () => {
         const laneObj = helper.command.catLane('dev');
         expect(laneObj.hash).to.eq(laneHash);

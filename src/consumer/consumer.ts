@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
-import { compact, partition } from 'lodash';
+import { compact } from 'lodash';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
@@ -623,24 +623,24 @@ export default class Consumer {
 
   async cleanOrRevertFromBitMapWhenOnLane(ids: BitIds) {
     logger.debug(`consumer.cleanFromBitMapWhenOnLane, cleaning ${ids.toString()} from`);
-    const [idsOnLane, idsOnMain] = partition(ids, (id) => {
-      const componentMap = this.bitMap.getComponent(id, { ignoreVersion: true });
-      return componentMap.isAvailableOnCurrentLane;
-    });
-    if (idsOnLane.length) {
-      await this.cleanFromBitMap(BitIds.fromArray(idsOnLane));
-    }
+    const unavailableOnMain: BitId[] = [];
     await Promise.all(
-      idsOnMain.map(async (id) => {
+      ids.map(async (id) => {
         const modelComp = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
         let updatedId = id.changeScope(undefined).changeVersion(undefined);
-        if (modelComp) {
+        if (modelComp && modelComp.hasHead()) {
           const head = modelComp.getHeadAsTagIfExist();
           if (head) updatedId = id.changeVersion(head);
+        } else {
+          unavailableOnMain.push(id);
+          return;
         }
         this.bitMap.updateComponentId(updatedId, false, true);
       })
     );
+    if (unavailableOnMain.length) {
+      await this.cleanFromBitMap(BitIds.fromArray(unavailableOnMain));
+    }
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {

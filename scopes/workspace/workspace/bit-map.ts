@@ -212,6 +212,7 @@ export class BitMap {
     ids.forEach((id) => {
       const componentMap = this.getBitmapEntry(id);
       delete componentMap.isAvailableOnCurrentLane;
+      delete componentMap.onLanesOnly;
     });
     this.legacyBitMap.markAsChanged();
   }
