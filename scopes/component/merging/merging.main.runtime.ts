@@ -537,9 +537,10 @@ export class MergingMain {
       })
       .flat();
 
-    await this.workspace.consumer.scope.scopeImporter.importManyIfMissingWithoutDeps({
-      ids: BitIds.fromArray(toImport),
+    await this.workspace.consumer.scope.scopeImporter.importWithoutDeps(BitIds.fromArray(toImport), {
       lane: otherLane || undefined,
+      cache: true,
+      includeVersionHistory: false,
     });
 
     const compStatusNotNeedMerge = componentStatusBeforeMergeAttempt.filter(
