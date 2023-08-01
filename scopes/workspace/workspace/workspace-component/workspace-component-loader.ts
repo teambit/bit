@@ -1,6 +1,5 @@
 import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, TagMap } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
 import { compact, fromPairs, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -147,25 +146,23 @@ export class WorkspaceComponentLoader {
       if (!componentFromScope) throw new MissingBitMapComponent(id.toString());
       return componentFromScope;
     }
-    const { extensions, errors } = await this.workspace.componentExtensions(id, componentFromScope);
+    const { extensions, errors } = await this.workspace.componentExtensions(
+      id,
+      componentFromScope,
+      [],
+      consumerComponent
+    );
     if (errors?.some((err) => err instanceof MergeConfigConflict)) {
       consumerComponent.issues.getOrCreate(IssuesClasses.MergeConfigHasConflict).data = true;
     }
 
-    const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
-    // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
-    const extensionDataList = ExtensionDataList.mergeConfigs([
-      extensionsFromConsumerComponent,
-      extensions,
-    ]).filterRemovedExtensions();
-
     // temporarily mutate consumer component extensions until we remove all direct access from legacy to extensions data
     // TODO: remove this once we remove all direct access from legacy code to extensions data
-    consumerComponent.extensions = extensionDataList;
+    consumerComponent.extensions = extensions;
 
     const state = new State(
-      new Config(consumerComponent.mainFile, extensionDataList),
-      await this.workspace.createAspectList(extensionDataList),
+      new Config(consumerComponent.mainFile, extensions),
+      await this.workspace.createAspectList(extensions),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
       consumerComponent

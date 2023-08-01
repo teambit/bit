@@ -3,6 +3,7 @@ import { Component, ComponentID } from '@teambit/component';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { BitId } from '@teambit/legacy-bit-id';
 import { EnvsAspect } from '@teambit/envs';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { partition, mergeWith, merge } from 'lodash';
@@ -35,7 +36,8 @@ export class AspectsMerger {
   async merge(
     componentId: ComponentID,
     componentFromScope?: Component,
-    excludeOrigins: ExtensionsOrigin[] = []
+    excludeOrigins: ExtensionsOrigin[] = [],
+    legacyComponent?: ConsumerComponent
   ): Promise<{
     extensions: ExtensionDataList;
     beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
@@ -158,6 +160,9 @@ export class AspectsMerger {
       const extensionDataList = ExtensionDataList.fromConfigObject(bitMapExtensions);
       setDataListAsSpecific(extensionDataList);
       await addExtensionsToMerge(extensionDataList, 'BitmapFile');
+    }
+    if (legacyComponent) {
+      await addExtensionsToMerge(legacyComponent.extensions, 'Legacy');
     }
     // config-merge is after the .bitmap. because normally if you have config set in .bitmap, you won't
     // be able to lane-merge. (unless you specify --ignore-config-changes).
