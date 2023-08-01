@@ -122,7 +122,6 @@ export interface EjectConfOptions {
 
 export type ExtensionsOrigin =
   | 'BitmapFile'
-  | 'Legacy'
   | 'ModelSpecific'
   | 'ModelNonSpecific'
   | 'ConfigMerge'
@@ -1122,14 +1121,13 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async componentExtensions(
     componentId: ComponentID,
     componentFromScope?: Component,
-    excludeOrigins: ExtensionsOrigin[] = [],
-    legacyComponent?: ConsumerComponent
+    excludeOrigins: ExtensionsOrigin[] = []
   ): Promise<{
     extensions: ExtensionDataList;
     beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
     errors?: Error[];
   }> {
-    return this.aspectsMerger.merge(componentId, componentFromScope, excludeOrigins, legacyComponent);
+    return this.aspectsMerger.merge(componentId, componentFromScope, excludeOrigins);
   }
 
   getConfigMergeFilePath(): string {
