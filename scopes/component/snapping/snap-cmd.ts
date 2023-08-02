@@ -43,7 +43,7 @@ export class SnapCmd implements Command {
     [
       '',
       'disable-snap-pipeline',
-      'skip the snap pipeline (contains, by default, a task to deploy application components)',
+      'skip the snap pipeline. this will for instance skip packing and publishing component version for install, and app deployment',
     ],
     ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
     ['', 'ignore-build-errors', 'run the snap pipeline even when the build pipeline fails'],
