@@ -18,8 +18,8 @@ export const importTransformer: SourceFileTransformer = (mapping: Record<string,
             const aliasName = element.name.text;
 
             for (const [oldName, newName] of Object.entries(mapping)) {
-              if (originalName === oldName) {
-                originalName = newName;
+              if (originalName.startsWith(oldName) || originalName.endsWith(oldName)) {
+                originalName = originalName.replace(oldName, newName);
               }
             }
 
