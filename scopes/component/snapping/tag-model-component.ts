@@ -573,12 +573,28 @@ export async function updateComponentsVersions(
   isTag = true
 ): Promise<StagedConfig> {
   const consumer = workspace.consumer;
+  const currentLane = consumer.getCurrentLaneId();
   const stagedConfig = await workspace.scope.getStagedConfig();
+  const isAvailableOnMain = async (component: ModelComponent | ConsumerComponent, id: BitId): Promise<boolean> => {
+    if (currentLane.isDefault()) {
+      return true;
+    }
+    if (!id.hasVersion()) {
+      // component was unsnapped on the current lane and is back to a new component
+      return true;
+    }
+    const modelComponent =
+      component instanceof ModelComponent ? component : await consumer.scope.getModelComponent(component.id);
+    return modelComponent.hasHead();
+  };
 
   const updateVersions = async (modelComponent: ModelComponent) => {
     const id: BitId = modelComponent.toBitIdWithLatestVersionAllowNull();
     consumer.bitMap.updateComponentId(id);
-
+    const availableOnMain = await isAvailableOnMain(modelComponent, id);
+    if (!availableOnMain) {
+      consumer.bitMap.setOnLanesOnly(id, true);
+    }
     const componentMap = consumer.bitMap.getComponent(id);
     const compId = await workspace.resolveComponentId(id);
     // it can be either a tag/snap or reset.

@@ -119,9 +119,9 @@ export default class BitMap {
     });
   }
 
-  setComponentProp(id: BitId, propName: keyof ComponentMap, val: any) {
+  setOnLanesOnly(id: BitId, value: boolean) {
     const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
-    (componentMap as any)[propName] = val;
+    componentMap.onLanesOnly = value;
     this.markAsChanged();
     return componentMap;
   }
