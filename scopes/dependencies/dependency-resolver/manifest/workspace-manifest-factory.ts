@@ -64,7 +64,9 @@ export class WorkspaceManifestFactory {
     let dedupedDependencies = getEmptyDedupedDependencies();
     rootPolicy = rootPolicy.filter((dep) => dep.dependencyId !== '@teambit/legacy');
     if (hasRootComponents) {
-      const { rootDependencies } = dedupeDependencies(rootPolicy, componentDependenciesMap);
+      const { rootDependencies } = dedupeDependencies(rootPolicy, componentDependenciesMap, {
+        dedupePeerDependencies: hasRootComponents,
+      });
       // We hoist dependencies in order for the IDE to work.
       // For runtime, the peer dependencies are installed inside:
       // <ws root>/node_module/<comp name>/node_module/<comp name>/node_modules
