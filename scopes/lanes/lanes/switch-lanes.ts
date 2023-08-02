@@ -78,7 +78,8 @@ export class LaneSwitcher {
         ? this.populatePropsAccordingToLocalLane(localLane)
         : await this.populatePropsAccordingToRemoteLane(laneId);
       const idsOnLaneOnly = laneIds.filter((id) => !mainIds.find((i) => i.isEqualWithoutVersion(id)));
-      this.switchProps.ids = [...mainIds, ...idsOnLaneOnly];
+      const idsOnMainOnly = mainIds.filter((id) => !laneIds.find((i) => i.isEqualWithoutVersion(id)));
+      this.switchProps.ids = [...idsOnMainOnly, ...laneIds];
       this.switchProps.laneBitIds = idsOnLaneOnly;
     }
 
