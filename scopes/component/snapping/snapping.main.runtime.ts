@@ -150,9 +150,6 @@ export class SnappingMain {
     failFast?: boolean;
   } & Partial<BasicTagParams>): Promise<TagResults | null> {
     if (soft) build = false;
-    if (disableTagAndSnapPipelines && ignoreBuildErrors) {
-      throw new BitError('you can use either ignore-build-errors or disable-tag-pipeline, but not both');
-    }
     if (editor && persist) {
       throw new BitError('you can use either --editor or --persist, but not both');
     }
