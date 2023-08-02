@@ -689,10 +689,10 @@ export default class BitMap {
     return componentMap;
   }
 
-  syncWithIds(ids: BitIds) {
+  syncWithIds(ids: BitIds, laneBitIds: BitIds) {
     this.components.forEach((componentMap) => {
       componentMap.isAvailableOnCurrentLane = ids.hasWithoutVersion(componentMap.id);
-      if (!componentMap.isAvailableOnCurrentLane) componentMap.onLanesOnly = true;
+      componentMap.onLanesOnly = laneBitIds.hasWithoutVersion(componentMap.id);
     });
     this._invalidateCache();
     this.markAsChanged();

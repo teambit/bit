@@ -14,6 +14,7 @@ import { throwForStagedComponents } from './create-lane';
 export type SwitchProps = {
   laneName: string;
   ids?: BitId[];
+  laneBitIds?: BitId[]; // only needed for the deprecated onLanesOnly prop. once this prop is removed, this prop can be removed as well.
   pattern?: string;
   existingOnWorkspaceOnly: boolean;
   remoteLane?: Lane;
@@ -73,13 +74,12 @@ export class LaneSwitcher {
       await this.populatePropsAccordingToDefaultLane();
       this.switchProps.ids = mainIds;
     } else {
-      const ids = localLane
+      const laneIds = localLane
         ? this.populatePropsAccordingToLocalLane(localLane)
         : await this.populatePropsAccordingToRemoteLane(laneId);
-      this.switchProps.ids = ids;
-      mainIds.forEach((id) => {
-        if (!ids.find((i) => i.isEqualWithoutVersion(id))) this.switchProps.ids?.push(id);
-      });
+      const idsOnLaneOnly = laneIds.filter((id) => !mainIds.find((i) => i.isEqualWithoutVersion(id)));
+      this.switchProps.ids = [...mainIds, ...idsOnLaneOnly];
+      this.switchProps.laneBitIds = idsOnLaneOnly;
     }
 
     if (this.switchProps.pattern) {
@@ -139,6 +139,9 @@ export class LaneSwitcher {
     }
 
     this.consumer.setCurrentLane(this.laneIdToSwitchTo, !this.laneToSwitchTo?.isNew);
-    this.consumer.bitMap.syncWithIds(BitIds.fromArray(this.switchProps.ids || []));
+    this.consumer.bitMap.syncWithIds(
+      BitIds.fromArray(this.switchProps.ids || []),
+      BitIds.fromArray(this.switchProps.laneBitIds || [])
+    );
   }
 }
