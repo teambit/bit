@@ -1,6 +1,7 @@
 import { IssuesClasses } from '@teambit/component-issues';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { Extensions } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -211,6 +212,27 @@ describe('bit recover command', function () {
         const isModified = helper.command.statusComponentIsModified(`${helper.scopes.remote}/comp2`);
         expect(isModified).to.be.true;
       });
+    });
+  });
+  describe('remove after recovering', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+
+      helper.command.softRemoveComponent('comp2');
+      helper.fs.outputFile('comp1/index.js', '');
+      helper.command.tagAllWithoutBuild();
+      helper.command.recover(`${helper.scopes.remote}/comp2`);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.softRemoveComponent('comp2');
+    });
+    it('bit show should show the component as removed', () => {
+      const removeData = helper.command.showAspectConfig('comp2', Extensions.remove);
+      expect(removeData.config.removed).to.be.true;
     });
   });
 });

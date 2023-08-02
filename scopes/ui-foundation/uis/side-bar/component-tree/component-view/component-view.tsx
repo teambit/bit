@@ -73,6 +73,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
       className={classNames(indentClass, styles.component, viewingMainCompOnLane && styles.mainOnly)}
       activeClassName={styles.active}
       onClick={handleClick}
+      exact={true}
     >
       <div className={styles.left}>
         <Tooltip className={styles.componentEnvTooltip} placement="right" content={envTooltip}>

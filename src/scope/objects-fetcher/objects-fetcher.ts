@@ -2,7 +2,6 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 // @ts-ignore
 import { pipeline } from 'stream/promises';
-import pMap from 'p-map';
 import { Scope } from '..';
 import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
 import loader from '../../cli/loader';
@@ -20,6 +19,7 @@ import { concurrentFetchLimit } from '../../utils/concurrency';
 import { ScopeNotFoundOrDenied } from '../../remotes/exceptions/scope-not-found-or-denied';
 import { Lane } from '../models';
 import { ComponentsPerRemote, MultipleComponentMerger } from '../component-ops/multiple-component-merger';
+import { pMapPool } from '../../utils/promise-with-concurrent';
 
 /**
  * due to the use of streams, this is memory efficient and can handle easily GBs of objects.
@@ -64,7 +64,7 @@ export class ObjectFetcher {
     const objectsQueue = new WriteObjectsQueue();
     const componentsPerRemote: ComponentsPerRemote = {};
     this.showProgress(objectsQueue);
-    await pMap(
+    await pMapPool(
       scopes,
       async (scopeName) => {
         const readableStream = await this.fetchFromSingleRemote(scopeName, idsGrouped[scopeName]);

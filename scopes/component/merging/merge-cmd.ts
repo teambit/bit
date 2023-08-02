@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { compact } from 'lodash';
 import { WILDCARD_HELP, AUTO_SNAPPED_MSG, MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import {
@@ -20,7 +21,7 @@ export class MergeCmd implements Command {
   group = 'development';
   extendedDescription = `merge changes of the remote head into local. when on a lane, merge the remote head of the lane into the local.
 if no ids are specified, all pending-merge components will be merged. (run "bit status" to list them).
-optionally use '--abort' to revert the last merge/lane-merge.
+optionally use '--abort' to revert the last merge. to revert a lane merge, use "bit lane merge-abort" command.
 ${WILDCARD_HELP('merge')}`;
   alias = '';
   options = [
@@ -302,5 +303,12 @@ export function getRemovedOutput(removedComponents?: BitId[]) {
   if (!removedComponents?.length) return '';
   const title = `the following ${removedComponents.length} component(s) have been removed`;
   const body = removedComponents.join('\n');
+  return `\n\n${chalk.underline(title)}\n${body}\n\n`;
+}
+
+export function getAddedOutput(addedComponents?: ComponentID[]) {
+  if (!addedComponents?.length) return '';
+  const title = `the following ${addedComponents.length} component(s) have been added`;
+  const body = addedComponents.join('\n');
   return `\n\n${chalk.underline(title)}\n${body}\n\n`;
 }

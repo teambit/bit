@@ -4,6 +4,9 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
+import { ExportAspect, ExportMain } from '@teambit/export';
+import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
+import InstallAspect, { InstallMain } from '@teambit/install';
 import { Component } from '@teambit/component';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ApiServerAspect } from './api-server.aspect';
@@ -18,7 +21,8 @@ export class ApiServerMain {
     private workspace: Workspace,
     private logger: Logger,
     private express: ExpressMain,
-    private watcher: WatcherMain
+    private watcher: WatcherMain,
+    private installer: InstallMain
   ) {}
 
   async runApiServer(options: { port: number }) {
@@ -46,6 +50,10 @@ export class ApiServerMain {
       sendEventsToClients('onBitmapChange', {});
     });
 
+    this.installer.registerPostInstall(async () => {
+      sendEventsToClients('onPostInstall', {});
+    });
+
     this.watcher
       .watch({
         preCompile: false,
@@ -69,23 +77,40 @@ export class ApiServerMain {
     WatcherAspect,
     SnappingAspect,
     LanesAspect,
+    InstallAspect,
+    ExportAspect,
+    CheckoutAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, loggerMain, express, watcher, snapping, lanes]: [
+  static async provider([
+    cli,
+    workspace,
+    loggerMain,
+    express,
+    watcher,
+    snapping,
+    lanes,
+    installer,
+    exporter,
+    checkout,
+  ]: [
     CLIMain,
     Workspace,
     LoggerMain,
     ExpressMain,
     WatcherMain,
     SnappingMain,
-    LanesMain
+    LanesMain,
+    InstallMain,
+    ExportMain,
+    CheckoutMain
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
-    const apiServer = new ApiServerMain(workspace, logger, express, watcher);
+    const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer);
     cli.register(new ServerCmd(apiServer));
 
     const cliRoute = new CLIRoute(logger, cli);
-    const apiForIDE = new APIForIDE(workspace, snapping, lanes);
+    const apiForIDE = new APIForIDE(workspace, snapping, lanes, installer, exporter, checkout);
     const vscodeRoute = new IDERoute(logger, apiForIDE);
     const sseEventsRoute = new SSEEventsRoute(logger, cli);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.

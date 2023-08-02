@@ -7,6 +7,8 @@ import {
   interfaceNamesTransformer,
   typeAliasNamesTransformer,
   variableNamesTransformer,
+  expressionStatementTransformer,
+  exportTransformer,
 } from './sourceFileTransformers';
 
 function normalizeFormatting(code: string): string {
@@ -70,6 +72,60 @@ describe('transformSourceFile', () => {
       sourceCode: 'let testVariable = "test";',
       nameMapping: { testVariable: 'newVariableName' },
       expectedCode: 'let newVariableName = "test";',
+    },
+    {
+      transformer: classNamesTransformer,
+      sourceCode: 'class TestClass { oldMethod() {} }',
+      nameMapping: { TestClass: 'NewClassName', oldMethod: 'newMethodName' },
+      expectedCode: 'class NewClassName { newMethodName() {} }',
+    },
+    {
+      transformer: classNamesTransformer,
+      sourceCode: 'class TestClass { oldMember: string; }',
+      nameMapping: { TestClass: 'NewClassName', oldMember: 'newMember' },
+      expectedCode: 'class NewClassName { newMember: string; }',
+    },
+    {
+      transformer: expressionStatementTransformer,
+      sourceCode: 'TestClass.staticMethod();',
+      nameMapping: { TestClass: 'NewClassName', staticMethod: 'newMethodName' },
+      expectedCode: 'NewClassName.newMethodName();',
+    },
+    {
+      transformer: expressionStatementTransformer,
+      sourceCode: 'let instance = new TestClass(); instance.method();',
+      nameMapping: { TestClass: 'NewClassName', method: 'newMethodName' },
+      expectedCode: 'let instance = new NewClassName(); instance.newMethodName();',
+    },
+    {
+      transformer: interfaceNamesTransformer,
+      sourceCode: 'interface TestInterface { oldMember: string; }',
+      nameMapping: { TestInterface: 'NewInterfaceName', oldMember: 'newMember' },
+      expectedCode: 'interface NewInterfaceName { newMember: string; }',
+    },
+    {
+      transformer: importTransformer,
+      sourceCode: 'const UI = require("@xxx/ui-library");',
+      nameMapping: { '@xxx/ui-library': '@abc/ui-library' },
+      expectedCode: 'const UI = require("@abc/ui-library");',
+    },
+    {
+      transformer: exportTransformer,
+      sourceCode: 'export { Component } from "@xxx/ui-library";',
+      nameMapping: { '@xxx/ui-library': '@abc/ui-library' },
+      expectedCode: 'export { Component } from "@abc/ui-library";',
+    },
+    {
+      transformer: exportTransformer,
+      sourceCode: 'export * from "@xxx/ui-library";',
+      nameMapping: { '@xxx/ui-library': '@abc/ui-library' },
+      expectedCode: 'export * from "@abc/ui-library";',
+    },
+    {
+      transformer: exportTransformer,
+      sourceCode: 'export { default as UI } from "@xxx/ui-library";',
+      nameMapping: { '@xxx/ui-library': '@abc/ui-library' },
+      expectedCode: 'export { default as UI } from "@abc/ui-library";',
     },
   ];
 

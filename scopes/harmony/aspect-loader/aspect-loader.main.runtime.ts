@@ -487,6 +487,10 @@ export class AspectLoaderMain {
 
   getPlugins(component: Component, componentPath: string): Plugins {
     const defs = this.getPluginDefs();
+    return this.getPluginsFromDefs(component, componentPath, defs);
+  }
+
+  getPluginsFromDefs(component: Component, componentPath: string, defs: PluginDefinition[]): Plugins {
     return Plugins.from(
       component,
       defs,
