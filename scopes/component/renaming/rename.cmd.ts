@@ -20,18 +20,18 @@ export class RenameCmd implements Command {
     },
     {
       name: 'new-name',
-      description: 'the new component name (without its scope name)',
+      description: "the new component name (without its scope name. use --scope to define the new component's scope)",
     },
   ];
   group = 'collaborate';
   skipWorkspace = true;
   alias = '';
   options = [
-    ['s', 'scope <scope-name>', 'default scope for the newly created component'],
+    ['s', 'scope <scope-name>', 'define the scope for the newly created component'],
     [
       'p',
       'path <relative-path>',
-      'relative path in the workspace. by default the path is `<scope>/<namespace>/<name>`',
+      'relative path in the workspace to place new component in. by default the path uses your workspace\'s "defaultScope" value',
     ],
     ['r', 'refactor', 'update the import/require statements in all dependent components (in the same workspace)'],
     ['', 'preserve', 'avoid renaming files and variables/classes according to the new component name'],
