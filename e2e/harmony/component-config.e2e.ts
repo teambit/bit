@@ -112,7 +112,7 @@ describe('component config', function () {
         helper.componentJson.deleteIfExist('bar');
         helper.fixtures.copyFixtureExtensions(EXTENSION_FOLDER);
         helper.command.addComponent(EXTENSION_FOLDER);
-        helper.extensions.addExtensionToVariant('bar', 'my-scope/dummy-extension', config);
+        helper.extensions.addExtensionToVariant('bar', 'my-scope/dummy-extension', config, true);
         helper.extensions.addExtensionToVariant(EXTENSION_FOLDER, 'teambit.harmony/aspect');
         helper.command.install();
         helper.command.compile();
