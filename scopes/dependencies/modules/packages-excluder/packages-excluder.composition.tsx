@@ -22,7 +22,7 @@ export function RegexExample() {
   const [regexResult, setRegexResult] = useState(true);
 
   useEffect(() => {
-    const pattern = generateNodeModulesPattern({ packages: packagesToExclude.split(','), excludeComponents });
+    const pattern = generateNodeModulesPattern({ packages: packagesToExclude.split(','), excludeComponents }) as string;
     setCalculatedRegex(pattern);
     const regex = new RegExp(pattern);
     setRegexResult(regex.test(`node_modules/${packageToCheck}/some-path`));
