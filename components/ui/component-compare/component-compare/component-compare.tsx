@@ -191,45 +191,15 @@ export function ComponentCompare(props: ComponentCompareProps) {
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
       <div className={classnames(styles.componentCompareContainer, className)} {...rest}>
-        <RenderCompareScreen
-          key={compCompareId}
-          {...props}
-          componentId={
-            compare?.id?.toStringWithoutVersion() ||
-            baseId.toStringWithoutVersion() ||
-            component?.id?.toStringWithoutVersion()
-          }
-          baseVersion={baseId.version}
-          compareVersion={_compareId?.version || component.id.version}
-          compareHasLocalChanges={compareIsLocalChanges}
-          changes={changes}
-          loading={loading}
-          Loader={Loader}
-        />
+        {loading && <Loader className={classnames(styles.loader)} />}
+        {!loading && <RenderCompareScreen key={compCompareId} {...props} changes={changes} />}
       </div>
     </ComponentCompareContext.Provider>
   );
 }
 
-function RenderCompareScreen(
-  props: ComponentCompareProps & {
-    baseVersion?: string;
-    compareVersion?: string;
-    compareHasLocalChanges?: boolean;
-    componentId: string;
-    loading?: boolean;
-  }
-) {
-  const {
-    routes,
-    state,
-    loading,
-    Loader = CompareLoader,
-    baseVersion,
-    compareVersion,
-    compareHasLocalChanges,
-    componentId,
-  } = props;
+function RenderCompareScreen(props: ComponentCompareProps) {
+  const { routes, state } = props;
   const showVersionPicker = state?.versionPicker?.element !== null;
 
   return (
@@ -237,27 +207,17 @@ function RenderCompareScreen(
       {showVersionPicker && (
         <div className={styles.top}>
           {state?.versionPicker?.element || (
-            <ComponentCompareVersionPicker
-              componentId={componentId}
-              baseVersion={baseVersion}
-              compareVersion={compareVersion}
-              compareHasLocalChanges={compareHasLocalChanges}
-              host={props.host}
-              customUseComponent={props.customUseComponent}
-            />
+            <ComponentCompareVersionPicker host={props.host} customUseComponent={props.customUseComponent} />
           )}
         </div>
       )}
-      {loading && <Loader className={classnames(styles.loader)} />}
-      {!loading && (
-        <div className={styles.bottom}>
-          <CompareMenuNav {...props} />
-          {(extractLazyLoadedData(routes) || []).length > 0 && (
-            <SlotRouter routes={extractLazyLoadedData(routes) || []} />
-          )}
-          {state?.tabs?.element}
-        </div>
-      )}
+      <div className={styles.bottom}>
+        <CompareMenuNav {...props} />
+        {(extractLazyLoadedData(routes) || []).length > 0 && (
+          <SlotRouter routes={extractLazyLoadedData(routes) || []} />
+        )}
+        {state?.tabs?.element}
+      </div>
     </>
   );
 }
