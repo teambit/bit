@@ -1,4 +1,4 @@
-export enum PatternFormat {
+export enum PatternTarget {
   /**
    * Used in Jest `transformIgnorePatterns` options
    */
@@ -25,23 +25,23 @@ type GenerateNodeModulesPatternOptions<T> = {
   format?: T;
 };
 
-const patternFormatMap = {
-  [PatternFormat.JEST]: toJestPattern,
-  [PatternFormat.WEBPACK]: toWebpackPattern,
+const patternTargetMap = {
+  [PatternTarget.JEST]: toJestPattern,
+  [PatternTarget.WEBPACK]: toWebpackPattern,
 };
 
-type PatternFormatMap = typeof patternFormatMap;
-type PatternFormatReturnType<T extends PatternFormat> = ReturnType<PatternFormatMap[T]>;
+type PatternTargetMap = typeof patternTargetMap;
+type PatternReturnType<T extends PatternTarget> = ReturnType<PatternTargetMap[T]>;
 
 /**
  * A function that receives an array of packages names and returns a pattern (string) of a regex that matches any node_modules/package-name except the provided package-names.
  * @param {string[]} packages - array of packages.
  * @returns {string} node modules catched packages regex.
  */
-export function generateNodeModulesPattern<T extends PatternFormat>(
+export function generateNodeModulesPattern<T extends PatternTarget>(
   options: GenerateNodeModulesPatternOptions<T>
-): PatternFormatReturnType<T> {
-  const { packages = [], excludeComponents, format = PatternFormat.JEST } = options;
+): PatternReturnType<T> {
+  const { packages = [], excludeComponents, format = PatternTarget.JEST } = options;
   const negativeLookaheadPatterns = packages.reduce((acc: string[], packageName) => {
     const yarnPattern = packageName.replace(/\//g, '[\\/]');
     const pnpmPackageName = packageName.replace(/\//g, '\\+');
@@ -57,7 +57,7 @@ export function generateNodeModulesPattern<T extends PatternFormat>(
     );
   }
 
-  return patternFormatMap[format](negativeLookaheadPatterns) as PatternFormatReturnType<T>;
+  return patternTargetMap[format](negativeLookaheadPatterns) as PatternReturnType<T>;
 }
 
 function toJestPattern(patterns: string[]) {

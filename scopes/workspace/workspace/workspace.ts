@@ -6,7 +6,7 @@ import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
-import { generateNodeModulesPattern, PatternFormat } from '@teambit/dependencies.modules.packages-excluder';
+import { generateNodeModulesPattern, PatternTarget } from '@teambit/dependencies.modules.packages-excluder';
 import {
   AspectEntry,
   ComponentMain,
@@ -1816,7 +1816,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
     const pathsExcluding = generateNodeModulesPattern({
       packages: workspacePackageNames,
-      format: PatternFormat.WEBPACK,
+      format: PatternTarget.WEBPACK,
     });
     this.componentPathsRegExps = [...pathsExcluding.map((stringPattern) => new RegExp(stringPattern))];
   }
