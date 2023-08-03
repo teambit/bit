@@ -2,6 +2,7 @@ import { uniqBy, property } from 'lodash';
 import { Dependency, DependencyLifecycleType, SerializedDependency, SemverVersion, PackageName } from './dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './constants';
 import { ComponentDependency } from './component-dependency';
+import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 
 export type LifecycleDependenciesManifest = Record<PackageName, SemverVersion>;
 
@@ -55,6 +56,9 @@ export class DependencyList {
     );
     if (!found) return undefined;
     if (version) {
+      // because the version for snaps is stored in deps as the hash without the prefix of "0.0.0-""
+      if (version.startsWith(SNAP_VERSION_PREFIX) && found.version === version.replace(SNAP_VERSION_PREFIX, ''))
+        return found;
       return found.version === version ? found : undefined;
     }
     return found;
