@@ -1,4 +1,4 @@
-import { PatternFormat, generateNodeModulesPattern } from './generate-node-modules-pattern';
+import { PatternTarget, generateNodeModulesPattern } from './generate-node-modules-pattern';
 
 describe('generateNodeModulesPattern()', () => {
   describe('default format for JEST', () => {
@@ -175,10 +175,10 @@ describe('generateNodeModulesPattern()', () => {
       });
     });
   });
-  describe.only('format for webpack', () => {
+  describe('format for webpack', () => {
     describe('when packages provided is an empty array', () => {
       it('should return an empty array', () => {
-        expect(generateNodeModulesPattern({ packages: [], format: PatternFormat.WEBPACK })).toEqual([]);
+        expect(generateNodeModulesPattern({ packages: [], format: PatternTarget.WEBPACK })).toEqual([]);
       });
     });
     describe('when packages contains a single package', () => {
@@ -186,7 +186,7 @@ describe('generateNodeModulesPattern()', () => {
       beforeAll(() => {
         patterns = generateNodeModulesPattern({
           packages: ['@my-org/my-scope.components'],
-          format: PatternFormat.WEBPACK,
+          format: PatternTarget.WEBPACK,
         });
       });
 
@@ -205,7 +205,7 @@ describe('generateNodeModulesPattern()', () => {
       beforeAll(() => {
         patterns = generateNodeModulesPattern({
           packages: ['@my-org/my-scope.components', '@other-org/my-scope.my-app'],
-          format: PatternFormat.WEBPACK,
+          format: PatternTarget.WEBPACK,
         });
         regexps = [...patterns.map((pattern) => new RegExp(pattern))];
       });
