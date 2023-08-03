@@ -1,8 +1,8 @@
 import { uniqBy, property } from 'lodash';
+import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 import { Dependency, DependencyLifecycleType, SerializedDependency, SemverVersion, PackageName } from './dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './constants';
 import { ComponentDependency } from './component-dependency';
-import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 
 export type LifecycleDependenciesManifest = Record<PackageName, SemverVersion>;
 
