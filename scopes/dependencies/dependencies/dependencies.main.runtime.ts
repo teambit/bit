@@ -28,6 +28,7 @@ import {
   DependenciesResetCmd,
   DependenciesSetCmd,
   DependenciesUnsetCmd,
+  DependenciesUsageCmd,
   RemoveDependenciesFlags,
   SetDependenciesFlags,
 } from './dependencies-cmd';
@@ -240,6 +241,24 @@ export class DependenciesMain {
     return blameResults;
   }
 
+  /**
+   * @param depName either component-id-string or package-name (of the component or not component)
+   * @returns array of component-id-string
+   */
+  async usage(depName: string): Promise<string[]> {
+    const [name, version] = this.splitPkgToNameAndVer(depName);
+    const allComps = await this.workspace.list();
+    const compsUsingDep = await Promise.all(
+      allComps.map(async (comp) => {
+        const depList = await this.dependencyResolver.getDependencies(comp);
+        const dependency = depList.findByPkgNameOrCompId(name, version);
+        if (dependency) return comp.id.toString();
+        return null;
+      })
+    );
+    return compact(compsUsingDep);
+  }
+
   private async getPackageNameAndVerResolved(pkg: string): Promise<[string, string]> {
     const resolveLatest = async (pkgName: string) => {
       const versionResolver = await this.dependencyResolver.getVersionResolver({});
@@ -280,6 +299,7 @@ export class DependenciesMain {
       new DependenciesResetCmd(depsMain),
       new DependenciesEjectCmd(depsMain),
       new DependenciesBlameCmd(depsMain),
+      new DependenciesUsageCmd(depsMain),
     ];
     cli.register(depsCmd);
 

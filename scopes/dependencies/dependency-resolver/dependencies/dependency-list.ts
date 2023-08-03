@@ -50,7 +50,9 @@ export class DependencyList {
   }
 
   findByPkgNameOrCompId(id: string, version?: string): Dependency | undefined {
-    const found = this.dependencies.find((dep) => dep.id === id || dep.getPackageName?.() === id);
+    const found = this.dependencies.find(
+      (dep) => dep.id === id || dep.getPackageName?.() === id || dep.id.startsWith(`${id}@`)
+    );
     if (!found) return undefined;
     if (version) {
       return found.version === version ? found : undefined;
