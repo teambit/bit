@@ -2,6 +2,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 import { Extensions } from '../../../src/constants';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -468,4 +469,51 @@ describe('bit lane command', function () {
       expect(lane.components).to.have.lengthOf(1);
     });
   });
+  // (supportNpmCiRegistryTesting ? describe : describe.skip)(
+  //   'soft remove on lane then tagging the dependent without removing the references to the removed component',
+  //   () => {
+  //     let npmCiRegistry: NpmCiRegistry;
+  //     before(async () => {
+  //       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+  //       helper.scopeHelper.setNewLocalAndRemoteScopes();
+  //       // helper.command.createLane();
+  //       helper.fixtures.populateComponents(2);
+  //       npmCiRegistry = new NpmCiRegistry(helper);
+  //       npmCiRegistry.configureCiInPackageJsonHarmony();
+  //       await npmCiRegistry.init();
+  //       helper.command.tagAllComponents();
+  //       helper.command.export();
+
+  //       helper.command.softRemoveComponent('comp2');
+  //       // this installs comp2 as a package
+  //       helper.command.install();
+
+  //       // const pkgName = helper.general.getPackageNameByCompName('bar/foo');
+
+  //       // helper.scopeHelper.reInitLocalScope();
+  //       // helper.scopeHelper.addRemoteScope();
+  //       // helper.command.createLane('lane-a');
+  //       // helper.fs.outputFile('comp1/comp1.js', `import '${pkgName}';`);
+  //       // helper.command.addComponent('comp1');
+  //       // helper.command.install(pkgName);
+  //       // helper.command.snapAllComponentsWithoutBuild();
+  //       // helper.command.export();
+
+  //       // helper.command.createLane('lane-b');
+  //       // npmCiRegistry.setResolver();
+  //       // helper.command.importComponent('bar/foo');
+  //       // helper.command.snapAllComponentsWithoutBuild('--unmodified');
+  //       // helper.command.export();
+
+  //       // helper.command.switchLocalLane('lane-a', '-x');
+  //       // helper.fs.appendFile('comp1/comp1.js');
+  //     });
+  //     after(() => {
+  //       // npmCiRegistry.destroy();
+  //     });
+  //     it.only('should ', () => {
+
+  //     });
+  //   }
+  // );
 });
