@@ -5,7 +5,6 @@ import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG, COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
-import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { SnappingMain, SnapResults } from './snapping.main.runtime';
 import { outputIdsIfExists } from './tag-cmd';
@@ -122,9 +121,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     if (forceDeploy) {
       this.logger.consoleWarning(`--force-deploy is deprecated, use --ignore-build-errors instead`);
       ignoreBuildErrors = true;
-    }
-    if (disableTagAndSnapPipelines && ignoreBuildErrors) {
-      throw new BitError('you can use either ignore-build-errors or disable-snap-pipeline, but not both'); // @david so what do i do if i want to ignore e.g. lint errors, but dont want bit to try to deploy my app?
     }
 
     const results = await this.snapping.snap({

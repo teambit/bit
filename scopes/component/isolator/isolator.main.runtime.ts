@@ -338,6 +338,8 @@ export class IsolatorMain {
   }
 
   private registerMoveCapsuleOnProcessExit(datedCapsuleDir: string, targetCapsuleDir: string): void {
+    const cacheCapsules = process.env.CACHE_CAPSULES;
+    if (!cacheCapsules) return;
     this.logger.info(`registering process.on(exit) to move capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
     process.on('exit', () => {
       this.logger.info(`start moving capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);

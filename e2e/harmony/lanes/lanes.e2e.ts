@@ -1682,4 +1682,16 @@ describe('bit lane command', function () {
       expect(() => helper.command.createLane('dev', '--scope some-scope')).to.not.throw();
     });
   });
+  describe('creating components on lanes, that do not exist on main', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('dev');
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+    });
+    it('should add "onLanesOnly" prop', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp1.onLanesOnly).to.be.true;
+    });
+  });
 });

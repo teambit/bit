@@ -52,8 +52,8 @@ export type PipeName = 'build' | 'tag' | 'snap';
 
 export type BuilderDescriptor = Array<{ pipeName: PipeName; tasks: string[] }>;
 
-type PipeFunctionNames = keyof typeof pipeNames;
-export class BuilderService implements EnvService<BuildServiceResults, BuilderDescriptor> {
+export type PipeFunctionNames = keyof typeof pipeNames;
+export class BuilderService implements EnvService<BuildServiceResults, string> {
   name = 'builder';
 
   constructor(
@@ -154,11 +154,15 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     return this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
   }
 
-  render(env: EnvDefinition) {
-    const pipes = this.getDescriptor(env);
+  render() {
+    const descriptor = this.getDescriptor();
 
     return (
-      <Text key={BuilderAspect.id}>{pipes.map(({ pipeName, tasks }) => this.renderOnePipe(pipeName, tasks))}</Text>
+      <Text key={BuilderAspect.id}>
+        {descriptor}
+        <Newline />
+        <Newline />
+      </Text>
     );
   }
 
@@ -185,41 +189,8 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     };
   }
 
-  private renderOnePipe(pipeName, tasks) {
-    if (!tasks || !tasks.length) return null;
-    return (
-      <Text key={pipeName}>
-        <Text underline color="green">
-          {pipeName} pipe
-        </Text>
-        <Newline />
-        <Text color="cyan">total {tasks.length} tasks are configured to be executed in the following order</Text>
-        <Newline />
-        {tasks.map((task, index) => (
-          <Text key={index}>
-            <Text>
-              {index + 1}. {task}
-            </Text>
-            <Newline />
-          </Text>
-        ))}
-        <Newline />
-      </Text>
-    );
-  }
-
-  getDescriptor(env: EnvDefinition) {
-    // @ts-ignore
-    const tasks = Object.keys(pipeNames).map((pipeFuncName: PipeFunctionNames) => {
-      let tasksQueue: string[];
-      try {
-        tasksQueue = this.getTasksNamesByPipeFunc(env, pipeFuncName);
-      } catch (err: any) {
-        tasksQueue = [`<failed getting task-queue, error: ${err.message}>`];
-      }
-      return { pipeName: pipeNames[pipeFuncName], tasks: tasksQueue };
-    });
-    return tasks as BuilderDescriptor;
+  getDescriptor() {
+    return 'run `bit build --list-tasks <component-id>` to see the tasks list for the pipelines: build, tag and snap';
   }
 
   private getTasksNamesByPipeFunc(env: EnvDefinition, pipeFuncName: PipeFunctionNames): string[] {

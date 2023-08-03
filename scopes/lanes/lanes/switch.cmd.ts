@@ -7,6 +7,7 @@ import { LanesMain } from './lanes.main.runtime';
 export class SwitchCmd implements Command {
   name = 'switch <lane> [pattern]'; // @david why do we have the pattern flag here?
   description = `switch to the specified lane`;
+  extendedDescription = ``;
   private = true;
   alias = '';
   arguments = [
