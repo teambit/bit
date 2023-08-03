@@ -48,6 +48,7 @@ import {
   ArtifactSource,
   getArtifactsFiles,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { VersionNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';
@@ -637,21 +638,51 @@ there are matching among unmodified components thought. consider using --unmodif
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
     const lane = await this.scope.legacyScope.getCurrentLaneObject();
     const allIds = BitIds.fromArray(components.map((c) => c.id));
+    const missingDeps = await pMapSeries(components, async (component) => {
+      return this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined);
+    });
+    const flattenedMissingDeps = BitIds.uniqFromArray(missingDeps.flat().map((id) => id.changeVersion(undefined)));
+    if (!flattenedMissingDeps.length) return;
+    // ignore the cache. even if the component exists locally, we still need its VersionHistory object
+    // in order to traverse the history and determine whether it's part of the lane history.
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(flattenedMissingDeps, {
+      cache: false,
+      ignoreMissingHead: true,
+      includeVersionHistory: true,
+      lane: lane || undefined,
+    });
     await pMapSeries(components, async (component) => {
-      await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined);
+      await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined, true);
     });
   }
-  private async throwForDepsFromAnotherLaneForComp(component: ConsumerComponent, allIds: BitIds, lane?: Lane) {
+  private async throwForDepsFromAnotherLaneForComp(
+    component: ConsumerComponent,
+    allIds: BitIds,
+    lane?: Lane,
+    throwForMissingObjects = false
+  ) {
     const deps = component.getAllDependencies();
+    const missingDeps: BitId[] = [];
     await Promise.all(
       deps.map(async (dep) => {
         if (!dep.id.hasScope() || !dep.id.hasVersion()) return;
         if (isTag(dep.id.version)) return;
         if (allIds.hasWithoutVersion(dep.id)) return; // it's tagged/snapped now.
-        const isPartOfHistory = lane
-          ? (await this.scope.legacyScope.isPartOfLaneHistory(dep.id, lane)) ||
-            (await this.scope.legacyScope.isPartOfMainHistory(dep.id))
-          : await this.scope.legacyScope.isPartOfMainHistory(dep.id);
+        let isPartOfHistory: boolean | undefined;
+        try {
+          isPartOfHistory = lane
+            ? (await this.scope.legacyScope.isPartOfLaneHistory(dep.id, lane)) ||
+              (await this.scope.legacyScope.isPartOfMainHistory(dep.id))
+            : await this.scope.legacyScope.isPartOfMainHistory(dep.id);
+        } catch (err) {
+          if (throwForMissingObjects) throw err;
+          if (err instanceof VersionNotFound) {
+            missingDeps.push(dep.id);
+            return;
+          }
+          throw err;
+        }
+
         if (!isPartOfHistory) {
           const laneOrMainStr = lane ? `current lane "${lane.name}"` : 'main';
           throw new Error(
@@ -662,6 +693,7 @@ another option, in case this dependency is not in main yet is to remove all refe
         }
       })
     );
+    return missingDeps;
   }
 
   async _addFlattenedDepsGraphToComponents(components: ConsumerComponent[]) {
