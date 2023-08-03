@@ -221,9 +221,7 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)\n`;
     const autoTagPendingOutput = immutableUnshift(
       autoTagPendingComponents.map((c) => format(c)),
       autoTagPendingComponents.length
-        ? chalk.underline.white(
-            'components pending to be tagged automatically (when their modified dependencies are tagged)'
-          )
+        ? chalk.underline.white('components pending auto-tag (when their modified dependencies are tagged)')
         : ''
     ).join('\n');
 
@@ -242,6 +240,8 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)\n`;
 
     const remotelySoftRemovedDesc =
       '\n(use "bit remove" to remove them from the workspace. use "bit recover" to undo the soft-remove)\n';
+    // @david shouldn't we auto-remove them locally when they've been removed on the remote?
+    // Otherwise they just get errors that the component doesnt exist when they try e.g. `bit import` for a component that has no remote but locally isnt marked as new
     const remotelySoftRemovedOutput = immutableUnshift(
       remotelySoftRemoved.map((c) => format(c)).sort(),
       remotelySoftRemoved.length
@@ -249,22 +249,22 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)\n`;
         : ''
     ).join('\n');
 
-    const stagedDesc = '\n(use "bit export" to push these component versions to a remote scope)\n';
+    const stagedDesc = '\n(use "bit export" to push these component versions to the remote scope)\n';
     const stagedComponentsOutput = immutableUnshift(
       stagedComponents.map((c) => format(c.id, true, undefined, c.versions)),
       stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
     ).join('\n');
 
-    const snappedDesc = '\n(use "bit tag" or "bit tag --snapped" to lock a version)\n';
+    const snappedDesc = '\n(use "bit tag" or "bit tag --snapped" to lock a semver version)\n';
     const snappedComponentsOutput = immutableUnshift(
       snappedComponents.map((c) => format(c)),
       snappedComponents.length ? chalk.underline.white('snapped components (tag pending)') + snappedDesc : ''
     ).join('\n');
 
-    const unavailableOnMainDesc = '\n(use "bit checkout head" to make it available)\n';
+    const unavailableOnMainDesc = '\n(use "bit checkout head" to make them available)\n';
     const unavailableOnMainOutput = immutableUnshift(
       unavailableOnMain.map((c) => format(c)),
-      unavailableOnMain.length ? chalk.underline.white('unavailable on main components') + unavailableOnMainDesc : ''
+      unavailableOnMain.length ? chalk.underline.white('components unavailable on main') + unavailableOnMainDesc : ''
     ).join('\n');
 
     const getUpdateFromMsg = (divergeData: SnapsDistance, from = 'main'): string => {

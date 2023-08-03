@@ -12,7 +12,13 @@ export default class UpdateCmd implements Command {
   helpUrl = 'docs/dependencies/configuring-dependencies/#update-dependencies';
   alias = 'up';
   group = 'development';
-  options = [['y', 'yes', 'automatically update all outdated packages']] as CommandOptions;
+  options = [
+    [
+      'y',
+      'yes',
+      'automatically update all outdated packages - use carefully as could result in breaking updates for dependencies',
+    ],
+  ] as CommandOptions;
 
   constructor(private install: InstallMain) {}
 

@@ -45,14 +45,18 @@ export default class Init implements LegacyCommand {
     [
       '',
       'reset-hard',
-      'delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-start using Bit from scratch',
+      'delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-starting workspace from scratch',
     ],
     [
       '',
       'reset-scope',
       'removes local scope (.bit or .git/bit). tags/snaps that have not been exported will be lost. workspace is left intact',
     ],
-    ['d', 'default-directory <default-directory>', 'set the default directory to import components into'],
+    [
+      'd',
+      'default-directory <default-directory>',
+      'set the default directory pattern to import/create components into',
+    ],
     ['', 'default-scope <default-scope>', 'set the default scope for components in the workspace'],
     ['p', 'package-manager <package-manager>', 'set the package manager (npm or yarn) to be used in the workspace'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
