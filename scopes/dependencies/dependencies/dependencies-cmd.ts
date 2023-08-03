@@ -41,7 +41,9 @@ export class DependenciesGetCmd implements Command {
           return archy(graphAsTree);
         } catch (err: any) {
           if (err.constructor.name === 'RangeError') {
-            return `${chalk.red('unable to generate a tree representation, the graph is too big or has cycles')}`;
+            return `${chalk.red(
+              'unable to generate a tree representation, the graph is too big or has cyclic dependencies'
+            )}`;
           }
           throw err;
         }
