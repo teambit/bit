@@ -9,6 +9,7 @@ import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
+import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
@@ -26,7 +27,6 @@ import { OldScopeNotFound } from './exceptions/old-scope-not-found';
 import { OldScopeExported } from './exceptions/old-scope-exported';
 import { OldScopeTagged } from './exceptions/old-scope-tagged';
 import { ScopeRenameOwnerCmd } from './scope-rename-owner.cmd';
-import EnvsAspect, { EnvsMain } from '@teambit/envs';
 
 export class RenamingMain {
   constructor(
