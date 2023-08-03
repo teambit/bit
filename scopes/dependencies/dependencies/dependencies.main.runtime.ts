@@ -243,20 +243,22 @@ export class DependenciesMain {
 
   /**
    * @param depName either component-id-string or package-name (of the component or not component)
-   * @returns array of component-id-string
+   * @returns a map of component-id-string to the version of the dependency
    */
-  async usage(depName: string): Promise<string[]> {
+  async usage(depName: string): Promise<{ [compIdStr: string]: string }> {
     const [name, version] = this.splitPkgToNameAndVer(depName);
     const allComps = await this.workspace.list();
-    const compsUsingDep = await Promise.all(
+    const results = {};
+    await Promise.all(
       allComps.map(async (comp) => {
         const depList = await this.dependencyResolver.getDependencies(comp);
         const dependency = depList.findByPkgNameOrCompId(name, version);
-        if (dependency) return comp.id.toString();
-        return null;
+        if (dependency) {
+          results[comp.id.toString()] = dependency.version;
+        }
       })
     );
-    return compact(compsUsingDep);
+    return results;
   }
 
   private async getPackageNameAndVerResolved(pkg: string): Promise<[string, string]> {

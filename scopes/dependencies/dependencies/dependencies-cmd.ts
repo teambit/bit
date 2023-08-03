@@ -295,10 +295,13 @@ export class DependenciesUsageCmd implements Command {
 
   async report([depName]: [string]) {
     const results = await this.deps.usage(depName);
-    if (!results.length) {
+    if (!Object.keys(results).length) {
       return chalk.yellow(`the specified dependency ${depName} is not used by any component`);
     }
-    return results.join('\n');
+    const depHasVersion = depName.includes('@');
+    return Object.keys(results)
+      .map((compIdStr) => `${compIdStr}${depHasVersion ? '' : ` (using dep in version ${results[compIdStr]})`}`)
+      .join('\n');
   }
 }
 
