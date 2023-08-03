@@ -593,7 +593,7 @@ export async function updateComponentsVersions(
     consumer.bitMap.updateComponentId(id);
     const availableOnMain = await isAvailableOnMain(modelComponent, id);
     if (!availableOnMain) {
-      consumer.bitMap.setComponentProp(id, 'onLanesOnly', true);
+      consumer.bitMap.setOnLanesOnly(id, true);
     }
     const componentMap = consumer.bitMap.getComponent(id);
     const compId = await workspace.resolveComponentId(id);

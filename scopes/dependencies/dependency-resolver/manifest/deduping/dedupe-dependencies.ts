@@ -41,10 +41,13 @@ export type DedupedDependencies = {
 export function dedupeDependencies(
   rootPolicy: WorkspacePolicy,
   componentDependenciesMap: ComponentDependenciesMap,
-  hoistedDepFields?: ManifestDependenciesKeysNames[]
+  options?: {
+    hoistedDepFields?: ManifestDependenciesKeysNames[];
+    dedupePeerDependencies?: boolean;
+  }
 ): DedupedDependencies {
-  const indexedByDepId = indexByDepId(rootPolicy, componentDependenciesMap, hoistedDepFields);
-  const dedupedDependenciesWithoutRootOriginal = hoistDependencies(indexedByDepId);
+  const indexedByDepId = indexByDepId(rootPolicy, componentDependenciesMap, options?.hoistedDepFields);
+  const dedupedDependenciesWithoutRootOriginal = hoistDependencies(indexedByDepId, options);
   const result = mergeWithRootDeps(rootPolicy.toManifest(), dedupedDependenciesWithoutRootOriginal);
   return result;
 }

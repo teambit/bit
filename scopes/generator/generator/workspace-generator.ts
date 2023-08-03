@@ -56,6 +56,9 @@ export class WorkspaceGenerator {
       await init(this.workspacePath, this.options.skipGit, false, false, false, false, false, false, {});
       await this.writeWorkspaceFiles();
       await this.reloadBitInWorkspaceDir();
+      // Setting the workspace to be in install context to prevent errors during the workspace generation
+      // the workspace will be in install context until the end of the generation install process
+      this.workspace.inInstallContext = true;
       await this.setupGitBitmapMergeDriver();
       await this.forkComponentsFromRemote();
       await this.importComponentsFromRemote();

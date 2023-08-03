@@ -283,12 +283,7 @@ export function CodeCompareView({
         maxHeight: containerHeightStyle,
         height: containerHeightStyle,
       }}
-      className={classNames(
-        styles.componentCompareCodeViewContainer,
-        className,
-        loading && styles.loading,
-        isFullScreen && styles.isFullScreen
-      )}
+      className={classNames(styles.componentCompareCodeViewContainer, className, isFullScreen && styles.isFullScreen)}
     >
       <CodeCompareNavigation
         files={files}
@@ -314,11 +309,7 @@ export function CodeCompareView({
           maxHeight: codeContainerHeightStyle,
           height: codeContainerHeightStyle,
         }}
-        className={classNames(
-          styles.componentCompareCodeDiffEditorContainer,
-          loading && styles.loading,
-          isFullScreen && styles.isFullScreen
-        )}
+        className={classNames(styles.componentCompareCodeDiffEditorContainer, isFullScreen && styles.isFullScreen)}
       >
         <CodeCompareViewLoader
           className={classNames(!loading && styles.hideLoader, isFullScreen && styles.isFullScreen)}
