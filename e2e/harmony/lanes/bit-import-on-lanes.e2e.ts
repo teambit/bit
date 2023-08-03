@@ -60,9 +60,9 @@ describe('bit lane command', function () {
         before(() => {
           helper.command.switchLocalLane('main');
         });
-        it('bit list should not show the component', () => {
+        it('bit list should show the component, because it has head', () => {
           const list = helper.command.listParsed();
-          expect(list).to.have.lengthOf(0);
+          expect(list).to.have.lengthOf(1);
         });
       });
     });

@@ -655,7 +655,9 @@ there are matching among unmodified components thought. consider using --unmodif
         if (!isPartOfHistory) {
           const laneOrMainStr = lane ? `current lane "${lane.name}"` : 'main';
           throw new Error(
-            `unable to tag/snap ${component.id.toString()}, it has a dependency ${dep.id.toString()} which is not part of ${laneOrMainStr} history.`
+            `unable to tag/snap ${component.id.toString()}, it has a dependency ${dep.id.toString()} which is not part of ${laneOrMainStr} history.
+one option to resolve this is installing ${dep.id.toStringWithoutVersion()} via "bit install", which installs the version from main.
+another option, in case this dependency is not in main yet is to remove all references of this dependency in the code and then tag/snap.`
           );
         }
       })

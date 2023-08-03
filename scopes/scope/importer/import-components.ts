@@ -712,7 +712,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       components.map(async (comp) => {
         const existOnRemoteLane = idsFromRemoteLanes.has(comp.id);
         if (!existOnRemoteLane && !this.options.saveInLane) {
-          this.consumer.bitMap.setComponentProp(comp.id, 'onLanesOnly', false);
+          this.consumer.bitMap.setOnLanesOnly(comp.id, false);
           return;
         }
         const modelComponent = await this.scope.getModelComponent(comp.id);
