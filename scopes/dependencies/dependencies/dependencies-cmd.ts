@@ -298,9 +298,8 @@ export class DependenciesUsageCmd implements Command {
     if (!Object.keys(results).length) {
       return chalk.yellow(`the specified dependency ${depName} is not used by any component`);
     }
-    const depHasVersion = depName.includes('@');
     return Object.keys(results)
-      .map((compIdStr) => `${compIdStr}${depHasVersion ? '' : ` (using dep in version ${results[compIdStr]})`}`)
+      .map((compIdStr) => `${chalk.bold(compIdStr)} (using dep in version ${results[compIdStr]})`)
       .join('\n');
   }
 }
