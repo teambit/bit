@@ -729,7 +729,7 @@ either, use the ignore file syntax or change the require statement to have a mod
 
         // In case it's resolved from the node_modules, and it's also in the ws policy or variants,
         // use the resolved version from the node_modules / package folder
-        if (this.isPkgInWorkspacePolicies(compDep.name) || this.isPkgInVariants(compDep.name)) {
+        if (this.isPkgInWorkspacePolicies(compDep.name)) {
           return componentId;
         }
 
@@ -740,6 +740,10 @@ either, use the ignore file syntax or change the require statement to have a mod
         if (fromMergeConfig) {
           depDebug.versionResolvedFrom = 'MergeConfig';
           return fromMergeConfig;
+        }
+
+        if (this.isPkgInVariants(compDep.name)) {
+          return componentId;
         }
 
         // If there is a version in the node_modules/package folder, but it's not in the ws policy,
