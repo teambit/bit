@@ -22,12 +22,12 @@ type LaneOptions = {
 
 export class LaneListCmd implements Command {
   name = 'list';
-  description = `list locally imported/created lanes`;
+  description = `list local lanes`;
   alias = '';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
     ['j', 'json', "show lanes' details in a json format"],
-    ['r', 'remote <remote-scope-name>', 'show remote lanes'], // @david does this show all lanes in the whole organisation?
+    ['r', 'remote <remote-scope-name>', 'show all remote lanes from the specified scope'],
     ['', 'merged', 'show merged lanes'], // @david again, is this all the merged lanes in the whole org, ever?
     ['', 'not-merged', 'show lanes that are not merged'], // @david isn't this the default, at least for the remote flag?
   ] as CommandOptions;

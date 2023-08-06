@@ -1,7 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import R from 'ramda';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { listTemplate } from './list-template';
 import { ListerMain, ListScopeResult } from './lister.main.runtime';
