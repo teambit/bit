@@ -24,8 +24,7 @@ const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
 
 export class StatusCmd implements Command {
   name = 'status';
-  description =
-    'present the current status of components in the workspace, including notification when issues are detected';
+  description = 'present the current status of components in the workspace, including indication of detected issues';
   group = 'development';
   extendedDescription: string;
   alias = 's';
