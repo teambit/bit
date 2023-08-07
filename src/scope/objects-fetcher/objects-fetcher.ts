@@ -158,7 +158,8 @@ the remote scope "${scopeName}" was not found`);
   }
 
   /**
-   * remove the "laneId" property from the fetchOptions if the scopeName is not the lane's scope.
+   * remove the "laneId" property from the fetchOptions if the scopeName is not the lane's scope of if the lane is new.
+   * otherwise, the importer will throw LaneNotFound error.
    */
   private getFetchOptionsPerRemote(scopeName: string): FETCH_OPTIONS {
     const fetchOptions = this.fetchOptions as FETCH_OPTIONS;
