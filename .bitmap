@@ -2309,5 +2309,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/yarn"
     },
-    "$schema-version": "15.0.0"
+    "$schema-version": "16.0.0"
 }
+
