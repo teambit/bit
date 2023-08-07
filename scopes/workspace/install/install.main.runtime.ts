@@ -576,7 +576,11 @@ export class InstallMain {
    *
    * @param options.all {Boolean} updates all outdated dependencies without showing a prompt.
    */
-  async updateDependencies(options: { patterns?: string[]; all: boolean }): Promise<ComponentMap<string> | null> {
+  async updateDependencies(options: {
+    forceVersionBump?: 'major' | 'minor' | 'patch';
+    patterns?: string[];
+    all: boolean;
+  }): Promise<ComponentMap<string> | null> {
     const { componentConfigFiles, componentPoliciesById } = await this._getComponentsWithDependencyPolicies();
     const variantPatterns = this.variants.raw();
     const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
@@ -587,6 +591,7 @@ export class InstallMain {
       componentPoliciesById,
       components,
       patterns: options.patterns,
+      forceVersionBump: options.forceVersionBump,
     });
     let outdatedPkgsToUpdate!: OutdatedPkg[];
     if (options.all) {
