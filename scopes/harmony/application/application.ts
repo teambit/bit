@@ -9,7 +9,7 @@ import { AppBuildResult } from './app-build-result';
 export type DeployFn = (context: AppDeployContext) => Promise<void>;
 
 // TODO: @nacho not sure if we need the dep Resolver and pubsub here
-export interface AppPostbuild extends AppBuildContext {
+export interface AppPostbuildContext extends AppBuildContext {
   publicDir: string;
   logger: Logger;
   workspacePath: string;
