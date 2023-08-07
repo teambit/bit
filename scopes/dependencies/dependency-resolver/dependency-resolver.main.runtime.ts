@@ -1,3 +1,4 @@
+import multimatch from 'multimatch';
 import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import { getAllCoreAspectsIds } from '@teambit/bit';
@@ -1402,11 +1403,13 @@ export class DependencyResolverMain {
     variantPoliciesByPatterns,
     componentPoliciesById,
     components,
+    patterns,
   }: {
     rootDir: string;
     variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
     componentPoliciesById: Record<string, any>;
     components: Component[];
+    patterns?: string[];
   }): Promise<OutdatedPkg[]> {
     const componentModelVersions: ComponentModelVersion[] = (
       await Promise.all(
@@ -1430,12 +1433,21 @@ export class DependencyResolverMain {
         })
       )
     ).flat();
-    const allPkgs = getAllPolicyPkgs({
+    let allPkgs = getAllPolicyPkgs({
       rootPolicy: this.getWorkspacePolicyFromConfig(),
       variantPoliciesByPatterns,
       componentPoliciesById,
       componentModelVersions,
     });
+    if (patterns?.length) {
+      const selectedPkgNames = new Set(
+        multimatch(
+          allPkgs.map(({ name }) => name),
+          patterns
+        )
+      );
+      allPkgs = allPkgs.filter(({ name }) => selectedPkgNames.has(name));
+    }
     return this.getOutdatedPkgs(rootDir, allPkgs);
   }
 
