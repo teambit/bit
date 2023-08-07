@@ -1,6 +1,8 @@
 import { Component } from '@teambit/component';
 import { isHash } from '@teambit/component-version';
 
+export const SNAP_VERSION_PREFIX = '0.0.0-';
+
 /**
  * This function will calculate the package version for a component.
  * It is used mainly for supporting lanes and snaps during capsule creation
@@ -25,6 +27,6 @@ export function getComponentPackageVersion(component: Component, snapId?: string
 }
 
 export function snapToSemver(version: string): string {
-  if (isHash(version)) return `0.0.0-${version}`;
+  if (isHash(version)) return `${SNAP_VERSION_PREFIX}${version}`;
   return version;
 }
