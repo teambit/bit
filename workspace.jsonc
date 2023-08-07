@@ -373,6 +373,7 @@
         "tempy": "1.0.1",
         "terser-webpack-plugin": "5.2.0",
         "tippy.js": "6.2.7",
+        "tsup": "7.2.0",
         "ua-parser-js": "0.7.24",
         "unist-util-remove": "2.0.1",
         "unist-util-visit": "2.0.3",

@@ -99,6 +99,7 @@ export const externals = [
   '@teambit/react.ui.docs-app',
   '@teambit/react.ui.compositions-app',
   'babel-preset-react-app',
+  'tippy.js',
   // 'esbuild'
   // 'mime'
 ];
