@@ -70,6 +70,33 @@ describe('update command', function () {
         expect(helper.fixtures.fs.readJsonFile(`node_modules/is-odd/package.json`).version).not.to.equal('1.0.0');
       });
     });
+    describe('select by patterns', function () {
+      let configFile;
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.extensions.bitJsonc.addPolicyToDependencyResolver({
+          dependencies: {
+            'is-odd': '1.0.0',
+            'is-negative': '1.0.0',
+            'is-positive': '1.0.0',
+          },
+        });
+        helper.command.install();
+        helper.command.update('--yes is-posit*');
+        configFile = helper.bitJsonc.read(helper.scopes.localPath);
+      });
+      it('should update the version range of the selected package', function () {
+        expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).not.to.equal(
+          '1.0.0'
+        );
+      });
+      it('should not update the version ranges of the packages that were not selected', function () {
+        expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative']).to.equal(
+          '1.0.0'
+        );
+        expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal('1.0.0');
+      });
+    });
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('updates dependencies from the model', () => {
     let configFile;
