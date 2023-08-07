@@ -90,6 +90,9 @@ export class AppsBuildTask implements BuildTask {
       artifactsDir: this.getArtifactDirectory(),
     });
     const deployContext = await app.build(appDeployContext);
+
+    if (app.getPostBuild) await app.getPostBuild(appDeployContext);
+
     const defaultArtifacts: ArtifactDefinition[] = this.getDefaultArtifactDef(app.applicationType || app.name);
     const artifacts = defaultArtifacts.concat(deployContext.artifacts || []);
 
