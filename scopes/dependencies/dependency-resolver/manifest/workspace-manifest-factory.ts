@@ -32,7 +32,7 @@ export type CreateFromComponentsOptions = {
   resolveVersionsFromDependenciesOnly?: boolean;
   referenceLocalPackages?: boolean;
   hasRootComponents?: boolean;
-  filterExtensionDependencies?: boolean;
+  excludeExtensionsDependencies?: boolean;
 };
 
 const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
@@ -40,7 +40,7 @@ const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
   createManifestForComponentsWithoutDependencies: true,
   dedupe: true,
   resolveVersionsFromDependenciesOnly: false,
-  filterExtensionDependencies: false,
+  excludeExtensionsDependencies: false,
 };
 export class WorkspaceManifestFactory {
   constructor(private dependencyResolver: DependencyResolverMain, private aspectLoader: AspectLoaderMain) {}
@@ -60,7 +60,7 @@ export class WorkspaceManifestFactory {
       filterComponentsFromManifests: optsWithDefaults.filterComponentsFromManifests,
       rootPolicy: optsWithDefaults.resolveVersionsFromDependenciesOnly ? undefined : rootPolicy,
       dependencyFilterFn: optsWithDefaults.dependencyFilterFn,
-      filterExtensionDependencies: optsWithDefaults.filterExtensionDependencies,
+      excludeExtensionsDependencies: optsWithDefaults.excludeExtensionsDependencies,
       referenceLocalPackages: optsWithDefaults.referenceLocalPackages && hasRootComponents,
       rootDependencies: hasRootComponents ? rootPolicy.toManifest().dependencies : undefined,
     });
@@ -125,14 +125,14 @@ export class WorkspaceManifestFactory {
     {
       dependencyFilterFn,
       filterComponentsFromManifests,
-      filterExtensionDependencies,
+      excludeExtensionsDependencies,
       referenceLocalPackages,
       rootDependencies,
       rootPolicy,
     }: {
       dependencyFilterFn?: DepsFilterFn;
       filterComponentsFromManifests?: boolean;
-      filterExtensionDependencies?: boolean;
+      excludeExtensionsDependencies?: boolean;
       referenceLocalPackages?: boolean;
       rootDependencies?: Record<string, string>;
       rootPolicy?: WorkspacePolicy;
@@ -163,7 +163,7 @@ export class WorkspaceManifestFactory {
       if (filterComponentsFromManifests ?? true) {
         depList = filterComponents(depList, components);
       }
-      if (filterExtensionDependencies) {
+      if (excludeExtensionsDependencies) {
         depList = filterExtensions(depList);
       }
       // Remove bit bin from dep list

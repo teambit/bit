@@ -21,7 +21,7 @@ const DEFAULT_PM_INSTALL_OPTIONS: PackageManagerInstallOptions = {
 
 const DEFAULT_INSTALL_OPTIONS: InstallOptions = {
   installTeambitBit: false,
-  filterExtensionDependencies: false,
+  excludeExtensionsDependencies: false,
 };
 
 export type DepInstallerContext = {
@@ -42,7 +42,7 @@ export type InstallOptions = {
   resolveVersionsFromDependenciesOnly?: boolean;
   linkedDependencies?: Record<string, Record<string, string>>;
   forceTeambitHarmonyLink?: boolean;
-  filterExtensionDependencies?: boolean;
+  excludeExtensionsDependencies?: boolean;
 };
 
 export type GetComponentManifestsOptions = {
@@ -52,7 +52,7 @@ export type GetComponentManifestsOptions = {
   resolveVersionsFromDependenciesOnly?: boolean;
   referenceLocalPackages?: boolean;
   hasRootComponents?: boolean;
-  filterExtensionDependencies?: boolean;
+  excludeExtensionsDependencies?: boolean;
 } & Pick<
   PackageManagerInstallOptions,
   'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents' | 'copyPeerToRuntimeOnRoot' | 'installPeersFromEnvs'
@@ -122,7 +122,7 @@ export class DependencyInstaller {
       rootDir: finalRootDir,
       resolveVersionsFromDependenciesOnly: options.resolveVersionsFromDependenciesOnly,
       referenceLocalPackages: packageManagerOptions.rootComponentsForCapsules,
-      filterExtensionDependencies: options.filterExtensionDependencies,
+      excludeExtensionsDependencies: options.excludeExtensionsDependencies,
     });
     return this.installComponents(
       finalRootDir,
@@ -277,7 +277,7 @@ export class DependencyInstaller {
     resolveVersionsFromDependenciesOnly,
     referenceLocalPackages,
     hasRootComponents,
-    filterExtensionDependencies,
+    excludeExtensionsDependencies,
   }: GetComponentManifestsOptions) {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
@@ -287,7 +287,7 @@ export class DependencyInstaller {
       resolveVersionsFromDependenciesOnly,
       referenceLocalPackages,
       hasRootComponents,
-      filterExtensionDependencies,
+      excludeExtensionsDependencies,
     };
     const workspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
       undefined,
