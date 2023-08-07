@@ -899,7 +899,7 @@
     },
     "network/get-port": {
         "scope": "teambit.toolbox",
-        "version": "0.0.121",
+        "version": "1.0.0",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/get-port"
     },
@@ -2291,3 +2291,4 @@
     },
     "$schema-version": "16.0.0"
 }
+
