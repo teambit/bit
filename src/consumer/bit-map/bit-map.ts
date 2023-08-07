@@ -40,7 +40,7 @@ export type GetBitMapComponentOptions = {
 };
 
 export type MergeOptions = {
-  mergeStrategy: 'theirs' | 'ours' | 'manual';
+  mergeStrategy?: 'theirs' | 'ours' | 'manual';
 };
 
 export const LANE_KEY = '_bit_lane';
@@ -143,7 +143,7 @@ export default class BitMap {
     return componentMap;
   }
 
-  static mergeContent(rawContent: string, otherRawContent: string, opts: MergeOptions): string {
+  static mergeContent(rawContent: string, otherRawContent: string, opts: MergeOptions = {}): string {
     const parsed = json.parse(rawContent, undefined, true);
     const parsedOther = json.parse(otherRawContent, undefined, true);
     const merged = {};

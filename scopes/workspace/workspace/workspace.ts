@@ -89,6 +89,7 @@ import {
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
+import { MergeOptions as BitmapMergeOptions } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
 import { GraphIdsFromFsBuilder } from './build-graph-ids-from-fs';
 import { AspectsMerger } from './aspects-merger';
@@ -960,8 +961,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return componentId.changeVersion(id.version);
   }
 
-  mergeBitmaps(bitmapContent: string, otherBitmapContent: string): string {
-    return this.bitMap.mergeBitmaps(bitmapContent, otherBitmapContent);
+  mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: BitmapMergeOptions = {}): string {
+    return this.bitMap.mergeBitmaps(bitmapContent, otherBitmapContent, opts);
   }
 
   /**

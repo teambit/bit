@@ -10,7 +10,7 @@ import { LaneId } from '@teambit/lane-id';
 import EnvsAspect from '@teambit/envs';
 
 export type MergeOptions = {
-  mergeStrategy: 'theirs' | 'ours' | 'manual';
+  mergeStrategy?: 'theirs' | 'ours' | 'manual';
 };
 /**
  * consider extracting to a new component.
@@ -19,7 +19,7 @@ export type MergeOptions = {
 export class BitMap {
   constructor(private legacyBitMap: LegacyBitMap, private consumer: Consumer) {}
 
-  mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: MergeOptions): string {
+  mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: MergeOptions = {}): string {
     return LegacyBitMap.mergeContent(bitmapContent, otherBitmapContent, opts);
   }
 
