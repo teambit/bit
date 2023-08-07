@@ -1404,12 +1404,14 @@ export class DependencyResolverMain {
     componentPoliciesById,
     components,
     patterns,
+    forceVersionBump,
   }: {
     rootDir: string;
     variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
     componentPoliciesById: Record<string, any>;
     components: Component[];
     patterns?: string[];
+    forceVersionBump?: 'major' | 'minor' | 'patch';
   }): Promise<OutdatedPkg[]> {
     const componentModelVersions: ComponentModelVersion[] = (
       await Promise.all(
@@ -1448,14 +1450,20 @@ export class DependencyResolverMain {
       );
       allPkgs = allPkgs.filter(({ name }) => selectedPkgNames.has(name));
     }
-    return this.getOutdatedPkgs(rootDir, allPkgs);
+    return this.getOutdatedPkgs({ rootDir, forceVersionBump }, allPkgs);
   }
 
   /**
    * Accepts a list of package dependency policies and returns a list of outdated policies extended with their "latestRange"
    */
   async getOutdatedPkgs<T>(
-    rootDir: string,
+    {
+      rootDir,
+      forceVersionBump,
+    }: {
+      rootDir: string;
+      forceVersionBump?: 'major' | 'minor' | 'patch';
+    },
     pkgs: Array<{ name: string; currentRange: string } & T>
   ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
     this.logger.setStatusLine('checking the latest versions of dependencies');
@@ -1475,7 +1483,7 @@ export class DependencyResolverMain {
     const outdatedPkgs = compact(
       await Promise.all(
         pkgs.map(async (pkg) => {
-          const latestVersion = await tryResolve(`${pkg.name}@latest`);
+          const latestVersion = await tryResolve(`${pkg.name}@${newVersionRange(pkg.currentRange, forceVersionBump)}`);
           if (!latestVersion) return null;
           const currentVersion = semver.valid(pkg.currentRange.replace(/[\^~]/, ''));
           // If the current version is newer than the latest, then no need to update the dependency
@@ -1678,5 +1686,20 @@ function repeatPrefix(originalSpec: string, newVersion: string): string {
       return `${originalSpec[0]}${newVersion}`;
     default:
       return newVersion;
+  }
+}
+
+function newVersionRange(currentRange: string, forceVersionBump?: 'major' | 'minor' | 'patch') {
+  if (forceVersionBump == null || forceVersionBump === 'major') return 'latest';
+  const currentVersion = semver.valid(currentRange.replace(/[\^~]/, ''));
+  if (!currentVersion) return null;
+  const [major, minor] = currentVersion.split('.');
+  switch (forceVersionBump) {
+    case 'patch':
+      return `>=${currentVersion} <${major}.${+minor + 1}.0`;
+    case 'minor':
+      return `>=${currentVersion} <${+major + 1}.0.0`;
+    default:
+      return null;
   }
 }
