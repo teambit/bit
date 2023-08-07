@@ -154,6 +154,8 @@ export default class BitMap {
     } else {
       Object.assign(merged, parsedOther, parsed);
       const merged2 = Object.assign({}, parsed, parsedOther);
+      // The easiest way to check for conflicts is to compare the hash of the merged object
+      // once when other is first and once when ours is first
       if (objectHash(merged) !== objectHash(merged2)) {
         throw new BitError(
           'conflict merging Bitmap, you need to resolve the conflict manually or choose "ours" or "theirs" strategy'
