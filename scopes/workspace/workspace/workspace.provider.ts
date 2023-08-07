@@ -185,6 +185,7 @@ export default async function provideWorkspace(
   LegacyDependencyResolver.registerOnComponentAutoDetectOverridesGetter(
     async (configuredExtensions: ExtensionDataList, id: BitId, legacyFiles: SourceFile[]) => {
       let policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
+      // this is needed for "bit install" to install the dependencies from the merge config (see https://github.com/teambit/bit/pull/6849)
       const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
       if (depsDataOfMergeConfig) {
         const policiesFromMergeConfig = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, 'auto');
