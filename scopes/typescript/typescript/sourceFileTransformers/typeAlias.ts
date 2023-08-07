@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { replaceName } from './replaceName';
 
 export function typeAliasNamesTransformer(nameMapping: Record<string, string>): ts.TransformerFactory<ts.SourceFile> {
   return (context) => {
@@ -6,16 +7,13 @@ export function typeAliasNamesTransformer(nameMapping: Record<string, string>): 
     const visit: ts.Visitor = (node) => {
       if (ts.isTypeAliasDeclaration(node)) {
         const oldName = node.name.text;
-        const newName = Object.keys(nameMapping).find((key) => oldName.startsWith(key) || oldName.endsWith(key));
+        const newName = replaceName(oldName, nameMapping);
         if (newName) {
-          const replacedName = oldName.startsWith(newName)
-            ? oldName.replace(newName, nameMapping[newName])
-            : oldName.replace(new RegExp(`${newName}$`), nameMapping[newName]);
           return factory.updateTypeAliasDeclaration(
             node,
             node.decorators,
             node.modifiers,
-            factory.createIdentifier(replacedName),
+            factory.createIdentifier(newName),
             node.typeParameters,
             node.type
           );

@@ -36,6 +36,10 @@ export type EnvsConfig = {
   options: EnvOptions;
 };
 
+type GetCalcEnvOptions = {
+  skipWarnings?: boolean;
+};
+
 export type EnvOptions = {};
 
 export type EnvTransformer = (env: Environment) => Environment;
@@ -409,8 +413,8 @@ export class EnvsMain {
     return envsData;
   }
 
-  async calcDescriptor(component: Component): Promise<Descriptor | undefined> {
-    const componentDescriptor = await this.getComponentEnvDescriptor(component);
+  async calcDescriptor(component: Component, opts: GetCalcEnvOptions = {}): Promise<Descriptor | undefined> {
+    const componentDescriptor = await this.getComponentEnvDescriptor(component, opts);
     if (!componentDescriptor) return undefined;
     const envComponentSelfDescriptor = await this.getEnvSelfDescriptor(component);
     const result = envComponentSelfDescriptor
@@ -446,8 +450,11 @@ export class EnvsMain {
   /**
    * Get env descriptor from the env that a given component is using
    */
-  private async getComponentEnvDescriptor(component: Component): Promise<RegularCompDescriptor | undefined> {
-    const envDef = this.calculateEnv(component);
+  private async getComponentEnvDescriptor(
+    component: Component,
+    opts: GetCalcEnvOptions = {}
+  ): Promise<RegularCompDescriptor | undefined> {
+    const envDef = this.calculateEnv(component, opts);
     return this.getEnvDescriptorFromEnvDef(envDef);
   }
 
@@ -524,7 +531,7 @@ export class EnvsMain {
    * Do not use it to get the env (use getEnv instead)
    * This should be used only during on load
    */
-  calculateEnv(component: Component): EnvDefinition {
+  calculateEnv(component: Component, opts: GetCalcEnvOptions = {}): EnvDefinition {
     // Search first for env configured via envs aspect itself
     const envIdFromEnvsConfig = this.getEnvIdFromEnvsConfig(component);
     let envIdFromEnvsConfigWithoutVersion;
@@ -555,11 +562,13 @@ export class EnvsMain {
           this.envIds.add(envDef.id);
           return envDef;
         }
-        // Do not allow a non existing env
-        this.printWarningIfFirstTime(
-          matchedEntry.id.toString(),
-          `environment with ID: ${matchedEntry.id.toString()} configured on component ${component.id.toString()} was not loaded (run "bit install")`
-        );
+        if (!opts.skipWarnings) {
+          // Do not allow a non existing env
+          this.printWarningIfFirstTime(
+            matchedEntry.id.toString(),
+            `environment with ID: ${matchedEntry.id.toString()} configured on component ${component.id.toString()} was not loaded (run "bit install")`
+          );
+        }
       }
       // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
       // const errMsg = new EnvNotConfiguredForComponent(envIdFromEnvsConfig as string, component.id.toString()).message;

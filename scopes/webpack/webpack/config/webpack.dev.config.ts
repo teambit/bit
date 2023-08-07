@@ -159,5 +159,9 @@ export function configFactory(
         options: { pubsub, devServerID },
       }),
     ],
+
+    watchOptions: {
+      poll: true,
+    },
   };
 }

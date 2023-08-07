@@ -1,17 +1,26 @@
 import ts from 'typescript';
 import { SourceFileTransformer } from '.';
+import { replaceName } from './replaceName';
 
 export const functionNamesTransformer: SourceFileTransformer = (mapping: Record<string, string>) => {
   return (context) => {
     const updateTypeReference: ts.Visitor = (node) => {
-      if (ts.isTypeReferenceNode(node)) {
-        const typeName = node.typeName.getText();
-        const newTypeName = mapping[typeName];
-        if (newTypeName) {
-          return ts.factory.updateTypeReferenceNode(node, ts.factory.createIdentifier(newTypeName), node.typeArguments);
+      try {
+        if (ts.isTypeReferenceNode(node) && node.typeName) {
+          const typeName = node.typeName.getText(node.getSourceFile());
+          const newTypeName = replaceName(typeName, mapping);
+          if (newTypeName) {
+            return ts.factory.updateTypeReferenceNode(
+              node,
+              ts.factory.createIdentifier(newTypeName),
+              node.typeArguments
+            );
+          }
         }
+        return ts.visitEachChild(node, updateTypeReference, context);
+      } catch (e) {
+        return node;
       }
-      return ts.visitEachChild(node, updateTypeReference, context);
     };
 
     const visit: ts.Visitor = (node) => {

@@ -17,7 +17,6 @@ export type ComponentStatus = {
   staged: boolean;
   notExist: boolean;
   missingFromScope: boolean;
-  nested: boolean; // when a component is nested, it doesn't matter whether it was modified
 };
 
 export type ComponentStatusResult = { id: BitId; status: ComponentStatus };

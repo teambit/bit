@@ -313,6 +313,7 @@ export async function tagModelComponent({
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
     await snapping._addFlattenedDependenciesToComponents(allComponentsToTag);
+    await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer);
@@ -592,7 +593,7 @@ export async function updateComponentsVersions(
     consumer.bitMap.updateComponentId(id);
     const availableOnMain = await isAvailableOnMain(modelComponent, id);
     if (!availableOnMain) {
-      consumer.bitMap.setComponentProp(id, 'onLanesOnly', true);
+      consumer.bitMap.setOnLanesOnly(id, true);
     }
     const componentMap = consumer.bitMap.getComponent(id);
     const compId = await workspace.resolveComponentId(id);

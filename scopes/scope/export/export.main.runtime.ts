@@ -733,14 +733,9 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     }
     loader.start(BEFORE_EXPORT); // show single export
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
-    const statuses = await consumer.getManyComponentsStatuses(parsedIds);
-    statuses.forEach(({ id, status }) => {
-      if (status.nested) {
-        throw new GeneralError(
-          `unable to export "${id.toString()}", the component is not fully available. please use "bit import" first`
-        );
-      }
-    });
+    // load the components for fixing any out-of-sync issues.
+    await consumer.loadComponents(BitIds.fromArray(parsedIds));
+
     return filterNonScopeIfNeeded(BitIds.fromArray(parsedIds));
   }
 

@@ -1,6 +1,5 @@
 import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, TagMap } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
 import { compact, fromPairs, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -152,20 +151,13 @@ export class WorkspaceComponentLoader {
       consumerComponent.issues.getOrCreate(IssuesClasses.MergeConfigHasConflict).data = true;
     }
 
-    const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
-    // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
-    const extensionDataList = ExtensionDataList.mergeConfigs([
-      extensionsFromConsumerComponent,
-      extensions,
-    ]).filterRemovedExtensions();
-
     // temporarily mutate consumer component extensions until we remove all direct access from legacy to extensions data
     // TODO: remove this once we remove all direct access from legacy code to extensions data
-    consumerComponent.extensions = extensionDataList;
+    consumerComponent.extensions = extensions;
 
     const state = new State(
-      new Config(consumerComponent.mainFile, extensionDataList),
-      await this.workspace.createAspectList(extensionDataList),
+      new Config(consumerComponent.mainFile, extensions),
+      await this.workspace.createAspectList(extensions),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
       consumerComponent
@@ -251,7 +243,7 @@ export class WorkspaceComponentLoader {
 
     // Special load events which runs from the workspace but should run from the correct aspect
     // TODO: remove this once those extensions dependent on workspace
-    const envsData = await this.envs.calcDescriptor(component);
+    const envsData = await this.envs.calcDescriptor(component, { skipWarnings: !!this.workspace.inInstallContext });
 
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const policy = await this.dependencyResolver.mergeVariantPolicies(
