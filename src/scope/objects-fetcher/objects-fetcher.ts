@@ -163,7 +163,7 @@ the remote scope "${scopeName}" was not found`);
   private getFetchOptionsPerRemote(scopeName: string): FETCH_OPTIONS {
     const fetchOptions = this.fetchOptions as FETCH_OPTIONS;
     if (!this.lane) return fetchOptions;
-    if (scopeName === this.lane.scope) return fetchOptions;
+    if (scopeName === this.lane.scope && !this.lane.isNew) return fetchOptions;
     return omit(fetchOptions, ['laneId']);
   }
 
