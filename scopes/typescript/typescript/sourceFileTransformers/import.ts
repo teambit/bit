@@ -14,19 +14,20 @@ export const importTransformer: SourceFileTransformer = (mapping: Record<string,
 
         if (node.importClause?.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
           const transformedBindings = node.importClause.namedBindings.elements.map((element) => {
-            let newElementName = element.name.text;
+            let originalName = element.propertyName ? element.propertyName.text : element.name.text;
+            const aliasName = element.name.text;
 
             for (const [oldName, newName] of Object.entries(mapping)) {
-              if (newElementName.startsWith(oldName) || newElementName.endsWith(oldName)) {
-                newElementName = newElementName.replace(oldName, newName);
+              if (originalName.startsWith(oldName) || originalName.endsWith(oldName)) {
+                originalName = originalName.replace(oldName, newName);
               }
             }
 
             return ts.factory.updateImportSpecifier(
               element,
               false,
-              element.propertyName ? ts.factory.createIdentifier(newElementName) : undefined,
-              ts.factory.createIdentifier(newElementName)
+              element.propertyName ? ts.factory.createIdentifier(originalName) : undefined,
+              ts.factory.createIdentifier(aliasName)
             );
           });
 

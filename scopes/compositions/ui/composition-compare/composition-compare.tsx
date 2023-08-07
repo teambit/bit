@@ -109,7 +109,7 @@ export function CompositionCompare(props: CompositionCompareProps) {
 
   const BaseLayout = useMemo(() => {
     if (base === undefined) {
-      return <></>;
+      return null;
     }
     const baseCompModel = base.model;
 
@@ -131,7 +131,7 @@ export function CompositionCompare(props: CompositionCompareProps) {
 
   const CompareLayout = useMemo(() => {
     if (compare === undefined) {
-      return <></>;
+      return null;
     }
     const compareCompModel = compare.model;
 
