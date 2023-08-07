@@ -474,7 +474,7 @@ describe('custom env', function () {
       helper.command.setEnv('comp1', 'teambit.react/react-env@0.1.15');
     });
     // previously, it didn't remove the custom-env due to mismatch between the legacy-id and harmony-id.
-    it.only('bit status should not show it as an issue because the previous env was removed', () => {
+    it('bit status should not show it as an issue because the previous env was removed', () => {
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MultipleEnvs.name);
     });
   });
