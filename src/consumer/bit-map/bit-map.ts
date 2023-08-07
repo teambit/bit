@@ -1,3 +1,4 @@
+import objectHash from 'object-hash';
 import json from 'comment-json';
 import fs from 'fs-extra';
 import * as path from 'path';
@@ -150,6 +151,14 @@ export default class BitMap {
       Object.assign(merged, parsedOther, parsed);
     } else if (opts.mergeStrategy === 'theirs') {
       Object.assign(merged, parsed, parsedOther);
+    } else {
+      Object.assign(merged, parsedOther, parsed);
+      const merged2 = Object.assign({}, parsed, parsedOther);
+      if (objectHash(merged) !== objectHash(merged2)) {
+        throw new BitError(
+          'conflict merging Bitmap, you need to resolve the conflict manually or choose "ours" or "theirs" strategy'
+        );
+      }
     }
     const sorted = sortObject(merged);
     // Delete and re-add it to make sure it will be at the end
