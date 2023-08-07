@@ -662,6 +662,7 @@ jobs:
           at: ./
       - restore_cache:
           key: bitsrc-registry10
+      - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
       # - run:
