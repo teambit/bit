@@ -188,6 +188,20 @@ describe('merge lanes', function () {
       expect(mergeOutput).to.not.have.string('getDivergeData: unable to find Version 0.0.1 of comp1');
     });
   });
+  describe('merging main into local lane when the lane does not have the main components', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('dev');
+      helper.command.mergeLane('main', '-x');
+    });
+    it('should not bring non-lane components from main', () => {
+      const lane = helper.command.showOneLaneParsed('dev');
+      expect(lane.components).to.have.lengthOf(0);
+    });
+  });
   describe('merging main lane with no snapped components', () => {
     let mergeOutput: string;
     before(() => {
