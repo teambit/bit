@@ -441,11 +441,14 @@ jobs:
   setup_harmony:
     resource_class: large
     <<: *defaults
+    environment:
+      BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: ./
       - restore_cache:
           key: bitsrc-registry10
+      - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
       # - run:
@@ -497,6 +500,8 @@ jobs:
   bit_build:
     resource_class: xlarge
     <<: *defaults
+    environment:
+      BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: ./
@@ -527,6 +532,8 @@ jobs:
   bit_tag:
     resource_class: xlarge
     <<: *defaults
+    environment:
+      BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: ./
@@ -879,6 +886,8 @@ jobs:
 
   bit_export:
     <<: *defaults
+    environment:
+      BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: ./
@@ -921,6 +930,7 @@ jobs:
     <<: *defaults
     environment:
       BITSRC_ENV: stg
+      BIT_FEATURES: cloud-importer-v2
     parallelism: 25
     steps:
       - attach_workspace:
