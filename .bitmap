@@ -1985,7 +1985,7 @@
     },
     "ui/pages/static-error": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.86",
+        "version": "0.0.87",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/pages/static-error"
     },
@@ -2291,4 +2291,3 @@
     },
     "$schema-version": "16.0.0"
 }
-
