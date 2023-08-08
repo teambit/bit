@@ -191,7 +191,7 @@ describe('generateNodeModulesPattern()', () => {
       });
 
       it('should return an array with 2 patterns', () => {
-        expect(patterns).toHaveLength(2);
+        expect((patterns || []).length).toEqual(2);
         expect(patterns).toEqual([
           '^(.+?[\\/]node_modules[\\/](?!(@my-org[\\/]my-scope.components))(@.+?[\\/])?.+?)[\\/]',
           '^(.+?[\\/]node_modules[\\/](?!(\\.pnpm[\\/](.*[+\\/])?@my-org\\+my-scope.components.*))(@.+?[\\/])?.+?)[\\/]',
