@@ -634,7 +634,15 @@ export class MergingMain {
     };
     const currentComponent = await getCurrentComponent();
     if (currentComponent.isRemoved()) {
-      return returnUnmerged(`component has been removed`, true);
+      // we made sure before that the component is not removed on the "other". so we have two options:
+      // 1. other is ahead. in this case, other recovered the component. so we can continue with the merge.
+      // it is possible that it is diverged, in which case, still continue with the merge, and later on, the
+      // merge-config will show a config conflict of the remove aspect.
+      // 2. other is not ahead. in this case, just ignore this component, no point to merge it, we want it removed.
+      const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
+      if (!divergeData.isTargetAhead()) {
+        return returnUnmerged(`component has been removed`, true);
+      }
     }
     const isModified = async () => {
       const componentModificationStatus = await consumer.getComponentStatusById(currentComponent.id);
