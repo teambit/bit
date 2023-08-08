@@ -714,7 +714,7 @@ export default class ScopeComponentsImporter {
         laneId: lane?.id(),
       },
       ids,
-      lane ? [lane] : [],
+      lane,
       context,
       throwOnUnavailableScope
     ).fetchFromRemoteAndWrite();
@@ -792,12 +792,12 @@ export default class ScopeComponentsImporter {
         type: delta && !isUsingImporter ? 'component-delta' : 'component',
         includeVersionHistory,
         ignoreMissingHead,
-        laneId: lane ? lane.id() : undefined,
+        laneId: lane?.id(),
         collectParents,
         returnNothingIfGivenVersionExists: delta,
       },
       leftIds,
-      lane ? [lane] : [],
+      lane,
       context
     ).fetchFromRemoteAndWrite();
   }

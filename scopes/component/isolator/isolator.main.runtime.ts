@@ -648,6 +648,7 @@ export class IsolatorMain {
       resolveVersionsFromDependenciesOnly: true,
       linkedDependencies: opts.linkedDependencies,
       forceTeambitHarmonyLink: !this.dependencyResolver.hasHarmonyInRootPolicy(),
+      excludeExtensionsDependencies: true,
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
