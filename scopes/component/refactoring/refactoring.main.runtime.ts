@@ -118,9 +118,12 @@ export class RefactoringMain {
   }
 
   refactorFilenames(component: Component, sourceId: ComponentID, targetId: ComponentID) {
+    const regex = new RegExp(`^${sourceId.name}(/|$)|/${sourceId.name}/`, 'g');
     component.filesystem.files.forEach((file) => {
-      if (file.relative.includes(sourceId.name)) {
-        file.updatePaths({ newRelative: file.relative.replace(sourceId.name, targetId.name) });
+      if (regex.test(file.relative)) {
+        file.updatePaths({
+          newRelative: file.relative.replace(regex, (match) => match.replace(sourceId.name, targetId.name)),
+        });
       }
     });
   }
