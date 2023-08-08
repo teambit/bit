@@ -336,6 +336,7 @@ export class Http implements Network {
   async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectItemsStream> {
     const route = 'api/scope/fetch';
     const getImporterUrl = () => {
+      if (this.url.startsWith('http:') || this.url.includes('//localhost')) return undefined; // it's a local scope
       if (isFeatureEnabled(CLOUD_IMPORTER)) return CENTRAL_BIT_HUB_URL_IMPORTER;
       if (isFeatureEnabled(CLOUD_IMPORTER_V2)) return CENTRAL_BIT_HUB_URL_IMPORTER_V2;
       return undefined;
