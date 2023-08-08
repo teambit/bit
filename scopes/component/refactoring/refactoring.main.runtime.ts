@@ -118,6 +118,7 @@ export class RefactoringMain {
   }
 
   refactorFilenames(component: Component, sourceId: ComponentID, targetId: ComponentID) {
+    // ensures that the replacement only occurs for paths that have the sourceId.name at the beginning or are delimited by /, preventing unintentional replacements in nested paths that include the targetId.name.
     const regex = new RegExp(`^${sourceId.name}(/|$)|/${sourceId.name}/`, 'g');
     component.filesystem.files.forEach((file) => {
       if (regex.test(file.relative)) {
