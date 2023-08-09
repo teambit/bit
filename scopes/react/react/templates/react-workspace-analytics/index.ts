@@ -4,6 +4,7 @@ import { generateFiles as generateCommonFiles } from '../workspace-common';
 export const reactWorkspaceAnalyticsTemplate: WorkspaceTemplate = {
   name: 'react-analytics',
   description: 'React workspace with components for an Analytics Application',
+  hidden: true,
   generateFiles: async (context: WorkspaceContext) => {
     return generateCommonFiles(context);
   },

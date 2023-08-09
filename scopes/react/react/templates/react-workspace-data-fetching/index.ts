@@ -4,6 +4,7 @@ import { generateFiles as generateCommonFiles } from '../workspace-common';
 export const reactWorkspaceDataFetchingTemplate: WorkspaceTemplate = {
   name: 'react-data-fetching',
   description: 'React workspace with components to show data fetching',
+  hidden: true,
   generateFiles: async (context: WorkspaceContext) => {
     return generateCommonFiles(context);
   },

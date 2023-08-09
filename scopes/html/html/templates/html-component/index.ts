@@ -7,7 +7,7 @@ import { testFile } from './files/test';
 export const htmlComponentTemplate: ComponentTemplate = {
   name: 'html',
   description: 'a basic html component',
-
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     const { name, namePascalCase: Name } = context;
     const indexFile = {

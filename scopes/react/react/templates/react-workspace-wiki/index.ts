@@ -4,6 +4,7 @@ import { generateFiles as generateCommonFiles } from '../workspace-common';
 export const reactWorkspaceWikiTemplate: WorkspaceTemplate = {
   name: 'react-wiki',
   description: 'React workspace with components for a Wiki',
+  hidden: true,
   generateFiles: async (context: WorkspaceContext) => {
     return generateCommonFiles(context);
   },

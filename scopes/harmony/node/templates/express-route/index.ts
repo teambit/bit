@@ -8,6 +8,7 @@ import { mainFile } from './files/main';
 export const expressRouteTemplate: ComponentTemplate = {
   name: 'express-route',
   description: 'an express route',
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     return [
       indexFile(context),

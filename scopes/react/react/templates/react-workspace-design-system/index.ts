@@ -4,6 +4,7 @@ import { generateFiles as generateCommonFiles } from '../workspace-common';
 export const reactWorkspaceDesignSystemTemplate: WorkspaceTemplate = {
   name: 'react-design-system',
   description: 'React workspace with components for a Design System',
+  hidden: true,
   generateFiles: async (context: WorkspaceContext) => {
     return generateCommonFiles(context);
   },

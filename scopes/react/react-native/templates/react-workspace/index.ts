@@ -4,6 +4,7 @@ import { generateFiles as generateCommonFiles } from '../workspace-common';
 export const reactWorkspaceTemplate: WorkspaceTemplate = {
   name: 'react-native',
   description: 'React workspace with demo components',
+  hidden: true,
   generateFiles: async (context: WorkspaceContext) => {
     return generateCommonFiles(context);
   },

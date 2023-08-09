@@ -4,6 +4,7 @@ import { generateFiles as generateCommonFiles } from '../workspace-common';
 export const reactWorkspaceBlogTemplate: WorkspaceTemplate = {
   name: 'react-blog',
   description: 'React workspace with components for a Blog',
+  hidden: true,
   generateFiles: async (context: WorkspaceContext) => {
     return generateCommonFiles(context);
   },

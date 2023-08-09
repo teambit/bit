@@ -6,6 +6,7 @@ import { extensionFile } from './files/extension';
 export const htmlEnvTemplate: ComponentTemplate = {
   name: 'html-env',
   description: 'customize the base Html env with your configs and tools',
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     return [
       {

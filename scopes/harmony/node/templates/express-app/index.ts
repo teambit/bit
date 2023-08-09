@@ -12,6 +12,7 @@ import { route } from './files/route';
 export const expressAppTemplate: ComponentTemplate = {
   name: 'express-app',
   description: 'a bit express application',
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     return [
       indexFile(context),
