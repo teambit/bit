@@ -52,6 +52,11 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       'resolve-unrelated [merge-strategy]',
       'relevant when a component on a lane and the component on main has nothing in common. merge-strategy can be "ours" (default) or "theirs"',
     ],
+    [
+      '',
+      'include-non-lane-comps',
+      'when merging main, include workspace components that are not on the lane (by default only lane components are merged)',
+    ],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -80,6 +85,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       resolveUnrelated,
       ignoreConfigChanges,
       verbose = false,
+      includeNonLaneComps = false,
     }: {
       ours: boolean;
       theirs: boolean;
@@ -98,6 +104,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       resolveUnrelated?: string | boolean;
       ignoreConfigChanges?: boolean;
       verbose?: boolean;
+      includeNonLaneComps?: boolean;
     }
   ): Promise<string> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
@@ -134,6 +141,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       resolveUnrelated: getResolveUnrelated(),
       ignoreConfigChanges,
       includeDeps,
+      includeNonLaneComps,
     });
 
     const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });
