@@ -1,7 +1,17 @@
-// As object
+const configs = require('eslint-plugin-mdx/lib/configs');
+
 module.exports = {
   extends: ['plugin:jest/recommended'],
   plugins: ['jest'],
+  settings: {
+    'mdx/code-blocks': true,
+    jest: {
+      version: 26,
+    },
+  },
+  env: {
+    'jest/globals': true,
+  },
   overrides: [
     {
       files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.mjs'],
@@ -23,66 +33,29 @@ module.exports = {
     },
     {
       files: ['*.md', '*.mdx'],
-      extends: ['plugin:mdx/recommended'],
+      extends: ['plugin:mdx/recommended', 'plugin:react/recommended'],
+      ...configs.overrides,
+      rules: {
+        ...configs.overrides.rules,
+        'react/jsx-uses-vars': 'error',
+        'react/jsx-uses-react': 'error',
+        'no-unused-vars': 'error',
+      },
+      // parser: 'eslint-mdx',
       parserOptions: {
-        // parser: '@typescript-eslint/parser',
+        extraFileExtensions: ['.md', '.mdx'],
         ecmaVersion: 6,
         sourceType: 'module',
         ecmaFeatures: {
           modules: true,
+          jsx: true,
         },
         extensions: ['.md', '.mdx'],
       },
     },
+    {
+      files: '**/*.{md,mdx}/**',
+      ...configs.codeBlocks,
+    },
   ],
-  parserOptions: {
-    warnOnUnsupportedTypeScriptVersion: false,
-    ecmaFeatures: {
-      jsx: true,
-    },
-    parser: require.resolve('@typescript-eslint/parser'),
-    extraFileExtensions: ['.md', '.mdx'],
-    // createDefaultProgram: true,
-    // Should be provided by the extender eslint
-    // we can't calculate the tsconfig path here
-    // project: `${tsconfigPath}`,
-  },
-  settings: {
-    jest: {
-      version: 26,
-    },
-  },
-
-  env: {
-    'jest/globals': true,
-  },
 };
-
-// As func
-// module.exports = (tsconfigPath) => {
-//     return {
-//       extends: [require.resolve('eslint-config-airbnb-typescript'), 'plugin:jest/recommended'],
-//       plugins: ['jest'],
-//       parserOptions: {
-//         warnOnUnsupportedTypeScriptVersion: false,
-//         ecmaFeatures: {
-//           jsx: true,
-//         },
-//         createDefaultProgram: true,
-//         project: `${tsconfigPath}`,
-//       },
-//       settings: {
-//         jest: {
-//           version: 26,
-//         },
-//       },
-//       rules: {
-//         '@typescript-eslint/camelcase': 'off',
-//         'import/no-extraneous-dependencies': 'off',
-//         'import/prefer-default-export': 'off',
-//       },
-//       env: {
-//         'jest/globals': true,
-//       },
-//     };
-//   };
