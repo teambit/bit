@@ -4,6 +4,7 @@ import { merge, mergeWithCustomize, mergeWithRules, CustomizeRule } from 'webpac
 import { ICustomizeOptions } from 'webpack-merge/dist/types';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { inject } from '@teambit/html.modules.inject-html-element';
+import type { InjectedHtmlElement as CustomHtmlElement } from '@teambit/html.modules.inject-html-element';
 
 export * from 'webpack-merge';
 
@@ -24,14 +25,6 @@ type MergeOpts = {
 
 type Rules = {
   [s: string]: CustomizeRule | Rules;
-};
-
-type CustomHtmlElement = {
-  parent: 'head' | 'body';
-  position: 'prepend' | 'append';
-  tag: string;
-  content?: string;
-  attributes?: { [key: string]: string };
 };
 
 const defaultAddToArrayOpts: AddToArrayOpts = {
@@ -107,7 +100,7 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  addModuleRule(rule: RuleSetRule, opts: AddToArrayOpts = {}): WebpackConfigMutator {
+  addModuleRule(rule: RuleSetRule | any, opts: AddToArrayOpts = {}): WebpackConfigMutator {
     if (!this.raw.module) {
       this.raw.module = {};
     }
@@ -125,7 +118,7 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  addModuleRules(rules: RuleSetRule[], opts: AddToArrayOpts = {}): WebpackConfigMutator {
+  addModuleRules(rules: RuleSetRule[] | any[], opts: AddToArrayOpts = {}): WebpackConfigMutator {
     rules.forEach((rule) => this.addModuleRule(rule, opts));
     return this;
   }
@@ -135,7 +128,7 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  addRuleToOneOf(rule: RuleSetRule, opts: AddToArrayOpts = {}): WebpackConfigMutator {
+  addRuleToOneOf(rule: RuleSetRule | any, opts: AddToArrayOpts = {}): WebpackConfigMutator {
     if (!this.raw.module) {
       this.raw.module = {};
     }
@@ -143,11 +136,12 @@ export class WebpackConfigMutator {
       this.raw.module.rules = [];
     }
     // @ts-ignore
-    if (!this.raw.module.rules.find((r) => !!r.oneOf)) {
+    const moduleWithOneOf = this.raw.module.rules.find((r) => !!(r as RuleSetRule).oneOf);
+    if (!moduleWithOneOf) {
       this.raw.module.rules.unshift({ oneOf: [] });
     }
 
-    addToArray(this.raw.module.rules.find((r) => !!(r as RuleSetRule).oneOf) as RuleSetRule[], rule, opts);
+    addToArray(moduleWithOneOf.oneOf, rule, opts);
     return this;
   }
 
@@ -219,7 +213,7 @@ export class WebpackConfigMutator {
    * @param resolve
    * @returns
    */
-  addResolve(resolve: ResolveOptions): WebpackConfigMutator {
+  addResolve(resolve: ResolveOptions | any): WebpackConfigMutator {
     if (!this.raw.resolve) {
       this.raw.resolve = {};
     }
@@ -298,7 +292,7 @@ export class WebpackConfigMutator {
    * @param opts
    * @returns
    */
-  mergeWithRules(configs: Configuration[] | any, rules: Rules, opts: MergeOpts): WebpackConfigMutator | any {
+  mergeWithRules(configs: Configuration[] | any, rules: Rules | any, opts: MergeOpts): WebpackConfigMutator | any {
     const concreteOpts = Object.assign({}, defaultMergeOpts, opts);
     const { firstConfig, configs: otherConfigs } = getConfigsToMerge(this.raw, configs, concreteOpts.rawConfigPosition);
     const merged = mergeWithRules(rules)(firstConfig, ...otherConfigs);

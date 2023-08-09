@@ -163,4 +163,20 @@ describe('bit lane command', function () {
       expect(output).to.have.string('please export or reset the following components first');
     });
   });
+  describe("fork a lane when the default-scope is different than the original lane's scope", () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.bitJsonc.addDefaultScope('some-scope');
+      helper.command.createLane('lane-b');
+    });
+    it('should set the scope-name to be the same as the original lane', () => {
+      const laneShow = helper.command.showOneLaneParsed('lane-b');
+      expect(laneShow.id.scope).to.equal(helper.scopes.remote);
+    });
+  });
 });

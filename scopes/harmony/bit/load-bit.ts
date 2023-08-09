@@ -44,7 +44,7 @@ import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { propogateUntil as propagateUntil } from '@teambit/legacy/dist/utils';
+import { findScopePath } from '@teambit/legacy/dist/utils';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -62,7 +62,7 @@ async function loadLegacyConfig(config: any) {
 
 async function getConfig(cwd = process.cwd()) {
   const consumerInfo = await getConsumerInfo(cwd);
-  const scopePath = propagateUntil(cwd);
+  const scopePath = findScopePath(cwd);
   const globalConfigOpts = {
     name: '.bitrc.jsonc',
   };
@@ -202,10 +202,15 @@ function shouldLoadInSafeMode() {
     'logout',
     'config',
     'remote',
+    'mini-status',
   ];
   const hasSafeModeFlag = process.argv.includes('--safe-mode');
   const isSafeModeCommand = safeModeCommands.includes(currentCommand);
   return isSafeModeCommand || hasSafeModeFlag;
+}
+
+function shouldRunAsDaemon() {
+  return process.env.BIT_DAEMON === 'true';
 }
 
 export async function loadBit(path = process.cwd()) {
@@ -223,6 +228,9 @@ export async function loadBit(path = process.cwd()) {
   const loadCLIOnly = shouldLoadInSafeMode();
   if (!loadCLIOnly) {
     aspectsToLoad.push(BitAspect);
+  }
+  if (shouldRunAsDaemon()) {
+    logger.isDaemon = true;
   }
   const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
 

@@ -11,6 +11,11 @@ import { WebpackConfigTransformer } from '@teambit/webpack';
 import { Tester } from '@teambit/tester';
 import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
 import { BUNDLE_UI_DIR } from '@teambit/ui';
+import { ConfigWriterEntry } from '@teambit/workspace-config-files';
+import { PrettierConfigWriter } from '@teambit/defender.prettier-formatter';
+import { TypescriptConfigWriter } from '@teambit/typescript.typescript-compiler';
+import { EslintConfigWriter } from '@teambit/defender.eslint-linter';
+import { Logger } from '@teambit/logger';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -20,7 +25,7 @@ export const AspectEnvType = 'aspect';
  * a component environment built for Aspects .
  */
 export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
-  constructor(private reactEnv: ReactEnv, private aspectLoader: AspectLoaderMain) {}
+  constructor(private reactEnv: ReactEnv, private aspectLoader: AspectLoaderMain, private logger: Logger) {}
 
   icon = 'https://static.bit.dev/extensions-icons/default.svg';
 
@@ -120,5 +125,30 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
         'react-dom': '^16.8.0 || ^17.0.0',
       },
     };
+  }
+
+  workspaceConfig(): ConfigWriterEntry[] {
+    return [
+      TypescriptConfigWriter.create(
+        {
+          tsconfig: require.resolve('./typescript/tsconfig.json'),
+          // types: resolveTypes(__dirname, ["./types"]),
+        },
+        this.logger
+      ),
+      EslintConfigWriter.create(
+        {
+          configPath: require.resolve('./eslint/eslintrc.js'),
+          tsconfig: require.resolve('./typescript/tsconfig.json'),
+        },
+        this.logger
+      ),
+      PrettierConfigWriter.create(
+        {
+          configPath: require.resolve('./prettier/prettier.config.js'),
+        },
+        this.logger
+      ),
+    ];
   }
 }

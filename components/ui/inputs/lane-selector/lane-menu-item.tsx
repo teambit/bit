@@ -13,7 +13,7 @@ export type LaneMenuItemProps = {
   selected?: LaneId;
   current: LaneModel;
   getHref?: (laneId: LaneId) => string;
-  onLaneSelected?: (laneId: LaneId) => void;
+  onLaneSelected?: (laneId: LaneId, lane: LaneModel) => void;
   icon?: React.ReactNode;
   timestamp?: Date;
 } & HTMLAttributes<HTMLDivElement>;
@@ -40,7 +40,7 @@ export const LaneMenuItem = forwardRef<HTMLDivElement, LaneMenuItemProps>(
     const href = getHref(current.id);
 
     const onClick = () => {
-      onLaneSelected?.(current.id);
+      onLaneSelected?.(current.id, current);
     };
 
     const laneDisplayName = current.displayName || current.id.name;
@@ -58,16 +58,7 @@ export const LaneMenuItem = forwardRef<HTMLDivElement, LaneMenuItemProps>(
       />
     );
 
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true,
-    };
-    const formattedTimestamp = timestamp?.toLocaleString(undefined, options).replace(',', '');
+    const formattedTimestamp = timestamp?.toString();
 
     return (
       <div {...rest} ref={ref} className={classnames(className, styles.laneMenuItemContainer)}>

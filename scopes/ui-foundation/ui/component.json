@@ -9,7 +9,7 @@
       "policy": {
         "dependencies": {
           "source-map-loader": "3.0.0",
-          "babel-loader": "8.2.2",
+          "babel-loader": "9.1.2",
           "babel-preset-react-app": "10.0.0",
           "resolve-url-loader": "5.0.0",
           "babel-plugin-named-asset-import": "0.3.7",
@@ -20,7 +20,8 @@
           "postcss-normalize": "10.0.0",
           "postcss-flexbugs-fixes": "5.0.2",
           "sanitize.css": "12.0.1",
-          "sass-loader": "12.1.0",
+          "sass": "1.63.6",
+          "sass-loader": "13.3.2",
           "less": "^4.1.1",
           "less-loader": "8.0.0",
           "@teambit/legacy": "-"
@@ -32,7 +33,7 @@
           "@teambit/legacy": "-"
         },
         "peerDependencies": {
-          "@teambit/legacy": "1.0.487"
+          "@teambit/legacy": "1.0.535"
         }
       }
     }

@@ -15,7 +15,7 @@ import { DeploymentProvider } from './deployment-provider';
 import { AppNotFound } from './exceptions';
 import { ApplicationAspect } from './application.aspect';
 import { AppListCmdDeprecated } from './app-list.cmd';
-import { AppsBuildTask } from './build.task';
+import { AppsBuildTask } from './build-application.task';
 import { RunCmd } from './run.cmd';
 import { AppService } from './application.service';
 import { AppCmd, AppListCmd } from './app.cmd';
@@ -66,6 +66,11 @@ export type ServeAppOptions = {
    * @default false
    */
   ssr?: boolean;
+
+  /**
+   * exact port to run the app
+   */
+  port?: number;
 };
 
 export class ApplicationMain {
@@ -137,16 +142,26 @@ export class ApplicationMain {
     return flatten(this.appTypeSlot.values());
   }
 
-  async listAppsFromComponents() {
+  /**
+   * @deprecated use `listAppsComponents` instead.
+   * @returns
+   */
+  async listAppsFromComponents(): Promise<Component[]> {
+    return this.listAppsComponents();
+  }
+
+  async listAppsComponents(): Promise<Component[]> {
     const components = await this.componentAspect.getHost().list();
     const appTypesPatterns = this.getAppPatterns();
-    const apps = components.filter((component) => {
-      // has app plugin from registered types.
-      const files = component.filesystem.byGlob(appTypesPatterns);
-      return !!files.length;
-    });
+    const appsComponents = components.filter((component) => this.hasAppTypePattern(component, appTypesPatterns));
+    return appsComponents;
+  }
 
-    return apps;
+  private hasAppTypePattern(component: Component, appTypesPatterns?: string[]): boolean {
+    const patterns = appTypesPatterns || this.getAppPatterns();
+    // has app plugin from registered types.
+    const files = component.filesystem.byGlob(patterns);
+    return !!files.length;
   }
 
   getAppPatterns() {
@@ -159,13 +174,14 @@ export class ApplicationMain {
   }
 
   async loadApps(): Promise<Application[]> {
-    const apps = await this.listAppsFromComponents();
+    const apps = await this.listAppsComponents();
     const appTypesPatterns = this.getAppPatterns();
 
     const pluginsToLoad = apps.flatMap((appComponent) => {
       const files = appComponent.filesystem.byGlob(appTypesPatterns);
       return files.map((file) => file.path);
     });
+
     // const app = require(appPath);
     const appManifests = compact(
       pluginsToLoad.map((pluginPath) => {
@@ -181,6 +197,29 @@ export class ApplicationMain {
     );
 
     return appManifests;
+  }
+
+  async loadAppsFromComponent(component: Component, rootDir: string): Promise<Application[] | undefined> {
+    const appTypesPatterns = this.getAppPatterns();
+    const isApp = this.hasAppTypePattern(component, appTypesPatterns);
+    if (!isApp) return undefined;
+
+    const allPluginDefs = this.aspectLoader.getPluginDefs();
+
+    const appsPluginDefs = allPluginDefs.filter((pluginDef) => {
+      return appTypesPatterns.includes(pluginDef.pattern.toString());
+    });
+    // const fileResolver = this.aspectLoader.pluginFileResolver(component, rootDir);
+
+    const plugins = this.aspectLoader.getPluginsFromDefs(component, rootDir, appsPluginDefs);
+    let loadedPlugins;
+    if (plugins.has()) {
+      loadedPlugins = await plugins.load(MainRuntime.name);
+      await this.aspectLoader.loadExtensionsByManifests([loadedPlugins], { seeders: [component.id.toString()] });
+    }
+
+    const listAppsById = this.listAppsById(component.id);
+    return listAppsById;
   }
 
   /**
@@ -258,7 +297,7 @@ export class ApplicationMain {
   async runApp(appName: string, options?: ServeAppOptions) {
     options = this.computeOptions(options);
     const app = this.getAppOrThrow(appName);
-    const context = await this.createAppContext(app.name);
+    const context = await this.createAppContext(app.name, options.port);
     if (!context) throw new AppNotFound(appName);
 
     if (options.ssr) {
@@ -285,20 +324,23 @@ export class ApplicationMain {
   /**
    * get the component ID of a certain app.
    */
-  getAppIdOrThrow(appName: string) {
+  async getAppIdOrThrow(appName: string) {
     const maybeApp = this.appSlot.toArray().find(([, apps]) => {
       return apps.find((app) => app.name === appName);
     });
 
     if (!maybeApp) throw new AppNotFound(appName);
-    return ComponentID.fromString(maybeApp[0]);
+
+    const host = this.componentAspect.getHost();
+    return host.resolveComponentId(maybeApp[0]);
   }
 
-  private async createAppContext(appName: string): Promise<AppContext> {
+  private async createAppContext(appName: string, port?: number): Promise<AppContext> {
     const host = this.componentAspect.getHost();
-    const components = await host.list();
-    const id = this.getAppIdOrThrow(appName);
-    const component = components.find((c) => c.id.isEqual(id));
+    // const components = await host.list();
+    const id = await this.getAppIdOrThrow(appName);
+    // const component = components.find((c) => c.id.isEqual(id));
+    const component = await host.get(id);
     if (!component) throw new AppNotFound(appName);
 
     const env = await this.envs.createEnvironment([component]);
@@ -306,7 +348,7 @@ export class ApplicationMain {
     const context = res.results[0].data;
     if (!context) throw new AppNotFound(appName);
     const hostRootDir = this.workspace.getComponentPackagePath(component);
-    const appContext = new AppContext(appName, context.dev, component, this.workspace.path, context, hostRootDir);
+    const appContext = new AppContext(appName, context.dev, component, this.workspace.path, context, hostRootDir, port);
     return appContext;
   }
 

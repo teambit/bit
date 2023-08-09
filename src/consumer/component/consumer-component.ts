@@ -128,7 +128,7 @@ export default class Component {
   modelComponent?: ModelComponent; // populated when loadedFromFileSystem is true and it exists in the model
   issues: IssuesList;
   deprecated: boolean;
-  removed?: boolean; // was it soft-removed
+  private removed?: boolean; // was it soft-removed. to get this data please use isRemoved() method.
   defaultScope: string | null;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _isModified: boolean;
@@ -277,6 +277,10 @@ export default class Component {
    */
   isRemoved() {
     return this.extensions.findCoreExtension(Extensions.remove)?.config?.removed || this.removed;
+  }
+
+  setRemoved() {
+    this.removed = true;
   }
 
   _getHomepage() {
@@ -613,6 +617,7 @@ async function getLoadedFiles(
   bitDir: string
 ): Promise<SourceFile[]> {
   if (componentMap.noFilesError) {
+    logger.error(`rethrowing an error of ${componentMap.noFilesError.message}`);
     throw componentMap.noFilesError;
   }
   await componentMap.trackDirectoryChangesHarmony(consumer, id);

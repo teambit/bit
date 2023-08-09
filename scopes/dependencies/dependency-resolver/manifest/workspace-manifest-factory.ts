@@ -2,7 +2,8 @@ import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { pickBy, pick, mapValues, uniq } from 'lodash';
+import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
+import { pickBy, mapValues, uniq, difference } from 'lodash';
 import { SemVer } from 'semver';
 import pMapSeries from 'p-map-series';
 import { snapToSemver } from '@teambit/component-package-version';
@@ -30,6 +31,8 @@ export type CreateFromComponentsOptions = {
   dependencyFilterFn?: DepsFilterFn;
   resolveVersionsFromDependenciesOnly?: boolean;
   referenceLocalPackages?: boolean;
+  hasRootComponents?: boolean;
+  excludeExtensionsDependencies?: boolean;
 };
 
 const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
@@ -37,6 +40,7 @@ const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
   createManifestForComponentsWithoutDependencies: true,
   dedupe: true,
   resolveVersionsFromDependenciesOnly: false,
+  excludeExtensionsDependencies: false,
 };
 export class WorkspaceManifestFactory {
   constructor(private dependencyResolver: DependencyResolverMain, private aspectLoader: AspectLoaderMain) {}
@@ -51,18 +55,21 @@ export class WorkspaceManifestFactory {
   ): Promise<WorkspaceManifest> {
     // Make sure to take other default if passed options with only one option
     const optsWithDefaults = Object.assign({}, DEFAULT_CREATE_OPTIONS, options);
-    const hasRootComponents = this.dependencyResolver.hasRootComponents();
+    const hasRootComponents = options.hasRootComponents ?? this.dependencyResolver.hasRootComponents();
     const componentDependenciesMap: ComponentDependenciesMap = await this.buildComponentDependenciesMap(components, {
       filterComponentsFromManifests: optsWithDefaults.filterComponentsFromManifests,
       rootPolicy: optsWithDefaults.resolveVersionsFromDependenciesOnly ? undefined : rootPolicy,
       dependencyFilterFn: optsWithDefaults.dependencyFilterFn,
+      excludeExtensionsDependencies: optsWithDefaults.excludeExtensionsDependencies,
       referenceLocalPackages: optsWithDefaults.referenceLocalPackages && hasRootComponents,
       rootDependencies: hasRootComponents ? rootPolicy.toManifest().dependencies : undefined,
     });
     let dedupedDependencies = getEmptyDedupedDependencies();
     rootPolicy = rootPolicy.filter((dep) => dep.dependencyId !== '@teambit/legacy');
     if (hasRootComponents) {
-      const { rootDependencies } = dedupeDependencies(rootPolicy, componentDependenciesMap);
+      const { rootDependencies } = dedupeDependencies(rootPolicy, componentDependenciesMap, {
+        dedupePeerDependencies: hasRootComponents,
+      });
       // We hoist dependencies in order for the IDE to work.
       // For runtime, the peer dependencies are installed inside:
       // <ws root>/node_module/<comp name>/node_module/<comp name>/node_modules
@@ -118,12 +125,14 @@ export class WorkspaceManifestFactory {
     {
       dependencyFilterFn,
       filterComponentsFromManifests,
+      excludeExtensionsDependencies,
       referenceLocalPackages,
       rootDependencies,
       rootPolicy,
     }: {
       dependencyFilterFn?: DepsFilterFn;
       filterComponentsFromManifests?: boolean;
+      excludeExtensionsDependencies?: boolean;
       referenceLocalPackages?: boolean;
       rootDependencies?: Record<string, string>;
       rootPolicy?: WorkspacePolicy;
@@ -132,7 +141,6 @@ export class WorkspaceManifestFactory {
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
       let depList = await this.dependencyResolver.getDependencies(component, { includeHidden: true });
-      const componentPolicy = await this.dependencyResolver.getPolicy(component);
       const additionalDeps = {};
       if (referenceLocalPackages) {
         const coreAspectIds = this.aspectLoader.getCoreAspectIds();
@@ -150,10 +158,14 @@ export class WorkspaceManifestFactory {
           }
         }
       }
+      const depManifestBeforeFiltering = depList.toDependenciesManifest();
+
       if (filterComponentsFromManifests ?? true) {
         depList = filterComponents(depList, components);
       }
-      depList = filterResolvedFromEnv(depList, componentPolicy);
+      if (excludeExtensionsDependencies) {
+        depList = filterExtensions(depList);
+      }
       // Remove bit bin from dep list
       depList = depList.filter((dep) => dep.id !== '@teambit/legacy');
       if (dependencyFilterFn) {
@@ -161,11 +173,39 @@ export class WorkspaceManifestFactory {
       }
       await this.updateDependenciesVersions(component, rootPolicy, depList);
       const depManifest = depList.toDependenciesManifest();
-      const missingRootDeps = rootDependencies ? pick(rootDependencies, getMissingPackages(component)) : {};
+      const { devMissings, runtimeMissings } = await getMissingPackages(component);
+      // Only add missing root deps that are not already in the component manifest
+      // We are using depManifestBeforeFiltering to support (rare) cases when a dependency is both:
+      // a component in the workspace (bitmap) and a dependency in the workspace.jsonc / package.json
+      // this happens for the bit repo itself for the @teambit/component-version component
+      // in this case we don't want to add that to the manifest when it's missing, because it will be linked from the
+      // workspace
+      const unresolvedRuntimeMissingRootDeps = pickBy(rootDependencies, (_version, rootPackageName) => {
+        return (
+          runtimeMissings.includes(rootPackageName) &&
+          !depManifestBeforeFiltering.dependencies[rootPackageName] &&
+          !depManifestBeforeFiltering.devDependencies[rootPackageName] &&
+          !depManifestBeforeFiltering.peerDependencies[rootPackageName]
+        );
+      });
+      // Only add missing root deps that are not already in the component manifest
+      const unresolvedDevMissingRootDeps = pickBy(rootDependencies, (_version, rootPackageName) => {
+        return (
+          devMissings.includes(rootPackageName) &&
+          !depManifestBeforeFiltering.dependencies[rootPackageName] &&
+          !depManifestBeforeFiltering.devDependencies[rootPackageName] &&
+          !depManifestBeforeFiltering.peerDependencies[rootPackageName]
+        );
+      });
       depManifest.dependencies = {
-        ...missingRootDeps,
+        ...unresolvedRuntimeMissingRootDeps,
         ...additionalDeps,
         ...depManifest.dependencies,
+      };
+
+      depManifest.devDependencies = {
+        ...unresolvedDevMissingRootDeps,
+        ...depManifest.devDependencies,
       };
 
       return { packageName, depManifest };
@@ -241,6 +281,16 @@ export class WorkspaceManifestFactory {
   }
 }
 
+function filterExtensions(dependencyList: DependencyList): DependencyList {
+  const filtered = dependencyList.filter((dep) => {
+    if (!(dep instanceof ComponentDependency)) {
+      return true;
+    }
+    return !dep.isExtension;
+  });
+  return filtered;
+}
+
 function filterComponents(dependencyList: DependencyList, componentsToFilterOut: Component[]): DependencyList {
   const filtered = dependencyList.filter((dep) => {
     if (!(dep instanceof ComponentDependency)) {
@@ -275,31 +325,29 @@ function filterComponents(dependencyList: DependencyList, componentsToFilterOut:
   return filtered;
 }
 
-/**
- * Filter deps which should be resolved from the env, we don't want to install them, they will be linked manually later
- * @param dependencyList
- * @param componentPolicy
- */
-function filterResolvedFromEnv(dependencyList: DependencyList, componentPolicy: VariantPolicy): DependencyList {
-  const filtered = dependencyList.filter((dep) => {
-    const fromPolicy = componentPolicy.find(dep.id);
-    if (!fromPolicy) {
-      return true;
-    }
-    if (fromPolicy.value.resolveFromEnv) {
-      return false;
-    }
-    return true;
-  });
-  return filtered;
-}
-
 function excludeWorkspaceDependencies(deps: DepObjectValue): DepObjectValue {
   return pickBy(deps, (versionSpec) => !versionSpec.startsWith('file:') && !versionSpec.startsWith('workspace:'));
 }
 
-function getMissingPackages(component: Component): string[] {
-  return uniq(
-    Object.values(component.state.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data).flat()
-  );
+async function getMissingPackages(component: Component): Promise<{ devMissings: string[]; runtimeMissings: string[] }> {
+  const missingPackagesData = component.state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data;
+  if (!missingPackagesData) return { devMissings: [], runtimeMissings: [] };
+  // TODO: this is a hack to get it from the legacy, we should take it from the dev files aspect
+  // TODO: the reason we don't is that it will make circular dependency between the dep resolver and the dev files aspect
+  const devFiles = await DependencyResolver.getDevFiles(component.state._consumer);
+  let devMissings: string[] = [];
+  let runtimeMissings: string[] = [];
+  Object.entries(missingPackagesData).forEach(([fileName, packages]) => {
+    if (devFiles.includes(fileName)) {
+      devMissings = uniq([...devMissings, ...packages]);
+    } else {
+      runtimeMissings = uniq([...runtimeMissings, ...packages]);
+    }
+  });
+  // Remove dev missing which are also runtime missing
+  devMissings = difference(devMissings, runtimeMissings);
+  return {
+    devMissings,
+    runtimeMissings,
+  };
 }

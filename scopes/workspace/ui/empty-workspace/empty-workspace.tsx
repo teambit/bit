@@ -9,7 +9,7 @@ export type EmptyWorkspaceProps = { name: string } & EmptyComponentGalleryProps;
  */
 export function EmptyWorkspace({ name }: EmptyWorkspaceProps) {
   return (
-    <EmptyComponentGallery name={name}>
+    <EmptyComponentGallery name={name} title={'Add components to'}>
       <div className={styles.text}>Start by adding new components to this workspace.</div>
     </EmptyComponentGallery>
   );

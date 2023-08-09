@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { pickBy } from 'lodash';
+import { cloneDeep, pickBy } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
@@ -132,7 +132,7 @@ export default class Lane extends BitObject {
     return Buffer.from(str);
   }
   addComponent(component: LaneComponent) {
-    const existsComponent = this.getComponentByName(component.id);
+    const existsComponent = this.getComponent(component.id);
     if (existsComponent) {
       existsComponent.id = component.id;
       existsComponent.head = component.head;
@@ -215,9 +215,9 @@ export default class Lane extends BitObject {
   }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
-    // validate that the head
+    const bitIds = this.toBitIds();
     this.components.forEach((component) => {
-      if (this.components.filter((c) => c.id.name === component.id.name).length > 1) {
+      if (bitIds.filterWithoutVersion(component.id).length > 1) {
         throw new ValidationError(`${message}, the following component is duplicated "${component.id.name}"`);
       }
       if (!isHash(component.head.hash)) {
@@ -239,7 +239,7 @@ export default class Lane extends BitObject {
     return new Lane({
       ...this,
       hash: this._hash,
-      components: [...this.components],
+      components: cloneDeep(this.components),
     });
   }
 }

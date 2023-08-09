@@ -6,9 +6,18 @@ import {
   DependencyResolverMain,
   KEY_NAME_BY_LIFECYCLE_TYPE,
 } from '@teambit/dependency-resolver';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { BitId } from '@teambit/legacy-bit-id';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { cloneDeep, compact, set } from 'lodash';
 import pMapSeries from 'p-map-series';
+import {
+  DependencyResolver,
+  updateDependenciesVersions,
+} from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
+import { DebugDependencies } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver/dependencies-resolver';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
+import { OverridesDependenciesData } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver/dependencies-data';
 import {
   DependenciesBlameCmd,
   DependenciesCmd,
@@ -19,12 +28,22 @@ import {
   DependenciesResetCmd,
   DependenciesSetCmd,
   DependenciesUnsetCmd,
+  DependenciesUsageCmd,
   RemoveDependenciesFlags,
   SetDependenciesFlags,
 } from './dependencies-cmd';
 import { DependenciesAspect } from './dependencies.aspect';
 
 export type RemoveDependencyResult = { id: ComponentID; removedPackages: string[] };
+
+export type DependenciesResultsDebug = DebugDependencies &
+  OverridesDependenciesData & { coreAspects: string[]; sources: { id: string; source: string }[] };
+
+export type DependenciesResults = {
+  scopeGraph: DependencyGraph;
+  workspaceGraph: DependencyGraph;
+  id: BitId;
+};
 
 export type BlameResult = {
   snap: string;
@@ -149,6 +168,42 @@ export class DependenciesMain {
     return compIds;
   }
 
+  async getDependencies(id: string): Promise<DependenciesResults> {
+    // @todo: supports this on bare-scope.
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    const compId = await this.workspace.resolveComponentId(id);
+    const bitId = compId._legacy;
+    const consumer = this.workspace.consumer;
+    const scopeGraph = await DependencyGraph.buildGraphFromScope(consumer.scope);
+    const scopeDependencyGraph = new DependencyGraph(scopeGraph);
+
+    const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(consumer, true);
+    const workspaceDependencyGraph = new DependencyGraph(workspaceGraph);
+
+    return { scopeGraph: scopeDependencyGraph, workspaceGraph: workspaceDependencyGraph, id: bitId };
+  }
+
+  async debugDependencies(id: string): Promise<DependenciesResultsDebug> {
+    // @todo: supports this on bare-scope.
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    const compId = await this.workspace.resolveComponentId(id);
+    const consumer = this.workspace.consumer;
+    const component = await this.workspace.get(compId);
+    const consumerComponent = component.state._consumer as ConsumerComponent;
+    const dependencyResolver = new DependencyResolver(consumerComponent, consumer);
+    const dependenciesData = await dependencyResolver.getDependenciesData({}, undefined);
+    const debugData: DebugDependencies = dependencyResolver.debugDependenciesData;
+    updateDependenciesVersions(consumer, consumerComponent, debugData.components);
+    const results = await this.dependencyResolver.getDependencies(component);
+    const sources = results.map((dep) => ({ id: dep.id, source: dep.source }));
+    return {
+      ...debugData,
+      ...dependenciesData.overridesDependencies,
+      coreAspects: dependenciesData.coreAspects,
+      sources,
+    };
+  }
+
   /**
    * helps determine what snap/tag changed a specific dependency.
    * the results are sorted from the oldest to newest.
@@ -186,6 +241,26 @@ export class DependenciesMain {
     return blameResults;
   }
 
+  /**
+   * @param depName either component-id-string or package-name (of the component or not component)
+   * @returns a map of component-id-string to the version of the dependency
+   */
+  async usage(depName: string): Promise<{ [compIdStr: string]: string }> {
+    const [name, version] = this.splitPkgToNameAndVer(depName);
+    const allComps = await this.workspace.list();
+    const results = {};
+    await Promise.all(
+      allComps.map(async (comp) => {
+        const depList = await this.dependencyResolver.getDependencies(comp);
+        const dependency = depList.findByPkgNameOrCompId(name, version);
+        if (dependency) {
+          results[comp.id.toString()] = dependency.version;
+        }
+      })
+    );
+    return results;
+  }
+
   private async getPackageNameAndVerResolved(pkg: string): Promise<[string, string]> {
     const resolveLatest = async (pkgName: string) => {
       const versionResolver = await this.dependencyResolver.getVersionResolver({});
@@ -218,14 +293,15 @@ export class DependenciesMain {
     const depsMain = new DependenciesMain(workspace, depsResolver);
     const depsCmd = new DependenciesCmd();
     depsCmd.commands = [
-      new DependenciesGetCmd(),
+      new DependenciesGetCmd(depsMain),
       new DependenciesRemoveCmd(depsMain),
       new DependenciesUnsetCmd(depsMain),
-      new DependenciesDebugCmd(),
+      new DependenciesDebugCmd(depsMain),
       new DependenciesSetCmd(depsMain),
       new DependenciesResetCmd(depsMain),
       new DependenciesEjectCmd(depsMain),
       new DependenciesBlameCmd(depsMain),
+      new DependenciesUsageCmd(depsMain),
     ];
     cli.register(depsCmd);
 

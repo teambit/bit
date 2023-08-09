@@ -11,6 +11,7 @@ import type { ComponentMain, Component } from '@teambit/component';
 
 import { isCoreAspect, loadBit } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import GitAspect, { GitMain } from '@teambit/git';
 import { BitError } from '@teambit/bit-error';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import TrackerAspect, { TrackerMain } from '@teambit/tracker';
@@ -80,7 +81,8 @@ export class GeneratorMain {
     private newComponentHelper: NewComponentHelperMain,
     private componentAspect: ComponentMain,
     private tracker: TrackerMain,
-    private logger: Logger
+    private logger: Logger,
+    private git: GitMain
   ) {}
 
   /**
@@ -476,6 +478,7 @@ export class GeneratorMain {
     ComponentAspect,
     TrackerAspect,
     LoggerAspect,
+    GitAspect,
   ];
 
   static runtime = MainRuntime;
@@ -492,6 +495,7 @@ export class GeneratorMain {
       componentAspect,
       tracker,
       loggerMain,
+      git,
     ]: [
       Workspace,
       CLIMain,
@@ -502,7 +506,8 @@ export class GeneratorMain {
       CommunityMain,
       ComponentMain,
       TrackerMain,
-      LoggerMain
+      LoggerMain,
+      GitMain
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
@@ -518,7 +523,8 @@ export class GeneratorMain {
       newComponentHelper,
       componentAspect,
       tracker,
-      logger
+      logger,
+      git
     );
     const commands = [
       new CreateCmd(generator, community.getDocsDomain()),

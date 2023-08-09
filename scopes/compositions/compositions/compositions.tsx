@@ -69,9 +69,11 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
 
   const compositionUrl = toPreviewUrl(component, 'compositions');
   const isScaling = component?.preview?.isScaling;
-  const compositionIdentifierParam = isScaling
-    ? `name=${currentComposition?.identifier}`
-    : currentComposition?.identifier;
+  const includesEnvTemplates = component?.preview?.includesEnvTemplate;
+  const compositionIdentifierParam =
+    isScaling && includesEnvTemplates === false
+      ? `name=${currentComposition?.identifier}`
+      : currentComposition?.identifier;
   const currentCompositionFullUrl = toPreviewUrl(component, 'compositions', compositionIdentifierParam);
 
   const [compositionParams, setCompositionParams] = useState<Record<string, any>>({});
@@ -115,6 +117,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
               <TabPanel className={styles.tabContent}>
                 <CompositionsPanel
                   isScaling={isScaling}
+                  includesEnvTemplate={component.preview?.includesEnvTemplate}
                   onSelectComposition={(composition) => {
                     if (!currentComposition || !location) return;
                     if (location.pathname.includes(currentComposition.identifier.toLowerCase())) {

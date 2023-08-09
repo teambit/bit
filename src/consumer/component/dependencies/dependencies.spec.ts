@@ -55,15 +55,7 @@ describe('Dependencies', () => {
       dependencies.dependencies[0].relativePaths[0].extra = 'should not be there!';
       expect(validateFunc).to.throw('undetected property of relativePaths "extra"');
     });
-    it('should throw when relativePaths.isCustomResolveUsed is true but importSource is missing', () => {
-      delete dependencies.dependencies[0].relativePaths[0].importSource;
-      expect(validateFunc).to.throw('missing relativePath.importSource');
-    });
-    it('should not throw when both relativePaths.isCustomResolveUsed and relativePaths.importSource are missing', () => {
-      delete dependencies.dependencies[0].relativePaths[0].isCustomResolveUsed;
-      delete dependencies.dependencies[0].relativePaths[0].importSource;
-      expect(validateFunc).to.not.throw();
-    });
+
     it('should throw when relativePaths.importSpecifiers is not an array', () => {
       dependencies.dependencies[0].relativePaths[0].importSpecifiers = {};
       expect(validateFunc).to.throw('to be array, got object');

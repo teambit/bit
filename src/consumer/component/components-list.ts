@@ -212,65 +212,6 @@ export default class ComponentsList {
     return compact(results);
   }
 
-  /**
-   * if the local lane was forked from another lane, this gets the differences between the two
-   */
-  async listUpdatesFromForked(): Promise<DivergeDataPerId[]> {
-    if (this.consumer.isOnMain()) {
-      return [];
-    }
-    const lane = await this.consumer.getCurrentLaneObject();
-    const forkedFromLaneId = lane?.forkedFrom;
-    if (!forkedFromLaneId) {
-      return [];
-    }
-    const forkedFromLane = await this.scope.loadLane(forkedFromLaneId);
-    if (!forkedFromLane) return []; // should we fetch it here?
-
-    const workspaceIds = this.bitMap.getAllBitIds();
-
-    const duringMergeIds = this.listDuringMergeStateComponents();
-
-    const componentsFromModel = await this.getModelComponents();
-    const compFromModelOnWorkspace = componentsFromModel
-      .filter((c) => workspaceIds.hasWithoutVersion(c.toBitId()))
-      // if a component is merge-pending, it needs to be resolved first before getting more updates from main
-      .filter((c) => !duringMergeIds.hasWithoutVersion(c.toBitId()));
-
-    // by default, when on a lane, forked is not fetched. we need to fetch it to get the latest updates.
-    await this.scope.scopeImporter.importWithoutDeps(
-      BitIds.fromArray(compFromModelOnWorkspace.map((c) => c.toBitId())),
-      {
-        cache: false,
-        includeVersionHistory: true,
-        lanes: [forkedFromLane],
-        ignoreMissingHead: true,
-      }
-    );
-
-    const remoteForkedLane = await this.scope.objects.remoteLanes.getRemoteLane(forkedFromLaneId);
-    if (!remoteForkedLane.length) return [];
-
-    const results = await Promise.all(
-      compFromModelOnWorkspace.map(async (modelComponent) => {
-        const headOnForked = remoteForkedLane.find((c) => c.id.isEqualWithoutVersion(modelComponent.toBitId()));
-        const headOnLane = modelComponent.laneHeadLocal;
-        if (!headOnForked || !headOnLane) return undefined;
-        const divergeData = await getDivergeData({
-          repo: this.scope.objects,
-          modelComponent,
-          targetHead: headOnForked.head,
-          sourceHead: headOnLane,
-          throws: false,
-        });
-        if (!divergeData.snapsOnTargetOnly.length && !divergeData.err) return undefined;
-        return { id: modelComponent.toBitId(), divergeData };
-      })
-    );
-
-    return compact(results);
-  }
-
   async listMergePendingComponents(loadOpts?: ComponentLoadOptions): Promise<DivergedComponent[]> {
     if (!this._mergePendingComponents) {
       const componentsFromFs = await this.getComponentsFromFS(loadOpts);
@@ -281,15 +222,7 @@ export default class ComponentsList {
           componentsFromFs.map(async (component: Component) => {
             const modelComponent = componentsFromModel.find((c) => c.toBitId().isEqualWithoutVersion(component.id));
             if (!modelComponent || duringMergeComps.hasWithoutScopeAndVersion(component.id)) return null;
-            await modelComponent.setDivergeData(this.scope.objects);
-            // don't use modelComponent.getDivergeData() because in some scenarios when on a lane, it compare the head
-            // on the lane against the head on the main, which could show the component as diverged incorrectly.
-            const divergedData = await getDivergeData({
-              repo: this.scope.objects,
-              modelComponent,
-              targetHead: (modelComponent.laneId ? modelComponent.laneHeadRemote : modelComponent.remoteHead) || null,
-              throws: false,
-            });
+            const divergedData = await modelComponent.getDivergeDataForMergePending(this.scope.objects);
             if (!divergedData.isDiverged()) return null;
             return { id: modelComponent.toBitId(), diverge: divergedData };
           })
@@ -462,13 +395,29 @@ export default class ComponentsList {
       );
       this._fromFileSystem[cacheKeyName] = components;
       if (!this._invalidComponents) {
-        this._invalidComponents = invalidComponents;
+        const divergeInvalid = await this.divergeDataErrorsToInvalidComp(components);
+        this._invalidComponents = [...invalidComponents, ...divergeInvalid];
       }
       if (!this._removedComponents) {
         this._removedComponents = removedComponents;
       }
     }
     return this._fromFileSystem[cacheKeyName];
+  }
+
+  private async divergeDataErrorsToInvalidComp(components: Component[]): Promise<InvalidComponent[]> {
+    const invalidComponents: InvalidComponent[] = [];
+    await Promise.all(
+      components.map(async (comp) => {
+        if (!comp.modelComponent) return;
+        await comp.modelComponent.setDivergeData(this.scope.objects, false);
+        const divergeData = comp.modelComponent.getDivergeData();
+        if (divergeData.err) {
+          invalidComponents.push({ id: comp.id, error: divergeData.err, component: comp });
+        }
+      })
+    );
+    return invalidComponents;
   }
 
   /**
@@ -482,7 +431,7 @@ export default class ComponentsList {
   }
 
   /**
-   * components that were deleted by soft-remove (bit remove --soft) and were not tagged/snapped after this change.
+   * components that were deleted by soft-remove (bit remove --delete) and were not tagged/snapped after this change.
    * practically, their bitmap record has the config or "removed: true" and the component has deleted from the filesystem
    * in bit-status, we suggest to snap+export.
    */
@@ -500,8 +449,11 @@ export default class ComponentsList {
    */
   async listRemotelySoftRemoved(): Promise<Component[]> {
     const fromFs = await this.getFromFileSystem();
-
-    return fromFs.filter((comp) => comp.isRemoved());
+    // if it's during-merge it might be removed on the other lane remote, not this lane remote and then upon snap/tag
+    // the component will be removed from the workspace, so no need to suggest using "bit remove".
+    const duringMerge = this.listDuringMergeStateComponents();
+    const removed = fromFs.filter((comp) => comp.isRemoved());
+    return removed.filter((comp) => !duringMerge.hasWithoutVersion(comp.id));
   }
 
   /**
@@ -571,7 +523,7 @@ export default class ComponentsList {
     const currentLane = await this.consumer.getCurrentLaneObject();
     const isIdOnCurrentLane = (componentMap: ComponentMap): boolean => {
       if (componentMap.isRemoved()) return false;
-      if (!componentMap.onLanesOnly) return true; // component is on main, always show it
+      if (componentMap.isAvailableOnCurrentLane) return true;
       if (!currentLane) return false; // if !currentLane the user is on main, don't show it.
       return Boolean(currentLane.getComponent(componentMap.id));
     };

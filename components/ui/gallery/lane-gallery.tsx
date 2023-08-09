@@ -28,7 +28,10 @@ export function LaneGallery({ routeSlot, overviewSlot, host }: LaneGalleryProps)
   const currentLane = lanesModel?.viewedLane;
 
   if (!currentLane || !currentLane.id) return null;
-  if (currentLane.components.length === 0) return <EmptyLane name={currentLane.id.name} />;
+  if (currentLane.components.length === 0)
+    return (
+      <EmptyLane name={currentLane.id.name} title={host === 'scope' ? 'Export components to' : 'Add components to'} />
+    );
 
   return (
     <LaneGalleryWithPreview host={host} currentLane={currentLane} overviewItems={overviewItems} routeSlot={routeSlot} />

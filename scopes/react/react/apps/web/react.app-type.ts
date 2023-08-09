@@ -28,7 +28,9 @@ export class ReactAppType implements ApplicationType<ReactAppOptions> {
       options.devServer,
       options.webpackTransformers,
       options.deploy,
-      options.favicon
+      options.favicon,
+      options.webpackModulePath,
+      options.webpackDevServerModulePath
     );
   }
 }

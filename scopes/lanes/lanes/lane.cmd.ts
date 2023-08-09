@@ -3,11 +3,12 @@ import chalk from 'chalk';
 import yn from 'yn';
 import { ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
-import { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { BitError } from '@teambit/bit-error';
 import { approveOperation } from '@teambit/legacy/dist/prompts';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 import { SwitchCmd } from './switch.cmd';
 
@@ -133,7 +134,7 @@ export class LaneShowCmd implements Command {
   alias = '';
   options = [
     ['j', 'json', 'show the lane details in json format'],
-    ['r', 'remote <string>', 'show remote lanes'],
+    ['r', 'remote', 'show the lane from remote'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -148,9 +149,16 @@ export class LaneShowCmd implements Command {
     if (!name) {
       name = this.lanes.getCurrentLaneName() || DEFAULT_LANE;
     }
+
+    if (!name && remote) {
+      throw new Error('remote flag is not supported without lane name');
+    }
+
+    const laneId = await this.lanes.parseLaneId(name);
+
     const lanes = await this.lanes.getLanes({
-      name,
-      remote,
+      name: laneId.name,
+      remote: remote ? laneId.scope : undefined,
     });
 
     const onlyLane = lanes[0];
@@ -169,6 +177,7 @@ export class LaneShowCmd implements Command {
       name,
       remote,
     });
+
     return lanes[0];
   }
 }
@@ -197,6 +206,7 @@ a lane created from another lane has all the components of the original lane.`;
       'alias <name>',
       'a local alias to refer to this lane, defaults to the `<lane-name>` (can be added later with "bit lane alias")',
     ],
+    ['', 'fork-lane-new-scope', 'allow forking a lane into a different scope than the original lane'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -265,7 +275,6 @@ export class LaneRenameCmd implements Command {
   options = [] as CommandOptions;
   loader = true;
   migration = true;
-
   constructor(private lanes: LanesMain) {}
 
   async report([currentName, newName]: [string, string]): Promise<string> {
@@ -319,6 +328,57 @@ export class LaneRemoveCmd implements Command {
   }
 }
 
+export type RemoveCompsOpts = { workspaceOnly?: boolean; updateMain?: boolean };
+
+export class LaneRemoveCompCmd implements Command {
+  name = 'remove-comp <component-pattern>';
+  arguments = [
+    {
+      name: 'component-pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
+  ];
+  description = `remove components when on a lane`;
+  extendedDescription = `in case the components are part of the lane and the lane is exported, it marks the components as removed,
+and then after snap+export, the remote-lane gets updated as well. upon lane-merge, these components are skipped.
+
+in case the components are not part of the lane or the lane is new, it simply removes the components from the workspace`;
+  group = 'collaborate';
+  alias = 'rc';
+  options = [
+    ['', 'workspace-only', 'do not mark the components as removed. instead, remove them from the workspace only'],
+    ['', 'update-main', 'NOT IMPLEMENTED YET. mark as removed on main after merging this lane into main'],
+  ] as CommandOptions;
+  loader = true;
+  migration = true;
+
+  constructor(private workspace: Workspace, private lanes: LanesMain) {}
+
+  async report([componentsPattern]: [string], removeCompsOpts: RemoveCompsOpts): Promise<string> {
+    if (removeCompsOpts.updateMain) throw new Error('not implemented yet');
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    if (this.workspace.isOnMain()) {
+      throw new Error(`error: you're checked out to main, please use "bit remove" instead`);
+    }
+    const { removedFromWs, markedRemoved } = await this.lanes.removeComps(componentsPattern, removeCompsOpts);
+    const getMarkedRemovedStr = () => {
+      if (!markedRemoved.length) return '';
+      return `${chalk.green('successfully marked the following components as removed:')}
+${markedRemoved.join('\n')}
+
+${chalk.bold('to update the remote, please snap and then export. to revert, please use "bit recover"')}
+`;
+    };
+    const getRemovedFromWsStr = () => {
+      if (!removedFromWs.length) return '';
+      return `\n${chalk.green('successfully removed the following components from the workspace:')}
+(either: these components were not part of the lane, so there was no need to mark them as removed or --workspace-only was used)
+${removedFromWs.join('\n')}`;
+    };
+    return getMarkedRemovedStr() + getRemovedFromWsStr();
+  }
+}
+
 export class LaneImportCmd implements Command {
   name = 'import <lane>';
   description = `import a remote lane to your workspace`;
@@ -326,6 +386,11 @@ export class LaneImportCmd implements Command {
   alias = '';
   options = [
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    [
+      'p',
+      'pattern <component-pattern>',
+      'switch only the specified component-pattern. works only when the workspace is empty',
+    ],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -334,16 +399,16 @@ export class LaneImportCmd implements Command {
 
   async report(
     [lane]: [string],
-    { skipDependencyInstallation = false }: { skipDependencyInstallation: boolean }
+    { skipDependencyInstallation = false, pattern }: { skipDependencyInstallation: boolean; pattern?: string }
   ): Promise<string> {
-    return this.switchCmd.report([lane], { getAll: true, skipDependencyInstallation });
+    return this.switchCmd.report([lane], { getAll: true, skipDependencyInstallation, pattern });
   }
 }
 
 export class LaneCmd implements Command {
   name = 'lane [lane-name]';
   description = 'manage lanes';
-  alias = '';
+  alias = 'l';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
     ['j', 'json', 'show lanes details in json format'],

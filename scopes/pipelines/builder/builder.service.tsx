@@ -1,7 +1,9 @@
+import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy/dist/constants';
 import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import React from 'react';
 import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
+import { GlobalConfigMain } from '@teambit/global-config';
 import { Text, Newline } from 'ink';
 import { Logger } from '@teambit/logger';
 import { IsolatorMain } from '@teambit/isolator';
@@ -28,6 +30,8 @@ export type BuilderServiceOptions = {
   skipTests?: boolean;
   previousTasksResults?: TaskResults[];
   dev?: boolean;
+  exitOnFirstFailedTask?: boolean;
+  capsulesBaseDir?: string;
 };
 
 type BuilderTransformationMap = ServiceTransformationMap & {
@@ -48,8 +52,8 @@ export type PipeName = 'build' | 'tag' | 'snap';
 
 export type BuilderDescriptor = Array<{ pipeName: PipeName; tasks: string[] }>;
 
-type PipeFunctionNames = keyof typeof pipeNames;
-export class BuilderService implements EnvService<BuildServiceResults, BuilderDescriptor> {
+export type PipeFunctionNames = keyof typeof pipeNames;
+export class BuilderService implements EnvService<BuildServiceResults, string> {
   name = 'builder';
 
   constructor(
@@ -78,7 +82,8 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
      */
     private displayPipeName: PipeName,
     private artifactFactory: ArtifactFactory,
-    private scope: ScopeMain
+    private scope: ScopeMain,
+    private globalConfig: GlobalConfigMain
   ) {}
 
   /**
@@ -99,16 +104,24 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     const longProcessLogger = this.logger.createLongProcessLogger(title);
     this.logger.consoleTitle(title);
     const envsBuildContext: EnvsBuildContext = {};
+    const capsulesBaseDir = this.getComponentsCapsulesBaseDir();
+
+    const baseDir = options.capsulesBaseDir || capsulesBaseDir;
+    const useHash = !baseDir;
+    const isolateOptions = {
+      baseDir,
+      useHash,
+      getExistingAsIs: true,
+      seedersOnly: options.seedersOnly,
+    };
+
     await pMapSeries(envsExecutionContext, async (executionContext) => {
       const componentIds = executionContext.components.map((component) => component.id);
       const { originalSeeders } = options;
       const originalSeedersOfThisEnv = componentIds.filter((compId) =>
         originalSeeders ? originalSeeders.find((seeder) => compId.isEqual(seeder)) : true
       );
-      const capsuleNetwork = await this.isolator.isolateComponents(componentIds, {
-        getExistingAsIs: true,
-        seedersOnly: options.seedersOnly,
-      });
+      const capsuleNetwork = await this.isolator.isolateComponents(componentIds, isolateOptions);
       capsuleNetwork._originalSeeders = originalSeedersOfThisEnv;
       this.logger.console(
         `generated graph for env "${executionContext.id}", originalSeedersOfThisEnv: ${originalSeedersOfThisEnv.length}, graphOfThisEnv: ${capsuleNetwork.seedersCapsules.length}, graph total: ${capsuleNetwork.graphCapsules.length}`
@@ -127,7 +140,8 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
       envsBuildContext,
       this.logger,
       this.artifactFactory,
-      options.previousTasksResults
+      options.previousTasksResults,
+      { exitOnFirstFailedTask: options.exitOnFirstFailedTask }
     );
     const buildResults = await buildPipe.execute();
     longProcessLogger.end();
@@ -136,11 +150,19 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     return buildResults;
   }
 
-  render(env: EnvDefinition) {
-    const pipes = this.getDescriptor(env);
+  getComponentsCapsulesBaseDir(): string | undefined {
+    return this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
+  }
+
+  render() {
+    const descriptor = this.getDescriptor();
 
     return (
-      <Text key={BuilderAspect.id}>{pipes.map(({ pipeName, tasks }) => this.renderOnePipe(pipeName, tasks))}</Text>
+      <Text key={BuilderAspect.id}>
+        {descriptor}
+        <Newline />
+        <Newline />
+      </Text>
     );
   }
 
@@ -167,36 +189,8 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     };
   }
 
-  private renderOnePipe(pipeName, tasks) {
-    if (!tasks || !tasks.length) return null;
-    return (
-      <Text key={pipeName}>
-        <Text underline color="green">
-          {pipeName} pipe
-        </Text>
-        <Newline />
-        <Text color="cyan">total {tasks.length} tasks are configured to be executed in the following order</Text>
-        <Newline />
-        {tasks.map((task, index) => (
-          <Text key={index}>
-            <Text>
-              {index + 1}. {task}
-            </Text>
-            <Newline />
-          </Text>
-        ))}
-        <Newline />
-      </Text>
-    );
-  }
-
-  getDescriptor(env: EnvDefinition) {
-    // @ts-ignore
-    const tasks = Object.keys(pipeNames).map((pipeFuncName: PipeFunctionNames) => {
-      const tasksQueue = this.getTasksNamesByPipeFunc(env, pipeFuncName);
-      return { pipeName: pipeNames[pipeFuncName], tasks: tasksQueue };
-    });
-    return tasks as BuilderDescriptor;
+  getDescriptor() {
+    return 'run `bit build --list-tasks <component-id>` to see the tasks list for the pipelines: build, tag and snap';
   }
 
   private getTasksNamesByPipeFunc(env: EnvDefinition, pipeFuncName: PipeFunctionNames): string[] {

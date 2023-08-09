@@ -1,5 +1,4 @@
 import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
-import { ResolveModulesConfig } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
@@ -65,7 +64,6 @@ export type WorkspaceSettingsNewProps = {
 export type WorkspaceLegacyProps = {
   dependenciesDirectory?: string;
   bindingPrefix?: string;
-  resolveModules?: ResolveModulesConfig;
   saveDependenciesAsComponents?: boolean;
 };
 
@@ -345,7 +343,6 @@ export class WorkspaceConfig implements HostConfig {
       _saveDependenciesAsComponents: this._legacyProps?.saveDependenciesAsComponents,
       _dependenciesDirectory: this._legacyProps?.dependenciesDirectory,
       componentsDefaultDirectory,
-      _resolveModules: this._legacyProps?.resolveModules,
       _manageWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.manageWorkspaces,
       defaultOwner: this.extension('teambit.workspace/workspace', true)?.defaultOwner,
       extensions: this.extensions.toConfigObject(),

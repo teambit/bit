@@ -12,7 +12,10 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { AbstractVinyl, Dist } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
+import {
+  linkToNodeModulesByComponents,
+  removeLinksFromNodeModules,
+} from '@teambit/workspace.modules.node-modules-linker';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -159,7 +162,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     let compileResults;
     if (isFileSupported) {
       try {
-        compileResults = this.compilerInstance.transpileFile?.(file.contents.toString(), options);
+        compileResults = await this.compilerInstance.transpileFile?.(file.contents.toString(), options);
       } catch (error: any) {
         this.compileErrors.push({ path: file.path, error });
         return;
@@ -234,23 +237,27 @@ export class WorkspaceCompiler {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
       this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
       this.watcher.registerOnPreWatch(this.onPreWatch.bind(this));
-      this.ui.registerPreStart(this.onPreStart.bind(this));
     }
+    this.ui.registerPreStart(this.onPreStart.bind(this));
     if (this.aspectLoader) {
       this.aspectLoader.registerOnAspectLoadErrorSlot(this.onAspectLoadFail.bind(this));
     }
   }
 
   async onPreStart(preStartOpts: PreStartOpts): Promise<void> {
-    if (preStartOpts.skipCompilation) {
-      return;
+    if (this.workspace) {
+      if (preStartOpts.skipCompilation) {
+        return;
+      }
+      await this.compileComponents([], {
+        changed: true,
+        verbose: false,
+        deleteDistDir: false,
+        initiator: CompilationInitiator.PreStart,
+      });
+    } else {
+      await this.watcher.watchScopeInternalFiles();
     }
-    await this.compileComponents([], {
-      changed: true,
-      verbose: false,
-      deleteDistDir: false,
-      initiator: CompilationInitiator.PreStart,
-    });
   }
 
   async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {
@@ -264,11 +271,18 @@ export class WorkspaceCompiler {
   async onComponentChange(
     component: Component,
     files: string[],
+    removedFiles?: string[],
     initiator?: CompilationInitiator
   ): Promise<SerializableResults> {
+    // when files are removed, we need to remove the dist directories and the old symlinks, otherwise, it has
+    // symlinks to non-exist files and the dist has stale files
+    const deleteDistDir = Boolean(removedFiles?.length);
+    if (removedFiles?.length) {
+      await removeLinksFromNodeModules(component, this.workspace, removedFiles);
+    }
     const buildResults = await this.compileComponents(
       [component.id.toString()],
-      { initiator: initiator || CompilationInitiator.ComponentChanged },
+      { initiator: initiator || CompilationInitiator.ComponentChanged, deleteDistDir },
       true
     );
     await linkToNodeModulesByComponents([component], this.workspace);
@@ -280,16 +294,16 @@ export class WorkspaceCompiler {
     };
   }
 
-  async onPreWatch(components: Component[], watchOpts: WatchOptions) {
+  async onPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
     if (watchOpts.preCompile) {
       const start = Date.now();
-      this.logger.console(`compiling ${components.length} components`);
+      this.logger.console(`compiling ${componentIds.length} components`);
       await this.compileComponents(
-        components.map((c) => c.id._legacy),
+        componentIds.map((id) => id._legacy),
         { initiator: CompilationInitiator.PreWatch }
       );
       const end = Date.now() - start;
-      this.logger.consoleSuccess(`compiled ${components.length} components successfully (${end / 1000} sec)`);
+      this.logger.consoleSuccess(`compiled ${componentIds.length} components successfully (${end / 1000} sec)`);
     }
   }
 

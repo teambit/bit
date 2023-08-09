@@ -119,9 +119,19 @@ export class ImporterMain {
     });
   }
 
-  async fetchLaneWithComponents(lane: Lane, options: Partial<ImportOptions> = {}): Promise<ImportResult> {
-    options.lanes = { laneIds: [lane.toLaneId()], lanes: [lane] };
-    return this.importObjects(options);
+  /**
+   * fetch lane's components and save them in the local scope.
+   * once done, merge the lane object and save it as well.
+   */
+  async fetchLaneComponents(lane: Lane) {
+    const ids = lane.toBitIds();
+    await this.scope.legacyScope.scopeImporter.importMany({
+      ids,
+      lane,
+      preferDependencyGraph: true,
+    });
+    const { mergeLane } = await this.scope.legacyScope.sources.mergeLane(lane, true);
+    await this.scope.legacyScope.lanes.saveLane(mergeLane);
   }
 
   async fetch(ids: string[], lanes: boolean, components: boolean, fromOriginalScope: boolean, allHistory = false) {
@@ -202,7 +212,8 @@ export class ImporterMain {
       : { importedIds: [], importDetails: [], importedDeps: [] };
     const resultsPerLane = await pMapSeries(lanes, async (lane) => {
       this.logger.setStatusLine(`fetching lane ${lane.name}`);
-      const results = await this.fetchLaneWithComponents(lane, options);
+      options.lanes = { laneIds: [lane.toLaneId()], lanes: [lane] };
+      const results = await this.importObjects(options);
       this.logger.consoleSuccess();
       return results;
     });

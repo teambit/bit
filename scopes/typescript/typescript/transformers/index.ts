@@ -34,3 +34,5 @@ export { EnumDeclarationTransformer } from './enum-declaration';
 export { BindingElementTransformer } from './binding-element';
 export { ExportAssignmentTransformer } from './export-assignment';
 export { ImportDeclarationTransformer } from './import-declaration';
+export { ExpressionStatementTransformer } from './expression-statement';
+export { ModuleDeclarationTransformer } from './module-declaration';

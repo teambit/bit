@@ -2,6 +2,7 @@ import chai, { expect } from 'chai';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { IS_WINDOWS } from '../../../src/constants';
 import Helper from '../../../src/e2e-helper/e2e-helper';
+import { LaneNotFound } from '../../../src/api/scope/lib/exceptions/lane-not-found';
 
 chai.use(require('chai-fs'));
 
@@ -122,15 +123,12 @@ describe('remove lanes', function () {
         expect(remoteComps).to.have.lengthOf(0);
       });
       describe('removing again after the lane was removed', () => {
-        let removeOutput;
-        before(() => {
-          removeOutput = helper.general.runWithTryCatch(
-            `bit lane remove ${helper.scopes.remote}/dev --remote --silent --force`
-          );
-        });
         it('should indicate that the lane was not found', () => {
+          const err = new LaneNotFound(helper.scopes.remote, `${helper.scopes.remote}/dev`);
+          const cmd = () =>
+            helper.command.runCmd(`bit lane remove ${helper.scopes.remote}/dev --remote --silent --force`);
           // this is to make sure it doesn't show an error about indexJson having the component but missing from the scope
-          expect(removeOutput).to.have.string('lane "dev" was not found in scope');
+          helper.general.expectToThrow(cmd, err);
         });
       });
     });

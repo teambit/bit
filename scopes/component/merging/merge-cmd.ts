@@ -1,5 +1,7 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
+import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { compact } from 'lodash';
 import { WILDCARD_HELP, AUTO_SNAPPED_MSG, MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import {
@@ -17,20 +19,22 @@ export class MergeCmd implements Command {
   description = 'merge changes of the remote head into local';
   helpUrl = 'docs/components/merging-changes';
   group = 'development';
-  extendedDescription = `merge changes of the remote head into local, optionally use '--abort' or '--resolve
+  extendedDescription = `merge changes of the remote head into local. when on a lane, merge the remote head of the lane into the local.
+if no ids are specified, all pending-merge components will be merged. (run "bit status" to list them).
+optionally use '--abort' to revert the last merge. to revert a lane merge, use "bit lane merge-abort" command.
 ${WILDCARD_HELP('merge')}`;
   alias = '';
   options = [
     ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
     ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
-    ['', 'abort', 'EXPERIMENTAL. in case of an unresolved merge, revert to the state before the merge began'],
-    ['', 'resolve', 'EXPERIMENTAL. mark an unresolved merge as resolved and create a new snap with the changes'],
-    ['', 'no-snap', 'EXPERIMENTAL. do not auto snap in case the merge completed without conflicts'],
+    ['', 'abort', 'in case of an unresolved merge, revert to the state before the merge began'],
+    ['', 'resolve', 'mark an unresolved merge as resolved and create a new snap with the changes'],
+    ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['', 'verbose', 'show details of components that were not merged legitimately'],
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
-    ['m', 'message <message>', 'EXPERIMENTAL. override the default message for the auto snap'],
+    ['m', 'message <message>', 'override the default message for the auto snap'],
   ] as CommandOptions;
   loader = true;
 
@@ -109,6 +113,7 @@ ${WILDCARD_HELP('merge')}`;
 export function mergeReport({
   components,
   failedComponents,
+  removedComponents,
   version,
   mergeSnapResults,
   mergeSnapError,
@@ -219,13 +224,15 @@ ${mergeSnapError.message}
     const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(unchangedLegitimately.toString())}`;
     const failedToMergeStr = `\nTotal Failed: ${chalk.bold(failedToMerge.toString())}`;
     const autoSnappedStr = `\nTotal Snapped: ${chalk.bold(autoSnapped.toString())}`;
+    const removedStr = `\nTotal Removed: ${chalk.bold(removedComponents?.length.toString() || '0')}`;
 
-    return newLines + title + mergedStr + unchangedLegitimatelyStr + failedToMergeStr + autoSnappedStr;
+    return newLines + title + mergedStr + unchangedLegitimatelyStr + failedToMergeStr + autoSnappedStr + removedStr;
   };
 
   return (
     getSuccessOutput() +
     getFailureOutput() +
+    getRemovedOutput(removedComponents) +
     getSnapsOutput() +
     getWorkspaceDepsOutput() +
     getConfigMergeConflictSummary() +
@@ -290,4 +297,18 @@ export function compilationErrorOutput(compilationError?: Error) {
   const subTitle = 'The following error had been caught from the compiler, please fix the issue and run "bit compile"';
   const body = chalk.red(compilationError.message);
   return `\n\n${title}\n${subTitle}\n${body}`;
+}
+
+export function getRemovedOutput(removedComponents?: BitId[]) {
+  if (!removedComponents?.length) return '';
+  const title = `the following ${removedComponents.length} component(s) have been removed`;
+  const body = removedComponents.join('\n');
+  return `\n\n${chalk.underline(title)}\n${body}\n\n`;
+}
+
+export function getAddedOutput(addedComponents?: ComponentID[]) {
+  if (!addedComponents?.length) return '';
+  const title = `the following ${addedComponents.length} component(s) have been added`;
+  const body = addedComponents.join('\n');
+  return `\n\n${chalk.underline(title)}\n${body}\n\n`;
 }

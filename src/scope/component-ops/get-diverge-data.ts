@@ -1,7 +1,7 @@
-import R from 'ramda';
+import { differenceBy } from 'lodash';
 import { ParentNotFound, VersionNotFoundOnFS } from '../exceptions';
 import { NoCommonSnap } from '../exceptions/no-common-snap';
-import { ModelComponent, Version } from '../models';
+import { ModelComponent } from '../models';
 import { VersionParents } from '../models/version-history';
 import { Ref, Repository } from '../objects';
 import { SnapsDistance } from './snaps-distance';
@@ -22,24 +22,28 @@ export async function getDivergeData({
   sourceHead, // if empty, use the local head (if on lane - lane head. if on main - component head)
   targetHead,
   throws = true, // otherwise, save the error instance in the `SnapsDistance` object,
-  versionObjects, // relevant for remote-scope where during export the data is not in the repo yet.
+  throwForNoCommonSnap = false, // by default, save the error in `SnapsDistance` obj.
+  versionParentsFromObjects, // relevant for remote-scope where during export the data is not in the repo yet.
 }: {
   repo: Repository;
   modelComponent: ModelComponent;
   sourceHead?: Ref | null;
   targetHead: Ref | null;
   throws?: boolean;
-  versionObjects?: Version[];
+  throwForNoCommonSnap?: boolean;
+  versionParentsFromObjects?: VersionParents[];
 }): Promise<SnapsDistance> {
   const isOnLane = modelComponent.laneHeadLocal || modelComponent.laneHeadLocal === null;
   const localHead = sourceHead || (isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead());
+  // uncomment the following line to debug diverge-data issues.
+  // if (modelComponent.name === 'x') console.log('getDivergeData, localHead', localHead, 'targetHead', targetHead);
   if (!targetHead) {
     if (localHead) {
       const allLocalHashes = await getAllVersionHashes({
         modelComponent,
         repo,
         throws: false,
-        versionObjects,
+        versionParentsFromObjects,
       });
       return new SnapsDistance(allLocalHashes);
     }
@@ -51,7 +55,7 @@ export async function getDivergeData({
       repo,
       throws: false,
       startFrom: targetHead,
-      versionObjects,
+      versionParentsFromObjects,
     });
     return new SnapsDistance([], allRemoteHashes);
   }
@@ -65,8 +69,9 @@ export async function getDivergeData({
     modelComponent,
     heads: [localHead, targetHead],
     throws: false,
-    versionObjects,
+    versionParentsFromObjects,
   });
+
   const getVersionData = (ref: Ref): VersionParents | undefined => versionParents.find((v) => v.hash.isEqual(ref));
 
   const snapsOnSource: Ref[] = [];
@@ -79,7 +84,7 @@ export async function getDivergeData({
 
   const commonSnapsWithDepths = {};
 
-  const addParentsRecursively = (version: VersionData, snaps: Ref[], isSource: boolean, depth = 0) => {
+  const addParentsRecursively = (version: VersionParents, snaps: Ref[], isSource: boolean, depth = 0) => {
     if (snaps.find((snap) => snap.isEqual(version.hash))) return; // already processed
 
     if (isSource) {
@@ -92,12 +97,24 @@ export async function getDivergeData({
         snaps.push(version.hash);
         return;
       }
+      const foundInSquashed = version.squashed?.find((s) => s.isEqual(targetHead));
+      if (foundInSquashed) {
+        targetHeadExistsInSource = true;
+        snaps.push(version.hash);
+        return;
+      }
     } else {
       if (version.hash.isEqual(localHead)) {
         sourceHeadExistsInTarget = true;
         return;
       }
       if (version.unrelated?.isEqual(localHead)) {
+        sourceHeadExistsInTarget = true;
+        snaps.push(version.hash);
+        return;
+      }
+      const foundInSquashed = version.squashed?.find((s) => s.isEqual(localHead));
+      if (foundInSquashed) {
         sourceHeadExistsInTarget = true;
         snaps.push(version.hash);
         return;
@@ -126,12 +143,18 @@ export async function getDivergeData({
         error = err;
       }
     });
-    if (version.unrelated?.hash) {
-      const unrelatedData = getVersionData(Ref.from(version.unrelated.hash));
+    if (version.unrelated) {
+      const unrelatedData = getVersionData(version.unrelated);
       if (unrelatedData) {
         addParentsRecursively(unrelatedData, snaps, isSource, depth + 1);
       }
     }
+    version.squashed?.forEach((squashed) => {
+      const squashedVersion = getVersionData(squashed);
+      if (squashedVersion) {
+        addParentsRecursively(squashedVersion, snaps, isSource, depth + 1);
+      }
+    });
   };
   const localVersion = getVersionData(localHead);
   if (!localVersion) {
@@ -154,8 +177,8 @@ bit import ${modelComponent.id()} --objects`);
   }
   addParentsRecursively(targetVersion, snapsOnTarget, false);
 
-  const sourceOnlySnaps = R.difference(snapsOnSource, snapsOnTarget);
-  const targetOnlySnaps = R.difference(snapsOnTarget, snapsOnSource);
+  const sourceOnlySnaps = differenceBy(snapsOnSource, snapsOnTarget, 'hash');
+  const targetOnlySnaps = differenceBy(snapsOnTarget, snapsOnSource, 'hash');
 
   if (sourceHeadExistsInTarget) {
     return new SnapsDistance([], targetOnlySnaps, localHead, error);
@@ -174,22 +197,9 @@ bit import ${modelComponent.id()} --objects`);
       return new SnapsDistance(snapsOnSource, snapsOnTarget, undefined);
     }
     const err = new NoCommonSnap(modelComponent.id());
-    if (throws) throw err;
+    if (throwForNoCommonSnap) throw err;
     return new SnapsDistance(snapsOnSource, snapsOnTarget, undefined, err);
   }
 
   return new SnapsDistance(sourceOnlySnaps, targetOnlySnaps, commonSnapBeforeDiverge, error);
 }
-
-type VersionDataRaw = {
-  parents: string[];
-  unrelated?: string;
-};
-
-type VersionData = {
-  hash: Ref;
-  parents: Ref[];
-  unrelated?: Ref;
-};
-
-export type VersionsHistory = { [hash: string]: VersionDataRaw };

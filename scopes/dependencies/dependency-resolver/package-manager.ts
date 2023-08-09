@@ -20,11 +20,15 @@ export type PackageManagerInstallOptions = {
 
   copyPeerToRuntimeOnComponents?: boolean;
 
+  excludeLinksFromLockfile?: boolean;
+
   installPeersFromEnvs?: boolean;
 
   dependencyFilterFn?: DepsFilterFn;
 
   overrides?: Record<string, string>;
+
+  lockfileOnly?: boolean;
 
   nodeLinker?: 'hoisted' | 'isolated';
 
@@ -53,6 +57,27 @@ export type PackageManagerInstallOptions = {
   updateAll?: boolean;
 
   hidePackageManagerOutput?: boolean;
+
+  pruneNodeModules?: boolean;
+
+  hasRootComponents?: boolean;
+
+  neverBuiltDependencies?: string[];
+
+  preferOffline?: boolean;
+
+  nmSelfReferences?: boolean;
+
+  /**
+   * e.g. when running `bit install` through the web or the IDE, not from the CLI.
+   */
+  optimizeReportForNonTerminal?: boolean;
+
+  /**
+   * Sets the frequency of updating the progress output in milliseconds.
+   * E.g., if this is set to 1000, then the progress will be updated every second.
+   */
+  throttleProgress?: number;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

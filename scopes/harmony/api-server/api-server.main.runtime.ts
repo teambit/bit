@@ -1,18 +1,28 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import LanesAspect, { LanesMain } from '@teambit/lanes';
+import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
+import { ExportAspect, ExportMain } from '@teambit/export';
+import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
+import InstallAspect, { InstallMain } from '@teambit/install';
+import { Component } from '@teambit/component';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ApiServerAspect } from './api-server.aspect';
 import { CLIRoute } from './cli.route';
 import { ServerCmd } from './server.cmd';
+import { IDERoute } from './ide.route';
+import { APIForIDE } from './api-for-ide';
+import { SSEEventsRoute, sendEventsToClients } from './sse-events.route';
 
 export class ApiServerMain {
   constructor(
     private workspace: Workspace,
     private logger: Logger,
     private express: ExpressMain,
-    private watcher: WatcherMain
+    private watcher: WatcherMain,
+    private installer: InstallMain
   ) {}
 
   async runApiServer(options: { port: number }) {
@@ -21,6 +31,29 @@ export class ApiServerMain {
     if (!this.workspace) {
       throw new Error(`unable to run bit-server, the current directory ${process.cwd()} is not a workspace`);
     }
+
+    this.workspace.registerOnComponentChange(
+      async (
+        component: Component,
+        files: string[], // os absolute paths
+        removedFiles?: string[] // os absolute paths
+      ) => {
+        sendEventsToClients('onComponentChange', {
+          id: component.id.toStringWithoutVersion(),
+          files,
+          removedFiles,
+        });
+      }
+    );
+
+    this.workspace.registerOnBitmapChange(async () => {
+      sendEventsToClients('onBitmapChange', {});
+    });
+
+    this.installer.registerPostInstall(async () => {
+      sendEventsToClients('onPostInstall', {});
+    });
+
     this.watcher
       .watch({
         preCompile: false,
@@ -36,23 +69,53 @@ export class ApiServerMain {
     });
   }
 
-  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, ExpressAspect, WatcherAspect];
+  static dependencies = [
+    CLIAspect,
+    WorkspaceAspect,
+    LoggerAspect,
+    ExpressAspect,
+    WatcherAspect,
+    SnappingAspect,
+    LanesAspect,
+    InstallAspect,
+    ExportAspect,
+    CheckoutAspect,
+  ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, loggerMain, express, watcher]: [
+  static async provider([
+    cli,
+    workspace,
+    loggerMain,
+    express,
+    watcher,
+    snapping,
+    lanes,
+    installer,
+    exporter,
+    checkout,
+  ]: [
     CLIMain,
     Workspace,
     LoggerMain,
     ExpressMain,
-    WatcherMain
+    WatcherMain,
+    SnappingMain,
+    LanesMain,
+    InstallMain,
+    ExportMain,
+    CheckoutMain
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
-    const apiServer = new ApiServerMain(workspace, logger, express, watcher);
+    const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer);
     cli.register(new ServerCmd(apiServer));
 
     const cliRoute = new CLIRoute(logger, cli);
+    const apiForIDE = new APIForIDE(workspace, snapping, lanes, installer, exporter, checkout);
+    const vscodeRoute = new IDERoute(logger, apiForIDE);
+    const sseEventsRoute = new SSEEventsRoute(logger, cli);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.
     if (workspace) {
-      express.register([cliRoute]);
+      express.register([cliRoute, vscodeRoute, sseEventsRoute]);
     }
 
     return apiServer;

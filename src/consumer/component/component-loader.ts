@@ -22,6 +22,7 @@ import loader from '../../cli/loader';
 export type ComponentLoadOptions = {
   loadDocs?: boolean;
   loadCompositions?: boolean;
+  originatedFromHarmony?: boolean;
 };
 export type LoadManyResult = {
   components: Component[];
@@ -158,7 +159,7 @@ export default class ComponentLoader {
         });
         return null;
       }
-      fromModel.removed = true;
+      fromModel.setRemoved();
       fromModel.componentMap = componentMap;
       removedComponents.push(fromModel);
       return null;

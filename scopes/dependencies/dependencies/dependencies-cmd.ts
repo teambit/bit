@@ -3,11 +3,6 @@ import { Command, CommandOptions } from '@teambit/cli';
 import Table from 'cli-table';
 import chalk from 'chalk';
 import archy from 'archy';
-import {
-  dependencies,
-  DependenciesResultsDebug,
-  DependenciesResults,
-} from '@teambit/legacy/dist/api/consumer/lib/dependencies';
 import { generateDependenciesInfoTable } from '@teambit/legacy/dist/cli/templates/component-template';
 import { IdNotFoundInGraph } from '@teambit/legacy/dist/scope/exceptions/id-not-found-in-graph';
 import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
@@ -33,8 +28,10 @@ export class DependenciesGetCmd implements Command {
   alias = '';
   options = [['t', 'tree', 'EXPERIMENTAL. render dependencies as a tree, similar to "npm ls"']] as CommandOptions;
 
+  constructor(private deps: DependenciesMain) {}
+
   async report([id]: [string], { tree = false }: GetDependenciesFlags) {
-    const results = (await dependencies(id, false)) as DependenciesResults;
+    const results = await this.deps.getDependencies(id);
 
     if (tree) {
       const idWithVersion = results.workspaceGraph._getIdWithLatestVersion(results.id);
@@ -86,8 +83,10 @@ export class DependenciesDebugCmd implements Command {
   alias = '';
   options = [] as CommandOptions;
 
+  constructor(private deps: DependenciesMain) {}
+
   async report([id]: [string]) {
-    const results = (await dependencies(id, true)) as DependenciesResultsDebug;
+    const results = await this.deps.debugDependencies(id);
     return JSON.stringify(results, undefined, 4);
   }
 }
@@ -275,6 +274,33 @@ export class DependenciesBlameCmd implements Command {
     );
 
     return table.toString();
+  }
+}
+
+export class DependenciesUsageCmd implements Command {
+  name = 'usage <dependency-name>';
+  arguments = [
+    {
+      name: 'dependency-name',
+      description:
+        'package-name. for components, you can use either component-id or package-name. if version is specified, it will search for the exact version',
+    },
+  ];
+  group = 'info';
+  description = 'EXPERIMENTAL. find components that use the specified dependency';
+  alias = '';
+  options = [] as CommandOptions;
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([depName]: [string]) {
+    const results = await this.deps.usage(depName);
+    if (!Object.keys(results).length) {
+      return chalk.yellow(`the specified dependency ${depName} is not used by any component`);
+    }
+    return Object.keys(results)
+      .map((compIdStr) => `${chalk.bold(compIdStr)} (using dep in version ${results[compIdStr]})`)
+      .join('\n');
   }
 }
 

@@ -179,15 +179,15 @@ export class TesterMain {
    * @returns
    */
   getPatterns() {
-    return { name: 'tests', pattern: this.patterns };
+    return this.patterns;
   }
 
   getComponentDevPatterns(component: Component) {
-    const env = this.envs.calculateEnv(component).env;
+    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace.inInstallContext }).env;
     const componentPatterns: string[] = env.getTestsDevPatterns
       ? env.getTestsDevPatterns(component)
       : this.getPatterns();
-    return componentPatterns;
+    return { name: 'tests', pattern: componentPatterns };
   }
 
   getDevPatternToRegister() {

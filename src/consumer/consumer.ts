@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
-import { partition } from 'lodash';
+import { compact } from 'lodash';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
@@ -121,18 +121,12 @@ export default class Consumer {
   }
 
   get bitmapIdsFromCurrentLaneIncludeRemoved(): BitIds {
-    const idsFromBitMap = this.bitMap.getAllIdsAvailableOnLane();
-    const removedIds = this.bitMap.getRemoved();
-    return BitIds.fromArray([...idsFromBitMap, ...removedIds]);
+    return this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
   }
 
-  get bitMapIdsFromAllLanes(): BitIds {
-    return this.bitMap.getAllBitIdsFromAllLanes();
-  }
-
-  clearCache() {
+  async clearCache() {
     this.componentLoader.clearComponentsCache();
-    this.onCacheClear.forEach((func) => func());
+    await Promise.all(this.onCacheClear.map((func) => func()));
   }
 
   getTmpFolder(fullPath = false): PathOsBased {
@@ -571,18 +565,10 @@ export default class Consumer {
 
   async resetLaneNew() {
     this.bitMap.resetLaneComponentsToNew();
+    this.bitMap.laneId = undefined;
     await Scope.reset(this.scope.path, true);
   }
 
-  static locateProjectScope(projectPath: string) {
-    if (fs.existsSync(path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR))) {
-      return path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR);
-    }
-    if (fs.existsSync(path.join(projectPath, BIT_HIDDEN_DIR))) {
-      return path.join(projectPath, BIT_HIDDEN_DIR);
-    }
-    return undefined;
-  }
   static async load(currentPath: PathOsBasedAbsolute): Promise<Consumer> {
     const consumerInfo = await getConsumerInfo(currentPath);
     if (!consumerInfo) {
@@ -600,8 +586,7 @@ export default class Consumer {
       await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
     }
     const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
-    const scopePath = Consumer.locateProjectScope(consumerInfo.path);
-    const scope = consumer?.scope || (await Scope.load(scopePath as string));
+    const scope = consumer?.scope || (await Scope.load(consumerInfo.path));
     consumer = new Consumer({
       projectPath: consumerInfo.path,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -638,24 +623,24 @@ export default class Consumer {
 
   async cleanOrRevertFromBitMapWhenOnLane(ids: BitIds) {
     logger.debug(`consumer.cleanFromBitMapWhenOnLane, cleaning ${ids.toString()} from`);
-    const [idsOnLane, idsOnMain] = partition(ids, (id) => {
-      const componentMap = this.bitMap.getComponent(id, { ignoreVersion: true });
-      return componentMap.onLanesOnly;
-    });
-    if (idsOnLane.length) {
-      await this.cleanFromBitMap(BitIds.fromArray(idsOnLane));
-    }
+    const unavailableOnMain: BitId[] = [];
     await Promise.all(
-      idsOnMain.map(async (id) => {
+      ids.map(async (id) => {
         const modelComp = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
         let updatedId = id.changeScope(undefined).changeVersion(undefined);
-        if (modelComp) {
+        if (modelComp && modelComp.hasHead()) {
           const head = modelComp.getHeadAsTagIfExist();
           if (head) updatedId = id.changeVersion(head);
+        } else {
+          unavailableOnMain.push(id);
+          return;
         }
         this.bitMap.updateComponentId(updatedId, false, true);
       })
     );
+    if (unavailableOnMain.length) {
+      await this.cleanFromBitMap(BitIds.fromArray(unavailableOnMain));
+    }
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
@@ -682,25 +667,22 @@ export default class Consumer {
   }
 
   async getIdsOfDefaultLane(): Promise<BitIds> {
-    const ids = this.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+    const ids = this.bitMap.getAllBitIds();
     const bitIds = await Promise.all(
       ids.map(async (id) => {
         if (!id.hasVersion()) return id;
         const modelComponent = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
-        if (modelComponent) {
-          const head = modelComponent.getHeadAsTagIfExist();
-          if (head) {
-            return id.changeVersion(head);
-          }
-          throw new Error(`model-component on main should have head. the head on ${id.toString()} is missing`);
+        if (!modelComponent) {
+          throw new Error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing, please run bit-import`);
         }
-        if (!id.hasVersion()) {
-          return id;
+        const head = modelComponent.getHeadAsTagIfExist();
+        if (head) {
+          return id.changeVersion(head);
         }
-        throw new Error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing, please run bit-import`);
+        return undefined;
       })
     );
-    return BitIds.fromArray(bitIds);
+    return BitIds.fromArray(compact(bitIds));
   }
 
   async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {

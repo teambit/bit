@@ -20,17 +20,18 @@ import { ProjectManifest } from '@pnpm/types';
 import { join } from 'path';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
+import type { RebuildFn } from './lynx';
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
 
-  private readConfig = memoize(readConfig);
+  public readConfig = memoize(readConfig);
   constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
 
   async install(
     { rootDir, manifests }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
-  ): Promise<{ dependenciesChanged: boolean }> {
+  ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string }> {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
@@ -50,7 +51,17 @@ export class PnpmPackageManager implements PackageManager {
     if (!installOptions.useNesting) {
       manifests = await extendWithComponentsFromDir(rootDir, manifests);
     }
-    await install(
+    if (installOptions.nmSelfReferences) {
+      Object.values(manifests).forEach((manifest) => {
+        if (manifest.name) {
+          manifest.devDependencies = {
+            [manifest.name]: 'link:.',
+            ...manifest.devDependencies,
+          };
+        }
+      });
+    }
+    const { dependenciesChanged, rebuild, storeDir } = await install(
       rootDir,
       manifests,
       config.storeDir,
@@ -60,6 +71,9 @@ export class PnpmPackageManager implements PackageManager {
       networkConfig,
       {
         engineStrict: installOptions.engineStrict ?? config.engineStrict,
+        excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
+        lockfileOnly: installOptions.lockfileOnly,
+        neverBuiltDependencies: installOptions.neverBuiltDependencies,
         nodeLinker: installOptions.nodeLinker,
         nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
         includeOptionalDeps: installOptions.includeOptionalDeps,
@@ -69,6 +83,7 @@ export class PnpmPackageManager implements PackageManager {
           ? ['*']
           : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
+        preferOffline: installOptions.preferOffline,
         rootComponents: installOptions.rootComponents,
         rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
         peerDependencyRules: installOptions.peerDependencyRules,
@@ -77,6 +92,10 @@ export class PnpmPackageManager implements PackageManager {
         pnpmHomeDir: config.pnpmHomeDir,
         updateAll: installOptions.updateAll,
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
+        reportOptions: {
+          appendOnly: installOptions.optimizeReportForNonTerminal,
+          throttleProgress: installOptions.throttleProgress,
+        },
       },
       this.logger
     );
@@ -86,7 +105,7 @@ export class PnpmPackageManager implements PackageManager {
       // this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
       // this.logger.consoleSuccess('installing dependencies using pnpm');
     }
-    return { dependenciesChanged: true };
+    return { dependenciesChanged, rebuild, storeDir };
   }
 
   async getPeerDependencyIssues(

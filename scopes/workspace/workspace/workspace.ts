@@ -47,11 +47,12 @@ import {
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact } from 'lodash';
-import { MergeConfigFilename } from '@teambit/legacy/dist/constants';
+import { MergeConfigFilename, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy/dist/constants';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { CompilationInitiator } from '@teambit/compiler';
+import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -60,6 +61,8 @@ import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { isHash } from '@teambit/component-version';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { GlobalConfigMain } from '@teambit/global-config';
+
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,
@@ -74,6 +77,8 @@ import { ComponentStatus } from './workspace-component/component-status';
 import {
   OnAspectsResolve,
   OnAspectsResolveSlot,
+  OnBitmapChange,
+  OnBitmapChangeSlot,
   OnComponentAddSlot,
   OnComponentChangeSlot,
   OnComponentLoadSlot,
@@ -84,6 +89,7 @@ import {
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
+import type { MergeOptions as BitmapMergeOptions } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
 import { GraphIdsFromFsBuilder } from './build-graph-ids-from-fs';
 import { AspectsMerger } from './aspects-merger';
@@ -95,9 +101,14 @@ import {
 } from './workspace-aspects-loader';
 import { MergeConflictFile } from './merge-conflict-file';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
+import { CompFiles } from './workspace-component/comp-files';
 
 export type EjectConfResult = {
   configPath: string;
+};
+
+export type ClearCacheOptions = {
+  skipClearFailedToLoadEnvs?: boolean;
 };
 
 export const AspectSpecificField = '__specific';
@@ -140,6 +151,7 @@ export class Workspace implements ComponentFactory {
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
   private componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized;
+  localAspects: string[] = [];
   constructor(
     /**
      * private pubsub.
@@ -189,6 +201,8 @@ export class Workspace implements ComponentFactory {
 
     readonly envs: EnvsMain,
 
+    readonly globalConfig: GlobalConfigMain,
+
     /**
      * on component add slot.
      */
@@ -200,7 +214,9 @@ export class Workspace implements ComponentFactory {
 
     private onRootAspectAddedSlot: OnRootAspectAddedSlot,
 
-    private graphql: GraphqlMain
+    private graphql: GraphqlMain,
+
+    private onBitmapChangeSlot: OnBitmapChangeSlot
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
 
@@ -265,6 +281,11 @@ export class Workspace implements ComponentFactory {
 
   registerOnComponentRemove(onComponentRemoveFunc: OnComponentRemove) {
     this.onComponentRemoveSlot.register(onComponentRemoveFunc);
+    return this;
+  }
+
+  registerOnBitmapChange(OnBitmapChangeFunc: OnBitmapChange) {
+    this.onBitmapChangeSlot.register(OnBitmapChangeFunc);
     return this;
   }
 
@@ -501,8 +522,15 @@ export class Workspace implements ComponentFactory {
     );
     const getCompIdByIdStr = (idStr: string): ComponentID => {
       const compId = flattenedBitIdCompIdMap[idStr];
-      if (!compId)
-        throw new Error(`id ${idStr} exists in flattenedEdges but not in flattened of ${component.id.toString()}`);
+      if (!compId) {
+        const suggestWrongSnap = isHash(component.id.version)
+          ? `\nplease check that .bitmap has the correct versions of ${component.id.toStringWithoutVersion()}.
+it's possible that the version ${component.id.version} belong to ${idStr.split('@')[0]}`
+          : '';
+        throw new Error(
+          `id ${idStr} exists in flattenedEdges but not in flattened of ${component.id.toString()}.${suggestWrongSnap}`
+        );
+      }
       return compId;
     };
     const nodes = Object.values(flattenedBitIdCompIdMap);
@@ -556,6 +584,28 @@ export class Workspace implements ComponentFactory {
     } catch (err) {
       return undefined;
     }
+  }
+
+  async getFilesModification(id: ComponentID): Promise<CompFiles> {
+    const bitMapEntry = this.bitMap.getBitmapEntry(id, { ignoreVersion: true });
+    const compDir = bitMapEntry.getComponentDir();
+    const compDirAbs = path.join(this.path, compDir);
+    const sourceFilesVinyls = bitMapEntry.files.map((file) => {
+      const filePath = path.join(compDirAbs, file.relativePath);
+      return SourceFile.load(filePath, compDirAbs, this.path, {});
+    });
+    const repo = this.scope.legacyScope.objects;
+    const getHeadFiles = async () => {
+      const modelComp = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
+      if (!modelComp) return [];
+      const head = modelComp.getHeadRegardlessOfLane();
+      if (!head) return [];
+
+      const verObj = await modelComp.loadVersion(head.toString(), repo);
+      return verObj.files;
+    };
+
+    return new CompFiles(id, repo, sourceFilesVinyls, compDir, await getHeadFiles());
   }
 
   /**
@@ -615,14 +665,21 @@ export class Workspace implements ComponentFactory {
     return workspaceAspectsLoader.getConfiguredUserAspectsPackages(options);
   }
 
-  clearCache() {
+  async clearCache(options: ClearCacheOptions = {}) {
     this.aspectLoader.resetFailedLoadAspects();
+    if (!options.skipClearFailedToLoadEnvs) this.envs.resetFailedToLoadEnvs();
     this.logger.debug('clearing the workspace and scope caches');
     delete this._cachedListIds;
     this.componentLoader.clearCache();
-    this.scope.clearCache();
+    await this.scope.clearCache();
     this.componentList = new ComponentsList(this.consumer);
     this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized.clear();
+  }
+
+  clearAllComponentsCache() {
+    this.componentLoader.clearCache();
+    this.consumer.componentLoader.clearComponentsCache();
+    this.componentList = new ComponentsList(this.consumer);
   }
 
   clearComponentCache(id: ComponentID) {
@@ -631,21 +688,22 @@ export class Workspace implements ComponentFactory {
     this.componentList = new ComponentsList(this.consumer);
   }
 
+  async warmCache() {
+    await this.list();
+  }
+
   async triggerOnComponentChange(
     id: ComponentID,
-    files: string[],
+    files: PathOsBasedAbsolute[],
+    removedFiles: PathOsBasedAbsolute[],
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
-    // if a new file was added, upon component-load, its .bitmap entry is updated to include the
-    // new file. write these changes to the .bitmap file so then other processes have access to
-    // this new file. If the .bitmap wasn't change, it won't do anything.
-    await this.bitMap.write();
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
-      const onChangeResult = await onChangeFunc(component, files, initiator);
-      results.push({ extensionId: extension, results: onChangeResult });
+      const onChangeResult = await onChangeFunc(component, files, removedFiles, initiator);
+      if (onChangeResult) results.push({ extensionId: extension, results: onChangeResult });
     });
 
     // TODO: find way to standardize event names.
@@ -679,6 +737,13 @@ export class Workspace implements ComponentFactory {
     return results;
   }
 
+  async triggerOnBitmapChange(): Promise<void> {
+    const onBitmapChangeEntries = this.onBitmapChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
+    await mapSeries(onBitmapChangeEntries, async ([, onBitmapChangeFunc]) => {
+      await onBitmapChangeFunc();
+    });
+  }
+
   getState(id: ComponentID, hash: string) {
     return this.scope.getState(id, hash);
   }
@@ -697,6 +762,10 @@ export class Workspace implements ComponentFactory {
 
   isOnMain(): boolean {
     return this.consumer.isOnMain();
+  }
+
+  isOnLane(): boolean {
+    return this.consumer.isOnLane();
   }
 
   /**
@@ -892,6 +961,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return componentId.changeVersion(id.version);
   }
 
+  mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: BitmapMergeOptions = {}): string {
+    return this.bitMap.mergeBitmaps(bitmapContent, otherBitmapContent, opts);
+  }
+
   /**
    * This will make sure to fetch the objects prior to load them
    * do not use it if you are not sure you need it.
@@ -923,8 +996,13 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     await this.scope.legacyScope.objects.writeObjectsToTheFS([lane]);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
     const ids = BitIds.fromArray(lane.toBitIds().filter((id) => id.hasScope()));
-    await scopeComponentsImporter.importManyDeltaWithoutDeps({ ids, fromHead: true, lane });
-    await scopeComponentsImporter.importMany({ ids, lanes: [lane] });
+    await scopeComponentsImporter.importWithoutDeps(ids.toVersionLatest(), {
+      cache: false,
+      lane,
+      includeVersionHistory: true,
+    });
+
+    await scopeComponentsImporter.importMany({ ids, lane });
   }
 
   async use(aspectIdStr: string): Promise<string> {
@@ -942,7 +1020,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   /**
-   * Get the component root dir in the file system (relative to workspace or full) in Linux format
+   * @todo: the return path here is Linux when asking for relative and os-based when asking for absolute. fix this to be consistent.
+   *
+   * Get the component root dir in the file system (relative to workspace or full)
    * @param componentId
    * @param relative return the path relative to the workspace or full path
    */
@@ -1325,6 +1405,15 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   getWorkspaceAspectsLoader(): WorkspaceAspectsLoader {
+    let resolveEnvsFromRoots = this.config.resolveEnvsFromRoots;
+    if (resolveEnvsFromRoots === undefined) {
+      const resolveEnvsFromRootsConfig = this.globalConfig.getSync(CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS);
+      const defaultResolveEnvsFromRoots: boolean =
+        // @ts-ignore
+        resolveEnvsFromRootsConfig === 'true' || resolveEnvsFromRootsConfig === true;
+      resolveEnvsFromRoots = defaultResolveEnvsFromRoots;
+    }
+
     const workspaceAspectsLoader = new WorkspaceAspectsLoader(
       this,
       this.scope,
@@ -1332,12 +1421,24 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.envs,
       this.dependencyResolver,
       this.logger,
+      this.globalConfig,
       this.harmony,
       this.onAspectsResolveSlot,
       this.onRootAspectAddedSlot,
-      this.config.resolveAspectsFromNodeModules
+      this.config.resolveAspectsFromNodeModules,
+      resolveEnvsFromRoots
     );
     return workspaceAspectsLoader;
+  }
+
+  getCapsulePath() {
+    const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
+    return workspaceAspectsLoader.getCapsulePath();
+  }
+
+  shouldUseHashForCapsules() {
+    const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
+    return workspaceAspectsLoader.shouldUseHashForCapsules();
   }
 
   /**
@@ -1349,7 +1450,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   async _reloadConsumer() {
     this.consumer = await loadConsumer(this.path, true);
-    this.clearCache();
+    this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
+    await this.clearCache();
   }
 
   getComponentPackagePath(component: Component) {

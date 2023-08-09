@@ -6,6 +6,8 @@ export {
   conflictSummaryReport,
   installationErrorOutput,
   compilationErrorOutput,
+  getRemovedOutput,
+  getAddedOutput,
 } from './merge-cmd';
 export type { MergingMain, ComponentMergeStatus, ApplyVersionResults } from './merging.main.runtime';
 export { ConfigMergeResult } from './config-merge-result';

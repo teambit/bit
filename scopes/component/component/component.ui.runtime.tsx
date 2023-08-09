@@ -145,20 +145,30 @@ export class ComponentUI {
     },
   ];
 
-  private bitMethod: ConsumePlugin = (comp, options) => {
-    const version = comp.version === comp.latest ? '' : `@${comp.version}`;
-    const packageVersion = comp.version === comp.latest ? '' : `@${this.formatToInstallableVersion(comp.version)}`;
+  private bitMethod: ConsumePlugin = ({
+    options,
+    id: componentId,
+    packageName: packageNameFromProps,
+    latest: latestFromProps,
+    componentModel,
+  }) => {
+    const packageName = packageNameFromProps || componentModel?.packageName;
+    const latest = latestFromProps || componentModel?.id.version;
+
+    const version = componentId.version === latest ? '' : `@${componentId.version}`;
+    const packageVersion =
+      componentId.version === latest ? '' : `@${this.formatToInstallableVersion(componentId.version)}`;
 
     return {
       Title: <img style={{ width: '20px' }} src="https://static.bit.dev/brands/bit-logo-text.svg" />,
-      Component: (
+      Component: !options?.hide ? (
         <Import
-          componentId={`${comp.id.toString({ ignoreVersion: true })}${version}`}
-          packageName={`${comp.packageName}${packageVersion}`}
-          componentName={comp.id.name}
-          showInstallMethod={!options?.currentLane}
+          componentId={`${componentId.toString({ ignoreVersion: true })}${version}`}
+          packageName={`${packageName}${packageVersion}`}
+          componentName={componentId.name}
+          showInstallMethod={!options?.disableInstall}
         />
-      ),
+      ) : null,
       order: 0,
     };
   };

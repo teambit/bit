@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Compiler, CompilerAspect, CompilerMain } from '@teambit/compiler';
+import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
 import { PackageJsonProps } from '@teambit/pkg';
@@ -12,10 +12,11 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
-import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import WatcherAspect, { WatcherMain, WatchOptions } from '@teambit/watcher';
-import type { Component } from '@teambit/component';
+import type { Component, ComponentID } from '@teambit/component';
+import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
+import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
@@ -60,11 +61,13 @@ import {
   ConditionalTypeTransformer,
   NamedTupleTransformer,
   ConstructorTransformer,
+  ExpressionStatementTransformer,
+  ModuleDeclarationTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
 import WriteTsconfigCmd from './cmds/write-tsconfig.cmd';
-import { TypescriptConfigWriter } from './ts-config-writer';
+import { RemoveTypesTask } from './remove-types-task';
 
 export type TsMode = 'build' | 'dev';
 
@@ -92,6 +95,7 @@ export class TypescriptMain {
     private logger: Logger,
     readonly schemaTransformerSlot: SchemaTransformerSlot,
     readonly workspace: Workspace,
+    readonly scope: ScopeMain,
     readonly depResolver: DependencyResolverMain,
     private envs: EnvsMain,
     private tsConfigWriter: TsconfigWriter,
@@ -133,7 +137,7 @@ export class TypescriptMain {
     files: string[] = []
   ): Promise<TsserverClient> {
     this.tsServer = new TsserverClient(projectPath, this.logger, options, files);
-    this.tsServer.init();
+    await this.tsServer.init();
     return this.tsServer;
   }
 
@@ -204,14 +208,16 @@ export class TypescriptMain {
   /**
    * create an instance of a typescript semantic schema extractor.
    */
-  createSchemaExtractor(tsconfig: any, path?: string): SchemaExtractor {
+  createSchemaExtractor(tsconfig: any, tsserverPath?: string, contextPath?: string): SchemaExtractor {
     return new TypeScriptExtractor(
       tsconfig,
       this.schemaTransformerSlot,
       this,
-      path || this.workspace.path,
+      tsserverPath || this.workspace?.path || '',
+      contextPath || this.workspace?.path || '',
       this.depResolver,
       this.workspace,
+      this.scope,
       this.aspectLoader,
       this.logger
     );
@@ -277,13 +283,13 @@ export class TypescriptMain {
     return { writeResults, cleanResults };
   }
 
-  private async onPreWatch(components: Component[], watchOpts: WatchOptions) {
+  private async onPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
     const workspace = this.workspace;
     if (!workspace || !watchOpts.spawnTSServer) {
       return;
     }
     const { verbose, checkTypes } = watchOpts;
-    const files = checkTypes ? this.getSupportedFilesForTsserver(components) : [];
+    const files = checkTypes ? this.getSupportedFilesForTsserver(await workspace.getMany(componentIds)) : [];
     const printTypeErrors = Boolean(checkTypes);
     await this.initTsserverClientFromWorkspace({ verbose, checkTypes, printTypeErrors }, files);
   }
@@ -310,13 +316,13 @@ export class TypescriptMain {
     DependencyResolverAspect,
     EnvsAspect,
     WatcherAspect,
-    WorkspaceConfigFilesAspect,
-    CompilerAspect,
+    ScopeAspect,
+    BuilderAspect,
   ];
   static slots = [Slot.withType<SchemaTransformer[]>()];
 
   static async provider(
-    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs, watcher, workspaceConfigFiles, compiler]: [
+    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs, watcher, scope, builder]: [
       SchemaMain,
       LoggerMain,
       AspectLoaderMain,
@@ -325,15 +331,14 @@ export class TypescriptMain {
       DependencyResolverMain,
       EnvsMain,
       WatcherMain,
-      WorkspaceConfigFilesMain,
-      CompilerMain
+      ScopeMain,
+      BuilderMain
     ],
     config,
     [schemaTransformerSlot]: [SchemaTransformerSlot]
   ) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
-    workspaceConfigFiles.registerConfigWriter(new TypescriptConfigWriter(compiler, logger));
 
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
     const tsconfigWriter = new TsconfigWriter(workspace, logger);
@@ -341,6 +346,7 @@ export class TypescriptMain {
       logger,
       schemaTransformerSlot,
       workspace,
+      scope,
       depResolver,
       envs,
       tsconfigWriter,
@@ -383,6 +389,8 @@ export class TypescriptMain {
       new NamedTupleTransformer(),
       new ConstructorTransformer(),
       new ImportDeclarationTransformer(),
+      new ExpressionStatementTransformer(),
+      new ModuleDeclarationTransformer(),
     ]);
 
     if (workspace) {
@@ -390,6 +398,10 @@ export class TypescriptMain {
       workspace.registerOnComponentChange(tsMain.onComponentChange.bind(tsMain));
       workspace.registerOnComponentAdd(tsMain.onComponentChange.bind(tsMain));
     }
+
+    const removeTypesTask = new RemoveTypesTask();
+    builder.registerSnapTasks([removeTypesTask]);
+    builder.registerTagTasks([removeTypesTask]);
 
     const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);
     const writeTsconfigCmd = new WriteTsconfigCmd(tsMain);

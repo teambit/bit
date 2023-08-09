@@ -6,7 +6,7 @@ import { head, uniqBy } from 'lodash';
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-import { resolve, sep, relative } from 'path';
+import { resolve, sep, relative, join, isAbsolute, extname } from 'path';
 import { Component, ComponentID } from '@teambit/component';
 import {
   TypeRefSchema,
@@ -68,8 +68,13 @@ export class SchemaExtractorContext {
     readonly component: Component,
     readonly extractor: TypeScriptExtractor,
     readonly componentDeps: ComponentDependency[],
+    readonly componentRootPath: string,
+    readonly hostRootPath: string,
     readonly formatter?: Formatter
-  ) {}
+  ) {
+    this.componentRootPath = pathNormalizeToLinux(componentRootPath);
+    this.hostRootPath = pathNormalizeToLinux(hostRootPath);
+  }
 
   getComputedNodeKey({ filePath, line, character }: Location) {
     return `${filePath}:${line}:${character}`;
@@ -108,11 +113,9 @@ export class SchemaExtractorContext {
     const location = this.getLocation(node);
     const key = this.getComputedNodeKey(location);
     const existingComputedSchema = this.computed.get(key);
-
     if (existingComputedSchema) {
       return existingComputedSchema;
     }
-
     const computedSchema = await this.extractor.computeSchema(node, this);
     this.setComputed(computedSchema);
     return computedSchema;
@@ -123,10 +126,10 @@ export class SchemaExtractorContext {
    */
   getLocation(node: Node, targetSourceFile?: ts.SourceFile, absolutePath = false): Location {
     const sourceFile = targetSourceFile || node.getSourceFile();
+    const filePath = absolutePath ? sourceFile.fileName : this.getPathRelativeToComponent(sourceFile.fileName);
     const position = sourceFile.getLineAndCharacterOfPosition(node.getStart());
     const line = position.line + 1;
     const character = position.character + 1;
-    const filePath = absolutePath ? sourceFile.fileName : this.getPathRelativeToComponent(sourceFile.fileName);
 
     return {
       filePath: pathNormalizeToLinux(filePath),
@@ -164,6 +167,13 @@ export class SchemaExtractorContext {
    */
   getPath(node: Node) {
     const sourceFile = node.getSourceFile();
+
+    const fileName = sourceFile.fileName;
+
+    if (!fileName.startsWith(this.componentRootPath) && !fileName.startsWith(this.hostRootPath)) {
+      return join(this.componentRootPath, fileName);
+    }
+
     return sourceFile.fileName;
   }
 
@@ -197,32 +207,50 @@ export class SchemaExtractorContext {
 
   visitTypeDefinition() {}
 
+  private getPathWithoutExtension(filePath: string) {
+    const knownExtensions = ['ts', 'js', 'jsx', 'tsx'];
+    const fileExtension = extname(filePath).substring(1);
+
+    const filePathWithoutExtension = () => {
+      if (knownExtensions.includes(fileExtension)) {
+        return filePath.replace(new RegExp(`\\.${fileExtension}$`), '');
+      }
+      return filePath;
+    };
+
+    if (!isAbsolute(filePath)) {
+      return filePathWithoutExtension();
+    }
+
+    if (filePath.startsWith(this.componentRootPath)) {
+      return relative(this.componentRootPath, filePathWithoutExtension());
+    }
+    if (filePath.startsWith(this.hostRootPath)) {
+      return relative(this.hostRootPath, filePathWithoutExtension());
+    }
+    return filePathWithoutExtension();
+  }
+
+  private isIndexFile(filePath: string, currentFilePath: string) {
+    const indexFilePath = join(filePath, 'index');
+    return pathNormalizeToLinux(indexFilePath) === currentFilePath;
+  }
+
   findFileInComponent(filePath: string) {
-    const filePathToCompare = pathNormalizeToLinux(filePath);
+    const normalizedFilePath = pathNormalizeToLinux(filePath);
+    const pathToCompareWithoutExtension = this.getPathWithoutExtension(normalizedFilePath);
+
     const matchingFile = this.component.filesystem.files.find((file) => {
       const currentFilePath = pathNormalizeToLinux(file.path);
-      // TODO: fix this line to support further extensions.
-      if (currentFilePath.includes(filePathToCompare)) {
-        const strings = ['ts', 'tsx', 'js', 'jsx'].map((format) => {
-          if (filePathToCompare.endsWith(`.${format}`)) return filePathToCompare;
+      const currentFilePathWithoutExtension = this.getPathWithoutExtension(currentFilePath);
 
-          return `${filePathToCompare}.${format}`;
-        });
+      const isSameFilePath = pathToCompareWithoutExtension === currentFilePathWithoutExtension;
 
-        const matchesWithExtension = !!strings.find((string) => string === currentFilePath);
-        // check if it is an index file export
-        const matchesIndexFile =
-          !matchesWithExtension &&
-          ['ts', 'js'].some((format) => {
-            return `${filePathToCompare}/index.${format}` === currentFilePath;
-          });
+      const matches =
+        isSameFilePath || this.isIndexFile(pathToCompareWithoutExtension, currentFilePathWithoutExtension);
 
-        return matchesWithExtension || matchesIndexFile;
-      }
-
-      return false;
+      return matches;
     });
-
     return matchingFile;
   }
 
@@ -267,7 +295,7 @@ export class SchemaExtractorContext {
   async getFilePathByNode(node: Node) {
     const def = await this.tsserver.getDefinition(this.getPath(node), this.getLocation(node));
 
-    const firstDef = head(def.body);
+    const firstDef = head(def?.body);
     return firstDef?.file;
   }
 
@@ -277,7 +305,7 @@ export class SchemaExtractorContext {
 
     const def = await this.tsserver.getDefinition(filePath, location);
 
-    const firstDef = head(def.body);
+    const firstDef = head(def?.body);
 
     return firstDef;
   }
@@ -514,13 +542,15 @@ export class SchemaExtractorContext {
     }
 
     const relativeDir = identifier.filePath.substring(0, identifier.filePath.lastIndexOf('/'));
-    const absFilePath = resolve(relativeDir, sourceFilePath);
-    const compFilePath = this.findFileInComponent(absFilePath);
+    const absFilePath = resolve(this.componentRootPath, relativeDir, sourceFilePath);
 
+    const compFilePath = this.findFileInComponent(absFilePath);
     if (!compFilePath) {
       // @todo handle this better
       throw new Error(
-        `cannot find file in component \n absolute path:  ${absFilePath}\n source file path ${sourceFilePath}\n identifier file path ${identifier.filePath} \n relative dir ${relativeDir}`
+        `cannot find file in component \n source file path ${sourceFilePath}\n 
+        identifier file path ${identifier.filePath}\nrelative dir ${relativeDir}\n
+        absFilePath ${absFilePath}`
       );
       return new TypeRefSchema(location, identifier.id);
     }

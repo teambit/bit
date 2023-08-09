@@ -16,7 +16,7 @@ import RemoteLanes from '../lanes/remote-lanes';
 import UnmergedComponents from '../lanes/unmerged-components';
 import ScopeMeta from '../models/scopeMeta';
 import { ScopeJson } from '../scope-json';
-import ScopeIndex, { IndexType } from './components-index';
+import ScopeIndex, { IndexType } from './scope-index';
 import BitObject from './object';
 import { ObjectItem, ObjectList } from './object-list';
 import BitRawObject from './raw-object';
@@ -40,7 +40,6 @@ export default class Repository {
   onRead: ContentTransformer;
   onPersist: ContentTransformer;
   scopePath: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   scopeIndex: ScopeIndex;
   private cache: InMemoryCache<BitObject>;
   remoteLanes!: RemoteLanes;
@@ -84,7 +83,14 @@ export default class Repository {
 
   static onPostObjectsPersist: () => Promise<void>;
 
-  // if current scope index difference with <scope_folder>/index.json content, reload it
+  async reLoadScopeIndex() {
+    this.scopeIndex = await this.loadOptionallyCreateScopeIndex();
+  }
+
+  /**
+   * current scope index difference with <scope_folder>/index.json content, reload it
+   * @deprecated use Scope aspect `watchSystemFiles` instead, it's way more efficient.
+   */
   public async reloadScopeIndexIfNeed(force = false) {
     const latestScopeIndex = await this.loadOptionallyCreateScopeIndex();
     if (force) {
@@ -360,8 +366,13 @@ export default class Repository {
     this.cache.delete(ref.toString());
   }
 
-  clearCache() {
+  async clearCache() {
     logger.debug('repository.clearCache');
+    this.cache.deleteAll();
+    await this.reLoadScopeIndex();
+  }
+  clearObjectsFromCache() {
+    logger.debug('repository.clearObjectsFromCache');
     this.cache.deleteAll();
   }
 

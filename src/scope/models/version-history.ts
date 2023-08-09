@@ -1,5 +1,5 @@
 import { Graph, Edge, Node } from '@teambit/graph.cleargraph';
-import { difference } from 'lodash';
+import { compact, difference, uniqBy } from 'lodash';
 import { BitId } from '../../bit-id';
 import getStringifyArgs from '../../utils/string/get-stringify-args';
 import Ref from '../objects/ref';
@@ -105,6 +105,11 @@ export default class VersionHistory extends BitObject {
     return { found: allHashes, missing };
   }
 
+  isRefPartOfHistory(startFrom: Ref, searchFor: Ref) {
+    const { found } = this.getAllHashesFrom(startFrom);
+    return found?.includes(searchFor.toString());
+  }
+
   getAllHashesAsString(): string[] {
     return this.versions.map((v) => v.hash.toString());
   }
@@ -120,11 +125,20 @@ export default class VersionHistory extends BitObject {
 
   getGraph() {
     const graph = new Graph<Ref, string>();
-    const nodes = this.versions.map((v) => new Node(v.hash.toString(), v.hash));
+    const allHashes = uniqBy(
+      this.versions
+        .map((v) => {
+          return compact([v.hash, ...v.parents, ...(v.squashed || []), v.unrelated]);
+        })
+        .flat(),
+      'hash'
+    );
+    const nodes = allHashes.map((v) => new Node(v.toString(), v));
     const edges = this.versions
       .map((v) => {
         const verEdges = v.parents.map((p) => new Edge(v.hash.toString(), p.toString(), 'parent'));
         if (v.unrelated) verEdges.push(new Edge(v.hash.toString(), v.unrelated.toString(), 'unrelated'));
+        if (v.squashed) v.squashed.map((p) => verEdges.push(new Edge(v.hash.toString(), p.toString(), 'squashed')));
         return verEdges;
       })
       .flat();

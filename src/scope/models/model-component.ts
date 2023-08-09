@@ -298,12 +298,29 @@ export default class Component extends BitObject {
     }
   }
 
+  /**
+   * this is used (among others) by `bit status` to check whether snaps are local (staged), for `bit reset` to remove them
+   * and for `bit export` to push them. for "merge pending" status, use `this.getDivergeDataForMergePending()`.
+   */
   getDivergeData(): SnapsDistance {
     if (!this.divergeData)
       throw new Error(
         `getDivergeData() expects divergeData to be populate, please use this.setDivergeData() for id: ${this.id()}`
       );
     return this.divergeData;
+  }
+
+  /**
+   * don't use modelComponent.getDivergeData() because in some scenarios when on a lane, it compares the head
+   * on the lane against the head on the main, which could show the component as diverged incorrectly.
+   */
+  async getDivergeDataForMergePending(repo: Repository) {
+    return getDivergeData({
+      repo,
+      modelComponent: this,
+      targetHead: (this.laneId ? this.laneHeadRemote : this.remoteHead) || null,
+      throws: false,
+    });
   }
 
   async populateLocalAndRemoteHeads(repo: Repository, lane: Lane | null) {
@@ -493,11 +510,11 @@ export default class Component extends BitObject {
       logger.info(`collectLogs is unable to find some objects for ${this.id()}. will try to import them`);
       try {
         const lane = await scope.getCurrentLaneObject();
-        await scope.scopeImporter.importManyDeltaWithoutDeps({
-          ids: BitIds.fromArray([this.toBitId()]),
+        await scope.scopeImporter.importWithoutDeps(BitIds.fromArray([this.toBitId()]).toVersionLatest(), {
+          cache: false,
+          includeVersionHistory: true,
           collectParents: true,
-          fromHead: true,
-          lane,
+          lane: lane || undefined,
         });
         versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
       } catch (err) {
@@ -1079,7 +1096,10 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   async getAndPopulateVersionHistory(repo: Repository, head: Ref): Promise<VersionHistory> {
     const versionHistory = await this.GetVersionHistory(repo);
     const { err } = await this.populateVersionHistoryIfMissingGracefully(repo, versionHistory, head);
-    if (err) throw err;
+    if (err) {
+      logger.error(`rethrowing an error ${err.message}, current stuck`, new Error(err.message));
+      throw err;
+    }
     return versionHistory;
   }
 

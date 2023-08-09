@@ -8,12 +8,20 @@ import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/con
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import EnvsAspect from '@teambit/envs';
+
+export type MergeOptions = {
+  mergeStrategy?: 'theirs' | 'ours' | 'manual';
+};
 /**
  * consider extracting to a new component.
  * (pro: making Workspace aspect smaller. con: it's an implementation details of the workspace)
  */
 export class BitMap {
   constructor(private legacyBitMap: LegacyBitMap, private consumer: Consumer) {}
+
+  mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: MergeOptions = {}): string {
+    return LegacyBitMap.mergeContent(bitmapContent, otherBitmapContent, opts);
+  }
 
   /**
    * adds component config to the .bitmap file.
@@ -207,8 +215,8 @@ export class BitMap {
   makeComponentsAvailableOnMain(ids: ComponentID[]) {
     ids.forEach((id) => {
       const componentMap = this.getBitmapEntry(id);
-      delete componentMap.onLanesOnly;
       delete componentMap.isAvailableOnCurrentLane;
+      delete componentMap.onLanesOnly;
     });
     this.legacyBitMap.markAsChanged();
   }

@@ -4,7 +4,8 @@ import InsightNotFound from './exceptions/insight-not-found';
 import { Insight, InsightResult } from './insight';
 
 export type RunInsightOptions = {
-  renderData: boolean;
+  renderData?: boolean;
+  includeDeps?: boolean;
 };
 export class InsightManager {
   /** insights is an insight registry */
@@ -66,7 +67,7 @@ export class InsightManager {
     await pMapSeries(insightNames, async (insightName) => {
       const insight = this.getByName(insightName);
       if (insight) {
-        const insightRes: InsightResult = await insight.run();
+        const insightRes: InsightResult = await insight.run(opts);
         if (!opts.renderData) {
           delete insightRes.renderedData;
         }

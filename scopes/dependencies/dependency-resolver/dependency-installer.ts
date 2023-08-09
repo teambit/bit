@@ -21,6 +21,7 @@ const DEFAULT_PM_INSTALL_OPTIONS: PackageManagerInstallOptions = {
 
 const DEFAULT_INSTALL_OPTIONS: InstallOptions = {
   installTeambitBit: false,
+  excludeExtensionsDependencies: false,
 };
 
 export type DepInstallerContext = {
@@ -40,6 +41,8 @@ export type InstallOptions = {
   packageManagerConfigRootDir?: string;
   resolveVersionsFromDependenciesOnly?: boolean;
   linkedDependencies?: Record<string, Record<string, string>>;
+  forceTeambitHarmonyLink?: boolean;
+  excludeExtensionsDependencies?: boolean;
 };
 
 export type GetComponentManifestsOptions = {
@@ -48,6 +51,8 @@ export type GetComponentManifestsOptions = {
   rootDir: string;
   resolveVersionsFromDependenciesOnly?: boolean;
   referenceLocalPackages?: boolean;
+  hasRootComponents?: boolean;
+  excludeExtensionsDependencies?: boolean;
 } & Pick<
   PackageManagerInstallOptions,
   'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents' | 'copyPeerToRuntimeOnRoot' | 'installPeersFromEnvs'
@@ -92,6 +97,10 @@ export class DependencyInstaller {
 
     private peerDependencyRules?: PeerDependencyRules,
 
+    private neverBuiltDependencies?: string[],
+
+    private preferOffline?: boolean,
+
     private installingContext: DepInstallerContext = {}
   ) {}
 
@@ -113,6 +122,7 @@ export class DependencyInstaller {
       rootDir: finalRootDir,
       resolveVersionsFromDependenciesOnly: options.resolveVersionsFromDependenciesOnly,
       referenceLocalPackages: packageManagerOptions.rootComponentsForCapsules,
+      excludeExtensionsDependencies: options.excludeExtensionsDependencies,
     });
     return this.installComponents(
       finalRootDir,
@@ -146,24 +156,35 @@ export class DependencyInstaller {
       throw new RootDirNotDefined();
     }
     if (options.linkedDependencies) {
-      const directDeps = new Set<string>();
-      Object.values(manifests).forEach((manifest) => {
-        for (const depName of Object.keys({ ...manifest.dependencies, ...manifest.devDependencies })) {
-          directDeps.add(depName);
-        }
-      });
-      if (options.linkedDependencies[finalRootDir]) {
+      manifests = JSON.parse(JSON.stringify(manifests));
+      const linkedDependencies = JSON.parse(
+        JSON.stringify(options.linkedDependencies)
+      ) as typeof options.linkedDependencies;
+      if (linkedDependencies[finalRootDir]) {
+        const directDeps = new Set<string>();
+        Object.values(manifests).forEach((manifest) => {
+          for (const depName of Object.keys({ ...manifest.dependencies, ...manifest.devDependencies })) {
+            directDeps.add(depName);
+          }
+        });
         for (const manifest of Object.values(manifests)) {
           if (manifest.name && directDeps.has(manifest.name)) {
-            delete options.linkedDependencies[finalRootDir][manifest.name];
+            delete linkedDependencies[finalRootDir][manifest.name];
           }
         }
+        if (options.forceTeambitHarmonyLink && manifests[finalRootDir].dependencies?.['@teambit/harmony']) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          delete manifests[finalRootDir].dependencies!['@teambit/harmony'];
+        }
       }
-      Object.entries(options.linkedDependencies).forEach(([dir, linkedDeps]) => {
+      Object.entries(linkedDependencies).forEach(([dir, linkedDeps]) => {
         if (!manifests[dir]) {
           manifests[dir] = {};
         }
-        manifests[dir].dependencies = Object.assign({}, manifests[dir].dependencies, linkedDeps);
+        manifests[dir].dependencies = {
+          ...linkedDeps,
+          ...manifests[dir].dependencies,
+        };
       });
     }
     const hidePackageManagerOutput = !!(this.installingContext.inCapsule && process.env.VERBOSE_PM_OUTPUT !== 'true');
@@ -180,6 +201,8 @@ export class DependencyInstaller {
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
       peerDependencyRules: this.peerDependencyRules,
       hidePackageManagerOutput,
+      neverBuiltDependencies: ['core-js', ...(this.neverBuiltDependencies ?? [])],
+      preferOffline: this.preferOffline,
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {
@@ -253,6 +276,8 @@ export class DependencyInstaller {
     installPeersFromEnvs,
     resolveVersionsFromDependenciesOnly,
     referenceLocalPackages,
+    hasRootComponents,
+    excludeExtensionsDependencies,
   }: GetComponentManifestsOptions) {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
@@ -261,6 +286,8 @@ export class DependencyInstaller {
       dependencyFilterFn,
       resolveVersionsFromDependenciesOnly,
       referenceLocalPackages,
+      hasRootComponents,
+      excludeExtensionsDependencies,
     };
     const workspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
       undefined,
@@ -271,6 +298,9 @@ export class DependencyInstaller {
       options,
       this.installingContext
     );
+    const packageNames = componentDirectoryMap.components.map((component) =>
+      this.dependencyResolver.getPackageName(component)
+    );
     const manifests: Record<string, ProjectManifest> = componentDirectoryMap
       .toArray()
       .reduce((acc, [component, dir]) => {
@@ -278,7 +308,10 @@ export class DependencyInstaller {
         const manifest = workspaceManifest.componentsManifestsMap.get(packageName);
         if (manifest) {
           acc[dir] = manifest.toJson({ copyPeerToRuntime: copyPeerToRuntimeOnComponents });
-          acc[dir].defaultPeerDependencies = fromPairs(manifest.envPolicy.selfPolicy.toNameVersionTuple());
+          const selfPolicyWithoutLocal = manifest.envPolicy.selfPolicy.filter(
+            (dep) => !packageNames.includes(dep.dependencyId)
+          );
+          acc[dir].defaultPeerDependencies = fromPairs(selfPolicyWithoutLocal.toNameVersionTuple());
         }
         return acc;
       }, {});

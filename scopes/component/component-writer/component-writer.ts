@@ -26,6 +26,7 @@ export type ComponentWriterProps = {
   ignoreBitDependencies?: boolean | BitIds;
   deleteBitDirContent?: boolean;
   existingComponentMap?: ComponentMap;
+  skipUpdatingBitMap?: boolean;
 };
 
 export default class ComponentWriter {
@@ -41,6 +42,7 @@ export default class ComponentWriter {
   ignoreBitDependencies: boolean | BitIds;
   deleteBitDirContent: boolean | undefined;
   existingComponentMap: ComponentMap | undefined;
+  skipUpdatingBitMap?: boolean;
 
   constructor({
     component,
@@ -55,6 +57,7 @@ export default class ComponentWriter {
     ignoreBitDependencies = true,
     deleteBitDirContent,
     existingComponentMap,
+    skipUpdatingBitMap,
   }: ComponentWriterProps) {
     this.component = component;
     this.writeToPath = writeToPath;
@@ -68,6 +71,7 @@ export default class ComponentWriter {
     this.ignoreBitDependencies = ignoreBitDependencies;
     this.deleteBitDirContent = deleteBitDirContent;
     this.existingComponentMap = existingComponentMap;
+    this.skipUpdatingBitMap = skipUpdatingBitMap;
   }
 
   /**
@@ -97,7 +101,9 @@ export default class ComponentWriter {
     this.component.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
     this.deleteBitDirContent = false;
     this._updateComponentRootPathAccordingToBitMap();
-    this.component.componentMap = this.addComponentToBitMap(this.component.componentMap.rootDir);
+    if (!this.skipUpdatingBitMap) {
+      this.component.componentMap = this.addComponentToBitMap(this.component.componentMap.rootDir);
+    }
     this.writePackageJson = false;
     await this.populateFilesToWriteToComponentDir();
     return this.component;

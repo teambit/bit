@@ -1,3 +1,4 @@
+import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import R from 'ramda';
@@ -36,6 +37,7 @@ import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import { ExportOrigin } from '@teambit/legacy/dist/scope/network/http/http';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import {
@@ -75,6 +77,7 @@ type ExportParams = {
   includeNonStaged?: boolean;
   resumeExportId?: string | undefined;
   ignoreMissingArtifacts?: boolean;
+  forkLaneNewScope?: boolean;
 };
 
 export class ExportMain {
@@ -105,22 +108,8 @@ export class ExportMain {
         this.logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
       });
     }
-    this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
+    await this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
     return exportResults;
-  }
-
-  async exportObjectList(
-    manyObjectsPerRemote: ObjectsPerRemote[],
-    scopeRemotes: Remotes,
-    centralHubOptions?: Record<string, any>
-  ) {
-    const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
-    if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes)) {
-      const objectList = this.transformToOneObjectListWithScopeData(manyObjectsPerRemote);
-      await http.pushToCentralHub(objectList, centralHubOptions);
-    } else {
-      await this.pushToRemotesCarefully(manyObjectsPerRemote);
-    }
   }
 
   private async exportComponents({ ids, includeNonStaged, originDirectly, ...params }: ExportParams): Promise<{
@@ -155,6 +144,26 @@ export class ExportMain {
     if (laneObject?.readmeComponent) {
       _throwForUnsnappedLaneReadme(laneObject);
     }
+
+    if (
+      !params.forkLaneNewScope &&
+      laneObject?.forkedFrom &&
+      laneObject.isNew &&
+      laneObject.forkedFrom.scope !== laneObject.scope
+    ) {
+      throw new BitError(`error: the current lane ${laneObject
+        .id()
+        .toString()} was forked from ${laneObject.forkedFrom.toString()}
+and is about to export to a different scope (${laneObject.scope}) than the original lane (${
+        laneObject.forkedFrom.scope
+      }).
+on large lanes with long history graph, it results in exporting lots of objects to the new scope, some of them might be missing locally.
+if you can use the same scope as the original name, change it now by running "bit lane change-scope ${
+        laneObject.name
+      } ${laneObject.forkedFrom.scope}".
+otherwise, re-run the export with "--fork-lane-new-scope" flag.
+if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
+    }
     const isOnMain = consumer.isOnMain();
     const { exported, updatedLocally, newIdsOnRemote } = await this.exportMany({
       ...params,
@@ -175,6 +184,7 @@ export class ExportMain {
     // ideally we should delete the staged-snaps only for the exported snaps. however, it's not easy, and it's ok to
     // delete them all because this file is mainly an optimization for the import process.
     await this.workspace.scope.legacyScope.stagedSnaps.deleteFile();
+    await fs.remove(this.workspace.scope.getLastMergedPath());
     Analytics.setExtraData('num_components', exported.length);
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
     // export and eject operations to function independently. we don't want to lose the changes to
@@ -207,6 +217,7 @@ export class ExportMain {
     isOnMain = true,
     exportHeadsOnly, // relevant when exporting from bare-scope, especially when re-exporting existing versions, the normal calculation based on getDivergeData won't work
     filterOutExistingVersions, // go to the remote and check whether the version exists there. if so, don't export it
+    exportOrigin = 'export',
   }: {
     scope: Scope;
     ids: BitIds;
@@ -220,6 +231,7 @@ export class ExportMain {
     isOnMain?: boolean;
     exportHeadsOnly?: boolean;
     filterOutExistingVersions?: boolean;
+    exportOrigin?: ExportOrigin;
   }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
     this.logger.debug(`scope.exportMany, ids: ${ids.toString()}`);
     const scopeRemotes: Remotes = await getScopeRemotes(scope);
@@ -305,7 +317,7 @@ export class ExportMain {
 
       const modelComponents = await mapSeries(bitIds, (id) => scope.getModelComponent(id));
       // super important! otherwise, the processModelComponent() changes objects in memory, while the key remains the same
-      scope.objects.clearCache();
+      scope.objects.clearObjectsFromCache();
 
       const refsToPotentialExportPerComponent = await mapSeries(modelComponents, async (modelComponent) => {
         const refs = await getVersionsToExport(modelComponent);
@@ -405,7 +417,7 @@ export class ExportMain {
     const pushAllToCentralHub = async () => {
       const objectList = this.transformToOneObjectListWithScopeData(manyObjectsPerRemote);
       const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
-      const pushResults = await http.pushToCentralHub(objectList);
+      const pushResults = await http.pushToCentralHub(objectList, { origin: exportOrigin });
       const { failedScopes, successIds, errors } = pushResults;
       if (failedScopes.length) {
         throw new PersistFailed(failedScopes, errors);
@@ -721,14 +733,9 @@ export class ExportMain {
     }
     loader.start(BEFORE_EXPORT); // show single export
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
-    const statuses = await consumer.getManyComponentsStatuses(parsedIds);
-    statuses.forEach(({ id, status }) => {
-      if (status.nested) {
-        throw new GeneralError(
-          `unable to export "${id.toString()}", the component is not fully available. please use "bit import" first`
-        );
-      }
-    });
+    // load the components for fixing any out-of-sync issues.
+    await consumer.loadComponents(BitIds.fromArray(parsedIds));
+
     return filterNonScopeIfNeeded(BitIds.fromArray(parsedIds));
   }
 

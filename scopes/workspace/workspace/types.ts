@@ -47,6 +47,16 @@ export interface WorkspaceExtConfig {
   resolveAspectsFromNodeModules?: boolean;
 
   /**
+   * If set to `true`, it allows the workspace to resolve envs from node modules
+   * installed in the workspace's `node_modules` directory.
+   * the envs will be resolved from the node_modules of the env's root (workspace/node_modules/.bit_roots/{envId})
+   * and if not found (usually when the env was hoisted to the root node_modules) then from the node_modules of the
+   * workspace.
+   * If not set or set to `false`, envs will only be resolved from the scope envs capsule.
+   */
+  resolveEnvsFromRoots?: boolean;
+
+  /**
    * If set to `true`, bit will try to load aspects dependencies automatically.
    * even if the aspects dependencies are not configured in the workspace.jsonc root config.
    * for example having the aspect

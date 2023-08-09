@@ -86,7 +86,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
 
     // using `loadMany` instead of `getMany` to make sure component aspects are loaded.
     this.logger.setStatusLine(`loading ${componentsToSign.length} components and their aspects...`);
-    const components = await this.scope.loadMany(componentsToSign, lane);
+    const components = await this.scope.loadMany(componentsToSign, lane, { loadApps: false, loadEnvs: false });
     this.logger.clearStatusLine();
     // it's enough to check the first component whether it's a snap or tag, because it can't be a mix of both
     const shouldRunSnapPipeline = isSnap(components[0].id.version);
@@ -201,7 +201,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     }
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
     await http.pushToCentralHub(objectList, {
-      persist: true,
+      origin: 'sign',
       sign: true,
       signComponents: signComponents.map((id) => id.toString()),
       idsHashMaps,
@@ -254,7 +254,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
   ) {
     const logger = loggerMain.createLogger(SignAspect.id);
     const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes, snapping, harmony);
-    cli.register(new SignCmd(signMain));
+    cli.register(new SignCmd(signMain, logger));
     return signMain;
   }
 }

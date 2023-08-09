@@ -289,8 +289,12 @@ export class UiMain {
       await uiServer.dev({ portRange: port || this.config.portRange });
     } else {
       if (!skipUiBuild) await this.buildUI(name, uiRoot, rebuild);
-      const bundleUiPublicPath = join(this.getBundleUiPath(), publicDir);
-      const bundleUiRoot = this._isBundleUiServed && existsSync(bundleUiPublicPath) ? bundleUiPublicPath : undefined;
+      const bundleUiPath = this.getBundleUiPath();
+      const bundleUiPublicPath = bundleUiPath ? join(bundleUiPath, publicDir) : undefined;
+      const bundleUiRoot =
+        this._isBundleUiServed && bundleUiPublicPath && existsSync(bundleUiPublicPath || '')
+          ? bundleUiPublicPath
+          : undefined;
       await uiServer.start({ portRange: port || this.config.portRange, bundleUiRoot });
     }
 
@@ -481,7 +485,7 @@ export class UiMain {
     return currentBundleUiHash === cachedBundleUiHash && !isLocalBuildAvailable && !force;
   }
 
-  private async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined): Promise<boolean> {
+  async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined): Promise<boolean> {
     this.logger.debug(`buildIfChanged, name ${name}`);
 
     if (this._isBundleUiServed) {
@@ -524,6 +528,14 @@ export class UiMain {
     return sha1(aspectPathStrings.join(''));
   }
 
+  /**
+   * Generate hash for a given root
+   * This API is public and used by external users, do not rename this function
+   */
+  async buildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
+    return this.createBuildUiHash(uiRoot, runtime);
+  }
+
   async createBundleUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
     const aspects = await uiRoot.resolveAspects(runtime);
     aspects.sort((a, b) => ((a.getId || a.aspectPath) > (b.getId || b.aspectPath) ? 1 : -1));
@@ -533,6 +545,9 @@ export class UiMain {
 
   private readBundleUiHash() {
     const bundleUiPathFromBvm = this.getBundleUiPath();
+    if (!bundleUiPathFromBvm) {
+      return '';
+    }
     const hashFilePath = join(bundleUiPathFromBvm, BUNDLE_UI_HASH_FILENAME);
     if (existsSync(hashFilePath)) {
       return readFileSync(hashFilePath).toString();
@@ -540,9 +555,14 @@ export class UiMain {
     return '';
   }
 
-  private getBundleUiPath() {
-    const uiPathFromBvm = getAspectDirFromBvm(UIAspect.id);
-    return join(uiPathFromBvm, BundleUiTask.getArtifactDirectory());
+  private getBundleUiPath(): string | undefined {
+    try {
+      const uiPathFromBvm = getAspectDirFromBvm(UIAspect.id);
+      return join(uiPathFromBvm, BundleUiTask.getArtifactDirectory());
+    } catch (err) {
+      this.logger.info(`getBundleUiPath, getAspectDirFromBvm failed with err: ${err}`);
+      return undefined;
+    }
   }
 
   private async buildIfNoBundle(name: string, uiRoot: UIRoot): Promise<boolean> {

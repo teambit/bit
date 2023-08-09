@@ -1,6 +1,6 @@
 import React, { HTMLAttributes, useState, useEffect, useMemo } from 'react';
-import { LaneCompareProps, LanesModel } from '@teambit/lanes';
-import { useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LaneCompareProps } from '@teambit/lanes';
+import { UseLanes, useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSelector } from '@teambit/lanes.ui.inputs.lane-selector';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 
@@ -9,7 +9,7 @@ import styles from './lane-compare-page.module.scss';
 export type LaneComparePageProps = {
   getLaneCompare: (props: LaneCompareProps) => React.ReactNode;
   groupByScope?: boolean;
-  useLanes?: () => { loading?: boolean; lanesModel?: LanesModel };
+  useLanes?: UseLanes;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LaneComparePage({
@@ -18,7 +18,7 @@ export function LaneComparePage({
   useLanes = defaultUseLanes,
   ...rest
 }: LaneComparePageProps) {
-  const { lanesModel } = useLanes();
+  const { lanesModel, loading, fetchMoreLanes, hasMore, offset, limit } = useLanes();
   const [base, setBase] = useState<LaneModel | undefined>();
   const defaultLane = lanesModel?.getDefaultLane();
   const compare = lanesModel?.viewedLane;
@@ -32,11 +32,10 @@ export function LaneComparePage({
     }
   }, [defaultLane, compare?.id.toString(), nonMainLanes?.length]);
 
-  const LaneCompareComponent = getLaneCompare({ base, compare });
+  const LaneCompareComponent = getLaneCompare({ base, compare, groupBy: 'status' });
 
   const lanes: Array<LaneModel> = useMemo(() => {
-    const allLanes = (defaultLane && [defaultLane, ...nonMainLanes]) || nonMainLanes;
-    return allLanes.filter((l) => l.toString() !== compare?.id.toString());
+    return nonMainLanes.filter((l) => l.toString() !== compare?.id.toString());
   }, [base?.id.toString(), compare?.id.toString(), lanesModel?.lanes.length]);
 
   if (!lanesModel) return null;
@@ -57,12 +56,16 @@ export function LaneComparePage({
               selectedLaneId={base.id}
               className={styles.baseSelector}
               nonMainLanes={lanes}
+              mainLane={defaultLane}
               groupByScope={groupByScope}
               getHref={() => ''}
-              forceCloseOnEnter={true}
-              onLaneSelected={(laneId) => {
-                setBase(lanesModel?.lanes.find((l) => l.id.toString() === laneId.toString()));
+              onLaneSelected={(_, lane) => {
+                setBase(lane);
               }}
+              loading={loading}
+              fetchMoreLanes={fetchMoreLanes}
+              hasMore={hasMore}
+              initialOffset={(offset ?? 0) + (limit ?? 0)}
             />
           </div>
         </div>

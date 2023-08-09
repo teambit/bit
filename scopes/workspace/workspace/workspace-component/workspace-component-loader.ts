@@ -1,12 +1,12 @@
 import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, TagMap } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
 import { compact, fromPairs, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
 import { IssuesClasses } from '@teambit/component-issues';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
@@ -89,7 +89,7 @@ export class WorkspaceComponentLoader {
     loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
     const bitIdWithVersion: BitId = getLatestVersionNumber(
-      this.workspace.consumer.bitmapIdsFromCurrentLane,
+      this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved,
       componentId._legacy
     );
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
@@ -97,7 +97,7 @@ export class WorkspaceComponentLoader {
     if (fromCache && useCache) {
       return fromCache;
     }
-    const consumerComponent = legacyComponent || (await this.getConsumerComponent(id));
+    const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, loadOpts));
     // in case of out-of-sync, the id may changed during the load process
     const updatedId = consumerComponent ? ComponentID.fromLegacy(consumerComponent.id, id.scope) : id;
     const component = await this.loadOne(updatedId, consumerComponent, loadOpts);
@@ -151,20 +151,13 @@ export class WorkspaceComponentLoader {
       consumerComponent.issues.getOrCreate(IssuesClasses.MergeConfigHasConflict).data = true;
     }
 
-    const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
-    // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
-    const extensionDataList = ExtensionDataList.mergeConfigs([
-      extensionsFromConsumerComponent,
-      extensions,
-    ]).filterRemovedExtensions();
-
     // temporarily mutate consumer component extensions until we remove all direct access from legacy to extensions data
     // TODO: remove this once we remove all direct access from legacy code to extensions data
-    consumerComponent.extensions = extensionDataList;
+    consumerComponent.extensions = extensions;
 
     const state = new State(
-      new Config(consumerComponent.mainFile, extensionDataList),
-      await this.workspace.createAspectList(extensionDataList),
+      new Config(consumerComponent.mainFile, extensions),
+      await this.workspace.createAspectList(extensions),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
       consumerComponent
@@ -207,9 +200,18 @@ export class WorkspaceComponentLoader {
     return undefined;
   }
 
-  async getConsumerComponent(id: ComponentID): Promise<ConsumerComponent | undefined> {
+  async getConsumerComponent(
+    id: ComponentID,
+    loadOpts: ComponentLoadOptions = {}
+  ): Promise<ConsumerComponent | undefined> {
+    loadOpts.originatedFromHarmony = true;
     try {
-      return await this.workspace.consumer.loadComponent(id._legacy);
+      const { components, removedComponents } = await this.workspace.consumer.loadComponents(
+        BitIds.fromArray([id._legacy]),
+        true,
+        loadOpts
+      );
+      return components?.[0] || removedComponents?.[0];
     } catch (err: any) {
       // don't return undefined for any error. otherwise, if the component is invalid (e.g. main
       // file is missing) it returns the model component later unexpectedly, or if it's new, it
@@ -241,7 +243,7 @@ export class WorkspaceComponentLoader {
 
     // Special load events which runs from the workspace but should run from the correct aspect
     // TODO: remove this once those extensions dependent on workspace
-    const envsData = await this.envs.calcDescriptor(component);
+    const envsData = await this.envs.calcDescriptor(component, { skipWarnings: !!this.workspace.inInstallContext });
 
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const policy = await this.dependencyResolver.mergeVariantPolicies(
