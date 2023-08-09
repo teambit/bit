@@ -9,7 +9,7 @@ module.exports = {
       version: 26,
     },
     react: {
-      version: '17.0.2',
+      version: 'detect',
     },
   },
   env: {
@@ -59,7 +59,7 @@ module.exports = {
         ...configs.overrides.rules,
         'react/jsx-uses-vars': 'error',
         'react/jsx-uses-react': 'error',
-        'no-unused-vars': 'error',
+        // 'no-unused-vars': 'error',
       },
       // parser: 'eslint-mdx',
       parserOptions: {
