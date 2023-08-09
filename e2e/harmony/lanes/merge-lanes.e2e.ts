@@ -386,7 +386,7 @@ describe('merge lanes', function () {
     describe('merging the lane', () => {
       let status;
       before(() => {
-        helper.command.mergeLane('main', '--theirs');
+        helper.command.mergeLane('main', '--auto-merge-resolve theirs');
         status = helper.command.statusJson();
         afterMergeToMain = helper.scopeHelper.cloneLocalScope();
       });

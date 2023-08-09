@@ -295,7 +295,7 @@ describe('bit snap command', function () {
           let mergeOutput;
           before(() => {
             helper.scopeHelper.getClonedLocalScope(beforeMergeScope);
-            mergeOutput = helper.command.merge('bar/foo --ours --no-snap');
+            mergeOutput = helper.command.merge('bar/foo --auto-merge-resolve ours --no-snap');
           });
           it('should succeed and indicate that the files were not changed', () => {
             expect(mergeOutput).to.have.string('unchanged');

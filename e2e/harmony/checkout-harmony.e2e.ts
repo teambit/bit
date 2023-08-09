@@ -354,7 +354,7 @@ describe('bit checkout command', function () {
       let output;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
-        output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--ours');
+        output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve ours');
       });
       it('should indicate that the version was switched', () => {
         expect(output).to.have.string(successOutput);
@@ -416,7 +416,7 @@ describe('bit checkout command', function () {
         let output;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeWithAddedFile);
-          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--ours');
+          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve ours');
         });
         it('should indicate that the new file was not changed', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
