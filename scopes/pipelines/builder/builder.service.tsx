@@ -1,6 +1,7 @@
 import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy/dist/constants';
 import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import React from 'react';
+import { uniq } from 'lodash';
 import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { GlobalConfigMain } from '@teambit/global-config';
@@ -15,7 +16,6 @@ import { BuildContext, BuildTask, BuildTaskHelper } from './build-task';
 import { ArtifactFactory } from './artifact';
 import { calculatePipelineOrder } from './build-pipeline-order';
 import { BuilderAspect } from './builder.aspect';
-import { uniq } from 'lodash';
 
 export type BuildServiceResults = {
   id: string;

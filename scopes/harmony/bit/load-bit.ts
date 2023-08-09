@@ -47,7 +47,6 @@ import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { findScopePath } from '@teambit/legacy/dist/utils';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
-import loader from '@teambit/legacy/dist/cli/loader';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
 import { manifestsMap } from './manifests';
