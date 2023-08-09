@@ -5,15 +5,18 @@ module.exports = {
   plugins: ['jest'],
   settings: {
     'mdx/code-blocks': true,
-    jest: {
-      version: 26,
-    },
+    // jest: {
+    //   version: 26,
+    // },
     react: {
       version: 'detect',
     },
   },
   env: {
     'jest/globals': true,
+    browser: true,
+    mocha: true,
+    node: true,
   },
   overrides: [
     {
