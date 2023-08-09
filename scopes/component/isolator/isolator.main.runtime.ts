@@ -21,7 +21,7 @@ import {
   KEY_NAME_BY_LIFECYCLE_TYPE,
   PackageManagerInstallOptions,
 } from '@teambit/dependency-resolver';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { Logger, LoggerAspect, LoggerMain, LongProcessLogger } from '@teambit/logger';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
@@ -460,7 +460,7 @@ export class IsolatorMain {
     if (installOptions.installPackages) {
       const cachePackagesOnCapsulesRoot = opts.cachePackagesOnCapsulesRoot ?? false;
       const linkingOptions = opts.linkingOptions ?? {};
-      let installLongProcessLogger;
+      let installLongProcessLogger: LongProcessLogger | undefined;
       // Only show the log message in case we are going to install something
       if (capsuleList && capsuleList.length && !opts.context?.aspects) {
         installLongProcessLogger = this.logger.createLongProcessLogger('install packages in capsules');
@@ -496,8 +496,7 @@ export class IsolatorMain {
         });
       }
       if (installLongProcessLogger) {
-        installLongProcessLogger.end();
-        this.logger.consoleSuccess('installed packages in capsules');
+        installLongProcessLogger.end('success');
       }
     }
 
