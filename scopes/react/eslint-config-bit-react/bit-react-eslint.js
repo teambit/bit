@@ -21,6 +21,7 @@ module.exports = {
         'import/no-extraneous-dependencies': 'off',
         'import/prefer-default-export': 'off',
         'react/jsx-props-no-spreading': 'off',
+        'react/no-array-index-key': 'off',
         'trailing-comma': 'off',
         '@typescript-eslint/comma-dangle': 'off',
         'object-curly-newline': 'off',
