@@ -2,7 +2,6 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 import { Extensions } from '../../../src/constants';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -469,7 +468,6 @@ describe('bit lane command', function () {
       expect(lane.components).to.have.lengthOf(1);
     });
   });
-  // (supportNpmCiRegistryTesting ? describe : describe.skip)(
   //   'soft remove on lane then tagging the dependent without removing the references to the removed component',
   //   () => {
   //     let npmCiRegistry: NpmCiRegistry;

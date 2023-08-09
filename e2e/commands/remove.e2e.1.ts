@@ -5,7 +5,6 @@ import { Extensions } from '../../src/constants';
 
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -423,27 +422,17 @@ describe('bit remove command', function () {
     });
   });
 
-  (supportNpmCiRegistryTesting ? describe : describe.skip)(
-    'soft remove on lane then tagging the dependent without removing the references to the removed component',
-    () => {
-      let npmCiRegistry: NpmCiRegistry;
-      before(async () => {
-        helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        // helper.command.createLane();
-        helper.fixtures.populateComponents(2);
-        npmCiRegistry = new NpmCiRegistry(helper);
-        npmCiRegistry.configureCiInPackageJsonHarmony();
-        await npmCiRegistry.init();
-        helper.command.tagAllComponents();
-        helper.command.export();
+  describe('soft remove on lane then tagging the dependent without removing the references to the removed component', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllComponents();
+      helper.command.export();
 
-        helper.command.softRemoveComponent('comp2');
-      });
-      after(() => {
-        npmCiRegistry.destroy();
-      });
-      it('bit status should show RemovedDependency issue', () => {});
-    }
-  );
+      helper.command.softRemoveComponent('comp2');
+    });
+    it('bit status should show RemovedDependency issue', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.RemovedDependencies.name);
+    });
+  });
 });
