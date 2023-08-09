@@ -8,6 +8,9 @@ module.exports = {
     jest: {
       version: 26,
     },
+    react: {
+      version: '17.0.2',
+    },
   },
   env: {
     'jest/globals': true,
@@ -16,6 +19,22 @@ module.exports = {
     {
       files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.mjs'],
       extends: [require.resolve('eslint-config-airbnb-typescript'), require.resolve('eslint-config-prettier')],
+      parser: require.resolve('@typescript-eslint/parser'),
+
+      parserOptions: {
+        warnOnUnsupportedTypeScriptVersion: false,
+        ecmaVersion: 6,
+        sourceType: 'module',
+        ecmaFeatures: {
+          modules: true,
+          jsx: true,
+        },
+        // createDefaultProgram: true,
+        // Should be provided by the extender eslint
+        // we can't calculate the tsconfig path here
+        // project: `${tsconfigPath}`,
+      },
+
       rules: {
         '@typescript-eslint/camelcase': 'off',
         'import/no-extraneous-dependencies': 'off',
