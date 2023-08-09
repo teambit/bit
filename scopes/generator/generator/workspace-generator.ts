@@ -56,9 +56,13 @@ export class WorkspaceGenerator {
       await init(this.workspacePath, this.options.skipGit, false, false, false, false, false, false, {});
       await this.writeWorkspaceFiles();
       await this.reloadBitInWorkspaceDir();
+      // Setting the workspace to be in install context to prevent errors during the workspace generation
+      // the workspace will be in install context until the end of the generation install process
+      this.workspace.inInstallContext = true;
       await this.setupGitBitmapMergeDriver();
       await this.forkComponentsFromRemote();
       await this.importComponentsFromRemote();
+      await this.workspace.clearCache();
       await this.install.install(undefined, {
         dedupe: true,
         import: false,
@@ -66,8 +70,10 @@ export class WorkspaceGenerator {
         copyPeerToRuntimeOnComponents: false,
         updateExisting: false,
       });
-      // await this.wsConfigFiles.writeConfigFiles({});
-      // await this.buildUI(); // disabled for now. it takes too long
+
+      // compile the components again now that we have the dependencies installed
+      await this.compileComponents(true);
+      await this.wsConfigFiles.writeConfigFiles({});
     } catch (err: any) {
       this.logger.error(`failed generating a new workspace, will delete the dir ${this.workspacePath}`, err);
       await fs.remove(this.workspacePath);
@@ -154,8 +160,6 @@ export class WorkspaceGenerator {
       refactor: true,
       install: false,
     });
-    this.workspace.clearCache();
-    await this.compileComponents();
   }
 
   private async importComponentsFromRemote() {
@@ -177,11 +181,12 @@ export class WorkspaceGenerator {
     });
 
     await this.workspace.bitMap.write();
-    this.workspace.clearCache();
-    await this.compileComponents();
   }
 
-  private async compileComponents() {
+  private async compileComponents(clearCache = true) {
+    if (clearCache) {
+      await this.workspace.clearCache();
+    }
     const compiler = this.harmony.get<CompilerMain>(CompilerAspect.id);
     await compiler.compileOnWorkspace();
   }

@@ -56,6 +56,7 @@ export type MergeLaneOptions = {
   resolveUnrelated?: MergeStrategy;
   ignoreConfigChanges?: boolean;
   skipFetch?: boolean;
+  includeNonLaneComps?: boolean;
 };
 
 const LAST_MERGED_LANE_FILENAME = 'lane';
@@ -99,6 +100,7 @@ export class MergeLanesMain {
       resolveUnrelated,
       ignoreConfigChanges,
       skipFetch,
+      includeNonLaneComps,
     } = options;
 
     const currentLaneId = consumer.getCurrentLaneId();
@@ -141,7 +143,7 @@ export class MergeLanesMain {
     const getBitIds = async () => {
       if (isDefaultLane) {
         if (!currentLane) throw new Error(`unable to merge ${DEFAULT_LANE}, the current lane was not found`);
-        return this.getMainIdsToMerge(currentLane);
+        return this.getMainIdsToMerge(currentLane, includeNonLaneComps);
       }
       if (!otherLane) throw new Error(`lane must be defined for non-default`);
       return otherLane.toBitIds();
@@ -301,8 +303,16 @@ export class MergeLanesMain {
     const configMergeFile = this.workspace.getConflictMergeFile();
     await configMergeFile.delete();
 
+    let checkoutResults: ApplyVersionResults | undefined;
+    let checkoutError: Error | undefined;
     checkoutProps.ids = await this.workspace.listIds();
-    const checkoutResults = await this.checkout.checkout(checkoutProps);
+    checkoutProps.restoreMissingComponents = true;
+    try {
+      checkoutResults = await this.checkout.checkout(checkoutProps);
+    } catch (err: any) {
+      this.logger.error(`merge-abort got an error during the checkout stage`, err);
+      checkoutError = err;
+    }
 
     const restoredItems = [
       `${path.basename(this.workspace.consumer.bitMap.mapPath)} file`,
@@ -312,7 +322,7 @@ export class MergeLanesMain {
       restoredItems.push(`${currentLane.id()} lane object`);
     }
 
-    return { checkoutResults, restoredItems };
+    return { checkoutResults, restoredItems, checkoutError };
   }
 
   private async getLastMergedLaneContentIfExists(): Promise<Buffer | null> {
@@ -334,14 +344,20 @@ export class MergeLanesMain {
   private getLastMergedLaneFilename() {
     return path.join(this.scope.getLastMergedPath(), LAST_MERGED_LANE_FILENAME);
   }
-  private async getMainIdsToMerge(lane: Lane) {
+  private async getMainIdsToMerge(lane: Lane, includeNonLaneComps = false) {
     const laneIds = lane.toBitIds();
-    if (!this.workspace) {
-      throw new BitError(`getMainIdsToMerge needs workspace`);
+    const ids = laneIds.filter((id) => id.hasScope());
+    if (includeNonLaneComps) {
+      if (!this.workspace) {
+        throw new BitError(`getMainIdsToMerge needs workspace`);
+      }
+      const workspaceIds = (await this.workspace.listIds()).map((id) => id._legacy);
+      const mainNotOnLane = workspaceIds.filter(
+        (id) => !laneIds.find((laneId) => laneId.isEqualWithoutVersion(id)) && id.hasScope()
+      );
+      ids.push(...mainNotOnLane);
     }
-    const workspaceIds = (await this.workspace.listIds()).map((id) => id._legacy);
-    const mainNotOnLane = workspaceIds.filter((id) => !laneIds.find((laneId) => laneId.isEqualWithoutVersion(id)));
-    const ids = [...laneIds, ...mainNotOnLane].filter((id) => id.hasScope());
+
     const modelComponents = await Promise.all(ids.map((id) => this.scope.legacyScope.getModelComponent(id)));
     return compact(
       modelComponents.map((c) => {

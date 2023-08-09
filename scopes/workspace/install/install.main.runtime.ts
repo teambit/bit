@@ -284,7 +284,7 @@ export class InstallMain {
         },
         pmInstallOptions
       );
-      if (options?.compile) {
+      if (options?.compile ?? true) {
         const compileStartTime = process.hrtime();
         const compileOutputMessage = `compiling components`;
         this.logger.setStatusLine(compileOutputMessage);
@@ -300,7 +300,7 @@ export class InstallMain {
       // We need to clear cache before creating the new component manifests.
       this.workspace.consumer.componentLoader.clearComponentsCache();
       // We don't want to clear the failed to load envs because we want to show the warning at the end
-      this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+      await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
       current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
@@ -576,7 +576,11 @@ export class InstallMain {
    *
    * @param options.all {Boolean} updates all outdated dependencies without showing a prompt.
    */
-  async updateDependencies(options: { all: boolean }): Promise<ComponentMap<string> | null> {
+  async updateDependencies(options: {
+    forceVersionBump?: 'major' | 'minor' | 'patch';
+    patterns?: string[];
+    all: boolean;
+  }): Promise<ComponentMap<string> | null> {
     const { componentConfigFiles, componentPoliciesById } = await this._getComponentsWithDependencyPolicies();
     const variantPatterns = this.variants.raw();
     const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
@@ -586,6 +590,8 @@ export class InstallMain {
       variantPoliciesByPatterns,
       componentPoliciesById,
       components,
+      patterns: options.patterns,
+      forceVersionBump: options.forceVersionBump,
     });
     let outdatedPkgsToUpdate!: OutdatedPkg[];
     if (options.all) {

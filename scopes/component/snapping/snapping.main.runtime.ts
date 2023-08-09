@@ -41,13 +41,14 @@ import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { ComponentID } from '@teambit/component-id';
-import { isHash } from '@teambit/component-version';
+import { isHash, isTag } from '@teambit/component-version';
 import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
 import {
   ArtifactFiles,
   ArtifactSource,
   getArtifactsFiles,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { VersionNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';
@@ -150,9 +151,6 @@ export class SnappingMain {
     failFast?: boolean;
   } & Partial<BasicTagParams>): Promise<TagResults | null> {
     if (soft) build = false;
-    if (disableTagAndSnapPipelines && ignoreBuildErrors) {
-      throw new BitError('you can use either ignore-build-errors or disable-tag-pipeline, but not both');
-    }
     if (editor && persist) {
       throw new BitError('you can use either --editor or --persist, but not both');
     }
@@ -626,10 +624,85 @@ there are matching among unmodified components thought. consider using --unmodif
 
   async _addFlattenedDependenciesToComponents(components: ConsumerComponent[]) {
     loader.start('importing missing dependencies...');
-    const flattenedDependenciesGetter = new FlattenedDependenciesGetter(this.scope.legacyScope, components);
+    const getLane = async () => {
+      const lane = await this.scope.legacyScope.getCurrentLaneObject();
+      if (!lane) return undefined;
+      if (!lane.isNew) return lane;
+      const forkedFrom = lane.forkedFrom;
+      if (!forkedFrom) return undefined;
+      return this.scope.legacyScope.loadLane(forkedFrom);
+    };
+    const lane = await getLane();
+
+    const flattenedDependenciesGetter = new FlattenedDependenciesGetter(
+      this.scope.legacyScope,
+      components,
+      lane || undefined
+    );
     await flattenedDependenciesGetter.populateFlattenedDependencies();
     loader.stop();
     await this._addFlattenedDepsGraphToComponents(components);
+  }
+
+  async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
+    const lane = await this.scope.legacyScope.getCurrentLaneObject();
+    const allIds = BitIds.fromArray(components.map((c) => c.id));
+    const missingDeps = await pMapSeries(components, async (component) => {
+      return this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined);
+    });
+    const flattenedMissingDeps = BitIds.uniqFromArray(missingDeps.flat().map((id) => id.changeVersion(undefined)));
+    if (!flattenedMissingDeps.length) return;
+    // ignore the cache. even if the component exists locally, we still need its VersionHistory object
+    // in order to traverse the history and determine whether it's part of the lane history.
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(flattenedMissingDeps, {
+      cache: false,
+      ignoreMissingHead: true,
+      includeVersionHistory: true,
+      lane: lane || undefined,
+    });
+    await pMapSeries(components, async (component) => {
+      await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined, true);
+    });
+  }
+  private async throwForDepsFromAnotherLaneForComp(
+    component: ConsumerComponent,
+    allIds: BitIds,
+    lane?: Lane,
+    throwForMissingObjects = false
+  ) {
+    const deps = component.getAllDependencies();
+    const missingDeps: BitId[] = [];
+    await Promise.all(
+      deps.map(async (dep) => {
+        if (!dep.id.hasScope() || !dep.id.hasVersion()) return;
+        if (isTag(dep.id.version)) return;
+        if (allIds.hasWithoutVersion(dep.id)) return; // it's tagged/snapped now.
+        let isPartOfHistory: boolean | undefined;
+        try {
+          isPartOfHistory = lane
+            ? (await this.scope.legacyScope.isPartOfLaneHistory(dep.id, lane)) ||
+              (await this.scope.legacyScope.isPartOfMainHistory(dep.id))
+            : await this.scope.legacyScope.isPartOfMainHistory(dep.id);
+        } catch (err) {
+          if (throwForMissingObjects) throw err;
+          if (err instanceof VersionNotFound) {
+            missingDeps.push(dep.id);
+            return;
+          }
+          throw err;
+        }
+
+        if (!isPartOfHistory) {
+          const laneOrMainStr = lane ? `current lane "${lane.name}"` : 'main';
+          throw new Error(
+            `unable to tag/snap ${component.id.toString()}, it has a dependency ${dep.id.toString()} which is not part of ${laneOrMainStr} history.
+one option to resolve this is installing ${dep.id.toStringWithoutVersion()} via "bit install", which installs the version from main.
+another option, in case this dependency is not in main yet is to remove all references of this dependency in the code and then tag/snap.`
+          );
+        }
+      })
+    );
+    return missingDeps;
   }
 
   async _addFlattenedDepsGraphToComponents(components: ConsumerComponent[]) {

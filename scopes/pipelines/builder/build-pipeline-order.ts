@@ -4,6 +4,7 @@ import { EnvDefinition, Environment } from '@teambit/envs';
 import { BuildTask, BuildTaskHelper } from './build-task';
 import type { TaskSlot } from './builder.main.runtime';
 import { TasksQueue } from './tasks-queue';
+import { PipeFunctionNames } from './builder.service';
 
 type TaskDependenciesGraph = Graph<string, string>;
 type Location = 'start' | 'middle' | 'end';
@@ -44,7 +45,7 @@ type DataPerLocation = { location: Location; graph: TaskDependenciesGraph; pipel
 export function calculatePipelineOrder(
   taskSlot: TaskSlot,
   envs: EnvDefinition[],
-  pipeNameOnEnv = 'getBuildPipe',
+  pipeNameOnEnv: PipeFunctionNames,
   tasks: string[] = [],
   skipTests = false
 ): TasksQueue {

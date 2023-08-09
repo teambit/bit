@@ -10,9 +10,9 @@ import {
   CFG_USE_DATED_CAPSULES,
 } from '@teambit/legacy/dist/constants';
 import { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
-import { Capsule, IsolatorMain } from '@teambit/isolator';
+import { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
-import { compact, uniq, difference, groupBy } from 'lodash';
+import { compact, uniq, difference, groupBy, defaultsDeep } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { ExtensionManifest, Aspect } from '@teambit/harmony';
@@ -187,32 +187,11 @@ needed-for: ${neededFor || '<unknown>'}`);
     opts?: { skipIfExists?: boolean; packageManagerConfigRootDir?: string; workspaceName?: string }
   ): Promise<RequireableComponent[]> {
     if (!components || !components.length) return [];
-    const useHash = this.shouldUseHashForCapsules();
-    const useDatedDirs = this.shouldUseDatedCapsules();
+    const isolateOpts = this.getIsolateOpts(opts);
     const network = await this.isolator.isolateComponents(
       components.map((c) => c.id),
       // includeFromNestedHosts - to support case when you are in a workspace, trying to load aspect defined in the workspace.jsonc but not part of the workspace
-      {
-        datedDirId: this.scope.name,
-        baseDir: this.getAspectCapsulePath(),
-        useHash,
-        packageManager: this.getAspectsPackageManager(),
-        useDatedDirs,
-        skipIfExists: opts?.skipIfExists ?? true,
-        seedersOnly: true,
-        includeFromNestedHosts: true,
-        installOptions: {
-          copyPeerToRuntimeOnRoot: true,
-          packageManagerConfigRootDir: opts?.packageManagerConfigRootDir,
-          useNesting: true,
-          copyPeerToRuntimeOnComponents: true,
-          installPeersFromEnvs: true,
-        },
-        context: {
-          aspects: true,
-          workspaceName: opts?.workspaceName,
-        },
-      },
+      isolateOpts,
       this.scope.legacyScope
     );
 
@@ -378,36 +357,8 @@ needed-for: ${neededFor || '<unknown>'}`);
   ): Promise<AspectDefinition[]> {
     if (!userAspectsIds || !userAspectsIds.length) return [];
     const components = await this.scope.getMany(userAspectsIds);
-    const useHash = this.shouldUseHashForCapsules();
-    const useDatedDirs = this.shouldUseDatedCapsules();
-    const network = await this.isolator.isolateComponents(
-      userAspectsIds,
-      {
-        datedDirId: this.scope.name,
-        baseDir: this.getAspectCapsulePath(),
-        useHash,
-        packageManager: this.getAspectsPackageManager(),
-        useDatedDirs,
-        skipIfExists: true,
-        // for some reason this needs to be false, otherwise tagging components in some workspaces
-        // result in error during Preview task:
-        // "No matching version found for <some-component-on-the-workspace>"
-        seedersOnly: true,
-        includeFromNestedHosts: true,
-        installOptions: {
-          copyPeerToRuntimeOnRoot: true,
-          useNesting: true,
-          copyPeerToRuntimeOnComponents: true,
-          installPeersFromEnvs: true,
-        },
-        host: this.scope,
-        context: {
-          aspects: true,
-          workspaceName: opts?.workspaceName,
-        },
-      },
-      this.scope.legacyScope
-    );
+    const isolateOpts = this.getIsolateOpts(opts);
+    const network = await this.isolator.isolateComponents(userAspectsIds, isolateOpts, this.scope.legacyScope);
 
     const capsules = network.seedersCapsules;
     const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
@@ -477,5 +428,50 @@ needed-for: ${neededFor || '<unknown>'}`);
       mergedOpts
     );
     return filteredDefs;
+  }
+
+  getIsolateOpts(opts?: {
+    skipIfExists?: boolean;
+    packageManagerConfigRootDir?: string;
+    workspaceName?: string;
+  }): IsolateComponentsOptions {
+    const overrideOpts = {
+      skipIfExists: opts?.skipIfExists ?? true,
+      installOptions: {
+        packageManagerConfigRootDir: opts?.packageManagerConfigRootDir,
+      },
+      context: {
+        workspaceName: opts?.workspaceName,
+      },
+    };
+    const isolateOpts = defaultsDeep(overrideOpts, this.getDefaultIsolateOpts());
+    return isolateOpts;
+  }
+
+  getDefaultIsolateOpts() {
+    const useHash = this.shouldUseHashForCapsules();
+    const useDatedDirs = this.shouldUseDatedCapsules();
+
+    const opts = {
+      datedDirId: this.scope.name,
+      baseDir: this.getAspectCapsulePath(),
+      useHash,
+      packageManager: this.getAspectsPackageManager(),
+      useDatedDirs,
+      skipIfExists: true,
+      seedersOnly: true,
+      includeFromNestedHosts: true,
+      host: this.scope,
+      installOptions: {
+        copyPeerToRuntimeOnRoot: true,
+        useNesting: true,
+        copyPeerToRuntimeOnComponents: true,
+        installPeersFromEnvs: true,
+      },
+      context: {
+        aspects: true,
+      },
+    };
+    return opts;
   }
 }

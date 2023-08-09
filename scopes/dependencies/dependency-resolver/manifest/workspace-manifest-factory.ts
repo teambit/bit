@@ -32,6 +32,7 @@ export type CreateFromComponentsOptions = {
   resolveVersionsFromDependenciesOnly?: boolean;
   referenceLocalPackages?: boolean;
   hasRootComponents?: boolean;
+  excludeExtensionsDependencies?: boolean;
 };
 
 const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
@@ -39,6 +40,7 @@ const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
   createManifestForComponentsWithoutDependencies: true,
   dedupe: true,
   resolveVersionsFromDependenciesOnly: false,
+  excludeExtensionsDependencies: false,
 };
 export class WorkspaceManifestFactory {
   constructor(private dependencyResolver: DependencyResolverMain, private aspectLoader: AspectLoaderMain) {}
@@ -58,13 +60,16 @@ export class WorkspaceManifestFactory {
       filterComponentsFromManifests: optsWithDefaults.filterComponentsFromManifests,
       rootPolicy: optsWithDefaults.resolveVersionsFromDependenciesOnly ? undefined : rootPolicy,
       dependencyFilterFn: optsWithDefaults.dependencyFilterFn,
+      excludeExtensionsDependencies: optsWithDefaults.excludeExtensionsDependencies,
       referenceLocalPackages: optsWithDefaults.referenceLocalPackages && hasRootComponents,
       rootDependencies: hasRootComponents ? rootPolicy.toManifest().dependencies : undefined,
     });
     let dedupedDependencies = getEmptyDedupedDependencies();
     rootPolicy = rootPolicy.filter((dep) => dep.dependencyId !== '@teambit/legacy');
     if (hasRootComponents) {
-      const { rootDependencies } = dedupeDependencies(rootPolicy, componentDependenciesMap);
+      const { rootDependencies } = dedupeDependencies(rootPolicy, componentDependenciesMap, {
+        dedupePeerDependencies: hasRootComponents,
+      });
       // We hoist dependencies in order for the IDE to work.
       // For runtime, the peer dependencies are installed inside:
       // <ws root>/node_module/<comp name>/node_module/<comp name>/node_modules
@@ -120,12 +125,14 @@ export class WorkspaceManifestFactory {
     {
       dependencyFilterFn,
       filterComponentsFromManifests,
+      excludeExtensionsDependencies,
       referenceLocalPackages,
       rootDependencies,
       rootPolicy,
     }: {
       dependencyFilterFn?: DepsFilterFn;
       filterComponentsFromManifests?: boolean;
+      excludeExtensionsDependencies?: boolean;
       referenceLocalPackages?: boolean;
       rootDependencies?: Record<string, string>;
       rootPolicy?: WorkspacePolicy;
@@ -155,6 +162,9 @@ export class WorkspaceManifestFactory {
 
       if (filterComponentsFromManifests ?? true) {
         depList = filterComponents(depList, components);
+      }
+      if (excludeExtensionsDependencies) {
+        depList = filterExtensions(depList);
       }
       // Remove bit bin from dep list
       depList = depList.filter((dep) => dep.id !== '@teambit/legacy');
@@ -269,6 +279,16 @@ export class WorkspaceManifestFactory {
     });
     return componentsManifests;
   }
+}
+
+function filterExtensions(dependencyList: DependencyList): DependencyList {
+  const filtered = dependencyList.filter((dep) => {
+    if (!(dep instanceof ComponentDependency)) {
+      return true;
+    }
+    return !dep.isExtension;
+  });
+  return filtered;
 }
 
 function filterComponents(dependencyList: DependencyList, componentsToFilterOut: Component[]): DependencyList {
