@@ -185,8 +185,8 @@ describe('sign command', function () {
         signRemote.scopePath
       );
       expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
-      expect(signOutput).to.not.include('running tag pipe');
-      expect(signOutput).to.include('running snap pipe');
+      expect(signOutput).to.not.include('tag pipe');
+      expect(signOutput).to.include('snap pipe');
     });
     it('should be able to sign previous snaps on this lane successfully', () => {
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
