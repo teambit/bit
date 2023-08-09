@@ -8,7 +8,7 @@ import { ComponentsEjector } from './components-ejector';
 
 export class EjectCmd implements Command {
   name = 'eject <component-pattern>';
-  description = 'eject component from the workspace, and install it instead as a regular npm package.';
+  description = 'remove component from the workspace and install it instead as a regular npm package.';
   extendedDescription = 'By default the component files will be removed from the workspace';
   helpUrl = 'reference/components/exporting-components#ejecting-components';
   arguments = [

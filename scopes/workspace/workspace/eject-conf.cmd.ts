@@ -19,7 +19,11 @@ export default class EjectConfCmd implements Command {
   alias = '';
   group = 'development';
   options = [
-    ['p', 'propagate', 'mark propagate true in the config file'], // @david what does propate do?
+    [
+      'p',
+      'propagate',
+      'mark propagate true in the config file, so that component.json configs will be merge with workspace configs',
+    ],
     ['o', 'override', 'override file if exist'],
   ] as CommandOptions;
 

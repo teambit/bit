@@ -33,7 +33,11 @@ export class StartCmd implements Command {
   options = [
     ['d', 'dev', 'start UI server in dev mode.'],
     ['p', 'port [port-number]', 'port of the UI server.'],
-    ['r', 'rebuild', 'rebuild the UI (useful e.g. when the bundler config has been changed in the env)'],
+    [
+      'r',
+      'rebuild',
+      'rebuild the UI (useful e.g. when updating the workspace UI - can use the dev flag for HMR in this case)',
+    ],
     ['', 'skip-ui-build', 'skip building UI'],
     ['v', 'verbose', 'show verbose output for inspection and prints stack trace'],
     ['n', 'no-browser', 'do not automatically open browser when ready'],

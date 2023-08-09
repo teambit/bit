@@ -13,7 +13,7 @@ export class SwitchCmd implements Command {
   arguments = [
     {
       name: 'lane',
-      description: 'lane-name or lane-id (if lane not imported/created locally) to switch to',
+      description: 'lane-name or lane-id (if lane is not local) to switch to',
     },
   ];
   options = [

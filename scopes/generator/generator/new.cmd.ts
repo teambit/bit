@@ -31,7 +31,7 @@ export class NewCmd implements Command {
     [
       'a',
       'aspect <aspect-id>',
-      "aspect-id of the template's owner, mandatory for non-core aspects. helpful for core aspects in case of a name collision",
+      'id of the aspect that registered the template, mandatory for non-core aspects. helpful for core aspects in case of a name collision',
     ],
     ['t', 'template <env-id>', "env-id of the template's owner. Alias for --env."],
     ['', 'env <env-id>', 'env-id of the template. Alias -t'],
