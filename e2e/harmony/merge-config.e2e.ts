@@ -495,6 +495,16 @@ describe('merge config scenarios', function () {
             expect(deps).to.include(`${barCompName}@0.0.2`);
             expect(deps).to.not.include(`${barCompName}@0.0.1`);
           });
+          describe('when installing a different version than the resolved one', () => {
+            before(() => {
+              helper.command.install(`${barPkgName}@0.0.1`);
+            });
+            it('should resolve from workspace.jsonc and not from unmerged file', () => {
+              const deps = helper.command.getCompDepsIdsFromData('comp1');
+              expect(deps).to.include(`${barCompName}@0.0.1`);
+              expect(deps).to.not.include(`${barCompName}@0.0.2`);
+            });
+          });
         });
       });
       describe('when the dep was updated in both, the lane and main so there is a conflict', () => {

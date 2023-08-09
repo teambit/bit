@@ -16,6 +16,7 @@ import { IssuesClasses } from '@teambit/component-issues';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
+import { VersionNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { removeComponentsFromNodeModules } from '@teambit/legacy/dist/consumer/component/package-json-utils';
 import { RemoveCmd } from './remove-cmd';
 import { removeComponents } from './remove-components';
@@ -172,11 +173,24 @@ export class RemoveMain {
       return true;
     }
     const compId = await this.workspace.scope.resolveComponentId(compIdStr);
-    const compFromScope = await this.workspace.scope.get(compId);
+    const currentLane = await this.workspace.getCurrentLaneObject();
+    const idOnLane = currentLane?.getComponent(compId._legacy);
+    const compIdWithPossibleVer = idOnLane ? compId.changeVersion(idOnLane.head.toString()) : compId;
+    let compFromScope: Component | undefined;
+    try {
+      compFromScope = await this.workspace.scope.get(compIdWithPossibleVer);
+    } catch (err: any) {
+      if (err instanceof VersionNotFound && err.version === '0.0.0') {
+        throw new BitError(
+          `unable to find the component ${compIdWithPossibleVer.toString()} in the current lane or main`
+        );
+      }
+      throw err;
+    }
     if (compFromScope && this.isRemoved(compFromScope)) {
       // case #2 and #3
-      await importComp(compId._legacy.toString());
-      await setAsRemovedFalse(compId);
+      await importComp(compIdWithPossibleVer._legacy.toString());
+      await setAsRemovedFalse(compIdWithPossibleVer);
       return true;
     }
     // case #5
