@@ -21,7 +21,7 @@ type GraphOpt = {
 
 export class GraphCmd implements Command {
   name = 'graph [id]';
-  description = 'generate an image file with the dependencies graph'; // @david, graph for a single component? For a scope? For the workspace?
+  description = "generate an image file with the workspace components' dependencies graph";
   group = 'discover';
   alias = '';
   options = [

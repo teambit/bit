@@ -15,7 +15,7 @@ type ListFlags = {
 
 export class ListCmd implements Command {
   name = 'list [remote-scope]';
-  description = 'list components on a workspace, local scope or a remote scope.'; // @david what's the difference between workspac and local scope? Can we just remove local scope in this description?
+  description = 'list components on a workspace or a remote scope (with flag).';
   group = 'discover';
   helpUrl = 'reference/cli-reference#list';
   alias = 'ls';
