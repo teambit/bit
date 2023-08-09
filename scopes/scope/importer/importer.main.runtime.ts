@@ -83,8 +83,7 @@ export class ImporterMain {
    * given a lane object, load all components by their head on the lane, find the artifacts refs and import them from
    * the lane scope
    */
-  async importHeadArtifactsFromLane(lane: Lane, throwIfMissing = false) {
-    const ids = lane.toBitIds();
+  async importHeadArtifactsFromLane(lane: Lane, ids: BitId[] = lane.toBitIds(), throwIfMissing = false) {
     const laneComps = await this.scope.legacyScope.getManyConsumerComponents(ids);
     try {
       await importAllArtifacts(this.scope.legacyScope, laneComps, lane);

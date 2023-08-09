@@ -77,6 +77,7 @@ export class MergeLanesMain {
     private checkout: CheckoutMain
   ) {}
 
+  // eslint-disable-next-line complexity
   async mergeLane(
     laneName: string,
     options: MergeLaneOptions
@@ -122,6 +123,7 @@ export class MergeLanesMain {
     }
     const currentLane = currentLaneId.isDefault() ? null : await consumer.scope.loadLane(currentLaneId);
     const isDefaultLane = otherLaneId.isDefault();
+    let laneToFetchArtifactsFrom: Lane | undefined;
     const getOtherLane = async () => {
       if (isDefaultLane) {
         if (!skipFetch) {
@@ -134,9 +136,7 @@ export class MergeLanesMain {
       if (shouldFetch) {
         // don't assign `lane` to the result of this command. otherwise, if you have local snaps, it'll ignore them and use the remote-lane.
         const otherLane = await this.lanes.fetchLaneWithItsComponents(otherLaneId);
-
-        await this.importer.importHeadArtifactsFromLane(otherLane, true);
-
+        laneToFetchArtifactsFrom = otherLane;
         lane = await consumer.scope.loadLane(otherLaneId);
       }
       return lane;
@@ -202,6 +202,11 @@ export class MergeLanesMain {
 
     if (shouldSquash) {
       await squashSnaps(allComponentsStatus, otherLaneId, consumer);
+    }
+
+    if (laneToFetchArtifactsFrom) {
+      const idsToMerge = allComponentsStatus.map((c) => c.id);
+      await this.importer.importHeadArtifactsFromLane(laneToFetchArtifactsFrom, idsToMerge, true);
     }
 
     const copyOfCurrentLane = currentLane ? currentLane.clone() : undefined;
@@ -410,7 +415,7 @@ export class MergeLanesMain {
       ignoreMissingHead: true,
       includeVersionHistory: true,
     });
-    await this.importer.importHeadArtifactsFromLane(fromLaneObj, true);
+    await this.importer.importHeadArtifactsFromLane(fromLaneObj, undefined, true);
     await this.throwIfNotUpToDate(fromLaneId, toLaneId);
     const repo = this.scope.legacyScope.objects;
     // loop through all components, make sure they're all ahead of main (it might not be on main yet).
