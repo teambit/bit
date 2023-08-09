@@ -75,6 +75,7 @@ export class MergeLanesMain {
     private checkout: CheckoutMain
   ) {}
 
+  // eslint-disable-next-line complexity
   async mergeLane(
     laneName: string,
     options: MergeLaneOptions
