@@ -119,7 +119,7 @@ const isOdd = require("is-odd");`
       helper.extensions.addExtensionToVariant('comp1', 'teambit.dependencies/dependency-resolver', {
         policy: {
           devDependencies: {
-            'is-negative': '1.0.0',
+            'is-negative': '~1.0.0',
           },
           peerDependencies: {
             'is-odd': '1.0.0',
@@ -136,33 +136,68 @@ const isOdd = require("is-odd");`
       helper.command.import(`${helper.scopes.remote}/my-aspect`);
       helper.command.tagComponent('my-aspect', undefined, '--unmodified');
       helper.command.export();
-
-      helper.scopeHelper.reInitLocalScope();
-      helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
-      helper.scopeHelper.addRemoteScope();
-      helper.bitJsonc.setupDefault();
-      helper.command.import(`${helper.scopes.remote}/comp1`);
-      helper.command.update('--yes');
-      configFile = helper.bitJsonc.read(helper.scopes.localPath);
-    });
-    it('should add an updated version of the dependency from the model to the workspace policies', function () {
-      expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative']).to.equal(
-        '2.1.0'
-      );
-    });
-    it('should not update extensions from the model', function () {
-      expect(
-        configFile['teambit.dependencies/dependency-resolver'].policy.dependencies[
-          `@${helper.scopes.remote.replace('.', '/')}.my-aspect`
-        ]
-      ).to.eq(undefined);
-    });
-    it('should not update peer dependencies from the model', function () {
-      expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.eq(undefined);
-      expect(configFile['teambit.dependencies/dependency-resolver'].policy.peerDependencies['is-odd']).to.eq(undefined);
     });
     after(() => {
       npmCiRegistry.destroy();
+    });
+    describe('with save prefix specified', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+        helper.scopeHelper.addRemoteScope();
+        helper.bitJsonc.setupDefault();
+        helper.extensions.bitJsonc.addKeyValToDependencyResolver('savePrefix', '^');
+        helper.command.import(`${helper.scopes.remote}/comp1`);
+        helper.command.update('--yes');
+        configFile = helper.bitJsonc.read(helper.scopes.localPath);
+      });
+      it('should add an updated version of the dependency from the model to the workspace policies', function () {
+        expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative']).to.equal(
+          '^2.1.0'
+        );
+      });
+      it('should not update extensions from the model', function () {
+        expect(
+          configFile['teambit.dependencies/dependency-resolver'].policy.dependencies[
+            `@${helper.scopes.remote.replace('.', '/')}.my-aspect`
+          ]
+        ).to.eq(undefined);
+      });
+      it('should not update peer dependencies from the model', function () {
+        expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.eq(undefined);
+        expect(configFile['teambit.dependencies/dependency-resolver'].policy.peerDependencies['is-odd']).to.eq(
+          undefined
+        );
+      });
+    });
+    describe('with save prefix not specified', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+        helper.scopeHelper.addRemoteScope();
+        helper.bitJsonc.setupDefault();
+        helper.command.import(`${helper.scopes.remote}/comp1`);
+        helper.command.update('--yes');
+        configFile = helper.bitJsonc.read(helper.scopes.localPath);
+      });
+      it('should add an updated version of the dependency from the model to the workspace policies', function () {
+        expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative']).to.equal(
+          '~2.1.0'
+        );
+      });
+      it('should not update extensions from the model', function () {
+        expect(
+          configFile['teambit.dependencies/dependency-resolver'].policy.dependencies[
+            `@${helper.scopes.remote.replace('.', '/')}.my-aspect`
+          ]
+        ).to.eq(undefined);
+      });
+      it('should not update peer dependencies from the model', function () {
+        expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.eq(undefined);
+        expect(configFile['teambit.dependencies/dependency-resolver'].policy.peerDependencies['is-odd']).to.eq(
+          undefined
+        );
+      });
     });
   });
 });
