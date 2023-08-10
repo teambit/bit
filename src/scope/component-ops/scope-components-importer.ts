@@ -163,6 +163,7 @@ export default class ScopeComponentsImporter {
 
   private async getIncompleteVersionHistory(existingDefs: ComponentDef[]) {
     const incompleteVersionHistory: BitId[] = [];
+    logger.profile(`getIncompleteVersionHistory`); // temporarily here to see how if affects the performance
     await pMapPool(
       existingDefs,
       async ({ id, component }) => {
@@ -180,7 +181,11 @@ export default class ScopeComponentsImporter {
       },
       { concurrency: concurrentComponentsLimit() }
     );
-
+    if (incompleteVersionHistory.length) {
+      const ids = incompleteVersionHistory.map((id) => id.toString()).join('\n');
+      logger.warn(`the following components have incomplete VersionHistory object:\n${ids}`);
+    }
+    logger.profile(`getIncompleteVersionHistory`);
     return incompleteVersionHistory;
   }
 
