@@ -172,6 +172,7 @@ export default class ScopeComponentsImporter {
         if (!component)
           throw new Error(`importMany, a component for ${id.toString()} is needed for version-history validation`);
         const versionHistory = await component.getVersionHistory(this.repo);
+        if (versionHistory.isEmpty()) return;
         const ref = component.getRef(id.version as string);
         if (!ref) throw new Error(`importMany, a ref for ${id.toString()} is needed for version-history validation`);
         const isComplete = versionHistory.isGraphCompleteSince(ref);

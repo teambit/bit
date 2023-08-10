@@ -84,6 +84,10 @@ export default class VersionHistory extends BitObject {
     });
   }
 
+  isEmpty() {
+    return !this.versions.length;
+  }
+
   getAllHashesFrom(start: Ref): { found?: string[]; missing?: string[] } {
     const item = this.versions.find((ver) => ver.hash.isEqual(start));
     if (!item) return { missing: [start.toString()] };
