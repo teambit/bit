@@ -2,7 +2,7 @@ import React, { HTMLAttributes } from 'react';
 import { DetailedVersion, VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
-import { UseComponentType, useComponent } from '@teambit/component';
+import { UseComponentType } from '@teambit/component';
 import classNames from 'classnames';
 import * as semver from 'semver';
 
@@ -19,8 +19,6 @@ export type ComponentCompareVersionPickerProps = {
 
 export function ComponentCompareVersionPicker({
   className,
-  host,
-  customUseComponent,
   compareVersion: compareVersionFromProps,
   baseVersion: baseVersionFromProps,
   componentId: componentIdFromProps,
@@ -36,6 +34,7 @@ export function ComponentCompareVersionPicker({
   const loadingLogs = !componentCompare?.compare?.model.logs;
 
   const useVersions = React.useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (filter: (version: string) => boolean = (version) => true) =>
       (props?: { skip?: boolean }) => {
         return {
@@ -64,12 +63,18 @@ export function ComponentCompareVersionPicker({
 
   const useVersion = (filter?: (version: string) => boolean) => (props?: { version?: string; skip?: boolean }) => {
     const { version, skip } = props || {};
-    const { tags, snaps, loading } = useVersions(filter)({ skip });
+    const versionData = useVersions(filter)({ skip });
     const isTag = React.useMemo(() => semver.valid(version), [loading, version]);
     if (isTag) {
-      return React.useMemo(() => tags?.find((tag) => tag.tag === version), [loading, tags?.length, version]);
+      return React.useMemo(
+        () => versionData?.tags?.find((tag) => tag.tag === version),
+        [loading, tags?.length, version]
+      );
     }
-    return React.useMemo(() => snaps?.find((snap) => snap.version === version), [loading, snaps?.length, version]);
+    return React.useMemo(
+      () => versionData?.snaps?.find((snap) => snap.version === version),
+      [loading, snaps?.length, version]
+    );
   };
 
   const useCompareVersion = React.useCallback(
