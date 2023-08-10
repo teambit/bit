@@ -28,6 +28,10 @@ const BEFORE_REMOVE = 'removing components';
 
 export type RemoveInfo = {
   removed: boolean;
+  /**
+   * whether to remove the component from default lane once merged
+   */
+  removeOnMain?: boolean;
 };
 
 export class RemoveMain {
@@ -91,7 +95,7 @@ export class RemoveMain {
     return results;
   }
 
-  async markRemoveComps(componentIds: ComponentID[]) {
+  async markRemoveComps(componentIds: ComponentID[], shouldUpdateMain = false) {
     const components = await this.workspace.getMany(componentIds);
     await removeComponentsFromNodeModules(
       this.workspace.consumer,
@@ -99,11 +103,9 @@ export class RemoveMain {
     );
     // don't use `this.workspace.addSpecificComponentConfig`, if the component has component.json it will be deleted
     // during this removal along with the entire component dir.
-    componentIds.map((compId) =>
-      this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, {
-        removed: true,
-      })
-    );
+    const config: RemoveInfo = { removed: true };
+    if (shouldUpdateMain) config.removeOnMain = true;
+    componentIds.map((compId) => this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, config));
     await this.workspace.bitMap.write();
     const bitIds = BitIds.fromArray(componentIds.map((id) => id._legacy));
     await deleteComponentsFiles(this.workspace.consumer, bitIds);
