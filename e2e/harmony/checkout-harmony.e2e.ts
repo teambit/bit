@@ -402,7 +402,7 @@ describe('bit checkout command', function () {
         let output;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeWithAddedFile);
-          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--theirs');
+          output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve theirs');
         });
         it('should indicate that the new file was removed', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.removed);
