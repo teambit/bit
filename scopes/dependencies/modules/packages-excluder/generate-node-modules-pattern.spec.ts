@@ -178,7 +178,7 @@ describe('generateNodeModulesPattern()', () => {
   describe('format for webpack', () => {
     describe('when packages provided is an empty array', () => {
       it('should return an empty array', () => {
-        expect(generateNodeModulesPattern({ packages: [], format: PatternTarget.WEBPACK })).toEqual([]);
+        expect(generateNodeModulesPattern({ packages: [], target: PatternTarget.WEBPACK })).toEqual([]);
       });
     });
     describe('when packages contains a single package', () => {
@@ -186,7 +186,7 @@ describe('generateNodeModulesPattern()', () => {
       beforeAll(() => {
         patterns = generateNodeModulesPattern({
           packages: ['@my-org/my-scope.components'],
-          format: PatternTarget.WEBPACK,
+          target: PatternTarget.WEBPACK,
         });
       });
 
@@ -205,7 +205,7 @@ describe('generateNodeModulesPattern()', () => {
       beforeAll(() => {
         patterns = generateNodeModulesPattern({
           packages: ['@my-org/my-scope.components', '@other-org/my-scope.my-app'],
-          format: PatternTarget.WEBPACK,
+          target: PatternTarget.WEBPACK,
         });
         regexps = [...patterns.map((pattern) => new RegExp(pattern))];
       });
@@ -226,7 +226,7 @@ describe('generateNodeModulesPattern()', () => {
         ).toBeFalsy();
       });
 
-      it('should exclude thes packages from absolute paths', () => {
+      it('should exclude the packages from absolute paths', () => {
         expect(
           regexps.every((regexp) =>
             regexp.test('/Users/aUser/dev/bit-example/node_modules/@my-org/my-scope.components/package.json')

@@ -20,9 +20,9 @@ type GenerateNodeModulesPatternOptions<T> = {
    */
   excludeComponents?: boolean;
   /**
-   * The format to return the patterns.
+   * The target for which patterns are generated.
    */
-  format?: T;
+  target?: T;
 };
 
 const patternTargetMap = {
@@ -41,7 +41,7 @@ type PatternReturnType<T extends PatternTarget> = ReturnType<PatternTargetMap[T]
 export function generateNodeModulesPattern<T extends PatternTarget>(
   options: GenerateNodeModulesPatternOptions<T>
 ): PatternReturnType<T> {
-  const { packages = [], excludeComponents, format = PatternTarget.JEST } = options;
+  const { packages = [], excludeComponents, target = PatternTarget.JEST } = options;
   const negativeLookaheadPatterns = packages.reduce((acc: string[], packageName) => {
     const yarnPattern = packageName.replace(/\//g, '[\\/]');
     const pnpmPackageName = packageName.replace(/\//g, '\\+');
@@ -57,7 +57,7 @@ export function generateNodeModulesPattern<T extends PatternTarget>(
     );
   }
 
-  return patternTargetMap[format](negativeLookaheadPatterns) as PatternReturnType<T>;
+  return patternTargetMap[target](negativeLookaheadPatterns) as PatternReturnType<T>;
 }
 
 function toJestPattern(patterns: string[]) {

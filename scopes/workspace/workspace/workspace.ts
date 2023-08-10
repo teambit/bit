@@ -1817,7 +1817,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
     const pathsExcluding = generateNodeModulesPattern({
       packages: workspacePackageNames,
-      format: PatternTarget.WEBPACK,
+      target: PatternTarget.WEBPACK,
     });
     this.componentPathsRegExps = [...pathsExcluding.map((stringPattern) => new RegExp(stringPattern))];
   }
