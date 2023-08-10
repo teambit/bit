@@ -110,6 +110,11 @@ export default class VersionHistory extends BitObject {
     return found?.includes(searchFor.toString());
   }
 
+  isGraphCompleteSince(ref: Ref) {
+    const { missing } = this.getAllHashesFrom(ref);
+    return !missing || !missing.length;
+  }
+
   getAllHashesAsString(): string[] {
     return this.versions.map((v) => v.hash.toString());
   }

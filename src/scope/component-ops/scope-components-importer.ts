@@ -133,6 +133,10 @@ export default class ScopeComponentsImporter {
       externalsToFetch.push(id);
       return false;
     });
+
+    const incompleteVersionHistory = await this.getIncompleteVersionHistory(existingDefs);
+    externalsToFetch.push(...incompleteVersionHistory);
+
     await this.findMissingExternalsRecursively(
       existingDefs,
       externalsToFetch,
@@ -155,6 +159,29 @@ export default class ScopeComponentsImporter {
     const versionDeps = await this.bitIdsToVersionDeps(idsToImport, throwForSeederNotFound, preferDependencyGraph);
     logger.debug('importMany, completed!');
     return versionDeps;
+  }
+
+  private async getIncompleteVersionHistory(existingDefs: ComponentDef[]) {
+    const incompleteVersionHistory: BitId[] = [];
+    await pMapPool(
+      existingDefs,
+      async ({ id, component }) => {
+        if (id.isLocal(this.scope.name)) return;
+        if (!id.hasVersion()) return;
+        if (!component)
+          throw new Error(`importMany, a component for ${id.toString()} is needed for version-history validation`);
+        const versionHistory = await component.getVersionHistory(this.repo);
+        const ref = component.getRef(id.version as string);
+        if (!ref) throw new Error(`importMany, a ref for ${id.toString()} is needed for version-history validation`);
+        const isComplete = versionHistory.isGraphCompleteSince(ref);
+        if (!isComplete) {
+          incompleteVersionHistory.push(id);
+        }
+      },
+      { concurrency: concurrentComponentsLimit() }
+    );
+
+    return incompleteVersionHistory;
   }
 
   /**
