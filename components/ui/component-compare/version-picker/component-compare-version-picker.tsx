@@ -106,7 +106,7 @@ export function ComponentCompareVersionPicker({
         />
       </div>
       <div className={styles.dropdownContainer}>
-        <span className={styles.titleText}>With</span>
+        <span className={styles.titleText}>with</span>
         <VersionDropdown
           className={classNames(styles.componentCompareVersionContainer, styles.right)}
           dropdownClassName={styles.componentCompareDropdown}
