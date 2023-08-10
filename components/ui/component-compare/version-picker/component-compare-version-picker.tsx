@@ -11,49 +11,60 @@ import styles from './component-compare-version-picker.module.scss';
 export type ComponentCompareVersionPickerProps = {
   customUseComponent?: UseComponentType;
   host: string;
+  baseVersion?: string;
+  compareVersion?: string;
+  compareHasLocalChanges?: boolean;
+  componentId: string;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function ComponentCompareVersionPicker({
   className,
   host,
   customUseComponent,
+  compareVersion: compareVersionFromProps,
+  baseVersion: baseVersionFromProps,
+  componentId: componentIdFromProps,
+  compareHasLocalChanges,
 }: ComponentCompareVersionPickerProps) {
   const componentCompare = useComponentCompare();
   const compare = componentCompare?.compare?.model;
-  const componentId = compare?.id.toString();
-  const componentWithLogsOptions = {
-    customUseComponent,
-  };
+  const componentId = componentIdFromProps || compare?.id.toStringWithoutVersion();
+  const compareVersion = compareHasLocalChanges ? 'workspace' : compareVersionFromProps || compare?.version;
+  const baseVersion = baseVersionFromProps || componentCompare?.base?.model.version;
 
-  const useVersions = (props?: { skip?: boolean }) => {
-    const { skip } = props || {};
-    const { componentLogs = {}, loading: loadingLogs } = useComponent(host, componentId, {
-      ...componentWithLogsOptions,
-      skip,
-    });
-    return {
-      loading: loadingLogs,
-      ...componentLogs,
-      snaps: (componentLogs.logs || [])
-        .map((snap) => ({ ...snap, version: snap.hash }))
-        .filter((log) => {
-          if (log.tag) return false;
-          const version = log.hash;
-          return componentCompare?.compare?.hasLocalChanges || version !== compare?.id.version;
-        }),
-      tags: (componentLogs.logs || [])
-        .map((tag) => ({ ...tag, version: tag.tag as string }))
-        .filter((log) => {
-          if (!log.tag) return false;
-          const version = log.tag;
-          return componentCompare?.compare?.hasLocalChanges || version !== compare?.id.version;
-        }),
-    };
-  };
+  const componentLogs = componentCompare?.compare?.model;
+  const loadingLogs = !componentCompare?.compare?.model.logs;
 
-  const useVersion = (props?: { version?: string; skip?: boolean }) => {
+  const useVersions = React.useCallback(
+    (filter: (version: string) => boolean = (version) => true) =>
+      (props?: { skip?: boolean }) => {
+        return {
+          loading: loadingLogs,
+          ...componentLogs,
+          snaps: (componentLogs?.logs || [])
+            .map((snap) => ({ ...snap, version: snap.hash }))
+            .filter((log) => {
+              if (log.tag) return false;
+              const version = log.hash;
+              return compareHasLocalChanges || filter?.(version);
+            }),
+          tags: (componentLogs?.logs || [])
+            .map((tag) => ({ ...tag, version: tag.tag as string }))
+            .filter((log) => {
+              if (!log.tag) return false;
+              const version = log.tag;
+              return compareHasLocalChanges || filter?.(version);
+            }),
+        };
+      },
+    [componentId, compareHasLocalChanges, loadingLogs, componentLogs?.logs?.length]
+  );
+
+  const { tags, snaps, loading } = useVersions()();
+
+  const useVersion = (filter?: (version: string) => boolean) => (props?: { version?: string; skip?: boolean }) => {
     const { version, skip } = props || {};
-    const { tags, snaps, loading } = useVersions({ skip });
+    const { tags, snaps, loading } = useVersions(filter)({ skip });
     const isTag = React.useMemo(() => semver.valid(version), [loading, version]);
     if (isTag) {
       return React.useMemo(() => tags?.find((tag) => tag.tag === version), [loading, tags?.length, version]);
@@ -61,32 +72,36 @@ export function ComponentCompareVersionPicker({
     return React.useMemo(() => snaps?.find((snap) => snap.version === version), [loading, snaps?.length, version]);
   };
 
-  const compareVersion = componentCompare?.compare?.hasLocalChanges ? 'workspace' : compare?.version;
-
-  const baseVersion = componentCompare?.base?.model.version;
-
-  const key = `base-compare-version-dropdown-${componentCompare?.compare?.model.id.toString()}`;
+  const useCompareVersion = React.useCallback(
+    (props?: { version?: string; skip?: boolean }) => {
+      const { version } = props || {};
+      const isTag = semver.valid(version);
+      if (isTag) {
+        return tags?.find((tag) => tag.tag === version);
+      }
+      return snaps?.find((snap) => snap.version === version);
+    },
+    [tags.length, snaps.length, loading]
+  );
 
   return (
     <div className={styles.componentCompareVersionPicker}>
       <div className={classNames(styles.dropdownContainer)}>
         <span className={classNames(styles.rightPad, styles.titleText)}>Comparing</span>
         <VersionDropdown
-          key={key}
           className={classNames(styles.componentCompareVersionContainer, styles.left, className)}
           dropdownClassName={styles.componentCompareDropdown}
           placeholderClassName={styles.componentCompareVersionPlaceholder}
           menuClassName={classNames(styles.componentCompareVersionMenu, styles.showMenuOverNav)}
           currentVersion={baseVersion as string}
-          loading={componentCompare?.loading}
           overrideVersionHref={(_baseVersion) => {
             return useUpdatedUrlFromQuery({ baseVersion: _baseVersion });
           }}
           disabled={(compare?.logs?.length ?? 0) < 2}
           hasMoreVersions={(compare?.logs?.length ?? 0) > 1}
           showVersionDetails={true}
-          useComponentVersions={useVersions}
-          useCurrentVersionLog={useVersion}
+          useComponentVersions={useVersions((version) => version !== compare?.id.version)}
+          useCurrentVersionLog={useVersion((version) => version !== compare?.id.version)}
           PlaceholderComponent={DetailedVersion}
         />
       </div>
@@ -98,10 +113,10 @@ export function ComponentCompareVersionPicker({
           placeholderClassName={styles.componentCompareVersionPlaceholder}
           menuClassName={styles.componentCompareVersionMenu}
           disabled={true}
-          loading={componentCompare?.loading}
           currentVersion={compareVersion as string}
           PlaceholderComponent={DetailedVersion}
-          useCurrentVersionLog={useVersion}
+          useCurrentVersionLog={useCompareVersion}
+          useComponentVersions={useVersions()}
           showVersionDetails={true}
         />
       </div>
