@@ -2,7 +2,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import logger, { IBitLogger } from '@teambit/legacy/dist/logger/logger';
 import chalk from 'chalk';
 
-import { LongProcessLogger } from './long-process-logger';
+import { ConsoleOnStart, LongProcessLogger } from './long-process-logger';
 
 export class Logger implements IBitLogger {
   constructor(private extensionName: string) {}
@@ -37,14 +37,19 @@ export class Logger implements IBitLogger {
    * once done, call `LongProcessLogger.end()`
    * the status-line will show all messages in the terminal.
    */
-  createLongProcessLogger(processDescription: string, totalItems?: number): LongProcessLogger {
-    return new LongProcessLogger(this, this.extensionName, processDescription, totalItems);
+  createLongProcessLogger(
+    processDescription: string,
+    totalItems?: number,
+    shouldConsole?: ConsoleOnStart
+  ): LongProcessLogger {
+    return new LongProcessLogger(this, this.extensionName, processDescription, totalItems, shouldConsole);
   }
   /**
    * single status-line on the bottom of the screen.
    * the text is replaced every time this method is called.
    */
-  setStatusLine(text: string) {
+  setStatusLine(text: string, shouldPrintOnCI = false) {
+    if (process.env.CI && !shouldPrintOnCI) return;
     loader.setTextAndRestart(text);
   }
   /**
