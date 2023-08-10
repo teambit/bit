@@ -844,6 +844,10 @@ another option, in case this dependency is not in main yet is to remove all refe
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     const { version, files, flattenedEdges } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
+    version.origin = {
+      id: { scope: source.scope || (source.defaultScope as string), name: source.name },
+      lane: lane ? { scope: lane.scope, name: lane.name, hash: lane.hash().toString() } : undefined,
+    };
     objectRepo.add(version);
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
