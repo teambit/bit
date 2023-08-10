@@ -468,50 +468,69 @@ describe('bit lane command', function () {
       expect(lane.components).to.have.lengthOf(1);
     });
   });
-  //   'soft remove on lane then tagging the dependent without removing the references to the removed component',
-  //   () => {
-  //     let npmCiRegistry: NpmCiRegistry;
-  //     before(async () => {
-  //       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-  //       helper.scopeHelper.setNewLocalAndRemoteScopes();
-  //       // helper.command.createLane();
-  //       helper.fixtures.populateComponents(2);
-  //       npmCiRegistry = new NpmCiRegistry(helper);
-  //       npmCiRegistry.configureCiInPackageJsonHarmony();
-  //       await npmCiRegistry.init();
-  //       helper.command.tagAllComponents();
-  //       helper.command.export();
+  describe('remove on lane with --update-main then merge to main', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.removeLaneComp('comp1', '--update-main');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.mergeLane('dev', '-x');
+    });
+    it('should be marked as removed on main', () => {
+      const removeData = helper.command.showAspectConfig('comp1', Extensions.remove);
+      expect(removeData.config.removed).to.be.true;
+    });
+    it('bit status should show the component as staged', () => {
+      const status = helper.command.statusJson();
+      expect(status.stagedComponents).to.have.lengthOf(1);
+    });
+    it('bitmap should not have the component', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.not.have.property('comp1');
+    });
+    describe('export and import the component to a new workspace', () => {
+      before(() => {
+        helper.command.export();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp1', '-x');
+      });
+      it('should show the component as removed', () => {
+        const removeData = helper.command.showAspectConfig('comp1', Extensions.remove);
+        expect(removeData.config.removed).to.be.true;
+      });
+    });
+  });
+  describe('remove on lane with --update-main then merge to another lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.removeLaneComp('comp1', '--update-main');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
 
-  //       helper.command.softRemoveComponent('comp2');
-  //       // this installs comp2 as a package
-  //       helper.command.install();
-
-  //       // const pkgName = helper.general.getPackageNameByCompName('bar/foo');
-
-  //       // helper.scopeHelper.reInitLocalScope();
-  //       // helper.scopeHelper.addRemoteScope();
-  //       // helper.command.createLane('lane-a');
-  //       // helper.fs.outputFile('comp1/comp1.js', `import '${pkgName}';`);
-  //       // helper.command.addComponent('comp1');
-  //       // helper.command.install(pkgName);
-  //       // helper.command.snapAllComponentsWithoutBuild();
-  //       // helper.command.export();
-
-  //       // helper.command.createLane('lane-b');
-  //       // npmCiRegistry.setResolver();
-  //       // helper.command.importComponent('bar/foo');
-  //       // helper.command.snapAllComponentsWithoutBuild('--unmodified');
-  //       // helper.command.export();
-
-  //       // helper.command.switchLocalLane('lane-a', '-x');
-  //       // helper.fs.appendFile('comp1/comp1.js');
-  //     });
-  //     after(() => {
-  //       // npmCiRegistry.destroy();
-  //     });
-  //     it.only('should ', () => {
-
-  //     });
-  //   }
-  // );
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.createLane('lane-b');
+      helper.command.mergeLane('lane-a', '-x');
+    });
+    it('should bring the removed component into the other lane', () => {
+      const laneComps = helper.command.catLane('lane-b');
+      const comps = laneComps.components.map((c) => c.id.name);
+      expect(comps).to.include('comp1');
+    });
+    it('should be marked with removed on main', () => {
+      const removeData = helper.command.showAspectConfig(`${helper.scopes.remote}/comp1`, Extensions.remove);
+      expect(removeData.config.removeOnMain).to.be.true;
+    });
+  });
 });

@@ -726,6 +726,9 @@ export default class Version extends BitObject {
   isRemoved(): boolean {
     return Boolean(this.extensions.findCoreExtension(Extensions.remove)?.config?.removed);
   }
+  shouldRemoveFromMain(): boolean {
+    return Boolean(this.extensions.findCoreExtension(Extensions.remove)?.config?.removeOnMain);
+  }
 
   /**
    * Validate the version model properties, to make sure we are not inserting something
