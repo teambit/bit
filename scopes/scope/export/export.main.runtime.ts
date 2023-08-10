@@ -370,7 +370,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         );
         const objectsList = await new ObjectList(objectItems).toBitObjects();
         const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
-        await this.convertToCorrectScopeHarmony(scope, componentAndObject, remoteNameStr, bitIds, idsWithFutureScope);
+        await this.convertToCorrectScope(scope, componentAndObject, remoteNameStr, bitIds, idsWithFutureScope);
         const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
         modelComponent.addScopeListItem(remoteObj);
         componentsAndObjects.push(componentAndObject);
@@ -579,7 +579,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
    *
    * This is the Harmony version of "convertToCorrectScope". No more codemod and no more hash changes.
    */
-  private async convertToCorrectScopeHarmony(
+  private async convertToCorrectScope(
     scope: Scope,
     componentsObjects: ModelComponentAndObjects,
     remoteScope: string,
