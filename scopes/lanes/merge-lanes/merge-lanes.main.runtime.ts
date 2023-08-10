@@ -45,6 +45,8 @@ import { MergeAbortLaneCmd, MergeAbortOpts } from './merge-abort.cmd';
 
 export type MergeLaneOptions = {
   mergeStrategy: MergeStrategy;
+  ours?: boolean;
+  theirs?: boolean;
   noSnap: boolean;
   snapMessage: string;
   existingOnWorkspaceOnly: boolean;
