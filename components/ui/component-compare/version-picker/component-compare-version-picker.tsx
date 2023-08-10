@@ -36,6 +36,7 @@ export function ComponentCompareVersionPicker({
   const useVersions = React.useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (filter: (version: string) => boolean = (version) => true) =>
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       (props?: { skip?: boolean }) => {
         return {
           loading: loadingLogs,
