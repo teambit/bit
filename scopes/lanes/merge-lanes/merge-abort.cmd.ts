@@ -1,9 +1,11 @@
 import chalk from 'chalk';
-import yesno from 'yesno';
 import { CheckoutProps, checkoutOutput } from '@teambit/checkout';
-import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
 import { Command, CommandOptions } from '@teambit/cli';
 import { MergeLanesMain } from './merge-lanes.main.runtime';
+
+export type MergeAbortOpts = {
+  silent?: boolean; // don't show prompt before aborting
+};
 
 export class MergeAbortLaneCmd implements Command {
   name = 'merge-abort';
@@ -35,16 +37,17 @@ also, checkout the workspace components according to the restored lane`;
       silent?: boolean;
     }
   ): Promise<string> {
-    if (!silent) {
-      await this.prompt();
-    }
     const checkoutProps: CheckoutProps = {
       reset: true,
       all: true,
       verbose,
       skipNpmInstall: skipDependencyInstallation,
     };
-    const { checkoutResults, restoredItems, checkoutError } = await this.mergeLanes.abortLaneMerge(checkoutProps);
+    const mergeAbortOpts = { silent };
+    const { checkoutResults, restoredItems, checkoutError } = await this.mergeLanes.abortLaneMerge(
+      checkoutProps,
+      mergeAbortOpts
+    );
 
     const getCheckoutErrorStr = () => {
       if (!checkoutError) return '';
@@ -59,18 +62,5 @@ please fix the error and then run "bit checkout reset --all" to revert the compo
     const restoredItemsOutput = restoredItems.map((item) => `[√] ${item}`).join('\n');
 
     return `${checkoutOutputStr}\n\n${restoredItemsTitle}\n${restoredItemsOutput}${getCheckoutErrorStr()}`;
-  }
-
-  private async prompt() {
-    this.mergeLanes.logger.clearStatusLine();
-    const ok = await yesno({
-      question: `Code changes that were done since the last lane-merge will be lost.
-The .bitmap and workspace.jsonc files will be restored to the state before the merge.
-This action is irreversible.
-${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
-    });
-    if (!ok) {
-      throw new PromptCanceled();
-    }
   }
 }

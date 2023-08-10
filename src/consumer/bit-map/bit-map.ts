@@ -177,12 +177,27 @@ export default class BitMap {
     if (!mapFileContent || !currentLocation) {
       return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA);
     }
+    const bitMap = BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath);
+    await bitMap.loadFiles();
+
+    return bitMap;
+  }
+
+  /**
+   * helpful for external tools to get an object representation of the .bitmap file quickly.
+   * keep in mind that ComponentMap are not complete because they don't have the filepaths inside each component, only the rootDir.
+   */
+  static loadFromContentWithoutLoadingFiles(
+    bitMapFileContent: Buffer,
+    bitMapFilePath: PathOsBasedAbsolute,
+    workspacePath: PathOsBasedAbsolute
+  ) {
     let componentsJson;
     try {
-      componentsJson = json.parse(mapFileContent.toString('utf8'), undefined, true);
+      componentsJson = json.parse(bitMapFileContent.toString('utf8'), undefined, true);
     } catch (e: any) {
-      logger.error(`invalid bitmap at ${currentLocation}`, e);
-      throw new InvalidBitMap(currentLocation, e.message);
+      logger.error(`invalid bitmap at ${bitMapFilePath}`, e);
+      throw new InvalidBitMap(bitMapFilePath, e.message);
     }
     const schema = componentsJson[SCHEMA_FIELD] || componentsJson.version;
     let isLaneExported = false;
@@ -193,10 +208,9 @@ export default class BitMap {
     }
     BitMap.removeNonComponentFields(componentsJson);
 
-    const bitMap = new BitMap(dirPath, currentLocation, schema, laneId, isLaneExported);
+    const bitMap = new BitMap(workspacePath, bitMapFilePath, schema, laneId, isLaneExported);
     bitMap.loadComponents(componentsJson);
 
-    await bitMap.loadFiles();
     return bitMap;
   }
 
