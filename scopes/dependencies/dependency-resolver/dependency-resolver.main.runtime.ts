@@ -1464,7 +1464,9 @@ export class DependencyResolverMain {
       rootDir: string;
       forceVersionBump?: 'major' | 'minor' | 'patch';
     },
-    pkgs: Array<{ name: string; currentRange: string } & T>
+    pkgs: Array<
+      { name: string; currentRange: string; source: 'variants' | 'component' | 'rootPolicy' | 'component-model' } & T
+    >
   ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
     this.logger.setStatusLine('checking the latest versions of dependencies');
     const resolver = await this.getVersionResolver();
@@ -1491,7 +1493,10 @@ export class DependencyResolverMain {
             return null;
           return {
             ...pkg,
-            latestRange: repeatPrefix(pkg.currentRange, latestVersion),
+            latestRange:
+              pkg.source === 'component-model' && this.config.savePrefix != null
+                ? `${this.config.savePrefix}${latestVersion}`
+                : repeatPrefix(pkg.currentRange, latestVersion),
           } as any;
         })
       )

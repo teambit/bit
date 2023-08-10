@@ -386,7 +386,7 @@ describe('merge lanes', function () {
     describe('merging the lane', () => {
       let status;
       before(() => {
-        helper.command.mergeLane('main', '--theirs');
+        helper.command.mergeLane('main', '--auto-merge-resolve theirs');
         status = helper.command.statusJson();
         afterMergeToMain = helper.scopeHelper.cloneLocalScope();
       });
@@ -431,7 +431,7 @@ describe('merge lanes', function () {
     describe('merge the lane without snapping', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeMerge);
-        helper.command.mergeLane('main', '--theirs --no-snap -x');
+        helper.command.mergeLane('main', '--auto-merge-resolve theirs --no-snap -x');
       });
       it('should show the during-merge as modified', () => {
         const status = helper.command.statusJson();

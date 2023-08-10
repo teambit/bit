@@ -347,7 +347,7 @@ in case the components are not part of the lane or the lane is new, it simply re
   alias = 'rc';
   options = [
     ['', 'workspace-only', 'do not mark the components as removed. instead, remove them from the workspace only'],
-    ['', 'update-main', 'NOT IMPLEMENTED YET. mark as removed on main after merging this lane into main'],
+    ['', 'update-main', 'EXPERIMENTAL. mark as removed on main after merging this lane into main'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -355,7 +355,6 @@ in case the components are not part of the lane or the lane is new, it simply re
   constructor(private workspace: Workspace, private lanes: LanesMain) {}
 
   async report([componentsPattern]: [string], removeCompsOpts: RemoveCompsOpts): Promise<string> {
-    if (removeCompsOpts.updateMain) throw new Error('not implemented yet');
     if (!this.workspace) throw new OutsideWorkspaceError();
     if (this.workspace.isOnMain()) {
       throw new Error(`error: you're checked out to main, please use "bit remove" instead`);

@@ -666,6 +666,7 @@ export default class CommandHelper {
     return this.runCmd(`bit merge ${values}`);
   }
   mergeLane(laneName: string, options = '') {
+    if (!laneName.includes('/')) laneName = `${this.scopes.remote}/${laneName}`;
     return this.runCmd(`bit lane merge ${laneName} ${options}`);
   }
   mergeAbortLane(options = '') {
