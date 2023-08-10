@@ -16,7 +16,7 @@ export class PostSign implements Action<Options> {
     await scope.objects.clearCache();
     if (PostSign.onPutHook) {
       PostSign.onPutHook(options.ids, [], authData).catch((err) => {
-        logger.error('fatal: onPutHook encountered an error (this error does not stop the process)', err);
+        logger.error('fatal: PostSign.onPutHook encountered an error (this error does not stop the process)', err);
         // let the process continue. we don't want to stop it when onPutHook failed.
       });
     }

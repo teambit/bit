@@ -92,6 +92,7 @@ export default function createWebpackConfig(
 
       alias: {
         // TODO: @uri please remember to remove after publishing evangelist and base-ui
+        'react/jsx-runtime': require.resolve('react/jsx-runtime'),
         react: require.resolve('react'),
         'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
