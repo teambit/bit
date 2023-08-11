@@ -670,9 +670,7 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
     await pMap(
       lane.components,
       async (component) => {
-        logger.profile(`mergeLaneComponent-${component.id.toString()}`);
         await mergeLaneComponent(component);
-        logger.profile(`mergeLaneComponent-${component.id.toString()}`);
       },
       { concurrency: concurrentComponentsLimit() }
     );

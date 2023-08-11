@@ -569,6 +569,7 @@ export class MergingMain {
     return results;
   }
 
+  // eslint-disable-next-line complexity
   private async getComponentStatusBeforeMergeAttempt(
     id: BitId, // the id.version is the version we want to merge to the current component
     localLane: Lane | null, // currently checked out lane. if on main, then it's null.
@@ -598,23 +599,26 @@ export class MergingMain {
     const otherLaneHead = modelComponent.getRef(version);
     const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
     const componentOnOther: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
+    const idOnCurrentLane = localLane?.getComponent(id);
+
     if (componentOnOther.isRemoved()) {
-      if (existingBitMapId && localLane) {
-        // continue with merging the component, so then the current lane will get the soft-remove update.
-        // also, remove the component from the workspace.
+      // if exist in current lane, we want the current lane to get the soft-remove update.
+      // or if it was removed with --update-main, we want to merge it so then main will get the update.
+      const shouldMerge = idOnCurrentLane || componentOnOther.shouldRemoveFromMain();
+      if (shouldMerge) {
+        // remove the component from the workspace if exist.
         componentStatus.shouldBeRemoved = true;
       } else {
-        // on main, don't merge soft-removed components.
-        // on lane, if it's not part of the current lane (!existingBitMapId), don't merge it.
+        // on main, don't merge soft-removed components unless it's marked with removeOnMain.
+        // on lane, if it's not part of the current lane, don't merge it.
         return returnUnmerged(`component has been removed`, true);
       }
     }
     const getCurrentId = () => {
       if (existingBitMapId) return existingBitMapId;
       if (localLane) {
-        const idOnLane = localLane.getComponent(id);
-        if (!idOnLane) return null;
-        return idOnLane.id.changeVersion(idOnLane.head.toString());
+        if (!idOnCurrentLane) return null;
+        return idOnCurrentLane.id.changeVersion(idOnCurrentLane.head.toString());
       }
       // it's on main
       const head = modelComponent.getHeadAsTagIfExist();
@@ -634,7 +638,7 @@ export class MergingMain {
     };
     const currentComponent = await getCurrentComponent();
     if (currentComponent.isRemoved()) {
-      // we made sure before that the component is not removed on the "other". so we have a few options:
+      // we have a few options:
       // 1. other is ahead. in this case, other recovered the component. so we can continue with the merge.
       // it is possible that it is diverged, in which case, still continue with the merge, and later on, the
       // merge-config will show a config conflict of the remove aspect.
