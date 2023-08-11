@@ -71,8 +71,7 @@ export class SignMain {
         this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
       }
       await this.scope.import(ids, { lane, preferDependencyGraph: true });
-      longProcessLogger.end();
-      this.logger.consoleSuccess();
+      longProcessLogger.end('success');
     }
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids, rebuild);
     if (ids.length && componentsToSkip.length) {

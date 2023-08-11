@@ -100,8 +100,8 @@ describe('multiple compilers - babel and typescript', function () {
       expect(buildOutput).to.have.string('the build has been completed');
     });
     it('should indicate that pre-build and post-build were running', () => {
-      expect(buildOutput).to.have.string('executing pre-build for all tasks');
-      expect(buildOutput).to.have.string('executing post-build for all tasks');
+      expect(buildOutput).to.have.string('running pre-build for all tasks');
+      expect(buildOutput).to.have.string('running post-build for all tasks');
     });
     it('should write .npmignore with TS entries even when getCompiler() is Babel', () => {
       const comp1Capsule = helper.command.getCapsuleOfComponent('comp1');

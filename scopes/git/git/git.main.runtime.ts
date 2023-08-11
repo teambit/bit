@@ -4,7 +4,7 @@ import { homedir } from 'os';
 import { join } from 'path';
 import gitconfig from 'gitconfig';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace, BitmapMergeOptions } from '@teambit/workspace';
 import { GitAspect } from './git.aspect';
 import { MergeBitmapsCmd } from './merge-bitmaps.cmd';
 import { SetGitMergeDriverCmd } from './set-git-merge-driver.cmd';
@@ -20,19 +20,31 @@ const GIT_DRIVER_KEY = `${GIT_BASE_KEY}.driver`;
 
 const GIT_NAME_VALUE = 'A custom merge driver used to resolve conflicts in .bitmap files';
 // const binName = process.argv[1];
-const GIT_DRIVER_VALUE = 'bit git merge-bitmaps %O %A %B';
+const GIT_DRIVER_VALUE = 'bd git merge-bitmaps %O %A %B';
 
 const GIT_ATTRIBUTES = '.bitmap merge=bitmap-driver';
 
+export interface GitExtWorkspaceConfig {
+  mergeStrategy: 'ours' | 'theirs' | 'manual';
+}
 export class GitMain {
-  constructor(private workspace: Workspace) {}
+  constructor(
+    private workspace: Workspace,
+    /**
+     * Git extension configuration.
+     */
+    readonly config: GitExtWorkspaceConfig
+  ) {}
 
   async mergeBitmaps(ancestor: string, current: string, other: string) {
     const encoding = 'utf-8';
     // const ancestorContent = this.stripBom(fs.readFileSync(ancestor, encoding));
     const currentContent = this.stripBom(fs.readFileSync(current, encoding));
     const otherContent = this.stripBom(fs.readFileSync(other, encoding));
-    const merged = this.workspace.bitMap.mergeBitmaps(currentContent, otherContent);
+    const opts: BitmapMergeOptions = {
+      mergeStrategy: this.config.mergeStrategy || 'manual',
+    };
+    const merged = this.workspace.bitMap.mergeBitmaps(currentContent, otherContent, opts);
     await fs.outputFile(current, merged);
     return merged;
   }
@@ -106,8 +118,8 @@ export class GitMain {
 
   static runtime = MainRuntime;
 
-  static async provider([cli, workspace]: [CLIMain, Workspace]) {
-    const gitMain = new GitMain(workspace);
+  static async provider([cli, workspace]: [CLIMain, Workspace], config: GitExtWorkspaceConfig) {
+    const gitMain = new GitMain(workspace, config);
     const gitCmd = new GitCmd();
     gitCmd.commands = [new SetGitMergeDriverCmd(gitMain), new MergeBitmapsCmd(gitMain)];
     cli.register(gitCmd);

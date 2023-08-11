@@ -86,15 +86,14 @@ export default class ComponentsList {
   async listModifiedComponents(load = false, loadOpts?: ComponentLoadOptions): Promise<Array<BitId | Component>> {
     if (!this._modifiedComponents) {
       const fileSystemComponents = await this.getComponentsFromFS(loadOpts);
-      const unmergedComponents = this.listDuringMergeStateComponents();
+      // const unmergedComponents = this.listDuringMergeStateComponents();
       const componentStatuses = await this.consumer.getManyComponentsStatuses(fileSystemComponents.map((f) => f.id));
-      this._modifiedComponents = fileSystemComponents
-        .filter((component) => {
-          const status = componentStatuses.find((s) => s.id.isEqual(component.id));
-          if (!status) throw new Error(`listModifiedComponents unable to find status for ${component.id.toString()}`);
-          return status.status.modified;
-        })
-        .filter((component: Component) => !unmergedComponents.hasWithoutScopeAndVersion(component.id));
+      this._modifiedComponents = fileSystemComponents.filter((component) => {
+        const status = componentStatuses.find((s) => s.id.isEqual(component.id));
+        if (!status) throw new Error(`listModifiedComponents unable to find status for ${component.id.toString()}`);
+        return status.status.modified;
+      });
+      // .filter((component: Component) => !unmergedComponents.hasWithoutScopeAndVersion(component.id));
     }
     if (load) return this._modifiedComponents;
     return this._modifiedComponents.map((component) => component.id);
@@ -304,7 +303,7 @@ export default class ComponentsList {
     const removedComponents = await this.listLocallySoftRemoved();
     const duringMergeIds = this.listDuringMergeStateComponents();
 
-    return BitIds.fromArray([
+    return BitIds.uniqFromArray([
       ...(newComponents as BitId[]),
       ...(modifiedComponents as BitId[]),
       ...removedComponents,

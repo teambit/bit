@@ -75,6 +75,7 @@ async function createStoreController(
     networkConcurrency: options.networkConfig.networkConcurrency,
     packageImportMethod: options.packageImportMethod,
     preferOffline: options.preferOffline,
+    relinkLocalDirDeps: false,
     resolveSymlinksInInjectedDirs: true,
     pnpmHomeDir: options.pnpmHomeDir,
   };

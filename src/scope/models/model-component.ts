@@ -1096,7 +1096,10 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   async getAndPopulateVersionHistory(repo: Repository, head: Ref): Promise<VersionHistory> {
     const versionHistory = await this.GetVersionHistory(repo);
     const { err } = await this.populateVersionHistoryIfMissingGracefully(repo, versionHistory, head);
-    if (err) throw err;
+    if (err) {
+      logger.error(`rethrowing an error ${err.message}, current stuck`, new Error(err.message));
+      throw err;
+    }
     return versionHistory;
   }
 
