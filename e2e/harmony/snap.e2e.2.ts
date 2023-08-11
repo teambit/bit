@@ -263,7 +263,7 @@ describe('bit snap command', function () {
         describe('without --no-snap flag', () => {
           let mergeOutput;
           before(() => {
-            mergeOutput = helper.command.merge('bar/foo --ours');
+            mergeOutput = helper.command.merge('bar/foo --auto-merge-resolve ours');
           });
           it('should succeed and indicate that the files were not changed', () => {
             expect(mergeOutput).to.have.string('unchanged');
@@ -295,7 +295,7 @@ describe('bit snap command', function () {
           let mergeOutput;
           before(() => {
             helper.scopeHelper.getClonedLocalScope(beforeMergeScope);
-            mergeOutput = helper.command.merge('bar/foo --ours --no-snap');
+            mergeOutput = helper.command.merge('bar/foo --auto-merge-resolve ours --no-snap');
           });
           it('should succeed and indicate that the files were not changed', () => {
             expect(mergeOutput).to.have.string('unchanged');
@@ -352,7 +352,7 @@ describe('bit snap command', function () {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.command.importComponent('bar/foo --objects');
-          mergeOutput = helper.command.merge('bar/foo --theirs');
+          mergeOutput = helper.command.merge('bar/foo --auto-merge-resolve theirs');
         });
         it('should succeed and indicate that the files were updated', () => {
           expect(mergeOutput).to.have.string('updated');
@@ -383,7 +383,7 @@ describe('bit snap command', function () {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.command.importComponent('bar/foo --objects');
-          mergeOutput = helper.command.merge('bar/foo --manual');
+          mergeOutput = helper.command.merge('bar/foo --auto-merge-resolve manual');
           scopeWithConflicts = helper.scopeHelper.cloneLocalScope();
         });
         it('should succeed and indicate that the files were left in a conflict state', () => {
@@ -412,7 +412,7 @@ describe('bit snap command', function () {
           expect(status.mergePendingComponents).to.have.lengthOf(0);
         });
         it('should block checking out the component', () => {
-          const output = helper.command.checkoutVersion(firstSnap, 'bar/foo', '--manual');
+          const output = helper.command.checkoutVersion(firstSnap, 'bar/foo', '--auto-merge-resolve manual');
           expect(output).to.have.string('is in during-merge state');
         });
         describe('tagging or snapping the component', () => {

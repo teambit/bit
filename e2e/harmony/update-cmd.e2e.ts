@@ -200,4 +200,58 @@ const isOdd = require("is-odd");`
       });
     });
   });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('dependency in the model is also a local component', () => {
+    let configFile;
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      helper.fixtures.populateComponents(1);
+      helper.command.install();
+      helper.command.compile();
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.command.tagAllComponents('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.fs.outputFile(
+        `comp1new/index.js`,
+        `const comp1 = require("@ci/${helper.scopes.remoteWithoutOwner}.comp1");`
+      );
+      helper.command.addComponent('comp1new');
+      helper.bitJsonc.addKeyValToDependencyResolver('policy', {
+        dependencies: {
+          [`@ci/${helper.scopes.remoteWithoutOwner}.comp1`]: '0.0.1',
+        },
+      });
+      helper.command.install();
+      helper.command.compile();
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.import(`${helper.scopes.remote}/comp1@0.0.1`);
+      helper.command.import(`${helper.scopes.remote}/comp1new@0.0.1`);
+      helper.command.update('--yes');
+      configFile = helper.bitJsonc.read(helper.scopes.localPath);
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+    });
+    it('should not update component that is available locally in the workspace', function () {
+      expect(
+        configFile['teambit.dependencies/dependency-resolver'].policy.dependencies[
+          `@ci/${helper.scopes.remoteWithoutOwner}.comp1`
+        ]
+      ).to.equal(undefined);
+    });
+  });
 });
