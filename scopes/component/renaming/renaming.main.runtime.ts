@@ -80,7 +80,9 @@ make sure this argument is the name only, without the scope-name. to change the 
       );
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
     }
-    if (!options.preserve) {
+
+    // only write if it is not tagged, since we writeAndAddNewComp for tagged components
+    if (!isTagged && !options.preserve) {
       await this.refactoring.refactorVariableAndClasses(targetComp, sourceId, targetId);
       this.refactoring.refactorFilenames(targetComp, sourceId, targetId);
       await this.componentWriter.writeMany({
@@ -89,6 +91,7 @@ make sure this argument is the name only, without the scope-name. to change the 
         writeToPath: this.newComponentHelper.getNewComponentPath(targetId),
       });
     }
+
     this.workspace.bitMap.renameAspectInConfig(sourceId, targetId);
     await this.workspace.bitMap.write();
 
