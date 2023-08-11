@@ -140,6 +140,7 @@ export function _LaneSelectorList({
     let lanesToRender = nonMainLanes;
 
     if (mainLane && isSearchMatch(mainLane)) {
+      lanesToRender = lanesToRender.filter((lane) => lane.id.toString() !== mainLane.id.toString());
       lanesToRender.unshift(mainLane);
     }
 
