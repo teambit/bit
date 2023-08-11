@@ -5,9 +5,9 @@ import { ComponentID } from '@teambit/component-id';
 import { compact } from 'lodash';
 import { WILDCARD_HELP, AUTO_SNAPPED_MSG, MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import {
-  getMergeStrategy,
   FileStatus,
   ApplyVersionResult,
+  MergeStrategy,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BitError } from '@teambit/bit-error';
@@ -25,9 +25,18 @@ optionally use '--abort' to revert the last merge. to revert a lane merge, use "
 ${WILDCARD_HELP('merge')}`;
   alias = '';
   options = [
-    ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
-    ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
-    ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
+    ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. In the future, this flag will leave the current code intact'],
+    [
+      '',
+      'theirs',
+      'DEPRECATED. use --auto-merge-resolve. In the future, this flag will override the current code with the incoming code',
+    ],
+    ['', 'manual', 'DEPRECATED. use --auto-merge-resolve'],
+    [
+      '',
+      'auto-merge-resolve <merge-strategy>',
+      'in case of a conflict, resolve according to the strategy: [ours, theirs, manual]',
+    ],
     ['', 'abort', 'in case of an unresolved merge, revert to the state before the merge began'],
     ['', 'resolve', 'mark an unresolved merge as resolved and create a new snap with the changes'],
     ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
@@ -46,6 +55,7 @@ ${WILDCARD_HELP('merge')}`;
       ours = false,
       theirs = false,
       manual = false,
+      autoMergeResolve,
       abort = false,
       resolve = false,
       build = false,
@@ -57,6 +67,7 @@ ${WILDCARD_HELP('merge')}`;
       ours?: boolean;
       theirs?: boolean;
       manual?: boolean;
+      autoMergeResolve?: MergeStrategy;
       abort?: boolean;
       resolve?: boolean;
       build?: boolean;
@@ -67,7 +78,19 @@ ${WILDCARD_HELP('merge')}`;
     }
   ) {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
-    const mergeStrategy = getMergeStrategy(ours, theirs, manual);
+    if (ours || theirs || manual) {
+      throw new BitError(
+        'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead'
+      );
+    }
+    if (
+      autoMergeResolve &&
+      autoMergeResolve !== 'ours' &&
+      autoMergeResolve !== 'theirs' &&
+      autoMergeResolve !== 'manual'
+    ) {
+      throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
+    }
     if (abort && resolve) throw new BitError('unable to use "abort" and "resolve" flags together');
     if (noSnap && message) throw new BitError('unable to use "noSnap" and "message" flags together');
     const {
@@ -80,7 +103,7 @@ ${WILDCARD_HELP('merge')}`;
       mergeSnapError,
     }: ApplyVersionResults = await this.merging.merge(
       ids,
-      mergeStrategy as any,
+      autoMergeResolve as any,
       abort,
       resolve,
       noSnap,

@@ -580,7 +580,7 @@ describe('bit lane command', function () {
           helper.scopeHelper.getClonedRemoteScope(afterSwitchingRemote);
           helper.fixtures.populateComponents(2, undefined, 'v3');
           helper.command.snapAllComponentsWithoutBuild();
-          helper.command.mergeLane('dev', '--ours --no-squash');
+          helper.command.mergeLane('dev', '--auto-merge-resolve ours --no-squash');
         });
         it('should merge the lane', () => {
           const mergedLanes = helper.command.listLanes('--merged');
@@ -1215,7 +1215,7 @@ describe('bit lane command', function () {
         expect(status.mergePendingComponents).to.have.lengthOf(1);
       });
       it('bit merge with no args should merge them', () => {
-        const output = helper.command.merge(`--manual`);
+        const output = helper.command.merge(`--auto-merge-resolve manual`);
         expect(output).to.have.string('successfully merged');
         expect(output).to.have.string('CONFLICT');
       });

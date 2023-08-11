@@ -561,7 +561,8 @@ please create a new lane instead, which will include all components of this lane
     if (!currentLane) {
       throw new Error('markRemoveOnLane expects to get called when on a lane');
     }
-    if (currentLane.isNew || removeCompsOpts.workspaceOnly) {
+    const { workspaceOnly, updateMain } = removeCompsOpts;
+    if (!updateMain && (currentLane.isNew || workspaceOnly)) {
       const results = await this.remove.remove({
         componentsPattern,
         force: true,
@@ -573,12 +574,14 @@ please create a new lane instead, which will include all components of this lane
 
     const componentIds = await workspace.idsByPattern(componentsPattern);
     const laneBitIds = currentLane.toBitIds();
-    const [laneCompIds, mainCompIds] = partition(componentIds, (id) => laneBitIds.hasWithoutVersion(id._legacy));
+    const [idsToMarkRemove, idsToRemoveFromWs] = updateMain
+      ? partition(componentIds, (id) => id.hasVersion())
+      : partition(componentIds, (id) => laneBitIds.hasWithoutVersion(id._legacy));
 
     const removeFromWorkspace = async () => {
-      if (!mainCompIds.length) return [];
+      if (!idsToRemoveFromWs.length) return [];
       const results = await this.remove.removeLocallyByIds(
-        mainCompIds.map((id) => id._legacy),
+        idsToRemoveFromWs.map((id) => id._legacy),
         { force: true }
       );
       const ids = results.localResult.removedComponentIds;
@@ -586,7 +589,7 @@ please create a new lane instead, which will include all components of this lane
     };
 
     const removedFromWs = await removeFromWorkspace();
-    const markedRemoved = await this.remove.markRemoveComps(laneCompIds);
+    const markedRemoved = await this.remove.markRemoveComps(idsToMarkRemove, updateMain);
 
     return { removedFromWs, markedRemoved };
   }
