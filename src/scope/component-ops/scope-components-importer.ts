@@ -16,7 +16,7 @@ import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import ComponentVersion from '../component-version';
 import { ComponentNotFound, HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
-import { Lane, ModelComponent, Version } from '../models';
+import { Lane, ModelComponent, Version, VersionHistory } from '../models';
 import { Ref, Repository } from '../objects';
 import { ObjectItemsStream, ObjectList } from '../objects/object-list';
 import SourcesRepository, { ComponentDef } from '../repositories/sources';
@@ -133,6 +133,10 @@ export default class ScopeComponentsImporter {
       externalsToFetch.push(id);
       return false;
     });
+
+    const incompleteVersionHistory = await this.getIncompleteVersionHistory(existingDefs);
+    externalsToFetch.push(...incompleteVersionHistory);
+
     await this.findMissingExternalsRecursively(
       existingDefs,
       externalsToFetch,
@@ -152,9 +156,56 @@ export default class ScopeComponentsImporter {
       throwForSeederNotFound,
       preferDependencyGraph
     );
+
+    await this.warnForIncompleteVersionHistory(incompleteVersionHistory);
+
     const versionDeps = await this.bitIdsToVersionDeps(idsToImport, throwForSeederNotFound, preferDependencyGraph);
     logger.debug('importMany, completed!');
     return versionDeps;
+  }
+
+  private async warnForIncompleteVersionHistory(bitIds: BitId[]) {
+    const defs = await this.sources.getMany(bitIds);
+    const stillIncomplete = await this.getIncompleteVersionHistory(defs);
+    if (!stillIncomplete.length) return;
+    const ids = stillIncomplete.map((id) => id.toString());
+    const msg = `${ids.length} components still have incomplete version-history after importing them from the remote`;
+    logger.error(`the following ${msg}\n${ids.join('\n')}`);
+    logger.console(`warning: ${msg}, see the debug.log for their ids`, 'warn', 'yellow');
+  }
+
+  private async getIncompleteVersionHistory(existingDefs: ComponentDef[]) {
+    const incompleteVersionHistory: BitId[] = [];
+    logger.profile(`getIncompleteVersionHistory`); // temporarily here to see how if affects the performance
+    const changedVersionHistory: VersionHistory[] = [];
+    await pMapPool(
+      existingDefs,
+      async ({ id, component }) => {
+        if (id.isLocal(this.scope.name)) return;
+        if (!id.hasVersion()) return;
+        if (!component)
+          throw new Error(`importMany, a component for ${id.toString()} is needed for version-history validation`);
+        const versionHistory = await component.getVersionHistory(this.repo);
+        if (versionHistory.isEmpty()) return;
+        const ref = component.getRef(id.version as string);
+        if (!ref) throw new Error(`importMany, a ref for ${id.toString()} is needed for version-history validation`);
+        const isComplete = versionHistory.isGraphCompleteSince(ref);
+        if (!isComplete) {
+          incompleteVersionHistory.push(id);
+        }
+        if (versionHistory.hasChanged) changedVersionHistory.push(versionHistory);
+      },
+      { concurrency: concurrentComponentsLimit() }
+    );
+    if (changedVersionHistory.length) {
+      await this.repo.writeObjectsToTheFS(changedVersionHistory);
+    }
+    if (incompleteVersionHistory.length) {
+      const ids = incompleteVersionHistory.map((id) => id.toString()).join('\n');
+      logger.warn(`the following components have incomplete VersionHistory object:\n${ids}`);
+    }
+    logger.profile(`getIncompleteVersionHistory`);
+    return incompleteVersionHistory;
   }
 
   /**
@@ -211,7 +262,7 @@ export default class ScopeComponentsImporter {
     await this.importWithoutDeps(BitIds.fromArray(missingHistory).toVersionLatest(), {
       cache: false,
       collectParents: true,
-      includeVersionHistory: true, // probably not needed
+      includeVersionHistory: true,
     });
   }
 
