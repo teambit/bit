@@ -11,7 +11,8 @@ export type RenameOptions = {
 
 export class RenameCmd implements Command {
   name = 'rename <current-name> <new-name>';
-  description = 'rename component. if tagged/exported, create a new component and deprecate the original component';
+  description =
+    'rename component. if tagged/exported, create a new component and deprecate the original component. otherwise just renames current component';
   helpUrl = 'docs/components/renaming-components';
   arguments = [
     {
@@ -31,7 +32,7 @@ export class RenameCmd implements Command {
     [
       'p',
       'path <relative-path>',
-      'relative path in the workspace to place new component in. by default the path uses your workspace\'s "defaultScope" value',
+      'relative path in the workspace to place new component in. by default, the directory of the new component is from your workspace\'s "defaultScope" value',
     ],
     ['r', 'refactor', 'update the import/require statements in all dependent components (in the same workspace)'],
     ['', 'preserve', 'avoid renaming files and variables/classes according to the new component name'],

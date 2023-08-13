@@ -9,7 +9,7 @@ export type RecoverOptions = {
 
 export class RecoverCmd implements Command {
   name = 'recover <component-name>';
-  description = 'EXPERIMENTAL. recover component(s) soft-removed from the workspace, or a remote scope';
+  description = 'EXPERIMENTAL. recover component(s) soft-deleted from the workspace, or a remote scope';
   group = 'collaborate';
   options = [
     ['x', 'skip-dependency-installation', 'do not install packages in case of importing components'],
@@ -22,7 +22,7 @@ export class RecoverCmd implements Command {
   async report([componentName]: [string], options: RecoverOptions) {
     const hasRecovered = await this.remove.recover(componentName, options);
     if (!hasRecovered) {
-      throw new BitError(`component ${componentName} was not soft-removed, nothing to recover`);
+      throw new BitError(`component ${componentName} was not soft-deleted, nothing to recover`);
     }
     return chalk.green(`successfully recovered ${componentName}`);
   }
