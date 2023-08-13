@@ -173,7 +173,7 @@
     },
     "babel/bit-react-transformer": {
         "scope": "teambit.react",
-        "version": "0.0.530",
+        "version": "1.0.0",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/bit-react-transformer"
     },
@@ -365,7 +365,7 @@
     },
     "component-version": {
         "scope": "teambit.component",
-        "version": "0.0.409",
+        "version": "1.0.0",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-version"
     },
@@ -797,7 +797,7 @@
     },
     "modules/generate-style-loaders": {
         "scope": "teambit.webpack",
-        "version": "0.0.110",
+        "version": "1.0.0",
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/modules/generate-style-loaders"
     },
@@ -815,7 +815,7 @@
     },
     "modules/mdx-loader": {
         "scope": "teambit.mdx",
-        "version": "0.0.513",
+        "version": "1.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/modules/loader"
     },
@@ -839,7 +839,7 @@
     },
     "modules/packages-excluder": {
         "scope": "teambit.dependencies",
-        "version": "0.0.70",
+        "version": "1.0.0",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/modules/packages-excluder"
     },
@@ -863,7 +863,7 @@
     },
     "modules/style-regexps": {
         "scope": "teambit.webpack",
-        "version": "0.0.139",
+        "version": "1.0.0",
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/style-regexps"
     },
@@ -1259,7 +1259,7 @@
     },
     "tests-results": {
         "scope": "teambit.defender",
-        "version": "0.0.104",
+        "version": "1.0.0",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/tests-results"
     },
@@ -1673,7 +1673,7 @@
     },
     "ui/docs-app": {
         "scope": "teambit.react",
-        "version": "0.0.208",
+        "version": "1.0.0",
         "mainFile": "index.tsx",
         "rootDir": "scopes/react/ui/docs-app"
     },
@@ -1895,13 +1895,13 @@
     },
     "ui/mdx-layout": {
         "scope": "teambit.mdx",
-        "version": "0.0.515",
+        "version": "1.0.0",
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/mdx-layout"
     },
     "ui/mdx-scope-context": {
         "scope": "teambit.mdx",
-        "version": "0.0.498",
+        "version": "1.0.0",
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/mdx-scope-context"
     },
