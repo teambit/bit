@@ -62,6 +62,11 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       'resolve-unrelated [merge-strategy]',
       'relevant when a component on a lane and the component on main have nothing in common. merge-strategy can be "ours" (default) or "theirs"',
     ],
+    [
+      '',
+      'include-non-lane-comps',
+      'when merging main, include workspace components that are not on the lane (by default only lane components are merged)',
+    ],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -90,6 +95,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       resolveUnrelated,
       ignoreConfigChanges,
       verbose = false,
+      includeNonLaneComps = false,
     }: {
       ours: boolean;
       theirs: boolean;
@@ -108,6 +114,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       resolveUnrelated?: string | boolean;
       ignoreConfigChanges?: boolean;
       verbose?: boolean;
+      includeNonLaneComps?: boolean;
     }
   ): Promise<string> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
@@ -144,6 +151,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       resolveUnrelated: getResolveUnrelated(),
       ignoreConfigChanges,
       includeDeps,
+      includeNonLaneComps,
     });
 
     const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });
