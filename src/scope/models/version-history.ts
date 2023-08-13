@@ -158,7 +158,10 @@ export default class VersionHistory extends BitObject {
       .map((v) => {
         const verEdges = v.parents.map((p) => new Edge(v.hash.toString(), p.toString(), 'parent'));
         if (v.unrelated) verEdges.push(new Edge(v.hash.toString(), v.unrelated.toString(), 'unrelated'));
-        if (v.squashed) v.squashed.map((p) => verEdges.push(new Edge(v.hash.toString(), p.toString(), 'squashed')));
+        if (v.squashed) {
+          const squashed = v.squashed.filter((s) => !v.parents.find((p) => p.isEqual(s)));
+          squashed.map((p) => verEdges.push(new Edge(v.hash.toString(), p.toString(), 'squashed')));
+        }
         return verEdges;
       })
       .flat();
