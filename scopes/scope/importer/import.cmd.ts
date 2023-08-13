@@ -86,7 +86,11 @@ export class ImportCmd implements Command {
       'all-history',
       'relevant for fetching all components objects. avoid optimizations, fetch all history versions, always',
     ],
-    ['', 'fetch-deps', 'fetch dependencies (bit components) objects to the local scope, but dont add to the workspace'], // @david is this edit correct? If so, what does this do?
+    [
+      '',
+      'fetch-deps',
+      'fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data',
+    ],
     [
       '',
       'track-only',
