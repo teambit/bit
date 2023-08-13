@@ -23,7 +23,7 @@ export class MergeCmd implements Command {
 and creates snaps for merged components, on the lane.
 if no ids are specified, all pending-merge components will be merged. (run "bit status" to list them).
 optionally use '--abort' to revert the last merge. to revert a lane merge, use "bit lane merge-abort" command.
-${WILDCARD_HELP('merge')}`; // @david does this command auto-snap by default? If so we must document it here
+${WILDCARD_HELP('merge')}`;
   alias = '';
   options = [
     ['', 'ours', 'in case of a conflict, keep the local modification'],
@@ -31,10 +31,10 @@ ${WILDCARD_HELP('merge')}`; // @david does this command auto-snap by default? If
     ['', 'manual', 'in case of a conflict, leave files in conflict state to resolve manually later'],
     ['', 'abort', 'in case of an unresolved merge, revert to pre-merge state'],
     ['', 'resolve', 'mark an unresolved merge as resolved and create a new snap with the changes'],
-    ['', 'no-snap', 'do not auto snap even if the merge completed without conflicts'], // @david please review this change
+    ['', 'no-snap', 'do not auto snap even if the merge completed without conflicts'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['', 'verbose', 'show details of components that were not merged successfully'],
-    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'], // @david what imported components?
+    ['x', 'skip-dependency-installation', 'do not install new dependencies resulting from the merge'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
   ] as CommandOptions;
   loader = true;
@@ -195,7 +195,7 @@ ${mergeSnapError.message}
 
   const getFailureOutput = () => {
     if (!failedComponents || !failedComponents.length) return '';
-    const title = '\n merge skipped for the following component(s)';
+    const title = '\nmerge skipped for the following component(s)';
     const body = compact(
       failedComponents.map((failedComponent) => {
         if (!verbose && failedComponent.unchangedLegitimately) return null;
@@ -204,7 +204,7 @@ ${mergeSnapError.message}
       })
     ).join('\n');
     if (!body) {
-      return `${chalk.bold(`\n merge skipped legitimately for ${failedComponents.length} component(s)`)}
+      return `${chalk.bold(`\nmerge skipped legitimately for ${failedComponents.length} component(s)`)}
 (use --verbose to list them next time)`;
     }
     return `\n${chalk.underline(title)}\n${body}\n\n`;
