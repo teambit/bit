@@ -16,10 +16,11 @@ import { ConfigMergeResult } from './config-merge-result';
 
 export class MergeCmd implements Command {
   name = 'merge [ids...]';
-  description = 'merge changes of the remote head into local';
+  description = 'merge changes of the remote head into local - auto-snaps all merged components';
   helpUrl = 'docs/components/merging-changes';
   group = 'development';
-  extendedDescription = `merge changes of the remote head into local. when on a lane, merge the remote head of the lane into the local.
+  extendedDescription = `merge changes of the remote head into local. when on a lane, merge the remote head of the lane into the local
+and creates snaps for merged components, on the lane.
 if no ids are specified, all pending-merge components will be merged. (run "bit status" to list them).
 optionally use '--abort' to revert the last merge. to revert a lane merge, use "bit lane merge-abort" command.
 ${WILDCARD_HELP('merge')}`; // @david does this command auto-snap by default? If so we must document it here
