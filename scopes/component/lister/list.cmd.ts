@@ -24,7 +24,7 @@ export class ListCmd implements Command {
     ['s', 'scope', 'show only components stored in the local scope, including indirect dependencies'],
     ['o', 'outdated', 'show latest versions from remotes'], // @david description and flag name don't match up. Is this correct?
     ['j', 'json', 'show the output in JSON format'],
-    ['n', 'namespace <string>', 'show only components in the specified namespace by using wildcards'], // @david e.g.?
+    ['n', 'namespace <string>', "show only components in the specified namespace/s e.g. '-n ui' or '*/ui'"],
   ] as CommandOptions;
   loader = true;
   migration = true;
