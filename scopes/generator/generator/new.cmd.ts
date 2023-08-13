@@ -17,7 +17,7 @@ export class NewCmd implements Command {
     {
       name: 'template-name',
       description:
-        "the name of the workspace template (run 'bit templates', outside of a workspace, to get a list of available workspace templates)",
+        "the name of the workspace template (run 'bit templates' outside of a workspace to get a list of available workspace templates)",
     },
     {
       name: 'workspace-name',
