@@ -18,6 +18,7 @@ import { DuplicateComponentAndPackage } from './duplicate-component-and-package'
 import { MergeConfigHasConflict } from './merge-config-has-conflict';
 import { NonLoadedEnv } from './non-loaded-env';
 import { ExternalEnvWithoutVersion } from './external-env-without-version';
+import { RemovedDependencies } from './removed-dependencies';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -39,6 +40,7 @@ export const IssuesClasses = {
   MergeConfigHasConflict,
   NonLoadedEnv,
   ExternalEnvWithoutVersion,
+  RemovedDependencies,
 };
 export type IssuesNames = keyof typeof IssuesClasses;
 

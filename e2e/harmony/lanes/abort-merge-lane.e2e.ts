@@ -47,4 +47,27 @@ describe('bit lane merge-abort command', function () {
       expect(comp1Content).to.not.include('v2');
     });
   });
+  describe('when the merged lane introduced new components', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.fixtures.populateComponents(2, undefined, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('lane-a', '-x');
+      helper.command.mergeLane(`${helper.scopes.remote}/lane-b`, '-x');
+      helper.fs.expectDirToExist(`${helper.scopes.remote}/comp2`);
+      helper.command.mergeAbortLane('-x');
+    });
+    it('should delete the newly introduced component root-dirs', () => {
+      helper.fs.expectPathNotToExist(`${helper.scopes.remote}/comp2`);
+    });
+  });
 });

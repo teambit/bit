@@ -186,7 +186,7 @@ export async function getAllVersionParents({
   versionParentsFromObjects?: VersionParents[];
   missingRefsFromVersionHistory?: Ref[];
 }): Promise<VersionParents[]> {
-  const versionHistory = await modelComponent.GetVersionHistory(repo);
+  const versionHistory = await modelComponent.getVersionHistory(repo);
   const versionParents: VersionParents[] = [];
   const push = (versionParentsItem: VersionParents) => {
     const existing = versionParents.find((v) => v.hash.isEqual(versionParentsItem.hash));

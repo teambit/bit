@@ -277,6 +277,33 @@ export class DependenciesBlameCmd implements Command {
   }
 }
 
+export class DependenciesUsageCmd implements Command {
+  name = 'usage <dependency-name>';
+  arguments = [
+    {
+      name: 'dependency-name',
+      description:
+        'package-name. for components, you can use either component-id or package-name. if version is specified, it will search for the exact version',
+    },
+  ];
+  group = 'info';
+  description = 'EXPERIMENTAL. find components that use the specified dependency';
+  alias = '';
+  options = [] as CommandOptions;
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([depName]: [string]) {
+    const results = await this.deps.usage(depName);
+    if (!Object.keys(results).length) {
+      return chalk.yellow(`the specified dependency ${depName} is not used by any component`);
+    }
+    return Object.keys(results)
+      .map((compIdStr) => `${chalk.bold(compIdStr)} (using dep in version ${results[compIdStr]})`)
+      .join('\n');
+  }
+}
+
 export class DependenciesCmd implements Command {
   name = 'deps <sub-command>';
   alias = 'dependencies';

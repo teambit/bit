@@ -1,6 +1,7 @@
 import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy/dist/constants';
 import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import React from 'react';
+import { uniq } from 'lodash';
 import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { GlobalConfigMain } from '@teambit/global-config';
@@ -100,9 +101,9 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
     );
     tasksQueue.validate();
     this.logger.info(`going to run tasks in the following order:\n${tasksQueue.toString()}`);
-    const title = `running ${this.displayPipeName} pipe for ${envs.length} environments, total ${tasksQueue.length} tasks`;
-    const longProcessLogger = this.logger.createLongProcessLogger(title);
-    this.logger.consoleTitle(title);
+    const envsStr = envs.map((env) => env.id).join(', ');
+    const title = `Running ${this.displayPipeName} pipeline using ${envs.length} environment(s) (${envsStr}), total ${tasksQueue.length} tasks`;
+    const longProcessLogger = this.logger.createLongProcessLogger(title, undefined, 'title');
     const envsBuildContext: EnvsBuildContext = {};
     const capsulesBaseDir = this.getComponentsCapsulesBaseDir();
 
@@ -135,17 +136,21 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
       });
       envsBuildContext[executionContext.id] = buildContext;
     });
+    const envIdsWithoutVersion = envs.map((env) => env.id.split('@')[0]);
     const buildPipe = new BuildPipe(
       tasksQueue,
       envsBuildContext,
       this.logger,
       this.artifactFactory,
       options.previousTasksResults,
-      { exitOnFirstFailedTask: options.exitOnFirstFailedTask }
+      {
+        exitOnFirstFailedTask: options.exitOnFirstFailedTask,
+        showEnvNameInOutput: envs.length > 1,
+        showEnvVersionInOutput: envIdsWithoutVersion.length > uniq(envIdsWithoutVersion).length,
+      }
     );
     const buildResults = await buildPipe.execute();
-    longProcessLogger.end();
-    buildResults.hasErrors() ? this.logger.consoleFailure() : this.logger.consoleSuccess();
+    longProcessLogger.end(buildResults.hasErrors() ? 'error' : 'success');
 
     return buildResults;
   }
