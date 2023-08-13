@@ -105,9 +105,8 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
         exitOnFirstFailedTask: failFast,
       }
     );
-    longProcessLogger.end();
+    longProcessLogger.end(envsExecutionResults.hasErrors() ? 'error' : 'success');
     envsExecutionResults.throwErrorsIfExist();
-    this.logger.consoleSuccess();
     return chalk.green(`the build has been completed. total: ${envsExecutionResults.tasksQueue.length} tasks`);
   }
 
