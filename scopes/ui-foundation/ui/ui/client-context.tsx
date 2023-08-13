@@ -13,7 +13,7 @@ export function ClientContext({ children }: { children: ReactNode }) {
   const [loaderApi, isLoading] = useLoaderApi();
 
   return (
-    <React.StrictMode>
+    <>
       {/* TODO - try moving LoaderContext to contextSlot, and LoaderRibbon to hudSlot */}
       <LoaderContext.Provider value={loaderApi}>
         <IconFont query="q76y7n" />
@@ -24,6 +24,6 @@ export function ClientContext({ children }: { children: ReactNode }) {
           <TooltipMountPoint />
         </ThemeSwitcher>
       </LoaderContext.Provider>
-    </React.StrictMode>
+    </>
   );
 }
