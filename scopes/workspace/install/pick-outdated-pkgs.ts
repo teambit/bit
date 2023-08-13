@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import colorizeSemverDiff from '@pnpm/colorize-semver-diff';
 import semverDiff from '@pnpm/semver-diff';
 import { OutdatedPkg } from '@teambit/dependency-resolver';
@@ -96,11 +97,11 @@ export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
 }
 
 export interface MergedOutdatedPkg extends OutdatedPkg {
-  dependentComponents?: string[];
+  dependentComponents?: ComponentID[];
   hasDifferentRanges?: boolean;
 }
 
-function mergeOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): MergedOutdatedPkg[] {
+export function mergeOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): MergedOutdatedPkg[] {
   const mergedOutdatedPkgs: Record<
     string,
     MergedOutdatedPkg & Required<Pick<MergedOutdatedPkg, 'dependentComponents'>>

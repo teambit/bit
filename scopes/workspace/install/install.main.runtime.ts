@@ -5,7 +5,7 @@ import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/com
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { compact, mapValues, omit, uniq, pick, intersection } from 'lodash';
+import { compact, mapValues, omit, uniq, pick, intersection, partition } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
@@ -41,7 +41,7 @@ import { snapToSemver } from '@teambit/component-package-version';
 import hash from 'object-hash';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
-import { pickOutdatedPkgs } from './pick-outdated-pkgs';
+import { MergedOutdatedPkg, mergeOutdatedPkgs, pickOutdatedPkgs } from './pick-outdated-pkgs';
 import { LinkCommand } from './link';
 import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
@@ -593,19 +593,37 @@ export class InstallMain {
       patterns: options.patterns,
       forceVersionBump: options.forceVersionBump,
     });
-    let outdatedPkgsToUpdate!: OutdatedPkg[];
+    const mergedOutdatedPkgs = mergeOutdatedPkgs(outdatedPkgs);
+    let outdatedPkgsToUpdate!: MergedOutdatedPkg[];
     if (options.all) {
-      outdatedPkgsToUpdate = outdatedPkgs;
+      outdatedPkgsToUpdate = mergedOutdatedPkgs;
     } else {
       this.logger.off();
-      outdatedPkgsToUpdate = await pickOutdatedPkgs(outdatedPkgs);
+      outdatedPkgsToUpdate = await pickOutdatedPkgs(mergedOutdatedPkgs);
       this.logger.on();
     }
     if (outdatedPkgsToUpdate.length === 0) {
       this.logger.consoleSuccess('No outdated dependencies found');
       return null;
     }
-    const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgsToUpdate, {
+    const [outdatedPkgs1, outdatedPkgs2] = partition(
+      outdatedPkgsToUpdate,
+      (outdatedPkg) => outdatedPkg.source === 'rootPolicy' && outdatedPkg.dependentComponents
+    );
+    for (const outdatedPkg of outdatedPkgs1) {
+      for (const componentId of outdatedPkg.dependentComponents!) {
+        const config = {
+          policy: {
+            [outdatedPkg.targetField]: {
+              [outdatedPkg.name]: outdatedPkg.latestRange,
+            },
+          },
+        };
+        await this.workspace.addSpecificComponentConfig(componentId, DependencyResolverAspect.id, config, true, true);
+      }
+    }
+    await this.workspace.bitMap.write();
+    const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgs2, {
       variantPoliciesByPatterns,
       componentPoliciesById,
     });

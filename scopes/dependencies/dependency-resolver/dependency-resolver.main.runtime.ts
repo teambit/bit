@@ -1431,7 +1431,7 @@ export class DependencyResolverMain {
             .map((dep) => ({
               name: dep.getPackageName!(), // eslint-disable-line
               version: dep.version,
-              componentId: component.id.toString(),
+              componentId: component.id,
               lifecycleType: dep.lifecycle,
             }));
         })

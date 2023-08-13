@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import { ManifestDependenciesKeysNames } from './manifest';
 import { VariantPolicyConfigObject, WorkspacePolicy } from './policy';
 import { DependencyLifecycleType } from './dependencies/dependency';
@@ -8,7 +9,8 @@ type CurrentPkg = {
   currentRange: string;
   source: 'variants' | 'component' | 'rootPolicy' | 'component-model';
   variantPattern?: string | null;
-  componentId?: string;
+  componentId?: ComponentID;
+
   targetField: ManifestDependenciesKeysNames;
 };
 
@@ -19,7 +21,7 @@ export type OutdatedPkg = CurrentPkg & {
 export type ComponentModelVersion = {
   name: string;
   version: string;
-  componentId: string;
+  componentId: ComponentID;
   lifecycleType: DependencyLifecycleType;
 };
 

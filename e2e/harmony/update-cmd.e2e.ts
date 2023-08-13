@@ -97,6 +97,18 @@ describe('update command', function () {
         expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal('1.0.0');
       });
     });
+    describe.only('policies added by deps set', function () {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.dependenciesSet('comp1', 'is-negative@1.0.0');
+        helper.command.update('--yes');
+      });
+      it('should update the version range', function () {
+        const showOutput = helper.command.showComponentParsed('comp1');
+        expect(showOutput.packageDependencies['is-negative']).not.to.equal('1.0.0');
+      });
+    });
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('updates dependencies from the model', () => {
     let configFile;
