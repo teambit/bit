@@ -1,1 +1,1 @@
-export { getComponentPackageVersion, snapToSemver } from './component-package-version';
+export { getComponentPackageVersion, snapToSemver, SNAP_VERSION_PREFIX } from './component-package-version';

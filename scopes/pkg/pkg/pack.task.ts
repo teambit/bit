@@ -8,6 +8,7 @@ import { Packer } from './packer';
  */
 export class PackTask implements BuildTask {
   readonly name = 'PackComponents';
+  readonly description = 'Packing components into a .tgz file';
   readonly location: TaskLocation = 'end';
   readonly dependencies = [TypescriptAspect.id];
   constructor(readonly aspectId: string, private packer: Packer, private logger: Logger) {}
