@@ -212,34 +212,7 @@ describe('skipping compilation on install', function () {
   });
 });
 
-// TODO: temporary disabled as it fails on CI -
-// need to be enabled once we update this chain to grid-component 1.0.2
-// @teambit/react.react-env 0.1.18
-//├─┬ @teambit/docs.docs-template 0.0.12
-//│ └─┬ @teambit/react.ui.docs-app 0.0.207
-//│   └─┬ @teambit/react.ui.docs.properties-table 0.0.12
-//│     └─┬ @teambit/documenter.ui.property-table 4.1.3
-//│       ├─┬ @teambit/documenter.ui.table 4.1.2
-//│       │ ├─┬ @teambit/documenter.ui.table-heading-row 4.0.4
-//│       │ │ └── @teambit/base-ui.layout.grid-component 1.0.1
-//│       │ └─┬ @teambit/documenter.ui.table-row 4.1.2
-//│       │   └── @teambit/base-ui.layout.grid-component 1.0.1
-//│       └─┬ @teambit/documenter.ui.table-row 4.1.2
-//│         └── @teambit/base-ui.layout.grid-component 1.0.1
-//└─┬ @teambit/preview.react-preview 0.0.42
-//  └─┬ @teambit/docs.docs-template 0.0.12
-//    └─┬ @teambit/react.ui.docs-app 0.0.207
-//      └─┬ @teambit/react.ui.docs.properties-table 0.0.12
-//        └─┬ @teambit/documenter.ui.property-table 4.1.3
-//          ├─┬ @teambit/documenter.ui.table 4.1.2
-//          │ ├─┬ @teambit/documenter.ui.table-heading-row 4.0.4
-//          │ │ └── @teambit/base-ui.layout.grid-component 1.0.1
-//          │ └─┬ @teambit/documenter.ui.table-row 4.1.2
-//          │   └── @teambit/base-ui.layout.grid-component 1.0.1
-//          └─┬ @teambit/documenter.ui.table-row 4.1.2
-//            └── @teambit/base-ui.layout.grid-component 1.0.1
-
-describe.skip('do not fail on environment loading files from a location inside node_modules that does not exist', function () {
+describe('do not fail on environment loading files from a location inside node_modules that does not exist', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
