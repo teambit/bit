@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { getMergeStrategy, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { mergeReport } from '@teambit/merging';
 import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
@@ -29,12 +29,17 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
   ];
   alias = '';
   options = [
-    ['', 'ours', 'in case of a conflict, keep local modifications'],
-    ['', 'theirs', 'in case of a conflict, override local with incoming changes'],
-    ['', 'manual', 'in case of a conflict, leave the files in conflict state to resolve manually later'],
-    ['', 'workspace', 'merge only lane components that are in the workspace'],
-    ['', 'no-snap', 'do not auto snap, even when merge completed without conflicts'],
-    ['', 'tag', 'tag all lane components after merging into main (or tag-merge in case of snap-merge)'],
+    ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. in case of a conflict, keep local modifications'],
+    ['', 'theirs', 'DEPRECATED. use --auto-merge-resolve. in case of a conflict, override local with incoming changes'],
+    ['', 'manual', 'DEPRECATED. use --auto-merge-resolve'],
+    [
+      '',
+      'auto-merge-resolve <merge-strategy>',
+      'in case of a merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
+    ],
+    ['', 'workspace', 'merge only lane components that are in the current workspace'],
+    ['', 'no-snap', 'do not auto snap after merge completed without conflicts'],
+    ['', 'tag', 'auto-tag all lane components after merging into main (or tag-merge in case of snap-merge)'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
@@ -78,9 +83,10 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
   async report(
     [name, pattern]: [string, string],
     {
-      ours = false,
-      theirs = false,
-      manual = false,
+      ours,
+      theirs,
+      manual,
+      autoMergeResolve,
       build,
       workspace: existingOnWorkspaceOnly = false,
       squash = false,
@@ -97,9 +103,10 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       verbose = false,
       includeNonLaneComps = false,
     }: {
-      ours: boolean;
-      theirs: boolean;
-      manual: boolean;
+      ours?: boolean;
+      theirs?: boolean;
+      manual?: boolean;
+      autoMergeResolve?: string;
       workspace?: boolean;
       build?: boolean;
       noSnap: boolean;
@@ -118,7 +125,20 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     }
   ): Promise<string> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
-    const mergeStrategy = getMergeStrategy(ours, theirs, manual);
+    if (ours || theirs || manual) {
+      throw new BitError(
+        'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead. see "bit lane merge --help" for more information'
+      );
+    }
+    if (
+      autoMergeResolve &&
+      autoMergeResolve !== 'ours' &&
+      autoMergeResolve !== 'theirs' &&
+      autoMergeResolve !== 'manual'
+    ) {
+      throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
+    }
+    const mergeStrategy = autoMergeResolve;
     if (noSnap && snapMessage) throw new BitError('unable to use "no-snap" and "message" flags together');
     if (includeDeps && !pattern && !existingOnWorkspaceOnly) {
       throw new BitError(`"--include-deps" flag is relevant only for --workspace and --pattern flags`);
@@ -138,6 +158,8 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       build,
       // @ts-ignore
       mergeStrategy,
+      ours,
+      theirs,
       existingOnWorkspaceOnly,
       noSnap,
       snapMessage,

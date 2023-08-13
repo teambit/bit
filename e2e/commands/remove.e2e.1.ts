@@ -421,4 +421,18 @@ describe('bit remove command', function () {
       expect(() => helper.command.importComponent('comp2')).to.not.throw();
     });
   });
+
+  describe('soft remove on lane then tagging the dependent without removing the references to the removed component', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.command.softRemoveComponent('comp2');
+    });
+    it('bit status should show RemovedDependency issue', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.RemovedDependencies.name);
+    });
+  });
 });

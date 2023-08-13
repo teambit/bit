@@ -118,7 +118,7 @@ export default class VisualDependencyGraph {
     const edges = clearGraph.edges;
 
     nodes.forEach((node) => {
-      graph.addNode(node);
+      graph.addNode(node.id);
     });
     edges.forEach((edge) => {
       const edgeType = edge.attr;

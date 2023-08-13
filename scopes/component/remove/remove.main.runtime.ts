@@ -11,7 +11,12 @@ import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/li
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { IssuesClasses } from '@teambit/component-issues';
+import IssuesAspect, { IssuesMain } from '@teambit/issues';
+import pMapSeries from 'p-map-series';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
+import { VersionNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { removeComponentsFromNodeModules } from '@teambit/legacy/dist/consumer/component/package-json-utils';
 import { RemoveCmd } from './remove-cmd';
 import { removeComponents } from './remove-components';
@@ -23,10 +28,19 @@ const BEFORE_REMOVE = 'removing components';
 
 export type RemoveInfo = {
   removed: boolean;
+  /**
+   * whether to remove the component from default lane once merged
+   */
+  removeOnMain?: boolean;
 };
 
 export class RemoveMain {
-  constructor(private workspace: Workspace, public logger: Logger, private importer: ImporterMain) {}
+  constructor(
+    private workspace: Workspace,
+    public logger: Logger,
+    private importer: ImporterMain,
+    private depResolver: DependencyResolverMain
+  ) {}
 
   async remove({
     componentsPattern,
@@ -81,7 +95,7 @@ export class RemoveMain {
     return results;
   }
 
-  async markRemoveComps(componentIds: ComponentID[]) {
+  async markRemoveComps(componentIds: ComponentID[], shouldUpdateMain = false) {
     const components = await this.workspace.getMany(componentIds);
     await removeComponentsFromNodeModules(
       this.workspace.consumer,
@@ -89,11 +103,9 @@ export class RemoveMain {
     );
     // don't use `this.workspace.addSpecificComponentConfig`, if the component has component.json it will be deleted
     // during this removal along with the entire component dir.
-    componentIds.map((compId) =>
-      this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, {
-        removed: true,
-      })
-    );
+    const config: RemoveInfo = { removed: true };
+    if (shouldUpdateMain) config.removeOnMain = true;
+    componentIds.map((compId) => this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, config));
     await this.workspace.bitMap.write();
     const bitIds = BitIds.fromArray(componentIds.map((id) => id._legacy));
     await deleteComponentsFiles(this.workspace.consumer, bitIds);
@@ -163,11 +175,24 @@ export class RemoveMain {
       return true;
     }
     const compId = await this.workspace.scope.resolveComponentId(compIdStr);
-    const compFromScope = await this.workspace.scope.get(compId);
+    const currentLane = await this.workspace.getCurrentLaneObject();
+    const idOnLane = currentLane?.getComponent(compId._legacy);
+    const compIdWithPossibleVer = idOnLane ? compId.changeVersion(idOnLane.head.toString()) : compId;
+    let compFromScope: Component | undefined;
+    try {
+      compFromScope = await this.workspace.scope.get(compIdWithPossibleVer);
+    } catch (err: any) {
+      if (err instanceof VersionNotFound && err.version === '0.0.0') {
+        throw new BitError(
+          `unable to find the component ${compIdWithPossibleVer.toString()} in the current lane or main`
+        );
+      }
+      throw err;
+    }
     if (compFromScope && this.isRemoved(compFromScope)) {
       // case #2 and #3
-      await importComp(compId._legacy.toString());
-      await setAsRemovedFalse(compId);
+      await importComp(compIdWithPossibleVer._legacy.toString());
+      await setAsRemovedFalse(compIdWithPossibleVer);
       return true;
     }
     // case #5
@@ -204,10 +229,45 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
   }
 
   /**
+   * performant version of isRemoved() in case the component object is not available and loading it is expensive.
+   */
+  async isRemovedByIdWithoutLoadingComponent(componentId: ComponentID): Promise<boolean> {
+    if (!componentId.hasVersion()) return false;
+    const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(componentId);
+    if (bitmapEntry && bitmapEntry.isRemoved()) return true;
+    const modelComp = await this.workspace.scope.getBitObjectModelComponent(componentId);
+    if (!modelComp) return false;
+    const versionObj = await this.workspace.scope.getBitObjectVersion(modelComp, componentId.version);
+    if (!versionObj) return false;
+    return versionObj.isRemoved();
+  }
+
+  /**
    * get components that were soft-removed and tagged/snapped/merged but not exported yet.
    */
   async getRemovedStaged(): Promise<ComponentID[]> {
     return this.workspace.isOnMain() ? this.getRemovedStagedFromMain() : this.getRemovedStagedFromLane();
+  }
+
+  async addRemovedDependenciesIssues(components: Component[]) {
+    await pMapSeries(components, async (component) => {
+      await this.addRemovedDepIssue(component);
+    });
+  }
+
+  private async addRemovedDepIssue(component: Component) {
+    const dependencies = await this.depResolver.getComponentDependencies(component);
+    const removedWithUndefined = await Promise.all(
+      dependencies.map(async (dep) => {
+        const isRemoved = await this.isRemovedByIdWithoutLoadingComponent(dep.componentId);
+        if (isRemoved) return dep.componentId;
+        return undefined;
+      })
+    );
+    const removed = compact(removedWithUndefined).map((id) => id.toString());
+    if (removed.length) {
+      component.state.issues.getOrCreate(IssuesClasses.RemovedDependencies).data = removed;
+    }
   }
 
   private async getRemovedStagedFromMain(): Promise<ComponentID[]> {
@@ -260,18 +320,29 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
   }
 
   static slots = [];
-  static dependencies = [WorkspaceAspect, CLIAspect, LoggerAspect, ComponentAspect, ImporterAspect];
+  static dependencies = [
+    WorkspaceAspect,
+    CLIAspect,
+    LoggerAspect,
+    ComponentAspect,
+    ImporterAspect,
+    DependencyResolverAspect,
+    IssuesAspect,
+  ];
   static runtime = MainRuntime;
 
-  static async provider([workspace, cli, loggerMain, componentAspect, importerMain]: [
+  static async provider([workspace, cli, loggerMain, componentAspect, importerMain, depResolver, issues]: [
     Workspace,
     CLIMain,
     LoggerMain,
     ComponentMain,
-    ImporterMain
+    ImporterMain,
+    DependencyResolverMain,
+    IssuesMain
   ]) {
     const logger = loggerMain.createLogger(RemoveAspect.id);
-    const removeMain = new RemoveMain(workspace, logger, importerMain);
+    const removeMain = new RemoveMain(workspace, logger, importerMain, depResolver);
+    issues.registerAddComponentsIssues(removeMain.addRemovedDependenciesIssues.bind(removeMain));
     componentAspect.registerShowFragments([new RemoveFragment(removeMain)]);
     cli.register(new RemoveCmd(removeMain, workspace), new RecoverCmd(removeMain));
     return removeMain;

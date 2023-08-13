@@ -353,7 +353,7 @@ in case the components are not yet part of the lane or the lane is new, it simpl
     [
       '',
       'update-main',
-      'NOT IMPLEMENTED YET. remove, i.e. delete, component/s on the main lane after merging this lane into main',
+      'EXPERIMENTAL. remove, i.e. delete, component/s on the main lane after merging this lane into main',
     ],
   ] as CommandOptions;
   loader = true;
@@ -362,7 +362,6 @@ in case the components are not yet part of the lane or the lane is new, it simpl
   constructor(private workspace: Workspace, private lanes: LanesMain) {}
 
   async report([componentsPattern]: [string], removeCompsOpts: RemoveCompsOpts): Promise<string> {
-    if (removeCompsOpts.updateMain) throw new Error('not implemented yet');
     if (!this.workspace) throw new OutsideWorkspaceError();
     if (this.workspace.isOnMain()) {
       throw new Error(`error: you're checked out to main, please use "bit remove" instead`);

@@ -10,7 +10,7 @@ import {
   getAddedOutput,
 } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy/dist/constants';
-import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
@@ -43,9 +43,18 @@ export class CheckoutCmd implements Command {
       'interactive-merge',
       'when a component is modified and the merge process found conflicts, display options to resolve them',
     ],
-    ['o', 'ours', 'in case of merge conflict, override incoming version with the current modification'],
-    ['t', 'theirs', 'in case of merge conflict, override the current modifications with incoming version'],
-    ['m', 'manual', 'in case of merge conflict, leave the files in conflict state to resolve them manually later'],
+    ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. In the future, this flag will leave the current code intact'],
+    [
+      '',
+      'theirs',
+      'DEPRECATED. use --auto-merge-resolve. In the future, this flag will override the current code with the incoming code',
+    ],
+    ['', 'manual', 'DEPRECATED. use --auto-merge-resolve'],
+    [
+      '',
+      'auto-merge-resolve <merge-strategy>',
+      'in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
+    ],
     ['r', 'reset', 'revert changes that were not snapped/tagged'],
     ['a', 'all', 'all components'],
     [
@@ -67,6 +76,7 @@ export class CheckoutCmd implements Command {
       ours = false,
       theirs = false,
       manual = false,
+      autoMergeResolve,
       all = false,
       workspaceOnly = false,
       verbose = false,
@@ -77,6 +87,7 @@ export class CheckoutCmd implements Command {
       ours?: boolean;
       theirs?: boolean;
       manual?: boolean;
+      autoMergeResolve?: MergeStrategy;
       all?: boolean;
       workspaceOnly?: boolean;
       verbose?: boolean;
@@ -84,9 +95,22 @@ export class CheckoutCmd implements Command {
       revert?: boolean;
     }
   ) {
+    if (ours || theirs || manual) {
+      throw new BitError(
+        'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead.'
+      );
+    }
+    if (
+      autoMergeResolve &&
+      autoMergeResolve !== 'ours' &&
+      autoMergeResolve !== 'theirs' &&
+      autoMergeResolve !== 'manual'
+    ) {
+      throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
+    }
     const checkoutProps: CheckoutProps = {
       promptMergeOptions: interactiveMerge,
-      mergeStrategy: getMergeStrategy(ours, theirs, manual),
+      mergeStrategy: autoMergeResolve,
       all,
       verbose,
       isLane: false,
