@@ -11,14 +11,14 @@ const bundleDir = `${rootOutDir}/bundle`;
 const appFile = 'bit.app.js';
 
 async function runBundle() {
-  // const esbuildRes = await runEsbuild(rootOutDir, appFile);
-  const tsupRes = await runTsup(bundleDir, appFile);
+  const esbuildRes = await runEsbuild(bundleDir, appFile);
+  // const tsupRes = await runTsup(bundleDir, appFile);
   await generateCoreAspectsModules(rootOutDir, appFile);
   generateNpmrc(rootOutDir);
   await generatePackageJson(rootOutDir);
   await generateCoreAspectsBarrelFile();
-  // return esbuildRes;
-  return tsupRes;
+  return esbuildRes;
+  // return tsupRes;
 }
 
 runBundle().then((res) => console.log(JSON.stringify(res, null, 2)));
