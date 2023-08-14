@@ -1,6 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import { existsSync, readdir } from 'fs-extra';
-import { join, resolve } from 'path';
+import { basename, dirname, join, resolve } from 'path';
 import { Config } from '@teambit/bvm.config';
 
 let _bvmConfig;
@@ -15,11 +15,24 @@ function getAspectDirFromPath(id: string, pathsToResolveAspects?: string[]): str
   } else {
     moduleDirectory = require.resolve(packageName);
   }
-  const dirPath = join(moduleDirectory, '../..'); // to remove the "index.js" at the end
+  const dirPath = getCoreAspectDirFromPath(moduleDirectory);
   if (!existsSync(dirPath)) {
     throw new Error(`unable to find ${aspectName} in ${dirPath}`);
   }
   return dirPath;
+}
+
+function getCoreAspectDirFromPath(resolvedModulesPath: string): string {
+  if (!resolvedModulesPath.includes('@teambit')) {
+    throw new Error(`unable to find core aspect in ${resolvedModulesPath}`);
+  }
+  let currentDir = resolvedModulesPath;
+  let parentDir = dirname(currentDir);
+  while (basename(parentDir) !== '@teambit') {
+    currentDir = parentDir;
+    parentDir = dirname(currentDir);
+  }
+  return currentDir;
 }
 
 export function getAspectDir(id: string): string {
