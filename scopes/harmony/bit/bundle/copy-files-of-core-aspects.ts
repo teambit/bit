@@ -80,5 +80,5 @@ async function handleOnePath(srcDir: string, targetDir: string, path: string) {
   if (exists) {
     await fs.remove(targetPath);
   }
-  return fs.copy(srcPath, targetPath);
+  return fs.copy(srcPath, targetPath, { dereference: true });
 }
