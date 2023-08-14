@@ -48,16 +48,16 @@ export function applyUpdates(
         }
         break;
       case 'component':
-        if (outdatedPkg.componentId) {
-          updatedComponents.add(outdatedPkg.componentId);
-          if (componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name].version) {
-            componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name].version =
-              outdatedPkg.latestRange;
-          } else {
-            componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name] =
-              outdatedPkg.latestRange;
-          }
-        }
+        // if (outdatedPkg.componentId) {
+        // updatedComponents.add(outdatedPkg.componentId);
+        // if (componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name].version) {
+        // componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name].version =
+        // outdatedPkg.latestRange;
+        // } else {
+        // componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name] =
+        // outdatedPkg.latestRange;
+        // }
+        // }
         break;
       default:
         throw new Error(`Unsupported policy source for update: ${outdatedPkg.source}`);

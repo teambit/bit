@@ -1401,14 +1401,14 @@ export class DependencyResolverMain {
   async getOutdatedPkgsFromPolicies({
     rootDir,
     variantPoliciesByPatterns,
-    componentPoliciesById,
+    componentPolicies,
     components,
     patterns,
     forceVersionBump,
   }: {
     rootDir: string;
     variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
-    componentPoliciesById: Record<string, any>;
+    componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
     components: Component[];
     patterns?: string[];
     forceVersionBump?: 'major' | 'minor' | 'patch';
@@ -1441,7 +1441,7 @@ export class DependencyResolverMain {
     let allPkgs = getAllPolicyPkgs({
       rootPolicy: this.getWorkspacePolicyFromConfig(),
       variantPoliciesByPatterns,
-      componentPoliciesById,
+      componentPolicies,
       componentModelVersions,
     });
     if (patterns?.length) {

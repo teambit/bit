@@ -581,14 +581,14 @@ export class InstallMain {
     patterns?: string[];
     all: boolean;
   }): Promise<ComponentMap<string> | null> {
-    const { componentConfigFiles, componentPoliciesById } = await this._getComponentsWithDependencyPolicies();
+    const { componentConfigFiles, componentPolicies } = await this._getComponentsWithDependencyPolicies();
     const variantPatterns = this.variants.raw();
     const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
     const components = await this.workspace.list();
     const outdatedPkgs = await this.dependencyResolver.getOutdatedPkgsFromPolicies({
       rootDir: this.workspace.path,
       variantPoliciesByPatterns,
-      componentPoliciesById,
+      componentPolicies,
       components,
       patterns: options.patterns,
       forceVersionBump: options.forceVersionBump,
@@ -605,13 +605,15 @@ export class InstallMain {
       this.logger.consoleSuccess('No outdated dependencies found');
       return null;
     }
-    // console.log(
+    console.log(outdatedPkgsToUpdate);
     const [outdatedPkgs1, outdatedPkgs2] = partition(
       outdatedPkgsToUpdate,
-      (outdatedPkg) => outdatedPkg.source === 'rootPolicy' && outdatedPkg.dependentComponents && !outdatedPkg.isAuto
+      (outdatedPkg) =>
+        outdatedPkg.source === 'component' ||
+        (outdatedPkg.source === 'rootPolicy' && outdatedPkg.dependentComponents && !outdatedPkg.isAuto)
     );
     for (const outdatedPkg of outdatedPkgs1) {
-      for (const componentId of outdatedPkg.dependentComponents!) {
+      for (const componentId of outdatedPkg.dependentComponents ?? [outdatedPkg.componentId!]) {
         const config = {
           policy: {
             [outdatedPkg.targetField]: {
@@ -625,7 +627,7 @@ export class InstallMain {
     await this.workspace.bitMap.write();
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgs2, {
       variantPoliciesByPatterns,
-      componentPoliciesById,
+      componentPoliciesById: {},
     });
     await this._updateVariantsPolicies(variantPatterns, updatedVariants);
     const updatedComponentConfigFiles = Object.values(pick(componentConfigFiles, updatedComponents));
@@ -649,7 +651,7 @@ export class InstallMain {
   private async _getComponentsWithDependencyPolicies() {
     const allComponentIds = await this.workspace.listIds();
     const componentConfigFiles: Record<string, ComponentConfigFile> = {};
-    const componentPoliciesById: Record<string, any> = {};
+    const componentPolicies = [] as Array<{ componentId: ComponentID; policy: any }>;
     (
       await Promise.all<ComponentConfigFile | undefined>(
         allComponentIds.map((componentId) => this.workspace.componentConfigFile(componentId))
@@ -658,13 +660,13 @@ export class InstallMain {
       if (!componentConfigFile) return;
       const depResolverConfig = componentConfigFile.aspects.get(DependencyResolverAspect.id);
       if (!depResolverConfig) return;
-      const componentId = allComponentIds[index].toString();
-      componentConfigFiles[componentId] = componentConfigFile;
-      componentPoliciesById[componentId] = depResolverConfig.config.policy;
+      const componentId = allComponentIds[index];
+      componentConfigFiles[componentId.toString()] = componentConfigFile;
+      componentPolicies.push({ componentId, policy: depResolverConfig.config.policy });
     });
     return {
       componentConfigFiles,
-      componentPoliciesById,
+      componentPolicies,
     };
   }
 

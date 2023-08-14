@@ -33,12 +33,12 @@ export type ComponentModelVersion = {
 export function getAllPolicyPkgs({
   rootPolicy,
   variantPoliciesByPatterns,
-  componentPoliciesById,
+  componentPolicies,
   componentModelVersions,
 }: {
   rootPolicy: WorkspacePolicy;
   variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
-  componentPoliciesById: Record<string, VariantPolicyConfigObject>;
+  componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
   componentModelVersions: ComponentModelVersion[];
 }): CurrentPkg[] {
   const pkgsFromPolicies = getPkgsFromRootPolicy(rootPolicy);
@@ -46,7 +46,7 @@ export function getAllPolicyPkgs({
   return [
     ...pkgsFromPolicies,
     ...getPkgsFromVariants(variantPoliciesByPatterns),
-    ...getPkgsFromComponents(componentPoliciesById),
+    ...getPkgsFromComponents(componentPolicies),
     ...componentModelVersions
       .filter(({ name }) => !pkgsNamesFromPolicies.has(name))
       .map((componentDep) => ({
@@ -79,9 +79,11 @@ function getPkgsFromVariants(variantPoliciesByPatterns: Record<string, VariantPo
     .flat();
 }
 
-function getPkgsFromComponents(componentPoliciesById: Record<string, VariantPolicyConfigObject>): CurrentPkg[] {
-  return Object.entries(componentPoliciesById)
-    .map(([componentId, policy]) => {
+function getPkgsFromComponents(
+  componentPolicies: Array<{ componentId: ComponentID; policy: VariantPolicyConfigObject }>
+): CurrentPkg[] {
+  return componentPolicies
+    .map(({ componentId, policy }) => {
       return readAllDependenciesFromPolicyObject({ source: 'component', componentId }, policy);
     })
     .flat();

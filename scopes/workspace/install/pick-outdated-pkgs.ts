@@ -1,16 +1,14 @@
-import { ComponentID } from '@teambit/component-id';
 import colorizeSemverDiff from '@pnpm/colorize-semver-diff';
 import semverDiff from '@pnpm/semver-diff';
-import { OutdatedPkg } from '@teambit/dependency-resolver';
+import { MergedOutdatedPkg } from '@teambit/dependency-resolver';
 import { getBorderCharacters, table } from 'table';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
-import semver from 'semver';
 
 /**
  * Lets the user pick the packages that should be updated.
  */
-export async function pickOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): Promise<MergedOutdatedPkg[]> {
+export async function pickOutdatedPkgs(outdatedPkgs: MergedOutdatedPkg[]): Promise<MergedOutdatedPkg[]> {
   if (outdatedPkgs.length === 0) return [];
   const { updateDependencies } = (await prompt({
     choices: makeOutdatedPkgChoices(outdatedPkgs),
@@ -57,7 +55,7 @@ ${chalk.red('Red')} - indicates a semantically breaking change`,
   } as any)) as { updateDependencies: Record<string, string | MergedOutdatedPkg> };
   return Object.values(updateDependencies ?? {}).filter(
     (updateDependency) => typeof updateDependency !== 'string'
-  ) as OutdatedPkg[];
+  ) as MergedOutdatedPkg[];
 }
 
 const DEP_TYPE_PRIORITY = {
@@ -69,15 +67,14 @@ const DEP_TYPE_PRIORITY = {
 /**
  * Groups the outdated packages and makes choices for enquirer's prompt.
  */
-export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
-  const mergedOutdatedPkgs = mergeOutdatedPkgs(outdatedPkgs);
-  mergedOutdatedPkgs.sort((pkg1, pkg2) => {
+export function makeOutdatedPkgChoices(outdatedPkgs: MergedOutdatedPkg[]) {
+  outdatedPkgs.sort((pkg1, pkg2) => {
     if (pkg1.targetField === pkg2.targetField) return pkg1.name.localeCompare(pkg2.name);
     return DEP_TYPE_PRIORITY[pkg1.targetField] - DEP_TYPE_PRIORITY[pkg2.targetField];
   });
-  const renderedTable = alignColumns(outdatedPkgsRows(mergedOutdatedPkgs));
+  const renderedTable = alignColumns(outdatedPkgsRows(outdatedPkgs));
   const groupedChoices = {};
-  mergedOutdatedPkgs.forEach((outdatedPkg, index) => {
+  outdatedPkgs.forEach((outdatedPkg, index) => {
     const context = renderContext(outdatedPkg);
     if (!groupedChoices[context]) {
       groupedChoices[context] = [];
