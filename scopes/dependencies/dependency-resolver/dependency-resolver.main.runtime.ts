@@ -1413,6 +1413,7 @@ export class DependencyResolverMain {
     patterns?: string[];
     forceVersionBump?: 'major' | 'minor' | 'patch';
   }): Promise<OutdatedPkg[]> {
+    const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
     const componentModelVersions: ComponentModelVersion[] = (
       await Promise.all(
         components.map(async (component) => {
@@ -1424,7 +1425,8 @@ export class DependencyResolverMain {
                 // If the dependency is referenced not via a valid range it means that it wasn't yet published to the registry
                 semver.validRange(dep.version) != null &&
                 !dep['isExtension'] && // eslint-disable-line
-                dep.lifecycle !== 'peer'
+                dep.lifecycle !== 'peer' &&
+                !localComponentPkgNames.has(dep.getPackageName())
             )
             .map((dep) => ({
               name: dep.getPackageName!(), // eslint-disable-line
@@ -1464,7 +1466,9 @@ export class DependencyResolverMain {
       rootDir: string;
       forceVersionBump?: 'major' | 'minor' | 'patch';
     },
-    pkgs: Array<{ name: string; currentRange: string } & T>
+    pkgs: Array<
+      { name: string; currentRange: string; source: 'variants' | 'component' | 'rootPolicy' | 'component-model' } & T
+    >
   ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
     this.logger.setStatusLine('checking the latest versions of dependencies');
     const resolver = await this.getVersionResolver();
@@ -1491,7 +1495,10 @@ export class DependencyResolverMain {
             return null;
           return {
             ...pkg,
-            latestRange: repeatPrefix(pkg.currentRange, latestVersion),
+            latestRange:
+              pkg.source === 'component-model' && this.config.savePrefix != null
+                ? `${this.config.savePrefix}${latestVersion}`
+                : repeatPrefix(pkg.currentRange, latestVersion),
           } as any;
         })
       )

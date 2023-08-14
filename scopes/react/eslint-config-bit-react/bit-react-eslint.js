@@ -5,11 +5,11 @@ module.exports = {
   plugins: ['jest'],
   settings: {
     'mdx/code-blocks': true,
-    // jest: {
-    //   version: 26,
-    // },
+    jest: {
+      version: 27,
+    },
     react: {
-      version: 'detect',
+      version: '17.0',
     },
   },
   env: {

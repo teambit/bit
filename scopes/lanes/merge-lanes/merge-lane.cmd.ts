@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { getMergeStrategy, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { mergeReport } from '@teambit/merging';
 import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BitError } from '@teambit/bit-error';
@@ -27,9 +27,18 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
   ];
   alias = '';
   options = [
-    ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
-    ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
-    ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
+    ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. In the future, this flag will leave the current code intact'],
+    [
+      '',
+      'theirs',
+      'DEPRECATED. use --auto-merge-resolve. In the future, this flag will override the current code with the incoming code',
+    ],
+    ['', 'manual', 'DEPRECATED. use --auto-merge-resolve'],
+    [
+      '',
+      'auto-merge-resolve <merge-strategy>',
+      'in case of a conflict, resolve according to the strategy: [ours, theirs, manual]',
+    ],
     ['', 'workspace', 'merge only components in a lane that exist in the workspace'],
     ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
     ['', 'tag', 'tag all lane components after merging into main (also tag-merge in case of snap-merge)'],
@@ -68,9 +77,10 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
   async report(
     [name, pattern]: [string, string],
     {
-      ours = false,
-      theirs = false,
-      manual = false,
+      ours,
+      theirs,
+      manual,
+      autoMergeResolve,
       build,
       workspace: existingOnWorkspaceOnly = false,
       squash = false,
@@ -87,9 +97,10 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       verbose = false,
       includeNonLaneComps = false,
     }: {
-      ours: boolean;
-      theirs: boolean;
-      manual: boolean;
+      ours?: boolean;
+      theirs?: boolean;
+      manual?: boolean;
+      autoMergeResolve?: string;
       workspace?: boolean;
       build?: boolean;
       noSnap: boolean;
@@ -108,7 +119,20 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
     }
   ): Promise<string> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
-    const mergeStrategy = getMergeStrategy(ours, theirs, manual);
+    if (ours || theirs || manual) {
+      throw new BitError(
+        'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead. see "bit lane merge --help" for more information'
+      );
+    }
+    if (
+      autoMergeResolve &&
+      autoMergeResolve !== 'ours' &&
+      autoMergeResolve !== 'theirs' &&
+      autoMergeResolve !== 'manual'
+    ) {
+      throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
+    }
+    const mergeStrategy = autoMergeResolve;
     if (noSnap && snapMessage) throw new BitError('unable to use "noSnap" and "message" flags together');
     if (includeDeps && !pattern && !existingOnWorkspaceOnly) {
       throw new BitError(`"--include-deps" flag is relevant only for --workspace and --pattern flags`);
@@ -128,6 +152,8 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       build,
       // @ts-ignore
       mergeStrategy,
+      ours,
+      theirs,
       existingOnWorkspaceOnly,
       noSnap,
       snapMessage,
