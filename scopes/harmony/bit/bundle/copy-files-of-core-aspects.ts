@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import { join } from 'path';
 
 const FILES_TO_COPY = {
-  'teambit.react/react': ['jest/jest.cjs.config.js'],
+  'teambit.react/react': ['jest'],
 };
 
 let wsRootDir: string;
@@ -40,5 +40,9 @@ async function handleOneAspect(bundleDir: string, packageName: string, files: st
 async function handleOneFile(srcDir: string, targetDir: string, file: string) {
   const srcPath = join(srcDir, file);
   const targetPath = join(targetDir, file);
+  const exists = await fs.pathExists(targetPath);
+  if (exists) {
+    await fs.remove(targetPath);
+  }
   return fs.copy(srcPath, targetPath);
 }
