@@ -40,7 +40,8 @@ async function handleRelativePath(args: OnResolveArgs, bundleDir: string) {
   const targetDir = join(bundleDir, targetDirName, dirname(relativePath));
   await fs.ensureDir(targetDir);
   const resolvedFilePath = require.resolve(origFilePath);
-  await fs.copyFile(resolvedFilePath, join(targetDir, basename(resolvedFilePath)));
+  const copyTarget = join(targetDir, basename(resolvedFilePath));
+  await fs.copyFile(resolvedFilePath, copyTarget);
   // const newPath = replaceRelativePath(targetDirName, parsed);
   const newPath = `./${targetDirName}/${relativePath}`;
   return {
