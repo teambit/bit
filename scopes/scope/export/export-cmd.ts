@@ -17,11 +17,11 @@ export class ExportCmd implements Command {
   extendedDescription = `bit export => export all staged snaps/tags of components to their remote scope. if checked out to a lane, export the lane as well
   \`bit export [pattern...]\` => export components included by the pattern to their remote scope (we recommend not using a pattern in
     most scenarios so that all changes are exported simultaneously)
-  ${WILDCARD_HELP('export remote-scope')}`;
+  ${WILDCARD_HELP('export')}`;
   alias = 'e';
   helpUrl = 'docs/components/exporting-components';
   options = [
-    ['e', 'eject', 'eject the exported components and convert them to regular dependencies in the workspace'],
+    ['e', 'eject', 'remove component from the workspace and install it instead as a regular npm package'],
     [
       'a',
       'all',

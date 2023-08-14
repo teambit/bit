@@ -96,7 +96,7 @@ export default class Init implements LegacyCommand {
       });
     }
     if (reset && resetHard)
-      throw new GeneralError('cannot use both --reset or --reset-hard, please use only one of them');
+      throw new GeneralError('cannot use both --reset and --reset-hard, please use only one of them');
     const workspaceConfigFileProps: WorkspaceConfigProps = {
       componentsDefaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
       defaultScope: defaultScope ?? getSync(CFG_INIT_DEFAULT_SCOPE),

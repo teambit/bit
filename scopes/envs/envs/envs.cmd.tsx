@@ -12,7 +12,7 @@ import { EnvOverview } from './components/env-overview';
 
 export class ListEnvsCmd implements Command {
   name = 'list';
-  description = 'list all envs available in the workspace'; // @david can we provide a bit more detail on what defines an 'available' env
+  description = 'list all envs currently used in the workspace';
   options = [];
   group = 'development';
 

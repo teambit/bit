@@ -239,8 +239,6 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)\n`;
 
     const remotelySoftRemovedDesc =
       '\n(use "bit remove" to remove them from the workspace. use "bit recover" to undo the soft-remove)\n';
-    // @david shouldn't we auto-remove them locally when they've been removed on the remote?
-    // Otherwise they just get errors that the component doesnt exist when they try e.g. `bit import` for a component that has no remote but locally isnt marked as new
     const remotelySoftRemovedOutput = immutableUnshift(
       remotelySoftRemoved.map((c) => format(c)).sort(),
       remotelySoftRemoved.length

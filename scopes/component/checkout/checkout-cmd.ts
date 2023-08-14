@@ -60,7 +60,7 @@ export class CheckoutCmd implements Command {
     [
       'e',
       'workspace-only',
-      "when on a lane, don't import components from the remote lane that are not already in the workspace", // @david what's the connection between the `bit checkout` command and lanes?
+      "only relevant for 'bit checkout head' when on a lane. don't import components from the remote lane that are not already in the workspace",
     ],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['x', 'skip-dependency-installation', 'do not auto-install dependencies of the imported components'],
@@ -107,6 +107,9 @@ export class CheckoutCmd implements Command {
       autoMergeResolve !== 'manual'
     ) {
       throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
+    }
+    if (workspaceOnly && to !== HEAD) {
+      throw new BitError('--workspace-only is only relevant when running "bit checkout head" on a lane');
     }
     const checkoutProps: CheckoutProps = {
       promptMergeOptions: interactiveMerge,

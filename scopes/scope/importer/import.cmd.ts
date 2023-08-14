@@ -55,7 +55,6 @@ export class ImportCmd implements Command {
       'objects',
       'import components objects to the local scope without checkout (without writing them to the file system). This is the default behavior for import with no id argument',
     ],
-    ['d', 'display-dependencies', 'display the imported dependencies'], // @david what are the imported dependencies?
     ['O', 'override', 'override local changes'],
     ['v', 'verbose', 'show verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],

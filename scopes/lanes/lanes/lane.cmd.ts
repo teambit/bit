@@ -392,7 +392,7 @@ ${removedFromWs.join('\n')}`;
 
 export class LaneImportCmd implements Command {
   name = 'import <lane>';
-  description = `import a remote lane to your workspace`;
+  description = `import a remote lane to your workspace and switch to that lane`;
   arguments = [{ name: 'lane', description: 'the remote lane name' }];
   alias = '';
   options = [
@@ -400,7 +400,7 @@ export class LaneImportCmd implements Command {
     [
       'p',
       'pattern <component-pattern>',
-      'switch only the specified component-pattern. works only when the workspace is empty', // @david it's not clear what this command does
+      'import only components from the lane that fit the specified component-pattern to the workspace. works only when the workspace is empty',
     ],
   ] as CommandOptions;
   loader = true;
