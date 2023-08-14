@@ -1,5 +1,6 @@
 export const externals = [
   // 'jest.worker',
+  'browserslist',
   'yoga-layout',
   'yoga-layout-prebuilt',
   '@surma/rollup-plugin-off-main-thread',
@@ -16,6 +17,7 @@ export const externals = [
   'babel-loader',
   'react-refresh/babel',
   'babel-loader',
+  '@babel/runtime',
   '@babel/preset-react',
   '@babel/preset-env',
   '@teambit/mdx.modules.mdx-loader',
@@ -86,6 +88,7 @@ export const externals = [
   'css-minimizer-webpack-plugin',
   'html-webpack-plugin',
   'jest-worker',
+  'jest-environment-node',
   'mocha',
   'rollup-plugin-terser',
   'terser-webpack-plugin',
