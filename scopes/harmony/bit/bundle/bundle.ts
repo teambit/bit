@@ -4,6 +4,7 @@ import { generateCoreAspectsModules } from './generate-core-aspects-modules';
 import { generatePackageJson } from './create-package-json';
 import { generateNpmrc } from './generate-npmrc';
 import { runTsup } from './tsup';
+import { copyFilesOfCoreAspects } from './copy-files-of-core-aspects';
 
 // const rootOutDir = '/Users/giladshoham/dev/bit/bit/bundle';
 const rootOutDir = '/tmp/bit-bundle';
@@ -14,6 +15,7 @@ async function runBundle() {
   const esbuildRes = await runEsbuild(bundleDir, appFile);
   // const tsupRes = await runTsup(bundleDir, appFile);
   await generateCoreAspectsModules(rootOutDir, appFile);
+  await copyFilesOfCoreAspects(rootOutDir);
   generateNpmrc(rootOutDir);
   await generatePackageJson(rootOutDir);
   await generateCoreAspectsBarrelFile();
