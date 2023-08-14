@@ -15,7 +15,7 @@ async function runBundle() {
   const esbuildRes = await runEsbuild(bundleDir, appFile);
   // const tsupRes = await runTsup(bundleDir, appFile);
   await generateCoreAspectsModules(rootOutDir, appFile);
-  await copyFilesOfCoreAspects(rootOutDir);
+  await copyFilesOfCoreAspects(rootOutDir, bundleDir);
   generateNpmrc(rootOutDir);
   await generatePackageJson(rootOutDir);
   await generateCoreAspectsBarrelFile();
