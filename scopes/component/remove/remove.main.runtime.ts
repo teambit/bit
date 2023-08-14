@@ -235,6 +235,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     if (!componentId.hasVersion()) return false;
     const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(componentId);
     if (bitmapEntry && bitmapEntry.isRemoved()) return true;
+    if (bitmapEntry && bitmapEntry.isRecovered()) return false;
     const modelComp = await this.workspace.scope.getBitObjectModelComponent(componentId);
     if (!modelComp) return false;
     const versionObj = await this.workspace.scope.getBitObjectVersion(modelComp, componentId.version);
