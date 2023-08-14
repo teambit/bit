@@ -18,17 +18,21 @@ type VersionHistoryProps = {
   name: string;
   scope?: string;
   versions: VersionParents[];
+  graphCompleteRefs?: string[];
 };
 
 export default class VersionHistory extends BitObject {
   name: string;
   scope?: string;
   versions: VersionParents[];
+  graphCompleteRefs: string[];
+  hasChanged = false; // whether the version history has changed since the last persist
   constructor(props: VersionHistoryProps) {
     super();
     this.name = props.name;
     this.scope = props.scope;
     this.versions = props.versions;
+    this.graphCompleteRefs = props.graphCompleteRefs || [];
   }
 
   id() {
@@ -49,6 +53,7 @@ export default class VersionHistory extends BitObject {
         unrelated: v.unrelated?.toString(),
         squashed: v.squashed ? v.squashed.map((p) => p.toString()) : undefined,
       })),
+      graphCompleteRefs: this.graphCompleteRefs,
     };
   }
 
@@ -84,6 +89,10 @@ export default class VersionHistory extends BitObject {
     });
   }
 
+  isEmpty() {
+    return !this.versions.length;
+  }
+
   getAllHashesFrom(start: Ref): { found?: string[]; missing?: string[] } {
     const item = this.versions.find((ver) => ver.hash.isEqual(start));
     if (!item) return { missing: [start.toString()] };
@@ -108,6 +117,17 @@ export default class VersionHistory extends BitObject {
   isRefPartOfHistory(startFrom: Ref, searchFor: Ref) {
     const { found } = this.getAllHashesFrom(startFrom);
     return found?.includes(searchFor.toString());
+  }
+
+  isGraphCompleteSince(ref: Ref) {
+    if (this.graphCompleteRefs.includes(ref.toString())) return true;
+    const { missing } = this.getAllHashesFrom(ref);
+    const isComplete = !missing || !missing.length;
+    if (isComplete) {
+      this.graphCompleteRefs.push(ref.toString());
+      this.hasChanged = true;
+    }
+    return isComplete;
   }
 
   getAllHashesAsString(): string[] {
@@ -138,7 +158,10 @@ export default class VersionHistory extends BitObject {
       .map((v) => {
         const verEdges = v.parents.map((p) => new Edge(v.hash.toString(), p.toString(), 'parent'));
         if (v.unrelated) verEdges.push(new Edge(v.hash.toString(), v.unrelated.toString(), 'unrelated'));
-        if (v.squashed) v.squashed.map((p) => verEdges.push(new Edge(v.hash.toString(), p.toString(), 'squashed')));
+        if (v.squashed) {
+          const squashed = v.squashed.filter((s) => !v.parents.find((p) => p.isEqual(s)));
+          squashed.map((p) => verEdges.push(new Edge(v.hash.toString(), p.toString(), 'squashed')));
+        }
         return verEdges;
       })
       .flat();
@@ -170,6 +193,7 @@ export default class VersionHistory extends BitObject {
         unrelated: ver.unrelated ? Ref.from(ver.unrelated) : undefined,
         squashed: ver.squashed ? ver.squashed.map((p) => Ref.from(p)) : undefined,
       })),
+      graphCompleteRefs: parsed.graphCompleteRefs,
     };
     return new VersionHistory(props);
   }
