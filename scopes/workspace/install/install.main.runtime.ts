@@ -606,9 +606,10 @@ export class InstallMain {
       this.logger.consoleSuccess('No outdated dependencies found');
       return null;
     }
+    // console.log(
     const [outdatedPkgs1, outdatedPkgs2] = partition(
       outdatedPkgsToUpdate,
-      (outdatedPkg) => outdatedPkg.source === 'rootPolicy' && outdatedPkg.dependentComponents
+      (outdatedPkg) => outdatedPkg.source === 'rootPolicy' && outdatedPkg.dependentComponents && !outdatedPkg.isAuto
     );
     for (const outdatedPkg of outdatedPkgs1) {
       for (const componentId of outdatedPkg.dependentComponents!) {

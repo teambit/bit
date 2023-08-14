@@ -10,6 +10,7 @@ type CurrentPkg = {
   source: 'variants' | 'component' | 'rootPolicy' | 'component-model';
   variantPattern?: string | null;
   componentId?: ComponentID;
+  isAuto?: boolean;
 
   targetField: ManifestDependenciesKeysNames;
 };
@@ -23,6 +24,7 @@ export type ComponentModelVersion = {
   version: string;
   componentId: ComponentID;
   lifecycleType: DependencyLifecycleType;
+  isAuto: boolean;
 };
 
 /**
@@ -51,6 +53,7 @@ export function getAllPolicyPkgs({
         name: componentDep.name,
         currentRange: componentDep.version,
         source: 'component-model' as const,
+        isAuto: componentDep.isAuto,
         componentId: componentDep.componentId,
         targetField: KEY_NAME_BY_LIFECYCLE_TYPE[componentDep.lifecycleType] as ManifestDependenciesKeysNames,
       })),

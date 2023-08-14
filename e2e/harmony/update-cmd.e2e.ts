@@ -97,7 +97,7 @@ describe('update command', function () {
         expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal('1.0.0');
       });
     });
-    describe.only('policies added by deps set', function () {
+    describe('policies added by deps set', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.populateComponents(1);
@@ -125,8 +125,14 @@ describe('update command', function () {
       helper.fs.outputFile(
         `comp1/index.js`,
         `const isNegative = require("is-negative");
-const isOdd = require("is-odd");`
+const isOdd = require("is-odd");
+const isPositive = require("is-positive");`
       );
+      helper.extensions.bitJsonc.addPolicyToDependencyResolver({
+        dependencies: {
+          'is-positive': '1.0.0',
+        },
+      });
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remoteWithoutOwner}/my-aspect`, {});
       helper.extensions.addExtensionToVariant('comp1', 'teambit.dependencies/dependency-resolver', {
         policy: {
@@ -164,9 +170,15 @@ const isOdd = require("is-odd");`
         configFile = helper.bitJsonc.read(helper.scopes.localPath);
       });
       it('should add an updated version of the dependency from the model to the workspace policies', function () {
-        expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative']).to.equal(
-          '^2.1.0'
+        expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal(
+          '^3.1.0'
         );
+      });
+      it('should add an updated version of the dependency from the model to the bitmap', function () {
+        const bitMap = helper.bitMap.read();
+        expect(
+          bitMap['comp1'].config['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative']
+        ).to.equal('^2.1.0');
       });
       it('should not update extensions from the model', function () {
         expect(
@@ -192,10 +204,11 @@ const isOdd = require("is-odd");`
         helper.command.update('--yes');
         configFile = helper.bitJsonc.read(helper.scopes.localPath);
       });
-      it('should add an updated version of the dependency from the model to the workspace policies', function () {
-        expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative']).to.equal(
-          '~2.1.0'
-        );
+      it('should add an updated version of the dependency from the model to the bitmap', function () {
+        const bitMap = helper.bitMap.read();
+        expect(
+          bitMap['comp1'].config['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative']
+        ).to.equal('~2.1.0');
       });
       it('should not update extensions from the model', function () {
         expect(
