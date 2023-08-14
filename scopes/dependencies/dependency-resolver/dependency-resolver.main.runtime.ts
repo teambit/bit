@@ -6,7 +6,7 @@ import { getRelativeRootComponentDir } from '@teambit/bit-roots';
 import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent, ComponentID } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
-import { compact, get, pick, uniq } from 'lodash';
+import { compact, get, pick, uniq, omit } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { DependenciesEnv, EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
@@ -1412,7 +1412,7 @@ export class DependencyResolverMain {
     components: Component[];
     patterns?: string[];
     forceVersionBump?: 'major' | 'minor' | 'patch';
-  }): Promise<OutdatedPkg[]> {
+  }): Promise<MergedOutdatedPkg[]> {
     const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
     const componentModelVersions: ComponentModelVersion[] = (
       await Promise.all(
@@ -1453,7 +1453,8 @@ export class DependencyResolverMain {
       );
       allPkgs = allPkgs.filter(({ name }) => selectedPkgNames.has(name));
     }
-    return this.getOutdatedPkgs({ rootDir, forceVersionBump }, allPkgs);
+    const outdatedPkgs = await this.getOutdatedPkgs({ rootDir, forceVersionBump }, allPkgs);
+    return mergeOutdatedPkgs(outdatedPkgs);
   }
 
   /**
@@ -1710,4 +1711,59 @@ function newVersionRange(currentRange: string, forceVersionBump?: 'major' | 'min
     default:
       return null;
   }
+}
+
+export interface MergedOutdatedPkg extends OutdatedPkg {
+  dependentComponents?: ComponentID[];
+  hasDifferentRanges?: boolean;
+}
+
+function mergeOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): MergedOutdatedPkg[] {
+  const mergedOutdatedPkgs: Record<
+    string,
+    MergedOutdatedPkg & Required<Pick<MergedOutdatedPkg, 'dependentComponents'>>
+  > = {};
+  const outdatedPkgsNotFromComponentModel: OutdatedPkg[] = [];
+  for (const outdatedPkg of outdatedPkgs) {
+    if (outdatedPkg.source === 'component-model' && outdatedPkg.componentId) {
+      if (!mergedOutdatedPkgs[outdatedPkg.name]) {
+        mergedOutdatedPkgs[outdatedPkg.name] = {
+          ...omit(outdatedPkg, ['componentId']),
+          source: 'rootPolicy',
+          dependentComponents: [outdatedPkg.componentId],
+        };
+      } else {
+        if (mergedOutdatedPkgs[outdatedPkg.name].currentRange !== outdatedPkg.currentRange) {
+          mergedOutdatedPkgs[outdatedPkg.name].hasDifferentRanges = true;
+        }
+        mergedOutdatedPkgs[outdatedPkg.name].currentRange = tryPickLowestRange(
+          mergedOutdatedPkgs[outdatedPkg.name].currentRange,
+          outdatedPkg.currentRange
+        );
+        mergedOutdatedPkgs[outdatedPkg.name].dependentComponents.push(outdatedPkg.componentId);
+        if (outdatedPkg.targetField === 'dependencies') {
+          mergedOutdatedPkgs[outdatedPkg.name].targetField = outdatedPkg.targetField;
+        }
+      }
+    } else {
+      outdatedPkgsNotFromComponentModel.push(outdatedPkg);
+    }
+  }
+  return [...Object.values(mergedOutdatedPkgs), ...outdatedPkgsNotFromComponentModel];
+}
+
+function tryPickLowestRange(range1: string, range2: string) {
+  if (range1 === '*' || range2 === '*') return '*';
+  try {
+    return semver.lt(rangeToVersion(range1), rangeToVersion(range2)) ? range1 : range2;
+  } catch {
+    return '*';
+  }
+}
+
+function rangeToVersion(range: string) {
+  if (range.startsWith('~') || range.startsWith('^')) {
+    return range.substring(1);
+  }
+  return range;
 }

@@ -21,6 +21,7 @@ export type {
   DependencyResolverWorkspaceConfig,
   DependencyResolverVariantConfig,
   BIT_CLOUD_REGISTRY,
+  MergedOutdatedPkg,
 } from './dependency-resolver.main.runtime';
 export {
   BIT_DEV_REGISTRY,

@@ -2,7 +2,6 @@ import { ComponentID } from '@teambit/component-id';
 import colorizeSemverDiff from '@pnpm/colorize-semver-diff';
 import semverDiff from '@pnpm/semver-diff';
 import { OutdatedPkg } from '@teambit/dependency-resolver';
-import { omit } from 'lodash';
 import { getBorderCharacters, table } from 'table';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
@@ -94,61 +93,6 @@ export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
     choices: subChoices,
   }));
   return choices;
-}
-
-export interface MergedOutdatedPkg extends OutdatedPkg {
-  dependentComponents?: ComponentID[];
-  hasDifferentRanges?: boolean;
-}
-
-export function mergeOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): MergedOutdatedPkg[] {
-  const mergedOutdatedPkgs: Record<
-    string,
-    MergedOutdatedPkg & Required<Pick<MergedOutdatedPkg, 'dependentComponents'>>
-  > = {};
-  const outdatedPkgsNotFromComponentModel: OutdatedPkg[] = [];
-  for (const outdatedPkg of outdatedPkgs) {
-    if (outdatedPkg.source === 'component-model' && outdatedPkg.componentId) {
-      if (!mergedOutdatedPkgs[outdatedPkg.name]) {
-        mergedOutdatedPkgs[outdatedPkg.name] = {
-          ...omit(outdatedPkg, ['componentId']),
-          source: 'rootPolicy',
-          dependentComponents: [outdatedPkg.componentId],
-        };
-      } else {
-        if (mergedOutdatedPkgs[outdatedPkg.name].currentRange !== outdatedPkg.currentRange) {
-          mergedOutdatedPkgs[outdatedPkg.name].hasDifferentRanges = true;
-        }
-        mergedOutdatedPkgs[outdatedPkg.name].currentRange = tryPickLowestRange(
-          mergedOutdatedPkgs[outdatedPkg.name].currentRange,
-          outdatedPkg.currentRange
-        );
-        mergedOutdatedPkgs[outdatedPkg.name].dependentComponents.push(outdatedPkg.componentId);
-        if (outdatedPkg.targetField === 'dependencies') {
-          mergedOutdatedPkgs[outdatedPkg.name].targetField = outdatedPkg.targetField;
-        }
-      }
-    } else {
-      outdatedPkgsNotFromComponentModel.push(outdatedPkg);
-    }
-  }
-  return [...Object.values(mergedOutdatedPkgs), ...outdatedPkgsNotFromComponentModel];
-}
-
-function tryPickLowestRange(range1: string, range2: string) {
-  if (range1 === '*' || range2 === '*') return '*';
-  try {
-    return semver.lt(rangeToVersion(range1), rangeToVersion(range2)) ? range1 : range2;
-  } catch {
-    return '*';
-  }
-}
-
-function rangeToVersion(range: string) {
-  if (range.startsWith('~') || range.startsWith('^')) {
-    return range.substring(1);
-  }
-  return range;
 }
 
 function renderContext(outdatedPkg: MergedOutdatedPkg) {

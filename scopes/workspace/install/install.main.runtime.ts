@@ -31,7 +31,7 @@ import {
   LinkingOptions,
   LinkResults,
   DependencyList,
-  OutdatedPkg,
+  MergedOutdatedPkg,
   WorkspacePolicy,
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -41,7 +41,7 @@ import { snapToSemver } from '@teambit/component-package-version';
 import hash from 'object-hash';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
-import { MergedOutdatedPkg, mergeOutdatedPkgs, pickOutdatedPkgs } from './pick-outdated-pkgs';
+import { pickOutdatedPkgs } from './pick-outdated-pkgs';
 import { LinkCommand } from './link';
 import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
@@ -593,13 +593,12 @@ export class InstallMain {
       patterns: options.patterns,
       forceVersionBump: options.forceVersionBump,
     });
-    const mergedOutdatedPkgs = mergeOutdatedPkgs(outdatedPkgs);
     let outdatedPkgsToUpdate!: MergedOutdatedPkg[];
     if (options.all) {
-      outdatedPkgsToUpdate = mergedOutdatedPkgs;
+      outdatedPkgsToUpdate = outdatedPkgs;
     } else {
       this.logger.off();
-      outdatedPkgsToUpdate = await pickOutdatedPkgs(mergedOutdatedPkgs);
+      outdatedPkgsToUpdate = await pickOutdatedPkgs(outdatedPkgs);
       this.logger.on();
     }
     if (outdatedPkgsToUpdate.length === 0) {
