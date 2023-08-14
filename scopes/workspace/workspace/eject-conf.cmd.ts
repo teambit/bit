@@ -14,9 +14,10 @@ type EjectConfOptionsCLI = {
 
 export default class EjectConfCmd implements Command {
   name = 'eject-conf <pattern>';
-  description =
-    'eject components configuration (create a `component.json` file) - note this can be reversed at any time by snapping/tagging changes and deleting the component.json file';
-  extendedDescription = `${PATTERN_HELP('eject-conf')}`;
+  description = 'eject components configuration (create a `component.json` file)';
+  extendedDescription = `note this can be reversed at any time by snapping/tagging changes and deleting the component.json file \n${PATTERN_HELP(
+    'eject-conf'
+  )}`;
   alias = '';
   group = 'development';
   options = [

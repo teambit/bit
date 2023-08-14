@@ -28,8 +28,8 @@ export class LaneListCmd implements Command {
     ['d', 'details', 'show more details on the state of each component in each lane'],
     ['j', 'json', "show lanes' details in a json format"],
     ['r', 'remote <remote-scope-name>', 'show all remote lanes from the specified scope'],
-    ['', 'merged', 'show merged lanes'], // @david again, is this all the merged lanes in the whole org, ever?
-    ['', 'not-merged', 'show lanes that are not merged'], // @david isn't this the default, at least for the remote flag?
+    ['', 'merged', 'list only merged lanes'],
+    ['', 'not-merged', "list only lanes that haven't been merged"],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -206,7 +206,11 @@ a lane created from another lane contains all the components of the original lan
       'alias <name>',
       'a local alias to refer to this lane, defaults to the `<lane-name>` (can be added later with "bit lane alias")',
     ],
-    ['', 'fork-lane-new-scope', 'allow forking a lane into a different scope to the original lane'],
+    [
+      '',
+      'fork-lane-new-scope',
+      'create the new lane in a different scope than its parent lane (if created from another lane)',
+    ],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -221,7 +225,7 @@ a lane created from another lane contains all the components of the original lan
       ? `the remote scope ${chalk.bold(createLaneOptions.scope)}`
       : `the default-scope ${chalk.bold(
           result.laneId.scope
-        )}. you change the lane's scope, before it is exported, with the "bit lane change-scope" command`;
+        )}. you can change the lane's scope, before it is exported, with the "bit lane change-scope" command`;
     const title = chalk.green(
       `successfully added and checked out to the new lane ${chalk.bold(result.alias || result.laneId.name)}
       ${currentLane !== null ? chalk.yellow(`\nnote - your new lane will be based on lane ${currentLane.name}`) : ''}
@@ -252,7 +256,8 @@ it is useful e.g. when having multiple lanes with the same name, but with differ
 
 export class LaneChangeScopeCmd implements Command {
   name = 'change-scope <lane-name> <remote-scope-name>';
-  description = `changes the remote scope of a lane. NOTE: available only before the lane is exported to the remote`;
+  description = `changes the remote scope of a lane`;
+  extendedDescription = 'NOTE: available only before the lane is exported to the remote';
   alias = '';
   options = [] as CommandOptions;
   loader = true;
@@ -289,11 +294,11 @@ export class LaneRenameCmd implements Command {
 export class LaneRemoveCmd implements Command {
   name = 'remove <lanes...>';
   arguments = [{ name: 'lanes...', description: 'A list of lane names, separated by spaces' }];
-  description = `remove lanes`;
+  description = `delete lanes`;
   group = 'collaborate';
   alias = '';
   options = [
-    ['r', 'remote', 'remove a remote lane (in the lane arg, use remote/lane-id syntax)'], // @david please add an example of the syntax here
+    ['r', 'remote', 'delete a remote lane. use remote/lane-id syntax e.g. bit lane remove owner.org/my-lane --remote'],
     ['f', 'force', 'removes the lane even when the lane was not merged yet'],
     ['s', 'silent', 'skip confirmation'],
   ] as CommandOptions;
@@ -318,7 +323,7 @@ export class LaneRemoveCmd implements Command {
       const removePromptResult = await approveOperation();
       // @ts-ignore
       if (!yn(removePromptResult.shouldProceed)) {
-        throw new BitError('the operation has been canceled'); // @david can we be more specific - i know this comes from legacy, but is there any more information we can add to this specific error point?
+        throw new BitError('the operation has been cancelled');
       }
     }
     const laneResults = await this.lanes.removeLanes(names, { remote, force });
@@ -412,15 +417,15 @@ export class LaneImportCmd implements Command {
 }
 
 export class LaneCmd implements Command {
-  name = 'lane [lane-name]'; // @david is the lane-name argument required?
-  description = 'manage lanes';
+  name = 'lane [sub-command]';
+  description = 'manage lanes - if no sub-command is used, runs "bit lane list"';
   alias = 'l';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
     ['j', 'json', 'show lanes details in json format'],
-    ['r', 'remote <string>', 'show remote lanes'],
-    ['', 'merged', 'show merged lanes'], // @david is this show ONLY merged lanes, or does the default just not show merged lanes
-    ['', 'not-merged', 'show un-merged lanes'], // @david same for this (i assume that only one of these could be the default)
+    ['r', 'remote <remote-scope-name>', 'show all remote lanes from the specified scope'],
+    ['', 'merged', 'list only merged lanes'],
+    ['', 'not-merged', "list only lanes that haven't been merged"],
   ] as CommandOptions;
   loader = true;
   migration = true;

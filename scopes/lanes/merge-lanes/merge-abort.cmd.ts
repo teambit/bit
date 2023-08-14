@@ -14,7 +14,7 @@ export class MergeAbortLaneCmd implements Command {
 also, checkout the workspace components according to the restored lane state`;
   alias = '';
   options = [
-    ['', 'verbose', 'show details of components that were not merged successfully'],
+    ['', 'verbose', "show details of components that didn't need to be merged"],
     ['s', 'silent', 'skip confirmation'],
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
   ] as CommandOptions;

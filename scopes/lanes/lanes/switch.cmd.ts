@@ -2,10 +2,11 @@ import chalk from 'chalk';
 import { applyVersionReport, installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
 import { Command, CommandOptions } from '@teambit/cli';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { LanesMain } from './lanes.main.runtime';
 
 export class SwitchCmd implements Command {
-  name = 'switch <lane> [pattern]'; // @david why do we have the pattern flag here?
+  name = 'switch <lane> ';
   description = `switch to the specified lane`;
   extendedDescription = ``;
   private = true;
@@ -20,7 +21,7 @@ export class SwitchCmd implements Command {
     [
       'n',
       'alias <string>',
-      'relevant when the specified lane is a remote late. name a local lane differently to the remote lane',
+      "relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote",
     ],
     [
       'm',
@@ -32,7 +33,8 @@ export class SwitchCmd implements Command {
     [
       'p',
       'pattern <component-pattern>',
-      'switch only the lane components matching the specified component-pattern. only works when the workspace is empty',
+      `switch only the lane components matching the specified component-pattern. only works when the workspace is empty\n
+${COMPONENT_PATTERN_HELP}`,
     ],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
@@ -91,7 +93,7 @@ export class SwitchCmd implements Command {
         )}\n`;
         return `${title} ${applyVersionReport(components, false)}${laneSwitched}`;
       }
-      const title = `successfully switched the following components to the head of lane ${lane}\n\n`;
+      const title = `successfully switched the following components to the local head of lane ${lane}\n\n`;
       const componentsStr = applyVersionReport(components, true, false);
       return title + componentsStr + laneSwitched;
     };

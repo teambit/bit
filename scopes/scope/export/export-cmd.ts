@@ -6,7 +6,7 @@ import { isEmpty } from 'lodash';
 import { ExportMain } from './export.main.runtime';
 
 export class ExportCmd implements Command {
-  name = 'export';
+  name = 'export [component-patterns...]';
   description = 'export components from the workspace to remote scopes';
   arguments = [
     {

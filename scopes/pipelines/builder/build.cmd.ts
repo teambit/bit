@@ -21,7 +21,8 @@ type BuildOpts = {
 
 export class BuilderCmd implements Command {
   name = 'build [component-pattern]';
-  description = 'run set of tasks for build. by default, only new and modified components are built';
+  description = 'run set of tasks for build. ';
+  extendedDescription = 'by default, only new and modified components are built';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   helpUrl = 'reference/build-pipeline/builder-overview';
   alias = '';

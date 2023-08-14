@@ -4,7 +4,7 @@ import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer
 import { Command, CommandOptions } from '@teambit/cli';
 import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
-import { DEFAULT_BIT_RELEASE_TYPE } from '@teambit/legacy/dist/constants';
+import { DEFAULT_BIT_RELEASE_TYPE, COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { BitId } from '@teambit/legacy-bit-id';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ReleaseType } from 'semver';
@@ -24,8 +24,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
   arguments = [
     {
       name: 'component-patterns...',
-      description:
-        'a list of component names, IDs or patterns (separated by space). run "bit pattern --help" to get more data about patterns. By default, all new and modified are tagged.',
+      description: `${COMPONENT_PATTERN_HELP}. By default, all new and modified are tagged.`,
     },
   ];
   helpUrl = 'https://bit.dev/reference/components/snaps#create-a-tag-(release-version)';

@@ -7,7 +7,7 @@ import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { LaneDiffGenerator } from './lane-diff-generator';
 
 export class LaneDiffCmd implements Command {
-  name = 'diff [from] [to]';
+  name = 'diff [from/to] [to]';
   description = `show diff between lanes`;
   extendedDescription = `bit lane diff => diff between the current lane and default lane. (only inside workspace).
 bit lane diff to => diff between the current lane (or default-lane when in scope) and "to" lane.
