@@ -603,7 +603,6 @@ export class PreviewMain {
     [context.id, ...context.relatedContexts].forEach((ctxId) => {
       this.executionRefs.set(ctxId, new ExecutionRef(context));
     });
-
     const previewRuntime = await this.writePreviewRuntime(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
 
@@ -671,7 +670,7 @@ export class PreviewMain {
       'preview',
       PreviewAspect.id,
       undefined,
-      uiRoot.path
+      (context as any).capsuleNetwork ? undefined : uiRoot.path // check if we are running inside a workspace or a capsule
     );
     return filePath;
   }

@@ -454,11 +454,14 @@ export class UiMain {
       ignoreVersion
     );
     const filename = `${runtimeName}.root${sha1(contents)}.js`;
-    const relativeFilepath = `./node_modules/.cache/bit/teambit.ui/${filename}`;
+    // Write the file into `./node_modules/.cache/bit/teambit.ui/` if the path
+    // is provided, which is usually the workspace root.
+    const relativeFilepath = path ? `./node_modules/.cache/bit/teambit.ui/${filename}` : filename;
     const filepath = resolve(join(path || __dirname, relativeFilepath));
-    if (fs.existsSync(filepath)) return relativeFilepath;
+    const returnedPath = path ? relativeFilepath : filepath;
+    if (fs.existsSync(filepath)) return returnedPath;
     fs.outputFileSync(filepath, contents);
-    return relativeFilepath;
+    return returnedPath;
   }
 
   private async selectPort() {
