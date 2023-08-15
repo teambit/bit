@@ -1,5 +1,4 @@
 import graphlib, { Graph as GraphLib } from 'graphlib';
-import { flatten } from 'lodash';
 import mapSeries from 'p-map-series';
 import R from 'ramda';
 import { Scope } from '..';
