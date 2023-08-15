@@ -65,6 +65,7 @@ export class StatusMain {
   async status({ lanes }: { lanes?: boolean }): Promise<StatusResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     loader.start(BEFORE_STATUS);
+    const allComps = await this.workspace.list();
     const consumer = this.workspace.consumer;
     const laneObj = await consumer.getCurrentLaneObject();
     const componentsList = new ComponentsList(consumer);
@@ -102,26 +103,11 @@ export class StatusMain {
     const invalidComponents = allInvalidComponents.filter((c) => !(c.error instanceof ComponentsPendingImport));
     const outdatedComponents = await componentsList.listOutdatedComponents();
     const idsDuringMergeState = componentsList.listDuringMergeStateComponents();
-    const { components: componentsDuringMergeState } = await this.workspace.consumer.loadComponents(
-      idsDuringMergeState,
-      false
-    );
     const mergePendingComponents = await componentsList.listMergePendingComponents();
-    const legacyCompsWithPotentialIssues: ConsumerComponent[] = [
-      ...newComponents,
-      ...modifiedComponents,
-      ...componentsDuringMergeState,
-    ];
     const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
-    if (legacyCompsWithPotentialIssues.length) {
-      const compsWithPotentialIssues = await this.workspace.getManyByLegacy(legacyCompsWithPotentialIssues, loadOpts);
-      await this.issues.triggerAddComponentIssues(compsWithPotentialIssues, issuesToIgnore);
-      this.issues.removeIgnoredIssuesFromComponents(compsWithPotentialIssues);
-    }
-    const componentsWithIssues = legacyCompsWithPotentialIssues.filter((component: ConsumerComponent) => {
-      return component.issues && !component.issues.isEmpty();
-    });
-
+    await this.issues.triggerAddComponentIssues(allComps, issuesToIgnore);
+    this.issues.removeIgnoredIssuesFromComponents(allComps);
+    const componentsWithIssues = allComps.filter((component) => !component.state.issues.isEmpty());
     const softTaggedComponents = componentsList.listSoftTaggedComponents();
     const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toBitId());
     const pendingUpdatesFromMain = lanes ? await componentsList.listUpdatesFromMainPending() : [];
@@ -153,15 +139,16 @@ export class StatusMain {
       return results.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
     };
 
+    const sortObjectsWithId = <T>(objectsWithId: Array<T & { id: ComponentID }>): Array<T & { id: ComponentID }> => {
+      return objectsWithId.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
+    };
+
     await consumer.onDestroy();
     return {
       newComponents: await convertBitIdToComponentIdsAndSort(newComponents.map((c) => c.id)),
       modifiedComponents: await convertBitIdToComponentIdsAndSort(modifiedComponents.map((c) => c.id)),
       stagedComponents: await convertObjToComponentIdsAndSort(stagedComponentsWithVersions),
-      // @ts-ignore - not clear why, it fails the "bit build" without it
-      componentsWithIssues: await convertObjToComponentIdsAndSort(
-        componentsWithIssues.map((c) => ({ id: c.id, issues: c.issues }))
-      ), // no need to sort, we don't print it as is
+      componentsWithIssues: sortObjectsWithId(componentsWithIssues.map((c) => ({ id: c.id, issues: c.state.issues }))),
       importPendingComponents: await convertBitIdToComponentIdsAndSort(importPendingComponents), // no need to sort, we use only its length
       autoTagPendingComponents: await convertBitIdToComponentIdsAndSort(autoTagPendingComponentsIds),
       invalidComponents: await convertObjToComponentIdsAndSort(
