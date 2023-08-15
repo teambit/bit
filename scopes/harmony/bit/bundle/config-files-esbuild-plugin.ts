@@ -139,6 +139,13 @@ export const configFilesEsbuildPlugin = (bundleDir: string) => {
         return handleConfigFile(args, bundleDir);
       });
 
+      build.onResolve({ filter: /asset.d.ts$/ }, (args) => {
+        return handleConfigFile(args, bundleDir);
+      });
+      build.onResolve({ filter: /style.d.ts$/ }, (args) => {
+        return handleConfigFile(args, bundleDir);
+      });
+
       build.onResolve({ filter: /tsconfig.json$/ }, (args) => {
         return handleConfigFile(args, bundleDir);
       });
