@@ -65,14 +65,16 @@ export class StatusMain {
   async status({ lanes }: { lanes?: boolean }): Promise<StatusResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     loader.start(BEFORE_STATUS);
-    const allComps = await this.workspace.list();
-    const consumer = this.workspace.consumer;
-    const laneObj = await consumer.getCurrentLaneObject();
-    const componentsList = new ComponentsList(consumer);
     const loadOpts = {
       loadDocs: false,
       loadCompositions: false,
     };
+    const { components: allComps, invalidComponents: allInvalidComponents } = await this.workspace.listWithInvalid(
+      loadOpts
+    );
+    const consumer = this.workspace.consumer;
+    const laneObj = await consumer.getCurrentLaneObject();
+    const componentsList = new ComponentsList(consumer);
     const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(
       true,
       loadOpts
@@ -91,22 +93,21 @@ export class StatusMain {
     const unavailableOnMain = await this.workspace.getUnavailableOnMainComponents();
     const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
     const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.id);
-    const allInvalidComponents = await componentsList.listInvalidComponents();
     const locallySoftRemoved = await componentsList.listLocallySoftRemoved();
     const remotelySoftRemoved = await componentsList.listRemotelySoftRemoved();
     const importPendingComponents = allInvalidComponents
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      .filter((c) => c.error instanceof ComponentsPendingImport)
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      .filter((c) => c.err instanceof ComponentsPendingImport)
       .map((i) => i.id);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const invalidComponents = allInvalidComponents.filter((c) => !(c.error instanceof ComponentsPendingImport));
     const outdatedComponents = await componentsList.listOutdatedComponents();
     const idsDuringMergeState = componentsList.listDuringMergeStateComponents();
     const mergePendingComponents = await componentsList.listMergePendingComponents();
-    const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
-    await this.issues.triggerAddComponentIssues(allComps, issuesToIgnore);
-    this.issues.removeIgnoredIssuesFromComponents(allComps);
+    if (allComps.length) {
+      const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
+      await this.issues.triggerAddComponentIssues(allComps, issuesToIgnore);
+      this.issues.removeIgnoredIssuesFromComponents(allComps);
+    }
     const componentsWithIssues = allComps.filter((component) => !component.state.issues.isEmpty());
     const softTaggedComponents = componentsList.listSoftTaggedComponents();
     const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toBitId());
@@ -149,11 +150,9 @@ export class StatusMain {
       modifiedComponents: await convertBitIdToComponentIdsAndSort(modifiedComponents.map((c) => c.id)),
       stagedComponents: await convertObjToComponentIdsAndSort(stagedComponentsWithVersions),
       componentsWithIssues: sortObjectsWithId(componentsWithIssues.map((c) => ({ id: c.id, issues: c.state.issues }))),
-      importPendingComponents: await convertBitIdToComponentIdsAndSort(importPendingComponents), // no need to sort, we use only its length
+      importPendingComponents, // no need to sort, we use only its length
       autoTagPendingComponents: await convertBitIdToComponentIdsAndSort(autoTagPendingComponentsIds),
-      invalidComponents: await convertObjToComponentIdsAndSort(
-        invalidComponents.map((c) => ({ id: c.id, error: c.error }))
-      ),
+      invalidComponents: sortObjectsWithId(invalidComponents.map((c) => ({ id: c.id, error: c.err }))),
       locallySoftRemoved: await convertBitIdToComponentIdsAndSort(locallySoftRemoved),
       remotelySoftRemoved: await convertBitIdToComponentIdsAndSort(remotelySoftRemoved.map((c) => c.id)),
       outdatedComponents: await convertObjToComponentIdsAndSort(
