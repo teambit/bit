@@ -171,7 +171,8 @@ export default class ScopeComponentsImporter {
     const ids = stillIncomplete.map((id) => id.toString());
     const msg = `${ids.length} components still have incomplete version-history after importing them from the remote`;
     logger.error(`the following ${msg}\n${ids.join('\n')}`);
-    logger.console(`warning: ${msg}, see the debug.log for their ids`, 'warn', 'yellow');
+    // for now remove this console, until we know better when this is not an error
+    // logger.console(`warning: ${msg}, see the debug.log for their ids`, 'warn', 'yellow');
   }
 
   private async getIncompleteVersionHistory(existingDefs: ComponentDef[]) {

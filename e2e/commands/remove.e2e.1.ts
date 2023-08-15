@@ -435,4 +435,29 @@ describe('bit remove command', function () {
       helper.command.expectStatusToHaveIssue(IssuesClasses.RemovedDependencies.name);
     });
   });
+
+  describe('soft remove on lane then tagging the dependent without removing the references to the removed component then recovering it', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp2', '-x');
+      helper.command.softRemoveComponent('comp2');
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importManyComponents(['comp1', 'comp2'], '-x');
+      helper.command.recover('comp2');
+      helper.command.install();
+    });
+    it('bit status should not show RemovedDependency issue because it was recovered', () => {
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedDependencies.name);
+    });
+  });
 });
