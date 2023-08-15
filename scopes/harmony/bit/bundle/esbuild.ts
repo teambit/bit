@@ -23,6 +23,7 @@ export function runEsbuild(outDir: string, appFile: string) {
     bundle: true,
     logLevel: 'error',
     platform: 'node',
+    // minify: true,
     // TODO: maybe enable sourcemap later
     // sourcemap: true,
     mainFields: ['main', 'module'],
