@@ -85,7 +85,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
         `no components found to build. use "--unmodified" flag to build all components or specify the ids to build, otherwise, only new and modified components will be built`
       );
     }
-    this.logger.consoleSuccess(`found ${components.length} components to build`);
+
     const envsExecutionResults = await this.builder.build(
       components,
       {
