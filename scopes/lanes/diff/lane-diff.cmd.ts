@@ -54,7 +54,7 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
     const diffResultsStr = outputDiffResults(compsWithDiff);
 
     const failuresTitle = `\n\nDiff failed on the following component(s)`;
-    const failuresIds = failures.map((f) => `${f.id.toString()} - ${chalk.red(f.msg)}`);
+    const failuresIds = failures.map((f) => `${f.id.toString()} - ${chalk.red(f.msg)}`).join('\n');
     const failuresStr = failures.length ? `${chalk.inverse(failuresTitle)}\n${failuresIds}` : '';
     const newCompsToStr = newCompsOutput(toLaneName, newCompsTo);
     const newCompsFromStr = newCompsOutput(fromLaneName, newCompsFrom);
