@@ -67,8 +67,12 @@ export class FlattenedDependenciesGetter {
     const dependencies = this.getFlattenedFromCurrentComponents(bitId);
     dependencies.forEach((dep) => throwWhenDepNotIncluded(bitId, dep));
     const dependenciesDeps = await mapSeries(dependencies, (dep) => this.getFlattenedFromVersion(dep, bitId));
-    const dependenciesDepsFlattened = flatten(dependenciesDeps);
-    dependencies.push(...dependenciesDepsFlattened);
+    const dependenciesDepsFlattened = dependenciesDeps.flat();
+    // this dependenciesDepsFlattened can be huge, don't use spread operator (...) here. otherwise, it throws
+    // `Maximum call stack size exceeded`. it's important to first make them uniq
+    // (from a real example, before uniq: 133,068. after uniq: 2,126)
+    const dependenciesDepsUniq = BitIds.uniqFromArray(dependenciesDepsFlattened);
+    dependencies.push(...dependenciesDepsUniq);
     return BitIds.uniqFromArray(dependencies);
   }
 
