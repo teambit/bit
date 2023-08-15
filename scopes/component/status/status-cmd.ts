@@ -178,8 +178,8 @@ export class StatusCmd implements Command {
     const outdatedStr = outdatedComponents.length ? [outdatedTitle, outdatedDesc, outdatedComps].join('\n') : '';
 
     const pendingMergeTitle = chalk.underline.white('pending merge');
-    const pendingMergeDesc = `(use "bit reset" to add local changes on top of the remote and discard local tags/snaps.
-alternatively, to keep local tags/snaps history, use "bit merge [component-id]")\n`; // @davidF how does bit reset add local changes on top of remote?
+    const pendingMergeDesc = `(use "bit reset" to discard local tags/snaps, and bit checkout head to re-merge with the remote.
+alternatively, to keep local tags/snaps history, use "bit merge [component-id]")\n`;
     const pendingMergeComps = mergePendingComponents
       .map((component) => {
         return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${

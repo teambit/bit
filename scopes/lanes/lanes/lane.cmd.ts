@@ -134,7 +134,7 @@ export class LaneShowCmd implements Command {
   alias = '';
   options = [
     ['j', 'json', 'show the lane details in json format'],
-    ['r', 'remote', 'show the lane from remote'], // @david what does this mean?
+    ['r', 'remote', 'show the remote head of the provided lane'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -150,8 +150,8 @@ export class LaneShowCmd implements Command {
       name = this.lanes.getCurrentLaneName() || DEFAULT_LANE;
     }
 
-    if (!name && remote) {
-      throw new Error('remote flag is not supported without lane name');
+    if (!name) {
+      throw new BitError('error fetching lane name - this error should not have happened');
     }
 
     const laneId = await this.lanes.parseLaneId(name);
@@ -294,12 +294,16 @@ export class LaneRenameCmd implements Command {
 export class LaneRemoveCmd implements Command {
   name = 'remove <lanes...>';
   arguments = [{ name: 'lanes...', description: 'A list of lane names, separated by spaces' }];
-  description = `delete lanes`;
+  description = `remove or delete lanes`;
   group = 'collaborate';
   alias = '';
   options = [
-    ['r', 'remote', 'delete a remote lane. use remote/lane-id syntax e.g. bit lane remove owner.org/my-lane --remote'],
-    ['f', 'force', 'removes the lane even when the lane was not merged yet'],
+    [
+      'r',
+      'remote',
+      'delete a remote lane. use remote/lane-id syntax e.g. bit lane remove owner.org/my-lane --remote. Delete is immediate, no export required',
+    ],
+    ['f', 'force', 'deletes the lane even when the lane is not yet merged to main'],
     ['s', 'silent', 'skip confirmation'],
   ] as CommandOptions;
   loader = true;

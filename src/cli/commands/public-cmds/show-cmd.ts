@@ -17,7 +17,7 @@ export default class Show implements LegacyCommand {
     ['j', 'json', 'return component overview in json format'],
     ['r', 'remote', 'show overview of a remote component'],
     ['v', 'versions', 'return a json of all the versions of the component'],
-    ['o', 'outdated', 'show latest version from the remote scope (if exists)'], // @david not sure how the flag name and description match?
+    ['o', 'outdated', 'highlight outdated components, in comparison with their latest remote version (if one exists)'],
     ['c', 'compare', 'compare current file system component to latest tagged component [default=latest]'],
     ['d', 'detailed', 'show extra component detail'],
     ['', 'dependents', 'show all dependents recursively'],

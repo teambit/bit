@@ -19,8 +19,8 @@ export class MergeCmd implements Command {
   description = 'merge changes of the remote head into local - auto-snaps all merged components';
   helpUrl = 'docs/components/merging-changes';
   group = 'development';
-  extendedDescription = `merge changes of the remote head into local. when on a lane, merge the remote head of the lane into the local
-and creates snaps for merged components, on the lane.
+  extendedDescription = `merge changes of the remote head into local when they are diverged. when on a lane, merge the remote head of the lane into the local
+and creates snaps for merged components that have diverged, on the lane.
 if no ids are specified, all pending-merge components will be merged. (run "bit status" to list them).
 optionally use '--abort' to revert the last merge. to revert a lane merge, use "bit lane merge-abort" command.
 ${WILDCARD_HELP('merge')}`;

@@ -93,7 +93,7 @@ ${COMPONENT_PATTERN_HELP}`,
         )}\n`;
         return `${title} ${applyVersionReport(components, false)}${laneSwitched}`;
       }
-      const title = `successfully switched the following components to the local head of lane ${lane}\n\n`;
+      const title = `successfully switched the following components to the head of lane ${lane}\n\n`;
       const componentsStr = applyVersionReport(components, true, false);
       return title + componentsStr + laneSwitched;
     };
