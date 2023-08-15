@@ -22,7 +22,7 @@ export class ListCmd implements Command {
   options = [
     ['i', 'ids', 'show only component ids, unformatted'],
     ['s', 'scope', 'show only components stored in the local scope, including indirect dependencies'],
-    ['o', 'outdated', 'show latest versions from remotes'], // @david description and flag name don't match up. Is this correct?
+    ['o', 'outdated', 'highlight outdated components, in comparison with their latest remote version (if one exists)'],
     ['j', 'json', 'show the output in JSON format'],
     ['n', 'namespace <string>', "show only components in the specified namespace/s e.g. '-n ui' or '*/ui'"],
   ] as CommandOptions;

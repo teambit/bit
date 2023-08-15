@@ -43,7 +43,7 @@ export class GetEnvCmd implements Command {
     [
       '',
       'services <string>',
-      'show information about the specific services only. for multiple services, separate by a comma and wrap with quotes', // @david do we provide a list anywhere for what values can be used here?
+      'show information about the specific services only. for multiple services, separate by a comma and wrap with quotes',
     ],
   ] as CommandOptions;
   group = 'development';

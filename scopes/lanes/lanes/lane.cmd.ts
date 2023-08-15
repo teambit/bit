@@ -134,7 +134,7 @@ export class LaneShowCmd implements Command {
   alias = '';
   options = [
     ['j', 'json', 'show the lane details in json format'],
-    ['r', 'remote', 'show the remote head of the provided lane'],
+    ['r', 'remote', 'show details of the remote head of the provided lane'],
   ] as CommandOptions;
   loader = true;
   migration = true;
