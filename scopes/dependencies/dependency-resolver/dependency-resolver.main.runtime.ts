@@ -1517,7 +1517,6 @@ export class DependencyResolverMain {
     outdatedPkgs: Array<Omit<OutdatedPkg, 'currentRange'>>,
     options: {
       variantPoliciesByPatterns: Record<string, any>;
-      componentPoliciesById: Record<string, any>;
     }
   ): {
     updatedVariants: string[];
@@ -1525,7 +1524,6 @@ export class DependencyResolverMain {
   } {
     const { updatedVariants, updatedComponents, updatedWorkspacePolicyEntries } = applyUpdates(outdatedPkgs, {
       variantPoliciesByPatterns: options.variantPoliciesByPatterns,
-      componentPoliciesById: options.componentPoliciesById,
     });
     this.addToRootPolicy(updatedWorkspacePolicyEntries, {
       updateExisting: true,

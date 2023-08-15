@@ -8,10 +8,8 @@ export function applyUpdates(
   outdatedPkgs: Array<Omit<OutdatedPkg, 'currentRange'>>,
   {
     variantPoliciesByPatterns,
-    componentPoliciesById,
   }: {
     variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
-    componentPoliciesById: Record<string, any>;
   }
 ): {
   updatedVariants: string[];
@@ -46,18 +44,6 @@ export function applyUpdates(
             variantPoliciesByPatterns[variantPattern][targetField]![name] = outdatedPkg.latestRange; // eslint-disable-line
           }
         }
-        break;
-      case 'component':
-        // if (outdatedPkg.componentId) {
-        // updatedComponents.add(outdatedPkg.componentId);
-        // if (componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name].version) {
-        // componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name].version =
-        // outdatedPkg.latestRange;
-        // } else {
-        // componentPoliciesById[outdatedPkg.componentId][outdatedPkg.targetField][outdatedPkg.name] =
-        // outdatedPkg.latestRange;
-        // }
-        // }
         break;
       default:
         throw new Error(`Unsupported policy source for update: ${outdatedPkg.source}`);

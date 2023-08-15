@@ -627,7 +627,6 @@ export class InstallMain {
     await this.workspace.bitMap.write();
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgs2, {
       variantPoliciesByPatterns,
-      componentPoliciesById: {},
     });
     await this._updateVariantsPolicies(variantPatterns, updatedVariants);
     const updatedComponentConfigFiles = Object.values(pick(componentConfigFiles, updatedComponents));
