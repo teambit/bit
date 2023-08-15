@@ -529,7 +529,9 @@ export class IsolatorMain {
       let installLongProcessLogger: LongProcessLogger | undefined;
       // Only show the log message in case we are going to install something
       if (capsuleList && capsuleList.length && !opts.context?.aspects) {
-        installLongProcessLogger = this.logger.createLongProcessLogger('install packages in capsules');
+        installLongProcessLogger = this.logger.createLongProcessLogger(
+          `install packages in ${capsuleList.length} capsules`
+        );
       }
       if (installOptions.useNesting) {
         await Promise.all(

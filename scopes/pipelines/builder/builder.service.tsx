@@ -1,6 +1,7 @@
 import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy/dist/constants';
 import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import React from 'react';
+import chalk from 'chalk';
 import { uniq } from 'lodash';
 import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
@@ -101,8 +102,8 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
     );
     tasksQueue.validate();
     this.logger.info(`going to run tasks in the following order:\n${tasksQueue.toString()}`);
-    const envsStr = envs.map((env) => env.id).join(', ');
-    const title = `Running ${this.displayPipeName} pipeline using ${envs.length} environment(s) (${envsStr}), total ${tasksQueue.length} tasks`;
+    this.logger.console('\n'); // this is to make is clear separation between the various pipelines (build/snap/tag)
+    const title = `Running ${this.displayPipeName} pipeline using ${envs.length} environment(s), total ${tasksQueue.length} tasks`;
     const longProcessLogger = this.logger.createLongProcessLogger(title, undefined, 'title');
     const envsBuildContext: EnvsBuildContext = {};
     const capsulesBaseDir = this.getComponentsCapsulesBaseDir();
@@ -124,9 +125,9 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
       );
       const capsuleNetwork = await this.isolator.isolateComponents(componentIds, isolateOptions);
       capsuleNetwork._originalSeeders = originalSeedersOfThisEnv;
-      this.logger.console(
-        `generated graph for env "${executionContext.id}", originalSeedersOfThisEnv: ${originalSeedersOfThisEnv.length}, graphOfThisEnv: ${capsuleNetwork.seedersCapsules.length}, graph total: ${capsuleNetwork.graphCapsules.length}`
-      );
+      const msg = `building ${originalSeedersOfThisEnv.length} components of env "${executionContext.id}"`;
+      const extraDetails = `original seeders of this env: ${originalSeedersOfThisEnv.length}, graph of this env: ${capsuleNetwork.seedersCapsules.length}, graph total (include other envs): ${capsuleNetwork.graphCapsules.length}`;
+      this.logger.console(`${msg}. ${chalk.dim(extraDetails)}`);
       const buildContext = Object.assign(executionContext, {
         capsuleNetwork,
         previousTasksResults: [],
