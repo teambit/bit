@@ -43,7 +43,7 @@ export class FormatCmd implements Command {
   group = 'development';
   helpUrl = 'reference/formatting/formatter-overview';
   options = [
-    ['c', 'changed', 'format only new and modified components'], // @davidF maybe we should align this with all other commands and do this by default (and add the unmodified flag)
+    ['c', 'changed', 'format only new and modified components'],
     ['', 'check', 'will output a human-friendly message and a list of unformatted files, if any'],
     ['j', 'json', 'return the format results in json format'],
   ] as CommandOptions;
