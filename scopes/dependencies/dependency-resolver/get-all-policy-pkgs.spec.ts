@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component';
 import { getAllPolicyPkgs } from './get-all-policy-pkgs';
 import { WorkspacePolicy } from './policy';
 
@@ -17,7 +18,7 @@ describe('getAllPolicyPkgs()', () => {
           peerDependencies: {},
         },
       },
-      componentPoliciesById: {},
+      componentPolicies: [],
       componentModelVersions: [],
     });
     // @ts-ignore
@@ -41,19 +42,21 @@ describe('getAllPolicyPkgs()', () => {
         },
       ]),
       variantPoliciesByPatterns: {},
-      componentPoliciesById: {},
+      componentPolicies: [],
       componentModelVersions: [
         {
           name: 'foo',
           version: '2',
           lifecycleType: 'runtime',
-          componentId: 'comp1',
+          componentId: ComponentID.fromString('scope/comp1'),
+          isAuto: true,
         },
         {
           name: 'bar',
           version: '2',
           lifecycleType: 'runtime',
-          componentId: 'comp1',
+          componentId: ComponentID.fromString('scope/comp1'),
+          isAuto: true,
         },
       ],
     });
@@ -67,8 +70,9 @@ describe('getAllPolicyPkgs()', () => {
         variantPattern: null,
       },
       {
-        componentId: 'comp1',
+        componentId: ComponentID.fromString('scope/comp1'),
         currentRange: '2',
+        isAuto: true,
         name: 'bar',
         source: 'component-model',
         targetField: 'dependencies',
