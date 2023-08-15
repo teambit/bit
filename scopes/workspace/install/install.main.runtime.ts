@@ -605,25 +605,27 @@ export class InstallMain {
       this.logger.consoleSuccess('No outdated dependencies found');
       return null;
     }
-    console.log(outdatedPkgsToUpdate);
     const [outdatedPkgs1, outdatedPkgs2] = partition(
       outdatedPkgsToUpdate,
       (outdatedPkg) =>
         outdatedPkg.source === 'component' ||
         (outdatedPkg.source === 'rootPolicy' && outdatedPkg.dependentComponents && !outdatedPkg.isAuto)
     );
-    for (const outdatedPkg of outdatedPkgs1) {
-      for (const componentId of outdatedPkg.dependentComponents ?? [outdatedPkg.componentId!]) {
-        const config = {
-          policy: {
-            [outdatedPkg.targetField]: {
-              [outdatedPkg.name]: outdatedPkg.latestRange,
+    await Promise.all(
+      outdatedPkgs1.map(async (outdatedPkg) => {
+        for (const componentId of outdatedPkg.dependentComponents ?? [outdatedPkg.componentId!]) {
+          // eslint-disable-line
+          const config = {
+            policy: {
+              [outdatedPkg.targetField]: {
+                [outdatedPkg.name]: outdatedPkg.latestRange,
+              },
             },
-          },
-        };
-        await this.workspace.addSpecificComponentConfig(componentId, DependencyResolverAspect.id, config, true, true);
-      }
-    }
+          };
+          await this.workspace.addSpecificComponentConfig(componentId, DependencyResolverAspect.id, config, true, true);
+        }
+      })
+    );
     await this.workspace.bitMap.write();
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgs2, {
       variantPoliciesByPatterns,
