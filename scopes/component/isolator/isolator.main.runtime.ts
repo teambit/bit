@@ -303,7 +303,8 @@ export class IsolatorMain {
     this.logger.debug(
       `creating network with base dir: ${opts.baseDir}, rootBaseDir: ${opts.rootBaseDir}. final capsule-dir: ${capsuleDir}. capsuleList: ${capsuleList.length}`
     );
-    if (shouldUseDatedDirs) {
+    const cacheCapsules = process.env.CACHE_CAPSULES;
+    if (shouldUseDatedDirs && cacheCapsules) {
       const targetCapsuleDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: false, baseDir: opts.baseDir || '' });
       this.registerMoveCapsuleOnProcessExit(capsuleDir, targetCapsuleDir);
       // TODO: ideally this should be inside the on process exit hook
@@ -338,8 +339,6 @@ export class IsolatorMain {
   }
 
   private registerMoveCapsuleOnProcessExit(datedCapsuleDir: string, targetCapsuleDir: string): void {
-    const cacheCapsules = process.env.CACHE_CAPSULES;
-    if (!cacheCapsules) return;
     this.logger.info(`registering process.on(exit) to move capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
     process.on('exit', () => {
       this.logger.info(`start moving capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
