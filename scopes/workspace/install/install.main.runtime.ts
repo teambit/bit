@@ -612,9 +612,9 @@ export class InstallMain {
         (outdatedPkg.source === 'rootPolicy' && outdatedPkg.dependentComponents && !outdatedPkg.isAuto)
     );
     await Promise.all(
-      outdatedPkgs1.map(async (outdatedPkg) => {
-        for (const componentId of outdatedPkg.dependentComponents ?? [outdatedPkg.componentId!]) {
-          // eslint-disable-line
+      outdatedPkgs1.map((outdatedPkg) => {
+        // eslint-disable-next-line
+        return (outdatedPkg.dependentComponents ?? [outdatedPkg.componentId!]).map((componentId) => {
           const config = {
             policy: {
               [outdatedPkg.targetField]: {
@@ -622,8 +622,14 @@ export class InstallMain {
               },
             },
           };
-          await this.workspace.addSpecificComponentConfig(componentId, DependencyResolverAspect.id, config, true, true);
-        }
+          return this.workspace.addSpecificComponentConfig(
+            componentId,
+            DependencyResolverAspect.id,
+            config,
+            true,
+            true
+          );
+        });
       })
     );
     await this.workspace.bitMap.write();
