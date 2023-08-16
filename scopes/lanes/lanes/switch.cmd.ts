@@ -6,7 +6,7 @@ import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { LanesMain } from './lanes.main.runtime';
 
 export class SwitchCmd implements Command {
-  name = 'switch <lane> ';
+  name = 'switch <lane>';
   description = `switch to the specified lane`;
   extendedDescription = ``;
   private = true;
