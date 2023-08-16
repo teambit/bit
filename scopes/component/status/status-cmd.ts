@@ -132,7 +132,7 @@ export class StatusCmd implements Command {
       const color = message ? 'yellow' : 'green';
       const messageStatus = chalk[color](messageStatusTextWithSoftTag);
 
-      if (!showIssues) {
+      if (!showIssues && !localVersions) {
         return `${formatBitString(id.toStringWithoutVersion())} ... ${messageStatus}`;
       }
       let bitFormatted = `${formatBitString(id.toStringWithoutVersion())}`;
