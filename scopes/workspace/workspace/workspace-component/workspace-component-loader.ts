@@ -243,9 +243,8 @@ export class WorkspaceComponentLoader {
 
   private isComponentNotExistsError(err: Error): boolean {
     return (
-      err instanceof ComponentNotFound ||
-      err instanceof MissingBitMapComponent ||
-      err instanceof ComponentNotFoundInPath
+      err instanceof ComponentNotFound || err instanceof MissingBitMapComponent
+      // || err instanceof ComponentNotFoundInPath
     );
   }
 
