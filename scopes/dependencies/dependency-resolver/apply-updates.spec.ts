@@ -163,24 +163,8 @@ describe('applyUpdates()', () => {
       },
     });
   });
-  it.skip('should apply updates on component dependencies', () => {
-    const componentPoliciesById = {
-      component1: {
-        dependencies: {
-          'component1-runtime-dep1': { version: '1.0.0', resolveFromEnv: true },
-          'component1-runtime-dep2': '1.0.0',
-        },
-        devDependencies: {
-          'component1-dev-dep1': '1.0.0',
-          'component1-dev-dep2': '1.0.0',
-        },
-        peerDependencies: {
-          'component1-peer-dep1': '1.0.0',
-          'component1-peer-dep2': '1.0.0',
-        },
-      },
-    };
-    applyUpdates(
+  it('should apply updates on component dependencies', () => {
+    const { updatedComponents } = applyUpdates(
       [
         {
           name: 'component1-runtime-dep1',
@@ -209,21 +193,23 @@ describe('applyUpdates()', () => {
       }
     );
     // @ts-ignore
-    expect(componentPoliciesById).toStrictEqual({
-      component1: {
-        dependencies: {
-          'component1-runtime-dep1': { version: '2.0.0', resolveFromEnv: true },
-          'component1-runtime-dep2': '1.0.0',
-        },
-        devDependencies: {
-          'component1-dev-dep1': '2.0.0',
-          'component1-dev-dep2': '1.0.0',
-        },
-        peerDependencies: {
-          'component1-peer-dep1': '2.0.0',
-          'component1-peer-dep2': '1.0.0',
+    expect(updatedComponents).toStrictEqual([
+      {
+        componentId: ComponentID.fromString('scope/component1'),
+        config: {
+          policy: {
+            dependencies: {
+              'component1-runtime-dep1': '2.0.0',
+            },
+            devDependencies: {
+              'component1-dev-dep1': '2.0.0',
+            },
+            peerDependencies: {
+              'component1-peer-dep1': '2.0.0',
+            },
+          },
         },
       },
-    });
+    ]);
   });
 });
