@@ -146,12 +146,11 @@ export class LaneShowCmd implements Command {
   async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
     const { remote } = laneOptions;
 
+    if (!name && remote) {
+      throw new Error('remote flag is not supported without lane name');
+    }
     if (!name) {
       name = this.lanes.getCurrentLaneName() || DEFAULT_LANE;
-    }
-
-    if (!name) {
-      throw new BitError('error fetching lane name - this error should not have happened');
     }
 
     const laneId = await this.lanes.parseLaneId(name);
