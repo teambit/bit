@@ -46,15 +46,15 @@ export class WorkspaceComponentLoader {
     const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
       return this.get(id, undefined, undefined, undefined, loadOpts).catch((err) => {
-        if (this.isComponentNotExistsError(err)) {
-          errors.push({
+        if (ConsumerComponent.isComponentInvalidByErrorType(err) && !throwOnFailure) {
+          invalidComponents.push({
             id,
             err,
           });
           return undefined;
         }
-        if (ConsumerComponent.isComponentInvalidByErrorType(err) && !throwOnFailure) {
-          invalidComponents.push({
+        if (this.isComponentNotExistsError(err)) {
+          errors.push({
             id,
             err,
           });
@@ -243,8 +243,9 @@ export class WorkspaceComponentLoader {
 
   private isComponentNotExistsError(err: Error): boolean {
     return (
-      err instanceof ComponentNotFound || err instanceof MissingBitMapComponent
-      // || err instanceof ComponentNotFoundInPath
+      err instanceof ComponentNotFound ||
+      err instanceof MissingBitMapComponent ||
+      err instanceof ComponentNotFoundInPath
     );
   }
 

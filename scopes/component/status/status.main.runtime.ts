@@ -5,7 +5,7 @@ import { IssuesList } from '@teambit/component-issues';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import { ComponentID } from '@teambit/component-id';
-import { Component } from '@teambit/component';
+import { Component, InvalidComponent } from '@teambit/component';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BEFORE_STATUS } from '@teambit/legacy/dist/cli/loader/loader-messages';
@@ -100,6 +100,8 @@ export class StatusMain {
       .map((i) => i.id);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const invalidComponents = allInvalidComponents.filter((c) => !(c.error instanceof ComponentsPendingImport));
+    const divergeInvalid = await this.divergeDataErrorsToInvalidComp(allComps);
+    invalidComponents.push(...divergeInvalid);
     const outdatedComponents = await componentsList.listOutdatedComponents();
     const idsDuringMergeState = componentsList.listDuringMergeStateComponents();
     const mergePendingComponents = await componentsList.listMergePendingComponents();
@@ -213,6 +215,22 @@ export class StatusMain {
       nonExistsInStaged.map((id) => this.workspace.scope.legacyScope.getModelComponent(id))
     );
     stagedComponents.push(...modelComps);
+  }
+
+  private async divergeDataErrorsToInvalidComp(components: Component[]): Promise<InvalidComponent[]> {
+    const invalidComponents: InvalidComponent[] = [];
+    await Promise.all(
+      components.map(async (component) => {
+        const comp = component.state._consumer as ConsumerComponent;
+        if (!comp.modelComponent) return;
+        await comp.modelComponent.setDivergeData(this.workspace.scope.legacyScope.objects, false);
+        const divergeData = comp.modelComponent.getDivergeData();
+        if (divergeData.err) {
+          invalidComponents.push({ id: component.id, err: divergeData.err });
+        }
+      })
+    );
+    return invalidComponents;
   }
 
   static slots = [];
