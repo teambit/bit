@@ -33,6 +33,7 @@ import {
   DependencyList,
   MergedOutdatedPkg,
   WorkspacePolicy,
+  UpdatedComponent,
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
@@ -653,9 +654,7 @@ export class InstallMain {
     return variantPoliciesByPatterns;
   }
 
-  private async _updateComponentsConfig(
-    updatedComponents: Array<{ componentId: ComponentID; config: Record<string, any> }>
-  ) {
+  private async _updateComponentsConfig(updatedComponents: UpdatedComponent[]) {
     if (updatedComponents.length === 0) return;
     await Promise.all(
       updatedComponents.map(({ componentId, config }) => {

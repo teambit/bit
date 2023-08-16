@@ -39,7 +39,7 @@ import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { Registries, Registry } from './registry';
-import { applyUpdates } from './apply-updates';
+import { applyUpdates, UpdatedComponent } from './apply-updates';
 import { ROOT_NAME } from './dependencies/constants';
 import {
   DependencyInstaller,
@@ -1520,7 +1520,7 @@ export class DependencyResolverMain {
     }
   ): {
     updatedVariants: string[];
-    updatedComponents: any[];
+    updatedComponents: UpdatedComponent[];
   } {
     const { updatedVariants, updatedComponents, updatedWorkspacePolicyEntries } = applyUpdates(outdatedPkgs, {
       variantPoliciesByPatterns: options.variantPoliciesByPatterns,

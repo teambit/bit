@@ -1,5 +1,6 @@
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 
+export { UpdatedComponent } from './apply-updates';
 export { RawComponentState, ComponentsManifestsMap, RegistriesMap } from './types';
 export {
   WorkspaceManifest,
