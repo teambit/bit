@@ -609,20 +609,7 @@ export class InstallMain {
       variantPoliciesByPatterns,
     });
     await this._updateVariantsPolicies(variantPatterns, updatedVariants);
-    if (updatedComponents.length) {
-      await Promise.all(
-        updatedComponents.map(({ componentId, config }) => {
-          return this.workspace.addSpecificComponentConfig(
-            componentId,
-            DependencyResolverAspect.id,
-            config,
-            true,
-            true
-          );
-        })
-      );
-      await this.workspace.bitMap.write();
-    }
+    await this._updateComponentsConfig(updatedComponents);
     await this.workspace._reloadConsumer();
     return this._installModules({ dedupe: true });
   }
@@ -664,6 +651,21 @@ export class InstallMain {
       }
     }
     return variantPoliciesByPatterns;
+  }
+
+  private async _updateComponentsConfig(
+    updatedComponents: Array<{ componentId: ComponentID; config: Record<string, any> }>
+  ) {
+    if (updatedComponents.length === 0) return;
+    await Promise.all(
+      updatedComponents.map(({ componentId, config }) => {
+        return this.workspace.addSpecificComponentConfig(componentId, DependencyResolverAspect.id, config, {
+          shouldMergeWithExisting: true,
+          shouldMergeWithPrevious: true,
+        });
+      })
+    );
+    await this.workspace.bitMap.write();
   }
 
   private _updateVariantsPolicies(variantPatterns: Record<string, any>, updateVariantPolicies: string[]) {
