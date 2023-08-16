@@ -1,11 +1,11 @@
-import { OutdatedPkg } from './get-all-policy-pkgs';
+import { MergedOutdatedPkg } from './dependency-resolver.main.runtime';
 import { VariantPolicyConfigObject, WorkspacePolicyEntry } from './policy';
 
 /**
  * Applies updates to policies.
  */
 export function applyUpdates(
-  outdatedPkgs: Array<Omit<OutdatedPkg, 'currentRange'>>,
+  outdatedPkgs: Array<Omit<MergedOutdatedPkg, 'currentRange'>>,
   {
     variantPoliciesByPatterns,
   }: {
@@ -13,14 +13,31 @@ export function applyUpdates(
   }
 ): {
   updatedVariants: string[];
-  updatedComponents: string[];
+  updatedComponents: any[];
   updatedWorkspacePolicyEntries: WorkspacePolicyEntry[];
 } {
   const updatedWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
   const updatedVariants = new Set<string>();
-  const updatedComponents = new Set<string>();
+  const updatedComponents = new Map<string, any>();
 
   for (const outdatedPkg of outdatedPkgs) {
+    if (
+      outdatedPkg.source === 'component' ||
+      (outdatedPkg.source === 'rootPolicy' && outdatedPkg.dependentComponents?.length && !outdatedPkg.isAuto)
+    ) {
+      (outdatedPkg.dependentComponents ?? [outdatedPkg.componentId!]).forEach((componentId) => {
+        const id = componentId.toString();
+        if (!updatedComponents.has(id)) {
+          updatedComponents.set(id, { componentId, config: { policy: {} } });
+        }
+        const { config } = updatedComponents.get(id);
+        if (!config.policy[outdatedPkg.targetField]) {
+          config.policy[outdatedPkg.targetField] = {};
+        }
+        config.policy[outdatedPkg.targetField][outdatedPkg.name] = outdatedPkg.latestRange;
+      });
+      continue;
+    }
     switch (outdatedPkg.source) {
       case 'rootPolicy':
       case 'component-model':
@@ -51,7 +68,7 @@ export function applyUpdates(
   }
   return {
     updatedVariants: Array.from(updatedVariants),
-    updatedComponents: Array.from(updatedComponents),
+    updatedComponents: Array.from(updatedComponents.values()),
     updatedWorkspacePolicyEntries,
   };
 }

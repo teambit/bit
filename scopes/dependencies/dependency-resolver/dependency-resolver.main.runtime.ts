@@ -1520,7 +1520,7 @@ export class DependencyResolverMain {
     }
   ): {
     updatedVariants: string[];
-    updatedComponents: string[];
+    updatedComponents: any[];
   } {
     const { updatedVariants, updatedComponents, updatedWorkspacePolicyEntries } = applyUpdates(outdatedPkgs, {
       variantPoliciesByPatterns: options.variantPoliciesByPatterns,
