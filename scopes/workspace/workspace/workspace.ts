@@ -389,7 +389,7 @@ export class Workspace implements ComponentFactory {
    */
   async filterIds(ids: ComponentID[]): Promise<ComponentID[]> {
     const workspaceIds = await this.listIds();
-    return ids.filter((id) => workspaceIds.find((wsId) => wsId.isEqual(id)));
+    return ids.filter((id) => workspaceIds.find((wsId) => wsId.isEqual(id, { ignoreVersion: !id.hasVersion() })));
   }
 
   /**
