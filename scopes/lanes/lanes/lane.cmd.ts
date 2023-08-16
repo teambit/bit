@@ -303,7 +303,7 @@ export class LaneRemoveCmd implements Command {
       'remote',
       'delete a remote lane. use remote/lane-id syntax e.g. bit lane remove owner.org/my-lane --remote. Delete is immediate, no export required',
     ],
-    ['f', 'force', 'deletes the lane even when the lane is not yet merged to main'],
+    ['f', 'force', 'removes/deletes the lane even when the lane is not yet merged to main'],
     ['s', 'silent', 'skip confirmation'],
   ] as CommandOptions;
   loader = true;
