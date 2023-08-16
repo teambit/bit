@@ -1239,12 +1239,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       shouldMergeWithExisting,
       shouldMergeWithPrevious,
     }: {
-      shouldMergeWithExisting: boolean;
+      shouldMergeWithExisting?: boolean;
       /**
        * relevant only when writing to .bitmap.
        * eject config of the given aspect-id, so then it won't override previous config. (see "adding prod dep, tagging then adding devDep" e2e-test)
        */
-      shouldMergeWithPrevious: boolean;
+      shouldMergeWithPrevious?: boolean;
     } = { shouldMergeWithExisting: false, shouldMergeWithPrevious: false }
   ) {
     const componentConfigFile = await this.componentConfigFile(id);

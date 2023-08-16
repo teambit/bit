@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component';
 import colorizeSemverDiff from '@pnpm/colorize-semver-diff';
 import semverDiff from '@pnpm/semver-diff';
 import { MergedOutdatedPkg } from '@teambit/dependency-resolver';
@@ -130,7 +131,7 @@ function outdatedPkgsRows(outdatedPkgs: MergedOutdatedPkg[]) {
   });
 }
 
-function renderDependents(dependentComponents: string[]): string {
+function renderDependents(dependentComponents: ComponentID[]): string {
   let result = `because of ${dependentComponents[0]}`;
   if (dependentComponents.length > 1) {
     result += ` and ${dependentComponents.length - 1} other components`;
