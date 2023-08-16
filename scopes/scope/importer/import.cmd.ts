@@ -12,7 +12,6 @@ import { BitId } from '@teambit/legacy-bit-id';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { ImporterMain } from './importer.main.runtime';
 import { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
 
