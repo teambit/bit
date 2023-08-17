@@ -233,6 +233,9 @@ export default async function provideWorkspace(
 
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
+  ui.registerPreStart(async () => {
+    return workspace.setComponentPathsRegExps();
+  });
   graphql.register(workspaceSchema);
   const capsuleCmd = getCapsulesCommands(isolator, scope, workspace);
   const commands: CommandList = [new EjectConfCmd(workspace), capsuleCmd, new UseCmd(workspace)];
@@ -264,7 +267,6 @@ export default async function provideWorkspace(
     componentIds.forEach((id) => {
       workspace.clearComponentCache(id);
     });
-    await workspace.setComponentPathsRegExps();
   });
 
   // add sub-commands "set" and "unset" to envs command.
