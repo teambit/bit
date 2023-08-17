@@ -342,15 +342,18 @@ export async function tagModelComponent({
     const isolateOptions = { packageManagerConfigRootDir, seedersOnly };
     const builderOptions = { exitOnFirstFailedTask, skipTests };
 
-    await scope.reloadAspectsWithNewVersion(allComponentsToTag);
-    harmonyComps = await (workspace || scope).getManyByLegacy(allComponentsToTag);
-    const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions, builderOptions);
-    const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
+    const componentsToBuild = allComponentsToTag.filter((c) => !c.isRemoved());
+    if (componentsToBuild.length) {
+      await scope.reloadAspectsWithNewVersion(componentsToBuild);
+      harmonyComps = await (workspace || scope).getManyByLegacy(componentsToBuild);
+      const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions, builderOptions);
+      const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
 
-    snapping._updateComponentsByTagResult(allComponentsToTag, buildResult);
-    publishedPackages.push(...snapping._getPublishedPackages(allComponentsToTag));
-    addBuildStatus(allComponentsToTag, BuildStatus.Succeed);
-    await mapSeries(allComponentsToTag, (consumerComponent) => snapping._enrichComp(consumerComponent));
+      snapping._updateComponentsByTagResult(componentsToBuild, buildResult);
+      publishedPackages.push(...snapping._getPublishedPackages(componentsToBuild));
+      addBuildStatus(componentsToBuild, BuildStatus.Succeed);
+      await mapSeries(componentsToBuild, (consumerComponent) => snapping._enrichComp(consumerComponent));
+    }
   }
 
   let removedComponents: BitIds | undefined;

@@ -460,4 +460,25 @@ describe('bit remove command', function () {
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedDependencies.name);
     });
   });
+
+  describe('soft remove then snapping with --build', () => {
+    let snapOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.softRemoveComponent('comp1');
+      snapOutput = helper.command.snapAllComponents('--build');
+    });
+    it('should not build the removed component', () => {
+      expect(snapOutput).to.not.have.string('pipeline');
+      const versionObj = helper.command.catComponent('comp1@latest');
+      expect(versionObj.buildStatus).to.equal('pending');
+    });
+    it('should remove successfully', () => {
+      const versionObj = helper.command.catComponent('comp1@latest');
+      const removeExt = versionObj.extensions.find((ext) => ext.name === Extensions.remove);
+      expect(removeExt.config.removed).to.be.true;
+    });
+  });
 });
