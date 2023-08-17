@@ -4,7 +4,7 @@ import { ForkingMain } from './forking.main.runtime';
 
 export class ScopeForkCmd implements Command {
   name = 'fork <original-scope> <new-scope>';
-  description = 'fork all components of the original-scope and refactor the source-code to use the new package names';
+  description = 'fork all components of the original-scope and refactor the source-code to use the new scope name';
   options = [] as CommandOptions;
   group = 'development';
 

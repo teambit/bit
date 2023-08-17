@@ -28,7 +28,7 @@ class ConfigSet implements LegacyCommand {
 
 class ConfigGet implements LegacyCommand {
   name = 'get <key>';
-  description = 'get a global configuration';
+  description = 'get a value from global configuration';
   alias = '';
   opts = [];
 
