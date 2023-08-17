@@ -35,7 +35,7 @@ describe('merge lanes', function () {
         helper.scopeHelper.addRemoteScope();
         helper.command.mergeLane(`${helper.scopes.remote}/dev`);
       });
-      it.only('should save the files to the filesystem', () => {
+      it('should save the files to the filesystem', () => {
         helper.fs.outputFile('app.js', fixtures.appPrintComp1(helper.scopes.remote));
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal(appOutput);
