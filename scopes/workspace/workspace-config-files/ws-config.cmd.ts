@@ -60,7 +60,7 @@ export class WsConfigWriteCmd implements Command {
     [
       '',
       'dry-run-with-content',
-      'use with --json flag. show the config content and the paths it will be written per env',
+      'use with --json flag. show the config content and the paths that will be written per env',
     ],
     ['v', 'verbose', 'showing verbose output for writing'],
     ['j', 'json', 'json format'],
@@ -124,9 +124,9 @@ export class WsConfigCleanCmd implements Command {
     [
       'w',
       'writers <writers>',
-      `only write config files for the given writers. use comma to separate multiple writers. use ${COMMAND_NAME} list to see all writers`,
+      `only clean config files for the given writers. use comma to separate multiple writers. use ${COMMAND_NAME} list to see all writers`,
     ],
-    ['', 'dry-run', 'show the paths that configs will be written per env'],
+    ['', 'dry-run', 'show the paths of configs that will be cleaned'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
 

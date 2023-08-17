@@ -17,9 +17,12 @@ export class NewCmd implements Command {
     {
       name: 'template-name',
       description:
-        "the name of the workspace template (run 'bit templates', outside of a workspace, to get a list of available templates)",
+        "the name of the workspace template (run 'bit templates' outside of a workspace to get a list of available workspace templates)",
     },
-    { name: 'workspace-name', description: 'the name for the new workspace and workspace directory' },
+    {
+      name: 'workspace-name',
+      description: 'the name for the new workspace and workspace directory that will be created',
+    },
   ];
   alias = '';
   loader = true;
@@ -28,18 +31,22 @@ export class NewCmd implements Command {
     [
       'a',
       'aspect <aspect-id>',
-      'aspect-id of the template. mandatory for non-core aspects. helpful for core aspects in case of a name collision',
+      'id of the aspect that registered the template, mandatory for non-core aspects. helpful for core aspects in case of a name collision',
     ],
-    ['t', 'template <env-id>', 'env-id of the template. alias for --env.'],
-    ['', 'env <env-id>', 'env-id of the template'],
-    ['d', 'default-scope <scope-name>', `set defaultScope in the new workspace.jsonc`],
+    ['t', 'template <env-id>', "env-id of the template's owner. Alias for --env."],
+    ['', 'env <env-id>', 'env-id of the template. Alias -t'],
+    ['d', 'default-scope <scope-name>', `set defaultScope in the new workspace's workspace.jsonc`],
     ['', 'standalone', 'DEPRECATED. use --skip-git instead'],
-    ['s', 'skip-git', 'skip generation of Git repository'],
-    ['e', 'empty', 'empty workspace with no components (relevant for templates that add components by default)'],
+    ['s', 'skip-git', 'skip generation of Git repository in the new workspace'],
+    [
+      'e',
+      'empty',
+      "skip template's default component creation (relevant for templates that add components by default)",
+    ],
     [
       '',
       'load-from <path-to-template>',
-      'path to the workspace containing the template. helpful during a development of a workspace-template',
+      'local path to the workspace containing the template. Helpful during a development of a workspace-template',
     ],
   ] as CommandOptions;
 
@@ -68,7 +75,7 @@ Congrats! A new workspace has been created successfully at '${workspacePath}'`)}
 Inside the directory '${workspaceName}' you can run various commands including:
 
       ${chalk.yellow('bit start')}
-        Starts the workspace in development mode
+        Starts the local dev server
 
       ${chalk.yellow('bit install')}
         Installs any missing dependencies

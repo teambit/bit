@@ -69,7 +69,7 @@ describe('Jest Tester', function () {
     it('bit build should not show the failing component if --skip-tests was entered', () => {
       const output = helper.command.build(undefined, '--skip-tests');
       expect(output).to.not.have.string('should fail');
-      expect(output).to.have.string('the build has been completed');
+      expect(output).to.have.string('build complete');
     });
   });
   describe('component with an errored test', () => {

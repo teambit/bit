@@ -12,13 +12,13 @@ import { RemoveMain } from './remove.main.runtime';
 
 export class RemoveCmd implements Command {
   name = 'remove <component-pattern>';
-  description = 'remove component(s) from the workspace, or a remote scope';
+  description = 'remove component(s) from the workspace, or a remote scope (with a flag)';
   extendedDescription = `to remove components from your local workspace only, use "bit remove" (with no flags).
 
 to remove a component from the remote scope, use "bit remove --delete", to mark the components as deleted.
 once tagged/snapped and exported, the remote scope will be updated and it'll be marked as deleted there as well.
 
-to remove components from lanes, use "bit lane remove-comp".
+to remove components from a lane, use "bit lane remove-comp".
 `;
   arguments = [
     {
@@ -111,7 +111,11 @@ ${chalk.bold('to update the remote, please tag/snap and then export. to revert, 
       remoteResult: RemovedObjects[];
     } = await this.remove.remove({ componentsPattern, remote: hard, force, track, deleteFiles: !keepFiles, fromLane });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return paintRemoved(localResult, false) + this.paintArray(remoteResult);
+    let localMessage = paintRemoved(localResult, false);
+    if (localMessage !== '')
+      localMessage +=
+        '. Note: these components were not deleted from the remote - if you want to delete components use --delete\n';
+    return `${localMessage}${this.paintArray(remoteResult)}`;
   }
   paintArray(removedObjectsArray: RemovedObjects[]) {
     return removedObjectsArray.map((item) => paintRemoved(item, true));
