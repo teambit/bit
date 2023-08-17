@@ -30,7 +30,7 @@ alternatively, restarting the computer could also help.`;
   group = 'development';
   options = [
     ['v', 'verbose', 'show all watch events and compiler verbose output'],
-    ['', 'skip-pre-compilation', 'skip the compilation step before starting to watch'],
+    ['', 'skip-pre-compilation', 'skip compilation step before starting to watch'],
     [
       't',
       'check-types [string]',
