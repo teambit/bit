@@ -10,6 +10,7 @@ import type { ComponentMain, ComponentFactory } from '@teambit/component';
 import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import { GraphAspect, GraphMain } from '@teambit/graph';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import {
   DependencyResolverAspect,
   DependencyResolverMain,
@@ -61,6 +62,10 @@ import { Network } from './network';
 export type ListResults = {
   capsules: string[];
 };
+
+export type CapsuleTransferFn = (sourceDir: string, targetDir: string) => void;
+
+export type CapsuleTransferSlot = SlotRegistry<CapsuleTransferFn>;
 
 /**
  * Context for the isolation process
@@ -236,18 +241,23 @@ export class IsolatorMain {
     GlobalConfigAspect,
     AspectLoaderAspect,
   ];
+  static slots = [Slot.withType<CapsuleTransferFn>()];
   static defaultConfig = {};
   _componentsPackagesVersionCache: { [idStr: string]: string } = {}; // cache packages versions of components
   _datedHashForName = new Map<string, string>(); // cache dated hash for a specific name
 
-  static async provider([dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader]: [
-    DependencyResolverMain,
-    LoggerMain,
-    ComponentMain,
-    GraphMain,
-    GlobalConfigMain,
-    AspectLoaderMain
-  ]): Promise<IsolatorMain> {
+  static async provider(
+    [dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader]: [
+      DependencyResolverMain,
+      LoggerMain,
+      ComponentMain,
+      GraphMain,
+      GlobalConfigMain,
+      AspectLoaderMain
+    ],
+    _config,
+    [capsuleTransferSlot]: [CapsuleTransferSlot]
+  ): Promise<IsolatorMain> {
     const logger = loggerExtension.createLogger(IsolatorAspect.id);
     const isolator = new IsolatorMain(
       dependencyResolver,
@@ -255,7 +265,8 @@ export class IsolatorMain {
       componentAspect,
       graphMain,
       globalConfig,
-      aspectLoader
+      aspectLoader,
+      capsuleTransferSlot
     );
     return isolator;
   }
@@ -265,7 +276,8 @@ export class IsolatorMain {
     private componentAspect: ComponentMain,
     private graph: GraphMain,
     private globalConfig: GlobalConfigMain,
-    private aspectLoader: AspectLoaderMain
+    private aspectLoader: AspectLoaderMain,
+    private capsuleTransferSlot: CapsuleTransferSlot
   ) {}
 
   // TODO: the legacy scope used for the component writer, which then decide if it need to write the artifacts and dists
@@ -387,7 +399,8 @@ export class IsolatorMain {
   private moveWithTempName(sourceDir, targetDir): void {
     const tempDir = `${targetDir}-${v4()}`;
     this.logger.console(`moving capsule from ${sourceDir} to a temp dir ${tempDir}`);
-    fs.moveSync(sourceDir, tempDir);
+    const mvFunc = this.getCapsuleTransferFn() || fs.moveSync;
+    mvFunc(sourceDir, tempDir);
     // This might exist if in the time when we move to the temp dir, another process created the target dir already
     if (fs.existsSync(targetDir)) {
       this.logger.console(`skip moving capsule from temp dir to real dir as it's already exist: ${targetDir}`);
@@ -396,7 +409,7 @@ export class IsolatorMain {
       return;
     }
     this.logger.console(`moving capsule from a temp dir ${tempDir} to the target dir ${targetDir}`);
-    fs.moveSync(tempDir, targetDir);
+    mvFunc(tempDir, targetDir);
   }
 
   /**
@@ -802,6 +815,14 @@ export class IsolatorMain {
       }
       throw e;
     }
+  }
+
+  registerCapsuleTransferFn(fn: CapsuleTransferFn) {
+    this.capsuleTransferSlot.register(fn);
+  }
+
+  private getCapsuleTransferFn(): CapsuleTransferFn {
+    return this.capsuleTransferSlot.values()[0];
   }
 
   /** @deprecated use the new function signature with an object parameter instead */
