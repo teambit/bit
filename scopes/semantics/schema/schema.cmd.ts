@@ -8,10 +8,10 @@ import type { SchemaMain } from './schema.main.runtime';
 
 export class SchemaCommand implements Command {
   name = 'schema <pattern>';
-  description = 'shows the API schema of a certain component.';
+  description = 'shows the API schema of the specified component/s.';
   extendedDescription = `${PATTERN_HELP('schema')}`;
   group = 'development';
-  options = [['j', 'json', 'return the component data in json format']] as CommandOptions;
+  options = [['j', 'json', 'return the component schema in json format']] as CommandOptions;
 
   constructor(private schema: SchemaMain, private component: ComponentMain, private logger: Logger) {}
 

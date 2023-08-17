@@ -588,7 +588,7 @@ describe('bit snap command', function () {
       helper.fs.outputFile('comp3/index.js', fixtures.comp3V2);
 
       const statusOutput = helper.command.runCmd('bit status');
-      expect(statusOutput).to.have.string('components pending to be tagged automatically');
+      expect(statusOutput).to.have.string('components pending auto-tag');
 
       snapOutput = helper.command.snapComponent('comp3');
       isTypeHead = helper.command.getHead('comp3');
