@@ -23,6 +23,7 @@ describe('bit recover command', function () {
 
       helper.command.softRemoveComponent('comp2');
       helper.command.recover('comp2');
+      helper.command.link();
     });
     it('bit status should not show a section of removed components', () => {
       const status = helper.command.statusJson();
