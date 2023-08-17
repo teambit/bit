@@ -4,7 +4,11 @@ import { RenamingMain } from './renaming.main.runtime';
 
 export class ScopeRenameCmd implements Command {
   name = 'rename <current-scope-name> <new-scope-name>';
-  description = "Renames the scope name for all components with the specified 'current scope name'";
+  description =
+    "Renames the scope name for all components with the specified 'current scope name' - only available for new components that have not yet been snapped/tagged";
+  extendedDescription = `Note: if <current-scope-name> is also the defaultScope for the workspace, this command will set <new-scope-name>
+as the defaultScope instead, and that will then be set for all components by default. You may see updates in your .bitmap file
+as a result of this change`;
   arguments = [
     { name: 'current-scope-name', description: 'the scope name to be replaced by another scope name' },
     { name: 'new-scope-name', description: 'a new scope name to replace the current scope name' },
@@ -13,7 +17,7 @@ export class ScopeRenameCmd implements Command {
     [
       'r',
       'refactor',
-      'update the import statements in all dependent components to the new package name (that contains the new scope name)',
+      'update the import statements in all dependent components to the new package name (i.e. with the new scope name)',
     ],
   ] as CommandOptions;
   group = 'development';

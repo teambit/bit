@@ -12,32 +12,40 @@ import { BasicTagSnapParams } from './tag-model-component';
 
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
-  description = 'create an immutable and exportable component snapshot (no release version)';
+  description = 'create an immutable and exportable component snapshot (non-release version)';
   extendedDescription: string;
   group = 'development';
   arguments = [
     {
       name: 'component-pattern',
-      description: `${COMPONENT_PATTERN_HELP}. By default, all new and modified components are snapped.`,
+      description: `${COMPONENT_PATTERN_HELP}. By default, only new and modified components are snapped (add --unmodified to snap all components in the workspace).`,
     },
   ];
   helpUrl = 'docs/components/snaps';
   alias = '';
   options = [
-    ['m', 'message <message>', 'log message describing the latest changes'],
+    ['m', 'message <message>', 'snap message describing the latest changes - will appear in component history log'],
     ['', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
     ['', 'unmerged', 'complete a merge process by snapping the unmerged components'],
-    ['b', 'build', 'not needed for now. run the build pipeline in case the feature-flag build-on-ci is enabled'],
+    [
+      'b',
+      'build',
+      'not needed for now. run the build pipeline locally in case the feature-flag build-on-ci is enabled',
+    ],
     [
       '',
       'editor [editor]',
-      'open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
+      'open an editor to write a snap message per component. optionally specify the editor-name (defaults to vim).',
     ],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
-    ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
+    [
+      '',
+      'disable-snap-pipeline',
+      'skip the snap pipeline. this will for instance skip packing and publishing component version for install, and app deployment',
+    ],
     ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
-    ['', 'ignore-build-errors', 'run the snap pipeline although the build pipeline failed'],
+    ['', 'ignore-build-errors', 'proceed to snap pipeline even when build pipeline fails'],
     [
       'i',
       'ignore-issues [issues]',
@@ -45,11 +53,11 @@ export class SnapCmd implements Command {
 [${Object.keys(IssuesClasses).join(', ')}]
 to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
     ],
-    ['a', 'all', 'DEPRECATED (not needed anymore, it is the default now). snap all new and modified components'],
+    ['a', 'all', 'DEPRECATED (not needed anymore, now the default). snap all new and modified components'],
     [
       '',
       'fail-fast',
-      'stop pipeline execution on the first failed task (by default a task is skipped only when its dependent failed)',
+      'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
     [
       'f',
@@ -96,18 +104,18 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     const disableTagAndSnapPipelines = disableSnapPipeline;
     if (all) {
       this.logger.consoleWarning(
-        `--all is deprecated, please omit it. "bit snap" by default will snap all new and modified components`
+        `--all is deprecated, please omit it. By default all new and modified components are snapped, to snap all components add --unmodified`
       );
     }
     if (force) {
       this.logger.consoleWarning(
-        `--force is deprecated, use either --skip-tests or --unmodified depending on the use case`
+        `--force is deprecated, use either --skip-tests or --ignore-build-errors depending on the use case`
       );
       if (pattern) unmodified = true;
     }
     if (!message && !editor) {
       this.logger.consoleWarning(
-        `--message will be mandatory in the next few releases. make sure to add a message with your snap`
+        `--message will be mandatory in the next few releases. make sure to add a message with your snap, will be displayed in the version history`
       );
     }
     if (forceDeploy) {
@@ -141,7 +149,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
     const snapExplanation = `\n(use "bit export" to push these components to a remote")
-(use "bit reset" to unstage versions)\n`;
+(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)\n`;
 
     const compInBold = (id: BitId) => {
       const version = id.hasVersion() ? `@${id.version}` : '';
