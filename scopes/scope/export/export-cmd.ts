@@ -1,6 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import ejectTemplate from '@teambit/legacy/dist/cli/templates/eject-template';
-import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
+import { WILDCARD_HELP, COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import chalk from 'chalk';
 import { isEmpty } from 'lodash';
 import { ExportMain } from './export.main.runtime';
@@ -11,21 +11,17 @@ export class ExportCmd implements Command {
   arguments = [
     {
       name: 'component-patterns...',
-      description:
-        'component IDs, component names, or component patterns (separated by space). Use patterns to export groups of components using a common scope or namespace. E.g., "utils/*" (wrap with double quotes)',
+      description: `(not recommended) ${COMPONENT_PATTERN_HELP}`,
     },
   ];
-  extendedDescription = `bit export => export all staged components to their current scope, if checked out to a lane, export the lane as well
-  \`bit export [id...]\` => export the given ids to their current scope
-  ${WILDCARD_HELP('export remote-scope')}`;
+  extendedDescription = `bit export => export all staged snaps/tags of components to their remote scope. if checked out to a lane, export the lane as well
+  \`bit export [pattern...]\` => export components included by the pattern to their remote scope (we recommend not using a pattern in
+    most scenarios so that all changes are exported simultaneously)
+  ${WILDCARD_HELP('export')}`;
   alias = 'e';
   helpUrl = 'docs/components/exporting-components';
   options = [
-    [
-      'e',
-      'eject',
-      'replace the exported components with their corresponding packages (to use these components without further maintaining them)',
-    ],
+    ['e', 'eject', 'remove component from the workspace and install it instead as a regular npm package'],
     [
       'a',
       'all',
@@ -117,9 +113,9 @@ export class ExportCmd implements Command {
       if (isEmpty(missingScope)) return '';
       const idsStr = missingScope.map((id) => id.toString()).join(', ');
       return chalk.yellow(
-        `the following component(s) were not exported: ${chalk.bold(
+        `the following component(s) were not exported as no remote scope is configured for them: ${chalk.bold(
           idsStr
-        )}.\nplease specify <remote> to export them, or set a "defaultScope" in your workspace config\n\n`
+        )}.\nplease specify <remote> to export them, run 'bit scope set <scope> <component>,  or set a "defaultScope" in your workspace config\n\n`
       );
     };
     const ejectOutput = () => {

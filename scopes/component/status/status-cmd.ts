@@ -24,13 +24,13 @@ const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
 
 export class StatusCmd implements Command {
   name = 'status';
-  description = 'present the current status of components in the workspace, and notifies when issues are detected';
+  description = 'present the current status of components in the workspace, including indication of detected issues';
   group = 'development';
   extendedDescription: string;
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],
-    ['', 'verbose', 'show extra data: full snap hashes for staged and divergence point for lanes'],
+    ['', 'verbose', 'show extra data: full snap hashes for staged components, and divergence point for lanes'],
     ['l', 'lanes', 'when on a lane, show updates from main and updates from forked lanes'],
     ['', 'strict', 'in case issues found, exit with code 1'],
   ] as CommandOptions;
@@ -178,13 +178,13 @@ export class StatusCmd implements Command {
     const outdatedStr = outdatedComponents.length ? [outdatedTitle, outdatedDesc, outdatedComps].join('\n') : '';
 
     const pendingMergeTitle = chalk.underline.white('pending merge');
-    const pendingMergeDesc = `(use "bit reset" to add local changes on top of the remote and discard local tags/snaps.
+    const pendingMergeDesc = `(use "bit reset" to discard local tags/snaps, and bit checkout head to re-merge with the remote.
 alternatively, to keep local tags/snaps history, use "bit merge [component-id]")\n`;
     const pendingMergeComps = mergePendingComponents
       .map((component) => {
         return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
           component.divergeData.snapsOnSourceOnly.length
-        } and ${component.divergeData.snapsOnTargetOnly.length} different snaps each, respectively\n`;
+        } (source) and ${component.divergeData.snapsOnTargetOnly.length} (target) uncommon snaps respectively\n`;
       })
       .join('');
 
@@ -192,10 +192,10 @@ alternatively, to keep local tags/snaps history, use "bit merge [component-id]")
       ? [pendingMergeTitle, pendingMergeDesc, pendingMergeComps].join('\n')
       : '';
 
-    const compDuringMergeTitle = chalk.underline.white('components during merge state');
+    const compDuringMergeTitle = chalk.underline.white('components in merge state');
     const compDuringMergeDesc = `(use "bit snap/tag [--unmerged]" to complete the merge process.
-to cancel the merge operation, use either "bit lane merge-abort" (for previous "bit lane merge" command)
-or use "bit merge [component-id] --abort" for previous "bit merge" command)\n`;
+to cancel the merge operation, use either "bit lane merge-abort" (for prior "bit lane merge" command)
+or use "bit merge [component-id] --abort" (for prior "bit merge" command)\n`;
     const compDuringMergeComps = componentsDuringMergeState.map((c) => format(c)).join('\n');
 
     const compDuringMergeStr = compDuringMergeComps.length
@@ -220,7 +220,7 @@ or use "bit merge [component-id] --abort" for previous "bit merge" command)\n`;
     const autoTagPendingOutput = immutableUnshift(
       autoTagPendingComponents.map((c) => format(c)),
       autoTagPendingComponents.length
-        ? chalk.underline.white('components pending to be tagged automatically (when their dependencies are tagged)')
+        ? chalk.underline.white('components pending auto-tag (when their modified dependencies are tagged)')
         : ''
     ).join('\n');
 
@@ -230,13 +230,14 @@ or use "bit merge [component-id] --abort" for previous "bit merge" command)\n`;
       componentsWithIssues.length ? chalk.underline.white('components with issues') + compWithIssuesDesc : ''
     ).join('\n');
 
-    const invalidDesc = '\nthese components were failed to load.\n';
+    const invalidDesc = '\nthese components failed to load.\n';
     const invalidComponentOutput = immutableUnshift(
       invalidComponents.map((c) => format(c.id, false, getInvalidComponentLabel(c.error))).sort(),
       invalidComponents.length ? chalk.underline.white(statusInvalidComponentsMsg) + invalidDesc : ''
     ).join('\n');
 
-    const locallySoftRemovedDesc = '\n(tag/snap and export them to update the remote. to undo, run "bit recover")\n';
+    const locallySoftRemovedDesc =
+      '\n(tag/snap and export the components to update the deletion to the remote. to undo deletion, run "bit recover")\n';
     const locallySoftRemovedOutput = immutableUnshift(
       locallySoftRemoved.map((c) => format(c)).sort(),
       locallySoftRemoved.length ? chalk.underline.white('soft-removed components locally') + locallySoftRemovedDesc : ''
@@ -247,26 +248,26 @@ or use "bit merge [component-id] --abort" for previous "bit merge" command)\n`;
     const remotelySoftRemovedOutput = immutableUnshift(
       remotelySoftRemoved.map((c) => format(c)).sort(),
       remotelySoftRemoved.length
-        ? chalk.underline.white('soft-removed components on the remote') + remotelySoftRemovedDesc
+        ? chalk.underline.white('components soft-removed on the remote') + remotelySoftRemovedDesc
         : ''
     ).join('\n');
 
-    const stagedDesc = '\n(use "bit export" to push these components to a remote scope)\n';
+    const stagedDesc = '\n(use "bit export" to push these component versions to the remote scope)\n';
     const stagedComponentsOutput = immutableUnshift(
       stagedComponents.map((c) => format(c.id, false, undefined, c.versions)),
       stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
     ).join('\n');
 
-    const snappedDesc = '\n(use "bit tag" or "bit tag --snapped" to lock a version)\n';
+    const snappedDesc = '\n(use "bit tag" or "bit tag --snapped" to lock a semver version)\n';
     const snappedComponentsOutput = immutableUnshift(
       snappedComponents.map((c) => format(c)),
       snappedComponents.length ? chalk.underline.white('snapped components (tag pending)') + snappedDesc : ''
     ).join('\n');
 
-    const unavailableOnMainDesc = '\n(use "bit checkout head" to make it available)\n';
+    const unavailableOnMainDesc = '\n(use "bit checkout head" to make them available)\n';
     const unavailableOnMainOutput = immutableUnshift(
       unavailableOnMain.map((c) => format(c)),
-      unavailableOnMain.length ? chalk.underline.white('unavailable on main components') + unavailableOnMainDesc : ''
+      unavailableOnMain.length ? chalk.underline.white('components unavailable on main') + unavailableOnMainDesc : ''
     ).join('\n');
 
     const getUpdateFromMsg = (divergeData: SnapsDistance, from = 'main'): string => {

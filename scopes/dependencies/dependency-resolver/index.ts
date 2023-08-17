@@ -1,5 +1,6 @@
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 
+export { UpdatedComponent } from './apply-updates';
 export { RawComponentState, ComponentsManifestsMap, RegistriesMap } from './types';
 export {
   WorkspaceManifest,
@@ -21,6 +22,7 @@ export type {
   DependencyResolverWorkspaceConfig,
   DependencyResolverVariantConfig,
   BIT_CLOUD_REGISTRY,
+  MergedOutdatedPkg,
 } from './dependency-resolver.main.runtime';
 export {
   BIT_DEV_REGISTRY,

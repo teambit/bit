@@ -395,7 +395,7 @@ export class Workspace implements ComponentFactory {
    */
   async filterIds(ids: ComponentID[]): Promise<ComponentID[]> {
     const workspaceIds = await this.listIds();
-    return ids.filter((id) => workspaceIds.find((wsId) => wsId.isEqual(id)));
+    return ids.filter((id) => workspaceIds.find((wsId) => wsId.isEqual(id, { ignoreVersion: !id.hasVersion() })));
   }
 
   /**
@@ -1242,12 +1242,17 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     id: ComponentID,
     aspectId: string,
     config: Record<string, any> = {},
-    shouldMergeWithExisting = false,
-    /**
-     * relevant only when writing to .bitmap.
-     * eject config of the given aspect-id, so then it won't override previous config. (see "adding prod dep, tagging then adding devDep" e2e-test)
-     */
-    shouldMergeWithPrevious = false
+    {
+      shouldMergeWithExisting,
+      shouldMergeWithPrevious,
+    }: {
+      shouldMergeWithExisting?: boolean;
+      /**
+       * relevant only when writing to .bitmap.
+       * eject config of the given aspect-id, so then it won't override previous config. (see "adding prod dep, tagging then adding devDep" e2e-test)
+       */
+      shouldMergeWithPrevious?: boolean;
+    } = { shouldMergeWithExisting: false, shouldMergeWithPrevious: false }
   ) {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {

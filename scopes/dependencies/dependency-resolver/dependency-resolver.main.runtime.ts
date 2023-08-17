@@ -6,7 +6,7 @@ import { getRelativeRootComponentDir } from '@teambit/bit-roots';
 import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent, ComponentID } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
-import { compact, get, pick, uniq } from 'lodash';
+import { compact, get, pick, uniq, omit } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { DependenciesEnv, EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
@@ -39,7 +39,7 @@ import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { Registries, Registry } from './registry';
-import { applyUpdates } from './apply-updates';
+import { applyUpdates, UpdatedComponent } from './apply-updates';
 import { ROOT_NAME } from './dependencies/constants';
 import {
   DependencyInstaller,
@@ -1401,18 +1401,18 @@ export class DependencyResolverMain {
   async getOutdatedPkgsFromPolicies({
     rootDir,
     variantPoliciesByPatterns,
-    componentPoliciesById,
+    componentPolicies,
     components,
     patterns,
     forceVersionBump,
   }: {
     rootDir: string;
     variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
-    componentPoliciesById: Record<string, any>;
+    componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
     components: Component[];
     patterns?: string[];
     forceVersionBump?: 'major' | 'minor' | 'patch';
-  }): Promise<OutdatedPkg[]> {
+  }): Promise<MergedOutdatedPkg[]> {
     const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
     const componentModelVersions: ComponentModelVersion[] = (
       await Promise.all(
@@ -1431,7 +1431,8 @@ export class DependencyResolverMain {
             .map((dep) => ({
               name: dep.getPackageName!(), // eslint-disable-line
               version: dep.version,
-              componentId: component.id.toString(),
+              isAuto: dep.source === 'auto',
+              componentId: component.id,
               lifecycleType: dep.lifecycle,
             }));
         })
@@ -1440,7 +1441,7 @@ export class DependencyResolverMain {
     let allPkgs = getAllPolicyPkgs({
       rootPolicy: this.getWorkspacePolicyFromConfig(),
       variantPoliciesByPatterns,
-      componentPoliciesById,
+      componentPolicies,
       componentModelVersions,
     });
     if (patterns?.length) {
@@ -1452,7 +1453,8 @@ export class DependencyResolverMain {
       );
       allPkgs = allPkgs.filter(({ name }) => selectedPkgNames.has(name));
     }
-    return this.getOutdatedPkgs({ rootDir, forceVersionBump }, allPkgs);
+    const outdatedPkgs = await this.getOutdatedPkgs({ rootDir, forceVersionBump }, allPkgs);
+    return mergeOutdatedPkgs(outdatedPkgs);
   }
 
   /**
@@ -1515,15 +1517,13 @@ export class DependencyResolverMain {
     outdatedPkgs: Array<Omit<OutdatedPkg, 'currentRange'>>,
     options: {
       variantPoliciesByPatterns: Record<string, any>;
-      componentPoliciesById: Record<string, any>;
     }
   ): {
     updatedVariants: string[];
-    updatedComponents: string[];
+    updatedComponents: UpdatedComponent[];
   } {
     const { updatedVariants, updatedComponents, updatedWorkspacePolicyEntries } = applyUpdates(outdatedPkgs, {
       variantPoliciesByPatterns: options.variantPoliciesByPatterns,
-      componentPoliciesById: options.componentPoliciesById,
     });
     this.addToRootPolicy(updatedWorkspacePolicyEntries, {
       updateExisting: true,
@@ -1709,4 +1709,59 @@ function newVersionRange(currentRange: string, forceVersionBump?: 'major' | 'min
     default:
       return null;
   }
+}
+
+export interface MergedOutdatedPkg extends OutdatedPkg {
+  dependentComponents?: ComponentID[];
+  hasDifferentRanges?: boolean;
+}
+
+function mergeOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): MergedOutdatedPkg[] {
+  const mergedOutdatedPkgs: Record<
+    string,
+    MergedOutdatedPkg & Required<Pick<MergedOutdatedPkg, 'dependentComponents'>>
+  > = {};
+  const outdatedPkgsNotFromComponentModel: OutdatedPkg[] = [];
+  for (const outdatedPkg of outdatedPkgs) {
+    if (outdatedPkg.source === 'component-model' && outdatedPkg.componentId) {
+      if (!mergedOutdatedPkgs[outdatedPkg.name]) {
+        mergedOutdatedPkgs[outdatedPkg.name] = {
+          ...omit(outdatedPkg, ['componentId']),
+          source: 'rootPolicy',
+          dependentComponents: [outdatedPkg.componentId],
+        };
+      } else {
+        if (mergedOutdatedPkgs[outdatedPkg.name].currentRange !== outdatedPkg.currentRange) {
+          mergedOutdatedPkgs[outdatedPkg.name].hasDifferentRanges = true;
+        }
+        mergedOutdatedPkgs[outdatedPkg.name].currentRange = tryPickLowestRange(
+          mergedOutdatedPkgs[outdatedPkg.name].currentRange,
+          outdatedPkg.currentRange
+        );
+        mergedOutdatedPkgs[outdatedPkg.name].dependentComponents.push(outdatedPkg.componentId);
+        if (outdatedPkg.targetField === 'dependencies') {
+          mergedOutdatedPkgs[outdatedPkg.name].targetField = outdatedPkg.targetField;
+        }
+      }
+    } else {
+      outdatedPkgsNotFromComponentModel.push(outdatedPkg);
+    }
+  }
+  return [...Object.values(mergedOutdatedPkgs), ...outdatedPkgsNotFromComponentModel];
+}
+
+function tryPickLowestRange(range1: string, range2: string) {
+  if (range1 === '*' || range2 === '*') return '*';
+  try {
+    return semver.lt(rangeToVersion(range1), rangeToVersion(range2)) ? range1 : range2;
+  } catch {
+    return '*';
+  }
+}
+
+function rangeToVersion(range: string) {
+  if (range.startsWith('~') || range.startsWith('^')) {
+    return range.substring(1);
+  }
+  return range;
 }

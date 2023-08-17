@@ -112,6 +112,7 @@ export class CLIMain {
     command.options = command.options || [];
     command.private = command.private || false;
     command.commands = command.commands || [];
+    command.name = command.name.trim();
     if (command.loader === undefined) {
       if (command.internal) {
         command.loader = false;
