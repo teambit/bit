@@ -53,7 +53,7 @@ export class WorkspaceComponentLoader {
           });
           return undefined;
         }
-        if (this.isComponentNotExistsError(err)) {
+        if (this.isComponentNotExistsError(err) || err instanceof ComponentNotFoundInPath) {
           errors.push({
             id,
             err,
@@ -215,7 +215,7 @@ export class WorkspaceComponentLoader {
     return undefined;
   }
 
-  async getConsumerComponent(
+  private async getConsumerComponent(
     id: ComponentID,
     loadOpts: ComponentLoadOptions = {}
   ): Promise<ConsumerComponent | undefined> {
@@ -242,11 +242,7 @@ export class WorkspaceComponentLoader {
   }
 
   private isComponentNotExistsError(err: Error): boolean {
-    return (
-      err instanceof ComponentNotFound ||
-      err instanceof MissingBitMapComponent ||
-      err instanceof ComponentNotFoundInPath
-    );
+    return err instanceof ComponentNotFound || err instanceof MissingBitMapComponent;
   }
 
   private async executeLoadSlot(component: Component, loadOpts?: ComponentLoadOptions) {
