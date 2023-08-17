@@ -82,7 +82,10 @@ export class DependenciesMain {
     };
     await Promise.all(
       compIds.map(async (compId) => {
-        await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, config, true, true);
+        await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, config, {
+          shouldMergeWithExisting: true,
+          shouldMergeWithPrevious: true,
+        });
       })
     );
 
@@ -161,7 +164,15 @@ export class DependenciesMain {
   async eject(componentPattern: string): Promise<ComponentID[]> {
     const compIds = await this.workspace.idsByPattern(componentPattern);
     await pMapSeries(compIds, async (compId) => {
-      await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, {}, true, true);
+      await this.workspace.addSpecificComponentConfig(
+        compId,
+        DependencyResolverAspect.id,
+        {},
+        {
+          shouldMergeWithExisting: true,
+          shouldMergeWithPrevious: true,
+        }
+      );
     });
     await this.workspace.bitMap.write();
 
