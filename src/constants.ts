@@ -551,8 +551,8 @@ export const WILDCARD_HELP = (command: string) =>
 
 export const PATTERN_HELP = (command: string) =>
   `you can use a \`<pattern>\` for multiple component ids, such as \`bit ${command} "org.scope/utils/**"\`.
-use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
-always wrap the pattern with quotes to avoid collision with shell commands.
+use comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'
+always wrap the pattern with single quotes to avoid collision with shell commands.
 use \`bit pattern --help\` to understand patterns better and \`bit pattern <pattern>\` to validate the pattern.
 `;
 
