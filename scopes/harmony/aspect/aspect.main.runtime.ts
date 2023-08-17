@@ -98,7 +98,9 @@ export class AspectMain {
     const componentIds = await this.workspace.idsByPattern(pattern);
     await Promise.all(
       componentIds.map(async (componentId) => {
-        await this.workspace.addSpecificComponentConfig(componentId, aspectId, config, options.merge);
+        await this.workspace.addSpecificComponentConfig(componentId, aspectId, config, {
+          shouldMergeWithExisting: options.merge,
+        });
       })
     );
     await this.workspace.bitMap.write();
