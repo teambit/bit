@@ -3,6 +3,7 @@ import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
 import { outputDiffResults } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { LaneDiffGenerator } from './lane-diff-generator';
 
 export class LaneDiffCmd implements Command {
@@ -12,8 +13,23 @@ export class LaneDiffCmd implements Command {
 bit lane diff to => diff between the current lane (or default-lane when in scope) and "to" lane.
 bit lane diff from to => diff between "from" lane and "to" lane.`;
   alias = '';
+  arguments = [
+    {
+      name: 'from',
+      description: `base lane for comparison`,
+    },
+    {
+      name: 'to',
+      description: `lane being compared to base lane`,
+    },
+  ];
   options = [
-    ['', 'pattern <component-pattern>', 'show lane-diff for the specified component-pattern only'],
+    [
+      '',
+      'pattern <component-pattern>',
+      `show lane-diff for components conforming to the specified component-pattern only
+component-pattern format: ${COMPONENT_PATTERN_HELP}`,
+    ],
   ] as CommandOptions;
   loader = true;
   private = true;
