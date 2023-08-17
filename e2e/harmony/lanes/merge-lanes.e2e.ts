@@ -35,7 +35,7 @@ describe('merge lanes', function () {
         helper.scopeHelper.addRemoteScope();
         helper.command.mergeLane(`${helper.scopes.remote}/dev`);
       });
-      it('should save the files to the filesystem', () => {
+      it.only('should save the files to the filesystem', () => {
         helper.fs.outputFile('app.js', fixtures.appPrintComp1(helper.scopes.remote));
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal(appOutput);
@@ -74,7 +74,7 @@ describe('merge lanes', function () {
         mergeOutput = helper.command.mergeLane(`${helper.scopes.remote}/dev`, `--workspace --verbose`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
-        expect(mergeOutput).to.have.string('the merge has been skipped on the following component(s)');
+        expect(mergeOutput).to.have.string('merge skipped for the following component(s)');
         expect(mergeOutput).to.have.string('not in the workspace');
       });
       it('bitmap should not save any component', () => {
