@@ -164,7 +164,7 @@ export function configFactory(
     ],
 
     snapshot: {
-      managedPaths: componentPathsRegExps,
+      ...(componentPathsRegExps && componentPathsRegExps.length > 0 ? { managedPaths: componentPathsRegExps } : {}),
     },
 
     watchOptions: {

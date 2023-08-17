@@ -39,7 +39,7 @@ type PatternReturnType<T extends PatternTarget> = ReturnType<PatternTargetMap[T]
  * @returns {string} node modules catched packages regex.
  */
 export function generateNodeModulesPattern<T extends PatternTarget>(
-  options: GenerateNodeModulesPatternOptions<T>
+  options: GenerateNodeModulesPatternOptions<T> = {}
 ): PatternReturnType<T> {
   const { packages = [], excludeComponents, target = PatternTarget.JEST } = options;
   const negativeLookaheadPatterns = packages.reduce((acc: string[], packageName) => {
