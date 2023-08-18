@@ -664,15 +664,13 @@ export class PreviewMain {
     const [name, uiRoot] = this.getUi();
     const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
     const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
-    const filePath = await this.ui.generateRoot(
-      filteredAspects,
-      name,
-      'preview',
-      PreviewAspect.id,
-      undefined,
-      (context as any).capsuleNetwork ? undefined : uiRoot.path // check if we are running inside a workspace or a capsule
-    );
-    return filePath;
+    // check if we are running inside a workspace or a capsule
+    // if it's for a workspace, we would write the file to the node_modules
+    // and return the relative path from the workspace root
+    const isInCapsule = 'capsuleNetwork' in context;
+    const dirPath = isInCapsule ? undefined : join(uiRoot.path, 'node_modules', '.cache', 'bit', 'teambit.ui');
+    const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id, undefined, dirPath);
+    return isInCapsule ? filePath : relative(uiRoot.path, filePath);
   }
 
   async resolveAspects(

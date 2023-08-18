@@ -83,11 +83,7 @@ export class UIServer {
    */
   async getDevConfig() {
     const aspects = await this.uiRoot.resolveAspects(UIRuntime.name);
-    return devConfig(
-      this.uiRoot.path,
-      [await this.ui.generateRoot(aspects, this.uiRootExtension, undefined, undefined, undefined, this.uiRoot.path)],
-      this.uiRoot.name
-    );
+    return devConfig(this.uiRoot.path, [await this.ui.generateRoot(aspects, this.uiRootExtension)], this.uiRoot.name);
   }
 
   private setReady: () => void;

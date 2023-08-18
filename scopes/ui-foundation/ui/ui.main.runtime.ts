@@ -223,14 +223,7 @@ export class UiMain {
 
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
     const ssr = uiRoot.buildOptions?.ssr || false;
-    const mainEntry = await this.generateRoot(
-      await uiRoot.resolveAspects(UIRuntime.name),
-      name,
-      undefined,
-      undefined,
-      undefined,
-      uiRoot.path
-    );
+    const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name);
     const outputPath = customOutputPath || uiRoot.path;
 
     const browserConfig = createWebpackConfig(outputPath, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
@@ -454,14 +447,10 @@ export class UiMain {
       ignoreVersion
     );
     const filename = `${runtimeName}.root${sha1(contents)}.js`;
-    // Write the file into `./node_modules/.cache/bit/teambit.ui/` if the path
-    // is provided, which is usually the workspace root.
-    const relativeFilepath = path ? `./node_modules/.cache/bit/teambit.ui/${filename}` : filename;
-    const filepath = resolve(join(path || __dirname, relativeFilepath));
-    const returnedPath = path ? relativeFilepath : filepath;
-    if (fs.existsSync(filepath)) return returnedPath;
+    const filepath = resolve(join(path || __dirname, filename));
+    if (fs.existsSync(filepath)) return filepath;
     fs.outputFileSync(filepath, contents);
-    return returnedPath;
+    return filepath;
   }
 
   private async selectPort() {
@@ -582,16 +571,7 @@ export class UiMain {
 
     const config = createWebpackConfig(
       uiRoot.path,
-      [
-        await this.generateRoot(
-          await uiRoot.resolveAspects(UIRuntime.name),
-          name,
-          undefined,
-          undefined,
-          undefined,
-          uiRoot.path
-        ),
-      ],
+      [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
       uiRoot.name,
       await this.publicDir(uiRoot)
     );
