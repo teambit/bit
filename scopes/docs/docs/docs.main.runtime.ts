@@ -86,7 +86,7 @@ export class DocsMain {
    * compute the description of the component from its source code and docs file.
    */
   async getDescription(component: Component): Promise<string> {
-    const componentDoc = await this.computeDoc(component);
+    const componentDoc = this.getDoc(component);
     const desc = componentDoc?.description;
     if (desc) return desc;
     const consumerComponent: ConsumerComponent = component.state._consumer;

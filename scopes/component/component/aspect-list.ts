@@ -19,6 +19,15 @@ export class AspectList {
     return entry;
   }
 
+  upsertEntry(aspectId: ComponentID, data: SerializableMap = {}) {
+    const existingEntry = this.entries.find((entry) => entry.id.isEqual(aspectId));
+    if (existingEntry) {
+      existingEntry.data = data;
+      return existingEntry;
+    }
+    return this.addEntry(aspectId, data);
+  }
+
   /**
    * transform an aspect list into a new one without the given aspect ids
    */
