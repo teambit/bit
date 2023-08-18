@@ -11,6 +11,8 @@ import { jestConfigFile } from './files/jest.config';
 export const reactNativeEnvTemplate: ComponentTemplate = {
   name: 'react-native-env',
   description: 'customize the base React Native env with your configs and tools',
+  hidden: true,
+
   generateFiles: (context: ComponentContext) => {
     return [
       {

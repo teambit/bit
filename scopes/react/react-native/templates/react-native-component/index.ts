@@ -8,6 +8,8 @@ import { indexFile } from './files/index';
 export const reactNativeComponent: ComponentTemplate = {
   name: 'react-native',
   description: 'a basic react native component',
+  hidden: true,
+
   generateFiles: (context: ComponentContext) => {
     return [indexFile(context), componentFile(context), compositionFile(context), docsFile(context), testFile(context)];
   },

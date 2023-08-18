@@ -28,7 +28,6 @@ import { WorkspaceGenerator } from './workspace-generator';
 import { WorkspaceTemplate } from './workspace-template';
 import { NewCmd, NewOptions } from './new.cmd';
 import { componentGeneratorTemplate } from './templates/component-generator';
-import { workspaceGeneratorTemplate } from './templates/workspace-generator';
 import { starterTemplate } from './templates/starter';
 import { StarterPlugin } from './starter.plugin';
 import { GeneratorService } from './generator.service';
@@ -281,7 +280,7 @@ export class GeneratorMain {
   ): Promise<GenerateResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     await this.loadAspects();
-    const { namespace, aspect: aspectId } = options;
+    const { namespace, aspectId } = options;
 
     const componentConfigLoadingRegistry = ComponentConfig.componentConfigLoadingRegistry;
 
@@ -536,8 +535,7 @@ export class GeneratorMain {
     aspectLoader.registerPlugins([new StarterPlugin(generator)]);
     envs.registerService(new GeneratorService());
 
-    if (generator)
-      generator.registerComponentTemplate([componentGeneratorTemplate, starterTemplate, workspaceGeneratorTemplate]);
+    if (generator) generator.registerComponentTemplate([componentGeneratorTemplate, starterTemplate]);
     return generator;
   }
 }

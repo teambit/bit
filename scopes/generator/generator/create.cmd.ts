@@ -1,14 +1,9 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { GeneratorMain } from './generator.main.runtime';
+import type { ComponentTemplateOptions } from './component-template';
 
-export type CreateOptions = {
-  namespace?: string;
-  aspect?: string;
-  scope?: string;
-  path?: string;
-  env?: string;
-};
+export type CreateOptions = ComponentTemplateOptions<string, string>;
 
 export class CreateCmd implements Command {
   name = 'create <template-name> <component-names...>';
@@ -65,7 +60,7 @@ export class CreateCmd implements Command {
       template?: string;
     }
   ) {
-    options.aspect = options.aspect ?? options.template;
+    options.aspectId = options.aspectId ?? options.template;
     const results = await this.generator.generateComponentTemplate(componentNames, templateName, options);
     const title = `${results.length} component(s) were created`;
 

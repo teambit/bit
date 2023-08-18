@@ -112,7 +112,7 @@ export class WorkspaceGenerator {
       name: this.workspaceName,
       defaultScope: this.options.defaultScope,
       empty: this.options.empty,
-      aspectComponent: this.aspectComponent,
+      aspect: this.aspectComponent,
       template: this.template,
     };
   }

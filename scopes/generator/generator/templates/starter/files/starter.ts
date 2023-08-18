@@ -1,31 +1,35 @@
-export function starterFile() {
+import { ComponentContext } from '@teambit/generator';
+
+export function starterFile({ namePascalCase, name }: ComponentContext) {
   return `import { WorkspaceContext, Starter } from '@teambit/generator';
-import { workspaceConfig } from './template/files/workspace-config';
-import { readme } from './template/files/readme-file';
-import { gitIgnore } from './template/files/git-ignore';
-
-export const starter: Starter = {
-  name: 'template-example',
-  description: 'demonstration of a workspace template',
-  generateFiles: async (context: WorkspaceContext) => [
-    {
-      relativePath: 'workspace.jsonc',
-      content: await workspaceConfig(context),
+  import { workspaceConfig } from './template/files/workspace-config';
+  import { gitIgnore } from './template/files/git-ignore';
+  
+  export const ${namePascalCase}Starter: Starter = {
+    name: '${name}',
+    description: 'a ${name} workspace',
+    generateFiles: async (context: WorkspaceContext) => {
+      const files = [
+        {
+          relativePath: 'workspace.jsonc',
+          content: await workspaceConfig(context),
+        },
+      ];
+  
+      if (!context.skipGit) {
+        files.push({
+          relativePath: '.gitignore',
+          content: gitIgnore(),
+        });
+      }
+  
+      return files;
     },
-    {
-      relativePath: '.gitignore',
-      content: gitIgnore(),
-    },
-    {
-      relativePath: 'README.md',
-      content: readme(),
-    },
-  ],
-  importComponents: () => [
-    { id: 'teambit.react/templates/ui/text', path: 'ui/text' },
-  ],
-};
-
-export default starter;
+    import: () => [
+      { id: 'teambit.community/component-showcase' },
+    ]
+  };
+  
+  export default ${namePascalCase}Starter;
 `;
 }

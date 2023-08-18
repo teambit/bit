@@ -150,7 +150,7 @@ export class ComponentGenerator {
     if (configWithEnv) this.workspace.bitMap.setEntireConfig(component.id, configWithEnv);
 
     const getEnvData = () => {
-      const envFromFlag = this.options.env; // env entered by the user when running `bit create --env`
+      const envFromFlag = this.options.envId; // env entered by the user when running `bit create --env`
       const envFromTemplate = config?.[EnvsAspect.id]?.env;
       if (envFromFlag) {
         return {
@@ -181,7 +181,7 @@ export class ComponentGenerator {
   }
 
   private async addEnvIfProvidedByFlag(config?: ComponentConfig): Promise<ComponentConfig | undefined> {
-    const userEnv = this.options.env; // env entered by the user when running `bit create --env`
+    const userEnv = this.options.envId; // env entered by the user when running `bit create --env`
     const templateEnv = config?.[EnvsAspect.id]?.env;
     if (!userEnv || userEnv === templateEnv) {
       return config;
