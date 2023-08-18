@@ -6,6 +6,7 @@ import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
+import { generateNodeModulesPattern, PatternTarget } from '@teambit/dependencies.modules.packages-excluder';
 import {
   AspectEntry,
   ComponentMain,
@@ -151,6 +152,11 @@ export class Workspace implements ComponentFactory {
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
   private componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized;
+  /**
+   * Components paths are calculated from the component package names of the workspace
+   * They are used in webpack configuration to only track changes from these paths inside `node_modules`
+   */
+  private componentPathsRegExps: RegExp[] = [];
   localAspects: string[] = [];
   constructor(
     /**
@@ -235,6 +241,22 @@ export class Workspace implements ComponentFactory {
       }
     );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
+
+    this.registerOnComponentAdd(async () => {
+      await this.setComponentPathsRegExps();
+      return {
+        results: this.componentPathsRegExps,
+        toString: () => this.componentPathsRegExps.join(),
+      };
+    });
+
+    this.registerOnComponentRemove(async () => {
+      await this.setComponentPathsRegExps();
+      return {
+        results: this.componentPathsRegExps,
+        toString: () => this.componentPathsRegExps.join(),
+      };
+    });
   }
 
   private validateConfig() {
@@ -1796,6 +1818,20 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     );
     await this.bitMap.write();
     return { updated, alreadyUpToDate };
+  }
+
+  getComponentPathsRegExps() {
+    return this.componentPathsRegExps;
+  }
+
+  async setComponentPathsRegExps() {
+    const workspaceComponents = await this.list();
+    const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
+    const pathsExcluding = generateNodeModulesPattern({
+      packages: workspacePackageNames,
+      target: PatternTarget.WEBPACK,
+    });
+    this.componentPathsRegExps = [...pathsExcluding.map((stringPattern) => new RegExp(stringPattern))];
   }
 }
 
