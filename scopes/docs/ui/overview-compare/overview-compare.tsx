@@ -73,8 +73,10 @@ export function OverviewCompare(props: OverviewCompareProps) {
     );
   };
 
+  const key = `${componentCompare?.base?.model.id.toString()}-${componentCompare?.compare?.model.id.toString()}-overview-compare`;
+
   return (
-    <React.Fragment key="overview-compare">
+    <React.Fragment key={key}>
       {componentCompare?.loading && (
         <div className={styles.loader}>
           <RoundLoader />
@@ -87,12 +89,7 @@ export function OverviewCompare(props: OverviewCompareProps) {
         </div>
       </div> */}
       <OverviewToolbar />
-      <CompareSplitLayoutPreset
-        key={`${componentCompare?.base?.model.id.toString()}-${componentCompare?.compare?.model.id.toString()}-overview-split-layout`}
-        base={BaseLayout}
-        compare={CompareLayout}
-        className={styles.splitLayout}
-      />
+      <CompareSplitLayoutPreset base={BaseLayout} compare={CompareLayout} className={styles.splitLayout} />
     </React.Fragment>
   );
 }
