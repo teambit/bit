@@ -23,6 +23,7 @@ describe('bit recover command', function () {
 
       helper.command.softRemoveComponent('comp2');
       helper.command.recover('comp2');
+      helper.command.link();
     });
     it('bit status should not show a section of removed components', () => {
       const status = helper.command.statusJson();
@@ -141,6 +142,9 @@ describe('bit recover command', function () {
 
         helper.command.removeLaneComp('comp2');
         helper.command.recover('comp2');
+        // @todo: this should not be needed. the installation during "recover" should create the link correctly.
+        // for some reason, the links it creates are incorrect. (@ur256cwd-remote/rgq5tjys-local.comp1 instead of @ur256cwd-remote/comp1)
+        helper.command.link();
       });
       it('bit status should not show a section of removed components', () => {
         const status = helper.command.statusJson();

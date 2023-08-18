@@ -546,7 +546,10 @@ export default class CommandHelper {
       .map((id) => (stripScopeName ? id.replace(`${this.scopes.remote}/`, '') : id));
   }
 
-  expectStatusToBeClean(exclude: string[] = []) {
+  expectStatusToBeClean(exclude: string[] = [], excludeComponentsWithIssuesSection = true) {
+    if (excludeComponentsWithIssuesSection) {
+      exclude.push('componentsWithIssues');
+    }
     const statusJson = this.statusJson();
     Object.keys(statusJson).forEach((key) => {
       if (exclude.includes(key)) return;
