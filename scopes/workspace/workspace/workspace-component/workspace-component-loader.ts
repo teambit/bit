@@ -31,14 +31,29 @@ export class WorkspaceComponentLoader {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
-  async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
+  async getMany(
+    ids: Array<ComponentID>,
+    loadOpts?: ComponentLoadOptions,
+    throwOnFailure = true
+  ): Promise<{
+    components: Component[];
+    invalidComponents: InvalidComponent[];
+  }> {
     const idsWithoutEmpty = compact(ids);
     const errors: { id: ComponentID; err: Error }[] = [];
+    const invalidComponents: InvalidComponent[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
       return this.get(id, undefined, undefined, undefined, loadOpts).catch((err) => {
-        if (this.isComponentNotExistsError(err)) {
+        if (ConsumerComponent.isComponentInvalidByErrorType(err) && !throwOnFailure) {
+          invalidComponents.push({
+            id,
+            err,
+          });
+          return undefined;
+        }
+        if (this.isComponentNotExistsError(err) || err instanceof ComponentNotFoundInPath) {
           errors.push({
             id,
             err,
@@ -56,7 +71,7 @@ export class WorkspaceComponentLoader {
     // remove errored components
     const filteredComponents: Component[] = compact(components);
     longProcessLogger.end();
-    return filteredComponents;
+    return { components: filteredComponents, invalidComponents };
   }
 
   async getInvalid(ids: Array<ComponentID>): Promise<InvalidComponent[]> {
@@ -200,7 +215,7 @@ export class WorkspaceComponentLoader {
     return undefined;
   }
 
-  async getConsumerComponent(
+  private async getConsumerComponent(
     id: ComponentID,
     loadOpts: ComponentLoadOptions = {}
   ): Promise<ConsumerComponent | undefined> {
@@ -227,11 +242,7 @@ export class WorkspaceComponentLoader {
   }
 
   private isComponentNotExistsError(err: Error): boolean {
-    return (
-      err instanceof ComponentNotFound ||
-      err instanceof MissingBitMapComponent ||
-      err instanceof ComponentNotFoundInPath
-    );
+    return err instanceof ComponentNotFound || err instanceof MissingBitMapComponent;
   }
 
   private async executeLoadSlot(component: Component, loadOpts?: ComponentLoadOptions) {
