@@ -371,6 +371,12 @@ export class Workspace implements ComponentFactory {
     return this.getMany(idsToGet, loadOpts);
   }
 
+  async listWithInvalid(loadOpts?: ComponentLoadOptions) {
+    const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
+    const ids = await this.resolveMultipleComponentIds(legacyIds);
+    return this.componentLoader.getMany(ids, loadOpts, false);
+  }
+
   /**
    * list all invalid components.
    * (see the invalid criteria in ConsumerComponent.isComponentInvalidByErrorType())
@@ -953,7 +959,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
-    return this.componentLoader.getMany(ids, loadOpts);
+    const { components } = await this.componentLoader.getMany(ids, loadOpts);
+    return components;
   }
 
   getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
@@ -1001,7 +1008,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(),
       preferDependencyGraph: true,
     });
-    return this.componentLoader.getMany(ids);
+    return this.getMany(ids);
   }
 
   async importCurrentLaneIfMissing() {
