@@ -1,12 +1,12 @@
+import { BitId } from '@teambit/legacy-bit-id';
 import chalk from 'chalk';
 import R from 'ramda';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 
-import { BitId, BitIds } from '../../bit-id';
-
-export default (
+export function removeTemplate(
   { dependentBits, modifiedComponents = [], removedComponentIds, missingComponents, removedFromLane },
   isRemote
-) => {
+) {
   const paintMissingComponents = () => {
     if (R.isEmpty(missingComponents)) return '';
     return (
@@ -71,4 +71,4 @@ export default (
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     paintModifiedComponents(modifiedComponents)
   );
-};
+}

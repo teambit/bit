@@ -5,7 +5,7 @@ import { mergeReport } from '@teambit/merging';
 import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
-import paintRemoved from '@teambit/legacy/dist/cli/templates/remove-template';
+import { removeTemplate } from '@teambit/remove';
 import { MergeLanesMain } from './merge-lanes.main.runtime';
 
 export class MergeLaneCmd implements Command {
@@ -177,9 +177,9 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     });
 
     const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });
-    const deleteResult = `${deleteResults.localResult ? paintRemoved(deleteResults.localResult, false) : ''}${(
+    const deleteResult = `${deleteResults.localResult ? removeTemplate(deleteResults.localResult, false) : ''}${(
       deleteResults.remoteResult || []
-    ).map((item) => paintRemoved(item, true))}${
+    ).map((item) => removeTemplate(item, true))}${
       (deleteResults.readmeResult && chalk.yellow(deleteResults.readmeResult)) || ''
     }\n`;
     return mergeResult + deleteResult;
