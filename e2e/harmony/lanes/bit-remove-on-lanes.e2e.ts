@@ -57,7 +57,7 @@ describe('bit lane command', function () {
     describe('removing a component that has no dependents', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeRemoval);
-        helper.command.removeLaneComp('comp1');
+        helper.command.softRemoveOnLane('comp1');
       });
 
       it('should remove the component from .bitmap', () => {
@@ -105,7 +105,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.command.removeLaneComp('comp2');
+      helper.command.softRemoveOnLane('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -162,7 +162,7 @@ describe('bit lane command', function () {
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
-      helper.command.removeLaneComp('comp1');
+      helper.command.softRemoveOnLane('comp1');
     });
     it('should remove from the lane object as well', () => {
       const lane = helper.command.showOneLaneParsed('dev');
@@ -184,7 +184,7 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
       helper.command.export();
-      helper.command.removeLaneComp('comp2');
+      helper.command.softRemoveOnLane('comp2');
     });
     it('should remove the component from the workspace', () => {
       const list = helper.command.listParsed();
@@ -207,7 +207,7 @@ describe('bit lane command', function () {
       helper.command.export();
       beforeRemoveScope = helper.scopeHelper.cloneLocalScope();
       helper.command.switchLocalLane('lane-a', '-x');
-      helper.command.removeLaneComp('comp2');
+      helper.command.softRemoveOnLane('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -279,7 +279,7 @@ describe('bit lane command', function () {
       helper.command.export();
       beforeRemoveScope = helper.scopeHelper.cloneLocalScope();
       helper.command.switchLocalLane('lane-a', '-x');
-      helper.command.removeLaneComp('comp2');
+      helper.command.softRemoveOnLane('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -380,7 +380,7 @@ describe('bit lane command', function () {
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.command.removeLaneComp('bar/foo');
+      helper.command.softRemoveOnLane('bar/foo');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
@@ -410,7 +410,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       beforeRemoveScope = helper.scopeHelper.cloneLocalScope();
-      helper.command.removeLaneComp('comp2');
+      helper.command.softRemoveOnLane('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -438,7 +438,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.removeLaneComp('comp1', '--workspace-only');
+      helper.command.softRemoveOnLane('comp1', '--workspace-only');
       helper.command.export();
     });
     // previously in older bit versions, it used to leave the removed-component with the snapped version in the lane-object.
@@ -455,7 +455,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.command.removeLaneComp('comp1');
+      helper.command.softRemoveOnLane('comp1');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
@@ -475,7 +475,7 @@ describe('bit lane command', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.createLane();
-      helper.command.removeLaneComp('comp1', '--update-main');
+      helper.command.softRemoveOnLane('comp1', '--update-main');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.switchLocalLane('main', '-x');
@@ -514,7 +514,7 @@ describe('bit lane command', function () {
       helper.command.export();
       helper.command.createLane('lane-a');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.removeLaneComp('comp1', '--update-main');
+      helper.command.softRemoveOnLane('comp1', '--update-main');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 

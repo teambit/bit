@@ -396,7 +396,7 @@ describe('bit remove command', function () {
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
-      helper.command.removeLaneComp('comp1');
+      helper.command.softRemoveOnLane('comp1');
     });
     it('should remove the components from the local lane', () => {
       const laneComps = helper.command.showOneLane('dev');
@@ -415,7 +415,7 @@ describe('bit remove command', function () {
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.command.removeLaneComp('comp2');
+      helper.command.softRemoveOnLane('comp2');
     });
     it('should not throwing an error upon import', () => {
       expect(() => helper.command.importComponent('comp2')).to.not.throw();
