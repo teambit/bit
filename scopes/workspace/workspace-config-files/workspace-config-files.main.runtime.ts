@@ -30,6 +30,7 @@ import {
  */
 export type WorkspaceConfigFilesAspectConfig = {
   configsRootDir?: string;
+  disableWorkspaceConfigWrite?: boolean;
 };
 
 export type EnvConfigWriter = {
@@ -142,6 +143,14 @@ export class WorkspaceConfigFilesMain {
     // const execContext = await this.getExecContext();
     const cleanResults = await this.clean(options);
     return cleanResults;
+  }
+
+  /**
+   * The function checks if the writing of workspace configuration is disabled.
+   * @returns the boolean value of `!!this.config.disableWorkspaceConfigWrite`.
+   */
+  isWorkspaceConfigWriteDisabled() {
+    return !!this.config.disableWorkspaceConfigWrite;
   }
 
   /**
@@ -338,6 +347,10 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
   static dependencies = [CLIAspect, WorkspaceAspect, EnvsAspect, LoggerAspect];
 
   static runtime = MainRuntime;
+
+  static defaultConfig: Partial<WorkspaceConfigFilesAspectConfig> = {
+    disableWorkspaceConfigWrite: false,
+  };
 
   static async provider(
     [cli, workspace, envs, loggerAspect]: [CLIMain, Workspace, EnvsMain, LoggerMain],

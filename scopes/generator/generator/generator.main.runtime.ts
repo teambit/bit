@@ -5,6 +5,7 @@ import { EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config';
+import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 
 import ComponentAspect, { ComponentID } from '@teambit/component';
 import type { ComponentMain, Component } from '@teambit/component';
@@ -82,7 +83,8 @@ export class GeneratorMain {
     private componentAspect: ComponentMain,
     private tracker: TrackerMain,
     private logger: Logger,
-    private git: GitMain
+    private git: GitMain,
+    private wsConfigFiles: WorkspaceConfigFilesMain
   ) {}
 
   /**
@@ -303,6 +305,7 @@ export class GeneratorMain {
       this.envs,
       this.newComponentHelper,
       this.tracker,
+      this.wsConfigFiles,
       this.logger,
       templateWithId.id,
       templateWithId.envName ? ComponentID.fromString(templateWithId.id) : undefined
@@ -479,6 +482,7 @@ export class GeneratorMain {
     TrackerAspect,
     LoggerAspect,
     GitAspect,
+    WorkspaceConfigFilesAspect,
   ];
 
   static runtime = MainRuntime;
@@ -496,6 +500,7 @@ export class GeneratorMain {
       tracker,
       loggerMain,
       git,
+      wsConfigFiles,
     ]: [
       Workspace,
       CLIMain,
@@ -507,7 +512,8 @@ export class GeneratorMain {
       ComponentMain,
       TrackerMain,
       LoggerMain,
-      GitMain
+      GitMain,
+      WorkspaceConfigFilesMain
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
@@ -524,7 +530,8 @@ export class GeneratorMain {
       componentAspect,
       tracker,
       logger,
-      git
+      git,
+      wsConfigFiles
     );
     const commands = [
       new CreateCmd(generator, community.getDocsDomain()),

@@ -15,6 +15,8 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ComponentID } from '@teambit/component-id';
+import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+
 import { ComponentTemplate, ComponentFile, ComponentConfig } from './component-template';
 import { CreateOptions } from './create.cmd';
 
@@ -36,6 +38,7 @@ export class ComponentGenerator {
     private envs: EnvsMain,
     private newComponentHelper: NewComponentHelperMain,
     private tracker: TrackerMain,
+    private wsConfigFiles: WorkspaceConfigFilesMain,
     private logger: Logger,
     private aspectId: string,
     private envId?: ComponentID
@@ -65,6 +68,13 @@ export class ComponentGenerator {
     await this.workspace.bitMap.write();
 
     const ids = generateResults.map((r) => r.id);
+    await this.tryLinkToNodeModules(ids);
+    await this.tryWriteConfigFiles();
+
+    return generateResults;
+  }
+
+  private async tryLinkToNodeModules(ids: ComponentID[]) {
     try {
       await linkToNodeModulesByIds(
         this.workspace,
@@ -75,8 +85,25 @@ export class ComponentGenerator {
         `failed linking the new components to node_modules, please run "bit link" manually. error: ${err.message}`
       );
     }
+  }
 
-    return generateResults;
+  /**
+   * The function `tryWriteConfigFiles` attempts to write workspace config files, and if it fails, it logs an error
+   * message.
+   * @returns If the condition `!shouldWrite` is true, then nothing is being returned. Otherwise, if the `writeConfigFiles`
+   * function is successfully executed, nothing is being returned. If an error occurs during the execution of
+   * `writeConfigFiles`, an error message is being returned.
+   */
+  private async tryWriteConfigFiles() {
+    try {
+      const shouldWrite = !this.wsConfigFiles.isWorkspaceConfigWriteDisabled();
+      if (!shouldWrite) return;
+      await this.wsConfigFiles.writeConfigFiles({});
+    } catch (err: any) {
+      this.logger.consoleFailure(
+        `failed generating workspace config files, please run "bit ws-config write" manually. error: ${err.message}`
+      );
+    }
   }
 
   private async deleteGeneratedComponents(dirs: string[]) {
