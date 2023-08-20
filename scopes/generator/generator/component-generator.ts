@@ -69,7 +69,7 @@ export class ComponentGenerator {
 
     const ids = generateResults.map((r) => r.id);
     await this.tryLinkToNodeModules(ids);
-    await this.tryWriteConfigFiles();
+    await this.tryWriteConfigFiles(ids);
 
     return generateResults;
   }
@@ -94,10 +94,11 @@ export class ComponentGenerator {
    * function is successfully executed, nothing is being returned. If an error occurs during the execution of
    * `writeConfigFiles`, an error message is being returned.
    */
-  private async tryWriteConfigFiles() {
+  private async tryWriteConfigFiles(ids: ComponentID[]) {
     try {
       const shouldWrite = !this.wsConfigFiles.isWorkspaceConfigWriteDisabled();
       if (!shouldWrite) return;
+      ids.map((id) => this.workspace.clearComponentCache(id));
       await this.wsConfigFiles.writeConfigFiles({
         clean: true,
         silent: true,
