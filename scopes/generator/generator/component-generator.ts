@@ -98,7 +98,11 @@ export class ComponentGenerator {
     try {
       const shouldWrite = !this.wsConfigFiles.isWorkspaceConfigWriteDisabled();
       if (!shouldWrite) return;
-      await this.wsConfigFiles.writeConfigFiles({});
+      await this.wsConfigFiles.writeConfigFiles({
+        clean: true,
+        silent: true,
+        dedupe: true,
+      });
     } catch (err: any) {
       this.logger.consoleFailure(
         `failed generating workspace config files, please run "bit ws-config write" manually. error: ${err.message}`

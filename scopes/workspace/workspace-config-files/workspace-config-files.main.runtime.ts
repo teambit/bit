@@ -349,7 +349,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
   static runtime = MainRuntime;
 
   static defaultConfig: Partial<WorkspaceConfigFilesAspectConfig> = {
-    disableWorkspaceConfigWrite: false,
+    disableWorkspaceConfigWrite: true,
   };
 
   static async provider(
