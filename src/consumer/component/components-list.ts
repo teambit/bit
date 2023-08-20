@@ -394,29 +394,13 @@ export default class ComponentsList {
       );
       this._fromFileSystem[cacheKeyName] = components;
       if (!this._invalidComponents) {
-        const divergeInvalid = await this.divergeDataErrorsToInvalidComp(components);
-        this._invalidComponents = [...invalidComponents, ...divergeInvalid];
+        this._invalidComponents = invalidComponents;
       }
       if (!this._removedComponents) {
         this._removedComponents = removedComponents;
       }
     }
     return this._fromFileSystem[cacheKeyName];
-  }
-
-  private async divergeDataErrorsToInvalidComp(components: Component[]): Promise<InvalidComponent[]> {
-    const invalidComponents: InvalidComponent[] = [];
-    await Promise.all(
-      components.map(async (comp) => {
-        if (!comp.modelComponent) return;
-        await comp.modelComponent.setDivergeData(this.scope.objects, false);
-        const divergeData = comp.modelComponent.getDivergeData();
-        if (divergeData.err) {
-          invalidComponents.push({ id: comp.id, error: divergeData.err, component: comp });
-        }
-      })
-    );
-    return invalidComponents;
   }
 
   /**

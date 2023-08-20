@@ -5,7 +5,6 @@ import Table from 'cli-table';
 import { forEach, isEmpty } from 'lodash';
 
 import { remoteAdd, remoteList, remoteRm } from '../../../api/consumer';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import RemoteUndefined from '../exceptions/remote-undefined';
@@ -36,7 +35,7 @@ class RemoteRm implements LegacyCommand {
   name = 'del <name>';
   description = 'remove a tracked bit remote';
   alias = '';
-  opts = [['g', 'global', 'remove a global configured remote scope']] as CommandOptions;
+  opts = [['g', 'global', 'remove a globally configured remote scope']] as CommandOptions;
 
   action([name]: [string], { global }: { global: boolean }): Promise<any> {
     return remoteRm(name, global);
@@ -51,7 +50,7 @@ export default class Remote implements LegacyCommand {
   name = 'remote';
   description = 'manage set of tracked bit scope(s)';
   group: Group = 'collaborate';
-  extendedDescription = `https://${BASE_DOCS_DOMAIN}/scope/remote-scopes`;
+  helpUrl = 'reference/scope/remote-scopes';
   alias = '';
   opts = [['g', 'global', 'see globally configured remotes']] as CommandOptions;
   migration = true;

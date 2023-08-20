@@ -446,9 +446,9 @@ export default class CommandHelper {
   renameLane(oldName: string, newName: string) {
     return this.runCmd(`bit lane rename ${oldName} ${newName}`);
   }
-  importManyComponents(ids: string[]) {
+  importManyComponents(ids: string[], flag = '') {
     const idsWithRemote = ids.map((id) => `${this.scopes.remote}/${id}`);
-    return this.runCmd(`bit import ${idsWithRemote.join(' ')}`);
+    return this.runCmd(`bit import ${idsWithRemote.join(' ')} ${flag}`);
   }
 
   importComponentWithOptions(id = 'bar/foo.js', options: Record<string, any>) {
@@ -546,7 +546,10 @@ export default class CommandHelper {
       .map((id) => (stripScopeName ? id.replace(`${this.scopes.remote}/`, '') : id));
   }
 
-  expectStatusToBeClean(exclude: string[] = []) {
+  expectStatusToBeClean(exclude: string[] = [], excludeComponentsWithIssuesSection = true) {
+    if (excludeComponentsWithIssuesSection) {
+      exclude.push('componentsWithIssues');
+    }
     const statusJson = this.statusJson();
     Object.keys(statusJson).forEach((key) => {
       if (exclude.includes(key)) return;

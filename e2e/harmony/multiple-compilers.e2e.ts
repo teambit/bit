@@ -97,7 +97,7 @@ describe('multiple compilers - babel and typescript', function () {
       buildOutput = helper.command.build();
     });
     it('should successfully build', () => {
-      expect(buildOutput).to.have.string('the build has been completed');
+      expect(buildOutput).to.have.string('build complete');
     });
     it('should indicate that pre-build and post-build were running', () => {
       expect(buildOutput).to.have.string('running pre-build for all tasks');

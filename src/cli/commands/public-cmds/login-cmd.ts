@@ -20,7 +20,7 @@ export default class Login implements LegacyCommand {
     [
       '',
       'machine-name <name>',
-      'specify machine-name to pair with the token (useful for CI to avoid accidentally revoke the token)',
+      'specify machine-name to pair with the token (useful for CI to avoid accidentally revoking the token)',
     ],
   ] as CommandOptions;
   action(

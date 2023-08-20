@@ -171,7 +171,8 @@ export default class ScopeComponentsImporter {
     const ids = stillIncomplete.map((id) => id.toString());
     const msg = `${ids.length} components still have incomplete version-history after importing them from the remote`;
     logger.error(`the following ${msg}\n${ids.join('\n')}`);
-    logger.console(`warning: ${msg}, see the debug.log for their ids`, 'warn', 'yellow');
+    // for now remove this console, until we know better when this is not an error
+    // logger.console(`warning: ${msg}, see the debug.log for their ids`, 'warn', 'yellow');
   }
 
   private async getIncompleteVersionHistory(existingDefs: ComponentDef[]) {
@@ -484,9 +485,7 @@ export default class ScopeComponentsImporter {
   async checkWhatHashesExistOnRemote(remote: string, hashes: string[]): Promise<string[]> {
     const remotes = await getScopeRemotes(this.scope);
     const multipleStreams = await remotes.fetch({ [remote]: hashes }, this.scope, { type: 'object' });
-    const bitObjectsList = await this.multipleStreamsToBitObjects(multipleStreams);
-    const allObjects = bitObjectsList.getAll();
-    const existing = allObjects.map((o) => o.hash().toString());
+    const existing = await this.streamToHashes(remote, multipleStreams[remote]);
     logger.debug(
       `checkWhatHashesExistOnRemote, searched for ${hashes.length} hashes, found ${existing.length} hashes on ${remote}`
     );
@@ -642,6 +641,19 @@ export default class ScopeComponentsImporter {
     const objectList = ObjectList.mergeMultipleInstances(objectListPerRemote);
     const bitObjects = await objectList.toBitObjects();
     return bitObjects;
+  }
+
+  private async streamToHashes(remoteName: string, stream: ObjectItemsStream): Promise<string[]> {
+    const hashes: string[] = [];
+    try {
+      for await (const obj of stream) {
+        hashes.push(obj.ref.hash);
+      }
+    } catch (err: any) {
+      logger.error(`streamToHashes, error from ${remoteName}`, err);
+      throw new Error(`the remote "${remoteName}" threw an error:\n${err.message}`);
+    }
+    return hashes;
   }
 
   private async getVersionFromComponentDef(component: ModelComponent, id: BitId): Promise<Version | null> {

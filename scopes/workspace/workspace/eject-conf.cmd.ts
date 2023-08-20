@@ -15,11 +15,17 @@ type EjectConfOptionsCLI = {
 export default class EjectConfCmd implements Command {
   name = 'eject-conf <pattern>';
   description = 'eject components configuration (create a `component.json` file)';
-  extendedDescription = `${PATTERN_HELP('eject-conf')}`;
+  extendedDescription = `note this can be reversed at any time by snapping/tagging changes and deleting the component.json file \n${PATTERN_HELP(
+    'eject-conf'
+  )}`;
   alias = '';
   group = 'development';
   options = [
-    ['p', 'propagate', 'mark propagate true in the config file'],
+    [
+      'p',
+      'propagate',
+      'mark propagate true in the config file, so that component.json configs will be merge with workspace configs',
+    ],
     ['o', 'override', 'override file if exist'],
   ] as CommandOptions;
 
@@ -31,7 +37,7 @@ export default class EjectConfCmd implements Command {
       .map((result) => result.configPath)
       .map((p) => path.relative(this.workspace.path, p))
       .join('\n');
-    return chalk.green(`successfully ejected config in the following path(s)
+    return chalk.green(`successfully ejected config to the following path(s)
 ${chalk.bold(paths)}`);
   }
 

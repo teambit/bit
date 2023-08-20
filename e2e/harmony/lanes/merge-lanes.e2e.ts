@@ -74,7 +74,7 @@ describe('merge lanes', function () {
         mergeOutput = helper.command.mergeLane(`${helper.scopes.remote}/dev`, `--workspace --verbose`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
-        expect(mergeOutput).to.have.string('the merge has been skipped on the following component(s)');
+        expect(mergeOutput).to.have.string('merge skipped for the following component(s)');
         expect(mergeOutput).to.have.string('not in the workspace');
       });
       it('bitmap should not save any component', () => {
@@ -262,6 +262,25 @@ describe('merge lanes', function () {
       expect(log[0].hash).to.equal(headOnMain);
       expect(log[1].hash).to.equal(headOnLane);
       expect(log[1].parents[0]).to.equal(headOnMain);
+    });
+  });
+  describe('merge with squash when other lane is ahead by only 1 snap, so no need to squash', () => {
+    let headOnLane: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('dev');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.switchLocalLane('main');
+      helper.command.mergeLane('dev');
+    });
+    it('should not add the squashed prop into the version object', () => {
+      const head = helper.command.catComponent(`comp1@${headOnLane}`);
+      expect(head).to.not.have.property('squashed');
+      expect(head.modified).to.have.lengthOf(0);
     });
   });
   describe('merge with squash after exporting and importing the lane to a new workspace', () => {

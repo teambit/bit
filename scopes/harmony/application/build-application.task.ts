@@ -137,8 +137,9 @@ export class AppsBuildTask implements BuildTask {
         appResult.componentResult.warnings || []
       );
       // @ts-ignore
-      merged.componentResult._metadata.buildDeployContexts = // @ts-ignore
-      (merged.componentResult._metadata.buildDeployContexts || [])
+      merged.componentResult._metadata.buildDeployContexts = ( // @ts-ignore
+        merged.componentResult._metadata.buildDeployContexts || []
+      )
         // @ts-ignore
         .concat(appResult.componentResult._metadata || []);
     });

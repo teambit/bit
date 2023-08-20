@@ -65,14 +65,10 @@ export class Watcher {
   private watchQueue = new WatchQueue();
   private bitMapChangesInProgress = false;
   private ipcEventsDir: string;
-  constructor(
-    private workspace: Workspace,
-    private pubsub: PubsubMain,
-    private watcherMain: WatcherMain,
-    private trackDirs: { [dir: PathLinux]: ComponentID } = {},
-    private verbose = false,
-    private multipleWatchers: WatcherProcessData[] = []
-  ) {
+  private trackDirs: { [dir: PathLinux]: ComponentID } = {};
+  private verbose = false;
+  private multipleWatchers: WatcherProcessData[] = [];
+  constructor(private workspace: Workspace, private pubsub: PubsubMain, private watcherMain: WatcherMain) {
     this.ipcEventsDir = this.watcherMain.ipcEvents.eventsDir;
   }
 
@@ -82,6 +78,7 @@ export class Watcher {
 
   async watchAll(opts: WatchOptions) {
     const { msgs, ...watchOpts } = opts;
+    this.verbose = opts.verbose || false;
     const pathsToWatch = await this.getPathsToWatch();
     const componentIds = Object.values(this.trackDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
@@ -92,8 +89,7 @@ export class Watcher {
     await this.workspace.scope.watchScopeInternalFiles();
 
     return new Promise((resolve, reject) => {
-      // prefix your command with "BIT_LOG=*" to see all watch events
-      if (process.env.BIT_LOG) {
+      if (this.verbose) {
         // @ts-ignore
         if (msgs?.onAll) watcher.on('all', msgs?.onAll);
       }
