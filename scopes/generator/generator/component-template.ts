@@ -5,26 +5,25 @@ import { ComponentID } from '@teambit/component-id';
  * related to component initialization and configuration.
  *
  * @template TComponentID - Represents the data type for the component ID properties.
- * @template TName - Represents the data type for the name properties.
  */
-export interface ComponentTemplateOptions<TComponentID = ComponentID, TName = string> {
+export interface ComponentTemplateOptions<TComponentID = ComponentID> {
   /**
    * component-name as entered by the user, e.g. `use-date`.
    * without the scope and the namespace.
    */
-  name: TName;
+  name: string;
 
   /**
    * component-name as upper camel case, e.g. `use-date` becomes `UseDate`.
    * useful when generating the file content, for example for a class name.
    */
-  namePascalCase: TName;
+  namePascalCase: string;
 
   /**
    * component-name as lower camel case, e.g. `use-date` becomes `useDate`.
    * useful when generating the file content, for example for a function/variable name.
    */
-  nameCamelCase: TName;
+  nameCamelCase: string;
 
   /**
    * component id.

@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { GeneratorMain } from './generator.main.runtime';
 import type { ComponentTemplateOptions } from './component-template';
 
-export type CreateOptions = ComponentTemplateOptions<string, string>;
+export type CreateOptions = ComponentTemplateOptions<string>;
 
 export class CreateCmd implements Command {
   name = 'create <template-name> <component-names...>';
