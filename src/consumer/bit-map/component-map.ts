@@ -339,6 +339,11 @@ export default class ComponentMap {
     if (!removeAspectConf) return false;
     return removeAspectConf !== '-' && removeAspectConf.removed;
   }
+  isRecovered() {
+    const removeAspectConf = this.config?.[Extensions.remove];
+    if (!removeAspectConf) return false;
+    return removeAspectConf !== '-' && removeAspectConf.removed === false;
+  }
 
   sort() {
     this.files = R.sortBy(R.prop('relativePath'), this.files);

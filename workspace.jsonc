@@ -155,19 +155,20 @@
         "@teambit/documenter.theme.theme-compositions": "4.1.1",
         "@teambit/documenter.theme.theme-context": "4.0.3",
         "@teambit/documenter.ui.code-snippet": "4.2.2",
-        "@teambit/documenter.ui.consumable-link": "4.0.3",
-        "@teambit/documenter.ui.copy-box": "4.1.6",
+        "@teambit/documenter.ui.consumable-link": "4.0.11",
+        "@teambit/documenter.ui.copy-box": "4.1.16",
         "@teambit/documenter.ui.heading": "4.1.1",
         "@teambit/documenter.ui.highlighted-text": "4.1.1",
         "@teambit/documenter.ui.label": "4.0.3",
         "@teambit/documenter.ui.label-list": "4.0.3",
         "@teambit/documenter.ui.linked-heading": "4.1.6",
         "@teambit/documenter.ui.paragraph": "4.1.1",
-        "@teambit/documenter.ui.property-table": "4.1.3",
+        "@teambit/documenter.ui.property-table": "4.1.10",
         "@teambit/documenter.ui.section": "4.1.1",
         "@teambit/documenter.ui.separator": "4.1.1",
         "@teambit/documenter.ui.sub-title": "4.1.1",
-        "@teambit/documenter.ui.table-row": "4.1.10",
+        "@teambit/documenter.ui.table-heading-row": "4.0.11",
+        "@teambit/documenter.ui.table-row": "4.1.13",
         "@teambit/evangelist.elements.button": "1.0.6",
         "@teambit/evangelist.elements.icon": "1.0.2",
         "@teambit/evangelist.elements.x-button": "1.0.7",
@@ -184,8 +185,6 @@
         "@teambit/html.modules.render-template": "0.0.104",
         "@teambit/lanes.ui.drawer": "0.0.37",
         "@teambit/lanes.ui.lane-readme": "0.0.116",
-        "@teambit/lanes.ui.lanes": "0.0.116",
-        "@teambit/lanes.ui.menus": "0.0.36",
         "@teambit/lanes.ui.viewed-lane": "0.0.37",
         "@teambit/mdx.ui.docs.link": "0.0.500",
         "@teambit/pkg.content.packages-overview": "1.95.9",
@@ -395,7 +394,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.535",
+        "@teambit/legacy": "1.0.545",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
@@ -487,7 +486,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.535"
+            "@teambit/legacy": "1.0.545"
           }
         }
       },
@@ -751,7 +750,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.535"
+            "@teambit/legacy": "1.0.545"
           }
         }
       }
@@ -841,7 +840,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.535",
+            "@teambit/legacy": "1.0.545",
             "graphql": "15.8.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -976,7 +975,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.535"
+            "@teambit/legacy": "1.0.545"
           }
         }
       }

@@ -1,56 +1,76 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { getMergeStrategy, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { mergeReport } from '@teambit/merging';
 import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import paintRemoved from '@teambit/legacy/dist/cli/templates/remove-template';
 import { MergeLanesMain } from './merge-lanes.main.runtime';
 
 export class MergeLaneCmd implements Command {
   name = 'merge <lane> [pattern]';
-  description = `merge a local or a remote lane`;
+  description = `merge a local or a remote lane to the current lane`;
   extendedDescription = `by default, the provided lane will be fetched from the remote before merging.
 to merge the lane from the local scope without updating it first, use "--skip-fetch" flag.
 
-when the current and the other lanes are diverged in history and the files could be merged with no conflicts,
-it will snap-merge these components to complete the merge. use "no-snap" to opt-out, or "tag" to tag instead`;
+when the current and merge candidate lanes are diverged in history and the files could be merged with no conflicts,
+these components will be snap-merged to complete the merge. use "no-snap" to opt-out, or "tag" to tag instead`;
   arguments = [
     {
       name: 'lane',
-      description: 'lane-name or lane-id (if not exists locally) to merge to the current lane',
+      description: 'lane-name or full lane-id (if remote) to merge to the current lane',
     },
     {
       name: 'pattern',
-      description: 'partially merge the lane with the specified component-pattern',
+      description: `partially merge the lane - only components that match the specified component-pattern
+Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     },
   ];
   alias = '';
   options = [
-    ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
-    ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
-    ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
-    ['', 'workspace', 'merge only components in a lane that exist in the workspace'],
-    ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
-    ['', 'tag', 'tag all lane components after merging into main (also tag-merge in case of snap-merge)'],
+    ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. in case of a conflict, keep local modifications'],
+    ['', 'theirs', 'DEPRECATED. use --auto-merge-resolve. in case of a conflict, override local with incoming changes'],
+    ['', 'manual', 'DEPRECATED. use --auto-merge-resolve'],
+    [
+      '',
+      'auto-merge-resolve <merge-strategy>',
+      'in case of a merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
+    ],
+    ['', 'workspace', 'merge only lane components that are in the current workspace'],
+    ['', 'no-snap', 'do not auto snap after merge completed without conflicts'],
+    ['', 'tag', 'auto-tag all lane components after merging into main (or tag-merge in case of snap-merge)'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
-    ['', 'no-squash', 'relevant for merging lanes into main, which by default squash'],
-    ['', 'squash', 'EXPERIMENTAL. relevant for merging a lane into another lane, which by default does not squash'],
+    ['', 'no-squash', 'relevant for merging lanes into main, which by default squashes all lane snaps'],
+    [
+      '',
+      'squash',
+      'EXPERIMENTAL. relevant for merging a lane into another non-main lane, which by default does not squash',
+    ],
     [
       '',
       'ignore-config-changes',
-      'allow merging when component are modified due to config changes (such as dependencies) only and not files',
+      'allow merging when components are modified due to config changes (such as dependencies) only and not files',
     ],
-    ['', 'verbose', 'show details of components that were not merged legitimately'],
-    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
-    ['', 'skip-fetch', 'use the current target-lane if exits locally without updating it from the remote'],
-    ['', 'include-deps', 'relevant for "--pattern" and "--workspace". merge also dependencies of the given components'],
+    ['', 'verbose', 'show details of components that were not merged successfully'],
+    ['x', 'skip-dependency-installation', 'do not install dependencies of the imported components'],
+    ['', 'skip-fetch', 'use the local state of target-lane if exits locally, without updating it from the remote'],
+    [
+      '',
+      'include-deps',
+      'relevant for "--pattern" and "--workspace". merge also dependencies of the specified components',
+    ],
     [
       '',
       'resolve-unrelated [merge-strategy]',
-      'relevant when a component on a lane and the component on main has nothing in common. merge-strategy can be "ours" (default) or "theirs"',
+      'relevant when a component on a lane and the component on main have nothing in common. merge-strategy can be "ours" (default) or "theirs"',
+    ],
+    [
+      '',
+      'include-non-lane-comps',
+      'when merging main, include workspace components that are not on the lane (by default only lane components are merged)',
     ],
   ] as CommandOptions;
   loader = true;
@@ -63,9 +83,10 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
   async report(
     [name, pattern]: [string, string],
     {
-      ours = false,
-      theirs = false,
-      manual = false,
+      ours,
+      theirs,
+      manual,
+      autoMergeResolve,
       build,
       workspace: existingOnWorkspaceOnly = false,
       squash = false,
@@ -80,10 +101,12 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       resolveUnrelated,
       ignoreConfigChanges,
       verbose = false,
+      includeNonLaneComps = false,
     }: {
-      ours: boolean;
-      theirs: boolean;
-      manual: boolean;
+      ours?: boolean;
+      theirs?: boolean;
+      manual?: boolean;
+      autoMergeResolve?: string;
       workspace?: boolean;
       build?: boolean;
       noSnap: boolean;
@@ -98,11 +121,25 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       resolveUnrelated?: string | boolean;
       ignoreConfigChanges?: boolean;
       verbose?: boolean;
+      includeNonLaneComps?: boolean;
     }
   ): Promise<string> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
-    const mergeStrategy = getMergeStrategy(ours, theirs, manual);
-    if (noSnap && snapMessage) throw new BitError('unable to use "noSnap" and "message" flags together');
+    if (ours || theirs || manual) {
+      throw new BitError(
+        'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead. see "bit lane merge --help" for more information'
+      );
+    }
+    if (
+      autoMergeResolve &&
+      autoMergeResolve !== 'ours' &&
+      autoMergeResolve !== 'theirs' &&
+      autoMergeResolve !== 'manual'
+    ) {
+      throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
+    }
+    const mergeStrategy = autoMergeResolve;
+    if (noSnap && snapMessage) throw new BitError('unable to use "no-snap" and "message" flags together');
     if (includeDeps && !pattern && !existingOnWorkspaceOnly) {
       throw new BitError(`"--include-deps" flag is relevant only for --workspace and --pattern flags`);
     }
@@ -121,6 +158,8 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       build,
       // @ts-ignore
       mergeStrategy,
+      ours,
+      theirs,
       existingOnWorkspaceOnly,
       noSnap,
       snapMessage,
@@ -134,6 +173,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       resolveUnrelated: getResolveUnrelated(),
       ignoreConfigChanges,
       includeDeps,
+      includeNonLaneComps,
     });
 
     const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });

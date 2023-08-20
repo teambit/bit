@@ -52,7 +52,7 @@ describe('merge config scenarios', function () {
     });
     describe('merging the lane to main', () => {
       before(() => {
-        helper.command.mergeLane(`${helper.scopes.remote}/dev`, '--manual --no-squash');
+        helper.command.mergeLane(`${helper.scopes.remote}/dev`, '--auto-merge-resolve manual --no-squash');
         // fixes the conflicts
         helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp1/index.js`);
         helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp2/index.js`);
@@ -94,7 +94,7 @@ describe('merge config scenarios', function () {
       });
       describe('merge from main to the lane', () => {
         before(() => {
-          helper.command.mergeLane('main', '--manual');
+          helper.command.mergeLane('main', '--auto-merge-resolve manual');
         });
         // previous bug, showed only comp1 as componentsDuringMergeState, but the rest, because they're not in the
         // workspace, it didn't merge them correctly.

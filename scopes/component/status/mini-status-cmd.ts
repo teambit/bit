@@ -11,8 +11,8 @@ export type MiniStatusOpts = {
 export default class MiniStatusCmd implements Command {
   name = 'mini-status [component-pattern]';
   description = 'EXPERIMENTAL. basic status for fast execution';
-  extendedDescription = `shows only modified/new components. for the full status, use "bit status".
-the modified are components that their source code have changed, it doesn't check for config/aspect changes`;
+  extendedDescription = `shows only modified/new components with code changes. for the full status, use "bit status".
+this command only checks source code changes, it doesn't check for config/aspect/dependency changes`;
   arguments = [
     {
       name: 'component-pattern',

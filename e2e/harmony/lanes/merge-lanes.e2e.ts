@@ -74,7 +74,7 @@ describe('merge lanes', function () {
         mergeOutput = helper.command.mergeLane(`${helper.scopes.remote}/dev`, `--workspace --verbose`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
-        expect(mergeOutput).to.have.string('the merge has been skipped on the following component(s)');
+        expect(mergeOutput).to.have.string('merge skipped for the following component(s)');
         expect(mergeOutput).to.have.string('not in the workspace');
       });
       it('bitmap should not save any component', () => {
@@ -188,6 +188,20 @@ describe('merge lanes', function () {
       expect(mergeOutput).to.not.have.string('getDivergeData: unable to find Version 0.0.1 of comp1');
     });
   });
+  describe('merging main into local lane when the lane does not have the main components', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('dev');
+      helper.command.mergeLane('main', '-x');
+    });
+    it('should not bring non-lane components from main', () => {
+      const lane = helper.command.showOneLaneParsed('dev');
+      expect(lane.components).to.have.lengthOf(0);
+    });
+  });
   describe('merging main lane with no snapped components', () => {
     let mergeOutput: string;
     before(() => {
@@ -248,6 +262,25 @@ describe('merge lanes', function () {
       expect(log[0].hash).to.equal(headOnMain);
       expect(log[1].hash).to.equal(headOnLane);
       expect(log[1].parents[0]).to.equal(headOnMain);
+    });
+  });
+  describe('merge with squash when other lane is ahead by only 1 snap, so no need to squash', () => {
+    let headOnLane: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('dev');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.switchLocalLane('main');
+      helper.command.mergeLane('dev');
+    });
+    it('should not add the squashed prop into the version object', () => {
+      const head = helper.command.catComponent(`comp1@${headOnLane}`);
+      expect(head).to.not.have.property('squashed');
+      expect(head.modified).to.have.lengthOf(0);
     });
   });
   describe('merge with squash after exporting and importing the lane to a new workspace', () => {
@@ -340,6 +373,7 @@ describe('merge lanes', function () {
   describe('getting updates from main when lane is diverge', () => {
     let workspaceOnLane: string;
     let comp2HeadOnMain: string;
+    let beforeMerge: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
@@ -357,6 +391,7 @@ describe('merge lanes', function () {
       helper.command.export();
       helper.scopeHelper.getClonedLocalScope(workspaceOnLane);
       helper.command.import();
+      beforeMerge = helper.scopeHelper.cloneLocalScope();
     });
     it('bit import should not bring the latest main objects', () => {
       const head = helper.command.getHead(`${helper.scopes.remote}/comp2`);
@@ -370,7 +405,7 @@ describe('merge lanes', function () {
     describe('merging the lane', () => {
       let status;
       before(() => {
-        helper.command.mergeLane('main', '--theirs');
+        helper.command.mergeLane('main', '--auto-merge-resolve theirs');
         status = helper.command.statusJson();
         afterMergeToMain = helper.scopeHelper.cloneLocalScope();
       });
@@ -410,6 +445,21 @@ describe('merge lanes', function () {
           expect(cat.parents).to.have.lengthOf(1);
           expect(cat.parents[0]).to.equal(beforeMergeHead);
         });
+      });
+    });
+    describe('merge the lane without snapping', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeMerge);
+        helper.command.mergeLane('main', '--auto-merge-resolve theirs --no-snap -x');
+      });
+      it('should show the during-merge as modified', () => {
+        const status = helper.command.statusJson();
+        expect(status.modifiedComponents).to.have.lengthOf(2);
+      });
+      it('bit diff should show the diff between the .bitmap version and the currently merged version', () => {
+        const diff = helper.command.diff();
+        expect(diff).to.have.string(`-module.exports = () => 'comp1v2 and ' + comp2();`);
+        expect(diff).to.have.string(`+module.exports = () => 'comp1v3 and ' + comp2();`);
       });
     });
   });

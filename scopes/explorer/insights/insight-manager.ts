@@ -1,4 +1,5 @@
 import pMapSeries from 'p-map-series';
+import { ComponentID } from '@teambit/component-id';
 import InsightAlreadyExists from './exceptions/insight-already-exists';
 import InsightNotFound from './exceptions/insight-not-found';
 import { Insight, InsightResult } from './insight';
@@ -6,6 +7,7 @@ import { Insight, InsightResult } from './insight';
 export type RunInsightOptions = {
   renderData?: boolean;
   includeDeps?: boolean;
+  ids?: ComponentID[];
 };
 export class InsightManager {
   /** insights is an insight registry */

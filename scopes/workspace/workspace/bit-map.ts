@@ -119,12 +119,21 @@ export class BitMap {
 
   /**
    * get the data saved in the .bitmap file for this component-id.
+   * throws if not found
+   * @see getBitmapEntryIfExist
    */
   getBitmapEntry(
     id: ComponentID,
     { ignoreVersion, ignoreScopeAndVersion }: GetBitMapComponentOptions = {}
   ): ComponentMap {
     return this.legacyBitMap.getComponent(id._legacy, { ignoreVersion, ignoreScopeAndVersion });
+  }
+
+  getBitmapEntryIfExist(
+    id: ComponentID,
+    { ignoreVersion, ignoreScopeAndVersion }: GetBitMapComponentOptions = {}
+  ): ComponentMap | undefined {
+    return this.legacyBitMap.getComponentIfExist(id._legacy, { ignoreVersion, ignoreScopeAndVersion });
   }
 
   getAspectIdFromConfig(

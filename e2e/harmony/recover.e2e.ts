@@ -23,6 +23,7 @@ describe('bit recover command', function () {
 
       helper.command.softRemoveComponent('comp2');
       helper.command.recover('comp2');
+      helper.command.link();
     });
     it('bit status should not show a section of removed components', () => {
       const status = helper.command.statusJson();
@@ -141,6 +142,9 @@ describe('bit recover command', function () {
 
         helper.command.removeLaneComp('comp2');
         helper.command.recover('comp2');
+        // @todo: this should not be needed. the installation during "recover" should create the link correctly.
+        // for some reason, the links it creates are incorrect. (@ur256cwd-remote/rgq5tjys-local.comp1 instead of @ur256cwd-remote/comp1)
+        helper.command.link();
       });
       it('bit status should not show a section of removed components', () => {
         const status = helper.command.statusJson();
@@ -233,6 +237,55 @@ describe('bit recover command', function () {
     it('bit show should show the component as removed', () => {
       const removeData = helper.command.showAspectConfig('comp2', Extensions.remove);
       expect(removeData.config.removed).to.be.true;
+    });
+  });
+  describe('remove in one lane, recover in other lane, then merged to the first lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(2);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane('lane-b');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.command.switchLocalLane('lane-a', '-x');
+      helper.command.removeLaneComp('comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.switchLocalLane('lane-b', '-x');
+      helper.command.mergeLane('lane-a', '-x');
+      helper.command.recover(`${helper.scopes.remote}/comp1`);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('lane-a', '-x');
+      helper.command.mergeLane('lane-b');
+    });
+    it('should bring back the previously removed component', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(2);
+      helper.bitMap.expectToHaveId('comp1');
+    });
+  });
+
+  describe('remove in one lane, recover in an empty lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(2);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.removeLaneComp('comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+    });
+    // currently it threw version "0.0.0" of component onpp7beq-remote/comp1 was not found
+    it('should show a descriptive error', () => {
+      expect(() => helper.command.recover(`${helper.scopes.remote}/comp1`)).to.throw('unable to find the component');
     });
   });
 });

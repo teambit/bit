@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.535",
+  "version": "1.0.545",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -105,12 +105,12 @@
     "lint-staged": "lint-staged"
   },
   "dependencies": {
-    "@teambit/legacy-bit-id": "^0.0.423",
+    "@teambit/legacy-bit-id": "1.0.0",
     "@teambit/defender.fs.global-bit-temp-dir": "0.0.1",
     "@teambit/toolbox.network.agent": "0.0.116",
     "@babel/core": "7.19.6",
     "@babel/runtime": "7.20.0",
-    "@teambit/component-version": "0.0.406",
+    "@teambit/component-version": "1.0.0",
     "@teambit/bvm.list": "0.1.6",
     "@teambit/node.deps-detectors.detective-es6": "^0.0.1",
     "@teambit/styling.deps-detectors.detective-css": "^0.0.2",

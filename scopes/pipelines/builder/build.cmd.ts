@@ -21,7 +21,8 @@ type BuildOpts = {
 
 export class BuilderCmd implements Command {
   name = 'build [component-pattern]';
-  description = 'run set of tasks for build';
+  description = 'run set of tasks for build. ';
+  extendedDescription = 'by default, only new and modified components are built';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   helpUrl = 'reference/build-pipeline/builder-overview';
   alias = '';
@@ -44,11 +45,11 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       'list-tasks <string>',
       'list tasks of an env or a component-id for each one of the pipelines: build, tag and snap',
     ],
-    ['', 'skip-tests', 'skip running component tests during tag process'],
+    ['', 'skip-tests', 'skip running component tests during build process'],
     [
       '',
       'fail-fast',
-      'stop pipeline execution on the first failed task (by default a task is skipped only when its dependent failed)',
+      'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
   ] as CommandOptions;
 
@@ -85,7 +86,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
         `no components found to build. use "--unmodified" flag to build all components or specify the ids to build, otherwise, only new and modified components will be built`
       );
     }
-    this.logger.consoleSuccess(`found ${components.length} components to build`);
+
     const envsExecutionResults = await this.builder.build(
       components,
       {
@@ -105,17 +106,16 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
         exitOnFirstFailedTask: failFast,
       }
     );
-    longProcessLogger.end();
+    longProcessLogger.end(envsExecutionResults.hasErrors() ? 'error' : 'success');
     envsExecutionResults.throwErrorsIfExist();
-    this.logger.consoleSuccess();
-    return chalk.green(`the build has been completed. total: ${envsExecutionResults.tasksQueue.length} tasks`);
+    return chalk.green(`build complete. total: ${envsExecutionResults.tasksQueue.length} tasks`);
   }
 
   private async getListTasks(componentIdStr: string): Promise<string> {
     const compId = await this.workspace.resolveComponentId(componentIdStr);
     const component = await this.workspace.get(compId);
     const results = this.builder.listTasks(component);
-    return `${chalk.green('Tasks List')}
+    return `${chalk.green('Task List')}
 id:    ${results.id.toString()}
 envId: ${results.envId}
 
