@@ -27,8 +27,12 @@ import { ComponentGenerator, GenerateResult } from './component-generator';
 import { WorkspaceGenerator } from './workspace-generator';
 import { WorkspaceTemplate } from './workspace-template';
 import { NewCmd, NewOptions } from './new.cmd';
-import { componentGeneratorTemplate } from './templates/component-generator';
-import { starterTemplate } from './templates/starter';
+import {
+  componentGeneratorTemplate,
+  componentGeneratorTemplateStandalone,
+  starterTemplate,
+  starterTemplateStandalone,
+} from './templates';
 import { StarterPlugin } from './starter.plugin';
 import { GeneratorService } from './generator.service';
 
@@ -535,7 +539,13 @@ export class GeneratorMain {
     aspectLoader.registerPlugins([new StarterPlugin(generator)]);
     envs.registerService(new GeneratorService());
 
-    if (generator) generator.registerComponentTemplate([componentGeneratorTemplate, starterTemplate]);
+    if (generator)
+      generator.registerComponentTemplate([
+        componentGeneratorTemplate,
+        componentGeneratorTemplateStandalone,
+        starterTemplate,
+        starterTemplateStandalone,
+      ]);
     return generator;
   }
 }

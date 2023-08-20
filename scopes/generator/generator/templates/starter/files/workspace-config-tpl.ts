@@ -1,6 +1,4 @@
-import { ComponentContext } from '@teambit/generator';
-
-export function workspaceConfigTemplate(context: ComponentContext) {
+export function workspaceConfigTemplate() {
   return `import { WorkspaceContext } from '@teambit/generator';
 import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
 

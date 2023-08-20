@@ -5,7 +5,7 @@ export function starterFile({ namePascalCase, name }: ComponentContext) {
   import { workspaceConfig } from './template/files/workspace-config';
   import { gitIgnore } from './template/files/git-ignore';
   
-  export const ${namePascalCase}Starter: Starter = {
+  export const ${namePascalCase}WorkspaceStarter: Starter = {
     name: '${name}',
     description: 'a ${name} workspace',
     generateFiles: async (context: WorkspaceContext) => {

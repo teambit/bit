@@ -4,11 +4,11 @@ import { starterFile } from './files/starter';
 import { docFile } from './files/doc-file';
 import { gitIgnoreTemplate } from './files/git-ignore-tpl';
 import { workspaceConfigTemplate } from './files/workspace-config-tpl';
-import { launchJsonFile } from './files/launch-json-file';
 
 export const starterTemplate: ComponentTemplate = {
-  name: 'starter',
-  description: 'create your own starter - \nDocs: https://bit.dev/reference/starters/create-starter',
+  name: 'standalone-starter',
+  description:
+    'create your own workspace starter (standalone) - \nDocs: https://bit.dev/reference/starters/create-starter',
   generateFiles: (context: ComponentContext) => {
     return [
       {
@@ -32,10 +32,6 @@ export const starterTemplate: ComponentTemplate = {
       {
         relativePath: 'template/files/workspace-config.ts',
         content: workspaceConfigTemplate(),
-      },
-      {
-        relativePath: 'template/files/launch-json-file.ts',
-        content: launchJsonFile(),
       },
     ];
   },

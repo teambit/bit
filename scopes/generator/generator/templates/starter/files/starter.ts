@@ -2,9 +2,9 @@ import { ComponentContext } from '@teambit/generator';
 
 export function starterFile({ namePascalCase, name }: ComponentContext) {
   return `import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';
-  import { generateFiles as generateCommonFiles } from './workspace-common';
+  import { generateFiles as generateCommonFiles } from './template/files/generate-files';
   
-  export type ${namePascalCase}StarterOptions = Pick<WorkspaceTemplate, 'name', 'description', 'hidden'>
+  export type ${namePascalCase}StarterOptions = Pick<WorkspaceTemplate, 'name' | 'description' | 'hidden'>;
   
   export class ${namePascalCase}WorkspaceStarter implements WorkspaceTemplate {
     constructor(
@@ -21,12 +21,12 @@ export function starterFile({ namePascalCase, name }: ComponentContext) {
       return [
         {
           id: 'teambit.react/react-env-extension',
-          targetName: envs/my-react-env,
+          targetName: 'envs/my-react-env',
         },
       ];
     }
   
-    static from(options: ${namePascalCase}StarterOptions = {}) {
+    static from(options: ${namePascalCase}StarterOptions) {
       return () =>
         new ${namePascalCase}WorkspaceStarter(
           options.name,
