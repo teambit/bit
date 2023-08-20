@@ -4,10 +4,20 @@ import { VariantPolicyConfigObject, WorkspacePolicy } from './policy';
 import { DependencyLifecycleType } from './dependencies/dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './dependencies';
 
+export type CurrentPkgSource =
+  // the variants section of "workspace.jsonc"
+  | 'variants'
+  // these are dependencies set via "bit deps set" or "component.json"
+  | 'component'
+  // these are dependencies from the dependencies policy in "workspace.jsonc"
+  | 'rootPolicy'
+  // the are dependencies of imported components
+  | 'component-model';
+
 type CurrentPkg = {
   name: string;
   currentRange: string;
-  source: 'variants' | 'component' | 'rootPolicy' | 'component-model';
+  source: CurrentPkgSource;
   variantPattern?: string | null;
   componentId?: ComponentID;
   isAuto?: boolean;

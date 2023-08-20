@@ -11,7 +11,7 @@ describe('update command', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('updates policies', function () {
+  describe('updates policies to latest versions', function () {
     describe('policies added by the user', function () {
       let configFile;
       let componentJson;
@@ -107,6 +107,33 @@ describe('update command', function () {
       it('should update the version range', function () {
         const showOutput = helper.command.showComponentParsed('comp1');
         expect(showOutput.packageDependencies['is-negative']).not.to.equal('1.0.0');
+      });
+    });
+  });
+  describe('updates policies to compatible versions', function () {
+    describe('policies added by deps set', function () {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.dependenciesSet('comp1', 'is-negative@1.0.0');
+        helper.command.update('--yes --compatible');
+      });
+      it('should update the version range', function () {
+        const showOutput = helper.command.showComponentParsed('comp1');
+        expect(showOutput.packageDependencies['is-negative']).to.equal('1.0.1');
+      });
+    });
+    describe('policies added by deps set. savePrefix is present', function () {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.extensions.bitJsonc.addKeyValToDependencyResolver('savePrefix', '^');
+        helper.fixtures.populateComponents(1);
+        helper.command.dependenciesSet('comp1', 'is-negative@1.0.0');
+        helper.command.update('--yes --compatible');
+      });
+      it('should update the version range', function () {
+        const showOutput = helper.command.showComponentParsed('comp1');
+        expect(showOutput.packageDependencies['is-negative']).to.equal('^1.0.1');
       });
     });
   });
