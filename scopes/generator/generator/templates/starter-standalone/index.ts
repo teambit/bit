@@ -5,7 +5,6 @@ import { docFile } from './files/doc-file';
 import { gitIgnoreTemplate } from './files/git-ignore-tpl';
 import { workspaceConfigTemplate } from './files/workspace-config-tpl';
 import { launchJsonFile } from './files/launch-json-file';
-import { generateFiles } from './files/generate-files';
 
 export const starterTemplate: ComponentTemplate = {
   name: 'starter',
@@ -29,24 +28,21 @@ export const starterTemplate: ComponentTemplate = {
         relativePath: 'template/files/git-ignore.ts',
         content: gitIgnoreTemplate(),
       },
-      {
-        relativePath: 'template/files/launch-json.ts',
-        content: launchJsonFile(),
-      },
+
       {
         relativePath: 'template/files/workspace-config.ts',
         content: workspaceConfigTemplate(),
       },
       {
-        relativePath: 'template/files/generate-files.ts',
-        content: generateFiles(),
+        relativePath: 'template/files/launch-json-file.ts',
+        content: launchJsonFile(),
       },
     ];
   },
   config: {
     'teambit.harmony/aspect': {},
     'teambit.envs/envs': {
-      env: 'teambit.harmony/node',
+      env: 'teambit.harmony/aspect',
     },
   },
 };

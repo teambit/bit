@@ -1,35 +1,40 @@
 import { ComponentContext } from '@teambit/generator';
 
 export function starterFile({ namePascalCase, name }: ComponentContext) {
-  return `import { WorkspaceContext, Starter } from '@teambit/generator';
-  import { workspaceConfig } from './template/files/workspace-config';
-  import { gitIgnore } from './template/files/git-ignore';
+  return `import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';
+  import { generateFiles as generateCommonFiles } from './workspace-common';
   
-  export const ${namePascalCase}Starter: Starter = {
-    name: '${name}',
-    description: 'a ${name} workspace',
-    generateFiles: async (context: WorkspaceContext) => {
-      const files = [
+  export type ${namePascalCase}StarterOptions = Pick<WorkspaceTemplate, 'name', 'description', 'hidden'>
+  
+  export class ${namePascalCase}WorkspaceStarter implements WorkspaceTemplate {
+    constructor(
+      readonly name = '${name}',
+      readonly description = '${namePascalCase} workspace with a custom react env',
+      readonly hidden = false
+    ) {}
+  
+    async generateFiles(context: WorkspaceContext) {
+      return generateCommonFiles(context);
+    }
+  
+    fork() {
+      return [
         {
-          relativePath: 'workspace.jsonc',
-          content: await workspaceConfig(context),
+          id: 'teambit.react/react-env-extension',
+          targetName: envs/my-react-env,
         },
       ];
+    }
   
-      if (!context.skipGit) {
-        files.push({
-          relativePath: '.gitignore',
-          content: gitIgnore(),
-        });
-      }
+    static from(options: ${namePascalCase}StarterOptions = {}) {
+      return () =>
+        new ${namePascalCase}WorkspaceStarter(
+          options.name,
+          options.description,
+          options.hidden
+        );
+    }
+  }
   
-      return files;
-    },
-    import: () => [
-      { id: 'teambit.community/component-showcase' },
-    ]
-  };
-  
-  export default ${namePascalCase}Starter;
 `;
 }

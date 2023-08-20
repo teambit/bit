@@ -1,6 +1,4 @@
-import { ComponentContext } from '@teambit/generator';
-
-export function workspaceConfigTemplate(context: ComponentContext) {
+export function workspaceConfigTemplate() {
   return `import { WorkspaceContext } from '@teambit/generator';
 import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
 
@@ -10,7 +8,9 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
   configParsed['teambit.workspace/workspace'].defaultScope = defaultScope || 'org.scope';
   configParsed['teambit.generator/generator'] = {
     envs: [
-     defaultScope + '/react/react-env',
+      'teambit.react/react-env',
+      'teambit.node/node',
+
     ],
   };
   configParsed['teambit.workspace/variants'] = {
