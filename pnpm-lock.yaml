@@ -22198,6 +22198,9 @@ importers:
       '@babel/runtime':
         specifier: 7.20.0
         version: 7.20.0
+      '@teambit/component-id':
+        specifier: ^0.0.427
+        version: 0.0.427
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -65861,6 +65864,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
+      '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
       chalk: 2.4.2
       core-js: 3.13.0
