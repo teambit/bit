@@ -205,13 +205,13 @@ export default class CommandHelper {
     return this.runCmd(`bit remove ${id} --silent ${flags}`);
   }
   softRemoveComponent(id: string, flags = '') {
-    return this.runCmd(`bit remove ${id} --silent --delete ${flags}`);
+    return this.runCmd(`bit delete ${id} --silent ${flags}`);
   }
   removeComponentFromRemote(id: string, flags = '') {
-    return this.runCmd(`bit remove ${id} --silent --hard ${flags}`);
+    return this.runCmd(`bit delete ${id} --silent --hard ${flags}`);
   }
-  removeLaneComp(id: string, flags = '') {
-    return this.runCmd(`bit lane remove-comp ${id} ${flags}`);
+  softRemoveOnLane(id: string, flags = '') {
+    return this.runCmd(`bit delete ${id} --silent --lane ${flags}`);
   }
   recover(id: string, flags = '') {
     return this.runCmd(`bit recover ${id} ${flags}`);
@@ -546,7 +546,10 @@ export default class CommandHelper {
       .map((id) => (stripScopeName ? id.replace(`${this.scopes.remote}/`, '') : id));
   }
 
-  expectStatusToBeClean(exclude: string[] = []) {
+  expectStatusToBeClean(exclude: string[] = [], excludeComponentsWithIssuesSection = true) {
+    if (excludeComponentsWithIssuesSection) {
+      exclude.push('componentsWithIssues');
+    }
     const statusJson = this.statusJson();
     Object.keys(statusJson).forEach((key) => {
       if (exclude.includes(key)) return;

@@ -422,7 +422,9 @@ export default class ScopeComponentsImporter {
     fromHead?: boolean;
     lane?: Lane;
   }): Promise<void> {
-    logger.debugAndAddBreadCrumb('importManyIfMissingWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
+    logger.debugAndAddBreadCrumb('importManyIfMissingWithoutDeps', `Lane: ${lane?.id()}, Ids: {ids}`, {
+      ids: ids.toString(),
+    });
     const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
     if (R.isEmpty(idsWithoutNils)) return;
     const idsToImport = fromHead ? idsWithoutNils.toVersionLatest() : idsWithoutNils;
@@ -485,9 +487,7 @@ export default class ScopeComponentsImporter {
   async checkWhatHashesExistOnRemote(remote: string, hashes: string[]): Promise<string[]> {
     const remotes = await getScopeRemotes(this.scope);
     const multipleStreams = await remotes.fetch({ [remote]: hashes }, this.scope, { type: 'object' });
-    const bitObjectsList = await this.multipleStreamsToBitObjects(multipleStreams);
-    const allObjects = bitObjectsList.getAll();
-    const existing = allObjects.map((o) => o.hash().toString());
+    const existing = await this.streamToHashes(remote, multipleStreams[remote]);
     logger.debug(
       `checkWhatHashesExistOnRemote, searched for ${hashes.length} hashes, found ${existing.length} hashes on ${remote}`
     );
@@ -643,6 +643,19 @@ export default class ScopeComponentsImporter {
     const objectList = ObjectList.mergeMultipleInstances(objectListPerRemote);
     const bitObjects = await objectList.toBitObjects();
     return bitObjects;
+  }
+
+  private async streamToHashes(remoteName: string, stream: ObjectItemsStream): Promise<string[]> {
+    const hashes: string[] = [];
+    try {
+      for await (const obj of stream) {
+        hashes.push(obj.ref.hash);
+      }
+    } catch (err: any) {
+      logger.error(`streamToHashes, error from ${remoteName}`, err);
+      throw new Error(`the remote "${remoteName}" threw an error:\n${err.message}`);
+    }
+    return hashes;
   }
 
   private async getVersionFromComponentDef(component: ModelComponent, id: BitId): Promise<Version | null> {

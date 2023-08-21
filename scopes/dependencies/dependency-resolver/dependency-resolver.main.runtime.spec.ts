@@ -9,6 +9,7 @@ jest.mock('@teambit/legacy/dist/scope/network/http', () => ({
 }));
 
 /* eslint-disable import/first */
+import { ComponentID } from '@teambit/component';
 import path from 'path';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
@@ -282,27 +283,30 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
             },
           },
         },
-        componentPoliciesById: {
-          component1: {
-            dependencies: {
-              'pkg-with-old-latest': '1.0.0',
-              'cannot-resolve': '1.0.0',
-              'component1-runtime-dep1': '1.0.0',
-              'component1-runtime-dep2': '1.0.0',
-              'component1-runtime-dep3': '-',
-            },
-            devDependencies: {
-              'component1-dev-dep1': '1.0.0',
-              'component1-dev-dep2': '1.0.0',
-              'component1-dev-dep3': '-',
-            },
-            peerDependencies: {
-              'component1-peer-dep1': '1.0.0',
-              'component1-peer-dep2': '1.0.0',
-              'component1-peer-dep3': '-',
+        componentPolicies: [
+          {
+            componentId: ComponentID.fromString('scope/component1'),
+            policy: {
+              dependencies: {
+                'pkg-with-old-latest': '1.0.0',
+                'cannot-resolve': '1.0.0',
+                'component1-runtime-dep1': '1.0.0',
+                'component1-runtime-dep2': '1.0.0',
+                'component1-runtime-dep3': '-',
+              },
+              devDependencies: {
+                'component1-dev-dep1': '1.0.0',
+                'component1-dev-dep2': '1.0.0',
+                'component1-dev-dep3': '-',
+              },
+              peerDependencies: {
+                'component1-peer-dep1': '1.0.0',
+                'component1-peer-dep2': '1.0.0',
+                'component1-peer-dep3': '-',
+              },
             },
           },
-        },
+        ],
         components: [],
       });
       // @ts-ignore
@@ -352,7 +356,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
           latestRange: '2.0.0',
           name: 'component1-runtime-dep1',
           source: 'component',
-          componentId: 'component1',
+          componentId: ComponentID.fromString('scope/component1'),
           targetField: 'dependencies',
         },
         {
@@ -360,7 +364,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
           latestRange: '2.0.0',
           name: 'component1-dev-dep1',
           source: 'component',
-          componentId: 'component1',
+          componentId: ComponentID.fromString('scope/component1'),
           targetField: 'devDependencies',
         },
         {
@@ -368,7 +372,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
           latestRange: '2.0.0',
           name: 'component1-peer-dep1',
           source: 'component',
-          componentId: 'component1',
+          componentId: ComponentID.fromString('scope/component1'),
           targetField: 'peerDependencies',
         },
       ]);
@@ -404,7 +408,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
       const outdatedPkgs = await depResolver.getOutdatedPkgsFromPolicies({
         rootDir: '',
         variantPoliciesByPatterns: {},
-        componentPoliciesById: {},
+        componentPolicies: [],
         components: [],
         forceVersionBump: 'patch',
       });
@@ -424,7 +428,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
       const outdatedPkgs = await depResolver.getOutdatedPkgsFromPolicies({
         rootDir: '',
         variantPoliciesByPatterns: {},
-        componentPoliciesById: {},
+        componentPolicies: [],
         components: [],
         forceVersionBump: 'minor',
       });
@@ -452,7 +456,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
       const outdatedPkgs = await depResolver.getOutdatedPkgsFromPolicies({
         rootDir: '',
         variantPoliciesByPatterns: {},
-        componentPoliciesById: {},
+        componentPolicies: [],
         components: [],
         forceVersionBump: 'major',
       });

@@ -1,1 +1,1 @@
-export { generateNodeModulesPattern } from './generate-node-modules-pattern';
+export { generateNodeModulesPattern, PatternTarget } from './generate-node-modules-pattern';

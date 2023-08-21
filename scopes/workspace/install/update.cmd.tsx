@@ -20,11 +20,15 @@ export default class UpdateCmd implements Command {
     {
       name: 'package-patterns...',
       description:
-        'a list of package names, or patterns (separated by space). The patterns should be in glob format. By default, all packages are selected.',
+        'a string list of package names, or patterns (separated by space), e.g. "@teambit/** @my-org/ui/**". The patterns should be in glob format. By default, all packages are selected.',
     },
   ];
   options = [
-    ['y', 'yes', 'automatically update all outdated packages'],
+    [
+      'y',
+      'yes',
+      'automatically update all outdated versions for packages specified in pattern (all if no pattern supplied) - use carefully as could result in breaking updates for dependencies',
+    ],
     ['', 'patch', 'update to the latest patch version. Semver rules are ignored'],
     ['', 'minor', 'update to the latest minor version. Semver rules are ignored'],
     ['', 'major', 'update to the latest major version. Semver rules are ignored'],

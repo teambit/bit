@@ -33,7 +33,7 @@ export class CheckoutCmd implements Command {
   group = 'development';
   extendedDescription = `
   \`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
-  \`bit checkout head [component-pattern]\` => checkout to the last snap/tag, omit [component-pattern] to checkout head for all
+  \`bit checkout head [component-pattern]\` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all
   \`bit checkout latest [component-pattern]\` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all
   \`bit checkout reset [component-pattern]\` => remove local modifications from the specified ids (or all components when --all is used)`;
   alias = 'U';
@@ -53,17 +53,17 @@ export class CheckoutCmd implements Command {
     [
       '',
       'auto-merge-resolve <merge-strategy>',
-      'in case of a conflict, resolve according to the strategy: [ours, theirs, manual]',
+      'in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
     ],
     ['r', 'reset', 'revert changes that were not snapped/tagged'],
     ['a', 'all', 'all components'],
     [
       'e',
       'workspace-only',
-      'when on a lane, avoid introducing new components from the remote lane that do not exist locally',
+      "only relevant for 'bit checkout head' when on a lane. don't import components from the remote lane that are not already in the workspace",
     ],
     ['v', 'verbose', 'showing verbose output for inspection'],
-    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not auto-install dependencies of the imported components'],
   ] as CommandOptions;
   loader = true;
 
@@ -107,6 +107,9 @@ export class CheckoutCmd implements Command {
       autoMergeResolve !== 'manual'
     ) {
       throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
+    }
+    if (workspaceOnly && to !== HEAD) {
+      throw new BitError('--workspace-only is only relevant when running "bit checkout head" on a lane');
     }
     const checkoutProps: CheckoutProps = {
       promptMergeOptions: interactiveMerge,
@@ -173,7 +176,7 @@ export function checkoutOutput(checkoutResults: ApplyVersionResults, checkoutPro
         )} components (use --verbose to get more details)\n`
       );
     }
-    const title = 'the checkout was not needed on the following component(s)';
+    const title = 'checkout was not required for the following component(s)';
     const body = notCheckedOutComponents
       .map((failedComponent) => `${failedComponent.id.toString()} - ${failedComponent.failureMessage}`)
       .join('\n');
@@ -221,7 +224,7 @@ once ready, snap/tag the components to persist the changes`;
     if (!newFromLane?.length) return '';
     const title = newFromLaneAdded
       ? `successfully added the following components from the lane`
-      : `the following components introduced on the lane and were not added. omit --workspace-only flag to add them`;
+      : `the following components exist on the lane but were not added to the workspace. omit --workspace-only flag to add them`;
     const body = newFromLane.join('\n');
     return `\n\n${chalk.underline(title)}\n${body}`;
   };

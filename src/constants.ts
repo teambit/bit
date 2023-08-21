@@ -193,13 +193,19 @@ export const getSymphonyUrl = (): string => {
   return resolvedSymphonyUrl;
 };
 
+export const CFG_CLOUD_DOMAIN_LOGIN_KEY = 'cloud_domain_login';
+
+export const getLoginUrl = (domain?: string): string => {
+  const finalDomain = domain || getSync(CFG_CLOUD_DOMAIN_LOGIN_KEY) || getCloudDomain();
+  const url = `https://${finalDomain}/bit-login`;
+  return url;
+};
+
 export const SYMPHONY_GRAPHQL = `https://${getSymphonyUrl()}/graphql`;
 
 export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/docs`;
 
 export const BASE_LEGACY_DOCS_DOMAIN = `legacy-docs.${BASE_COMMUNITY_DOMAIN}/docs`;
-
-export const DEFAULT_HUB_LOGIN = `https://${getCloudDomain()}/bit-login`;
 
 export const DEFAULT_ANALYTICS_DOMAIN = `https://analytics.${getCloudDomain()}/`;
 
@@ -289,8 +295,6 @@ export const CFG_REGISTRY_URL_KEY = 'registry';
 export const CFG_SSH_KEY_FILE_KEY = 'ssh_key_file';
 
 export const CFG_HUB_DOMAIN_KEY = 'hub_domain';
-
-export const CFG_HUB_LOGIN_KEY = 'hub_domain_login';
 
 export const CFG_ANALYTICS_DOMAIN_KEY = 'analytics_domain';
 
