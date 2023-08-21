@@ -1087,21 +1087,24 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return this.getDivergeData().isSourceAhead();
   }
 
-  async GetVersionHistory(repo: Repository): Promise<VersionHistory> {
+  async getVersionHistory(repo: Repository): Promise<VersionHistory> {
     const emptyVersionHistory = VersionHistory.fromId(this.name, this.scope || undefined);
     const versionHistory = await repo.load(emptyVersionHistory.hash());
     return (versionHistory || emptyVersionHistory) as VersionHistory;
   }
 
   async getAndPopulateVersionHistory(repo: Repository, head: Ref): Promise<VersionHistory> {
-    const versionHistory = await this.GetVersionHistory(repo);
+    const versionHistory = await this.getVersionHistory(repo);
     const { err } = await this.populateVersionHistoryIfMissingGracefully(repo, versionHistory, head);
-    if (err) throw err;
+    if (err) {
+      logger.error(`rethrowing an error ${err.message}, current stuck`, new Error(err.message));
+      throw err;
+    }
     return versionHistory;
   }
 
   async updateRebasedVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory | undefined> {
-    const versionHistory = await this.GetVersionHistory(repo);
+    const versionHistory = await this.getVersionHistory(repo);
     const hasUpdated = versions.some((version) => {
       const versionData = versionHistory.getVersionData(version.hash());
       if (!versionData) return false;

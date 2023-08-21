@@ -5,7 +5,7 @@ import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/com
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { compact, mapValues, omit, uniq, pick, intersection } from 'lodash';
+import { compact, mapValues, omit, uniq, intersection } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
@@ -31,8 +31,9 @@ import {
   LinkingOptions,
   LinkResults,
   DependencyList,
-  OutdatedPkg,
+  MergedOutdatedPkg,
   WorkspacePolicy,
+  UpdatedComponent,
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
@@ -576,18 +577,24 @@ export class InstallMain {
    *
    * @param options.all {Boolean} updates all outdated dependencies without showing a prompt.
    */
-  async updateDependencies(options: { all: boolean }): Promise<ComponentMap<string> | null> {
-    const { componentConfigFiles, componentPoliciesById } = await this._getComponentsWithDependencyPolicies();
+  async updateDependencies(options: {
+    forceVersionBump?: 'major' | 'minor' | 'patch';
+    patterns?: string[];
+    all: boolean;
+  }): Promise<ComponentMap<string> | null> {
+    const componentPolicies = await this._getComponentsWithDependencyPolicies();
     const variantPatterns = this.variants.raw();
     const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
     const components = await this.workspace.list();
     const outdatedPkgs = await this.dependencyResolver.getOutdatedPkgsFromPolicies({
       rootDir: this.workspace.path,
       variantPoliciesByPatterns,
-      componentPoliciesById,
+      componentPolicies,
       components,
+      patterns: options.patterns,
+      forceVersionBump: options.forceVersionBump,
     });
-    let outdatedPkgsToUpdate!: OutdatedPkg[];
+    let outdatedPkgsToUpdate!: MergedOutdatedPkg[];
     if (options.all) {
       outdatedPkgsToUpdate = outdatedPkgs;
     } else {
@@ -601,11 +608,9 @@ export class InstallMain {
     }
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgsToUpdate, {
       variantPoliciesByPatterns,
-      componentPoliciesById,
     });
     await this._updateVariantsPolicies(variantPatterns, updatedVariants);
-    const updatedComponentConfigFiles = Object.values(pick(componentConfigFiles, updatedComponents));
-    await this._saveManyComponentConfigFiles(updatedComponentConfigFiles);
+    await this._updateComponentsConfig(updatedComponents);
     await this.workspace._reloadConsumer();
     return this._installModules({ dedupe: true });
   }
@@ -624,8 +629,7 @@ export class InstallMain {
 
   private async _getComponentsWithDependencyPolicies() {
     const allComponentIds = await this.workspace.listIds();
-    const componentConfigFiles: Record<string, ComponentConfigFile> = {};
-    const componentPoliciesById: Record<string, any> = {};
+    const componentPolicies = [] as Array<{ componentId: ComponentID; policy: any }>;
     (
       await Promise.all<ComponentConfigFile | undefined>(
         allComponentIds.map((componentId) => this.workspace.componentConfigFile(componentId))
@@ -634,14 +638,10 @@ export class InstallMain {
       if (!componentConfigFile) return;
       const depResolverConfig = componentConfigFile.aspects.get(DependencyResolverAspect.id);
       if (!depResolverConfig) return;
-      const componentId = allComponentIds[index].toString();
-      componentConfigFiles[componentId] = componentConfigFile;
-      componentPoliciesById[componentId] = depResolverConfig.config.policy;
+      const componentId = allComponentIds[index];
+      componentPolicies.push({ componentId, policy: depResolverConfig.config.policy });
     });
-    return {
-      componentConfigFiles,
-      componentPoliciesById,
-    };
+    return componentPolicies;
   }
 
   private _variantPatternsToDepPolicesDict(variantPatterns: Patterns): Record<string, VariantPolicyConfigObject> {
@@ -654,6 +654,19 @@ export class InstallMain {
     return variantPoliciesByPatterns;
   }
 
+  private async _updateComponentsConfig(updatedComponents: UpdatedComponent[]) {
+    if (updatedComponents.length === 0) return;
+    await Promise.all(
+      updatedComponents.map(({ componentId, config }) => {
+        return this.workspace.addSpecificComponentConfig(componentId, DependencyResolverAspect.id, config, {
+          shouldMergeWithExisting: true,
+          shouldMergeWithPrevious: true,
+        });
+      })
+    );
+    await this.workspace.bitMap.write();
+  }
+
   private _updateVariantsPolicies(variantPatterns: Record<string, any>, updateVariantPolicies: string[]) {
     for (const variantPattern of updateVariantPolicies) {
       this.variants.setExtension(
@@ -664,14 +677,6 @@ export class InstallMain {
       );
     }
     return this.dependencyResolver.persistConfig(this.workspace.path);
-  }
-
-  private async _saveManyComponentConfigFiles(componentConfigFiles: ComponentConfigFile[]) {
-    await Promise.all(
-      Array.from(componentConfigFiles).map(async (componentConfigFile) => {
-        await componentConfigFile.write({ override: true });
-      })
-    );
   }
 
   /**

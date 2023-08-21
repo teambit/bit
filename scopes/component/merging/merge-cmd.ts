@@ -5,9 +5,9 @@ import { ComponentID } from '@teambit/component-id';
 import { compact } from 'lodash';
 import { WILDCARD_HELP, AUTO_SNAPPED_MSG, MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import {
-  getMergeStrategy,
   FileStatus,
   ApplyVersionResult,
+  MergeStrategy,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BitError } from '@teambit/bit-error';
@@ -16,24 +16,34 @@ import { ConfigMergeResult } from './config-merge-result';
 
 export class MergeCmd implements Command {
   name = 'merge [ids...]';
-  description = 'merge changes of the remote head into local';
+  description = 'merge changes of the remote head into local - auto-snaps all merged components';
   helpUrl = 'docs/components/merging-changes';
   group = 'development';
-  extendedDescription = `merge changes of the remote head into local. when on a lane, merge the remote head of the lane into the local.
+  extendedDescription = `merge changes of the remote head into local when they are diverged. when on a lane, merge the remote head of the lane into the local
+and creates snaps for merged components that have diverged, on the lane.
 if no ids are specified, all pending-merge components will be merged. (run "bit status" to list them).
 optionally use '--abort' to revert the last merge. to revert a lane merge, use "bit lane merge-abort" command.
 ${WILDCARD_HELP('merge')}`;
   alias = '';
   options = [
-    ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
-    ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
-    ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
-    ['', 'abort', 'in case of an unresolved merge, revert to the state before the merge began'],
+    ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. in case of a conflict, keep the local modification'],
+    [
+      '',
+      'theirs',
+      'DEPRECATED. use --auto-merge-resolve. in case of a conflict, override the local modification with the specified version',
+    ],
+    ['', 'manual', 'DEPRECATED. use --auto-merge-resolve'],
+    [
+      '',
+      'auto-merge-resolve <merge-strategy>',
+      'in case of a conflict, resolve according to the strategy: [ours, theirs, manual]',
+    ],
+    ['', 'abort', 'in case of an unresolved merge, revert to pre-merge state'],
     ['', 'resolve', 'mark an unresolved merge as resolved and create a new snap with the changes'],
-    ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
+    ['', 'no-snap', 'do not auto snap even if the merge completed without conflicts'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
-    ['', 'verbose', 'show details of components that were not merged legitimately'],
-    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['', 'verbose', 'show details of components that were not merged successfully'],
+    ['x', 'skip-dependency-installation', 'do not install new dependencies resulting from the merge'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
   ] as CommandOptions;
   loader = true;
@@ -46,6 +56,7 @@ ${WILDCARD_HELP('merge')}`;
       ours = false,
       theirs = false,
       manual = false,
+      autoMergeResolve,
       abort = false,
       resolve = false,
       build = false,
@@ -57,6 +68,7 @@ ${WILDCARD_HELP('merge')}`;
       ours?: boolean;
       theirs?: boolean;
       manual?: boolean;
+      autoMergeResolve?: MergeStrategy;
       abort?: boolean;
       resolve?: boolean;
       build?: boolean;
@@ -67,7 +79,19 @@ ${WILDCARD_HELP('merge')}`;
     }
   ) {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
-    const mergeStrategy = getMergeStrategy(ours, theirs, manual);
+    if (ours || theirs || manual) {
+      throw new BitError(
+        'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead'
+      );
+    }
+    if (
+      autoMergeResolve &&
+      autoMergeResolve !== 'ours' &&
+      autoMergeResolve !== 'theirs' &&
+      autoMergeResolve !== 'manual'
+    ) {
+      throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
+    }
     if (abort && resolve) throw new BitError('unable to use "abort" and "resolve" flags together');
     if (noSnap && message) throw new BitError('unable to use "noSnap" and "message" flags together');
     const {
@@ -80,7 +104,7 @@ ${WILDCARD_HELP('merge')}`;
       mergeSnapError,
     }: ApplyVersionResults = await this.merging.merge(
       ids,
-      mergeStrategy as any,
+      autoMergeResolve as any,
       abort,
       resolve,
       noSnap,
@@ -133,7 +157,7 @@ export function mergeReport({
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
     const title = `\n\nfiles with conflicts summary\n`;
-    const suggestion = `\n\nthe merge process wasn't completed due to the conflicts above. fix them manually and then run "bit install".
+    const suggestion = `\n\nmerge process not completed due to the conflicts above. fix conflicts manually and then run "bit install".
 once ready, snap/tag the components to complete the merge.`;
     return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
   };
@@ -151,9 +175,7 @@ once ready, snap/tag the components to complete the merge.`;
   const getSnapsOutput = () => {
     if (mergeSnapError) {
       return `
-${chalk.bold(
-  'snapping the merged components had failed with the following error, please fix the issues and snap manually'
-)}
+${chalk.bold('snapping merged components failed with the following error, please fix the issues and snap manually')}
 ${mergeSnapError.message}
 `;
     }
@@ -177,7 +199,7 @@ ${mergeSnapError.message}
 
     return `\n${chalk.underline(
       'merge-snapped components'
-    )}\n(${'components that snapped as a result of the merge'})\n${outputComponents(snappedComponents)}\n`;
+    )}\n(${'components snapped as a result of the merge'})\n${outputComponents(snappedComponents)}\n`;
   };
 
   const getWorkspaceDepsOutput = () => {
@@ -196,7 +218,7 @@ ${mergeSnapError.message}
 
   const getFailureOutput = () => {
     if (!failedComponents || !failedComponents.length) return '';
-    const title = '\nthe merge has been skipped on the following component(s)';
+    const title = '\nmerge skipped for the following component(s)';
     const body = compact(
       failedComponents.map((failedComponent) => {
         if (!verbose && failedComponent.unchangedLegitimately) return null;
@@ -205,7 +227,7 @@ ${mergeSnapError.message}
       })
     ).join('\n');
     if (!body) {
-      return `${chalk.bold(`\nthe merge has been skipped on ${failedComponents.length} component(s) legitimately`)}
+      return `${chalk.bold(`\nmerge skipped legitimately for ${failedComponents.length} component(s)`)}
 (use --verbose to list them next time)`;
     }
     return `\n${chalk.underline(title)}\n${body}\n\n`;
@@ -285,8 +307,7 @@ export function conflictSummaryReport(components: ApplyVersionResult[]): string 
 export function installationErrorOutput(installationError?: Error) {
   if (!installationError) return '';
   const title = chalk.underline('Installation Error');
-  const subTitle =
-    'The following error had been caught from the package manager, please fix the issue and run "bit install"';
+  const subTitle = 'The following error was thrown by the package manager, please fix the issue and run "bit install"';
   const body = chalk.red(installationError.message);
   return `\n\n${title}\n${subTitle}\n${body}`;
 }
@@ -294,7 +315,7 @@ export function installationErrorOutput(installationError?: Error) {
 export function compilationErrorOutput(compilationError?: Error) {
   if (!compilationError) return '';
   const title = chalk.underline('Compilation Error');
-  const subTitle = 'The following error had been caught from the compiler, please fix the issue and run "bit compile"';
+  const subTitle = 'The following error was thrown by the compiler, please fix the issue and run "bit compile"';
   const body = chalk.red(compilationError.message);
   return `\n\n${title}\n${subTitle}\n${body}`;
 }

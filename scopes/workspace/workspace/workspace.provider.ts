@@ -185,6 +185,7 @@ export default async function provideWorkspace(
   LegacyDependencyResolver.registerOnComponentAutoDetectOverridesGetter(
     async (configuredExtensions: ExtensionDataList, id: BitId, legacyFiles: SourceFile[]) => {
       let policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
+      // this is needed for "bit install" to install the dependencies from the merge config (see https://github.com/teambit/bit/pull/6849)
       const depsDataOfMergeConfig = workspace.getDepsDataOfMergeConfig(id);
       if (depsDataOfMergeConfig) {
         const policiesFromMergeConfig = VariantPolicy.fromConfigObject(depsDataOfMergeConfig, 'auto');
@@ -232,6 +233,9 @@ export default async function provideWorkspace(
 
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
+  ui.registerPreStart(async () => {
+    return workspace.setComponentPathsRegExps();
+  });
   graphql.register(workspaceSchema);
   const capsuleCmd = getCapsulesCommands(isolator, scope, workspace);
   const commands: CommandList = [new EjectConfCmd(workspace), capsuleCmd, new UseCmd(workspace)];

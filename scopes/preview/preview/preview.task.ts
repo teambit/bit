@@ -29,6 +29,7 @@ export class PreviewTask implements BuildTask {
 
   aspectId = 'teambit.preview/preview';
   name = PREVIEW_TASK_NAME;
+  description = 'Bundling components for preview';
   location: TaskLocation = 'end';
   // readonly dependencies = [CompilerAspect.id];
 

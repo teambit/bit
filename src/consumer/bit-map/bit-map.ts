@@ -1,3 +1,4 @@
+import objectHash from 'object-hash';
 import json from 'comment-json';
 import fs from 'fs-extra';
 import * as path from 'path';
@@ -36,6 +37,10 @@ export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
 export type GetBitMapComponentOptions = {
   ignoreVersion?: boolean;
   ignoreScopeAndVersion?: boolean;
+};
+
+export type MergeOptions = {
+  mergeStrategy?: 'theirs' | 'ours' | 'manual';
 };
 
 export const LANE_KEY = '_bit_lane';
@@ -138,14 +143,30 @@ export default class BitMap {
     return componentMap;
   }
 
-  static mergeContent(rawContent: string, otherRawContent: string): string {
+  static mergeContent(rawContent: string, otherRawContent: string, opts: MergeOptions = {}): string {
     const parsed = json.parse(rawContent, undefined, true);
     const parsedOther = json.parse(otherRawContent, undefined, true);
-    const merged = sortObject(Object.assign(parsed, parsedOther));
+    const merged = {};
+    if (opts.mergeStrategy === 'ours') {
+      Object.assign(merged, parsedOther, parsed);
+    } else if (opts.mergeStrategy === 'theirs') {
+      Object.assign(merged, parsed, parsedOther);
+    } else {
+      Object.assign(merged, parsedOther, parsed);
+      const merged2 = Object.assign({}, parsed, parsedOther);
+      // The easiest way to check for conflicts is to compare the hash of the merged object
+      // once when other is first and once when ours is first
+      if (objectHash(merged) !== objectHash(merged2)) {
+        throw new BitError(
+          'conflict merging Bitmap, you need to resolve the conflict manually or choose "ours" or "theirs" strategy'
+        );
+      }
+    }
+    const sorted = sortObject(merged);
     // Delete and re-add it to make sure it will be at the end
-    delete merged[SCHEMA_FIELD];
-    merged[SCHEMA_FIELD] = parsed[SCHEMA_FIELD];
-    const result = `${AUTO_GENERATED_MSG}${BITMAP_PREFIX_MESSAGE}${JSON.stringify(merged, null, 4)}`;
+    delete sorted[SCHEMA_FIELD];
+    sorted[SCHEMA_FIELD] = parsed[SCHEMA_FIELD];
+    const result = `${AUTO_GENERATED_MSG}${BITMAP_PREFIX_MESSAGE}${JSON.stringify(sorted, null, 4)}`;
     return result;
   }
 
@@ -156,12 +177,27 @@ export default class BitMap {
     if (!mapFileContent || !currentLocation) {
       return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA);
     }
+    const bitMap = BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath);
+    await bitMap.loadFiles();
+
+    return bitMap;
+  }
+
+  /**
+   * helpful for external tools to get an object representation of the .bitmap file quickly.
+   * keep in mind that ComponentMap are not complete because they don't have the filepaths inside each component, only the rootDir.
+   */
+  static loadFromContentWithoutLoadingFiles(
+    bitMapFileContent: Buffer,
+    bitMapFilePath: PathOsBasedAbsolute,
+    workspacePath: PathOsBasedAbsolute
+  ) {
     let componentsJson;
     try {
-      componentsJson = json.parse(mapFileContent.toString('utf8'), undefined, true);
+      componentsJson = json.parse(bitMapFileContent.toString('utf8'), undefined, true);
     } catch (e: any) {
-      logger.error(`invalid bitmap at ${currentLocation}`, e);
-      throw new InvalidBitMap(currentLocation, e.message);
+      logger.error(`invalid bitmap at ${bitMapFilePath}`, e);
+      throw new InvalidBitMap(bitMapFilePath, e.message);
     }
     const schema = componentsJson[SCHEMA_FIELD] || componentsJson.version;
     let isLaneExported = false;
@@ -172,10 +208,9 @@ export default class BitMap {
     }
     BitMap.removeNonComponentFields(componentsJson);
 
-    const bitMap = new BitMap(dirPath, currentLocation, schema, laneId, isLaneExported);
+    const bitMap = new BitMap(workspacePath, bitMapFilePath, schema, laneId, isLaneExported);
     bitMap.loadComponents(componentsJson);
 
-    await bitMap.loadFiles();
     return bitMap;
   }
 

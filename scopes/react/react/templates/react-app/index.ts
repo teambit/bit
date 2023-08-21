@@ -22,7 +22,7 @@ export const reactAppTemplate: ComponentTemplate = {
         content: docFile(context),
       },
       {
-        relativePath: `${context.name}.react-app.ts`,
+        relativePath: `${context.name}.react-app.cjs`,
         content: appPlugin(context),
       },
       {

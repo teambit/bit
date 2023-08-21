@@ -1,7 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import R from 'ramda';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { listTemplate } from './list-template';
 import { ListerMain, ListScopeResult } from './lister.main.runtime';
@@ -16,16 +15,16 @@ type ListFlags = {
 
 export class ListCmd implements Command {
   name = 'list [remote-scope]';
-  description = 'list components on a workspace, local scope or a remote scope.';
+  description = 'list components on a workspace or a remote scope (with flag).';
   group = 'discover';
-  extendedDescription = `https://${BASE_DOCS_DOMAIN}/reference/cli-reference#list`;
+  helpUrl = 'reference/cli-reference#list';
   alias = 'ls';
   options = [
-    ['i', 'ids', 'show only component ids unformatted'],
+    ['i', 'ids', 'show only component ids, unformatted'],
     ['s', 'scope', 'show only components stored in the local scope, including indirect dependencies'],
-    ['o', 'outdated', 'show latest versions from remotes'],
+    ['o', 'outdated', 'highlight outdated components, in comparison with their latest remote version (if one exists)'],
     ['j', 'json', 'show the output in JSON format'],
-    ['n', 'namespace <string>', 'show only specified namespace by using wildcards'],
+    ['n', 'namespace <string>', "show only components in the specified namespace/s e.g. '-n ui' or '*/ui'"],
   ] as CommandOptions;
   loader = true;
   migration = true;

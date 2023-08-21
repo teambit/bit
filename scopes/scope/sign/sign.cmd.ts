@@ -20,7 +20,7 @@ with --multiple, a new bare-scope needs to be created and it will import the com
     ['', 'always-succeed', 'exit with code 0 even though the build failed'],
     ['', 'push', 'export the updated objects to the original scopes once done'],
     ['', 'lane <lane-id>', 'helps to fetch the components from the lane scope (relevant for --multiple)'],
-    ['', 'rebuild', 'allow signing components that their buildStatus is success for testing purposes'],
+    ['', 'rebuild', 'allow signing components whose buildStatus is successful for testing purposes'],
   ] as CommandOptions;
 
   constructor(private signMain: SignMain, private logger: Logger) {}

@@ -3,7 +3,7 @@ import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
-import { OutsideWorkspaceError, Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { LaneDiffCmd, LaneDiffGenerator, LaneDiffResults } from '@teambit/lanes.modules.diff';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
@@ -22,7 +22,7 @@ import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId, InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { compact, partition } from 'lodash';
+import { compact } from 'lodash';
 import { ComponentCompareMain, ComponentCompareAspect } from '@teambit/component-compare';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
@@ -48,7 +48,6 @@ import {
   LaneAddReadmeCmd,
   LaneRemoveReadmeCmd,
   LaneRemoveCompCmd,
-  RemoveCompsOpts,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -552,43 +551,6 @@ please create a new lane instead, which will include all components of this lane
       );
     }
     await this.scope.legacyScope.objects.restoreFromTrash([ref]);
-  }
-
-  async removeComps(componentsPattern: string, removeCompsOpts: RemoveCompsOpts): Promise<MarkRemoveOnLaneResult> {
-    const workspace = this.workspace;
-    if (!workspace) throw new OutsideWorkspaceError();
-    const currentLane = await workspace.getCurrentLaneObject();
-    if (!currentLane) {
-      throw new Error('markRemoveOnLane expects to get called when on a lane');
-    }
-    if (currentLane.isNew || removeCompsOpts.workspaceOnly) {
-      const results = await this.remove.remove({
-        componentsPattern,
-        force: true,
-      });
-      const ids = results.localResult.removedComponentIds;
-      const compIds = await workspace.resolveMultipleComponentIds(ids);
-      return { removedFromWs: compIds, markedRemoved: [] };
-    }
-
-    const componentIds = await workspace.idsByPattern(componentsPattern);
-    const laneBitIds = currentLane.toBitIds();
-    const [laneCompIds, mainCompIds] = partition(componentIds, (id) => laneBitIds.hasWithoutVersion(id._legacy));
-
-    const removeFromWorkspace = async () => {
-      if (!mainCompIds.length) return [];
-      const results = await this.remove.removeLocallyByIds(
-        mainCompIds.map((id) => id._legacy),
-        { force: true }
-      );
-      const ids = results.localResult.removedComponentIds;
-      return workspace.resolveMultipleComponentIds(ids);
-    };
-
-    const removedFromWs = await removeFromWorkspace();
-    const markedRemoved = await this.remove.markRemoveComps(laneCompIds);
-
-    return { removedFromWs, markedRemoved };
   }
 
   /**
