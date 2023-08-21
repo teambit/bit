@@ -15,7 +15,7 @@ export default class FindCycles implements Insight {
     this.graphBuilder = graphBuilder;
   }
   private async runInsight(opts?: RunInsightOptions): Promise<RawResult> {
-    const graph = await this.graphBuilder.getGraphIds();
+    const graph = await this.graphBuilder.getGraphIds(opts?.ids);
     if (!graph) {
       return {
         message: '',
@@ -69,7 +69,7 @@ export default class FindCycles implements Insight {
   }
 
   async addAsComponentIssue(components: Component[]) {
-    const result = await this.runInsight();
+    const result = await this.runInsight({ ids: components.map((c) => c.id) });
     if (!result.data.length) {
       return; // no circulars
     }

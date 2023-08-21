@@ -306,9 +306,6 @@ importers:
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
-      '@teambit/component-version':
-        specifier: 0.0.406
-        version: 0.0.406
       '@teambit/component.instructions.exporting-components':
         specifier: 0.0.6
         version: registry.npmjs.org/@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
@@ -568,8 +565,8 @@ importers:
         specifier: 0.0.37
         version: 0.0.37(@apollo/client@3.6.9)(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       '@teambit/mdx.ui.docs.link':
         specifier: 0.0.500
         version: 0.0.500(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -16884,8 +16881,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -17117,8 +17114,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -17254,8 +17251,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       classnames:
         specifier: 2.2.6
         version: 2.2.6
@@ -17342,8 +17339,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -17670,8 +17667,8 @@ importers:
   scopes/component/component-issues:
     dependencies:
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -17698,8 +17695,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -18057,8 +18054,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -18145,8 +18142,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -18233,8 +18230,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -18440,8 +18437,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -18553,8 +18550,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -18654,8 +18651,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -18718,8 +18715,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -18776,8 +18773,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -18919,8 +18916,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -21381,8 +21378,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       archy:
         specifier: 1.0.0
         version: 1.0.0
@@ -21457,8 +21454,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       cli-highlight:
         specifier: 2.1.9
         version: 2.1.9
@@ -22043,8 +22040,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -22201,6 +22198,9 @@ importers:
       '@babel/runtime':
         specifier: 7.20.0
         version: 7.20.0
+      '@teambit/component-id':
+        specifier: ^0.0.427
+        version: 0.0.427
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -22752,8 +22752,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -22816,8 +22816,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       '@teambit/ui-foundation.ui.navigation.react-router-adapter':
         specifier: 6.1.1
         version: 6.1.1(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -23864,8 +23864,8 @@ importers:
   scopes/lanes/diff:
     dependencies:
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -24032,8 +24032,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       '@teambit/scope.ui.scope-icon':
         specifier: 0.0.91
         version: 0.0.91(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
@@ -24108,8 +24108,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -26319,8 +26319,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -26417,8 +26417,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -30278,9 +30278,6 @@ importers:
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
-      semver:
-        specifier: 7.5.2
-        version: 7.5.2
       table:
         specifier: 5.4.6
         version: 5.4.6
@@ -30309,9 +30306,6 @@ importers:
       '@types/react-dom':
         specifier: ^17.0.5
         version: 17.0.20
-      '@types/semver':
-        specifier: 7.3.4
-        version: 7.3.4
       '@types/testing-library__jest-dom':
         specifier: 5.9.5
         version: 5.9.5
@@ -30356,8 +30350,8 @@ importers:
   scopes/workspace/modules/node-modules-linker:
     dependencies:
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -30593,8 +30587,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       comment-json:
         specifier: 3.0.3
         version: 3.0.3
@@ -30648,8 +30642,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -30742,8 +30736,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
-        specifier: ^0.0.423
-        version: 0.0.423
+        specifier: 1.0.0
+        version: 1.0.0
       chalk:
         specifier: 2.4.2
         version: 2.4.2
@@ -35279,7 +35273,7 @@ packages:
     dev: false
 
   /@pnpm/network.agent@0.0.3:
-    resolution: {integrity: sha1-g28zSZMRCjzekv8O3yavci0Lt4c=, tarball: https://node-registry.bit.cloud/@pnpm/network.agent/-/pnpm-network.agent-0.0.3.tgz}
+    resolution: {integrity: sha1-g28zSZMRCjzekv8O3yavci0Lt4c=}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@pnpm/network.proxy-agent': 0.0.3
@@ -36689,7 +36683,7 @@ packages:
     dev: false
 
   /@teambit/base-ui.hook.use-click-outside@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-MWkSceL3FJ7qLtW2mGtE9h7+a6Y=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/hook/use-click-outside@1.0.1.tgz}
+    resolution: {integrity: sha1-MWkSceL3FJ7qLtW2mGtE9h7+a6Y=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -36882,7 +36876,7 @@ packages:
       url-parse: 1.5.1
 
   /@teambit/base-ui.routing.native-link@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-yrkm02UxkeCBWyLQC9MG7Jl6JbQrsIBz+9c57mZqAjEcVvQWY2mB3lEY+pNZAuIyOg55/DTqKR1bKQKl6ZAdzg==, tarball: https://node-registry.bit.cloud/@teambit/base-ui.routing.native-link/-/@teambit-base-ui.routing.native-link-1.0.0.tgz}
+    resolution: {integrity: sha512-yrkm02UxkeCBWyLQC9MG7Jl6JbQrsIBz+9c57mZqAjEcVvQWY2mB3lEY+pNZAuIyOg55/DTqKR1bKQKl6ZAdzg==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -37126,7 +37120,7 @@ packages:
     dev: false
 
   /@teambit/base-ui.text.heading@1.0.4(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-tPpsdOpL9sYJhfliT8AZfDG0p0A=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/text/heading@1.0.4.tgz}
+    resolution: {integrity: sha1-tPpsdOpL9sYJhfliT8AZfDG0p0A=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -37141,6 +37135,20 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/base-ui.text.paragraph@1.0.1(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-cs1ugxwYUCTFBNF+QSlq206u5ZcfJts3LluDO42hi5R1iQ/o1lyhQhmQ9VgTWE1mXuwGrSzkJ02/S7vigxTzJg==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-ui.text.text-sizes': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.theme.sizes': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -37228,7 +37236,6 @@ packages:
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-    dev: false
 
   /@teambit/base-ui.theme.dark-theme@1.0.2(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-Y/fLbxyb8XW7qZ4wAgl2cEmWXceOfaXN/GcfrVZEBqmM6YerlAkNq9RW3bcN9OuhSVekDjApwbDtELsE9WStdA==}
@@ -37299,6 +37306,17 @@ packages:
 
   /@teambit/base-ui.theme.size-definition@1.0.0(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-cOexDIzZvG37G76bn0P6SPfR68UKh4ZlH10fZKJsBcIEs4s9Ne5+zPqhDyjgKCHZVOqIj/0I4EVBFIb8o06L2w==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
+  /@teambit/base-ui.theme.sizes@1.0.0(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-A2PoEhZ/8GYSeypqIMGK0Hu/bcpfDdquxQtkXZ34bIpXdYaYGn0tHIJTAuxJTInWM+qLMBAHQ32p3qkm86IuDQ==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -37771,20 +37789,20 @@ packages:
       '@teambit/bit-error': 0.0.394
       semver: 7.3.4
 
-  /@teambit/component-version@0.0.406:
-    resolution: {integrity: sha512-fcqjqGhAblhIfzMgzuLchEq+8T3+fgTojaNmP97F1BAbj3nRtp7cXTyqB8C2My/gC9jJk1CQcTDn5q9xQCmvow==}
-    engines: {node: '>=12.22.0'}
-    dependencies:
-      '@teambit/bit-error': 0.0.402
-      semver: 7.3.4
-    dev: false
-
   /@teambit/component-version@0.0.408:
     resolution: {integrity: sha512-Hq9jjy2aCvsKWzWH1WV8RMExct9J6wBHzoPDG8z8/2QhQVd2mX+oUg8XX3839A9mCgytJF+scAi5neCW2MTP5A==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@teambit/bit-error': 0.0.402
       semver: 7.3.4
+
+  /@teambit/component-version@0.0.409:
+    resolution: {integrity: sha512-We+VvtCvyfxruCtsbI527vErlQVrF/XAYMEZJrpLclXfskwMyGc2M1IatXxKcKm/ryl3FVmeh4QAt32nPjmwlw==}
+    engines: {node: '>=12.22.0'}
+    dependencies:
+      '@teambit/bit-error': 0.0.402
+      semver: 7.5.2
+    dev: false
 
   /@teambit/component.content.component-overview@1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-9Dbi90Jg9C5Jmy4g7IdouEqSuo8=, tarball: https://node-registry.bit.cloud/tarballs/teambit.component/content/component-overview@1.95.0.tgz}
@@ -39302,7 +39320,7 @@ packages:
     dev: false
 
   /@teambit/docs.entities.doc@0.0.2:
-    resolution: {integrity: sha1-Ljj4ksQWmKMbUZy58m0cB7MnSWo=, tarball: https://node-registry.bit.cloud/@teambit/docs.entities.doc/-/@teambit-docs.entities.doc-0.0.2.tgz}
+    resolution: {integrity: sha1-Ljj4ksQWmKMbUZy58m0cB7MnSWo=}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@teambit/toolbox.types.serializable': 0.0.483
@@ -39746,6 +39764,20 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
+  /@teambit/documenter.ui.paragraph@4.1.1(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-6SGnp4qO/AOG+sETJ/uStgFt6UY5s3E/55nX7RO7BIJEEVSi+kGU3xze2z10ruK/hKXJ6//JLwP7t5Sld8zj7g==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-ui.text.paragraph': 1.0.1(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.theme.sizes': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
   /@teambit/documenter.ui.paragraph@4.1.5(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-w9jrNz9R2bIsMgLvjNgv9Ycmr3Y=, tarball: https://node-registry.bit.cloud/@teambit/documenter.ui.paragraph/-/@teambit-documenter.ui.paragraph-4.1.5.tgz}
     peerDependencies:
@@ -39753,7 +39785,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.text.paragraph': 1.0.3(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/base-ui.theme.sizes': registry.npmjs.org/@teambit/base-ui.theme.sizes@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.theme.sizes': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -39832,7 +39864,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.text.muted-text': 1.0.1(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.paragraph': registry.npmjs.org/@teambit/documenter.ui.paragraph@4.1.1(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.paragraph': 4.1.1(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -40283,7 +40315,7 @@ packages:
     dev: true
 
   /@teambit/explorer.ui.gallery.base-component-card@0.0.492(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-3PAYOsXMLxyP9FOt//xSgkdAscg=, tarball: https://node-registry.bit.cloud/@teambit/explorer.ui.gallery.base-component-card/-/@teambit-explorer.ui.gallery.base-component-card-0.0.492.tgz}
+    resolution: {integrity: sha1-3PAYOsXMLxyP9FOt//xSgkdAscg=}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -40360,7 +40392,7 @@ packages:
     dev: false
 
   /@teambit/explorer.ui.gallery.component-grid@0.0.484(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-1JJr4vIMX4zfPor98vVev8V5g/c=, tarball: https://node-registry.bit.cloud/@teambit/explorer.ui.gallery.component-grid/-/@teambit-explorer.ui.gallery.component-grid-0.0.484.tgz}
+    resolution: {integrity: sha1-1JJr4vIMX4zfPor98vVev8V5g/c=}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@teambit/legacy': 1.0.193
@@ -40722,7 +40754,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.427
       '@teambit/lane-id': 0.0.204(@teambit/legacy@node_modules+@teambit+legacy)
       core-js: 3.13.0
@@ -40848,6 +40880,17 @@ packages:
       lodash: 4.17.21
       semver: 7.3.4
 
+  /@teambit/legacy-bit-id@1.0.0:
+    resolution: {integrity: sha512-gfe4Mw70/Ur8fCpoPG20/DoL+GFeLCRFpKFLuju5UwnUMhZVIVtTJ++v63csgJJEL8gVXw50JjFCLZ0iCf1KfA==}
+    engines: {node: '>=12.22.0'}
+    dependencies:
+      '@teambit/bit-error': 0.0.402
+      '@teambit/component-version': 0.0.409
+      decamelize: 1.2.0
+      lodash: 4.17.21
+      semver: 7.3.4
+    dev: false
+
   /@teambit/mdx.ui.docs.link@0.0.500(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-9wYyLJ4RST9XSG52npQ+3BJDgJ0=, tarball: https://node-registry.bit.cloud/@teambit/mdx.ui.docs.link/-/teambit-mdx.ui.docs.link-0.0.500.tgz}
     engines: {node: '>=12.22.0'}
@@ -40912,7 +40955,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.utils.string.affix': registry.npmjs.org/@teambit/base-ui.utils.string.affix@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       lodash: 4.17.21
@@ -43382,7 +43425,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.0
       '@yarnpkg/fslib': 3.0.0-rc.48
-      '@yarnpkg/libzip': 3.0.0-rc.48(@yarnpkg/fslib@3.0.0-rc.48)
+      '@yarnpkg/libzip': 3.0.0-rc.48
       '@yarnpkg/parsers': 3.0.0-rc.48.1
       '@yarnpkg/shell': 4.0.0-rc.48
       camelcase: 5.3.1
@@ -43413,7 +43456,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.0
       '@yarnpkg/fslib': 3.0.0-rc.48
-      '@yarnpkg/libzip': 3.0.0-rc.48(@yarnpkg/fslib@3.0.0-rc.48)
+      '@yarnpkg/libzip': 3.0.0-rc.48
       '@yarnpkg/parsers': 3.0.0-rc.48.1
       '@yarnpkg/shell': 4.0.0-rc.48
       camelcase: 5.3.1
@@ -43486,11 +43529,9 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.0-rc.48(@yarnpkg/fslib@3.0.0-rc.48):
+  /@yarnpkg/libzip@3.0.0-rc.48:
     resolution: {integrity: sha512-WqqbaqRsS72LY3JXiHHrojTDG8PeeVwKBdn3NfQyqowzSVDr6Vu9c/WwWirR6K4QVmJKC1Obt1lKsAfMiRry0A==}
     engines: {node: '>=18.12.0'}
-    peerDependencies:
-      '@yarnpkg/fslib': ^3.0.0-rc.48
     dependencies:
       '@types/emscripten': 1.39.6
       '@yarnpkg/fslib': 3.0.0-rc.48
@@ -63864,7 +63905,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       cli-highlight: 2.1.9
       core-js: 3.13.0
@@ -63953,7 +63994,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       core-js: 3.13.0
       lodash: 4.17.21
@@ -64009,7 +64050,7 @@ packages:
       '@teambit/documenter.ui.separator': 4.1.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       classnames: 2.2.6
       copy-to-clipboard: 3.3.1
       core-js: 3.13.0
@@ -64040,7 +64081,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       core-js: 3.13.0
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash.flatten: 4.4.0
@@ -64155,7 +64196,7 @@ packages:
     resolution: {directory: scopes/component/component-issues, type: directory}
     name: '@teambit/component-issues'
     dependencies:
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
     dev: false
 
@@ -64170,7 +64211,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       cli-table: 0.3.6
       core-js: 3.13.0
@@ -64308,7 +64349,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       core-js: 3.13.0
       graphql-tag: 2.12.1(graphql@15.8.0)
@@ -64342,7 +64383,7 @@ packages:
       '@teambit/evangelist.input.checkbox.label': 1.0.3(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       classnames: 2.2.6
       core-js: 3.13.0
@@ -64373,7 +64414,7 @@ packages:
       '@teambit/capsule': 0.0.12
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       core-js: 3.13.0
       debug: 4.3.2
@@ -64446,7 +64487,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       core-js: 3.13.0
       lodash: 4.17.21
@@ -64485,7 +64526,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       core-js: 3.13.0
       fs-extra: 10.0.0
       react: 17.0.2
@@ -64522,7 +64563,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       core-js: 3.13.0
       group-array: 1.0.0
@@ -64545,7 +64586,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       core-js: 3.13.0
       fs-extra: 10.0.0
@@ -64568,7 +64609,7 @@ packages:
       '@teambit/component-id': 0.0.427
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       core-js: 3.13.0
       lodash: 4.17.21
@@ -64615,7 +64656,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       core-js: 3.13.0
       lodash: 4.17.21
@@ -65512,7 +65553,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       archy: 1.0.0
       chalk: 2.4.2
       cli-table: 0.3.6
@@ -65538,7 +65579,7 @@ packages:
       '@pnpm/types': 9.2.0
       '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       cli-highlight: 2.1.9
       core-js: 3.13.0
       execa: 2.1.0
@@ -65762,7 +65803,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       comment-json: 3.0.3
       core-js: 3.13.0
@@ -65823,6 +65864,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
+      '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
       chalk: 2.4.2
       core-js: 3.13.0
@@ -66031,7 +66073,7 @@ packages:
       '@teambit/bvm.config': 0.2.2
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       core-js: 3.13.0
       fs-extra: 10.0.0
@@ -66050,7 +66092,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.1(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       browserslist: 4.16.3
       buffer: 6.0.3
@@ -66441,7 +66483,7 @@ packages:
     resolution: {directory: scopes/lanes/diff, type: directory}
     name: '@teambit/lanes.modules.diff'
     dependencies:
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
     dev: false
 
@@ -66522,7 +66564,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/design.ui.pages.not-found': 0.0.366(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       '@teambit/scope.ui.scope-icon': 0.0.91(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       chalk: 2.4.2
       core-js: 3.13.0
@@ -66551,7 +66593,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       core-js: 3.13.0
       fs-extra: 10.0.0
@@ -67406,7 +67448,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       core-js: 3.13.0
       lodash: 4.17.21
@@ -67442,7 +67484,7 @@ packages:
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       chokidar: 3.5.3
       classnames: 2.2.6
@@ -68903,7 +68945,7 @@ packages:
     resolution: {directory: scopes/workspace/modules/node-modules-linker, type: directory}
     name: '@teambit/workspace.modules.node-modules-linker'
     dependencies:
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       fs-extra: 10.0.0
       p-map-series: 2.1.0
     dev: false
@@ -68985,7 +69027,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       comment-json: 3.0.3
       core-js: 3.13.0
       lodash: 4.17.21
@@ -69004,7 +69046,7 @@ packages:
       '@babel/runtime': 7.20.0
       '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       chokidar: 3.5.3
       core-js: 3.13.0
@@ -69038,7 +69080,7 @@ packages:
       '@teambit/explorer.ui.gallery.component-grid': 0.0.496(react-dom@17.0.2)(react@17.0.2)
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/harmony': 0.4.6
-      '@teambit/legacy-bit-id': 0.0.423
+      '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
       core-js: 3.13.0
       detect-indent: 5.0.0
@@ -69551,7 +69593,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.surfaces.split-pane.layout': registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.layout@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.surfaces.split-pane.layout': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -69703,7 +69745,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.theme.colors': registry.npmjs.org/@teambit/base-ui.theme.colors@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.theme.colors': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)

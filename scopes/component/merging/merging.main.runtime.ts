@@ -650,24 +650,30 @@ export class MergingMain {
         return returnUnmerged(`component has been removed`, true);
       }
     }
-    const isModified = async () => {
+
+    const isModified = async (): Promise<undefined | 'code' | 'config'> => {
       const componentModificationStatus = await consumer.getComponentStatusById(currentComponent.id);
-      if (!componentModificationStatus.modified) return false;
-      if (!existingBitMapId) return false;
+      if (!componentModificationStatus.modified) return undefined;
+      if (!existingBitMapId) return undefined;
       const baseComponent = await modelComponent.loadVersion(
         existingBitMapId.version as string,
         consumer.scope.objects
       );
-      return options?.ignoreConfigChanges
-        ? consumer.isComponentSourceCodeModified(baseComponent, currentComponent)
-        : true;
+      const isSourceCodeModified = await consumer.isComponentSourceCodeModified(baseComponent, currentComponent);
+      if (isSourceCodeModified) return 'code';
+      return 'config';
     };
 
-    const isComponentModified = await isModified();
-
-    if (isComponentModified) {
+    const modifiedType = await isModified();
+    if (modifiedType === 'config' && !options?.ignoreConfigChanges) {
+      return returnUnmerged(
+        `component has config changes, please snap/tag it first. alternatively, use --ignore-config-changes flag to bypass`
+      );
+    }
+    if (modifiedType === 'code') {
       return returnUnmerged(`component is modified, please snap/tag it first`);
     }
+
     if (!otherLaneHead) {
       throw new Error(`merging: unable finding a hash for the version ${version} of ${id.toString()}`);
     }

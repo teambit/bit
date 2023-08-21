@@ -15,15 +15,24 @@
   height: 100%;
 }
 
-.toggleContainer {
+.toolbar {
   display: flex;
-  align-items: center;
-  margin-bottom: 8px;
+  background-color: var(--bit-bg-heaviest, #ededed);
+  padding: 8px;
+}
 
-  .toggle {
-    position: relative;
-    margin-right: 8px;
-  }
+.widgets {
+  display: flex;
+}
+
+.left,
+.right {
+  display: flex;
+  flex: 1;
+  padding: 8px;
+  background-color: #fff;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .splitLayout {
