@@ -49,7 +49,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
       <div className={styles.workspaceWrapper}>
         <TopBar
           className={styles.topbar}
-          Corner={() => <Corner name={workspace.name} icon={workspace.icon} />}
+          Corner={() => <Corner className={styles.corner} name={workspace.name} icon={workspace.icon} />}
           menu={menuSlot}
         />
 
