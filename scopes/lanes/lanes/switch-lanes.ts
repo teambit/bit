@@ -55,6 +55,7 @@ export class LaneSwitcher {
       ids,
       allowAddingComponentsFromScope: true,
       versionPerId: await this.workspace.resolveMultipleComponentIds(idsToSwitch),
+      lane: this.laneToSwitchTo,
     };
 
     const results = await this.Lanes.checkout.checkout(checkoutProps);
