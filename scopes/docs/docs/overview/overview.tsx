@@ -6,7 +6,7 @@ import { PropertiesTable } from '@teambit/react.ui.docs.properties-table';
 // import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
-import { ComponentPreview } from '@teambit/preview.ui.component-preview';
+import { ComponentPreview, ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { CompositionGallery } from '@teambit/compositions.panels.composition-gallery';
@@ -35,9 +35,10 @@ export type OverviewOptionsSlot = SlotRegistry<OverviewOptions>;
 export type OverviewProps = {
   titleBadges: TitleBadgeSlot;
   overviewOptions: OverviewOptionsSlot;
+  previewProps?: ComponentPreviewProps;
 };
 
-export function Overview({ titleBadges, overviewOptions }: OverviewProps) {
+export function Overview({ titleBadges, overviewOptions, previewProps }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
   const overviewProps = flatten(overviewOptions.values())[0];
@@ -59,6 +60,17 @@ export function Overview({ titleBadges, overviewOptions }: OverviewProps) {
   const iframeQueryParams = `skipIncludes=${component.preview?.skipIncludes || 'false'}`;
 
   const overviewPropsValues = overviewProps && overviewProps();
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { onLoad, style, ...rest } = previewProps || {};
+
+  const onPreviewLoad = React.useCallback(
+    (e, props) => {
+      setLoading(false);
+      onLoad?.(e, props);
+    },
+    [onLoad]
+  );
 
   return (
     <div className={styles.overviewWrapper}>
@@ -84,7 +96,7 @@ export function Overview({ titleBadges, overviewOptions }: OverviewProps) {
       <div className={styles.readme}>
         {/* {isLoading && <ReadmeSkeleton />} */}
         <ComponentPreview
-          onLoad={() => setLoading(false)}
+          onLoad={onPreviewLoad}
           component={component}
           style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
           previewName="overview"
@@ -93,6 +105,7 @@ export function Overview({ titleBadges, overviewOptions }: OverviewProps) {
           viewport={null}
           fullContentHeight
           disableScroll={true}
+          {...rest}
         />
         {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
         {component.preview?.skipIncludes && (
