@@ -27,13 +27,16 @@ describe('new command', function () {
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope(undefined, undefined, true);
-      helper.command.create('starter', 'workspace-example');
+      helper.command.create('standalone-starter', 'react');
       helper.bitJsonc.addToVariant('*', 'teambit.harmony/aspect', {});
       helper.command.install();
 
-      const starterPath = path.join(helper.scopes.remote, 'workspace-example/workspace-example.starter.ts');
+      const starterPath = path.join(helper.scopes.remote, 'react/react.starter.ts');
       const starterContent = helper.fs.readFile(starterPath);
-      const updatedIndex = starterContent.replace('teambit.react/templates/ui/text', `${helper.scopes.remote}/comp1`);
+      const updatedIndex = starterContent.replace(
+        'teambit.community/component-showcase',
+        `${helper.scopes.remote}/comp1`
+      );
       helper.fs.outputFile(starterPath, updatedIndex);
 
       helper.command.tagAllComponents();
@@ -41,7 +44,7 @@ describe('new command', function () {
 
       helper.scopeHelper.cleanLocalScope(); // it deletes all content without bit-init
       helper.scopeHelper.addRemoteScope(undefined, undefined, true);
-      helper.command.new('template-example', `--aspect ${helper.scopes.remote}/workspace-example`);
+      helper.command.new('react-workspace-starter', `--aspect ${helper.scopes.remote}/react`);
     });
     after(() => {
       helper.scopeHelper.removeRemoteScope(undefined, true);
@@ -66,12 +69,12 @@ describe('new command', function () {
       helper.scopeHelper.reInitLocalScope();
     });
     it('should throw an error', () => {
-      expect(() => helper.command.new('react')).to.throw();
+      expect(() => helper.command.new('react', '--aspect teambit.react/react-env')).to.throw();
     });
   });
   describe('creating a new react workspace', () => {
     before(() => {
-      helper.scopeHelper.newLocalScope('react');
+      helper.scopeHelper.newLocalScope('react', '--aspect teambit.react/react-env');
     });
     it('bit status should be clean', () => {
       helper.command.expectStatusToNotHaveIssues();
