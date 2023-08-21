@@ -285,12 +285,10 @@ export class WorkspaceComponentLoader {
     await mapSeries(entries, async ([extension, onLoad]) => {
       const data = await onLoad(component, loadOpts);
       await this.upsertExtensionData(component, extension, data);
+      // Update the aspect list to have changes happened during the on load slot (new data added above)
       component.state.aspects.upsertEntry(await this.workspace.resolveComponentId(extension), data);
     });
 
-    // Update the aspect list to have changes happened during the on load slot (new data added above)
-    const updatedAspectList = await this.workspace.createAspectList(component.state.config.extensions);
-    component.state.aspects = updatedAspectList;
     return component;
   }
 
