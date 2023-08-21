@@ -1,4 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import fs from 'fs-extra';
 import semver from 'semver';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Consumer } from '@teambit/legacy/dist/consumer';
@@ -258,9 +259,8 @@ export class MergingMain {
       }
     );
 
-    markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
-
-    await deleteFilesIfNeeded(componentsResults, this.workspace);
+    // markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
+    // await deleteFilesIfNeeded(componentsResults, this.workspace);
 
     const allConfigMerge = compact(succeededComponents.map((c) => c.configMergeResult));
 
@@ -892,6 +892,18 @@ other:   ${otherLaneHead.toString()}`);
       const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(files, mergeResults, mergeStrategy);
       legacyComponent.files = modifiedFiles;
       filesStatus = { ...filesStatus, ...modifiedStatus };
+    }
+
+    if (currentComponent) {
+      const existingFilePathsFromModel = filesStatus;
+      const filePathsFromFS = currentComponent.files || [];
+      filePathsFromFS.forEach((file) => {
+        const filename = pathNormalizeToLinux(file.relative);
+        if (!existingFilePathsFromModel[filename]) {
+          fs.removeSync(file.path);
+          existingFilePathsFromModel[filename] = FileStatus.removed;
+        }
+      });
     }
 
     const manyComponentsWriterOpts = {

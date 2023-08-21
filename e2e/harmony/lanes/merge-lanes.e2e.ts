@@ -1407,4 +1407,31 @@ describe('merge lanes', function () {
       expect(() => helper.command.mergeLane('main', '-x --no-snap')).to.not.throw();
     });
   });
+  describe('renaming files from uppercase to lowercase', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane('lane-a');
+      helper.fs.outputFile('comp1/Foo.js');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane('lane-b');
+      helper.fs.deletePath('comp1/Foo.js');
+      helper.fs.outputFile('comp1/foo.js');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      // @todo: add test-case for switch.
+      // helper.command.switchLocalLane('lane-a', '-x');
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('lane-a', '-x');
+    });
+    it('should get the rename from the other lane', () => {
+      const file = path.join(helper.scopes.remote, 'comp1/foo.js');
+      helper.fs.expectFileToExist(file);
+    });
+  });
 });
