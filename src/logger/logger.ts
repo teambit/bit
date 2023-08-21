@@ -11,6 +11,8 @@ import { serializeError } from 'serialize-error';
 import format from 'string-format';
 import { Logger as PinoLogger, Level } from 'pino';
 import yn from 'yn';
+import pMapSeries from 'p-map-series';
+
 import { Analytics } from '../analytics/analytics';
 import { getSync } from '../api/consumer/lib/global-config';
 import defaultHandleError from '../cli/default-error-handler';
@@ -18,7 +20,6 @@ import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS } from '../constant
 import { getWinstonLogger } from './winston-logger';
 import { getPinoLogger } from './pino-logger';
 import { Profiler } from './profiler';
-import pMapSeries from 'p-map-series';
 
 export { Level as LoggerLevel };
 
