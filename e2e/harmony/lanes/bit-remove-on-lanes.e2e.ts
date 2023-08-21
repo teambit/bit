@@ -57,9 +57,8 @@ describe('bit lane command', function () {
     describe('removing a component that has no dependents', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeRemoval);
-        helper.command.softRemoveOnLane('comp1');
+        helper.command.removeComponent('comp1');
       });
-
       it('should remove the component from .bitmap', () => {
         const bitMap = helper.bitMap.read();
         expect(bitMap).to.not.have.property('comp1');
@@ -162,7 +161,7 @@ describe('bit lane command', function () {
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
-      helper.command.softRemoveOnLane('comp1');
+      helper.command.removeComponent('comp1');
     });
     it('should remove from the lane object as well', () => {
       const lane = helper.command.showOneLaneParsed('dev');
@@ -438,7 +437,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.softRemoveOnLane('comp1', '--workspace-only');
+      helper.command.removeComponent('comp1');
       helper.command.export();
     });
     // previously in older bit versions, it used to leave the removed-component with the snapped version in the lane-object.

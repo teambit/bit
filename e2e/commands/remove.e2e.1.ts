@@ -396,7 +396,7 @@ describe('bit remove command', function () {
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
-      helper.command.softRemoveOnLane('comp1');
+      helper.command.removeComponent('comp1');
     });
     it('should remove the components from the local lane', () => {
       const laneComps = helper.command.showOneLane('dev');
