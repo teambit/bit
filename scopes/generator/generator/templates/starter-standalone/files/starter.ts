@@ -30,6 +30,6 @@ export function starterFile({ namePascalCase, name }: ComponentContext) {
     ]
   };
   
-  export default ${namePascalCase}Starter;
+  export default ${namePascalCase}WorkspaceStarter;
 `;
 }

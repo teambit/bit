@@ -1,6 +1,6 @@
 import { ComponentContext } from '@teambit/generator';
 
-export function componentTemplate({ nameCamelCase, name }: ComponentContext) {
+export function componentTemplate({ namePascalCase, name }: ComponentContext) {
   return `import {
     ComponentContext,
     ComponentFile,
@@ -11,7 +11,7 @@ export function componentTemplate({ nameCamelCase, name }: ComponentContext) {
   import { testFile } from './files/test-file';
   import { compositionFile } from './files/composition-file';
   
-  export type ${nameCamelCase}ComponentTemplateOptions = {
+  export type ${namePascalCase}ComponentTemplateOptions = {
     /**
      * name of the template
      */
@@ -28,7 +28,7 @@ export function componentTemplate({ nameCamelCase, name }: ComponentContext) {
     hidden?: boolean;
   };
   
-  export class ${nameCamelCase}ComponentTemplate implements ComponentTemplate {
+  export class ${namePascalCase}ComponentTemplate implements ComponentTemplate {
     constructor(
       readonly name = '${name}',
       readonly description = 'a template for ${name} components',
@@ -44,9 +44,9 @@ export function componentTemplate({ nameCamelCase, name }: ComponentContext) {
       ];
     }
   
-    static from(options: ${nameCamelCase}ComponentTemplateOptions = {}) {
+    static from(options: ${namePascalCase}ComponentTemplateOptions = {}) {
       return () =>
-        new ${nameCamelCase}ComponentTemplate(
+        new ${namePascalCase}ComponentTemplate(
           options.name,
           options.description,
           options.hidden

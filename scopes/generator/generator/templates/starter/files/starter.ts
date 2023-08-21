@@ -26,7 +26,7 @@ export function starterFile({ namePascalCase, name }: ComponentContext) {
       ];
     }
   
-    static from(options: ${namePascalCase}StarterOptions) {
+    static from(options: Partial<${namePascalCase}StarterOptions>) {
       return () =>
         new ${namePascalCase}WorkspaceStarter(
           options.name,
