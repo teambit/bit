@@ -1,5 +1,6 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { buildRegistry } from '@teambit/legacy/dist/cli';
+import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
@@ -18,15 +19,18 @@ import { HelpCmd } from './help.cmd';
 
 export type CommandList = Array<Command>;
 export type OnStart = (hasWorkspace: boolean, currentCommand: string) => Promise<void>;
+export type OnBeforeExitFn = () => Promise<void>;
 
 export type OnStartSlot = SlotRegistry<OnStart>;
 export type CommandsSlot = SlotRegistry<CommandList>;
+export type OnBeforeExitSlot = SlotRegistry<OnBeforeExitFn>;
 
 export class CLIMain {
   public groups: GroupsType = clone(groups); // if it's not cloned, it is cached across loadBit() instances
   constructor(
     private commandsSlot: CommandsSlot,
     private onStartSlot: OnStartSlot,
+    private onBeforeExitSlot: OnBeforeExitSlot,
     private community: CommunityMain,
     private logger: Logger
   ) {}
@@ -90,6 +94,27 @@ export class CLIMain {
   }
 
   /**
+   * This will register a function to be called before the process exits.
+   * This will run only for "regular" exits
+   * e.g.
+   * yes - command run and finished successfully
+   * yes - command run and failed gracefully (code 1)
+   * not SIGKILL (kill -9)
+   * not SIGINT (Ctrl+C)
+   * not SIGTERM (kill)
+   * not uncaughtException
+   * not unhandledRejection
+   *
+   * @param onBeforeExitFn
+   * @returns
+   */
+  registerOnBeforeExit(onBeforeExitFn: OnBeforeExitFn) {
+    this.onBeforeExitSlot.register(onBeforeExitFn);
+    legacyLogger.registerOnBeforeExitFn(onBeforeExitFn);
+    return this;
+  }
+
+  /**
    * execute commands registered to this aspect.
    */
   async run(hasWorkspace: boolean) {
@@ -127,15 +152,15 @@ export class CLIMain {
 
   static dependencies = [CommunityAspect, LoggerAspect];
   static runtime = MainRuntime;
-  static slots = [Slot.withType<CommandList>(), Slot.withType<OnStart>()];
+  static slots = [Slot.withType<CommandList>(), Slot.withType<OnStart>(), Slot.withType<OnBeforeExitFn>()];
 
   static async provider(
     [community, loggerMain]: [CommunityMain, LoggerMain],
     config,
-    [commandsSlot, onStartSlot]: [CommandsSlot, OnStartSlot]
+    [commandsSlot, onStartSlot, onBeforeExitSlot]: [CommandsSlot, OnStartSlot, OnBeforeExitSlot]
   ) {
     const logger = loggerMain.createLogger(CLIAspect.id);
-    const cliMain = new CLIMain(commandsSlot, onStartSlot, community, logger);
+    const cliMain = new CLIMain(commandsSlot, onStartSlot, onBeforeExitSlot, community, logger);
     const legacyRegistry = buildRegistry();
     await ensureWorkspaceAndScope();
     const legacyCommands = legacyRegistry.commands;
