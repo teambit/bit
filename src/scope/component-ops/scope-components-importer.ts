@@ -422,7 +422,9 @@ export default class ScopeComponentsImporter {
     fromHead?: boolean;
     lane?: Lane;
   }): Promise<void> {
-    logger.debugAndAddBreadCrumb('importManyIfMissingWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
+    logger.debugAndAddBreadCrumb('importManyIfMissingWithoutDeps', `Lane: ${lane?.id()}, Ids: {ids}`, {
+      ids: ids.toString(),
+    });
     const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
     if (R.isEmpty(idsWithoutNils)) return;
     const idsToImport = fromHead ? idsWithoutNils.toVersionLatest() : idsWithoutNils;
