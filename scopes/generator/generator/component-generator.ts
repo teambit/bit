@@ -110,7 +110,7 @@ export class ComponentGenerator {
    */
   private async tryWriteConfigFiles(ids: ComponentID[]) {
     try {
-      const shouldWrite = !this.wsConfigFiles.isWorkspaceConfigWriteDisabled();
+      const shouldWrite = this.wsConfigFiles.isWorkspaceConfigWriteEnabled();
       if (!shouldWrite) return;
       ids.map((id) => this.workspace.clearComponentCache(id));
       await this.wsConfigFiles.writeConfigFiles({

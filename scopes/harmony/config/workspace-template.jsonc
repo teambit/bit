@@ -53,7 +53,7 @@
   },
 
   "teambit.workspace/workspace-config-files": {
-    "disableWorkspaceConfigWrite": false
+    "enableWorkspaceConfigWrite": true
   },
 
   /**

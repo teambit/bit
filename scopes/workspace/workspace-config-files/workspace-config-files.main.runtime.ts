@@ -30,7 +30,7 @@ import {
  */
 export type WorkspaceConfigFilesAspectConfig = {
   configsRootDir?: string;
-  disableWorkspaceConfigWrite?: boolean;
+  enableWorkspaceConfigWrite?: boolean;
 };
 
 export type EnvConfigWriter = {
@@ -146,11 +146,12 @@ export class WorkspaceConfigFilesMain {
   }
 
   /**
-   * The function checks if the writing of workspace configuration is disabled.
-   * @returns the boolean value of `!!this.config.disableWorkspaceConfigWrite`.
+   * The function checks if the auto writing of workspace configuration is enabled.
+   * if it's enabled we will re-generate the configuration files upon bit create
+   * @returns the boolean value of `!!this.config.enableWorkspaceConfigWrite`.
    */
-  isWorkspaceConfigWriteDisabled() {
-    return !!this.config.disableWorkspaceConfigWrite;
+  isWorkspaceConfigWriteEnabled() {
+    return !!this.config.enableWorkspaceConfigWrite;
   }
 
   /**
@@ -349,7 +350,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
   static runtime = MainRuntime;
 
   static defaultConfig: Partial<WorkspaceConfigFilesAspectConfig> = {
-    disableWorkspaceConfigWrite: true,
+    enableWorkspaceConfigWrite: false,
   };
 
   static async provider(
