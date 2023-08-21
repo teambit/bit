@@ -14,7 +14,7 @@ export const classRenderer: APINodeRenderer = {
 
 function ClassComponent(props: APINodeRenderProps) {
   const {
-    apiNode: { schema: api },
+    apiNode: { api },
   } = props;
   const classNode = api as ClassSchema;
   const { extendsNodes, implementNodes, signature, members } = classNode;

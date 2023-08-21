@@ -79,7 +79,7 @@ export function FunctionNodeSummary({
                   {...apiNodeRendererProps}
                   key={`param-${param.name}`}
                   depth={(apiNodeRendererProps.depth ?? 0) + 1}
-                  apiNode={{ ...apiNodeRendererProps.apiNode, renderer: paramRenderer, schema: param }}
+                  apiNode={{ ...apiNodeRendererProps.apiNode, renderer: paramRenderer, api: param }}
                   metadata={{ [param.__schema]: { columnView: true } }}
                 />
               );
@@ -89,7 +89,7 @@ export function FunctionNodeSummary({
                 {...apiNodeRendererProps}
                 key={`param-${param.name}`}
                 depth={(apiNodeRendererProps.depth ?? 0) + 1}
-                apiNode={{ ...apiNodeRendererProps.apiNode, renderer: defaultParamRenderer, schema: param }}
+                apiNode={{ ...apiNodeRendererProps.apiNode, renderer: defaultParamRenderer, api: param }}
                 metadata={{ [param.__schema]: { columnView: true } }}
               />
             );
@@ -102,7 +102,7 @@ export function FunctionNodeSummary({
           {(returnTypeRenderer && (
             <returnTypeRenderer.Component
               {...apiNodeRendererProps}
-              apiNode={{ ...apiNodeRendererProps.apiNode, schema: returnType, renderer: returnTypeRenderer }}
+              apiNode={{ ...apiNodeRendererProps.apiNode, api: returnType, renderer: returnTypeRenderer }}
               depth={(apiNodeRendererProps.depth ?? 0) + 1}
             />
           )) || <div className={styles.node}>{returnType.toString()}</div>}

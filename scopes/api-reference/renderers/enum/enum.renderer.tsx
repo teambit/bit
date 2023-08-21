@@ -14,7 +14,7 @@ export const enumRenderer: APINodeRenderer = {
 
 function EnumComponent(props: APINodeRenderProps) {
   const {
-    apiNode: { schema: api },
+    apiNode: { api },
   } = props;
   const enumNode = api as EnumSchema;
   const { members } = enumNode;
