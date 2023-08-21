@@ -84,7 +84,7 @@
         "@teambit/base-ui.utils.time-ago": "1.0.1",
         "@teambit/bit.content.what-is-bit": "1.96.2",
         "@teambit/bvm.config": "0.2.2",
-        "@teambit/bvm.path": "^0.0.2",
+        "@teambit/bvm.path": "^0.1.2",
         "@teambit/capsule": "0.0.12",
         "@teambit/code.ui.code-compare-section": "0.0.5",
         "@teambit/code.ui.dependency-tree": "0.0.546",
