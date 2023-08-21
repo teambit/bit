@@ -97,7 +97,7 @@ export class GeneratorMain {
   }
 
   /**
-   * register a new component template.
+   * register a new workspace starter.
    */
   registerWorkspaceTemplate(templates: WorkspaceTemplate[]) {
     this.workspaceTemplateSlot.register(templates);
@@ -321,7 +321,7 @@ export class GeneratorMain {
     if (this.workspace) {
       throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
     }
-    const { aspect: aspectId, loadFrom } = options;
+    const { aspectComponent: aspectId, loadFrom } = options;
     const { workspaceTemplate, aspect } = loadFrom
       ? await this.findTemplateInOtherWorkspace(loadFrom, templateName, aspectId)
       : await this.getWorkspaceTemplate(templateName, aspectId);
@@ -329,7 +329,6 @@ export class GeneratorMain {
     if (!workspaceTemplate) throw new BitError(`template "${templateName}" was not found`);
     const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, workspaceTemplate, aspect);
     const workspacePath = await workspaceGenerator.generate();
-
     return { workspacePath, appName: workspaceTemplate.appName };
   }
 

@@ -30,7 +30,7 @@ export interface WorkspaceOptions<TAspect = string, TTemplate = string> {
    * Represents the aspect in the context where a remote aspect is imported (often via the `--aspect` flag).
    * This is useful for obtaining the aspect-id and other related information.
    */
-  aspect?: TAspect;
+  aspectComponent?: TAspect;
 
   /**
    * Represents the selected template to initialize or create the workspace.
