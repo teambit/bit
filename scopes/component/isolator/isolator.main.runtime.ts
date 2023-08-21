@@ -1,6 +1,6 @@
 import rimraf from 'rimraf';
 import { v4 } from 'uuid';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, pick } from 'lodash';
@@ -240,6 +240,7 @@ export class IsolatorMain {
     GraphAspect,
     GlobalConfigAspect,
     AspectLoaderAspect,
+    CLIAspect,
   ];
   static slots = [Slot.withType<CapsuleTransferFn>()];
   static defaultConfig = {};
@@ -247,13 +248,14 @@ export class IsolatorMain {
   _datedHashForName = new Map<string, string>(); // cache dated hash for a specific name
 
   static async provider(
-    [dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader]: [
+    [dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader, cli]: [
       DependencyResolverMain,
       LoggerMain,
       ComponentMain,
       GraphMain,
       GlobalConfigMain,
-      AspectLoaderMain
+      AspectLoaderMain,
+      CLIMain
     ],
     _config,
     [capsuleTransferSlot]: [CapsuleTransferSlot]
@@ -264,6 +266,7 @@ export class IsolatorMain {
       logger,
       componentAspect,
       graphMain,
+      cli,
       globalConfig,
       aspectLoader,
       capsuleTransferSlot
@@ -275,6 +278,7 @@ export class IsolatorMain {
     private logger: Logger,
     private componentAspect: ComponentMain,
     private graph: GraphMain,
+    private cli: CLIMain,
     private globalConfig: GlobalConfigMain,
     private aspectLoader: AspectLoaderMain,
     private capsuleTransferSlot: CapsuleTransferSlot
@@ -352,12 +356,12 @@ export class IsolatorMain {
 
   private registerMoveCapsuleOnProcessExit(datedCapsuleDir: string, targetCapsuleDir: string): void {
     this.logger.info(`registering process.on(exit) to move capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
-    process.on('exit', () => {
+    this.cli.registerOnBeforeExit(async () => {
       this.logger.info(`start moving capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
       const allDirs = fs
         .readdirSync(datedCapsuleDir, { withFileTypes: true })
         .filter((dir) => dir.isDirectory() && dir.name !== 'node_modules');
-      allDirs.forEach((dir) => {
+      const promises = allDirs.map(async (dir) => {
         const sourceDir = path.join(datedCapsuleDir, dir.name);
         const sourceCapsuleReadyFile = this.getCapsuleReadyFilePath(sourceDir);
         if (!fs.pathExistsSync(sourceCapsuleReadyFile)) {
@@ -380,10 +384,11 @@ export class IsolatorMain {
         // We delete the ready file path first, as the move might take a long time, so we don't want to move
         // the ready file indicator before the capsule is ready in the new location
         this.removeCapsuleReadyFileSync(sourceDir);
-        this.moveWithTempName(sourceDir, targetDir);
+        await this.moveWithTempName(sourceDir, targetDir);
         // Mark the capsule as ready in the new location
         this.writeCapsuleReadyFileSync(targetDir);
       });
+      await Promise.all(promises);
     });
   }
 
@@ -396,20 +401,21 @@ export class IsolatorMain {
    * @param sourceDir - The source directory from where the files or directories will be moved.
    * @param targetDir - The target directory where the source directory will be moved to.
    */
-  private moveWithTempName(sourceDir, targetDir): void {
+  private async moveWithTempName(sourceDir, targetDir): Promise<void> {
     const tempDir = `${targetDir}-${v4()}`;
     this.logger.console(`moving capsule from ${sourceDir} to a temp dir ${tempDir}`);
-    const mvFunc = this.getCapsuleTransferFn() || fs.moveSync;
-    mvFunc(sourceDir, tempDir);
+    const mvFunc = this.getCapsuleTransferFn() || fs.move;
+    await mvFunc(sourceDir, tempDir);
+    const exists = await fs.pathExists(targetDir);
     // This might exist if in the time when we move to the temp dir, another process created the target dir already
-    if (fs.existsSync(targetDir)) {
+    if (exists) {
       this.logger.console(`skip moving capsule from temp dir to real dir as it's already exist: ${targetDir}`);
       // Clean leftovers
-      rimraf.sync(tempDir);
+      await rimraf(tempDir);
       return;
     }
     this.logger.console(`moving capsule from a temp dir ${tempDir} to the target dir ${targetDir}`);
-    mvFunc(tempDir, targetDir);
+    await mvFunc(tempDir, targetDir);
   }
 
   /**

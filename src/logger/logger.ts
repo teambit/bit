@@ -18,6 +18,7 @@ import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS } from '../constant
 import { getWinstonLogger } from './winston-logger';
 import { getPinoLogger } from './pino-logger';
 import { Profiler } from './profiler';
+import pMapSeries from 'p-map-series';
 
 export { Level as LoggerLevel };
 
@@ -66,6 +67,8 @@ const commandHistoryFile = 'command-history';
 class BitLogger implements IBitLogger {
   logger: PinoLogger;
   private profiler: Profiler;
+  private onBeforeExitFns: Function[] = [];
+
   isDaemon = false; // 'bit cli' is a daemon as it should never exit the process, unless the user kills it
   /**
    * being set on command-registrar, once the flags are parsed. here, it's a workaround to have
@@ -169,6 +172,14 @@ class BitLogger implements IBitLogger {
     console ? this.console(fullMsg) : this.info(fullMsg);
   }
 
+  registerOnBeforeExitFn(fn: Function) {
+    this.onBeforeExitFns.push(fn);
+  }
+
+  async runOnBeforeExitFns() {
+    return pMapSeries(this.onBeforeExitFns, (fn) => fn());
+  }
+
   async exitAfterFlush(code = 0, commandName: string, cliOutput = '') {
     await Analytics.sendData();
     const isSuccess = code === 0;
@@ -186,6 +197,7 @@ class BitLogger implements IBitLogger {
     this.logger[level](msg);
     this.commandHistory.completed = `${new Date().toISOString()} end ${process.argv.slice(2).join(' ')}, code: ${code}`;
     this.writeCommandHistory();
+    await this.runOnBeforeExitFns();
     if (!this.isDaemon) process.exit(code);
   }
 
