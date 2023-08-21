@@ -24,7 +24,7 @@ import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
 import { generatorSchema } from './generator.graphql';
-import { ComponentGenerator, GenerateResult } from './component-generator';
+import { ComponentGenerator, GenerateResult, OnComponentCreateFn } from './component-generator';
 import { WorkspaceGenerator } from './workspace-generator';
 import { WorkspaceTemplate } from './workspace-template';
 import { NewCmd, NewOptions } from './new.cmd';
@@ -36,6 +36,7 @@ import { GeneratorService } from './generator.service';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
+export type OnComponentCreateSlot = SlotRegistry<OnComponentCreateFn>;
 
 export type TemplateDescriptor = {
   aspectId: string;
@@ -75,6 +76,7 @@ export class GeneratorMain {
   constructor(
     private componentTemplateSlot: ComponentTemplateSlot,
     private workspaceTemplateSlot: WorkspaceTemplateSlot,
+    private onComponentCreateSlot: OnComponentCreateSlot,
     private config: GeneratorConfig,
     private workspace: Workspace,
     private envs: EnvsMain,
@@ -100,6 +102,11 @@ export class GeneratorMain {
    */
   registerWorkspaceTemplate(templates: WorkspaceTemplate[]) {
     this.workspaceTemplateSlot.register(templates);
+    return this;
+  }
+
+  registerOnComponentCreate(fn: OnComponentCreateFn) {
+    this.onComponentCreateSlot.register(fn);
     return this;
   }
 
@@ -307,6 +314,7 @@ export class GeneratorMain {
       this.tracker,
       this.wsConfigFiles,
       this.logger,
+      this.onComponentCreateSlot,
       templateWithId.id,
       templateWithId.envName ? ComponentID.fromString(templateWithId.id) : undefined
     );
@@ -468,7 +476,11 @@ export class GeneratorMain {
     this.aspectLoaded = true;
   }
 
-  static slots = [Slot.withType<ComponentTemplate[]>(), Slot.withType<WorkspaceTemplate[]>()];
+  static slots = [
+    Slot.withType<ComponentTemplate[]>(),
+    Slot.withType<WorkspaceTemplate[]>(),
+    Slot.withType<OnComponentCreateFn>(),
+  ];
 
   static dependencies = [
     WorkspaceAspect,
@@ -516,12 +528,17 @@ export class GeneratorMain {
       WorkspaceConfigFilesMain
     ],
     config: GeneratorConfig,
-    [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
+    [componentTemplateSlot, workspaceTemplateSlot, onComponentCreateSlot]: [
+      ComponentTemplateSlot,
+      WorkspaceTemplateSlot,
+      OnComponentCreateSlot
+    ]
   ) {
     const logger = loggerMain.createLogger(GeneratorAspect.id);
     const generator = new GeneratorMain(
       componentTemplateSlot,
       workspaceTemplateSlot,
+      onComponentCreateSlot,
       config,
       workspace,
       envs,

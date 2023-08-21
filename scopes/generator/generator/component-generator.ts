@@ -19,6 +19,7 @@ import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 
 import { ComponentTemplate, ComponentFile, ComponentConfig } from './component-template';
 import { CreateOptions } from './create.cmd';
+import { OnComponentCreateSlot } from './generator.main.runtime';
 
 export type GenerateResult = {
   id: ComponentID;
@@ -28,6 +29,8 @@ export type GenerateResult = {
   envSetBy: string;
   packageName: string;
 };
+
+export type OnComponentCreateFn = (generateResults: GenerateResult[]) => Promise<void>;
 
 export class ComponentGenerator {
   constructor(
@@ -40,6 +43,7 @@ export class ComponentGenerator {
     private tracker: TrackerMain,
     private wsConfigFiles: WorkspaceConfigFilesMain,
     private logger: Logger,
+    private onComponentCreateSlot: OnComponentCreateSlot,
     private aspectId: string,
     private envId?: ComponentID
   ) {}
@@ -69,6 +73,10 @@ export class ComponentGenerator {
 
     const ids = generateResults.map((r) => r.id);
     await this.tryLinkToNodeModules(ids);
+    await this.runOnComponentCreateHook(generateResults);
+    // We are running this after the runOnComponentCreateHook as it require
+    // the env to be installed to work properly, and the hook might install
+    // the env.
     await this.tryWriteConfigFiles(ids);
 
     return generateResults;
@@ -85,6 +93,12 @@ export class ComponentGenerator {
         `failed linking the new components to node_modules, please run "bit link" manually. error: ${err.message}`
       );
     }
+  }
+
+  private async runOnComponentCreateHook(generateResults: GenerateResult[]) {
+    const fns = this.onComponentCreateSlot.values();
+    if (!fns.length) return;
+    await Promise.all(fns.map((fn) => fn(generateResults)));
   }
 
   /**
