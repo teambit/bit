@@ -18,7 +18,7 @@ import {
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import mapSeries from 'p-map-series';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
-import { Version, ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { Version, ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { ComponentID } from '@teambit/component-id';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
@@ -47,6 +47,7 @@ export type CheckoutProps = {
   revert?: boolean; // change the files according to the given version, but don't change the bitmap version and don't try to merge
   all?: boolean; // checkout all ids
   isLane?: boolean;
+  lane?: Lane; // currently needed for "bit switch" to tell the "fetch" where to fetch from
   workspaceOnly?: boolean;
   versionPerId?: ComponentID[]; // if given, the ComponentID.version is the version to checkout to.
   skipUpdatingBitmap?: boolean; // needed for stash
@@ -97,6 +98,7 @@ export class CheckoutMain {
       .flat();
     await this.workspace.scope.legacyScope.scopeImporter.importManyIfMissingWithoutDeps({
       ids: BitIds.fromArray(toImport),
+      lane: checkoutProps.lane,
     });
 
     const getComponentsStatusOfMergeNeeded = async (): Promise<ComponentStatus[]> => {

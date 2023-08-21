@@ -1446,7 +1446,7 @@ describe('bit lane command', function () {
       let beforeCheckout: string;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(firstWorkspaceAfterExport);
-        helper.command.removeLaneComp('comp2');
+        helper.command.softRemoveOnLane('comp2');
         helper.fs.writeFile('comp1/index.js', ''); // remove the comp2 dependency from the code
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
