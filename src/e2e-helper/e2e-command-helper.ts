@@ -211,7 +211,7 @@ export default class CommandHelper {
     return this.runCmd(`bit delete ${id} --silent --hard ${flags}`);
   }
   softRemoveOnLane(id: string, flags = '') {
-    return this.runCmd(`bit delete ${id} --lane ${flags}`);
+    return this.runCmd(`bit delete ${id} --silent --lane ${flags}`);
   }
   recover(id: string, flags = '') {
     return this.runCmd(`bit recover ${id} ${flags}`);
