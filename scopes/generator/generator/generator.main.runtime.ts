@@ -316,12 +316,12 @@ export class GeneratorMain {
   async generateWorkspaceTemplate(
     workspaceName: string,
     templateName: string,
-    options: NewOptions
+    options: NewOptions & { aspect?: string }
   ): Promise<GenerateWorkspaceTemplateResult> {
     if (this.workspace) {
       throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
     }
-    const { aspectComponent: aspectId, loadFrom } = options;
+    const { aspect: aspectId, loadFrom } = options;
     const { workspaceTemplate, aspect } = loadFrom
       ? await this.findTemplateInOtherWorkspace(loadFrom, templateName, aspectId)
       : await this.getWorkspaceTemplate(templateName, aspectId);

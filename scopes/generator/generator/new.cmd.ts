@@ -53,10 +53,11 @@ export class NewCmd implements Command {
       standalone: boolean;
       env?: string;
       template?: string;
+      aspect?: string;
     }
   ) {
     options.skipGit = options.skipGit ?? options.standalone;
-    options.aspectComponent = options.aspectComponent ?? options.env ?? options.template;
+    options.aspect = options.aspect ?? options.env ?? options.template;
     const { workspacePath, appName } = await this.generator.generateWorkspaceTemplate(
       workspaceName,
       templateName,
