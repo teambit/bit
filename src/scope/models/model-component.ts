@@ -1103,6 +1103,11 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return versionHistory;
   }
 
+  /**
+   * careful! the `versions` passed here can belong to other components, not necessarily to this one.
+   * that's why it checks whether the version-hash exists in the VersionHistory, and if it's not,
+   * it won't update it.
+   */
   async updateRebasedVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory | undefined> {
     const versionHistory = await this.getVersionHistory(repo);
     const hasUpdated = versions.some((version) => {
