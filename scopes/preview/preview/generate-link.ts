@@ -28,9 +28,7 @@ export function generateLink(
   let modulesLinks;
   if (mainModulesMap) {
     modulesLinks = Object.entries(mainModulesMap).map(([envId, path]) => {
-      // convert the path of files like mounters or docs templates into a path
-      // which starts from its package name
-      const resolveFrom = path.replace(/^.+\/node_modules\//, '');
+      const resolveFrom = toWindowsCompatiblePath(path);
       const varName = getEnvVarName(envId);
       return { envId, varName, resolveFrom };
     });
