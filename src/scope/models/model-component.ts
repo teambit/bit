@@ -1115,6 +1115,12 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return hasUpdated ? versionHistory : undefined;
   }
 
+  async updateVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory> {
+    const versionHistory = await this.getVersionHistory(repo);
+    versionHistory.addFromVersionsObjects(versions);
+    return versionHistory;
+  }
+
   async populateVersionHistoryIfMissingGracefully(
     repo: Repository,
     versionHistory: VersionHistory,
