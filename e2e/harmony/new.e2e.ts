@@ -49,10 +49,10 @@ describe('new command', function () {
     after(() => {
       helper.scopeHelper.removeRemoteScope(undefined, true);
     });
-    it('should generate a new workspace, import components and add them as new with no issues', () => {
+    it('should generate a new workspace, import components and add with no issues', () => {
       const wsPath = path.join(helper.scopes.localPath, 'my-workspace');
-      const status = helper.command.statusJson(wsPath);
-      expect(status.newComponents).to.have.lengthOf(1);
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
       helper.command.expectStatusToNotHaveIssues(wsPath);
     });
     it('should not add env dependencies to the workspace.jsonc', () => {
