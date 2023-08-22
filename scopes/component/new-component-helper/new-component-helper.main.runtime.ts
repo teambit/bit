@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import path from 'path';
 import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { MainRuntime } from '@teambit/cli';
@@ -32,15 +33,43 @@ export class NewComponentHelperMain {
   }
 
   /**
+   * Synchronously checks if the given directory contains any files.
+   */
+  private dirContainsFiles(dirPath: string): boolean {
+    if (!fs.existsSync(dirPath)) return false;
+
+    const contents = fs.readdirSync(dirPath);
+    for (const item of contents) {
+      if (fs.statSync(path.join(dirPath, item)).isFile()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * when creating/forking a component, the user may or may not provide a path.
    * if not provided, generate the path based on the component-id.
    * the component will be written to that path.
    */
-  getNewComponentPath(componentId: ComponentID, pathFromUser?: string): PathLinuxRelative {
-    if (pathFromUser) return pathFromUser;
+  getNewComponentPath(componentId: ComponentID, pathFromUser?: string, componentsToCreate?: number): PathLinuxRelative {
+    if (pathFromUser) {
+      const fullPath = path.join(this.workspace.path, pathFromUser);
+      const componentPath = componentId.namespace?.length
+        ? path.join(componentId.namespace, componentId.name)
+        : componentId.name;
+      const dirHasFiles = this.dirContainsFiles(fullPath);
+      if (componentsToCreate && componentsToCreate === 1) {
+        return dirHasFiles ? pathFromUser : path.join(pathFromUser, componentPath);
+      }
+      if (componentsToCreate && componentsToCreate > 1) {
+        return path.join(pathFromUser, componentPath);
+      }
+      return pathFromUser;
+    }
+
     return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.workspace.defaultDirectory);
   }
-
   async writeAndAddNewComp(
     comp: Component,
     targetId: ComponentID,
