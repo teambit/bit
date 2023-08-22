@@ -229,7 +229,7 @@ const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
 /**
  * File name to indicate that the capsule is ready (all packages are installed and links are created)
  */
-const CAPSULE_READY_FILE = '.bit-capsule-ready';
+export const CAPSULE_READY_FILE = '.bit-capsule-ready';
 
 export class IsolatorMain {
   static runtime = MainRuntime;
