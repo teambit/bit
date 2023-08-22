@@ -109,14 +109,16 @@ async function _updateVersionHistoryForVersionsWithoutOrigin(
 ): Promise<VersionHistory[]> {
   const mutatedVersionObjects = versionWithoutOrigin.filter((v) => v.squashed || v.unrelated);
   if (!mutatedVersionObjects.length) return [];
-  logger.debug(`updateVersionHistoryIfNeeded, found ${mutatedVersionObjects.length} mutated version`);
+  logger.debug(`_updateVersionHistoryForVersionsWithoutOrigin, found ${mutatedVersionObjects.length} mutated version`);
   const versionsHistory = await Promise.all(
     mergedComponents.map(async (modelComp) =>
       modelComp.updateRebasedVersionHistory(scope.objects, mutatedVersionObjects)
     )
   );
   const versionsHistoryNoNull = compact(versionsHistory);
-  logger.debug(`updateVersionHistoryIfNeeded, found ${versionsHistoryNoNull.length} versionsHistory to update
+  logger.debug(`_updateVersionHistoryForVersionsWithoutOrigin, found ${
+    versionsHistoryNoNull.length
+  } versionsHistory to update
 ${versionsHistoryNoNull.map((v) => v.bitId.toString()).join(', ')}`);
 
   return versionsHistoryNoNull;
@@ -128,6 +130,7 @@ async function _updateVersionHistoryForVersionsWithOrigin(
   versionObjects: Version[]
 ): Promise<VersionHistory[]> {
   if (!versionObjects.length) return [];
+  logger.debug(`_updateVersionHistoryForVersionsWithOrigin, found ${versionObjects.length} versions with origin`);
   const componentVersionMap = new Map<ModelComponent, Version[]>();
   versionObjects.forEach((version) => {
     const component = mergedComponents.find(
