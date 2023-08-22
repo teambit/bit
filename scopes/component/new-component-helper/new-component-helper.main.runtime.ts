@@ -41,7 +41,7 @@ export class NewComponentHelperMain {
     if (pathFromUser) {
       const fullPath = path.join(this.workspace.path, pathFromUser);
       const componentPath = componentId.fullName;
-      const dirExists = fs.readdirSync(fullPath);
+      const dirExists = fs.pathExistsSync(fullPath);
       if (componentsToCreate && componentsToCreate === 1) {
         return dirExists ? path.join(pathFromUser, componentPath) : pathFromUser;
       }
