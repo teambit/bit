@@ -191,7 +191,6 @@ export class ComponentGenerator {
       // the component template has an env and the user wants a different env.
       delete config[templateEnv];
     }
-    this.logger.console(userEnv);
     await this.tracker.addEnvToConfig(userEnv, config);
 
     return config;
