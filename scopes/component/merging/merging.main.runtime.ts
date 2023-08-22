@@ -45,8 +45,8 @@ import {
   CheckoutMain,
   ComponentStatusBase,
   applyModifiedVersion,
-  deleteFilesIfNeeded,
-  markFilesToBeRemovedIfNeeded,
+  // deleteFilesIfNeeded,
+  // markFilesToBeRemovedIfNeeded,
 } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';

@@ -1,5 +1,6 @@
 import { compact } from 'lodash';
 import * as path from 'path';
+import fs from 'fs-extra';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { BitId } from '@teambit/legacy-bit-id';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
@@ -95,6 +96,19 @@ export async function applyVersion(
   files.forEach((file) => {
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
+
+  if (componentFromFS) {
+    const existingFilePathsFromModel = filesStatus;
+    const filePathsFromFS = componentFromFS.files || [];
+    filePathsFromFS.forEach((file) => {
+      const filename = pathNormalizeToLinux(file.relative);
+      if (!existingFilePathsFromModel[filename]) {
+        existingFilePathsFromModel[filename] = FileStatus.removed;
+        fs.removeSync(file.path);
+      }
+    });
+  }
+
   if (mergeResults) {
     // update files according to the merge results
     const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(files, mergeResults, mergeStrategy);

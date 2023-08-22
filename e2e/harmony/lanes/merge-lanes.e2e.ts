@@ -1408,6 +1408,7 @@ describe('merge lanes', function () {
     });
   });
   describe('renaming files from uppercase to lowercase', () => {
+    let afterExport: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1, false);
@@ -1421,17 +1422,27 @@ describe('merge lanes', function () {
       helper.fs.outputFile('comp1/foo.js');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-
-      // @todo: add test-case for switch.
-      // helper.command.switchLocalLane('lane-a', '-x');
-
-      helper.scopeHelper.reInitLocalScope();
-      helper.scopeHelper.addRemoteScope();
-      helper.command.importLane('lane-a', '-x');
+      afterExport = helper.scopeHelper.cloneLocalScope();
     });
-    it('should get the rename from the other lane', () => {
-      const file = path.join(helper.scopes.remote, 'comp1/foo.js');
-      helper.fs.expectFileToExist(file);
+    describe('merging', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importLane('lane-a', '-x');
+        helper.command.mergeLane('lane-b', '-x');
+      });
+      it('should get the rename from the other lane', () => {
+        const file = path.join(helper.scopes.remote, 'comp1/foo.js');
+        helper.fs.expectFileToExist(file);
+      });
+    });
+    describe('switching', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterExport);
+      });
+      it('should remove the file from the current lane and write the file according to the switch-to lane', () => {
+        helper.fs.expectFileToExist('comp1/Foo.js');
+      });
     });
   });
 });
