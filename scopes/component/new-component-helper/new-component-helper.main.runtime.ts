@@ -33,21 +33,6 @@ export class NewComponentHelperMain {
   }
 
   /**
-   * Synchronously checks if the given directory contains any files.
-   */
-  private dirContainsFiles(dirPath: string): boolean {
-    if (!fs.existsSync(dirPath)) return false;
-
-    const contents = fs.readdirSync(dirPath);
-    for (const item of contents) {
-      if (fs.statSync(path.join(dirPath, item)).isFile()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
    * when creating/forking a component, the user may or may not provide a path.
    * if not provided, generate the path based on the component-id.
    * the component will be written to that path.
@@ -58,9 +43,9 @@ export class NewComponentHelperMain {
       const componentPath = componentId.namespace?.length
         ? path.join(componentId.namespace, componentId.name)
         : componentId.name;
-      const dirHasFiles = this.dirContainsFiles(fullPath);
+      const dirExists = fs.readdirSync(fullPath);
       if (componentsToCreate && componentsToCreate === 1) {
-        return dirHasFiles ? pathFromUser : path.join(pathFromUser, componentPath);
+        return dirExists ? path.join(pathFromUser, componentPath) : pathFromUser;
       }
       if (componentsToCreate && componentsToCreate > 1) {
         return path.join(pathFromUser, componentPath);
