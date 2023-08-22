@@ -24,22 +24,23 @@ export class CreateCmd implements Command {
   ];
   examples = [
     {
-      cmd: 'bit create react ui/button',
+      cmd: 'bit create react ui/button --aspect teambit.react/react-env',
       description: "creates a component named 'ui/button' using the 'react' template",
     },
     {
-      cmd: 'bit create react ui/button pages/register',
-      description: "creates two components, 'ui/button' and 'pages/register', using the 'react' template",
+      cmd: 'bit create node utils/is-string utils/is-number --aspect teambit.node/node',
+      description:
+        "creates two components, 'utils/is-string' and 'utils/is-number' using the 'node' template from the 'node' aspect(env)",
     },
     {
-      cmd: 'bit create react ui/button --scope my-org.my-scope',
+      cmd: 'bit create mdx docs/create-components --aspect teambit.mdx/mdx-env --scope my-org.my-scope',
       description:
-        "creates a component named 'ui/button' and sets it scope to 'my-org.my-scope'. \nby default, the scope is the `defaultScope` value, configured in your `workspace.jsonc`.",
+        "creates an mdx component named 'docs/create-components' and sets it scope to 'my-org.my-scope'. \nby default, the scope is the `defaultScope` value, configured in your `workspace.jsonc`.",
     },
     {
-      cmd: 'bit create react ui/button --env teambit.community/envs/community-react@1.95.13',
+      cmd: 'bit create react ui/button --aspect teambit.react/react-env --env teambit.community/envs/community-react@3.0.3',
       description:
-        "creates a component named 'ui/button' and sets it to use the 'community-react' env. \n(the template's default env is 'teambit.react/react').",
+        "creates a component named 'ui/button' from the teambit.react/react-env env and sets it to use the 'community-react' env. \n(the template's default env is 'teambit.react/react-env').",
     },
   ];
   group = 'development';
