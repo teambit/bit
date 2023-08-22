@@ -284,11 +284,11 @@ export class GeneratorMain {
   ): Promise<GenerateResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     await this.loadAspects();
-    const { namespace, aspectId } = options;
+    const { namespace, aspect } = options;
 
     const componentConfigLoadingRegistry = ComponentConfig.componentConfigLoadingRegistry;
 
-    const templateWithId = await this.getComponentTemplate(templateName, aspectId);
+    const templateWithId = await this.getComponentTemplate(templateName, aspect);
 
     ComponentConfig.componentConfigLoadingRegistry = componentConfigLoadingRegistry;
 
