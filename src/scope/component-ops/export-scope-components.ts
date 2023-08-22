@@ -108,6 +108,7 @@ async function _updateVersionHistoryForVersionsWithoutOrigin(
   versionWithoutOrigin: Version[]
 ): Promise<VersionHistory[]> {
   const mutatedVersionObjects = versionWithoutOrigin.filter((v) => v.squashed || v.unrelated);
+  if (!mutatedVersionObjects.length) return [];
   logger.debug(`updateVersionHistoryIfNeeded, found ${mutatedVersionObjects.length} mutated version`);
   const versionsHistory = await Promise.all(
     mergedComponents.map(async (modelComp) =>
