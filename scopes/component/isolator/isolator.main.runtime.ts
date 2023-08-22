@@ -53,6 +53,8 @@ import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
+import pMap from 'p-map';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
@@ -885,10 +887,12 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions
   ): Promise<Capsule[]> {
     this.logger.debug(`createCapsulesFromComponents: ${components.length} components`);
-    const capsules: Capsule[] = await Promise.all(
-      components.map((component: Component) => {
+    const capsules: Capsule[] = await pMap(
+      components,
+      (component: Component) => {
         return Capsule.createFromComponent(component, baseDir, opts);
-      })
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
     return capsules;
   }
