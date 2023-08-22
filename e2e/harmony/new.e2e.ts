@@ -51,7 +51,7 @@ describe('new command', function () {
     });
     it('should generate a new workspace, import components and add with no issues', () => {
       const wsPath = path.join(helper.scopes.localPath, 'my-workspace');
-      const list = helper.command.listParsed();
+      const list = helper.command.runCmd(`bit list --json`, wsPath);
       expect(list).to.have.lengthOf(1);
       helper.command.expectStatusToNotHaveIssues(wsPath);
     });
