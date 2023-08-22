@@ -44,7 +44,7 @@ describe('new command', function () {
 
       helper.scopeHelper.cleanLocalScope(); // it deletes all content without bit-init
       helper.scopeHelper.addRemoteScope(undefined, undefined, true);
-      helper.command.new('react-workspace-starter', `--aspect ${helper.scopes.remote}/react`);
+      helper.command.new('react-workspace', `--aspect ${helper.scopes.remote}/react`);
     });
     after(() => {
       helper.scopeHelper.removeRemoteScope(undefined, true);

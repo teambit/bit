@@ -8,7 +8,7 @@ export function starterFile({ namePascalCase, name }: ComponentContext) {
   
   export class ${namePascalCase}WorkspaceStarter implements WorkspaceTemplate {
     constructor(
-      readonly name = '${name}',
+      readonly name = '${name}-workspace',
       readonly description = '${namePascalCase} workspace with a custom react env',
       readonly hidden = false
     ) {}
