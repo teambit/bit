@@ -40,9 +40,7 @@ export class NewComponentHelperMain {
   getNewComponentPath(componentId: ComponentID, pathFromUser?: string, componentsToCreate?: number): PathLinuxRelative {
     if (pathFromUser) {
       const fullPath = path.join(this.workspace.path, pathFromUser);
-      const componentPath = componentId.namespace?.length
-        ? path.join(componentId.namespace, componentId.name)
-        : componentId.name;
+      const componentPath = componentId.fullName;
       const dirExists = fs.readdirSync(fullPath);
       if (componentsToCreate && componentsToCreate === 1) {
         return dirExists ? path.join(pathFromUser, componentPath) : pathFromUser;
