@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs, { pathExistsSync } from 'fs-extra';
 import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { MainRuntime } from '@teambit/cli';
@@ -36,8 +36,17 @@ export class NewComponentHelperMain {
    * if not provided, generate the path based on the component-id.
    * the component will be written to that path.
    */
-  getNewComponentPath(componentId: ComponentID, pathFromUser?: string): PathLinuxRelative {
-    if (pathFromUser) return pathFromUser;
+  getNewComponentPath(componentId: ComponentID, pathFromUser?: string, componentsToCreate?: number): PathLinuxRelative {
+    if (pathFromUser) {
+      const fullPath = `${this.workspace.path}/${pathFromUser}`;
+
+      if (componentsToCreate && componentsToCreate === 1 && pathExistsSync(fullPath)) {
+        return `${pathFromUser}${componentId.namespace}/${componentId.name}`;
+      }
+
+      return pathFromUser;
+    }
+
     return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.workspace.defaultDirectory);
   }
 
