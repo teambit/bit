@@ -31,7 +31,7 @@ export class WorkspaceGenerator {
   private workspace: Workspace;
   private install: InstallMain;
   private importer: ImporterMain;
-  private logger: Logger;
+  private logger?: Logger;
   private forking: ForkingMain;
   private git: GitMain;
   private wsConfigFiles: WorkspaceConfigFilesMain;
@@ -75,7 +75,7 @@ export class WorkspaceGenerator {
       await this.compileComponents(true);
       await this.wsConfigFiles.writeConfigFiles({});
     } catch (err: any) {
-      this.logger.error(`failed generating a new workspace, will delete the dir ${this.workspacePath}`, err);
+      this.logger?.error(`failed generating a new workspace, will delete the dir ${this.workspacePath}`, err);
       await fs.remove(this.workspacePath);
       throw err;
     }
@@ -114,6 +114,7 @@ export class WorkspaceGenerator {
       empty: this.options.empty,
       aspectComponent: this.aspectComponent,
       template: this.template,
+      skipGit: this.options.skipGit,
     };
   }
 
