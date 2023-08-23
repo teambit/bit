@@ -1717,12 +1717,16 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async resolveEnvIdWithPotentialVersionForConfig(envId: ComponentID): Promise<string> {
     const isCore = this.aspectLoader.isCoreAspect(envId.toStringWithoutVersion());
     const existsOnWorkspace = await this.hasId(envId);
+    const isNew = !envId.hasVersion();
+    if (isNew) {
+      return envId.toString();
+    }
     if (isCore || existsOnWorkspace) {
       // the env needs to be without version
       return envId.toStringWithoutVersion();
     }
     // the env must include a version
-    if (envId.hasVersion()) {
+    if (!isNew) {
       return envId.toString();
     }
     const extensions = this.harmony.get<ConfigMain>('teambit.harmony/config').extensions;

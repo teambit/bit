@@ -59,6 +59,9 @@ make sure this argument is the name only, without the scope-name. to change the 
       await this.refactoring.refactorVariableAndClasses(sourceComp, sourceId, targetId);
       this.refactoring.refactorFilenames(sourceComp, sourceId, targetId);
     }
+    if (isSourceCompEnv) {
+      await this.workspace.replaceEnvForAllComponents(sourceId, targetId);
+    }
     if (isTagged) {
       const config = await this.getConfig(sourceComp);
       await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetId, options, config);
@@ -92,7 +95,6 @@ make sure this argument is the name only, without the scope-name. to change the 
         writeToPath: this.newComponentHelper.getNewComponentPath(targetId),
       });
     }
-    isSourceCompEnv && (await this.workspace.replaceEnvForAllComponents(sourceId, targetId));
     await this.workspace.bitMap.write();
 
     await linkToNodeModulesByComponents([targetComp], this.workspace); // link the new-name to node-modules
