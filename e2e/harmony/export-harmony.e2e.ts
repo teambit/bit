@@ -46,6 +46,14 @@ describe('export functionality on Harmony', function () {
     it('should not delete the first version', () => {
       expect(() => helper.command.catComponent('comp1@0.0.1')).not.to.throw();
     });
+    it('should update the VersionHistory on the remote', () => {
+      const versionHistory = helper.command.catVersionHistory(
+        `${helper.scopes.remote}/comp1`,
+        helper.scopes.remotePath
+      );
+      expect(versionHistory).to.have.property('versions');
+      expect(versionHistory.versions).to.have.lengthOf(2);
+    });
     it('should enable un-tagging after a new tag', () => {
       // before it used to throw VersionNotFound
       helper.fixtures.populateComponents(1, undefined, '-v3');
