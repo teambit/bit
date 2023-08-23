@@ -158,7 +158,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     await Promise.all(
       envs.map(async (env) => {
         const componentIds = compsUsingEnv[env.id.toString()];
-        if (!componentIds.length) return;
+        if (!componentIds?.length) return;
         await this.workspace.setEnvToComponents(env.id.changeScope(newScope), componentIds);
       })
     );
