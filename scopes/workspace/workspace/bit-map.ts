@@ -192,10 +192,9 @@ export class BitMap {
       const config = componentMap.config;
       if (!config) return;
       Object.keys(config).forEach((aspectId) => {
-        const fullSourceId = sourceId.toStringWithoutVersion();
-
+        const sourceIdwithoutVersion = sourceId.toStringWithoutVersion();
         const aspectIdWithoutVersion = ComponentID.fromString(aspectId).toStringWithoutVersion();
-        if (aspectIdWithoutVersion === fullSourceId) {
+        if (aspectIdWithoutVersion === sourceIdwithoutVersion) {
           config[targetId.toString()] = config[aspectId];
           delete config[aspectId];
           this.markAsChanged();
@@ -203,7 +202,7 @@ export class BitMap {
 
         if (aspectId === EnvsAspect.id) {
           const envConfig = config[aspectId];
-          if (envConfig !== REMOVE_EXTENSION_SPECIAL_SIGN && envConfig.env === fullSourceId) {
+          if (envConfig !== REMOVE_EXTENSION_SPECIAL_SIGN && envConfig.env === sourceIdwithoutVersion) {
             envConfig.env = targetId.toString();
             this.markAsChanged();
           }

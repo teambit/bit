@@ -1698,6 +1698,18 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   /**
+   * replace the env for all components in the workspace that are using it
+   * returns the components ids that were changed.
+   */
+
+  async replaceEnvForAllComponents(currentEnv: ComponentID, newEnv: ComponentID) {
+    const components = await this.getComponentsUsingEnv(currentEnv.toString(), true, true);
+    const componentIds = components.map((comp) => comp.id);
+    await this.setEnvToComponents(newEnv, componentIds);
+    return componentIds;
+  }
+
+  /**
    * helpful when a user provides an env-string to be set and this env has no version.
    * in the workspace config, a custom-env needs to be set with a version unless it's part of the workspace.
    * (inside envs/envs it's set without a version).
