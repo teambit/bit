@@ -1,6 +1,5 @@
 import { getScopeComponent } from './api/consumer/index';
 import { scopeList } from './api/scope/index';
-import { Packer } from './pack';
 import HooksManager from './hooks';
 // import { registerCoreExtensions } from './extensions/bit';
 // import { manifestsMap as coreExtensions } from './extensions/bit';
@@ -33,6 +32,3 @@ export function list(
     listScopeResult.map((result) => result.id.toString())
   );
 }
-
-const packer = new Packer();
-export { packer };
