@@ -1,7 +1,7 @@
-import execa from 'execa';
 import fs from 'fs-extra';
 import path from 'path';
 import ssri from 'ssri';
+import { pack } from '@pnpm/plugin-commands-publishing';
 import { isSnap } from '@teambit/component-version';
 import isRelative from 'is-relative-path';
 import { checksumFile } from '../utils';
@@ -68,24 +68,19 @@ export class Packer {
     const startTime = Date.now();
     const errors: string[] = [];
     const warnings: string[] = [];
-    const packageManager = 'npm';
 
-    const args = ['pack'];
-    if (dryRun) {
-      args.push('--dry-run');
-    }
     try {
       const pkgJson = readPackageJson(cwd);
       if (isSnap(pkgJson.version)) {
         warnings.push(`"package.json at ${cwd}" contain a snap version which is not a valid semver, can't pack it`);
         return { warnings, startTime, endTime: Date.now() };
       }
-      // @todo: once capsule.exec works properly, replace this
-      const { stdout, stderr } = await execa(packageManager, args, { cwd });
-      logger.debug(`successfully ran ${packageManager} ${args} at ${cwd}`);
-      logger.debug(`stdout: ${stdout}`);
-      logger.debug(`stderr: ${stderr}`);
-      const tgzName = stdout.trim();
+      const tgzName = await pack.handler({
+        argv: { original: [] },
+        dir: cwd,
+        rawConfig: {},
+      });
+      logger.debug(`successfully packed tarball at ${cwd}`);
       const tgzOriginPath = path.join(cwd, tgzName);
       let tarPath = path.join(outputPath, tgzName);
       if (isRelative(tarPath)) {
@@ -115,7 +110,7 @@ export class Packer {
       }
       return { metadata, warnings, errors, startTime, endTime: Date.now() };
     } catch (err: any) {
-      const errorMsg = `failed running ${packageManager} ${args} at ${cwd}`;
+      const errorMsg = `failed packing at ${cwd}`;
       logger.error(`${errorMsg}`, err);
       if (err.stderr) logger.error(`${err.stderr}`);
       errors.push(`${errorMsg}\n${err.stderr || err.message}`);

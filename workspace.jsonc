@@ -37,6 +37,7 @@
         "@pnpm/package-store": "16.1.0",
         "@pnpm/parse-overrides": "4.0.2",
         "@pnpm/pick-registry-for-package": "5.0.2",
+        "@pnpm/plugin-commands-publishing": "^7.3.5",
         "@pnpm/plugin-commands-rebuild": "^9.1.8",
         "@pnpm/registry-mock": "3.4.0",
         "@pnpm/semver-diff": "1.1.0",
