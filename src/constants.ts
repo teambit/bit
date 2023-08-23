@@ -195,6 +195,8 @@ export const getSymphonyUrl = (): string => {
 
 export const CFG_CLOUD_DOMAIN_LOGIN_KEY = 'cloud_domain_login';
 
+export const CFG_WATCH_USE_POLLING = 'watch_use_polling';
+
 export const getLoginUrl = (domain?: string): string => {
   const finalDomain = domain || getSync(CFG_CLOUD_DOMAIN_LOGIN_KEY) || getCloudDomain();
   const url = `https://${finalDomain}/bit-login`;
