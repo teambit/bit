@@ -144,7 +144,7 @@ export class Workspace implements ComponentFactory {
   componentLoader: WorkspaceComponentLoader;
   bitMap: BitMap;
   /**
-   * Indicate that we are now running installaion process
+   * Indicate that we are now running installation process
    * This is important to know to ignore missing modules across different places
    */
   inInstallContext = false;

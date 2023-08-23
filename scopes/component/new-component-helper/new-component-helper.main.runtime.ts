@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import path from 'path';
 import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { MainRuntime } from '@teambit/cli';
@@ -36,11 +37,22 @@ export class NewComponentHelperMain {
    * if not provided, generate the path based on the component-id.
    * the component will be written to that path.
    */
-  getNewComponentPath(componentId: ComponentID, pathFromUser?: string): PathLinuxRelative {
-    if (pathFromUser) return pathFromUser;
+  getNewComponentPath(componentId: ComponentID, pathFromUser?: string, componentsToCreate?: number): PathLinuxRelative {
+    if (pathFromUser) {
+      const fullPath = path.join(this.workspace.path, pathFromUser);
+      const componentPath = componentId.fullName;
+      const dirExists = fs.pathExistsSync(fullPath);
+      if (componentsToCreate && componentsToCreate === 1) {
+        return dirExists ? path.join(pathFromUser, componentPath) : pathFromUser;
+      }
+      if (componentsToCreate && componentsToCreate > 1) {
+        return path.join(pathFromUser, componentPath);
+      }
+      return pathFromUser;
+    }
+
     return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.workspace.defaultDirectory);
   }
-
   async writeAndAddNewComp(
     comp: Component,
     targetId: ComponentID,

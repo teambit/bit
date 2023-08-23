@@ -7,6 +7,7 @@ import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
 import { compact, mapValues, omit, uniq, intersection } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
+import { GenerateResult, GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
 import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
@@ -173,6 +174,31 @@ export class InstallMain {
 
   registerPostInstall(fn: PostInstall) {
     this.postInstallSlot.register(fn);
+  }
+
+  async onComponentCreate(generateResults: GenerateResult[]) {
+    this.workspace.inInstallContext = true;
+    const ids = generateResults.map((r) => r.id);
+    const nonLoadedEnvs: string[] = [];
+    ids.map((id) => this.workspace.clearComponentCache(id));
+    await pMapSeries(ids, async (id) => {
+      const component = await this.workspace.get(id);
+      // const envId = await this.envs.getEnvId(component);
+      const envId = (await this.envs.calculateEnvId(component)).toString();
+      const isLoaded = this.envs.isEnvRegistered(envId);
+      if (!isLoaded) {
+        nonLoadedEnvs.push(envId);
+      }
+      return component;
+    });
+    if (!nonLoadedEnvs.length) {
+      this.workspace.inInstallContext = false;
+      return;
+    }
+    this.logger.consoleWarning(
+      `the following environments are not installed yet: ${nonLoadedEnvs.join(', ')}. installing them now...`
+    );
+    await this.install();
   }
 
   private async _addPackages(packages: string[], options?: WorkspaceInstallOptions) {
@@ -824,12 +850,13 @@ export class InstallMain {
     EnvsAspect,
     ApplicationAspect,
     IpcEventsAspect,
+    GeneratorAspect,
   ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [dependencyResolver, workspace, loggerExt, variants, cli, compiler, issues, envs, app, ipcEvents]: [
+    [dependencyResolver, workspace, loggerExt, variants, cli, compiler, issues, envs, app, ipcEvents, generator]: [
       DependencyResolverMain,
       Workspace,
       LoggerMain,
@@ -839,7 +866,8 @@ export class InstallMain {
       IssuesMain,
       EnvsMain,
       ApplicationMain,
-      IpcEventsMain
+      IpcEventsMain,
+      GeneratorMain
     ],
     _,
     [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot]
@@ -866,6 +894,7 @@ export class InstallMain {
     if (issues) {
       issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));
     }
+    generator.registerOnComponentCreate(installExt.onComponentCreate.bind(installExt));
     const commands: CommandList = [
       new InstallCmd(installExt, workspace, logger),
       new UninstallCmd(installExt),

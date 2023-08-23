@@ -18680,9 +18680,9 @@ importers:
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
-      yn:
-        specifier: 2.0.0
-        version: 2.0.0
+      yesno:
+        specifier: 0.4.0
+        version: 0.4.0
     devDependencies:
       '@types/jest':
         specifier: ^26.0.0
@@ -20975,9 +20975,6 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@teambit/design.inputs.toggle-switch':
-        specifier: 0.0.6
-        version: 0.0.6(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.alert-card':
         specifier: 0.0.26
         version: 0.0.26(react-dom@17.0.2)(react@17.0.2)
@@ -21845,9 +21842,6 @@ importers:
 
   scopes/docs/ui/overview-compare:
     dependencies:
-      '@teambit/design.inputs.toggle-switch':
-        specifier: 0.0.6
-        version: 0.0.6(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.round-loader':
         specifier: 0.0.355
         version: 0.0.355(react-dom@17.0.2)(react@17.0.2)
@@ -43425,7 +43419,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.0
       '@yarnpkg/fslib': 3.0.0-rc.48
-      '@yarnpkg/libzip': 3.0.0-rc.48
+      '@yarnpkg/libzip': 3.0.0-rc.48(@yarnpkg/fslib@3.0.0-rc.48)
       '@yarnpkg/parsers': 3.0.0-rc.48.1
       '@yarnpkg/shell': 4.0.0-rc.48
       camelcase: 5.3.1
@@ -43456,7 +43450,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.0
       '@yarnpkg/fslib': 3.0.0-rc.48
-      '@yarnpkg/libzip': 3.0.0-rc.48
+      '@yarnpkg/libzip': 3.0.0-rc.48(@yarnpkg/fslib@3.0.0-rc.48)
       '@yarnpkg/parsers': 3.0.0-rc.48.1
       '@yarnpkg/shell': 4.0.0-rc.48
       camelcase: 5.3.1
@@ -43529,9 +43523,11 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.0-rc.48:
+  /@yarnpkg/libzip@3.0.0-rc.48(@yarnpkg/fslib@3.0.0-rc.48):
     resolution: {integrity: sha512-WqqbaqRsS72LY3JXiHHrojTDG8PeeVwKBdn3NfQyqowzSVDr6Vu9c/WwWirR6K4QVmJKC1Obt1lKsAfMiRry0A==}
     engines: {node: '>=18.12.0'}
+    peerDependencies:
+      '@yarnpkg/fslib': ^3.0.0-rc.48
     dependencies:
       '@types/emscripten': 1.39.6
       '@yarnpkg/fslib': 3.0.0-rc.48
@@ -64573,6 +64569,7 @@ packages:
       ramda: 0.27.1
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+      yesno: 0.4.0
       yn: 2.0.0
     dev: false
 

@@ -18,7 +18,7 @@ export type PackResultWithId = PackResult & {
   id: string;
 };
 
-const DEFAULT_TAR_DIR_IN_CAPSULE = 'package-tar';
+export const DEFAULT_TAR_DIR_IN_CAPSULE = 'package-tar';
 const PACK_CONCURRENCY = 10;
 export const TAR_FILE_ARTIFACT_NAME = 'package tar file';
 
