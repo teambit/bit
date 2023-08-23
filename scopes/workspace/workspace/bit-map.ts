@@ -193,6 +193,7 @@ export class BitMap {
       if (!config) return;
       Object.keys(config).forEach((aspectId) => {
         const fullSourceId = this.getBitmapEntry(sourceId).id.toStringWithoutVersion();
+        const aspectIdWithoutVersion = ComponentID.fromString(aspectId).toStringWithoutVersion();
         if (aspectId === fullSourceId) {
           config[targetId.toString()] = config[aspectId];
           delete config[aspectId];
@@ -200,7 +201,7 @@ export class BitMap {
         }
         if (aspectId === EnvsAspect.id) {
           const envConfig = config[aspectId];
-          if (envConfig !== REMOVE_EXTENSION_SPECIAL_SIGN && envConfig.env !== sourceId.toString()) {
+          if (envConfig !== REMOVE_EXTENSION_SPECIAL_SIGN && envConfig.env === fullSourceId) {
             envConfig.env = targetId.toString();
             this.markAsChanged();
           }
