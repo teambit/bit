@@ -21,7 +21,7 @@ export class SnapCmd implements Command {
       description: `${COMPONENT_PATTERN_HELP}. By default, only new and modified components are snapped (add --unmodified to snap all components in the workspace).`,
     },
   ];
-  helpUrl = 'docs/components/snaps';
+  helpUrl = 'reference/components/snaps';
   alias = '';
   options = [
     ['m', 'message <message>', 'snap message describing the latest changes - will appear in component history log'],
