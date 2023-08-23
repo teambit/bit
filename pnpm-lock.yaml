@@ -4467,7 +4467,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(@types/react@17.0.8)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@types/react@17.0.8)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
@@ -6371,7 +6371,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(@types/react@17.0.8)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@types/react@17.0.8)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
@@ -8275,7 +8275,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(@types/react@17.0.8)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@types/react@17.0.8)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
@@ -10179,7 +10179,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(@types/react@17.0.8)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@types/react@17.0.8)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
@@ -12083,7 +12083,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(@types/react@17.0.8)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@types/react@17.0.8)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
@@ -13987,7 +13987,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(@types/react@17.0.8)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@types/react@17.0.8)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(react-dom@17.0.2)(react@17.0.2)
@@ -24778,6 +24778,9 @@ importers:
       '@babel/runtime':
         specifier: 7.20.0
         version: 7.20.0
+      '@pnpm/plugin-commands-publishing':
+        specifier: ^7.3.5
+        version: 7.3.5(@pnpm/logger@5.0.0)(bluebird@3.7.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -24802,6 +24805,9 @@ importers:
       ink:
         specifier: 3.2.0
         version: 3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
+      is-relative-path:
+        specifier: 2.0.0
+        version: 2.0.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -24820,6 +24826,9 @@ importers:
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
+      ssri:
+        specifier: 10.0.1
+        version: 10.0.1
     devDependencies:
       '@teambit/pkg.content.packages-overview':
         specifier: 1.95.9
@@ -36879,7 +36888,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.layout.breakpoints': registry.npmjs.org/@teambit/base-ui.layout.breakpoints@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.layout.breakpoints': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -37231,7 +37240,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.text.text-sizes': 1.0.0(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/base-ui.theme.sizes': registry.npmjs.org/@teambit/base-ui.theme.sizes@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.theme.sizes': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -37385,7 +37394,7 @@ packages:
     dev: false
 
   /@teambit/base-ui.theme.sizes@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-A2PoEhZ/8GYSeypqIMGK0Hu/bcpfDdquxQtkXZ34bIpXdYaYGn0tHIJTAuxJTInWM+qLMBAHQ32p3qkm86IuDQ==}
+    resolution: {integrity: sha512-A2PoEhZ/8GYSeypqIMGK0Hu/bcpfDdquxQtkXZ34bIpXdYaYGn0tHIJTAuxJTInWM+qLMBAHQ32p3qkm86IuDQ==, tarball: https://node-registry.bit.cloud/@teambit/base-ui.theme.sizes/-/@teambit-base-ui.theme.sizes-1.0.0.tgz}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -38023,7 +38032,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
       react-router-dom: ^6.0.0
     dependencies:
-      '@teambit/base-ui.routing.nav-link': registry.npmjs.org/@teambit/base-ui.routing.nav-link@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.routing.nav-link': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.427
       '@teambit/component.ui.component-compare.models.component-compare-change-type': 0.0.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component.ui.component-compare.models.component-compare-hooks': 0.0.4(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -40175,7 +40184,7 @@ packages:
     dev: false
 
   /@teambit/evangelist.input.checkbox.label@1.0.10(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-ub516a6yD7zFu3GeZXNeH97ULNo=, tarball: https://node-registry.bit.cloud/tarballs/teambit.evangelist/input/checkbox/label@1.0.10.tgz}
+    resolution: {integrity: sha1-ub516a6yD7zFu3GeZXNeH97ULNo=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -40476,7 +40485,7 @@ packages:
     dev: true
 
   /@teambit/explorer.ui.gallery.component-grid@0.0.486(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-G7vGhAafW+HEcBuKFaOCCqv2Rrk=, tarball: https://node-registry.bit.cloud/@teambit/explorer.ui.gallery.component-grid/-/@teambit-explorer.ui.gallery.component-grid-0.0.486.tgz}
+    resolution: {integrity: sha1-G7vGhAafW+HEcBuKFaOCCqv2Rrk=}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -57038,6 +57047,7 @@ packages:
 
   /prr@1.0.1:
     resolution: {integrity: sha512-yPw4Sng1gWghHQWj0B3ZggWUm4qVbPwPFcRG8KyxiU7J2OHFSoEHKS+EZ3fv5l1t9CyCiop6l/ZYeWbrgoQejw==}
+    requiresBuild: true
     dev: false
 
   /pseudomap@1.0.2:
@@ -66906,7 +66916,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/pkg/pkg(@types/react@17.0.8)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5):
+  file:scopes/pkg/pkg(@pnpm/logger@5.0.0)(@types/react@17.0.8)(bluebird@3.7.2)(bufferutil@4.0.3)(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5):
     resolution: {directory: scopes/pkg/pkg, type: directory}
     id: file:scopes/pkg/pkg
     name: '@teambit/pkg'
@@ -66915,6 +66925,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
+      '@pnpm/plugin-commands-publishing': 7.3.5(@pnpm/logger@5.0.0)(bluebird@3.7.2)
       '@teambit/harmony': 0.4.6
       chalk: 2.4.2
       cli-highlight: 2.1.9
@@ -66923,16 +66934,22 @@ packages:
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
       ink: 3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
+      is-relative-path: 2.0.0
       lodash: 4.17.21
       mime: 2.5.2
       p-map: 4.0.0
       p-map-series: 2.1.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+      ssri: 10.0.1
     transitivePeerDependencies:
+      - '@pnpm/logger'
       - '@types/react'
+      - bluebird
       - bufferutil
+      - domexception
       - graphql
+      - supports-color
       - utf-8-validate
     dev: false
 
