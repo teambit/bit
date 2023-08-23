@@ -194,7 +194,7 @@ export class BitMap {
       Object.keys(config).forEach((aspectId) => {
         const fullSourceId = this.getBitmapEntry(sourceId).id.toStringWithoutVersion();
         const aspectIdWithoutVersion = ComponentID.fromString(aspectId).toStringWithoutVersion();
-        if (aspectId === fullSourceId) {
+        if (aspectIdWithoutVersion === fullSourceId) {
           config[targetId.toString()] = config[aspectId];
           delete config[aspectId];
           this.markAsChanged();
