@@ -184,35 +184,6 @@ export class BitMap {
     }
   }
 
-  /**
-   * helpful when reaming an aspect and this aspect is used in the config of other components.
-   */
-  renameAspectInConfig(sourceId: ComponentID, targetId: ComponentID) {
-    this.legacyBitMap.components.forEach((componentMap) => {
-      const config = componentMap.config;
-      if (!config) return;
-      Object.keys(config).forEach((aspectId) => {
-        const sourceIdwithoutVersion = sourceId.toStringWithoutVersion();
-        const aspectIdWithoutVersion = ComponentID.fromString(aspectId).toStringWithoutVersion();
-        if (aspectIdWithoutVersion === sourceIdwithoutVersion) {
-          config[targetId.toString()] = config[aspectId];
-          delete config[aspectId];
-          this.markAsChanged();
-        }
-
-        if (aspectId === EnvsAspect.id) {
-          const envConfig = config[aspectId];
-          if (envConfig !== REMOVE_EXTENSION_SPECIAL_SIGN && envConfig.env === sourceIdwithoutVersion) {
-            envConfig.env = targetId.toString();
-            this.markAsChanged();
-          }
-        }
-      });
-
-      componentMap.config = config;
-    });
-  }
-
   removeComponent(id: ComponentID) {
     this.legacyBitMap.removeComponent(id._legacy);
   }
