@@ -24,13 +24,7 @@ import { ComponentID } from '@teambit/component-id';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
-import {
-  applyVersion,
-  markFilesToBeRemovedIfNeeded,
-  ComponentStatus,
-  deleteFilesIfNeeded,
-  ComponentStatusBase,
-} from './checkout-version';
+import { applyVersion, ComponentStatus, ComponentStatusBase } from './checkout-version';
 import { RevertCmd } from './revert-cmd';
 
 export type CheckoutProps = {
@@ -144,8 +138,6 @@ export class CheckoutMain {
       return applyVersion(consumer, id, currentComponent, mergeResults, checkoutPropsLegacy);
     });
 
-    markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
-
     const componentsLegacy = compact(componentsResults.map((c) => c.component));
 
     let newFromLane: ComponentID[] | undefined;
@@ -172,7 +164,6 @@ export class CheckoutMain {
         skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap,
       };
       componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
-      await deleteFilesIfNeeded(componentsResults, this.workspace);
     }
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);

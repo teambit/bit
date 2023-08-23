@@ -44,8 +44,7 @@ import {
   CheckoutMain,
   ComponentStatusBase,
   applyModifiedVersion,
-  deleteFilesIfNeeded,
-  markFilesToBeRemovedIfNeeded,
+  removeFilesIfNeeded,
 } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
@@ -257,10 +256,6 @@ export class MergingMain {
         });
       }
     );
-
-    markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
-
-    await deleteFilesIfNeeded(componentsResults, this.workspace);
 
     const allConfigMerge = compact(succeededComponents.map((c) => c.configMergeResult));
 
@@ -893,6 +888,8 @@ other:   ${otherLaneHead.toString()}`);
       legacyComponent.files = modifiedFiles;
       filesStatus = { ...filesStatus, ...modifiedStatus };
     }
+
+    await removeFilesIfNeeded(filesStatus, currentComponent || undefined);
 
     const manyComponentsWriterOpts = {
       consumer,
