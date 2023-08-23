@@ -23,7 +23,7 @@ export function formatHelp(commands: CommandList, groups: GroupsType, showPrivat
   const helpProps = groupCommands(commands, groups, showPrivateCommands);
   const commandsStr = formatCommandsHelp(helpProps);
 
-  return `${getHeader('bit.dev')}
+  return `${getHeader()}
 
 ${commandsStr}
 
@@ -69,10 +69,10 @@ function commandTemplate(name: string, description: string): string {
   return res;
 }
 
-function getHeader(docsDomain: string): string {
+function getHeader(): string {
   return `${chalk.bold('usage: bit [--version] [--help] <command> [<args>]')}
 
-${chalk.yellow(`bit documentation: https://bit.dev`)}`;
+${chalk.yellow(`bit documentation: https://bit.dev/`)}`;
 }
 
 function getFooter(): string {
