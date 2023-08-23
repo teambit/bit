@@ -257,9 +257,6 @@ export class MergingMain {
       }
     );
 
-    // markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
-    // await deleteFilesIfNeeded(componentsResults, this.workspace);
-
     const allConfigMerge = compact(succeededComponents.map((c) => c.configMergeResult));
 
     const { workspaceDepsUpdates, workspaceDepsConflicts } = await this.updateWorkspaceJsoncWithDepsIfNeeded(

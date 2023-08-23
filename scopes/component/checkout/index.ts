@@ -9,8 +9,6 @@ export {
   ComponentStatus,
   applyModifiedVersion,
   applyVersion,
-  deleteFilesIfNeeded,
-  markFilesToBeRemovedIfNeeded,
   ComponentStatusBase,
   ApplyVersionWithComps,
   removeFilesIfNeeded,

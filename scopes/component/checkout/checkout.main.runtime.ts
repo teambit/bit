@@ -138,8 +138,6 @@ export class CheckoutMain {
       return applyVersion(consumer, id, currentComponent, mergeResults, checkoutPropsLegacy);
     });
 
-    // markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
-
     const componentsLegacy = compact(componentsResults.map((c) => c.component));
 
     let newFromLane: ComponentID[] | undefined;
@@ -166,7 +164,6 @@ export class CheckoutMain {
         skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap,
       };
       componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
-      // await deleteFilesIfNeeded(componentsResults, this.workspace);
     }
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
