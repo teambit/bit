@@ -13,5 +13,6 @@ export {
   markFilesToBeRemovedIfNeeded,
   ComponentStatusBase,
   ApplyVersionWithComps,
+  removeFilesIfNeeded,
 } from './checkout-version';
 export { checkoutOutput } from './checkout-cmd';
