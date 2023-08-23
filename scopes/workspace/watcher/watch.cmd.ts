@@ -25,7 +25,7 @@ export class WatchCommand implements Command {
   extendedDescription = `by default, the watcher doesn't use polling, to keep the CPU idle.
 in some rare cases, this could result in missing file events (files are not watched).
 to fix it, try to stop other watchers on the same machine.
-alternatively, to use polling, run "bit config watch_use_polling true".`;
+alternatively, to use polling, run "bit config set watch_use_polling true".`;
   helpUrl = 'reference/compiling/compiler-overview';
   alias = '';
   group = 'development';
