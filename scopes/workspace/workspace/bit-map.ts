@@ -191,15 +191,8 @@ export class BitMap {
     this.legacyBitMap.components.forEach((componentMap) => {
       const config = componentMap.config;
       if (!config) return;
-
       Object.keys(config).forEach((aspectId) => {
-        let fullSourceId: string;
-        try {
-          fullSourceId = this.getBitmapEntry(sourceId).id.toStringWithoutVersion();
-        } catch (error) {
-          // If entry not found it's probably new, keep the sourceId as is
-          fullSourceId = sourceId.toString();
-        }
+        const fullSourceId = sourceId.toStringWithoutVersion();
 
         const aspectIdWithoutVersion = ComponentID.fromString(aspectId).toStringWithoutVersion();
         if (aspectIdWithoutVersion === fullSourceId) {
