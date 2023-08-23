@@ -53,7 +53,7 @@ export class CreateCmd implements Command {
     ['e', 'env <string>', "set the component's environment. (overrides the env from variants and the template)"],
   ] as CommandOptions;
 
-  constructor(private generator: GeneratorMain, private docsDomain: string) {}
+  constructor(private generator: GeneratorMain) {}
 
   async report(
     [templateName, componentNames]: [string, string[]],
@@ -76,7 +76,7 @@ export class CreateCmd implements Command {
 `;
       })
       .join('\n');
-    const footer = `env configuration is according to workspace variants, template config or --env flag. learn more at https://${this.docsDomain}/envs/using-envs`;
+    const footer = `env configuration is according to workspace variants, template config or --env flag.`;
 
     return `${chalk.green(title)}\n\n${componentsData}\n\n${footer}`;
   }

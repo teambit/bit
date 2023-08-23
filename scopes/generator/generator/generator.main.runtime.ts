@@ -2,8 +2,6 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
-import { CommunityAspect } from '@teambit/community';
-import type { CommunityMain } from '@teambit/community';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 
@@ -491,7 +489,6 @@ export class GeneratorMain {
     EnvsAspect,
     AspectLoaderAspect,
     NewComponentHelperAspect,
-    CommunityAspect,
     ComponentAspect,
     TrackerAspect,
     LoggerAspect,
@@ -509,7 +506,6 @@ export class GeneratorMain {
       envs,
       aspectLoader,
       newComponentHelper,
-      community,
       componentAspect,
       tracker,
       loggerMain,
@@ -522,7 +518,6 @@ export class GeneratorMain {
       EnvsMain,
       AspectLoaderMain,
       NewComponentHelperMain,
-      CommunityMain,
       ComponentMain,
       TrackerMain,
       LoggerMain,
@@ -552,11 +547,7 @@ export class GeneratorMain {
       git,
       wsConfigFiles
     );
-    const commands = [
-      new CreateCmd(generator, community.getDocsDomain()),
-      new TemplatesCmd(generator),
-      new NewCmd(generator),
-    ];
+    const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
     graphql.register(generatorSchema(generator));
     aspectLoader.registerPlugins([new StarterPlugin(generator)]);
