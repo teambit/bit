@@ -2055,6 +2055,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/ui/status"
     },
+    "ui/surfaces/menu/section": {
+        "scope": "teambit.design",
+        "version": "0.0.351",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/surfaces/menu/section"
+    },
     "ui/test-compare": {
         "scope": "teambit.defender",
         "version": "0.0.223",
