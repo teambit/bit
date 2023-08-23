@@ -178,7 +178,7 @@ export const getCloudDomain = (): string => {
   return resolvedCloudDomain;
 };
 
-export const BASE_COMMUNITY_DOMAIN = 'bit.dev';
+export const BASE_COMMUNITY_DOMAIN = 'https://bit.dev';
 
 export const PREVIOUSLY_BASE_WEB_DOMAIN = 'bitsrc.io';
 
@@ -203,7 +203,7 @@ export const getLoginUrl = (domain?: string): string => {
 
 export const SYMPHONY_GRAPHQL = `https://${getSymphonyUrl()}/graphql`;
 
-export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/docs`;
+export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/`;
 
 export const BASE_LEGACY_DOCS_DOMAIN = `legacy-docs.${BASE_COMMUNITY_DOMAIN}/docs`;
 
