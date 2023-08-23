@@ -1439,6 +1439,7 @@ describe('merge lanes', function () {
     describe('switching', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(afterExport);
+        helper.command.switchLocalLane('lane-a', '-x');
       });
       it('should remove the file from the current lane and write the file according to the switch-to lane', () => {
         helper.fs.expectFileToExist('comp1/Foo.js');
