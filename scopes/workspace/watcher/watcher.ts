@@ -5,7 +5,7 @@ import { compact, difference, partition } from 'lodash';
 import { ComponentID } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { BIT_MAP } from '@teambit/legacy/dist/constants';
+import { BIT_MAP, CFG_WATCH_USE_POLLING } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -392,13 +392,19 @@ export class Watcher {
   }
 
   private async createWatcher(pathsToWatch: string[]) {
+    const usePollingConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_POLLING);
+    const usePolling = usePollingConf === 'true';
     this.fsWatcher = chokidar.watch(pathsToWatch, {
       ignoreInitial: true,
       // `chokidar` matchers have Bash-parity, so Windows-style backslackes are not supported as separators.
       // (windows-style backslashes are converted to forward slashes)
       ignored: ['**/node_modules/**', '**/package.json'],
+      usePolling,
       persistent: true,
     });
+    if (this.verbose) {
+      logger.console(`chokidar.options ${JSON.stringify(this.fsWatcher.options, undefined, 2)}`);
+    }
   }
 
   async setTrackDirs() {
