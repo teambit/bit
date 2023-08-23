@@ -1,4 +1,3 @@
-import { compact } from 'lodash';
 import * as path from 'path';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { BitId } from '@teambit/legacy-bit-id';
@@ -10,13 +9,13 @@ import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import {
   ApplyVersionResult,
+  FilesStatus,
   FileStatus,
   MergeOptions,
   MergeStrategy,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { Workspace } from '@teambit/workspace';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
@@ -95,6 +94,9 @@ export async function applyVersion(
   files.forEach((file) => {
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
+
+  await removeFilesIfNeeded(filesStatus, componentFromFS || undefined);
+
   if (mergeResults) {
     // update files according to the merge results
     const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(files, mergeResults, mergeStrategy);
@@ -106,6 +108,27 @@ export async function applyVersion(
     applyVersionResult: { id, filesStatus },
     component,
   };
+}
+
+/**
+ * when files exist on the filesystem but not on the checked out versions, they need to be deleted.
+ * without this function, these files would be left on the filesystem. (we don't delete the comp-dir before writing).
+ * this needs to be done *before* the component is written to the filesystem, otherwise, it won't work when a file
+ * has a case change. e.g. from uppercase to lowercase. (see merge-lane.e2e 'renaming files from uppercase to lowercase').
+ */
+export async function removeFilesIfNeeded(filesStatus: FilesStatus, componentFromFS?: ConsumerComponent) {
+  if (!componentFromFS) return;
+  const filePathsFromFS = componentFromFS.files || [];
+  const dataToPersist = new DataToPersist();
+  filePathsFromFS.forEach((file) => {
+    const filename = pathNormalizeToLinux(file.relative);
+    if (!filesStatus[filename]) {
+      // @ts-ignore todo: typescript has a good point here. it should be the string "removed", not chalk.green(removed).
+      filesStatus[filename] = FileStatus.removed;
+      dataToPersist.removePath(new RemovePath(file.path));
+    }
+  });
+  await dataToPersist.persistAllToFS();
 }
 
 /**
@@ -187,62 +210,4 @@ export function applyModifiedVersion(
   });
 
   return { filesStatus, modifiedFiles };
-}
-
-/**
- * when files exist on the filesystem but not on the checked out versions, they need to be deleted.
- * this function only mark them as such. later `deleteFilesIfNeeded()` will delete them
- */
-export function markFilesToBeRemovedIfNeeded(
-  succeededComponents: ComponentStatus[],
-  componentsResults: ApplyVersionWithComps[]
-) {
-  const succeededComponentsByBitId: {
-    [K in string]: ComponentStatus;
-  } = succeededComponents.reduce((accum, current) => {
-    const bitId = current.id.toStringWithoutVersion();
-    if (!accum[bitId]) accum[bitId] = current;
-    return accum;
-  }, {});
-
-  componentsResults.forEach((componentResult) => {
-    const existingFilePathsFromModel = componentResult.applyVersionResult.filesStatus;
-    const bitId = componentResult.applyVersionResult.id.toStringWithoutVersion();
-    const succeededComponent = succeededComponentsByBitId[bitId];
-    const filePathsFromFS = succeededComponent.currentComponent?.files || [];
-
-    filePathsFromFS.forEach((file) => {
-      const filename = pathNormalizeToLinux(file.relative);
-      if (!existingFilePathsFromModel[filename]) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        existingFilePathsFromModel[filename] = FileStatus.removed;
-      }
-    });
-  });
-}
-
-/**
- * it's needed in case the checked out version removed files that exist on the current version.
- * without this function, these files would be left on the filesystem.
- */
-export async function deleteFilesIfNeeded(
-  componentsResults: ApplyVersionWithComps[],
-  workspace: Workspace
-): Promise<void> {
-  const pathsToRemoveIncludeNull = componentsResults.map((compResult) => {
-    return Object.keys(compResult.applyVersionResult.filesStatus).map((filePath) => {
-      if (compResult.applyVersionResult.filesStatus[filePath] === FileStatus.removed) {
-        if (!compResult.component) return null;
-        const compDir = compResult.component.writtenPath || compResult.component.componentMap?.rootDir;
-        if (!compDir) return null;
-        return path.join(compDir, filePath);
-      }
-      return null;
-    });
-  });
-  const pathsToRemove = compact(pathsToRemoveIncludeNull.flat());
-  const dataToPersist = new DataToPersist();
-  dataToPersist.removeManyPaths(pathsToRemove.map((p) => new RemovePath(p, true)));
-  dataToPersist.addBasePath(workspace.path);
-  await dataToPersist.persistAllToFS();
 }
