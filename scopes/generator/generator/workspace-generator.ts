@@ -114,7 +114,6 @@ export class WorkspaceGenerator {
       empty: this.options.empty,
       aspectComponent: this.aspectComponent,
       template: this.template,
-      skipGit: this.options.skipGit,
     };
   }
 
