@@ -1,7 +1,7 @@
 import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, TagMap } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
 import mapSeries from 'p-map-series';
-import { compact, fromPairs, uniq } from 'lodash';
+import { compact, fromPairs, groupBy, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
@@ -20,6 +20,11 @@ import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
 
+type GetManyRes = {
+  components: Component[];
+  invalidComponents: InvalidComponent[];
+};
+
 export class WorkspaceComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
   constructor(
@@ -31,46 +36,101 @@ export class WorkspaceComponentLoader {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
-  async getMany(
-    ids: Array<ComponentID>,
-    loadOpts?: ComponentLoadOptions,
-    throwOnFailure = true
-  ): Promise<{
-    components: Component[];
-    invalidComponents: InvalidComponent[];
-  }> {
+  async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
+    console.log('🚀 ~ file: workspace-component-loader.ts:40 ~ WorkspaceComponentLoader ~ getMany ~ getMany:');
+    console.time('getMany');
+    console.time('getMany - load comps');
     const idsWithoutEmpty = compact(ids);
+    const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
+
+    const groupedByIsCoreEnvs = groupBy(idsWithoutEmpty, (id) => {
+      return this.envs.isCoreEnv(id.toStringWithoutVersion());
+    });
+
+    const { components: coreEnvsComponents, invalidComponents: coreEnvsInvalidComponents } = await this.getAndLoadSlot(
+      groupedByIsCoreEnvs.true || [],
+      loadOpts || {},
+      throwOnFailure,
+      longProcessLogger
+    );
+    if (groupedByIsCoreEnvs.true) {
+      console.log(
+        '🚀 ~ file: workspace-component-loader.ts:51 ~ WorkspaceComponentLoader ~ getMany ~ groupedByIsCoreEnvs.true:',
+        groupedByIsCoreEnvs.true.map((id) => id.toString())
+      );
+    }
+
+    const { components: regularComponents, invalidComponents: regularInvalidComponents } = await this.getAndLoadSlot(
+      groupedByIsCoreEnvs.false || [],
+      loadOpts || {},
+      throwOnFailure,
+      longProcessLogger
+    );
+
+    const components = [...coreEnvsComponents, ...regularComponents];
+    const invalidComponents = [...coreEnvsInvalidComponents, ...regularInvalidComponents];
+
+    longProcessLogger.end();
+    console.log('\n-----------------------');
+    console.timeEnd('getMany');
+    console.log('-----------------------');
+    return { components, invalidComponents };
+  }
+
+  private async getAndLoadSlot(
+    ids: ComponentID[],
+    loadOpts: ComponentLoadOptions,
+    throwOnFailure = true,
+    longProcessLogger
+  ): Promise<GetManyRes> {
     const errors: { id: ComponentID; err: Error }[] = [];
     const invalidComponents: InvalidComponent[] = [];
-    const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
-    const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
-      longProcessLogger.logProgress(id.toString());
-      return this.get(id, undefined, undefined, undefined, loadOpts).catch((err) => {
-        if (ConsumerComponent.isComponentInvalidByErrorType(err) && !throwOnFailure) {
-          invalidComponents.push({
-            id,
-            err,
-          });
-          return undefined;
-        }
-        if (this.isComponentNotExistsError(err) || err instanceof ComponentNotFoundInPath) {
-          errors.push({
-            id,
-            err,
-          });
-          return undefined;
-        }
-        throw err;
-      });
-    });
-    const components = await componentsP;
+    const componentsP = Promise.all(
+      ids.map(async (id: ComponentID) => {
+        longProcessLogger.logProgress(id.toString());
+        return this.get(id, undefined, undefined, undefined, loadOpts).catch((err) => {
+          if (ConsumerComponent.isComponentInvalidByErrorType(err) && !throwOnFailure) {
+            invalidComponents.push({
+              id,
+              err,
+            });
+            return undefined;
+          }
+          if (this.isComponentNotExistsError(err) || err instanceof ComponentNotFoundInPath) {
+            errors.push({
+              id,
+              err,
+            });
+            return undefined;
+          }
+          throw err;
+        });
+      })
+    );
+    const components = compact(await componentsP);
     errors.forEach((err) => {
       this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
       this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
     });
+    console.log('\n-----------------------');
+    console.timeEnd('getMany - load comps');
+    console.log('-----------------------');
+    console.time('getMany - load aspects');
+
+    const withAspects = await Promise.all(
+      components.map((component) => {
+        return this.executeLoadSlot(component);
+      })
+    );
+    console.log('\n-----------------------');
+    console.timeEnd('getMany - load aspects');
+    console.log('-----------------------');
+
     // remove errored components
-    const filteredComponents: Component[] = compact(components);
-    longProcessLogger.end();
+    const filteredComponents: Component[] = compact(withAspects);
+    console.log('\n-----------------------');
+    console.timeEnd('getMany');
+    console.log('-----------------------');
     return { components: filteredComponents, invalidComponents };
   }
 
@@ -188,8 +248,8 @@ export class WorkspaceComponentLoader {
         componentFromScope.tags,
         this.workspace
       );
-      const updatedComp = await this.executeLoadSlot(workspaceComponent, loadOpts);
-      return updatedComp;
+      // const updatedComp = await this.executeLoadSlot(workspaceComponent, loadOpts);
+      return workspaceComponent;
     }
     return this.executeLoadSlot(this.newComponentFromState(id, state), loadOpts);
   }
