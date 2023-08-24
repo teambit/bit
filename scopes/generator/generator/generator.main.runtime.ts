@@ -252,9 +252,9 @@ export class GeneratorMain {
     if (registeredTemplate) {
       return { workspaceTemplate: registeredTemplate };
     }
-    // if (!aspectId) {
-    //   throw new BitError(`template "${name}" was not found, if this is a custom-template, please use --aspect flag`);
-    // }
+    if (!aspectId) {
+      throw new BitError(`template "${name}" was not found, if this is a custom-template, please use --aspect flag`);
+    }
 
     const { workspaceTemplate, aspect } = await this.findWorkspaceTemplateInGlobalScope(aspectId, name);
     if (workspaceTemplate) {
