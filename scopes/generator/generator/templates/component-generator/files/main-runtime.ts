@@ -1,4 +1,4 @@
-import { ComponentContext } from '@teambit/generator';
+import { ComponentContext } from '../../../';
 
 export function mainRuntime({ name, namePascalCase }: ComponentContext) {
   return `import { MainRuntime } from '@teambit/cli';

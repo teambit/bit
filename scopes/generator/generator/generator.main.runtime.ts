@@ -31,6 +31,7 @@ import { NewCmd, NewOptions } from './new.cmd';
 import { componentGeneratorTemplate } from './templates/component-generator';
 import { workspaceGeneratorTemplate } from './templates/workspace-generator';
 import { starterTemplate } from './templates/starter';
+import { BasicWorkspaceStarter } from './templates/basic';
 import { StarterPlugin } from './starter.plugin';
 import { GeneratorService } from './generator.service';
 
@@ -251,9 +252,9 @@ export class GeneratorMain {
     if (registeredTemplate) {
       return { workspaceTemplate: registeredTemplate };
     }
-    if (!aspectId) {
-      throw new BitError(`template "${name}" was not found, if this is a custom-template, please use --aspect flag`);
-    }
+    // if (!aspectId) {
+    //   throw new BitError(`template "${name}" was not found, if this is a custom-template, please use --aspect flag`);
+    // }
 
     const { workspaceTemplate, aspect } = await this.findWorkspaceTemplateInGlobalScope(aspectId, name);
     if (workspaceTemplate) {
@@ -560,8 +561,10 @@ export class GeneratorMain {
     aspectLoader.registerPlugins([new StarterPlugin(generator)]);
     envs.registerService(new GeneratorService());
 
-    if (generator)
+    if (generator) {
       generator.registerComponentTemplate([componentGeneratorTemplate, starterTemplate, workspaceGeneratorTemplate]);
+      generator.registerWorkspaceTemplate([BasicWorkspaceStarter]);
+    }
     return generator;
   }
 }
