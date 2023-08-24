@@ -1,13 +1,12 @@
+import fs from 'fs';
+import path from 'path';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
-
-import ComponentAspect, { ComponentID } from '@teambit/component';
-import type { ComponentMain, Component } from '@teambit/component';
-
+import ComponentAspect, { ComponentID, ComponentMain, Component } from '@teambit/component';
 import { isCoreAspect, loadBit } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import GitAspect, { GitMain } from '@teambit/git';
@@ -26,12 +25,7 @@ import { ComponentGenerator, GenerateResult, OnComponentCreateFn } from './compo
 import { WorkspaceGenerator } from './workspace-generator';
 import { WorkspaceTemplate } from './workspace-template';
 import { NewCmd, NewOptions } from './new.cmd';
-import {
-  componentGeneratorTemplate,
-  componentGeneratorTemplateStandalone,
-  starterTemplate,
-  starterTemplateStandalone,
-} from './templates';
+import * as coreGenerators from './templates';
 import { StarterPlugin } from './starter.plugin';
 import { GeneratorService } from './generator.service';
 
@@ -120,6 +114,22 @@ export class GeneratorMain {
       return this.getAllComponentTemplatesDescriptorsFlattened(aspect);
     }
     return this.getAllWorkspaceTemplatesDescriptorFlattened(aspect);
+  }
+
+  private async findWorkspaceDir(startDir: string): Promise<string | null> {
+    let currentDir = startDir;
+    let parentDir = path.dirname(currentDir);
+
+    while (currentDir !== parentDir) {
+      if (fs.existsSync(path.join(currentDir, '.bitmap'))) {
+        return currentDir;
+      }
+
+      currentDir = parentDir;
+      parentDir = path.dirname(currentDir);
+    }
+
+    return null;
   }
 
   private getTemplateDescriptor = ({ id, template }: AnyTemplateWithId): TemplateDescriptor => {
@@ -220,24 +230,34 @@ export class GeneratorMain {
     return { workspaceTemplate: fromGlobal, aspect };
   }
 
-  async findTemplateInOtherWorkspace(workspacePath: string, name: string, aspectId?: string) {
-    if (!aspectId)
+  async findTemplateInOtherWorkspace(templatePath: string, name: string, aspectId?: string) {
+    const workspacePath = await this.findWorkspaceDir(templatePath);
+    const templateComponentId = await this.workspace.getComponentIdByPath(templatePath);
+    if (!workspacePath)
       throw new BitError(
-        `to load a template from a different workspace, please provide the aspect-id using --aspect flag`
+        'No workspace found for this template path. make sure you pass an absolute path for the template dir\n e.g `/Users/myself/my-scope/my-template-or-env`'
       );
+    if (!templateComponentId && !aspectId)
+      throw new BitError(
+        'No template component found in this directory. Make sure you pass an absolute path for the template dir\n e.g `/Users/myself/my-scope/my-template-or-env`'
+      );
+
     const harmony = await loadBit(workspacePath);
-    let workspace: Workspace;
-    try {
-      workspace = harmony.get<Workspace>(WorkspaceAspect.id);
-    } catch (err: any) {
-      throw new Error(`fatal: "${workspacePath}" is not a valid Bit workspace, make sure the path is correct`);
+    const workspace: Workspace = harmony.get<Workspace>(WorkspaceAspect.id);
+
+    let aspectComponent: Component;
+    if (aspectId) {
+      const aspectComponentId = await workspace.resolveComponentId(aspectId);
+      await workspace.loadAspects([aspectId], true);
+      aspectComponent = await workspace.get(aspectComponentId);
+    } else {
+      await workspace.loadAspects([templateComponentId.toString()], true);
+      aspectComponent = await workspace.get(templateComponentId);
     }
-    const aspectComponentId = await workspace.resolveComponentId(aspectId);
-    await workspace.loadAspects([aspectId], true);
-    const aspectComponent = await workspace.get(aspectComponentId);
-    const aspectFullId = aspectComponentId.toString();
+
     const generator = harmony.get<GeneratorMain>(GeneratorAspect.id);
-    const workspaceTemplate = await generator.searchRegisteredWorkspaceTemplate(name, aspectFullId);
+    const workspaceTemplate = await generator.searchRegisteredWorkspaceTemplate(name, aspectComponentId.toString());
+
     return { workspaceTemplate, aspect: aspectComponent };
   }
 
@@ -331,7 +351,9 @@ export class GeneratorMain {
       throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
     }
     const { aspect: aspectId, loadFrom } = options;
-    const { workspaceTemplate, aspect } = loadFrom
+    const loadFromLocalPath = path.isAbsolute(loadFrom || '');
+
+    const { workspaceTemplate, aspect } = loadFromLocalPath
       ? await this.findTemplateInOtherWorkspace(loadFrom, templateName, aspectId)
       : await this.getWorkspaceTemplate(templateName, aspectId);
 
@@ -554,12 +576,13 @@ export class GeneratorMain {
     envs.registerService(new GeneratorService());
 
     if (generator)
-      generator.registerComponentTemplate([
-        componentGeneratorTemplate,
-        componentGeneratorTemplateStandalone,
-        starterTemplate,
-        starterTemplateStandalone,
-      ]);
+      if (generator)
+        generator.registerComponentTemplate([
+          coreGenerators.componentGeneratorTemplate,
+          coreGenerators.starterTemplate,
+          coreGenerators.componentGeneratorTemplateStandalone,
+        ]);
+    generator.registerWorkspaceTemplate([coreGenerators.BasicWorkspaceStarter]);
     return generator;
   }
 }

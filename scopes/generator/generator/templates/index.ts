@@ -2,3 +2,4 @@ export { starterTemplate as starterTemplateStandalone } from './starter-standalo
 export { starterTemplate } from './starter';
 export { componentGeneratorTemplate as componentGeneratorTemplateStandalone } from './component-generator-standalone';
 export { componentGeneratorTemplate } from './component-generator';
+export { BasicWorkspaceStarter } from './basic-workspace';
