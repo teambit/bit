@@ -1,4 +1,4 @@
-import { WorkspaceContext, Starter } from '../../';
+import { WorkspaceContext, Starter } from '../..';
 import { workspaceConfig } from './template/files/workspace-config';
 import { gitIgnore } from './template/files/git-ignore';
 

@@ -1,4 +1,4 @@
-import { ComponentContext } from '../../../';
+import { ComponentContext } from '../../..';
 
 export function indexFile({ namePascalCase, name }: ComponentContext) {
   return `import { ${namePascalCase}Aspect } from './${name}.aspect';
