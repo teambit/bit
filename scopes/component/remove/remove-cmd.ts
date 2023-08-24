@@ -19,7 +19,7 @@ export class RemoveCmd implements Command {
     },
   ];
   group = 'collaborate';
-  helpUrl = 'docs/components/removing-components';
+  helpUrl = 'reference/components/removing-components';
   skipWorkspace = true;
   alias = 'rm';
   options = [
