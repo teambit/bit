@@ -91,8 +91,8 @@ importers:
         specifier: 10.2.15
         version: 10.2.15(@pnpm/logger@5.0.0)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
       '@pnpm/default-reporter':
-        specifier: 12.2.9
-        version: 12.2.9(@pnpm/logger@5.0.0)
+        specifier: 12.3.0
+        version: 12.3.0(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path':
         specifier: 2.1.3
         version: 2.1.3
@@ -21600,8 +21600,8 @@ importers:
         specifier: 10.2.15
         version: 10.2.15(@pnpm/logger@5.0.0)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
       '@pnpm/default-reporter':
-        specifier: 12.2.9
-        version: 12.2.9(@pnpm/logger@5.0.0)
+        specifier: 12.3.0
+        version: 12.3.0(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path':
         specifier: 2.1.3
         version: 2.1.3
@@ -34754,6 +34754,35 @@ packages:
       string-length: 4.0.2
     dev: false
 
+  /@pnpm/default-reporter@12.3.0(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-2hbxWZ3MPd0s/fndlnzHTMc7sJgukuWSbq5pFCDHwA162dG/krYQ9tlewHo7r9rRbbdWAneL1YsIrEMZ5DnB/g==}
+    engines: {node: '>=16.14'}
+    peerDependencies:
+      '@pnpm/logger': ^5.0.0
+    dependencies:
+      '@pnpm/config': 18.4.4(@pnpm/logger@5.0.0)
+      '@pnpm/core-loggers': 9.0.2(@pnpm/logger@5.0.0)
+      '@pnpm/dedupe.issues-renderer': 1.0.0
+      '@pnpm/dedupe.types': 1.0.0
+      '@pnpm/error': 5.0.2
+      '@pnpm/logger': 5.0.0
+      '@pnpm/render-peer-issues': 4.0.2
+      '@pnpm/types': 9.2.0
+      ansi-diff: 1.1.1
+      boxen: 5.1.2
+      chalk: 4.1.2
+      cli-truncate: 2.1.0
+      normalize-path: 3.0.0
+      pretty-bytes: 5.6.0
+      pretty-ms: 7.0.1
+      ramda: /@pnpm/ramda@0.28.1
+      right-pad: 1.0.1
+      rxjs: 7.8.1
+      semver: 7.5.4
+      stacktracey: 2.1.8
+      string-length: 4.0.2
+    dev: false
+
   /@pnpm/default-resolver@18.0.12(@pnpm/logger@5.0.0):
     resolution: {integrity: sha512-Pq5bQTdgX/JJNZTZqnIM172mQLV+wSsBywIB4uRKLAGEF4M4H13pS3PM0hlkeTiCXMsrmZ3xHvmQ7CsUkHOx9g==}
     engines: {node: '>=16.14'}
@@ -36631,7 +36660,7 @@ packages:
     dev: false
 
   /@teambit/base-ui.css-components.elevation@1.0.1(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-1s1wcfF6LWUdqQJ4VqwO5uqJ3Go=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/css-components/elevation@1.0.1.tgz}
+    resolution: {integrity: sha1-1s1wcfF6LWUdqQJ4VqwO5uqJ3Go=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -36642,7 +36671,7 @@ packages:
     dev: false
 
   /@teambit/base-ui.css-components.roundness@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-92TAw5Cs4wg2h+Ad9/XmY2p5yRlV8a4dIPL776A1OXw/JXR6NIePUl61VtCrW9v0EJanSJywBtka3AWG+PKOmg==, tarball: https://node-registry.bit.cloud/@teambit/base-ui.css-components.roundness/-/@teambit-base-ui.css-components.roundness-1.0.0.tgz}
+    resolution: {integrity: sha512-92TAw5Cs4wg2h+Ad9/XmY2p5yRlV8a4dIPL776A1OXw/JXR6NIePUl61VtCrW9v0EJanSJywBtka3AWG+PKOmg==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -37882,6 +37911,14 @@ packages:
       semver: 7.5.2
     dev: false
 
+  /@teambit/component-version@1.0.0:
+    resolution: {integrity: sha512-JPwjcflyezcqb+YrGfZP1oAID0oZ/uR8bmLhFLtzIgpwV0TdUeetSZ/dkcPWLddFuBJWw4rqM/4GErBUbDpd+g==}
+    engines: {node: '>=12.22.0'}
+    dependencies:
+      '@teambit/bit-error': 0.0.402
+      semver: 7.5.2
+    dev: false
+
   /@teambit/component.content.component-overview@1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-9Dbi90Jg9C5Jmy4g7IdouEqSuo8=, tarball: https://node-registry.bit.cloud/tarballs/teambit.component/content/component-overview@1.95.0.tgz}
     peerDependencies:
@@ -38398,7 +38435,7 @@ packages:
     dev: false
 
   /@teambit/design.inputs.dropdown@1.2.10(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-1TIt8cwqQpiR9YywJC7oXyxBoik=, tarball: https://node-registry.bit.cloud/@teambit/design.inputs.dropdown/-/@teambit-design.inputs.dropdown-1.2.10.tgz}
+    resolution: {integrity: sha1-1TIt8cwqQpiR9YywJC7oXyxBoik=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
     dependencies:
@@ -65726,7 +65763,7 @@ packages:
       '@pnpm/client': 10.0.17(@pnpm/logger@5.0.0)(bluebird@3.7.2)
       '@pnpm/config': 18.4.4(@pnpm/logger@5.0.0)
       '@pnpm/core': 10.2.15(@pnpm/logger@5.0.0)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
-      '@pnpm/default-reporter': 12.2.9(@pnpm/logger@5.0.0)
+      '@pnpm/default-reporter': 12.3.0(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path': 2.1.3
       '@pnpm/error': 5.0.2
       '@pnpm/lockfile-file': 8.1.2(@pnpm/logger@5.0.0)
@@ -66926,6 +66963,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.20.0
       '@pnpm/plugin-commands-publishing': 7.3.5(@pnpm/logger@5.0.0)(bluebird@3.7.2)
+      '@teambit/component-version': 1.0.0
       '@teambit/harmony': 0.4.6
       chalk: 2.4.2
       cli-highlight: 2.1.9
