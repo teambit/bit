@@ -1,5 +1,5 @@
 import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
-import { WorkspaceContext } from '../../../../';
+import { WorkspaceContext } from '../../../..';
 
 export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
   const configParsed = await getWorkspaceConfigTemplateParsed();
@@ -17,12 +17,14 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
     },
   };
 
+  delete configParsed['teambit.workspace/variants'];
+
   configParsed['teambit.generator/generator'] = {
     envs: [
       'teambit.node/node',
       //  "teambit.angular/angular",
       //  "teambit.vue/vue",
-      // "teambit.react/react-env",
+      //  "teambit.react/react-env",
       //  "teambit.html/html-env"
     ],
   };
