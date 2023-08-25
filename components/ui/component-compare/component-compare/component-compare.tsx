@@ -1,14 +1,7 @@
 import React, { useContext, useMemo, HTMLAttributes } from 'react';
 import classnames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import {
-  CollapsibleMenuNav,
-  ComponentContext,
-  ComponentDescriptorContext,
-  ComponentID,
-  NavPlugin,
-  useComponent,
-} from '@teambit/component';
+import { CollapsibleMenuNav, ComponentContext, ComponentID, NavPlugin, useComponent } from '@teambit/component';
 import { ComponentCompareContext } from '@teambit/component.ui.component-compare.context';
 import { useComponentCompareQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare';
 import {
@@ -59,12 +52,10 @@ export function ComponentCompare(props: ComponentCompareProps) {
     baseContext,
     compareContext,
     isFullScreen,
-    hidden = false,
     ...rest
   } = props;
   const baseVersion = useCompareQueryParam('baseVersion');
   const component = useContext(ComponentContext);
-  const componentDescriptor = useContext(ComponentDescriptorContext);
   const location = useLocation();
   const isWorkspace = host === 'teambit.workspace/workspace';
 
@@ -72,8 +63,8 @@ export function ComponentCompare(props: ComponentCompareProps) {
     component: compareComponent,
     loading: loadingCompare,
     componentDescriptor: compareComponentDescriptor,
-  } = useComponent(host, _compareId?.toString(), {
-    skip: hidden || !_compareId,
+  } = useComponent(host, _compareId?.toString() || '', {
+    skip: !_compareId,
     customUseComponent,
     logFilters: {
       log: {
@@ -112,7 +103,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
     componentDescriptor: baseComponentDescriptor,
   } = useComponent(host, baseId?.toString(), {
     customUseComponent,
-    skip: hidden || !baseId,
+    skip: !baseId,
     logFilters: {
       log: {
         limit: 3,
@@ -131,7 +122,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   }, [compare?.id.toString()]);
 
   const skipComponentCompareQuery =
-    hidden || compareIsLocalChanges || base?.id.version?.toString() === compare?.id.version?.toString();
+    compareIsLocalChanges || base?.id.version?.toString() === compare?.id.version?.toString();
 
   const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
     base?.id.toString(),
@@ -174,7 +165,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   const componentCompareModel = {
     compare: compare && {
       model: compare,
-      descriptor: compareComponentDescriptor || componentDescriptor,
+      descriptor: compareComponentDescriptor,
       hasLocalChanges: compareIsLocalChanges,
     },
     base: base && {
@@ -191,7 +182,6 @@ export function ComponentCompare(props: ComponentCompareProps) {
     fileCompareDataByName,
     testCompareDataByName,
     isFullScreen,
-    hidden,
   };
 
   const changes =
@@ -239,9 +229,7 @@ function RenderCompareScreen(
     compareVersion,
     compareHasLocalChanges,
     componentId,
-    hidden,
   } = props;
-
   const showVersionPicker = state?.versionPicker?.element !== null;
 
   return (
@@ -262,7 +250,7 @@ function RenderCompareScreen(
       )}
       {loading && <Loader className={classnames(styles.loader)} />}
       {!loading && (
-        <div className={classnames(styles.bottom, hidden && styles.hidden)}>
+        <div className={styles.bottom}>
           <CompareMenuNav {...props} />
           {(extractLazyLoadedData(routes) || []).length > 0 && (
             <SlotRouter routes={extractLazyLoadedData(routes) || []} />

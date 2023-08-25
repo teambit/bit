@@ -12,9 +12,7 @@ export type ComponentCompareContextType = ComponentCompareModel &
   StateAndHooks & {
     baseContext?: StateAndHooks;
     compareContext?: StateAndHooks;
-  } & {
     isFullScreen?: boolean;
-    hidden?: boolean;
   };
 
 export const ComponentCompareContext = createContext<ComponentCompareContextType | undefined>(undefined);

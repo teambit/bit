@@ -1,9 +1,6 @@
-.subContainerLeft {
-  flex: 1;
-}
-
-.subContainerRight {
-  flex: 1;
+.checkboxContainer {
+  margin-top: 16px;
+  padding-left: 16px;
 }
 
 .subView {
@@ -18,34 +15,26 @@
   height: 100%;
 }
 
-.toggleContainer {
-  display: flex;
-  align-items: center;
-
-  .toggle {
-    position: relative;
-  }
-}
-
 .toolbar {
   display: flex;
-  padding: 4px;
+  background-color: var(--bit-bg-heaviest, #ededed);
+  padding: 8px;
+}
+
+.widgets {
+  display: flex;
 }
 
 .left,
 .right {
   display: flex;
   flex: 1;
-  background-color: var(--background-color);
+  padding: 8px;
+  background-color: #fff;
   align-items: center;
   justify-content: space-between;
 }
 
-.right {
-  justify-content: flex-end;
-}
-
-.widgets {
-  display: flex;
-  padding: 4px;
+.splitLayout {
+  margin-top: 8px;
 }

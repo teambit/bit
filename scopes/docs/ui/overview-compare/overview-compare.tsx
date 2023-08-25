@@ -1,4 +1,4 @@
-import { ComponentDescriptorProvider, ComponentProvider } from '@teambit/component';
+import { ComponentProvider } from '@teambit/component';
 import { CompareSplitLayoutPreset } from '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
@@ -6,29 +6,21 @@ import { Overview } from '@teambit/docs';
 import type { TitleBadgeSlot, OverviewOptionsSlot } from '@teambit/docs';
 import React, { useMemo, useRef } from 'react';
 import { ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
-import { OverviewViewCompareContext } from './overview-compare.context';
 
 import styles from './overview-compare.module.scss';
-
-export type OverviewViewProps = {
-  titleBadges: TitleBadgeSlot;
-  overviewOptions: OverviewOptionsSlot;
-  previewProps?: Partial<ComponentPreviewProps>;
-};
 
 export type OverviewCompareProps = {
   titleBadges: TitleBadgeSlot;
   overviewOptions: OverviewOptionsSlot;
-  previewProps?: Partial<ComponentPreviewProps>;
+  previewProps?: ComponentPreviewProps;
   Widgets?: {
     Right?: React.ReactNode;
     Left?: React.ReactNode;
   };
-  OverviewView?: React.ComponentType<OverviewViewProps>;
 };
 
 export function OverviewCompare(props: OverviewCompareProps) {
-  const { titleBadges, overviewOptions, previewProps, Widgets, OverviewView = Overview } = props;
+  const { titleBadges, overviewOptions, previewProps, Widgets } = props;
   const componentCompare = useComponentCompare();
 
   const leftPanelRef = useRef<HTMLDivElement>(null);
@@ -41,13 +33,9 @@ export function OverviewCompare(props: OverviewCompareProps) {
 
     return (
       <div className={styles.subView} ref={leftPanelRef}>
-        <OverviewViewCompareContext.Provider value={{ titleBadges, overviewOptions, previewProps, isBase: true }}>
-          <ComponentDescriptorProvider componentDescriptor={componentCompare?.base.descriptor}>
-            <ComponentProvider component={componentCompare.base.model}>
-              <OverviewView titleBadges={titleBadges} overviewOptions={overviewOptions} previewProps={previewProps} />
-            </ComponentProvider>
-          </ComponentDescriptorProvider>
-        </OverviewViewCompareContext.Provider>
+        <ComponentProvider component={componentCompare.base.model}>
+          <Overview titleBadges={titleBadges} overviewOptions={overviewOptions} previewProps={previewProps} />
+        </ComponentProvider>
       </div>
     );
   }, [componentCompare?.base]);
@@ -59,13 +47,9 @@ export function OverviewCompare(props: OverviewCompareProps) {
 
     return (
       <div className={styles.subView} ref={rightPanelRef}>
-        <OverviewViewCompareContext.Provider value={{ titleBadges, overviewOptions, previewProps, isCompare: true }}>
-          <ComponentDescriptorProvider componentDescriptor={componentCompare?.compare?.descriptor}>
-            <ComponentProvider component={componentCompare.compare.model}>
-              <OverviewView titleBadges={titleBadges} overviewOptions={overviewOptions} previewProps={previewProps} />
-            </ComponentProvider>
-          </ComponentDescriptorProvider>
-        </OverviewViewCompareContext.Provider>
+        <ComponentProvider component={componentCompare.compare.model}>
+          <Overview titleBadges={titleBadges} overviewOptions={overviewOptions} previewProps={previewProps} />
+        </ComponentProvider>
       </div>
     );
   }, [componentCompare?.compare]);
@@ -105,7 +89,7 @@ export function OverviewCompare(props: OverviewCompareProps) {
         </div>
       </div> */}
       <OverviewToolbar />
-      <CompareSplitLayoutPreset base={BaseLayout} compare={CompareLayout} />
+      <CompareSplitLayoutPreset base={BaseLayout} compare={CompareLayout} className={styles.splitLayout} />
     </React.Fragment>
   );
 }
