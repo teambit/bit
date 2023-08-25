@@ -8,6 +8,7 @@ import { LanesMain } from '@teambit/lanes';
 import { InstallMain } from '@teambit/install';
 import { ExportMain } from '@teambit/export';
 import { CheckoutMain } from '@teambit/checkout';
+import { ApplyVersionResults } from '@teambit/merging';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -55,6 +56,14 @@ export class APIForIDE {
       getAll: true,
     });
     return (results.components || []).map((c) => c.id.toString());
+  }
+
+  async listLanes() {
+    return this.lanes.getLanes({ showDefaultLane: true });
+  }
+
+  async createLane(name: string) {
+    return this.lanes.createLane(name);
   }
 
   async getCompFiles(id: string): Promise<{ dirAbs: string; filesRelative: PathOsBasedRelative[] }> {
@@ -132,11 +141,21 @@ export class APIForIDE {
   }
 
   async checkoutHead() {
-    const { components, failedComponents } = await this.checkout.checkout({
+    const results = await this.checkout.checkout({
       head: true,
       skipNpmInstall: true,
       ids: await this.workspace.listIds(),
     });
+    return this.adjustCheckoutResultsToIde(results);
+  }
+
+  async switchLane(name: string) {
+    const results = await this.lanes.switchLanes(name, { skipDependencyInstallation: true });
+    return this.adjustCheckoutResultsToIde(results);
+  }
+
+  private adjustCheckoutResultsToIde(output: ApplyVersionResults) {
+    const { components, failedComponents } = output;
     const skipped = failedComponents?.filter((f) => f.unchangedLegitimately).map((f) => f.id.toString());
     const failed = failedComponents?.filter((f) => !f.unchangedLegitimately).map((f) => f.id.toString());
     return {
