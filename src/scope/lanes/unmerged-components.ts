@@ -29,7 +29,23 @@ export type UnmergedComponent = {
    * before 0.2.33 this was boolean. now it's an object with more data.
    * it should be safe to remove the "boolean" around 11/2023
    */
-  unrelated?: boolean | { unrelatedHead: Ref; unrelatedLaneId: LaneId; futureParent: Ref };
+  unrelated?:
+    | boolean
+    | {
+        /**
+         * this will be saved in the Version.unrelated.head
+         */
+        unrelatedHead: Ref;
+        /**
+         * this will be saved in the Version.unrelated.laneId
+         */
+        unrelatedLaneId: LaneId;
+        /**
+         * this will be the parent of the snap-merge.
+         * (so basically, the history of the component is determined by this ref)
+         */
+        headOnCurrentLane: Ref;
+      };
   /**
    * aspects config that were merged successfully
    */
@@ -55,7 +71,7 @@ export default class UnmergedComponents {
       return {
         unrelatedHead: Ref.from(item.unrelated.unrelatedHead),
         unrelatedLaneId: new LaneId(item.unrelated.unrelatedLaneId),
-        futureParent: Ref.from(item.unrelated.futureParent),
+        headOnCurrentLane: Ref.from(item.unrelated.headOnCurrentLane),
       };
     };
     try {
@@ -127,7 +143,7 @@ export default class UnmergedComponents {
       return {
         unrelatedHead: item.unrelated.unrelatedHead.toString(),
         unrelatedLaneId: item.unrelated.unrelatedLaneId.toObject(),
-        futureParent: item.unrelated.futureParent.toString(),
+        headOnCurrentLane: item.unrelated.headOnCurrentLane.toString(),
       };
     };
     return this.unmerged.map((item) => ({

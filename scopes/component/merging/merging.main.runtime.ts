@@ -53,10 +53,9 @@ import { MergeStatusProvider } from './merge-status-provider';
 
 type ResolveUnrelatedData = {
   strategy: MergeStrategy;
-  headOnLane: Ref;
+  headOnCurrentLane: Ref;
   unrelatedHead: Ref;
   unrelatedLaneId: LaneId;
-  futureParent: Ref;
 };
 type PkgEntry = { name: string; version: string; force: boolean };
 
@@ -565,10 +564,10 @@ export class MergingMain {
       // first and then merge with --resolve-unrelated
       if (!localLane) throw new Error('localLane must be defined when resolvedUnrelated');
       if (!resolvedUnrelated) throw new Error('resolvedUnrelated must be populated');
-      localLane.addComponent({ id, head: resolvedUnrelated.headOnLane });
+      localLane.addComponent({ id, head: resolvedUnrelated.headOnCurrentLane });
       unmergedComponent.unrelated = {
         unrelatedHead: resolvedUnrelated.unrelatedHead,
-        futureParent: resolvedUnrelated.futureParent,
+        headOnCurrentLane: resolvedUnrelated.headOnCurrentLane,
         unrelatedLaneId: resolvedUnrelated.unrelatedLaneId,
       };
       consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);

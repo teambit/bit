@@ -822,7 +822,7 @@ another option, in case this dependency is not in main yet is to remove all refe
         } else {
           const unrelated = unmergedComponent.unrelated;
           version.setUnrelated({ head: unrelated.unrelatedHead, laneId: unrelated.unrelatedLaneId });
-          version.addAsOnlyParent(unrelated.futureParent);
+          version.addAsOnlyParent(unrelated.headOnCurrentLane);
         }
       } else {
         // this is adding a second parent to the version. the order is important. the first parent is coming from the current-lane.
