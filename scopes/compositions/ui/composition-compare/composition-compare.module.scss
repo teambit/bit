@@ -1,20 +1,17 @@
 .toolbar {
   display: flex;
-  padding: 4px;
+  background-color: var(--bit-bg-heaviest, #ededed);
+  padding: 8px;
 }
 
 .left,
 .right {
   display: flex;
   flex: 1;
-  padding: 4px;
-  background-color: var(--background-color);
+  padding: 8px;
+  background-color: #fff;
   align-items: center;
   justify-content: space-between;
-}
-
-.right {
-  justify-content: flex-end;
 }
 
 .mainContainer {
@@ -33,7 +30,8 @@
 
 .subView {
   height: 100%;
-  background-color: var(--background-color);
+  background-color: white;
+  overflow-y: auto;
 }
 
 .loader {
@@ -44,7 +42,6 @@
 
 .widgets {
   display: flex;
-  padding: 4px;
 }
 
 .dropdown {
