@@ -26,7 +26,7 @@ export type UnmergedComponent = {
    */
   laneId: LaneId;
   /**
-   * before 0.2.32 this was boolean. now it's an object with more data.
+   * before 0.2.33 this was boolean. now it's an object with more data.
    * it should be safe to remove the "boolean" around 11/2023
    */
   unrelated?: boolean | { unrelatedHead: Ref; unrelatedLaneId: LaneId; futureParent: Ref };

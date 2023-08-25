@@ -280,7 +280,7 @@ ${duplicationStr}`);
   }
   const unrelatedHead = version.unrelated?.head;
   if (unrelatedHead && version.parents.some((p) => p.isEqual(unrelatedHead))) {
-    if (version.bitVersion && gt(version.bitVersion, '0.2.31'))
+    if (version.bitVersion && gt(version.bitVersion, '0.2.33'))
       throw new VersionInvalid(`${message}, the unrelated.head is the same as the parent: ${unrelatedHead.toString()}`);
   }
   const schema = version.schema || SchemaName.Legacy;
