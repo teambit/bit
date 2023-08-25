@@ -2,7 +2,7 @@ import React, { HTMLAttributes } from 'react';
 import { DetailedVersion, VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
-import { UseComponentType, useComponent } from '@teambit/component';
+import { UseComponentType } from '@teambit/component';
 import classNames from 'classnames';
 import * as semver from 'semver';
 
@@ -36,6 +36,7 @@ export function ComponentCompareVersionPicker({
   const useVersions = React.useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (filter: (version: string) => boolean = (version) => true) =>
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       (props?: { skip?: boolean }) => {
         return {
           loading: loadingLogs,

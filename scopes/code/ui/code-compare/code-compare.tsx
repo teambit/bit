@@ -32,7 +32,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   const query = useQuery();
   const location = useLocation() || { pathname: '/' };
 
-  const { base, compare, state: compareState, hooks: compareHooks, hidden, loading } = componentCompareContext || {};
+  const { base, compare, state: compareState, hooks: compareHooks, hidden } = componentCompareContext || {};
 
   const state = compareState?.code;
   const hook = compareHooks?.code;
