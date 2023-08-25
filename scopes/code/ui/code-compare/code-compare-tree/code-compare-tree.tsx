@@ -19,6 +19,7 @@ export type CodeCompareTreeProps = {
   widgets?: ComponentType<WidgetProps<any>>[];
   getHref?: (node: TreeNode) => string;
   onTreeNodeSelected?: (id: string, event?: React.MouseEvent) => void;
+  open?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function CodeCompareTree({
@@ -29,6 +30,7 @@ export function CodeCompareTree({
   drawerName,
   widgets,
   getHref,
+  open,
   onTreeNodeSelected,
 }: CodeCompareTreeProps) {
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
@@ -46,6 +48,8 @@ export function CodeCompareTree({
     }
     onToggleDrawer((list) => list.concat(id));
   };
+
+  if (!open) return null;
 
   return (
     <div className={classNames(styles.componentCompareCodeTreeContainer, className)}>
