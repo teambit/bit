@@ -56,7 +56,13 @@ import { MergingAspect } from './merging.aspect';
 import { ConfigMerger } from './config-merger';
 import { ConfigMergeResult } from './config-merge-result';
 
-type ResolveUnrelatedData = { strategy: MergeStrategy; head: Ref };
+type ResolveUnrelatedData = {
+  strategy: MergeStrategy;
+  headOnLane: Ref;
+  unrelatedHead: Ref;
+  unrelatedLaneId: LaneId;
+  futureParent: Ref;
+};
 type PkgEntry = { name: string; version: string; force: boolean };
 
 export type WorkspaceDepsUpdates = { [pkgName: string]: [string, string] }; // from => to
@@ -519,7 +525,7 @@ export class MergingMain {
       await this.importer.importObjectsFromMainIfExist(otherLane.toBitIds().toVersionLatest());
     }
     const componentStatusBeforeMergeAttempt = await mapSeries(bitIds, (id) =>
-      this.getComponentStatusBeforeMergeAttempt(id, currentLane, options)
+      this.getComponentStatusBeforeMergeAttempt(id, currentLane, otherLane || null, options)
     );
     const toImport = componentStatusBeforeMergeAttempt
       .map((compStatus) => {
@@ -568,6 +574,7 @@ export class MergingMain {
   private async getComponentStatusBeforeMergeAttempt(
     id: BitId, // the id.version is the version we want to merge to the current component
     localLane: Lane | null, // currently checked out lane. if on main, then it's null.
+    otherLane: Lane | null, // the lane we want to merged to our lane. (null if it's "main").
     options?: { resolveUnrelated?: MergeStrategy; ignoreConfigChanges?: boolean }
   ): Promise<ComponentMergeStatusBeforeMergeAttempt> {
     const consumer = this.workspace.consumer;
@@ -680,44 +687,100 @@ export class MergingMain {
     });
     if (divergeData.err) {
       const mainHead = modelComponent.head;
-      if (divergeData.err instanceof NoCommonSnap && options?.resolveUnrelated && mainHead) {
-        const hasResolvedFromMain = async (hashToCompare: Ref | null) => {
-          const divergeDataFromMain = await getDivergeData({
-            repo,
-            modelComponent,
-            sourceHead: hashToCompare,
-            targetHead: mainHead,
-            throws: false,
-          });
-          if (!divergeDataFromMain.err) return true;
-          return !(divergeDataFromMain.err instanceof NoCommonSnap);
-        };
-        const hasResolvedLocally = await hasResolvedFromMain(modelComponent.getHeadRegardlessOfLane() as Ref);
-        const hasResolvedRemotely = await hasResolvedFromMain(otherLaneHead);
-        if (!hasResolvedLocally && !hasResolvedRemotely) {
-          return returnUnmerged(
-            `unable to traverse ${currentComponent.id.toString()} history. the main-head ${mainHead.toString()} doesn't appear in both lanes, it was probably created in each lane separately`
+      if (divergeData.err instanceof NoCommonSnap && options?.resolveUnrelated) {
+        if (mainHead) {
+          const hasResolvedFromMain = async (hashToCompare: Ref | null) => {
+            const divergeDataFromMain = await getDivergeData({
+              repo,
+              modelComponent,
+              sourceHead: hashToCompare,
+              targetHead: mainHead,
+              throws: false,
+            });
+            if (!divergeDataFromMain.err) return true;
+            return !(divergeDataFromMain.err instanceof NoCommonSnap);
+          };
+          const hasResolvedLocally = await hasResolvedFromMain(modelComponent.getHeadRegardlessOfLane() as Ref);
+          const hasResolvedRemotely = await hasResolvedFromMain(otherLaneHead);
+          if (!hasResolvedLocally && !hasResolvedRemotely) {
+            return returnUnmerged(
+              `unable to traverse ${currentComponent.id.toString()} history. the main-head ${mainHead.toString()} doesn't appear in both lanes, it was probably created in each lane separately`
+            );
+          }
+          const versionToSaveInLane = hasResolvedLocally ? currentComponent.id.version : id.version;
+          const resolvedRef = modelComponent.getRef(versionToSaveInLane as string);
+          if (!resolvedRef) throw new Error(`unable to get ref of "${versionToSaveInLane}" for "${id.toString()}"`);
+          const unrelatedHead = hasResolvedLocally ? id.version : currentComponent.id.version;
+          const unrelatedHeadRef = modelComponent.getRef(unrelatedHead as string);
+          if (!unrelatedHeadRef) throw new Error(`unable to get ref of "${unrelatedHead}" for "${id.toString()}"`);
+          if (options?.resolveUnrelated === 'ours') {
+            return {
+              currentComponent,
+              id,
+              divergeData,
+              resolvedUnrelated: {
+                strategy: 'ours',
+                headOnLane: resolvedRef,
+                unrelatedHead: unrelatedHeadRef,
+                unrelatedLaneId: localLane?.toLaneId() as LaneId,
+                futureParent: resolvedRef,
+              },
+            };
+          }
+          if (options?.resolveUnrelated === 'theirs') {
+            // just override with the model data
+            return {
+              currentComponent,
+              componentFromModel: componentOnOther,
+              id,
+              divergeData,
+              resolvedUnrelated: {
+                strategy: 'theirs',
+                headOnLane: resolvedRef,
+                unrelatedHead: unrelatedHeadRef,
+                unrelatedLaneId: localLane?.toLaneId() as LaneId,
+                futureParent: resolvedRef,
+              },
+            };
+          }
+          throw new Error(
+            `unsupported strategy "${options?.resolveUnrelated}" of resolve-unrelated. supported strategies are: [ours, theirs]`
           );
         }
-        const versionToSaveInLane = hasResolvedLocally ? currentComponent.id.version : id.version;
+        const versionToSaveInLane = options.resolveUnrelated === 'ours' ? currentComponent.id.version : id.version;
+        const unrelatedHead = options.resolveUnrelated === 'ours' ? id.version : currentComponent.id.version;
         const resolvedRef = modelComponent.getRef(versionToSaveInLane as string);
         if (!resolvedRef) throw new Error(`unable to get ref of "${versionToSaveInLane}" for "${id.toString()}"`);
-        if (options?.resolveUnrelated === 'theirs') {
+        const unrelatedHeadRef = modelComponent.getRef(unrelatedHead as string);
+        if (!unrelatedHeadRef) throw new Error(`unable to get ref of "${unrelatedHead}" for "${id.toString()}"`);
+        if (options.resolveUnrelated === 'ours') {
+          return {
+            currentComponent,
+            id,
+            divergeData,
+            resolvedUnrelated: {
+              headOnLane: resolvedRef,
+              strategy: 'ours',
+              unrelatedHead: unrelatedHeadRef,
+              unrelatedLaneId: otherLane?.toLaneId() as LaneId,
+              futureParent: resolvedRef,
+            },
+          };
+        }
+        if (options.resolveUnrelated === 'theirs') {
           // just override with the model data
           return {
             currentComponent,
             componentFromModel: componentOnOther,
             id,
             divergeData,
-            resolvedUnrelated: { strategy: 'theirs', head: resolvedRef },
-          };
-        }
-        if (options?.resolveUnrelated === 'ours') {
-          return {
-            currentComponent,
-            id,
-            divergeData,
-            resolvedUnrelated: { strategy: 'ours', head: resolvedRef },
+            resolvedUnrelated: {
+              headOnLane: resolvedRef,
+              strategy: 'theirs',
+              unrelatedHead: unrelatedHeadRef,
+              unrelatedLaneId: localLane?.toLaneId() as LaneId,
+              futureParent: resolvedRef,
+            },
           };
         }
         throw new Error(
@@ -835,8 +898,6 @@ other:   ${otherLaneHead.toString()}`);
       // @ts-ignore
       id: { name: id.name, scope: id.scope },
       head: remoteHead,
-      remote: laneId.scope, // @todo: remove. it has been deprecated around 0.0.832
-      lane: laneId.name, // @todo: remove. it has been deprecated around 0.0.832
       laneId,
     };
     id = currentComponent ? currentComponent.id : id;
@@ -844,12 +905,16 @@ other:   ${otherLaneHead.toString()}`);
     const modelComponent = await consumer.scope.getModelComponent(id);
     const handleResolveUnrelated = () => {
       if (!currentComponent) throw new Error('currentComponent must be defined when resolvedUnrelated');
+      // because when on a main, we don't allow merging lanes with unrelated. we asks users to switch to the lane
+      // first and then merge with --resolve-unrelated
       if (!localLane) throw new Error('localLane must be defined when resolvedUnrelated');
-      if (!resolvedUnrelated?.head) throw new Error('resolvedUnrelated must have head prop');
-      localLane.addComponent({ id, head: resolvedUnrelated.head });
-      unmergedComponent.laneId = localLane.toLaneId();
-      unmergedComponent.head = resolvedUnrelated.head;
-      unmergedComponent.unrelated = true;
+      if (!resolvedUnrelated) throw new Error('resolvedUnrelated must be populated');
+      localLane.addComponent({ id, head: resolvedUnrelated.headOnLane });
+      unmergedComponent.unrelated = {
+        unrelatedHead: resolvedUnrelated.unrelatedHead,
+        futureParent: resolvedUnrelated.futureParent,
+        unrelatedLaneId: resolvedUnrelated.unrelatedLaneId,
+      };
       consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
       return { applyVersionResult: { id, filesStatus }, component: currentComponent };
     };

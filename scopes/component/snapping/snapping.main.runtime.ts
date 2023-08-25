@@ -814,9 +814,16 @@ another option, in case this dependency is not in main yet is to remove all refe
             `source.previouslyUsedVersion must be set for ${component.name} because it's unrelated resolved.`
           );
         }
-        const unrelatedHead = Ref.from(source.previouslyUsedVersion);
-        version.unrelated = { head: unrelatedHead, laneId: unmergedComponent.laneId };
-        version.addAsOnlyParent(unmergedComponent.head);
+        if (unmergedComponent.unrelated === true) {
+          // backward compatibility
+          const unrelatedHead = Ref.from(source.previouslyUsedVersion);
+          version.setUnrelated({ head: unrelatedHead, laneId: unmergedComponent.laneId });
+          version.addAsOnlyParent(unmergedComponent.head);
+        } else {
+          const unrelated = unmergedComponent.unrelated;
+          version.setUnrelated({ head: unrelated.unrelatedHead, laneId: unrelated.unrelatedLaneId });
+          version.addAsOnlyParent(unrelated.futureParent);
+        }
       } else {
         // this is adding a second parent to the version. the order is important. the first parent is coming from the current-lane.
         version.addParent(unmergedComponent.head);
