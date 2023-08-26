@@ -111,8 +111,8 @@ export class LaneSwitcher {
   }
 
   private async populatePropsAccordingToDefaultLane() {
-    this.throwForSwitchingToCurrentLane();
     this.laneIdToSwitchTo = LaneId.from(DEFAULT_LANE, this.consumer.scope.name);
+    this.throwForSwitchingToCurrentLane();
   }
 
   private populatePropsAccordingToLocalLane(localLane: Lane): BitId[] {
