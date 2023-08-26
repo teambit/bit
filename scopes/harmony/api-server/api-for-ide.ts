@@ -9,6 +9,7 @@ import { InstallMain } from '@teambit/install';
 import { ExportMain } from '@teambit/export';
 import { CheckoutMain } from '@teambit/checkout';
 import { ApplyVersionResults } from '@teambit/merging';
+import { ComponentLogMain } from '@teambit/component-log';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -30,7 +31,8 @@ export class APIForIDE {
     private lanes: LanesMain,
     private installer: InstallMain,
     private exporter: ExportMain,
-    private checkout: CheckoutMain
+    private checkout: CheckoutMain,
+    private componentLog: ComponentLogMain
   ) {}
 
   async listIdsWithPaths() {
@@ -98,6 +100,16 @@ export class APIForIDE {
         results[pathJoinLinux(compDir, file.relative)] = filePath;
       })
     );
+    return results;
+  }
+
+  async catObject(hash: string) {
+    const object = await this.workspace.scope.legacyScope.getRawObject(hash);
+    return JSON.stringify(object.content.toString());
+  }
+
+  async logFile(filePath: string) {
+    const results = await this.componentLog.getFileHistoryHashes(filePath);
     return results;
   }
 
