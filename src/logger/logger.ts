@@ -11,6 +11,8 @@ import { serializeError } from 'serialize-error';
 import format from 'string-format';
 import { Logger as PinoLogger, Level } from 'pino';
 import yn from 'yn';
+import pMapSeries from 'p-map-series';
+
 import { Analytics } from '../analytics/analytics';
 import { getSync } from '../api/consumer/lib/global-config';
 import defaultHandleError from '../cli/default-error-handler';

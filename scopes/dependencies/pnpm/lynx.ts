@@ -167,6 +167,8 @@ export interface ReportOptions {
   appendOnly?: boolean;
   throttleProgress?: number;
   hideAddedPkgsProgress?: boolean;
+  hideProgressPrefix?: boolean;
+  hideLifecycleOutput?: boolean;
 }
 
 export async function install(
@@ -320,6 +322,7 @@ export async function install(
       if (!_opts.hidePackageManagerOutput) {
         stopReporting = initReporter({
           appendOnly: true,
+          hideLifecycleOutput: true,
         });
       }
       try {
@@ -341,6 +344,8 @@ function initReporter(opts?: ReportOptions) {
       appendOnly: opts?.appendOnly ?? false,
       throttleProgress: opts?.throttleProgress ?? 200,
       hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
+      hideProgressPrefix: opts?.hideProgressPrefix,
+      hideLifecycleOutput: opts?.hideLifecycleOutput,
     },
     streamParser,
     // Linked in core aspects are excluded from the output to reduce noise.

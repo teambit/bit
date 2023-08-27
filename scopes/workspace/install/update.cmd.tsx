@@ -13,7 +13,7 @@ type UpdateCmdOptions = {
 export default class UpdateCmd implements Command {
   name = 'update [package-patterns...]';
   description = 'update dependencies';
-  helpUrl = 'docs/dependencies/configuring-dependencies/#update-dependencies';
+  helpUrl = 'reference/dependencies/configuring-dependencies/#update-dependencies';
   alias = 'up';
   group = 'development';
   arguments = [

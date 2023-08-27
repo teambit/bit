@@ -282,16 +282,13 @@ export class WorkspaceComponentLoader {
     component.state.aspects = aspectListWithEnvsAndDeps;
 
     const entries = this.workspace.onComponentLoadSlot.toArray();
-    const promises = entries.map(async ([extension, onLoad]) => {
+    await mapSeries(entries, async ([extension, onLoad]) => {
       const data = await onLoad(component, loadOpts);
-      return this.upsertExtensionData(component, extension, data);
+      await this.upsertExtensionData(component, extension, data);
+      // Update the aspect list to have changes happened during the on load slot (new data added above)
+      component.state.aspects.upsertEntry(await this.workspace.resolveComponentId(extension), data);
     });
 
-    await Promise.all(promises);
-
-    // Update the aspect list to have changes happened during the on load slot (new data added above)
-    const updatedAspectList = await this.workspace.createAspectList(component.state.config.extensions);
-    component.state.aspects = updatedAspectList;
     return component;
   }
 

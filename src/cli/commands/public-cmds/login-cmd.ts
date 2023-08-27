@@ -12,7 +12,7 @@ export default class Login implements LegacyCommand {
   alias = '';
   skipWorkspace = true;
   opts = [
-    ['d', 'hub-domain-login <url>', 'hub domain login url (default https://bit.cloud)'],
+    ['d', 'cloud-domain <domain>', 'login cloud domain (default bit.cloud)'],
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
     ['', 'suppress-browser-launch', 'do not open a browser for authentication'],
     ['', 'npmrc-path <path>', `path to npmrc file to configure ${getCloudDomain()} registry`],
@@ -26,14 +26,14 @@ export default class Login implements LegacyCommand {
   action(
     [], // eslint-disable-line no-empty-pattern
     {
-      hubDomainLogin,
+      cloudDomain,
       port,
       suppressBrowserLaunch = false,
       npmrcPath,
       skipRegistryConfig = false,
       machineName,
     }: {
-      hubDomainLogin?: string;
+      cloudDomain?: string;
       port: string;
       suppressBrowserLaunch?: boolean;
       npmrcPath: string;
@@ -41,7 +41,7 @@ export default class Login implements LegacyCommand {
       machineName?: string;
     }
   ): Promise<any> {
-    return login(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName, hubDomainLogin).then(
+    return login(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName, cloudDomain).then(
       (results) => ({
         ...results,
         skipRegistryConfig,
