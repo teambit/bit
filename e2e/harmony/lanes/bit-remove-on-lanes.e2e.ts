@@ -443,6 +443,8 @@ describe('bit lane command', function () {
     // previously in older bit versions, it used to leave the removed-component with the snapped version in the lane-object.
     // the export was pushing this object to the remote, and then when importing, the snapped-version was missing.
     it('should be able to import the lane with no errors', () => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       expect(() => helper.command.importLane('dev')).to.not.throw();
     });
   });

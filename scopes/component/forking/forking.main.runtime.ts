@@ -19,7 +19,7 @@ import { ForkCmd, ForkOptions } from './fork.cmd';
 import { ForkingAspect } from './forking.aspect';
 import { ForkingFragment } from './forking.fragment';
 import { forkingSchema } from './forking.graphql';
-import { ScopeForkCmd } from './scope-fork.cmd';
+import { ScopeForkCmd, ScopeForkOptions } from './scope-fork.cmd';
 
 export type ForkInfo = {
   forkedFrom: ComponentID;
@@ -43,6 +43,7 @@ type MultipleForkOptions = {
   refactor?: boolean;
   scope?: string; // different scope-name than the original components
   install?: boolean; // whether to run "bit install" once done.
+  ast?: boolean; // whether to use AST to transform files instead of regex
 };
 
 export class ForkingMain {
@@ -138,10 +139,11 @@ export class ForkingMain {
       .flat();
     const allComponents = await this.workspace.list();
     if (options.refactor) {
-      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, stringsToReplace, [
-        importTransformer,
-        exportTransformer,
-      ]);
+      const { changedComponents } = await this.refactoring.replaceMultipleStrings(
+        allComponents,
+        stringsToReplace,
+        options.ast ? [importTransformer, exportTransformer] : undefined
+      );
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
     }
     const forkedComponents = results.map((result) => result.component);
@@ -158,7 +160,7 @@ export class ForkingMain {
   /**
    * fork all components of the given scope
    */
-  async forkScope(originalScope: string, newScope: string): Promise<ComponentID[]> {
+  async forkScope(originalScope: string, newScope: string, options?: ScopeForkOptions): Promise<ComponentID[]> {
     const idsFromOriginalScope = await this.workspace.scope.listRemoteScope(originalScope);
     if (!idsFromOriginalScope.length) {
       throw new Error(`unable to find components to fork from ${originalScope}`);
@@ -181,7 +183,7 @@ export class ForkingMain {
       await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, { scope: newScope }, config);
       multipleForkInfo.push({ targetCompId, sourceId: component.id.toStringWithoutVersion(), component });
     });
-    await this.refactorMultipleAndInstall(multipleForkInfo, { refactor: true, install: true });
+    await this.refactorMultipleAndInstall(multipleForkInfo, { refactor: true, install: true, ast: options?.ast });
     return multipleForkInfo.map((info) => info.targetCompId);
   }
 
@@ -225,7 +227,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
           newStr: targetCompId.toStringWithoutVersion(),
         },
       ],
-      [importTransformer, exportTransformer]
+      options?.ast ? [importTransformer, exportTransformer] : undefined
     );
     if (!options?.preserve) {
       await this.refactoring.refactorVariableAndClasses(component, sourceId, targetCompId);
