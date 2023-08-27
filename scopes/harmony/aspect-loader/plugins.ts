@@ -154,7 +154,7 @@ export class Plugins {
     return path.isAbsolute(component.filesystem.files[0]?.path || '');
   }
 
-  private static constructWarningMessage(component: Component): string | null {
+  private static constructWarningMessage(component: Component): string | undefined {
     if (this.isImportedComponent(component)) {
       return (
         `env with id: ${chalk.blue(component.id.toString())} could not be loaded.\n` +
@@ -163,6 +163,6 @@ export class Plugins {
         `Run: ${chalk.cyan('bit plugins --patterns')} to see all available plugin patterns.`
       );
     }
-    return null;
+    return undefined;
   }
 }
