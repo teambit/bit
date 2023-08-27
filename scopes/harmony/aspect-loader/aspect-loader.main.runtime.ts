@@ -4,7 +4,7 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { BitId } from '@teambit/legacy-bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { GLOBAL_SCOPE, DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
 import type { LoggerMain } from '@teambit/logger';
@@ -24,6 +24,7 @@ import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from './
 import { CannotLoadExtension } from './exceptions';
 import { getAspectDef } from './core-aspects';
 import { Plugins } from './plugins';
+import { PluginsCmd } from './aspect-loader.cmd';
 
 export type PluginDefinitionSlot = SlotRegistry<PluginDefinition[]>;
 
@@ -120,7 +121,8 @@ export class AspectLoaderMain {
     private harmony: Harmony,
     private onAspectLoadErrorSlot: OnAspectLoadErrorSlot,
     private onLoadRequireableExtensionSlot: OnLoadRequireableExtensionSlot,
-    private pluginSlot: PluginDefinitionSlot
+    private pluginSlot: PluginDefinitionSlot,
+    private cli: CLIMain
   ) {}
 
   private getCompiler(component: Component) {
@@ -481,7 +483,15 @@ export class AspectLoaderMain {
     return updatedManifest;
   }
 
+  getPluginDefsPatterns() {
+    const patternsSet = new Set();
+    this.pluginSlot.values().flatMap((val) => val.map((def) => patternsSet.add(def.pattern)));
+    const uniquePatterns = [...patternsSet];
+    return uniquePatterns;
+  }
+
   getPluginDefs() {
+    this.getPluginDefsPatterns();
     return flatten(this.pluginSlot.values());
   }
 
@@ -502,12 +512,12 @@ export class AspectLoaderMain {
 
   getPluginFiles(component: Component, componentPath: string): string[] {
     const defs = this.getPluginDefs();
-    return Plugins.files(component, defs, this.pluginFileResolver.call(this, component, componentPath));
+    return Plugins.files(component, defs, this.logger, this.pluginFileResolver.call(this, component, componentPath));
   }
 
   hasPluginFiles(component: Component): boolean {
     const defs = this.getPluginDefs();
-    const files = Plugins.files(component, defs);
+    const files = Plugins.files(component, defs, this.logger);
     return !isEmpty(files);
   }
 
@@ -807,9 +817,8 @@ export class AspectLoaderMain {
     const files = readdirSync(join(dirPath, 'dist'));
     return files.find((path) => path.includes(`.aspect.js`));
   }
-
   static runtime = MainRuntime;
-  static dependencies = [LoggerAspect, EnvsAspect];
+  static dependencies = [LoggerAspect, EnvsAspect, CLIAspect];
   static slots = [
     Slot.withType<OnAspectLoadError>(),
     Slot.withType<OnLoadRequireableExtension>(),
@@ -817,7 +826,7 @@ export class AspectLoaderMain {
   ];
 
   static async provider(
-    [loggerExt, envs]: [LoggerMain, EnvsMain],
+    [loggerExt, envs, cli]: [LoggerMain, EnvsMain, CLIMain],
     config,
     [onAspectLoadErrorSlot, onLoadRequireableExtensionSlot, pluginSlot]: [
       OnAspectLoadErrorSlot,
@@ -825,7 +834,7 @@ export class AspectLoaderMain {
       PluginDefinitionSlot
     ],
     harmony: Harmony
-  ) {
+  ): Promise<AspectLoaderMain> {
     const logger = loggerExt.createLogger(AspectLoaderAspect.id);
     const aspectLoader = new AspectLoaderMain(
       logger,
@@ -833,11 +842,12 @@ export class AspectLoaderMain {
       harmony,
       onAspectLoadErrorSlot,
       onLoadRequireableExtensionSlot,
-      pluginSlot
+      pluginSlot,
+      cli
     );
-
+    const pluginsCmd = new PluginsCmd(aspectLoader);
+    cli.register(pluginsCmd);
     aspectLoader.registerPlugins([envs.getEnvPlugin()]);
-
     return aspectLoader;
   }
 }

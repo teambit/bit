@@ -566,7 +566,7 @@ export class EnvsMain {
           // Do not allow a non existing env
           this.printWarningIfFirstTime(
             matchedEntry.id.toString(),
-            `environment with ID: ${matchedEntry.id.toString()} configured on component ${component.id.toString()} was not loaded (run "bit install")`
+            `environment with ID: ${matchedEntry.id.toString()} configured on component ${component.id.toString()} was not loaded`
           );
         }
       }

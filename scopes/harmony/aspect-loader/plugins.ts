@@ -1,3 +1,5 @@
+import path from 'path';
+import chalk from 'chalk';
 import { Component } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { Aspect } from '@teambit/harmony';
@@ -21,6 +23,7 @@ export class Plugins {
   //     return plugin.def.dependencies;
   //   });
   // }
+  private static checkedComponents: Set<string> = new Set();
 
   getByRuntime(runtime: string) {
     return this.plugins.filter((plugin) => {
@@ -98,12 +101,14 @@ export class Plugins {
     triggerOnAspectLoadError: OnAspectLoadErrorHandler,
     logger: Logger,
     resolvePath?: (path: string) => string
-  ) {
+  ): Plugins {
     const plugins = defs.flatMap((pluginDef) => {
-      const files =
-        typeof pluginDef.pattern === 'string'
-          ? component.filesystem.byGlob([pluginDef.pattern])
-          : component.filesystem.byRegex(pluginDef.pattern);
+      const files = this.getFileMatches(component, pluginDef);
+
+      if (files.length === 0 && !Plugins.checkedComponents.has(component.id.toString())) {
+        logger.consoleWarning(this.constructWarningMessage(component));
+        Plugins.checkedComponents.add(component.id.toString());
+      }
 
       return files.map((file) => {
         return new Plugin(pluginDef, resolvePath ? resolvePath(file.relative) : file.path);
@@ -116,17 +121,48 @@ export class Plugins {
   /**
    * Get the plugin files from the component.
    */
-  static files(component: Component, defs: PluginDefinition[], resolvePath?: (path: string) => string): string[] {
+
+  static files(
+    component: Component,
+    defs: PluginDefinition[],
+    logger: Logger,
+    resolvePath?: (path: string) => string
+  ): string[] {
     const files = defs.flatMap((pluginDef) => {
-      const matches =
-        typeof pluginDef.pattern === 'string'
-          ? component.filesystem.byGlob([pluginDef.pattern])
-          : component.filesystem.byRegex(pluginDef.pattern);
+      const matches = this.getFileMatches(component, pluginDef);
+
+      const warningMessage = this.constructWarningMessage(component);
+      if (matches.length === 0 && warningMessage && !Plugins.checkedComponents.has(component.id.toString())) {
+        logger.consoleWarning(warningMessage);
+        Plugins.checkedComponents.add(component.id.toString());
+      }
 
       return matches.map((file) => {
         return resolvePath ? resolvePath(file.relative) : file.path;
       });
     });
     return files;
+  }
+
+  private static getFileMatches(component: Component, pluginDef: PluginDefinition): any[] {
+    return typeof pluginDef.pattern === 'string'
+      ? component.filesystem.byGlob([pluginDef.pattern])
+      : component.filesystem.byRegex(pluginDef.pattern);
+  }
+
+  private static isImportedComponent(component: Component): boolean {
+    return path.isAbsolute(component.filesystem.files[0]?.path || '');
+  }
+
+  private static constructWarningMessage(component: Component): string | null {
+    if (this.isImportedComponent(component)) {
+      return (
+        `env with id: ${chalk.blue(component.id.toString())} could not be loaded.\n` +
+        'Ensure the env has a plugin file with the correct file pattern.' +
+        `\nExample: ${chalk.cyan('*.bit-env.*')}\n` +
+        `Run: ${chalk.cyan('bit plugins --patterns')} to see all available plugin patterns.`
+      );
+    }
+    return null;
   }
 }
