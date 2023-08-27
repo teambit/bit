@@ -800,7 +800,6 @@ export class AspectLoaderMain {
 
   public async resolveLocalAspects(ids: string[], runtime?: string): Promise<AspectDefinition[]> {
     const dirs = this.parseLocalAspect(ids);
-
     return dirs.map((dir) => {
       const srcRuntimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
       const srcAspectFilePath = runtime ? this.findAspectFile(dir) : undefined;

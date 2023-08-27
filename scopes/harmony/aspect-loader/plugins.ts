@@ -1,13 +1,11 @@
 import path from 'path';
-import chalk from 'chalk';
 import { Component } from '@teambit/component';
-import { Logger } from '@teambit/logger';
 import { Aspect } from '@teambit/harmony';
+import { Logger } from '@teambit/logger';
+import chalk from 'chalk';
 import { PluginDefinition } from './plugin-definition';
 import { Plugin } from './plugin';
 import { OnAspectLoadErrorHandler } from './aspect-loader.main.runtime';
-
-export type PluginMap = { [filePath: string]: PluginDefinition };
 
 export class Plugins {
   constructor(
@@ -17,22 +15,17 @@ export class Plugins {
     private logger: Logger
   ) {}
 
-  // computeDependencies(runtime: string): Aspect[] {
-  //   const inRuntime = this.getByRuntime(runtime);
-  //   return inRuntime.flatMap((plugin) => {
-  //     return plugin.def.dependencies;
-  //   });
-  // }
-  private static checkedComponents: Set<string> = new Set();
+  private static pluginCache: Map<string, Plugin[]> = new Map();
+  private static nonPluginComponentsCache: Set<string> = new Set();
 
   getByRuntime(runtime: string) {
     return this.plugins.filter((plugin) => {
-      return plugin.supportsRuntime(runtime);
+      return plugin?.supportsRuntime(runtime);
     });
   }
 
   async load(runtime: string) {
-    const plugins = this.getByRuntime(runtime);
+    const plugins = this?.getByRuntime(runtime);
     const aspect = Aspect.create({
       id: this.component.id.toString(),
     });
@@ -44,12 +37,9 @@ export class Plugins {
             return this.registerPluginWithTryCatch(plugin, aspect);
           })
         );
-        // Return an empty object so haromny will have something in the extension instance
-        // otherwise it will throw an error when trying to access the extension instance (harmony.get)
         return {};
       },
       runtime,
-      // dependencies: this.computeDependencies(runtime)
       dependencies: [],
     });
 
@@ -57,37 +47,26 @@ export class Plugins {
   }
 
   async registerPluginWithTryCatch(plugin: Plugin, aspect: Aspect) {
+    let isPluginLoadedSuccessfully = false;
+
     try {
-      return plugin.register(aspect);
+      plugin.register(aspect);
+      isPluginLoadedSuccessfully = true;
     } catch (firstErr: any) {
-      this.logger.warn(
-        `failed loading plugin with pattern "${
-          plugin.def.pattern
-        }", in component ${this.component.id.toString()}, will try to fix and reload`,
-        firstErr
-      );
       const isFixed = await this.triggerOnAspectLoadError(firstErr, this.component);
-      let errAfterReLoad;
       if (isFixed) {
-        this.logger.info(
-          `the loading issue might be fixed now, re-loading plugin with pattern "${
-            plugin.def.pattern
-          }", in component ${this.component.id.toString()}`
-        );
         try {
-          return plugin.register(aspect);
+          plugin.register(aspect);
+          isPluginLoadedSuccessfully = true;
         } catch (err: any) {
-          this.logger.warn(
-            `re-load of the plugin with pattern "${
-              plugin.def.pattern
-            }", in component ${this.component.id.toString()} failed as well`,
-            err
-          );
-          errAfterReLoad = err;
+          this.logger.warn(`Error: ${err} while loading plugin file`);
         }
       }
-      const error = errAfterReLoad || firstErr;
-      throw error;
+    }
+
+    if (!isPluginLoadedSuccessfully) {
+      this.logger.error('Plugin loading failed after all attempts.');
+      throw new Error('Plugin loading failed after all attempts.');
     }
   }
 
@@ -102,25 +81,45 @@ export class Plugins {
     logger: Logger,
     resolvePath?: (path: string) => string
   ): Plugins {
-    const plugins = defs.flatMap((pluginDef) => {
-      const files = this.getFileMatches(component, pluginDef);
+    const componentId = component.id.toString();
 
-      if (files.length === 0 && !Plugins.checkedComponents.has(component.id.toString())) {
-        logger.consoleWarning(this.constructNoPluginFileWarningMessage(component));
-        Plugins.checkedComponents.add(component.id.toString());
+    if (this.nonPluginComponentsCache.has(componentId)) {
+      return new Plugins(component, [], triggerOnAspectLoadError, logger);
+    }
+
+    const plugins = defs.flatMap((pluginDef) => {
+      const cachedPlugins = Plugins.pluginCache.get(pluginDef.pattern.toString());
+      if (cachedPlugins) {
+        return cachedPlugins;
       }
 
-      return files.map((file) => {
-        return new Plugin(pluginDef, resolvePath ? resolvePath(file.relative) : file.path);
-      });
+      const files = Plugins.getFileMatches(component, pluginDef);
+      if (files.length > 0) {
+        const loadedPlugins = files.map((file) => {
+          let resolvedPath = file.path;
+          if (resolvePath) {
+            resolvedPath = resolvePath(file.relative);
+          }
+          if (component.filesystem.files.some((f) => f.relative === '.bit-capsule-ready')) {
+            resolvedPath = path.join(resolvedPath, 'dist');
+          }
+          return new Plugin(pluginDef, resolvedPath);
+        });
+        Plugins.pluginCache.set(pluginDef.pattern.toString(), loadedPlugins);
+        return loadedPlugins;
+      }
+
+      return [];
     });
+
+    if (!plugins.length) {
+      this.nonPluginComponentsCache.add(componentId);
+      const warningMessage = this.constructNoPluginFileWarningMessage(component);
+      logger.consoleWarning(warningMessage);
+    }
 
     return new Plugins(component, plugins, triggerOnAspectLoadError, logger);
   }
-
-  /**
-   * Get the plugin files from the component.
-   */
 
   static files(
     component: Component,
@@ -128,20 +127,10 @@ export class Plugins {
     logger: Logger,
     resolvePath?: (path: string) => string
   ): string[] {
-    const files = defs.flatMap((pluginDef) => {
+    return defs.flatMap((pluginDef) => {
       const matches = this.getFileMatches(component, pluginDef);
-
-      const warningMessage = this.constructNoPluginFileWarningMessage(component);
-      if (matches.length === 0 && warningMessage && !Plugins.checkedComponents.has(component.id.toString())) {
-        logger.consoleWarning(warningMessage);
-        Plugins.checkedComponents.add(component.id.toString());
-      }
-
-      return matches.map((file) => {
-        return resolvePath ? resolvePath(file.relative) : file.path;
-      });
+      return matches.map((file) => (resolvePath ? resolvePath(file.relative) : file.path));
     });
-    return files;
   }
 
   private static getFileMatches(component: Component, pluginDef: PluginDefinition): any[] {
@@ -150,17 +139,10 @@ export class Plugins {
       : component.filesystem.byRegex(pluginDef.pattern);
   }
 
-  private static isImportedComponent(component: Component): boolean {
-    return path.isAbsolute(component.filesystem.files[0]?.path || '');
-  }
-
-  private static constructNoPluginFileWarningMessage(component: Component): string | undefined {
-    if (this.isImportedComponent(component)) {
-      return `env with id: ${chalk.blue(component.id.toString())} could not be loaded.
+  private static constructNoPluginFileWarningMessage(component: Component): string {
+    return `plugin file from env with id: ${chalk.blue(component.id.toString())} could not be loaded.
 Ensure the env has a plugin file with the correct file pattern.
 Example: ${chalk.cyan('*.bit-env.*')}
 Run: ${chalk.cyan('bit plugins --patterns')} to see all available plugin patterns.`;
-    }
-    return undefined;
   }
 }
