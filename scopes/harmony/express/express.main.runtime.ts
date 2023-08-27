@@ -94,6 +94,13 @@ export class ExpressMain {
     });
     if (!options?.disableBodyParser) this.bodyParser(app);
 
+    const middlewaresSlot = this.middlewareSlot.values().flat();
+    middlewaresSlot.forEach(({ route, middleware }) => {
+      if (!route) app.use(middleware);
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      if (route) app.use(route, middleware);
+    });
+
     this.middlewareSlot
       .toArray()
       .flatMap(([, middlewares]) =>

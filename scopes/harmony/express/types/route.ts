@@ -5,7 +5,7 @@ import { Response } from './response';
 /**
  * define express Middleware
  */
-export type Middleware = (req: Request, res: Response, next: NextFunction) => Promise<any>;
+export type Middleware = (req: Request, res: Response, next: NextFunction) => void | Promise<any>;
 
 export enum Verb {
   WRITE = 'write',
