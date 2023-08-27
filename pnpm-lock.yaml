@@ -17770,9 +17770,15 @@ importers:
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
       moment:
         specifier: 2.29.4
         version: 2.29.4
+      p-map:
+        specifier: 4.0.0
+        version: 4.0.0
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -17789,6 +17795,9 @@ importers:
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
+      '@types/lodash':
+        specifier: 4.14.165
+        version: 4.14.165
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -40251,7 +40260,7 @@ packages:
     dev: false
 
   /@teambit/evangelist.input.checkbox.indicator@1.0.7(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-NYg/ZeFXH2J0ujDD82H5Bl1vEIk=, tarball: https://node-registry.bit.cloud/@teambit/evangelist.input.checkbox.indicator/-/@teambit-evangelist.input.checkbox.indicator-1.0.7.tgz}
+    resolution: {integrity: sha1-NYg/ZeFXH2J0ujDD82H5Bl1vEIk=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -64410,7 +64419,9 @@ packages:
       chalk: 2.4.2
       cli-table: 0.3.6
       core-js: 3.13.0
+      lodash: 4.17.21
       moment: 2.29.4
+      p-map: 4.0.0
       p-map-series: 2.1.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
