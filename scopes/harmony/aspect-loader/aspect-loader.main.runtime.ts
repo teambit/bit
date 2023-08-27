@@ -491,7 +491,6 @@ export class AspectLoaderMain {
   }
 
   getPluginDefs() {
-    this.getPluginDefsPatterns();
     return flatten(this.pluginSlot.values());
   }
 

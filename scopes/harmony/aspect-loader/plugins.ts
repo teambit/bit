@@ -106,7 +106,7 @@ export class Plugins {
       const files = this.getFileMatches(component, pluginDef);
 
       if (files.length === 0 && !Plugins.checkedComponents.has(component.id.toString())) {
-        logger.consoleWarning(this.constructWarningMessage(component));
+        logger.consoleWarning(this.constructNoPluginFileWarningMessage(component));
         Plugins.checkedComponents.add(component.id.toString());
       }
 
@@ -131,7 +131,7 @@ export class Plugins {
     const files = defs.flatMap((pluginDef) => {
       const matches = this.getFileMatches(component, pluginDef);
 
-      const warningMessage = this.constructWarningMessage(component);
+      const warningMessage = this.constructNoPluginFileWarningMessage(component);
       if (matches.length === 0 && warningMessage && !Plugins.checkedComponents.has(component.id.toString())) {
         logger.consoleWarning(warningMessage);
         Plugins.checkedComponents.add(component.id.toString());
@@ -154,14 +154,12 @@ export class Plugins {
     return path.isAbsolute(component.filesystem.files[0]?.path || '');
   }
 
-  private static constructWarningMessage(component: Component): string | undefined {
+  private static constructNoPluginFileWarningMessage(component: Component): string | undefined {
     if (this.isImportedComponent(component)) {
-      return (
-        `env with id: ${chalk.blue(component.id.toString())} could not be loaded.\n` +
-        'Ensure the env has a plugin file with the correct file pattern.' +
-        `\nExample: ${chalk.cyan('*.bit-env.*')}\n` +
-        `Run: ${chalk.cyan('bit plugins --patterns')} to see all available plugin patterns.`
-      );
+      return `env with id: ${chalk.blue(component.id.toString())} could not be loaded.
+Ensure the env has a plugin file with the correct file pattern.
+Example: ${chalk.cyan('*.bit-env.*')}
+Run: ${chalk.cyan('bit plugins --patterns')} to see all available plugin patterns.`;
     }
     return undefined;
   }
