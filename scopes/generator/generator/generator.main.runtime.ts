@@ -19,7 +19,7 @@ import { compact } from 'lodash';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
-import { CreateCmd, CreateOptions } from './create.cmd';
+import { CreateCmd } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
 import { generatorSchema } from './generator.graphql';
 import { ComponentGenerator, GenerateResult, OnComponentCreateFn } from './component-generator';
@@ -287,7 +287,7 @@ export class GeneratorMain {
   async generateComponentTemplate(
     componentNames: string[],
     templateName: string,
-    options: CreateOptions
+    options: CreateCmdOptions
   ): Promise<GenerateResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     await this.loadAspects();

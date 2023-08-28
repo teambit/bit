@@ -18,7 +18,7 @@ import { ComponentID } from '@teambit/component-id';
 import GitAspect, { GitMain } from '@teambit/git';
 import { InstallAspect, InstallMain } from '@teambit/install';
 import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
-
+// import { ComponentGenerator } from './component-generator';
 import { WorkspaceTemplate, WorkspaceContext } from './workspace-template';
 import { NewOptions } from './new.cmd';
 import { GeneratorAspect } from './generator.aspect';
@@ -35,6 +35,7 @@ export class WorkspaceGenerator {
   private forking: ForkingMain;
   private git: GitMain;
   private wsConfigFiles: WorkspaceConfigFilesMain;
+  // private componentGenerator?: ComponentGenerator;
 
   constructor(
     private workspaceName: string,
@@ -142,6 +143,16 @@ export class WorkspaceGenerator {
     this.git = this.harmony.get<GitMain>(GitAspect.id);
     this.wsConfigFiles = this.harmony.get<WorkspaceConfigFilesMain>(WorkspaceConfigFilesAspect.id);
   }
+
+  // WIP
+  // private async createComponentsFromRemote() {
+  //   if (this.options.empty || !this.template.create) return
+  //   const workspaceContext = this.getWorkspaceContext();
+  //   const componentsToCreate = this.template.create(workspaceContext)
+  //   await pMapSeries(componentsToCreate, async (componentToCreate) => {
+  //     await ComponentGenerator.generate(componentToCreate);
+  //   });
+  // }
 
   private async forkComponentsFromRemote() {
     if (this.options.empty) return;

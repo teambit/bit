@@ -48,13 +48,6 @@ export interface BaseComponentTemplateOptions {
    * scope of the component.
    */
   scope?: string;
-}
-
-/**
- * ComponentTemplateOptions builds upon BaseComponentTemplateOptions and adds
- * properties related to component initialization and configuration.
- */
-export interface ComponentTemplateOptions extends BaseComponentTemplateOptions {
   /**
    * namespace of the component.
    */
