@@ -689,6 +689,20 @@ describe('merge lanes', function () {
         });
       });
     });
+    describe('switching to main and checking out to head', () => {
+      before(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
+        helper.scopeHelper.getClonedLocalScope(afterLaneExport);
+        helper.command.switchLocalLane('main', '-x');
+        helper.command.checkoutHead('comp1', '-x');
+      });
+      it('should make the component available and checkout to 0.0.1', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
+        expect(list[0].localVersion).to.equal('0.0.1');
+        expect(list[0].currentVersion).to.equal('0.0.1');
+      });
+    });
     describe('bit lane merge after soft-removed the unrelated component', () => {
       before(() => {
         helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
