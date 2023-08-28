@@ -1,37 +1,59 @@
+import fs from 'fs-extra';
+import path from 'path';
+import ssri from 'ssri';
 import _ from 'lodash';
+import { pack } from '@pnpm/plugin-commands-publishing';
 import { ComponentFactory } from '@teambit/component';
 import { ComponentResult, ArtifactDefinition } from '@teambit/builder';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
+import { isSnap } from '@teambit/component-version';
 import { ScopeMain } from '@teambit/scope';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
-import { Packer as LegacyPacker, PackWriteOptions, PackOptions } from '@teambit/legacy/dist/pack';
+import { checksumFile } from '@teambit/legacy/dist/utils';
 import { Logger } from '@teambit/logger';
 import pMap from 'p-map';
+import isRelative from 'is-relative-path';
 
 // @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
-
-export { PackOptions };
 
 export type PackResult = Omit<ComponentResult, 'component'>;
 export type PackResultWithId = PackResult & {
   id: string;
 };
 
-const DEFAULT_TAR_DIR_IN_CAPSULE = 'package-tar';
+export const DEFAULT_TAR_DIR_IN_CAPSULE = 'package-tar';
 const PACK_CONCURRENCY = 10;
 export const TAR_FILE_ARTIFACT_NAME = 'package tar file';
 
+export type PackResultMetadata = {
+  pkgJson: Record<any, string>;
+  tarPath: string;
+  tarName: string;
+  checksum?: string;
+  integrity?: string;
+};
+
+export type PackWriteOptions = {
+  outDir?: string;
+  override?: boolean;
+};
+
+export type PackOptions = {
+  writeOptions: PackWriteOptions;
+  prefix?: boolean;
+  keep?: boolean;
+  loadScopeFromCache?: boolean;
+  dryRun?: boolean;
+};
+
 export class Packer {
-  legacyPacker: LegacyPacker;
   constructor(
     private isolator: IsolatorMain,
     private logger: Logger,
     private host: ComponentFactory,
     private scope?: ScopeMain
-  ) {
-    this.legacyPacker = new LegacyPacker(this.logger);
-  }
+  ) {}
 
   async packComponent(
     componentId: string,
@@ -77,7 +99,7 @@ export class Packer {
     const concreteWriteOpts = writeOptions;
     // Set the package-tar as out dir to easily read the tar later
     concreteWriteOpts.outDir = concreteWriteOpts.outDir ?? DEFAULT_TAR_DIR_IN_CAPSULE;
-    const packResult = await this.legacyPacker.npmPack(
+    const packResult = await this.pnpmPack(
       capsule.path,
       concreteWriteOpts.outDir || capsule.path,
       concreteWriteOpts.override,
@@ -101,6 +123,60 @@ export class Packer {
     };
   }
 
+  async pnpmPack(cwd: string, outputPath: string, override = false, dryRun = false): Promise<PackResult> {
+    const startTime = Date.now();
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    try {
+      const pkgJson = readPackageJson(cwd);
+      if (isSnap(pkgJson.version)) {
+        warnings.push(`"package.json at ${cwd}" contain a snap version which is not a valid semver, can't pack it`);
+        return { warnings, startTime, endTime: Date.now() };
+      }
+      const tgzName = await pack.handler({
+        argv: { original: [] },
+        dir: cwd,
+        rawConfig: {},
+      });
+      this.logger.debug(`successfully packed tarball at ${cwd}`);
+      const tgzOriginPath = path.join(cwd, tgzName);
+      let tarPath = path.join(outputPath, tgzName);
+      if (isRelative(tarPath)) {
+        tarPath = path.join(cwd, tarPath);
+      }
+      const metadata: PackResultMetadata = {
+        pkgJson,
+        tarPath,
+        tarName: tgzName,
+      };
+      if (tgzOriginPath !== tarPath && fs.pathExistsSync(tarPath)) {
+        if (override) {
+          warnings.push(`"${tarPath}" already exists, override it`);
+          fs.removeSync(tarPath);
+        } else {
+          errors.push(`"${tarPath}" already exists, use --override flag to override`);
+          return { metadata, errors, startTime, endTime: Date.now() };
+        }
+      }
+      if (tgzOriginPath !== tarPath && !dryRun) {
+        await fs.move(tgzOriginPath, tarPath);
+      }
+      if (!dryRun) {
+        const checksum = await checksumFile(tarPath);
+        metadata.checksum = checksum;
+        metadata.integrity = await calculateFileIntegrity(tarPath);
+      }
+      return { metadata, warnings, errors, startTime, endTime: Date.now() };
+    } catch (err: any) {
+      const errorMsg = `failed packing at ${cwd}`;
+      this.logger.error(`${errorMsg}`, err);
+      if (err.stderr) this.logger.error(`${err.stderr}`);
+      errors.push(`${errorMsg}\n${err.stderr || err.message}`);
+      return { errors, startTime, endTime: Date.now() };
+    }
+  }
+
   getArtifactDefInCapsule(outDir?: string): ArtifactDefinition {
     const rootDir = outDir || DEFAULT_TAR_DIR_IN_CAPSULE;
     const def: ArtifactDefinition = {
@@ -118,4 +194,13 @@ export class Packer {
     if (!capsule) throw new Error(`capsule not found for ${componentId}`);
     return capsule;
   }
+}
+
+function readPackageJson(dir: string) {
+  const pkgJson = fs.readJsonSync(path.join(dir, 'package.json'));
+  return pkgJson;
+}
+
+async function calculateFileIntegrity(filePath: string): Promise<string> {
+  return ssri.fromData(await fs.readFile(filePath), { algorithms: ['sha512'] }).toString();
 }

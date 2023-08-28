@@ -178,7 +178,7 @@ export const getCloudDomain = (): string => {
   return resolvedCloudDomain;
 };
 
-export const BASE_COMMUNITY_DOMAIN = 'bit.dev';
+export const BASE_COMMUNITY_DOMAIN = 'https://bit.dev';
 
 export const PREVIOUSLY_BASE_WEB_DOMAIN = 'bitsrc.io';
 
@@ -195,6 +195,8 @@ export const getSymphonyUrl = (): string => {
 
 export const CFG_CLOUD_DOMAIN_LOGIN_KEY = 'cloud_domain_login';
 
+export const CFG_WATCH_USE_POLLING = 'watch_use_polling';
+
 export const getLoginUrl = (domain?: string): string => {
   const finalDomain = domain || getSync(CFG_CLOUD_DOMAIN_LOGIN_KEY) || getCloudDomain();
   const url = `https://${finalDomain}/bit-login`;
@@ -203,7 +205,7 @@ export const getLoginUrl = (domain?: string): string => {
 
 export const SYMPHONY_GRAPHQL = `https://${getSymphonyUrl()}/graphql`;
 
-export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/docs`;
+export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/`;
 
 export const BASE_LEGACY_DOCS_DOMAIN = `legacy-docs.${BASE_COMMUNITY_DOMAIN}/docs`;
 

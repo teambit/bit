@@ -17,7 +17,7 @@ type RunOptions = {
 export class RunCmd implements Command {
   name = 'run <app-name>';
   description = "locally run an app component (independent of bit's dev server)";
-  helpUrl = 'docs/apps/apps-overview';
+  helpUrl = 'reference/apps/apps-overview/';
   arguments = [
     {
       name: 'app-name',

@@ -22,7 +22,7 @@ this command marks the components as deleted, and after snap/tag and export they
     },
   ];
   group = 'collaborate';
-  helpUrl = 'docs/components/removing-components';
+  helpUrl = 'reference/components/removing-components';
   skipWorkspace = true;
   alias = '';
   options = [

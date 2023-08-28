@@ -411,7 +411,7 @@ export class LaneCmd implements Command {
   group = 'collaborate';
   remoteOp = true;
   skipWorkspace = true;
-  helpUrl = 'docs/components/lanes';
+  helpUrl = 'reference/components/lanes';
   commands: Command[] = [];
 
   constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain) {}

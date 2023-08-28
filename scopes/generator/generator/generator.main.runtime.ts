@@ -5,6 +5,7 @@ import { EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config';
+import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 
 import ComponentAspect, { ComponentID } from '@teambit/component';
 import type { ComponentMain, Component } from '@teambit/component';
@@ -23,7 +24,7 @@ import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
 import { generatorSchema } from './generator.graphql';
-import { ComponentGenerator, GenerateResult } from './component-generator';
+import { ComponentGenerator, GenerateResult, OnComponentCreateFn } from './component-generator';
 import { WorkspaceGenerator } from './workspace-generator';
 import { WorkspaceTemplate } from './workspace-template';
 import { NewCmd, NewOptions } from './new.cmd';
@@ -35,6 +36,7 @@ import { GeneratorService } from './generator.service';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
+export type OnComponentCreateSlot = SlotRegistry<OnComponentCreateFn>;
 
 export type TemplateDescriptor = {
   aspectId: string;
@@ -74,6 +76,7 @@ export class GeneratorMain {
   constructor(
     private componentTemplateSlot: ComponentTemplateSlot,
     private workspaceTemplateSlot: WorkspaceTemplateSlot,
+    private onComponentCreateSlot: OnComponentCreateSlot,
     private config: GeneratorConfig,
     private workspace: Workspace,
     private envs: EnvsMain,
@@ -82,7 +85,8 @@ export class GeneratorMain {
     private componentAspect: ComponentMain,
     private tracker: TrackerMain,
     private logger: Logger,
-    private git: GitMain
+    private git: GitMain,
+    private wsConfigFiles: WorkspaceConfigFilesMain
   ) {}
 
   /**
@@ -98,6 +102,11 @@ export class GeneratorMain {
    */
   registerWorkspaceTemplate(templates: WorkspaceTemplate[]) {
     this.workspaceTemplateSlot.register(templates);
+    return this;
+  }
+
+  registerOnComponentCreate(fn: OnComponentCreateFn) {
+    this.onComponentCreateSlot.register(fn);
     return this;
   }
 
@@ -303,7 +312,9 @@ export class GeneratorMain {
       this.envs,
       this.newComponentHelper,
       this.tracker,
+      this.wsConfigFiles,
       this.logger,
+      this.onComponentCreateSlot,
       templateWithId.id,
       templateWithId.envName ? ComponentID.fromString(templateWithId.id) : undefined
     );
@@ -465,7 +476,11 @@ export class GeneratorMain {
     this.aspectLoaded = true;
   }
 
-  static slots = [Slot.withType<ComponentTemplate[]>(), Slot.withType<WorkspaceTemplate[]>()];
+  static slots = [
+    Slot.withType<ComponentTemplate[]>(),
+    Slot.withType<WorkspaceTemplate[]>(),
+    Slot.withType<OnComponentCreateFn>(),
+  ];
 
   static dependencies = [
     WorkspaceAspect,
@@ -479,6 +494,7 @@ export class GeneratorMain {
     TrackerAspect,
     LoggerAspect,
     GitAspect,
+    WorkspaceConfigFilesAspect,
   ];
 
   static runtime = MainRuntime;
@@ -496,6 +512,7 @@ export class GeneratorMain {
       tracker,
       loggerMain,
       git,
+      wsConfigFiles,
     ]: [
       Workspace,
       CLIMain,
@@ -507,15 +524,21 @@ export class GeneratorMain {
       ComponentMain,
       TrackerMain,
       LoggerMain,
-      GitMain
+      GitMain,
+      WorkspaceConfigFilesMain
     ],
     config: GeneratorConfig,
-    [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
+    [componentTemplateSlot, workspaceTemplateSlot, onComponentCreateSlot]: [
+      ComponentTemplateSlot,
+      WorkspaceTemplateSlot,
+      OnComponentCreateSlot
+    ]
   ) {
     const logger = loggerMain.createLogger(GeneratorAspect.id);
     const generator = new GeneratorMain(
       componentTemplateSlot,
       workspaceTemplateSlot,
+      onComponentCreateSlot,
       config,
       workspace,
       envs,
@@ -524,7 +547,8 @@ export class GeneratorMain {
       componentAspect,
       tracker,
       logger,
-      git
+      git,
+      wsConfigFiles
     );
     const commands = [
       new CreateCmd(generator, community.getDocsDomain()),

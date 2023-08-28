@@ -713,6 +713,10 @@ export default class Version extends BitObject {
     }
   }
 
+  setUnrelated(externalHead: ExternalHead) {
+    this.unrelated = externalHead;
+  }
+
   addModifiedLog(log: Log) {
     this.modified.push(log);
   }

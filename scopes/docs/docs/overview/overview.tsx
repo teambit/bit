@@ -35,7 +35,7 @@ export type OverviewOptionsSlot = SlotRegistry<OverviewOptions>;
 export type OverviewProps = {
   titleBadges: TitleBadgeSlot;
   overviewOptions: OverviewOptionsSlot;
-  previewProps?: ComponentPreviewProps;
+  previewProps?: Partial<ComponentPreviewProps>;
 };
 
 export function Overview({ titleBadges, overviewOptions, previewProps }: OverviewProps) {
@@ -97,8 +97,6 @@ export function Overview({ titleBadges, overviewOptions, previewProps }: Overvie
         {/* {isLoading && <ReadmeSkeleton />} */}
         <ComponentPreview
           onLoad={onPreviewLoad}
-          component={component}
-          style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
           previewName="overview"
           pubsub={true}
           queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
@@ -106,6 +104,8 @@ export function Overview({ titleBadges, overviewOptions, previewProps }: Overvie
           fullContentHeight
           disableScroll={true}
           {...rest}
+          component={component}
+          style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
         />
         {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
         {component.preview?.skipIncludes && (

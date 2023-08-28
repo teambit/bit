@@ -121,15 +121,17 @@ export default async function componentsDiff(
   async function getComponentDiff(component: Component): Promise<DiffResults> {
     const diffResult = { id: component.id, hasDiff: false };
     if (!component.componentFromModel) {
-      // it's a new component. not modified. nothing to check.
+      // it's a new component. not modified. show all files as new.
+      const fsFiles = component.files;
+      // @ts-ignore version must be defined as the component.componentFromModel do exist
+      diffResult.filesDiff = await getFilesDiff([], fsFiles, component.id.version, component.id.version);
+      if (hasDiff(diffResult)) diffResult.hasDiff = true;
       return diffResult;
     }
     const modelFiles = component.componentFromModel.files;
     const fsFiles = component.files;
-    // $FlowFixMe version must be defined as the component.componentFromModel do exist
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore version must be defined as the component.componentFromModel do exist
     diffResult.filesDiff = await getFilesDiff(modelFiles, fsFiles, component.id.version, component.id.version);
-    // $FlowFixMe we made sure already that component.componentFromModel is defined
     await updateFieldsDiff(component.componentFromModel, component, diffResult, diffOpts);
 
     return diffResult;

@@ -15,8 +15,11 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ComponentID } from '@teambit/component-id';
+import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+
 import { ComponentTemplate, ComponentFile, ComponentConfig } from './component-template';
 import { CreateOptions } from './create.cmd';
+import { OnComponentCreateSlot } from './generator.main.runtime';
 
 export type GenerateResult = {
   id: ComponentID;
@@ -27,6 +30,8 @@ export type GenerateResult = {
   packageName: string;
 };
 
+export type OnComponentCreateFn = (generateResults: GenerateResult[]) => Promise<void>;
+
 export class ComponentGenerator {
   constructor(
     private workspace: Workspace,
@@ -36,7 +41,9 @@ export class ComponentGenerator {
     private envs: EnvsMain,
     private newComponentHelper: NewComponentHelperMain,
     private tracker: TrackerMain,
+    private wsConfigFiles: WorkspaceConfigFilesMain,
     private logger: Logger,
+    private onComponentCreateSlot: OnComponentCreateSlot,
     private aspectId: string,
     private envId?: ComponentID
   ) {}
@@ -45,7 +52,11 @@ export class ComponentGenerator {
     const dirsToDeleteIfFailed: string[] = [];
     const generateResults = await pMapSeries(this.componentIds, async (componentId) => {
       try {
-        const componentPath = this.newComponentHelper.getNewComponentPath(componentId, this.options.path);
+        const componentPath = this.newComponentHelper.getNewComponentPath(
+          componentId,
+          this.options.path,
+          this.componentIds.length
+        );
         if (fs.existsSync(path.join(this.workspace.path, componentPath))) {
           throw new BitError(`unable to create a component at "${componentPath}", this path already exist`);
         }
@@ -65,6 +76,17 @@ export class ComponentGenerator {
     await this.workspace.bitMap.write();
 
     const ids = generateResults.map((r) => r.id);
+    await this.tryLinkToNodeModules(ids);
+    await this.runOnComponentCreateHook(generateResults);
+    // We are running this after the runOnComponentCreateHook as it require
+    // the env to be installed to work properly, and the hook might install
+    // the env.
+    await this.tryWriteConfigFiles(ids);
+
+    return generateResults;
+  }
+
+  private async tryLinkToNodeModules(ids: ComponentID[]) {
     try {
       await linkToNodeModulesByIds(
         this.workspace,
@@ -75,8 +97,36 @@ export class ComponentGenerator {
         `failed linking the new components to node_modules, please run "bit link" manually. error: ${err.message}`
       );
     }
+  }
 
-    return generateResults;
+  private async runOnComponentCreateHook(generateResults: GenerateResult[]) {
+    const fns = this.onComponentCreateSlot.values();
+    if (!fns.length) return;
+    await Promise.all(fns.map((fn) => fn(generateResults)));
+  }
+
+  /**
+   * The function `tryWriteConfigFiles` attempts to write workspace config files, and if it fails, it logs an error
+   * message.
+   * @returns If the condition `!shouldWrite` is true, then nothing is being returned. Otherwise, if the `writeConfigFiles`
+   * function is successfully executed, nothing is being returned. If an error occurs during the execution of
+   * `writeConfigFiles`, an error message is being returned.
+   */
+  private async tryWriteConfigFiles(ids: ComponentID[]) {
+    try {
+      const shouldWrite = this.wsConfigFiles.isWorkspaceConfigWriteEnabled();
+      if (!shouldWrite) return;
+      ids.map((id) => this.workspace.clearComponentCache(id));
+      await this.wsConfigFiles.writeConfigFiles({
+        clean: true,
+        silent: true,
+        dedupe: true,
+      });
+    } catch (err: any) {
+      this.logger.consoleFailure(
+        `failed generating workspace config files, please run "bit ws-config write" manually. error: ${err.message}`
+      );
+    }
   }
 
   private async deleteGeneratedComponents(dirs: string[]) {

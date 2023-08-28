@@ -108,7 +108,7 @@ export class ComponentCompareMain {
     // no arguments
     if (!values.length) {
       const componentsList = new ComponentsList(consumer);
-      const bitIds = await componentsList.listModifiedComponents();
+      const bitIds = await componentsList.listTagPendingComponents();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return { bitIds };
     }
