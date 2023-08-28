@@ -1,6 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
 import { BASE_COMMUNITY_DOMAIN, BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
-import { HelloWorldStarter } from '@teambit/community.starters.hello-world';
+// import { HelloWorldStarter } from '@teambit/community.starters.hello-world';
 // import { } from '@teambit/community.starters.hello-world-angular';
 // import {} from '@learnbit-vue/hello-world.starters.hello-world';
 // import {} from '@teambit/community.starters.wiki';
@@ -16,7 +16,9 @@ export interface CommunityWorkspaceConfig {
 }
 
 export class CommunityMain {
-  constructor(private config: CommunityWorkspaceConfig, private generator: GeneratorMain) {}
+  constructor(
+    private config: CommunityWorkspaceConfig // private generator: GeneratorMain
+  ) {}
 
   getBaseDomain(): string {
     return this.config.communityDomain;
@@ -35,10 +37,10 @@ export class CommunityMain {
   };
 
   static async provider(_deps: [GeneratorMain], config: CommunityWorkspaceConfig) {
-    const [generator] = _deps;
-    const community = new CommunityMain(config, generator);
+    // const [generator] = _deps;
+    const community = new CommunityMain(config);
 
-    if (generator) generator.registerWorkspaceTemplate([HelloWorldStarter]);
+    // if (generator) generator.registerWorkspaceTemplate([HelloWorldStarter]);
 
     return community;
   }

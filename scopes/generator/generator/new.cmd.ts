@@ -1,9 +1,12 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { GeneratorMain } from './generator.main.runtime';
-import { WorkspaceOptions } from './workspace-template';
+import { BaseWorkspaceOptions } from './workspace-template';
 
-export type NewOptions = WorkspaceOptions<string, string>;
+/**
+ * NewOptions combines foundational properties with additional options for creating a workspace.
+ */
+export type NewOptions = BaseWorkspaceOptions;
 
 export class NewCmd implements Command {
   name = 'new <template-name> <workspace-name>';

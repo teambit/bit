@@ -1,9 +1,15 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { GeneratorMain } from './generator.main.runtime';
-import type { ComponentTemplateOptions } from './component-template';
+import type { BaseComponentTemplateOptions } from './component-template';
 
-export type CreateOptions = ComponentTemplateOptions<string> & { env: string; aspect: string };
+/**
+ * CreateOptions combines foundational properties with additional options for creating a component.
+ */
+export type CreateOptions = BaseComponentTemplateOptions & {
+  env: string;
+  aspect: string;
+};
 
 export class CreateCmd implements Command {
   name = 'create <template-name> <component-names...>';

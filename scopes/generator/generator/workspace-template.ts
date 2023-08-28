@@ -2,13 +2,9 @@ import type { Component } from '@teambit/component';
 import { ComponentConfig } from './component-template';
 
 /**
- * WorkspaceOptions describes the shared properties between command and context
- * related to workspace initialization and configuration.
- *
- * @template TAspect - Represents the data type for the aspect property.
- * @template TTemplate - Represents the data type for the template property.
+ * BaseWorkspaceOptions describes the foundational properties for workspaces.
  */
-export interface WorkspaceOptions<TAspect = string, TTemplate = string> {
+export interface BaseWorkspaceOptions {
   /**
    * The name of the workspace as provided by the user (e.g., `react-app`).
    * This is also used as the directory name for the workspace.
@@ -30,12 +26,13 @@ export interface WorkspaceOptions<TAspect = string, TTemplate = string> {
    * Represents the aspect in the context where a remote aspect is imported (often via the `--aspect` flag).
    * This is useful for obtaining the aspect-id and other related information.
    */
-  aspectComponent?: TAspect;
+  aspectComponent?: Component;
 
   /**
    * Represents the selected template to initialize or create the workspace.
    */
-  template: TTemplate;
+  template: WorkspaceTemplate;
+
   /**
    * Flag to check if Git repository generation should be skipped.
    */
@@ -48,7 +45,10 @@ export interface WorkspaceOptions<TAspect = string, TTemplate = string> {
   loadFrom?: string;
 }
 
-export type WorkspaceContext = Omit<WorkspaceOptions<Component, WorkspaceTemplate>, 'loadFrom'>;
+/**
+ * WorkspaceContext represents foundational properties for a workspace context.
+ */
+export type WorkspaceContext = BaseWorkspaceOptions;
 
 export interface WorkspaceFile {
   /**

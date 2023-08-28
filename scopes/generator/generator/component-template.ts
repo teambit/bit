@@ -1,12 +1,9 @@
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component';
 
 /**
- * ComponentContextOptions describes the shared properties between command and context
- * related to component initialization and configuration.
- *
- * @template TComponentID - Represents the data type for the component ID properties.
+ * BaseComponentTemplateOptions describes the foundational properties for components.
  */
-export interface ComponentTemplateOptions<TComponentID = ComponentID> {
+export interface BaseComponentTemplateOptions {
   /**
    * component-name as entered by the user, e.g. `use-date`.
    * without the scope and the namespace.
@@ -29,37 +26,45 @@ export interface ComponentTemplateOptions<TComponentID = ComponentID> {
    * component id.
    * the name is the name+namespace. the scope is the scope entered by --scope flag or the defaultScope
    */
-  componentId: TComponentID;
+  componentId: ComponentID;
 
   /**
    * aspect id of the aspect that register the template itself
    */
-  aspectId: TComponentID;
+  aspectId: ComponentID;
 
   /**
-   * env id of the env that register the template itself
-   * This will be usually identical to the aspectId
-   * but aspectId will always exist, while envId will be undefined if the template is not registered by an env
-   * so in case you want to use the envId, you should check if it exists first
-   * You can use this in case you want to only do something if the template was registered by an env
+   * env id of the env that register the template itself.
+   * This will be usually identical to the aspectId but aspectId will always exist,
+   * while envId will be undefined if the template is not registered by an env.
    */
-  envId?: TComponentID;
+  envId?: ComponentID;
 
-  /**
-   * namespace of the component.
-   */
-  namespace?: string;
-  /**
-   * scope of the component.
-   */
-  scope?: string;
   /**
    * path of the component.
    */
   path?: string;
+  /**
+   * scope of the component.
+   */
+  scope?: string;
 }
 
-export type ComponentContext = Omit<ComponentTemplateOptions, 'namespace' | 'scope'>;
+/**
+ * ComponentTemplateOptions builds upon BaseComponentTemplateOptions and adds
+ * properties related to component initialization and configuration.
+ */
+export interface ComponentTemplateOptions extends BaseComponentTemplateOptions {
+  /**
+   * namespace of the component.
+   */
+  namespace?: string;
+}
+
+/**
+ * ComponentContext represents foundational properties for a component context.
+ */
+export type ComponentContext = BaseComponentTemplateOptions;
 
 export interface ComponentFile {
   /**
