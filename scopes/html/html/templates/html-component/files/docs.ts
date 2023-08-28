@@ -21,7 +21,7 @@ A basic div that renders some text
 ${Name}("Some basic composition text");
 \`\`\`
 This outputs html as a string, which you can convert to a dom fragment, which can then be placed directly on the dom,
-using our helper function [RenderTemplate](https://bit.dev/teambit/html/modules/render-template)
+using our helper function [RenderTemplate](https://bit.cloud/teambit/html/modules/render-template)
 
 ### Using props to customize the text
 
