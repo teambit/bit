@@ -536,6 +536,7 @@ export class MergingMain {
       lane: otherLane || undefined,
       cache: true,
       includeVersionHistory: false,
+      reason: `importing the gap between the common-snap and the head of ${otherLane ? 'the other lane' : 'main'}`,
     });
 
     const compStatusNotNeedMerge = componentStatusBeforeMergeAttempt.filter(

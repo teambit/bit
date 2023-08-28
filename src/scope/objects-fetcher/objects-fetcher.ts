@@ -44,7 +44,8 @@ export class ObjectFetcher {
     private lane?: Lane,
     private context = {},
     private throwOnUnavailableScope = true,
-    private groupedHashes?: { [scopeName: string]: string[] }
+    private groupedHashes?: { [scopeName: string]: string[] },
+    private reason?: string // console the reason why the import is needed
   ) {}
 
   public async fetchFromRemoteAndWrite(): Promise<string[]> {
@@ -204,7 +205,7 @@ the remote scope "${scopeName}" was not found`);
     objectsQueue.getQueue().on('add', () => {
       objectsAdded += 1;
       if (objectsAdded % 100 === 0) {
-        loader.start(`Downloaded ${objectsAdded} objects`);
+        loader.start(`Downloaded ${objectsAdded} objects. ${this.reason || ''}`);
       }
     });
   }

@@ -238,6 +238,7 @@ export class CheckoutMain {
     try {
       await scopeComponentsImporter.importWithoutDeps(BitIds.fromArray(notExported || []).toVersionLatest(), {
         cache: false,
+        reason: 'making sure the new components are really new and are not out-of-sync',
       });
     } catch (err) {
       // don't stop the process. it's possible that the scope doesn't exist yet because these are new components

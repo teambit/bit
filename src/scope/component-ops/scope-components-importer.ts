@@ -101,6 +101,7 @@ export default class ScopeComponentsImporter {
     lane,
     ignoreMissingHead = false,
     preferDependencyGraph = false,
+    reason,
   }: {
     ids: BitIds;
     cache?: boolean;
@@ -110,6 +111,7 @@ export default class ScopeComponentsImporter {
     lane?: Lane; // if ids coming from a lane, add the lane object so we could fetch these ids from the lane's remote
     ignoreMissingHead?: boolean; // needed when fetching "main" objects when on a lane
     preferDependencyGraph?: boolean; // if an external is missing and the remote has it with the dependency graph, don't fetch all its dependencies
+    reason?: string; // reason why this import is needed
   }): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
     logger.debug(
@@ -340,6 +342,7 @@ export default class ScopeComponentsImporter {
       ignoreMissingHead = false,
       collectParents = false,
       fetchHeadIfLocalIsBehind = false,
+      reason,
     }: {
       /**
        * if cache is true and the component found locally, don't go to the remote
@@ -359,6 +362,10 @@ export default class ScopeComponentsImporter {
        * go to the remote, check what’s the head. if the local head is behind, then fetch it, otherwise, return nothing
        */
       fetchHeadIfLocalIsBehind?: boolean;
+      /**
+       * the reason why this import is needed (shown during the import)
+       */
+      reason?: string;
     }
   ): Promise<void> {
     const idsWithoutNils = compact(ids);

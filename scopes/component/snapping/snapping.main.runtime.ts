@@ -659,6 +659,7 @@ there are matching among unmodified components thought. consider using --unmodif
       ignoreMissingHead: true,
       includeVersionHistory: true,
       lane: lane || undefined,
+      reason: 'fetch latest with version-history to make sure there are no dependencies from another lane',
     });
     await pMapSeries(components, async (component) => {
       await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined, true);
