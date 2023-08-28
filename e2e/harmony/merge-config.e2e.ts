@@ -559,6 +559,15 @@ describe('merge config scenarios', function () {
               const status = helper.command.statusJson();
               expect(status.workspaceIssues).to.have.lengthOf(0);
             });
+            describe('snapping all', () => {
+              before(() => {
+                helper.command.snapAllComponentsWithoutBuild();
+              });
+              it('should delete the config-merge file although it has the Workspace section', () => {
+                const conflictFile = helper.general.getConfigMergePath();
+                expect(conflictFile).to.not.be.a.path();
+              });
+            });
           });
         });
         describe('when the dep is not in the workspace.jsonc', () => {
