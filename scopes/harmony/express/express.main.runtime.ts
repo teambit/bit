@@ -101,11 +101,6 @@ export class ExpressMain {
       if (route) app.use(route, middleware);
     });
 
-    this.middlewareSlot
-      .toArray()
-      .flatMap(([, middlewares]) =>
-        middlewares.flatMap((middlewareManifest) => app.use(middlewareManifest.middleware))
-      );
     sortedRoutes.forEach((routeInfo) => {
       const { method, path, middlewares, disableNamespace } = routeInfo;
       // TODO: @guy make sure to support single middleware here.
