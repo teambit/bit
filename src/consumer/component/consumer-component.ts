@@ -273,10 +273,10 @@ export default class Component {
   }
 
   /**
-   * whether the component is soft removed
+   * whether the component is deleted (soft removed)
    */
-  isRemoved() {
-    return this.extensions.findCoreExtension(Extensions.remove)?.config?.removed || this.removed;
+  isRemoved(): Boolean {
+    return Boolean(this.extensions.findCoreExtension(Extensions.remove)?.config?.removed || this.removed);
   }
 
   setRemoved() {

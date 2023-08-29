@@ -210,10 +210,21 @@ other:   ${otherLaneHead.toString()}`);
       // it is possible that it is diverged, in which case, still continue with the merge, and later on, the
       // merge-config will show a config conflict of the remove aspect.
       // 2. other is not ahead. in this case, just ignore this component, no point to merge it, we want it removed.
-      // 3. there are errors when calculating the divergeData, e.g. no snap in common. in such cases, we assume
-      // there are issues with this component, and is better not to merge it.
+      // 3. there are errors when calculating the divergeData, e.g. no snap in common.
+      // here we need to differentiate between two cases:
+      // 3.1. the "otherLane" is main. in this case, we probably noticed that our component by accident got created
+      // with the same name of an existing component on main and therefore we removed it. so we want to keep this
+      // component removed during merges and we don't care about merging it.
+      // 3.2. the "otherLane" is a lane. in this case, it's possible that although it was removed in this lane, it's
+      // needed and is used by other components of the other other lane, so in order for this merge to work
+      // (and not throw error about deps from other lane), it needs the option to merge (user can decide whether to
+      // exclude it or to use --resolve-unrelated)
       const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
-      if (divergeData.err || !divergeData.isTargetAhead()) {
+      const isTargetNotAhead = !divergeData.err && !divergeData.isTargetAhead();
+      const shouldIgnore = this.otherLane
+        ? isTargetNotAhead // options 3.2 above. if they're not related - don't ignore.
+        : isTargetNotAhead || divergeData.err; // it's main. options 3.1 above. even if they're not related - still ignore.
+      if (shouldIgnore) {
         return this.returnUnmerged(id, `component has been removed`, true);
       }
     }
@@ -303,7 +314,10 @@ other:   ${otherLaneHead.toString()}`);
     componentOnOther?: Version,
     divergeData?: SnapsDistance
   ): Promise<ComponentMergeStatusBeforeMergeAttempt> {
-    const { resolveUnrelated } = this.options || {};
+    let { resolveUnrelated } = this.options || {};
+    if (currentComponent.isRemoved()) {
+      resolveUnrelated = 'theirs';
+    }
     if (!resolveUnrelated) throw new Error(`handleNoCommonSnap expects resolveUnrelated to be set`);
     const consumer = this.workspace.consumer;
     const repo = consumer.scope.objects;
