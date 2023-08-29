@@ -36,12 +36,12 @@ export function useCodeCompare({ fileName }: useCodeCompareProps): useCodeCompar
   const { fileContent: downloadedCompareFileContent, loading: loadingDownloadedCompareFileContent } = useFileContent(
     compareId,
     fileName,
-    loadingFromContext || !!codeCompareDataForFile?.compareContent
+    componentCompareContext?.hidden || loadingFromContext || !!codeCompareDataForFile?.compareContent
   );
   const { fileContent: downloadedBaseFileContent, loading: loadingDownloadedBaseFileContent } = useFileContent(
     baseId,
     fileName,
-    loadingFromContext || !!codeCompareDataForFile?.baseContent
+    componentCompareContext?.hidden || loadingFromContext || !!codeCompareDataForFile?.baseContent
   );
   const loading =
     loadingFromContext ||

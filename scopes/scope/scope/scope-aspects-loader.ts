@@ -174,8 +174,8 @@ needed-for: ${neededFor || '<unknown>'}`);
     if (!componentIds || !componentIds.length) return [];
     await this.scope.import(componentIds, {
       reFetchUnBuiltVersion: false,
-      preferDependencyGraph: true,
       lane,
+      reason: 'for loading aspects from the scope',
     });
     const components = await this.scope.getMany(componentIds);
 
