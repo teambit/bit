@@ -701,8 +701,8 @@ describe('merge lanes', function () {
         expect(list).to.have.lengthOf(1);
         // it can be 0.0.1 or 0.0.2 depends when the ".only" is, but it doesn't matter.
         // all we want here is to make sure it's a tag, not a snap.
-        expect(list[0].localVersion).to.startsWith('0.0');
-        expect(list[0].currentVersion).to.startsWith('0.0');
+        expect(list[0].localVersion.startsWith('0.0')).to.be.true;
+        expect(list[0].currentVersion.startsWith('0.0')).to.be.true;
       });
     });
     describe('bit lane merge after soft-removed the unrelated component', () => {
