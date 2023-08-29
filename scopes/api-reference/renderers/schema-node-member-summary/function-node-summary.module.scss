@@ -1,31 +1,36 @@
 .summaryContainer {
-  margin: var(--bit-p-md);
-  padding: var(--bit-p-sm);
+  padding: 12px;
   border-radius: var(--bit-p-sm);
   background-color: var(--surface-neutral-color);
 }
 
 .signatureTitle {
-  font-size: var(--bit-p-md);
   color: var(--on-background-color);
-  margin-bottom: var(--bit-p-md);
+  margin-bottom: 16px;
+
+  > pre {
+    > code {
+      // override syntax highlighter code font size
+      font-size: var(--bit-p-xxs, 12px) !important;
+    }
+  }
 }
 
 .description {
-  margin-bottom: var(--bit-p-md);
+  margin-bottom: 16px;
 }
 
 .subtitle {
   font-weight: 500;
   text-transform: uppercase;
   font-size: var(--bit-p-xxs);
-  padding-right: var(--bit-p-md);
-  margin-bottom: var(--bit-p-sm);
+  padding-right: 16px;
+  margin-bottom: 16px;
 }
 
 .paramsContainer,
 .returnContainer {
-  margin-bottom: var(--bit-p-md);
+  margin-bottom: 16px;
 }
 
 .node {
@@ -33,9 +38,15 @@
   word-break: normal;
   position: relative;
   line-height: 1.2em;
-  background-color: var(--surface01-color, #fffbff);
+  // background-color: var(--surface01-color, #fffbff);
   padding: 4px;
   border-radius: 4px;
   word-break: keep-all;
   flex-wrap: wrap;
+}
+
+.functionName {
+  font-size: var(--bit-p-md);
+  font-weight: 500;
+  padding: 8px 0px;
 }

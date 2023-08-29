@@ -126,7 +126,8 @@ export function GroupedSchemaNodesSummary({
                     groupElementClassName={typeId}
                     headings={_headings}
                     apiRefModel={apiRefModel}
-                    name={(member as any).name || (type === 'constructors' ? 'constructor' : '')}
+                    name={(member as any).name}
+                    hideName={type === 'constructors'}
                     params={(member as any).params || [(member as any).param]}
                     returnType={(member as any).returnType}
                   />

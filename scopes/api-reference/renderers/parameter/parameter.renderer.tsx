@@ -2,6 +2,7 @@ import React from 'react';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { InferenceTypeSchema, ParameterSchema } from '@teambit/semantics.entities.semantic-schema';
 import { TableRow } from '@teambit/documenter.ui.table-row';
+import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
 
 import styles from './parameter.renderer.module.scss';
 
@@ -23,12 +24,14 @@ function ParameterComponent(props: APINodeRenderProps) {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { name, isOptional, doc, type, defaultValue, objectBindingNodes } = paramNode;
-  // const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
+  const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
   const typeRef = type.name ? apiRefModel.apiByName.get(type.name) : undefined;
+  const headings = ['name', 'type', 'default', 'description'];
 
   const ObjectBindingNodeComponent =
     objectBindingNodes && objectBindingNodes.length > 0 ? (
-      <React.Fragment key={`${name}-param`}>
+      <React.Fragment key={`${name}-param-object-binding-wrapper`}>
+        <HeadingRow headings={headings} colNumber={4} />
         {objectBindingNodes.map((_bindingNode) => {
           const typeRefCorrespondingNode = typeRef?.api.findNode((node) => node.name === _bindingNode.name);
           const bindingNode = typeRefCorrespondingNode || _bindingNode;
@@ -49,7 +52,7 @@ function ParameterComponent(props: APINodeRenderProps) {
           return (
             <TableRow
               key={`${bindingNode.name}-param`}
-              headings={['name', 'type', 'default', 'description']}
+              headings={headings}
               colNumber={4}
               customRow={{
                 type: customBindingNodeTypeRow,
@@ -72,17 +75,25 @@ function ParameterComponent(props: APINodeRenderProps) {
       </React.Fragment>
     ) : null;
 
-  const ParameterTypeRender = typeRef && renderers.find((renderer) => renderer.predicate(typeRef.api));
+  const ParameterTypeRefRender = typeRef && renderers.find((renderer) => renderer.predicate(typeRef.api));
 
-  const ParameterTypeComponent = ParameterTypeRender && (
-    <ParameterTypeRender.Component
+  const ParameterTypeComponent = (ParameterTypeRefRender && (
+    <ParameterTypeRefRender.Component
       {...props}
       // className={styles.customTypeRow}
-      apiNode={{ ...props.apiNode, api: typeRef.api, renderer: ParameterTypeRender }}
+      apiNode={{ ...props.apiNode, api: typeRef.api, renderer: ParameterTypeRefRender }}
       depth={(props.depth ?? 0) + 1}
       metadata={{ [typeRef.api.__schema]: { columnView: true } }}
     />
-  );
+  )) ||
+    (typeRenderer && (
+      <typeRenderer.Component
+        {...props}
+        apiNode={{ ...props.apiNode, api: type, renderer: typeRenderer }}
+        depth={(props.depth ?? 0) + 1}
+        metadata={{ [type.__schema]: { columnView: true } }}
+      />
+    )) || <div className={styles.node}>{type.toString()}</div>;
 
   return <>{ObjectBindingNodeComponent || ParameterTypeComponent}</>;
 }

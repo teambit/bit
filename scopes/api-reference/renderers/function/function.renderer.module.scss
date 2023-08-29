@@ -10,6 +10,16 @@
   font-weight: 500;
 }
 
+.containerList {
+  padding-left: 4px;
+}
+
+.subTitle {
+  padding-bottom: 16px;
+  font-size: var(--bit-p-sm);
+  font-weight: 400;
+}
+
 .value {
   font-size: var(--bit-p-xs);
   background: var(--bit-bg-dent);

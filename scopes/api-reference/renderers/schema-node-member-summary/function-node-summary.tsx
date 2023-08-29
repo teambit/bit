@@ -13,6 +13,7 @@ export type FunctionNodeSummaryProps = {
   groupElementClassName?: string;
   node: SchemaNode;
   name: string;
+  hideName?: boolean;
   headings: string[];
   apiRefModel: APIReferenceModel;
   returnType?: SchemaNode;
@@ -26,6 +27,7 @@ export function FunctionNodeSummary({
   params,
   returnType,
   apiNodeRendererProps,
+  hideName,
 }: FunctionNodeSummaryProps) {
   const {
     __schema,
@@ -49,17 +51,15 @@ export function FunctionNodeSummary({
   return (
     <div className={styles.summaryContainer}>
       <div className={styles.signatureTitle}>
-        {name}
+        {!hideName && <div className={styles.functionName}>{name}</div>}
         {signature && (
           <SyntaxHighlighter
             language={lang}
             style={defaultTheme}
             customStyle={{
-              borderTopLeftRadius: '8px',
-              borderTopRightRadius: '8px',
-              paddingTop: '8px',
-              paddingBottom: '8px',
+              borderRadius: '8px',
               marginTop: '8px',
+              padding: '8px',
             }}
           >
             {signature}
@@ -70,7 +70,7 @@ export function FunctionNodeSummary({
 
       {params.length > 0 && (
         <div className={styles.paramsContainer}>
-          <h3 className={styles.subtitle}>Parameters:</h3>
+          <h3 className={styles.subtitle}>Parameters</h3>
           {params.map((param) => {
             const paramRenderer = renderers.find((renderer) => renderer.predicate(param));
             if (paramRenderer?.Component) {
@@ -98,7 +98,7 @@ export function FunctionNodeSummary({
       )}
       {returnType && (
         <div className={styles.returnContainer}>
-          <h3 className={styles.subtitle}>Returns:</h3>
+          <h3 className={styles.subtitle}>Returns</h3>
           {(returnTypeRenderer && (
             <returnTypeRenderer.Component
               {...apiNodeRendererProps}
