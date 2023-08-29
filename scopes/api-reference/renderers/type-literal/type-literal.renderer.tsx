@@ -18,6 +18,11 @@ function TypeLiteralComponent(props: APINodeRenderProps) {
     apiNode: { api },
   } = props;
   const typeLiteralNode = api as TypeLiteralSchema;
+
+  if (props.metadata?.[api.__schema]?.columnView) {
+    return <div className={styles.node}>{api.toString()}</div>;
+  }
+
   const members = typeLiteralNode.getNodes().map((node) => {
     if (node.signature) return node;
     return copySchemaNode(node, { signature: node.toString() });

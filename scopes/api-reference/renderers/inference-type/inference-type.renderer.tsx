@@ -18,9 +18,11 @@ function InferenceTypeComponent(props: APINodeRenderProps) {
 
   const inferenceTypeNode = api as InferenceTypeSchema;
 
+  // if(!inferenceTypeNode.type || !inferenceTypeNode.name) return null;
+
   return (
     <div key={`inference-${inferenceTypeNode.name}`} className={styles.node}>
-      {inferenceTypeNode.type}
+      {inferenceTypeNode.type || inferenceTypeNode.name}
     </div>
   );
 }

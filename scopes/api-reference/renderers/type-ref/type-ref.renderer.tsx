@@ -104,7 +104,6 @@ function TypeRefComponent(props: APINodeRenderProps) {
     );
   }
 
-  console.log('🚀 ~ file: type-ref.renderer.tsx:111 ~ TypeRefComponent ~ typeRefNode:', typeRefNode);
   return (
     <TypeRefName
       key={`typeRef-${typeRefNode.name}`}

@@ -3,8 +3,8 @@ import { ReactSchema } from '@teambit/react';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
-import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
 import classnames from 'classnames';
+import { TagName } from '@teambit/semantics.entities.semantic-schema';
 
 import styles from './react.renderer.module.scss';
 
@@ -43,6 +43,7 @@ function ReactComponent(props: APINodeRenderProps) {
         metadata={{ [paramRef.__schema]: { columnView: true } }}
       />
     ) : null;
+
   const ParamComponent = paramRenderer?.Component ? (
     <paramRenderer.Component
       {...props}
@@ -64,7 +65,7 @@ function ReactComponent(props: APINodeRenderProps) {
   return (
     <APINodeDetails {...props} options={{ hideIndex: true }}>
       {typeParams && (
-        <div className={classnames(styles.container, styles.typeParams)}>
+        <div className={classnames(styles.container, styles.typeParams, styles.topPad)}>
           <div className={styles.title}>Type Parameters</div>
           <div className={styles.values}>
             {typeParams.map((typeParam) => {
@@ -77,15 +78,14 @@ function ReactComponent(props: APINodeRenderProps) {
           </div>
         </div>
       )}
-      {
-        <div className={styles.container}>
-          <div className={styles.title}>Props</div>
-          <div className={styles.paramRef}>{PropsRefComponent}</div>
-          {ParamComponent}
-        </div>
-      }
+      <div className={classnames(styles.container, styles.topPad)}>
+        <div className={styles.title}>Props</div>
+        <div className={styles.paramRef}>{PropsRefComponent}</div>
+        {ParamComponent}
+      </div>
       <div className={styles.container}>
         <div className={styles.title}>Returns</div>
+        <div className={styles.docComment}>{api.doc?.findTag(TagName.return)?.comment}</div>
         <div className={styles.returnType}>
           {(returnTypeRenderer && (
             <returnTypeRenderer.Component

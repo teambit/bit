@@ -1,5 +1,5 @@
 import React from 'react';
-import { FunctionLikeSchema } from '@teambit/semantics.entities.semantic-schema';
+import { FunctionLikeSchema, TagName } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
@@ -81,6 +81,7 @@ function FunctionComponent(props: APINodeRenderProps) {
       )}
       <div className={styles.container}>
         <div className={styles.title}>Returns</div>
+        <div className={styles.docComment}>{api.doc?.findTag(TagName.return)?.comment}</div>
         <div className={styles.returnType}>
           {(returnTypeRenderer && (
             <returnTypeRenderer.Component

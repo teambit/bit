@@ -21,10 +21,10 @@ function ParameterComponent(props: APINodeRenderProps) {
 
   const paramNode = api as ParameterSchema;
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { name, isOptional, doc, type, defaultValue, objectBindingNodes } = paramNode;
-  const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
+  // const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
   const typeRef = type.name ? apiRefModel.apiByName.get(type.name) : undefined;
-  console.log('🚀 ~ file: parameter.renderer.tsx:27 ~ typeRef:', typeRef);
 
   const ObjectBindingNodeComponent =
     objectBindingNodes && objectBindingNodes.length > 0 ? (
@@ -44,10 +44,7 @@ function ParameterComponent(props: APINodeRenderProps) {
             />
           )) || <div className={styles.node}>{bindingNode.toString()}</div>;
 
-          console.log(
-            '🚀 ~ file: parameter.renderer.tsx:54 ~ {objectBindingNodes.map ~ typeRefCorrespondingNode:',
-            typeRefCorrespondingNode
-          );
+          // const customBindingNodeTypeRow = <div className={styles.node}>{bindingNode.toString()}</div>;
 
           return (
             <TableRow
@@ -76,10 +73,7 @@ function ParameterComponent(props: APINodeRenderProps) {
     ) : null;
 
   const ParameterTypeRender = typeRef && renderers.find((renderer) => renderer.predicate(typeRef.api));
-  console.log(
-    '🚀 ~ file: parameter.renderer.tsx:88 ~ {objectBindingNodes.map ~ ParameterTypeRender:',
-    ParameterTypeRender
-  );
+
   const ParameterTypeComponent = ParameterTypeRender && (
     <ParameterTypeRender.Component
       {...props}
@@ -90,10 +84,5 @@ function ParameterComponent(props: APINodeRenderProps) {
     />
   );
 
-  return (
-    <>
-      {ParameterTypeComponent}
-      {ObjectBindingNodeComponent}
-    </>
-  );
+  return <>{ObjectBindingNodeComponent || ParameterTypeComponent}</>;
 }

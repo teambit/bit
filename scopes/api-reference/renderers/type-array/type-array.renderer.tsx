@@ -28,7 +28,7 @@ function TypeArrayComponent(props: APINodeRenderProps) {
           depth={(props.depth ?? 0) + 1}
           metadata={{ [typeArray.type.__schema]: { columnView: true } }}
         />
-        {'[]'}
+        <span className={styles.code}>{'[]'}</span>
       </div>
     );
   }

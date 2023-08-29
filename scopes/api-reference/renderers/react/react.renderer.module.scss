@@ -1,13 +1,12 @@
 .container {
   display: flex;
   flex-direction: column;
-  padding-bottom: 16px;
 }
 
 .title {
   padding-bottom: 16px;
-  font-size: var(--bit-p-md);
-  font-weight: 500;
+  font-size: var(--bit-p-lg);
+  font-weight: 600;
 }
 
 .value {
@@ -18,8 +17,14 @@
   font-family: Roboto mono;
 }
 
+.topPad {
+  padding: 16px 0px;
+  border-top: 1px solid var(--border-medium-color);
+}
+
 .typeParams {
   padding-top: 16px;
+  border-top: 1px solid var(--border-medium-color);
 }
 
 .bold {
@@ -46,4 +51,14 @@
   display: flex;
   font-size: var(--bit-p-xxs);
   word-break: normal;
+}
+
+.paramRef {
+  padding-bottom: 16px;
+  font-size: var(--bit-p-md);
+}
+
+.docComment {
+  font-size: var(--bit-p-xs);
+  padding-bottom: 16px;
 }

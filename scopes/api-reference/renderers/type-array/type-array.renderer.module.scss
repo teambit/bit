@@ -1,7 +1,14 @@
 .node {
   display: flex;
-  font-family: Roboto mono;
-  font-size: var(--bit-p-xxs);
+  font-size: var(--bit-p-xs);
   word-break: normal;
-  color: rgb(57, 115, 0);
+  position: relative;
+  line-height: 1.2em;
+  background-color: var(--surface01-color, #fffbff);
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.code {
+  font-family: 'Roboto Mono', monospace;
 }

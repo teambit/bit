@@ -84,8 +84,6 @@ export function GroupedSchemaNodesSummary({
       ? Array.from(groupByNodeSignatureType(nodes).entries()).sort(sortSignatureType)
       : (hasNodes && [['', nodes] as [string, SchemaNode[]]]) || [];
 
-  console.log('🚀 ~ file: grouped-schema-nodes-summary.tsx:83 ~ groupedNodes:', groupedNodes);
-
   const { apiRefModel } = apiNodeRendererProps;
 
   return (

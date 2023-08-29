@@ -42,6 +42,16 @@
 
 .node {
   display: flex;
-  font-size: var(--bit-p-xxs);
+  font-size: var(--bit-p-xs);
   word-break: normal;
+  position: relative;
+  line-height: 1.2em;
+  background-color: var(--surface01-color, #fffbff);
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.docComment {
+  font-size: var(--bit-p-xs);
+  padding-bottom: 16px;
 }
