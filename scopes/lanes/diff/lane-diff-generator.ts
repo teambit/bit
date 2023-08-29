@@ -102,14 +102,14 @@ export class LaneDiffGenerator {
       cache: true,
       lane: toLane || undefined,
       ignoreMissingHead: true,
-      reason: `importing components for the "to" diff - ${toLane ? toLane.name : DEFAULT_LANE}`,
+      reason: `for the "to" diff - ${toLane ? toLane.name : DEFAULT_LANE}`,
     });
     const idsOfFrom = BitIds.fromArray(this.fromLaneData.components.map((c) => c.id.changeVersion(c.head?.toString())));
     await this.scope.legacyScope.scopeImporter.importWithoutDeps(idsOfFrom, {
       cache: true,
       lane: fromLane || undefined,
       ignoreMissingHead: true,
-      reason: `importing components for the "from" diff - ${fromLane ? fromLane.name : DEFAULT_LANE}`,
+      reason: `for the "from" diff - ${fromLane ? fromLane.name : DEFAULT_LANE}`,
     });
 
     await Promise.all(

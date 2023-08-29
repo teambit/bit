@@ -51,7 +51,7 @@ export class MergeStatusProvider {
       lane: this.otherLane,
       cache: true,
       includeVersionHistory: false,
-      reason: `importing the gap between the common-snap and the head of ${this.otherLane ? 'the other lane' : 'main'}`,
+      reason: `for filling the gap between the common-snap and the head of ${this.otherLane?.id() || 'main'}`,
     });
 
     const compStatusNotNeedMerge = componentStatusBeforeMergeAttempt.filter(

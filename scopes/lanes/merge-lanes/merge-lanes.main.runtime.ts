@@ -438,7 +438,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
       lane: fromLaneObj,
       ignoreMissingHead: true,
       includeVersionHistory: true,
-      reason: `import "from" lane (${fromLaneId.name}) for lane-merge to get all version-history`,
+      reason: `of "from" lane (${fromLaneId.name}) for lane-merge to get all version-history`,
     });
 
     // get their main/to-lane as well
@@ -447,7 +447,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
       lane: toLaneObj,
       ignoreMissingHead: true,
       includeVersionHistory: true,
-      reason: `import "to" lane (${toLaneId.name}) for lane-merge to get all version-history`,
+      reason: `of "to" lane (${toLaneId.name}) for lane-merge to get all version-history`,
     });
     await this.importer.importHeadArtifactsFromLane(fromLaneObj, undefined, true);
     await this.throwIfNotUpToDate(fromLaneId, toLaneId);
