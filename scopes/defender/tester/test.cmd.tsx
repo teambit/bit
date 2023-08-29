@@ -12,6 +12,7 @@ type TestFlags = {
   watch: boolean;
   debug: boolean;
   all: boolean;
+  unmodified: boolean;
   env?: string;
   scope?: string;
   junit?: string;
@@ -50,7 +51,7 @@ export class TestCmd implements Command {
 
   async render(
     [userPattern]: [string],
-    { watch = false, debug = false, all = false, env, scope, junit, coverage = false }: TestFlags
+    { watch = false, debug = false, all = false, env, scope, junit, coverage = false, unmodified = false }: TestFlags
   ) {
     const timer = Timer.create();
     const scopeName = typeof scope === 'string' ? scope : undefined;
@@ -58,6 +59,9 @@ export class TestCmd implements Command {
       this.logger.consoleWarning(
         `--scope is deprecated, use the pattern argument instead. e.g. "scopeName/**" for the entire scope`
       );
+    }
+    if (all) {
+      this.logger.consoleWarning(`--all is deprecated, use --unmodified instead`);
     }
     timer.start();
     if (!this.workspace) throw new OutsideWorkspaceError();
@@ -68,7 +72,7 @@ export class TestCmd implements Command {
       return scopeName ? `${scopeName}/${pattern}` : pattern;
     };
     const patternWithScope = getPatternWithScope();
-    const components = await this.workspace.getComponentsByUserInput(all, patternWithScope, true);
+    const components = await this.workspace.getComponentsByUserInput(unmodified, patternWithScope, true);
     if (!components.length) {
       return {
         code: 0,
