@@ -31,7 +31,7 @@ export interface BaseComponentTemplateOptions {
   /**
    * aspect id of the aspect that register the template itself
    */
-  aspectId: ComponentID;
+  aspectId: ComponentID | string;
 
   /**
    * env id of the env that register the template itself.

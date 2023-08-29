@@ -1,4 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
+import { ComponentID } from '@teambit/component';
 import chalk from 'chalk';
 import { GeneratorMain } from './generator.main.runtime';
 import type { BaseComponentTemplateOptions } from './component-template';
@@ -64,9 +65,7 @@ export class CreateCmd implements Command {
   async report(
     [templateName, componentNames]: [string, string[]],
     options: CreateOptions & {
-      template?: string;
-      env?: string;
-      aspect: string;
+      template?: string | ComponentID;
     }
   ) {
     options.aspectId = options.aspectId ?? options.template;
