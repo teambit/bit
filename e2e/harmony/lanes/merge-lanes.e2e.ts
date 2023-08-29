@@ -696,11 +696,13 @@ describe('merge lanes', function () {
         helper.command.switchLocalLane('main', '-x');
         helper.command.checkoutHead('comp1', '-x');
       });
-      it('should make the component available and checkout to 0.0.1', () => {
+      it('should make the component available and checkout to main version', () => {
         const list = helper.command.listParsed();
         expect(list).to.have.lengthOf(1);
-        expect(list[0].localVersion).to.equal('0.0.1');
-        expect(list[0].currentVersion).to.equal('0.0.1');
+        // it can be 0.0.1 or 0.0.2 depends when the ".only" is, but it doesn't matter.
+        // all we want here is to make sure it's a tag, not a snap.
+        expect(list[0].localVersion).to.startsWith('0.0');
+        expect(list[0].currentVersion).to.startsWith('0.0');
       });
     });
     describe('bit lane merge after soft-removed the unrelated component', () => {
