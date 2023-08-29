@@ -33,7 +33,7 @@ export class TestCmd implements Command {
   options = [
     ['w', 'watch', 'start the tester in watch mode.'],
     ['d', 'debug', 'start the tester in debug mode.'],
-    ['a', 'all', 'DEPRECATED. (use --unmodified instead)'],
+    ['a', 'all', 'DEPRECATED. (use --unmodified)'],
     ['u', 'unmodified', 'test all components, not only new and modified'],
     ['', 'junit <filepath>', 'write tests results as JUnit XML format into the specified file path'],
     ['', 'coverage', 'show code coverage data'],
