@@ -17,7 +17,7 @@ import { ConfigMergeResult } from './config-merge-result';
 export class MergeCmd implements Command {
   name = 'merge [ids...]';
   description = 'merge changes of the remote head into local - auto-snaps all merged components';
-  helpUrl = 'docs/components/merging-changes';
+  helpUrl = 'reference/components/merging-changes';
   group = 'development';
   extendedDescription = `merge changes of the remote head into local when they are diverged. when on a lane, merge the remote head of the lane into the local
 and creates snaps for merged components that have diverged, on the lane.

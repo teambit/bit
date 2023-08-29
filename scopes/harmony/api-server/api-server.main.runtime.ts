@@ -3,6 +3,7 @@ import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
+import ComponentLogAspect, { ComponentLogMain } from '@teambit/component-log';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
@@ -80,6 +81,7 @@ export class ApiServerMain {
     InstallAspect,
     ExportAspect,
     CheckoutAspect,
+    ComponentLogAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -93,6 +95,7 @@ export class ApiServerMain {
     installer,
     exporter,
     checkout,
+    componentLog,
   ]: [
     CLIMain,
     Workspace,
@@ -103,14 +106,15 @@ export class ApiServerMain {
     LanesMain,
     InstallMain,
     ExportMain,
-    CheckoutMain
+    CheckoutMain,
+    ComponentLogMain
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer);
     cli.register(new ServerCmd(apiServer));
 
     const cliRoute = new CLIRoute(logger, cli);
-    const apiForIDE = new APIForIDE(workspace, snapping, lanes, installer, exporter, checkout);
+    const apiForIDE = new APIForIDE(workspace, snapping, lanes, installer, exporter, checkout, componentLog);
     const vscodeRoute = new IDERoute(logger, apiForIDE);
     const sseEventsRoute = new SSEEventsRoute(logger, cli);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.

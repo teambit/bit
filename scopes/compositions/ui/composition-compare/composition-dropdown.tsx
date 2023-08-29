@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
-import { Icon } from '@teambit/evangelist.elements.icon';
+import { Icon } from '@teambit/design.elements.icon';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 
 import styles from './composition-dropdown.module.scss';
@@ -41,14 +41,7 @@ type MenuItemProps = {
 function MenuItem(props: MenuItemProps) {
   const { selected, current } = props;
 
-  const isCurrent = selected?.id === current.id;
   const currentVersionRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (isCurrent) {
-      currentVersionRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }
-  }, [isCurrent]);
 
   const onClick = (!!current.onClick && ((e) => current.onClick?.(current.id, e))) || undefined;
 

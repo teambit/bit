@@ -178,7 +178,7 @@ export class ReactMain {
   }
 
   /**
-   * Override the Bit documentation link. See docs: https://bit.dev/docs/docs/doc-templates
+   * Override the Bit documentation link. See docs: https://bit.dev/refrence/docs/doc-templates
    */
   overrideDocsTemplate(templatePath: string) {
     return this.envs.override({

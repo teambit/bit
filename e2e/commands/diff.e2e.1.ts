@@ -44,10 +44,10 @@ describe('bit diff command', function () {
       helper.fixtures.createComponentBarFoo(barFooV1);
       helper.fixtures.addComponentBarFooAsDir();
     });
-    it('before tagging it should indicate that there is no diff for that component', () => {
+    it('diff should show that all files were added', () => {
       const output = helper.command.diff('bar/foo');
-      expect(output).to.have.string(noDiffMessage);
-      expect(output).to.have.string('bar/foo');
+      expect(output).to.not.have.string(noDiffMessage);
+      expect(output).to.have.string(`+module.exports = function foo() { return 'got foo'; };`);
     });
     describe('after the component was tagged', () => {
       before(() => {
