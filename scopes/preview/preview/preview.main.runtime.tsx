@@ -616,8 +616,8 @@ export class PreviewMain {
       const visitedEnvs = new Set();
       const mainModulesMap: MainModulesMap = {
         // @ts-ignore
-        default: this.getRelativeTemplatePath(defaultTemplatePath),
-        [context.envDefinition.id]: this.getRelativeTemplatePath(defaultTemplatePath),
+        default: defaultTemplatePath,
+        [context.envDefinition.id]: defaultTemplatePath,
       };
 
       const map = await previewDef.getModuleMap(components);
@@ -630,7 +630,7 @@ export class PreviewMain {
         if (!mainModulesMap[envId] && !visitedEnvs.has(envId)) {
           const modulePath = await previewDef.renderTemplatePathByEnv?.(envDef.env);
           if (modulePath) {
-            mainModulesMap[envId] = this.getRelativeTemplatePath(modulePath) as string;
+            mainModulesMap[envId] = modulePath;
           }
           visitedEnvs.add(envId);
         }
@@ -657,11 +657,6 @@ export class PreviewMain {
     });
 
     return Promise.all(paths);
-  }
-
-  private getRelativeTemplatePath(templatePath: string | undefined) {
-    if (!templatePath) return undefined;
-    return templatePath.replace(/^.+\/node_modules\//, '');
   }
 
   async writePreviewRuntime(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
