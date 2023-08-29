@@ -68,16 +68,14 @@ function createImports(aspectDefs: AspectDefinition[]) {
   const defs = aspectDefs.filter((def) => def.runtimePath);
 
   return `import { Harmony } from '@teambit/harmony';
-${getImportStatements(aspectDefs, 'aspectFilePath', 'Aspect')}
-${getImportStatements(defs, 'runtimePath', 'Runtime')}`;
+${getImportStatements(aspectDefs, 'aspectFilePackagePath', 'Aspect')}
+${getImportStatements(defs, 'runtimePathPackagePath', 'Runtime')}`;
 }
 
 function getImportStatements(aspectDefs: AspectDefinition[], pathProp: string, suffix: string): string {
   return aspectDefs
     .map((aspectDef) => {
-      // convert to relative path
-      const url = aspectDef[pathProp].replace(/^.+(?=@teambit)/, '');
-      return `import ${getIdentifier(aspectDef, suffix, pathProp)} from '${url}';`;
+      return `import ${getIdentifier(aspectDef, suffix, pathProp)} from '${aspectDef[pathProp]}';`;
     })
     .join('\n');
 }

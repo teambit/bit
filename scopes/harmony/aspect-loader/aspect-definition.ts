@@ -1,4 +1,6 @@
+import { relative } from 'path';
 import { Component } from '@teambit/component';
+import { getCoreAspectPackageName } from './core-aspects';
 
 export type AspectDefinitionProps = {
   id?: string;
@@ -43,6 +45,22 @@ export class AspectDefinition {
     if (this.component) return this.component.id.toString();
     if (this.id) return this.id;
     return null;
+  }
+
+  get packageName() {
+    return this.getId ? getCoreAspectPackageName(this.getId) : null;
+  }
+
+  get aspectFilePackagePath() {
+    if (!this.packageName) return null;
+    if (!this.aspectFilePath) return null;
+    return `${this.packageName}/${relative(this.aspectPath, this.aspectFilePath)}`;
+  }
+
+  get runtimePathPackagePath() {
+    if (!this.packageName) return null;
+    if (!this.runtimePath) return null;
+    return `${this.packageName}/${relative(this.aspectPath, this.runtimePath)}`;
   }
 
   static from({ component, aspectPath, aspectFilePath, runtimePath, id, local }: AspectDefinitionProps) {
