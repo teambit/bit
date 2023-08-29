@@ -4,6 +4,10 @@
   height: 100vh;
 }
 
+.corner {
+  width: 300px;
+}
+
 .workspaceWrapper {
   display: flex;
   flex-direction: column;
@@ -37,4 +41,8 @@
   position: relative;
 
   height: 100%;
+
+  &.closed {
+    overflow: hidden;
+  }
 }

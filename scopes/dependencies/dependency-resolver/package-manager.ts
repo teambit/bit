@@ -78,6 +78,10 @@ export type PackageManagerInstallOptions = {
    * E.g., if this is set to 1000, then the progress will be updated every second.
    */
   throttleProgress?: number;
+
+  hideProgressPrefix?: boolean;
+
+  hideLifecycleOutput?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

@@ -9,6 +9,7 @@ import {
   MergeStrategy,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import { BitId } from '@teambit/legacy-bit-id';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
@@ -37,7 +38,7 @@ type ImportFlags = {
 export class ImportCmd implements Command {
   name = 'import [component-patterns...]';
   description = 'import components from their remote scopes to the local workspace';
-  helpUrl = 'docs/components/importing-components';
+  helpUrl = 'reference/components/importing-components';
   arguments = [
     {
       name: 'component-patterns...',
@@ -53,37 +54,48 @@ export class ImportCmd implements Command {
     [
       'o',
       'objects',
-      'import components objects to the local scope without checkout (without writing them to the file system). This is a default behavior for import with no id argument',
+      'import components objects to the local scope without checkout (without writing them to the file system). This is the default behavior for import with no id argument',
     ],
-    ['d', 'display-dependencies', 'display the imported dependencies'],
     ['O', 'override', 'override local changes'],
     ['v', 'verbose', 'show verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],
     // ['', 'conf', 'write the configuration file (component.json) of the component'], // not working. need to fix once ComponentWriter is moved to Harmony
-    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not auto-install dependencies of the imported components'],
     [
       'm',
       'merge [strategy]',
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"',
     ],
-    ['', 'dependencies', 'import all dependencies and write them to the workspace'],
+    [
+      '',
+      'dependencies',
+      'import all dependencies (bit components only) of imported components and write them to the workspace',
+    ],
     [
       '',
       'dependents',
-      'import components found while traversing from the given ids upwards to the workspace components',
+      'import components found while traversing from the imported components upwards to the workspace components',
     ],
     [
       '',
       'save-in-lane',
-      'when checked out to a lane and the component is not on the remote-lane, save it in the lane (default to save on main)',
+      'when checked out to a lane and the component is not on the remote-lane, save it in the lane (defaults to save on main)',
     ],
     [
       '',
       'all-history',
       'relevant for fetching all components objects. avoid optimizations, fetch all history versions, always',
     ],
-    ['', 'fetch-deps', 'fetch dependencies objects'],
-    ['', 'track-only', 'do not write any file, just create .bitmap entries of the imported components'],
+    [
+      '',
+      'fetch-deps',
+      'fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data',
+    ],
+    [
+      '',
+      'track-only',
+      'do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap',
+    ],
     ['', 'include-deprecated', 'when importing with patterns, include deprecated components (default to exclude them)'],
   ] as CommandOptions;
   loader = true;
@@ -106,16 +118,16 @@ export class ImportCmd implements Command {
     if (!importedIds.length && !missingIds?.length) {
       return chalk.yellow(cancellationMessage || 'nothing to import');
     }
-
+    const importedIdsUniqNoVersion = BitIds.fromArray(importedIds).toVersionLatest();
     const summaryPrefix =
-      importedIds.length === 1
+      importedIdsUniqNoVersion.length === 1
         ? 'successfully imported one component'
-        : `successfully imported ${importedIds.length} components`;
+        : `successfully imported ${importedIdsUniqNoVersion.length} components`;
 
     let upToDateCount = 0;
     const importedComponents = importedIds.map((bitId) => {
       const details = importDetails.find((c) => c.id === bitId.toStringWithoutVersion());
-      if (!details) throw new Error(`missing details of component ${bitId.toString()}`);
+      if (!details) throw new Error(`missing details for component ${bitId.toString()}`);
       if (details.status === 'up to date') {
         upToDateCount += 1;
       }
@@ -168,10 +180,10 @@ export class ImportCmd implements Command {
     }: ImportFlags
   ): Promise<ImportResult> {
     if (objects && merge) {
-      throw new GeneralError('you cant use --objects and --merge flags combined');
+      throw new GeneralError(' --objects and --merge flags cannot be used together');
     }
     if (override && merge) {
-      throw new GeneralError('you cant use --override and --merge flags combined');
+      throw new GeneralError('--override and --merge cannot be used together');
     }
     if (!ids.length && dependencies) {
       throw new GeneralError('you have to specify ids to use "--dependencies" flag');
@@ -217,7 +229,7 @@ function formatMissingComponents(missing?: string[]) {
   if (!missing?.length) return '';
   const title = chalk.underline('Missing Components');
   const subTitle = `The following components are missing from the remote in the requested version, try running "bit status" to re-sync your .bitmap file
-Also, make sure the requested version exists on main or the checked out lane`;
+Also, check that the requested version exists on main or the checked out lane`;
   const body = chalk.red(missing.join('\n'));
   return `\n\n${title}\n${subTitle}\n${body}`;
 }

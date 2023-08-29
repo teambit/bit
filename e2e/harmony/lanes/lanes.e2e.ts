@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { InvalidScopeName } from '@teambit/legacy-bit-id';
 import path from 'path';
-import { statusWorkspaceIsCleanMsg, AUTO_SNAPPED_MSG, IMPORT_PENDING_MSG } from '../../../src/constants';
+import { AUTO_SNAPPED_MSG, IMPORT_PENDING_MSG } from '../../../src/constants';
 import { LANE_KEY } from '../../../src/consumer/bit-map/bit-map';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../../src/fixtures/fixtures';
@@ -180,8 +180,7 @@ describe('bit lane command', function () {
         expect(list).to.have.lengthOf(1);
       });
       it('bit status should show a clean state', () => {
-        const output = helper.command.runCmd('bit status');
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        helper.command.expectStatusToBeClean();
       });
       it('should change .bitmap to have the remote lane', () => {
         const bitMap = helper.bitMap.read();
@@ -418,7 +417,7 @@ describe('bit lane command', function () {
       helper.fs.outputFile('comp3/index.js', `module.exports = () => 'comp3 v2';`);
 
       const statusOutput = helper.command.runCmd('bit status');
-      expect(statusOutput).to.have.string('components pending to be tagged automatically');
+      expect(statusOutput).to.have.string('components pending auto-tag (when their modified dependencies are tagged)');
 
       snapOutput = helper.command.snapComponent('comp3');
       comp3Head = helper.command.getHeadOfLane('dev', 'comp3');
@@ -1026,6 +1025,10 @@ describe('bit lane command', function () {
   // on lane-b, getDivergeData compares its head to main, not to lane-a because they're different scopes.
   // as a result, although it traverses the "squash", it's unable to connect main to lane-b.
   // the missing history exists on lane-a only.
+
+  // update: after PR: https://github.com/teambit/bit/pull/7822, the version-history is created during
+  // export. as a result, the VersionHistory the client gets, has already the entire graph, with all the
+  // connections.
   describe('multiple scopes - fork the lane, then original lane progresses and squashed to main', () => {
     let anotherRemote: string;
     let laneB: string;
@@ -1057,7 +1060,8 @@ describe('bit lane command', function () {
     it('should not throw NoCommonSnap on bit status', () => {
       expect(() => helper.command.status()).not.to.throw();
     });
-    it('should show the component in the invalid component section', () => {
+    // see the update in the `describe` section.
+    it.skip('should show the component in the invalid component section', () => {
       const status = helper.command.statusJson();
       expect(status.invalidComponents).lengthOf(2);
       expect(status.invalidComponents[0].error.name).to.equal('NoCommonSnap');
@@ -1447,7 +1451,7 @@ describe('bit lane command', function () {
       let beforeCheckout: string;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(firstWorkspaceAfterExport);
-        helper.command.removeLaneComp('comp2');
+        helper.command.softRemoveOnLane('comp2');
         helper.fs.writeFile('comp1/index.js', ''); // remove the comp2 dependency from the code
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();

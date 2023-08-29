@@ -304,7 +304,10 @@ export default class Consumer {
       if (throwIfNotExist) return this.scope.getModelComponent(id);
       const modelComponent = await this.scope.getModelComponentIfExist(id);
       if (modelComponent) return modelComponent;
-      await scopeComponentsImporter.importMany({ ids: new BitIds(id), preferDependencyGraph: true });
+      await scopeComponentsImporter.importMany({
+        ids: new BitIds(id),
+        reason: `because this component (${id.toString()}) was missing from the local scope`,
+      });
       return this.scope.getModelComponent(id);
     };
     const modelComponent = await getModelComponent();

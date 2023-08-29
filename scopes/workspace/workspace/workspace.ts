@@ -6,6 +6,7 @@ import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
+import { generateNodeModulesPattern, PatternTarget } from '@teambit/dependencies.modules.packages-excluder';
 import {
   AspectEntry,
   ComponentMain,
@@ -143,7 +144,7 @@ export class Workspace implements ComponentFactory {
   componentLoader: WorkspaceComponentLoader;
   bitMap: BitMap;
   /**
-   * Indicate that we are now running installaion process
+   * Indicate that we are now running installation process
    * This is important to know to ignore missing modules across different places
    */
   inInstallContext = false;
@@ -151,6 +152,11 @@ export class Workspace implements ComponentFactory {
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
   private componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized;
+  /**
+   * Components paths are calculated from the component package names of the workspace
+   * They are used in webpack configuration to only track changes from these paths inside `node_modules`
+   */
+  private componentPathsRegExps: RegExp[] = [];
   localAspects: string[] = [];
   constructor(
     /**
@@ -235,6 +241,22 @@ export class Workspace implements ComponentFactory {
       }
     );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
+
+    this.registerOnComponentAdd(async () => {
+      await this.setComponentPathsRegExps();
+      return {
+        results: this.componentPathsRegExps,
+        toString: () => this.componentPathsRegExps.join(),
+      };
+    });
+
+    this.registerOnComponentRemove(async () => {
+      await this.setComponentPathsRegExps();
+      return {
+        results: this.componentPathsRegExps,
+        toString: () => this.componentPathsRegExps.join(),
+      };
+    });
   }
 
   private validateConfig() {
@@ -349,6 +371,12 @@ export class Workspace implements ComponentFactory {
     return this.getMany(idsToGet, loadOpts);
   }
 
+  async listWithInvalid(loadOpts?: ComponentLoadOptions) {
+    const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
+    const ids = await this.resolveMultipleComponentIds(legacyIds);
+    return this.componentLoader.getMany(ids, loadOpts, false);
+  }
+
   /**
    * list all invalid components.
    * (see the invalid criteria in ConsumerComponent.isComponentInvalidByErrorType())
@@ -389,7 +417,7 @@ export class Workspace implements ComponentFactory {
    */
   async filterIds(ids: ComponentID[]): Promise<ComponentID[]> {
     const workspaceIds = await this.listIds();
-    return ids.filter((id) => workspaceIds.find((wsId) => wsId.isEqual(id)));
+    return ids.filter((id) => workspaceIds.find((wsId) => wsId.isEqual(id, { ignoreVersion: !id.hasVersion() })));
   }
 
   /**
@@ -931,7 +959,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
-    return this.componentLoader.getMany(ids, loadOpts);
+    const { components } = await this.componentLoader.getMany(ids, loadOpts);
+    return components;
   }
 
   getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
@@ -972,14 +1001,15 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * currently it used only for get many of aspects
    * @param ids
    */
-  async importAndGetMany(ids: Array<ComponentID>): Promise<Component[]> {
+  async importAndGetMany(ids: Array<ComponentID>, reason?: string): Promise<Component[]> {
     if (!ids.length) return [];
     await this.importCurrentLaneIfMissing();
     await this.scope.import(ids, {
       reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(),
       preferDependencyGraph: true,
+      reason,
     });
-    return this.componentLoader.getMany(ids);
+    return this.getMany(ids);
   }
 
   async importCurrentLaneIfMissing() {
@@ -1000,9 +1030,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       cache: false,
       lane,
       includeVersionHistory: true,
+      reason: 'latest of the current lane',
     });
 
-    await scopeComponentsImporter.importMany({ ids, lane });
+    await scopeComponentsImporter.importMany({ ids, lane, reason: 'for making sure the current lane has all ' });
   }
 
   async use(aspectIdStr: string): Promise<string> {
@@ -1235,12 +1266,17 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     id: ComponentID,
     aspectId: string,
     config: Record<string, any> = {},
-    shouldMergeWithExisting = false,
-    /**
-     * relevant only when writing to .bitmap.
-     * eject config of the given aspect-id, so then it won't override previous config. (see "adding prod dep, tagging then adding devDep" e2e-test)
-     */
-    shouldMergeWithPrevious = false
+    {
+      shouldMergeWithExisting,
+      shouldMergeWithPrevious,
+    }: {
+      shouldMergeWithExisting?: boolean;
+      /**
+       * relevant only when writing to .bitmap.
+       * eject config of the given aspect-id, so then it won't override previous config. (see "adding prod dep, tagging then adding devDep" e2e-test)
+       */
+      shouldMergeWithPrevious?: boolean;
+    } = { shouldMergeWithExisting: false, shouldMergeWithPrevious: false }
   ) {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {
@@ -1684,7 +1720,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (found && found.extensionId?.version) {
       return found.extensionId.toString();
     }
-    const comps = await this.importAndGetMany([envId]);
+    const comps = await this.importAndGetMany([envId], `to get the env ${envId.toString()}`);
     return comps[0].id.toString();
   }
 
@@ -1784,6 +1820,20 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     );
     await this.bitMap.write();
     return { updated, alreadyUpToDate };
+  }
+
+  getComponentPathsRegExps() {
+    return this.componentPathsRegExps;
+  }
+
+  async setComponentPathsRegExps() {
+    const workspaceComponents = await this.list();
+    const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
+    const pathsExcluding = generateNodeModulesPattern({
+      packages: workspacePackageNames,
+      target: PatternTarget.WEBPACK,
+    });
+    this.componentPathsRegExps = [...pathsExcluding.map((stringPattern) => new RegExp(stringPattern))];
   }
 }
 

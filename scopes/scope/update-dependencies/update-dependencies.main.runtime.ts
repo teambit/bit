@@ -166,7 +166,12 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     }
     // do not use cache. for dependencies we must fetch the latest ModelComponent from the remote
     // in order to match the semver later.
-    await this.scope.import(idsToImport, { useCache: false, lane: this.laneObj });
+    await this.scope.import(idsToImport, {
+      useCache: false,
+      lane: this.laneObj,
+      preferDependencyGraph: false,
+      reason: 'which are the seeders for the update-dependencies process',
+    });
   }
 
   private async addComponentsToScope() {

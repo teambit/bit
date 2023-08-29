@@ -7,12 +7,14 @@ export type RenameOptions = {
   path?: string;
   refactor?: boolean;
   preserve?: boolean;
+  ast?: boolean;
 };
 
 export class RenameCmd implements Command {
   name = 'rename <current-name> <new-name>';
-  description = 'rename component. if tagged/exported, create a new component and deprecate the original component';
-  helpUrl = 'docs/components/renaming-components';
+  description =
+    'rename component. if tagged/exported, create a new component and deprecate the original component. otherwise just renames current component';
+  helpUrl = 'reference/components/renaming-components';
   arguments = [
     {
       name: 'current-name',
@@ -20,21 +22,22 @@ export class RenameCmd implements Command {
     },
     {
       name: 'new-name',
-      description: 'the new component name (without its scope name)',
+      description: "the new component name (without its scope name. use --scope to define the new component's scope)",
     },
   ];
   group = 'collaborate';
   skipWorkspace = true;
   alias = '';
   options = [
-    ['s', 'scope <scope-name>', 'default scope for the newly created component'],
+    ['s', 'scope <scope-name>', 'define the scope for the newly created component'],
     [
       'p',
       'path <relative-path>',
-      'relative path in the workspace. by default the path is `<scope>/<namespace>/<name>`',
+      'relative path in the workspace to place new component in. by default, the directory of the new component is from your workspace\'s "defaultScope" value',
     ],
     ['r', 'refactor', 'update the import/require statements in all dependent components (in the same workspace)'],
     ['', 'preserve', 'avoid renaming files and variables/classes according to the new component name'],
+    ['', 'ast', 'EXPERIMENTAL. use ast to transform files instead of regex'],
   ] as CommandOptions;
   loader = true;
   migration = true;

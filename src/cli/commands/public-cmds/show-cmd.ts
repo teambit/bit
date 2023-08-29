@@ -10,16 +10,16 @@ import paintComponent from '../../templates/component-template';
 export default class Show implements LegacyCommand {
   name = 'show <id>';
   description = 'show component overview';
-  extendedDescription = `https://${BASE_DOCS_DOMAIN}/components/component-config`;
+  extendedDescription = `https://${BASE_DOCS_DOMAIN}/reference/components/component-config`;
   group: Group = 'info';
   alias = '';
   opts = [
-    ['j', 'json', 'return a json version of the component'],
-    ['r', 'remote', 'show a remote component'],
+    ['j', 'json', 'return component overview in json format'],
+    ['r', 'remote', 'show overview of a remote component'],
     ['v', 'versions', 'return a json of all the versions of the component'],
-    ['o', 'outdated', 'show latest version from the remote scope (if exists)'],
+    ['o', 'outdated', 'highlight outdated components, in comparison with their latest remote version (if one exists)'],
     ['c', 'compare', 'compare current file system component to latest tagged component [default=latest]'],
-    ['d', 'detailed', 'show more details'],
+    ['d', 'detailed', 'show extra component detail'],
     ['', 'dependents', 'show all dependents recursively'],
     ['', 'dependencies', 'show all dependencies recursively'],
     ['', 'legacy', ''],
@@ -58,7 +58,7 @@ export default class Show implements LegacyCommand {
       throw new GeneralError('the [--versions] and [--remote] flags cannot be used together');
     }
     if (compare && outdated) {
-      throw new GeneralError('please make sure to use either [--compare] or [--outdated], alone');
+      throw new GeneralError('the [--compare] and [--outdated] flags cannot be used together');
     }
 
     return show({

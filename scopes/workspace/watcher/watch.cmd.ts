@@ -22,12 +22,16 @@ export type WatchCmdOpts = {
 export class WatchCommand implements Command {
   name = 'watch';
   description = 'automatically recompile modified components (on save)';
+  extendedDescription = `by default, the watcher doesn't use polling, to keep the CPU idle.
+in some rare cases, this could result in missing file events (files are not watched).
+to fix it, try to stop other watchers on the same machine.
+alternatively, to use polling, run "bit config set watch_use_polling true".`;
   helpUrl = 'reference/compiling/compiler-overview';
   alias = '';
   group = 'development';
   options = [
-    ['v', 'verbose', 'show npm verbose output for inspection and print the stack trace'],
-    ['', 'skip-pre-compilation', 'skip the compilation step before starting to watch'],
+    ['v', 'verbose', 'show all watch events and compiler verbose output'],
+    ['', 'skip-pre-compilation', 'skip compilation step before starting to watch'],
     [
       't',
       'check-types [string]',
@@ -99,7 +103,7 @@ function getMessages(logger: Logger): EventMessages {
   return {
     onAll: (event: string, path: string) => logger.console(`Event: "${event}". Path: ${path}`),
     onStart: () => {},
-    onReady: (workspace, watchPathsSortByComponent, verbose) => {
+    onReady: (workspace, watchPathsSortByComponent, verbose?: boolean) => {
       clearOutdatedData();
       if (verbose) {
         logger.console(formatWatchPathsSortByComponent(watchPathsSortByComponent));

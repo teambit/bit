@@ -396,7 +396,7 @@ describe('bit remove command', function () {
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
-      helper.command.removeLaneComp('comp1');
+      helper.command.removeComponent('comp1');
     });
     it('should remove the components from the local lane', () => {
       const laneComps = helper.command.showOneLane('dev');
@@ -415,7 +415,7 @@ describe('bit remove command', function () {
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.command.removeLaneComp('comp2');
+      helper.command.softRemoveOnLane('comp2');
     });
     it('should not throwing an error upon import', () => {
       expect(() => helper.command.importComponent('comp2')).to.not.throw();
@@ -458,6 +458,27 @@ describe('bit remove command', function () {
     });
     it('bit status should not show RemovedDependency issue because it was recovered', () => {
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedDependencies.name);
+    });
+  });
+
+  describe('soft remove then snapping with --build', () => {
+    let snapOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.softRemoveComponent('comp1');
+      snapOutput = helper.command.snapAllComponents('--build');
+    });
+    it('should not build the removed component', () => {
+      expect(snapOutput).to.not.have.string('pipeline');
+      const versionObj = helper.command.catComponent('comp1@latest');
+      expect(versionObj.buildStatus).to.equal('pending');
+    });
+    it('should remove successfully', () => {
+      const versionObj = helper.command.catComponent('comp1@latest');
+      const removeExt = versionObj.extensions.find((ext) => ext.name === Extensions.remove);
+      expect(removeExt.config.removed).to.be.true;
     });
   });
 });

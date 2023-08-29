@@ -438,6 +438,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
       lane: fromLaneObj,
       ignoreMissingHead: true,
       includeVersionHistory: true,
+      reason: `of "from" lane (${fromLaneId.name}) for lane-merge to get all version-history`,
     });
 
     // get their main/to-lane as well
@@ -446,6 +447,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
       lane: toLaneObj,
       ignoreMissingHead: true,
       includeVersionHistory: true,
+      reason: `of "to" lane (${toLaneId.name}) for lane-merge to get all version-history`,
     });
     await this.importer.importHeadArtifactsFromLane(fromLaneObj, undefined, true);
     await this.throwIfNotUpToDate(fromLaneId, toLaneId);
@@ -775,17 +777,16 @@ alternatively, use "--no-squash" flag to keep the entire history of "${otherLane
       .join('\n');
     return `${messageTitle}\n${allMessageStr}`;
   };
-  // no need to check this case. even if it has only one snap ahead, we want to do the "squash", and run "addAsOnlyParent"
-  // to make sure it doesn't not have two parents.
-  // if (remoteSnaps.length === 1) {
-  //   // nothing to squash. it has only one commit.
-  //   return;
-  // }
   if (!componentFromModel) {
     throw new Error('unable to squash, the componentFromModel is missing');
   }
-
   const currentParents = componentFromModel.parents;
+
+  // if the remote has only one snap, there is nothing to squash.
+  // other checks here is to make sure `componentFromModel.addAsOnlyParent` call is not needed.
+  if (remoteSnaps.length === 1 && divergeData.commonSnapBeforeDiverge && currentParents.length === 1) {
+    return undefined;
+  }
 
   const doSquash = async () => {
     if (divergeData.commonSnapBeforeDiverge) {

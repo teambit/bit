@@ -5,7 +5,7 @@ import { compact, difference, partition } from 'lodash';
 import { ComponentID } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { BIT_MAP } from '@teambit/legacy/dist/constants';
+import { BIT_MAP, CFG_WATCH_USE_POLLING } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -65,14 +65,10 @@ export class Watcher {
   private watchQueue = new WatchQueue();
   private bitMapChangesInProgress = false;
   private ipcEventsDir: string;
-  constructor(
-    private workspace: Workspace,
-    private pubsub: PubsubMain,
-    private watcherMain: WatcherMain,
-    private trackDirs: { [dir: PathLinux]: ComponentID } = {},
-    private verbose = false,
-    private multipleWatchers: WatcherProcessData[] = []
-  ) {
+  private trackDirs: { [dir: PathLinux]: ComponentID } = {};
+  private verbose = false;
+  private multipleWatchers: WatcherProcessData[] = [];
+  constructor(private workspace: Workspace, private pubsub: PubsubMain, private watcherMain: WatcherMain) {
     this.ipcEventsDir = this.watcherMain.ipcEvents.eventsDir;
   }
 
@@ -82,6 +78,7 @@ export class Watcher {
 
   async watchAll(opts: WatchOptions) {
     const { msgs, ...watchOpts } = opts;
+    this.verbose = opts.verbose || false;
     const pathsToWatch = await this.getPathsToWatch();
     const componentIds = Object.values(this.trackDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
@@ -92,8 +89,7 @@ export class Watcher {
     await this.workspace.scope.watchScopeInternalFiles();
 
     return new Promise((resolve, reject) => {
-      // prefix your command with "BIT_LOG=*" to see all watch events
-      if (process.env.BIT_LOG) {
+      if (this.verbose) {
         // @ts-ignore
         if (msgs?.onAll) watcher.on('all', msgs?.onAll);
       }
@@ -396,13 +392,19 @@ export class Watcher {
   }
 
   private async createWatcher(pathsToWatch: string[]) {
+    const usePollingConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_POLLING);
+    const usePolling = usePollingConf === 'true';
     this.fsWatcher = chokidar.watch(pathsToWatch, {
       ignoreInitial: true,
       // `chokidar` matchers have Bash-parity, so Windows-style backslackes are not supported as separators.
       // (windows-style backslashes are converted to forward slashes)
       ignored: ['**/node_modules/**', '**/package.json'],
+      usePolling,
       persistent: true,
     });
+    if (this.verbose) {
+      logger.console(`chokidar.options ${JSON.stringify(this.fsWatcher.options, undefined, 2)}`);
+    }
   }
 
   async setTrackDirs() {
