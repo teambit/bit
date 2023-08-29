@@ -26,7 +26,6 @@ export class DeployTask implements BuildTask {
       if (originalSeedersIds && originalSeedersIds.length && !originalSeedersIds.includes(component.id.toString())) {
         return undefined;
       }
-
       const apps = await this.application.loadAppsFromComponent(component, capsule.path);
       if (!apps || !apps.length) return undefined;
       await mapSeries(compact(apps), async (app) => this.runForOneApp(app, capsule, context));
@@ -44,17 +43,26 @@ export class DeployTask implements BuildTask {
 
   private async runForOneApp(app: Application, capsule: Capsule, context: BuildContext): Promise<void> {
     const aspectId = this.application.getAppAspect(app.name);
+    let buildTask: TaskResults | undefined;
+    let _metadata;
     if (!aspectId) return;
+
     if (!capsule || !capsule?.component) return;
-    const buildTask = this.getBuildTask(context.previousTasksResults, context.envRuntime.id);
-    if (!buildTask) return;
-    const _metadata = this.getBuildMetadata(buildTask, capsule.component.id, app);
-    const appDeployContext: AppDeployContext = Object.assign(context, _metadata.deployContext, {
+
+    if (context.previousTasksResults) {
+      buildTask = this.getBuildTask(context.previousTasksResults || [], context.envRuntime.id);
+      _metadata = this.getBuildMetadata(buildTask as TaskResults, capsule.component.id, app);
+    }
+
+    const appDeployContext: AppDeployContext = Object.assign(context, {
       capsule,
       appComponent: capsule.component,
+      ...(_metadata && _metadata.deploycontext ? { deploycontext: _metadata.deploycontext } : {}),
     });
-    if (!app.deploy) return;
-    await app.deploy(appDeployContext);
+
+    if (app && typeof app.deploy === 'function') {
+      await app.deploy(appDeployContext);
+    }
   }
 
   private getBuildMetadata(buildTask: TaskResults, componentId: ComponentID, app: Application) {
