@@ -191,7 +191,7 @@ ${found.map((id) => id.toString()).join('\n')}`);
   }
 
   toVersionLatest(): BitIds {
-    return BitIds.fromArray(this.map((id) => id.changeVersion(LATEST_BIT_VERSION)));
+    return BitIds.uniqFromArray(this.map((id) => id.changeVersion(LATEST_BIT_VERSION)));
   }
 
   clone(): BitIds {
