@@ -69,7 +69,7 @@ function createImports(aspectDefs: AspectDefinition[]) {
 
   return `import { Harmony } from '@teambit/harmony';
 ${getImportStatements(aspectDefs, 'aspectFilePackagePath', 'Aspect')}
-${getImportStatements(defs, 'runtimePathPackagePath', 'Runtime')}`;
+${getImportStatements(defs, 'runtimePackagePath', 'Runtime')}`;
 }
 
 function getImportStatements(aspectDefs: AspectDefinition[], pathProp: string, suffix: string): string {

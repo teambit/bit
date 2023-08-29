@@ -57,7 +57,7 @@ export class AspectDefinition {
     return `${this.packageName}/${relative(this.aspectPath, this.aspectFilePath)}`;
   }
 
-  get runtimePathPackagePath() {
+  get runtimePackagePath() {
     if (!this.packageName) return null;
     if (!this.runtimePath) return null;
     return `${this.packageName}/${relative(this.aspectPath, this.runtimePath)}`;
