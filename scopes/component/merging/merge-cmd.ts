@@ -265,11 +265,12 @@ ${mergeSnapError.message}
 
 export function applyVersionReport(components: ApplyVersionResult[], addName = true, showVersion = false): string {
   const tab = addName ? '\t' : '';
-  return components
-    .map((component: ApplyVersionResult) => {
+  return compact(
+    components.map((component: ApplyVersionResult) => {
       const name = showVersion ? component.id.toString() : component.id.toStringWithoutVersion();
-      const files = Object.keys(component.filesStatus)
-        .map((file) => {
+      const files = compact(
+        Object.keys(component.filesStatus).map((file) => {
+          if (component.filesStatus[file] === FileStatus.unchanged) return null;
           const note =
             component.filesStatus[file] === FileStatus.manual
               ? chalk.white(
@@ -278,10 +279,11 @@ export function applyVersionReport(components: ApplyVersionResult[], addName = t
               : '';
           return `${tab}${component.filesStatus[file]} ${chalk.bold(file)} ${note}`;
         })
-        .join('\n');
+      ).join('\n');
+      if (!files) return null;
       return `${addName ? name : ''}\n${chalk.cyan(files)}`;
     })
-    .join('\n\n');
+  ).join('\n\n');
 }
 
 export function conflictSummaryReport(components: ApplyVersionResult[]): string {
