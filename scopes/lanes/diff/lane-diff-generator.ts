@@ -98,16 +98,18 @@ export class LaneDiffGenerator {
     }
 
     const idsOfTo = BitIds.fromArray(this.toLaneData.components.map((c) => c.id.changeVersion(c.head?.toString())));
-    const idsOfFrom = BitIds.fromArray(this.fromLaneData.components.map((c) => c.id.changeVersion(c.head?.toString())));
     await this.scope.legacyScope.scopeImporter.importWithoutDeps(idsOfTo, {
       cache: true,
       lane: toLane || undefined,
       ignoreMissingHead: true,
+      reason: `for the "to" diff - ${toLane ? toLane.name : DEFAULT_LANE}`,
     });
+    const idsOfFrom = BitIds.fromArray(this.fromLaneData.components.map((c) => c.id.changeVersion(c.head?.toString())));
     await this.scope.legacyScope.scopeImporter.importWithoutDeps(idsOfFrom, {
       cache: true,
       lane: fromLane || undefined,
       ignoreMissingHead: true,
+      reason: `for the "from" diff - ${fromLane ? fromLane.name : DEFAULT_LANE}`,
     });
 
     await Promise.all(

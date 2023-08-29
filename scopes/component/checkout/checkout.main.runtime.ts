@@ -90,8 +90,9 @@ export class CheckoutMain {
         return idsToImport;
       })
       .flat();
-    await this.workspace.scope.legacyScope.scopeImporter.importManyIfMissingWithoutDeps({
-      ids: BitIds.fromArray(toImport),
+
+    await this.workspace.scope.legacyScope.scopeImporter.importWithoutDeps(BitIds.fromArray(toImport), {
+      cache: true,
       lane: checkoutProps.lane,
     });
 
@@ -238,6 +239,7 @@ export class CheckoutMain {
     try {
       await scopeComponentsImporter.importWithoutDeps(BitIds.fromArray(notExported || []).toVersionLatest(), {
         cache: false,
+        reason: 'for making sure the new components are really new and are not out-of-sync',
       });
     } catch (err) {
       // don't stop the process. it's possible that the scope doesn't exist yet because these are new components
