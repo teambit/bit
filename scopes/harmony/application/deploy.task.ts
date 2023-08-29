@@ -49,15 +49,15 @@ export class DeployTask implements BuildTask {
 
     if (!capsule || !capsule?.component) return;
 
-    if (context.previousTasksResults) {
-      buildTask = this.getBuildTask(context.previousTasksResults || [], context.envRuntime.id);
+    if (context?.previousTasksResults.length !== 0) {
+      buildTask = this.getBuildTask(context.previousTasksResults, context.envRuntime.id);
       _metadata = this.getBuildMetadata(buildTask as TaskResults, capsule.component.id, app);
     }
 
     const appDeployContext: AppDeployContext = Object.assign(context, {
       capsule,
       appComponent: capsule.component,
-      ...(_metadata && _metadata.deploycontext ? { deploycontext: _metadata.deploycontext } : {}),
+      ...(_metadata && _metadata.deployContext ? { deployContext: _metadata.deployContext } : {}),
     });
 
     if (app && typeof app.deploy === 'function') {
@@ -66,7 +66,7 @@ export class DeployTask implements BuildTask {
   }
 
   private getBuildMetadata(buildTask: TaskResults, componentId: ComponentID, app: Application) {
-    const componentResults = buildTask.componentsResults.find((res) =>
+    const componentResults = buildTask?.componentsResults.find((res) =>
       res.component.id.isEqual(componentId, { ignoreVersion: true })
     );
     /**

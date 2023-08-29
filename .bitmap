@@ -1819,7 +1819,10 @@
         "scope": "teambit.ui-foundation",
         "version": "0.0.191",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/uis/hooks/use-is-mobile"
+        "rootDir": "scopes/ui-foundation/uis/hooks/use-is-mobile",
+        "config": {
+            "teambit.community/envs/community-react@3.0.30": {}
+        }
     },
     "ui/hooks/use-scope": {
         "scope": "teambit.scope",
@@ -1837,7 +1840,10 @@
         "scope": "teambit.ui-foundation",
         "version": "0.0.191",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/uis/hooks/use-user-agent"
+        "rootDir": "scopes/ui-foundation/uis/hooks/use-user-agent",
+        "config": {
+            "teambit.community/envs/community-react@3.0.30": {}
+        }
     },
     "ui/icons/lane-icon": {
         "scope": "teambit.lanes",
