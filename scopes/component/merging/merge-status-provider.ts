@@ -36,27 +36,30 @@ export class MergeStatusProvider {
     const componentStatusBeforeMergeAttempt = await mapSeries(bitIds, (id) =>
       this.getComponentStatusBeforeMergeAttempt(id)
     );
+    // whether or not we need to import the gap between the common-snap and the other lane.
+    // the common-snap itself we need anyway in order to get the files hash/content for checking conflicts.
     const shouldImportHistoryOfOtherLane =
       !this.currentLane || // on main. we need all history in order to push each component to its remote
       this.currentLane.scope !== this.otherLane?.scope; // on lane, but the other lane is from a different scope. we need all history in order to push to the current lane's scope
-    if (shouldImportHistoryOfOtherLane) {
-      const toImport = componentStatusBeforeMergeAttempt
-        .map((compStatus) => {
-          if (!compStatus.divergeData) return [];
-          const versionsToImport = compact([
-            ...compStatus.divergeData.snapsOnTargetOnly,
-            compStatus.divergeData.commonSnapBeforeDiverge,
-          ]);
-          return versionsToImport.map((v) => compStatus.id.changeVersion(v.toString()));
-        })
-        .flat();
-      await this.workspace.consumer.scope.scopeImporter.importWithoutDeps(BitIds.fromArray(toImport), {
-        lane: this.otherLane,
-        cache: true,
-        includeVersionHistory: false,
-        reason: `for filling the gap between the common-snap and the head of ${this.otherLane?.id() || 'main'}`,
-      });
-    }
+    const toImport = componentStatusBeforeMergeAttempt
+      .map((compStatus) => {
+        if (!compStatus.divergeData) return [];
+        const versionsToImport = [compStatus.divergeData.commonSnapBeforeDiverge];
+        if (shouldImportHistoryOfOtherLane) {
+          versionsToImport.push(...compStatus.divergeData.snapsOnTargetOnly);
+        }
+        return compact(versionsToImport).map((v) => compStatus.id.changeVersion(v.toString()));
+      })
+      .flat();
+    const reason = shouldImportHistoryOfOtherLane
+      ? `for filling the gap between the common-snap and the head of ${this.otherLane?.id() || 'main'}`
+      : `for getting the common-snap between ${this.currentLane?.id() || 'main'} and ${this.otherLane?.id() || 'main'}`;
+    await this.workspace.consumer.scope.scopeImporter.importWithoutDeps(BitIds.fromArray(toImport), {
+      lane: this.otherLane,
+      cache: true,
+      includeVersionHistory: false,
+      reason,
+    });
 
     const compStatusNotNeedMerge = componentStatusBeforeMergeAttempt.filter(
       (c) => !c.mergeProps
