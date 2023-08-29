@@ -515,6 +515,7 @@ export default class Component extends BitObject {
           includeVersionHistory: true,
           collectParents: true,
           lane: lane || undefined,
+          reason: 'to collect logs (including parents)',
         });
         versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
       } catch (err) {

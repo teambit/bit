@@ -184,6 +184,7 @@ export default class ComponentsList {
         cache: false,
         includeVersionHistory: true,
         ignoreMissingHead: true,
+        reason: 'main components of the current lane to check for updates',
       }
     );
     const results = await Promise.all(

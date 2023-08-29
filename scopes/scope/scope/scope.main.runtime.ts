@@ -439,7 +439,10 @@ export class ScopeMain implements ComponentFactory {
     const components = await this.getMany(ids);
     const allFlattened = components.map((component) => component.state._consumer.getAllFlattenedDependencies()).flat();
     const allFlattenedUniq = BitIds.uniqFromArray(allFlattened);
-    await this.legacyScope.scopeImporter.importMany({ ids: allFlattenedUniq });
+    await this.legacyScope.scopeImporter.importWithoutDeps(allFlattenedUniq, {
+      cache: true,
+      reason: `which are unique flattened dependencies to get the graph of ${ids.length} ids`,
+    });
     const allFlattenedCompIds = await this.resolveMultipleComponentIds(allFlattenedUniq);
     const dependencies = await this.getMany(allFlattenedCompIds);
     const allComponents: Component[] = [...components, ...dependencies];
@@ -485,7 +488,7 @@ export class ScopeMain implements ComponentFactory {
     const lane = (await this.legacyScope.getCurrentLaneObject()) || undefined;
     await this.import(
       componentsWithoutSavedGraph.map((c) => c.id),
-      { reFetchUnBuiltVersion: false, lane }
+      { reFetchUnBuiltVersion: false, lane, reason: `to build graph-ids from the scope` }
     );
 
     const allFlattened = componentsWithoutSavedGraph
@@ -542,7 +545,7 @@ export class ScopeMain implements ComponentFactory {
     {
       useCache = true,
       reFetchUnBuiltVersion = true,
-      preferDependencyGraph = false,
+      preferDependencyGraph = true,
       lane,
     }: {
       /**
@@ -563,6 +566,10 @@ export class ScopeMain implements ComponentFactory {
        * if an external is missing and the remote has it with the dependency graph, don't fetch all its dependencies
        */
       preferDependencyGraph?: boolean;
+      /**
+       * reason why this import is needed (to show in the terminal)
+       */
+      reason?: string;
     } = {}
   ): Promise<void> {
     const legacyIds = ids.map((id) => {
