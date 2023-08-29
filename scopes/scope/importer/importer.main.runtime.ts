@@ -128,7 +128,7 @@ export class ImporterMain {
     await this.scope.legacyScope.scopeImporter.importMany({
       ids,
       lane,
-      preferDependencyGraph: true,
+      reason: `for fetching lane ${lane.id()}`,
     });
     const { mergeLane } = await this.scope.legacyScope.sources.mergeLane(lane, true);
     await this.scope.legacyScope.lanes.saveLane(mergeLane);

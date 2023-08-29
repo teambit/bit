@@ -689,6 +689,22 @@ describe('merge lanes', function () {
         });
       });
     });
+    describe('switching to main and checking out to head', () => {
+      before(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
+        helper.scopeHelper.getClonedLocalScope(afterLaneExport);
+        helper.command.switchLocalLane('main', '-x');
+        helper.command.checkoutHead('comp1', '-x');
+      });
+      it('should make the component available and checkout to main version', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
+        // it can be 0.0.1 or 0.0.2 depends when the ".only" is, but it doesn't matter.
+        // all we want here is to make sure it's a tag, not a snap.
+        expect(list[0].localVersion.startsWith('0.0')).to.be.true;
+        expect(list[0].currentVersion.startsWith('0.0')).to.be.true;
+      });
+    });
     describe('bit lane merge after soft-removed the unrelated component', () => {
       before(() => {
         helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
@@ -721,6 +737,68 @@ describe('merge lanes', function () {
       // it is fixed by traversing the unrelated. as a result, #1 includes not only snapC, but also snapB and snapA.
       it('bit status should not throw', () => {
         expect(() => helper.command.status()).to.not.throw();
+      });
+    });
+  });
+  describe('merge unrelated between two lanes with --resolve-unrelated', () => {
+    let headOnLaneA: string;
+    let headOnLaneB: string;
+    let beforeMerge: string;
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(1, false, 'lane-a');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      headOnLaneA = helper.command.getHeadOfLane('lane-a', 'comp1');
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.createLane('lane-b');
+      helper.fixtures.populateComponents(1, false, 'lane-b');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      headOnLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
+      beforeMerge = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('without specifying strategy, which defaults to "ours"', () => {
+      before(() => {
+        helper.command.mergeLane('lane-a', '--resolve-unrelated -x');
+      });
+      it('should resolve by default by ours', () => {
+        const fileContent = helper.fs.readFile('comp1/index.js');
+        expect(fileContent).to.have.string('lane-b');
+        expect(fileContent).to.not.have.string('lane-a');
+      });
+      it('should populate the unrelated property correctly on the Version object', () => {
+        const ver = helper.command.catComponent('comp1@latest');
+        expect(ver.unrelated.head).to.equal(headOnLaneA);
+        expect(ver.unrelated.laneId.name).to.equal('lane-a');
+      });
+      it('should populate the parents according to the current lane', () => {
+        const ver = helper.command.catComponent('comp1@latest');
+        expect(ver.parents[0]).to.equal(headOnLaneB);
+      });
+    });
+    describe('with strategy theirs', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeMerge);
+        helper.command.mergeLane('lane-a', '--resolve-unrelated=theirs -x');
+      });
+      it('should get the file content according to their', () => {
+        const fileContent = helper.fs.readFile('comp1/index.js');
+        expect(fileContent).to.have.string('lane-a');
+        expect(fileContent).to.not.have.string('lane-b');
+      });
+      it('should populate the unrelated property correctly on the Version object', () => {
+        const ver = helper.command.catComponent('comp1@latest');
+        expect(ver.unrelated.head).to.equal(headOnLaneB);
+        expect(ver.unrelated.laneId.name).to.equal('lane-b');
+      });
+      it('should populate the parents according to the other lane', () => {
+        const ver = helper.command.catComponent('comp1@latest');
+        expect(ver.parents[0]).to.equal(headOnLaneA);
       });
     });
   });

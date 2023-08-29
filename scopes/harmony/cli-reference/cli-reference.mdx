@@ -13,7 +13,7 @@ Commands that are marked as workspace only must be executed inside a workspace. 
 **Workspace only**: yes  
 **Description**: add any subset of files to be tracked as a component(s)  
  all flags support glob patterns and {PARENT} {FILE_NAME} annotations  
- https://bit.dev/docs/components/adding-components
+ https://bit.dev/reference/components/adding-components
 
 `bit add [path...]`
 
@@ -255,9 +255,9 @@ other users after publishing/exporting them.
 The following gets removed by this command:
 
 1. V8 compiled code (generated the first time Bit is loaded by v8-compile-cache package)
-2. components cache on the filesystem (mainly the dependencies graph and docs)
+2. components cache on the filesystem (mainly the dependencies graph and reference)
 3. scope's index file, which maps the component-id:object-hash  
-   https://bit.dev/docs/workspace/clearing-cache
+   https://bit.dev/reference/workspace/clearing-cache
 
 `bit clear-cache`
 
@@ -328,7 +328,7 @@ The following gets removed by this command:
 
 **Workspace only**: yes  
 **Description**: global config management.  
- https://bit.dev/docs/config/bit-config
+ https://bit.dev/reference/config/bit-config
 
 `bit config`
 
@@ -535,7 +535,7 @@ to validate the pattern before running this command, run `bit pattern <pattern>`
 bit export => export all staged components to their current scope, if checked out to a lane, export the lane as well  
 `bit export [id...]` => export the given ids to their current scope
 
-https://bit.dev/docs/components/exporting-components  
+https://bit.dev/reference/components/exporting-components  
 you can use a pattern for multiple ids, such as bit export remote-scope "utils/\*". (wrap the pattern with quotes to avoid collision with shell commands)
 
 `bit export [remote] [id...]`
@@ -630,7 +630,7 @@ to set the default-scope, please use --scope flag
 
 **Workspace only**: yes  
 **Description**: import components into your current workspace.  
-https://bit.dev/docs/components/importing-components  
+https://bit.dev/reference/components/importing-components  
 you can use a pattern for multiple ids, such as bit import "utils/\*". (wrap the pattern with quotes to avoid collision with shell commands)
 
 `bit import [ids...]`
@@ -658,7 +658,7 @@ you can use a pattern for multiple ids, such as bit import "utils/\*". (wrap the
 
 **Workspace only**: no  
 **Description**: initialize an empty bit scope  
-https://bit.dev/docs/workspace/creating-workspaces#initialize-a-workspace-on-an-existing-project
+https://bit.dev/reference/workspace/creating-workspaces#initialize-a-workspace-on-an-existing-project
 
 `bit init [path]`
 
@@ -702,7 +702,7 @@ https://bit.dev/docs/workspace/creating-workspaces#initialize-a-workspace-on-an-
 
 **Workspace only**: yes  
 **Description**: generate symlinks to resolve module paths for imported components.  
-https://bit.dev/docs/workspace/component-links
+https://bit.dev/reference/workspace/component-links
 
 `bit link [ids...]`
 
@@ -737,7 +737,7 @@ https://bit.dev/docs/workspace/component-links
 **Alias**: `ls`  
 **Workspace only**: no  
 **Description**: list components on a local or a remote scope.  
- https://bit.dev/docs/reference/cli-reference#list
+ https://bit.dev/reference/reference/cli-reference#list
 
 `bit list [remote-scope]`
 
@@ -757,7 +757,7 @@ https://bit.dev/docs/workspace/component-links
 
 **Workspace only**: no  
 **Description**: show components(s) tag history.  
- https://bit.dev/docs/reference/cli-reference#log
+ https://bit.dev/reference/reference/cli-reference#log
 
 `bit log <id>`
 
@@ -822,7 +822,7 @@ https://bit.dev/docs/workspace/component-links
 **Alias**: `mv`  
 **Workspace only**: yes  
 **Description**: move files or directories of component(s)  
- https://bit.dev/docs/workspace/moving-components
+ https://bit.dev/reference/workspace/moving-components
 
 `bit move <existing-dir> <new-dir>`
 
@@ -900,7 +900,7 @@ the `<old-id>` and `<new-id>` arguments can be either a component-id or a packag
 
 **Workspace only**: yes  
 **Description**: manage set of tracked bit scope(s)  
- https://bit.dev/docs/scope/remote-scopes
+ https://bit.dev/reference/scope/remote-scopes
 
 `bit remote`
 
@@ -937,7 +937,7 @@ Legacy support [file, ssh]. Harmony supports [file, http].
 **Alias**: `rm`  
 **Workspace only**: no  
 **Description**: remove a component (local/remote)  
- https://bit.dev/docs/components/removing-components  
+ https://bit.dev/reference/components/removing-components  
  you can use a pattern for multiple ids, such as bit remove "utils/\*". (wrap the pattern with quotes to avoid collision with shell commands)
 
 `bit remove <ids...>`
@@ -1082,7 +1082,7 @@ alternatively, exporting to any one of the failed scopes, throws server-is-busy 
 **Alias**: `s`  
 **Workspace only**: yes  
 **Description**: show the working area component(s) status.  
- https://bit.dev/docs/workspace/workspace-status
+ https://bit.dev/reference/workspace/workspace-status
 
 `bit status`
 
@@ -1100,7 +1100,7 @@ alternatively, exporting to any one of the failed scopes, throws server-is-busy 
 **Description**: record component changes and lock versions.  
 if no ids are provided, it will tag all new and modified components.  
 if component ids are entered, you can specify a version per id using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major  
-https://bit.dev/components/tags  
+https://bit.dev/reference/components/tags  
 you can use a pattern for multiple ids, such as bit tag "utils/\*". (wrap the pattern with quotes to avoid collision with shell commands)
 
 `bit tag [id...]`
@@ -1202,7 +1202,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
 **Workspace only**: yes  
 **Description**: revert version(s) tagged for component(s)  
- https://bit.dev/docs/components/tags#undoing-a-tag  
+ https://bit.dev/reference/components/tags#undoing-a-tag  
  you can use a pattern for multiple ids, such as bit untag "utils/\*". (wrap the pattern with quotes to avoid collision with shell commands)
 
 `bit untag [id] [version]`
