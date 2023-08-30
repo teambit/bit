@@ -32,6 +32,7 @@ import {
   starterTemplate,
   starterTemplateStandalone,
 } from './templates';
+import { BasicWorkspaceStarter } from './templates/basic';
 import { StarterPlugin } from './starter.plugin';
 import { GeneratorService } from './generator.service';
 
@@ -560,6 +561,10 @@ export class GeneratorMain {
         starterTemplate,
         starterTemplateStandalone,
       ]);
+    if (generator) {
+      generator.registerComponentTemplate([componentGeneratorTemplate, starterTemplate]);
+      generator.registerWorkspaceTemplate([BasicWorkspaceStarter]);
+    }
     return generator;
   }
 }

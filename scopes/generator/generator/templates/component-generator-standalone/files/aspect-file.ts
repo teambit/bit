@@ -1,4 +1,4 @@
-import { ComponentContext } from '@teambit/generator';
+import { ComponentContext } from '../../..';
 
 export function aspectFile({ namePascalCase, componentId }: ComponentContext) {
   return `import { Aspect } from '@teambit/harmony';
