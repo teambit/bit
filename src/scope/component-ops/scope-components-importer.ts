@@ -434,7 +434,7 @@ export default class ScopeComponentsImporter {
    * just make sure not to use it for components/lanes, as they require a proper "merge" before
    * persisting them to the filesystem. this method is good for immutable objects.
    */
-  async importManyObjects(groupedHashes: HashesPerRemote): Promise<void> {
+  async importManyObjects(groupedHashes: HashesPerRemote, reason?: string): Promise<void> {
     await this.importManyObjectsMutex.runExclusive(async () => {
       const groupedHashedMissing = {};
       await Promise.all(
@@ -460,7 +460,8 @@ export default class ScopeComponentsImporter {
         undefined,
         undefined,
         undefined,
-        groupedHashedMissing
+        groupedHashedMissing,
+        reason
       ).fetchFromRemoteAndWrite();
       this.throwForMissingObjects(groupedHashedMissing, allObjects);
     });
