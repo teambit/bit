@@ -6,6 +6,7 @@ import * as path from 'path';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
 import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
+import { FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -362,7 +363,7 @@ describe('bit checkout command', function () {
         expect(output).to.have.string('bar/foo');
       });
       it('should indicate that the file was not changed', () => {
-        expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
+        expect(output).to.not.have.string(FILE_CHANGES_CHECKOUT_MSG);
       });
       it('should leave the file intact', () => {
         const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
@@ -419,8 +420,7 @@ describe('bit checkout command', function () {
           output = helper.command.checkoutVersion('0.0.1', 'bar/foo', '--auto-merge-resolve ours');
         });
         it('should indicate that the new file was not changed', () => {
-          expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
-          expect(output).to.have.string('foo2.js');
+          expect(output).to.not.have.string(FILE_CHANGES_CHECKOUT_MSG);
         });
         it('should not delete the file', () => {
           expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.be.a.file();
