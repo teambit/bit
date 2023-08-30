@@ -254,18 +254,20 @@ it is useful e.g. when having multiple lanes with the same name, but with differ
 }
 
 export class LaneChangeScopeCmd implements Command {
-  name = 'change-scope <lane-name> <remote-scope-name>';
+  name = 'change-scope <remote-scope-name>';
   description = `changes the remote scope of a lane`;
   extendedDescription = 'NOTE: available only before the lane is exported to the remote';
   alias = '';
-  options = [] as CommandOptions;
+  options = [
+    ['lane-name', '', 'the name of the lane to change its remote scope. if not specified, the current lane is used'],
+  ] as CommandOptions;
   loader = true;
   migration = true;
 
   constructor(private lanes: LanesMain) {}
 
-  async report([localName, remoteScope]: [string, string]): Promise<string> {
-    const { remoteScopeBefore } = await this.lanes.changeScope(localName, remoteScope);
+  async report([remoteScope]: [string], { laneName }: { laneName?: string }): Promise<string> {
+    const { remoteScopeBefore, localName } = await this.lanes.changeScope(remoteScope, laneName);
     return `the remote-scope of ${chalk.bold(localName)} has been changed from ${chalk.bold(
       remoteScopeBefore
     )} to ${chalk.bold(remoteScope)}`;
