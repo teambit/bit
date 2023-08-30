@@ -1821,7 +1821,10 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-is-mobile",
         "config": {
-            "teambit.community/envs/community-react@3.0.30": {}
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
         }
     },
     "ui/hooks/use-scope": {
@@ -1842,7 +1845,10 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-user-agent",
         "config": {
-            "teambit.community/envs/community-react@3.0.30": {}
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
         }
     },
     "ui/icons/lane-icon": {
