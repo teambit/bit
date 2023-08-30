@@ -2092,6 +2092,9 @@ importers:
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
+      react-router-dom:
+        specifier: ^6.0.0
+        version: 6.3.0(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
@@ -4393,7 +4396,7 @@ importers:
         version: file:scopes/lanes/diff
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.2.2)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2)
@@ -6317,7 +6320,7 @@ importers:
         version: file:scopes/lanes/diff
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2)
@@ -8226,7 +8229,7 @@ importers:
         version: file:scopes/lanes/diff
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2)
@@ -10135,7 +10138,7 @@ importers:
         version: file:scopes/lanes/diff
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2)
@@ -12044,7 +12047,7 @@ importers:
         version: file:scopes/lanes/diff
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2)
@@ -13953,7 +13956,7 @@ importers:
         version: file:scopes/lanes/diff
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2)
@@ -15862,7 +15865,7 @@ importers:
         version: file:scopes/lanes/diff
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react@17.0.2)
+        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2)
@@ -32792,6 +32795,9 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
+      classnames:
+        specifier: 2.2.6
+        version: 2.2.6
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -32847,6 +32853,9 @@ importers:
       '@teambit/workspace.content.workspace-overview':
         specifier: 1.95.0
         version: 1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@types/classnames':
+        specifier: 2.2.11
+        version: 2.2.11
       '@types/find-root':
         specifier: 1.1.2
         version: 1.1.2
@@ -38997,6 +39006,7 @@ packages:
 
   /@teambit/base-ui.hook.use-click-outside@1.0.0(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-We1J6M2/jBAAIN7/zilrIJKeGILSpkR7/FSSidsiacfm/SqIn+BMuse1GXvd4ThOhvAgFUUbj0fZ4NDyQhu3BQ==}
+    deprecated: No longer maintained, use teambit.base-react/hooks/use-click-outside
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -39043,7 +39053,7 @@ packages:
     dev: false
 
   /@teambit/base-ui.input.checkbox.hidden@1.0.2(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-O8Yps5mBrOsEIvF8nvTyKoBjXxM=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/input/checkbox/hidden@1.0.2.tgz}
+    resolution: {integrity: sha1-O8Yps5mBrOsEIvF8nvTyKoBjXxM=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -39080,7 +39090,7 @@ packages:
     dev: false
 
   /@teambit/base-ui.input.checkbox.label@1.0.2(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-1DriGxnU40B6XI0f0MQRPf6bZuw=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/input/checkbox/label@1.0.2.tgz}
+    resolution: {integrity: sha1-1DriGxnU40B6XI0f0MQRPf6bZuw=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -42562,7 +42572,7 @@ packages:
     dev: false
 
   /@teambit/evangelist.input.checkbox.indicator@1.0.8(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-Nn0xSq1WfQhUKQ4sx4G7T9Q78eM=, tarball: https://node-registry.bit.cloud/tarballs/teambit.evangelist/input/checkbox/indicator@1.0.8.tgz}
+    resolution: {integrity: sha1-Nn0xSq1WfQhUKQ4sx4G7T9Q78eM=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -65594,13 +65604,14 @@ packages:
       use-optionally-controlled-state: 1.2.0(react-dom@17.0.2)(react@17.0.2)
     dev: false
 
-  file:components/ui/compare/lane-compare(react-dom@17.0.2)(react@17.0.2):
+  file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.2.2)(react@17.0.2):
     resolution: {directory: components/ui/compare/lane-compare, type: directory}
     id: file:components/ui/compare/lane-compare
     name: '@teambit/lanes.ui.compare.lane-compare'
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
+      react-router-dom: ^6.0.0
     dependencies:
       '@teambit/component-id': 0.0.427
       '@teambit/design.elements.icon': 1.0.5(react-dom@17.0.2)(react@17.0.2)
@@ -65610,6 +65621,27 @@ packages:
       lodash: 4.17.21
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+      react-router-dom: 6.2.2(react-dom@17.0.2)(react@17.0.2)
+    dev: false
+
+  file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+    resolution: {directory: components/ui/compare/lane-compare, type: directory}
+    id: file:components/ui/compare/lane-compare
+    name: '@teambit/lanes.ui.compare.lane-compare'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+      react-router-dom: ^6.0.0
+    dependencies:
+      '@teambit/component-id': 0.0.427
+      '@teambit/design.elements.icon': 1.0.5(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.heading': 4.1.1(react-dom@17.0.2)(react@17.0.2)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      lodash: 4.17.21
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+      react-router-dom: 6.3.0(react-dom@17.0.2)(react@17.0.2)
     dev: false
 
   file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2):
@@ -73358,6 +73390,7 @@ packages:
       '@teambit/harmony': 0.4.6
       '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
+      classnames: 2.2.6
       core-js: 3.13.0
       detect-indent: 5.0.0
       detect-newline: 3.1.0
@@ -73406,6 +73439,7 @@ packages:
       '@teambit/harmony': 0.4.6
       '@teambit/legacy-bit-id': 1.0.0
       chalk: 2.4.2
+      classnames: 2.2.6
       core-js: 3.13.0
       detect-indent: 5.0.0
       detect-newline: 3.1.0

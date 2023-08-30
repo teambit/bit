@@ -2,8 +2,6 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
-import { CommunityAspect } from '@teambit/community';
-import type { CommunityMain } from '@teambit/community';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 
@@ -28,8 +26,12 @@ import { ComponentGenerator, GenerateResult, OnComponentCreateFn } from './compo
 import { WorkspaceGenerator } from './workspace-generator';
 import { WorkspaceTemplate } from './workspace-template';
 import { NewCmd, NewOptions } from './new.cmd';
-import { componentGeneratorTemplate } from './templates/component-generator';
-import { starterTemplate } from './templates/starter';
+import {
+  componentGeneratorTemplate,
+  componentGeneratorTemplateStandalone,
+  starterTemplate,
+  starterTemplateStandalone,
+} from './templates';
 import { BasicWorkspaceStarter } from './templates/basic';
 import { StarterPlugin } from './starter.plugin';
 import { GeneratorService } from './generator.service';
@@ -98,7 +100,7 @@ export class GeneratorMain {
   }
 
   /**
-   * register a new component template.
+   * register a new workspace starter.
    */
   registerWorkspaceTemplate(templates: WorkspaceTemplate[]) {
     this.workspaceTemplateSlot.register(templates);
@@ -290,11 +292,11 @@ export class GeneratorMain {
   ): Promise<GenerateResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     await this.loadAspects();
-    const { namespace, aspect: aspectId } = options;
+    const { namespace, aspect } = options;
 
     const componentConfigLoadingRegistry = ComponentConfig.componentConfigLoadingRegistry;
 
-    const templateWithId = await this.getComponentTemplate(templateName, aspectId);
+    const templateWithId = await this.getComponentTemplate(templateName, aspect);
 
     ComponentConfig.componentConfigLoadingRegistry = componentConfigLoadingRegistry;
 
@@ -324,7 +326,7 @@ export class GeneratorMain {
   async generateWorkspaceTemplate(
     workspaceName: string,
     templateName: string,
-    options: NewOptions
+    options: NewOptions & { aspect?: string }
   ): Promise<GenerateWorkspaceTemplateResult> {
     if (this.workspace) {
       throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
@@ -337,7 +339,6 @@ export class GeneratorMain {
     if (!workspaceTemplate) throw new BitError(`template "${templateName}" was not found`);
     const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, workspaceTemplate, aspect);
     const workspacePath = await workspaceGenerator.generate();
-
     return { workspacePath, appName: workspaceTemplate.appName };
   }
 
@@ -489,7 +490,6 @@ export class GeneratorMain {
     EnvsAspect,
     AspectLoaderAspect,
     NewComponentHelperAspect,
-    CommunityAspect,
     ComponentAspect,
     TrackerAspect,
     LoggerAspect,
@@ -507,7 +507,6 @@ export class GeneratorMain {
       envs,
       aspectLoader,
       newComponentHelper,
-      community,
       componentAspect,
       tracker,
       loggerMain,
@@ -520,7 +519,6 @@ export class GeneratorMain {
       EnvsMain,
       AspectLoaderMain,
       NewComponentHelperMain,
-      CommunityMain,
       ComponentMain,
       TrackerMain,
       LoggerMain,
@@ -550,20 +548,21 @@ export class GeneratorMain {
       git,
       wsConfigFiles
     );
-    const commands = [
-      new CreateCmd(generator, community.getDocsDomain()),
-      new TemplatesCmd(generator),
-      new NewCmd(generator),
-    ];
+    const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
     graphql.register(generatorSchema(generator));
     aspectLoader.registerPlugins([new StarterPlugin(generator)]);
     envs.registerService(new GeneratorService());
 
-    if (generator) {
-      generator.registerComponentTemplate([componentGeneratorTemplate, starterTemplate]);
-      generator.registerWorkspaceTemplate([BasicWorkspaceStarter]);
-    }
+    if (generator)
+      generator.registerComponentTemplate([
+        componentGeneratorTemplate,
+        componentGeneratorTemplateStandalone,
+        starterTemplate,
+        starterTemplateStandalone,
+      ]);
+    generator.registerWorkspaceTemplate([BasicWorkspaceStarter]);
+
     return generator;
   }
 }
