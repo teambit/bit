@@ -94,6 +94,7 @@
         "@teambit/code.ui.queries.get-file-content": "0.0.504",
         "@teambit/code.ui.utils.get-file-icon": "0.0.495",
         "@teambit/community.constants.links": "0.0.2",
+        "@teambit/community.starters.hello-world": "^0.0.16",
         "@teambit/compilation.content.compiler-overview": "1.95.0",
         "@teambit/component-id": "^0.0.427",
         "@teambit/component.content.component-overview": "1.95.0",

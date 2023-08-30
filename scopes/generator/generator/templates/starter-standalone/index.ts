@@ -1,15 +1,14 @@
-import { ComponentContext, ComponentTemplate } from '../../';
+import { ComponentContext, ComponentTemplate } from '@teambit/generator';
 import { indexFile } from './files/index';
 import { starterFile } from './files/starter';
 import { docFile } from './files/doc-file';
 import { gitIgnoreTemplate } from './files/git-ignore-tpl';
 import { workspaceConfigTemplate } from './files/workspace-config-tpl';
-import { generateFiles } from './files/generate-files';
 
 export const starterTemplate: ComponentTemplate = {
-  name: 'starter',
+  name: 'standalone-starter',
   description:
-    'create your own workspace starter (env integrated) - \nDocs: https://bit.dev/reference/starters/create-starter',
+    'create your own workspace starter (standalone) - \nDocs: https://bit.dev/reference/starters/create-starter',
   generateFiles: (context: ComponentContext) => {
     return [
       {
@@ -34,16 +33,12 @@ export const starterTemplate: ComponentTemplate = {
         relativePath: 'template/files/workspace-config.ts',
         content: workspaceConfigTemplate(),
       },
-      {
-        relativePath: 'template/files/generate-files.ts',
-        content: generateFiles(),
-      },
     ];
   },
   config: {
     'teambit.harmony/aspect': {},
     'teambit.envs/envs': {
-      env: 'teambit.harmony/node',
+      env: 'teambit.harmony/aspect',
     },
   },
 };

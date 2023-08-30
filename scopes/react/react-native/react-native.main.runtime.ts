@@ -11,7 +11,7 @@ import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain, ReactEnv, UseWebpackModifiers } from '@teambit/react';
 import { ReactNativeAspect } from './react-native.aspect';
-import { componentTemplates, workspaceTemplates } from './react-native.templates';
+import { componentTemplates } from './react-native.templates';
 import { previewConfigTransformer, devServerConfigTransformer } from './webpack/webpack-transformers';
 import { ReactNativeEnv } from './react-native.env';
 
@@ -126,7 +126,6 @@ export class ReactNativeMain {
 
     if (generator) {
       generator.registerComponentTemplate(componentTemplates);
-      generator.registerWorkspaceTemplate(workspaceTemplates);
     }
 
     return new ReactNativeMain(react, reactNativeComposedEnv, envs);

@@ -1,14 +1,12 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { GeneratorMain } from './generator.main.runtime';
+import { BaseWorkspaceOptions } from './workspace-template';
 
-export type NewOptions = {
-  aspect?: string;
-  defaultScope?: string;
-  skipGit?: boolean;
-  loadFrom?: string;
-  empty?: boolean;
-};
+/**
+ * NewOptions combines foundational properties with additional options for creating a workspace.
+ */
+export type NewOptions = BaseWorkspaceOptions;
 
 export class NewCmd implements Command {
   name = 'new <template-name> <workspace-name>';
@@ -58,6 +56,7 @@ export class NewCmd implements Command {
       standalone: boolean;
       env?: string;
       template?: string;
+      aspect?: string;
     }
   ) {
     options.skipGit = options.skipGit ?? options.standalone;

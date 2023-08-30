@@ -3,13 +3,13 @@ export function workspaceConfigTemplate() {
 import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
 
 export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
-  const scope = defaultScope || 'org.scope';
   const configParsed = await getWorkspaceConfigTemplateParsed();
   configParsed['teambit.workspace/workspace'].name = name;
-  configParsed['teambit.workspace/workspace'].defaultScope = scope;
+  configParsed['teambit.workspace/workspace'].defaultScope = defaultScope || 'org.scope';
   configParsed['teambit.generator/generator'] = {
     envs: [
-     scope + '/react/react-env',
+      'teambit.react/react-env',
+      'teambit.node/node',
     ],
   };
   configParsed['teambit.workspace/variants'] = {

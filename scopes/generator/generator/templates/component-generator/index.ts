@@ -1,13 +1,14 @@
 import { ComponentContext, ComponentTemplate } from '../..';
 import { indexFile } from './files/index';
-import { aspectFile } from './files/aspect-file';
-import { docsFile } from './files/docs-file';
-import { mainRuntime } from './files/main-runtime';
+import { generateTestFileContent } from './files/component-template-files/test';
+import { generateComponentFileContent } from './files/component-template-files/component';
+import { generateCompositionFileContent } from './files/component-template-files/composition';
+import { generateIndexFileContent } from './files/component-template-files/index-file';
+import { componentTemplate } from './files/component-template';
 
 export const componentGeneratorTemplate: ComponentTemplate = {
   name: 'component-generator',
-  description:
-    'create your own component generator \nDocs: https://bit.dev/docs/dev-services/generator/generate-component',
+  description: 'create your own component generator \nDocs: https://bit.dev/reference/generator/create-generator',
   generateFiles: (context: ComponentContext) => {
     return [
       {
@@ -15,17 +16,26 @@ export const componentGeneratorTemplate: ComponentTemplate = {
         content: indexFile(context),
         isMain: true,
       },
+
       {
-        relativePath: `${context.name}.aspect.ts`,
-        content: aspectFile(context),
+        relativePath: `./${context.name}.ts`,
+        content: componentTemplate(context),
       },
       {
-        relativePath: `${context.name}.docs.mdx`,
-        content: docsFile(),
+        relativePath: `./files/test-file.ts`,
+        content: generateTestFileContent(),
       },
       {
-        relativePath: `${context.name}.main.runtime.ts`,
-        content: mainRuntime(context),
+        relativePath: `./files/composition-file.ts`,
+        content: generateCompositionFileContent(),
+      },
+      {
+        relativePath: `./files/component-file.ts`,
+        content: generateComponentFileContent(),
+      },
+      {
+        relativePath: `./files/index-file.ts`,
+        content: generateIndexFileContent(),
       },
     ];
   },
