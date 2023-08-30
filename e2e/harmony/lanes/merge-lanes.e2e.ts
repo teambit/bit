@@ -567,7 +567,7 @@ describe('merge lanes', function () {
         mergeOutput = helper.command.mergeLane('main', '--resolve-unrelated');
       });
       it('should merge successfully', () => {
-        expect(mergeOutput).to.have.string('successfully merged components');
+        expect(mergeOutput).to.have.string('successfully merged');
       });
       it('bit status should show the component as staged and not everywhere else', () => {
         helper.command.expectStatusToBeClean(['stagedComponents']);
@@ -1521,6 +1521,34 @@ describe('merge lanes', function () {
       });
       it('should remove the file from the current lane and write the file according to the switch-to lane', () => {
         helper.fs.expectFileToExist('comp1/Foo.js');
+      });
+    });
+  });
+  describe('multiple files, some are not changes', () => {
+    let switchOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile('comp1/foo.js');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      switchOutput = helper.command.switchLocalLane('lane-a', '-x');
+    });
+    it('expect to have all files as unchanged, not updated', () => {
+      expect(switchOutput).to.not.have.string('updated');
+    });
+    describe('merge the lane', () => {
+      let mergeOutput: string;
+      before(() => {
+        mergeOutput = helper.command.mergeLane('lane-b', '-x');
+      });
+      it('expect to have all files as unchanged, not updated', () => {
+        expect(mergeOutput).to.not.have.string('updated');
       });
     });
   });
