@@ -3,7 +3,12 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentID } from '@teambit/component-id';
 import { compact } from 'lodash';
-import { WILDCARD_HELP, AUTO_SNAPPED_MSG, MergeConfigFilename } from '@teambit/legacy/dist/constants';
+import {
+  WILDCARD_HELP,
+  AUTO_SNAPPED_MSG,
+  MergeConfigFilename,
+  FILE_CHANGES_CHECKOUT_MSG,
+} from '@teambit/legacy/dist/constants';
 import {
   FileStatus,
   ApplyVersionResult,
@@ -151,14 +156,9 @@ export function mergeReport({
     const title = `successfully merged ${components.length} components${
       version ? `from version ${chalk.bold(version)}` : ''
     }\n`;
-    const fileChangesOutput = () => {
-      const fileChangesReport = applyVersionReport(components);
-      if (!fileChangesReport) return '';
-      const fileChangesTitle = `\ncomponents with file changes\n`;
-      return chalk.underline(fileChangesTitle) + chalk.green(fileChangesReport);
-    };
+    const fileChangesReport = applyVersionReport(components);
 
-    return chalk.bold(title) + fileChangesOutput();
+    return chalk.bold(title) + fileChangesReport;
   };
 
   const getConflictSummary = () => {
@@ -270,9 +270,13 @@ ${mergeSnapError.message}
   );
 }
 
+/**
+ * shows only the file-changes section.
+ * if all files are "unchanged", it returns an empty string
+ */
 export function applyVersionReport(components: ApplyVersionResult[], addName = true, showVersion = false): string {
   const tab = addName ? '\t' : '';
-  return compact(
+  const fileChanges = compact(
     components.map((component: ApplyVersionResult) => {
       const name = showVersion ? component.id.toString() : component.id.toStringWithoutVersion();
       const files = compact(
@@ -291,6 +295,11 @@ export function applyVersionReport(components: ApplyVersionResult[], addName = t
       return `${addName ? name : ''}\n${chalk.cyan(files)}`;
     })
   ).join('\n\n');
+  if (!fileChanges) {
+    return '';
+  }
+  const title = `\n${FILE_CHANGES_CHECKOUT_MSG}\n`;
+  return chalk.underline(title) + fileChanges;
 }
 
 export function conflictSummaryReport(components: ApplyVersionResult[]): string {
