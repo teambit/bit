@@ -72,8 +72,7 @@ describe('updates from main and lane', function () {
         );
       });
       it('should update not only components belong to the main but also components that are available on the workspace and have updates from main', () => {
-        expect(mergeOutput).to.have.string('comp1');
-        expect(mergeOutput).to.have.string('comp2');
+        expect(mergeOutput).to.have.string('Total Merged: 2');
 
         const status = helper.command.statusJson(undefined, '--lanes');
         expect(status.pendingUpdatesFromMain).to.have.lengthOf(0);
