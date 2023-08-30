@@ -9,8 +9,6 @@ import { MainRuntime } from '@teambit/cli';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactEnv, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
-import { htmlEnvTemplate } from './templates/html-env';
-import { htmlComponentTemplate, deprecatedHtmlComponentTemplate } from './templates/html-component';
 import { HtmlAspect } from './html.aspect';
 import { HtmlEnv } from './html.env';
 
@@ -110,11 +108,10 @@ export class HtmlMain {
     return this.envs.compose(this.envs.merge(targetEnv, this.htmlEnv), transformers);
   }
 
-  static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {
+  static async provider([envs, react]: [EnvsMain, ReactMain, GeneratorMain]) {
     const htmlEnv: HtmlEnv = envs.merge<HtmlEnv, ReactEnv>(new HtmlEnv(), react.reactEnv);
     envs.registerEnv(htmlEnv);
-    if (generator)
-      generator.registerComponentTemplate([htmlEnvTemplate, htmlComponentTemplate, deprecatedHtmlComponentTemplate]);
+
     return new HtmlMain(react, htmlEnv, envs);
   }
 }
