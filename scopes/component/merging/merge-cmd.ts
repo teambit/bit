@@ -148,10 +148,17 @@ export function mergeReport({
 }: ApplyVersionResults & { configMergeResults?: ConfigMergeResult[] }): string {
   const getSuccessOutput = () => {
     if (!components || !components.length) return '';
-    // @ts-ignore version is set in case of merge command
-    const title = `successfully merged components${version ? `from version ${chalk.bold(version)}` : ''}\n`;
-    // @ts-ignore components is set in case of merge command
-    return chalk.underline(title) + chalk.green(applyVersionReport(components));
+    const title = `successfully merged ${components.length} components${
+      version ? `from version ${chalk.bold(version)}` : ''
+    }\n`;
+    const fileChangesOutput = () => {
+      const fileChangesReport = applyVersionReport(components);
+      if (!fileChangesReport) return '';
+      const fileChangesTitle = `\ncomponents with file changes\n`;
+      return chalk.underline(fileChangesTitle) + chalk.green(fileChangesReport);
+    };
+
+    return chalk.bold(title) + fileChangesOutput();
   };
 
   const getConflictSummary = () => {
