@@ -259,7 +259,11 @@ export class LaneChangeScopeCmd implements Command {
   extendedDescription = 'NOTE: available only before the lane is exported to the remote';
   alias = '';
   options = [
-    ['lane-name', '', 'the name of the lane to change its remote scope. if not specified, the current lane is used'],
+    [
+      'l',
+      'lane-name <lane-name>',
+      'the name of the lane to change its remote scope. if not specified, the current lane is used',
+    ],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -285,8 +289,8 @@ export class LaneRenameCmd implements Command {
   migration = true;
   constructor(private lanes: LanesMain) {}
 
-  async report([currentName, newName]: [string, string]): Promise<string> {
-    const { exported, exportErr } = await this.lanes.rename(currentName, newName);
+  async report([newName]: [string], { laneName }: { laneName?: string }): Promise<string> {
+    const { exported, exportErr, currentName } = await this.lanes.rename(newName, laneName);
     const exportedStr = exported
       ? `and have been exported successfully to the remote`
       : `however failed exporting the renamed lane to the remote, due to an error: ${exportErr?.message || 'unknown'}`;
