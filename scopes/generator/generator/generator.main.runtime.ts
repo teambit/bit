@@ -561,10 +561,8 @@ export class GeneratorMain {
         starterTemplate,
         starterTemplateStandalone,
       ]);
-    if (generator) {
-      generator.registerComponentTemplate([componentGeneratorTemplate, starterTemplate]);
-      generator.registerWorkspaceTemplate([BasicWorkspaceStarter]);
-    }
+    generator.registerWorkspaceTemplate([BasicWorkspaceStarter]);
+
     return generator;
   }
 }
