@@ -275,10 +275,12 @@ export class LaneChangeScopeCmd implements Command {
 }
 
 export class LaneRenameCmd implements Command {
-  name = 'rename <current-name> <new-name>';
+  name = 'rename <new-name>';
   description = `EXPERIMENTAL. change the lane-name locally and on the remote (if exported)`;
   alias = '';
-  options = [] as CommandOptions;
+  options = [
+    ['l', 'lane-name <lane-name>', 'the name of the lane to rename. if not specified, the current lane is used'],
+  ] as CommandOptions;
   loader = true;
   migration = true;
   constructor(private lanes: LanesMain) {}
