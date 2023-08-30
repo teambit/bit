@@ -9,6 +9,7 @@ import {
   MergeStrategy,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import { BitId } from '@teambit/legacy-bit-id';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
@@ -117,11 +118,11 @@ export class ImportCmd implements Command {
     if (!importedIds.length && !missingIds?.length) {
       return chalk.yellow(cancellationMessage || 'nothing to import');
     }
-
+    const importedIdsUniqNoVersion = BitIds.fromArray(importedIds).toVersionLatest();
     const summaryPrefix =
-      importedIds.length === 1
+      importedIdsUniqNoVersion.length === 1
         ? 'successfully imported one component'
-        : `successfully imported ${importedIds.length} components`;
+        : `successfully imported ${importedIdsUniqNoVersion.length} components`;
 
     let upToDateCount = 0;
     const importedComponents = importedIds.map((bitId) => {

@@ -53,6 +53,7 @@ export function useComponentFilters() {
     },
   };
 }
+
 export function useLaneComponentIdFromUrl(): ComponentID | undefined | null {
   const idFromLocation = useIdFromLocation();
   const { lanesModel, loading } = useLanes();
@@ -60,16 +61,27 @@ export function useLaneComponentIdFromUrl(): ComponentID | undefined | null {
   const query = useQuery();
   const componentVersion = query.get('version');
 
-  if (componentVersion && laneFromUrl) {
-    const componentId = ComponentID.fromString(`${idFromLocation}@${componentVersion}`);
-    return componentId;
-  }
-  const laneComponentId =
-    idFromLocation && !laneFromUrl?.isDefault()
-      ? lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl) ?? null
-      : null;
+  if (!idFromLocation) return null;
 
-  return loading ? undefined : laneComponentId;
+  const compIdFromLocation = ComponentID.tryFromString(
+    `${idFromLocation}${componentVersion ? `@${componentVersion}` : ''}`
+  );
+
+  if (compIdFromLocation) return compIdFromLocation;
+  if (loading) return undefined;
+
+  return lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl) ?? null;
+
+  // if (componentVersion && laneFromUrl) {
+  //   const componentId = ComponentID.tryFromString(`${idFromLocation}@${componentVersion}`);
+  //   return componentId;
+  // }
+
+  // const laneComponentId =
+  //   idFromLocation && !laneFromUrl?.isDefault()
+  //     ? lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl) ?? null
+  //     : null;
+  // return loading ? undefined : laneComponentId;
 }
 
 export function useComponentId() {

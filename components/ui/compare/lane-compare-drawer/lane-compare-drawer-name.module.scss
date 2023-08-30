@@ -7,6 +7,10 @@
   justify-content: space-between;
 }
 
+.closed {
+  visibility: hidden;
+}
+
 .versionContainer {
   display: flex;
   align-items: center;
@@ -77,4 +81,16 @@
     height: 14px;
     width: 14px;
   }
+}
+
+.fullHeight {
+  height: 100%;
+}
+
+.autoHeight {
+  height: auto;
+}
+
+.noHeight {
+  height: 0;
 }
