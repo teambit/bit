@@ -12,5 +12,6 @@ export {
   ComponentStatusBase,
   ApplyVersionWithComps,
   removeFilesIfNeeded,
+  updateFileStatus,
 } from './checkout-version';
 export { checkoutOutput } from './checkout-cmd';
