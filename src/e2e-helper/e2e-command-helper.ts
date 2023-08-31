@@ -6,7 +6,7 @@ import rightpad from 'pad-right';
 import * as path from 'path';
 import tar from 'tar';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
-import { BUILD_ON_CI, ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
+import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
 import { Extensions, NOTHING_TO_SNAP_MSG } from '../constants';
 import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
