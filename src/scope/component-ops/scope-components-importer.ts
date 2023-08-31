@@ -866,10 +866,10 @@ export default class ScopeComponentsImporter {
   }
 
   private async getLaneForFetcher(lane?: Lane): Promise<Lane | undefined> {
-    if (lane) return lane;
+    if (lane && !lane.isNew) return lane;
     if (!this.shouldOnlyFetchFromCurrentLane) return undefined;
     const currentLane = await this.scope.getCurrentLaneObject();
-    return currentLane || undefined;
+    return currentLane && !currentLane.isNew ? currentLane : undefined;
   }
 
   private async _getComponentVersion(id: BitId): Promise<ComponentVersion> {

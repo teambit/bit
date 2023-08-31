@@ -3,6 +3,7 @@ import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
@@ -242,10 +243,10 @@ to move all component files to a different directory, run bit remove and then bi
 
     if (fs.pathExistsSync(componentDir)) {
       if (!isDir(componentDir)) {
-        throw new GeneralError(`unable to import to ${componentDir} because it's a file`);
+        throw new BitError(`unable to import to ${componentDir} because it's a file`);
       }
       if (!isDirEmptySync(componentDir) && opts.throwForExistingDir) {
-        throw new GeneralError(
+        throw new BitError(
           `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import`
         );
       }
