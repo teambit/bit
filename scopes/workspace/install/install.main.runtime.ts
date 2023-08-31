@@ -311,10 +311,17 @@ export class InstallMain {
         },
         pmInstallOptions
       );
+      let cacheCleared = false;
       if (options?.compile ?? true) {
         const compileStartTime = process.hrtime();
         const compileOutputMessage = `compiling components`;
         this.logger.setStatusLine(compileOutputMessage);
+        // We need to clear cache before compiling the components or it might compile them with the default env
+        // incorrectly in case the env was not loaded correctly before the install
+        this.workspace.consumer.componentLoader.clearComponentsCache();
+        // We don't want to clear the failed to load envs because we want to show the warning at the end
+        await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+        cacheCleared = true;
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
@@ -324,10 +331,14 @@ export class InstallMain {
       const oldNonLoadedEnvs = this.getOldNonLoadedEnvs();
       if (!oldNonLoadedEnvs.length) break;
       prevManifests.add(manifestsHash(current.manifests));
-      // We need to clear cache before creating the new component manifests.
-      this.workspace.consumer.componentLoader.clearComponentsCache();
-      // We don't want to clear the failed to load envs because we want to show the warning at the end
-      await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+      // If we run compile we do the clear cache before the compilation so no need to clean it again (it's an expensive
+      // operation)
+      if (!cacheCleared) {
+        // We need to clear cache before creating the new component manifests.
+        this.workspace.consumer.componentLoader.clearComponentsCache();
+        // We don't want to clear the failed to load envs because we want to show the warning at the end
+        await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+      }
       current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
