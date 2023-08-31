@@ -67,13 +67,14 @@ export class ComponentLogMain {
     const filePathAsLinux = pathNormalizeToLinux(filePath);
     const filePathRelativeInComponent = filePathAsLinux.replace(`${rootDir}/`, '');
 
-    const modelComp = await workspace.scope.getBitObjectModelComponent(componentId, true);
+    const modelComp = await workspace.scope.getBitObjectModelComponent(componentId);
+    if (!modelComp) return []; // probably a new component
     const results: FileLog[] = [];
     await pMap(
       logs,
       async (logItem) => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const versionObj = await workspace.scope.getBitObjectVersion(modelComp!, logItem.hash);
+        const versionObj = await workspace.scope.getBitObjectVersion(modelComp!, logItem.hash, true);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const fileInComp = versionObj!.files.find((f) => f.relativePath === filePathRelativeInComponent);
         if (!fileInComp) return;
