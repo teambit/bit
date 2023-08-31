@@ -14,7 +14,7 @@ import {
   ApplyVersionResult,
   MergeStrategy,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { isFeatureEnabled, FORCE_LOCAL_BUILD } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BitError } from '@teambit/bit-error';
 import { ApplyVersionResults, MergingMain } from './merging.main.runtime';
 import { ConfigMergeResult } from './config-merge-result';
@@ -83,7 +83,7 @@ ${WILDCARD_HELP('merge')}`;
       skipDependencyInstallation?: boolean;
     }
   ) {
-    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
+    build = isFeatureEnabled(FORCE_LOCAL_BUILD) || Boolean(build);
     if (ours || theirs || manual) {
       throw new BitError(
         'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead'

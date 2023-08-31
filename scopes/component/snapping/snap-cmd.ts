@@ -3,7 +3,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
-import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { isFeatureEnabled, FORCE_LOCAL_BUILD } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG, COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Logger } from '@teambit/logger';
 import { SnappingMain, SnapResults } from './snapping.main.runtime';
@@ -100,7 +100,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       failFast?: boolean;
     } & BasicTagSnapParams
   ) {
-    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
+    build = isFeatureEnabled(FORCE_LOCAL_BUILD) || Boolean(build);
     const disableTagAndSnapPipelines = disableSnapPipeline;
     if (all) {
       this.logger.consoleWarning(

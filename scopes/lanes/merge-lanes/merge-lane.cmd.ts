@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { mergeReport } from '@teambit/merging';
-import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { FORCE_LOCAL_BUILD, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import { removeTemplate } from '@teambit/remove';
@@ -134,7 +134,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       includeNonLaneComps?: boolean;
     }
   ): Promise<string> {
-    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
+    build = isFeatureEnabled(FORCE_LOCAL_BUILD) || Boolean(build);
     if (ours || theirs || manual) {
       throw new BitError(
         'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead. see "bit lane merge --help" for more information'

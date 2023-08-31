@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { isFeatureEnabled, FORCE_LOCAL_BUILD } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { Command, CommandOptions } from '@teambit/cli';
 import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
@@ -226,7 +226,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     };
 
     const disableTagAndSnapPipelines = disableTagPipeline || disableDeployPipeline;
-    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
+    build = isFeatureEnabled(FORCE_LOCAL_BUILD) || Boolean(build);
 
     const params = {
       ids: patterns,

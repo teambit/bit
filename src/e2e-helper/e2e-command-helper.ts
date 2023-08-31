@@ -263,12 +263,12 @@ export default class CommandHelper {
     return result;
   }
   tagAllWithoutBuild(options = '') {
-    const result = this.runCmd(`bit tag ${options}`, undefined, undefined, BUILD_ON_CI);
+    const result = this.runCmd(`bit tag ${options}`);
     expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
   tagWithoutBuild(id = '', options = '') {
-    const result = this.runCmd(`bit tag ${id} ${options}`, undefined, undefined, BUILD_ON_CI);
+    const result = this.runCmd(`bit tag ${id} ${options}`);
     expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
@@ -282,30 +282,30 @@ export default class CommandHelper {
   }
   tagIncludeUnmodifiedWithoutBuild(version = '', options = '') {
     const ver = version ? `--ver ${version}` : '';
-    return this.runCmd(`bit tag --unmodified ${ver} ${options}`, undefined, undefined, BUILD_ON_CI);
+    return this.runCmd(`bit tag --unmodified ${ver} ${options}`);
   }
   softTag(options = '') {
     return this.runCmd(`bit tag --soft ${options}`);
   }
   persistTag(options = '') {
-    return this.runCmd(`bit tag --persist ${options}`);
+    return this.runCmd(`bit tag --persist ${options} --build`);
   }
   persistTagWithoutBuild(options = '') {
-    return this.runCmd(`bit tag --persist ${options}`, undefined, undefined, BUILD_ON_CI);
+    return this.runCmd(`bit tag --persist ${options}`);
   }
   snapComponent(id: string, tagMsg = 'snap-message', options = '') {
-    return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options}`);
+    return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options} --build`);
   }
   snapComponentWithoutBuild(id: string, options = '') {
-    return this.runCmd(`bit snap ${id} ${options}`, undefined, undefined, BUILD_ON_CI);
+    return this.runCmd(`bit snap ${id} ${options}`);
   }
   snapAllComponents(options = '', assertSnapped = true) {
-    const result = this.runCmd(`bit snap -a ${options} `);
+    const result = this.runCmd(`bit snap -a ${options} --build`);
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
   snapAllComponentsWithoutBuild(options = '', assertSnapped = true) {
-    const result = this.runCmd(`bit snap -a ${options} `, undefined, undefined, BUILD_ON_CI);
+    const result = this.runCmd(`bit snap -a ${options} `);
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
