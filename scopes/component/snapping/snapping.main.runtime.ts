@@ -263,7 +263,7 @@ export class SnappingMain {
       })
     );
     const componentIds = tagDataPerComp.map((t) => t.componentId);
-    await this.scope.import(componentIds);
+    await this.scope.import(componentIds, { preferDependencyGraph: false, reason: 'of the seeders to tag' });
     const deps = compact(tagDataPerComp.map((t) => t.dependencies).flat()).map((dep) => dep.changeVersion(LATEST));
     const additionalComponentIdsToFetch = await Promise.all(
       componentIds.map(async (id) => {
@@ -281,7 +281,10 @@ if you're willing to lose the history from the head to the specified version, us
     );
 
     // import deps to be able to resolve semver
-    await this.scope.import([...deps, ...compact(additionalComponentIdsToFetch)], { useCache: false });
+    await this.scope.import([...deps, ...compact(additionalComponentIdsToFetch)], {
+      useCache: false,
+      reason: `which are the dependencies of the ${componentIds.length} seeders`,
+    });
     await Promise.all(
       tagDataPerComp.map(async (tagData) => {
         tagData.dependencies = tagData.dependencies
@@ -386,7 +389,11 @@ if you're willing to lose the history from the head to the specified version, us
       this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
     }
 
-    await this.scope.import(componentIdsLatest, { lane });
+    await this.scope.import(componentIdsLatest, {
+      preferDependencyGraph: false,
+      lane,
+      reason: `seeders to snap`,
+    });
     const components = await this.scope.getMany(componentIdsLatest);
     await Promise.all(
       components.map(async (comp) => {
@@ -659,6 +666,7 @@ there are matching among unmodified components thought. consider using --unmodif
       ignoreMissingHead: true,
       includeVersionHistory: true,
       lane: lane || undefined,
+      reason: 'of latest with version-history to make sure there are no dependencies from another lane',
     });
     await pMapSeries(components, async (component) => {
       await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined, true);
@@ -814,9 +822,16 @@ another option, in case this dependency is not in main yet is to remove all refe
             `source.previouslyUsedVersion must be set for ${component.name} because it's unrelated resolved.`
           );
         }
-        const unrelatedHead = Ref.from(source.previouslyUsedVersion);
-        version.unrelated = { head: unrelatedHead, laneId: unmergedComponent.laneId };
-        version.addAsOnlyParent(unmergedComponent.head);
+        if (unmergedComponent.unrelated === true) {
+          // backward compatibility
+          const unrelatedHead = Ref.from(source.previouslyUsedVersion);
+          version.setUnrelated({ head: unrelatedHead, laneId: unmergedComponent.laneId });
+          version.addAsOnlyParent(unmergedComponent.head);
+        } else {
+          const unrelated = unmergedComponent.unrelated;
+          version.setUnrelated({ head: unrelated.unrelatedHead, laneId: unrelated.unrelatedLaneId });
+          version.addAsOnlyParent(unrelated.headOnCurrentLane);
+        }
       } else {
         // this is adding a second parent to the version. the order is important. the first parent is coming from the current-lane.
         version.addParent(unmergedComponent.head);

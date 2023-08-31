@@ -5,7 +5,7 @@ import { mergeReport } from '@teambit/merging';
 import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
-import paintRemoved from '@teambit/legacy/dist/cli/templates/remove-template';
+import { removeTemplate } from '@teambit/remove';
 import { MergeLanesMain } from './merge-lanes.main.runtime';
 
 export class MergeLaneCmd implements Command {
@@ -15,7 +15,17 @@ export class MergeLaneCmd implements Command {
 to merge the lane from the local scope without updating it first, use "--skip-fetch" flag.
 
 when the current and merge candidate lanes are diverged in history and the files could be merged with no conflicts,
-these components will be snap-merged to complete the merge. use "no-snap" to opt-out, or "tag" to tag instead`;
+these components will be snap-merged to complete the merge. use "no-snap" to opt-out, or "tag" to tag instead.
+
+in case a component in both ends don't share history (no snap is found in common), the merge will require "--resolve-unrelated" flag.
+this flag keeps the history of one end and saves a reference to the other end. the decision of which end to keep is determined by the following:
+1. if the component exists on main, then the history linked to main will be kept.
+in this case, the strategy of "--resolve-unrelated" only determines which source-code to keep. it's not about the history.
+2. if the component doesn't exist on main, then by default, the history of the current lane will be kept.
+unless "--resolve-unrelated" is set to "theirs", in which case the history of the other lane will be kept.
+2. a. an edge case: if the component is deleted on the current lane, the strategy will always be "theirs".
+so then the history (and the source-code) of the other lane will be kept.
+`;
   arguments = [
     {
       name: 'lane',
@@ -177,9 +187,9 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     });
 
     const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });
-    const deleteResult = `${deleteResults.localResult ? paintRemoved(deleteResults.localResult, false) : ''}${(
+    const deleteResult = `${deleteResults.localResult ? removeTemplate(deleteResults.localResult, false) : ''}${(
       deleteResults.remoteResult || []
-    ).map((item) => paintRemoved(item, true))}${
+    ).map((item) => removeTemplate(item, true))}${
       (deleteResults.readmeResult && chalk.yellow(deleteResults.readmeResult)) || ''
     }\n`;
     return mergeResult + deleteResult;

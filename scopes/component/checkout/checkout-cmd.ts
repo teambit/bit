@@ -29,7 +29,7 @@ export class CheckoutCmd implements Command {
     },
   ];
   description = 'switch between component versions or remove local changes';
-  helpUrl = 'docs/components/merging-changes#checkout-snaps-to-the-working-directory';
+  helpUrl = 'reference/components/merging-changes#checkout-snaps-to-the-working-directory';
   group = 'development';
   extendedDescription = `
   \`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
@@ -200,7 +200,7 @@ once ready, snap/tag the components to persist the changes`;
         // @ts-ignore version is defined when !reset
         head || latest ? component.id.version : version
       )}\n`;
-      return `${chalk.underline(title)} ${applyVersionReport(components, false)}`;
+      return chalk.bold(title) + applyVersionReport(components, false);
     }
     if (reset) {
       const title = 'successfully reset the following components\n\n';
@@ -215,10 +215,9 @@ once ready, snap/tag the components to persist the changes`;
       return `version ${chalk.bold(version)}`;
     };
     const versionOutput = getVerOutput();
-    const title = `successfully ${switchedOrReverted} the following components to ${versionOutput}\n\n`;
+    const title = `successfully ${switchedOrReverted} ${components.length} components to ${versionOutput}\n`;
     const showVersion = head || reset;
-    const componentsStr = applyVersionReport(components, true, showVersion);
-    return chalk.underline(title) + componentsStr;
+    return chalk.bold(title) + applyVersionReport(components, true, showVersion);
   };
   const getNewOnLaneOutput = () => {
     if (!newFromLane?.length) return '';

@@ -21,7 +21,7 @@ describe('rename lanes', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.command.renameLane('d', 'new-dev');
+      helper.command.renameLane('new-dev');
     });
     it('should not throw on any command', () => {
       expect(() => helper.command.status()).to.not.throw();

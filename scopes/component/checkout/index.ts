@@ -9,9 +9,9 @@ export {
   ComponentStatus,
   applyModifiedVersion,
   applyVersion,
-  deleteFilesIfNeeded,
-  markFilesToBeRemovedIfNeeded,
   ComponentStatusBase,
   ApplyVersionWithComps,
+  removeFilesIfNeeded,
+  updateFileStatus,
 } from './checkout-version';
 export { checkoutOutput } from './checkout-cmd';

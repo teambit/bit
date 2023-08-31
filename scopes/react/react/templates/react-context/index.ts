@@ -9,7 +9,7 @@ import { indexFile } from './files/index-file';
 export const reactContext: ComponentTemplate = {
   name: 'react-context',
   description: 'a react context component',
-
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     return [
       indexFile(context),

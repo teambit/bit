@@ -1,14 +1,15 @@
-import { ComponentContext, ComponentTemplate } from '@teambit/generator';
+import { ComponentContext, ComponentTemplate } from '../../';
 import { indexFile } from './files/index';
 import { starterFile } from './files/starter';
-import { docsFile } from './files/docs-file';
+import { docFile } from './files/doc-file';
 import { gitIgnoreTemplate } from './files/git-ignore-tpl';
-import { readmeTemplate } from './files/readme-tpl';
 import { workspaceConfigTemplate } from './files/workspace-config-tpl';
+import { generateFiles } from './files/generate-files';
 
 export const starterTemplate: ComponentTemplate = {
   name: 'starter',
-  description: 'create your own starter - \nDocs: https://bit.dev/docs/dev-services/generator/generate-workspace',
+  description:
+    'create your own workspace starter (env integrated) - \nDocs: https://bit.dev/reference/starters/create-starter',
   generateFiles: (context: ComponentContext) => {
     return [
       {
@@ -18,30 +19,31 @@ export const starterTemplate: ComponentTemplate = {
       },
       {
         relativePath: `${context.name}.starter.ts`,
-        content: starterFile(),
+        content: starterFile(context),
       },
       {
         relativePath: `${context.name}.docs.mdx`,
-        content: docsFile(),
+        content: docFile(context),
       },
       {
         relativePath: 'template/files/git-ignore.ts',
         content: gitIgnoreTemplate(),
       },
-      {
-        relativePath: 'template/files/readme-file.ts',
-        content: readmeTemplate(),
-      },
+
       {
         relativePath: 'template/files/workspace-config.ts',
         content: workspaceConfigTemplate(),
+      },
+      {
+        relativePath: 'template/files/generate-files.ts',
+        content: generateFiles(),
       },
     ];
   },
   config: {
     'teambit.harmony/aspect': {},
     'teambit.envs/envs': {
-      env: 'teambit.harmony/aspect',
+      env: 'teambit.harmony/node',
     },
   },
 };

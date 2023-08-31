@@ -293,7 +293,7 @@ describe('custom env', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.command.create('aspect', 'comp1', `--env ${envId}@0.0.1`);
+        helper.command.create('starter', 'comp1', `--env ${envId}@0.0.1`);
       });
       it('should save it with a version in root but without version in envs/envs', () => {
         const bitMap = helper.bitMap.read();

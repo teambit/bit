@@ -7,11 +7,11 @@ import { v4 } from 'uuid';
 
 import { getSync, setSync } from '../../api/consumer/lib/global-config';
 import {
-  CFG_HUB_LOGIN_KEY,
   CFG_REGISTRY_URL_KEY,
   CFG_USER_TOKEN_KEY,
-  DEFAULT_HUB_LOGIN,
+  getLoginUrl,
   DEFAULT_REGISTRY_URL,
+  CFG_CLOUD_DOMAIN_KEY,
   PREVIOUSLY_DEFAULT_REGISTRY_URL,
 } from '../../constants';
 import GeneralError from '../../error/general-error';
@@ -23,13 +23,13 @@ const ERROR_RESPONSE = 500;
 const DEFAULT_PORT = 8085;
 const REDIRECT = 302;
 
-export default function loginToBitSrc(
+export default function loginToCloud(
   port: string,
   suppressBrowserLaunch: boolean,
   npmrcPath: string,
   skipRegistryConfig: boolean,
   machineName: string | null | undefined,
-  hubDomainLogin?: string
+  cloudDomain?: string
 ): Promise<{
   isAlreadyLoggedIn?: boolean;
   username?: string;
@@ -50,21 +50,17 @@ export default function loginToBitSrc(
         server.close();
       };
       if (request.method !== 'GET') {
-        logger.errorAndAddBreadCrumb('login.loginToBitSrc', 'received non get request, closing connection');
+        logger.errorAndAddBreadCrumb('login.loginToCloud', 'received non get request, closing connection');
         closeConnection();
         reject(new LoginFailed());
       }
       try {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const { clientId, redirectUri, username, token } = url.parse(request.url, true).query || {};
         let writeToNpmrcError = false;
         if (clientGeneratedId !== clientId) {
           logger.errorAndAddBreadCrumb(
-            'login.loginToBitSrc',
+            'login.loginToCloud',
             'clientId mismatch, expecting: {clientGeneratedId} got {clientId}',
             { clientGeneratedId, clientId }
           );
@@ -72,6 +68,9 @@ export default function loginToBitSrc(
           reject(new LoginFailed());
         }
         setSync(CFG_USER_TOKEN_KEY, token as string);
+        if (cloudDomain) {
+          setSync(CFG_CLOUD_DOMAIN_KEY, cloudDomain);
+        }
         const configuredRegistry = getSync(CFG_REGISTRY_URL_KEY);
         if (!skipRegistryConfig) {
           try {
@@ -107,20 +106,20 @@ export default function loginToBitSrc(
       }
     });
 
-    logger.debugAndAddBreadCrumb('login.loginToBitSrc', `initializing login server on port: ${port || DEFAULT_PORT}`);
+    logger.debugAndAddBreadCrumb('login.loginToCloud', `initializing login server on port: ${port || DEFAULT_PORT}`);
     // @ts-ignore
     server.listen(port || DEFAULT_PORT, (err: Error) => {
       if (err) {
-        logger.errorAndAddBreadCrumb('login.loginToBitSrc', 'something bad happened', {}, err);
+        logger.errorAndAddBreadCrumb('login.loginToCloud', 'something bad happened', {}, err);
         reject(new LoginFailed());
       }
 
+      const loginUrl = getLoginUrl(cloudDomain);
+
       const encoded = encodeURI(
-        `${hubDomainLogin || getSync(CFG_HUB_LOGIN_KEY) || DEFAULT_HUB_LOGIN}?port=${
-          port || DEFAULT_PORT
-        }&clientId=${clientGeneratedId}&responseType=token&deviceName=${machineName || os.hostname()}&os=${
-          process.platform
-        }`
+        `${loginUrl}?port=${port || DEFAULT_PORT}&clientId=${clientGeneratedId}&responseType=token&deviceName=${
+          machineName || os.hostname()
+        }&os=${process.platform}`
       );
       if (!suppressBrowserLaunch) {
         console.log(chalk.yellow(`Your browser has been opened to visit:\n${encoded}`)); // eslint-disable-line no-console
