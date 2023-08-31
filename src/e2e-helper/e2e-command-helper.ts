@@ -312,8 +312,8 @@ export default class CommandHelper {
   createLane(laneName = 'dev', options = '') {
     return this.runCmd(`bit lane create ${laneName} ${options}`);
   }
-  changeLaneScope(newScope: string) {
-    return this.runCmd(`bit lane change-scope ${newScope}`);
+  changeLaneScope(laneNameOrNewScope: string, newScope?: string) {
+    return this.runCmd(`bit lane change-scope ${laneNameOrNewScope} ${newScope ?? ''}`);
   }
   clearCache() {
     return this.runCmd('bit clear-cache');
@@ -443,8 +443,8 @@ export default class CommandHelper {
   fetchAllComponents() {
     return this.runCmd(`bit fetch --components`);
   }
-  renameLane(newName: string) {
-    return this.runCmd(`bit lane rename ${newName}`);
+  renameLane(existingLaneOrNewName: string, newName?: string) {
+    return this.runCmd(`bit lane rename ${existingLaneOrNewName} ${newName ?? ''}`);
   }
   importManyComponents(ids: string[], flag = '') {
     const idsWithRemote = ids.map((id) => `${this.scopes.remote}/${id}`);
