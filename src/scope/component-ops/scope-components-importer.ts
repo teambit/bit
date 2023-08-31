@@ -434,7 +434,7 @@ export default class ScopeComponentsImporter {
    * just make sure not to use it for components/lanes, as they require a proper "merge" before
    * persisting them to the filesystem. this method is good for immutable objects.
    */
-  async importManyObjects(groupedHashes: HashesPerRemote): Promise<void> {
+  async importManyObjects(groupedHashes: HashesPerRemote, reason?: string): Promise<void> {
     await this.importManyObjectsMutex.runExclusive(async () => {
       const groupedHashedMissing = {};
       await Promise.all(
@@ -460,7 +460,8 @@ export default class ScopeComponentsImporter {
         undefined,
         undefined,
         undefined,
-        groupedHashedMissing
+        groupedHashedMissing,
+        reason
       ).fetchFromRemoteAndWrite();
       this.throwForMissingObjects(groupedHashedMissing, allObjects);
     });
@@ -865,10 +866,10 @@ export default class ScopeComponentsImporter {
   }
 
   private async getLaneForFetcher(lane?: Lane): Promise<Lane | undefined> {
-    if (lane) return lane;
+    if (lane && !lane.isNew) return lane;
     if (!this.shouldOnlyFetchFromCurrentLane) return undefined;
     const currentLane = await this.scope.getCurrentLaneObject();
-    return currentLane || undefined;
+    return currentLane && !currentLane.isNew ? currentLane : undefined;
   }
 
   private async _getComponentVersion(id: BitId): Promise<ComponentVersion> {

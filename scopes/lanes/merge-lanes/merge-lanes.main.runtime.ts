@@ -250,7 +250,7 @@ export class MergeLanesMain {
       const readmeComponentId = otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash);
       deleteResults = await this.remove.removeLocallyByIds([readmeComponentId]);
     } else if (otherLane && !otherLane.readmeComponent) {
-      deleteResults = { readmeResult: `\nlane ${otherLane.name} doesn't have a readme component` };
+      deleteResults = { readmeResult: '' };
     }
     const configMergeResults = allComponentsStatus.map((c) => c.configMergeResult);
 

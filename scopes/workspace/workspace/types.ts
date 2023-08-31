@@ -14,7 +14,7 @@ export interface WorkspaceExtConfig {
   icon: string;
 
   /**
-   * applies only on bit.dev. configure the main owner of your workspace
+   * applies only on bit.cloud. configure the main owner of your workspace
    */
   defaultOwner: string;
 

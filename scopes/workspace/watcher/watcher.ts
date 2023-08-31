@@ -277,6 +277,11 @@ export class Watcher {
       );
       return [];
     }
+    this.consumer.bitMap.updateComponentPaths(
+      componentId._legacy,
+      compFiles.map((f) => this.consumer.getPathRelativeToConsumer(f)),
+      removedFiles.map((f) => this.consumer.getPathRelativeToConsumer(f))
+    );
     const buildResults = await this.executeWatchOperationsOnComponent(
       updatedComponentId,
       compFiles,
@@ -321,8 +326,8 @@ export class Watcher {
 
   private async executeWatchOperationsOnComponent(
     componentId: ComponentID,
-    files: string[],
-    removedFiles: string[] = [],
+    files: PathOsBasedAbsolute[],
+    removedFiles: PathOsBasedAbsolute[] = [],
     isChange = true,
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
