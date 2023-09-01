@@ -1,7 +1,8 @@
 .summaryContainer {
-  padding: 0px 12px;
+  padding: 0px 12px 2px 12px;
+  margin-bottom: 8px;
   border-radius: var(--bit-p-sm);
-  background-color: var(--surface-neutral-color);
+  background-color: var(--primary-surface-color);
 }
 
 .signatureTitle {
@@ -18,7 +19,7 @@
 
 .description {
   font-size: 14px;
-  margin: 16px 0px;
+  margin: 20px 0px;
 }
 
 .subtitle {

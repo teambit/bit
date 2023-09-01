@@ -18,8 +18,8 @@ function ParameterComponent(props: APINodeRenderProps) {
     apiNode: { api },
     apiRefModel,
     renderers,
+    depth = 0,
   } = props;
-
   const paramNode = api as ParameterSchema;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -77,24 +77,25 @@ function ParameterComponent(props: APINodeRenderProps) {
 
   const ParameterTypeRefRender = typeRef && renderers.find((renderer) => renderer.predicate(typeRef.api));
 
-  const ParameterTypeComponent = ParameterTypeRefRender ? (
-    <ParameterTypeRefRender.Component
-      {...props}
-      // className={styles.customTypeRow}
-      apiNode={{ ...props.apiNode, api: typeRef.api, renderer: ParameterTypeRefRender }}
-      depth={(props.depth ?? 0) + 1}
-      metadata={{ [typeRef.api.__schema]: { columnView: true } }}
-    />
-  ) : (
-    (typeRenderer && (
-      <typeRenderer.Component
+  const ParameterTypeComponent =
+    depth < 1 && ParameterTypeRefRender ? (
+      <ParameterTypeRefRender.Component
         {...props}
-        apiNode={{ ...props.apiNode, api: type, renderer: typeRenderer }}
+        // className={styles.customTypeRow}
+        apiNode={{ ...props.apiNode, api: typeRef.api, renderer: ParameterTypeRefRender }}
         depth={(props.depth ?? 0) + 1}
-        metadata={{ [type.__schema]: { columnView: true } }}
+        metadata={{ [typeRef.api.__schema]: { columnView: true } }}
       />
-    )) || <div className={nodeStyles.node}>{type.toString()}</div>
-  );
+    ) : (
+      (typeRenderer && (
+        <typeRenderer.Component
+          {...props}
+          apiNode={{ ...props.apiNode, api: type, renderer: typeRenderer }}
+          depth={(props.depth ?? 0) + 1}
+          metadata={{ [type.__schema]: { columnView: true } }}
+        />
+      )) || <div className={nodeStyles.node}>{type.toString()}</div>
+    );
 
   const ParameterType = ParameterTypeComponent ? (
     <div className={styles.paramType}>

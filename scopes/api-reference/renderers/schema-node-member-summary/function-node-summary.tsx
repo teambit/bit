@@ -6,6 +6,7 @@ import { transformSignature } from '@teambit/api-reference.utils.schema-node-sig
 import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 import { APINodeRenderProps, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
+import classNames from 'classnames';
 
 import styles from './function-node-summary.module.scss';
 
@@ -51,7 +52,7 @@ export function FunctionNodeSummary({
   return (
     <div className={styles.summaryContainer}>
       <div className={styles.signatureTitle}>
-        {!hideName && <div className={styles.functionName}>{name}</div>}
+        {<div className={classNames(styles.functionName, hideName && styles.hide)}>{hideName ? '' : name}</div>}
         {signature && (
           <SyntaxHighlighter
             language={lang}
@@ -80,7 +81,7 @@ export function FunctionNodeSummary({
                   key={`param-${param.name}`}
                   depth={(apiNodeRendererProps.depth ?? 0) + 1}
                   apiNode={{ ...apiNodeRendererProps.apiNode, renderer: paramRenderer, api: param }}
-                  metadata={{ [param.__schema]: { columnView: false } }}
+                  metadata={{ [param.__schema]: { columnView: true } }}
                 />
               );
             }
@@ -90,7 +91,7 @@ export function FunctionNodeSummary({
                 key={`param-${param.name}`}
                 depth={(apiNodeRendererProps.depth ?? 0) + 1}
                 apiNode={{ ...apiNodeRendererProps.apiNode, renderer: defaultParamRenderer, api: param }}
-                metadata={{ [param.__schema]: { columnView: false } }}
+                metadata={{ [param.__schema]: { columnView: true } }}
               />
             );
           })}
