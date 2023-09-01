@@ -1,5 +1,5 @@
 import { ComponentTreeSlot } from '@teambit/component-tree';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link, useLocation } from '@teambit/base-react.navigation.link';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import classNames from 'classnames';
@@ -34,6 +34,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
     },
     [onSelect, node.id]
   );
+  const location = useLocation();
 
   if (!(component instanceof ComponentModel)) return null;
   const envId = ComponentID.fromString(component.environment?.id as string);
@@ -57,8 +58,14 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   );
 
   const href = lanesModel?.getLaneComponentUrlByVersion(component.id, lanesModel.viewedLane?.id);
-  const viewingMainCompOnLane =
-    !lanesModel?.viewedLane?.id.isDefault() && lanesModel?.isComponentOnMainButNotOnLane(component.id);
+
+  const viewingMainCompOnLane = React.useMemo(() => {
+    return (
+      !lanesModel?.viewedLane?.id.isDefault() &&
+      lanesModel?.isComponentOnMainButNotOnLane(component.id, undefined, lanesModel?.viewedLane?.id)
+    );
+  }, [lanesModel?.viewedLane?.id.toString(), component.id.toString()]);
+
   const Name = viewingMainCompOnLane ? (
     <Tooltip className={styles.onMainTooltip} placement="right" content={'On Main'}>
       <span>{getName(node.id)}</span>
@@ -67,13 +74,37 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
     <span>{getName(node.id)}</span>
   );
 
+  const isActive = React.useMemo(() => {
+    if (!href || !location) return false;
+    const pathname = location.pathname.substring(1);
+    const hrefWithoutLaneMetadata = href.split('?lane')[0];
+    const sanitizedHref = (
+      hrefWithoutLaneMetadata.startsWith('/') ? hrefWithoutLaneMetadata.substring(1) : hrefWithoutLaneMetadata
+    ).split('?')[0];
+    if (pathname === sanitizedHref) return true;
+    // viewing main component
+    if (viewingMainCompOnLane || lanesModel?.viewedLane?.id.isDefault()) {
+      const locationWithoutSubRoutes = pathname.split('/~')[0];
+      return locationWithoutSubRoutes === sanitizedHref;
+    }
+    // viewing a lane component
+    const lastIndexOfSubRoute = pathname.lastIndexOf('/~');
+    const noSubRoutes =
+      pathname.substring(lastIndexOfSubRoute + 1).includes(LanesModel.baseLaneComponentRoute) ||
+      pathname.substring(lastIndexOfSubRoute + 1).includes(LanesModel.lanesPrefix);
+    if (noSubRoutes) return pathname === sanitizedHref;
+    const pathnameWithoutSubRoute = pathname.substring(0, lastIndexOfSubRoute);
+    return pathnameWithoutSubRoute === sanitizedHref;
+  }, [href, viewingMainCompOnLane, location?.pathname, component.id.toString()]);
+
   return (
     <Link
       href={href}
       className={classNames(indentClass, styles.component, viewingMainCompOnLane && styles.mainOnly)}
       activeClassName={styles.active}
       onClick={handleClick}
-      exact={true}
+      // exact={true}
+      active={isActive}
     >
       <div className={styles.left}>
         <Tooltip className={styles.componentEnvTooltip} placement="right" content={envTooltip}>
