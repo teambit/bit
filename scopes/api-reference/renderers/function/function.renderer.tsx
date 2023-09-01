@@ -1,6 +1,6 @@
 import React from 'react';
 import { FunctionLikeSchema, TagName } from '@teambit/semantics.entities.semantic-schema';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import classnames from 'classnames';
 
@@ -25,7 +25,7 @@ function FunctionComponent(props: APINodeRenderProps) {
   const returnTypeRenderer = renderers.find((renderer) => renderer.predicate(returnType));
 
   if (props.metadata?.[api.__schema]?.columnView) {
-    return <div className={styles.node}>{api.toString()}</div>;
+    return <div className={nodeStyles.node}>{api.toString()}</div>;
   }
 
   const Params = params.map((param) => {
@@ -85,7 +85,7 @@ function FunctionComponent(props: APINodeRenderProps) {
               apiNode={{ ...props.apiNode, api: returnType, renderer: returnTypeRenderer }}
               depth={(props.depth ?? 0) + 1}
             />
-          )) || <div className={styles.node}>{returnType.toString()}</div>}
+          )) || <div className={nodeStyles.node}>{returnType.toString()}</div>}
         </div>
       </div>
       {/* {hasParams && (
@@ -129,7 +129,7 @@ function FunctionComponent(props: APINodeRenderProps) {
               apiNode={{ ...props.apiNode, api: returnType, renderer: returnTypeRenderer }}
               depth={(props.depth ?? 0) + 1}
             />
-          )) || <div className={styles.node}>{returnType.toString()}</div>}
+          )) || <div className={nodeStyles.node}>{returnType.toString()}</div>}
         </div>
       </div> */}
     </APINodeDetails>

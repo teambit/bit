@@ -25,8 +25,6 @@ function TypeIntersectionComponent(props: APINodeRenderProps) {
     <div key={`${api.__schema}-${api.name}`}>
       {typeNode.types.map((type, index) => {
         const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
-        // const isNotFirstOrLast = index > 0 && index < typeArr.length - 1;
-        // const isLast = index === typeArr.length - 1;
 
         if (typeRenderer) {
           return (

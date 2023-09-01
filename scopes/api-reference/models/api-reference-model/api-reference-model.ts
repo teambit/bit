@@ -19,38 +19,12 @@ export class APIReferenceModel {
   apiNodes: APINode[];
   componentId: ComponentID;
 
-  constructor(_api: APISchema, _renderers: APINodeRenderer[]) {
+  constructor(public _api: APISchema, _renderers: APINodeRenderer[]) {
     this.componentId = _api.componentId;
     this.apiNodes = this.mapToAPINode(_api, _renderers, this.componentId);
     this.apiByType = this.groupByType(this.apiNodes);
     this.apiByName = this.groupByName(this.apiNodes);
   }
-
-  // private hasType(node: SchemaNode): node is TypeSchema {
-  //   return (node as any).type !== undefined
-  // }
-
-  // resolveTypeRefByName(
-  //   name: string,
-  //   lastResolvedNode: APINode<TypeSchema> | undefined = undefined,
-  //   resolved: Set<string> = new Set()
-  // ): APINode<TypeSchema> | undefined {
-  //   console.log("🚀 ~ file: api-reference-model.ts:38 ~ APIReferenceModel ~ name:", name)
-  //   if (resolved.has(name)) return lastResolvedNode;
-
-  //   const api = this.apiByName.get(name);
-
-  //   if (!api || !this.hasType(api.api)) return lastResolvedNode;
-
-  //   resolved.add(name);
-
-  //   const typeApi = api as APINode<TypeSchema>;
-  //   console.log("🚀 ~ file: api-reference-model.ts:47 ~ APIReferenceModel ~ typeApi:", typeApi)
-
-  //   if (!typeApi.api.type.name) return lastResolvedNode;
-
-  //   return this.resolveTypeRefByName(typeApi.api.type.name, typeApi, resolved);
-  // }
 
   mapToAPINode(api: APISchema, renderers: APINodeRenderer[], componentId: ComponentID): APINode[] {
     const { exports: schemaNodes } = api.module;

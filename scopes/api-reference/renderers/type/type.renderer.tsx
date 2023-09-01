@@ -20,8 +20,6 @@ function TypeComponent(props: APINodeRenderProps) {
   const typeNode = api as TypeSchema;
   const { type } = typeNode;
 
-  console.log('🚀 ~ file: type.renderer.tsx:21 ~ TypeComponent ~ type:', type);
-
   const subTypeRenderer = renderers.find((renderer) => renderer.predicate(type));
 
   if (metadata?.[api.__schema]?.columnView) {

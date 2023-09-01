@@ -1,5 +1,5 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { copySchemaNode } from '@teambit/api-reference.utils.copy-schema-node';
@@ -67,6 +67,7 @@ function TypeRefComponent(props: APINodeRenderProps) {
           <React.Fragment key={`type-arg-renderer-container-${typeArg.__schema}-${typeArg.toString()}-${index}`}>
             <typeArgRenderer.Component
               {...props}
+              className={styles.typeArgNode}
               key={`type-arg-${typeArg.__schema}-${typeArg.toString()}-${index}`}
               apiNode={{ ...props.apiNode, api: typeArg, renderer: typeArgRenderer }}
               depth={(props.depth ?? 0) + 1}
@@ -93,8 +94,11 @@ function TypeRefComponent(props: APINodeRenderProps) {
           name={typeRefNode.name}
           external={!!exportedTypeUrlFromAnotherComp}
           url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp}
+          exported={typeRefNode.isExported()}
+          internal={typeRefNode.isInternalReference()}
+          packageName={typeRefNode.packageName}
         >
-          <div key={`typeArgsContainer-${typeRefNode.name}`} className={classnames(styles.node)}>
+          <div key={`typeArgsContainer-${typeRefNode.name}`} className={styles.typeArgs}>
             {'<'}
             {args.map((arg) => arg)}
             {'>'}
@@ -136,7 +140,7 @@ function TypeRefName({
   exported?: boolean;
   packageName?: string;
 }) {
-  const className = classnames(styles.node, {
+  const className = classnames(nodeStyles.node, {
     [styles.internalType]: internal,
     [styles.exportedType]: exported,
     [styles.package]: !!packageName,
@@ -148,7 +152,16 @@ function TypeRefName({
   if (url && !withinLink) {
     return (
       <LinkContext.Provider value={true}>
-        <Link href={url} external={external} className={classnames(className, styles.nodeLink)}>
+        <Link
+          style={
+            {
+              '--tooltip-text': packageName ? `"${packageName}"` : '',
+            } as React.CSSProperties
+          }
+          href={url}
+          external={external}
+          className={classnames(className, styles.nodeLink)}
+        >
           {name}
           {children}
         </Link>
@@ -157,7 +170,14 @@ function TypeRefName({
   }
 
   return (
-    <div className={className}>
+    <div
+      style={
+        {
+          '--tooltip-text': packageName ? `"${packageName}"` : '',
+        } as React.CSSProperties
+      }
+      className={className}
+    >
       {name}
       {children}
     </div>

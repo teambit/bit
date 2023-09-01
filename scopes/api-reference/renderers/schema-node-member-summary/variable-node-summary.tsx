@@ -2,7 +2,7 @@ import React, { HTMLAttributes } from 'react';
 import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { TableRow } from '@teambit/documenter.ui.table-row';
 import classnames from 'classnames';
-import { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { trackedElementClassName } from './index';
 
 import styles from './variable-node-summary.module.scss';
@@ -44,7 +44,7 @@ export function VariableNodeSummary({
       depth={(apiNodeRendererProps.depth ?? 0) + 1}
       metadata={{ [type.__schema]: { columnView: true } }}
     />
-  )) || <div className={classnames(styles.node, styles.codeSnippet)}>{type?.toString()}</div>;
+  )) || <div className={classnames(nodeStyles.node, styles.codeSnippet)}>{type?.toString()}</div>;
 
   return (
     <TableRow

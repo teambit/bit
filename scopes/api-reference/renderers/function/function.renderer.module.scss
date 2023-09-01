@@ -25,7 +25,6 @@
   background: var(--bit-bg-dent);
   padding: 16px;
   border-radius: 6px;
-  font-family: Roboto mono;
 }
 
 .typeParams {
@@ -47,18 +46,6 @@
   // color: #397300;
   display: flex;
   color: #4646c6;
-  font-family: Roboto mono;
-}
-
-.node {
-  display: flex;
-  font-size: var(--bit-p-xs);
-  word-break: normal;
-  position: relative;
-  line-height: 1.2em;
-  background-color: var(--surface01-color, #fffbff);
-  padding: 4px;
-  border-radius: 4px;
 }
 
 .docComment {

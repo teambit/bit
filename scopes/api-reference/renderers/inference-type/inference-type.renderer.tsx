@@ -1,8 +1,7 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { InferenceTypeSchema } from '@teambit/semantics.entities.semantic-schema';
-
-import styles from './inference-type.module.scss';
+import classNames from 'classnames';
 
 export const inferenceTypeRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === InferenceTypeSchema.name,
@@ -14,6 +13,7 @@ export const inferenceTypeRenderer: APINodeRenderer = {
 function InferenceTypeComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
+    className,
   } = props;
 
   const inferenceTypeNode = api as InferenceTypeSchema;
@@ -21,7 +21,7 @@ function InferenceTypeComponent(props: APINodeRenderProps) {
   // if(!inferenceTypeNode.type || !inferenceTypeNode.name) return null;
 
   return (
-    <div key={`inference-${inferenceTypeNode.name}`} className={styles.node}>
+    <div key={`inference-${inferenceTypeNode.name}`} className={classNames(nodeStyles.node, className)}>
       {inferenceTypeNode.type || inferenceTypeNode.name}
     </div>
   );

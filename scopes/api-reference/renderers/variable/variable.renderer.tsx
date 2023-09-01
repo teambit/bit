@@ -1,9 +1,7 @@
 import React from 'react';
 import { VariableLikeSchema } from '@teambit/semantics.entities.semantic-schema';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
-
-import styles from './variable.renderer.module.scss';
 
 export const variableRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === VariableLikeSchema.name,
@@ -26,7 +24,7 @@ function VariableComponent(props: APINodeRenderProps) {
         metadata={{ [type.__schema]: { columnView: true } }}
       />
     ) : (
-      <div className={styles.node}>{type.toString()}</div>
+      <div className={nodeStyles.node}>{type.toString()}</div>
     );
   }
   return <APINodeDetails {...props} />;

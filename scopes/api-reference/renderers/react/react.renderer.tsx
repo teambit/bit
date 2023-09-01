@@ -1,6 +1,6 @@
 import React from 'react';
 import { ReactSchema } from '@teambit/react';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
 import classnames from 'classnames';
@@ -27,7 +27,7 @@ function ReactComponent(props: APINodeRenderProps) {
   const returnTypeRenderer = renderers.find((renderer) => renderer.predicate(returnType));
 
   if (props.metadata?.[api.__schema]?.columnView) {
-    return <div className={styles.node}>{api.toString()}</div>;
+    return <div className={nodeStyles.node}>{api.toString()}</div>;
   }
 
   const paramRenderer = renderers.find((renderer) => renderer.predicate(reactProps));
@@ -62,6 +62,8 @@ function ReactComponent(props: APINodeRenderProps) {
     />
   );
 
+  const docComment = api.doc?.findTag(TagName.return)?.comment;
+
   return (
     <APINodeDetails {...props} options={{ hideIndex: true }}>
       {typeParams && (
@@ -85,7 +87,7 @@ function ReactComponent(props: APINodeRenderProps) {
       </div>
       <div className={styles.container}>
         <div className={styles.title}>Returns</div>
-        <div className={styles.docComment}>{api.doc?.findTag(TagName.return)?.comment}</div>
+        {docComment && <div className={styles.docComment}>{docComment}</div>}
         <div className={styles.returnType}>
           {(returnTypeRenderer && (
             <returnTypeRenderer.Component
@@ -93,7 +95,7 @@ function ReactComponent(props: APINodeRenderProps) {
               apiNode={{ ...props.apiNode, api: returnType, renderer: returnTypeRenderer }}
               depth={(props.depth ?? 0) + 1}
             />
-          )) || <div className={styles.node}>{returnType.toString()}</div>}
+          )) || <div className={nodeStyles.node}>{returnType.toString()}</div>}
         </div>
       </div>
     </APINodeDetails>

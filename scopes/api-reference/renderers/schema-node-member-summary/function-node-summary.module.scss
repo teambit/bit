@@ -1,5 +1,5 @@
 .summaryContainer {
-  padding: 12px;
+  padding: 0px 12px;
   border-radius: var(--bit-p-sm);
   background-color: var(--surface-neutral-color);
 }
@@ -17,7 +17,8 @@
 }
 
 .description {
-  margin-bottom: 16px;
+  font-size: 14px;
+  margin: 16px 0px;
 }
 
 .subtitle {
@@ -25,24 +26,12 @@
   text-transform: uppercase;
   font-size: var(--bit-p-xxs);
   padding-right: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .paramsContainer,
 .returnContainer {
   margin-bottom: 16px;
-}
-
-.node {
-  font-size: var(--bit-p-xs);
-  word-break: normal;
-  position: relative;
-  line-height: 1.2em;
-  // background-color: var(--surface01-color, #fffbff);
-  padding: 4px;
-  border-radius: 4px;
-  word-break: keep-all;
-  flex-wrap: wrap;
 }
 
 .functionName {

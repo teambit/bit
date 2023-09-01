@@ -4,7 +4,7 @@ import defaultTheme from 'react-syntax-highlighter/dist/esm/styles/prism/vsc-dar
 import { SchemaNode, SetAccessorSchema } from '@teambit/semantics.entities.semantic-schema';
 import { transformSignature } from '@teambit/api-reference.utils.schema-node-signature-transform';
 import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
-import { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
 
 import styles from './function-node-summary.module.scss';
@@ -80,7 +80,7 @@ export function FunctionNodeSummary({
                   key={`param-${param.name}`}
                   depth={(apiNodeRendererProps.depth ?? 0) + 1}
                   apiNode={{ ...apiNodeRendererProps.apiNode, renderer: paramRenderer, api: param }}
-                  metadata={{ [param.__schema]: { columnView: true } }}
+                  metadata={{ [param.__schema]: { columnView: false } }}
                 />
               );
             }
@@ -90,7 +90,7 @@ export function FunctionNodeSummary({
                 key={`param-${param.name}`}
                 depth={(apiNodeRendererProps.depth ?? 0) + 1}
                 apiNode={{ ...apiNodeRendererProps.apiNode, renderer: defaultParamRenderer, api: param }}
-                metadata={{ [param.__schema]: { columnView: true } }}
+                metadata={{ [param.__schema]: { columnView: false } }}
               />
             );
           })}
@@ -105,7 +105,7 @@ export function FunctionNodeSummary({
               apiNode={{ ...apiNodeRendererProps.apiNode, api: returnType, renderer: returnTypeRenderer }}
               depth={(apiNodeRendererProps.depth ?? 0) + 1}
             />
-          )) || <div className={styles.node}>{returnType.toString()}</div>}
+          )) || <div className={nodeStyles.node}>{returnType.toString()}</div>}
         </div>
       )}
     </div>

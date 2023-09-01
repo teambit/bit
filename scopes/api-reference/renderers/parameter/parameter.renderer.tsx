@@ -1,5 +1,5 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { InferenceTypeSchema, ParameterSchema } from '@teambit/semantics.entities.semantic-schema';
 import { TableRow } from '@teambit/documenter.ui.table-row';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
@@ -45,9 +45,9 @@ function ParameterComponent(props: APINodeRenderProps) {
               depth={(props.depth ?? 0) + 1}
               metadata={{ [_bindingNode.__schema]: { columnView: true } }}
             />
-          )) || <div className={styles.node}>{bindingNode.toString()}</div>;
+          )) || <div className={nodeStyles.node}>{bindingNode.toString()}</div>;
 
-          // const customBindingNodeTypeRow = <div className={styles.node}>{bindingNode.toString()}</div>;
+          // const customBindingNodeTypeRow = <div className={nodeStyles.node}>{bindingNode.toString()}</div>;
 
           return (
             <TableRow
@@ -77,7 +77,7 @@ function ParameterComponent(props: APINodeRenderProps) {
 
   const ParameterTypeRefRender = typeRef && renderers.find((renderer) => renderer.predicate(typeRef.api));
 
-  const ParameterTypeComponent = (ParameterTypeRefRender && (
+  const ParameterTypeComponent = ParameterTypeRefRender ? (
     <ParameterTypeRefRender.Component
       {...props}
       // className={styles.customTypeRow}
@@ -85,7 +85,7 @@ function ParameterComponent(props: APINodeRenderProps) {
       depth={(props.depth ?? 0) + 1}
       metadata={{ [typeRef.api.__schema]: { columnView: true } }}
     />
-  )) ||
+  ) : (
     (typeRenderer && (
       <typeRenderer.Component
         {...props}
@@ -93,7 +93,15 @@ function ParameterComponent(props: APINodeRenderProps) {
         depth={(props.depth ?? 0) + 1}
         metadata={{ [type.__schema]: { columnView: true } }}
       />
-    )) || <div className={styles.node}>{type.toString()}</div>;
+    )) || <div className={nodeStyles.node}>{type.toString()}</div>
+  );
 
-  return <>{ObjectBindingNodeComponent || ParameterTypeComponent}</>;
+  const ParameterType = ParameterTypeComponent ? (
+    <div className={styles.paramType}>
+      <div className={styles.name}>{paramNode.name}</div>
+      <div className={styles.type}>{ParameterTypeComponent}</div>
+    </div>
+  ) : null;
+
+  return <>{ObjectBindingNodeComponent || ParameterType}</>;
 }

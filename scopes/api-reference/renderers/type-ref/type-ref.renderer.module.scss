@@ -19,10 +19,50 @@
 .package::before {
   content: '📦';
   display: inline-block;
-  height: 8px;
-  width: 8px;
-  margin-right: 10px;
+  margin-right: 4px;
   text-decoration: none;
+}
+
+.package {
+  &:hover {
+    $caret-height: 4px;
+    $caret-width: 6px;
+    $distance: 10px;
+    $tooltip-bg-color: var(--on-background-color, #2b2b2b);
+
+    &::after {
+      content: var(--tooltip-text);
+      font-size: 12px;
+      text-align: center;
+      position: absolute;
+      display: block;
+      left: 4px;
+      animation: fade-in 200ms ease;
+      background: $tooltip-bg-color;
+      border-radius: 4px;
+      padding: 4px 6px;
+      min-width: fit-content;
+      max-width: 200px;
+      height: fit-content;
+      width: fit-content;
+      color: #ffffff;
+      z-index: 1;
+      top: 20px;
+    }
+
+    &::before {
+      content: '📦';
+      display: inline-block;
+      margin-right: 4px;
+      text-decoration: none;
+    }
+  }
+  &::before {
+    content: '📦';
+    display: inline-block;
+    margin-right: 4px;
+    text-decoration: none;
+  }
 }
 
 .internalType {
@@ -55,9 +95,7 @@
     &::before {
       content: '🔒';
       display: inline-block;
-      height: 8px;
-      width: 8px;
-      margin-right: 6px;
+      margin-right: 4px;
       text-decoration: none;
     }
   }
@@ -78,4 +116,16 @@
   to {
     opacity: 1;
   }
+}
+
+.typeArgs {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  padding: 0px 2px;
+}
+
+.typeArgNode {
+  padding: 1px;
 }
