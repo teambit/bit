@@ -37050,7 +37050,7 @@ packages:
     dev: false
 
   /@teambit/base-ui.routing.compare-url@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-57vlN0+yBZFGsX5JLo237OQ3Bu8eeJ+vEVbeQuioJsuvS0zEhI8EyobYssEfyaCMsbpDpbpL6HkfSvuQB0Vtmw==, tarball: https://node-registry.bit.cloud/@teambit/base-ui.routing.compare-url/-/@teambit-base-ui.routing.compare-url-1.0.0.tgz}
+    resolution: {integrity: sha512-57vlN0+yBZFGsX5JLo237OQ3Bu8eeJ+vEVbeQuioJsuvS0zEhI8EyobYssEfyaCMsbpDpbpL6HkfSvuQB0Vtmw==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -37061,7 +37061,7 @@ packages:
       url-parse: 1.5.1
 
   /@teambit/base-ui.routing.native-link@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-yrkm02UxkeCBWyLQC9MG7Jl6JbQrsIBz+9c57mZqAjEcVvQWY2mB3lEY+pNZAuIyOg55/DTqKR1bKQKl6ZAdzg==, tarball: https://node-registry.bit.cloud/@teambit/base-ui.routing.native-link/-/@teambit-base-ui.routing.native-link-1.0.0.tgz}
+    resolution: {integrity: sha512-yrkm02UxkeCBWyLQC9MG7Jl6JbQrsIBz+9c57mZqAjEcVvQWY2mB3lEY+pNZAuIyOg55/DTqKR1bKQKl6ZAdzg==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -37071,7 +37071,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
 
   /@teambit/base-ui.routing.native-nav-link@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-elXAzsYT7e7Y6/2n5Xv0iYS48ITG2KDBcrtUifxSlVob3zyRbaX18M6wPrHyD9z9XXwqyxEJreTKL1Gt9IdEaA==, tarball: https://node-registry.bit.cloud/@teambit/base-ui.routing.native-nav-link/-/@teambit-base-ui.routing.native-nav-link-1.0.0.tgz}
+    resolution: {integrity: sha512-elXAzsYT7e7Y6/2n5Xv0iYS48ITG2KDBcrtUifxSlVob3zyRbaX18M6wPrHyD9z9XXwqyxEJreTKL1Gt9IdEaA==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -37098,7 +37098,7 @@ packages:
     dev: false
 
   /@teambit/base-ui.routing.routing-provider@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-18qOybF12VyqLHbbrHGuzgZx3YRMahiedOMkSDO7fOHQUqCUok0c8LkY3BEenaL3nK0Buy1ih3wNT9GiSWy2MA==, tarball: https://node-registry.bit.cloud/@teambit/base-ui.routing.routing-provider/-/@teambit-base-ui.routing.routing-provider-1.0.0.tgz}
+    resolution: {integrity: sha512-18qOybF12VyqLHbbrHGuzgZx3YRMahiedOMkSDO7fOHQUqCUok0c8LkY3BEenaL3nK0Buy1ih3wNT9GiSWy2MA==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -37541,7 +37541,7 @@ packages:
     dev: false
 
   /@teambit/base-ui.utils.is-browser@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-xvMmDLJFXqO0WwEYtM+zipMFQ7yaQLxDWmUynehfrBERSA8ZaeVfR8DiTPV/X3nRM/OD2Cym4f6UZPhcXLXJeg==, tarball: https://node-registry.bit.cloud/@teambit/base-ui.utils.is-browser/-/@teambit-base-ui.utils.is-browser-1.0.0.tgz}
+    resolution: {integrity: sha512-xvMmDLJFXqO0WwEYtM+zipMFQ7yaQLxDWmUynehfrBERSA8ZaeVfR8DiTPV/X3nRM/OD2Cym4f6UZPhcXLXJeg==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -43635,7 +43635,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.0
       '@yarnpkg/fslib': 3.0.0-rc.48
-      '@yarnpkg/libzip': 3.0.0-rc.48(@yarnpkg/fslib@3.0.0-rc.48)
+      '@yarnpkg/libzip': 3.0.0-rc.48
       '@yarnpkg/parsers': 3.0.0-rc.48.1
       '@yarnpkg/shell': 4.0.0-rc.48
       camelcase: 5.3.1
@@ -43666,7 +43666,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.0
       '@yarnpkg/fslib': 3.0.0-rc.48
-      '@yarnpkg/libzip': 3.0.0-rc.48(@yarnpkg/fslib@3.0.0-rc.48)
+      '@yarnpkg/libzip': 3.0.0-rc.48
       '@yarnpkg/parsers': 3.0.0-rc.48.1
       '@yarnpkg/shell': 4.0.0-rc.48
       camelcase: 5.3.1
@@ -43739,11 +43739,9 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.0-rc.48(@yarnpkg/fslib@3.0.0-rc.48):
+  /@yarnpkg/libzip@3.0.0-rc.48:
     resolution: {integrity: sha512-WqqbaqRsS72LY3JXiHHrojTDG8PeeVwKBdn3NfQyqowzSVDr6Vu9c/WwWirR6K4QVmJKC1Obt1lKsAfMiRry0A==}
     engines: {node: '>=18.12.0'}
-    peerDependencies:
-      '@yarnpkg/fslib': ^3.0.0-rc.48
     dependencies:
       '@types/emscripten': 1.39.6
       '@yarnpkg/fslib': 3.0.0-rc.48
@@ -69527,20 +69525,6 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  registry.npmjs.org/@teambit/base-ui.hook.use-click-outside@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-We1J6M2/jBAAIN7/zilrIJKeGILSpkR7/FSSidsiacfm/SqIn+BMuse1GXvd4ThOhvAgFUUbj0fZ4NDyQhu3BQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.hook.use-click-outside/-/base-ui.hook.use-click-outside-1.0.0.tgz}
-    id: registry.npmjs.org/@teambit/base-ui.hook.use-click-outside/1.0.0
-    name: '@teambit/base-ui.hook.use-click-outside'
-    version: 1.0.0
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
   registry.npmjs.org/@teambit/base-ui.input.checkbox.hidden@1.0.1(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-gGUqZs+n0F2EeJaSryGkNfE1MOslKdKqNveI6jgphoYhhQ2WEOiZaDtsxTKIAzi/tbnEe5kZlC+uAk0q7jo6Ug==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.input.checkbox.hidden/-/base-ui.input.checkbox.hidden-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.input.checkbox.hidden/1.0.1
@@ -69797,8 +69781,8 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.hook.use-click-outside': registry.npmjs.org/@teambit/base-ui.hook.use-click-outside@1.0.0(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/base-ui.surfaces.abs-container': registry.npmjs.org/@teambit/base-ui.surfaces.abs-container@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.hook.use-click-outside': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.surfaces.abs-container': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
