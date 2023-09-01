@@ -547,6 +547,7 @@ export class ScopeMain implements ComponentFactory {
       reFetchUnBuiltVersion = true,
       preferDependencyGraph = true,
       lane,
+      reason,
     }: {
       /**
        * if the component exists locally, don't go to the server to search for updates.
@@ -588,6 +589,7 @@ export class ScopeMain implements ComponentFactory {
       reFetchUnBuiltVersion,
       lane,
       preferDependencyGraph,
+      reason,
     });
   }
 
