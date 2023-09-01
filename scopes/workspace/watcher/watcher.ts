@@ -81,6 +81,7 @@ export class Watcher {
     this.verbose = opts.verbose || false;
     const componentIds = Object.values(this.trackDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
+    await this.setTrackDirs();
     await this.createWatcher();
     const watcher = this.fsWatcher;
     msgs?.onStart(this.workspace);
