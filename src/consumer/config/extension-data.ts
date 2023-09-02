@@ -146,6 +146,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   }
 
   findExtension(extensionId: string, ignoreVersion = false, ignoreScope = false): ExtensionDataEntry | undefined {
+    ignoreScope = false;
     if (ExtensionDataList.coreExtensionsNames.has(extensionId)) {
       return this.findCoreExtension(extensionId);
     }

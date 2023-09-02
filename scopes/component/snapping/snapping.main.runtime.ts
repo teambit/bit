@@ -605,7 +605,7 @@ there are matching among unmodified components thought. consider using --unmodif
         : softTaggedComponentsIds;
       return compact(
         idsToRemoveSoftTags.map((componentId) => {
-          const componentMap = consumer.bitMap.getComponent(componentId._legacy, { ignoreScopeAndVersion: true });
+          const componentMap = consumer.bitMap.getComponent(componentId._legacy, { ignoreVersion: true });
           const removedVersion = componentMap.nextVersion?.version;
           if (!removedVersion) return null;
           componentMap.clearNextVersion();

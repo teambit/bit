@@ -125,7 +125,7 @@ export default class BitMap {
   }
 
   setOnLanesOnly(id: BitId, value: boolean) {
-    const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
+    const componentMap = this.getComponent(id, { ignoreVersion: true });
     componentMap.onLanesOnly = value;
     this.markAsChanged();
     return componentMap;
@@ -137,7 +137,7 @@ export default class BitMap {
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   removeComponentProp(id: BitId, propName: keyof ComponentMap) {
-    const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
+    const componentMap = this.getComponent(id, { ignoreVersion: true });
     delete componentMap[propName];
     this.markAsChanged();
     return componentMap;
@@ -759,7 +759,7 @@ export default class BitMap {
   }
 
   removeComponent(bitId: BitId) {
-    const bitmapComponent = this.getBitIdIfExist(bitId, { ignoreScopeAndVersion: true });
+    const bitmapComponent = this.getBitIdIfExist(bitId, { ignoreVersion: true });
     if (bitmapComponent) this._removeFromComponentsArray(bitmapComponent);
     return bitmapComponent;
   }

@@ -207,7 +207,7 @@ export default class AddComponents {
     const componentFromScope = await this._getComponentFromScopeIfExist(parsedBitId);
     const files: ComponentMapFile[] = component.files;
     const foundComponentFromBitMap = this.bitMap.getComponentIfExist(component.componentId, {
-      ignoreScopeAndVersion: true,
+      ignoreVersion: true,
     });
     const componentFilesP = files.map(async (file: ComponentMapFile) => {
       // $FlowFixMe null is removed later on
