@@ -79,10 +79,10 @@ export class Watcher {
   async watchAll(opts: WatchOptions) {
     const { msgs, ...watchOpts } = opts;
     this.verbose = opts.verbose || false;
-    const pathsToWatch = await this.getPathsToWatch();
     const componentIds = Object.values(this.trackDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
-    await this.createWatcher(pathsToWatch);
+    await this.setTrackDirs();
+    await this.createWatcher();
     const watcher = this.fsWatcher;
     msgs?.onStart(this.workspace);
 
@@ -95,37 +95,22 @@ export class Watcher {
       }
       watcher.on('ready', () => {
         msgs?.onReady(this.workspace, this.trackDirs, this.verbose);
+        // console.log(this.fsWatcher.getWatched());
         loader.stop();
       });
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      watcher.on('change', async (filePath) => {
+      watcher.on('all', async (event, filePath) => {
+        if (event !== 'change' && event !== 'add' && event !== 'unlink') return;
         const startTime = new Date().getTime();
-        const { files, results, debounced, failureMsg } = await this.handleChange(filePath, opts?.initiator);
-        if (debounced) {
+        const { files, results, debounced, irrelevant, failureMsg } = await this.handleChange(
+          filePath,
+          opts?.initiator
+        );
+        if (debounced || irrelevant) {
           return;
         }
         const duration = new Date().getTime() - startTime;
         msgs?.onChange(files, results, this.verbose, duration, failureMsg);
-      });
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      watcher.on('add', async (filePath) => {
-        const startTime = new Date().getTime();
-        const { files, results, debounced, failureMsg } = await this.handleChange(filePath, opts?.initiator);
-        if (debounced) {
-          return;
-        }
-        const duration = new Date().getTime() - startTime;
-        msgs?.onAdd(files, results, this.verbose, duration, failureMsg);
-      });
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      watcher.on('unlink', async (filePath) => {
-        const startTime = new Date().getTime();
-        const { files, results, debounced, failureMsg } = await this.handleChange(filePath, opts?.initiator);
-        if (debounced) {
-          return;
-        }
-        const duration = new Date().getTime() - startTime;
-        msgs?.onUnlink(files, results, this.verbose, duration, failureMsg);
       });
       watcher.on('error', (err) => {
         msgs?.onError(err);
@@ -177,6 +162,7 @@ export class Watcher {
     files: string[];
     failureMsg?: string;
     debounced?: boolean;
+    irrelevant?: boolean; // file/dir is not part of any component
   }> {
     try {
       if (filePath.endsWith(BIT_MAP)) {
@@ -199,10 +185,8 @@ export class Watcher {
       }
       const componentId = this.getComponentIdByPath(filePath);
       if (!componentId) {
-        const failureMsg = `file ${filePath} is not part of any component, ignoring it`;
-        logger.debug(failureMsg);
         loader.stop();
-        return { results: [], files: [filePath], failureMsg };
+        return { results: [], files: [], irrelevant: true };
       }
       const compIdStr = componentId.toString();
       if (this.changedFilesPerComponent[compIdStr]) {
@@ -304,14 +288,12 @@ export class Watcher {
     const removedDirs: string[] = difference(Object.keys(previewsTrackDirs), Object.keys(this.trackDirs));
     const results: OnComponentEventResult[] = [];
     if (newDirs.length) {
-      this.fsWatcher.add(newDirs.map((dir) => this.consumer.toAbsolutePath(dir)));
       const addResults = await mapSeries(newDirs, async (dir) =>
         this.executeWatchOperationsOnComponent(this.trackDirs[dir], [], [], false)
       );
       results.push(...addResults.flat());
     }
     if (removedDirs.length) {
-      await this.fsWatcher.unwatch(removedDirs);
       await mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsTrackDirs[dir]));
     }
 
@@ -396,14 +378,20 @@ export class Watcher {
     return this.findTrackDirByFilePathRecursively(parentDir);
   }
 
-  private async createWatcher(pathsToWatch: string[]) {
+  private async createWatcher() {
     const usePollingConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_POLLING);
     const usePolling = usePollingConf === 'true';
-    this.fsWatcher = chokidar.watch(pathsToWatch, {
+    const ignoreLocalScope = (pathToCheck: string) => {
+      if (pathToCheck.startsWith(this.ipcEventsDir)) return false;
+      return (
+        pathToCheck.startsWith(`${this.workspace.path}/.git/`) || pathToCheck.startsWith(`${this.workspace.path}/.bit/`)
+      );
+    };
+    this.fsWatcher = chokidar.watch(this.workspace.path, {
       ignoreInitial: true,
-      // `chokidar` matchers have Bash-parity, so Windows-style backslackes are not supported as separators.
+      // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
       // (windows-style backslashes are converted to forward slashes)
-      ignored: ['**/node_modules/**', '**/package.json'],
+      ignored: ['**/node_modules/**', '**/package.json', ignoreLocalScope],
       usePolling,
       persistent: true,
     });
@@ -424,15 +412,5 @@ export class Watcher {
         this.trackDirs[rootDir] = componentId;
       })
     );
-  }
-
-  private async getPathsToWatch(): Promise<PathOsBasedAbsolute[]> {
-    await this.setTrackDirs();
-    const paths = [...Object.keys(this.trackDirs), BIT_MAP];
-    const pathsAbsolute = paths.map((dir) => this.consumer.toAbsolutePath(dir));
-    // otherwise, if the dir is not there, chokidar triggers 'onReady' event twice for some unclear reason.
-    await fs.ensureDir(this.ipcEventsDir);
-    pathsAbsolute.push(this.ipcEventsDir);
-    return pathsAbsolute;
   }
 }
