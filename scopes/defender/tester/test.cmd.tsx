@@ -53,6 +53,7 @@ export class TestCmd implements Command {
     [userPattern]: [string],
     { watch = false, debug = false, all = false, env, scope, junit, coverage = false, unmodified = false }: TestFlags
   ) {
+    unmodified = unmodified || all;
     const timer = Timer.create();
     const scopeName = typeof scope === 'string' ? scope : undefined;
     if (scopeName) {
