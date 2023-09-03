@@ -33,7 +33,7 @@ import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
-import { componentTemplates, workspaceTemplates } from './react.templates';
+import { componentTemplates } from './react.templates';
 import { ReactAppOptions } from './apps/web/react-app-options';
 
 type ReactDeps = [
@@ -174,7 +174,7 @@ export class ReactMain {
   }
 
   /**
-   * Override the Bit documentation link. See docs: https://bit.dev/docs/docs/doc-templates
+   * Override the Bit documentation link. See docs: https://bit.dev/refrence/docs/doc-templates
    */
   overrideDocsTemplate(templatePath: string) {
     return this.envs.override({
@@ -453,7 +453,6 @@ export class ReactMain {
     envs.registerEnv(reactEnv);
     if (generator) {
       generator.registerComponentTemplate(componentTemplates);
-      generator.registerWorkspaceTemplate(workspaceTemplates);
     }
 
     if (application) application.registerAppType(appType);

@@ -224,7 +224,7 @@ export class BitMap {
   makeComponentsAvailableOnMain(ids: ComponentID[]) {
     ids.forEach((id) => {
       const componentMap = this.getBitmapEntry(id);
-      delete componentMap.isAvailableOnCurrentLane;
+      componentMap.isAvailableOnCurrentLane = true;
       delete componentMap.onLanesOnly;
     });
     this.legacyBitMap.markAsChanged();

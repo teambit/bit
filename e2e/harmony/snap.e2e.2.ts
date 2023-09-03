@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { HASH_SIZE, AUTO_SNAPPED_MSG } from '../../src/constants';
+import { HASH_SIZE, AUTO_SNAPPED_MSG, FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
 import ComponentsPendingMerge from '../../src/consumer/component-ops/exceptions/components-pending-merge';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -266,7 +266,7 @@ describe('bit snap command', function () {
             mergeOutput = helper.command.merge('bar/foo --auto-merge-resolve ours');
           });
           it('should succeed and indicate that the files were not changed', () => {
-            expect(mergeOutput).to.have.string('unchanged');
+            expect(mergeOutput).to.not.have.string(FILE_CHANGES_CHECKOUT_MSG);
           });
           it('should indicate that a component was snapped', () => {
             expect(mergeOutput).to.have.string('merge-snapped components');
@@ -298,7 +298,7 @@ describe('bit snap command', function () {
             mergeOutput = helper.command.merge('bar/foo --auto-merge-resolve ours --no-snap');
           });
           it('should succeed and indicate that the files were not changed', () => {
-            expect(mergeOutput).to.have.string('unchanged');
+            expect(mergeOutput).to.not.have.string(FILE_CHANGES_CHECKOUT_MSG);
           });
           it('should not show a message about merge-snapped components', () => {
             expect(mergeOutput).to.not.have.string('merge-snapped components');

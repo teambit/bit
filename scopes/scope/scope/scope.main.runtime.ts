@@ -35,7 +35,7 @@ import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component'
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
 import { PersistOptions } from '@teambit/legacy/dist/scope/types';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
@@ -104,6 +104,10 @@ export type ScopeConfig = {
    * Set a different package manager for the aspects capsules
    */
   aspectsPackageManager?: string;
+  /**
+   * Set a different node linker for the aspects capsules
+   */
+  aspectsNodeLinker?: NodeLinker;
 };
 
 export class ScopeMain implements ComponentFactory {
@@ -191,6 +195,10 @@ export class ScopeMain implements ComponentFactory {
 
   get aspectsPackageManager(): string | undefined {
     return this.config.aspectsPackageManager;
+  }
+
+  get aspectsNodeLinker(): NodeLinker | undefined {
+    return this.config.aspectsNodeLinker;
   }
 
   // We need to reload the aspects with their new version since:
@@ -439,7 +447,10 @@ export class ScopeMain implements ComponentFactory {
     const components = await this.getMany(ids);
     const allFlattened = components.map((component) => component.state._consumer.getAllFlattenedDependencies()).flat();
     const allFlattenedUniq = BitIds.uniqFromArray(allFlattened);
-    await this.legacyScope.scopeImporter.importMany({ ids: allFlattenedUniq });
+    await this.legacyScope.scopeImporter.importWithoutDeps(allFlattenedUniq, {
+      cache: true,
+      reason: `which are unique flattened dependencies to get the graph of ${ids.length} ids`,
+    });
     const allFlattenedCompIds = await this.resolveMultipleComponentIds(allFlattenedUniq);
     const dependencies = await this.getMany(allFlattenedCompIds);
     const allComponents: Component[] = [...components, ...dependencies];
@@ -485,7 +496,7 @@ export class ScopeMain implements ComponentFactory {
     const lane = (await this.legacyScope.getCurrentLaneObject()) || undefined;
     await this.import(
       componentsWithoutSavedGraph.map((c) => c.id),
-      { reFetchUnBuiltVersion: false, lane }
+      { reFetchUnBuiltVersion: false, lane, reason: `to build graph-ids from the scope` }
     );
 
     const allFlattened = componentsWithoutSavedGraph
@@ -542,8 +553,9 @@ export class ScopeMain implements ComponentFactory {
     {
       useCache = true,
       reFetchUnBuiltVersion = true,
-      preferDependencyGraph = false,
+      preferDependencyGraph = true,
       lane,
+      reason,
     }: {
       /**
        * if the component exists locally, don't go to the server to search for updates.
@@ -563,6 +575,10 @@ export class ScopeMain implements ComponentFactory {
        * if an external is missing and the remote has it with the dependency graph, don't fetch all its dependencies
        */
       preferDependencyGraph?: boolean;
+      /**
+       * reason why this import is needed (to show in the terminal)
+       */
+      reason?: string;
     } = {}
   ): Promise<void> {
     const legacyIds = ids.map((id) => {
@@ -581,6 +597,7 @@ export class ScopeMain implements ComponentFactory {
       reFetchUnBuiltVersion,
       lane,
       preferDependencyGraph,
+      reason,
     });
   }
 

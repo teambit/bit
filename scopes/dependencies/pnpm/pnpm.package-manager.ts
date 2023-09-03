@@ -95,6 +95,8 @@ export class PnpmPackageManager implements PackageManager {
         reportOptions: {
           appendOnly: installOptions.optimizeReportForNonTerminal,
           throttleProgress: installOptions.throttleProgress,
+          hideProgressPrefix: installOptions.hideProgressPrefix,
+          hideLifecycleOutput: installOptions.hideLifecycleOutput,
         },
       },
       this.logger
