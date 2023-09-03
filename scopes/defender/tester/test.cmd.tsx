@@ -53,7 +53,6 @@ export class TestCmd implements Command {
     [userPattern]: [string],
     { watch = false, debug = false, all = false, env, scope, junit, coverage = false, unmodified = false }: TestFlags
   ) {
-    unmodified = unmodified || all;
     const timer = Timer.create();
     const scopeName = typeof scope === 'string' ? scope : undefined;
     if (scopeName) {
@@ -62,6 +61,7 @@ export class TestCmd implements Command {
       );
     }
     if (all) {
+      unmodified = all;
       this.logger.consoleWarning(`--all is deprecated, use --unmodified instead`);
     }
     timer.start();
