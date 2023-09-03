@@ -1,6 +1,55 @@
 import type { Component } from '@teambit/component';
 import { ComponentConfig } from './component-template';
 
+/**
+ * BaseWorkspaceOptions describes the foundational properties for workspaces.
+ */
+export interface BaseWorkspaceOptions {
+  /**
+   * The name of the workspace as provided by the user (e.g., `react-app`).
+   * This is also used as the directory name for the workspace.
+   */
+  name: string;
+
+  /**
+   * The default scope provided by the user.
+   * This is set in the workspace.jsonc and is utilized for components within the workspace.
+   */
+  defaultScope?: string;
+
+  /**
+   * Indicates whether the user has opted to avoid creating components (typically with a `--empty` flag).
+   */
+  empty?: boolean;
+
+  /**
+   * Represents the aspect in the context where a remote aspect is imported (often via the `--aspect` flag).
+   * This is useful for obtaining the aspect-id and other related information.
+   */
+  aspectComponent?: Component;
+
+  /**
+   * Represents the selected template to initialize or create the workspace.
+   */
+  template: WorkspaceTemplate;
+
+  /**
+   * Flag to check if Git repository generation should be skipped.
+   */
+  skipGit?: boolean;
+
+  /**
+   * Local path to the workspace template.
+   * Useful during the development of a workspace-template.
+   */
+  loadFrom?: string;
+}
+
+/**
+ * WorkspaceContext represents foundational properties for a workspace context.
+ */
+export type WorkspaceContext = BaseWorkspaceOptions;
+
 export interface WorkspaceFile {
   /**
    * relative path of the file within the workspace.
@@ -13,52 +62,11 @@ export interface WorkspaceFile {
   content: string;
 }
 
-export interface WorkspaceContext {
-  /**
-   * workspace-name as entered by the user, e.g. `react-app`.
-   * it is used as the directory name for the workspace.
-   */
-  name: string;
-
-  /**
-   * default scope as entered by the user.
-   * it will be set in the workspace.jsonc and be used for components
-   */
-  defaultScope?: string;
-
-  /**
-   * whether user entered `--empty` flag in `bit new` to avoid creating components.
-   */
-  empty?: boolean;
-
-  /**
-   * in case the "--aspect" flag used to import a remote aspect, this is populated with that aspect.
-   * useful to get the aspect-id and other info.
-   */
-  aspectComponent?: Component;
-
-  /**
-   * the template the user selected to create the workspace.
-   */
-  template: WorkspaceTemplate;
-}
-
-export interface ForkComponentInfo {
-  /**
-   * full component id
-   */
-  id: string;
-
-  /**
-   * path where to write the component
-   */
-  path?: string;
-
+export interface ForkComponentInfo extends ImportComponentInfo {
   /**
    * a new component name. if not specified, use the original id (without the scope)
    */
   targetName?: string;
-
   /**
    * env to use for the component.
    */
@@ -88,12 +96,12 @@ export interface ImportComponentInfo {
   /**
    * path where to write the component
    */
-  path: string;
+  path?: string;
 }
 
 export interface WorkspaceTemplate {
   /**
-   * name of the workspace template. for example: `react-workspace`.
+   * name of the workspace starter. for example: `react-workspace`.
    */
   name: string;
 
@@ -104,17 +112,17 @@ export interface WorkspaceTemplate {
   appName?: string;
 
   /**
-   * short description of the template. shown in the `bit templates` command when outside of bit-workspace.
+   * short description of the starter. shown in the `bit starter` command when outside of bit-workspace.
    */
   description?: string;
 
   /**
-   * hide this template so that it is not listed with `bit templates`
+   * hide this starter so that it is not listed with `bit starter`
    */
   hidden?: boolean;
 
   /**
-   * template function for generating the template files,
+   * starter function for generating the template files,
    */
   generateFiles(context: WorkspaceContext): Promise<WorkspaceFile[]>;
 

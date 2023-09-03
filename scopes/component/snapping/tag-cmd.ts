@@ -27,7 +27,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
       description: `${COMPONENT_PATTERN_HELP}. By default, all new and modified are tagged.`,
     },
   ];
-  helpUrl = 'https://bit.dev/reference/components/snaps#create-a-tag-(release-version)';
+  helpUrl = 'reference/components/snaps#create-a-tag-(release-version)';
   alias = 't';
   loader = true;
   options = [

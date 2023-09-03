@@ -3,6 +3,7 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { flatten, partition } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID } from '@teambit/component';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import BitIds from '@teambit/legacy/dist/bit-id/bit-ids';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
@@ -32,6 +33,7 @@ export class GraphIdsFromFsBuilder {
   private consumer: Consumer;
   private loadedComponents: { [idStr: string]: Component } = {};
   private importedIds: string[] = [];
+  private shouldThrowOnInvalidDeps = true; // for now it has the same value as shouldThrowOnMissingDep. change if needed
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -39,6 +41,7 @@ export class GraphIdsFromFsBuilder {
     private shouldThrowOnMissingDep = true
   ) {
     this.consumer = this.workspace.consumer;
+    this.shouldThrowOnInvalidDeps = this.shouldThrowOnMissingDep;
   }
 
   /**
@@ -84,7 +87,7 @@ export class GraphIdsFromFsBuilder {
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,
-      preferDependencyGraph: true,
+      reason: 'for building graph-ids from the workspace',
     });
     notImported.map((id) => this.importedIds.push(id.toString()));
   }
@@ -188,6 +191,17 @@ export class GraphIdsFromFsBuilder {
           }
           throw new BitError(
             `error: component "${idStr}" was not found.\nthis component is a dependency of "${
+              dependenciesOf || '<none>'
+            }" and is needed as part of the graph generation`
+          );
+        }
+        if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
+          if (dependenciesOf && !this.shouldThrowOnInvalidDeps) {
+            this.logger.warn(`component ${idStr}, dependency of ${dependenciesOf} is invalid. continuing without it`);
+            return null;
+          }
+          throw new BitError(
+            `error: component "${idStr}" is invalid (${err.message}).\nthis component is a dependency of "${
               dependenciesOf || '<none>'
             }" and is needed as part of the graph generation`
           );

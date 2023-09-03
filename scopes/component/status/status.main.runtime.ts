@@ -5,7 +5,7 @@ import { IssuesList } from '@teambit/component-issues';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import { ComponentID } from '@teambit/component-id';
-import { Component } from '@teambit/component';
+import { Component, InvalidComponent } from '@teambit/component';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BEFORE_STATUS } from '@teambit/legacy/dist/cli/loader/loader-messages';
@@ -65,13 +65,16 @@ export class StatusMain {
   async status({ lanes }: { lanes?: boolean }): Promise<StatusResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     loader.start(BEFORE_STATUS);
-    const consumer = this.workspace.consumer;
-    const laneObj = await consumer.getCurrentLaneObject();
-    const componentsList = new ComponentsList(consumer);
     const loadOpts = {
       loadDocs: false,
       loadCompositions: false,
     };
+    const { components: allComps, invalidComponents: allInvalidComponents } = await this.workspace.listWithInvalid(
+      loadOpts
+    );
+    const consumer = this.workspace.consumer;
+    const laneObj = await consumer.getCurrentLaneObject();
+    const componentsList = new ComponentsList(consumer);
     const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(
       true,
       loadOpts
@@ -90,38 +93,24 @@ export class StatusMain {
     const unavailableOnMain = await this.workspace.getUnavailableOnMainComponents();
     const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
     const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.id);
-    const allInvalidComponents = await componentsList.listInvalidComponents();
     const locallySoftRemoved = await componentsList.listLocallySoftRemoved();
     const remotelySoftRemoved = await componentsList.listRemotelySoftRemoved();
     const importPendingComponents = allInvalidComponents
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      .filter((c) => c.error instanceof ComponentsPendingImport)
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      .filter((c) => c.err instanceof ComponentsPendingImport)
       .map((i) => i.id);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const invalidComponents = allInvalidComponents.filter((c) => !(c.error instanceof ComponentsPendingImport));
+    const divergeInvalid = await this.divergeDataErrorsToInvalidComp(allComps);
+    invalidComponents.push(...divergeInvalid);
     const outdatedComponents = await componentsList.listOutdatedComponents();
     const idsDuringMergeState = componentsList.listDuringMergeStateComponents();
-    const { components: componentsDuringMergeState } = await this.workspace.consumer.loadComponents(
-      idsDuringMergeState,
-      false
-    );
     const mergePendingComponents = await componentsList.listMergePendingComponents();
-    const legacyCompsWithPotentialIssues: ConsumerComponent[] = [
-      ...newComponents,
-      ...modifiedComponents,
-      ...componentsDuringMergeState,
-    ];
-    const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
-    if (legacyCompsWithPotentialIssues.length) {
-      const compsWithPotentialIssues = await this.workspace.getManyByLegacy(legacyCompsWithPotentialIssues, loadOpts);
-      await this.issues.triggerAddComponentIssues(compsWithPotentialIssues, issuesToIgnore);
-      this.issues.removeIgnoredIssuesFromComponents(compsWithPotentialIssues);
+    if (allComps.length) {
+      const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
+      await this.issues.triggerAddComponentIssues(allComps, issuesToIgnore);
+      this.issues.removeIgnoredIssuesFromComponents(allComps);
     }
-    const componentsWithIssues = legacyCompsWithPotentialIssues.filter((component: ConsumerComponent) => {
-      return component.issues && !component.issues.isEmpty();
-    });
-
+    const componentsWithIssues = allComps.filter((component) => !component.state.issues.isEmpty());
     const softTaggedComponents = componentsList.listSoftTaggedComponents();
     const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toBitId());
     const pendingUpdatesFromMain = lanes ? await componentsList.listUpdatesFromMainPending() : [];
@@ -153,20 +142,19 @@ export class StatusMain {
       return results.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
     };
 
+    const sortObjectsWithId = <T>(objectsWithId: Array<T & { id: ComponentID }>): Array<T & { id: ComponentID }> => {
+      return objectsWithId.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
+    };
+
     await consumer.onDestroy();
     return {
       newComponents: await convertBitIdToComponentIdsAndSort(newComponents.map((c) => c.id)),
       modifiedComponents: await convertBitIdToComponentIdsAndSort(modifiedComponents.map((c) => c.id)),
       stagedComponents: await convertObjToComponentIdsAndSort(stagedComponentsWithVersions),
-      // @ts-ignore - not clear why, it fails the "bit build" without it
-      componentsWithIssues: await convertObjToComponentIdsAndSort(
-        componentsWithIssues.map((c) => ({ id: c.id, issues: c.issues }))
-      ), // no need to sort, we don't print it as is
-      importPendingComponents: await convertBitIdToComponentIdsAndSort(importPendingComponents), // no need to sort, we use only its length
+      componentsWithIssues: sortObjectsWithId(componentsWithIssues.map((c) => ({ id: c.id, issues: c.state.issues }))),
+      importPendingComponents, // no need to sort, we use only its length
       autoTagPendingComponents: await convertBitIdToComponentIdsAndSort(autoTagPendingComponentsIds),
-      invalidComponents: await convertObjToComponentIdsAndSort(
-        invalidComponents.map((c) => ({ id: c.id, error: c.error }))
-      ),
+      invalidComponents: sortObjectsWithId(invalidComponents.map((c) => ({ id: c.id, error: c.err }))),
       locallySoftRemoved: await convertBitIdToComponentIdsAndSort(locallySoftRemoved),
       remotelySoftRemoved: await convertBitIdToComponentIdsAndSort(remotelySoftRemoved.map((c) => c.id)),
       outdatedComponents: await convertObjToComponentIdsAndSort(
@@ -227,6 +215,22 @@ export class StatusMain {
       nonExistsInStaged.map((id) => this.workspace.scope.legacyScope.getModelComponent(id))
     );
     stagedComponents.push(...modelComps);
+  }
+
+  private async divergeDataErrorsToInvalidComp(components: Component[]): Promise<InvalidComponent[]> {
+    const invalidComponents: InvalidComponent[] = [];
+    await Promise.all(
+      components.map(async (component) => {
+        const comp = component.state._consumer as ConsumerComponent;
+        if (!comp.modelComponent) return;
+        await comp.modelComponent.setDivergeData(this.workspace.scope.legacyScope.objects, false);
+        const divergeData = comp.modelComponent.getDivergeData();
+        if (divergeData.err) {
+          invalidComponents.push({ id: component.id, err: divergeData.err });
+        }
+      })
+    );
+    return invalidComponents;
   }
 
   static slots = [];

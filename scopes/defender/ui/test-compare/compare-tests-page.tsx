@@ -116,7 +116,7 @@ export function CompareTestsPage(props: CompareTestsPageProps) {
       <EmptyBox
         title="This component doesn’t have any tests."
         linkText="Learn how to add tests to your components"
-        link={`https://bit.dev/docs/dev-services-overview/tester/tester-overview`}
+        link={`https://bit.dev/reference/dev-services-overview/tester/tester-overview`}
       />
     );
   }

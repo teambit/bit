@@ -1,5 +1,5 @@
 import mapSeries from 'p-map-series';
-import { compact } from 'lodash';
+import { compact, partition } from 'lodash';
 import R from 'ramda';
 import { BitId, BitIds } from '../../bit-id';
 import logger from '../../logger/logger';
@@ -16,6 +16,8 @@ import { PersistFailed } from '../exceptions/persist-failed';
 import { MergeResult } from '../repositories/sources';
 import { Ref } from '../objects';
 import { BitObjectList } from '../objects/bit-object-list';
+import { pMapPool } from '../../utils/promise-with-concurrent';
+import { concurrentComponentsLimit } from '../../utils/concurrency';
 
 /**
  * ** Legacy and "bit sign" Only **
@@ -51,7 +53,7 @@ export async function saveObjects(scope: Scope, objectList: ObjectList): Promise
   const { mergedIds, mergedComponentsResults, mergedLanes } = await mergeObjects(scope, bitObjectList);
   const mergedComponents = mergedComponentsResults.map((_) => _.mergedComponent);
   const versionObjects = objectsNotRequireMerge.filter((o) => o instanceof Version) as Version[];
-  const versionsHistory = await updateVersionHistoryIfNeeded(scope, mergedComponents, versionObjects);
+  const versionsHistory = await updateVersionHistory(scope, mergedComponents, versionObjects);
   const allObjects = [...mergedComponents, ...mergedLanes, ...objectsNotRequireMerge, ...versionsHistory];
   scope.objects.validateObjects(true, allObjects);
   await scope.objects.writeObjectsToTheFS(allObjects);
@@ -61,29 +63,98 @@ export async function saveObjects(scope: Scope, objectList: ObjectList): Promise
 }
 
 /**
- * in case of rebase (squash / unrelated) where the version history is changed, make the necessary changes in the
- * VersionHistory. Because we only know about this from the Version object, and the Version object has no info about
- * what the component-id is, we have to iterate all model-components, grab their version-history and check whether
- * the version-hash is inside their VersionHistory.
- * it's not ideal performance wise. however, in most cases, this rebase is about squashing, and when squashing, it's
- * done for the entire lane, so all components need to be updated regardless.
+ * Previously, the VersionHistory was populated during fetch. However, we want the fetch operation to be more efficient
+ * so we move this logic to the export operation.
+ * Before version 0.2.22, the Version object didn't have any info about the component-id, so we do update only for
+ * rebase. For versions that tagged by > 0.2.22, we have the "origin.id" and we know to what component this version
+ * belongs to.
  */
-async function updateVersionHistoryIfNeeded(
+async function updateVersionHistory(
   scope: Scope,
   mergedComponents: ModelComponent[],
   versionObjects: Version[]
 ): Promise<VersionHistory[]> {
-  const mutatedVersionObjects = versionObjects.filter((v) => v.squashed || v.unrelated);
-  logger.debug(`updateVersionHistoryIfNeeded, found ${mutatedVersionObjects.length} mutated version`);
+  const versionsWithComponentId = versionObjects.filter((obj) => obj.origin?.id);
+
+  const [versionsWithOrigin, versionWithoutOrigin] = partition(versionsWithComponentId, (v) => v.origin?.id);
+
+  const versionHistoryOfVersionsWithOrigin = await _updateVersionHistoryForVersionsWithOrigin(
+    scope,
+    mergedComponents,
+    versionsWithOrigin
+  );
+
+  const versionHistoryOfVersionsWithoutOrigin = await _updateVersionHistoryForVersionsWithoutOrigin(
+    scope,
+    mergedComponents,
+    versionWithoutOrigin
+  );
+
+  return [...versionHistoryOfVersionsWithOrigin, ...versionHistoryOfVersionsWithoutOrigin];
+}
+
+/**
+ * In case of rebase (squash / unrelated) where the version history is changed, make the necessary changes in the
+ * VersionHistory.
+ * Because previously (bit-version < 0.2.22) we only knew about this from the Version object, and the Version object
+ * didn't have any info about what the component-id is, we have to iterate all model-components, grab their
+ * version-history and check whether the version-hash is inside their VersionHistory.
+ * it's not ideal performance wise. however, in most cases, this rebase is about squashing, and when squashing, it's
+ * done for the entire lane, so all components need to be updated regardless.
+ */
+async function _updateVersionHistoryForVersionsWithoutOrigin(
+  scope: Scope,
+  mergedComponents: ModelComponent[],
+  versionWithoutOrigin: Version[]
+): Promise<VersionHistory[]> {
+  const mutatedVersionObjects = versionWithoutOrigin.filter((v) => v.squashed || v.unrelated);
+  if (!mutatedVersionObjects.length) return [];
+  logger.debug(`_updateVersionHistoryForVersionsWithoutOrigin, found ${mutatedVersionObjects.length} mutated version`);
   const versionsHistory = await Promise.all(
     mergedComponents.map(async (modelComp) =>
       modelComp.updateRebasedVersionHistory(scope.objects, mutatedVersionObjects)
     )
   );
   const versionsHistoryNoNull = compact(versionsHistory);
-  logger.debug(`updateVersionHistoryIfNeeded, found ${versionsHistoryNoNull.length} versionsHistory to update
+  logger.debug(`_updateVersionHistoryForVersionsWithoutOrigin, found ${
+    versionsHistoryNoNull.length
+  } versionsHistory to update
 ${versionsHistoryNoNull.map((v) => v.bitId.toString()).join(', ')}`);
+
   return versionsHistoryNoNull;
+}
+
+async function _updateVersionHistoryForVersionsWithOrigin(
+  scope: Scope,
+  mergedComponents: ModelComponent[],
+  versionObjects: Version[]
+): Promise<VersionHistory[]> {
+  if (!versionObjects.length) return [];
+  logger.debug(`_updateVersionHistoryForVersionsWithOrigin, found ${versionObjects.length} versions with origin`);
+  const componentVersionMap = new Map<ModelComponent, Version[]>();
+  versionObjects.forEach((version) => {
+    const component = mergedComponents.find(
+      (c) => c.scope === version.origin?.id.scope && c.name === version.origin?.id.name
+    );
+    if (!component) {
+      logger.error(`updateVersionHistoryIfNeeded, unable to find component for version ${version.hash().toString()}`);
+      return;
+    }
+    const versions = componentVersionMap.get(component) || [];
+    componentVersionMap.set(component, [...versions, version]);
+  });
+
+  const versionsHistory = await pMapPool(
+    mergedComponents,
+    async (modelComp) => {
+      const versions = componentVersionMap.get(modelComp);
+      if (!versions || !versions.length) return undefined;
+      return modelComp.updateVersionHistory(scope.objects, versions);
+    },
+    { concurrency: concurrentComponentsLimit() }
+  );
+
+  return compact(versionsHistory);
 }
 
 type MergeObjectsResult = { mergedIds: BitIds; mergedComponentsResults: MergeResult[]; mergedLanes: Lane[] };

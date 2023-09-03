@@ -132,7 +132,7 @@ export class StatusCmd implements Command {
       const color = message ? 'yellow' : 'green';
       const messageStatus = chalk[color](messageStatusTextWithSoftTag);
 
-      if (!showIssues) {
+      if (!showIssues && !localVersions) {
         return `${formatBitString(id.toStringWithoutVersion())} ... ${messageStatus}`;
       }
       let bitFormatted = `${formatBitString(id.toStringWithoutVersion())}`;
@@ -158,7 +158,7 @@ export class StatusCmd implements Command {
     const splitByMissing = R.groupBy((component) => {
       return component.includes(statusFailureMsg) ? 'missing' : 'nonMissing';
     });
-    const { missing, nonMissing } = splitByMissing(newComponents.map((c) => format(c, true)));
+    const { missing, nonMissing } = splitByMissing(newComponents.map((c) => format(c)));
 
     const outdatedTitle = chalk.underline.white('pending updates');
     const outdatedDesc =
@@ -196,7 +196,7 @@ alternatively, to keep local tags/snaps history, use "bit merge [component-id]")
     const compDuringMergeDesc = `(use "bit snap/tag [--unmerged]" to complete the merge process.
 to cancel the merge operation, use either "bit lane merge-abort" (for prior "bit lane merge" command)
 or use "bit merge [component-id] --abort" (for prior "bit merge" command)\n`;
-    const compDuringMergeComps = componentsDuringMergeState.map((c) => format(c, true)).join('\n');
+    const compDuringMergeComps = componentsDuringMergeState.map((c) => format(c)).join('\n');
 
     const compDuringMergeStr = compDuringMergeComps.length
       ? [compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps].join('\n')
@@ -211,7 +211,7 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)\n`;
 
     const modifiedDesc = '(use "bit diff" to compare changes)\n';
     const modifiedComponentOutput = immutableUnshift(
-      modifiedComponents.map((c) => format(c, true)),
+      modifiedComponents.map((c) => format(c)),
       modifiedComponents.length
         ? chalk.underline.white('modified components') + newComponentDescription + modifiedDesc
         : ''
@@ -222,6 +222,12 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)\n`;
       autoTagPendingComponents.length
         ? chalk.underline.white('components pending auto-tag (when their modified dependencies are tagged)')
         : ''
+    ).join('\n');
+
+    const compWithIssuesDesc = '\n(fix the issues according to the suggested solution)\n';
+    const compWithIssuesOutput = immutableUnshift(
+      componentsWithIssues.map((c) => format(c.id, true)).sort(),
+      componentsWithIssues.length ? chalk.underline.white('components with issues') + compWithIssuesDesc : ''
     ).join('\n');
 
     const invalidDesc = '\nthese components failed to load.\n';
@@ -248,7 +254,7 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)\n`;
 
     const stagedDesc = '\n(use "bit export" to push these component versions to the remote scope)\n';
     const stagedComponentsOutput = immutableUnshift(
-      stagedComponents.map((c) => format(c.id, true, undefined, c.versions)),
+      stagedComponents.map((c) => format(c.id, false, undefined, c.versions)),
       stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
     ).join('\n');
 
@@ -329,6 +335,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
         stagedComponentsOutput,
         unavailableOnMainOutput,
         autoTagPendingOutput,
+        compWithIssuesOutput,
         invalidComponentOutput,
         locallySoftRemovedOutput,
         remotelySoftRemovedOutput,

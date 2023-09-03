@@ -14,7 +14,7 @@ export default class Config extends Map<string, string> {
   }
 
   toJson() {
-    return JSON.stringify(this.toPlainObject());
+    return JSON.stringify(this.toPlainObject(), null, 2);
   }
 
   write() {

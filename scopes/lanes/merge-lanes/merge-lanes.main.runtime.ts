@@ -250,7 +250,7 @@ export class MergeLanesMain {
       const readmeComponentId = otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash);
       deleteResults = await this.remove.removeLocallyByIds([readmeComponentId]);
     } else if (otherLane && !otherLane.readmeComponent) {
-      deleteResults = { readmeResult: `\nlane ${otherLane.name} doesn't have a readme component` };
+      deleteResults = { readmeResult: '' };
     }
     const configMergeResults = allComponentsStatus.map((c) => c.configMergeResult);
 
@@ -438,6 +438,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
       lane: fromLaneObj,
       ignoreMissingHead: true,
       includeVersionHistory: true,
+      reason: `of "from" lane (${fromLaneId.name}) for lane-merge to get all version-history`,
     });
 
     // get their main/to-lane as well
@@ -446,6 +447,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
       lane: toLaneObj,
       ignoreMissingHead: true,
       includeVersionHistory: true,
+      reason: `of "to" lane (${toLaneId.name}) for lane-merge to get all version-history`,
     });
     await this.importer.importHeadArtifactsFromLane(fromLaneObj, undefined, true);
     await this.throwIfNotUpToDate(fromLaneId, toLaneId);

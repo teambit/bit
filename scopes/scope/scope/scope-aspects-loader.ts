@@ -20,6 +20,7 @@ import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } fro
 import { ScopeMain } from '@teambit/scope';
 import { Logger } from '@teambit/logger';
 import { EnvsMain } from '@teambit/envs';
+import { NodeLinker } from '@teambit/dependency-resolver';
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
 
@@ -174,8 +175,8 @@ needed-for: ${neededFor || '<unknown>'}`);
     if (!componentIds || !componentIds.length) return [];
     await this.scope.import(componentIds, {
       reFetchUnBuiltVersion: false,
-      preferDependencyGraph: true,
       lane,
+      reason: 'for loading aspects from the scope',
     });
     const components = await this.scope.getMany(componentIds);
 
@@ -350,6 +351,10 @@ needed-for: ${neededFor || '<unknown>'}`);
     return this.scope.aspectsPackageManager;
   }
 
+  getAspectsNodeLinker(): NodeLinker | undefined {
+    return this.scope.aspectsNodeLinker;
+  }
+
   private async resolveUserAspects(
     runtimeName?: string,
     userAspectsIds?: ComponentID[],
@@ -451,12 +456,14 @@ needed-for: ${neededFor || '<unknown>'}`);
   getDefaultIsolateOpts() {
     const useHash = this.shouldUseHashForCapsules();
     const useDatedDirs = this.shouldUseDatedCapsules();
+    const nodeLinker = this.getAspectsNodeLinker();
 
     const opts = {
       datedDirId: this.scope.name,
       baseDir: this.getAspectCapsulePath(),
       useHash,
       packageManager: this.getAspectsPackageManager(),
+      nodeLinker,
       useDatedDirs,
       skipIfExists: true,
       seedersOnly: true,
