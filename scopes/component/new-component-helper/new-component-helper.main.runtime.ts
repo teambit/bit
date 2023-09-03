@@ -12,8 +12,11 @@ import { Harmony } from '@teambit/harmony';
 import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { PkgAspect } from '@teambit/pkg';
+import { RenamingAspect } from '@teambit/renaming';
 import { EnvsAspect } from '@teambit/envs';
 import { NewComponentHelperAspect } from './new-component-helper.aspect';
+
+const aspectsConfigToIgnore: string[] = [PkgAspect.id, RenamingAspect.id];
 
 export class NewComponentHelperMain {
   constructor(private workspace: Workspace, private harmony: Harmony, private tracker: TrackerMain) {}
@@ -116,7 +119,7 @@ export class NewComponentHelperMain {
       const aspectId = entry.id.toString();
       // don't copy the pkg aspect, it's not relevant for the new component
       // (it might contain values that are bounded to the other component name / id)
-      if (aspectId === PkgAspect.id) {
+      if (aspectsConfigToIgnore.includes(aspectId)) {
         return;
       }
       fromExisting[aspectId] = entry.config;
