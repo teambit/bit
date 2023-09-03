@@ -211,6 +211,7 @@ async function postProcessExtendingConfigFiles(
         fileHashPerDedupedPaths.push({ fileHash: newHash, paths: [path] });
       }
     });
+    return undefined;
   });
 }
 
