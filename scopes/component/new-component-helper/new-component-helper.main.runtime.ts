@@ -117,8 +117,8 @@ export class NewComponentHelperMain {
     comp.state.aspects.entries.forEach((entry) => {
       if (!entry.config) return;
       const aspectId = entry.id.toString();
-      // don't copy the pkg aspect, it's not relevant for the new component
-      // (it might contain values that are bounded to the other component name / id)
+      // don't copy config of aspects that are not relevant for the new component
+      // (e.g. pkg aspect config might contain values that are bounded to the other component name / id)
       if (aspectsConfigToIgnore.includes(aspectId)) {
         return;
       }
