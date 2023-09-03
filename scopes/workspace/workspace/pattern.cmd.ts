@@ -16,7 +16,7 @@ the matching algorithm is from multimatch (@see https://github.com/sindresorhus/
 NOTE: always wrap the pattern with single quotes '' and not double "" to avoid collision with shell commands
 `;
   examples = [
-    { cmd: 'bit pattern "**"', description: 'matches all components' },
+    { cmd: "bit pattern '**'", description: 'matches all components' },
     {
       cmd: "bit pattern '*/ui/*'",
       description:
