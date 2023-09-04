@@ -122,6 +122,10 @@ export interface EjectConfOptions {
   override?: boolean;
 }
 
+export type ComponentExtensionsOpts = {
+  loadExtensions?: boolean;
+};
+
 export type ExtensionsOrigin =
   | 'BitmapFile'
   | 'ModelSpecific'
@@ -1153,13 +1157,19 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async componentExtensions(
     componentId: ComponentID,
     componentFromScope?: Component,
-    excludeOrigins: ExtensionsOrigin[] = []
+    excludeOrigins: ExtensionsOrigin[] = [],
+    opts: ComponentExtensionsOpts = {}
   ): Promise<{
     extensions: ExtensionDataList;
     beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
     errors?: Error[];
   }> {
-    return this.aspectsMerger.merge(componentId, componentFromScope, excludeOrigins);
+    const optsWithDefaults: ComponentExtensionsOpts = Object.assign({ loadExtensions: true }, opts);
+    const mergeRes = await this.aspectsMerger.merge(componentId, componentFromScope, excludeOrigins);
+    if (optsWithDefaults.loadExtensions) {
+      await this.loadComponentsExtensions(mergeRes.extensions, componentId);
+    }
+    return mergeRes;
   }
 
   getConfigMergeFilePath(): string {
@@ -1387,6 +1397,15 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   ): Promise<string[]> {
     const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
     return workspaceAspectsLoader.loadAspects(ids, throwOnError, neededFor, opts);
+  }
+
+  async loadComponentsExtensions(
+    extensions: ExtensionDataList,
+    originatedFrom?: ComponentID,
+    opts: WorkspaceLoadAspectsOptions = {}
+  ): Promise<void> {
+    const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
+    return workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, opts);
   }
 
   /**

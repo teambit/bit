@@ -11,11 +11,11 @@ import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
-import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { ComponentLoadOptions as LegacyComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
@@ -23,6 +23,11 @@ import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
 type GetManyRes = {
   components: Component[];
   invalidComponents: InvalidComponent[];
+};
+
+type ComponentLoadOptions = LegacyComponentLoadOptions & {
+  loadExtensions?: boolean;
+  executeLoadSlot?: boolean;
 };
 
 export class WorkspaceComponentLoader {
@@ -37,43 +42,61 @@ export class WorkspaceComponentLoader {
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
-    console.log('🚀 ~ file: workspace-component-loader.ts:40 ~ WorkspaceComponentLoader ~ getMany ~ getMany:');
-    console.time('getMany');
-    console.time('getMany - load comps');
+    console.log(
+      '🚀 ~ file: workspace-component-loader.ts:40 ~ WorkspaceComponentLoader ~ getMany ~ getMany:',
+      ids.map((i) => i.toString())
+    );
+    // console.time('getMany');
+    // console.time('getMany - load comps');
     const idsWithoutEmpty = compact(ids);
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
+    const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
+      // We don't want to load extension or execute the load slot at this step
+      // we will do it later
+      // this important for better performance
+      { loadExtensions: false, executeLoadSlot: false },
+      loadOpts || {}
+    );
 
-    const groupedByIsCoreEnvs = groupBy(idsWithoutEmpty, (id) => {
+    const loadOrCached: { idsToLoad: ComponentID[]; fromCache: Component[] } = { idsToLoad: [], fromCache: [] };
+    idsWithoutEmpty.forEach((id) => {
+      const componentFromCache = this.getFromCache(id, loadOpts);
+      if (componentFromCache) {
+        loadOrCached.fromCache.push(componentFromCache);
+      }
+    }, loadOrCached);
+
+    const groupedByIsCoreEnvs = groupBy(loadOrCached.idsToLoad, (id) => {
       return this.envs.isCoreEnv(id.toStringWithoutVersion());
     });
 
     const { components: coreEnvsComponents, invalidComponents: coreEnvsInvalidComponents } = await this.getAndLoadSlot(
       groupedByIsCoreEnvs.true || [],
-      loadOpts || {},
+      loadOptsWithDefaults,
       throwOnFailure,
       longProcessLogger
     );
-    if (groupedByIsCoreEnvs.true) {
-      console.log(
-        '🚀 ~ file: workspace-component-loader.ts:51 ~ WorkspaceComponentLoader ~ getMany ~ groupedByIsCoreEnvs.true:',
-        groupedByIsCoreEnvs.true.map((id) => id.toString())
-      );
-    }
+    // if (groupedByIsCoreEnvs.true) {
+    //   console.log(
+    //     '🚀 ~ file: workspace-component-loader.ts:51 ~ WorkspaceComponentLoader ~ getMany ~ groupedByIsCoreEnvs.true:',
+    //     groupedByIsCoreEnvs.true.map((id) => id.toString())
+    //   );
+    // }
 
     const { components: regularComponents, invalidComponents: regularInvalidComponents } = await this.getAndLoadSlot(
       groupedByIsCoreEnvs.false || [],
-      loadOpts || {},
+      loadOptsWithDefaults,
       throwOnFailure,
       longProcessLogger
     );
 
-    const components = [...coreEnvsComponents, ...regularComponents];
+    const components = [...coreEnvsComponents, ...regularComponents, ...loadOrCached.fromCache];
     const invalidComponents = [...coreEnvsInvalidComponents, ...regularInvalidComponents];
 
     longProcessLogger.end();
-    console.log('\n-----------------------');
-    console.timeEnd('getMany');
-    console.log('-----------------------');
+    // console.log('\n-----------------------');
+    // console.timeEnd('getMany');
+    // console.log('-----------------------');
     return { components, invalidComponents };
   }
 
@@ -83,12 +106,56 @@ export class WorkspaceComponentLoader {
     throwOnFailure = true,
     longProcessLogger
   ): Promise<GetManyRes> {
-    const errors: { id: ComponentID; err: Error }[] = [];
+    if (!ids?.length) return { components: [], invalidComponents: [] };
+    console.log(
+      '🚀 ~ file: workspace-component-loader.ts:98 ~ WorkspaceComponentLoader ~ ids:',
+      ids.map((i) => i.toString())
+    );
+    const { components, invalidComponents } = await this.getComponentsWithoutLoadExtensions(
+      ids,
+      loadOpts,
+      throwOnFailure,
+      longProcessLogger
+    );
+
+    const allExtensions: ExtensionDataList[] = components.map((component) => {
+      return component.state._consumer.extensions;
+    });
+    // console.log("🚀 ~ file: workspace-component-loader.ts:108 ~ WorkspaceComponentLoader ~ allExtensions:", allExtensions)
+
+    // Ensure we won't load the same extension many times
+    const mergedExtensions = ExtensionDataList.mergeConfigs(allExtensions);
+    await this.workspace.loadComponentsExtensions(mergedExtensions);
+
+    const withAspects = await Promise.all(
+      components.map((component) => {
+        return this.executeLoadSlot(component);
+      })
+    );
+
+    return { components: withAspects, invalidComponents };
+  }
+
+  private async getComponentsWithoutLoadExtensions(
+    ids: ComponentID[],
+    loadOpts: ComponentLoadOptions,
+    throwOnFailure = true,
+    longProcessLogger
+  ) {
     const invalidComponents: InvalidComponent[] = [];
+    const errors: { id: ComponentID; err: Error }[] = [];
+    const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
+      // We don't want to load extension or execute the load slot at this step
+      // we will do it later
+      // this important for better performance
+      { loadExtensions: false, executeLoadSlot: false },
+      loadOpts || {}
+    );
+
     const componentsP = Promise.all(
       ids.map(async (id: ComponentID) => {
         longProcessLogger.logProgress(id.toString());
-        return this.get(id, undefined, undefined, undefined, loadOpts).catch((err) => {
+        return this.get(id, undefined, undefined, undefined, loadOptsWithDefaults).catch((err) => {
           if (ConsumerComponent.isComponentInvalidByErrorType(err) && !throwOnFailure) {
             invalidComponents.push({
               id,
@@ -107,31 +174,12 @@ export class WorkspaceComponentLoader {
         });
       })
     );
-    const components = compact(await componentsP);
     errors.forEach((err) => {
       this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
       this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
     });
-    console.log('\n-----------------------');
-    console.timeEnd('getMany - load comps');
-    console.log('-----------------------');
-    console.time('getMany - load aspects');
-
-    const withAspects = await Promise.all(
-      components.map((component) => {
-        return this.executeLoadSlot(component);
-      })
-    );
-    console.log('\n-----------------------');
-    console.timeEnd('getMany - load aspects');
-    console.log('-----------------------');
-
-    // remove errored components
-    const filteredComponents: Component[] = compact(withAspects);
-    console.log('\n-----------------------');
-    console.timeEnd('getMany');
-    console.log('-----------------------');
-    return { components: filteredComponents, invalidComponents };
+    const components = compact(await componentsP);
+    return { components, invalidComponents };
   }
 
   async getInvalid(ids: Array<ComponentID>): Promise<InvalidComponent[]> {
@@ -168,7 +216,7 @@ export class WorkspaceComponentLoader {
       componentId._legacy
     );
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
-    const fromCache = this.getFromCache(id, loadOpts);
+    const fromCache = this.getFromCache(componentId, loadOpts);
     if (fromCache && useCache) {
       return fromCache;
     }
@@ -221,7 +269,9 @@ export class WorkspaceComponentLoader {
       if (!componentFromScope) throw new MissingBitMapComponent(id.toString());
       return componentFromScope;
     }
-    const { extensions, errors } = await this.workspace.componentExtensions(id, componentFromScope);
+    const { extensions, errors } = await this.workspace.componentExtensions(id, componentFromScope, undefined, {
+      loadExtensions: loadOpts?.loadExtensions,
+    });
     if (errors?.some((err) => err instanceof MergeConfigConflict)) {
       consumerComponent.issues.getOrCreate(IssuesClasses.MergeConfigHasConflict).data = true;
     }
@@ -251,7 +301,11 @@ export class WorkspaceComponentLoader {
       // const updatedComp = await this.executeLoadSlot(workspaceComponent, loadOpts);
       return workspaceComponent;
     }
-    return this.executeLoadSlot(this.newComponentFromState(id, state), loadOpts);
+    const newComponent = this.newComponentFromState(id, state);
+    if (!loadOpts?.executeLoadSlot) {
+      return newComponent;
+    }
+    return this.executeLoadSlot(newComponent, loadOpts);
   }
 
   private saveInCache(component: Component, loadOpts?: ComponentLoadOptions): void {
@@ -266,7 +320,12 @@ export class WorkspaceComponentLoader {
    * as a result, when out-of-sync is happening and the id is changed to include scope-name in the
    * legacy-id, the component is the cache has the old id.
    */
-  private getFromCache(id: ComponentID, loadOpts?: ComponentLoadOptions): Component | undefined {
+  private getFromCache(componentId: ComponentID, loadOpts?: ComponentLoadOptions): Component | undefined {
+    const bitIdWithVersion: BitId = getLatestVersionNumber(
+      this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved,
+      componentId._legacy
+    );
+    const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
     const cacheKey = createComponentCacheKey(id, loadOpts);
     const fromCache = this.componentsCache.get(cacheKey);
     if (fromCache && fromCache.id._legacy.isEqual(id._legacy)) {

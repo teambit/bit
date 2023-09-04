@@ -193,7 +193,6 @@ export class AspectsMerger {
     }
 
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
-    await this.loadExtensions(afterMerge, componentId);
     const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
     const extensions = ExtensionDataList.fromArray(withoutRemoved);
     return {
@@ -315,19 +314,6 @@ export class AspectsMerger {
       }
     }
     return { extensionDataListFiltered: extensionDataList, envIsCurrentlySet: Boolean(envFromEnvsAspect) };
-  }
-
-  /**
-   * Load all unloaded extensions from a list
-   * @param extensions list of extensions with config to load
-   */
-  private async loadExtensions(
-    extensions: ExtensionDataList,
-    originatedFrom?: ComponentID,
-    opts: WorkspaceLoadAspectsOptions = {}
-  ): Promise<void> {
-    const workspaceAspectsLoader = this.workspace.getWorkspaceAspectsLoader();
-    return workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, opts);
   }
 
   /**
