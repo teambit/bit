@@ -683,7 +683,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
    * Only use it for component extensions
    * for workspace/scope root aspect use the load aspects directly
    *
-   * The reason we are loading component extensions with "scope aspects capsules" is becasuse for component extensions
+   * The reason we are loading component extensions with "scope aspects capsules" is because for component extensions
    * we might have the same extension in multiple versions
    * (for example I might have 2 components using different versions of the same env)
    * in such case, I can't install both version into the root of the node_modules so I need to place it somewhere else (capsules)
