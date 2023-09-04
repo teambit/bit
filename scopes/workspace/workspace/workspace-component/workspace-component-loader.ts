@@ -30,6 +30,10 @@ type ComponentLoadOptions = LegacyComponentLoadOptions & {
   executeLoadSlot?: boolean;
 };
 
+type ComponentGetOneOptions = {
+  resolveIdVersion?: boolean;
+};
+
 export class WorkspaceComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
   constructor(
@@ -42,10 +46,10 @@ export class WorkspaceComponentLoader {
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
-    console.log(
-      '🚀 ~ file: workspace-component-loader.ts:40 ~ WorkspaceComponentLoader ~ getMany ~ getMany:',
-      ids.map((i) => i.toString())
-    );
+    // console.log(
+    //   '🚀 ~ file: workspace-component-loader.ts:40 ~ WorkspaceComponentLoader ~ getMany ~ getMany:',
+    //   ids.map((i) => i.toString())
+    // );
     // console.time('getMany');
     // console.time('getMany - load comps');
     const idsWithoutEmpty = compact(ids);
@@ -63,6 +67,8 @@ export class WorkspaceComponentLoader {
       const componentFromCache = this.getFromCache(id, loadOpts);
       if (componentFromCache) {
         loadOrCached.fromCache.push(componentFromCache);
+      } else {
+        loadOrCached.idsToLoad.push(id);
       }
     }, loadOrCached);
 
@@ -152,10 +158,46 @@ export class WorkspaceComponentLoader {
       loadOpts || {}
     );
 
+    const idsWithUpdatedVersions = compact(
+      await Promise.all(
+        ids.map(async (componentId) => {
+          const inWs = await this.workspace.hasId(componentId);
+          if (!inWs) return undefined;
+          return this.resolveVersion(componentId);
+        })
+      )
+    );
+    const legacyIdsIndex = {};
+
+    const legacyIds = idsWithUpdatedVersions.map((id) => {
+      legacyIdsIndex[id._legacy.toString()] = id;
+      return id._legacy;
+    });
+
+    const { components: legacyComponents, invalidComponents: legacyInvalidComponents } =
+      await this.workspace.consumer.loadComponents(BitIds.fromArray(legacyIds), false, loadOpts);
+
+    legacyInvalidComponents.forEach((invalidComponent) => {
+      const entry = { id: legacyIdsIndex[invalidComponent.id.toString()], err: invalidComponent.error };
+      if (ConsumerComponent.isComponentInvalidByErrorType(invalidComponent.error)) {
+        if (throwOnFailure) throw invalidComponent.error;
+        invalidComponents.push(entry);
+      }
+      if (
+        this.isComponentNotExistsError(invalidComponent.error) ||
+        invalidComponent.error instanceof ComponentNotFoundInPath
+      ) {
+        errors.push(entry);
+      }
+    });
+
+    // await this.getConsumerComponent(id, loadOpts)
+
     const componentsP = Promise.all(
-      ids.map(async (id: ComponentID) => {
+      legacyComponents.map(async (legacyComponent) => {
+        const id = legacyIdsIndex[legacyComponent.id.toString()];
         longProcessLogger.logProgress(id.toString());
-        return this.get(id, undefined, undefined, undefined, loadOptsWithDefaults).catch((err) => {
+        return this.get(id, legacyComponent, undefined, undefined, loadOptsWithDefaults).catch((err) => {
           if (ConsumerComponent.isComponentInvalidByErrorType(err) && !throwOnFailure) {
             invalidComponents.push({
               id,
@@ -209,13 +251,10 @@ export class WorkspaceComponentLoader {
     legacyComponent?: ConsumerComponent,
     useCache = true,
     storeInCache = true,
-    loadOpts?: ComponentLoadOptions
+    loadOpts?: ComponentLoadOptions,
+    getOpts: ComponentGetOneOptions = { resolveIdVersion: true }
   ): Promise<Component> {
-    const bitIdWithVersion: BitId = getLatestVersionNumber(
-      this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved,
-      componentId._legacy
-    );
-    const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
+    const id = getOpts?.resolveIdVersion ? this.resolveVersion(componentId) : componentId;
     const fromCache = this.getFromCache(componentId, loadOpts);
     if (fromCache && useCache) {
       return fromCache;
@@ -240,6 +279,15 @@ export class WorkspaceComponentLoader {
       }
       throw err;
     }
+  }
+
+  private resolveVersion(componentId: ComponentID): ComponentID {
+    const bitIdWithVersion: BitId = getLatestVersionNumber(
+      this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved,
+      componentId._legacy
+    );
+    const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
+    return id;
   }
 
   private addMultipleEnvsIssueIfNeeded(component: Component) {

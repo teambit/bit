@@ -97,6 +97,7 @@ export default class ComponentLoader {
   }
 
   async loadMany(ids: BitIds, throwOnFailure = true, loadOpts?: ComponentLoadOptions): Promise<LoadManyResult> {
+    // console.log("🚀 ~ file: component-loader.ts:100 ~ ComponentLoader ~ loadMany ~ ids:", ids.map(id => id.toString()))
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
       ids: ids.toString(),
     });
@@ -113,7 +114,7 @@ export default class ComponentLoader {
       const fromCache = this.componentsCache.get(idStr);
       if (fromCache) {
         alreadyLoadedComponents.push(fromCache);
-      } else {
+      } else if (!idsToProcess.includes(idWithVersion)) {
         idsToProcess.push(idWithVersion);
       }
     });
@@ -123,11 +124,17 @@ export default class ComponentLoader {
       { idsStr: alreadyLoadedComponents.map((c) => c.id.toString()).join(', ') }
     );
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
+    console.log(
+      '🚀 ~ file: component-loader.ts:121 ~ ComponentLoader ~ ids.forEach ~ idsToProcess:',
+      idsToProcess.map((i) => i.toString())
+    );
 
     const allComponents: Component[] = [];
     await mapSeries(idsToProcess, async (id: BitId) => {
       const component = await this.loadOne(id, throwOnFailure, invalidComponents, removedComponents, loadOpts);
+      // console.log("🚀 ~ file: component-loader.ts:131 ~ ComponentLoader ~ awaitmapSeries ~ component:", component?.id.toString())
       if (component) {
+        // console.log("🚀 ~ file: component-loader.ts:132 ~ ComponentLoader ~ await mapSeries ~ component.id.toString():", component.id.toString())
         this.componentsCache.set(component.id.toString(), component);
         logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
           id: component.id.toString(),
