@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 
 import { login } from '../../../api/consumer';
-import { getCloudDomain } from '../../../constants';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
@@ -15,8 +14,6 @@ export default class Login implements LegacyCommand {
     ['d', 'cloud-domain <domain>', 'login cloud domain (default bit.cloud)'],
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
     ['', 'suppress-browser-launch', 'do not open a browser for authentication'],
-    ['', 'npmrc-path <path>', `path to npmrc file to configure ${getCloudDomain()} registry`],
-    ['', 'skip-registry-config', `don't configure ${getCloudDomain()} registry`],
     [
       '',
       'machine-name <name>',
@@ -29,47 +26,29 @@ export default class Login implements LegacyCommand {
       cloudDomain,
       port,
       suppressBrowserLaunch = false,
-      npmrcPath,
-      skipRegistryConfig = false,
       machineName,
     }: {
       cloudDomain?: string;
       port: string;
       suppressBrowserLaunch?: boolean;
-      npmrcPath: string;
-      skipRegistryConfig: boolean;
       machineName?: string;
     }
   ): Promise<any> {
-    return login(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName, cloudDomain).then(
-      (results) => ({
-        ...results,
-        skipRegistryConfig,
-      })
-    );
+    return login(port, suppressBrowserLaunch, machineName, cloudDomain).then((results) => ({
+      ...results,
+    }));
   }
   report({
     isAlreadyLoggedIn = false,
     username,
-    npmrcPath,
-    skipRegistryConfig,
-    writeToNpmrcError,
   }: {
     isAlreadyLoggedIn: boolean;
     username: string;
-    npmrcPath: string;
-    skipRegistryConfig: boolean;
     writeToNpmrcError: boolean;
   }): string {
     if (isAlreadyLoggedIn) return chalk.yellow('already logged in');
     const successLoginMessage = chalk.green(`success! logged in as ${username}`);
-    let writeToNpmrcMessage = '\n';
-    if (!skipRegistryConfig) {
-      writeToNpmrcMessage = writeToNpmrcError
-        ? chalk.yellow(`\nunable to add @bit as a scoped registry at "${chalk.bold(npmrcPath)}"\n`)
-        : chalk.green(`\nsuccessfully added @bit as a scoped registry at ${npmrcPath}\n`);
-    }
-    const finalMessage = `${writeToNpmrcMessage}${successLoginMessage}`;
+    const finalMessage = successLoginMessage;
     return finalMessage;
   }
 }
