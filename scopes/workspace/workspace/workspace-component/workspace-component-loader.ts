@@ -173,10 +173,15 @@ export class WorkspaceComponentLoader {
       legacyIdsIndex[id._legacy.toString()] = id;
       return id._legacy;
     });
+    if (ids.length > 100) {
+      console.time('consumer.loadComponents');
+    }
 
     const { components: legacyComponents, invalidComponents: legacyInvalidComponents } =
       await this.workspace.consumer.loadComponents(BitIds.fromArray(legacyIds), false, loadOpts);
-
+    if (ids.length > 100) {
+      console.timeEnd('consumer.loadComponents');
+    }
     legacyInvalidComponents.forEach((invalidComponent) => {
       const entry = { id: legacyIdsIndex[invalidComponent.id.toString()], err: invalidComponent.error };
       if (ConsumerComponent.isComponentInvalidByErrorType(invalidComponent.error)) {
