@@ -99,6 +99,7 @@ export class AppsBuildTask implements BuildTask {
         component: capsule.component,
         errors: deployContext.errors,
         warnings: deployContext.warnings,
+        metadata: deployContext.metadata,
         /**
          * @guysaar223
          * @ram8

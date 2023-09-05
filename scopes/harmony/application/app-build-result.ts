@@ -12,4 +12,9 @@ export interface AppBuildResult {
    * warnings thrown during the build process.
    */
   warnings?: string[];
+
+  /**
+   * metadata to persist.
+   */
+  metadata?: Record<string, string>;
 }
