@@ -42,6 +42,13 @@ export type PostProcessExtendingConfigFilesArgs = {
    */
   paths: string[];
   envMapValue: EnvMapValue;
+  /**
+   * This is a flag for backward compatibility
+   * We used to return string from the post process, so old versions of bit only knows to handle string results
+   * while in new version we support getting array of objects
+   * we need to know if bit the user is using support the new format or not
+   */
+  supportSpecificPathChange?: boolean;
 };
 
 export type GenerateExtendingConfigFilesArgs = {
@@ -49,6 +56,11 @@ export type GenerateExtendingConfigFilesArgs = {
   configsRootDir: string;
   writtenConfigFiles: WrittenConfigFile[];
   envMapValue: EnvMapValue;
+};
+
+export type PostProcessExtendingConfigFilesOneFile = {
+  path: string;
+  content: string;
 };
 
 export type MergeConfigFilesFunc = (configFile: ConfigFile, configFile2: ConfigFile) => string;
@@ -112,7 +124,9 @@ export interface ConfigWriterEntry {
    * or based on other config files that were written.
    * @param args
    */
-  postProcessExtendingConfigFiles?(args: PostProcessExtendingConfigFilesArgs): Promise<string | undefined>;
+  postProcessExtendingConfigFiles?(
+    args: PostProcessExtendingConfigFilesArgs
+  ): Promise<string | Array<PostProcessExtendingConfigFilesOneFile> | undefined>;
 
   /**
    * Find all the files that are relevant for the config type.

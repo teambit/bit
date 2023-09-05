@@ -99,6 +99,8 @@ export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 
+export type NodeLinker = 'hoisted' | 'isolated';
+
 export interface DependencyResolverComponentData {
   packageName: string;
   policy: SerializedVariantPolicy;
@@ -232,7 +234,7 @@ export interface DependencyResolverWorkspaceConfig {
    * Defines what linker should be used for installing Node.js packages.
    * Supported values are hoisted and isolated.
    */
-  nodeLinker?: 'hoisted' | 'isolated';
+  nodeLinker?: NodeLinker;
 
   /*
    * Controls the way packages are imported from the store.
@@ -306,6 +308,7 @@ export type GetInstallerOptions = {
   packageManager?: string;
   cacheRootDirectory?: string;
   installingContext?: DepInstallerContext;
+  nodeLinker?: NodeLinker;
 };
 
 export type GetLinkerOptions = {
@@ -416,7 +419,7 @@ export class DependencyResolverMain {
     return rootPolicy.entries.some(({ dependencyId }) => dependencyId === '@teambit/harmony');
   }
 
-  nodeLinker(): 'hoisted' | 'isolated' {
+  nodeLinker(): NodeLinker {
     if (this.config.nodeLinker) return this.config.nodeLinker;
     if (this.config.packageManager === 'teambit.dependencies/pnpm') return 'isolated';
     return 'hoisted';
@@ -713,7 +716,7 @@ export class DependencyResolverMain {
       cacheRootDir,
       preInstallSubscribers,
       postInstallSubscribers,
-      this.config.nodeLinker,
+      options.nodeLinker || this.nodeLinker(),
       this.config.packageImportMethod,
       this.config.sideEffectsCache,
       this.config.nodeVersion,
