@@ -269,9 +269,9 @@ export const AUTO_GENERATED_MSG = `/* THIS IS A ${AUTO_GENERATED_STAMP} FILE. DO
 export const BITMAP_PREFIX_MESSAGE = `/**
  * The Bitmap file is an auto generated file used by Bit to track all your Bit components. It maps the component to a folder in your file system.
  * This file should be committed to VCS(version control).
- * Components are listed using their component ID (https://${BASE_DOCS_DOMAIN}/components/component-id).
+ * Components are listed using their component ID (${BASE_DOCS_DOMAIN}reference/components/component-id).
  * If you want to delete components you can use the "bit remove <component-id>" command.
- * See the docs (https://${BASE_DOCS_DOMAIN}/components/removing-components) for more information, or use "bit remove --help".
+ * See the docs (${BASE_DOCS_DOMAIN}reference/components/removing-components) for more information, or use "bit remove --help".
  */\n\n`;
 
 export const BIT_DESCRIPTION =
