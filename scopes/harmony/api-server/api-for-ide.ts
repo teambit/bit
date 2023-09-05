@@ -9,7 +9,7 @@ import { InstallMain } from '@teambit/install';
 import { ExportMain } from '@teambit/export';
 import { CheckoutMain } from '@teambit/checkout';
 import { ApplyVersionResults } from '@teambit/merging';
-import { ComponentLogMain } from '@teambit/component-log';
+import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -110,6 +110,11 @@ export class APIForIDE {
 
   async logFile(filePath: string) {
     const results = await this.componentLog.getFileHistoryHashes(filePath);
+    return results;
+  }
+
+  async changedFilesFromParent(id: string): Promise<FileHashDiffFromParent[]> {
+    const results = await this.componentLog.getChangedFilesFromParent(id);
     return results;
   }
 

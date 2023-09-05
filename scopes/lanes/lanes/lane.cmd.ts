@@ -254,18 +254,24 @@ it is useful e.g. when having multiple lanes with the same name, but with differ
 }
 
 export class LaneChangeScopeCmd implements Command {
-  name = 'change-scope <lane-name> <remote-scope-name>';
+  name = 'change-scope <remote-scope-name>';
   description = `changes the remote scope of a lane`;
   extendedDescription = 'NOTE: available only before the lane is exported to the remote';
   alias = '';
-  options = [] as CommandOptions;
+  options = [
+    [
+      'l',
+      'lane-name <lane-name>',
+      'the name of the lane to change its remote scope. if not specified, the current lane is used',
+    ],
+  ] as CommandOptions;
   loader = true;
   migration = true;
 
   constructor(private lanes: LanesMain) {}
 
-  async report([localName, remoteScope]: [string, string]): Promise<string> {
-    const { remoteScopeBefore } = await this.lanes.changeScope(localName, remoteScope);
+  async report([remoteScope]: [string], { laneName }: { laneName?: string }): Promise<string> {
+    const { remoteScopeBefore, localName } = await this.lanes.changeScope(remoteScope, laneName);
     return `the remote-scope of ${chalk.bold(localName)} has been changed from ${chalk.bold(
       remoteScopeBefore
     )} to ${chalk.bold(remoteScope)}`;
@@ -273,16 +279,18 @@ export class LaneChangeScopeCmd implements Command {
 }
 
 export class LaneRenameCmd implements Command {
-  name = 'rename <current-name> <new-name>';
+  name = 'rename <new-name>';
   description = `EXPERIMENTAL. change the lane-name locally and on the remote (if exported)`;
   alias = '';
-  options = [] as CommandOptions;
+  options = [
+    ['l', 'lane-name <lane-name>', 'the name of the lane to rename. if not specified, the current lane is used'],
+  ] as CommandOptions;
   loader = true;
   migration = true;
   constructor(private lanes: LanesMain) {}
 
-  async report([currentName, newName]: [string, string]): Promise<string> {
-    const { exported, exportErr } = await this.lanes.rename(currentName, newName);
+  async report([newName]: [string], { laneName }: { laneName?: string }): Promise<string> {
+    const { exported, exportErr, currentName } = await this.lanes.rename(newName, laneName);
     const exportedStr = exported
       ? `and have been exported successfully to the remote`
       : `however failed exporting the renamed lane to the remote, due to an error: ${exportErr?.message || 'unknown'}`;

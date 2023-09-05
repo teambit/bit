@@ -567,7 +567,7 @@ describe('merge lanes', function () {
         mergeOutput = helper.command.mergeLane('main', '--resolve-unrelated');
       });
       it('should merge successfully', () => {
-        expect(mergeOutput).to.have.string('successfully merged components');
+        expect(mergeOutput).to.have.string('successfully merged');
       });
       it('bit status should show the component as staged and not everywhere else', () => {
         helper.command.expectStatusToBeClean(['stagedComponents']);
@@ -687,6 +687,22 @@ describe('merge lanes', function () {
         it('should be able to merge with no errors', () => {
           expect(() => helper.command.mergeLane('dev2', '--resolve-unrelated')).to.not.throw();
         });
+      });
+    });
+    describe('switching to main and checking out to head', () => {
+      before(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
+        helper.scopeHelper.getClonedLocalScope(afterLaneExport);
+        helper.command.switchLocalLane('main', '-x');
+        helper.command.checkoutHead('comp1', '-x');
+      });
+      it('should make the component available and checkout to main version', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
+        // it can be 0.0.1 or 0.0.2 depends when the ".only" is, but it doesn't matter.
+        // all we want here is to make sure it's a tag, not a snap.
+        expect(list[0].localVersion.startsWith('0.0')).to.be.true;
+        expect(list[0].currentVersion.startsWith('0.0')).to.be.true;
       });
     });
     describe('bit lane merge after soft-removed the unrelated component', () => {
@@ -1505,6 +1521,34 @@ describe('merge lanes', function () {
       });
       it('should remove the file from the current lane and write the file according to the switch-to lane', () => {
         helper.fs.expectFileToExist('comp1/Foo.js');
+      });
+    });
+  });
+  describe('multiple files, some are not changes', () => {
+    let switchOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile('comp1/foo.js');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      switchOutput = helper.command.switchLocalLane('lane-a', '-x');
+    });
+    it('expect to have all files as unchanged, not updated', () => {
+      expect(switchOutput).to.not.have.string('updated');
+    });
+    describe('merge the lane', () => {
+      let mergeOutput: string;
+      before(() => {
+        mergeOutput = helper.command.mergeLane('lane-b', '-x');
+      });
+      it('expect to have all files as unchanged, not updated', () => {
+        expect(mergeOutput).to.not.have.string('updated');
       });
     });
   });

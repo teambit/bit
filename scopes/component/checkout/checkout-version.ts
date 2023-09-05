@@ -91,9 +91,7 @@ export async function applyVersion(
   if (componentFromFS && !componentMap) throw new GeneralError('applyVersion: componentMap was not found');
 
   const files = component.files;
-  files.forEach((file) => {
-    filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
-  });
+  updateFileStatus(files, filesStatus, componentFromFS || undefined);
 
   await removeFilesIfNeeded(filesStatus, componentFromFS || undefined);
 
@@ -108,6 +106,15 @@ export async function applyVersion(
     applyVersionResult: { id, filesStatus },
     component,
   };
+}
+
+export function updateFileStatus(files: SourceFile[], filesStatus: FilesStatus, componentFromFS?: ConsumerComponent) {
+  files.forEach((file) => {
+    const fileFromFs = componentFromFS?.files.find((f) => f.relative === file.relative);
+    const areFilesEqual = fileFromFs && Buffer.compare(fileFromFs.contents, file.contents) === 0;
+    // @ts-ignore
+    filesStatus[pathNormalizeToLinux(file.relative)] = areFilesEqual ? FileStatus.unchanged : FileStatus.updated;
+  });
 }
 
 /**

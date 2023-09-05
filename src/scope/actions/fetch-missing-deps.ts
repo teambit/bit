@@ -16,7 +16,7 @@ export class FetchMissingDeps implements Action<Options> {
     const bitIds: BitIds = BitIds.deserialize(options.ids);
     options.fetchFromOriginalScopes
       ? await scopeComponentsImporter.importManyFromOriginalScopes(bitIds)
-      : await scopeComponentsImporter.importMany({ ids: bitIds, cache: true });
+      : await scopeComponentsImporter.importMany({ ids: bitIds, cache: true, preferDependencyGraph: false });
 
     logger.debugAndAddBreadCrumb('FetchMissingDeps', 'successfully ran importMany');
   }
