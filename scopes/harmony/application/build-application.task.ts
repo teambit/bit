@@ -109,6 +109,8 @@ export class AppsBuildTask implements BuildTask {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         metadata: { deployContext: getDeployContextFormMetadata(), name: app.name, appType: app.applicationType! },
         /**
+         * @deprecated - please use metadata instead
+         *
          * @guysaar223
          * @ram8
          * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
@@ -143,8 +145,7 @@ export class AppsBuildTask implements BuildTask {
         appResult.componentResult.warnings || []
       );
       // @ts-ignore
-      merged.componentResult.metadata.buildDeployContexts = // @ts-ignore
-      (merged.componentResult.metadata.buildDeployContexts || [])
+      merged.componentResult.metadata.buildDeployContexts = (merged.componentResult.metadata.buildDeployContexts || []) // @ts-ignore
         // @ts-ignore
         .concat(appResult.componentResult.metadata || []);
     });
