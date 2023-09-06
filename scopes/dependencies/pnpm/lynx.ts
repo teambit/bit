@@ -28,6 +28,7 @@ import {
 import * as pnpm from '@pnpm/core';
 import { createClient, ClientOptions } from '@pnpm/client';
 import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
+import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
 import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
@@ -289,6 +290,7 @@ export async function install(
   let dependenciesChanged = false;
   try {
     await installsRunning[rootDir];
+    await restartWorkerPool();
     installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
     const { stats } = await installsRunning[rootDir];
     dependenciesChanged = stats.added + stats.removed + stats.linkedToRoot > 0;
@@ -300,6 +302,7 @@ export async function install(
     throw pnpmErrorToBitError(err);
   } finally {
     stopReporting?.();
+    await finishWorkers();
   }
   if (options.rootComponents) {
     const modulesState = await readModulesManifest(path.join(rootDir, 'node_modules'));
