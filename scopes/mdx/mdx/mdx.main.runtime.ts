@@ -13,7 +13,6 @@ import { MDXAspect } from './mdx.aspect';
 import { MDXCompiler, MDXCompilerOpts } from './mdx.compiler';
 import { MDXDependencyDetector } from './mdx.detector';
 import { MDXDocReader } from './mdx.doc-reader';
-import { componentTemplates } from './mdx.templates';
 import { babelConfig } from './babel/babel.config';
 
 export type MDXConfig = {
@@ -111,7 +110,6 @@ export class MDXMain {
     envs.registerEnv(mdxEnv);
     depResolver.registerDetector(new MDXDependencyDetector(config.extensions));
     docs.registerDocReader(new MDXDocReader(config.extensions));
-    if (generator) generator.registerComponentTemplate(componentTemplates);
 
     mdx.mdxEnv = mdxEnv as ReactEnv;
     return mdx;

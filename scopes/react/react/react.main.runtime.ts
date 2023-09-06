@@ -33,7 +33,6 @@ import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
-import { componentTemplates } from './react.templates';
 import { ReactAppOptions } from './apps/web/react-app-options';
 
 type ReactDeps = [
@@ -451,9 +450,6 @@ export class ReactMain {
     const react = new ReactMain(reactEnv, envs, application, appType, dependencyResolver, logger);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
-    if (generator) {
-      generator.registerComponentTemplate(componentTemplates);
-    }
 
     if (application) application.registerAppType(appType);
 

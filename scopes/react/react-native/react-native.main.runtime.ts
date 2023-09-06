@@ -11,7 +11,6 @@ import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain, ReactEnv, UseWebpackModifiers } from '@teambit/react';
 import { ReactNativeAspect } from './react-native.aspect';
-import { componentTemplates } from './react-native.templates';
 import { previewConfigTransformer, devServerConfigTransformer } from './webpack/webpack-transformers';
 import { ReactNativeEnv } from './react-native.env';
 
@@ -123,10 +122,6 @@ export class ReactNativeMain {
       react.compose([react.useWebpack(webpackModifiers), react.overrideJestConfig(jestConfig)])
     );
     envs.registerEnv(reactNativeComposedEnv);
-
-    if (generator) {
-      generator.registerComponentTemplate(componentTemplates);
-    }
 
     return new ReactNativeMain(react, reactNativeComposedEnv, envs);
   }

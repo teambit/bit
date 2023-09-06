@@ -13,11 +13,7 @@ import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs
 import { ReactAspect, ReactEnv, ReactMain, UseTypescriptModifiers } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
-import { nodeEnvTemplate } from './templates/node-env';
-import { nodeTemplate } from './templates/node';
 import { NodeAppType } from './node.app-type';
-import { expressAppTemplate } from './templates/express-app';
-import { expressRouteTemplate } from './templates/express-route';
 
 export class NodeMain {
   constructor(
@@ -165,8 +161,6 @@ export class NodeMain {
     envs.registerEnv(nodeEnv);
     const nodeAppType = new NodeAppType('node-app', nodeEnv, logger);
     application.registerAppType(nodeAppType);
-    if (generator)
-      generator.registerComponentTemplate([nodeEnvTemplate, nodeTemplate, expressAppTemplate, expressRouteTemplate]);
     return new NodeMain(react, tsAspect, nodeEnv, envs);
   }
 }
