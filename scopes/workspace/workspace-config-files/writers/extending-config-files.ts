@@ -183,17 +183,34 @@ async function postProcessExtendingConfigFiles(
       return undefined;
     }
 
-    const newContent = await postProcessFunc({
+    const postProcessRes = await postProcessFunc({
       configsRootDir,
       extendingConfigFile: extendingConfigFileEntry.extendingConfigFile,
       envMapValue: envMapVal,
       workspaceDir,
       paths: dedupEntry.paths,
+      supportSpecificPathChange: true,
     });
-    if (!newContent) {
+    if (!postProcessRes) {
       return undefined;
     }
-    extendingConfigFileEntry.extendingConfigFile.content = newContent;
+    if (typeof postProcessRes === 'string') {
+      extendingConfigFileEntry.extendingConfigFile.content = postProcessRes;
+      return undefined;
+    }
+    postProcessRes.forEach(({ path, content }) => {
+      // Remove it from the current entry
+      dedupEntry.paths = dedupEntry.paths.filter((currPath) => currPath !== path);
+      const newHash = sha1(content);
+      extendingConfigFilesMap[newHash] = JSON.parse(JSON.stringify(extendingConfigFileEntry));
+      extendingConfigFilesMap[newHash].extendingConfigFile.content = content;
+      const foundNewHash = fileHashPerDedupedPaths.find((entry) => entry.fileHash === newHash);
+      if (foundNewHash) {
+        foundNewHash.paths.push(path);
+      } else {
+        fileHashPerDedupedPaths.push({ fileHash: newHash, paths: [path] });
+      }
+    });
     return undefined;
   });
 }

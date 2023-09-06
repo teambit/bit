@@ -35,7 +35,7 @@ import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component'
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
 import { PersistOptions } from '@teambit/legacy/dist/scope/types';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
@@ -104,6 +104,10 @@ export type ScopeConfig = {
    * Set a different package manager for the aspects capsules
    */
   aspectsPackageManager?: string;
+  /**
+   * Set a different node linker for the aspects capsules
+   */
+  aspectsNodeLinker?: NodeLinker;
 };
 
 export class ScopeMain implements ComponentFactory {
@@ -191,6 +195,10 @@ export class ScopeMain implements ComponentFactory {
 
   get aspectsPackageManager(): string | undefined {
     return this.config.aspectsPackageManager;
+  }
+
+  get aspectsNodeLinker(): NodeLinker | undefined {
+    return this.config.aspectsNodeLinker;
   }
 
   // We need to reload the aspects with their new version since:
