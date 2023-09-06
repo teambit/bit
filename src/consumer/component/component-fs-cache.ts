@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '../../api/consumer/lib/feature-toggle';
 import { PathOsBasedAbsolute } from '../../utils/path';
 import type { ComponentMapFile } from '../bit-map/component-map';
+import logger from '../../logger/logger';
 
 const WORKSPACE_CACHE = 'cache';
 const COMPONENTS_CACHE = 'components';
@@ -89,7 +90,11 @@ export class ComponentFsCache {
   private async saveDataInCache(key: string, cacheName: string, data: any, metadata?: any) {
     if (this.isNoFsCacheFeatureEnabled) return;
     const cachePath = this.getCachePath(cacheName);
-    await cacache.put(cachePath, key, data, { metadata });
+    try {
+      await cacache.put(cachePath, key, data, { metadata });
+    } catch (err) {
+      logger.error(`failed caching ${key} in ${cachePath}`, err);
+    }
   }
 
   private async getStringDataFromCache(
