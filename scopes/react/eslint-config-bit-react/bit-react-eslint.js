@@ -52,6 +52,12 @@ module.exports = {
         'arrow-body-style': 'off',
         'prefer-arrow-callback': 'off',
         'no-underscore-dangle': 'off',
+        // Disable the rule because this causes issues in case there are multiple eslint versions
+        // on the process, as it depends on some outer context.
+        // this should be solve once upgrading to @typescript-eslint/eslint-plugin v6
+        // see more details here -
+        // https://stackoverflow.com/questions/76457373/cannot-read-properties-of-undefined-reading-gettokens-occurred-while-linting
+        '@typescript-eslint/no-empty-function': 'off',
       },
     },
     {
