@@ -77,9 +77,6 @@ export default class InstallCmd implements Command {
   async report([packages = []]: [string[]], options: InstallCmdOptions) {
     const startTime = Date.now();
     if (!this.workspace) throw new OutsideWorkspaceError();
-    if (packages.length && options.addMissingDeps) {
-      throw new BitError('cannot use --add-missing-deps with a list of packages');
-    }
     if (options.updateExisting) {
       this.logger.consoleWarning(
         `--update-existing is deprecated, please omit it. "bit install" will update existing dependencies by default`
