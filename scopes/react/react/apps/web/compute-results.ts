@@ -12,8 +12,8 @@ export async function computeResults(
   const result = results[0];
 
   return {
-    publicDir,
-    ssrPublicDir,
+    publicDir, // TODO: remove this later. it's for backward compatibility. use "metadata.publicDir" instead.
+    ssrPublicDir, // TODO: remove this later. it's for backward compatibility. use "metadata.ssrPublicDir" instead.
     metadata: {
       publicDir,
       ssrPublicDir,

@@ -2,10 +2,10 @@ import mapSeries from 'p-map-series';
 import { BuilderMain, BuildTask, BuildContext, ComponentResult, TaskResults, BuiltTaskResult } from '@teambit/builder';
 import { compact } from 'lodash';
 import { Capsule } from '@teambit/isolator';
-import { Component, ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
-import { BUILD_TASK } from './build-application.task';
+import { BUILD_TASK, BuildDeployContexts } from './build-application.task';
 import { AppDeployContext } from './app-deploy-context';
 import { Application } from './application';
 
@@ -49,24 +49,12 @@ export class DeployTask implements BuildTask {
 
     const buildTask = this.getBuildTask(context.previousTasksResults, context.envRuntime.id);
 
-    const metadata = buildTask
-      ? this.getBuildMetadata(buildTask as TaskResults, capsule.component.id, app)
-      : this.getBuildMetadataFromCompObject(capsule.component, app);
-
+    const metadata = this.getBuildMetadata(buildTask, capsule.component);
     if (!metadata) return;
+    const buildDeployContexts = metadata.find((ctx) => ctx.name === app.name && ctx.appType === app.applicationType);
+    if (!buildDeployContexts) return;
 
-    /**
-     * types are terrible here. an example of the metadata is:
-     * {
-          publicDir: 'artifacts/apps/react-common-js/bit-dev/public',
-          ssrPublicDir: 'artifacts/apps/react-common-js/bit-dev'
-        },
-        name: 'bit-dev',
-        appType: 'react-common-js'
-      }
-     */
-
-    const appDeployContext: AppDeployContext = Object.assign(context, metadata.deployContext, {
+    const appDeployContext: AppDeployContext = Object.assign(context, buildDeployContexts.deployContext, {
       capsule,
       appComponent: capsule.component,
     });
@@ -76,30 +64,19 @@ export class DeployTask implements BuildTask {
     }
   }
 
-  private getBuildMetadata(buildTask: TaskResults, componentId: ComponentID, app: Application) {
+  private getBuildMetadata(
+    buildTask: TaskResults | undefined,
+    component: Component
+  ): BuildDeployContexts[] | undefined {
+    if (!buildTask) {
+      const appData = this.builder.getDataByAspect(component, ApplicationAspect.id);
+      if (!appData) return undefined;
+      return appData.buildDeployContexts;
+    }
     const componentResults = buildTask?.componentsResults.find((res) =>
-      res.component.id.isEqual(componentId, { ignoreVersion: true })
+      res.component.id.isEqual(component.id, { ignoreVersion: true })
     );
-
-    // @ts-ignore
-    const metadata = componentResults?.metadata?.buildDeployContexts.find(
-      (ctx) => ctx.name === app.name && ctx.appType === app.applicationType
-    );
-
-    return metadata;
-  }
-
-  private getBuildMetadataFromCompObject(component: Component, app: Application) {
-    const builderData = component.state.aspects.get('teambit.pipelines/builder')?.data;
-    if (!builderData) return undefined;
-    const appData = builderData.aspectsData.find((aspectData) => aspectData.aspectId === ApplicationAspect.id);
-    if (!appData) return undefined;
-
-    const metadata = appData.data.buildDeployContexts.find(
-      (ctx) => ctx.name === app.name && ctx.appType === app.applicationType
-    );
-
-    return metadata;
+    return componentResults?.metadata?.buildDeployContexts;
   }
 
   private getBuildTask(taskResults: TaskResults[], runtime: string) {

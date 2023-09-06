@@ -35,6 +35,12 @@ export type BuildAppResult = {
   artifacts?: ArtifactDefinition[];
 };
 
+export type BuildDeployContexts = {
+  deployContext: { publicDir?: string; ssrPublicDir?: string };
+  name: string;
+  appType: string;
+};
+
 export type Options = {
   deploy: boolean;
 };
@@ -106,8 +112,7 @@ export class AppsBuildTask implements BuildTask {
         component: capsule.component,
         errors: deployContext.errors,
         warnings: deployContext.warnings,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        metadata: { deployContext: getDeployContextFormMetadata(), name: app.name, appType: app.applicationType! },
+        metadata: { deployContext: getDeployContextFormMetadata(), name: app.name, appType: app.applicationType },
         /**
          * @deprecated - please use metadata instead
          *
@@ -130,7 +135,6 @@ export class AppsBuildTask implements BuildTask {
         component: appsResults[0].componentResult.component,
         errors: [],
         warnings: [],
-        // @ts-ignore
         metadata: {
           buildDeployContexts: [],
         },
@@ -145,9 +149,9 @@ export class AppsBuildTask implements BuildTask {
         appResult.componentResult.warnings || []
       );
       // @ts-ignore
-      merged.componentResult.metadata.buildDeployContexts = (merged.componentResult.metadata.buildDeployContexts || []) // @ts-ignore
-        // @ts-ignore
-        .concat(appResult.componentResult.metadata || []);
+      merged.componentResult.metadata.buildDeployContexts = (
+        merged.componentResult.metadata.buildDeployContexts || []
+      ).concat(appResult.componentResult.metadata || []);
     });
     return merged;
   }

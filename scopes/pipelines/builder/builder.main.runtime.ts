@@ -28,7 +28,7 @@ import { TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
 import { BuildPipelineResultList, AspectData, PipelineReport } from './build-pipeline-result-list';
-import { Serializable } from './types';
+import { TaskMetadata } from './types';
 import { ArtifactsCmd } from './artifact/artifacts.cmd';
 import { buildTaskTemplate } from './templates/build-task';
 import { BuilderRoute } from './builder.route';
@@ -254,7 +254,12 @@ export class BuilderMain {
     return artifacts;
   }
 
-  getDataByAspect(component: IComponent, aspectName: string): Serializable | undefined {
+  /**
+   * this is the aspect's data that was generated as "metadata" of the task component-result during the build process
+   * and saved by the builder aspect in the "aspectsData" property.
+   * (not to be confused with the data saved in the aspect itself, which is saved in the "data" property of the aspect).
+   */
+  getDataByAspect(component: IComponent, aspectName: string): TaskMetadata | undefined {
     const aspectsData = this.getBuilderData(component)?.aspectsData;
     const data = aspectsData?.find((aspectData) => aspectData.aspectId === aspectName);
     return data?.data;
