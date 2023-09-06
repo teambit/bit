@@ -970,7 +970,7 @@ export class DependencyResolverMain {
 
       const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig();
 
-      const alwaysAuth = bitAuthHeaderValue !== undefined;
+      const alwaysAuth = !!bitAuthHeaderValue;
       const bitDefaultRegistry = new Registry(
         bitRegistry,
         alwaysAuth,
