@@ -2,10 +2,10 @@ import mapSeries from 'p-map-series';
 import { BuilderMain, BuildTask, BuildContext, ComponentResult, TaskResults, BuiltTaskResult } from '@teambit/builder';
 import { compact } from 'lodash';
 import { Capsule } from '@teambit/isolator';
-import { ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
-import { BUILD_TASK } from './build-application.task';
+import { BUILD_TASK, BuildDeployContexts } from './build-application.task';
 import { AppDeployContext } from './app-deploy-context';
 import { Application } from './application';
 
@@ -43,21 +43,20 @@ export class DeployTask implements BuildTask {
 
   private async runForOneApp(app: Application, capsule: Capsule, context: BuildContext): Promise<void> {
     const aspectId = this.application.getAppAspect(app.name);
-    let buildTask: TaskResults | undefined;
-    let _metadata;
     if (!aspectId) return;
 
     if (!capsule || !capsule?.component) return;
 
-    if (context?.previousTasksResults.length !== 0) {
-      buildTask = this.getBuildTask(context.previousTasksResults, context.envRuntime.id);
-      _metadata = this.getBuildMetadata(buildTask as TaskResults, capsule.component.id, app);
-    }
+    const buildTask = this.getBuildTask(context.previousTasksResults, context.envRuntime.id);
 
-    const appDeployContext: AppDeployContext = Object.assign(context, {
+    const metadata = this.getBuildMetadata(buildTask, capsule.component);
+    if (!metadata) return;
+    const buildDeployContexts = metadata.find((ctx) => ctx.name === app.name && ctx.appType === app.applicationType);
+    if (!buildDeployContexts) return;
+
+    const appDeployContext: AppDeployContext = Object.assign(context, buildDeployContexts.deployContext, {
       capsule,
       appComponent: capsule.component,
-      ...(_metadata && _metadata.deployContext ? { deployContext: _metadata.deployContext } : {}),
     });
 
     if (app && typeof app.deploy === 'function') {
@@ -65,22 +64,19 @@ export class DeployTask implements BuildTask {
     }
   }
 
-  private getBuildMetadata(buildTask: TaskResults, componentId: ComponentID, app: Application) {
+  private getBuildMetadata(
+    buildTask: TaskResults | undefined,
+    component: Component
+  ): BuildDeployContexts[] | undefined {
+    if (!buildTask) {
+      const appData = this.builder.getDataByAspect(component, ApplicationAspect.id);
+      if (!appData) return undefined;
+      return appData.buildDeployContexts;
+    }
     const componentResults = buildTask?.componentsResults.find((res) =>
-      res.component.id.isEqual(componentId, { ignoreVersion: true })
+      res.component.id.isEqual(component.id, { ignoreVersion: true })
     );
-    /**
-     * @guysaar223
-     * @ram8
-     * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
-     * or create new deploy context on builder
-     */
-    // @ts-ignore
-    const metadata = componentResults?._metadata.buildDeployContexts.find(
-      (ctx) => ctx.name === app.name && ctx.appType === app.applicationType
-    );
-
-    return metadata;
+    return componentResults?.metadata?.buildDeployContexts;
   }
 
   private getBuildTask(taskResults: TaskResults[], runtime: string) {
