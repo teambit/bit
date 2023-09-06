@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { BuilderMain, BuildTask, BuildContext, ComponentResult, TaskResults, BuiltTaskResult } from '@teambit/builder';
 import { compact } from 'lodash';
 import { Capsule } from '@teambit/isolator';
-import { ComponentID } from '@teambit/component';
+import { Component, ComponentID } from '@teambit/component';
 import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
 import { BUILD_TASK } from './build-application.task';
@@ -43,21 +43,32 @@ export class DeployTask implements BuildTask {
 
   private async runForOneApp(app: Application, capsule: Capsule, context: BuildContext): Promise<void> {
     const aspectId = this.application.getAppAspect(app.name);
-    let buildTask: TaskResults | undefined;
-    let _metadata;
     if (!aspectId) return;
 
     if (!capsule || !capsule?.component) return;
 
-    if (context?.previousTasksResults.length !== 0) {
-      buildTask = this.getBuildTask(context.previousTasksResults, context.envRuntime.id);
-      _metadata = this.getBuildMetadata(buildTask as TaskResults, capsule.component.id, app);
-    }
+    const buildTask = this.getBuildTask(context.previousTasksResults, context.envRuntime.id);
 
-    const appDeployContext: AppDeployContext = Object.assign(context, {
+    const metadata = buildTask
+      ? this.getBuildMetadata(buildTask as TaskResults, capsule.component.id, app)
+      : this.getBuildMetadataFromCompObject(capsule.component, app);
+
+    if (!metadata) return;
+
+    /**
+     * types are terrible here. an example of the metadata is:
+     * {
+          publicDir: 'artifacts/apps/react-common-js/bit-dev/public',
+          ssrPublicDir: 'artifacts/apps/react-common-js/bit-dev'
+        },
+        name: 'bit-dev',
+        appType: 'react-common-js'
+      }
+     */
+
+    const appDeployContext: AppDeployContext = Object.assign(context, metadata.deployContext, {
       capsule,
       appComponent: capsule.component,
-      ...(_metadata && _metadata.deployContext ? { deployContext: _metadata.deployContext } : {}),
     });
 
     if (app && typeof app.deploy === 'function') {
@@ -69,14 +80,22 @@ export class DeployTask implements BuildTask {
     const componentResults = buildTask?.componentsResults.find((res) =>
       res.component.id.isEqual(componentId, { ignoreVersion: true })
     );
-    /**
-     * @guysaar223
-     * @ram8
-     * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
-     * or create new deploy context on builder
-     */
+
     // @ts-ignore
-    const metadata = componentResults?._metadata.buildDeployContexts.find(
+    const metadata = componentResults?.metadata?.buildDeployContexts.find(
+      (ctx) => ctx.name === app.name && ctx.appType === app.applicationType
+    );
+
+    return metadata;
+  }
+
+  private getBuildMetadataFromCompObject(component: Component, app: Application) {
+    const builderData = component.state.aspects.get('teambit.pipelines/builder')?.data;
+    if (!builderData) return undefined;
+    const appData = builderData.aspectsData.find((aspectData) => aspectData.aspectId === ApplicationAspect.id);
+    if (!appData) return undefined;
+
+    const metadata = appData.data.buildDeployContexts.find(
       (ctx) => ctx.name === app.name && ctx.appType === app.applicationType
     );
 

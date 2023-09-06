@@ -8,7 +8,7 @@ import {
   ArtifactDefinition,
   CAPSULE_ARTIFACTS_DIR,
 } from '@teambit/builder';
-import { compact } from 'lodash';
+import { compact, omit } from 'lodash';
 import { Capsule } from '@teambit/isolator';
 import { Component } from '@teambit/component';
 
@@ -93,13 +93,21 @@ export class AppsBuildTask implements BuildTask {
     const defaultArtifacts: ArtifactDefinition[] = this.getDefaultArtifactDef(app.applicationType || app.name);
     const artifacts = defaultArtifacts.concat(deployContext.artifacts || []);
 
+    const getDeployContextFormMetadata = () => {
+      if (deployContext.metadata) {
+        return deployContext.metadata;
+      }
+      return omit(deployContext, 'errors', 'warnings');
+    };
+
     return {
       artifacts,
       componentResult: {
         component: capsule.component,
         errors: deployContext.errors,
         warnings: deployContext.warnings,
-        metadata: deployContext.metadata,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        metadata: { deployContext: getDeployContextFormMetadata(), name: app.name, appType: app.applicationType! },
         /**
          * @guysaar223
          * @ram8
@@ -121,7 +129,7 @@ export class AppsBuildTask implements BuildTask {
         errors: [],
         warnings: [],
         // @ts-ignore
-        _metadata: {
+        metadata: {
           buildDeployContexts: [],
         },
       },
@@ -135,11 +143,10 @@ export class AppsBuildTask implements BuildTask {
         appResult.componentResult.warnings || []
       );
       // @ts-ignore
-      merged.componentResult._metadata.buildDeployContexts = ( // @ts-ignore
-        merged.componentResult._metadata.buildDeployContexts || []
-      )
+      merged.componentResult.metadata.buildDeployContexts = // @ts-ignore
+      (merged.componentResult.metadata.buildDeployContexts || [])
         // @ts-ignore
-        .concat(appResult.componentResult._metadata || []);
+        .concat(appResult.componentResult.metadata || []);
     });
     return merged;
   }

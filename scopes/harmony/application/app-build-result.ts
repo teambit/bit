@@ -16,5 +16,5 @@ export interface AppBuildResult {
   /**
    * metadata to persist.
    */
-  metadata?: Record<string, string>;
+  metadata?: Record<string, string | undefined>;
 }
