@@ -148,10 +148,11 @@ export class AppsBuildTask implements BuildTask {
       merged.componentResult.warnings = (merged.componentResult.warnings || []).concat(
         appResult.componentResult.warnings || []
       );
-      // @ts-ignore
-      merged.componentResult.metadata.buildDeployContexts = (
-        merged.componentResult.metadata.buildDeployContexts || []
-      ).concat(appResult.componentResult.metadata || []);
+
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      merged.componentResult.metadata!.buildDeployContexts =
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        (merged.componentResult.metadata!.buildDeployContexts || []).concat(appResult.componentResult.metadata || []);
     });
     return merged;
   }
@@ -164,8 +165,7 @@ export class AppsBuildTask implements BuildTask {
     return [
       {
         name: `app-build-${nameSuffix}`,
-        globPatterns: ['**'],
-        rootDir: this.getArtifactDirectory(),
+        globPatterns: [`${this.getArtifactDirectory()}/**`],
       },
     ];
   }
