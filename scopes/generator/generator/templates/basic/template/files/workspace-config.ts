@@ -13,11 +13,17 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
         '@teambit/node.node': 'latest',
         '@types/node': '16.18.44',
         '@types/jest': '29.5.4',
+        '@teambit/eslint-config-bit-react': '^0.0.367',
+        '@typescript-eslint/eslint-plugin': '4.29.3',
+        'eslint-import-resolver-node': '0.3.6',
+        'eslint-plugin-import': '2.22.1',
+        'eslint-plugin-jest': '24.1.5',
+        'eslint-plugin-jsx-a11y': '6.4.1',
+        'eslint-plugin-mdx': '1.13.0',
+        'eslint-plugin-react': '7.22.0',
       },
     },
   };
-
-  delete configParsed['teambit.workspace/variants'];
 
   configParsed['teambit.generator/generator'] = {
     envs: [
