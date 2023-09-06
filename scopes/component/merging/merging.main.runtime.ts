@@ -30,6 +30,7 @@ import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-w
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { compact, isEmpty } from 'lodash';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import { DependencyResolverAspect, WorkspacePolicyConfigKeysNames } from '@teambit/dependency-resolver';
@@ -763,6 +764,7 @@ export class MergingMain {
     ImporterAspect,
     ConfigAspect,
     RemoveAspect,
+    GlobalConfigAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -776,6 +778,7 @@ export class MergingMain {
     importer,
     config,
     remove,
+    globalConfig,
   ]: [
     CLIMain,
     Workspace,
@@ -786,7 +789,8 @@ export class MergingMain {
     ComponentWriterMain,
     ImporterMain,
     ConfigMain,
-    RemoveMain
+    RemoveMain,
+    GlobalConfigMain
   ]) {
     const logger = loggerMain.createLogger(MergingAspect.id);
     const merging = new MergingMain(
@@ -800,7 +804,7 @@ export class MergingMain {
       config,
       remove
     );
-    cli.register(new MergeCmd(merging));
+    cli.register(new MergeCmd(merging, globalConfig));
     return merging;
   }
 }

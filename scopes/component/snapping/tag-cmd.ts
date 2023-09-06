@@ -1,10 +1,14 @@
 import chalk from 'chalk';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { isFeatureEnabled, FORCE_LOCAL_BUILD } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { Command, CommandOptions } from '@teambit/cli';
 import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
-import { DEFAULT_BIT_RELEASE_TYPE, COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import {
+  DEFAULT_BIT_RELEASE_TYPE,
+  COMPONENT_PATTERN_HELP,
+  CFG_FORCE_LOCAL_BUILD,
+} from '@teambit/legacy/dist/constants';
+import { GlobalConfigMain } from '@teambit/global-config';
 import { BitId } from '@teambit/legacy-bit-id';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ReleaseType } from 'semver';
@@ -98,7 +102,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   remoteOp = true; // In case a compiler / tester is not installed
   examples = [{ cmd: 'tag --ver 1.0.0', description: 'tag all components to version 1.0.0' }];
 
-  constructor(private snapping: SnappingMain, private logger: Logger) {}
+  constructor(private snapping: SnappingMain, private logger: Logger, private globalConfig: GlobalConfigMain) {}
 
   // eslint-disable-next-line complexity
   async report(
@@ -230,7 +234,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     };
 
     const disableTagAndSnapPipelines = disableTagPipeline || disableDeployPipeline;
-    build = isFeatureEnabled(FORCE_LOCAL_BUILD) || Boolean(build);
+    build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
     if (persist) {
       if (persist === true) build = true;
       else if (persist === 'skip-build') build = false;

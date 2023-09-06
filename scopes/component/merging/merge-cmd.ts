@@ -8,13 +8,14 @@ import {
   AUTO_SNAPPED_MSG,
   MergeConfigFilename,
   FILE_CHANGES_CHECKOUT_MSG,
+  CFG_FORCE_LOCAL_BUILD,
 } from '@teambit/legacy/dist/constants';
 import {
   FileStatus,
   ApplyVersionResult,
   MergeStrategy,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { isFeatureEnabled, FORCE_LOCAL_BUILD } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { GlobalConfigMain } from '@teambit/global-config';
 import { BitError } from '@teambit/bit-error';
 import { ApplyVersionResults, MergingMain } from './merging.main.runtime';
 import { ConfigMergeResult } from './config-merge-result';
@@ -53,7 +54,7 @@ ${WILDCARD_HELP('merge')}`;
   ] as CommandOptions;
   loader = true;
 
-  constructor(private merging: MergingMain) {}
+  constructor(private merging: MergingMain, private globalConfig: GlobalConfigMain) {}
 
   async report(
     [ids = []]: [string[]],
@@ -83,7 +84,7 @@ ${WILDCARD_HELP('merge')}`;
       skipDependencyInstallation?: boolean;
     }
   ) {
-    build = isFeatureEnabled(FORCE_LOCAL_BUILD) || Boolean(build);
+    build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
     if (ours || theirs || manual) {
       throw new BitError(
         'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead'
