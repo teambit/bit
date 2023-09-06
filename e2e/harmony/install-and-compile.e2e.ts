@@ -12,7 +12,7 @@ describe('all custom envs are compiled during installation', function () {
   function prepare() {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.command.create('node-env', 'custom-env1');
+    helper.command.create('node-env', 'custom-env1', '--aspect teambit.node/node-env');
     helper.fixtures.generateEnvJsoncFile(`${helper.scopes.remoteWithoutOwner}/custom-env1`, {
       policy: {
         runtime: [
@@ -52,7 +52,7 @@ export class CustomEnv1Main {
 CustomEnv1Aspect.addRuntime(CustomEnv1Main);
 `
     );
-    helper.command.create('node-env', 'custom-env2');
+    helper.command.create('node-env', 'custom-env2', '--aspect teambit.node/node-env');
     helper.fixtures.generateEnvJsoncFile(`${helper.scopes.remoteWithoutOwner}/custom-env2`, {
       policy: {
         runtime: [
@@ -97,7 +97,7 @@ CustomEnv2Aspect.addRuntime(CustomEnv2Main);
 `
     );
     helper.command.setEnv(`custom-env2`, `custom-env1`);
-    helper.command.create('node', 'comp');
+    helper.command.create('node', 'comp', '--aspect teambit.node/node');
     helper.fs.outputFile(
       `${helper.scopes.remoteWithoutOwner}/comp/comp.ts`,
       `
@@ -158,7 +158,7 @@ export function comp() {
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
-      helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
+      helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1 --aspect teambit.react/react-env');
       helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
         envName: 'env1',
         dependencies: {
@@ -180,8 +180,8 @@ export function comp() {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();
-      helper.command.create('react', 'comp1');
-      helper.command.create('react', 'comp2');
+      helper.command.create('react', 'comp1', '--aspect teambit.react/react-env');
+      helper.command.create('react', 'comp2', '--aspect teambit.react/react-env');
       helper.command.setEnv('comp1', `${helper.scopes.remote}/custom-react/env1`);
     });
     it('should not run install indefinitely', () => {

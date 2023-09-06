@@ -15,7 +15,7 @@ describe('app command', function () {
   describe('app run', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
-      helper.command.create('express-app', 'my-app');
+      helper.command.create('express-app', 'my-app', '--aspect teambit.node/node');
       helper.command.compile();
       helper.command.install();
       helper.bitJsonc.addKeyVal('my-scope/my-app', {});

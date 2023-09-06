@@ -1564,7 +1564,7 @@ describe('env peer dependencies hoisting', function () {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.command.create('react', 'my-button', '-p my-button');
+      helper.command.create('react', 'my-button', '-p my-button --aspect teambit.react/react-env');
       helper.command.install();
     });
     after(() => {
@@ -1618,7 +1618,7 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/${pm}`);
-    helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
+    helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1 --aspect teambit.react/react-env');
     helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
       envName: 'env1',
       dependencies: {
@@ -1631,7 +1631,7 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
         ],
       },
     });
-    helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
+    helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2 --aspect teambit.react/react-env');
     helper.fixtures.populateEnvMainRuntime(`custom-react/env2/env2.main.runtime.ts`, {
       envName: 'env2',
       dependencies: {
@@ -1666,9 +1666,9 @@ describe('create with root components on', function () {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-    helper.command.create('react', 'card');
+    helper.command.create('react', 'card', '--aspect teambit.react/react-env');
     helper.command.install();
-    helper.command.create('react', 'my-button');
+    helper.command.create('react', 'my-button', '--aspect teambit.react/react-env');
   });
   it('should create the runtime component directory for the created component', () => {
     expect(path.join(helper.env.rootCompDirDep('teambit.react/react', 'my-button'), 'index.ts')).to.be.a.path();

@@ -10,7 +10,7 @@ describe.skip('installing in an angular workspace', function () {
     helper = new Helper();
     helper.command.new('ng-workspace', '--aspect=teambit.angular/angular');
     workspaceDir = path.join(helper.scopes.localPath, 'my-workspace');
-    helper.command.create('ng-module', 'ui/my-button', undefined, workspaceDir);
+    helper.command.create('ng-module', 'ui/my-button', '--aspect teambit.angular/angular', workspaceDir);
   }
   describe('using yarn', function () {
     before(prepare);

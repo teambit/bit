@@ -11,7 +11,12 @@ describe('policies order', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
+      helper.command.create(
+        'react-env',
+        'custom-react/env1',
+        '-p custom-react/env1',
+        '--aspect teambit.react/react-env'
+      );
       helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
         envName: 'env1',
         dependencies: {
@@ -48,7 +53,7 @@ describe('policies order', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
+      helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1 --aspect teambit.react/react-env');
       helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
         envName: 'env1',
         dependencies: {

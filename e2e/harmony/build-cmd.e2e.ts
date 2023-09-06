@@ -24,7 +24,7 @@ describe('build command', function () {
   describe('an mdx dependency of a react env', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.command.create('mdx-component', 'my-mdx');
+      helper.command.create('mdx-component', 'my-mdx', '--aspect teambit.mdx/mdx-env');
       helper.command.create('react-env', 'my-env');
       const importStatement = `import { MyMdx } from '@${helper.scopes.remote}/my-mdx';\n`;
       helper.fs.prependFile(path.join(helper.scopes.remote, 'my-env/my-env.docs.mdx'), importStatement);
@@ -68,7 +68,7 @@ describe('build command', function () {
   describe('registering the publish task for the snap pipeline in a new-custom env', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
-      helper.command.create('node-env', 'my-env');
+      helper.command.create('node-env', 'my-env', '--aspect teambit.node/node');
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('my-scope/my-env/my-env.main.runtime.ts', getMyEnvMainRuntime());
       helper.bitJsonc.setVariant(undefined, 'my-scope/my-env', { 'teambit.envs/env': {} });

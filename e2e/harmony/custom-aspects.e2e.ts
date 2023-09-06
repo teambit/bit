@@ -52,7 +52,7 @@ describe('custom aspects', function () {
 
       helper.command.install(`@ci/${helper.scopes.remoteWithoutOwner}.main-aspect`);
 
-      helper.command.create('react-env', 'my-env', '--path my-env');
+      helper.command.create('react-env', 'my-env', '--path my-env --aspect teambit.react/react-env');
       helper.fs.outputFile('my-env/my-env.main.runtime.ts', getEnvRuntimeMain(helper.scopes.remoteWithoutOwner));
       helper.fixtures.populateComponents(1);
 
