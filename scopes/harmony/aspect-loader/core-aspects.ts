@@ -2,6 +2,7 @@ import { BitError } from '@teambit/bit-error';
 import { existsSync, readdir } from 'fs-extra';
 import { join, resolve } from 'path';
 import { Config } from '@teambit/bvm.config';
+import { AspectDefinitionProps } from './aspect-definition';
 
 let _bvmConfig;
 
@@ -83,7 +84,7 @@ export function getCoreAspectPackageName(id: string): string {
   return `@teambit/${aspectName}`;
 }
 
-export async function getAspectDef(aspectName: string, runtime?: string) {
+export async function getAspectDef(aspectName: string, runtime?: string): Promise<AspectDefinitionProps> {
   const dirPath = getAspectDistDir(aspectName);
 
   const files = await readdir(dirPath);

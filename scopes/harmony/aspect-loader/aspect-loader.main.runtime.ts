@@ -310,6 +310,7 @@ export class AspectLoaderMain {
       this.coreAspects.map(async (aspect) => {
         const id = aspect.id;
         const rawDef = await getAspectDef(id, runtimeName);
+        rawDef.isCoreAspect = true;
         return this.loadDefinition(rawDef);
       })
     );

@@ -359,6 +359,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     let coreAspectDefs = await Promise.all(
       coreAspectsIds.map(async (coreId) => {
         const rawDef = await getAspectDef(coreId, runtimeName);
+        rawDef.isCoreAspect = true;
         return this.aspectLoader.loadDefinition(rawDef);
       })
     );

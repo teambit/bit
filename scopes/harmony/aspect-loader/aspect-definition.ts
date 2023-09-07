@@ -9,6 +9,7 @@ export type AspectDefinitionProps = {
   runtimePath: string | null;
   aspectFilePath: string | null;
   local?: boolean;
+  isCoreAspect?: boolean;
 };
 
 export class AspectDefinition {
@@ -38,7 +39,11 @@ export class AspectDefinition {
     /**
      * aspect defined using 'file://' protocol
      */
-    readonly local?: boolean
+    readonly local?: boolean,
+    /**
+     * whether the aspect is a core aspect
+     */
+    readonly isCoreAspect?: boolean
   ) {}
 
   get getId() {
@@ -48,7 +53,7 @@ export class AspectDefinition {
   }
 
   get packageName() {
-    return this.getId ? getCoreAspectPackageName(this.getId) : null;
+    return this.isCoreAspect && this.getId ? getCoreAspectPackageName(this.getId) : null;
   }
 
   get aspectFilePackagePath() {
@@ -63,7 +68,7 @@ export class AspectDefinition {
     return `${this.packageName}/${relative(this.aspectPath, this.runtimePath)}`;
   }
 
-  static from({ component, aspectPath, aspectFilePath, runtimePath, id, local }: AspectDefinitionProps) {
-    return new AspectDefinition(aspectPath, aspectFilePath, runtimePath, component, id, local);
+  static from({ component, aspectPath, aspectFilePath, runtimePath, id, local, isCoreAspect }: AspectDefinitionProps) {
+    return new AspectDefinition(aspectPath, aspectFilePath, runtimePath, component, id, local, isCoreAspect);
   }
 }
