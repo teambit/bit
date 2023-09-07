@@ -419,10 +419,11 @@ export class DependencyResolverMain {
     return rootPolicy.entries.some(({ dependencyId }) => dependencyId === '@teambit/harmony');
   }
 
-  nodeLinker(): NodeLinker {
+  nodeLinker(packageManagerName?: string): NodeLinker {
     if (this.config.nodeLinker) return this.config.nodeLinker;
-    if (this.config.packageManager === 'teambit.dependencies/pnpm') return 'isolated';
-    return 'hoisted';
+    const pmName = packageManagerName || this.config.packageManager;
+    if (pmName === 'teambit.dependencies/yarn') return 'hoisted';
+    return 'isolated';
   }
 
   linkCoreAspects(): boolean {
@@ -716,7 +717,7 @@ export class DependencyResolverMain {
       cacheRootDir,
       preInstallSubscribers,
       postInstallSubscribers,
-      options.nodeLinker || this.nodeLinker(),
+      options.nodeLinker || this.nodeLinker(packageManagerName),
       this.config.packageImportMethod,
       this.config.sideEffectsCache,
       this.config.nodeVersion,
