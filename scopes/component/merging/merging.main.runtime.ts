@@ -40,6 +40,7 @@ import {
   ComponentStatusBase,
   applyModifiedVersion,
   removeFilesIfNeeded,
+  updateFileStatus,
 } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
@@ -597,10 +598,7 @@ export class MergingMain {
       legacyComponent.version = id.version;
     }
     const files = legacyComponent.files;
-    files.forEach((file) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
-    });
+    updateFileStatus(files, filesStatus, currentComponent || undefined);
 
     if (mergeResults) {
       // update files according to the merge results

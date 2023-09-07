@@ -1,23 +1,9 @@
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component';
 
-export interface ComponentFile {
-  /**
-   * relative path of the file within the component.
-   */
-  relativePath: string;
-
-  /**
-   * file content
-   */
-  content: string;
-
-  /**
-   * whether this file will be tracked as the main file
-   */
-  isMain?: boolean;
-}
-
-export interface ComponentContext {
+/**
+ * BaseComponentTemplateOptions describes the foundational properties for components.
+ */
+export interface BaseComponentTemplateOptions {
   /**
    * component-name as entered by the user, e.g. `use-date`.
    * without the scope and the namespace.
@@ -45,16 +31,49 @@ export interface ComponentContext {
   /**
    * aspect id of the aspect that register the template itself
    */
-  aspectId: ComponentID;
+  aspectId: ComponentID | string;
 
   /**
-   * env id of the env that register the template itself
-   * This will be usually identical to the aspectId
-   * but aspectId will always exist, while envId will be undefined if the template is not registered by an env
-   * so in case you want to use the envId, you should check if it exists first
-   * You can use this in case you want to only do something if the template was registered by an env
+   * env id of the env that register the template itself.
+   * This will be usually identical to the aspectId but aspectId will always exist,
+   * while envId will be undefined if the template is not registered by an env.
    */
   envId?: ComponentID;
+
+  /**
+   * path of the component.
+   */
+  path?: string;
+  /**
+   * scope of the component.
+   */
+  scope?: string;
+  /**
+   * namespace of the component.
+   */
+  namespace?: string;
+}
+
+/**
+ * ComponentContext represents foundational properties for a component context.
+ */
+export type ComponentContext = BaseComponentTemplateOptions;
+
+export interface ComponentFile {
+  /**
+   * relative path of the file within the component.
+   */
+  relativePath: string;
+
+  /**
+   * file content
+   */
+  content: string;
+
+  /**
+   * whether this file will be tracked as the main file
+   */
+  isMain?: boolean;
 }
 
 export interface ConfigContext {

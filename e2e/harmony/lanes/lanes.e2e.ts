@@ -329,7 +329,7 @@ describe('bit lane command', function () {
       const { scopePath, scopeName } = helper.scopeHelper.getNewBareScope();
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.command.createLane('dev');
-      helper.command.changeLaneScope('dev', scopeName);
+      helper.command.changeLaneScope(scopeName);
       helper.fs.outputFile('comp1/comp1.spec.js');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -632,7 +632,7 @@ describe('bit lane command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.command.createLane();
-      output = helper.command.changeLaneScope('dev', 'my-remote');
+      output = helper.command.changeLaneScope('my-remote');
     });
     it('should output the changes', () => {
       expect(removeChalkCharacters(output)).to.have.string(
@@ -1232,7 +1232,7 @@ describe('bit lane command', function () {
       helper.fixtures.populateComponents(1);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.command.renameLane('dev', 'new-lane');
+      helper.command.renameLane('new-lane');
     });
     it('should rename the lane locally', () => {
       const lanes = helper.command.listLanes();
@@ -1517,7 +1517,7 @@ describe('bit lane command', function () {
         helper.command.export();
       });
       it('should block the rename', () => {
-        expect(() => helper.command.changeLaneScope('dev', 'new-scope')).to.throw(
+        expect(() => helper.command.changeLaneScope('new-scope')).to.throw(
           'changing lane scope-name is allowed for new lanes only'
         );
       });
@@ -1530,7 +1530,7 @@ describe('bit lane command', function () {
       });
       it('should throw InvalidScopeName error', () => {
         const err = new InvalidScopeName('invalid.scope.name');
-        const cmd = () => helper.command.changeLaneScope('dev', 'invalid.scope.name');
+        const cmd = () => helper.command.changeLaneScope('invalid.scope.name');
         helper.general.expectToThrow(cmd, err);
       });
     });
