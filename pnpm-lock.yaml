@@ -3889,7 +3889,7 @@ importers:
         version: file:scopes/compilation/babel(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit':
         specifier: workspace:*
-        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.8)(subscriptions-transport-ws@0.9.18)
+        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.8)(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
@@ -5798,7 +5798,7 @@ importers:
         version: file:scopes/compilation/babel(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit':
         specifier: workspace:*
-        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.8)(subscriptions-transport-ws@0.9.18)
+        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.8)(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
@@ -7707,7 +7707,7 @@ importers:
         version: file:scopes/compilation/babel(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit':
         specifier: workspace:*
-        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.8)(subscriptions-transport-ws@0.9.18)
+        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.8)(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
@@ -9616,7 +9616,7 @@ importers:
         version: file:scopes/compilation/babel(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit':
         specifier: workspace:*
-        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.8)(subscriptions-transport-ws@0.9.18)
+        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.8)(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
@@ -11525,7 +11525,7 @@ importers:
         version: file:scopes/compilation/babel(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit':
         specifier: workspace:*
-        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.8)(subscriptions-transport-ws@0.9.18)
+        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.8)(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
@@ -13434,7 +13434,7 @@ importers:
         version: file:scopes/compilation/babel(react-dom@17.0.2)(react@17.0.2)
       '@teambit/bit':
         specifier: workspace:*
-        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.8)(subscriptions-transport-ws@0.9.18)
+        version: file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.8)(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)(subscriptions-transport-ws@0.9.18)
       '@teambit/bit-custom-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/bit-custom-aspect(react-dom@17.0.2)(react@17.0.2)
@@ -22906,6 +22906,9 @@ importers:
       '@teambit/ui-foundation.ui.navigation.react-router-adapter':
         specifier: 6.1.1
         version: 6.1.1(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@yarnpkg/plugin-pack':
+        specifier: 3.2.0
+        version: 3.2.0(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
       browserslist:
         specifier: 4.16.3
         version: 4.16.3
@@ -40760,7 +40763,7 @@ packages:
     dev: false
 
   /@teambit/html.modules.create-element-from-string@0.0.104:
-    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=}
+    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: https://node-registry.bit.cloud/@teambit/html.modules.create-element-from-string/-/@teambit-html.modules.create-element-from-string-0.0.104.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -41529,7 +41532,7 @@ packages:
     dev: true
 
   /@teambit/toolbox.string.ellipsis@0.0.181:
-    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=}
+    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.181.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -41549,7 +41552,7 @@ packages:
     dev: true
 
   /@teambit/toolbox.types.serializable@0.0.491:
-    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=}
+    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.491.tgz}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -41666,7 +41669,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.get-icon-from-file-name@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=}
+    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.get-icon-from-file-name/-/@teambit-ui-foundation.ui.get-icon-from-file-name-0.0.495.tgz}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -66281,7 +66284,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.8)(subscriptions-transport-ws@0.9.18):
+  file:scopes/harmony/bit(@testing-library/react@12.1.5)(@types/react@17.0.8)(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)(subscriptions-transport-ws@0.9.18):
     resolution: {directory: scopes/harmony/bit, type: directory}
     id: file:scopes/harmony/bit
     name: '@teambit/bit'
@@ -66292,6 +66295,7 @@ packages:
       '@teambit/harmony': 0.4.6
       '@teambit/legacy-bit-id': 1.0.0
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.1(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@yarnpkg/plugin-pack': 3.2.0(@yarnpkg/cli@3.6.1)(@yarnpkg/core@3.5.2)
       browserslist: 4.16.3
       buffer: 6.0.3
       comment-json: 3.0.3
@@ -66311,6 +66315,8 @@ packages:
     transitivePeerDependencies:
       - '@testing-library/react'
       - '@types/react'
+      - '@yarnpkg/cli'
+      - '@yarnpkg/core'
       - graphql-ws
       - subscriptions-transport-ws
     dev: false
