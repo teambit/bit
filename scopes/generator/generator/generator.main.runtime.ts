@@ -254,14 +254,16 @@ export class GeneratorMain {
       return { workspaceTemplate: registeredTemplate };
     }
     if (!aspectId) {
-      throw new BitError(`template "${name}" was not found, if this is a custom-template, please use --aspect flag`);
+      throw new BitError(
+        `template "${name}" was not found, please use --aspect flag to load from an env i.e --aspect teambit.react/react-env\n Learn more about component templates here: https://bit.dev/reference/generator/create-generator`
+      );
     }
 
     const { workspaceTemplate, aspect } = await this.findWorkspaceTemplateInGlobalScope(aspectId, name);
     if (workspaceTemplate) {
       return { workspaceTemplate, aspect };
     }
-    throw new BitError(`template "${name}" was not found`);
+    `template "${name}" was not found, please use --aspect flag to load from an env i.e --aspect teambit.react/react-env\n Learn more about component templates here: https://bit.dev/reference/generator/create-generator`;
   }
 
   async searchRegisteredWorkspaceTemplate(
