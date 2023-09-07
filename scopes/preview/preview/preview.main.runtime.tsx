@@ -642,9 +642,7 @@ export class PreviewMain {
             return file.path;
           }
           const distRelativePath = compilerInstance.getDistPathBySrcPath(file.relative);
-          const moduleName = modulePath.replace(/^.*node_modules\//, '');
-          const importPath = `${moduleName}/${distRelativePath}`;
-          return importPath;
+          return join(this.workspace.path, modulePath, distRelativePath);
         });
       });
       const withPaths = await withPathsP;
