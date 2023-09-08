@@ -118,6 +118,11 @@ export class APIForIDE {
     return results;
   }
 
+  async setDefaultScope(scopeName: string) {
+    await this.workspace.setDefaultScope(scopeName);
+    return scopeName;
+  }
+
   async getCompFilesDirPathFromLastSnapUsingCompFiles(
     compFiles: CompFiles
   ): Promise<{ [relativePath: string]: string }> {
