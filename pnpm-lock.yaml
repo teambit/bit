@@ -38033,6 +38033,14 @@ packages:
       semver: 7.5.2
     dev: false
 
+  /@teambit/component-version@1.0.0:
+    resolution: {integrity: sha512-JPwjcflyezcqb+YrGfZP1oAID0oZ/uR8bmLhFLtzIgpwV0TdUeetSZ/dkcPWLddFuBJWw4rqM/4GErBUbDpd+g==}
+    engines: {node: '>=12.22.0'}
+    dependencies:
+      '@teambit/bit-error': 0.0.402
+      semver: 7.5.2
+    dev: false
+
   /@teambit/component.content.component-overview@1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-9Dbi90Jg9C5Jmy4g7IdouEqSuo8=, tarball: https://node-registry.bit.cloud/tarballs/teambit.component/content/component-overview@1.95.0.tgz}
     peerDependencies:
@@ -64484,6 +64492,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
+      '@teambit/component-version': 1.0.0
       '@teambit/harmony': 0.4.6
       core-js: 3.13.0
       fs-extra: 10.0.0
