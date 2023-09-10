@@ -208,6 +208,12 @@ export class APIForIDE {
     return results;
   }
 
+  async getFilesStatus(id: string): Promise<FilesStatus> {
+    const componentId = await this.workspace.resolveComponentId(id);
+    const compFiles = await this.workspace.getFilesModification(componentId);
+    return compFiles.getFilesStatus();
+  }
+
   async getCompFilesDirPathFromLastSnapForAllComps(): Promise<{ [relativePath: string]: string }> {
     const ids = await this.workspace.listIds();
     let results = {};
