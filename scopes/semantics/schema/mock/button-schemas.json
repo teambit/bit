@@ -440,7 +440,8 @@
           },
           "type": "4"
         },
-        "isOptional": false
+        "isOptional": false,
+        "defaultValue": "4"
       },
       {
         "__schema": "VariableLikeSchema",
@@ -460,7 +461,8 @@
           },
           "name": "5"
         },
-        "isOptional": false
+        "isOptional": false,
+        "defaultValue": "5"
       },
       {
         "__schema": "ModuleSchema",
@@ -492,7 +494,7 @@
             "modifiers": []
           },
           {
-            "__schema": "ReactSchema",
+            "__schema": "FunctionLikeSchema",
             "location": {
               "filePath": "button.composition.tsx",
               "line": 14,
@@ -510,22 +512,37 @@
             },
             "signature": "function Footer({ children }: {\n    children?: any;\n}): any",
             "name": "Footer",
-            "props": {
-              "__schema": "ParameterSchema",
-              "location": {
-                "filePath": "button.composition.tsx",
-                "line": 14,
-                "character": 24
-              },
-              "name": "{ children = <BasicButton /> }",
-              "type": {
-                "__schema": "TypeLiteralSchema",
+            "params": [
+              {
+                "__schema": "ParameterSchema",
                 "location": {
                   "filePath": "button.composition.tsx",
                   "line": 14,
                   "character": 24
                 },
-                "members": [
+                "name": "{ children = <BasicButton /> }",
+                "type": {
+                  "__schema": "TypeLiteralSchema",
+                  "location": {
+                    "filePath": "button.composition.tsx",
+                    "line": 14,
+                    "character": 24
+                  },
+                  "members": [
+                    {
+                      "__schema": "InferenceTypeSchema",
+                      "location": {
+                        "filePath": "button.composition.tsx",
+                        "line": 14,
+                        "character": 24
+                      },
+                      "name": "children",
+                      "type": "any"
+                    }
+                  ]
+                },
+                "isOptional": false,
+                "objectBindingNodes": [
                   {
                     "__schema": "InferenceTypeSchema",
                     "location": {
@@ -536,32 +553,18 @@
                     "name": "children",
                     "type": "any"
                   }
-                ]
-              },
-              "isOptional": false,
-              "objectBindingNodes": [
-                {
-                  "__schema": "InferenceTypeSchema",
-                  "location": {
-                    "filePath": "button.composition.tsx",
-                    "line": 14,
-                    "character": 24
-                  },
-                  "name": "children",
-                  "type": "any"
-                }
-              ],
-              "isSpread": false
-            },
+                ],
+                "isSpread": false
+              }
+            ],
             "returnType": {
-              "__schema": "TypeRefSchema",
+              "__schema": "InferenceTypeSchema",
               "location": {
                 "filePath": "button.composition.tsx",
                 "line": 14,
                 "character": 1
               },
-              "name": "",
-              "packageName": "react"
+              "type": "any"
             },
             "modifiers": [
               "export"
@@ -652,7 +655,8 @@
           },
           "type": "\"HiThere\""
         },
-        "isOptional": false
+        "isOptional": false,
+        "defaultValue": "'HiThere'"
       },
       {
         "__schema": "FunctionLikeSchema",
@@ -685,16 +689,16 @@
         "signature": "const Array: string[]",
         "name": "Array",
         "type": {
-          "__schema": "TypeRefSchema",
+          "__schema": "InferenceTypeSchema",
           "location": {
             "filePath": "index.ts",
             "line": 32,
             "character": 14
           },
-          "name": "string[]",
-          "packageName": ""
+          "type": "string[]"
         },
-        "isOptional": false
+        "isOptional": false,
+        "defaultValue": "['hi', 'there']"
       },
       {
         "__schema": "ClassSchema",
@@ -724,7 +728,8 @@
               },
               "type": "string"
             },
-            "isOptional": false
+            "isOptional": false,
+            "defaultValue": "''"
           },
           {
             "__schema": "ConstructorSchema",
@@ -998,7 +1003,8 @@
             "internalFilePath": "index.ts"
           }
         },
-        "isOptional": false
+        "isOptional": false,
+        "defaultValue": "{ a: 5, b: 9 }"
       },
       {
         "__schema": "TypeSchema",
@@ -1127,34 +1133,14 @@
                   "name": "Function"
                 },
                 {
-                  "__schema": "TypeRefSchema",
+                  "__schema": "InferenceTypeSchema",
                   "location": {
                     "filePath": "index.ts",
                     "line": 71,
                     "character": 53
                   },
                   "name": "Record",
-                  "packageName": "",
-                  "typeArgs": [
-                    {
-                      "__schema": "KeywordTypeSchema",
-                      "location": {
-                        "filePath": "index.ts",
-                        "line": 71,
-                        "character": 60
-                      },
-                      "name": "string"
-                    },
-                    {
-                      "__schema": "KeywordTypeSchema",
-                      "location": {
-                        "filePath": "index.ts",
-                        "line": 71,
-                        "character": 68
-                      },
-                      "name": "any"
-                    }
-                  ]
+                  "type": "{ [P in K]: T; }"
                 }
               ]
             },
@@ -1226,25 +1212,14 @@
         "name": "getPromise",
         "params": [],
         "returnType": {
-          "__schema": "TypeRefSchema",
+          "__schema": "InferenceTypeSchema",
           "location": {
             "filePath": "index.ts",
             "line": 79,
             "character": 37
           },
           "name": "Promise",
-          "packageName": "",
-          "typeArgs": [
-            {
-              "__schema": "KeywordTypeSchema",
-              "location": {
-                "filePath": "index.ts",
-                "line": 79,
-                "character": 45
-              },
-              "name": "string"
-            }
-          ]
+          "type": ""
         },
         "modifiers": [
           "export",
@@ -1946,7 +1921,8 @@
           },
           "type": "<T>(a: T) => void"
         },
-        "isOptional": false
+        "isOptional": false,
+        "defaultValue": "genericFunction<string>('')"
       }
     ],
     "internals": [
@@ -1991,7 +1967,8 @@
               },
               "type": "string"
             },
-            "isOptional": false
+            "isOptional": false,
+            "defaultValue": "''"
           },
           {
             "__schema": "ConstructorSchema",
@@ -2135,7 +2112,8 @@
               },
               "type": "{\n    a: number;\n    b: number;\n}"
             },
-            "isOptional": false
+            "isOptional": false,
+            "defaultValue": "{ a: 1, b: 2 }"
           }
         ],
         "internals": []
@@ -2318,7 +2296,8 @@
               },
               "type": "\"str\""
             },
-            "isOptional": false
+            "isOptional": false,
+            "defaultValue": "'str'"
           }
         ],
         "internals": []
