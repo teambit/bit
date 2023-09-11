@@ -633,6 +633,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/install"
     },
+    "instructions/exporting-components": {
+        "scope": "teambit.component",
+        "version": "0.0.6",
+        "mainFile": "index.ts",
+        "rootDir": "components/instructions/exporting-components"
+    },
     "ipc-events": {
         "scope": "teambit.harmony",
         "version": "0.0.46",
