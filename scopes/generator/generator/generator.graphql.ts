@@ -1,6 +1,9 @@
 import { Schema } from '@teambit/graphql';
 import gql from 'graphql-tag';
 import { GeneratorMain } from './generator.main.runtime';
+import { CreateOptions } from './create.cmd';
+
+export type CreateQueryOptions = CreateOptions & { templateName: string };
 
 export function generatorSchema(generator: GeneratorMain): Schema {
   return {
@@ -37,15 +40,8 @@ export function generatorSchema(generator: GeneratorMain): Schema {
     `,
     resolvers: {
       Mutation: {
-        createComponent: async (
-          req: any,
-          {
-            name,
-            templateName,
-            ...options
-          }: { name: string; templateName: string; scope?: string; namespace?: string; aspect?: string }
-        ) => {
-          const res = await generator.generateComponentTemplate([name], templateName, options);
+        createComponent: async (req: any, { name, templateName, ...options }: CreateQueryOptions) => {
+          const res = await generator.generateComponentTemplate([name], templateName, { name, ...options });
           return res.map((component) => ({
             id: component.id.toString(),
             dir: component.dir,

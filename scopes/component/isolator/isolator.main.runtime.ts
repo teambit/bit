@@ -22,6 +22,7 @@ import {
   ComponentDependency,
   KEY_NAME_BY_LIFECYCLE_TYPE,
   PackageManagerInstallOptions,
+  NodeLinker,
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain, LongProcessLogger } from '@teambit/logger';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
@@ -199,6 +200,11 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * Use specific package manager for the isolation process (override the package manager from the dep resolver config)
    */
   packageManager?: string;
+
+  /**
+   * Use specific node linker for the isolation process (override the package manager from the dep resolver config)
+   */
+  nodeLinker?: NodeLinker;
 
   /**
    * Dir where to read the package manager config from
@@ -568,6 +574,7 @@ export class IsolatorMain {
               cachePackagesOnCapsulesRoot,
               linkedDependencies,
               packageManager: opts.packageManager,
+              nodeLinker: opts.nodeLinker,
             });
           })
         );
@@ -651,6 +658,7 @@ export class IsolatorMain {
       cachePackagesOnCapsulesRoot?: boolean;
       linkedDependencies?: Record<string, Record<string, string>>;
       packageManager?: string;
+      nodeLinker?: NodeLinker;
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({
@@ -658,6 +666,7 @@ export class IsolatorMain {
       cacheRootDirectory: opts.cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
       installingContext: { inCapsule: true },
       packageManager: opts.packageManager,
+      nodeLinker: opts.nodeLinker,
     });
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace

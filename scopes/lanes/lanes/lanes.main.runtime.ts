@@ -356,14 +356,21 @@ if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-
     return { laneId };
   }
 
-  async changeScope(laneName: string, remoteScope: string): Promise<{ remoteScopeBefore: string }> {
+  async changeScope(remoteScope: string, laneName?: string): Promise<{ remoteScopeBefore: string; localName: string }> {
     if (!this.workspace) {
       throw new BitError(`unable to change-scope of a lane outside of Bit workspace`);
     }
-    const laneNameWithoutScope = laneName.includes(LANE_REMOTE_DELIMITER)
-      ? laneName.split(LANE_REMOTE_DELIMITER)[1]
-      : laneName;
-    const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(laneName);
+    let laneId: LaneId;
+    let laneNameWithoutScope: string;
+    if (laneName) {
+      laneNameWithoutScope = laneName.includes(LANE_REMOTE_DELIMITER)
+        ? laneName.split(LANE_REMOTE_DELIMITER)[1]
+        : laneName;
+      laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(laneName);
+    } else {
+      laneId = this.workspace.getCurrentLaneId();
+      laneNameWithoutScope = laneId.name;
+    }
     const lane = await this.loadLane(laneId);
     if (!lane) {
       throw new BitError(`unable to find a local lane "${laneName}"`);
@@ -388,17 +395,21 @@ please create a new lane instead, which will include all components of this lane
     this.workspace.consumer.bitMap.setCurrentLane(newLaneId, false);
     await this.workspace.consumer.onDestroy();
 
-    return { remoteScopeBefore };
+    return { remoteScopeBefore, localName: laneNameWithoutScope };
   }
 
   /**
    * change a lane-name and if possible, export the lane to the remote
    */
-  async rename(currentName: string, newName: string): Promise<{ exported: boolean; exportErr?: Error }> {
+  async rename(
+    newName: string,
+    laneName?: string
+  ): Promise<{ exported: boolean; exportErr?: Error; currentName: string }> {
     if (!this.workspace) {
       throw new BitError(`unable to rename a lane outside of Bit workspace`);
     }
     throwForInvalidLaneName(newName);
+    const currentName = laneName || this.workspace.getCurrentLaneId().name;
     const existingAliasWithNewName = this.scope.legacyScope.lanes.getRemoteTrackedDataByLocalLane(newName);
     if (existingAliasWithNewName) {
       const remoteIdStr = `${existingAliasWithNewName.remoteLane}/${existingAliasWithNewName.remoteScope}`;
@@ -452,7 +463,7 @@ please create a new lane instead, which will include all components of this lane
 
     await this.workspace.consumer.onDestroy();
 
-    return { exported, exportErr };
+    return { exported, exportErr, currentName };
   }
 
   async exportLane(lane: Lane) {

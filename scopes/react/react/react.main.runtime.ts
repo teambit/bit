@@ -34,7 +34,7 @@ import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
-import { componentTemplates, workspaceTemplates } from './react.templates';
+import { componentTemplates } from './react.templates';
 import { ReactAppOptions } from './apps/web/react-app-options';
 import { ReactAPITransformer, ReactSchema } from '.';
 // import { ReactAPITransformer } from './react.api.transformer';
@@ -459,7 +459,6 @@ export class ReactMain {
     envs.registerEnv(reactEnv);
     if (generator) {
       generator.registerComponentTemplate(componentTemplates);
-      generator.registerWorkspaceTemplate(workspaceTemplates);
     }
 
     if (application) application.registerAppType(appType);

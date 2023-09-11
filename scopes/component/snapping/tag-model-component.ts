@@ -306,6 +306,7 @@ export async function tagModelComponent({
 
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId, copyLogFromPreviousSnap);
   // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
+  // (it's being deleted in snapping.main.runtime - `_addCompToObjects` method)
   const unmergedComps = workspace ? await workspace.listComponentsDuringMerge() : [];
   let stagedConfig;
   if (soft) {
@@ -314,7 +315,7 @@ export async function tagModelComponent({
   } else {
     await snapping._addFlattenedDependenciesToComponents(allComponentsToTag);
     await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
-    emptyBuilderData(allComponentsToTag);
+    if (!build) emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer);
 
@@ -410,7 +411,10 @@ async function removeMergeConfigFromComponents(
       configMergeFile.removeConflict(compId.toStringWithoutVersion());
     }
   });
-  if (configMergeFile.hasConflict()) {
+  const currentlyUnmerged = workspace ? await workspace.listComponentsDuringMerge() : [];
+  if (configMergeFile.hasConflict() && currentlyUnmerged.length) {
+    // it's possible that "workspace" section is still there. but if all "unmerged" are now merged,
+    // then, it's safe to delete the file.
     await configMergeFile.write();
   } else {
     await configMergeFile.delete();
@@ -441,6 +445,10 @@ async function addComponentsToScope(
   }
 }
 
+/**
+ * otherwise, tagging without build will have the old build data of the previous snap/tag.
+ * in case we currently build, it's ok to leave the data as is, because it'll be overridden anyway.
+ */
 function emptyBuilderData(components: ConsumerComponent[]) {
   components.forEach((component) => {
     component.extensions = component.extensions.clone();

@@ -311,10 +311,17 @@ export class InstallMain {
         },
         pmInstallOptions
       );
+      let cacheCleared = false;
       if (options?.compile ?? true) {
         const compileStartTime = process.hrtime();
         const compileOutputMessage = `compiling components`;
         this.logger.setStatusLine(compileOutputMessage);
+        // We need to clear cache before compiling the components or it might compile them with the default env
+        // incorrectly in case the env was not loaded correctly before the install
+        this.workspace.consumer.componentLoader.clearComponentsCache();
+        // We don't want to clear the failed to load envs because we want to show the warning at the end
+        await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+        cacheCleared = true;
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
@@ -324,10 +331,14 @@ export class InstallMain {
       const oldNonLoadedEnvs = this.getOldNonLoadedEnvs();
       if (!oldNonLoadedEnvs.length) break;
       prevManifests.add(manifestsHash(current.manifests));
-      // We need to clear cache before creating the new component manifests.
-      this.workspace.consumer.componentLoader.clearComponentsCache();
-      // We don't want to clear the failed to load envs because we want to show the warning at the end
-      await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+      // If we run compile we do the clear cache before the compilation so no need to clean it again (it's an expensive
+      // operation)
+      if (!cacheCleared) {
+        // We need to clear cache before creating the new component manifests.
+        this.workspace.consumer.componentLoader.clearComponentsCache();
+        // We don't want to clear the failed to load envs because we want to show the warning at the end
+        await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+      }
       current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
@@ -503,7 +514,7 @@ export class InstallMain {
       await Promise.all(
         envs.map(async (envId) => {
           return [
-            getRootComponentDir(this.workspace.path, envId.toString()),
+            await this.getRootComponentDirByRootId(this.workspace.path, envId),
             {
               dependencies: {
                 ...(await this._getEnvDependencies(envId)),
@@ -565,7 +576,7 @@ export class InstallMain {
             if (!appManifest) return null;
             const envId = await this.envs.calculateEnvId(app);
             return [
-              getRootComponentDir(this.workspace.path, app.id.toString()),
+              await this.getRootComponentDirByRootId(this.workspace.path, app.id),
               {
                 ...omit(appManifest, ['name', 'version']),
                 dependencies: {
@@ -759,16 +770,26 @@ export class InstallMain {
 
   private async _linkAllComponentsToBitRoots(compDirMap: ComponentMap<string>) {
     const envs = await this._getAllUsedEnvIds();
-    const apps = (await this.app.listAppsComponents()).map((component) => component.id.toString());
+    const apps = (await this.app.listAppsComponents()).map((component) => component.id);
     await Promise.all(
       [...envs, ...apps].map(async (id) => {
-        await fs.mkdirp(getRootComponentDir(this.workspace.path, id.toString()));
+        const dir = await this.getRootComponentDirByRootId(this.workspace.path, id);
+        await fs.mkdirp(dir);
       })
     );
     await linkPkgsToBitRoots(
       this.workspace.path,
       compDirMap.components.map((component) => this.dependencyResolver.getPackageName(component))
     );
+  }
+
+  private async getRootComponentDirByRootId(workspacePath: string, rootComponentId: ComponentID): Promise<string> {
+    // Root directories for local envs and apps are created without their version number.
+    // This is done in order to avoid changes to the lockfile after such components are tagged.
+    const id = (await this.workspace.hasId(rootComponentId))
+      ? rootComponentId.toStringWithoutVersion()
+      : rootComponentId.toString();
+    return getRootComponentDir(workspacePath, id);
   }
 
   /**
