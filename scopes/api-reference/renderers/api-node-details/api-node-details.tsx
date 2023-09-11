@@ -1,5 +1,4 @@
 import React, { useState, useRef, useCallback } from 'react';
-import * as _ from 'lodash';
 import { H6 } from '@teambit/documenter.ui.heading';
 import { CodeEditor } from '@teambit/code.ui.code-editor';
 import { useLocation } from '@teambit/base-react.navigation.link';
