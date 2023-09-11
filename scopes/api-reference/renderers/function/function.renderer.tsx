@@ -91,8 +91,12 @@ function FunctionComponent(props: APINodeRenderProps) {
           </div>
         </div>
       )}
-      <div className={styles.title}>Parameters</div>
-      <div className={styles.containerList}>{...Params}</div>
+      {Params.length > 0 && (
+        <React.Fragment key={`parameter-list`}>
+          <div className={styles.title}>Parameters</div>
+          <div className={styles.containerList}>{...Params}</div>
+        </React.Fragment>
+      )}
       <div className={styles.container}>
         <div className={styles.title}>Returns</div>
         {returnDocComment && <div className={styles.docComment}>{returnDocComment}</div>}

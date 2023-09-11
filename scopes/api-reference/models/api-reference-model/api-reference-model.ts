@@ -1,4 +1,4 @@
-import { APISchema, SchemaNode, TypeSchema } from '@teambit/semantics.entities.semantic-schema';
+import { APISchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 
