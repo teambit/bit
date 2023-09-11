@@ -16,7 +16,8 @@ export default function getLatestVersionNumber(bitIds: BitIds, bitId: BitId): Bi
   // otherwise we will have problems finding the version from the bitmap after we export the component
   // because we tag with a name without scope but the bitmap contain it with the scope name since it was exported
   // without this, we will always just return the first component in the bitmap which is really bad
-  const ignoreScope = !bitId.hasScope();
+  // const ignoreScope = !bitId.hasScope();
+  const ignoreScope = false;
 
   const similarIds = ignoreScope ? bitIds.filterWithoutScopeAndVersion(bitId) : bitIds.filterWithoutVersion(bitId);
   const allVersionsForId = similarIds.filter((id) => id.hasVersion() && !id.isVersionSnap()).map((id) => id.version);

@@ -1115,7 +1115,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
-    const bitMapId = this.consumer.bitMap.getExistingBitId(name);
+    const bitMapId = this.consumer.bitMap.getExistingBitId(name, false);
     const bitMapEntry = bitMapId ? this.consumer.bitMap.getComponent(bitMapId) : undefined;
     if (bitMapEntry && bitMapEntry.defaultScope) {
       return bitMapEntry.defaultScope;

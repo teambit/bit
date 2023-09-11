@@ -203,7 +203,7 @@ export class ComponentWriterMain {
       };
     };
     return {
-      consumer: this.consumer,
+      workspace: this.workspace,
       bitMap: this.consumer.bitMap,
       component,
       writeToPath: componentRootDir,

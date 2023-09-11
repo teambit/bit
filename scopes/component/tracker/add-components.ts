@@ -265,7 +265,7 @@ export default class AddComponents {
 
     const { componentId, trackDir } = component;
     const mainFile = determineMainFile(component, foundComponentFromBitMap);
-    const getRootDir = (): PathLinuxRelative | undefined => {
+    const getRootDir = (): PathLinuxRelative => {
       if (this.trackDirFeature) throw new Error('track dir should not calculate the rootDir');
       if (foundComponentFromBitMap) return foundComponentFromBitMap.rootDir;
       if (!trackDir) throw new Error(`addOrUpdateComponentInBitMap expect to have trackDir for non-legacy workspace`);
@@ -279,24 +279,30 @@ export default class AddComponents {
       }
       return pathNormalizeToLinux(trackDir);
     };
-    const getComponentMap = (): ComponentMap => {
+    const getComponentMap = async (): Promise<ComponentMap> => {
       if (this.trackDirFeature) {
         return this.bitMap.addFilesToComponent({ componentId, files: component.files });
       }
       const rootDir = getRootDir();
+      const defaultScope =
+        this.defaultScope ||
+        (await this.workspace.componentDefaultScopeFromComponentDirAndName(
+          rootDir,
+          componentId.toStringWithoutScopeAndVersion()
+        ));
       const componentMap = this.bitMap.addComponent({
         componentId,
         files: component.files,
-        defaultScope: this.defaultScope,
+        defaultScope,
         config: this.config,
         mainFile,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         override: this.override,
       });
-      if (rootDir) componentMap.changeRootDirAndUpdateFilesAccordingly(rootDir);
+      componentMap.changeRootDirAndUpdateFilesAccordingly(rootDir);
       return componentMap;
     };
-    const componentMap = getComponentMap();
+    const componentMap = await getComponentMap();
     return { id: componentId, files: componentMap.files };
   }
 

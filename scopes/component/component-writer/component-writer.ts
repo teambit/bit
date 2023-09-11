@@ -14,6 +14,7 @@ import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-p
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { isHash } from '@teambit/component-version';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { Workspace } from '@teambit/workspace';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -22,7 +23,7 @@ export type ComponentWriterProps = {
   writePackageJson?: boolean;
   override?: boolean;
   isolated?: boolean;
-  consumer: Consumer | undefined;
+  workspace: Workspace;
   scope?: Scope | undefined;
   bitMap: BitMap;
   ignoreBitDependencies?: boolean | BitIds;
@@ -39,6 +40,7 @@ export default class ComponentWriter {
   override: boolean; // default to true
   isolated?: boolean;
   consumer: Consumer | undefined; // when using capsule, the consumer is not defined
+  workspace: Workspace;
   scope?: Scope | undefined;
   bitMap: BitMap;
   ignoreBitDependencies: boolean | BitIds;
@@ -53,8 +55,8 @@ export default class ComponentWriter {
     writePackageJson = true,
     override = true,
     isolated = false,
-    consumer,
-    scope = consumer?.scope,
+    workspace,
+    scope = workspace.consumer?.scope,
     bitMap,
     ignoreBitDependencies = true,
     deleteBitDirContent,
@@ -67,7 +69,8 @@ export default class ComponentWriter {
     this.writePackageJson = writePackageJson;
     this.override = override;
     this.isolated = isolated;
-    this.consumer = consumer;
+    this.workspace = workspace;
+    this.consumer = workspace.consumer;
     this.scope = scope;
     this.bitMap = bitMap;
     this.ignoreBitDependencies = ignoreBitDependencies;
@@ -137,7 +140,7 @@ export default class ComponentWriter {
     }
   }
 
-  async addComponentToBitMap(rootDir: string | undefined): Promise<ComponentMap> {
+  async addComponentToBitMap(rootDir: string): Promise<ComponentMap> {
     if (rootDir === '.') {
       throw new Error('addComponentToBitMap: rootDir cannot be "."');
     }
@@ -145,9 +148,14 @@ export default class ComponentWriter {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
 
+    const componentId = await this.replaceSnapWithTagIfNeeded();
     return this.bitMap.addComponent({
       componentId: await this.replaceSnapWithTagIfNeeded(),
       files: filesForBitMap,
+      defaultScope: await this.workspace.componentDefaultScopeFromComponentDirAndName(
+        rootDir,
+        componentId.toStringWithoutScopeAndVersion()
+      ),
       mainFile: pathNormalizeToLinux(this.component.mainFile),
       rootDir,
     });
