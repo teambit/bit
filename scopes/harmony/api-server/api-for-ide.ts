@@ -9,7 +9,7 @@ import { InstallMain } from '@teambit/install';
 import { ExportMain } from '@teambit/export';
 import { CheckoutMain } from '@teambit/checkout';
 import { ApplyVersionResults } from '@teambit/merging';
-import { ComponentLogMain } from '@teambit/component-log';
+import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -113,6 +113,16 @@ export class APIForIDE {
     return results;
   }
 
+  async changedFilesFromParent(id: string): Promise<FileHashDiffFromParent[]> {
+    const results = await this.componentLog.getChangedFilesFromParent(id);
+    return results;
+  }
+
+  async setDefaultScope(scopeName: string) {
+    await this.workspace.setDefaultScope(scopeName);
+    return scopeName;
+  }
+
   async getCompFilesDirPathFromLastSnapUsingCompFiles(
     compFiles: CompFiles
   ): Promise<{ [relativePath: string]: string }> {
@@ -196,6 +206,12 @@ export class APIForIDE {
     );
 
     return results;
+  }
+
+  async getFilesStatus(id: string): Promise<FilesStatus> {
+    const componentId = await this.workspace.resolveComponentId(id);
+    const compFiles = await this.workspace.getFilesModification(componentId);
+    return compFiles.getFilesStatus();
   }
 
   async getCompFilesDirPathFromLastSnapForAllComps(): Promise<{ [relativePath: string]: string }> {

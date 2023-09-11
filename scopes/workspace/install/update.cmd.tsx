@@ -20,7 +20,7 @@ export default class UpdateCmd implements Command {
     {
       name: 'package-patterns...',
       description:
-        'a string list of package names, or patterns (separated by space), e.g. "@teambit/** @my-org/ui/**". The patterns should be in glob format. By default, all packages are selected.',
+        'a string list of package names, or patterns (separated by spaces or commas), e.g. "@teambit/**,@my-org/ui/**". The patterns should be in glob format. By default, all packages are selected.',
     },
   ];
   options = [
@@ -47,9 +47,17 @@ export default class UpdateCmd implements Command {
     }
     await this.install.updateDependencies({
       all: options.yes === true,
-      patterns,
+      patterns: splitPatterns(patterns),
       forceVersionBump,
     });
     return '';
   }
+}
+
+function splitPatterns(patterns: string[]): string[] {
+  const splittedPatterns: string[] = [];
+  for (const pattern of patterns) {
+    splittedPatterns.push(...pattern.split(/[, ]/));
+  }
+  return splittedPatterns;
 }

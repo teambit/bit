@@ -315,7 +315,7 @@ export async function tagModelComponent({
   } else {
     await snapping._addFlattenedDependenciesToComponents(allComponentsToTag);
     await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
-    emptyBuilderData(allComponentsToTag);
+    if (!build) emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer);
 
@@ -445,6 +445,10 @@ async function addComponentsToScope(
   }
 }
 
+/**
+ * otherwise, tagging without build will have the old build data of the previous snap/tag.
+ * in case we currently build, it's ok to leave the data as is, because it'll be overridden anyway.
+ */
 function emptyBuilderData(components: ConsumerComponent[]) {
   components.forEach((component) => {
     component.extensions = component.extensions.clone();
