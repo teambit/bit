@@ -76,7 +76,6 @@ async function createStoreController(
     networkConcurrency: options.networkConfig.networkConcurrency,
     packageImportMethod: options.packageImportMethod,
     preferOffline: options.preferOffline,
-    relinkLocalDirDeps: false,
     resolveSymlinksInInjectedDirs: true,
     pnpmHomeDir: options.pnpmHomeDir,
   };
@@ -278,6 +277,7 @@ export async function install(
       ...options?.peerDependencyRules,
     },
     depth: options.updateAll ? Infinity : 0,
+    disableRelinkLocalDirDeps: true,
   };
 
   let stopReporting: Function | undefined;
@@ -382,7 +382,7 @@ async function linkManifestsToInjectedDeps({
             try {
               await fs.link(pkgJsonPath, path.join(targetDir, 'package.json'));
             } catch (err: any) {
-              if (err.code !== 'EEXIST') throw err;
+              if (err.code !== 'EEXIST' && err.code !== 'ENOENT') throw err;
             }
           })
         );
