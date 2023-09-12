@@ -6,26 +6,30 @@ import { BuildStatus } from '@teambit/legacy/dist/constants';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import { SignMain } from './sign.main.runtime';
 
-type SignOptions = { multiple: boolean; alwaysSucceed: boolean; push: boolean; lane?: string; rebuild?: boolean };
+type SignOptions = { alwaysSucceed: boolean; push: boolean; lane?: string; rebuild?: boolean; originalScope?: boolean };
 export class SignCmd implements Command {
   name = 'sign [component...]';
   private = true;
   description = 'complete the build process for components';
-  extendedDescription = `without --multiple, this will be running on the original scope.
-with --multiple, a new bare-scope needs to be created and it will import the components to this scope first`;
+  extendedDescription = `a new bare-scope needs to be created and it will import the components to this scope first`;
   alias = '';
   group = 'development';
   options = [
-    ['', 'multiple', 'sign components from multiple scopes'],
+    ['', 'multiple', 'DEPRECATED. this is now the default. sign components from multiple scopes'],
     ['', 'always-succeed', 'exit with code 0 even though the build failed'],
     ['', 'push', 'export the updated objects to the original scopes once done'],
     ['', 'lane <lane-id>', 'helps to fetch the components from the lane scope (relevant for --multiple)'],
     ['', 'rebuild', 'allow signing components whose buildStatus is successful for testing purposes'],
+    [
+      '',
+      'original-scope',
+      'sign components from the original scope. works only when all components are from the same scope',
+    ],
   ] as CommandOptions;
 
   constructor(private signMain: SignMain, private logger: Logger) {}
 
-  async report([components = []]: [string[]], { multiple, alwaysSucceed, push, lane, rebuild }: SignOptions) {
+  async report([components = []]: [string[]], { alwaysSucceed, push, lane, rebuild, originalScope }: SignOptions) {
     const harmonyVersion = getHarmonyVersion();
     this.logger.console(`signing using ${harmonyVersion} version`); // eslint-disable-line no-console
     const componentIds = components.map((c) => ComponentID.fromString(c));
@@ -33,7 +37,7 @@ with --multiple, a new bare-scope needs to be created and it will import the com
     if (push && rebuild) {
       throw new Error('you can not use --push and --rebuild together');
     }
-    const results = await this.signMain.sign(componentIds, multiple, push, lane, rebuild);
+    const results = await this.signMain.sign(componentIds, originalScope, push, lane, rebuild);
     if (!results) {
       return chalk.bold('no more components left to sign');
     }
