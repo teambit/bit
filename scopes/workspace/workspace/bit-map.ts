@@ -35,7 +35,7 @@ export class BitMap {
     shouldMergeConfig = false
   ): boolean {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     const currentConfig = (bitMapEntry.config ||= {})[aspectId];
     if (isEqual(currentConfig, config)) {
       return false; // no changes
@@ -66,7 +66,7 @@ export class BitMap {
 
   removeComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist: boolean): boolean {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     const currentConfig = (bitMapEntry.config ||= {})[aspectId];
     if (currentConfig) {
       delete bitMapEntry.config[aspectId];
@@ -83,7 +83,7 @@ export class BitMap {
   }
 
   removeEntireConfig(id: ComponentID): boolean {
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     if (!bitMapEntry.config) return false;
     delete bitMapEntry.config;
     this.legacyBitMap.markAsChanged();
@@ -91,13 +91,13 @@ export class BitMap {
   }
 
   setEntireConfig(id: ComponentID, config: Record<string, any>) {
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     bitMapEntry.config = config;
     this.legacyBitMap.markAsChanged();
   }
 
   removeDefaultScope(id: ComponentID) {
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     if (bitMapEntry.defaultScope) {
       delete bitMapEntry.defaultScope;
       this.legacyBitMap.markAsChanged();
@@ -105,7 +105,7 @@ export class BitMap {
   }
 
   setDefaultScope(id: ComponentID, defaultScope: string) {
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     bitMapEntry.defaultScope = defaultScope;
     this.legacyBitMap.markAsChanged();
   }

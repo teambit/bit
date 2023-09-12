@@ -64,4 +64,19 @@ describe('two components with the same name but different scope-name', function 
       expect(status.newComponents[0]).to.equal(`${helper.scopes.remote}/bar/foo`);
     });
   });
+  // @todo: support this case.
+  describe.skip('creating two new components with the same name in the same workspace', () => {
+    let anotherScopeName: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherScopeName = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.fs.outputFile('scope1/comp1/index.ts');
+      helper.fs.outputFile('scope2/comp1/index.ts');
+      helper.command.addComponent('scope1/comp1', '--id comp1');
+      helper.command.addComponent('scope2/comp1', `--id comp1 --scope ${anotherScopeName}`);
+    });
+    it('should work', () => {});
+  });
 });
