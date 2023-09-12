@@ -96,6 +96,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
     },
 
     devServer: {
+      open: true,
       allowedHosts: 'all',
 
       static: [
