@@ -896,6 +896,8 @@ export class InstallMain {
     const logger = loggerExt.createLogger(InstallAspect.id);
     ipcEvents.registerGotEventSlot(async (eventName) => {
       if (eventName !== 'onPostInstall') return;
+      logger.debug('got onPostInstall event, clear workspace and all components cache');
+      await workspace.clearCache();
       workspace.clearAllComponentsCache();
       await pMapSeries(postInstallSlot.values(), (fn) => fn());
     });
