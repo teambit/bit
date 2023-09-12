@@ -162,7 +162,7 @@ export function checkoutOutput(checkoutResults: ApplyVersionResults, checkoutPro
     const body = realFailedComponents
       .map(
         (failedComponent) =>
-          `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.failureMessage)}`
+          `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.unchangedMessage)}`
       )
       .join('\n');
     return `${chalk.underline(title)}\n${body}\n\n`;
@@ -178,7 +178,7 @@ export function checkoutOutput(checkoutResults: ApplyVersionResults, checkoutPro
     }
     const title = 'checkout was not required for the following component(s)';
     const body = notCheckedOutComponents
-      .map((failedComponent) => `${failedComponent.id.toString()} - ${failedComponent.failureMessage}`)
+      .map((failedComponent) => `${failedComponent.id.toString()} - ${failedComponent.unchangedMessage}`)
       .join('\n');
     return `${chalk.underline(title)}\n${body}\n\n`;
   };
