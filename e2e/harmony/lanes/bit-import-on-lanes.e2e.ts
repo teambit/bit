@@ -83,8 +83,8 @@ describe('bit lane command', function () {
       helper.command.export();
 
       helper.fs.outputFile('bar2/foo2.js', 'console.log("v1");');
-      helper.command.addComponent('bar2');
       helper.bitJsonc.addToVariant('bar2', 'defaultScope', anotherRemote);
+      helper.command.addComponent('bar2');
       helper.command.compile();
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();

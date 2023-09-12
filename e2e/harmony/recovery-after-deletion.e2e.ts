@@ -55,8 +55,8 @@ describe('recovery after component/scope deletion', function () {
         helper.fs.outputFile('comp3/index.js', '');
         helper.command.addComponent('comp1');
         helper.command.addComponent('comp2');
-        helper.command.addComponent('comp3');
         helper.bitJsonc.addToVariant('comp3', 'defaultScope', remote2Name);
+        helper.command.addComponent('comp3');
         helper.command.linkAndCompile();
         helper.command.tagAllComponents();
         helper.command.export();
@@ -127,9 +127,9 @@ describe('recovery after component/scope deletion', function () {
                 `${helper.scopes.remote}/comp2@0.0.1`,
               ]);
               helper.fs.outputFile('comp-new/index.js', `require('@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1');`);
-              helper.command.addComponent('comp-new');
               compNewRemote = helper.scopeHelper.getNewBareScope('-remote3', true);
               helper.bitJsonc.addToVariant('comp-new', 'defaultScope', compNewRemote.scopeName);
+              helper.command.addComponent('comp-new');
               helper.command.tagAllComponents();
               helper.scopeHelper.addRemoteScope(compNewRemote.scopePath);
               helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, compNewRemote.scopePath);
@@ -361,8 +361,8 @@ describe('recovery after component/scope deletion', function () {
             `${helper.scopes.remote}/comp2@0.0.1`,
           ]);
           helper.fs.outputFile('comp3/index.js', '');
-          helper.command.addComponent('comp3');
           helper.bitJsonc.addToVariant('comp3', 'defaultScope', remote2Name);
+          helper.command.addComponent('comp3');
           helper.command.tagAllComponents('', '0.0.2');
           helper.command.export();
           helper.scopeHelper.reInitLocalScope();
@@ -561,8 +561,8 @@ describe('recovery after component/scope deletion', function () {
           helper.bitJsonc.disablePreview();
           helper.scopeHelper.addRemoteScope(remote2Path);
           helper.fs.outputFile('comp3/index.js', '');
-          helper.command.addComponent('comp3');
           helper.bitJsonc.addToVariant('comp3', 'defaultScope', remote2Name);
+          helper.command.addComponent('comp3');
           helper.command.snapAllComponentsWithoutBuild();
 
           helper.command.export();

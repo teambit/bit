@@ -660,8 +660,8 @@ describe('bit lane command', function () {
       helper.fs.outputFile('bar1/foo1.js', 'console.log("v1");');
       helper.fs.outputFile('bar2/foo2.js', 'console.log("v1");');
       helper.command.addComponent('bar1');
-      helper.command.addComponent('bar2');
       helper.bitJsonc.addToVariant('bar2', 'defaultScope', anotherRemote);
+      helper.command.addComponent('bar2');
       helper.command.linkAndRewire();
       helper.command.compile();
       helper.command.tagAllComponents();
