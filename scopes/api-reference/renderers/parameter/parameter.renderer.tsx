@@ -23,9 +23,12 @@ function ParameterComponent(props: APINodeRenderProps) {
   const paramNode = api as ParameterSchema;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { name, isOptional, doc, type, defaultValue, objectBindingNodes } = paramNode;
+  const { name, isOptional, doc, type, defaultValue, objectBindingNodes, location } = paramNode;
   const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
-  const typeRef = type.name ? apiRefModel.apiByName.get(type.name) : undefined;
+  const typeRef = type.name
+    ? apiRefModel.apiByName.get(type.name) ||
+      apiRefModel.apiByName.get(apiRefModel.generateInternalAPIKey(type.location.filePath, type.name))
+    : undefined;
   const headings = ['name', 'type', 'default', 'description'];
 
   const ObjectBindingNodeComponent =

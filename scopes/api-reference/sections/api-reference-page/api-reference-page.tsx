@@ -35,18 +35,21 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
   const selectedAPIFromUrl = useAPIRefParam('selectedAPI');
+
   React.useEffect(() => {
     window.scrollTo(0, 0);
   }, [selectedAPIFromUrl]);
+
   const apiNodes = (apiModel && flatten(Array.from(apiModel.apiByType.values())).sort(sortAPINodes)) || [];
 
   const isEmpty = apiNodes.length === 0;
 
   const apiTree: string[] = useMemo(() => {
     return apiNodes.map((apiNode) => {
+      if (!apiNode.exported) return `_Internals/${apiModel?.internalAPIKey(apiNode.api)}`;
       return `${apiNode.renderer?.nodeType}/${apiNode.api.name}`;
     });
-  }, [apiNodes]);
+  }, [apiNodes.length]);
 
   const getIcon = (node: TreeNode) => {
     const nodeType = node.id.split('/')[0];
@@ -54,10 +57,16 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
     return icon;
   };
 
-  const selectedAPINode = (selectedAPIFromUrl && apiModel?.apiByName.get(selectedAPIFromUrl)) || apiNodes[0];
+  const selectedAPINode =
+    (selectedAPIFromUrl &&
+      (apiModel?.apiByName.get(selectedAPIFromUrl) ||
+        apiModel?.apiByName.get(selectedAPIFromUrl.replace('_Internals/', '')))) ||
+    apiNodes[0];
 
   const selectedAPIName =
-    (selectedAPINode && `${selectedAPINode?.renderer?.nodeType}/${selectedAPINode?.api.name}`) || apiTree[0];
+    (selectedAPINode && selectedAPINode.exported
+      ? `${selectedAPINode?.renderer?.nodeType}/${selectedAPINode?.api.name}`
+      : selectedAPINode && `_Internals/${apiModel?.internalAPIKey(selectedAPINode.api)}`) || apiTree[0];
 
   const SelectedAPIComponent = selectedAPINode && selectedAPINode.renderer.Component;
   // const location = useLocation();
