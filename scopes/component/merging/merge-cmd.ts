@@ -192,9 +192,7 @@ ${mergeSnapError.message}
       return comps
         .map((component) => {
           let componentOutput = `     > ${component.id.toString()}`;
-          const autoTag = autoSnappedResults.filter((result) =>
-            result.triggeredBy.searchWithoutScopeAndVersion(component.id)
-          );
+          const autoTag = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
           if (autoTag.length) {
             const autoTagComp = autoTag.map((a) => a.component.id.toString());
             componentOutput += `\n       ${AUTO_SNAPPED_MSG}: ${autoTagComp.join(', ')}`;

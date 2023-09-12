@@ -130,12 +130,8 @@ async function removeLocal(
   const idsToRemove = force ? bitIds : nonModifiedComponents;
   const componentsList = new ComponentsList(consumer);
   const newComponents = (await componentsList.listNewComponents(false)) as BitIds;
-  const idsToRemoveFromScope = BitIds.fromArray(
-    idsToRemove.filter((id) => !newComponents.hasWithoutScopeAndVersion(id))
-  );
-  const idsToCleanFromWorkspace = BitIds.fromArray(
-    idsToRemove.filter((id) => newComponents.hasWithoutScopeAndVersion(id))
-  );
+  const idsToRemoveFromScope = BitIds.fromArray(idsToRemove.filter((id) => !newComponents.hasWithoutVersion(id)));
+  const idsToCleanFromWorkspace = BitIds.fromArray(idsToRemove.filter((id) => newComponents.hasWithoutVersion(id)));
   const { components: componentsToRemove, invalidComponents } = await consumer.loadComponents(idsToRemove, false);
   const { removedComponentIds, missingComponents, dependentBits, removedFromLane } = await consumer.scope.removeMany(
     idsToRemoveFromScope,
