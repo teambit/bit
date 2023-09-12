@@ -21,6 +21,7 @@ const addComponentParamsFixture = {
   componentId: new BitId({ name: 'is-string' }),
   files: [{ name: 'is-string.js', relativePath: 'is-string.js', test: false }],
   mainFile: 'is-string.js',
+  defaultScope: 'my-scope',
 };
 
 describe('BitMap', function () {
@@ -80,6 +81,7 @@ describe('BitMap', function () {
       const invalidBitMap = {
         'scope/comp1': {
           mainFile: 'index.js',
+          scope: 'scope',
           rootDir: 'comp1',
           exported: true,
         },
