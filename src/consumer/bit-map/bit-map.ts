@@ -747,7 +747,7 @@ export default class BitMap {
   }
 
   removeComponent(bitId: BitId) {
-    const bitmapComponent = this.getBitIdIfExist(bitId, { ignoreScopeAndVersion: true });
+    const bitmapComponent = this.getBitIdIfExist(bitId, { ignoreVersion: true });
     if (bitmapComponent) this._removeFromComponentsArray(bitmapComponent);
     return bitmapComponent;
   }
