@@ -126,8 +126,7 @@ export class AspectsMerger {
       removedExtensionIds.push(...extensions.filter((extData) => extData.isRemoved).map((extData) => extData.stringId));
       const extsWithoutRemoved = extensions.filterRemovedExtensions();
       const selfInMergedExtensions = extsWithoutRemoved.findExtension(
-        componentId._legacy.toStringWithoutScopeAndVersion(),
-        true,
+        componentId._legacy.toStringWithoutVersion(),
         true
       );
       const extsWithoutSelf = selfInMergedExtensions?.extensionId

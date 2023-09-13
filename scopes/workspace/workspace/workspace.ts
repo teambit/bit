@@ -503,7 +503,7 @@ export class Workspace implements ComponentFactory {
     const allIds = this.consumer.bitMap.getAllBitIdsFromAllLanes();
     const availableIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
     if (allIds.length === availableIds.length) return [];
-    const unavailableIds = allIds.filter((id) => !availableIds.hasWithoutScopeAndVersion(id));
+    const unavailableIds = allIds.filter((id) => !availableIds.hasWithoutVersion(id));
     if (!unavailableIds.length) return [];
     const removedIds = this.consumer.bitMap.getRemoved();
     const compsWithHead: BitId[] = [];
@@ -1524,10 +1524,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         return bitId.scope;
       }
       const relativeComponentDir = this.componentDirFromLegacyId(bitId, bitMapOptions, { relative: true });
-      const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
-        relativeComponentDir,
-        bitId.toStringWithoutScopeAndVersion()
-      );
+      const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(relativeComponentDir, bitId.name);
       return defaultScope;
     };
 
