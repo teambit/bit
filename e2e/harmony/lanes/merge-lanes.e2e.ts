@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import { uniq } from 'lodash';
 import { DEFAULT_LANE } from '@teambit/lane-id';
-import { statusWorkspaceIsCleanMsg } from '../../../src/constants';
+import { Extensions, statusWorkspaceIsCleanMsg } from '../../../src/constants';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../../src/fixtures/fixtures';
 
@@ -1549,6 +1549,44 @@ describe('merge lanes', function () {
       });
       it('expect to have all files as unchanged, not updated', () => {
         expect(mergeOutput).to.not.have.string('updated');
+      });
+    });
+  });
+  describe('merging from main when main is ahead so then a snap of an existing tag is in .bitmap', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.mergeLane('lane-a', '-x');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('lane-a', '-x');
+      helper.command.mergeLane('main', '-x');
+    });
+    it('bit status should not show the component as modified', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(0);
+    });
+    it('the dependency should use the tag not the snap', () => {
+      const dep = helper.command.getCompDepsIdsFromData('comp1');
+      expect(dep[0]).to.equal(`${helper.scopes.remote}/comp2@0.0.2`);
+    });
+    describe('snapping the dependent', () => {
+      before(() => {
+        helper.command.snapComponentWithoutBuild('comp1');
+      });
+      it('should save the dependency with tag, not snap', () => {
+        const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
+        expect(comp1.dependencies[0].id.version).to.equal('0.0.2');
+        expect(comp1.flattenedDependencies[0].version).to.equal('0.0.2');
+        const depResolver = comp1.extensions.find((e) => e.name === Extensions.dependencyResolver);
+        const dep = depResolver.data.dependencies.find((d) => d.id.includes('comp2'));
+        expect(dep.version).to.equal('0.0.2');
       });
     });
   });

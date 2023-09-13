@@ -73,7 +73,7 @@ export function Overview({ titleBadges, overviewOptions, previewProps }: Overvie
   );
 
   return (
-    <div className={styles.overviewWrapper}>
+    <div className={styles.overviewWrapper} key={`${component.id.toString()}`}>
       {showHeader && (
         <ComponentOverview
           className={classNames(styles.componentOverviewBlock, !isScaling && styles.legacyPreview)}

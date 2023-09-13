@@ -111,10 +111,13 @@ export class ComponentWriterMain {
     this.fixDirsIfNested(componentWriterInstances);
     // add componentMap entries into .bitmap before starting the process because steps like writing package-json
     // rely on .bitmap to determine whether a dependency exists and what's its origin
-    componentWriterInstances.forEach((componentWriter: ComponentWriter) => {
-      componentWriter.existingComponentMap =
-        componentWriter.existingComponentMap || componentWriter.addComponentToBitMap(componentWriter.writeToPath);
-    });
+    await Promise.all(
+      componentWriterInstances.map(async (componentWriter: ComponentWriter) => {
+        componentWriter.existingComponentMap =
+          componentWriter.existingComponentMap ||
+          (await componentWriter.addComponentToBitMap(componentWriter.writeToPath));
+      })
+    );
     if (opts.resetConfig) {
       componentWriterInstances.forEach((componentWriter: ComponentWriter) => {
         delete componentWriter.existingComponentMap?.config;

@@ -180,6 +180,13 @@ export class Component implements IComponent {
   }
 
   /**
+   * whether a component is marked as deleted.
+   */
+  isDeleted(): boolean {
+    return this.state._consumer.isRemoved();
+  }
+
+  /**
    * is component isOutdated
    */
   isOutdated(): boolean {

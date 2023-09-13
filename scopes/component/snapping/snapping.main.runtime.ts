@@ -183,9 +183,7 @@ export class SnappingMain {
     this.logger.debug(`tagging the following components: ${legacyBitIds.toString()}`);
     const components = await this.loadComponentsForTagOrSnap(legacyBitIds, !soft);
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
-    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
-    await this.throwForComponentIssues(components, ignoreIssues);
-    this.throwForPendingImport(consumerComponents);
+    await this.throwForVariousIssues(components, ignoreIssues);
 
     const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig, removedComponents } =
       await tagModelComponent({
@@ -492,9 +490,7 @@ if you're willing to lose the history from the head to the specified version, us
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     const components = await this.loadComponentsForTagOrSnap(ids);
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
-    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
-    await this.throwForComponentIssues(components, ignoreIssues);
-    this.throwForPendingImport(consumerComponents);
+    await this.throwForVariousIssues(components, ignoreIssues);
 
     const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await tagModelComponent({
       workspace: this.workspace,
@@ -673,6 +669,15 @@ there are matching among unmodified components thought. consider using --unmodif
       await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined, true);
     });
   }
+
+  private async throwForVariousIssues(components: Component[], ignoreIssues?: string) {
+    const componentsToCheck = components.filter((c) => !c.isDeleted());
+    const consumerComponents = componentsToCheck.map((c) => c.state._consumer) as ConsumerComponent[];
+    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
+    await this.throwForComponentIssues(componentsToCheck, ignoreIssues);
+    this.throwForPendingImport(consumerComponents);
+  }
+
   private async throwForDepsFromAnotherLaneForComp(
     component: ConsumerComponent,
     allIds: BitIds,
@@ -938,7 +943,6 @@ another option, in case this dependency is not in main yet is to remove all refe
 
   private throwForPendingImport(components: ConsumerComponent[]) {
     const componentsMissingFromScope = components
-      .filter((c) => !c.isRemoved())
       .filter((c) => !c.componentFromModel && c.id.hasScope())
       .map((c) => c.id.toString());
     if (componentsMissingFromScope.length) {
