@@ -316,8 +316,8 @@ importers:
         specifier: ^0.0.427
         version: 0.0.427
       '@teambit/component.instructions.exporting-components':
-        specifier: 0.0.6
-        version: registry.npmjs.org/@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 0.0.7
+        version: 0.0.7(react-dom@17.0.2)(react@17.0.2)
       '@teambit/defender.eslint-linter':
         specifier: 1.0.1
         version: 1.0.1(@teambit/legacy@node_modules+@teambit+legacy)
@@ -3913,7 +3913,7 @@ importers:
         version: file:scopes/harmony/cache(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/changelog(react-dom@17.0.2)(react@17.0.2)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(react-dom@17.0.2)(react@17.0.2)
@@ -5822,7 +5822,7 @@ importers:
         version: file:scopes/harmony/cache(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/changelog(react-dom@17.0.2)(react@17.0.2)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(react-dom@17.0.2)(react@17.0.2)
@@ -7731,7 +7731,7 @@ importers:
         version: file:scopes/harmony/cache(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/changelog(react-dom@17.0.2)(react@17.0.2)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(react-dom@17.0.2)(react@17.0.2)
@@ -9640,7 +9640,7 @@ importers:
         version: file:scopes/harmony/cache(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/changelog(react-dom@17.0.2)(react@17.0.2)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(react-dom@17.0.2)(react@17.0.2)
@@ -11549,7 +11549,7 @@ importers:
         version: file:scopes/harmony/cache(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/changelog(react-dom@17.0.2)(react@17.0.2)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(react-dom@17.0.2)(react@17.0.2)
@@ -13458,7 +13458,7 @@ importers:
         version: file:scopes/harmony/cache(bluebird@3.7.2)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        version: file:scopes/component/changelog(react-dom@17.0.2)(react@17.0.2)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(react-dom@17.0.2)(react@17.0.2)
@@ -17123,8 +17123,8 @@ importers:
         specifier: 7.20.0
         version: 7.20.0
       '@teambit/component.instructions.exporting-components':
-        specifier: 0.0.6
-        version: registry.npmjs.org/@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+        specifier: 0.0.7
+        version: 0.0.7(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.alert-card':
         specifier: 0.0.26
         version: 0.0.26(react-dom@17.0.2)(react@17.0.2)
@@ -38033,6 +38033,14 @@ packages:
       semver: 7.5.2
     dev: false
 
+  /@teambit/component-version@1.0.0:
+    resolution: {integrity: sha512-JPwjcflyezcqb+YrGfZP1oAID0oZ/uR8bmLhFLtzIgpwV0TdUeetSZ/dkcPWLddFuBJWw4rqM/4GErBUbDpd+g==}
+    engines: {node: '>=12.22.0'}
+    dependencies:
+      '@teambit/bit-error': 0.0.402
+      semver: 7.5.2
+    dev: false
+
   /@teambit/component.content.component-overview@1.95.0(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-9Dbi90Jg9C5Jmy4g7IdouEqSuo8=, tarball: https://node-registry.bit.cloud/tarballs/teambit.component/content/component-overview@1.95.0.tgz}
     peerDependencies:
@@ -38061,19 +38069,17 @@ packages:
       - react-dom
     dev: true
 
-  /@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-ku7UpvjuRW6hu5Uz01g0tBa6hgArnF2WpgotayCe5LL2GBoNs0KTGRPoa16zFVtqmt21eWxIKrZZq4TvL1ZsoQ==}
+  /@teambit/component.instructions.exporting-components@0.0.7(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-KlMurY5P4HPdRQotsPM3Wzw+BfkkCpl2cusVoGnMfWPmhJG/ew4rUrJZWJGVJnfhoORJ0gEPAAE72W5LboXfiQ==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': 0.0.368(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/mdx.ui.mdx-scope-context': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-    transitivePeerDependencies:
-      - '@teambit/legacy'
     dev: false
 
   /@teambit/component.modules.component-url@0.0.124(react-dom@17.0.2)(react@17.0.2):
@@ -40763,7 +40769,7 @@ packages:
     dev: false
 
   /@teambit/html.modules.create-element-from-string@0.0.104:
-    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=, tarball: https://node-registry.bit.cloud/@teambit/html.modules.create-element-from-string/-/@teambit-html.modules.create-element-from-string-0.0.104.tgz}
+    resolution: {integrity: sha1-yk2HNfv5z+0qh75v4SL0qkRNP9U=}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -41151,6 +41157,18 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
+  /@teambit/mdx.ui.mdx-scope-context@1.0.0(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-0iaAXiMh0kzHEi6ufS6qman7QrB+J+6PwpCibAtzbjXaH8FHUX7v6r+eV7BFt8zrtTEiUOFz7g1hax5ZOmUKRw==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
   /@teambit/node.deps-detectors.detective-es6@0.0.1:
     resolution: {integrity: sha1-nwO+/PmFgU12kOXA1FqJvDBnVqM=, tarball: https://node-registry.bit.cloud/@teambit/node.deps-detectors.detective-es6/-/@teambit-node.deps-detectors.detective-es6-0.0.1.tgz}
     dependencies:
@@ -41532,7 +41550,7 @@ packages:
     dev: true
 
   /@teambit/toolbox.string.ellipsis@0.0.181:
-    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.string.ellipsis/-/@teambit-toolbox.string.ellipsis-0.0.181.tgz}
+    resolution: {integrity: sha1-85eglHHFlGiDBGQi9V5m4z9Tr+w=}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -41552,7 +41570,7 @@ packages:
     dev: true
 
   /@teambit/toolbox.types.serializable@0.0.491:
-    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=, tarball: https://node-registry.bit.cloud/@teambit/toolbox.types.serializable/-/@teambit-toolbox.types.serializable-0.0.491.tgz}
+    resolution: {integrity: sha1-VTrj6yH43qYR2efWo5lAnh4dizI=}
     engines: {node: '>=12.22.0'}
     dev: false
 
@@ -41669,7 +41687,7 @@ packages:
     dev: false
 
   /@teambit/ui-foundation.ui.get-icon-from-file-name@0.0.495(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=, tarball: https://node-registry.bit.cloud/@teambit/ui-foundation.ui.get-icon-from-file-name/-/@teambit-ui-foundation.ui.get-icon-from-file-name-0.0.495.tgz}
+    resolution: {integrity: sha1-KzxZCIVyVGbjJHC01V/8RI6cyhY=}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
@@ -64155,7 +64173,7 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  file:scopes/component/changelog(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
+  file:scopes/component/changelog(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: scopes/component/changelog, type: directory}
     id: file:scopes/component/changelog
     name: '@teambit/changelog'
@@ -64164,7 +64182,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
-      '@teambit/component.instructions.exporting-components': 0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/component.instructions.exporting-components': 0.0.7(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.alert-card': 0.0.26(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.separator': 0.0.354(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.heading': 4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -64173,8 +64191,6 @@ packages:
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-    transitivePeerDependencies:
-      - '@teambit/legacy'
     dev: false
 
   file:scopes/component/checkout(react-dom@17.0.2)(react@17.0.2):
@@ -64486,6 +64502,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
+      '@teambit/component-version': 1.0.0
       '@teambit/harmony': 0.4.6
       core-js: 3.13.0
       fs-extra: 10.0.0
@@ -70133,24 +70150,6 @@ packages:
       path-browserify: 1.0.1
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  registry.npmjs.org/@teambit/component.instructions.exporting-components@0.0.6(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-ku7UpvjuRW6hu5Uz01g0tBa6hgArnF2WpgotayCe5LL2GBoNs0KTGRPoa16zFVtqmt21eWxIKrZZq4TvL1ZsoQ==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/component.instructions.exporting-components/-/component.instructions.exporting-components-0.0.6.tgz}
-    id: registry.npmjs.org/@teambit/component.instructions.exporting-components/0.0.6
-    name: '@teambit/component.instructions.exporting-components'
-    version: 0.0.6
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@mdx-js/react': 1.6.22(react@17.0.2)
-      '@teambit/mdx.ui.mdx-scope-context': registry.npmjs.org/@teambit/mdx.ui.mdx-scope-context@0.0.368(@teambit/legacy@node_modules+@teambit+legacy)(react-dom@17.0.2)(react@17.0.2)
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    transitivePeerDependencies:
-      - '@teambit/legacy'
     dev: false
 
   registry.npmjs.org/@teambit/design.theme.icons-font@1.0.0(react-dom@17.0.2)(react@17.0.2):
