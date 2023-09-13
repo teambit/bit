@@ -22,8 +22,8 @@ const plugins = [
   require.resolve('babel-plugin-transform-typescript-metadata'),
   [require.resolve('@babel/plugin-proposal-decorators'), { legacy: true }],
   [require.resolve('@babel/plugin-transform-runtime')],
-  [require.resolve('@babel/plugin-proposal-object-rest-spread')],
-  [require.resolve('@babel/plugin-proposal-class-properties')],
+  [require.resolve('@babel/plugin-transform-object-rest-spread')],
+  [require.resolve('@babel/plugin-transform-class-properties')],
 ];
 
 export const babelConfig = {
