@@ -382,7 +382,7 @@ async function linkManifestsToInjectedDeps({
             try {
               await fs.link(pkgJsonPath, path.join(targetDir, 'package.json'));
             } catch (err: any) {
-              if (err.code !== 'EEXIST' && err.code !== 'ENOENT') throw err;
+              if (err.code !== 'EEXIST') throw err;
             }
           })
         );
