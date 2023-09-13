@@ -110,7 +110,7 @@ export class SchemaMain {
       }
       const schemaExtractor: SchemaExtractor = env.getSchemaExtractor(undefined, tsserverPath, contextPath);
 
-      const result = await schemaExtractor.extract(component, formatter, tsserverPath, contextPath);
+      const result = await schemaExtractor.extract(component, { formatter, tsserverPath, contextPath });
       if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();
 
       return result;
