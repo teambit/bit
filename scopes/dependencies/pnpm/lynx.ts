@@ -76,7 +76,6 @@ async function createStoreController(
     networkConcurrency: options.networkConfig.networkConcurrency,
     packageImportMethod: options.packageImportMethod,
     preferOffline: options.preferOffline,
-    relinkLocalDirDeps: false,
     resolveSymlinksInInjectedDirs: true,
     pnpmHomeDir: options.pnpmHomeDir,
   };
@@ -278,6 +277,7 @@ export async function install(
       ...options?.peerDependencyRules,
     },
     depth: options.updateAll ? Infinity : 0,
+    disableRelinkLocalDirDeps: true,
   };
 
   let stopReporting: Function | undefined;
