@@ -129,7 +129,6 @@ export type ExtensionsOrigin =
   | 'ConfigMerge'
   | 'WorkspaceVariants'
   | 'ComponentJsonFile'
-  | 'WorkspaceDefault'
   | 'FinalAfterMerge';
 
 const DEFAULT_VENDOR_DIR = 'vendor';
@@ -858,10 +857,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
 
   async getExtensionsFromScopeAndSpecific(id: ComponentID): Promise<ExtensionDataList> {
     const componentFromScope = await this.scope.get(id);
-    const { extensions } = await this.componentExtensions(id, componentFromScope, [
-      'WorkspaceDefault',
-      'WorkspaceVariants',
-    ]);
+    const { extensions } = await this.componentExtensions(id, componentFromScope, ['WorkspaceVariants']);
 
     return extensions;
   }

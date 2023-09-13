@@ -44,7 +44,6 @@ export class AspectsMerger {
     // TODO: consider caching this result
     let configFileExtensions: ExtensionDataList | undefined;
     let variantsExtensions: ExtensionDataList | undefined;
-    let wsDefaultExtensions: ExtensionDataList | undefined;
     const mergeFromScope = true;
     const errors: Error[] = [];
 
@@ -182,16 +181,6 @@ export class AspectsMerger {
       await addExtensionsToMerge(variantsExtensions, 'WorkspaceVariants', { appliedRules });
     }
     continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
-    // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
-    const isDefaultExtension = wsDefaultExtensions?.findExtension(componentId.toString(), true, true);
-    if (
-      wsDefaultExtensions &&
-      continuePropagating &&
-      !isDefaultExtension &&
-      !excludeOrigins.includes('WorkspaceDefault')
-    ) {
-      await addExtensionsToMerge(wsDefaultExtensions, 'WorkspaceDefault');
-    }
     if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
       await addExtensionsToMerge(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }

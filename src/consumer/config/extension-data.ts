@@ -145,19 +145,13 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     return extensionDataList;
   }
 
-  findExtension(extensionId: string, ignoreVersion = false, ignoreScope = false): ExtensionDataEntry | undefined {
+  findExtension(extensionId: string, ignoreVersion = false): ExtensionDataEntry | undefined {
     if (ExtensionDataList.coreExtensionsNames.has(extensionId)) {
       return this.findCoreExtension(extensionId);
     }
     return this.find((extEntry) => {
-      if (ignoreVersion && ignoreScope) {
-        return extEntry.extensionId?.toStringWithoutScopeAndVersion() === extensionId;
-      }
       if (ignoreVersion) {
         return extEntry.extensionId?.toStringWithoutVersion() === extensionId;
-      }
-      if (ignoreScope) {
-        return extEntry.extensionId?.toStringWithoutScope() === extensionId;
       }
       return extEntry.stringId === extensionId;
     });
