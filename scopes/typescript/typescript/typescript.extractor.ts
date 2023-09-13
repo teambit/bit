@@ -1,6 +1,6 @@
 import ts, { Node, SourceFile, SyntaxKind } from 'typescript';
 import { getTsconfig } from 'get-tsconfig';
-import { SchemaExtractor } from '@teambit/schema';
+import { SchemaExtractor, SchemaExtractorOptions } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
 import type { Workspace } from '@teambit/workspace';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -52,7 +52,14 @@ export class TypeScriptExtractor implements SchemaExtractor {
   /**
    * extract a component schema.
    */
-  async extract(component: Component, formatter?: Formatter): Promise<APISchema> {
+  async extract(component: Component, options: SchemaExtractorOptions = {}): Promise<APISchema> {
+    // override the rootTsserverPath and rootContextPath if passed via options
+    if (options.tsserverPath) {
+      this.rootTsserverPath = options.tsserverPath;
+    }
+    if (options.contextPath) {
+      this.rootContextPath = options.contextPath;
+    }
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
     const compatibleExts = ['.tsx', '.ts'];
@@ -61,7 +68,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     );
     const allFiles = [mainFile, ...internalFiles];
 
-    const context = await this.createContext(tsserver, component, formatter);
+    const context = await this.createContext(tsserver, component, options.formatter);
 
     await pMapSeries(allFiles, async (file) => {
       const ast = this.parseSourceFile(file);

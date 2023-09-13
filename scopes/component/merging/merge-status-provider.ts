@@ -137,8 +137,8 @@ other:   ${otherLaneHead.toString()}`);
 
   private returnUnmerged(id: BitId, msg: string, unmergedLegitimately = false): ComponentMergeStatusBeforeMergeAttempt {
     const componentStatus: ComponentMergeStatusBeforeMergeAttempt = { id };
-    componentStatus.unmergedMessage = msg;
-    componentStatus.unmergedLegitimately = unmergedLegitimately;
+    componentStatus.unchangedMessage = msg;
+    componentStatus.unchangedLegitimately = unmergedLegitimately;
     return componentStatus;
   }
 

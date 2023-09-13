@@ -5,7 +5,6 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import {
   MergeStrategy,
-  FailedComponents,
   FileStatus,
   ApplyVersionResult,
   getMergeStrategyInteractive,
@@ -64,8 +63,6 @@ export type WorkspaceDepsUpdates = { [pkgName: string]: [string, string] }; // f
 export type WorkspaceDepsConflicts = Record<WorkspacePolicyConfigKeysNames, Array<{ name: string; version: string }>>; // the pkg value is in a format of CONFLICT::OURS::THEIRS
 
 export type ComponentMergeStatus = ComponentStatusBase & {
-  unmergedMessage?: string;
-  unmergedLegitimately?: boolean; // failed to merge but for a legitimate reason, such as, up-to-date
   mergeResults?: MergeResultsThreeWay | null;
   divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
@@ -73,8 +70,6 @@ export type ComponentMergeStatus = ComponentStatusBase & {
 };
 
 export type ComponentMergeStatusBeforeMergeAttempt = ComponentStatusBase & {
-  unmergedMessage?: string;
-  unmergedLegitimately?: boolean; // failed to merge but for a legitimate reason, such as, up-to-date
   divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
   mergeProps?: {
@@ -83,6 +78,8 @@ export type ComponentMergeStatusBeforeMergeAttempt = ComponentStatusBase & {
     modelComponent: ModelComponent;
   };
 };
+
+export type FailedComponents = { id: BitId; unchangedMessage: string; unchangedLegitimately?: boolean };
 
 export type ApplyVersionResults = {
   components?: ApplyVersionResult[];
@@ -169,12 +166,12 @@ export class MergingMain {
     const currentLaneId = consumer.getCurrentLaneId();
     const currentLaneObject = await consumer.getCurrentLaneObject();
     const allComponentsStatus = await this.getAllComponentsStatus(bitIds, currentLaneId, currentLaneObject);
-    const failedComponents = allComponentsStatus.filter((c) => c.unmergedMessage && !c.unmergedLegitimately);
+    const failedComponents = allComponentsStatus.filter((c) => c.unchangedMessage && !c.unchangedLegitimately);
     if (failedComponents.length) {
       const failureMsgs = failedComponents
         .map(
           (failedComponent) =>
-            `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.unmergedMessage as string)}`
+            `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.unchangedMessage as string)}`
         )
         .join('\n');
       throw new BitError(`unable to merge due to the following failures:\n${failureMsgs}`);
@@ -224,19 +221,19 @@ export class MergingMain {
       mergeStrategy = await getMergeStrategyInteractive();
     }
     const failedComponents: FailedComponents[] = allComponentsStatus
-      .filter((componentStatus) => componentStatus.unmergedMessage)
+      .filter((componentStatus) => componentStatus.unchangedMessage)
       .filter((componentStatus) => !componentStatus.shouldBeRemoved)
       .map((componentStatus) => ({
         id: componentStatus.id,
-        failureMessage: componentStatus.unmergedMessage as string,
-        unchangedLegitimately: componentStatus.unmergedLegitimately,
+        unchangedMessage: componentStatus.unchangedMessage as string,
+        unchangedLegitimately: componentStatus.unchangedLegitimately,
       }));
 
     const componentIdsToRemove = allComponentsStatus
       .filter((componentStatus) => componentStatus.shouldBeRemoved)
       .map((c) => c.id.changeVersion(undefined));
 
-    const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.unmergedMessage);
+    const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.unchangedMessage);
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
     // which can be an issue when some components are also dependencies of others
     const componentsResults = await mapSeries(
