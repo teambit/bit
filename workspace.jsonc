@@ -269,7 +269,7 @@
         "cors": "2.8.5",
         "credentials-by-uri": "2.0.0",
         "cross-env": "7.0.3",
-        "css-minimizer-webpack-plugin": "3.0.2",
+        "css-minimizer-webpack-plugin": "5.0.1",
         "dagre": "0.8.5",
         "didyoumean": "1.2.1",
         "enquirer": "2.3.6",
@@ -313,7 +313,7 @@
         "jest-watcher": "27.5.1",
         "json-formatter-js": "2.3.4",
         "jsx-to-string": "1.4.0",
-        "junit-report-builder": "3.0.0",
+        "junit-report-builder": "3.0.1",
         "less": "^4.1.1",
         "loader-utils": "2.0.4",
         "lodash": "4.17.20",
@@ -397,7 +397,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.557",
+        "@teambit/legacy": "1.0.558",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
@@ -489,7 +489,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.557"
+            "@teambit/legacy": "1.0.558"
           }
         }
       },
@@ -753,7 +753,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.557"
+            "@teambit/legacy": "1.0.558"
           }
         }
       }
@@ -843,7 +843,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.557",
+            "@teambit/legacy": "1.0.558",
             "@yarnpkg/plugin-pack": "3.2.0",
             "graphql": "15.8.0",
             "browserslist": "4.16.3",
@@ -916,7 +916,7 @@
             "string_decoder": "1.3.0",
             "timers-browserify": "2.0.12",
             "tty-browserify": "0.0.1",
-            "url": "0.11.0",
+            "url": "0.11.2",
             "util": "0.12.3",
             "vm-browserify": "1.1.2"
           }
@@ -950,9 +950,9 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@babel/plugin-proposal-class-properties": "7.18.6",
+            "@babel/plugin-transform-class-properties": "7.22.5",
             "@babel/plugin-proposal-decorators": "7.12.13",
-            "@babel/plugin-proposal-object-rest-spread": "7.12.13",
+            "@babel/plugin-transform-object-rest-spread": "7.22.15",
             "@babel/plugin-transform-modules-commonjs": "7.12.13",
             "@babel/plugin-transform-runtime": "7.12.17",
             "@babel/preset-env": "7.12.17",
@@ -979,7 +979,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.557"
+            "@teambit/legacy": "1.0.558"
           }
         }
       }
