@@ -29,7 +29,7 @@ import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import CheckoutAspect, { CheckoutMain, CheckoutProps } from '@teambit/checkout';
+import CheckoutAspect, { CheckoutMain, CheckoutProps, throwForFailures } from '@teambit/checkout';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { compact, uniq } from 'lodash';
@@ -176,7 +176,7 @@ export class MergeLanesMain {
       );
       bitIds.forEach((bitId) => {
         if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
-          allComponentsStatus.push({ id: bitId, unmergedLegitimately: true, unmergedMessage: `excluded by pattern` });
+          allComponentsStatus.push({ id: bitId, unchangedLegitimately: true, unchangedMessage: `excluded by pattern` });
         }
       });
     }
@@ -196,12 +196,16 @@ export class MergeLanesMain {
       );
       bitIds.forEach((bitId) => {
         if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
-          allComponentsStatus.push({ id: bitId, unmergedLegitimately: true, unmergedMessage: `not in the workspace` });
+          allComponentsStatus.push({
+            id: bitId,
+            unchangedLegitimately: true,
+            unchangedMessage: `not in the workspace`,
+          });
         }
       });
     }
 
-    throwForFailures();
+    throwForFailures(allComponentsStatus);
 
     if (shouldSquash) {
       await squashSnaps(allComponentsStatus, otherLaneId, consumer);
@@ -257,19 +261,6 @@ export class MergeLanesMain {
     await this.workspace.consumer.onDestroy();
 
     return { mergeResults, deleteResults, configMergeResults: compact(configMergeResults) };
-
-    function throwForFailures() {
-      const failedComponents = allComponentsStatus.filter((c) => c.unmergedMessage && !c.unmergedLegitimately);
-      if (failedComponents.length) {
-        const failureMsgs = failedComponents
-          .map(
-            (failedComponent) =>
-              `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.unmergedMessage as string)}`
-          )
-          .join('\n');
-        throw new BitError(`unable to merge due to the following failures:\n${failureMsgs}`);
-      }
-    }
   }
 
   async abortLaneMerge(checkoutProps: CheckoutProps, mergeAbortOpts: MergeAbortOpts) {
@@ -609,7 +600,7 @@ async function filterComponentsStatus(
       throw new Error(`filterComponentsStatus: unable to find ${compId.toString()} in component-status`);
     }
     filteredComponentStatus.push(fromStatus);
-    if (fromStatus.unmergedMessage) {
+    if (fromStatus.unchangedMessage) {
       return;
     }
     if (!otherLane) {
@@ -700,7 +691,7 @@ async function getLogForSquash(otherLaneId: LaneId) {
 
 async function squashSnaps(allComponentsStatus: ComponentMergeStatus[], otherLaneId: LaneId, consumer: Consumer) {
   const currentLaneName = consumer.getCurrentLaneId().name;
-  const succeededComponents = allComponentsStatus.filter((c) => !c.unmergedMessage);
+  const succeededComponents = allComponentsStatus.filter((c) => !c.unchangedMessage);
   const log = await getLogForSquash(otherLaneId);
 
   await Promise.all(

@@ -412,8 +412,9 @@ describe('bit snap command', function () {
           expect(status.mergePendingComponents).to.have.lengthOf(0);
         });
         it('should block checking out the component', () => {
-          const output = helper.command.checkoutVersion(firstSnap, 'bar/foo', '--auto-merge-resolve manual');
-          expect(output).to.have.string('is in during-merge state');
+          expect(() => helper.command.checkoutVersion(firstSnap, 'bar/foo', '--auto-merge-resolve manual')).to.throw(
+            'is in during-merge state'
+          );
         });
         describe('tagging or snapping the component', () => {
           beforeEach(() => {
