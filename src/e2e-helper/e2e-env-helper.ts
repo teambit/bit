@@ -231,7 +231,7 @@ export default class EnvHelper {
           '@babel/core': '7.11.6',
           '@babel/preset-env': '7.11.5',
           '@babel/preset-typescript': '7.10.4',
-          '@babel/plugin-proposal-class-properties': '7.10.4',
+          '@babel/plugin-transform-class-properties': '7.22.5',
         },
       },
     });
