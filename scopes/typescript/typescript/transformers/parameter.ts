@@ -93,7 +93,7 @@ export class ParameterTransformer implements SchemaTransformer {
   ): Promise<SchemaNode[] | undefined> {
     if (param.name.kind !== SyntaxKind.ObjectBindingPattern) return undefined;
     return pMapSeries(param.name.elements, async (elem: BindingElement) => {
-      const existing = paramType.findNode((node) => {
+      const existing = paramType.findNode?.((node) => {
         return node.name === elem.name.getText().trim();
       });
       if (existing) return existing;
