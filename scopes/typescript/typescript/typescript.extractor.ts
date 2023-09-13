@@ -52,7 +52,19 @@ export class TypeScriptExtractor implements SchemaExtractor {
   /**
    * extract a component schema.
    */
-  async extract(component: Component, formatter?: Formatter): Promise<APISchema> {
+  async extract(
+    component: Component,
+    formatter?: Formatter,
+    overrideRootTsserverPath?: string,
+    overrideContextPath?: string
+  ): Promise<APISchema> {
+    // override the rootTsserverPath and rootContextPath if passed
+    if (overrideRootTsserverPath) {
+      this.rootTsserverPath = overrideRootTsserverPath;
+    }
+    if (overrideContextPath) {
+      this.rootContextPath = overrideContextPath;
+    }
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
     const compatibleExts = ['.tsx', '.ts'];
