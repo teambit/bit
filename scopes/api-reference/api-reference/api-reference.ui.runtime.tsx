@@ -19,17 +19,32 @@ import { typeLiteralRenderer } from '@teambit/api-reference.renderers.type-liter
 import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
 import { inferenceTypeRenderer } from '@teambit/api-reference.renderers.inference-type';
 import { typeArrayRenderer } from '@teambit/api-reference.renderers.type-array';
+import { SchemaNodeConstructor, SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';
 
 import { APIReferenceAspect } from './api-reference.aspect';
 
 export type APINodeRendererSlot = SlotRegistry<APINodeRenderer[]>;
 export class APIReferenceUI {
+  constructor(private host: string, private apiNodeRendererSlot: APINodeRendererSlot) {}
+
   static dependencies = [ComponentAspect];
   static runtime = UIRuntime;
   static slots = [Slot.withType<APINodeRenderer[]>()];
 
   getAPIPage() {
     return <APIRefPage host={this.host} rendererSlot={this.apiNodeRendererSlot} />;
+  }
+
+  registerSchemaClass(schema: SchemaNodeConstructor) {
+    SchemaRegistry.register(schema);
+  }
+
+  getSchemaClasses() {
+    return SchemaRegistry.schemas;
+  }
+
+  registerAPINodeRenderer(apiNodeRenderers: APINodeRenderer[]) {
+    this.apiNodeRendererSlot.register(apiNodeRenderers);
   }
 
   apiNodeRenderers: APINodeRenderer[] = [
@@ -62,14 +77,12 @@ export class APIReferenceUI {
     const apiReferenceSection = new APIRefSection(apiReferenceUI);
     componentUI.registerNavigation(apiReferenceSection.navigationLink, apiReferenceSection.order);
     componentUI.registerRoute(apiReferenceSection.route);
+    // register all default schema classes
+    Object.values(Schemas).forEach((Schema) => {
+      apiReferenceUI.registerSchemaClass(Schema);
+    });
     return apiReferenceUI;
   }
-
-  registerAPINodeRenderer(apiNodeRenderers: APINodeRenderer[]) {
-    this.apiNodeRendererSlot.register(apiNodeRenderers);
-  }
-
-  constructor(private host: string, private apiNodeRendererSlot: APINodeRendererSlot) {}
 }
 
 export default APIReferenceUI;

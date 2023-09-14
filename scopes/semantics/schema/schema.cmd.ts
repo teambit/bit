@@ -32,7 +32,7 @@ export class SchemaCommand implements Command {
     const longRunningLog = this.logger.createLongProcessLogger('generating schema', ids.length);
     const results = await pMapSeries(components, (component) => {
       longRunningLog.logProgress(component.id.toString());
-      return this.schema.getSchema(component);
+      return this.schema.getSchema(component, undefined, true);
     });
     longRunningLog.end();
     return results;

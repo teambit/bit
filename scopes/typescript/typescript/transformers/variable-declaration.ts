@@ -57,7 +57,9 @@ export class VariableDeclaration implements SchemaTransformer {
     }
     const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(varDec, typeStr);
-    return new VariableLikeSchema(location, name, displaySig, type, false, doc);
+    const defaultValue = varDec.initializer ? varDec.initializer.getText() : undefined;
+
+    return new VariableLikeSchema(location, name, displaySig, type, false, doc, defaultValue);
   }
 }
 

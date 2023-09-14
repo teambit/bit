@@ -5,7 +5,13 @@ import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
-import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
+import {
+  APISchema,
+  Export,
+  Schemas,
+  SchemaNodeConstructor,
+  SchemaRegistry,
+} from '@teambit/semantics.entities.semantic-schema';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Formatter } from '@teambit/formatter';
@@ -52,6 +58,10 @@ export class SchemaMain {
    */
   getDefaultParser(): Parser {
     return this.parserSlot.get(this.config.defaultParser) as Parser;
+  }
+
+  registerSchemaClass(schema: SchemaNodeConstructor) {
+    SchemaRegistry.register(schema);
   }
 
   /**
@@ -197,10 +207,10 @@ export class SchemaMain {
     graphql.register(schemaSchema(schema));
     envs.registerService(new SchemaService());
 
-    // workspace.onComponentLoad(async (component) => {
-    //   const apiSchema = await schema.getSchema(component);
-    //   return {};
-    // });
+    // register all default schema classes
+    Object.values(Schemas).forEach((Schema) => {
+      schema.registerSchemaClass(Schema);
+    });
 
     return schema;
   }

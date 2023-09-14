@@ -11,6 +11,7 @@ import { GraphqlAspect } from '@teambit/graphql';
 import type { JestMain } from '@teambit/jest';
 import { JestAspect } from '@teambit/jest';
 import type { PkgMain, PackageJsonProps } from '@teambit/pkg';
+import { SchemaMain, SchemaAspect } from '@teambit/schema';
 import { PkgAspect } from '@teambit/pkg';
 import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
@@ -35,6 +36,8 @@ import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
 import { componentTemplates } from './react.templates';
 import { ReactAppOptions } from './apps/web/react-app-options';
+import { ReactAPITransformer, ReactSchema } from '.';
+// import { ReactAPITransformer } from './react.api.transformer';
 
 type ReactDeps = [
   EnvsMain,
@@ -51,7 +54,8 @@ type ReactDeps = [
   ApplicationMain,
   GeneratorMain,
   DependencyResolverMain,
-  LoggerMain
+  LoggerMain,
+  SchemaMain
 ];
 
 export type ReactMainConfig = {
@@ -409,6 +413,7 @@ export class ReactMain {
     GeneratorAspect,
     DependencyResolverAspect,
     LoggerAspect,
+    SchemaAspect,
   ];
 
   static async provider(
@@ -428,6 +433,7 @@ export class ReactMain {
       generator,
       dependencyResolver,
       loggerMain,
+      schemaMain,
     ]: ReactDeps,
     config: ReactMainConfig
   ) {
@@ -456,6 +462,8 @@ export class ReactMain {
     }
 
     if (application) application.registerAppType(appType);
+    schemaMain.registerSchemaClass(ReactSchema);
+    tsAspect.registerApiTransformer([new ReactAPITransformer()]);
 
     return react;
   }

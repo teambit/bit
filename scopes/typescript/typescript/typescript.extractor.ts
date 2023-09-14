@@ -14,7 +14,7 @@ import AspectLoaderAspect, { AspectLoaderMain, getCoreAspectPackageName } from '
 import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { compact, flatten } from 'lodash';
-import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
+import { TypescriptMain, SchemaTransformerSlot, APITransformerSlot } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
 import { Identifier } from './identifier';
@@ -26,6 +26,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
   constructor(
     private tsconfig: any,
     private schemaTransformerSlot: SchemaTransformerSlot,
+    private apiTransformerSlot: APITransformerSlot,
     private tsMain: TypescriptMain,
     private rootTsserverPath: string,
     private rootContextPath: string,
@@ -166,7 +167,15 @@ export class TypeScriptExtractor implements SchemaExtractor {
     if (!transformer) {
       return new UnImplementedSchema(context.getLocation(node), node.getText(), SyntaxKind[node.kind]);
     }
-    return transformer.transform(node, context);
+
+    const schemaNode = await transformer.transform(node, context);
+
+    return this.transformAPI(schemaNode, context);
+  }
+
+  async transformAPI(schema: SchemaNode, context: SchemaExtractorContext): Promise<SchemaNode> {
+    const apiTransformer = this.getAPITransformer(schema);
+    return apiTransformer ? apiTransformer.transform(schema, context) : schema;
   }
 
   async getComponentIDByPath(file: string) {
@@ -199,6 +208,18 @@ export class TypeScriptExtractor implements SchemaExtractor {
     return transformer;
   }
 
+  getAPITransformer(node: SchemaNode) {
+    const transformers = flatten(this.apiTransformerSlot.values());
+    const transformer = transformers.find((singleTransformer) => {
+      return singleTransformer.predicate(node);
+    });
+    if (!transformer) {
+      return undefined;
+    }
+
+    return transformer;
+  }
+
   static from(options: ExtractorOptions) {
     return (context: EnvContext) => {
       const tsconfig = getTsconfig(options.tsconfig)?.config || { compilerOptions: options.compilerOptions };
@@ -211,6 +232,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
       return new TypeScriptExtractor(
         tsconfig,
         tsMain.schemaTransformerSlot,
+        tsMain.apiTransformerSlot,
         tsMain,
         rootPath,
         rootPath,
