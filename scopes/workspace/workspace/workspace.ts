@@ -144,7 +144,7 @@ export class Workspace implements ComponentFactory {
   componentLoader: WorkspaceComponentLoader;
   bitMap: BitMap;
   /**
-   * Indicate that we are now running installaion process
+   * Indicate that we are now running installation process
    * This is important to know to ignore missing modules across different places
    */
   inInstallContext = false;
@@ -1001,12 +1001,13 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * currently it used only for get many of aspects
    * @param ids
    */
-  async importAndGetMany(ids: Array<ComponentID>): Promise<Component[]> {
+  async importAndGetMany(ids: Array<ComponentID>, reason?: string): Promise<Component[]> {
     if (!ids.length) return [];
     await this.importCurrentLaneIfMissing();
     await this.scope.import(ids, {
       reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(),
       preferDependencyGraph: true,
+      reason,
     });
     return this.getMany(ids);
   }
@@ -1029,9 +1030,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       cache: false,
       lane,
       includeVersionHistory: true,
+      reason: 'latest of the current lane',
     });
 
-    await scopeComponentsImporter.importMany({ ids, lane });
+    await scopeComponentsImporter.importMany({ ids, lane, reason: 'for making sure the current lane has all ' });
   }
 
   async use(aspectIdStr: string): Promise<string> {
@@ -1718,7 +1720,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (found && found.extensionId?.version) {
       return found.extensionId.toString();
     }
-    const comps = await this.importAndGetMany([envId]);
+    const comps = await this.importAndGetMany([envId], `to get the env ${envId.toString()}`);
     return comps[0].id.toString();
   }
 

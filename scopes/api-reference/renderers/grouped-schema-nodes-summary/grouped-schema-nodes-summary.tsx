@@ -19,78 +19,120 @@ import styles from './grouped-schema-nodes-summary.module.scss';
 export type GroupedSchemaNodesSummaryProps = {
   nodes: SchemaNode[];
   apiNodeRendererProps: APINodeRenderProps;
+  headings?: Record<string, string[]>;
+  skipGrouping?: boolean;
+  skipNode?(type: string, members: SchemaNode[]): boolean;
+  renderTable?(type: string, member: SchemaNode, headings?: string[]): React.ReactNode;
 } & HTMLAttributes<HTMLDivElement>;
+
+const DEFAULT_HEADINGS = {
+  methods: ['name', 'signature', 'description'],
+  constructors: ['name', 'signature', 'description'],
+  'enum members': ['name', 'description'],
+  properties: ['name', 'type', 'default', 'description'],
+  setters: ['name', 'signature', 'description'],
+  default: ['name', 'type', 'description'],
+};
 
 export function GroupedSchemaNodesSummary({
   nodes,
   apiNodeRendererProps,
+  headings: headingsFromProps = {},
+  skipNode,
+  skipGrouping,
+  renderTable = (type, member, _headings = []) => {
+    const typeId = type && encodeURIComponent(type);
+
+    if (type === 'enum members') {
+      return (
+        <EnumMemberSummary
+          key={`${member.__schema}-${member.name}`}
+          headings={_headings}
+          apiNodeRendererProps={apiNodeRendererProps}
+          groupElementClassName={typeId}
+          name={(member as EnumMemberSchema).name}
+          node={member as EnumMemberSchema}
+        />
+      );
+    }
+
+    return (
+      <VariableNodeSummary
+        key={`${member.__schema}-${member.name}`}
+        node={member}
+        headings={_headings}
+        groupElementClassName={typeId}
+        apiNodeRendererProps={apiNodeRendererProps}
+        name={member.name || member.signature || ''}
+        type={(member as any).type}
+        isOptional={(member as any).isOptional}
+        defaultValue={(member as any).defaultValue}
+      />
+    );
+  },
   className,
   ...rest
 }: GroupedSchemaNodesSummaryProps) {
   const hasNodes = nodes.length > 0;
+  const headings = {
+    ...DEFAULT_HEADINGS,
+    ...headingsFromProps,
+  };
 
-  const groupedNodes = hasNodes ? Array.from(groupByNodeSignatureType(nodes).entries()).sort(sortSignatureType) : [];
+  const groupedNodes =
+    !skipGrouping && hasNodes
+      ? Array.from(groupByNodeSignatureType(nodes).entries()).sort(sortSignatureType)
+      : (hasNodes && [['', nodes] as [string, SchemaNode[]]]) || [];
+
   const { apiRefModel } = apiNodeRendererProps;
+
   return (
     <div {...rest} className={classnames(styles.groupNodesContainer, className)}>
       {groupedNodes.map(([type, groupedMembersByType], index) => {
+        const skip = skipNode && type && skipNode(type, groupedMembersByType);
+        const skipRenderingTable = type === 'methods' || type === 'constructors' || type === 'setters';
         const typeId = type && encodeURIComponent(type);
-        const headings =
-          type === 'methods' || type === 'constructors' || type === 'enum members' || type === 'setters'
-            ? ['name', 'signature', 'description']
-            : ['name', 'type', 'description'];
+        const _headings = (type && headings[type]) || headings.default;
+
+        if (skip) return null;
 
         return (
-          <div key={`${typeId}`} className={classnames(styles.table, index !== 0 && styles.paddingTop)}>
+          <div key={`${typeId}`} className={classnames(index !== 0 && styles.paddingTop)}>
             {type && (
               <div id={typeId} className={classnames(styles.groupName, trackedElementClassName)}>
                 {type}
               </div>
             )}
-            <HeadingRow className={classnames(styles.row)} colNumber={3} headings={headings} />
-            {groupedMembersByType.map((member) => {
-              if (type === 'methods' || type === 'constructors' || type === 'setters') {
+            {!skipRenderingTable && (
+              <div className={styles.table}>
+                <HeadingRow
+                  className={classnames(styles.row)}
+                  colNumber={_headings.length as any}
+                  headings={_headings}
+                />
+                {groupedMembersByType.map((member) => {
+                  return renderTable(type ?? '', member, _headings);
+                })}
+              </div>
+            )}
+            {skipRenderingTable &&
+              groupedMembersByType.map((member) => {
+                if (!type) return null;
                 return (
                   <FunctionNodeSummary
                     key={`${member.__schema}-${member.name}`}
                     node={member}
                     apiNodeRendererProps={apiNodeRendererProps}
                     groupElementClassName={typeId}
-                    headings={headings}
+                    headings={_headings}
                     apiRefModel={apiRefModel}
-                    name={(member as any).name || 'constructor'}
+                    name={(member as any).name}
+                    hideName={type === 'constructors'}
                     params={(member as any).params || [(member as any).param]}
                     returnType={(member as any).returnType}
                   />
                 );
-              }
-              if (type === 'enum members') {
-                return (
-                  <EnumMemberSummary
-                    key={`${member.__schema}-${member.name}`}
-                    headings={headings}
-                    apiNodeRendererProps={apiNodeRendererProps}
-                    groupElementClassName={typeId}
-                    name={(member as EnumMemberSchema).name}
-                    node={member as EnumMemberSchema}
-                  />
-                );
-              }
-
-              return (
-                // @todo refactor this the member type should not be any
-                <VariableNodeSummary
-                  key={`${member.__schema}-${member.name}`}
-                  node={member}
-                  headings={headings}
-                  groupElementClassName={typeId}
-                  apiNodeRendererProps={apiNodeRendererProps}
-                  name={(member as any).name}
-                  type={(member as any).type}
-                  isOptional={(member as any).isOptional}
-                />
-              );
-            })}
+              })}
           </div>
         );
       })}

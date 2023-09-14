@@ -14,7 +14,6 @@ describe('bit checkout command when on a lane', function () {
   });
   describe('checkout head when some components are merge-pending', () => {
     let originalWs: string;
-    let output: string;
     let comp1Head: string;
     let comp2RemoteHead: string;
     before(() => {
@@ -32,18 +31,16 @@ describe('bit checkout command when on a lane', function () {
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
       comp1Head = helper.command.getHeadOfLane('dev', 'comp1');
       helper.command.import();
-      output = helper.command.checkoutHead();
-    });
-    it('should not allow checking out to head because it is merge pending', () => {
-      expect(output).to.have.string('component is merge-pending and cannot be checked out');
+      // should not allow checking out to head because it is merge pending
+      expect(() => helper.command.checkoutHead()).to.throw('component is merge-pending and cannot be checked out');
     });
     it('should leave the merge-pending component with the current version', () => {
       const bitmap = helper.bitMap.read();
       expect(bitmap.comp1.version).to.equal(comp1Head);
     });
-    it('should update the non-merge-pending component to the latest', () => {
+    it('should not update the non-merge-pending component to the latest', () => {
       const bitmap = helper.bitMap.read();
-      expect(bitmap.comp2.version).to.equal(comp2RemoteHead);
+      expect(bitmap.comp2.version).to.not.equal(comp2RemoteHead);
     });
   });
   describe('checkout head on main when some components are not available on main', () => {
@@ -73,6 +70,44 @@ describe('bit checkout command when on a lane', function () {
     it('should make them available on main even without running bit-import before', () => {
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(2);
+    });
+  });
+  describe('checkout when some are pending-merge', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.tagWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+
+      helper.command.switchLocalLane('dev', '-x');
+      helper.command.mergeLane('main', '-x'); // comp1 is now pending-merge
+
+      const originalWs = helper.scopeHelper.cloneLocalScope();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('dev');
+
+      helper.fs.outputFile(`${helper.scopes.remote}/comp3/index.js`, 'console.log("v2");');
+      helper.command.snapComponentWithoutBuild('comp3');
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(originalWs);
+    });
+    it('checkout head should stop with an error', () => {
+      expect(() => helper.command.checkoutHead('-x')).to.throw();
+    });
+    it('should not merged the head of other components', () => {
+      const comp3File = helper.fs.readFile('comp3/index.js');
+      expect(comp3File).to.not.include('v2');
     });
   });
 });

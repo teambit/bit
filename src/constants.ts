@@ -178,7 +178,7 @@ export const getCloudDomain = (): string => {
   return resolvedCloudDomain;
 };
 
-export const BASE_COMMUNITY_DOMAIN = 'bit.dev';
+export const BASE_COMMUNITY_DOMAIN = 'https://bit.dev';
 
 export const PREVIOUSLY_BASE_WEB_DOMAIN = 'bitsrc.io';
 
@@ -195,6 +195,9 @@ export const getSymphonyUrl = (): string => {
 
 export const CFG_CLOUD_DOMAIN_LOGIN_KEY = 'cloud_domain_login';
 
+export const CFG_WATCH_USE_POLLING = 'watch_use_polling';
+export const CFG_WATCH_USE_FS_EVENTS = 'watch_use_fsevents';
+
 export const getLoginUrl = (domain?: string): string => {
   const finalDomain = domain || getSync(CFG_CLOUD_DOMAIN_LOGIN_KEY) || getCloudDomain();
   const url = `https://${finalDomain}/bit-login`;
@@ -203,7 +206,7 @@ export const getLoginUrl = (domain?: string): string => {
 
 export const SYMPHONY_GRAPHQL = `https://${getSymphonyUrl()}/graphql`;
 
-export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/docs`;
+export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/`;
 
 export const BASE_LEGACY_DOCS_DOMAIN = `legacy-docs.${BASE_COMMUNITY_DOMAIN}/docs`;
 
@@ -267,9 +270,9 @@ export const AUTO_GENERATED_MSG = `/* THIS IS A ${AUTO_GENERATED_STAMP} FILE. DO
 export const BITMAP_PREFIX_MESSAGE = `/**
  * The Bitmap file is an auto generated file used by Bit to track all your Bit components. It maps the component to a folder in your file system.
  * This file should be committed to VCS(version control).
- * Components are listed using their component ID (https://${BASE_DOCS_DOMAIN}/components/component-id).
+ * Components are listed using their component ID (${BASE_DOCS_DOMAIN}reference/components/component-id).
  * If you want to delete components you can use the "bit remove <component-id>" command.
- * See the docs (https://${BASE_DOCS_DOMAIN}/components/removing-components) for more information, or use "bit remove --help".
+ * See the docs (${BASE_DOCS_DOMAIN}reference/components/removing-components) for more information, or use "bit remove --help".
  */\n\n`;
 
 export const BIT_DESCRIPTION =
@@ -555,8 +558,8 @@ export const WILDCARD_HELP = (command: string) =>
 
 export const PATTERN_HELP = (command: string) =>
   `you can use a \`<pattern>\` for multiple component ids, such as \`bit ${command} "org.scope/utils/**"\`.
-use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
-always wrap the pattern with quotes to avoid collision with shell commands.
+use comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'
+always wrap the pattern with single quotes to avoid collision with shell commands.
 use \`bit pattern --help\` to understand patterns better and \`bit pattern <pattern>\` to validate the pattern.
 `;
 
@@ -607,3 +610,5 @@ export enum BuildStatus {
 }
 
 export const SOURCE_DIR_SYMLINK_TO_NM = '_src'; // symlink from node_modules to the workspace sources files
+
+export const FILE_CHANGES_CHECKOUT_MSG = 'components with file changes';

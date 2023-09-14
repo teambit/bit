@@ -17,14 +17,24 @@ export class CatVersionHistoryCmd implements LegacyCommand {
     // json is also the default for this command. it's only needed to suppress the logger.console
     ['j', 'json', 'json format'],
     ['g', 'graph', `generate graph image (arrows color: ${JSON.stringify(colorPerEdgeType)})`],
+    [
+      '',
+      'mark <string>',
+      'relevant for --graph only. paint the given node-ids in the graph in red color, for multiple, separate by commas',
+    ],
   ] as CommandOptions;
 
-  async action([id]: [string], { graph }: { graph: boolean }): Promise<any> {
+  async action([id]: [string], { graph, mark }: { graph: boolean; mark?: string }): Promise<any> {
     if (graph) {
       const graphHistory = await generateVersionHistoryGraph(id);
-      const visualDependencyGraph = await VisualDependencyGraph.loadFromClearGraph(graphHistory, {
-        colorPerEdgeType,
-      });
+      const markIds = mark ? mark.split(',').map((node) => node.trim()) : undefined;
+      const visualDependencyGraph = await VisualDependencyGraph.loadFromClearGraph(
+        graphHistory,
+        {
+          colorPerEdgeType,
+        },
+        markIds
+      );
       const result = await visualDependencyGraph.image();
       return `image created at ${result}`;
     }

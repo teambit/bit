@@ -13,8 +13,8 @@
           "react-dom": "-",
           "@svgr/webpack": "5.5.0",
           "@babel/helper-plugin-test-runner": "7.16.7",
-          "@babel/preset-env": "7.12.17",
-          "@babel/preset-react": "7.13.13",
+          "@babel/preset-env": "7.22.15",
+          "@babel/preset-react": "7.22.15",
           "@typescript-eslint/parser": "5.35.1",
           "@typescript-eslint/eslint-plugin": "5.35.1",
           "esbuild": "0.14.29",
@@ -64,7 +64,7 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.545"
+          "@teambit/legacy": "1.0.560"
         }
       }
     }

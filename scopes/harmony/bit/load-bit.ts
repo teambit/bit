@@ -11,9 +11,6 @@ import { nativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 // Enable v8 compile cache, keep this before other imports
 nativeCompileCache?.install();
 
-// needed for class-transformer package
-import 'reflect-metadata';
-
 import './hook-require';
 
 import {

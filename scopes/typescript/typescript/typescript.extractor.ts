@@ -1,6 +1,6 @@
 import ts, { Node, SourceFile, SyntaxKind } from 'typescript';
 import { getTsconfig } from 'get-tsconfig';
-import { SchemaExtractor } from '@teambit/schema';
+import { SchemaExtractor, SchemaExtractorOptions } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
 import type { Workspace } from '@teambit/workspace';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -14,7 +14,7 @@ import AspectLoaderAspect, { AspectLoaderMain, getCoreAspectPackageName } from '
 import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { compact, flatten } from 'lodash';
-import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
+import { TypescriptMain, SchemaTransformerSlot, APITransformerSlot } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
 import { Identifier } from './identifier';
@@ -26,6 +26,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
   constructor(
     private tsconfig: any,
     private schemaTransformerSlot: SchemaTransformerSlot,
+    private apiTransformerSlot: APITransformerSlot,
     private tsMain: TypescriptMain,
     private rootTsserverPath: string,
     private rootContextPath: string,
@@ -52,7 +53,14 @@ export class TypeScriptExtractor implements SchemaExtractor {
   /**
    * extract a component schema.
    */
-  async extract(component: Component, formatter?: Formatter): Promise<APISchema> {
+  async extract(component: Component, options: SchemaExtractorOptions = {}): Promise<APISchema> {
+    // override the rootTsserverPath and rootContextPath if passed via options
+    if (options.tsserverPath) {
+      this.rootTsserverPath = options.tsserverPath;
+    }
+    if (options.contextPath) {
+      this.rootContextPath = options.contextPath;
+    }
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
     const compatibleExts = ['.tsx', '.ts'];
@@ -61,7 +69,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     );
     const allFiles = [mainFile, ...internalFiles];
 
-    const context = await this.createContext(tsserver, component, formatter);
+    const context = await this.createContext(tsserver, component, options.formatter);
 
     await pMapSeries(allFiles, async (file) => {
       const ast = this.parseSourceFile(file);
@@ -159,7 +167,15 @@ export class TypeScriptExtractor implements SchemaExtractor {
     if (!transformer) {
       return new UnImplementedSchema(context.getLocation(node), node.getText(), SyntaxKind[node.kind]);
     }
-    return transformer.transform(node, context);
+
+    const schemaNode = await transformer.transform(node, context);
+
+    return this.transformAPI(schemaNode, context);
+  }
+
+  async transformAPI(schema: SchemaNode, context: SchemaExtractorContext): Promise<SchemaNode> {
+    const apiTransformer = this.getAPITransformer(schema);
+    return apiTransformer ? apiTransformer.transform(schema, context) : schema;
   }
 
   async getComponentIDByPath(file: string) {
@@ -192,6 +208,18 @@ export class TypeScriptExtractor implements SchemaExtractor {
     return transformer;
   }
 
+  getAPITransformer(node: SchemaNode) {
+    const transformers = flatten(this.apiTransformerSlot.values());
+    const transformer = transformers.find((singleTransformer) => {
+      return singleTransformer.predicate(node);
+    });
+    if (!transformer) {
+      return undefined;
+    }
+
+    return transformer;
+  }
+
   static from(options: ExtractorOptions) {
     return (context: EnvContext) => {
       const tsconfig = getTsconfig(options.tsconfig)?.config || { compilerOptions: options.compilerOptions };
@@ -204,6 +232,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
       return new TypeScriptExtractor(
         tsconfig,
         tsMain.schemaTransformerSlot,
+        tsMain.apiTransformerSlot,
         tsMain,
         rootPath,
         rootPath,

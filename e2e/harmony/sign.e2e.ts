@@ -28,7 +28,7 @@ describe('sign command', function () {
       helper.scopeHelper.addRemoteScope(undefined, helper.scopes.remotePath);
       const ids = [`${helper.scopes.remote}/comp1`, `${helper.scopes.remote}/comp2`];
       // console.log('sign-command', `bit sign ${ids.join(' ')}`);
-      signOutput = helper.command.sign(ids, '--push', helper.scopes.remotePath);
+      signOutput = helper.command.sign(ids, '--push --original-scope', helper.scopes.remotePath);
     });
     it('on the workspace, the build status should be pending', () => {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
@@ -69,7 +69,7 @@ describe('sign command', function () {
       helper.command.export();
       const ids = [`${helper.scopes.remote}/comp1`, `${helper.scopes.remote}/comp2`];
       // console.log('sign-command', `bit sign ${ids.join(' ')}`);
-      signOutput = helper.command.sign(ids, '', helper.scopes.remotePath);
+      signOutput = helper.command.sign(ids, '--original-scope', helper.scopes.remotePath);
     });
     it('on the workspace, the build status should be pending', () => {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
@@ -92,11 +92,7 @@ describe('sign command', function () {
     });
     it('should sign the last successfully', () => {
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
-      const signOutput = helper.command.sign(
-        [`${helper.scopes.remote}/comp1@${firstSnap}`],
-        `--multiple`,
-        signRemote.scopePath
-      );
+      const signOutput = helper.command.sign([`${helper.scopes.remote}/comp1@${firstSnap}`], '', signRemote.scopePath);
       expect(signOutput).to.include('the following component(s) were already signed successfully');
       expect(signOutput).to.include('no more components left to sign');
     });
@@ -109,7 +105,7 @@ describe('sign command', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       // console.log('sign-command', `bit sign ${ids.join(' ')}`);
-      signOutput = helper.command.sign([], '', helper.scopes.remotePath);
+      signOutput = helper.command.sign([], '--original-scope', helper.scopes.remotePath);
     });
     it('should sign successfully', () => {
       expect(signOutput).to.include('the following 2 component(s) were signed with build-status "succeed"');
@@ -130,7 +126,7 @@ describe('sign command', function () {
       helper.scopeHelper.addRemoteScope(undefined, helper.scopes.remotePath);
       const ids = [`${helper.scopes.remote}/bar`];
       // console.log('sign-command', `bit sign ${ids.join(' ')}`);
-      signOutput = helper.command.sign(ids, '--always-succeed --push', helper.scopes.remotePath);
+      signOutput = helper.command.sign(ids, '--always-succeed --push --original-scope', helper.scopes.remotePath);
     });
     it('on the workspace, the build status should be pending', () => {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/bar@latest`);
@@ -181,7 +177,7 @@ describe('sign command', function () {
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
       signOutput = helper.command.sign(
         [`${secondScopeName}/comp1@${snapHash}`],
-        `--multiple --lane ${helper.scopes.remote}/dev`,
+        `--lane ${helper.scopes.remote}/dev`,
         signRemote.scopePath
       );
       expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
@@ -192,7 +188,7 @@ describe('sign command', function () {
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
       signOutput = helper.command.sign(
         [`${secondScopeName}/comp1@${firstSnapHash}`],
-        `--multiple --lane ${helper.scopes.remote}/dev`,
+        `--lane ${helper.scopes.remote}/dev`,
         signRemote.scopePath
       );
       expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
@@ -202,7 +198,7 @@ describe('sign command', function () {
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
       signOutput = helper.command.sign(
         [`${secondScopeName}/comp1@${snapHash}`],
-        `--multiple --lane ${helper.scopes.remote}/dev --push`,
+        `--lane ${helper.scopes.remote}/dev --push`,
         signRemote.scopePath
       );
       expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
@@ -229,7 +225,7 @@ describe('sign command', function () {
       helper.scopeHelper.addRemoteScope(secondRemote.scopePath, signRemote.scopePath);
       signOutput = helper.command.sign(
         [`${helper.scopes.remote}/comp1`, `${secondRemote.scopeName}/comp2`],
-        '--multiple',
+        '',
         signRemote.scopePath
       );
     });

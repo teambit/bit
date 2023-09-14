@@ -1,5 +1,5 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { TypeIntersectionSchema } from '@teambit/semantics.entities.semantic-schema';
 import classnames from 'classnames';
 
@@ -16,39 +16,41 @@ function TypeIntersectionComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
     renderers,
+    metadata,
   } = props;
 
   const typeNode = api as TypeIntersectionSchema;
 
   return (
-    <div key={`${api.__schema}-${api.name}`} className={styles.node}>
-      {typeNode.types.map((type, index, types) => {
+    <div key={`${api.__schema}-${api.name}`}>
+      {typeNode.types.map((type, index) => {
         const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
 
         if (typeRenderer) {
           return (
-            <React.Fragment key={`typeIntersectionMember-container-${type.toString()}-${index}}`}>
-              <typeRenderer.Component
-                {...props}
-                key={`typeIntersectionMember-${type.toString()}-${index}}`}
-                apiNode={{ ...props.apiNode, api: type, renderer: typeRenderer }}
-                depth={(props.depth ?? 0) + 1}
-                metadata={{ [type.__schema]: { columnView: true } }}
-              />
-              {types.length > 1 && index !== types.length - 1 ? (
-                <div key={`${type.name}-${index}-&`} className={classnames(styles.node, styles.separator)}>
-                  {'&'}
+            <div key={`typeIntersectionMember-container-${type.toString()}-${index}}`}>
+              {/* {type.name && <div className={styles.typeTitle}>{type.name}</div>} */}
+              {
+                <div className={classnames(styles.typeBody)}>
+                  <typeRenderer.Component
+                    {...props}
+                    className={styles.intersectionMember}
+                    key={`typeIntersectionMember-${type.toString()}-${index}}`}
+                    apiNode={{ ...props.apiNode, api: type, renderer: typeRenderer }}
+                    depth={(props.depth ?? 0) + 1}
+                    metadata={{ [type.__schema]: { columnView: metadata?.[typeNode.__schema]?.columnView } }}
+                  />
                 </div>
-              ) : null}
-            </React.Fragment>
+              }
+            </div>
           );
         }
 
         return (
-          <div key={`${type.name}-${index}`} className={styles.node}>
+          <div key={`${type.name}-${index}`}>
             {type.toString()}
-            {types.length > 1 && index !== types.length - 1 ? (
-              <div key={`${type.name}-${index}-&`} className={classnames(styles.node, styles.separator)}>
+            {typeNode.types.length > 1 && index !== typeNode.types.length - 1 ? (
+              <div key={`${type.name}-${index}-&`} className={classnames(nodeStyles.node, styles.separator)}>
                 {'&'}
               </div>
             ) : null}

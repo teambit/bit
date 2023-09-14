@@ -22,6 +22,7 @@ import {
   ComponentDependency,
   KEY_NAME_BY_LIFECYCLE_TYPE,
   PackageManagerInstallOptions,
+  NodeLinker,
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain, LongProcessLogger } from '@teambit/logger';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
@@ -53,6 +54,8 @@ import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
+import pMap from 'p-map';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
@@ -199,6 +202,11 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   packageManager?: string;
 
   /**
+   * Use specific node linker for the isolation process (override the package manager from the dep resolver config)
+   */
+  nodeLinker?: NodeLinker;
+
+  /**
    * Dir where to read the package manager config from
    * usually used when running package manager in the capsules dir to use the config
    * from the workspace dir
@@ -229,7 +237,7 @@ const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
 /**
  * File name to indicate that the capsule is ready (all packages are installed and links are created)
  */
-const CAPSULE_READY_FILE = '.bit-capsule-ready';
+export const CAPSULE_READY_FILE = '.bit-capsule-ready';
 
 export class IsolatorMain {
   static runtime = MainRuntime;
@@ -566,6 +574,7 @@ export class IsolatorMain {
               cachePackagesOnCapsulesRoot,
               linkedDependencies,
               packageManager: opts.packageManager,
+              nodeLinker: opts.nodeLinker,
             });
           })
         );
@@ -649,6 +658,7 @@ export class IsolatorMain {
       cachePackagesOnCapsulesRoot?: boolean;
       linkedDependencies?: Record<string, Record<string, string>>;
       packageManager?: string;
+      nodeLinker?: NodeLinker;
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({
@@ -656,6 +666,7 @@ export class IsolatorMain {
       cacheRootDirectory: opts.cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
       installingContext: { inCapsule: true },
       packageManager: opts.packageManager,
+      nodeLinker: opts.nodeLinker,
     });
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace
@@ -885,10 +896,12 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions
   ): Promise<Capsule[]> {
     this.logger.debug(`createCapsulesFromComponents: ${components.length} components`);
-    const capsules: Capsule[] = await Promise.all(
-      components.map((component: Component) => {
+    const capsules: Capsule[] = await pMap(
+      components,
+      (component: Component) => {
         return Capsule.createFromComponent(component, baseDir, opts);
-      })
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
     return capsules;
   }

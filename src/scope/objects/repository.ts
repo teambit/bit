@@ -180,7 +180,9 @@ export default class Repository {
       return null;
     }
     const size = fileContentsRaw.byteLength;
-    const fileContents = await this.onRead(fileContentsRaw);
+    const fileContents = this.onRead(fileContentsRaw);
+    // uncomment to debug the transformed objects by onRead
+    // console.log('transformedContent load', ref.toString(), BitObject.parseSync(fileContents).getType());
     const parsedObject = await BitObject.parseObject(fileContents, objectPath);
     const maxSizeToCache = 100 * 1024; // 100KB
     if (size < maxSizeToCache) {
@@ -302,6 +304,8 @@ export default class Repository {
     const raw = await fs.readFile(this.objectPath(ref));
     // Run hook to transform content pre reading
     const transformedContent = this.onRead(raw);
+    // uncomment to debug the transformed objects by onRead
+    // console.log('transformedContent loadRaw', ref.toString(), BitObject.parseSync(transformedContent).getType());
     return transformedContent;
   }
 

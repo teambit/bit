@@ -23,6 +23,7 @@ export type {
   DependencyResolverVariantConfig,
   BIT_CLOUD_REGISTRY,
   MergedOutdatedPkg,
+  NodeLinker,
 } from './dependency-resolver.main.runtime';
 export {
   BIT_DEV_REGISTRY,
