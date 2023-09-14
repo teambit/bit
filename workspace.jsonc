@@ -236,7 +236,6 @@
         "@types/url-join": "4.0.0",
         "@types/url-parse": "1.4.3",
         "@types/webpack": "5.28.1",
-        "@types/webpack-dev-server": "4.7.2",
         "@yarnpkg/cli": "3.6.1",
         "@yarnpkg/core": "3.5.2",
         "@yarnpkg/fslib": "2.10.3",
@@ -921,6 +920,9 @@
             "url": "0.11.2",
             "util": "0.12.3",
             "vm-browserify": "1.1.2"
+          },
+          "devDependencies": {
+            "@types/webpack-dev-server": "-"
           }
         }
       }
