@@ -4,6 +4,9 @@ export function sortAPINodes(apiNodeA: APINode, apiNodeB: APINode): 1 | -1 | 0 {
   const aNodeType = apiNodeA.renderer.nodeType;
   const bNodeType = apiNodeB.renderer.nodeType;
 
+  if (!apiNodeA.exported) return 1;
+  if (!apiNodeB.exported) return 1;
+
   if (aNodeType < bNodeType) return -1;
   if (aNodeType > bNodeType) return 1;
 

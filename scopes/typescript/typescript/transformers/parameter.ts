@@ -29,14 +29,16 @@ export class ParameterTransformer implements SchemaTransformer {
   }
 
   async transform(node: ParameterDeclaration, context: SchemaExtractorContext) {
+    const type = await this.getType(node, context);
     return new ParameterSchema(
       context.getLocation(node),
       this.getName(node),
-      await this.getType(node, context),
+      type,
       Boolean(node.questionToken),
       node.initializer ? node.initializer.getText() : undefined,
       undefined,
-      await this.getObjectBindingNodes(node, context)
+      await this.getObjectBindingNodes(node, type, context),
+      Boolean(node.dotDotDotToken)
     );
   }
 
@@ -86,25 +88,19 @@ export class ParameterTransformer implements SchemaTransformer {
 
   async getObjectBindingNodes(
     param: ParameterDeclaration,
+    paramType: SchemaNode,
     context: SchemaExtractorContext
   ): Promise<SchemaNode[] | undefined> {
     if (param.name.kind !== SyntaxKind.ObjectBindingPattern) return undefined;
     return pMapSeries(param.name.elements, async (elem: BindingElement) => {
-      const info =
-        elem.name.kind === SyntaxKind.ObjectBindingPattern ? undefined : await context.getQuickInfo(elem.name);
-      // @todo look into extracting nested objected binding patters
-      /**
-         * apiNode: {
-            api: {
-              name,
-              signature: defaultSignature,
-              doc, 
-              location: { filePath },
-            },
-          },
-         */
+      const existing = paramType.findNode?.((node) => {
+        return node.name === elem.name.getText().trim();
+      });
+      if (existing) return existing;
+      const info = await context.getQuickInfo(elem.name);
       const parsed = info ? parseTypeFromQuickInfo(info) : elem.getText();
-      return new InferenceTypeSchema(context.getLocation(param), parsed, elem.name.getText());
+      const defaultValue = elem.initializer ? elem.initializer.getText() : undefined;
+      return new InferenceTypeSchema(context.getLocation(elem.name), parsed, elem.name.getText(), defaultValue);
     });
   }
 }

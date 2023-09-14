@@ -1,5 +1,5 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { TypeUnionSchema } from '@teambit/semantics.entities.semantic-schema';
 
 import classnames from 'classnames';
@@ -20,7 +20,7 @@ function TypeUnionComponent(props: APINodeRenderProps) {
   const typeNode = api as TypeUnionSchema;
 
   return (
-    <div key={`${api.__schema}-${api.name}`} className={styles.node}>
+    <div key={`${api.__schema}-${api.name}`} className={nodeStyles.node}>
       {typeNode.types.map((type, index, types) => {
         const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
 
@@ -35,7 +35,7 @@ function TypeUnionComponent(props: APINodeRenderProps) {
                 metadata={{ [type.__schema]: { columnView: true } }}
               />
               {types.length > 1 && index !== types.length - 1 ? (
-                <div key={`${type.name}-${index}-|`} className={classnames(styles.node, styles.separator)}>
+                <div key={`${type.name}-${index}-|`} className={classnames(nodeStyles.node, styles.separator)}>
                   {'|'}
                 </div>
               ) : null}
@@ -44,10 +44,10 @@ function TypeUnionComponent(props: APINodeRenderProps) {
         }
 
         return (
-          <div key={`${type.name}-${index}`} className={styles.node}>
+          <div key={`${type.name}-${index}`} className={nodeStyles.node}>
             {type.toString()}
             {types.length > 1 && index !== types.length - 1 ? (
-              <div key={`${type.name}-${index}-|`} className={classnames(styles.node, styles.separator)}>
+              <div key={`${type.name}-${index}-|`} className={classnames(nodeStyles.node, styles.separator)}>
                 {'|'}
               </div>
             ) : null}

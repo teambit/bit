@@ -1,16 +1,34 @@
-import { Location, SchemaNode } from '../../schema-node';
+import { SchemaLocation, SchemaNode } from '../../schema-node';
 
 /**
  * e.g. `@deprecated please use something else`
  */
 export class TagSchema extends SchemaNode {
-  constructor(readonly location: Location, readonly tagName: TagName | string, readonly comment?: string) {
+  constructor(readonly location: SchemaLocation, readonly tagName: TagName | string, readonly comment?: string) {
     super();
   }
 
   toString() {
     const comment = this.comment ? ` ${this.comment}` : '';
     return `@${this.tagName}${comment}`;
+  }
+
+  static fromObject(obj: Record<string, any>): TagSchema {
+    const location = obj.location;
+    const tagName = obj.tagName;
+    const comment = obj.comment;
+    return new TagSchema(location, tagName, comment);
+  }
+
+  toObject() {
+    return {
+      __schema: this.__schema,
+      location: this.location,
+      name: this.name,
+      signature: this.signature,
+      tagName: this.tagName,
+      comment: this.comment,
+    };
   }
 }
 

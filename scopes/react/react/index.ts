@@ -2,6 +2,8 @@ export type { ReactMain, UseWebpackModifiers, UseTypescriptModifiers } from './r
 export type { ReactPreview } from './react.preview.runtime';
 export type { ReactAppType } from './apps/web/react.app-type';
 export type { ReactEnv } from './react.env';
+export { ReactSchema } from './react.schema';
+export { ReactAPITransformer } from './react.api.transformer';
 export type { ReactAppOptions, ReactDeployContext } from './apps/web';
 // Re-export it to indicate for people that extends the react env that we are using it
 // Commented - make errors in safari - SyntaxError: Invalid regular expression: invalid group specifier name

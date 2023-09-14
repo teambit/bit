@@ -22,7 +22,7 @@ import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
 import { TypescriptCompiler } from './typescript.compiler';
 import { TypeScriptParser } from './typescript.parser';
-import { SchemaTransformer } from './schema-transformer';
+import { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
 import { SchemaTransformerPlugin } from './schema-transformer.plugin';
 import {
   ExportDeclarationTransformer,
@@ -72,6 +72,7 @@ import { RemoveTypesTask } from './remove-types-task';
 export type TsMode = 'build' | 'dev';
 
 export type SchemaTransformerSlot = SlotRegistry<SchemaTransformer[]>;
+export type APITransformerSlot = SlotRegistry<SchemaNodeTransformer[]>;
 
 export type TsConfigTransformContext = {
   // mode: TsMode;
@@ -94,6 +95,7 @@ export class TypescriptMain {
   constructor(
     private logger: Logger,
     readonly schemaTransformerSlot: SchemaTransformerSlot,
+    readonly apiTransformerSlot: APITransformerSlot,
     readonly workspace: Workspace,
     readonly scope: ScopeMain,
     readonly depResolver: DependencyResolverMain,
@@ -122,6 +124,16 @@ export class TypescriptMain {
    */
   getTsserverClient(): TsserverClient | undefined {
     return this.tsServer;
+  }
+
+  registerSchemaTransformer(transformers: SchemaTransformer[]) {
+    this.schemaTransformerSlot.register(transformers);
+    return this;
+  }
+
+  registerApiTransformer(transformers: SchemaNodeTransformer[]) {
+    this.apiTransformerSlot.register(transformers);
+    return this;
   }
 
   /**
@@ -212,6 +224,7 @@ export class TypescriptMain {
     return new TypeScriptExtractor(
       tsconfig,
       this.schemaTransformerSlot,
+      this.apiTransformerSlot,
       this,
       tsserverPath || this.workspace?.path || '',
       contextPath || this.workspace?.path || '',
@@ -319,7 +332,7 @@ export class TypescriptMain {
     ScopeAspect,
     BuilderAspect,
   ];
-  static slots = [Slot.withType<SchemaTransformer[]>()];
+  static slots = [Slot.withType<SchemaTransformer[]>(), Slot.withType<SchemaNodeTransformer[]>()];
 
   static async provider(
     [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs, watcher, scope, builder]: [
@@ -335,7 +348,7 @@ export class TypescriptMain {
       BuilderMain
     ],
     config,
-    [schemaTransformerSlot]: [SchemaTransformerSlot]
+    [schemaTransformerSlot, apiTransformerSlot]: [SchemaTransformerSlot, APITransformerSlot]
   ) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
@@ -345,6 +358,7 @@ export class TypescriptMain {
     const tsMain = new TypescriptMain(
       logger,
       schemaTransformerSlot,
+      apiTransformerSlot,
       workspace,
       scope,
       depResolver,
@@ -352,7 +366,7 @@ export class TypescriptMain {
       tsconfigWriter,
       aspectLoader
     );
-    schemaTransformerSlot.register([
+    tsMain.registerSchemaTransformer([
       new ExportDeclarationTransformer(),
       new ExportAssignmentTransformer(),
       new FunctionLikeTransformer(),

@@ -1095,6 +1095,19 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/parameter"
     },
+    "renderers/react": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.api-reference",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/react",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "renderers/schema-node-member-summary": {
         "scope": "teambit.api-reference",
         "version": "0.0.18",
@@ -1346,6 +1359,13 @@
         "version": "0.0.263",
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-compare"
+    },
+    "ui/code-editor": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/code/ui/code-editor"
     },
     "ui/code-tab-page": {
         "scope": "teambit.code",

@@ -10,12 +10,21 @@
   font-weight: 500;
 }
 
+.containerList {
+  padding-left: 4px;
+}
+
+.subTitle {
+  padding-bottom: 16px;
+  font-size: var(--bit-p-sm);
+  font-weight: 400;
+}
+
 .value {
   font-size: var(--bit-p-xs);
   background: var(--bit-bg-dent);
   padding: 16px;
   border-radius: 6px;
-  font-family: Roboto mono;
 }
 
 .typeParams {
@@ -37,13 +46,9 @@
   // color: #397300;
   display: flex;
   color: #4646c6;
-  font-family: Roboto mono;
 }
 
-.node {
-  display: flex;
-  font-family: Roboto mono;
-  font-size: var(--bit-p-xxs);
-  word-break: normal;
-  color: rgb(57, 115, 0);
+.docComment {
+  font-size: var(--bit-p-xs);
+  padding-bottom: 16px;
 }
