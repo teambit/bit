@@ -1,8 +1,13 @@
 import React from 'react';
 import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { InferenceTypeSchema } from '@teambit/semantics.entities.semantic-schema';
+import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
+import tsxSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
+import defaultTheme from 'react-syntax-highlighter/dist/esm/styles/prism/vsc-dark-plus';
 import classNames from 'classnames';
 import styles from './inference-type.module.scss';
+
+SyntaxHighlighter.registerLanguage('tsx', tsxSyntax);
 
 export const inferenceTypeRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === InferenceTypeSchema.name,
@@ -15,27 +20,43 @@ function InferenceTypeComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
     className,
+    metadata,
   } = props;
 
   const inferenceTypeNode = api as InferenceTypeSchema;
-  // if(!inferenceTypeNode.type || !inferenceTypeNode.name) return null;
+  const typeToRender = (inferenceTypeNode.type || inferenceTypeNode.name) ?? '';
+  // ugly - but we need to make an educated guess if this is an object or not to decide if we should highlight it or not
+  const maybeObject = typeToRender.includes('{');
+  const disableHighlight = metadata?.[inferenceTypeNode.__schema]?.disableHighlight || !maybeObject;
+
+  const lang = React.useMemo(() => {
+    const langFromFileEnding = api.location.filePath?.split('.').pop();
+    if (langFromFileEnding === 'scss' || langFromFileEnding === 'sass') return 'css';
+    if (langFromFileEnding === 'mdx') return 'md';
+    return langFromFileEnding;
+  }, [api.location.filePath]);
 
   return (
     <div
       key={`inference-${inferenceTypeNode.name}`}
       className={classNames(nodeStyles.node, className, styles.inferenceWrapper)}
     >
-      {/* <SyntaxHighlighter
-        language={lang}
-        // style={defaultTheme}
-        customStyle={{
-          borderRadius: '8px',
-          marginTop: '4px',
-          padding: '4px',
-        }}
-      > */}
-      {inferenceTypeNode.type || inferenceTypeNode.name}
-      {/* </SyntaxHighlighter> */}
+      {!disableHighlight && (
+        <SyntaxHighlighter
+          language={lang}
+          style={defaultTheme}
+          customStyle={{
+            borderRadius: '8px',
+            marginTop: '4px',
+            padding: '8px',
+            fontFamily: 'roboto mono',
+            fontSize: 12,
+          }}
+        >
+          {typeToRender}
+        </SyntaxHighlighter>
+      )}
+      {disableHighlight && (inferenceTypeNode.type || inferenceTypeNode.name)}
     </div>
   );
 }

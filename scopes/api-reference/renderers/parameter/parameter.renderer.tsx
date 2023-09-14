@@ -23,7 +23,7 @@ function ParameterComponent(props: APINodeRenderProps) {
   const paramNode = api as ParameterSchema;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { name, isOptional, doc, type, defaultValue, objectBindingNodes, location } = paramNode;
+  const { name, isOptional, type, defaultValue, objectBindingNodes } = paramNode;
   const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
   const typeRef = type.name
     ? apiRefModel.apiByName.get(type.name) ||
@@ -46,7 +46,7 @@ function ParameterComponent(props: APINodeRenderProps) {
               className={styles.customTypeRow}
               apiNode={{ ...props.apiNode, api: bindingNode, renderer: bindingNodeRenderer }}
               depth={(props.depth ?? 0) + 1}
-              metadata={{ [_bindingNode.__schema]: { columnView: true } }}
+              metadata={{ [_bindingNode.__schema]: { columnView: true, disableHighlight: true } }}
             />
           )) || <div className={nodeStyles.node}>{bindingNode.toString()}</div>;
 
