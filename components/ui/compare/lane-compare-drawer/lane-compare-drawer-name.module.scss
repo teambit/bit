@@ -50,6 +50,16 @@
   white-space: nowrap;
   border-radius: 6px;
   background-color: var(--bit-bg-heavy, #f4f5f6);
+
+  &.override {
+    text-decoration: line-through;
+    color: var(--on-surface-medium-color, #707279);
+  }
+
+  &.overridden {
+    background-color: var(--on-surface-color, #2b2b2b);
+    color: var(--surface-neutral-active-color, #eeeff2);
+  }
 }
 
 .versionIcon {

@@ -251,21 +251,22 @@ export function CodeCompareView({
   };
 
   const diffEditor = useMemo(
-    () => (
-      <CodeCompareEditor
-        language={language}
-        modifiedPath={modifiedPath}
-        originalPath={originalPath}
-        originalFileContent={originalFileContent}
-        modifiedFileContent={modifiedFileContent}
-        handleEditorDidMount={handleEditorDidMount}
-        ignoreWhitespace={ignoreWhitespace}
-        editorViewMode={view}
-        wordWrap={wrap}
-        Loader={<CodeCompareViewLoader />}
-      />
-    ),
-    [modifiedFileContent, originalFileContent, ignoreWhitespace, view, wrap]
+    () =>
+      loading || files.length === 0 ? null : (
+        <CodeCompareEditor
+          language={language}
+          modifiedPath={modifiedPath}
+          originalPath={originalPath}
+          originalFileContent={originalFileContent}
+          modifiedFileContent={modifiedFileContent}
+          handleEditorDidMount={handleEditorDidMount}
+          ignoreWhitespace={ignoreWhitespace}
+          editorViewMode={view}
+          wordWrap={wrap}
+          Loader={<CodeCompareViewLoader />}
+        />
+      ),
+    [modifiedFileContent, originalFileContent, ignoreWhitespace, view, wrap, loading, files.length]
   );
 
   const containerHeightStyle = isFullScreen
@@ -273,6 +274,19 @@ export function CodeCompareView({
     : (!!containerHeight && `calc(${containerHeight} + 30px)`) || '250px';
 
   const codeContainerHeightStyle = isFullScreen ? 'calc(100% - 30px)' : containerHeight ?? '220px';
+
+  const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
+
+  const codeNavFiles = React.useMemo(() => {
+    return files.filter((file) => {
+      if (file === fileName) return true;
+      const codeCompareDataForFile = fileCompareDataByName?.get(file) ?? null;
+      const status = codeCompareDataForFile?.status;
+      if (componentCompareContext?.compare && !componentCompareContext.base && !status) return true;
+      if (status && status !== 'UNCHANGED') return true;
+      return false;
+    });
+  }, [files.length, fileName, fileCompareDataByName?.size]);
 
   return (
     <div
@@ -285,24 +299,26 @@ export function CodeCompareView({
       }}
       className={classNames(styles.componentCompareCodeViewContainer, className, isFullScreen && styles.isFullScreen)}
     >
-      <CodeCompareNavigation
-        files={files}
-        selectedFile={fileName}
-        fileIconMatchers={fileIconMatchers}
-        onTabClicked={onTabClicked}
-        getHref={getHref}
-        widgets={widgets}
-        Menu={
-          <CodeCompareEditorSettings
-            wordWrap={wrap}
-            ignoreWhitespace={ignoreWhitespace}
-            editorViewMode={view}
-            onViewModeChanged={(value) => setView(value)}
-            onWordWrapChanged={(value) => setWrap(value)}
-            onIgnoreWhitespaceChanged={(value) => setIgnoreWhitespace(value)}
-          />
-        }
-      />
+      {!loading && files.length > 0 && (
+        <CodeCompareNavigation
+          files={codeNavFiles}
+          selectedFile={fileName}
+          fileIconMatchers={fileIconMatchers}
+          onTabClicked={onTabClicked}
+          getHref={getHref}
+          widgets={widgets}
+          Menu={
+            <CodeCompareEditorSettings
+              wordWrap={wrap}
+              ignoreWhitespace={ignoreWhitespace}
+              editorViewMode={view}
+              onViewModeChanged={(value) => setView(value)}
+              onWordWrapChanged={(value) => setWrap(value)}
+              onIgnoreWhitespaceChanged={(value) => setIgnoreWhitespace(value)}
+            />
+          }
+        />
+      )}
       <div
         style={{
           minHeight: codeContainerHeightStyle,
@@ -312,9 +328,12 @@ export function CodeCompareView({
         className={classNames(styles.componentCompareCodeDiffEditorContainer, isFullScreen && styles.isFullScreen)}
       >
         <CodeCompareViewLoader
-          className={classNames(!loading && styles.hideLoader, isFullScreen && styles.isFullScreen)}
+          className={classNames(
+            !(loading || files.length === 0) && styles.hideLoader,
+            isFullScreen && styles.isFullScreen
+          )}
         />
-        {loading ? null : diffEditor}
+        {diffEditor}
       </div>
     </div>
   );
