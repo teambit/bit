@@ -341,12 +341,12 @@ export default class ComponentsList {
   async updateIdsFromModelIfTheyOutOfSync(ids: BitIds, loadOpts?: ComponentLoadOptions): Promise<BitIds> {
     const updatedIdsP = ids.map(async (id: BitId) => {
       const componentMap = this.bitMap.getComponentIfExist(id, { ignoreScopeAndVersion: true });
-      if (componentMap && !componentMap.id.hasVersion() && componentMap.defaultScope === id.scope) {
-        // component is out of sync, fix it by loading it from the consumer
-        const component = await this.consumer.loadComponent(id.changeVersion(LATEST), loadOpts);
-        return component.id;
-      }
-      return id;
+      if (!componentMap || componentMap.id.hasVersion()) return id;
+      const areSameScope = id.scope ? id.scope === componentMap.defaultScope : true;
+      if (!areSameScope) return id;
+      // component is out of sync, fix it by loading it from the consumer
+      const component = await this.consumer.loadComponent(id.changeVersion(LATEST), loadOpts);
+      return component.id;
     });
     const updatedIds = await Promise.all(updatedIdsP);
     return BitIds.fromArray(updatedIds);
