@@ -106,10 +106,7 @@ export default class ConsumerOverrides {
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return overridesValues.exclude.some(
-      (excludeRule) =>
-        this._isMatchByWildcard(bitId, excludeRule) ||
-        bitId.toStringWithoutVersion() === excludeRule ||
-        bitId.toStringWithoutScopeAndVersion() === excludeRule
+      (excludeRule) => this._isMatchByWildcard(bitId, excludeRule) || bitId.toStringWithoutVersion() === excludeRule
     );
   }
   /**
@@ -145,31 +142,8 @@ export default class ConsumerOverrides {
     return indexOfFirstWildcard(a) - indexOfFirstWildcard(b);
   }
 
-  updateOverridesIfChanged(component: Component, areEnvsChanged: boolean): boolean {
-    const overrides: ConsumerOverridesOfComponent = component.overrides.componentOverridesData;
-    const id: BitId = component.id;
-    const existingOverrides = this.getOverrideComponentData(id);
-    if (!areEnvsChanged && this.areOverridesObjectsEqual(existingOverrides, overrides)) return false;
-    const exactMatch = this.findExactMatch(id);
-    const key = exactMatch || id.toStringWithoutVersion();
-    this.overrides[key] = overrides;
-    this.hasChanged = true;
-    return true;
-  }
-
-  areOverridesObjectsEqual(
-    overridesA: ConsumerOverridesOfComponent | null | undefined,
-    overridesB: ConsumerOverridesOfComponent
-  ): boolean {
-    // seems like R.equals does a great job here. it compares objects by values (not by reference).
-    // also it disregards the keys order.
-    return R.equals(overridesA || {}, overridesB || {});
-  }
-
   findExactMatch(bitId: BitId): string | null | undefined {
-    return Object.keys(this.overrides).find(
-      (idStr) => bitId.toStringWithoutVersion() === idStr || bitId.toStringWithoutScopeAndVersion() === idStr
-    );
+    return Object.keys(this.overrides).find((idStr) => bitId.toStringWithoutVersion() === idStr);
   }
 
   removeExactMatch(bitId: BitId): boolean {

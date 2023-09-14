@@ -142,13 +142,10 @@ export default class Lane extends BitObject {
     }
   }
   removeComponent(id: BitId): boolean {
-    const existsComponent = this.getComponentByName(id);
+    const existsComponent = this.getComponent(id);
     if (!existsComponent) return false;
     this.components = this.components.filter((c) => !c.id.isEqualWithoutScopeAndVersion(id));
     return true;
-  }
-  getComponentByName(bitId: BitId): LaneComponent | undefined {
-    return this.components.find((c) => c.id.isEqualWithoutScopeAndVersion(bitId));
   }
   getComponent(id: BitId): LaneComponent | undefined {
     return this.components.find((c) => c.id.isEqualWithoutVersion(id));
@@ -168,7 +165,7 @@ export default class Lane extends BitObject {
       this.readmeComponent = undefined;
       return;
     }
-    const readmeComponent = this.getComponentByName(id);
+    const readmeComponent = this.getComponent(id);
     if (!readmeComponent) {
       this.readmeComponent = { id, head: null };
     } else {
