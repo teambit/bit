@@ -249,6 +249,10 @@ export class SnappingMain {
         `unable to run this command from a workspace, please create a new bare-scope and run it from there`
       );
     }
+    if (!this.scope) {
+      throw new BitError(`please create a new bare-scope and run it from there`);
+    }
+
     const tagDataPerComp = await Promise.all(
       tagDataPerCompRaw.map(async (tagData) => {
         return {
