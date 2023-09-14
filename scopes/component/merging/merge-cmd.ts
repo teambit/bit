@@ -230,7 +230,7 @@ ${mergeSnapError.message}
       failedComponents.map((failedComponent) => {
         if (!verbose && failedComponent.unchangedLegitimately) return null;
         const color = failedComponent.unchangedLegitimately ? 'white' : 'red';
-        return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.failureMessage)}`;
+        return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.unchangedMessage)}`;
       })
     ).join('\n');
     if (!body) {

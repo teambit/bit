@@ -51,9 +51,6 @@ importers:
       '@babel/register':
         specifier: 7.18.9
         version: 7.18.9(@babel/core@7.19.6)
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@babel/types':
         specifier: 7.22.3
         version: 7.22.3
@@ -1675,6 +1672,9 @@ importers:
         specifier: 2.0.0
         version: 2.0.0
     devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
       '@teambit/base-ui.theme.theme-provider':
         specifier: 1.0.1
         version: registry.npmjs.org/@teambit/base-ui.theme.theme-provider@1.0.1(react-dom@17.0.2)(react@17.0.2)
@@ -1903,9 +1903,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -1913,9 +1910,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -1955,9 +1949,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -1968,9 +1959,6 @@ importers:
         specifier: 15.4.3
         version: 15.4.3(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -2016,9 +2004,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fuse.js:
         specifier: 6.6.2
         version: 6.6.2
@@ -2041,9 +2026,6 @@ importers:
         specifier: 1.2.0
         version: 1.2.0(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@testing-library/jest-dom':
         specifier: 5.16.2
         version: 5.16.2
@@ -2083,9 +2065,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -2099,9 +2078,6 @@ importers:
         specifier: ^6.0.0
         version: 6.3.0(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -2141,9 +2117,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2154,9 +2127,6 @@ importers:
         specifier: 7.5.2
         version: 7.5.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -2190,9 +2160,6 @@ importers:
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2200,9 +2167,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -2230,9 +2194,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2240,9 +2201,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -2267,9 +2225,6 @@ importers:
 
   components/ui/compare/lane-compare-page:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2277,9 +2232,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -2304,9 +2256,6 @@ importers:
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2314,9 +2263,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -2341,9 +2287,6 @@ importers:
       '@teambit/design.ui.empty-box':
         specifier: 0.0.363
         version: 0.0.363(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2351,9 +2294,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -2378,9 +2318,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2388,9 +2325,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -2430,9 +2364,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2440,9 +2371,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -2482,9 +2410,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -2495,9 +2420,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -2525,9 +2447,6 @@ importers:
 
   components/ui/component-compare/compare-aspects/context:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2535,9 +2454,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -2568,9 +2484,6 @@ importers:
       '@teambit/design.ui.tree':
         specifier: 0.0.15
         version: 0.0.15(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2578,9 +2491,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -2602,9 +2512,6 @@ importers:
 
   components/ui/component-compare/compare-aspects/models/component-compare-aspects-model:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2612,9 +2519,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -2645,9 +2549,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2655,9 +2556,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -2682,9 +2580,6 @@ importers:
 
   components/ui/component-compare/context:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2692,9 +2587,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -2719,9 +2611,6 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2729,9 +2618,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -2756,9 +2642,6 @@ importers:
       '@teambit/base-react.navigation.link':
         specifier: 2.0.27
         version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2766,9 +2649,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -2793,9 +2673,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2803,9 +2680,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -2830,9 +2704,6 @@ importers:
 
   components/ui/component-compare/models/component-compare-change-type:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2840,9 +2711,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -2864,9 +2732,6 @@ importers:
 
   components/ui/component-compare/models/component-compare-hooks:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2874,9 +2739,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -2898,9 +2760,6 @@ importers:
 
   components/ui/component-compare/models/component-compare-model:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2908,9 +2767,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -2938,9 +2794,6 @@ importers:
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2951,9 +2804,6 @@ importers:
         specifier: ^6.0.0
         version: 6.3.0(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -2975,9 +2825,6 @@ importers:
 
   components/ui/component-compare/models/component-compare-state:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -2985,9 +2832,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -3015,9 +2859,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -3025,9 +2866,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -3052,9 +2890,6 @@ importers:
 
   components/ui/component-compare/utils/group-by-version:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -3062,9 +2897,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -3086,9 +2918,6 @@ importers:
 
   components/ui/component-compare/utils/lazy-loading:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -3099,9 +2928,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -3126,9 +2952,6 @@ importers:
 
   components/ui/component-compare/utils/sort-logs:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -3136,9 +2959,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -3160,9 +2980,6 @@ importers:
 
   components/ui/component-compare/utils/sort-tabs:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -3170,9 +2987,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -3197,9 +3011,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -3210,9 +3021,6 @@ importers:
         specifier: 7.5.2
         version: 7.5.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -3264,9 +3072,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash.flatten:
         specifier: 4.4.0
         version: 4.4.0
@@ -3277,9 +3082,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -3310,9 +3112,6 @@ importers:
       '@teambit/evangelist.elements.icon':
         specifier: 1.0.2
         version: registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -3320,9 +3119,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -3368,9 +3164,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -3384,9 +3177,6 @@ importers:
         specifier: ^6.0.0
         version: 6.3.0(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -3420,9 +3210,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -3430,9 +3217,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -3463,9 +3247,6 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash.flatten:
         specifier: 4.4.0
         version: 4.4.0
@@ -3476,9 +3257,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -3512,9 +3290,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash.flatten:
         specifier: 4.4.0
         version: 4.4.0
@@ -3528,9 +3303,6 @@ importers:
         specifier: ^6.0.0
         version: 6.3.0(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -3570,9 +3342,6 @@ importers:
       '@teambit/evangelist.elements.icon':
         specifier: 1.0.2
         version: registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -3580,9 +3349,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -3610,9 +3376,6 @@ importers:
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -3626,9 +3389,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -3662,9 +3422,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -3672,9 +3429,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -3699,9 +3453,6 @@ importers:
 
   components/ui/readme:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash.flatten:
         specifier: 4.4.0
         version: 4.4.0
@@ -3715,9 +3466,6 @@ importers:
         specifier: ^6.0.0
         version: 6.3.0(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -3742,9 +3490,6 @@ importers:
 
   components/ui/surfaces/menu/section:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -3752,9 +3497,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -15230,15 +14972,9 @@ importers:
 
   scopes/api-reference/api-reference:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15276,9 +15012,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15286,9 +15019,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -15316,9 +15046,6 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15326,9 +15053,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -15353,9 +15077,6 @@ importers:
       '@teambit/base-react.navigation.link':
         specifier: 2.0.27
         version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15363,9 +15084,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -15390,9 +15108,6 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15400,9 +15115,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -15424,9 +15136,6 @@ importers:
 
   scopes/api-reference/models/api-node-renderer:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15434,9 +15143,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -15461,9 +15167,6 @@ importers:
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15471,9 +15174,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -15507,9 +15207,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15520,9 +15217,6 @@ importers:
         specifier: ^6.0.0
         version: 6.3.0(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -15547,9 +15241,6 @@ importers:
 
   scopes/api-reference/renderers/class:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15557,9 +15248,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -15581,9 +15269,6 @@ importers:
 
   scopes/api-reference/renderers/enum:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15591,9 +15276,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -15621,9 +15303,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15631,9 +15310,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -15664,9 +15340,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15674,9 +15347,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -15701,9 +15371,6 @@ importers:
 
   scopes/api-reference/renderers/inference-type:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15711,9 +15378,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -15735,9 +15399,6 @@ importers:
 
   scopes/api-reference/renderers/interface:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15745,9 +15406,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -15772,9 +15430,6 @@ importers:
       '@teambit/documenter.ui.table-row':
         specifier: 4.1.13
         version: 4.1.13(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15782,9 +15437,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -15815,9 +15467,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15825,9 +15474,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -15864,9 +15510,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash.flatten:
         specifier: 4.4.0
         version: 4.4.0
@@ -15877,9 +15520,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -15907,9 +15547,6 @@ importers:
 
   scopes/api-reference/renderers/type:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15917,9 +15554,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -15941,9 +15575,6 @@ importers:
 
   scopes/api-reference/renderers/type-array:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15951,9 +15582,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -15978,9 +15606,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -15988,9 +15613,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -16015,9 +15637,6 @@ importers:
 
   scopes/api-reference/renderers/type-literal:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -16025,9 +15644,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -16058,9 +15674,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -16068,9 +15681,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -16098,9 +15708,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -16108,9 +15715,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -16135,9 +15739,6 @@ importers:
 
   scopes/api-reference/renderers/unresolved:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -16145,9 +15746,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -16169,9 +15767,6 @@ importers:
 
   scopes/api-reference/renderers/variable:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -16179,9 +15774,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -16227,9 +15819,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash.flatten:
         specifier: 4.4.0
         version: 4.4.0
@@ -16240,9 +15829,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -16270,9 +15856,6 @@ importers:
 
   scopes/api-reference/sections/api-reference-section:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -16280,9 +15863,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -16390,15 +15970,9 @@ importers:
 
   scopes/cloud/cloud:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -16481,9 +16055,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -16497,9 +16068,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -16557,9 +16125,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       is-binary-path:
         specifier: 2.1.0
         version: 2.1.0
@@ -16573,9 +16138,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -16615,9 +16177,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -16625,9 +16184,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -16652,15 +16208,9 @@ importers:
 
   scopes/community/community:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -16692,9 +16242,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -16702,9 +16249,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -16732,9 +16276,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -16742,9 +16283,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -16772,9 +16310,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -16782,9 +16317,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -16812,15 +16344,9 @@ importers:
       '@babel/core':
         specifier: 7.19.6
         version: 7.19.6
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -16870,18 +16396,12 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       cli-highlight:
         specifier: 2.1.9
         version: 2.1.9
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       ink:
         specifier: 3.2.0
         version: 3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -16944,9 +16464,6 @@ importers:
 
   scopes/compilation/compiler:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -16959,9 +16476,6 @@ importers:
       cli-highlight:
         specifier: 2.1.9
         version: 2.1.9
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -17039,15 +16553,9 @@ importers:
 
   scopes/compilation/multi-compiler:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -17082,9 +16590,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -17092,9 +16597,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -17119,9 +16621,6 @@ importers:
 
   scopes/component/changelog:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component.instructions.exporting-components':
         specifier: 0.0.7
         version: 0.0.7(react-dom@17.0.2)(react@17.0.2)
@@ -17140,9 +16639,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -17174,9 +16670,6 @@ importers:
 
   scopes/component/checkout:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -17189,9 +16682,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -17229,9 +16719,6 @@ importers:
 
   scopes/component/code:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/base-ui.constants.storage':
         specifier: 1.0.0
         version: registry.npmjs.org/@teambit/base-ui.constants.storage@1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -17244,9 +16731,6 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -17278,9 +16762,6 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/any-fs':
         specifier: 0.0.5
         version: 0.0.5
@@ -17329,9 +16810,6 @@ importers:
       copy-to-clipboard:
         specifier: 3.3.1
         version: 3.3.1
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
@@ -17402,18 +16880,12 @@ importers:
 
   scopes/component/component-compare:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/legacy-bit-id':
         specifier: 1.0.0
         version: 1.0.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
@@ -17454,12 +16926,6 @@ importers:
 
   scopes/component/component-descriptor:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -17515,9 +16981,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash.flatten:
         specifier: 4.4.0
         version: 4.4.0
@@ -17528,9 +16991,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -17558,9 +17018,6 @@ importers:
 
   scopes/component/component-filters/component-filter-context:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -17571,9 +17028,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -17604,9 +17058,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -17614,9 +17065,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -17656,9 +17104,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -17666,9 +17111,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -17699,9 +17141,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -17709,9 +17148,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -17755,9 +17191,6 @@ importers:
 
   scopes/component/component-log:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/graph.cleargraph':
         specifier: 0.0.1
         version: 0.0.1
@@ -17773,9 +17206,6 @@ importers:
       cli-table:
         specifier: 0.3.6
         version: 0.3.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -17834,15 +17264,9 @@ importers:
 
   scopes/component/component-sizer:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
@@ -17874,15 +17298,9 @@ importers:
 
   scopes/component/component-tree:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -17973,15 +17391,9 @@ importers:
 
   scopes/component/component-writer:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -18019,9 +17431,6 @@ importers:
 
   scopes/component/deprecation:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -18031,9 +17440,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
@@ -18065,18 +17471,12 @@ importers:
 
   scopes/component/dev-files:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       comment-json:
         specifier: 3.0.3
         version: 3.0.3
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
@@ -18123,9 +17523,6 @@ importers:
 
   scopes/component/forking:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -18138,9 +17535,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
@@ -18184,9 +17578,6 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/base-ui.routing.nav-link':
         specifier: 1.0.0
         version: registry.npmjs.org/@teambit/base-ui.routing.nav-link@1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -18229,9 +17620,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       dagre:
         specifier: 0.8.5
         version: 0.8.5
@@ -18293,9 +17681,6 @@ importers:
 
   scopes/component/isolator:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/any-fs':
         specifier: 0.0.5
         version: 0.0.5
@@ -18314,9 +17699,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       debug:
         specifier: 4.3.2
         version: 4.3.2
@@ -18396,18 +17778,12 @@ importers:
 
   scopes/component/issues:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -18451,9 +17827,6 @@ importers:
 
   scopes/component/lister:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -18466,9 +17839,6 @@ importers:
       cli-table:
         specifier: 0.3.6
         version: 0.3.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       ramda:
         specifier: 0.27.1
         version: 0.27.1
@@ -18509,9 +17879,6 @@ importers:
 
   scopes/component/merging:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -18524,9 +17891,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -18573,18 +17937,12 @@ importers:
 
   scopes/component/mover:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -18622,9 +17980,6 @@ importers:
 
   scopes/component/new-component-helper:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -18634,9 +17989,6 @@ importers:
       '@teambit/legacy-bit-id':
         specifier: 1.0.0
         version: 1.0.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -18671,9 +18023,6 @@ importers:
 
   scopes/component/refactoring:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -18683,9 +18032,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       isbinaryfile:
         specifier: 4.0.6
         version: 4.0.6
@@ -18723,9 +18069,6 @@ importers:
 
   scopes/component/remove:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -18738,9 +18081,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       group-array:
         specifier: 1.0.0
         version: 1.0.0
@@ -18790,9 +18130,6 @@ importers:
 
   scopes/component/renaming:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -18802,9 +18139,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -18842,9 +18176,6 @@ importers:
 
   scopes/component/snapping:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -18860,9 +18191,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -18930,9 +18258,6 @@ importers:
 
   scopes/component/stash:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -18942,9 +18267,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -18988,9 +18310,6 @@ importers:
 
   scopes/component/status:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -19003,9 +18322,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -19071,9 +18387,6 @@ importers:
 
   scopes/component/tracker:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -19083,9 +18396,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -19138,9 +18448,6 @@ importers:
       '@teambit/design.ui.pill-label':
         specifier: 0.0.356
         version: 0.0.356(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19148,9 +18455,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -19193,9 +18497,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       is-binary-path:
         specifier: 2.1.0
         version: 2.1.0
@@ -19209,9 +18510,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -19236,9 +18534,6 @@ importers:
 
   scopes/component/ui/component-artifacts/models/component-artifacts-model:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19246,9 +18541,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -19273,9 +18565,6 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19283,9 +18572,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -19325,9 +18611,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19335,9 +18618,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -19392,9 +18672,6 @@ importers:
       '@teambit/documenter.ui.sub-title':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.ui.sub-title@4.1.1(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19402,9 +18679,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -19432,9 +18706,6 @@ importers:
       '@teambit/design.ui.tooltip':
         specifier: 0.0.361
         version: 0.0.361(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       pretty-bytes:
         specifier: 5.6.0
         version: 5.6.0
@@ -19445,9 +18716,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -19475,9 +18743,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19485,9 +18750,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -19527,9 +18789,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19537,9 +18796,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -19585,9 +18841,6 @@ importers:
       '@testing-library/react':
         specifier: ^12.1.5
         version: 12.1.5(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19595,9 +18848,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -19652,9 +18902,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19662,9 +18909,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -19707,9 +18951,6 @@ importers:
       '@teambit/graphql.hooks.use-query-light':
         specifier: 1.0.0
         version: 1.0.0(graphql@15.8.0)(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19717,9 +18958,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -19744,9 +18982,6 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19754,9 +18989,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -19793,9 +19025,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19803,9 +19032,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -19854,9 +19080,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19870,9 +19093,6 @@ importers:
         specifier: 7.5.2
         version: 7.5.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -19924,9 +19144,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19934,9 +19151,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -19979,9 +19193,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -19989,9 +19200,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -20016,9 +19224,6 @@ importers:
 
   scopes/compositions/composition-card:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/base-ui.loaders.skeleton':
         specifier: 1.0.1
         version: 1.0.1(react-dom@17.0.2)(react@17.0.2)
@@ -20031,9 +19236,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -20065,9 +19267,6 @@ importers:
 
   scopes/compositions/compositions:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/base-react.navigation.link':
         specifier: 2.0.27
         version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -20113,9 +19312,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
@@ -20270,9 +19466,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -20283,9 +19476,6 @@ importers:
         specifier: ^3.0.0
         version: 3.1.4(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -20325,9 +19515,6 @@ importers:
       '@teambit/evangelist.surfaces.dropdown':
         specifier: 1.0.2
         version: registry.npmjs.org/@teambit/evangelist.surfaces.dropdown@1.0.2(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -20341,9 +19528,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -20368,9 +19552,6 @@ importers:
 
   scopes/compositions/ui/composition-compare-section:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -20378,9 +19559,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -20405,9 +19583,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash.flatten:
         specifier: 4.4.0
         version: 4.4.0
@@ -20418,9 +19593,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -20448,9 +19620,6 @@ importers:
 
   scopes/compositions/ui/compositions-overview:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -20458,9 +19627,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -20482,9 +19648,6 @@ importers:
 
   scopes/compositions/ui/hooks/use-composition:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -20492,9 +19655,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -20516,15 +19676,9 @@ importers:
 
   scopes/defender/eslint:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       eslint:
         specifier: 7.32.0
         version: 7.32.0
@@ -20605,9 +19759,6 @@ importers:
 
   scopes/defender/formatter:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -20617,9 +19768,6 @@ importers:
       cli-highlight:
         specifier: 2.1.9
         version: 2.1.9
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
@@ -20663,9 +19811,6 @@ importers:
 
   scopes/defender/jest:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@jest/test-result':
         specifier: 26.6.2
         version: 26.6.2
@@ -20675,9 +19820,6 @@ importers:
       comlink:
         specifier: 4.3.0
         version: 4.3.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       flatted:
         specifier: 3.1.0
         version: 3.1.0
@@ -20733,9 +19875,6 @@ importers:
 
   scopes/defender/linter:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -20745,9 +19884,6 @@ importers:
       cli-highlight:
         specifier: 2.1.9
         version: 2.1.9
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
@@ -20797,15 +19933,9 @@ importers:
       '@babel/register':
         specifier: 7.18.9
         version: 7.18.9(@babel/core@7.19.6)
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -20846,15 +19976,9 @@ importers:
 
   scopes/defender/multi-tester:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -20895,15 +20019,9 @@ importers:
 
   scopes/defender/prettier:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -20969,9 +20087,6 @@ importers:
 
   scopes/defender/tester:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -20981,9 +20096,6 @@ importers:
       cli-highlight:
         specifier: 2.1.9
         version: 2.1.9
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -21075,9 +20187,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -21085,9 +20194,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -21112,9 +20218,6 @@ importers:
 
   scopes/defender/ui/test-compare-section:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -21122,9 +20225,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -21152,9 +20252,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -21162,9 +20259,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -21210,9 +20304,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -21220,9 +20311,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -21253,9 +20341,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -21263,9 +20348,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -21296,9 +20378,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -21306,9 +20385,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -21336,9 +20412,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -21346,9 +20419,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -21376,9 +20446,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -21386,9 +20453,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -21416,9 +20480,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -21426,9 +20487,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -21453,9 +20511,6 @@ importers:
 
   scopes/dependencies/dependencies:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -21474,9 +20529,6 @@ importers:
       cli-table:
         specifier: 0.3.6
         version: 0.3.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -21520,9 +20572,6 @@ importers:
 
   scopes/dependencies/dependency-resolver:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@pnpm/core':
         specifier: 12.1.0
         version: 12.1.0(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.0)(@yarnpkg/core@3.5.2)(bluebird@3.7.2)
@@ -21544,9 +20593,6 @@ importers:
       cli-highlight:
         specifier: 2.1.9
         version: 2.1.9
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       execa:
         specifier: 2.1.0
         version: 2.1.0
@@ -21669,9 +20715,6 @@ importers:
 
   scopes/dependencies/pnpm:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@pnpm/client':
         specifier: 10.0.23
         version: 10.0.23(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.0)(bluebird@3.7.2)
@@ -21726,9 +20769,6 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       credentials-by-uri:
         specifier: 2.0.0
         version: 2.0.0
@@ -21784,9 +20824,6 @@ importers:
 
   scopes/dependencies/yarn:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@pnpm/parse-overrides':
         specifier: 4.0.2
         version: 4.0.2
@@ -21811,9 +20848,6 @@ importers:
       '@yarnpkg/plugin-npm':
         specifier: 2.7.4
         version: 2.7.4(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -21866,9 +20900,6 @@ importers:
 
   scopes/docs/docs:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/base-ui.loaders.skeleton':
         specifier: 1.0.1
         version: 1.0.1(react-dom@17.0.2)(react@17.0.2)
@@ -21887,9 +20918,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
@@ -21936,9 +20964,6 @@ importers:
       '@teambit/design.ui.round-loader':
         specifier: 0.0.355
         version: 0.0.355(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -21946,9 +20971,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -21970,9 +20992,6 @@ importers:
 
   scopes/docs/ui/overview-compare-section:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -21980,9 +20999,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -22007,9 +21023,6 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -22017,9 +21030,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -22044,9 +21054,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -22054,9 +21061,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -22081,15 +21085,9 @@ importers:
 
   scopes/envs/env:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -22118,9 +21116,6 @@ importers:
 
   scopes/envs/envs:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -22133,9 +21128,6 @@ importers:
       comment-json:
         specifier: 3.0.3
         version: 3.0.3
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
@@ -22182,9 +21174,6 @@ importers:
 
   scopes/envs/ui/env-icon:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -22192,9 +21181,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -22216,9 +21202,6 @@ importers:
 
   scopes/explorer/command-bar:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/base-ui.text.muted-text':
         specifier: 1.0.1
         version: registry.npmjs.org/@teambit/base-ui.text.muted-text@1.0.1(react-dom@17.0.2)(react@17.0.2)
@@ -22231,9 +21214,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       is-primitive:
         specifier: 3.0.1
         version: 3.0.1
@@ -22280,9 +21260,6 @@ importers:
 
   scopes/explorer/insights:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -22292,9 +21269,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -22344,9 +21318,6 @@ importers:
       '@teambit/explorer.ui.gallery.base-component-card':
         specifier: 0.0.503
         version: 0.0.503(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -22354,9 +21325,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -22381,9 +21349,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -22391,9 +21356,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -22418,9 +21380,6 @@ importers:
 
   scopes/generator/generator:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -22433,9 +21392,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       execa:
         specifier: 2.1.0
         version: 2.1.0
@@ -22488,18 +21444,12 @@ importers:
 
   scopes/git/git:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -22537,15 +21487,9 @@ importers:
 
   scopes/harmony/api-server:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -22586,18 +21530,12 @@ importers:
 
   scopes/harmony/application:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       ink:
         specifier: 3.2.0
         version: 3.2.0(@types/react@17.0.8)(bufferutil@4.0.3)(react@17.0.2)(utf-8-validate@5.0.5)
@@ -22668,9 +21606,6 @@ importers:
       '@babel/preset-typescript':
         specifier: 7.18.6
         version: 7.18.6(@babel/core@7.19.6)
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -22695,9 +21630,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -22747,9 +21679,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -22757,9 +21686,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -22787,9 +21713,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -22797,9 +21720,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -22824,9 +21744,6 @@ importers:
 
   scopes/harmony/aspect-loader:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/bvm.config':
         specifier: 0.2.2
         version: 0.2.2
@@ -22842,9 +21759,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -22891,9 +21805,6 @@ importers:
       '@apollo/client':
         specifier: 3.6.9
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/base-react.navigation.link':
         specifier: 2.0.27
         version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -22988,15 +21899,9 @@ importers:
 
   scopes/harmony/bit-custom-aspect:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -23037,18 +21942,12 @@ importers:
 
   scopes/harmony/cache:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       cacache:
         specifier: 15.0.5
         version: 15.0.5(bluebird@3.7.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -23092,18 +21991,12 @@ importers:
 
   scopes/harmony/cli:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       didyoumean:
         specifier: 1.2.1
         version: 1.2.1
@@ -23162,9 +22055,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -23172,9 +22062,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -23196,9 +22083,6 @@ importers:
 
   scopes/harmony/config:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -23208,9 +22092,6 @@ importers:
       comment-json:
         specifier: 3.0.3
         version: 3.0.3
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -23251,15 +22132,9 @@ importers:
 
   scopes/harmony/diagnostic:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       graphql-tag:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
@@ -23291,18 +22166,12 @@ importers:
 
   scopes/harmony/express:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       body-parser:
         specifier: 1.19.0
         version: 1.19.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       express:
         specifier: 4.17.1
         version: 4.17.1
@@ -23343,18 +22212,12 @@ importers:
 
   scopes/harmony/global-config:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -23395,9 +22258,6 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@graphql-modules/core':
         specifier: 0.7.17
         version: 0.7.17(graphql@15.8.0)(reflect-metadata@0.1.13)
@@ -23428,9 +22288,6 @@ importers:
       bufferutil:
         specifier: 4.0.3
         version: 4.0.3
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       cors:
         specifier: 2.8.5
         version: 2.8.5
@@ -23507,15 +22364,9 @@ importers:
 
   scopes/harmony/ipc-events:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -23553,18 +22404,12 @@ importers:
 
   scopes/harmony/logger:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       pretty-time:
         specifier: 1.1.0
         version: 1.1.0
@@ -23626,18 +22471,12 @@ importers:
 
   scopes/harmony/node:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/design.ui.empty-box':
         specifier: 0.0.363
         version: 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       jest-environment-node:
         specifier: 27.5.1
         version: 27.5.1
@@ -23672,15 +22511,9 @@ importers:
 
   scopes/harmony/pubsub:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       eventemitter2:
         specifier: 6.4.4
         version: 6.4.4
@@ -23746,9 +22579,6 @@ importers:
       copy-to-clipboard:
         specifier: 3.3.1
         version: 3.3.1
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       json-formatter-js:
         specifier: 2.3.4
         version: 2.3.4
@@ -23762,9 +22592,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -23792,18 +22619,12 @@ importers:
 
   scopes/harmony/worker:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       comlink:
         specifier: 4.3.0
         version: 4.3.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -23835,9 +22656,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -23845,9 +22663,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -23872,18 +22687,12 @@ importers:
 
   scopes/html/html:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       '@teambit/html.modules.render-template':
         specifier: 0.0.104
         version: 0.0.104
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       map-obj:
         specifier: 4.2.1
         version: 4.2.1
@@ -24036,9 +22845,6 @@ importers:
       '@teambit/base-react.navigation.link':
         specifier: 2.0.27
         version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -24049,9 +22855,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -24110,9 +22913,6 @@ importers:
 
   scopes/lanes/lanes:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/design.ui.pages.not-found':
         specifier: 0.0.366
         version: 0.0.366(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -24128,9 +22928,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fuse.js:
         specifier: 6.6.2
         version: 6.6.2
@@ -24186,9 +22983,6 @@ importers:
 
   scopes/lanes/merge-lanes:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -24201,9 +22995,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -24259,9 +23050,6 @@ importers:
       '@teambit/evangelist.elements.button':
         specifier: 1.0.6
         version: 1.0.6(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -24272,9 +23060,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -24305,18 +23090,12 @@ importers:
       '@babel/helper-plugin-test-runner':
         specifier: 7.16.7
         version: 7.16.7
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/design.ui.empty-box':
         specifier: 0.0.363
         version: 0.0.363(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -24458,15 +23237,9 @@ importers:
 
   scopes/mdx/readme:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -24501,9 +23274,6 @@ importers:
       '@teambit/mdx.ui.docs.link':
         specifier: 0.0.500
         version: 0.0.500(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -24511,9 +23281,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -24538,9 +23305,6 @@ importers:
 
   scopes/mdx/ui/mdx-scope-context:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -24548,9 +23312,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -24578,9 +23339,6 @@ importers:
       '@teambit/documenter.markdown.hybrid-live-code-snippet':
         specifier: 0.1.12
         version: 0.1.12(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)(typescript@4.7.4)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -24588,9 +23346,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -24627,9 +23382,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -24637,9 +23389,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -24664,9 +23413,6 @@ importers:
 
   scopes/pipelines/builder:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -24682,9 +23428,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       filenamify:
         specifier: 4.2.0
         version: 4.2.0
@@ -24761,12 +23504,6 @@ importers:
 
   scopes/pipelines/modules/builder-data:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -24826,9 +23563,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -24836,9 +23570,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -24863,9 +23594,6 @@ importers:
 
   scopes/pkg/pkg:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@pnpm/plugin-commands-publishing':
         specifier: 7.3.11
         version: 7.3.11(@pnpm/logger@5.0.0)(@pnpm/worker@0.3.0)(bluebird@3.7.2)
@@ -24878,9 +23606,6 @@ importers:
       cli-highlight:
         specifier: 2.1.9
         version: 2.1.9
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       execa:
         specifier: 2.1.0
         version: 2.1.0
@@ -24954,9 +23679,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -24964,9 +23686,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -25043,9 +23762,6 @@ importers:
 
   scopes/preview/preview:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -25055,9 +23771,6 @@ importers:
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       cross-fetch:
         specifier: 3.1.5
         version: 3.1.5
@@ -25140,9 +23853,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -25156,9 +23866,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -25195,9 +23902,6 @@ importers:
       '@teambit/evangelist.elements.icon':
         specifier: 1.0.2
         version: registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -25205,9 +23909,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -25232,9 +23933,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -25242,9 +23940,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -25272,9 +23967,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -25282,9 +23974,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -25309,9 +23998,6 @@ importers:
 
   scopes/react/bit-component-meta:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -25319,9 +24005,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -25544,9 +24227,6 @@ importers:
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       css-loader:
         specifier: 6.2.0
         version: 6.2.0(webpack@5.84.1)
@@ -25743,9 +24423,6 @@ importers:
       '@babel/preset-react':
         specifier: 7.18.6
         version: 7.18.6(@babel/core@7.19.6)
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
@@ -25761,9 +24438,6 @@ importers:
       babel-preset-react-app:
         specifier: ^10.0.0
         version: 10.0.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       css-loader:
         specifier: 6.2.0
         version: 6.2.0(webpack@5.84.1)
@@ -25876,9 +24550,6 @@ importers:
       '@babel/preset-react':
         specifier: 7.13.13
         version: 7.13.13(@babel/core@7.19.6)
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -25891,9 +24562,6 @@ importers:
       '@testing-library/jest-native':
         specifier: 4.0.4
         version: 4.0.4
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -25940,9 +24608,6 @@ importers:
       '@teambit/design.ui.pages.standalone-not-found-page':
         specifier: 0.0.369
         version: 0.0.369(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -25950,9 +24615,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -25992,9 +24654,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       jsx-to-string:
         specifier: 1.4.0
         version: 1.4.0
@@ -26008,9 +24667,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -26041,9 +24697,6 @@ importers:
       '@teambit/base-ui.utils.composer':
         specifier: 1.0.0
         version: registry.npmjs.org/@teambit/base-ui.utils.composer@1.0.0(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -26054,9 +24707,6 @@ importers:
         specifier: ^3.0.0
         version: 3.1.4(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -26084,9 +24734,6 @@ importers:
       '@teambit/documenter.ui.section':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.ui.section@4.1.1(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -26094,9 +24741,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -26121,9 +24765,6 @@ importers:
       '@teambit/documenter.ui.section':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.ui.section@4.1.1(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -26137,9 +24778,6 @@ importers:
         specifier: ^3.0.0
         version: 3.1.4(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -26173,9 +24811,6 @@ importers:
       '@teambit/documenter.ui.section':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.ui.section@4.1.1(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -26183,9 +24818,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -26216,9 +24848,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -26229,9 +24858,6 @@ importers:
         specifier: ^3.0.0
         version: 3.1.4(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -26262,9 +24888,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       query-string:
         specifier: 7.0.0
         version: 7.0.0
@@ -26275,9 +24898,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -26308,9 +24928,6 @@ importers:
       '@testing-library/react':
         specifier: ^12.1.5
         version: 12.1.5(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -26318,9 +24935,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -26342,18 +24956,12 @@ importers:
 
   scopes/scope/export:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -26400,9 +25008,6 @@ importers:
 
   scopes/scope/importer:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -26412,9 +25017,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -26474,9 +25076,6 @@ importers:
 
   scopes/scope/scope:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/base-ui.surfaces.split-pane.hover-splitter':
         specifier: 1.0.0
         version: registry.npmjs.org/@teambit/base-ui.surfaces.split-pane.hover-splitter@1.0.0(react-dom@17.0.2)(react@17.0.2)
@@ -26516,9 +25115,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -26586,18 +25182,12 @@ importers:
 
   scopes/scope/sign:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -26632,9 +25222,6 @@ importers:
       '@teambit/documenter.ui.highlighted-text':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.ui.highlighted-text@4.1.1(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -26642,9 +25229,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -26669,9 +25253,6 @@ importers:
 
   scopes/scope/ui/hooks/scope-context:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -26679,9 +25260,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -26706,9 +25284,6 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -26716,9 +25291,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -26746,9 +25318,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -26759,9 +25328,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -26792,9 +25358,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -26805,9 +25368,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -26847,9 +25407,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -26857,9 +25414,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -26884,18 +25438,12 @@ importers:
 
   scopes/scope/update-dependencies:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -26964,18 +25512,12 @@ importers:
 
   scopes/semantics/schema:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/base-react.navigation.link':
         specifier: 2.0.27
         version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -27352,9 +25894,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -27362,9 +25901,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -27451,18 +25987,12 @@ importers:
 
   scopes/typescript/typescript:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -27586,9 +26116,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -27596,9 +26123,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -27641,9 +26165,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -27651,9 +26172,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -27684,9 +26202,6 @@ importers:
       '@teambit/base-ui.constants.storage':
         specifier: 1.0.0
         version: registry.npmjs.org/@teambit/base-ui.constants.storage@1.0.0(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -27697,9 +26212,6 @@ importers:
         specifier: 11.0.0
         version: 11.0.0
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -27721,15 +26233,9 @@ importers:
 
   scopes/ui-foundation/harmony-ui-app/harmony-ui-app:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -27764,9 +26270,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -27777,9 +26280,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -27816,9 +26316,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -27826,9 +26323,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -27853,15 +26347,9 @@ importers:
 
   scopes/ui-foundation/notifications/aspect:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -27914,9 +26402,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -27924,9 +26409,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/base-ui.theme.dark-theme':
         specifier: 1.0.2
         version: registry.npmjs.org/@teambit/base-ui.theme.dark-theme@1.0.2(react-dom@17.0.2)(react@17.0.2)
@@ -27966,9 +26448,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -27976,9 +26455,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -28003,9 +26479,6 @@ importers:
 
   scopes/ui-foundation/notifications/ui/notification-context:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28013,9 +26486,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -28037,9 +26507,6 @@ importers:
 
   scopes/ui-foundation/notifications/ui/notification-store:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28047,9 +26514,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -28071,18 +26535,12 @@ importers:
 
   scopes/ui-foundation/panels:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28120,9 +26578,6 @@ importers:
 
   scopes/ui-foundation/react-router/react-router:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/base-react.navigation.link':
         specifier: 2.0.27
         version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
@@ -28132,9 +26587,6 @@ importers:
       '@teambit/ui-foundation.ui.navigation.react-router-adapter':
         specifier: 6.1.1
         version: 6.1.1(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28172,9 +26624,6 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -28188,9 +26637,6 @@ importers:
         specifier: ^6.0.0
         version: 6.3.0(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -28218,9 +26664,6 @@ importers:
       '@teambit/base-react.navigation.link':
         specifier: 2.0.27
         version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28228,9 +26671,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -28252,18 +26692,12 @@ importers:
 
   scopes/ui-foundation/sidebar:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -28307,9 +26741,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28317,9 +26748,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -28365,9 +26793,6 @@ importers:
       '@teambit/design.ui.tree':
         specifier: 0.0.15
         version: 0.0.15(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28375,9 +26800,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/code.ui.utils.get-file-icon':
         specifier: 0.0.495
         version: 0.0.495(react-dom@17.0.2)(react@17.0.2)
@@ -28423,9 +26845,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28433,9 +26852,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -28478,9 +26894,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28488,9 +26901,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -28518,9 +26928,6 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@pmmmwh/react-refresh-webpack-plugin':
         specifier: 0.5.4
         version: 0.5.4(@types/webpack@5.28.1)(react-refresh@0.10.0)(webpack-dev-server@4.15.0)(webpack@5.84.1)
@@ -28560,9 +26967,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       css-loader:
         specifier: 5.2.0
         version: 5.2.0(webpack@5.84.1)
@@ -28708,9 +27112,6 @@ importers:
 
   scopes/ui-foundation/uis/constants/z-indexes:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28718,9 +27119,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -28748,9 +27146,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28761,9 +27156,6 @@ importers:
         specifier: ^6.0.0
         version: 6.3.0(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -28788,9 +27180,6 @@ importers:
 
   scopes/ui-foundation/uis/full-loader:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28798,9 +27187,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -28822,9 +27208,6 @@ importers:
 
   scopes/ui-foundation/uis/global-loader:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28835,9 +27218,6 @@ importers:
         specifier: 8.3.2
         version: 8.3.2
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -28862,9 +27242,6 @@ importers:
 
   scopes/ui-foundation/uis/hooks/use-bind-key:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       mousetrap:
         specifier: 1.6.5
         version: 1.6.5
@@ -28875,9 +27252,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -28905,9 +27279,6 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28915,9 +27286,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -28939,9 +27307,6 @@ importers:
 
   scopes/ui-foundation/uis/hooks/use-in-out-transition:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28949,9 +27314,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -28973,9 +27335,6 @@ importers:
 
   scopes/ui-foundation/uis/hooks/use-is-mobile:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -28983,9 +27342,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -29010,9 +27366,6 @@ importers:
       '@teambit/react.rendering.ssr':
         specifier: 0.0.3
         version: 0.0.3(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29023,9 +27376,6 @@ importers:
         specifier: 0.7.24
         version: 0.7.24
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -29050,9 +27400,6 @@ importers:
 
   scopes/ui-foundation/uis/is-browser:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29060,9 +27407,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -29087,9 +27431,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29097,9 +27438,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -29136,9 +27474,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -29149,9 +27484,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -29179,9 +27511,6 @@ importers:
 
   scopes/ui-foundation/uis/pages/preview-not-found:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29189,9 +27518,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -29222,9 +27548,6 @@ importers:
       '@teambit/design.ui.pages.server-error':
         specifier: 0.0.366
         version: 0.0.366(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29232,9 +27555,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -29256,9 +27576,6 @@ importers:
 
   scopes/ui-foundation/uis/rendering/html:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29266,9 +27583,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -29320,9 +27634,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29333,9 +27644,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -29363,9 +27671,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29373,9 +27678,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -29406,9 +27708,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29416,9 +27715,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -29455,9 +27751,6 @@ importers:
       '@teambit/evangelist.elements.icon':
         specifier: 1.0.2
         version: registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29465,9 +27758,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -29489,9 +27779,6 @@ importers:
 
   scopes/ui-foundation/use-box/bottom-link:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29499,9 +27786,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -29535,9 +27819,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29545,9 +27826,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -29596,9 +27874,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash.flatten:
         specifier: 4.4.0
         version: 4.4.0
@@ -29612,9 +27887,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -29654,9 +27926,6 @@ importers:
       '@teambit/evangelist.elements.icon':
         specifier: 1.0.2
         version: registry.npmjs.org/@teambit/evangelist.elements.icon@1.0.2(react-dom@17.0.2)(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29664,9 +27933,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -29694,9 +27960,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29704,9 +27967,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -29737,9 +27997,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29750,9 +28007,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/classnames':
         specifier: 2.2.11
         version: 2.2.11
@@ -29777,15 +28031,9 @@ importers:
 
   scopes/ui-foundation/user-agent:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -29820,9 +28068,6 @@ importers:
 
   scopes/web-components/elements:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -29832,9 +28077,6 @@ importers:
       camelcase:
         specifier: 6.2.0
         version: 6.2.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -30010,9 +28252,6 @@ importers:
 
   scopes/webpack/webpack:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -30034,9 +28273,6 @@ importers:
       constants-browserify:
         specifier: 1.0.0
         version: 1.0.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       crypto-browserify:
         specifier: 3.12.0
         version: 3.12.0
@@ -30164,9 +28400,6 @@ importers:
       '@mdx-js/react':
         specifier: 1.6.22
         version: 1.6.22(react@17.0.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -30174,9 +28407,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -30201,12 +28431,6 @@ importers:
 
   scopes/workspace/bit-roots:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -30241,18 +28465,12 @@ importers:
 
   scopes/workspace/clear-cache:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -30281,18 +28499,12 @@ importers:
 
   scopes/workspace/eject:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -30321,9 +28533,6 @@ importers:
 
   scopes/workspace/install:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@pnpm/colorize-semver-diff':
         specifier: 1.0.1
         version: 1.0.1
@@ -30339,9 +28548,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       enquirer:
         specifier: 2.3.6
         version: 2.3.6
@@ -30487,9 +28693,6 @@ importers:
 
   scopes/workspace/ui/empty-workspace:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -30497,9 +28700,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -30533,9 +28733,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -30543,9 +28740,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -30585,9 +28779,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -30595,9 +28786,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.1
         version: registry.npmjs.org/@teambit/documenter.theme.theme-compositions@4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -30631,9 +28819,6 @@ importers:
 
   scopes/workspace/ui/workspace-component-card:
     dependencies:
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2
@@ -30641,9 +28826,6 @@ importers:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
     devDependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@types/jest':
         specifier: ^26.0.0
         version: 26.0.20
@@ -30665,9 +28847,6 @@ importers:
 
   scopes/workspace/variants:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
@@ -30677,9 +28856,6 @@ importers:
       comment-json:
         specifier: 3.0.3
         version: 3.0.3
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -30717,9 +28893,6 @@ importers:
 
   scopes/workspace/watcher:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -30735,9 +28908,6 @@ importers:
       chokidar:
         specifier: 3.5.3
         version: 3.5.3
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -30790,9 +28960,6 @@ importers:
       '@apollo/client':
         specifier: ^3.6.0
         version: 3.6.9(graphql@15.8.0)(react@17.0.2)(subscriptions-transport-ws@0.9.18)
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@react-hook/latest':
         specifier: 1.0.3
         version: 1.0.3(react@17.0.2)
@@ -30829,9 +28996,6 @@ importers:
       classnames:
         specifier: 2.2.6
         version: 2.2.6
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       detect-indent:
         specifier: 5.0.0
         version: 5.0.0
@@ -30926,18 +29090,12 @@ importers:
 
   scopes/workspace/workspace-config-files:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@teambit/harmony':
         specifier: 0.4.6
         version: 0.4.6
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
