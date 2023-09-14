@@ -152,10 +152,7 @@ export default class ComponentWriter {
     return this.bitMap.addComponent({
       componentId: await this.replaceSnapWithTagIfNeeded(),
       files: filesForBitMap,
-      defaultScope: await this.workspace.componentDefaultScopeFromComponentDirAndName(
-        rootDir,
-        componentId.toStringWithoutScopeAndVersion()
-      ),
+      defaultScope: await this.workspace.componentDefaultScopeFromComponentDirAndName(rootDir, componentId.name),
       mainFile: pathNormalizeToLinux(this.component.mainFile),
       rootDir,
     });
