@@ -15,9 +15,16 @@ export const classRenderer: APINodeRenderer = {
 function ClassComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
+    metadata,
+    // depth
   } = props;
   const classNode = api as ClassSchema;
   const { extendsNodes, implementNodes, signature, members } = classNode;
+
+  if (metadata?.columnView?.[api.__schema]) {
+    // todo handle when recursively rendering a class
+    return <React.Fragment key={`class-column-view-${classNode.toString()}`}>{classNode.toString()}</React.Fragment>;
+  }
 
   const extendsSignature = extendsNodes?.[0]?.name;
   const implementsDefinition = implementNodes?.[0]?.name;

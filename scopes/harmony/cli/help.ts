@@ -19,11 +19,11 @@ type GroupContent = {
   description: string;
 };
 
-export function formatHelp(commands: CommandList, groups: GroupsType, docsDomain: string, showPrivateCommands = false) {
+export function formatHelp(commands: CommandList, groups: GroupsType, showPrivateCommands = false) {
   const helpProps = groupCommands(commands, groups, showPrivateCommands);
   const commandsStr = formatCommandsHelp(helpProps);
 
-  return `${getHeader(docsDomain)}
+  return `${getHeader()}
 
 ${commandsStr}
 
@@ -69,10 +69,10 @@ function commandTemplate(name: string, description: string): string {
   return res;
 }
 
-function getHeader(docsDomain: string): string {
+function getHeader(): string {
   return `${chalk.bold('usage: bit [--version] [--help] <command> [<args>]')}
 
-${chalk.yellow(`bit documentation: https://${docsDomain}`)}`;
+${chalk.yellow(`bit documentation: https://bit.dev/`)}`;
 }
 
 function getFooter(): string {

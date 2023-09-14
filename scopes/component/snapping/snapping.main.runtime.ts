@@ -48,6 +48,7 @@ import {
   ArtifactSource,
   getArtifactsFiles,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { VersionNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';
@@ -150,9 +151,6 @@ export class SnappingMain {
     failFast?: boolean;
   } & Partial<BasicTagParams>): Promise<TagResults | null> {
     if (soft) build = false;
-    if (disableTagAndSnapPipelines && ignoreBuildErrors) {
-      throw new BitError('you can use either ignore-build-errors or disable-tag-pipeline, but not both');
-    }
     if (editor && persist) {
       throw new BitError('you can use either --editor or --persist, but not both');
     }
@@ -184,9 +182,7 @@ export class SnappingMain {
     this.logger.debug(`tagging the following components: ${legacyBitIds.toString()}`);
     const components = await this.loadComponentsForTagOrSnap(legacyBitIds, !soft);
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
-    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
-    await this.throwForComponentIssues(components, ignoreIssues);
-    this.throwForPendingImport(consumerComponents);
+    await this.throwForVariousIssues(components, ignoreIssues);
 
     const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig, removedComponents } =
       await tagModelComponent({
@@ -265,7 +261,7 @@ export class SnappingMain {
       })
     );
     const componentIds = tagDataPerComp.map((t) => t.componentId);
-    await this.scope.import(componentIds);
+    await this.scope.import(componentIds, { preferDependencyGraph: false, reason: 'of the seeders to tag' });
     const deps = compact(tagDataPerComp.map((t) => t.dependencies).flat()).map((dep) => dep.changeVersion(LATEST));
     const additionalComponentIdsToFetch = await Promise.all(
       componentIds.map(async (id) => {
@@ -283,7 +279,10 @@ if you're willing to lose the history from the head to the specified version, us
     );
 
     // import deps to be able to resolve semver
-    await this.scope.import([...deps, ...compact(additionalComponentIdsToFetch)], { useCache: false });
+    await this.scope.import([...deps, ...compact(additionalComponentIdsToFetch)], {
+      useCache: false,
+      reason: `which are the dependencies of the ${componentIds.length} seeders`,
+    });
     await Promise.all(
       tagDataPerComp.map(async (tagData) => {
         tagData.dependencies = tagData.dependencies
@@ -388,7 +387,11 @@ if you're willing to lose the history from the head to the specified version, us
       this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
     }
 
-    await this.scope.import(componentIdsLatest, { lane });
+    await this.scope.import(componentIdsLatest, {
+      preferDependencyGraph: false,
+      lane,
+      reason: `seeders to snap`,
+    });
     const components = await this.scope.getMany(componentIdsLatest);
     await Promise.all(
       components.map(async (comp) => {
@@ -486,9 +489,7 @@ if you're willing to lose the history from the head to the specified version, us
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     const components = await this.loadComponentsForTagOrSnap(ids);
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
-    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
-    await this.throwForComponentIssues(components, ignoreIssues);
-    this.throwForPendingImport(consumerComponents);
+    await this.throwForVariousIssues(components, ignoreIssues);
 
     const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await tagModelComponent({
       workspace: this.workspace,
@@ -626,7 +627,16 @@ there are matching among unmodified components thought. consider using --unmodif
 
   async _addFlattenedDependenciesToComponents(components: ConsumerComponent[]) {
     loader.start('importing missing dependencies...');
-    const lane = await this.scope.legacyScope.getCurrentLaneObject();
+    const getLane = async () => {
+      const lane = await this.scope.legacyScope.getCurrentLaneObject();
+      if (!lane) return undefined;
+      if (!lane.isNew) return lane;
+      const forkedFrom = lane.forkedFrom;
+      if (!forkedFrom) return undefined;
+      return this.scope.legacyScope.loadLane(forkedFrom);
+    };
+    const lane = await getLane();
+
     const flattenedDependenciesGetter = new FlattenedDependenciesGetter(
       this.scope.legacyScope,
       components,
@@ -640,29 +650,72 @@ there are matching among unmodified components thought. consider using --unmodif
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
     const lane = await this.scope.legacyScope.getCurrentLaneObject();
     const allIds = BitIds.fromArray(components.map((c) => c.id));
+    const missingDeps = await pMapSeries(components, async (component) => {
+      return this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined);
+    });
+    const flattenedMissingDeps = BitIds.uniqFromArray(missingDeps.flat().map((id) => id.changeVersion(undefined)));
+    if (!flattenedMissingDeps.length) return;
+    // ignore the cache. even if the component exists locally, we still need its VersionHistory object
+    // in order to traverse the history and determine whether it's part of the lane history.
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(flattenedMissingDeps, {
+      cache: false,
+      ignoreMissingHead: true,
+      includeVersionHistory: true,
+      lane: lane || undefined,
+      reason: 'of latest with version-history to make sure there are no dependencies from another lane',
+    });
     await pMapSeries(components, async (component) => {
-      await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined);
+      await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined, true);
     });
   }
-  private async throwForDepsFromAnotherLaneForComp(component: ConsumerComponent, allIds: BitIds, lane?: Lane) {
+
+  private async throwForVariousIssues(components: Component[], ignoreIssues?: string) {
+    const componentsToCheck = components.filter((c) => !c.isDeleted());
+    const consumerComponents = componentsToCheck.map((c) => c.state._consumer) as ConsumerComponent[];
+    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
+    await this.throwForComponentIssues(componentsToCheck, ignoreIssues);
+    this.throwForPendingImport(consumerComponents);
+  }
+
+  private async throwForDepsFromAnotherLaneForComp(
+    component: ConsumerComponent,
+    allIds: BitIds,
+    lane?: Lane,
+    throwForMissingObjects = false
+  ) {
     const deps = component.getAllDependencies();
+    const missingDeps: BitId[] = [];
     await Promise.all(
       deps.map(async (dep) => {
         if (!dep.id.hasScope() || !dep.id.hasVersion()) return;
         if (isTag(dep.id.version)) return;
         if (allIds.hasWithoutVersion(dep.id)) return; // it's tagged/snapped now.
-        const isPartOfHistory = lane
-          ? (await this.scope.legacyScope.isPartOfLaneHistory(dep.id, lane)) ||
-            (await this.scope.legacyScope.isPartOfMainHistory(dep.id))
-          : await this.scope.legacyScope.isPartOfMainHistory(dep.id);
+        let isPartOfHistory: boolean | undefined;
+        try {
+          isPartOfHistory = lane
+            ? (await this.scope.legacyScope.isPartOfLaneHistory(dep.id, lane)) ||
+              (await this.scope.legacyScope.isPartOfMainHistory(dep.id))
+            : await this.scope.legacyScope.isPartOfMainHistory(dep.id);
+        } catch (err) {
+          if (throwForMissingObjects) throw err;
+          if (err instanceof VersionNotFound) {
+            missingDeps.push(dep.id);
+            return;
+          }
+          throw err;
+        }
+
         if (!isPartOfHistory) {
           const laneOrMainStr = lane ? `current lane "${lane.name}"` : 'main';
           throw new Error(
-            `unable to tag/snap ${component.id.toString()}, it has a dependency ${dep.id.toString()} which is not part of ${laneOrMainStr} history.`
+            `unable to tag/snap ${component.id.toString()}, it has a dependency ${dep.id.toString()} which is not part of ${laneOrMainStr} history.
+one option to resolve this is installing ${dep.id.toStringWithoutVersion()} via "bit install", which installs the version from main.
+another option, in case this dependency is not in main yet is to remove all references of this dependency in the code and then tag/snap.`
           );
         }
       })
     );
+    return missingDeps;
   }
 
   async _addFlattenedDepsGraphToComponents(components: ConsumerComponent[]) {
@@ -774,9 +827,16 @@ there are matching among unmodified components thought. consider using --unmodif
             `source.previouslyUsedVersion must be set for ${component.name} because it's unrelated resolved.`
           );
         }
-        const unrelatedHead = Ref.from(source.previouslyUsedVersion);
-        version.unrelated = { head: unrelatedHead, laneId: unmergedComponent.laneId };
-        version.addAsOnlyParent(unmergedComponent.head);
+        if (unmergedComponent.unrelated === true) {
+          // backward compatibility
+          const unrelatedHead = Ref.from(source.previouslyUsedVersion);
+          version.setUnrelated({ head: unrelatedHead, laneId: unmergedComponent.laneId });
+          version.addAsOnlyParent(unmergedComponent.head);
+        } else {
+          const unrelated = unmergedComponent.unrelated;
+          version.setUnrelated({ head: unrelated.unrelatedHead, laneId: unrelated.unrelatedLaneId });
+          version.addAsOnlyParent(unrelated.headOnCurrentLane);
+        }
       } else {
         // this is adding a second parent to the version. the order is important. the first parent is coming from the current-lane.
         version.addParent(unmergedComponent.head);
@@ -804,6 +864,10 @@ there are matching among unmodified components thought. consider using --unmodif
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     const { version, files, flattenedEdges } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
+    version.origin = {
+      id: { scope: source.scope || (source.defaultScope as string), name: source.name },
+      lane: lane ? { scope: lane.scope, name: lane.name, hash: lane.hash().toString() } : undefined,
+    };
     objectRepo.add(version);
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
@@ -878,7 +942,6 @@ there are matching among unmodified components thought. consider using --unmodif
 
   private throwForPendingImport(components: ConsumerComponent[]) {
     const componentsMissingFromScope = components
-      .filter((c) => !c.isRemoved())
       .filter((c) => !c.componentFromModel && c.id.hasScope())
       .map((c) => c.id.toString());
     if (componentsMissingFromScope.length) {

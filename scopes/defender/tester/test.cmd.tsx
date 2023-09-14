@@ -20,7 +20,7 @@ type TestFlags = {
 
 export class TestCmd implements Command {
   name = 'test [component-pattern]';
-  description = 'test components in the workspace';
+  description = 'test components in the workspace. by default only runs tests for new and modified components';
   helpUrl = 'reference/testing/tester-overview';
   arguments = [
     {
@@ -36,7 +36,7 @@ export class TestCmd implements Command {
     ['a', 'all', 'test all components, not only new and modified'],
     ['', 'junit <filepath>', 'write tests results as JUnit XML format into the specified file path'],
     ['', 'coverage', 'show code coverage data'],
-    ['e', 'env <id>', 'test only the given env'],
+    ['e', 'env <id>', 'test only components assigned the given env'],
     [
       's',
       'scope <scope-name>',
@@ -115,7 +115,7 @@ export class TestCmd implements Command {
       code,
       data: (
         <Box>
-          <Text>test has been completed in </Text>
+          <Text>tests has been completed in </Text>
           <Text color="cyan">{seconds} </Text>
           <Text>seconds.</Text>
         </Box>

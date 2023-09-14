@@ -1,6 +1,5 @@
 import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, TagMap } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
 import { compact, fromPairs, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -32,14 +31,29 @@ export class WorkspaceComponentLoader {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
-  async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
+  async getMany(
+    ids: Array<ComponentID>,
+    loadOpts?: ComponentLoadOptions,
+    throwOnFailure = true
+  ): Promise<{
+    components: Component[];
+    invalidComponents: InvalidComponent[];
+  }> {
     const idsWithoutEmpty = compact(ids);
     const errors: { id: ComponentID; err: Error }[] = [];
+    const invalidComponents: InvalidComponent[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
       return this.get(id, undefined, undefined, undefined, loadOpts).catch((err) => {
-        if (this.isComponentNotExistsError(err)) {
+        if (ConsumerComponent.isComponentInvalidByErrorType(err) && !throwOnFailure) {
+          invalidComponents.push({
+            id,
+            err,
+          });
+          return undefined;
+        }
+        if (this.isComponentNotExistsError(err) || err instanceof ComponentNotFoundInPath) {
           errors.push({
             id,
             err,
@@ -57,7 +71,7 @@ export class WorkspaceComponentLoader {
     // remove errored components
     const filteredComponents: Component[] = compact(components);
     longProcessLogger.end();
-    return filteredComponents;
+    return { components: filteredComponents, invalidComponents };
   }
 
   async getInvalid(ids: Array<ComponentID>): Promise<InvalidComponent[]> {
@@ -152,20 +166,13 @@ export class WorkspaceComponentLoader {
       consumerComponent.issues.getOrCreate(IssuesClasses.MergeConfigHasConflict).data = true;
     }
 
-    const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
-    // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
-    const extensionDataList = ExtensionDataList.mergeConfigs([
-      extensionsFromConsumerComponent,
-      extensions,
-    ]).filterRemovedExtensions();
-
     // temporarily mutate consumer component extensions until we remove all direct access from legacy to extensions data
     // TODO: remove this once we remove all direct access from legacy code to extensions data
-    consumerComponent.extensions = extensionDataList;
+    consumerComponent.extensions = extensions;
 
     const state = new State(
-      new Config(consumerComponent.mainFile, extensionDataList),
-      await this.workspace.createAspectList(extensionDataList),
+      new Config(consumerComponent.mainFile, extensions),
+      await this.workspace.createAspectList(extensions),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
       consumerComponent
@@ -208,7 +215,7 @@ export class WorkspaceComponentLoader {
     return undefined;
   }
 
-  async getConsumerComponent(
+  private async getConsumerComponent(
     id: ComponentID,
     loadOpts: ComponentLoadOptions = {}
   ): Promise<ConsumerComponent | undefined> {
@@ -235,11 +242,7 @@ export class WorkspaceComponentLoader {
   }
 
   private isComponentNotExistsError(err: Error): boolean {
-    return (
-      err instanceof ComponentNotFound ||
-      err instanceof MissingBitMapComponent ||
-      err instanceof ComponentNotFoundInPath
-    );
+    return err instanceof ComponentNotFound || err instanceof MissingBitMapComponent;
   }
 
   private async executeLoadSlot(component: Component, loadOpts?: ComponentLoadOptions) {
@@ -279,16 +282,13 @@ export class WorkspaceComponentLoader {
     component.state.aspects = aspectListWithEnvsAndDeps;
 
     const entries = this.workspace.onComponentLoadSlot.toArray();
-    const promises = entries.map(async ([extension, onLoad]) => {
+    await mapSeries(entries, async ([extension, onLoad]) => {
       const data = await onLoad(component, loadOpts);
-      return this.upsertExtensionData(component, extension, data);
+      await this.upsertExtensionData(component, extension, data);
+      // Update the aspect list to have changes happened during the on load slot (new data added above)
+      component.state.aspects.upsertEntry(await this.workspace.resolveComponentId(extension), data);
     });
 
-    await Promise.all(promises);
-
-    // Update the aspect list to have changes happened during the on load slot (new data added above)
-    const updatedAspectList = await this.workspace.createAspectList(component.state.config.extensions);
-    component.state.aspects = updatedAspectList;
     return component;
   }
 

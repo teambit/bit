@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component';
 import { applyUpdates } from './apply-updates';
 
 describe('applyUpdates()', () => {
@@ -19,7 +20,6 @@ describe('applyUpdates()', () => {
       ],
       {
         variantPoliciesByPatterns: {},
-        componentPoliciesById: {},
       }
     );
     // @ts-ignore
@@ -115,7 +115,6 @@ describe('applyUpdates()', () => {
       ],
       {
         variantPoliciesByPatterns,
-        componentPoliciesById: {},
       }
     );
     // @ts-ignore
@@ -165,67 +164,52 @@ describe('applyUpdates()', () => {
     });
   });
   it('should apply updates on component dependencies', () => {
-    const componentPoliciesById = {
-      component1: {
-        dependencies: {
-          'component1-runtime-dep1': { version: '1.0.0', resolveFromEnv: true },
-          'component1-runtime-dep2': '1.0.0',
-        },
-        devDependencies: {
-          'component1-dev-dep1': '1.0.0',
-          'component1-dev-dep2': '1.0.0',
-        },
-        peerDependencies: {
-          'component1-peer-dep1': '1.0.0',
-          'component1-peer-dep2': '1.0.0',
-        },
-      },
-    };
-    applyUpdates(
+    const { updatedComponents } = applyUpdates(
       [
         {
           name: 'component1-runtime-dep1',
           latestRange: '2.0.0',
           source: 'component',
-          componentId: 'component1',
+          componentId: ComponentID.fromString('scope/component1'),
           targetField: 'dependencies',
         },
         {
           name: 'component1-dev-dep1',
           latestRange: '2.0.0',
           source: 'component',
-          componentId: 'component1',
+          componentId: ComponentID.fromString('scope/component1'),
           targetField: 'devDependencies',
         },
         {
           name: 'component1-peer-dep1',
           latestRange: '2.0.0',
           source: 'component',
-          componentId: 'component1',
+          componentId: ComponentID.fromString('scope/component1'),
           targetField: 'peerDependencies',
         },
       ],
       {
         variantPoliciesByPatterns: {},
-        componentPoliciesById,
       }
     );
     // @ts-ignore
-    expect(componentPoliciesById).toStrictEqual({
-      component1: {
-        dependencies: {
-          'component1-runtime-dep1': { version: '2.0.0', resolveFromEnv: true },
-          'component1-runtime-dep2': '1.0.0',
-        },
-        devDependencies: {
-          'component1-dev-dep1': '2.0.0',
-          'component1-dev-dep2': '1.0.0',
-        },
-        peerDependencies: {
-          'component1-peer-dep1': '2.0.0',
-          'component1-peer-dep2': '1.0.0',
+    expect(updatedComponents).toStrictEqual([
+      {
+        componentId: ComponentID.fromString('scope/component1'),
+        config: {
+          policy: {
+            dependencies: {
+              'component1-runtime-dep1': '2.0.0',
+            },
+            devDependencies: {
+              'component1-dev-dep1': '2.0.0',
+            },
+            peerDependencies: {
+              'component1-peer-dep1': '2.0.0',
+            },
+          },
         },
       },
-    });
+    ]);
   });
 });

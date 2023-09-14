@@ -2,36 +2,39 @@ import chalk from 'chalk';
 import { applyVersionReport, installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
 import { Command, CommandOptions } from '@teambit/cli';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { LanesMain } from './lanes.main.runtime';
 
 export class SwitchCmd implements Command {
-  name = 'switch <lane> [pattern]';
+  name = 'switch <lane>';
   description = `switch to the specified lane`;
+  extendedDescription = ``;
   private = true;
   alias = '';
   arguments = [
     {
       name: 'lane',
-      description: 'lane-name or lane-id (if not exists locally) to switch to',
+      description: 'lane-name or lane-id (if lane is not local) to switch to',
     },
   ];
   options = [
     [
       'n',
       'alias <string>',
-      'relevant when the specified lane is a remote late. name a local lane differently than the remote lane',
+      "relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote",
     ],
     [
       'm',
       'merge [strategy]',
       'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"',
     ],
-    ['a', 'get-all', 'checkout all components in a lane include ones that do not exist in the workspace'],
-    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['a', 'get-all', 'checkout all components in a lane, including those not currently in the workspace'],
+    ['x', 'skip-dependency-installation', 'do not install dependencies of the imported components'],
     [
       'p',
       'pattern <component-pattern>',
-      'switch only the specified component-pattern. works only when the workspace is empty',
+      `switch only the lane components matching the specified component-pattern. only works when the workspace is empty\n
+${COMPONENT_PATTERN_HELP}`,
     ],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
@@ -70,29 +73,20 @@ export class SwitchCmd implements Command {
     }
     const getFailureOutput = () => {
       if (!failedComponents || !failedComponents.length) return '';
-      const title = 'the switch has been canceled on the following component(s)';
+      const title = 'the switch has been canceled for the following component(s)';
       const body = failedComponents
         .map((failedComponent) => {
           const color = failedComponent.unchangedLegitimately ? 'white' : 'red';
-          return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.failureMessage)}`;
+          return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.unchangedMessage)}`;
         })
         .join('\n');
       return `${title}\n${body}\n\n`;
     };
     const getSuccessfulOutput = () => {
       const laneSwitched = chalk.green(`\nsuccessfully set "${chalk.bold(lane)}" as the active lane`);
-      if (!components || !components.length) return `No component had been changed.${laneSwitched}`;
-      if (components.length === 1) {
-        const component = components[0];
-        const componentName = component.id.toStringWithoutVersion();
-        const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(
-          component.id.version as string
-        )}\n`;
-        return `${title} ${applyVersionReport(components, false)}${laneSwitched}`;
-      }
-      const title = `successfully switched the following components to the version of ${lane}\n\n`;
-      const componentsStr = applyVersionReport(components, true, false);
-      return title + componentsStr + laneSwitched;
+      if (!components || !components.length) return `No components have been changed.${laneSwitched}`;
+      const title = `successfully switched ${components.length} components to the head of lane ${lane}\n`;
+      return chalk.bold(title) + applyVersionReport(components, true, false) + laneSwitched;
     };
     const failedOutput = getFailureOutput();
     const successOutput = getSuccessfulOutput();

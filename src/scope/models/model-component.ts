@@ -515,6 +515,7 @@ export default class Component extends BitObject {
           includeVersionHistory: true,
           collectParents: true,
           lane: lane || undefined,
+          reason: 'to collect logs (including parents)',
         });
         versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
       } catch (err) {
@@ -1087,21 +1088,29 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return this.getDivergeData().isSourceAhead();
   }
 
-  async GetVersionHistory(repo: Repository): Promise<VersionHistory> {
+  async getVersionHistory(repo: Repository): Promise<VersionHistory> {
     const emptyVersionHistory = VersionHistory.fromId(this.name, this.scope || undefined);
     const versionHistory = await repo.load(emptyVersionHistory.hash());
     return (versionHistory || emptyVersionHistory) as VersionHistory;
   }
 
   async getAndPopulateVersionHistory(repo: Repository, head: Ref): Promise<VersionHistory> {
-    const versionHistory = await this.GetVersionHistory(repo);
+    const versionHistory = await this.getVersionHistory(repo);
     const { err } = await this.populateVersionHistoryIfMissingGracefully(repo, versionHistory, head);
-    if (err) throw err;
+    if (err) {
+      logger.error(`rethrowing an error ${err.message}, current stuck`, new Error(err.message));
+      throw err;
+    }
     return versionHistory;
   }
 
+  /**
+   * careful! the `versions` passed here can belong to other components, not necessarily to this one.
+   * that's why it checks whether the version-hash exists in the VersionHistory, and if it's not,
+   * it won't update it.
+   */
   async updateRebasedVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory | undefined> {
-    const versionHistory = await this.GetVersionHistory(repo);
+    const versionHistory = await this.getVersionHistory(repo);
     const hasUpdated = versions.some((version) => {
       const versionData = versionHistory.getVersionData(version.hash());
       if (!versionData) return false;
@@ -1110,6 +1119,12 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     });
 
     return hasUpdated ? versionHistory : undefined;
+  }
+
+  async updateVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory> {
+    const versionHistory = await this.getVersionHistory(repo);
+    versionHistory.addFromVersionsObjects(versions);
+    return versionHistory;
   }
 
   async populateVersionHistoryIfMissingGracefully(

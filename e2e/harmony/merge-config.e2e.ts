@@ -52,7 +52,7 @@ describe('merge config scenarios', function () {
     });
     describe('merging the lane to main', () => {
       before(() => {
-        helper.command.mergeLane(`${helper.scopes.remote}/dev`, '--manual --no-squash');
+        helper.command.mergeLane(`${helper.scopes.remote}/dev`, '--auto-merge-resolve manual --no-squash');
         // fixes the conflicts
         helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp1/index.js`);
         helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp2/index.js`);
@@ -94,7 +94,7 @@ describe('merge config scenarios', function () {
       });
       describe('merge from main to the lane', () => {
         before(() => {
-          helper.command.mergeLane('main', '--manual');
+          helper.command.mergeLane('main', '--auto-merge-resolve manual');
         });
         // previous bug, showed only comp1 as componentsDuringMergeState, but the rest, because they're not in the
         // workspace, it didn't merge them correctly.
@@ -495,6 +495,16 @@ describe('merge config scenarios', function () {
             expect(deps).to.include(`${barCompName}@0.0.2`);
             expect(deps).to.not.include(`${barCompName}@0.0.1`);
           });
+          describe('when installing a different version than the resolved one', () => {
+            before(() => {
+              helper.command.install(`${barPkgName}@0.0.1`);
+            });
+            it('should resolve from workspace.jsonc and not from unmerged file', () => {
+              const deps = helper.command.getCompDepsIdsFromData('comp1');
+              expect(deps).to.include(`${barCompName}@0.0.1`);
+              expect(deps).to.not.include(`${barCompName}@0.0.2`);
+            });
+          });
         });
       });
       describe('when the dep was updated in both, the lane and main so there is a conflict', () => {
@@ -548,6 +558,15 @@ describe('merge config scenarios', function () {
             it('bit status should not show a workspace issue anymore', () => {
               const status = helper.command.statusJson();
               expect(status.workspaceIssues).to.have.lengthOf(0);
+            });
+            describe('snapping all', () => {
+              before(() => {
+                helper.command.snapAllComponentsWithoutBuild();
+              });
+              it('should delete the config-merge file although it has the Workspace section', () => {
+                const conflictFile = helper.general.getConfigMergePath();
+                expect(conflictFile).to.not.be.a.path();
+              });
             });
           });
         });

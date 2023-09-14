@@ -67,12 +67,17 @@ export default class VisualDependencyGraph {
 
   static async loadFromClearGraph(
     clearGraph: ClearGraph<any, any>,
-    config: ConfigProps = {}
+    config: ConfigProps = {},
+    markIds?: string[]
   ): Promise<VisualDependencyGraph> {
     const mergedConfig = Object.assign({}, defaultConfig, config);
     await checkGraphvizInstalled(config.graphVizPath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const graph: Digraph = VisualDependencyGraph.buildDependenciesGraphFromClearGraph(clearGraph, mergedConfig);
+    const graph: Digraph = VisualDependencyGraph.buildDependenciesGraphFromClearGraph(
+      clearGraph,
+      mergedConfig,
+      markIds
+    );
     // @ts-ignore
     return new VisualDependencyGraph(clearGraph, graph, mergedConfig);
   }
@@ -107,7 +112,11 @@ export default class VisualDependencyGraph {
     return graph;
   }
 
-  static buildDependenciesGraphFromClearGraph(clearGraph: ClearGraph<any, any>, config: ConfigProps): Digraph {
+  static buildDependenciesGraphFromClearGraph(
+    clearGraph: ClearGraph<any, any>,
+    config: ConfigProps,
+    markIds?: string[]
+  ): Digraph {
     const graph = graphviz.digraph('G');
 
     if (config.graphVizPath) {
@@ -118,7 +127,9 @@ export default class VisualDependencyGraph {
     const edges = clearGraph.edges;
 
     nodes.forEach((node) => {
-      graph.addNode(node);
+      if (markIds?.includes(node.id)) {
+        graph.addNode(node.id, { color: 'red', style: 'filled' });
+      } else graph.addNode(node.id);
     });
     edges.forEach((edge) => {
       const edgeType = edge.attr;

@@ -1,21 +1,42 @@
-import { Transform } from 'class-transformer';
 import chalk from 'chalk';
-import { Location, SchemaNode } from '../schema-node';
+import { SchemaLocation, SchemaNode } from '../schema-node';
 import { ParameterSchema } from './parameter';
-import { schemaObjToInstance } from '../class-transformers';
 
 export class SetAccessorSchema extends SchemaNode {
-  @Transform(schemaObjToInstance)
   readonly param: ParameterSchema;
-  constructor(readonly location: Location, readonly name: string, param: ParameterSchema, readonly signature: string) {
+
+  constructor(
+    readonly location: SchemaLocation,
+    readonly name: string,
+    param: ParameterSchema,
+    readonly signature: string
+  ) {
     super();
     this.param = param;
   }
+
   getSignature() {
     return this.signature;
   }
 
   toString() {
     return `set ${chalk.bold(this.name)}(${this.param.toString()})`;
+  }
+
+  toObject() {
+    return {
+      ...super.toObject(),
+      name: this.name,
+      param: this.param.toObject(),
+      signature: this.signature,
+    };
+  }
+
+  static fromObject(obj: Record<string, any>): SetAccessorSchema {
+    const location = obj.location;
+    const name = obj.name;
+    const param = ParameterSchema.fromObject(obj.param);
+    const signature = obj.signature;
+    return new SetAccessorSchema(location, name, param, signature);
   }
 }

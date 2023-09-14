@@ -301,6 +301,7 @@ if you need this specific snap, find the lane this snap is belong to, then run "
       // in case a user is merging a lane into a new workspace, then, locally main has head, but remotely the head is
       // empty, until it's exported. going to the remote and asking this component will throw an error if ignoreMissingHead is false
       ignoreMissingHead: true,
+      reason: `of their latest on ${lane ? `lane ${lane.id()}` : 'main'}`,
     });
 
     loader.start(`import ${ids.length} components with their dependencies (if missing)`);
@@ -316,6 +317,9 @@ if you need this specific snap, find the lane this snap is belong to, then run "
           // it's possible that .bitmap is not in sync and has local tags that don't exist on the remote. later, we
           // add them to "missingIds" of "importResult" and show them to the user
           throwForSeederNotFound: false,
+          reason: this.options.fetchDeps
+            ? 'for getting all dependencies'
+            : `for getting dependencies of components that don't have dependency-graph`,
         });
 
     return results;
@@ -712,7 +716,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       components.map(async (comp) => {
         const existOnRemoteLane = idsFromRemoteLanes.has(comp.id);
         if (!existOnRemoteLane && !this.options.saveInLane) {
-          this.consumer.bitMap.setComponentProp(comp.id, 'onLanesOnly', false);
+          this.consumer.bitMap.setOnLanesOnly(comp.id, false);
           return;
         }
         const modelComponent = await this.scope.getModelComponent(comp.id);

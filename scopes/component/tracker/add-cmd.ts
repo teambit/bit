@@ -26,14 +26,18 @@ export class AddCmd implements Command {
   description = 'Add any subset of files to be tracked as a component(s).';
   group = 'development';
   extendedDescription = 'Learn the recommended workflow for tracking directories as components, in the link below.';
-  helpUrl = 'docs/workspace/creating-workspaces?new_existing_project=1';
+  helpUrl = 'reference/workspace/component-directory';
   alias = 'a';
   options = [
     ['i', 'id <name>', 'manually set component id'],
-    ['m', 'main <file>', 'define entry point for the components'],
+    ['m', 'main <file>', 'define component entry point'],
     ['n', 'namespace <namespace>', 'organize component in a namespace'],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)'],
-    ['s', 'scope <string>', `sets the component's scope-name. if not entered, the default-scope will be used`],
+    [
+      's',
+      'scope <string>',
+      `sets the component's scope. if not entered, the default-scope from workspace.jsonc will be used`,
+    ],
     ['e', 'env <string>', "set the component's environment. (overrides the env from variants if exists)"],
     ['j', 'json', 'output as json format'],
   ] as CommandOptions;
@@ -92,7 +96,9 @@ export class AddCmd implements Command {
     { id, main, namespace, scope, env, override = false }: AddFlags
   ): Promise<AddResults> {
     if (namespace && id) {
-      throw new BitError('please use either [id] or [namespace] to add a particular component');
+      throw new BitError(
+        'please use either [id] or [namespace] to add a particular component - they cannot be used together'
+      );
     }
 
     const normalizedPaths: PathOsBased[] = paths.map((p) => path.normalize(p));

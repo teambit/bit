@@ -28,6 +28,7 @@ import {
   DependenciesResetCmd,
   DependenciesSetCmd,
   DependenciesUnsetCmd,
+  DependenciesUsageCmd,
   RemoveDependenciesFlags,
   SetDependenciesFlags,
 } from './dependencies-cmd';
@@ -81,7 +82,10 @@ export class DependenciesMain {
     };
     await Promise.all(
       compIds.map(async (compId) => {
-        await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, config, true, true);
+        await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, config, {
+          shouldMergeWithExisting: true,
+          shouldMergeWithPrevious: true,
+        });
       })
     );
 
@@ -160,7 +164,15 @@ export class DependenciesMain {
   async eject(componentPattern: string): Promise<ComponentID[]> {
     const compIds = await this.workspace.idsByPattern(componentPattern);
     await pMapSeries(compIds, async (compId) => {
-      await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, {}, true, true);
+      await this.workspace.addSpecificComponentConfig(
+        compId,
+        DependencyResolverAspect.id,
+        {},
+        {
+          shouldMergeWithExisting: true,
+          shouldMergeWithPrevious: true,
+        }
+      );
     });
     await this.workspace.bitMap.write();
 
@@ -240,6 +252,26 @@ export class DependenciesMain {
     return blameResults;
   }
 
+  /**
+   * @param depName either component-id-string or package-name (of the component or not component)
+   * @returns a map of component-id-string to the version of the dependency
+   */
+  async usage(depName: string): Promise<{ [compIdStr: string]: string }> {
+    const [name, version] = this.splitPkgToNameAndVer(depName);
+    const allComps = await this.workspace.list();
+    const results = {};
+    await Promise.all(
+      allComps.map(async (comp) => {
+        const depList = await this.dependencyResolver.getDependencies(comp);
+        const dependency = depList.findByPkgNameOrCompId(name, version);
+        if (dependency) {
+          results[comp.id.toString()] = dependency.version;
+        }
+      })
+    );
+    return results;
+  }
+
   private async getPackageNameAndVerResolved(pkg: string): Promise<[string, string]> {
     const resolveLatest = async (pkgName: string) => {
       const versionResolver = await this.dependencyResolver.getVersionResolver({});
@@ -280,6 +312,7 @@ export class DependenciesMain {
       new DependenciesResetCmd(depsMain),
       new DependenciesEjectCmd(depsMain),
       new DependenciesBlameCmd(depsMain),
+      new DependenciesUsageCmd(depsMain),
     ];
     cli.register(depsCmd);
 

@@ -10,7 +10,7 @@ import {
   getAddedOutput,
 } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy/dist/constants';
-import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
@@ -29,11 +29,11 @@ export class CheckoutCmd implements Command {
     },
   ];
   description = 'switch between component versions or remove local changes';
-  helpUrl = 'docs/components/merging-changes#checkout-snaps-to-the-working-directory';
+  helpUrl = 'reference/components/merging-changes#checkout-snaps-to-the-working-directory';
   group = 'development';
   extendedDescription = `
   \`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
-  \`bit checkout head [component-pattern]\` => checkout to the last snap/tag, omit [component-pattern] to checkout head for all
+  \`bit checkout head [component-pattern]\` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all
   \`bit checkout latest [component-pattern]\` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all
   \`bit checkout reset [component-pattern]\` => remove local modifications from the specified ids (or all components when --all is used)`;
   alias = 'U';
@@ -43,18 +43,27 @@ export class CheckoutCmd implements Command {
       'interactive-merge',
       'when a component is modified and the merge process found conflicts, display options to resolve them',
     ],
-    ['o', 'ours', 'in case of a conflict, override the used version with the current modification'],
-    ['t', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
-    ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
+    ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. In the future, this flag will leave the current code intact'],
+    [
+      '',
+      'theirs',
+      'DEPRECATED. use --auto-merge-resolve. In the future, this flag will override the current code with the incoming code',
+    ],
+    ['', 'manual', 'DEPRECATED. use --auto-merge-resolve'],
+    [
+      '',
+      'auto-merge-resolve <merge-strategy>',
+      'in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
+    ],
     ['r', 'reset', 'revert changes that were not snapped/tagged'],
     ['a', 'all', 'all components'],
     [
       'e',
       'workspace-only',
-      'when on a lane, avoid introducing new components from the remote lane that do not exist locally',
+      "only relevant for 'bit checkout head' when on a lane. don't import components from the remote lane that are not already in the workspace",
     ],
     ['v', 'verbose', 'showing verbose output for inspection'],
-    ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['x', 'skip-dependency-installation', 'do not auto-install dependencies of the imported components'],
   ] as CommandOptions;
   loader = true;
 
@@ -67,6 +76,7 @@ export class CheckoutCmd implements Command {
       ours = false,
       theirs = false,
       manual = false,
+      autoMergeResolve,
       all = false,
       workspaceOnly = false,
       verbose = false,
@@ -77,6 +87,7 @@ export class CheckoutCmd implements Command {
       ours?: boolean;
       theirs?: boolean;
       manual?: boolean;
+      autoMergeResolve?: MergeStrategy;
       all?: boolean;
       workspaceOnly?: boolean;
       verbose?: boolean;
@@ -84,9 +95,25 @@ export class CheckoutCmd implements Command {
       revert?: boolean;
     }
   ) {
+    if (ours || theirs || manual) {
+      throw new BitError(
+        'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead.'
+      );
+    }
+    if (
+      autoMergeResolve &&
+      autoMergeResolve !== 'ours' &&
+      autoMergeResolve !== 'theirs' &&
+      autoMergeResolve !== 'manual'
+    ) {
+      throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
+    }
+    if (workspaceOnly && to !== HEAD) {
+      throw new BitError('--workspace-only is only relevant when running "bit checkout head" on a lane');
+    }
     const checkoutProps: CheckoutProps = {
       promptMergeOptions: interactiveMerge,
-      mergeStrategy: getMergeStrategy(ours, theirs, manual),
+      mergeStrategy: autoMergeResolve,
       all,
       verbose,
       isLane: false,
@@ -135,7 +162,7 @@ export function checkoutOutput(checkoutResults: ApplyVersionResults, checkoutPro
     const body = realFailedComponents
       .map(
         (failedComponent) =>
-          `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.failureMessage)}`
+          `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.unchangedMessage)}`
       )
       .join('\n');
     return `${chalk.underline(title)}\n${body}\n\n`;
@@ -149,9 +176,9 @@ export function checkoutOutput(checkoutResults: ApplyVersionResults, checkoutPro
         )} components (use --verbose to get more details)\n`
       );
     }
-    const title = 'the checkout was not needed on the following component(s)';
+    const title = 'checkout was not required for the following component(s)';
     const body = notCheckedOutComponents
-      .map((failedComponent) => `${failedComponent.id.toString()} - ${failedComponent.failureMessage}`)
+      .map((failedComponent) => `${failedComponent.id.toString()} - ${failedComponent.unchangedMessage}`)
       .join('\n');
     return `${chalk.underline(title)}\n${body}\n\n`;
   };
@@ -173,7 +200,7 @@ once ready, snap/tag the components to persist the changes`;
         // @ts-ignore version is defined when !reset
         head || latest ? component.id.version : version
       )}\n`;
-      return `${chalk.underline(title)} ${applyVersionReport(components, false)}`;
+      return chalk.bold(title) + applyVersionReport(components, false);
     }
     if (reset) {
       const title = 'successfully reset the following components\n\n';
@@ -188,16 +215,15 @@ once ready, snap/tag the components to persist the changes`;
       return `version ${chalk.bold(version)}`;
     };
     const versionOutput = getVerOutput();
-    const title = `successfully ${switchedOrReverted} the following components to ${versionOutput}\n\n`;
+    const title = `successfully ${switchedOrReverted} ${components.length} components to ${versionOutput}\n`;
     const showVersion = head || reset;
-    const componentsStr = applyVersionReport(components, true, showVersion);
-    return chalk.underline(title) + componentsStr;
+    return chalk.bold(title) + applyVersionReport(components, true, showVersion);
   };
   const getNewOnLaneOutput = () => {
     if (!newFromLane?.length) return '';
     const title = newFromLaneAdded
       ? `successfully added the following components from the lane`
-      : `the following components introduced on the lane and were not added. omit --workspace-only flag to add them`;
+      : `the following components exist on the lane but were not added to the workspace. omit --workspace-only flag to add them`;
     const body = newFromLane.join('\n');
     return `\n\n${chalk.underline(title)}\n${body}`;
   };

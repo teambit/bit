@@ -6,16 +6,17 @@ import { ComponentCompareMain } from './component-compare.main.runtime';
 export class DiffCmd implements Command {
   name = 'diff [values...]';
   group = 'development';
-  description = "show the diff between the components' source files and config";
+  description =
+    "show the diff between the components' current source files and config, and their latest snapshot or tag";
   helpUrl = 'docs/components/merging-changes#compare-component-snaps';
   extendedDescription = `bit diff => compare all modified components to their model version
 bit diff [ids...] => compare the specified components against their modified states
-bit diff [id] [version] => compare the specified version to used or modified files
-bit diff [id] [version] [to_version] => compare the specified version files to to_version files
+bit diff [id] [version] => compare component's current files and configs to the specified version of the component
+bit diff [id] [version] [to_version] => compare component's files and configs between the specified version and the to_version provided
 ${WILDCARD_HELP('diff')}`;
   alias = '';
   options = [
-    ['v', 'verbose', 'show a more verbose output when possible'],
+    ['v', 'verbose', 'show a more verbose output where possible'],
     ['t', 'table', 'show tables instead of plain text for dependencies diff'],
   ] as CommandOptions;
   loader = true;

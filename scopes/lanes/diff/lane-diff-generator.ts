@@ -45,37 +45,40 @@ export class LaneDiffGenerator {
 
   /**
    * the values array may include zero to two values and will be processed as following:
-   * [] => diff between the current lane and default lane. (only inside workspace).
+   * [] => diff between the default lane (from) and the current lane (to). (only inside workspace).
    * [to] => diff between the current lane (or default-lane when in scope) and "to" lane.
    * [from, to] => diff between "from" lane and "to" lane.
    */
   async generate(values: string[], diffOptions: DiffOptions = {}, pattern?: string): Promise<LaneDiffResults> {
     const { fromLaneName, toLaneName } = this.getLaneNames(values);
+
     if (fromLaneName === toLaneName) {
       throw new Error(`unable to run diff between "${fromLaneName}" and "${toLaneName}", they're the same lane`);
     }
     const legacyScope = this.scope.legacyScope;
     const fromLaneId = await legacyScope.lanes.parseLaneIdFromString(fromLaneName);
     const toLaneId = await legacyScope.lanes.parseLaneIdFromString(toLaneName);
+    let toLane: Lane | null | undefined;
+    let fromLane: Lane | null | undefined;
 
     if (fromLaneId.isDefault()) {
       if (toLaneId.isDefault()) throw new Error(`unable to diff between main and main, they're the same lane`);
-      const toLane = await legacyScope.lanes.loadLane(toLaneId);
+      toLane = await legacyScope.lanes.loadLane(toLaneId);
       if (!toLane) throw new Error(`unable to find a lane "${toLaneName}" in the scope`);
       this.toLaneData = await this.mapToLaneData(toLane);
       const bitIds = toLane.components.map((c) => c.id);
       this.fromLaneData = await this.getDefaultLaneData(bitIds);
     } else if (toLaneId.isDefault()) {
-      const fromLane = await legacyScope.lanes.loadLane(fromLaneId);
+      fromLane = await legacyScope.lanes.loadLane(fromLaneId);
       if (!fromLane) throw new Error(`unable to find a lane "${fromLaneName}" in the scope`);
       this.fromLaneData = await this.mapToLaneData(fromLane);
       const bitIds = fromLane?.components.map((c) => c.id) || [];
       this.toLaneData = await this.getDefaultLaneData(bitIds);
     } else {
       // both, "from" and "to" are not default-lane.
-      const toLane = await legacyScope.lanes.loadLane(toLaneId);
+      toLane = await legacyScope.lanes.loadLane(toLaneId);
       if (!toLane) throw new Error(`unable to find a lane "${toLaneName}" in the scope`);
-      const fromLane = await legacyScope.lanes.loadLane(fromLaneId);
+      fromLane = await legacyScope.lanes.loadLane(fromLaneId);
       if (!fromLane) throw new Error(`unable to find a lane "${fromLaneName}" in the scope`);
       this.toLaneData = await this.mapToLaneData(toLane);
       this.fromLaneData = await this.mapToLaneData(fromLane);
@@ -93,6 +96,21 @@ export class LaneDiffGenerator {
     if (!this.toLaneData.components.length) {
       throw new BitError(`lane "${toLaneName}" is empty, nothing to show`);
     }
+
+    const idsOfTo = BitIds.fromArray(this.toLaneData.components.map((c) => c.id.changeVersion(c.head?.toString())));
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(idsOfTo, {
+      cache: true,
+      lane: toLane || undefined,
+      ignoreMissingHead: true,
+      reason: `for the "to" diff - ${toLane ? toLane.name : DEFAULT_LANE}`,
+    });
+    const idsOfFrom = BitIds.fromArray(this.fromLaneData.components.map((c) => c.id.changeVersion(c.head?.toString())));
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(idsOfFrom, {
+      cache: true,
+      lane: fromLane || undefined,
+      ignoreMissingHead: true,
+      reason: `for the "from" diff - ${fromLane ? fromLane.name : DEFAULT_LANE}`,
+    });
 
     await Promise.all(
       this.toLaneData.components.map(async ({ id, head }) => {
@@ -132,7 +150,7 @@ export class LaneDiffGenerator {
     }
     let fromVersion: Version;
     try {
-      fromVersion = (await fromLaneHead.load(this.scope.legacyScope.objects, true)) as Version;
+      fromVersion = await modelComponent.loadVersion(fromLaneHead.toString(), this.scope.legacyScope.objects, true);
     } catch (err: any) {
       this.failures.push({ id, msg: err.message });
       return;
@@ -191,7 +209,7 @@ export class LaneDiffGenerator {
         const modelComponent = await this.scope.legacyScope.getModelComponent(id);
         const laneComponent = {
           id,
-          head: modelComponent.head as Ref,
+          head: modelComponent.head as Ref, // @todo: this is not true. it can be undefined
           version: modelComponent.latestVersion(), // should this be latestVersion() or bitId.version.toString()
         };
         laneData.components.push(laneComponent);

@@ -28,7 +28,7 @@ class ConfigSet implements LegacyCommand {
 
 class ConfigGet implements LegacyCommand {
   name = 'get <key>';
-  description = 'get a global configuration';
+  description = 'get a value from global configuration';
   alias = '';
   opts = [];
 
@@ -78,7 +78,7 @@ class ConfigDel implements LegacyCommand {
 export default class Config implements LegacyCommand {
   name = 'config';
   description = 'global config management';
-  extendedDescription = `https://${BASE_DOCS_DOMAIN}/config/bit-config`;
+  extendedDescription = `https://${BASE_DOCS_DOMAIN}/reference/config/bit-config`;
   group: Group = 'general';
   alias = '';
   commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];

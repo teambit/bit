@@ -1,4 +1,3 @@
-import { Transform, plainToInstance } from 'class-transformer';
 import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
 import {
@@ -12,25 +11,24 @@ import {
   UnresolvedSchema,
   VariableLikeSchema,
 } from './schemas';
-import { Location, SchemaNode } from './schema-node';
-import { schemaObjArrayToInstances, schemaObjToInstance } from './class-transformers';
-import { componentIdTransformer } from './class-transformers/comp-id-transformer';
+import { SchemaLocation, SchemaNode } from './schema-node';
 import { TagName } from './schemas/docs/tag';
 
 export class APISchema extends SchemaNode {
-  @Transform(schemaObjToInstance)
   readonly module: ModuleSchema; // index
 
-  @Transform(schemaObjArrayToInstances)
   readonly internals: ModuleSchema[];
 
-  @Transform(componentIdTransformer)
   readonly componentId: ComponentID;
 
-  @Transform(schemaObjArrayToInstances)
   readonly taggedModuleExports: SchemaNode[];
 
-  constructor(readonly location: Location, module: ModuleSchema, internals: ModuleSchema[], componentId: ComponentID) {
+  constructor(
+    readonly location: SchemaLocation,
+    module: ModuleSchema,
+    internals: ModuleSchema[],
+    componentId: ComponentID
+  ) {
     super();
     this.module = module;
     this.internals = internals;
@@ -80,8 +78,23 @@ export class APISchema extends SchemaNode {
     return this.module.exports.map((exp) => exp.signature);
   }
 
+  toObject() {
+    return {
+      ...super.toObject(),
+      module: this.module.toObject(),
+      internals: this.internals.map((i) => i.toObject()),
+      componentId: this.componentId.toObject(),
+      taggedModuleExports: this.taggedModuleExports.map((e) => e.toObject()),
+    };
+  }
+
   static fromObject(obj: Record<string, any>): APISchema {
-    return plainToInstance(APISchema, obj);
+    const location: SchemaLocation = obj.location;
+    const module: ModuleSchema = ModuleSchema.fromObject(obj.module);
+    const internals: ModuleSchema[] = (obj.internals || []).map((i: any) => ModuleSchema.fromObject(i));
+    const componentId: ComponentID = ComponentID.fromObject(obj.componentId);
+
+    return new APISchema(location, module, internals, componentId);
   }
 
   static empty(componentId: ComponentID) {

@@ -8,6 +8,10 @@ import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/con
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import EnvsAspect from '@teambit/envs';
+
+export type MergeOptions = {
+  mergeStrategy?: 'theirs' | 'ours' | 'manual';
+};
 /**
  * consider extracting to a new component.
  * (pro: making Workspace aspect smaller. con: it's an implementation details of the workspace)
@@ -15,8 +19,8 @@ import EnvsAspect from '@teambit/envs';
 export class BitMap {
   constructor(private legacyBitMap: LegacyBitMap, private consumer: Consumer) {}
 
-  mergeBitmaps(bitmapContent: string, otherBitmapContent: string): string {
-    return LegacyBitMap.mergeContent(bitmapContent, otherBitmapContent);
+  mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: MergeOptions = {}): string {
+    return LegacyBitMap.mergeContent(bitmapContent, otherBitmapContent, opts);
   }
 
   /**
@@ -115,12 +119,21 @@ export class BitMap {
 
   /**
    * get the data saved in the .bitmap file for this component-id.
+   * throws if not found
+   * @see getBitmapEntryIfExist
    */
   getBitmapEntry(
     id: ComponentID,
     { ignoreVersion, ignoreScopeAndVersion }: GetBitMapComponentOptions = {}
   ): ComponentMap {
     return this.legacyBitMap.getComponent(id._legacy, { ignoreVersion, ignoreScopeAndVersion });
+  }
+
+  getBitmapEntryIfExist(
+    id: ComponentID,
+    { ignoreVersion, ignoreScopeAndVersion }: GetBitMapComponentOptions = {}
+  ): ComponentMap | undefined {
+    return this.legacyBitMap.getComponentIfExist(id._legacy, { ignoreVersion, ignoreScopeAndVersion });
   }
 
   getAspectIdFromConfig(
@@ -211,8 +224,8 @@ export class BitMap {
   makeComponentsAvailableOnMain(ids: ComponentID[]) {
     ids.forEach((id) => {
       const componentMap = this.getBitmapEntry(id);
+      componentMap.isAvailableOnCurrentLane = true;
       delete componentMap.onLanesOnly;
-      delete componentMap.isAvailableOnCurrentLane;
     });
     this.legacyBitMap.markAsChanged();
   }

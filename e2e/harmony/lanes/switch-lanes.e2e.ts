@@ -24,11 +24,11 @@ describe('bit lane command', function () {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
         helper.command.createLane();
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
         helper.command.exportLane();
 
         helper.scopeHelper.reInitLocalScope();
@@ -306,12 +306,14 @@ describe('bit lane command', function () {
       after(() => {
         npmCiRegistry.destroy();
       });
-      it('bit snap should throw an error saying a dependency is from another lane', () => {
+      // previously, the bar/foo component was available on lane-a with a version from lane-b unexpectedly.
+      // this test was to make sure that if we have such bugs, it won't let snapping.
+      it.skip('bit snap should throw an error saying a dependency is from another lane', () => {
         expect(() => helper.command.snapAllComponentsWithoutBuild()).to.throw(
           'is not part of current lane "lane-a" history'
         );
       });
-      it.skip('should use the dep from main and not from the previous lane', () => {
+      it('should use the dep from main and not from the previous lane', () => {
         const comp1 = helper.command.catComponent('comp1@latest');
         expect(comp1.dependencies[0].id.version).to.equal('0.0.1');
       });

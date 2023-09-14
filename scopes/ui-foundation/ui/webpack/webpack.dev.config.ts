@@ -96,6 +96,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
     },
 
     devServer: {
+      open: true,
       allowedHosts: 'all',
 
       static: [
@@ -176,6 +177,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
       // for React Native Web.
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
       alias: {
+        'react/jsx-runtime': require.resolve('react/jsx-runtime'),
         react: require.resolve('react'),
         'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),

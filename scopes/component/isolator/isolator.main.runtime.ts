@@ -1,6 +1,6 @@
 import rimraf from 'rimraf';
 import { v4 } from 'uuid';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, pick } from 'lodash';
@@ -10,6 +10,7 @@ import type { ComponentMain, ComponentFactory } from '@teambit/component';
 import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import { GraphAspect, GraphMain } from '@teambit/graph';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import {
   DependencyResolverAspect,
   DependencyResolverMain,
@@ -21,8 +22,9 @@ import {
   ComponentDependency,
   KEY_NAME_BY_LIFECYCLE_TYPE,
   PackageManagerInstallOptions,
+  NodeLinker,
 } from '@teambit/dependency-resolver';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { Logger, LoggerAspect, LoggerMain, LongProcessLogger } from '@teambit/logger';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
@@ -52,6 +54,8 @@ import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
+import pMap from 'p-map';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
@@ -61,6 +65,10 @@ import { Network } from './network';
 export type ListResults = {
   capsules: string[];
 };
+
+export type CapsuleTransferFn = (sourceDir: string, targetDir: string) => void;
+
+export type CapsuleTransferSlot = SlotRegistry<CapsuleTransferFn>;
 
 /**
  * Context for the isolation process
@@ -194,6 +202,11 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   packageManager?: string;
 
   /**
+   * Use specific node linker for the isolation process (override the package manager from the dep resolver config)
+   */
+  nodeLinker?: NodeLinker;
+
+  /**
    * Dir where to read the package manager config from
    * usually used when running package manager in the capsules dir to use the config
    * from the workspace dir
@@ -224,7 +237,7 @@ const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
 /**
  * File name to indicate that the capsule is ready (all packages are installed and links are created)
  */
-const CAPSULE_READY_FILE = '.bit-capsule-ready';
+export const CAPSULE_READY_FILE = '.bit-capsule-ready';
 
 export class IsolatorMain {
   static runtime = MainRuntime;
@@ -235,27 +248,36 @@ export class IsolatorMain {
     GraphAspect,
     GlobalConfigAspect,
     AspectLoaderAspect,
+    CLIAspect,
   ];
+  static slots = [Slot.withType<CapsuleTransferFn>()];
   static defaultConfig = {};
   _componentsPackagesVersionCache: { [idStr: string]: string } = {}; // cache packages versions of components
   _datedHashForName = new Map<string, string>(); // cache dated hash for a specific name
 
-  static async provider([dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader]: [
-    DependencyResolverMain,
-    LoggerMain,
-    ComponentMain,
-    GraphMain,
-    GlobalConfigMain,
-    AspectLoaderMain
-  ]): Promise<IsolatorMain> {
+  static async provider(
+    [dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader, cli]: [
+      DependencyResolverMain,
+      LoggerMain,
+      ComponentMain,
+      GraphMain,
+      GlobalConfigMain,
+      AspectLoaderMain,
+      CLIMain
+    ],
+    _config,
+    [capsuleTransferSlot]: [CapsuleTransferSlot]
+  ): Promise<IsolatorMain> {
     const logger = loggerExtension.createLogger(IsolatorAspect.id);
     const isolator = new IsolatorMain(
       dependencyResolver,
       logger,
       componentAspect,
       graphMain,
+      cli,
       globalConfig,
-      aspectLoader
+      aspectLoader,
+      capsuleTransferSlot
     );
     return isolator;
   }
@@ -264,8 +286,10 @@ export class IsolatorMain {
     private logger: Logger,
     private componentAspect: ComponentMain,
     private graph: GraphMain,
+    private cli: CLIMain,
     private globalConfig: GlobalConfigMain,
-    private aspectLoader: AspectLoaderMain
+    private aspectLoader: AspectLoaderMain,
+    private capsuleTransferSlot: CapsuleTransferSlot
   ) {}
 
   // TODO: the legacy scope used for the component writer, which then decide if it need to write the artifacts and dists
@@ -303,7 +327,8 @@ export class IsolatorMain {
     this.logger.debug(
       `creating network with base dir: ${opts.baseDir}, rootBaseDir: ${opts.rootBaseDir}. final capsule-dir: ${capsuleDir}. capsuleList: ${capsuleList.length}`
     );
-    if (shouldUseDatedDirs) {
+    const cacheCapsules = process.env.CACHE_CAPSULES;
+    if (shouldUseDatedDirs && cacheCapsules) {
       const targetCapsuleDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: false, baseDir: opts.baseDir || '' });
       this.registerMoveCapsuleOnProcessExit(capsuleDir, targetCapsuleDir);
       // TODO: ideally this should be inside the on process exit hook
@@ -339,12 +364,12 @@ export class IsolatorMain {
 
   private registerMoveCapsuleOnProcessExit(datedCapsuleDir: string, targetCapsuleDir: string): void {
     this.logger.info(`registering process.on(exit) to move capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
-    process.on('exit', () => {
+    this.cli.registerOnBeforeExit(async () => {
       this.logger.info(`start moving capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
       const allDirs = fs
         .readdirSync(datedCapsuleDir, { withFileTypes: true })
         .filter((dir) => dir.isDirectory() && dir.name !== 'node_modules');
-      allDirs.forEach((dir) => {
+      const promises = allDirs.map(async (dir) => {
         const sourceDir = path.join(datedCapsuleDir, dir.name);
         const sourceCapsuleReadyFile = this.getCapsuleReadyFilePath(sourceDir);
         if (!fs.pathExistsSync(sourceCapsuleReadyFile)) {
@@ -367,10 +392,11 @@ export class IsolatorMain {
         // We delete the ready file path first, as the move might take a long time, so we don't want to move
         // the ready file indicator before the capsule is ready in the new location
         this.removeCapsuleReadyFileSync(sourceDir);
-        this.moveWithTempName(sourceDir, targetDir);
+        await this.moveWithTempName(sourceDir, targetDir);
         // Mark the capsule as ready in the new location
         this.writeCapsuleReadyFileSync(targetDir);
       });
+      await Promise.all(promises);
     });
   }
 
@@ -383,19 +409,21 @@ export class IsolatorMain {
    * @param sourceDir - The source directory from where the files or directories will be moved.
    * @param targetDir - The target directory where the source directory will be moved to.
    */
-  private moveWithTempName(sourceDir, targetDir): void {
+  private async moveWithTempName(sourceDir, targetDir): Promise<void> {
     const tempDir = `${targetDir}-${v4()}`;
     this.logger.console(`moving capsule from ${sourceDir} to a temp dir ${tempDir}`);
-    fs.moveSync(sourceDir, tempDir);
+    const mvFunc = this.getCapsuleTransferFn() || fs.move;
+    await mvFunc(sourceDir, tempDir);
+    const exists = await fs.pathExists(targetDir);
     // This might exist if in the time when we move to the temp dir, another process created the target dir already
-    if (fs.existsSync(targetDir)) {
+    if (exists) {
       this.logger.console(`skip moving capsule from temp dir to real dir as it's already exist: ${targetDir}`);
       // Clean leftovers
-      rimraf.sync(tempDir);
+      await rimraf(tempDir);
       return;
     }
     this.logger.console(`moving capsule from a temp dir ${tempDir} to the target dir ${targetDir}`);
-    fs.moveSync(tempDir, targetDir);
+    await mvFunc(tempDir, targetDir);
   }
 
   /**
@@ -525,10 +553,12 @@ export class IsolatorMain {
     if (installOptions.installPackages) {
       const cachePackagesOnCapsulesRoot = opts.cachePackagesOnCapsulesRoot ?? false;
       const linkingOptions = opts.linkingOptions ?? {};
-      let installLongProcessLogger;
+      let installLongProcessLogger: LongProcessLogger | undefined;
       // Only show the log message in case we are going to install something
       if (capsuleList && capsuleList.length && !opts.context?.aspects) {
-        installLongProcessLogger = this.logger.createLongProcessLogger('install packages in capsules');
+        installLongProcessLogger = this.logger.createLongProcessLogger(
+          `install packages in ${capsuleList.length} capsules`
+        );
       }
       if (installOptions.useNesting) {
         await Promise.all(
@@ -544,6 +574,7 @@ export class IsolatorMain {
               cachePackagesOnCapsulesRoot,
               linkedDependencies,
               packageManager: opts.packageManager,
+              nodeLinker: opts.nodeLinker,
             });
           })
         );
@@ -561,8 +592,7 @@ export class IsolatorMain {
         });
       }
       if (installLongProcessLogger) {
-        installLongProcessLogger.end();
-        this.logger.consoleSuccess('installed packages in capsules');
+        installLongProcessLogger.end('success');
       }
     }
 
@@ -628,6 +658,7 @@ export class IsolatorMain {
       cachePackagesOnCapsulesRoot?: boolean;
       linkedDependencies?: Record<string, Record<string, string>>;
       packageManager?: string;
+      nodeLinker?: NodeLinker;
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({
@@ -635,6 +666,7 @@ export class IsolatorMain {
       cacheRootDirectory: opts.cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
       installingContext: { inCapsule: true },
       packageManager: opts.packageManager,
+      nodeLinker: opts.nodeLinker,
     });
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace
@@ -646,6 +678,7 @@ export class IsolatorMain {
       resolveVersionsFromDependenciesOnly: true,
       linkedDependencies: opts.linkedDependencies,
       forceTeambitHarmonyLink: !this.dependencyResolver.hasHarmonyInRootPolicy(),
+      excludeExtensionsDependencies: true,
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
@@ -801,6 +834,14 @@ export class IsolatorMain {
     }
   }
 
+  registerCapsuleTransferFn(fn: CapsuleTransferFn) {
+    this.capsuleTransferSlot.register(fn);
+  }
+
+  private getCapsuleTransferFn(): CapsuleTransferFn {
+    return this.capsuleTransferSlot.values()[0];
+  }
+
   /** @deprecated use the new function signature with an object parameter instead */
   getCapsulesRootDir(baseDir: string, rootBaseDir?: string, useHash?: boolean): PathOsBasedAbsolute;
   getCapsulesRootDir(getCapsuleDirOpts: GetCapsuleDirOpts): PathOsBasedAbsolute;
@@ -855,10 +896,12 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions
   ): Promise<Capsule[]> {
     this.logger.debug(`createCapsulesFromComponents: ${components.length} components`);
-    const capsules: Capsule[] = await Promise.all(
-      components.map((component: Component) => {
+    const capsules: Capsule[] = await pMap(
+      components,
+      (component: Component) => {
         return Capsule.createFromComponent(component, baseDir, opts);
-      })
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
     return capsules;
   }

@@ -3,6 +3,7 @@ import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
@@ -110,10 +111,13 @@ export class ComponentWriterMain {
     this.fixDirsIfNested(componentWriterInstances);
     // add componentMap entries into .bitmap before starting the process because steps like writing package-json
     // rely on .bitmap to determine whether a dependency exists and what's its origin
-    componentWriterInstances.forEach((componentWriter: ComponentWriter) => {
-      componentWriter.existingComponentMap =
-        componentWriter.existingComponentMap || componentWriter.addComponentToBitMap(componentWriter.writeToPath);
-    });
+    await Promise.all(
+      componentWriterInstances.map(async (componentWriter: ComponentWriter) => {
+        componentWriter.existingComponentMap =
+          componentWriter.existingComponentMap ||
+          (await componentWriter.addComponentToBitMap(componentWriter.writeToPath));
+      })
+    );
     if (opts.resetConfig) {
       componentWriterInstances.forEach((componentWriter: ComponentWriter) => {
         delete componentWriter.existingComponentMap?.config;
@@ -242,10 +246,10 @@ to move all component files to a different directory, run bit remove and then bi
 
     if (fs.pathExistsSync(componentDir)) {
       if (!isDir(componentDir)) {
-        throw new GeneralError(`unable to import to ${componentDir} because it's a file`);
+        throw new BitError(`unable to import to ${componentDir} because it's a file`);
       }
       if (!isDirEmptySync(componentDir) && opts.throwForExistingDir) {
-        throw new GeneralError(
+        throw new BitError(
           `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import`
         );
       }

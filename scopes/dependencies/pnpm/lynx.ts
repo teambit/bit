@@ -28,6 +28,7 @@ import {
 import * as pnpm from '@pnpm/core';
 import { createClient, ClientOptions } from '@pnpm/client';
 import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
+import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
 import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
@@ -166,6 +167,8 @@ export interface ReportOptions {
   appendOnly?: boolean;
   throttleProgress?: number;
   hideAddedPkgsProgress?: boolean;
+  hideProgressPrefix?: boolean;
+  hideLifecycleOutput?: boolean;
 }
 
 export async function install(
@@ -274,6 +277,7 @@ export async function install(
       ...options?.peerDependencyRules,
     },
     depth: options.updateAll ? Infinity : 0,
+    disableRelinkLocalDirDeps: true,
   };
 
   let stopReporting: Function | undefined;
@@ -286,6 +290,7 @@ export async function install(
   let dependenciesChanged = false;
   try {
     await installsRunning[rootDir];
+    await restartWorkerPool();
     installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
     const { stats } = await installsRunning[rootDir];
     dependenciesChanged = stats.added + stats.removed + stats.linkedToRoot > 0;
@@ -297,6 +302,7 @@ export async function install(
     throw pnpmErrorToBitError(err);
   } finally {
     stopReporting?.();
+    await finishWorkers();
   }
   if (options.rootComponents) {
     const modulesState = await readModulesManifest(path.join(rootDir, 'node_modules'));
@@ -319,6 +325,7 @@ export async function install(
       if (!_opts.hidePackageManagerOutput) {
         stopReporting = initReporter({
           appendOnly: true,
+          hideLifecycleOutput: true,
         });
       }
       try {
@@ -340,6 +347,8 @@ function initReporter(opts?: ReportOptions) {
       appendOnly: opts?.appendOnly ?? false,
       throttleProgress: opts?.throttleProgress ?? 200,
       hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
+      hideProgressPrefix: opts?.hideProgressPrefix,
+      hideLifecycleOutput: opts?.hideLifecycleOutput,
     },
     streamParser,
     // Linked in core aspects are excluded from the output to reduce noise.

@@ -16,3 +16,8 @@ export type SchemaTransformer = {
    */
   transform(node: Node, context: SchemaExtractorContext): Promise<SchemaNode>;
 };
+
+export type SchemaNodeTransformer = {
+  predicate(node: SchemaNode): boolean;
+  transform(node: SchemaNode, context: SchemaExtractorContext): Promise<SchemaNode>;
+};

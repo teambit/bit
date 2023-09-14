@@ -9,6 +9,7 @@ import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
+import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
 import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
@@ -37,7 +38,8 @@ export class RenamingMain {
     private config: ConfigMain,
     private componentWriter: ComponentWriterMain,
     private compiler: CompilerMain,
-    private logger: Logger
+    private logger: Logger,
+    private envs: EnvsMain
   ) {}
 
   async rename(sourceIdStr: string, targetName: string, options: RenameOptions): Promise<RenameDependencyNameResult> {
@@ -78,8 +80,10 @@ make sure this argument is the name only, without the scope-name. to change the 
       );
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
     }
-    if (!options.preserve) {
-      await this.refactoring.refactorVariableAndClasses(targetComp, sourceId, targetId);
+
+    // only write if it is not tagged, since we writeAndAddNewComp for tagged components
+    if (!isTagged && !options.preserve) {
+      await this.refactoring.refactorVariableAndClasses(targetComp, sourceId, targetId, options);
       this.refactoring.refactorFilenames(targetComp, sourceId, targetId);
       await this.componentWriter.writeMany({
         components: [targetComp.state._consumer],
@@ -87,6 +91,7 @@ make sure this argument is the name only, without the scope-name. to change the 
         writeToPath: this.newComponentHelper.getNewComponentPath(targetId),
       });
     }
+
     this.workspace.bitMap.renameAspectInConfig(sourceId, targetId);
     await this.workspace.bitMap.write();
 
@@ -119,6 +124,17 @@ make sure this argument is the name only, without the scope-name. to change the 
     if (!componentsUsingOldScope.length && this.workspace.defaultScope !== oldScope) {
       throw new OldScopeNotFound(oldScope);
     }
+    const envs = componentsUsingOldScope.filter((c) => this.envs.isEnv(c));
+    const compsUsingEnv = {};
+    await Promise.all(
+      envs.map(async (env) => {
+        const components = await this.workspace.getComponentsUsingEnv(env.id.toString(), true);
+        if (!components.length) return;
+        const componentIds = components.map((comp) => comp.id);
+        compsUsingEnv[env.id.toString()] = componentIds;
+      })
+    );
+
     // verify they're all new.
     const exported = componentsUsingOldScope.filter((comp) => comp.id._legacy.hasScope());
     if (exported.length) {
@@ -137,6 +153,16 @@ make sure this argument is the name only, without the scope-name. to change the 
       componentsUsingOldScope.forEach((comp) => this.workspace.bitMap.setDefaultScope(comp.id, newScope));
     }
     await this.workspace.bitMap.write();
+    await this.workspace.clearCache();
+
+    await Promise.all(
+      envs.map(async (env) => {
+        const componentIds = compsUsingEnv[env.id.toString()];
+        if (!componentIds?.length) return;
+        await this.workspace.setEnvToComponents(env.id.changeScope(newScope), componentIds);
+      })
+    );
+
     const refactoredIds: ComponentID[] = [];
     if (options.refactor) {
       const legacyComps = componentsUsingOldScope.map((c) => c.state._consumer);
@@ -192,7 +218,11 @@ make sure this argument is the name only, without the scope-name. to change the 
    * keep in mind that this is working for new components only, for tagged/exported it's impossible. See the errors
    * thrown in such cases in this method.
    */
-  async renameOwner(oldOwner: string, newOwner: string, options: { refactor?: boolean }): Promise<RenameScopeResult> {
+  async renameOwner(
+    oldOwner: string,
+    newOwner: string,
+    options: { refactor?: boolean; ast?: boolean }
+  ): Promise<RenameScopeResult> {
     const allComponents = await this.workspace.list();
     const isScopeUsesOldOwner = (scope: string) => scope.startsWith(`${oldOwner}.`);
     const componentsUsingOldScope = allComponents.filter((comp) => isScopeUsesOldOwner(comp.id.scope));
@@ -242,10 +272,11 @@ make sure this argument is the name only, without the scope-name. to change the 
           }),
         };
       });
-      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace, [
-        importTransformer,
-        exportTransformer,
-      ]);
+      const { changedComponents } = await this.refactoring.replaceMultipleStrings(
+        allComponents,
+        packagesToReplace,
+        options.ast ? [importTransformer, exportTransformer] : undefined
+      );
       await this.renameOwnerOfAspectIdsInWorkspaceConfig(
         componentsUsingOldScope.map((c) => c.id),
         oldOwner,
@@ -339,6 +370,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     ComponentWriterAspect,
     CompilerAspect,
     LoggerAspect,
+    EnvsAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -354,6 +386,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     componentWriter,
     compiler,
     loggerMain,
+    envs,
   ]: [
     CLIMain,
     Workspace,
@@ -366,7 +399,8 @@ make sure this argument is the name only, without the scope-name. to change the 
     ConfigMain,
     ComponentWriterMain,
     CompilerMain,
-    LoggerMain
+    LoggerMain,
+    EnvsMain
   ]) {
     const logger = loggerMain.createLogger(RenamingAspect.id);
     const renaming = new RenamingMain(
@@ -378,7 +412,8 @@ make sure this argument is the name only, without the scope-name. to change the 
       config,
       componentWriter,
       compiler,
-      logger
+      logger,
+      envs
     );
     cli.register(new RenameCmd(renaming));
 

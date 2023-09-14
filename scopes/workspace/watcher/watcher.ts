@@ -5,7 +5,7 @@ import { compact, difference, partition } from 'lodash';
 import { ComponentID } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { BIT_MAP } from '@teambit/legacy/dist/constants';
+import { BIT_MAP, CFG_WATCH_USE_FS_EVENTS } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -65,14 +65,10 @@ export class Watcher {
   private watchQueue = new WatchQueue();
   private bitMapChangesInProgress = false;
   private ipcEventsDir: string;
-  constructor(
-    private workspace: Workspace,
-    private pubsub: PubsubMain,
-    private watcherMain: WatcherMain,
-    private trackDirs: { [dir: PathLinux]: ComponentID } = {},
-    private verbose = false,
-    private multipleWatchers: WatcherProcessData[] = []
-  ) {
+  private trackDirs: { [dir: PathLinux]: ComponentID } = {};
+  private verbose = false;
+  private multipleWatchers: WatcherProcessData[] = [];
+  constructor(private workspace: Workspace, private pubsub: PubsubMain, private watcherMain: WatcherMain) {
     this.ipcEventsDir = this.watcherMain.ipcEvents.eventsDir;
   }
 
@@ -82,54 +78,39 @@ export class Watcher {
 
   async watchAll(opts: WatchOptions) {
     const { msgs, ...watchOpts } = opts;
-    const pathsToWatch = await this.getPathsToWatch();
+    this.verbose = opts.verbose || false;
     const componentIds = Object.values(this.trackDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
-    await this.createWatcher(pathsToWatch);
+    await this.setTrackDirs();
+    await this.createWatcher();
     const watcher = this.fsWatcher;
     msgs?.onStart(this.workspace);
 
     await this.workspace.scope.watchScopeInternalFiles();
 
     return new Promise((resolve, reject) => {
-      // prefix your command with "BIT_LOG=*" to see all watch events
-      if (process.env.BIT_LOG) {
+      if (this.verbose) {
         // @ts-ignore
         if (msgs?.onAll) watcher.on('all', msgs?.onAll);
       }
       watcher.on('ready', () => {
         msgs?.onReady(this.workspace, this.trackDirs, this.verbose);
+        // console.log(this.fsWatcher.getWatched());
         loader.stop();
       });
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      watcher.on('change', async (filePath) => {
+      watcher.on('all', async (event, filePath) => {
+        if (event !== 'change' && event !== 'add' && event !== 'unlink') return;
         const startTime = new Date().getTime();
-        const { files, results, debounced, failureMsg } = await this.handleChange(filePath, opts?.initiator);
-        if (debounced) {
+        const { files, results, debounced, irrelevant, failureMsg } = await this.handleChange(
+          filePath,
+          opts?.initiator
+        );
+        if (debounced || irrelevant) {
           return;
         }
         const duration = new Date().getTime() - startTime;
         msgs?.onChange(files, results, this.verbose, duration, failureMsg);
-      });
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      watcher.on('add', async (filePath) => {
-        const startTime = new Date().getTime();
-        const { files, results, debounced, failureMsg } = await this.handleChange(filePath, opts?.initiator);
-        if (debounced) {
-          return;
-        }
-        const duration = new Date().getTime() - startTime;
-        msgs?.onAdd(files, results, this.verbose, duration, failureMsg);
-      });
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      watcher.on('unlink', async (filePath) => {
-        const startTime = new Date().getTime();
-        const { files, results, debounced, failureMsg } = await this.handleChange(filePath, opts?.initiator);
-        if (debounced) {
-          return;
-        }
-        const duration = new Date().getTime() - startTime;
-        msgs?.onUnlink(files, results, this.verbose, duration, failureMsg);
       });
       watcher.on('error', (err) => {
         msgs?.onError(err);
@@ -181,6 +162,7 @@ export class Watcher {
     files: string[];
     failureMsg?: string;
     debounced?: boolean;
+    irrelevant?: boolean; // file/dir is not part of any component
   }> {
     try {
       if (filePath.endsWith(BIT_MAP)) {
@@ -203,10 +185,8 @@ export class Watcher {
       }
       const componentId = this.getComponentIdByPath(filePath);
       if (!componentId) {
-        const failureMsg = `file ${filePath} is not part of any component, ignoring it`;
-        logger.debug(failureMsg);
         loader.stop();
-        return { results: [], files: [filePath], failureMsg };
+        return { results: [], files: [], irrelevant: true };
       }
       const compIdStr = componentId.toString();
       if (this.changedFilesPerComponent[compIdStr]) {
@@ -281,6 +261,11 @@ export class Watcher {
       );
       return [];
     }
+    this.consumer.bitMap.updateComponentPaths(
+      componentId._legacy,
+      compFiles.map((f) => this.consumer.getPathRelativeToConsumer(f)),
+      removedFiles.map((f) => this.consumer.getPathRelativeToConsumer(f))
+    );
     const buildResults = await this.executeWatchOperationsOnComponent(
       updatedComponentId,
       compFiles,
@@ -303,14 +288,12 @@ export class Watcher {
     const removedDirs: string[] = difference(Object.keys(previewsTrackDirs), Object.keys(this.trackDirs));
     const results: OnComponentEventResult[] = [];
     if (newDirs.length) {
-      this.fsWatcher.add(newDirs.map((dir) => this.consumer.toAbsolutePath(dir)));
       const addResults = await mapSeries(newDirs, async (dir) =>
         this.executeWatchOperationsOnComponent(this.trackDirs[dir], [], [], false)
       );
       results.push(...addResults.flat());
     }
     if (removedDirs.length) {
-      await this.fsWatcher.unwatch(removedDirs);
       await mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsTrackDirs[dir]));
     }
 
@@ -325,8 +308,8 @@ export class Watcher {
 
   private async executeWatchOperationsOnComponent(
     componentId: ComponentID,
-    files: string[],
-    removedFiles: string[] = [],
+    files: PathOsBasedAbsolute[],
+    removedFiles: PathOsBasedAbsolute[] = [],
     isChange = true,
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
@@ -395,14 +378,34 @@ export class Watcher {
     return this.findTrackDirByFilePathRecursively(parentDir);
   }
 
-  private async createWatcher(pathsToWatch: string[]) {
-    this.fsWatcher = chokidar.watch(pathsToWatch, {
+  private async createWatcher() {
+    // const usePollingConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_POLLING);
+    // const usePolling = usePollingConf === 'true';
+    const useFsEventsConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_FS_EVENTS);
+    const useFsEvents = useFsEventsConf === 'true';
+    const ignoreLocalScope = (pathToCheck: string) => {
+      if (pathToCheck.startsWith(this.ipcEventsDir)) return false;
+      return (
+        pathToCheck.startsWith(`${this.workspace.path}/.git/`) || pathToCheck.startsWith(`${this.workspace.path}/.bit/`)
+      );
+    };
+    this.fsWatcher = chokidar.watch(this.workspace.path, {
       ignoreInitial: true,
-      // `chokidar` matchers have Bash-parity, so Windows-style backslackes are not supported as separators.
+      // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
       // (windows-style backslashes are converted to forward slashes)
-      ignored: ['**/node_modules/**', '**/package.json'],
+      ignored: ['**/node_modules/**', '**/package.json', ignoreLocalScope],
+      /**
+       * default to false, although it causes high CPU usage.
+       * see: https://github.com/paulmillr/chokidar/issues/1196#issuecomment-1711033539
+       * there is a fix for this in master. once a new version of Chokidar is released, we can upgrade it and then
+       * default to true.
+       */
+      useFsEvents,
       persistent: true,
     });
+    if (this.verbose) {
+      logger.console(`chokidar.options ${JSON.stringify(this.fsWatcher.options, undefined, 2)}`);
+    }
   }
 
   async setTrackDirs() {
@@ -417,15 +420,5 @@ export class Watcher {
         this.trackDirs[rootDir] = componentId;
       })
     );
-  }
-
-  private async getPathsToWatch(): Promise<PathOsBasedAbsolute[]> {
-    await this.setTrackDirs();
-    const paths = [...Object.keys(this.trackDirs), BIT_MAP];
-    const pathsAbsolute = paths.map((dir) => this.consumer.toAbsolutePath(dir));
-    // otherwise, if the dir is not there, chokidar triggers 'onReady' event twice for some unclear reason.
-    await fs.ensureDir(this.ipcEventsDir);
-    pathsAbsolute.push(this.ipcEventsDir);
-    return pathsAbsolute;
   }
 }

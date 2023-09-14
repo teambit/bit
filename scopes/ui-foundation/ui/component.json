@@ -1,7 +1,8 @@
 {
   "componentId": {
     "name": "ui",
-    "version": "0.0.10"
+    "version": "0.0.10",
+    "scope": "teambit.ui-foundation"
   },
   "propagate": true,
   "extensions": {
@@ -30,10 +31,11 @@
           "@types/mocha": "9.1.0",
           "@types/node": "12.20.4",
           "@types/postcss-normalize": "9.0.1",
-          "@teambit/legacy": "-"
+          "@teambit/legacy": "-",
+          "@types/webpack-dev-server": "-"
         },
         "peerDependencies": {
-          "@teambit/legacy": "1.0.532"
+          "@teambit/legacy": "1.0.560"
         }
       }
     }

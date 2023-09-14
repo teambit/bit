@@ -306,6 +306,7 @@ export async function tagModelComponent({
 
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId, copyLogFromPreviousSnap);
   // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
+  // (it's being deleted in snapping.main.runtime - `_addCompToObjects` method)
   const unmergedComps = workspace ? await workspace.listComponentsDuringMerge() : [];
   let stagedConfig;
   if (soft) {
@@ -314,7 +315,7 @@ export async function tagModelComponent({
   } else {
     await snapping._addFlattenedDependenciesToComponents(allComponentsToTag);
     await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
-    emptyBuilderData(allComponentsToTag);
+    if (!build) emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer);
 
@@ -342,15 +343,18 @@ export async function tagModelComponent({
     const isolateOptions = { packageManagerConfigRootDir, seedersOnly };
     const builderOptions = { exitOnFirstFailedTask, skipTests };
 
-    await scope.reloadAspectsWithNewVersion(allComponentsToTag);
-    harmonyComps = await (workspace || scope).getManyByLegacy(allComponentsToTag);
-    const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions, builderOptions);
-    const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
+    const componentsToBuild = allComponentsToTag.filter((c) => !c.isRemoved());
+    if (componentsToBuild.length) {
+      await scope.reloadAspectsWithNewVersion(componentsToBuild);
+      harmonyComps = await (workspace || scope).getManyByLegacy(componentsToBuild);
+      const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions, builderOptions);
+      const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
 
-    snapping._updateComponentsByTagResult(allComponentsToTag, buildResult);
-    publishedPackages.push(...snapping._getPublishedPackages(allComponentsToTag));
-    addBuildStatus(allComponentsToTag, BuildStatus.Succeed);
-    await mapSeries(allComponentsToTag, (consumerComponent) => snapping._enrichComp(consumerComponent));
+      snapping._updateComponentsByTagResult(componentsToBuild, buildResult);
+      publishedPackages.push(...snapping._getPublishedPackages(componentsToBuild));
+      addBuildStatus(componentsToBuild, BuildStatus.Succeed);
+      await mapSeries(componentsToBuild, (consumerComponent) => snapping._enrichComp(consumerComponent));
+    }
   }
 
   let removedComponents: BitIds | undefined;
@@ -407,7 +411,10 @@ async function removeMergeConfigFromComponents(
       configMergeFile.removeConflict(compId.toStringWithoutVersion());
     }
   });
-  if (configMergeFile.hasConflict()) {
+  const currentlyUnmerged = workspace ? await workspace.listComponentsDuringMerge() : [];
+  if (configMergeFile.hasConflict() && currentlyUnmerged.length) {
+    // it's possible that "workspace" section is still there. but if all "unmerged" are now merged,
+    // then, it's safe to delete the file.
     await configMergeFile.write();
   } else {
     await configMergeFile.delete();
@@ -438,6 +445,10 @@ async function addComponentsToScope(
   }
 }
 
+/**
+ * otherwise, tagging without build will have the old build data of the previous snap/tag.
+ * in case we currently build, it's ok to leave the data as is, because it'll be overridden anyway.
+ */
 function emptyBuilderData(components: ConsumerComponent[]) {
   components.forEach((component) => {
     component.extensions = component.extensions.clone();
@@ -593,7 +604,7 @@ export async function updateComponentsVersions(
     consumer.bitMap.updateComponentId(id);
     const availableOnMain = await isAvailableOnMain(modelComponent, id);
     if (!availableOnMain) {
-      consumer.bitMap.setComponentProp(id, 'onLanesOnly', true);
+      consumer.bitMap.setOnLanesOnly(id, true);
     }
     const componentMap = consumer.bitMap.getComponent(id);
     const compId = await workspace.resolveComponentId(id);

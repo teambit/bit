@@ -1,6 +1,8 @@
 import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy/dist/constants';
 import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import React from 'react';
+import chalk from 'chalk';
+import { uniq } from 'lodash';
 import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { GlobalConfigMain } from '@teambit/global-config';
@@ -52,8 +54,8 @@ export type PipeName = 'build' | 'tag' | 'snap';
 
 export type BuilderDescriptor = Array<{ pipeName: PipeName; tasks: string[] }>;
 
-type PipeFunctionNames = keyof typeof pipeNames;
-export class BuilderService implements EnvService<BuildServiceResults, BuilderDescriptor> {
+export type PipeFunctionNames = keyof typeof pipeNames;
+export class BuilderService implements EnvService<BuildServiceResults, string> {
   name = 'builder';
 
   constructor(
@@ -100,9 +102,9 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     );
     tasksQueue.validate();
     this.logger.info(`going to run tasks in the following order:\n${tasksQueue.toString()}`);
-    const title = `running ${this.displayPipeName} pipe for ${envs.length} environments, total ${tasksQueue.length} tasks`;
-    const longProcessLogger = this.logger.createLongProcessLogger(title);
-    this.logger.consoleTitle(title);
+    this.logger.console('\n'); // this is to make is clear separation between the various pipelines (build/snap/tag)
+    const title = `Running ${this.displayPipeName} pipeline using ${envs.length} environment(s), total ${tasksQueue.length} tasks`;
+    const longProcessLogger = this.logger.createLongProcessLogger(title, undefined, 'title');
     const envsBuildContext: EnvsBuildContext = {};
     const capsulesBaseDir = this.getComponentsCapsulesBaseDir();
 
@@ -123,9 +125,9 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
       );
       const capsuleNetwork = await this.isolator.isolateComponents(componentIds, isolateOptions);
       capsuleNetwork._originalSeeders = originalSeedersOfThisEnv;
-      this.logger.console(
-        `generated graph for env "${executionContext.id}", originalSeedersOfThisEnv: ${originalSeedersOfThisEnv.length}, graphOfThisEnv: ${capsuleNetwork.seedersCapsules.length}, graph total: ${capsuleNetwork.graphCapsules.length}`
-      );
+      const msg = `building ${originalSeedersOfThisEnv.length} components of env "${executionContext.id}"`;
+      const extraDetails = `original seeders of this env: ${originalSeedersOfThisEnv.length}, graph of this env: ${capsuleNetwork.seedersCapsules.length}, graph total (include other envs): ${capsuleNetwork.graphCapsules.length}`;
+      this.logger.console(`${msg}. ${chalk.dim(extraDetails)}`);
       const buildContext = Object.assign(executionContext, {
         capsuleNetwork,
         previousTasksResults: [],
@@ -135,17 +137,21 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
       });
       envsBuildContext[executionContext.id] = buildContext;
     });
+    const envIdsWithoutVersion = envs.map((env) => env.id.split('@')[0]);
     const buildPipe = new BuildPipe(
       tasksQueue,
       envsBuildContext,
       this.logger,
       this.artifactFactory,
       options.previousTasksResults,
-      { exitOnFirstFailedTask: options.exitOnFirstFailedTask }
+      {
+        exitOnFirstFailedTask: options.exitOnFirstFailedTask,
+        showEnvNameInOutput: envs.length > 1,
+        showEnvVersionInOutput: envIdsWithoutVersion.length > uniq(envIdsWithoutVersion).length,
+      }
     );
     const buildResults = await buildPipe.execute();
-    longProcessLogger.end();
-    buildResults.hasErrors() ? this.logger.consoleFailure() : this.logger.consoleSuccess();
+    longProcessLogger.end(buildResults.hasErrors() ? 'error' : 'success');
 
     return buildResults;
   }
@@ -154,11 +160,15 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     return this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
   }
 
-  render(env: EnvDefinition) {
-    const pipes = this.getDescriptor(env);
+  render() {
+    const descriptor = this.getDescriptor();
 
     return (
-      <Text key={BuilderAspect.id}>{pipes.map(({ pipeName, tasks }) => this.renderOnePipe(pipeName, tasks))}</Text>
+      <Text key={BuilderAspect.id}>
+        {descriptor}
+        <Newline />
+        <Newline />
+      </Text>
     );
   }
 
@@ -185,41 +195,8 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     };
   }
 
-  private renderOnePipe(pipeName, tasks) {
-    if (!tasks || !tasks.length) return null;
-    return (
-      <Text key={pipeName}>
-        <Text underline color="green">
-          {pipeName} pipe
-        </Text>
-        <Newline />
-        <Text color="cyan">total {tasks.length} tasks are configured to be executed in the following order</Text>
-        <Newline />
-        {tasks.map((task, index) => (
-          <Text key={index}>
-            <Text>
-              {index + 1}. {task}
-            </Text>
-            <Newline />
-          </Text>
-        ))}
-        <Newline />
-      </Text>
-    );
-  }
-
-  getDescriptor(env: EnvDefinition) {
-    // @ts-ignore
-    const tasks = Object.keys(pipeNames).map((pipeFuncName: PipeFunctionNames) => {
-      let tasksQueue: string[];
-      try {
-        tasksQueue = this.getTasksNamesByPipeFunc(env, pipeFuncName);
-      } catch (err: any) {
-        tasksQueue = [`<failed getting task-queue, error: ${err.message}>`];
-      }
-      return { pipeName: pipeNames[pipeFuncName], tasks: tasksQueue };
-    });
-    return tasks as BuilderDescriptor;
+  getDescriptor() {
+    return 'run `bit build --list-tasks <component-id>` to see the tasks list for the pipelines: build, tag and snap';
   }
 
   private getTasksNamesByPipeFunc(env: EnvDefinition, pipeFuncName: PipeFunctionNames): string[] {

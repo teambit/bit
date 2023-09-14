@@ -1,4 +1,3 @@
-import { BitError } from '@teambit/bit-error';
 import { Command, CommandOptions } from '@teambit/cli';
 import { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
@@ -35,24 +34,24 @@ export default class InstallCmd implements Command {
   description = 'installs workspace dependencies';
   extendedDescription =
     'when no package is specified, all workspace dependencies are installed and all workspace components are imported.';
-  helpUrl = 'docs/dependencies/dependency-installation';
+  helpUrl = 'reference/dependencies/dependency-installation';
   arguments = [{ name: 'packages...', description: 'a list of packages to install (separated by spaces)' }];
   alias = 'in';
   group = 'development';
   options = [
     ['t', 'type [lifecycleType]', '"runtime" (default) or "peer" (dev is not a valid option)'],
-    ['u', 'update', 'update all dependencies'],
+    ['u', 'update', 'update all dependencies to latest version according to their semver range'],
     [
       '',
-      'update-existing [updateExisting]',
+      'update-existing',
       'DEPRECATED (not needed anymore, it is the default now). update existing dependencies version and types',
     ],
     ['', 'save-prefix [savePrefix]', 'set the prefix to use when adding dependency to workspace.jsonc'],
-    ['', 'skip-dedupe [skipDedupe]', 'do not dedupe dependencies on installation'],
-    ['', 'skip-import [skipImport]', 'do not import bit objects post installation'],
-    ['', 'skip-compile [skipCompile]', 'do not compile components'],
-    ['', 'add-missing-deps [addMissingDeps]', 'install all missing dependencies'],
-    ['', 'add-missing-peers [addMissingPeers]', 'install all missing peer dependencies'],
+    ['', 'skip-dedupe', 'do not dedupe dependencies on installation'],
+    ['', 'skip-import', 'do not import bit objects post installation'],
+    ['', 'skip-compile', 'do not compile components'],
+    ['', 'add-missing-deps', 'install all missing dependencies'],
+    ['', 'add-missing-peers', 'install all missing peer dependencies'],
     [
       '',
       recurringInstallFlagName,
@@ -77,12 +76,9 @@ export default class InstallCmd implements Command {
   async report([packages = []]: [string[]], options: InstallCmdOptions) {
     const startTime = Date.now();
     if (!this.workspace) throw new OutsideWorkspaceError();
-    if (packages.length && options.addMissingDeps) {
-      throw new BitError('You can not use --add-missing-deps with a list of packages');
-    }
     if (options.updateExisting) {
       this.logger.consoleWarning(
-        `--update-existing is deprecated, please omit it. "bit install" will update existing dependency by default`
+        `--update-existing is deprecated, please omit it. "bit install" will update existing dependencies by default`
       );
     }
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
@@ -137,7 +133,7 @@ function formatOutput({
 export function getAnotherInstallRequiredOutput(recurringInstall = false, oldNonLoadedEnvs: string[] = []): string {
   if (!oldNonLoadedEnvs.length) return '';
   const oldNonLoadedEnvsStr = oldNonLoadedEnvs.join(', ');
-  const firstPart = `Bit is unable to install all dependencies. Please run "${chalk.cyan('bit install')}" again `;
+  const firstPart = `Bit was not able to install all dependencies. Please run "${chalk.cyan('bit install')}" again `;
   const flag = chalk.cyan(`--${recurringInstallFlagName}`);
   const suggestRecurringInstall = recurringInstall ? '' : `(or use the "${flag}" option next time).`;
   const envsStr = `The following environments need to add support for "dependency policy" to fix the warning: ${chalk.cyan(
