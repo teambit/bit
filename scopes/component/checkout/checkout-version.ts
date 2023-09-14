@@ -16,6 +16,8 @@ import {
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { BitError } from '@teambit/bit-error';
+import chalk from 'chalk';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
@@ -38,11 +40,11 @@ export type ComponentStatusBase = {
   componentFromModel?: Version;
   id: BitId;
   shouldBeRemoved?: boolean; // in case the component is soft-removed, it should be removed from the workspace
+  unchangedMessage?: string; // this gets populated either upon skip or failure.
+  unchangedLegitimately?: boolean; // true for skipped legitimately (e.g. already up to date). false for failure.
 };
 
 export type ComponentStatus = ComponentStatusBase & {
-  failureMessage?: string;
-  unchangedLegitimately?: boolean; // failed to checkout but for a legitimate reason, such as, up-to-date
   mergeResults?: MergeResultsThreeWay | null | undefined;
 };
 
@@ -217,4 +219,17 @@ export function applyModifiedVersion(
   });
 
   return { filesStatus, modifiedFiles };
+}
+
+export function throwForFailures(allComponentsStatus: ComponentStatusBase[]) {
+  const failedComponents = allComponentsStatus.filter((c) => c.unchangedMessage && !c.unchangedLegitimately);
+  if (failedComponents.length) {
+    const failureMsgs = failedComponents
+      .map(
+        (failedComponent) =>
+          `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.unchangedMessage as string)}`
+      )
+      .join('\n');
+    throw new BitError(`unable to proceed due to the following failures:\n${failureMsgs}`);
+  }
 }
