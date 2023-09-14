@@ -843,6 +843,9 @@
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
             "@teambit/legacy": "1.0.559",
+            // These are the peer dependencies of Yarn
+            "@yarnpkg/cli": "3.6.1",
+            "@yarnpkg/core": "3.5.2",
             "@yarnpkg/plugin-pack": "3.2.0",
             "graphql": "15.8.0",
             "browserslist": "4.16.3",
