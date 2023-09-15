@@ -148,6 +148,9 @@ export class APIForIDE {
   async warmWorkspaceCache() {
     await this.workspace.warmCache();
   }
+  async clearCache() {
+    await this.workspace.clearCache();
+  }
 
   async install() {
     return this.installer.install(undefined, { optimizeReportForNonTerminal: true });
