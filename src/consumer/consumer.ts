@@ -17,15 +17,13 @@ import {
   DOT_GIT_DIR,
   LATEST,
 } from '../constants';
-import GeneralError from '../error/general-error';
 import logger from '../logger/logger';
 import { Scope } from '../scope';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
-import { pathNormalizeToLinux, sortObject } from '../utils';
+import { sortObject } from '../utils';
 import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
-import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
 import {
   PathAbsolute,
   PathLinuxRelative,
@@ -451,41 +449,6 @@ export default class Consumer {
     });
 
     if (componentsToTag.length) this.bitMap.markAsChanged();
-  }
-
-  getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {
-    const { packageName } = this.splitPackagePathToNameAndFile(requirePath);
-    return packageNameToComponentId(this, packageName, bindingPrefix);
-  }
-
-  /**
-   * e.g.
-   * input: @bit/my-scope.my-name/internal-path.js
-   * output: { packageName: '@bit/my-scope', internalPath: 'internal-path.js' }
-   */
-  splitPackagePathToNameAndFile(packagePath: string): { packageName: string; internalPath: string } {
-    const packagePathWithoutNM = this.stripNodeModulesFromPackagePath(packagePath);
-    const packageSplitBySlash = packagePathWithoutNM.split('/');
-    const isScopedPackage = packagePathWithoutNM.startsWith('@');
-    const packageName = isScopedPackage
-      ? `${packageSplitBySlash.shift()}/${packageSplitBySlash.shift()}`
-      : (packageSplitBySlash.shift() as string);
-
-    const internalPath = packageSplitBySlash.join('/');
-
-    return { packageName, internalPath };
-  }
-
-  private stripNodeModulesFromPackagePath(requirePath: string): string {
-    requirePath = pathNormalizeToLinux(requirePath);
-    const prefix = requirePath.includes('node_modules') ? 'node_modules/' : '';
-    const withoutPrefix = prefix ? requirePath.slice(requirePath.indexOf(prefix) + prefix.length) : requirePath;
-    if (!withoutPrefix.includes('/') && withoutPrefix.startsWith('@')) {
-      throw new GeneralError(
-        'getComponentIdFromNodeModulesPath expects the path to have at least one slash for the scoped package, such as @bit/'
-      );
-    }
-    return withoutPrefix;
   }
 
   composeRelativeComponentPath(bitId: BitId): PathLinuxRelative {
