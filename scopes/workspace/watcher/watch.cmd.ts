@@ -22,10 +22,8 @@ export type WatchCmdOpts = {
 export class WatchCommand implements Command {
   name = 'watch';
   description = 'automatically recompile modified components (on save)';
-  extendedDescription = `by default, the watcher use polling, although it causes a high CPU usage.
-it's needed due to a bug (fixed in master but not released yet) in Chokidar package, which is used by Bit watcher.
-for small projects though it should be ok to use the fsevents.
-to use fsevents, run "bit config set watch_use_fsevents true".`;
+  extendedDescription = `by default, the watcher doesn't use polling, to keep the CPU idle.
+if this doesn't work well for you, run "bit config set watch_use_polling true" to use polling.`;
   helpUrl = 'reference/compiling/compiler-overview';
   alias = '';
   group = 'development';
