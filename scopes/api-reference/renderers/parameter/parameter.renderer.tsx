@@ -36,7 +36,6 @@ function ParameterComponent(props: APINodeRenderProps) {
       <React.Fragment key={`${name}-param-object-binding-wrapper`}>
         <HeadingRow headings={headings} colNumber={4} />
         {objectBindingNodes.map((_bindingNode) => {
-          // @todo handle spread _bindingNode.isSpread
           const typeRefCorrespondingNode = typeRef?.api.findNode((node) => node.name === _bindingNode.name);
           const bindingNode = typeRefCorrespondingNode || _bindingNode;
           const bindingNodeRenderer = renderers.find((renderer) => renderer.predicate(bindingNode));
