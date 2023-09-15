@@ -8,7 +8,6 @@ import logger from '../../logger/logger';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 import hasWildcard from '../../utils/string/has-wildcard';
 import { validateUserInputType } from '../../utils/validate-type';
-import Component from '../component/consumer-component';
 import { ComponentOverridesData } from './component-overrides';
 
 export type ConsumerOverridesOfComponent = ComponentOverridesData & {
