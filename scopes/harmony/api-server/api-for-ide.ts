@@ -10,6 +10,7 @@ import { ExportMain } from '@teambit/export';
 import { CheckoutMain } from '@teambit/checkout';
 import { ApplyVersionResults } from '@teambit/merging';
 import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
+import { Log } from '@teambit/legacy/dist/scope/models/lane';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -23,6 +24,16 @@ type InitSCMEntry = {
 };
 
 type DataToInitSCM = { [compId: string]: InitSCMEntry };
+
+type LaneObj = {
+  name: string;
+  scope: string;
+  id: string;
+  log: Log;
+  components: Array<{ id: string; head: string }>;
+  isNew: boolean;
+  forkedFrom?: string;
+};
 
 export class APIForIDE {
   constructor(
@@ -58,6 +69,29 @@ export class APIForIDE {
       getAll: true,
     });
     return (results.components || []).map((c) => c.id.toString());
+  }
+
+  async getCurrentLaneObject(): Promise<LaneObj | undefined> {
+    const currentLane = await this.lanes.getCurrentLane();
+    if (!currentLane) return undefined;
+    const components = await Promise.all(
+      currentLane.components.map(async (c) => {
+        const compId = await this.workspace.resolveComponentId(c.id);
+        return {
+          id: compId.toStringWithoutVersion(),
+          head: c.head.toString(),
+        };
+      })
+    );
+    return {
+      name: currentLane.name,
+      scope: currentLane.scope,
+      id: currentLane.id(),
+      log: currentLane.log,
+      components,
+      isNew: currentLane.isNew,
+      forkedFrom: currentLane.forkedFrom?.toString(),
+    };
   }
 
   async listLanes() {
@@ -147,6 +181,9 @@ export class APIForIDE {
 
   async warmWorkspaceCache() {
     await this.workspace.warmCache();
+  }
+  async clearCache() {
+    await this.workspace.clearCache();
   }
 
   async install() {
