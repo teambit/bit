@@ -285,6 +285,9 @@ importers:
       '@teambit/capsule':
         specifier: 0.0.12
         version: 0.0.12
+      '@teambit/chokidar':
+        specifier: 3.5.6
+        version: 3.5.6
       '@teambit/code.ui.code-compare-section':
         specifier: 0.0.5
         version: 0.0.5(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
@@ -789,9 +792,6 @@ importers:
       checksum:
         specifier: 0.1.1
         version: 0.1.1
-      chokidar:
-        specifier: 3.5.3
-        version: 3.5.3
       classnames:
         specifier: 2.2.6
         version: 2.2.6
@@ -25237,6 +25237,9 @@ importers:
       '@teambit/base-ui.utils.composer':
         specifier: 1.0.0
         version: registry.npmjs.org/@teambit/base-ui.utils.composer@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/chokidar':
+        specifier: 3.5.6
+        version: 3.5.6
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -25261,9 +25264,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      chokidar:
-        specifier: 3.5.3
-        version: 3.5.3
       classnames:
         specifier: 2.2.6
         version: 2.2.6
@@ -29036,6 +29036,9 @@ importers:
 
   scopes/workspace/watcher:
     dependencies:
+      '@teambit/chokidar':
+        specifier: 3.5.6
+        version: 3.5.6
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -29048,9 +29051,6 @@ importers:
       chalk:
         specifier: 2.4.2
         version: 2.4.2
-      chokidar:
-        specifier: 3.5.3
-        version: 3.5.3
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -36096,6 +36096,21 @@ packages:
       p-limit: 2.3.0
     dev: false
 
+  /@teambit/chokidar@3.5.6:
+    resolution: {integrity: sha512-J9q0BvcSKt/nhsmFGqtjnZF7jHKjxPucVV2NhDjWOgABU1iVXMQ1dD/n1Cq/K77sbugNyt9v8abGDQ1iK+1vDg==}
+    engines: {node: '>= 8.10.0'}
+    dependencies:
+      anymatch: 3.1.3
+      braces: 3.0.2
+      glob-parent: 5.1.2
+      is-binary-path: 2.1.0
+      is-glob: 4.0.1
+      normalize-path: 3.0.0
+      readdirp: 3.6.0
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: false
+
   /@teambit/code.ui.code-compare-section@0.0.5(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
     resolution: {integrity: sha1-uCNGPFa1JA80ygcbuav0SJO+7CY=, tarball: https://node-registry.bit.cloud/@teambit/code.ui.code-compare-section/-/@teambit-code.ui.code-compare-section-0.0.5.tgz}
     engines: {node: '>=12.22.0'}
@@ -42071,7 +42086,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.0
       '@yarnpkg/fslib': 3.0.0-rc.48
-      '@yarnpkg/libzip': 3.0.0-rc.48
+      '@yarnpkg/libzip': 3.0.0-rc.48(@yarnpkg/fslib@3.0.0-rc.48)
       '@yarnpkg/parsers': 3.0.0-rc.48.1
       '@yarnpkg/shell': 4.0.0-rc.48
       camelcase: 5.3.1
@@ -42102,7 +42117,7 @@ packages:
       '@types/semver': 7.3.4
       '@types/treeify': 1.0.0
       '@yarnpkg/fslib': 3.0.0-rc.48
-      '@yarnpkg/libzip': 3.0.0-rc.48
+      '@yarnpkg/libzip': 3.0.0-rc.48(@yarnpkg/fslib@3.0.0-rc.48)
       '@yarnpkg/parsers': 3.0.0-rc.48.1
       '@yarnpkg/shell': 4.0.0-rc.48
       camelcase: 5.3.1
@@ -42175,9 +42190,11 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@yarnpkg/libzip@3.0.0-rc.48:
+  /@yarnpkg/libzip@3.0.0-rc.48(@yarnpkg/fslib@3.0.0-rc.48):
     resolution: {integrity: sha512-WqqbaqRsS72LY3JXiHHrojTDG8PeeVwKBdn3NfQyqowzSVDr6Vu9c/WwWirR6K4QVmJKC1Obt1lKsAfMiRry0A==}
     engines: {node: '>=18.12.0'}
+    peerDependencies:
+      '@yarnpkg/fslib': ^3.0.0-rc.48
     dependencies:
       '@types/emscripten': 1.39.6
       '@yarnpkg/fslib': 3.0.0-rc.48
@@ -66438,6 +66455,7 @@ packages:
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.utils.composer': 1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/chokidar': 3.5.6
       '@teambit/component-id': 0.0.427
       '@teambit/design.ui.surfaces.menu.link-item': 1.0.0(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/design.ui.tree': 0.0.15(react-dom@17.0.2)(react@17.0.2)
@@ -68007,6 +68025,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@babel/runtime': 7.20.0
+      '@teambit/chokidar': 3.5.6
       '@teambit/component-id': 0.0.427
       '@teambit/harmony': 0.4.6
       '@teambit/legacy-bit-id': 1.0.0
