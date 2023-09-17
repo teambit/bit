@@ -1,3 +1,5 @@
+import path from 'path';
+import fs from 'fs-extra';
 import stringifyPackage from 'stringify-package';
 import writeFileAtomic from 'write-file-atomic';
 
@@ -30,6 +32,7 @@ export default class PackageJsonVinyl extends AbstractVinyl {
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     logger.debug(`package-json-vinyl.write, path ${this.path}`);
+    await fs.mkdirp(path.dirname(this.path));
     await writeFileAtomic(this.path, this.contents);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.path;
