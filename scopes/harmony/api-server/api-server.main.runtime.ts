@@ -50,14 +50,13 @@ export class ApiServerMain {
     );
 
     this.workspace.registerOnBitmapChange(async () => {
-      const lastModified = await this.workspace.bitMap.getLastModifiedBitmapThroughBit();
-      if (lastModified && Date.now() - lastModified > 1000) {
-        this.logger.debug(
-          `running import because we assume the .bitmap file has changed due to "git pull", last time it was modified by bit was ${
-            (Date.now() - lastModified) / 1000
-          } seconds ago`
-        );
+      const lastModifiedTimestamp = await this.workspace.bitMap.getLastModifiedBitmapThroughBit();
+      const secondsPassedSinceLastModified = lastModifiedTimestamp && (Date.now() - lastModifiedTimestamp) / 1000;
+      if (secondsPassedSinceLastModified && secondsPassedSinceLastModified > 1) {
         // changes by bit were done more than a second ago, so probably this .bitmap change was done by "git pull"
+        this.logger.debug(
+          `running import because we assume the .bitmap file has changed due to "git pull", last time it was modified by bit was ${secondsPassedSinceLastModified} seconds ago`
+        );
         await this.importer.importCurrentObjects();
       }
       sendEventsToClients('onBitmapChange', {});

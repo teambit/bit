@@ -49,7 +49,6 @@ import { ConsumerNotFound } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
-import { getPathStatIfExist } from '../utils/fs/last-modified';
 
 type ConsumerProps = {
   projectPath: string;
