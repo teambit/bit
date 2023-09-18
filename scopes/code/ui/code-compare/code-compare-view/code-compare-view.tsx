@@ -1,7 +1,7 @@
 import React, { HTMLAttributes, useMemo, useRef, useState, ComponentType, useEffect } from 'react';
 import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DiffOnMount, Monaco } from '@monaco-editor/react';
-import { FileIconSlot } from '@teambit/code';
+import { FileIconSlot, useDiffEditor } from '@teambit/code';
 import flatten from 'lodash.flatten';
 import classNames from 'classnames';
 import { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
@@ -55,6 +55,7 @@ export function CodeCompareView({
       fileName,
     });
   const componentCompareContext = useComponentCompare();
+  const DiffEditor = useDiffEditor();
 
   const getDefaultView: () => EditorViewMode = () => {
     if (!baseId) return 'inline';
@@ -263,6 +264,7 @@ export function CodeCompareView({
         editorViewMode={view}
         wordWrap={wrap}
         Loader={<CodeCompareViewLoader />}
+        DiffEditor={DiffEditor}
       />
     ),
     [modifiedFileContent, originalFileContent, ignoreWhitespace, view, wrap]

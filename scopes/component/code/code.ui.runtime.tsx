@@ -10,6 +10,8 @@ import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-c
 import { CodeCompareSection } from '@teambit/code.ui.code-compare-section';
 import { CodeAspect } from './code.aspect';
 import { CodeSection } from './code.section';
+import { DiffEditorProvider } from './code.diff.editor.provider';
+import { EditorProvider } from './code.editor.provider';
 
 const isTsx = /\.tsx$/;
 
@@ -33,8 +35,15 @@ export class CodeUI {
   };
 
   getCodeCompare = (props?: Partial<CodeCompareProps>) => {
-    return <CodeCompare {...(props || {})} fileIconSlot={this.fileIconSlot} />;
+    return (
+      <DiffEditorProvider>
+        <CodeCompare {...(props || {})} fileIconSlot={this.fileIconSlot} />
+      </DiffEditorProvider>
+    );
   };
+
+  getCodeEditorProvider = () => EditorProvider;
+  getCodeDiffEditorProvider = () => DiffEditorProvider;
 
   registerEnvFileIcon(icons: FileIconMatch[]) {
     this.fileIconSlot?.register(icons);

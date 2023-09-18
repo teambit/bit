@@ -19,29 +19,35 @@ import { typeLiteralRenderer } from '@teambit/api-reference.renderers.type-liter
 import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
 import { inferenceTypeRenderer } from '@teambit/api-reference.renderers.inference-type';
 import { typeArrayRenderer } from '@teambit/api-reference.renderers.type-array';
-import { SchemaNodeConstructor, SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';
+// import { SchemaNodeConstructor, SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';
+import CodeAspect, { CodeUI } from '@teambit/code';
 
 import { APIReferenceAspect } from './api-reference.aspect';
 
 export type APINodeRendererSlot = SlotRegistry<APINodeRenderer[]>;
 export class APIReferenceUI {
-  constructor(private host: string, private apiNodeRendererSlot: APINodeRendererSlot) {}
+  constructor(private host: string, private apiNodeRendererSlot: APINodeRendererSlot, private codeUI: CodeUI) {}
 
-  static dependencies = [ComponentAspect];
+  static dependencies = [ComponentAspect, CodeAspect];
   static runtime = UIRuntime;
   static slots = [Slot.withType<APINodeRenderer[]>()];
 
   getAPIPage() {
-    return <APIRefPage host={this.host} rendererSlot={this.apiNodeRendererSlot} />;
+    const CodeEditorProvider = this.codeUI.getCodeEditorProvider();
+    return (
+      <CodeEditorProvider>
+        <APIRefPage host={this.host} rendererSlot={this.apiNodeRendererSlot} />
+      </CodeEditorProvider>
+    );
   }
 
-  registerSchemaClass(schema: SchemaNodeConstructor) {
-    SchemaRegistry.register(schema);
-  }
+  // registerSchemaClass(schema: SchemaNodeConstructor) {
+  //   SchemaRegistry.register(schema);
+  // }
 
-  getSchemaClasses() {
-    return SchemaRegistry.schemas;
-  }
+  // getSchemaClasses() {
+  //   return SchemaRegistry.schemas;
+  // }
 
   registerAPINodeRenderer(apiNodeRenderers: APINodeRenderer[]) {
     this.apiNodeRendererSlot.register(apiNodeRenderers);
@@ -65,22 +71,22 @@ export class APIReferenceUI {
   ];
 
   static async provider(
-    [componentUI]: [ComponentUI],
+    [componentUI, codeUI]: [ComponentUI, CodeUI],
     _,
     [apiNodeRendererSlot]: [APINodeRendererSlot],
     harmony: Harmony
   ) {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
-    const apiReferenceUI = new APIReferenceUI(host, apiNodeRendererSlot);
+    const apiReferenceUI = new APIReferenceUI(host, apiNodeRendererSlot, codeUI);
     apiReferenceUI.registerAPINodeRenderer(apiReferenceUI.apiNodeRenderers);
     const apiReferenceSection = new APIRefSection(apiReferenceUI);
     componentUI.registerNavigation(apiReferenceSection.navigationLink, apiReferenceSection.order);
     componentUI.registerRoute(apiReferenceSection.route);
-    // register all default schema classes
-    Object.values(Schemas).forEach((Schema) => {
-      apiReferenceUI.registerSchemaClass(Schema);
-    });
+    // // register all default schema classes
+    // Object.values(Schemas).forEach((Schema) => {
+    //   apiReferenceUI.registerSchemaClass(Schema);
+    // });
     return apiReferenceUI;
   }
 }
