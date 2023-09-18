@@ -100,13 +100,7 @@ export class ParameterTransformer implements SchemaTransformer {
       const info = await context.getQuickInfo(elem.name);
       const parsed = info ? parseTypeFromQuickInfo(info) : elem.getText();
       const defaultValue = elem.initializer ? elem.initializer.getText() : undefined;
-      return new InferenceTypeSchema(
-        context.getLocation(elem.name),
-        parsed,
-        elem.name.getText(),
-        defaultValue,
-        Boolean(elem.dotDotDotToken)
-      );
+      return new InferenceTypeSchema(context.getLocation(elem.name), parsed, elem.name.getText(), defaultValue);
     });
   }
 }
