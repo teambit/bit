@@ -1248,14 +1248,21 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (this.defaultScope === scopeName) {
       throw new Error(`the default-scope is already set as "${scopeName}", nothing to change`);
     }
+    if (!isValidScopeName(scopeName)) {
+      throw new InvalidScopeName(scopeName);
+    }
     const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
     config.workspaceConfig?.setExtension(
       WorkspaceAspect.id,
       { defaultScope: scopeName },
       { mergeIntoExisting: true, ignoreVersion: true }
     );
+    // fix also comps using the old default-scope
+    this.bitMap.updateDefaultScope(this.config.defaultScope, scopeName);
+
     this.config.defaultScope = scopeName;
     await config.workspaceConfig?.write({ dir: path.dirname(config.workspaceConfig.path) });
+    await this.bitMap.write();
   }
 
   async addSpecificComponentConfig(

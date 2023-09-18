@@ -8,6 +8,7 @@ import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/con
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import EnvsAspect from '@teambit/envs';
+import { BitId } from '@teambit/legacy-bit-id';
 
 export type MergeOptions = {
   mergeStrategy?: 'theirs' | 'ours' | 'manual';
@@ -58,6 +59,21 @@ export class BitMap {
     this.legacyBitMap.markAsChanged();
 
     return true; // changes have been made
+  }
+
+  updateDefaultScope(oldScope: string, newScope: string) {
+    const changedId: BitId[] = [];
+    this.legacyBitMap.components.forEach((componentMap) => {
+      // only new components (not snapped/tagged) can be changed
+      if (componentMap.defaultScope === oldScope && !componentMap.id.hasVersion()) {
+        componentMap.defaultScope = newScope;
+        changedId.push(componentMap.id);
+      }
+    });
+    if (changedId.length) {
+      this.legacyBitMap.markAsChanged();
+    }
+    return changedId;
   }
 
   markAsChanged() {
