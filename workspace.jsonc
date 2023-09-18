@@ -267,7 +267,7 @@
         "cors": "2.8.5",
         "credentials-by-uri": "2.0.0",
         "cross-env": "7.0.3",
-        "css-minimizer-webpack-plugin": "5.0.1",
+        "css-minimizer-webpack-plugin": "3.0.2",
         "dagre": "0.8.5",
         "didyoumean": "1.2.1",
         "enquirer": "2.3.6",
