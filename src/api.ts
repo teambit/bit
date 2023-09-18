@@ -1,5 +1,4 @@
 import { getScopeComponent } from './api/consumer/index';
-import { scopeList } from './api/scope/index';
 import HooksManager from './hooks';
 // import { registerCoreExtensions } from './extensions/bit';
 // import { manifestsMap as coreExtensions } from './extensions/bit';
@@ -19,16 +18,5 @@ export function show(scopePath: string, id: string, opts?: Record<string, any>) 
       }
       return component.toObject();
     }
-  );
-}
-export function list(
-  scopePath: string,
-  namespacesUsingWildcards?: string,
-  opts: { loadScopeFromCache?: boolean } = {}
-) {
-  // When using the API programmatically do not use the scope cache by default
-  const loadScopeFromCache = opts && opts.loadScopeFromCache !== undefined ? !!opts.loadScopeFromCache : false;
-  return scopeList(scopePath, namespacesUsingWildcards, loadScopeFromCache).then((listScopeResult) =>
-    listScopeResult.map((result) => result.id.toString())
   );
 }
