@@ -462,8 +462,8 @@ export class ReactMain {
     }
 
     if (application) application.registerAppType(appType);
-    schemaMain.registerSchemaClass(ReactSchema);
-    tsAspect.registerApiTransformer([new ReactAPITransformer()]);
+    if (schemaMain) schemaMain.registerSchemaClass(ReactSchema);
+    if (tsAspect) tsAspect.registerApiTransformer([new ReactAPITransformer()]);
 
     return react;
   }
