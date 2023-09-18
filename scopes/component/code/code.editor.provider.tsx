@@ -7,7 +7,9 @@ type EditorProviderProps = {
 };
 
 export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
-  const Editor = React.lazy(() => import('@monaco-editor/react'));
+  const Editor = React.lazy(() => {
+    return import('@monaco-editor/react').then((module) => ({ default: module.default }));
+  });
 
   return <EditorContext.Provider value={Editor}>{children}</EditorContext.Provider>;
 };

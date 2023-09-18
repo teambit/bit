@@ -66,18 +66,20 @@ export function CodeEditor({
   }, [filePath]);
 
   return (
-    <Editor
-      path={filePath}
-      value={fileContent || undefined}
-      language={language || defaultLang}
-      height={height || '100%'}
-      onMount={onMount}
-      beforeMount={beforeMount}
-      onChange={onChange}
-      className={classnames(darkMode, className)}
-      theme={'vs-dark'}
-      options={options || DEFAULT_EDITOR_OPTIONS}
-      loading={Loader}
-    />
+    <React.Suspense fallback={Loader ?? <></>}>
+      <Editor
+        path={filePath}
+        value={fileContent || undefined}
+        language={language || defaultLang}
+        height={height || '100%'}
+        onMount={onMount}
+        beforeMount={beforeMount}
+        onChange={onChange}
+        className={classnames(darkMode, className)}
+        theme={'vs-dark'}
+        options={options || DEFAULT_EDITOR_OPTIONS}
+        loading={Loader}
+      />
+    </React.Suspense>
   );
 }
