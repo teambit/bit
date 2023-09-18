@@ -36,7 +36,6 @@ export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
 export type GetBitMapComponentOptions = {
   ignoreVersion?: boolean;
-  ignoreScopeAndVersion?: boolean;
 };
 
 export type MergeOptions = {
@@ -450,10 +449,7 @@ export default class BitMap {
    * throw an exception if not found
    * @see also getBitIdIfExist
    */
-  getBitId(
-    bitId: BitId,
-    { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
-  ): BitId {
+  getBitId(bitId: BitId, { ignoreVersion = false }: GetBitMapComponentOptions = {}): BitId {
     if (bitId.constructor.name !== BitId.name) {
       throw new TypeError(`BitMap.getBitId expects bitId to be an instance of BitId, instead, got ${bitId}`);
     }
@@ -463,10 +459,6 @@ export default class BitMap {
     if (ignoreVersion) {
       const matchWithoutVersion = allIds.searchWithoutVersion(bitId);
       if (matchWithoutVersion) return matchWithoutVersion;
-    }
-    if (ignoreScopeAndVersion) {
-      const matchWithoutScopeAndVersion = allIds.searchWithoutScopeAndVersion(bitId);
-      if (matchWithoutScopeAndVersion) return matchWithoutScopeAndVersion;
     }
     if (this.updatedIds[bitId.toString()]) {
       return this.updatedIds[bitId.toString()].id;
@@ -483,14 +475,12 @@ export default class BitMap {
     bitId: BitId,
     {
       ignoreVersion = false,
-      ignoreScopeAndVersion = false,
     }: {
       ignoreVersion?: boolean;
-      ignoreScopeAndVersion?: boolean;
     } = {}
   ): BitId | undefined {
     try {
-      const existingBitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
+      const existingBitId = this.getBitId(bitId, { ignoreVersion });
       return existingBitId;
     } catch (err: any) {
       if (err instanceof MissingBitMapComponent) return undefined;
@@ -503,13 +493,9 @@ export default class BitMap {
    * throw an exception if not found.
    * @see also getComponentIfExist
    */
-  getComponent(
-    bitId: BitId,
-    { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
-  ): ComponentMap {
+  getComponent(bitId: BitId, { ignoreVersion = false }: GetBitMapComponentOptions = {}): ComponentMap {
     const existingBitId: BitId = this.getBitId(bitId, {
       ignoreVersion,
-      ignoreScopeAndVersion,
     });
     return this.components.find((c) => c.id.isEqual(existingBitId)) as ComponentMap;
   }
@@ -521,10 +507,10 @@ export default class BitMap {
    */
   getComponentIfExist(
     bitId: BitId,
-    { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
+    { ignoreVersion = false }: GetBitMapComponentOptions = {}
   ): ComponentMap | undefined {
     try {
-      const componentMap = this.getComponent(bitId, { ignoreVersion, ignoreScopeAndVersion });
+      const componentMap = this.getComponent(bitId, { ignoreVersion });
       return componentMap;
     } catch (err: any) {
       if (err instanceof MissingBitMapComponent) return undefined;
