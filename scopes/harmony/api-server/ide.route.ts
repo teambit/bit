@@ -32,7 +32,7 @@ export class IDERoute implements Route {
         const result = await this.apiForIDE[req.params.method](...args);
         const duration = prettyTime(process.hrtime(startTask));
         this.logger.consoleSuccess(`api-IDE call: ${req.params.method} had been completed in ${duration}`);
-        res.json(result);
+        res.json(result || {});
       } catch (err: any) {
         this.logger.error(`api-IDE call: ${req.params.method} had failed`, err);
         this.logger.consoleFailure(`api-IDE call: ${req.params.method} had failed. ${err.message}`);

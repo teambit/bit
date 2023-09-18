@@ -11,7 +11,7 @@
     "policy": {
       "dependencies": {
         "@babel/core": "7.19.6",
-        "@babel/preset-react": "7.22.15",
+        "@babel/preset-react": "7.18.6",
         "@babel/preset-typescript": "7.22.15",
         "@babel/types": "7.22.3",
         "@graphql-modules/core": "0.7.17",
@@ -21,11 +21,11 @@
         "@mdx-js/react": "1.6.22",
         "@monaco-editor/react": "4.4.6",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
-        "@pnpm/client": "10.0.23",
+        "@pnpm/client": "10.0.24",
         "@pnpm/colorize-semver-diff": "1.0.1",
         "@pnpm/config": "19.0.3",
-        "@pnpm/core": "12.1.0",
-        "@pnpm/default-reporter": "12.3.4",
+        "@pnpm/core": "12.1.1",
+        "@pnpm/default-reporter": "12.3.5",
         "@pnpm/dependency-path": "2.1.3",
         "@pnpm/error": "5.0.2",
         "@pnpm/fetch": "7.0.3",
@@ -37,12 +37,12 @@
         "@pnpm/package-store": "19.0.0",
         "@pnpm/parse-overrides": "4.0.2",
         "@pnpm/pick-registry-for-package": "5.0.2",
-        "@pnpm/plugin-commands-publishing": "7.3.11",
-        "@pnpm/plugin-commands-rebuild": "9.1.14",
+        "@pnpm/plugin-commands-publishing": "7.3.12",
+        "@pnpm/plugin-commands-rebuild": "9.1.15",
         "@pnpm/registry-mock": "3.4.0",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/sort-packages": "5.0.4",
-        "@pnpm/store-connection-manager": "7.0.0",
+        "@pnpm/store-connection-manager": "7.0.1",
         "@pnpm/types": "9.2.0",
         "@pnpm/worker": "0.3.0",
         "@pnpm/workspace.pkgs-graph": "2.0.6",
@@ -267,7 +267,7 @@
         "cors": "2.8.5",
         "credentials-by-uri": "2.0.0",
         "cross-env": "7.0.3",
-        "css-minimizer-webpack-plugin": "5.0.1",
+        "css-minimizer-webpack-plugin": "3.0.2",
         "dagre": "0.8.5",
         "didyoumean": "1.2.1",
         "enquirer": "2.3.6",
@@ -395,7 +395,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.560",
+        "@teambit/legacy": "1.0.563",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
@@ -487,7 +487,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.560"
+            "@teambit/legacy": "1.0.563"
           }
         }
       },
@@ -728,8 +728,8 @@
             "postcss": "8.4.18",
             "postcss-loader": "7.0.1",
             "babel-loader": "9.1.2",
-            "@babel/preset-react": "7.22.15",
-            "@babel/preset-env": "7.22.15",
+            "@babel/preset-react": "7.18.6",
+            "@babel/preset-env": "7.19.4",
             "resolve-url-loader": "5.0.0",
             "sass-loader": "13.3.2",
             "@svgr/webpack": "5.5.0",
@@ -751,7 +751,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.560"
+            "@teambit/legacy": "1.0.563"
           }
         }
       }
@@ -760,8 +760,8 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "devDependencies": {
-            "@babel/preset-react": "7.22.15",
-            "@babel/preset-env": "7.22.15",
+            "@babel/preset-react": "7.18.6",
+            "@babel/preset-env": "7.19.4",
             "babel-loader": "9.1.2"
           }
         }
@@ -841,7 +841,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.560",
+            "@teambit/legacy": "1.0.563",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
@@ -959,9 +959,9 @@
             "@babel/plugin-transform-object-rest-spread": "7.22.15",
             "@babel/plugin-transform-modules-commonjs": "7.12.13",
             "@babel/plugin-transform-runtime": "7.12.17",
-            "@babel/preset-env": "7.22.15",
+            "@babel/preset-env": "7.12.17",
             "babel-plugin-transform-typescript-metadata": "0.3.1",
-            "@babel/preset-react": "7.22.15",
+            "@babel/preset-react": "7.13.13",
             "@babel/preset-typescript": "7.22.15",
             "jest-environment-node": "27.5.1"
           }
@@ -983,7 +983,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.560"
+            "@teambit/legacy": "1.0.563"
           }
         }
       }
