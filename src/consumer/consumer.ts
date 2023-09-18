@@ -49,6 +49,7 @@ import { ConsumerNotFound } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
+import { getPathStatIfExist } from '../utils/fs/last-modified';
 
 type ConsumerProps = {
   projectPath: string;
@@ -59,6 +60,8 @@ type ConsumerProps = {
   addedGitHooks?: string[] | undefined;
   existingGitHooks: string[] | undefined;
 };
+
+const BITMAP_HISTORY_DIR_NAME = 'bitmap-history';
 
 /**
  * @todo: change the class name to Workspace
@@ -699,10 +702,14 @@ export default class Consumer {
     await this.bitMap.write();
   }
 
+  getBitmapHistoryDir() {
+    return path.join(this.scope.path, BITMAP_HISTORY_DIR_NAME);
+  }
+
   private async backupBitMap() {
     if (!this.bitMap.hasChanged) return;
     try {
-      const baseDir = path.join(this.scope.path, 'bitmap-history');
+      const baseDir = this.getBitmapHistoryDir();
       await fs.ensureDir(baseDir);
       const backupPath = path.join(baseDir, `.bitmap-${this.currentDateAndTimeToFileName()}`);
       await fs.copyFile(this.bitMap.mapPath, backupPath);
