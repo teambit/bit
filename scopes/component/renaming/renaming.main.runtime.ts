@@ -54,9 +54,13 @@ make sure this argument is the name only, without the scope-name. to change the 
     const sourceComp = await this.workspace.get(sourceId);
     const sourcePackageName = this.workspace.componentPackageName(sourceComp);
     const targetId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope);
+    const isSourceCompEnv = this.envs.isEnv(sourceComp);
     if (!options.preserve) {
       await this.refactoring.refactorVariableAndClasses(sourceComp, sourceId, targetId);
       this.refactoring.refactorFilenames(sourceComp, sourceId, targetId);
+    }
+    if (isSourceCompEnv) {
+      await this.workspace.replaceEnvForAllComponents(sourceId, targetId);
     }
     if (isTagged) {
       const config = await this.getConfig(sourceComp);
@@ -91,8 +95,6 @@ make sure this argument is the name only, without the scope-name. to change the 
         writeToPath: this.newComponentHelper.getNewComponentPath(targetId),
       });
     }
-
-    this.workspace.bitMap.renameAspectInConfig(sourceId, targetId);
     await this.workspace.bitMap.write();
 
     await linkToNodeModulesByComponents([targetComp], this.workspace); // link the new-name to node-modules

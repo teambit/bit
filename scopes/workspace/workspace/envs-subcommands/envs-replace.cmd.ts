@@ -20,12 +20,11 @@ export class EnvsReplaceCmd implements Command {
 
   constructor(private workspace: Workspace) {}
 
-  async report([oldEnv, env]: [string, string]) {
-    const envId = await this.workspace.resolveComponentId(env);
-    const components = await this.workspace.getComponentsUsingEnv(oldEnv, true, true);
-    const componentIds = components.map((comp) => comp.id);
-    await this.workspace.setEnvToComponents(envId, componentIds);
-    return `added ${chalk.bold(envId.toString())} env to the following component(s):
-${componentIds.map((compId) => compId.toString()).join('\n')}`;
+  async report([currentEnv, newEnv]: [string, string]) {
+    const currentEnvId = await this.workspace.resolveComponentId(currentEnv);
+    const newEnvId = await this.workspace.resolveComponentId(newEnv);
+    const changedComponentIds = await this.workspace.replaceEnvForAllComponents(currentEnvId, newEnvId);
+    return `added ${chalk.bold(newEnvId.toString())} env to the following component(s):
+${changedComponentIds.map((compId) => compId.toString()).join('\n')}`;
   }
 }
