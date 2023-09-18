@@ -524,8 +524,14 @@ export default class ComponentsList {
   ): Promise<ListScopeResult[]> {
     const components = await scope.listLocal();
     const componentsOnMain = components.filter((comp) => comp.head);
-    const componentsFilteredByWildcards = namespacesUsingWildcards
-      ? ComponentsList.filterComponentsByWildcard(componentsOnMain, namespacesUsingWildcards)
+    const getNameSpaceIncludeScopeNameIfNeeded = () => {
+      if (!namespacesUsingWildcards) return undefined;
+      if (namespacesUsingWildcards.startsWith(`${scope.name}/`)) return namespacesUsingWildcards;
+      return `${scope.name}/${namespacesUsingWildcards}`;
+    };
+    const nameSpaceIncludeScopeName = getNameSpaceIncludeScopeNameIfNeeded();
+    const componentsFilteredByWildcards = nameSpaceIncludeScopeName
+      ? ComponentsList.filterComponentsByWildcard(componentsOnMain, nameSpaceIncludeScopeName)
       : componentsOnMain;
     const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
     const results = await Promise.all(
