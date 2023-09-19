@@ -17,6 +17,7 @@ type InstallCmdOptions = {
   addMissingPeers: boolean;
   noOptional: boolean;
   recurringInstall: boolean;
+  lockfileOnly: boolean;
 };
 
 type FormatOutputArgs = {
@@ -58,6 +59,7 @@ export default class InstallCmd implements Command {
       'automatically run install again if there are non loaded old envs in your workspace',
     ],
     ['', 'no-optional [noOptional]', 'do not install optional dependencies (works with pnpm only)'],
+    ['', 'lockfile-only', 'dependencies are not written to node_modules. Only the lockfile is updated'],
   ] as CommandOptions;
 
   constructor(
@@ -94,6 +96,7 @@ export default class InstallCmd implements Command {
       includeOptionalDeps: !options.noOptional,
       updateAll: options.update,
       recurringInstall: options.recurringInstall,
+      lockfileOnly: options.lockfileOnly,
     };
     const components = await this.install.install(packages, installOpts);
     const endTime = Date.now();

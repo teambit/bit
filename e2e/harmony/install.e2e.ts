@@ -242,3 +242,28 @@ describe('named install', function () {
     expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal('^3.1.0');
   });
 });
+
+describe('install with --lockfile-only', function () {
+  this.timeout(0);
+  let helper: Helper;
+  let bitJsonc;
+  before(() => {
+    helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/pnpm');
+    helper.command.install('is-positive@1.0.0 --lockfile-only');
+    bitJsonc = helper.bitJsonc.read();
+  });
+  after(() => {
+    helper.scopeHelper.destroy();
+  });
+  it('should update workspace.jsonc', () => {
+    expect(bitJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal('^1.0.0');
+  });
+  it('should create pnpm-lock.yaml', () => {
+    expect(fs.existsSync(path.join(helper.fixtures.scopes.localPath, 'pnpm-lock.yaml'))).to.equal(true);
+  });
+  it('should not write dependencies to node_modules', () => {
+    expect(fs.existsSync(path.join(helper.fixtures.scopes.localPath, 'node_modules/is-positive'))).to.equal(false);
+  });
+});
