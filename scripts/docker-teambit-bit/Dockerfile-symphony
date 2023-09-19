@@ -11,7 +11,7 @@ ENV NODE_OPTIONS=--max-old-space-size=${MAX_OLD_SPACE_SIZE}
 # RUN bvm link bbit
 # ENV PATH=$PATH:/home/user/bin
 RUN npm i -g npm@9
-RUN npm config set @teambit:registry=https://node.bit.dev
+RUN npm config set @teambit:registry=https://node-registry.bit.cloud
 RUN npm i @teambit/bit -g --unsafe-perm=true
 RUN bbit config set analytics_reporting false
 RUN bbit config set no_warnings false

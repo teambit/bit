@@ -555,6 +555,7 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run: cd bit && node scripts/bump-bit-legacy-ver.js
       - run: bvm link
+      - run: cd bit && bit config set force_local_build true
       # temporary, check if we can remove it
       - run: cd bit && bit cc
       - run: cd bit && bit status
@@ -580,6 +581,7 @@ jobs:
           name: tag persist
           # command: cd bit && bit tag --ignore-newest-version
           # command: cd bit && bit tag --increment-by 2
+          # command: cd bit && bit tag --increment-by 2 --unmodified
           command: cd bit && bit tag
           # command: cd bit && bit tag --persist
           # command: cd bit && bit tag --persist --ignore-newest-version

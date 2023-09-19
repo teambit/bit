@@ -36,8 +36,8 @@ import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
 import { componentTemplates } from './react.templates';
 import { ReactAppOptions } from './apps/web/react-app-options';
-import { ReactAPITransformer, ReactSchema } from '.';
-// import { ReactAPITransformer } from './react.api.transformer';
+import { ReactSchema } from './react.schema';
+import { ReactAPITransformer } from './react.api.transformer';
 
 type ReactDeps = [
   EnvsMain,
