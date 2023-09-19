@@ -8,7 +8,7 @@ const methods = [
     Title: <img style={{ width: '30px' }} src="https://static.bit.dev/brands/logo-npm-new.svg" />,
     Component: (
       <Install
-        config={`npm config set @teambit:registry' https://node.bit.dev`}
+        config={`npm config set @teambit:registry' https://node-registry.bit.dev`}
         componentName="radio"
         packageManager="npm"
         copyString="npm i @teambit/design.ui.radio"

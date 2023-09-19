@@ -2,8 +2,8 @@ import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { mergeReport } from '@teambit/merging';
-import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { GlobalConfigMain } from '@teambit/global-config';
+import { COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import { removeTemplate } from '@teambit/remove';
 import { MergeLanesMain } from './merge-lanes.main.runtime';
@@ -88,7 +88,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
   migration = true;
   remoteOp = true;
 
-  constructor(private mergeLanes: MergeLanesMain) {}
+  constructor(private mergeLanes: MergeLanesMain, private globalConfig: GlobalConfigMain) {}
 
   async report(
     [name, pattern]: [string, string],
@@ -134,7 +134,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       includeNonLaneComps?: boolean;
     }
   ): Promise<string> {
-    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
+    build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
     if (ours || theirs || manual) {
       throw new BitError(
         'the "--ours", "--theirs" and "--manual" flags are deprecated. use "--auto-merge-resolve" instead. see "bit lane merge --help" for more information'
