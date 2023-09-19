@@ -1739,8 +1739,15 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
           unchanged.push(id);
           return;
         }
+        // the env that gets saved in the .bitmap file config root can be with or without version.
+        // e.g. when a custom env is in .bitmap, it's saved without version, but when asking the component for the
+        // env by `this.getAspectIdFromConfig`, it returns the env with version.
+        // to make sure we remove the env from the .bitmap, we need to remove both with and without version.
         const currentEnvWithPotentialVersion = await this.getAspectIdFromConfig(id, currentEnv, true);
-        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv);
+        await this.removeSpecificComponentConfig(id, currentEnv);
+        if (currentEnvWithPotentialVersion && currentEnvWithPotentialVersion.includes('@')) {
+          await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion);
+        }
         await this.removeSpecificComponentConfig(id, EnvsAspect.id);
         changed.push(id);
       })

@@ -28,7 +28,7 @@ export async function getLastModifiedComponentTimestampMs(rootDir: string, files
   return Math.max(lastModifiedDirs, lastModifiedFiles);
 }
 
-async function getPathStatIfExist(path: string): Promise<Stats | null> {
+export async function getPathStatIfExist(path: string): Promise<Stats | null> {
   try {
     return await fs.stat(path);
   } catch (err: any) {

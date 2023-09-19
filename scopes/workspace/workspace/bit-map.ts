@@ -9,6 +9,7 @@ import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import EnvsAspect from '@teambit/envs';
 import { BitId } from '@teambit/legacy-bit-id';
+import { getPathStatIfExist } from '@teambit/legacy/dist/utils/fs/last-modified';
 
 export type MergeOptions = {
   mergeStrategy?: 'theirs' | 'ours' | 'manual';
@@ -254,5 +255,17 @@ export class BitMap {
   restoreFromSnapshot(componentMaps: ComponentMap[]) {
     this.legacyBitMap.components = componentMaps;
     this.legacyBitMap._invalidateCache();
+  }
+
+  /**
+   * .bitmap file could be changed by other sources (e.g. manually or by "git pull") not only by bit.
+   * this method returns the timestamp when the .bitmap has changed through bit. (e.g. as part of snap/tag/export/merge
+   * process)
+   */
+  async getLastModifiedBitmapThroughBit(): Promise<number | undefined> {
+    const bitmapHistoryDir = this.consumer.getBitmapHistoryDir();
+    const stat = await getPathStatIfExist(bitmapHistoryDir);
+    if (!stat) return undefined;
+    return stat.mtimeMs;
   }
 }
