@@ -30,7 +30,7 @@ describe('bit checkout command', function () {
         const output = helper.command.checkoutVersion('0.0.1', 'comp1');
         expect(output).to.have.string('Installation Error');
         // this is the actual error coming from the package-manager
-        // the full error is: `GET https://node.bit.cloud/bit-non-exist-pkg: Not Found - 404`
+        // the full error is: `GET https://node-registry.bit.cloud/bit-non-exist-pkg: Not Found - 404`
         expect(output).to.have.string('404');
       });
     });

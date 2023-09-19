@@ -3,7 +3,7 @@ import path from 'path';
 import { getAgent } from './agent';
 
 test('getAgent reads cafile', () => {
-  const agent = getAgent('https://node.bit.cloud', {
+  const agent = getAgent('https://node-registry.bit.cloud', {
     cafile: path.join(__dirname, 'fixtures/cafile.txt'),
   });
   // @ts-ignore
