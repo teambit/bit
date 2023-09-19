@@ -1,6 +1,5 @@
 import chai, { expect } from 'chai';
 import { Extensions } from '@teambit/legacy/dist/constants';
-import { BUILD_ON_CI } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -10,7 +9,6 @@ describe('sign command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures([BUILD_ON_CI]);
   });
   after(() => {
     helper.scopeHelper.destroy();
