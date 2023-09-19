@@ -198,6 +198,8 @@ export const CFG_CLOUD_DOMAIN_LOGIN_KEY = 'cloud_domain_login';
 export const CFG_WATCH_USE_POLLING = 'watch_use_polling';
 export const CFG_WATCH_USE_FS_EVENTS = 'watch_use_fsevents';
 
+export const CFG_FORCE_LOCAL_BUILD = 'force_local_build';
+
 export const getLoginUrl = (domain?: string): string => {
   const finalDomain = domain || getSync(CFG_CLOUD_DOMAIN_LOGIN_KEY) || getCloudDomain();
   const url = `https://${finalDomain}/bit-login`;
