@@ -12,6 +12,8 @@ import { LegacyCommand } from '../../legacy-command';
 class ConfigSet implements LegacyCommand {
   name = 'set <key> <val>';
   description = 'set a global configuration';
+  extendedDescription = `to set temporary configuration by env variable, prefix with "BIT_CONFIG", replace "." with "_" and change to upper case.
+for example, "user.token" becomes "BIT_CONFIG_USER_TOKEN"`;
   baseUrl = 'reference/config/bit-config/';
   alias = '';
   skipWorkspace = true;

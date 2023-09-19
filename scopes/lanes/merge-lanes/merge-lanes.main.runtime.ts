@@ -34,6 +34,7 @@ import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-di
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { compact, uniq } from 'lodash';
 import { ExportAspect, ExportMain } from '@teambit/export';
+import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { BitObject } from '@teambit/legacy/dist/scope/objects';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
@@ -544,10 +545,23 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
     ExportAspect,
     ImporterAspect,
     CheckoutAspect,
+    GlobalConfigAspect,
   ];
   static runtime = MainRuntime;
 
-  static async provider([lanes, cli, workspace, merging, loggerMain, remove, scope, exporter, importer, checkout]: [
+  static async provider([
+    lanes,
+    cli,
+    workspace,
+    merging,
+    loggerMain,
+    remove,
+    scope,
+    exporter,
+    importer,
+    checkout,
+    globalConfig,
+  ]: [
     LanesMain,
     CLIMain,
     Workspace,
@@ -557,7 +571,8 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
     ScopeMain,
     ExportMain,
     ImporterMain,
-    CheckoutMain
+    CheckoutMain,
+    GlobalConfigMain
   ]) {
     const logger = loggerMain.createLogger(MergeLanesAspect.id);
     const lanesCommand = cli.getCommand('lane');
@@ -572,7 +587,7 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
       importer,
       checkout
     );
-    lanesCommand?.commands?.push(new MergeLaneCmd(mergeLanesMain));
+    lanesCommand?.commands?.push(new MergeLaneCmd(mergeLanesMain, globalConfig));
     lanesCommand?.commands?.push(new MergeAbortLaneCmd(mergeLanesMain));
     cli.register(new MergeLaneFromScopeCmd(mergeLanesMain));
     return mergeLanesMain;
