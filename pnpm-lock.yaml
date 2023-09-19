@@ -315,6 +315,9 @@ importers:
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
+      '@teambit/component-version':
+        specifier: 1.0.0
+        version: 1.0.0
       '@teambit/component.instructions.exporting-components':
         specifier: 0.0.7
         version: 0.0.7(react-dom@17.0.2)(react@17.0.2)
