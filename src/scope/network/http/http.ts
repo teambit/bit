@@ -456,37 +456,16 @@ export class Http implements Network {
       }
     `;
 
-    const LIST_LEGACY = gql`
-      query list($namespaces: String) {
-        scope {
-          _legacyList(namespaces: $namespaces) {
-            id
-            deprecated
-          }
-        }
-      }
-    `;
+    const data = await this.graphClientRequest(LIST_HARMONY, Verb.READ, {
+      namespaces: namespacesUsingWildcards ? [namespacesUsingWildcards] : undefined,
+    });
 
-    try {
-      const data = await this.graphClientRequest(LIST_HARMONY, Verb.READ, {
-        namespaces: namespacesUsingWildcards ? [namespacesUsingWildcards] : undefined,
-      });
+    data.scope.components.forEach((comp) => {
+      comp.id = new BitId(comp.id);
+      comp.deprecated = comp.deprecation.isDeprecate;
+    });
 
-      data.scope.components.forEach((comp) => {
-        comp.id = BitId.parse(comp.id);
-        comp.deprecated = comp.deprecation.isDeprecate;
-      });
-
-      return data.scope.components;
-    } catch (e) {
-      const data = await this.graphClientRequest(LIST_LEGACY, Verb.READ, {
-        namespaces: namespacesUsingWildcards,
-      });
-      data.scope._legacyList.forEach((comp) => {
-        comp.id = BitId.parse(comp.id);
-      });
-      return data.scope._legacyList;
-    }
+    return data.scope.components;
   }
 
   async show(bitId: BitId): Promise<Component | null | undefined> {
