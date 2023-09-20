@@ -255,6 +255,7 @@ export function CodeCompareView({
     () =>
       loading || files.length === 0 ? null : (
         <CodeCompareEditor
+          DiffEditor={DiffEditor}
           language={language}
           modifiedPath={modifiedPath}
           originalPath={originalPath}
@@ -267,7 +268,7 @@ export function CodeCompareView({
           Loader={<CodeCompareViewLoader />}
         />
       ),
-    [modifiedFileContent, originalFileContent, ignoreWhitespace, view, wrap, loading, files.length]
+    [modifiedFileContent, originalFileContent, ignoreWhitespace, view, wrap, loading, files.length, DiffEditor]
   );
 
   const containerHeightStyle = isFullScreen
