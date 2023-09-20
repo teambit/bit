@@ -60,8 +60,11 @@ export function ComponentCompare(props: ComponentCompareProps) {
     compareContext,
     isFullScreen,
     hidden = false,
+    compareIdOverride,
+    baseIdOverride,
     ...rest
   } = props;
+
   const baseVersion = useCompareQueryParam('baseVersion');
   const component = useContext(ComponentContext);
   const componentDescriptor = useContext(ComponentDescriptorContext);
@@ -72,8 +75,8 @@ export function ComponentCompare(props: ComponentCompareProps) {
     component: compareComponent,
     loading: loadingCompare,
     componentDescriptor: compareComponentDescriptor,
-  } = useComponent(host, _compareId?.toString(), {
-    skip: hidden || !_compareId,
+  } = useComponent(host, compareIdOverride?.toString() || _compareId?.toString(), {
+    skip: hidden || (!_compareId && !compareIdOverride),
     customUseComponent,
     logFilters: {
       log: {
@@ -110,9 +113,9 @@ export function ComponentCompare(props: ComponentCompareProps) {
     component: base,
     loading: loadingBase,
     componentDescriptor: baseComponentDescriptor,
-  } = useComponent(host, baseId?.toString(), {
+  } = useComponent(host, baseIdOverride?.toString() || baseId?.toString(), {
     customUseComponent,
-    skip: hidden || !baseId,
+    skip: hidden || (!baseId && !baseIdOverride),
     logFilters: {
       log: {
         limit: 3,
@@ -260,7 +263,7 @@ function RenderCompareScreen(
           )}
         </div>
       )}
-      {loading && <Loader className={classnames(styles.loader)} />}
+      {loading && !hidden && <Loader className={classnames(styles.loader)} />}
       {!loading && (
         <div className={classnames(styles.bottom, hidden && styles.hidden)}>
           <CompareMenuNav {...props} />
