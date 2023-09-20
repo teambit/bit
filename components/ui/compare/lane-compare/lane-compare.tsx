@@ -1,5 +1,6 @@
 import React, { HTMLAttributes, useCallback, useMemo, useEffect } from 'react';
 import classnames from 'classnames';
+import { ComponentID, UseComponentType } from '@teambit/component';
 import {
   ComponentCompareStateData,
   ComponentCompareStateKey,
@@ -16,12 +17,14 @@ import {
   LaneCompareDrawerProps,
   LaneCompareDrawerProvider,
 } from '@teambit/lanes.ui.compare.lane-compare-drawer';
-import { UseComponentType, ComponentID } from '@teambit/component';
 import { H4 } from '@teambit/documenter.ui.heading';
-import { UseLaneDiffStatus } from '@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status';
+import {
+  useLaneDiffStatus as defaultUseLaneDiffStatus,
+  UseLaneDiffStatus,
+} from '@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status';
 import { ChangeType, LaneDiff } from '@teambit/lanes.entities.lane-diff';
+import { useLocation, Location } from '@teambit/base-react.navigation.link';
 import { Icon } from '@teambit/design.elements.icon';
-import { Location, useLocation } from 'react-router-dom';
 import { LaneCompareContextModel, useLaneCompareContext } from './lane-compare.context';
 import { LaneCompareProvider } from './lane-compare.provider';
 
@@ -123,9 +126,6 @@ export type LaneCompareProps = {
    * callback called when a component compare drawer open/closes
    */
   onDrawerToggled?: (openDrawers: string[]) => void;
-  /**
-   * group component diffs by diff status or scope
-   */
   groupBy?: 'scope' | 'status';
 } & HTMLAttributes<HTMLDivElement>;
 
@@ -151,16 +151,18 @@ function _LaneCompare({
   base,
   tabs,
   customUseComponent,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  customUseLaneDiff: useLaneDiffStatus = defaultUseLaneDiffStatus,
   Drawer = LaneCompareDrawer,
   DrawerWidgets,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   LaneCompareLoader = DefaultLaneCompareLoader,
   ComponentCompareLoader,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  className,
   onFullScreenChanged,
   onStateChanged,
   onDrawerToggled,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  groupBy,
   ...rest
 }: LaneCompareProps) {
   const {
@@ -172,7 +174,6 @@ function _LaneCompare({
     setLaneCompareState,
     defaultLaneState,
     loadingLaneDiff,
-    // groupBy,
     // groupedComponentsToDiff,
     // laneComponentDiffByCompId,
   } = useLaneCompareContext() as LaneCompareContextModel;
@@ -302,8 +303,8 @@ function GroupedComponentCompare({
     (key?: string) => (e: React.MouseEvent<HTMLDivElement>) => {
       e.stopPropagation();
       if (!key) return;
-      onFullScreenChanged?.(fullScreenDrawerKey === key ? undefined : key, location);
       setFullScreen((fullScreenState) => {
+        onFullScreenChanged?.(fullScreenState === key ? undefined : key, location);
         if (fullScreenState === key) return undefined;
         setOpenDrawerList((drawers) => {
           if (!drawers.includes(key)) return [...drawers, key];
@@ -326,14 +327,14 @@ function GroupedComponentCompare({
     [groupedComponentsToDiff, groupBy]
   );
 
-  const groupedKey = grouped.map((g) => g[0]).join();
+  const groupWrapperKey = grouped.map((g) => g[0]).join();
 
   return (
-    <React.Fragment key={`grouped-lane-component-drawer-${groupedKey}`}>
+    <React.Fragment key={`grouped-lane-component-drawer-${groupWrapperKey}`}>
       {grouped.map(([key, compIds]) => {
-        const groupKey = `${key}-group`;
+        const groupedKey = `${key}-group`;
         return (
-          <div key={`groupKey-${groupKey}`} className={styles.groupedComponentCompareContainer}>
+          <div key={`groupKey-${groupedKey}`} className={styles.groupedComponentCompareContainer}>
             {groupBy && (
               <div className={classnames(styles.changeTypeTitle, groupBy === 'status' && styles.groupedStatus)}>
                 {groupBy === 'status' && <H4>{displayChangeType(key as ChangeType).concat(` (${compIds.length})`)}</H4>}
@@ -346,7 +347,7 @@ function GroupedComponentCompare({
 
                 return (
                   <GroupedComponentCompareDrawer
-                    key={`group-comp-${groupKey}-${compareIdStrWithoutVersion}`}
+                    key={`group-comp-${groupedKey}-${compareIdStrWithoutVersion}`}
                     DrawerWidgets={DrawerWidgets}
                     Drawer={Drawer}
                     ComponentCompareLoader={ComponentCompareLoader}
@@ -400,15 +401,11 @@ function GroupedComponentCompareDrawer({
 }) {
   const { laneCompareState } = useLaneCompareContext() as LaneCompareContextModel;
   const compKey = computeStateKey(baseId, compareId);
-  // const drawerKey =
-  //   (compareId?.toStringWithoutVersion() && compareId?.toStringWithoutVersion()) || undefined;
-  // const open = !!drawerKey && openDrawerList.includes(drawerKey);
-  // const compareIdStrWithoutVersion = compareId?.toStringWithoutVersion();
-  // const changes: ChangeType[] = !compareIdStrWithoutVersion || loading === undefined
-  //   ? undefined
-  //   : laneComponentDiffByCompId.get(compareIdStrWithoutVersion)?.changes;
-  const isFullScreen = fullScreenDrawerKey === drawerKey;
   const state = laneCompareState.get(compKey);
+  const compareIdOverride = state?.drawer?.compareOverride
+    ? ComponentID.tryFromString(state?.drawer?.compareOverride)
+    : undefined;
+  const isFullScreen = fullScreenDrawerKey === drawerKey;
 
   const compareProps: ComponentCompareProps = {
     host,
@@ -416,6 +413,7 @@ function GroupedComponentCompareDrawer({
     baseId,
     compareId,
     changes,
+    compareIdOverride,
     className: classnames(
       styles.componentCompareContainer,
       isFullScreen && styles.fullScreen,
@@ -461,7 +459,15 @@ function GroupedComponentCompareDrawer({
   const drawerProps = {
     isOpen: open,
     onToggle: () => handleDrawerToggle(drawerKey),
-    name: <LaneCompareDrawerName compareId={compareId} baseId={baseId} open={open} leftWidget={LeftWidget} />,
+    name: (
+      <LaneCompareDrawerName
+        compareId={compareId}
+        baseId={baseId}
+        open={open}
+        leftWidget={LeftWidget}
+        compareIdOverride={compareIdOverride}
+      />
+    ),
     Widgets: [
       RightWidget,
       <div key={'full-screen-icon'} className={styles.fullScreenIcon} onClick={onFullScreenClicked(drawerKey)}>
