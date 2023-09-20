@@ -64,6 +64,7 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
               widgets={[Widget]}
               getHref={getHref}
               onTreeNodeSelected={hook?.onClick}
+              open={isSidebarOpen}
             />
           </Pane>
         </SplitPane>

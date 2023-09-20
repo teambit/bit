@@ -21,14 +21,16 @@ export function useCodeCompare({ fileName }: useCodeCompareProps): useCodeCompar
   const comparingLocalChanges = componentCompareContext?.compare?.hasLocalChanges;
   const codeCompareDataForFile = componentCompareContext?.fileCompareDataByName?.get(fileName);
   const loadingFromContext =
-    componentCompareContext?.loading || componentCompareContext?.fileCompareDataByName === undefined;
-
+    !componentCompareContext ||
+    componentCompareContext?.loading ||
+    componentCompareContext?.fileCompareDataByName === undefined;
   /**
    * when comparing with workspace changes, query without id
    */
   const compareId = comparingLocalChanges
     ? componentCompareContext?.compare?.model.id.changeVersion(undefined)
     : componentCompareContext?.compare?.model.id;
+
   const baseId = componentCompareContext?.base?.model.id;
   /**
    * when there is no component to compare with, fetch file content

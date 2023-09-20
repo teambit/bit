@@ -60,12 +60,7 @@ export function CodeCompareView({
     if (!baseId) return 'inline';
     if (baseId && compareId && baseId.isEqual(compareId)) return 'inline';
     if (!originalFileContent || !modifiedFileContent) return 'inline';
-    if (
-      !componentCompareContext?.fileCompareDataByName?.get(fileName)?.status ||
-      componentCompareContext?.fileCompareDataByName?.get(fileName)?.status === 'UNCHANGED'
-    )
-      return 'inline';
-
+    if (componentCompareContext?.fileCompareDataByName?.get(fileName)?.status === 'UNCHANGED') return 'inline';
     return 'split';
   };
 
@@ -84,7 +79,13 @@ export function CodeCompareView({
   useEffect(() => {
     const updatedView = getDefaultView();
     if (view !== updatedView) setView(updatedView);
-  }, [baseId?.toString(), originalFileContent, modifiedFileContent]);
+  }, [
+    baseId?.toString(),
+    originalFileContent,
+    modifiedFileContent,
+    componentCompareContext?.fileCompareDataByName?.size,
+    compareId?.toString(),
+  ]);
 
   const [containerHeight, setContainerHeight] = useState<string | undefined>(isFullScreen ? '100%' : undefined);
 
@@ -208,47 +209,50 @@ export function CodeCompareView({
     }
   }, [isFullScreen, componentCompareContext]);
 
-  const handleEditorDidMount: DiffOnMount = (editor, monaco) => {
-    /**
-     * disable syntax check
-     * ts cant validate all types because imported files aren't available to the editor
-     */
-    monacoRef.current = { monaco, editor };
-    if (monacoRef.current) {
-      monacoRef.current.monaco.languages?.typescript?.typescriptDefaults?.setDiagnosticsOptions({
-        noSemanticValidation: true,
-        noSyntaxValidation: true,
+  const handleEditorDidMount: DiffOnMount = React.useCallback(
+    (editor, monaco) => {
+      /**
+       * disable syntax check
+       * ts cant validate all types because imported files aren't available to the editor
+       */
+      monacoRef.current = { monaco, editor };
+      if (monacoRef.current) {
+        monacoRef.current.monaco.languages?.typescript?.typescriptDefaults?.setDiagnosticsOptions({
+          noSemanticValidation: true,
+          noSyntaxValidation: true,
+        });
+      }
+
+      monaco.editor.defineTheme('bit', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [],
+        colors: {
+          'scrollbar.shadow': '#222222',
+          'diffEditor.insertedTextBackground': '#1C4D2D',
+          'diffEditor.removedTextBackground': '#761E24',
+          'editor.selectionBackground': '#5A5A5A',
+          'editor.overviewRulerBorder': '#6a57fd',
+          'editor.lineHighlightBorder': '#6a57fd',
+        },
       });
-    }
+      monaco.editor.setTheme('bit');
+      editor.getOriginalEditor().onDidChangeModelDecorations(updateEditorHeight);
+      editor.getModifiedEditor().onDidChangeModelDecorations(updateEditorHeight);
+      const containerElement = containerRef.current;
+      let resizeObserver: ResizeObserver | undefined;
 
-    monaco.editor.defineTheme('bit', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [],
-      colors: {
-        'scrollbar.shadow': '#222222',
-        'diffEditor.insertedTextBackground': '#1C4D2D',
-        'diffEditor.removedTextBackground': '#761E24',
-        'editor.selectionBackground': '#5A5A5A',
-        'editor.overviewRulerBorder': '#6a57fd',
-        'editor.lineHighlightBorder': '#6a57fd',
-      },
-    });
-    monaco.editor.setTheme('bit');
-    editor.getOriginalEditor().onDidChangeModelDecorations(updateEditorHeight);
-    editor.getModifiedEditor().onDidChangeModelDecorations(updateEditorHeight);
-    const containerElement = containerRef.current;
-    let resizeObserver: ResizeObserver | undefined;
+      if (containerElement) {
+        resizeObserver = new ResizeObserver(() => {
+          setTimeout(() => updateEditorHeight());
+        });
+        resizeObserver.observe(containerElement);
+      }
 
-    if (containerElement) {
-      resizeObserver = new ResizeObserver(() => {
-        setTimeout(() => updateEditorHeight());
-      });
-      resizeObserver.observe(containerElement);
-    }
-
-    return () => containerElement && resizeObserver?.unobserve(containerElement);
-  };
+      return () => containerElement && resizeObserver?.unobserve(containerElement);
+    },
+    [fileName, view, compareId?.toString(), componentCompareContext?.hidden, loading, files.length]
+  );
 
   const diffEditor = useMemo(
     () =>
@@ -266,7 +270,21 @@ export function CodeCompareView({
           Loader={<CodeCompareViewLoader />}
         />
       ),
-    [modifiedFileContent, originalFileContent, ignoreWhitespace, view, wrap, loading, files.length]
+    [
+      modifiedFileContent,
+      originalFileContent,
+      ignoreWhitespace,
+      view,
+      wrap,
+      fileName,
+      loading,
+      files.length,
+      modifiedPath,
+      originalPath,
+      language,
+      compareId?.toString(),
+      baseId?.toString(),
+    ]
   );
 
   const containerHeightStyle = isFullScreen
@@ -299,7 +317,7 @@ export function CodeCompareView({
       }}
       className={classNames(styles.componentCompareCodeViewContainer, className, isFullScreen && styles.isFullScreen)}
     >
-      {!loading && files.length > 0 && (
+      {files.length > 0 && (
         <CodeCompareNavigation
           files={codeNavFiles}
           selectedFile={fileName}
