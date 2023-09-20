@@ -11,15 +11,24 @@ import styles from './lane-compare-drawer-name.module.scss';
 export type LaneCompareDrawerNameProps = {
   baseId?: ComponentID;
   compareId?: ComponentID;
+  compareIdOverride?: ComponentID;
+  baseIdOverride?: string;
   open?: boolean;
   leftWidget?: React.ReactNode;
 } & HTMLAttributes<HTMLDivElement>;
 
 const shortenVersion = (version?: string) => (semver.valid(version) ? version : version?.substring(0, 6));
 
-export function LaneCompareDrawerName({ baseId, compareId, open, leftWidget }: LaneCompareDrawerNameProps) {
+export function LaneCompareDrawerName({
+  baseId,
+  compareId,
+  open,
+  leftWidget,
+  compareIdOverride,
+}: LaneCompareDrawerNameProps) {
   const status = !baseId ? 'new' : (!compareId?.isEqual(baseId) && 'modified') || undefined;
   const key = `drawer-name-${baseId}-${compareId}`;
+  const isCompareOverriden = compareIdOverride && compareIdOverride.version !== compareId?.version;
 
   return (
     <div key={key} className={classnames(styles.drawerNameContainer, open && styles.open)}>
@@ -40,7 +49,16 @@ export function LaneCompareDrawerName({ baseId, compareId, open, leftWidget }: L
           )}
           {compareId && (
             <Tooltip content={compareId.version} placement={'bottom'}>
-              <div className={styles.version}>{shortenVersion(compareId?.version)}</div>
+              <div className={classnames(styles.version, isCompareOverriden && styles.override)}>
+                {shortenVersion(compareId?.version)}
+              </div>
+            </Tooltip>
+          )}
+          {compareIdOverride && (
+            <Tooltip content={compareIdOverride.version} placement={'bottom'}>
+              <div className={classnames(styles.version, styles.overridden)}>
+                {shortenVersion(compareIdOverride?.version)}
+              </div>
             </Tooltip>
           )}
         </div>

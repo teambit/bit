@@ -525,7 +525,7 @@ jobs:
           name: 'bit build'
           command: 'cd bit && bit build'
           environment:
-            NODE_OPTIONS: --max_old_space_size=12000
+            NODE_OPTIONS: --max-old-space-size=15000
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
@@ -581,13 +581,13 @@ jobs:
           name: tag persist
           # command: cd bit && bit tag --ignore-newest-version
           # command: cd bit && bit tag --increment-by 2
-          command: cd bit && bit tag --increment-by 2 --unmodified
-          # command: cd bit && bit tag
+          # command: cd bit && bit tag --increment-by 2 --unmodified
+          command: cd bit && bit tag
           # command: cd bit && bit tag --persist
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
-            NODE_OPTIONS: --max_old_space_size=12000
+            NODE_OPTIONS: --max-old-space-size=15000
       - run: cd bit && git diff
       - run:
           name: backup bit objects (before export)

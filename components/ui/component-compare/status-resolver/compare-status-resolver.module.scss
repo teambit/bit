@@ -10,10 +10,10 @@
     }
   }
   .modified {
-    color: #ff8b00 !important;
+    color: var(--process-color, #0984e3) !important;
   }
   .error {
-    color: #df083e !important;
+    color: var(--negative-color, #e62e5c) !important;
   }
 }
 
@@ -29,13 +29,13 @@
   display: flex;
   justify-content: center;
   &.modified {
-    color: #ff8b00;
+    color: var(--process-color, #0984e3);
   }
   &.deleted {
     color: var(--negative-color, #e62e5c);
   }
   &.new {
-    color: #37b26c;
+    color: var(--positive-color, #37b26c);
   }
 }
 

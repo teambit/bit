@@ -43,6 +43,8 @@
 
 .activeNav {
   background-color: var(--surface-neutral-color, #121212);
+  border-bottom: 2px solid var(--primary-color, #6a57fd);
+
   &::after {
     background-color: var(--surface-neutral-color, #121212) !important;
   }
