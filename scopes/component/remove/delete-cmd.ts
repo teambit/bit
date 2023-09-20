@@ -98,12 +98,15 @@ ${chalk.bold('to update the remote, please tag/snap and then export. to revert, 
     return removedObjectsArray.map((item) => removeTemplate(item, true));
   }
 
-  private async removePrompt(hard?: boolean) {
+  private async removePrompt(hard?: boolean, lane?: boolean) {
     this.remove.logger.clearStatusLine();
+    const laneOrMainWarning = lane
+      ? `this command will mark the component as removed from this lane, and any changes made on this lane will be reverted after snap and export`
+      : `this command will mark the component as deleted, and it won’t be shown on the remote scope after tag/snap and export.`;
     const remoteOrLocalOutput = hard
       ? `WARNING: the component(s) will be permanently deleted from the remote with no option to recover. prefer omitting --hard to only mark the component as deleted`
-      : `this command will mark the component as deleted, and it won’t be shown on the remote scope after tag/snap and export.
-if your intent, is to remove the component only from your local workspace, refer to bit remove.`;
+      : `${laneOrMainWarning}
+if your intent is to remove the component only from your local workspace, refer to bit remove.`;
 
     const ok = await yesno({
       question: `${remoteOrLocalOutput}
