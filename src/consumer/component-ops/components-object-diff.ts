@@ -326,31 +326,16 @@ export function diffBetweenComponentsObjects(
     return depsDiff;
   };
 
-  const fieldsEnvsConfigOutput = getEnvsConfigOutput(componentLeft, componentRight);
   const extensionsConfigOutput = getExtensionsConfigOutput(componentLeft, componentRight);
 
   const allDiffs = [
     ...fieldsDiffOutput,
-    ...fieldsEnvsConfigOutput,
     ...extensionsConfigOutput,
     ...dependenciesRelativePathsOutput(),
     ...getAllDepsOutput(),
   ];
 
   return R.isEmpty(allDiffs) ? undefined : allDiffs;
-}
-
-function getEnvsConfigOutput(componentLeft: Component, componentRight: Component): Array<ConfigDiff> {
-  const envs = ['compiler', 'tester'];
-  const fieldsEnvsConfigOutput = envs.map((env: string) => {
-    const leftConfig = componentLeft[env] && componentLeft[env].dynamicConfig ? componentLeft[env].dynamicConfig : {};
-    const rightConfig =
-      componentRight[env] && componentRight[env].dynamicConfig ? componentRight[env].dynamicConfig : {};
-    if (JSON.stringify(leftConfig) === JSON.stringify(rightConfig)) return undefined;
-    const fieldName = `${env} configuration`;
-    return configsOutput(fieldName, leftConfig, rightConfig, componentLeft.version, componentRight.version);
-  });
-  return compact(fieldsEnvsConfigOutput);
 }
 
 function getExtensionsConfigOutput(componentLeft: Component, componentRight: Component): Array<ConfigDiff> {

@@ -11,6 +11,7 @@ import { CheckoutMain } from '@teambit/checkout';
 import { ApplyVersionResults } from '@teambit/merging';
 import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
 import { Log } from '@teambit/legacy/dist/scope/models/lane';
+import { ComponentCompareMain } from '@teambit/component-compare';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -43,7 +44,8 @@ export class APIForIDE {
     private installer: InstallMain,
     private exporter: ExportMain,
     private checkout: CheckoutMain,
-    private componentLog: ComponentLogMain
+    private componentLog: ComponentLogMain,
+    private componentCompare: ComponentCompareMain
   ) {}
 
   async listIdsWithPaths() {
@@ -149,6 +151,11 @@ export class APIForIDE {
 
   async changedFilesFromParent(id: string): Promise<FileHashDiffFromParent[]> {
     const results = await this.componentLog.getChangedFilesFromParent(id);
+    return results;
+  }
+
+  async getConfigForDiff(id: string) {
+    const results = await this.componentCompare.getConfigForDiff(id);
     return results;
   }
 
