@@ -2,13 +2,13 @@ import React from 'react';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
 import { CheckboxLabel } from '@teambit/evangelist.input.checkbox.label';
 
-type GraphFilters = {
+type GraphFiltersType = {
   isFiltered: boolean;
   onChangeFilter: (isFiltered: boolean) => void;
   disable?: boolean;
 } & CardProps;
 
-export function GraphFilters({ onChangeFilter, isFiltered, disable, ...rest }: GraphFilters) {
+export function GraphFilters({ onChangeFilter, isFiltered, disable, ...rest }: GraphFiltersType) {
   return (
     <Card {...rest}>
       <div>

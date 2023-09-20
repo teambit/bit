@@ -15,12 +15,12 @@ import { ComponentGraphContext } from '../dependencies-graph/';
 import styles from './component-node.module.scss';
 import variants from './variants.module.scss';
 
-export interface ComponentNode extends CardProps {
+export interface IComponentNode extends CardProps {
   node: NodeModel;
   type: string;
 }
 
-export function ComponentNode({ node, type = 'defaultNode', ...rest }: ComponentNode) {
+export function ComponentNode({ node, type = 'defaultNode', ...rest }: IComponentNode) {
   const graphContext = useContext(ComponentGraphContext);
   const { component } = node;
   const { id } = component;

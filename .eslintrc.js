@@ -54,6 +54,9 @@ module.exports = {
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/ban-ts-comment': 'off',
     '@typescript-eslint/ban-types': 'off',
+    '@typescript-eslint/lines-between-class-members': 'off',
+    '@typescript-eslint/naming-convention': 'off',
+    '@typescript-eslint/no-unused-expressions': 'off',
     'no-shadow': 'off',
     '@typescript-eslint/no-shadow': ['error'],
     // ERRORS OF plugin:@typescript-eslint/recommended
