@@ -498,7 +498,7 @@ jobs:
           path: bit/yarn.lock
 
   bit_build:
-    resource_class: xlarge
+    resource_class: 2xlarge
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
@@ -525,12 +525,12 @@ jobs:
           name: 'bit build'
           command: 'cd bit && bit build'
           environment:
-            NODE_OPTIONS: --max-old-space-size=15000
+            NODE_OPTIONS: --max-old-space-size=30000
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
   bit_tag:
-    resource_class: xlarge
+    resource_class: 2xlarge
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
@@ -587,7 +587,7 @@ jobs:
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
-            NODE_OPTIONS: --max-old-space-size=15000
+            NODE_OPTIONS: --max-old-space-size=30000
       - run: cd bit && git diff
       - run:
           name: backup bit objects (before export)
