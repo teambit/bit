@@ -8,6 +8,7 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import { TestLoader } from '@teambit/defender.ui.test-loader';
 import { EmptyStateSlot } from '@teambit/tester';
+import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/defender.ui.test-table';
@@ -73,10 +74,13 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
   const query = useRouterQuery();
 
   const component = useContext(ComponentContext);
+  const viewedLaneFromUrl = useViewedLaneFromUrl();
 
   const queryHasVersion = query.get('version');
 
-  const id = queryHasVersion ? component.id.toString() : component.id.toStringWithoutVersion();
+  // when viewing component tests outside of a lane without a specific version, we want to show the tests of the latest version of the component
+  // otherwise, we want to show the tests of the version that is currently viewed
+  const id = queryHasVersion || !!viewedLaneFromUrl ? component.id.toString() : component.id.toStringWithoutVersion();
 
   const onTestsChanged = useSubscription(TESTS_SUBSCRIPTION_CHANGED, {
     variables: { id },
