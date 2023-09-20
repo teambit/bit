@@ -10,7 +10,7 @@ import {
   useGraphQuery,
 } from '@teambit/graph';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -55,14 +55,35 @@ export function DependenciesCompare() {
   const graph = diffGraph(baseGraph, compareGraph, baseId) ?? undefined;
   const elements = calcElements(graph, { rootNode: baseId });
 
+  useEffect(() => () => (graphRef.current = undefined), []);
+
   useEffect(() => {
     graphRef.current?.fitView();
   }, [elements]);
 
-  function handleLoad(instance: OnLoadParams) {
-    graphRef.current = instance;
-    graphRef.current?.fitView();
-  }
+  const handleLoad = useCallback(
+    (instance: OnLoadParams) => {
+      graphRef.current = instance;
+      if ((graph?.nodes.length ?? 0) <= 3) {
+        graphRef.current?.fitView({
+          padding: 2,
+        });
+      } else {
+        instance.fitView();
+      }
+    },
+    [graph?.nodes.length]
+  );
+
+  useEffect(() => {
+    setTimeout(() => {
+      if ((graph?.nodes.length ?? 0) <= 3)
+        return graphRef.current?.fitView({
+          padding: 2,
+        });
+      return graphRef.current?.fitView();
+    }, 0);
+  }, [compareId?.toString(), baseId?.toString()]);
 
   const onCheckFilter = (_isFiltered: boolean) => {
     setFilter(_isFiltered ? 'runtimeOnly' : undefined);
@@ -87,7 +108,8 @@ export function DependenciesCompare() {
           nodesConnectable={false}
           zoomOnDoubleClick={false}
           elementsSelectable={false}
-          maxZoom={1}
+          maxZoom={100}
+          minZoom={0}
           className={dependenciesGraphStyles.graph}
           elements={elements}
           nodeTypes={NodeTypes}
