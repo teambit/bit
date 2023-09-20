@@ -80,7 +80,7 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
 
   // when viewing component tests outside of a lane without a specific version, we want to show the tests of the latest version of the component
   // otherwise, we want to show the tests of the version that is currently viewed
-  const id = queryHasVersion || !!viewedLaneFromUrl ? component.id.toString() : component.id.toStringWithoutVersion();
+  const id = queryHasVersion || viewedLaneFromUrl ? component.id.toString() : component.id.toStringWithoutVersion();
 
   const onTestsChanged = useSubscription(TESTS_SUBSCRIPTION_CHANGED, {
     variables: { id },
