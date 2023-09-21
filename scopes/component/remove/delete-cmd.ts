@@ -70,7 +70,7 @@ this command marks the components as deleted, and after snap/tag and export they
     }
 
     if (!silent) {
-      await this.removePrompt(hard);
+      await this.removePrompt(hard, lane);
     }
 
     if (hard) {
