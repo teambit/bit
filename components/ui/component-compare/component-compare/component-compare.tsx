@@ -91,7 +91,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   );
   const isNew = useMemo(() => allVersionInfo.length === 0, [allVersionInfo]);
   const compareVersion =
-    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.id.version;
+    isWorkspace && !isNew && !location?.search.includes('version') && !_compareId ? 'workspace' : component.id.version;
   const compareIsLocalChanges = compareVersion === 'workspace';
 
   const lastVersionInfo = useMemo(() => {
