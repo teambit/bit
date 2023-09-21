@@ -81,7 +81,7 @@ export default class Consumer {
   componentLoader: ComponentLoader;
   componentStatusLoader: ComponentStatusLoader;
   packageJson: any;
-  public onCacheClear: Array<() => void> = [];
+  public onCacheClear: Array<() => void | Promise<void>> = [];
   constructor({
     projectPath,
     config,
