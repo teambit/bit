@@ -18,6 +18,7 @@ import { ServerCmd } from './server.cmd';
 import { IDERoute } from './ide.route';
 import { APIForIDE } from './api-for-ide';
 import { SSEEventsRoute, sendEventsToClients } from './sse-events.route';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 
 export class ApiServerMain {
   constructor(
@@ -96,6 +97,7 @@ export class ApiServerMain {
     ComponentLogAspect,
     ImporterAspect,
     ComponentCompareAspect,
+    GeneratorAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -112,6 +114,7 @@ export class ApiServerMain {
     componentLog,
     importer,
     componentCompare,
+    generator,
   ]: [
     CLIMain,
     Workspace,
@@ -125,7 +128,8 @@ export class ApiServerMain {
     CheckoutMain,
     ComponentLogMain,
     ImporterMain,
-    ComponentCompareMain
+    ComponentCompareMain,
+    GeneratorMain
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer, importer);
@@ -140,7 +144,8 @@ export class ApiServerMain {
       exporter,
       checkout,
       componentLog,
-      componentCompare
+      componentCompare,
+      generator
     );
     const vscodeRoute = new IDERoute(logger, apiForIDE);
     const sseEventsRoute = new SSEEventsRoute(logger, cli);

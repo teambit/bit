@@ -12,6 +12,7 @@ import { ApplyVersionResults } from '@teambit/merging';
 import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
 import { Log } from '@teambit/legacy/dist/scope/models/lane';
 import { ComponentCompareMain } from '@teambit/component-compare';
+import { GeneratorMain } from '@teambit/generator';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -45,7 +46,8 @@ export class APIForIDE {
     private exporter: ExportMain,
     private checkout: CheckoutMain,
     private componentLog: ComponentLogMain,
-    private componentCompare: ComponentCompareMain
+    private componentCompare: ComponentCompareMain,
+    private generator: GeneratorMain
   ) {}
 
   async listIdsWithPaths() {
@@ -221,6 +223,19 @@ export class APIForIDE {
       ids: await this.workspace.listIds(),
     });
     return this.adjustCheckoutResultsToIde(results);
+  }
+
+  async getTemplates() {
+    const templates = await this.generator.listTemplates();
+    return templates;
+  }
+
+  async createComponent(templateName: string, idIncludeScope: string) {
+    if (!idIncludeScope.includes('/')) {
+      throw new Error('id should include the scope name');
+    }
+    const [scope, ...nameSplit] = idIncludeScope.split('/');
+    return this.generator.generateComponentTemplate([nameSplit.join('/')], templateName, { scope });
   }
 
   async switchLane(name: string) {
