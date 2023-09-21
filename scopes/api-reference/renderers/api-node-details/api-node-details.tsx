@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { H6 } from '@teambit/documenter.ui.heading';
-import { CodeEditor } from '@teambit/code.ui.code-editor';
+import { CodeEditor, useCodeEditor } from '@teambit/code.ui.code-editor';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
 import classnames from 'classnames';
@@ -11,7 +11,6 @@ import { useNavigate } from 'react-router-dom';
 import { APINode } from '@teambit/api-reference.models.api-reference-model';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
 import { OnMount, Monaco } from '@monaco-editor/react';
-import { useEditor } from '@teambit/code';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 import styles from './api-node-details.module.scss';
@@ -45,7 +44,7 @@ export function APINodeDetails({
   const routerLocation = useLocation();
   const query = useQuery();
   const navigate = useNavigate();
-  const Editor = useEditor();
+  const Editor = useCodeEditor();
 
   const signatureEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
   const signatureMonacoRef = useRef<Monaco>();
