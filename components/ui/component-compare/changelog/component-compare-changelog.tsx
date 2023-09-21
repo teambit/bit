@@ -8,7 +8,7 @@ import { sortByDateDsc } from '@teambit/component.ui.component-compare.utils.sor
 
 import styles from './component-compare-changelog.module.scss';
 
-export type ComponentCompareChangelog = {} & HTMLAttributes<HTMLDivElement>;
+export type ComponentCompareChangelogType = {} & HTMLAttributes<HTMLDivElement>;
 
 const orderByDateDsc: (
   logA?: LegacyComponentLog,
@@ -43,7 +43,7 @@ const getLogsBetweenVersions: (
   return allLogs.filter((_, index) => index >= startingVersionIndex && index <= endingVersionIndex);
 };
 
-export function ComponentCompareChangelog({ className }: ComponentCompareChangelog) {
+export function ComponentCompareChangelog({ className }: ComponentCompareChangelogType) {
   const component = useContext(ComponentContext);
   const componentCompareContext = useComponentCompare();
   const { base, compare, logsByVersion } = componentCompareContext || {};
