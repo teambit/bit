@@ -101,7 +101,7 @@ ${chalk.bold('to update the remote, please tag/snap and then export. to revert, 
   private async removePrompt(hard?: boolean, lane?: boolean) {
     this.remove.logger.clearStatusLine();
     const laneOrMainWarning = lane
-      ? `this command will mark the component as removed from this lane, and any changes made on this lane will be reverted after snap and export`
+      ? `this command will mark the component as removed from this lane, and as a result any changes made to the component on this lane will be reverted`
       : `this command will mark the component as deleted, and it won’t be shown on the remote scope after tag/snap and export.`;
     const remoteOrLocalOutput = hard
       ? `WARNING: the component(s) will be permanently deleted from the remote with no option to recover. prefer omitting --hard to only mark the component as deleted`
