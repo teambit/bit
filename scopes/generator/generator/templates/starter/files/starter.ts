@@ -25,6 +25,10 @@ export function starterFile({ namePascalCase, name }: ComponentContext) {
         },
       ];
     }
+
+    // import: () => [
+    //   { id: 'teambit.community/component-showcase' },
+    // ]
   
     static from(options: Partial<${namePascalCase}StarterOptions>) {
       return () =>

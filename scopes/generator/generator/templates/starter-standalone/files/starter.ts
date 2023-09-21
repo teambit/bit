@@ -28,6 +28,15 @@ export function starterFile({ namePascalCase, name }: ComponentContext) {
     import: () => [
       { id: 'teambit.community/component-showcase' },
     ]
+// you can also fork components
+//    fork: () => [
+//      {
+//        id: 'teambit.react/react-env-extension',
+//        targetName: 'envs/my-react-env',
+//      },
+//    ]
+
+
   };
   
   export default ${namePascalCase}WorkspaceStarter;
