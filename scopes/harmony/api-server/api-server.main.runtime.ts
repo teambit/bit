@@ -3,6 +3,7 @@ import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
+import ComponentCompareAspect, { ComponentCompareMain } from '@teambit/component-compare';
 import ComponentLogAspect, { ComponentLogMain } from '@teambit/component-log';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import { ExportAspect, ExportMain } from '@teambit/export';
@@ -94,6 +95,7 @@ export class ApiServerMain {
     CheckoutAspect,
     ComponentLogAspect,
     ImporterAspect,
+    ComponentCompareAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -109,6 +111,7 @@ export class ApiServerMain {
     checkout,
     componentLog,
     importer,
+    componentCompare,
   ]: [
     CLIMain,
     Workspace,
@@ -121,14 +124,24 @@ export class ApiServerMain {
     ExportMain,
     CheckoutMain,
     ComponentLogMain,
-    ImporterMain
+    ImporterMain,
+    ComponentCompareMain
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer, importer);
     cli.register(new ServerCmd(apiServer));
 
     const cliRoute = new CLIRoute(logger, cli);
-    const apiForIDE = new APIForIDE(workspace, snapping, lanes, installer, exporter, checkout, componentLog);
+    const apiForIDE = new APIForIDE(
+      workspace,
+      snapping,
+      lanes,
+      installer,
+      exporter,
+      checkout,
+      componentLog,
+      componentCompare
+    );
     const vscodeRoute = new IDERoute(logger, apiForIDE);
     const sseEventsRoute = new SSEEventsRoute(logger, cli);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.

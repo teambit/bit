@@ -84,7 +84,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       'fail-fast',
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
-    ['b', 'build', 'not needed for now. run the pipeline build and complete the tag'],
+    ['b', 'build', 'locally run the build pipeline (i.e. not via rippleCI) and complete the tag'],
     [
       'a',
       'all [version]',

@@ -1,17 +1,16 @@
 import React from 'react';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
-import { CodeCompare, CodeCompareProps } from '@teambit/code.ui.code-compare';
+import { CodeCompare, CodeCompareEditorProvider, CodeCompareProps } from '@teambit/code.ui.code-compare';
 import { Harmony, SlotRegistry, Slot } from '@teambit/harmony';
 import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { CodePage, CodePageProps } from '@teambit/code.ui.code-tab-page';
 import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-compare';
+import { CodeEditorProvider } from '@teambit/code.ui.code-editor';
 import { CodeCompareSection } from '@teambit/code.ui.code-compare-section';
 import { CodeAspect } from './code.aspect';
 import { CodeSection } from './code.section';
-import { DiffEditorProvider } from './code.diff.editor.provider';
-import { EditorProvider } from './code.editor.provider';
 
 const isTsx = /\.tsx$/;
 
@@ -36,14 +35,14 @@ export class CodeUI {
 
   getCodeCompare = (props?: Partial<CodeCompareProps>) => {
     return (
-      <DiffEditorProvider>
+      <CodeCompareEditorProvider>
         <CodeCompare {...(props || {})} fileIconSlot={this.fileIconSlot} />
-      </DiffEditorProvider>
+      </CodeCompareEditorProvider>
     );
   };
 
-  getCodeEditorProvider = () => EditorProvider;
-  getCodeDiffEditorProvider = () => DiffEditorProvider;
+  getCodeEditorProvider = () => CodeEditorProvider;
+  getCodeDiffEditorProvider = () => CodeCompareEditorProvider;
 
   registerEnvFileIcon(icons: FileIconMatch[]) {
     this.fileIconSlot?.register(icons);

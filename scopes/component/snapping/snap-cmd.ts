@@ -30,7 +30,7 @@ export class SnapCmd implements Command {
   alias = '';
   options = [
     ['m', 'message <message>', 'snap message describing the latest changes - will appear in component history log'],
-    ['', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
+    ['u', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
     ['', 'unmerged', 'complete a merge process by snapping the unmerged components'],
     [
       'b',
@@ -146,9 +146,11 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
     const { snappedComponents, autoSnappedResults, warnings, newComponents, laneName, removedComponents }: SnapResults =
       results;
-    const changedComponents = snappedComponents.filter(
-      (component) => !newComponents.searchWithoutVersion(component.id)
-    );
+    const changedComponents = snappedComponents.filter((component) => {
+      return (
+        !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id)
+      );
+    });
     const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
     const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
 
