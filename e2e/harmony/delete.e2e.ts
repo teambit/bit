@@ -6,6 +6,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 describe('bit delete command', function () {
   let helper: Helper;
   let npmCiRegistry: NpmCiRegistry;
+  let output: string;
   this.timeout(0);
   before(() => {
     helper = new Helper();
@@ -35,7 +36,7 @@ describe('bit delete command', function () {
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         helper.command.export();
         helper.command.softRemoveOnLane('comp3');
-        helper.command.softRemoveOnLane('comp2');
+        output = helper.command.softRemoveOnLane('comp2');
         helper.command.install(helper.general.getPackageNameByCompName('comp2'));
       });
       after(() => {
@@ -44,8 +45,11 @@ describe('bit delete command', function () {
       it('bit status should not show RemovedDependencies issues', () => {
         helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedDependencies.name);
       });
-      it('bit snap should fail due to removedDependencies error', () => {
+      it('bit snap should not fail due to removedDependencies error', () => {
         expect(() => helper.command.snapAllComponentsWithoutBuild()).not.to.throw();
+      });
+      it('bit snap output should be relevant for lanes when --lane command used', () => {
+        expect(output).to.not.have.string('will mark the component as deleted');
       });
     }
   );
