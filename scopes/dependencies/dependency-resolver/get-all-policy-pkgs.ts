@@ -11,7 +11,7 @@ export type CurrentPkgSource =
   | 'component'
   // these are dependencies from the dependencies policy in "workspace.jsonc"
   | 'rootPolicy'
-  // the are dependencies of imported components
+  // these are dependencies stored in the component object (snapped/tagged version)
   | 'component-model';
 
 type CurrentPkg = {
