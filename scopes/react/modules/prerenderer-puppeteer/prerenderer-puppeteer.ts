@@ -31,7 +31,7 @@ const waitForRender = function (options: { renderAfterDocumentEvent?: string; re
   return new Promise<void>((resolve) => {
     // Render when an event fires on the document.
     if (options.renderAfterDocumentEvent) {
-      // eslint-disable-next-line dot-notation
+      // eslint-disable-next-line dot-notation, @typescript-eslint/dot-notation
       if (window['__PRERENDER_STATUS'] && window['__PRERENDER_STATUS'].__DOCUMENT_EVENT_RESOLVED) resolve();
       document.addEventListener(options.renderAfterDocumentEvent, () => resolve());
 
@@ -133,8 +133,10 @@ export default class CustomPuppeteerRenderer {
           if (options.renderAfterDocumentEvent) {
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
             page.evaluateOnNewDocument(function (_options: { renderAfterDocumentEvent: string }) {
+              // eslint-disable-next-line dot-notation, @typescript-eslint/dot-notation
               window['__PRERENDER_STATUS'] = {};
               document.addEventListener(_options.renderAfterDocumentEvent, () => {
+                // eslint-disable-next-line dot-notation, @typescript-eslint/dot-notation
                 window['__PRERENDER_STATUS'].__DOCUMENT_EVENT_RESOLVED = true;
               });
             }, this._rendererOptions);
