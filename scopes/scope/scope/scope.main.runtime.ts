@@ -759,7 +759,7 @@ export class ScopeMain implements ComponentFactory {
   }
 
   async getStagedConfig() {
-    const currentLaneId = this.legacyScope.currentLaneId;
+    const currentLaneId = this.legacyScope.getCurrentLaneId();
     return StagedConfig.load(this.path, this.logger, currentLaneId);
   }
 
