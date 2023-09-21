@@ -146,9 +146,11 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
     const { snappedComponents, autoSnappedResults, warnings, newComponents, laneName, removedComponents }: SnapResults =
       results;
-    const changedComponents = snappedComponents.filter(
-      (component) => !newComponents.searchWithoutVersion(component.id)
-    );
+    const changedComponents = snappedComponents.filter((component) => {
+      return (
+        !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id)
+      );
+    });
     const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
     const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
 
