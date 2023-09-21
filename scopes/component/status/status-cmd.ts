@@ -8,7 +8,6 @@ import { IssuesList } from '@teambit/component-issues';
 import { formatBitString } from '@teambit/legacy/dist/cli/chalk-box';
 import { getInvalidComponentLabel } from '@teambit/legacy/dist/cli/templates/component-issues-template';
 import {
-  BASE_DOCS_DOMAIN,
   IMPORT_PENDING_MSG,
   statusFailureMsg,
   statusInvalidComponentsMsg,
@@ -19,7 +18,7 @@ import { isHash } from '@teambit/component-version';
 import { StatusMain, StatusResult } from './status.main.runtime';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
-  `learn more at https://${BASE_DOCS_DOMAIN}/components/adding-components`
+  `learn more at about Bit component: https://bit.dev/reference/components/component-anatomy/`
 )}`;
 
 export class StatusCmd implements Command {
