@@ -12,6 +12,7 @@ type TestFlags = {
   watch: boolean;
   debug: boolean;
   all: boolean;
+  unmodified: boolean;
   env?: string;
   scope?: string;
   junit?: string;
@@ -33,7 +34,8 @@ export class TestCmd implements Command {
   options = [
     ['w', 'watch', 'start the tester in watch mode.'],
     ['d', 'debug', 'start the tester in debug mode.'],
-    ['a', 'all', 'test all components, not only new and modified'],
+    ['a', 'all', 'DEPRECATED. (use --unmodified)'],
+    ['u', 'unmodified', 'test all components, not only new and modified'],
     ['', 'junit <filepath>', 'write tests results as JUnit XML format into the specified file path'],
     ['', 'coverage', 'show code coverage data'],
     ['e', 'env <id>', 'test only components assigned the given env'],
@@ -49,7 +51,7 @@ export class TestCmd implements Command {
 
   async render(
     [userPattern]: [string],
-    { watch = false, debug = false, all = false, env, scope, junit, coverage = false }: TestFlags
+    { watch = false, debug = false, all = false, env, scope, junit, coverage = false, unmodified = false }: TestFlags
   ) {
     const timer = Timer.create();
     const scopeName = typeof scope === 'string' ? scope : undefined;
@@ -57,6 +59,10 @@ export class TestCmd implements Command {
       this.logger.consoleWarning(
         `--scope is deprecated, use the pattern argument instead. e.g. "scopeName/**" for the entire scope`
       );
+    }
+    if (all) {
+      unmodified = all;
+      this.logger.consoleWarning(`--all is deprecated, use --unmodified instead`);
     }
     timer.start();
     if (!this.workspace) throw new OutsideWorkspaceError();
@@ -67,7 +73,7 @@ export class TestCmd implements Command {
       return scopeName ? `${scopeName}/${pattern}` : pattern;
     };
     const patternWithScope = getPatternWithScope();
-    const components = await this.workspace.getComponentsByUserInput(all, patternWithScope, true);
+    const components = await this.workspace.getComponentsByUserInput(unmodified, patternWithScope, true);
     if (!components.length) {
       return {
         code: 0,
