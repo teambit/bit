@@ -41,7 +41,7 @@ import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import chokidar from 'chokidar';
+import chokidar from '@teambit/chokidar';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';

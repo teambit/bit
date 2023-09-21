@@ -31,6 +31,15 @@ export class GlobalConfigMain {
     return get(key);
   }
 
+  async getBool(key: string): Promise<boolean | undefined> {
+    const result = await get(key);
+    if (result === undefined || result === null) return undefined;
+    if (typeof result === 'boolean') return result;
+    if (result === 'true') return true;
+    if (result === 'false') return false;
+    throw new Error(`the configuration "${key}" has an invalid value "${result}". it should be boolean`);
+  }
+
   getSync(key: string): string | undefined {
     return getSync(key);
   }

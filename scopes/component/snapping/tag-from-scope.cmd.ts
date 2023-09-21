@@ -30,7 +30,7 @@ export class TagFromScopeCmd implements Command {
 the input data is a stringified JSON of an array of the following object.
 {
   componentId: string;    // ids always have scope, so it's safe to parse them from string
-  dependencies?: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]
+  dependencies?: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester^@1.0.0, teambit/linter~@0.0.1]
   versionToTag?: string;  // specific version (e.g. '1.0.0') or semver (e.g. 'minor', 'patch')
   prereleaseId?: string;  // applicable when versionToTag is a pre-release. (e.g. "dev", for 1.0.0-dev.1)
   message?: string;       // tag-message.

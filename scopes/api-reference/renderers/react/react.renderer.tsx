@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReactSchema } from '@teambit/react';
+import type { ReactSchema } from '@teambit/react';
 import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
@@ -9,7 +9,7 @@ import { TagName } from '@teambit/semantics.entities.semantic-schema';
 import styles from './react.renderer.module.scss';
 
 export const reactRenderer: APINodeRenderer = {
-  predicate: (node) => node.__schema === ReactSchema.name,
+  predicate: (node) => node.__schema === 'ReactSchema',
   Component: ReactComponent,
   nodeType: 'React',
   icon: { name: 'React', url: 'https://static.bit.dev/extensions-icons/react.svg' },
