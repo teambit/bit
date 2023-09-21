@@ -113,11 +113,18 @@ export default class Scope {
   _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
   lanes: Lanes;
   /**
+   * important! never use this function directly, even inside this class. Only use getCurrentLaneId().
+   *
    * normally, the data about the current-lane is saved in .bitmap. the reason for having this prop here is that we
    * need this data when loading model-component, which gets called in multiple places where the consumer is not passed.
    * another instance this is needed is for bit-sign, this way when loading aspects and fetching dists, it'll go to lane-scope.
    */
-  currentLaneId?: LaneId;
+  private currentLaneId?: LaneId;
+  /**
+   * when the consumer is available, this function is set with the consumer.getCurrentLaneIdIfExist, so then we guarantee
+   * that it's always in sync with the consumer.
+   */
+  currentLaneIdFunc?: () => LaneId | undefined;
   stagedSnaps: StagedSnaps;
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
@@ -136,6 +143,11 @@ export default class Scope {
 
   public async refreshScopeIndex(force = false) {
     await this.objects.reloadScopeIndexIfNeed(force);
+  }
+
+  getCurrentLaneId(): LaneId | undefined {
+    if (this.currentLaneIdFunc) return this.currentLaneIdFunc();
+    return this.currentLaneId;
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
@@ -163,7 +175,7 @@ export default class Scope {
   setCurrentLaneId(laneId?: LaneId) {
     if (!laneId) return;
     if (laneId.isDefault()) this.currentLaneId = undefined;
-    this.currentLaneId = laneId;
+    else this.currentLaneId = laneId;
   }
 
   getPath() {
@@ -464,7 +476,8 @@ once done, to continue working, please run "bit cc"`
   }
 
   async getCurrentLaneObject(): Promise<Lane | null> {
-    return this.currentLaneId ? this.loadLane(this.currentLaneId) : null;
+    const currentLaneId = this.getCurrentLaneId();
+    return currentLaneId ? this.loadLane(currentLaneId) : null;
   }
 
   /**

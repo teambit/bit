@@ -90,11 +90,7 @@ import { DependencyDetector } from './dependency-detector';
 import { DependenciesService } from './dependencies.service';
 import { EnvPolicy } from './policy/env-policy';
 
-/**
- * @deprecated use BIT_CLOUD_REGISTRY instead
- */
-export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
-export const BIT_CLOUD_REGISTRY = `https://node.${getCloudDomain()}/`;
+export const BIT_CLOUD_REGISTRY = `https://node-registry.${getCloudDomain()}/`;
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
@@ -969,15 +965,13 @@ export class DependencyResolverMain {
       registries = await systemPm.getRegistries();
     }
 
-    const bitScope = registries.scopes.bit;
-
     const getDefaultBitRegistry = (): Registry => {
       const bitGlobalConfigRegistry = this.globalConfig.getSync(CFG_REGISTRY_URL_KEY);
-      const bitRegistry = bitGlobalConfigRegistry || bitScope?.uri || BIT_DEV_REGISTRY;
+      const bitRegistry = bitGlobalConfigRegistry || BIT_CLOUD_REGISTRY;
 
-      const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig(bitScope);
+      const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig();
 
-      const alwaysAuth = bitAuthHeaderValue !== undefined;
+      const alwaysAuth = !!bitAuthHeaderValue;
       const bitDefaultRegistry = new Registry(
         bitRegistry,
         alwaysAuth,
@@ -1006,24 +1000,20 @@ export class DependencyResolverMain {
       // then in the registry server it should be use it when proxies
       registries = registries.setDefaultRegistry(bitDefaultRegistry);
     }
-    // Make sure @bit scope is register with alwaysAuth
-    if (!bitScope || (bitScope && !bitScope.alwaysAuth)) {
-      registries = registries.updateScopedRegistry('bit', bitDefaultRegistry);
-    }
 
-    registries = this.addAuthToScopedBitRegistries(registries, bitScope);
+    registries = this.addAuthToScopedBitRegistries(registries);
     return registries;
   }
 
   /**
    * This will mutate any registry which point to BIT_DEV_REGISTRY to have the auth config from the @bit scoped registry or from the user.token in bit's config
    */
-  private addAuthToScopedBitRegistries(registries: Registries, bitScopeRegistry: Registry): Registries {
-    const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig(bitScopeRegistry);
+  private addAuthToScopedBitRegistries(registries: Registries): Registries {
+    const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig();
     const alwaysAuth = bitAuthHeaderValue !== undefined;
     let updatedRegistries = registries;
     Object.entries(registries.scopes).map(([name, registry]) => {
-      if (!registry.authHeaderValue && BIT_DEV_REGISTRY.includes(registry.uri)) {
+      if (!registry.authHeaderValue && BIT_CLOUD_REGISTRY.includes(registry.uri)) {
         const registryWithAuth = new Registry(
           registry.uri,
           alwaysAuth,
@@ -1038,26 +1028,26 @@ export class DependencyResolverMain {
     return updatedRegistries;
   }
 
-  private getBitAuthConfig(
-    bitScopeRegistry: Registry
-  ): Partial<{ bitOriginalAuthType: string; bitAuthHeaderValue: string; bitOriginalAuthValue: string }> {
+  private getBitAuthConfig(): Partial<{
+    bitOriginalAuthType: string;
+    bitAuthHeaderValue: string;
+    bitOriginalAuthValue: string;
+  }> {
     const bitGlobalConfigToken = this.globalConfig.getSync(CFG_USER_TOKEN_KEY);
-    let bitAuthHeaderValue = bitScopeRegistry?.authHeaderValue;
-    let bitOriginalAuthType = bitScopeRegistry?.originalAuthType;
-    let bitOriginalAuthValue = bitScopeRegistry?.originalAuthValue;
+    const res = {
+      bitOriginalAuthType: '',
+      bitAuthHeaderValue: '',
+      bitOriginalAuthValue: '',
+    };
 
     // In case there is no auth configuration in the npmrc, but there is token in bit config, take it from the config
-    if ((!bitScopeRegistry || !bitScopeRegistry.authHeaderValue) && bitGlobalConfigToken) {
-      bitOriginalAuthType = 'authToken';
-      bitAuthHeaderValue = `Bearer ${bitGlobalConfigToken}`;
-      bitOriginalAuthValue = bitGlobalConfigToken;
+    if (bitGlobalConfigToken) {
+      res.bitOriginalAuthType = 'authToken';
+      res.bitAuthHeaderValue = `Bearer ${bitGlobalConfigToken}`;
+      res.bitOriginalAuthValue = bitGlobalConfigToken;
     }
 
-    return {
-      bitOriginalAuthType,
-      bitAuthHeaderValue,
-      bitOriginalAuthValue,
-    };
+    return res;
   }
 
   get packageManagerName(): string {

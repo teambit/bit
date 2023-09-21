@@ -5,14 +5,14 @@ import { compact, difference, partition } from 'lodash';
 import { ComponentID } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { BIT_MAP, CFG_WATCH_USE_FS_EVENTS } from '@teambit/legacy/dist/constants';
+import { BIT_MAP, CFG_WATCH_USE_POLLING } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
-import chokidar, { FSWatcher } from 'chokidar';
+import chokidar, { FSWatcher } from '@teambit/chokidar';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { PathLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { CompilationInitiator } from '@teambit/compiler';
@@ -379,10 +379,10 @@ export class Watcher {
   }
 
   private async createWatcher() {
-    // const usePollingConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_POLLING);
-    // const usePolling = usePollingConf === 'true';
-    const useFsEventsConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_FS_EVENTS);
-    const useFsEvents = useFsEventsConf === 'true';
+    const usePollingConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_POLLING);
+    const usePolling = usePollingConf === 'true';
+    // const useFsEventsConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_FS_EVENTS);
+    // const useFsEvents = useFsEventsConf === 'true';
     const ignoreLocalScope = (pathToCheck: string) => {
       if (pathToCheck.startsWith(this.ipcEventsDir)) return false;
       return (
@@ -400,7 +400,8 @@ export class Watcher {
        * there is a fix for this in master. once a new version of Chokidar is released, we can upgrade it and then
        * default to true.
        */
-      useFsEvents,
+      usePolling,
+      // useFsEvents,
       persistent: true,
     });
     if (this.verbose) {

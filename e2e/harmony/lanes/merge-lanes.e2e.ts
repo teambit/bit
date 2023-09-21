@@ -891,7 +891,7 @@ describe('merge lanes', function () {
       helper.command.tagAllWithoutBuild('--unmodified');
       // this will fail the build
       helper.command.dependenciesSet('comp1', 'non-exist-pkg@123.123.123');
-      helper.command.mergeLane('dev', '--no-squash --ignore-config-changes');
+      helper.command.mergeLane('dev', '--no-squash --ignore-config-changes --build');
     });
     // previous bug was writing the .bitmap at the end with the failed version
     it('should not change the .bitmap with the failed-snap version', () => {

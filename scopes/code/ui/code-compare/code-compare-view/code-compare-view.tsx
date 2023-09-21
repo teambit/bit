@@ -11,6 +11,7 @@ import {
   CodeCompareNavigation,
   useCodeCompare,
   EditorViewMode,
+  useCodeCompareEditor,
 } from '@teambit/code.ui.code-compare';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
@@ -55,17 +56,13 @@ export function CodeCompareView({
       fileName,
     });
   const componentCompareContext = useComponentCompare();
+  const DiffEditor = useCodeCompareEditor();
 
   const getDefaultView: () => EditorViewMode = () => {
     if (!baseId) return 'inline';
     if (baseId && compareId && baseId.isEqual(compareId)) return 'inline';
     if (!originalFileContent || !modifiedFileContent) return 'inline';
-    if (
-      !componentCompareContext?.fileCompareDataByName?.get(fileName)?.status ||
-      componentCompareContext?.fileCompareDataByName?.get(fileName)?.status === 'UNCHANGED'
-    )
-      return 'inline';
-
+    if (componentCompareContext?.fileCompareDataByName?.get(fileName)?.status === 'UNCHANGED') return 'inline';
     return 'split';
   };
 
@@ -84,7 +81,13 @@ export function CodeCompareView({
   useEffect(() => {
     const updatedView = getDefaultView();
     if (view !== updatedView) setView(updatedView);
-  }, [baseId?.toString(), originalFileContent, modifiedFileContent]);
+  }, [
+    baseId?.toString(),
+    originalFileContent,
+    modifiedFileContent,
+    componentCompareContext?.fileCompareDataByName?.size,
+    compareId?.toString(),
+  ]);
 
   const [containerHeight, setContainerHeight] = useState<string | undefined>(isFullScreen ? '100%' : undefined);
 
@@ -208,64 +211,84 @@ export function CodeCompareView({
     }
   }, [isFullScreen, componentCompareContext]);
 
-  const handleEditorDidMount: DiffOnMount = (editor, monaco) => {
-    /**
-     * disable syntax check
-     * ts cant validate all types because imported files aren't available to the editor
-     */
-    monacoRef.current = { monaco, editor };
-    if (monacoRef.current) {
-      monacoRef.current.monaco.languages?.typescript?.typescriptDefaults?.setDiagnosticsOptions({
-        noSemanticValidation: true,
-        noSyntaxValidation: true,
+  const handleEditorDidMount: DiffOnMount = React.useCallback(
+    (editor, monaco) => {
+      /**
+       * disable syntax check
+       * ts cant validate all types because imported files aren't available to the editor
+       */
+      monacoRef.current = { monaco, editor };
+      if (monacoRef.current) {
+        monacoRef.current.monaco.languages?.typescript?.typescriptDefaults?.setDiagnosticsOptions({
+          noSemanticValidation: true,
+          noSyntaxValidation: true,
+        });
+      }
+
+      monaco.editor.defineTheme('bit', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [],
+        colors: {
+          'scrollbar.shadow': '#222222',
+          'diffEditor.insertedTextBackground': '#1C4D2D',
+          'diffEditor.removedTextBackground': '#761E24',
+          'editor.selectionBackground': '#5A5A5A',
+          'editor.overviewRulerBorder': '#6a57fd',
+          'editor.lineHighlightBorder': '#6a57fd',
+        },
       });
-    }
+      monaco.editor.setTheme('bit');
+      editor.getOriginalEditor().onDidChangeModelDecorations(updateEditorHeight);
+      editor.getModifiedEditor().onDidChangeModelDecorations(updateEditorHeight);
+      const containerElement = containerRef.current;
+      let resizeObserver: ResizeObserver | undefined;
 
-    monaco.editor.defineTheme('bit', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [],
-      colors: {
-        'scrollbar.shadow': '#222222',
-        'diffEditor.insertedTextBackground': '#1C4D2D',
-        'diffEditor.removedTextBackground': '#761E24',
-        'editor.selectionBackground': '#5A5A5A',
-        'editor.overviewRulerBorder': '#6a57fd',
-        'editor.lineHighlightBorder': '#6a57fd',
-      },
-    });
-    monaco.editor.setTheme('bit');
-    editor.getOriginalEditor().onDidChangeModelDecorations(updateEditorHeight);
-    editor.getModifiedEditor().onDidChangeModelDecorations(updateEditorHeight);
-    const containerElement = containerRef.current;
-    let resizeObserver: ResizeObserver | undefined;
+      if (containerElement) {
+        resizeObserver = new ResizeObserver(() => {
+          setTimeout(() => updateEditorHeight());
+        });
+        resizeObserver.observe(containerElement);
+      }
 
-    if (containerElement) {
-      resizeObserver = new ResizeObserver(() => {
-        setTimeout(() => updateEditorHeight());
-      });
-      resizeObserver.observe(containerElement);
-    }
-
-    return () => containerElement && resizeObserver?.unobserve(containerElement);
-  };
+      return () => containerElement && resizeObserver?.unobserve(containerElement);
+    },
+    [fileName, view, compareId?.toString(), componentCompareContext?.hidden, loading, files.length]
+  );
 
   const diffEditor = useMemo(
-    () => (
-      <CodeCompareEditor
-        language={language}
-        modifiedPath={modifiedPath}
-        originalPath={originalPath}
-        originalFileContent={originalFileContent}
-        modifiedFileContent={modifiedFileContent}
-        handleEditorDidMount={handleEditorDidMount}
-        ignoreWhitespace={ignoreWhitespace}
-        editorViewMode={view}
-        wordWrap={wrap}
-        Loader={<CodeCompareViewLoader />}
-      />
-    ),
-    [modifiedFileContent, originalFileContent, ignoreWhitespace, view, wrap]
+    () =>
+      loading || files.length === 0 ? null : (
+        <CodeCompareEditor
+          DiffEditor={DiffEditor}
+          language={language}
+          modifiedPath={modifiedPath}
+          originalPath={originalPath}
+          originalFileContent={originalFileContent}
+          modifiedFileContent={modifiedFileContent}
+          handleEditorDidMount={handleEditorDidMount}
+          ignoreWhitespace={ignoreWhitespace}
+          editorViewMode={view}
+          wordWrap={wrap}
+          Loader={<CodeCompareViewLoader />}
+        />
+      ),
+    [
+      modifiedFileContent,
+      originalFileContent,
+      ignoreWhitespace,
+      view,
+      wrap,
+      fileName,
+      loading,
+      files.length,
+      modifiedPath,
+      originalPath,
+      language,
+      compareId?.toString(),
+      baseId?.toString(),
+      DiffEditor,
+    ]
   );
 
   const containerHeightStyle = isFullScreen
@@ -273,6 +296,19 @@ export function CodeCompareView({
     : (!!containerHeight && `calc(${containerHeight} + 30px)`) || '250px';
 
   const codeContainerHeightStyle = isFullScreen ? 'calc(100% - 30px)' : containerHeight ?? '220px';
+
+  const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
+
+  const codeNavFiles = React.useMemo(() => {
+    return files.filter((file) => {
+      if (file === fileName) return true;
+      const codeCompareDataForFile = fileCompareDataByName?.get(file) ?? null;
+      const status = codeCompareDataForFile?.status;
+      if (componentCompareContext?.compare && !componentCompareContext.base && !status) return true;
+      if (status && status !== 'UNCHANGED') return true;
+      return false;
+    });
+  }, [files.length, fileName, fileCompareDataByName?.size]);
 
   return (
     <div
@@ -285,24 +321,26 @@ export function CodeCompareView({
       }}
       className={classNames(styles.componentCompareCodeViewContainer, className, isFullScreen && styles.isFullScreen)}
     >
-      <CodeCompareNavigation
-        files={files}
-        selectedFile={fileName}
-        fileIconMatchers={fileIconMatchers}
-        onTabClicked={onTabClicked}
-        getHref={getHref}
-        widgets={widgets}
-        Menu={
-          <CodeCompareEditorSettings
-            wordWrap={wrap}
-            ignoreWhitespace={ignoreWhitespace}
-            editorViewMode={view}
-            onViewModeChanged={(value) => setView(value)}
-            onWordWrapChanged={(value) => setWrap(value)}
-            onIgnoreWhitespaceChanged={(value) => setIgnoreWhitespace(value)}
-          />
-        }
-      />
+      {files.length > 0 && (
+        <CodeCompareNavigation
+          files={codeNavFiles}
+          selectedFile={fileName}
+          fileIconMatchers={fileIconMatchers}
+          onTabClicked={onTabClicked}
+          getHref={getHref}
+          widgets={widgets}
+          Menu={
+            <CodeCompareEditorSettings
+              wordWrap={wrap}
+              ignoreWhitespace={ignoreWhitespace}
+              editorViewMode={view}
+              onViewModeChanged={(value) => setView(value)}
+              onWordWrapChanged={(value) => setWrap(value)}
+              onIgnoreWhitespaceChanged={(value) => setIgnoreWhitespace(value)}
+            />
+          }
+        />
+      )}
       <div
         style={{
           minHeight: codeContainerHeightStyle,
@@ -312,9 +350,12 @@ export function CodeCompareView({
         className={classNames(styles.componentCompareCodeDiffEditorContainer, isFullScreen && styles.isFullScreen)}
       >
         <CodeCompareViewLoader
-          className={classNames(!loading && styles.hideLoader, isFullScreen && styles.isFullScreen)}
+          className={classNames(
+            !(loading || files.length === 0) && styles.hideLoader,
+            isFullScreen && styles.isFullScreen
+          )}
         />
-        {loading ? null : diffEditor}
+        {diffEditor}
       </div>
     </div>
   );

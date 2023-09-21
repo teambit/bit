@@ -1,6 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
-import Editor, { OnMount, BeforeMount, OnChange } from '@monaco-editor/react';
+import { OnMount, BeforeMount, OnChange, EditorProps } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 
@@ -15,6 +15,7 @@ export type CodeEditorProps = {
   onMount?: OnMount;
   onChange?: OnChange;
   Loader?: React.ReactNode;
+  Editor: React.FC<EditorProps>;
 };
 
 export const DEFAULT_EDITOR_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
@@ -56,6 +57,7 @@ export function CodeEditor({
   options,
   className,
   height,
+  Editor,
 }: CodeEditorProps) {
   const defaultLang = React.useMemo(() => {
     if (!filePath) return languageOverrides.ts;
@@ -64,18 +66,20 @@ export function CodeEditor({
   }, [filePath]);
 
   return (
-    <Editor
-      path={filePath}
-      value={fileContent || undefined}
-      language={language || defaultLang}
-      height={height || '100%'}
-      onMount={onMount}
-      beforeMount={beforeMount}
-      onChange={onChange}
-      className={classnames(darkMode, className)}
-      theme={'vs-dark'}
-      options={options || DEFAULT_EDITOR_OPTIONS}
-      loading={Loader}
-    />
+    <React.Suspense fallback={Loader ?? <></>}>
+      <Editor
+        path={filePath}
+        value={fileContent || undefined}
+        language={language || defaultLang}
+        height={height || '100%'}
+        onMount={onMount}
+        beforeMount={beforeMount}
+        onChange={onChange}
+        className={classnames(darkMode, className)}
+        theme={'vs-dark'}
+        options={options || DEFAULT_EDITOR_OPTIONS}
+        loading={Loader}
+      />
+    </React.Suspense>
   );
 }

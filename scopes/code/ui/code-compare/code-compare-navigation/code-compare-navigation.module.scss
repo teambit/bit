@@ -1,4 +1,4 @@
-@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .codeCompareTab {
   display: flex;
@@ -43,6 +43,8 @@
 
 .activeNav {
   background-color: var(--surface-neutral-color, #121212);
+  border-bottom: 2px solid var(--primary-color, #6a57fd);
+
   &::after {
     background-color: var(--surface-neutral-color, #121212) !important;
   }

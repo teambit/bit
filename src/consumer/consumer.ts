@@ -60,6 +60,8 @@ type ConsumerProps = {
   existingGitHooks: string[] | undefined;
 };
 
+const BITMAP_HISTORY_DIR_NAME = 'bitmap-history';
+
 /**
  * @todo: change the class name to Workspace
  */
@@ -79,7 +81,7 @@ export default class Consumer {
   componentLoader: ComponentLoader;
   componentStatusLoader: ComponentStatusLoader;
   packageJson: any;
-  public onCacheClear: Array<() => void> = [];
+  public onCacheClear: Array<() => void | Promise<void>> = [];
   constructor({
     projectPath,
     config,
@@ -136,8 +138,12 @@ export default class Consumer {
     return path.join(this.getPath(), BIT_WORKSPACE_TMP_DIRNAME);
   }
 
+  getCurrentLaneIdIfExist() {
+    return this.bitMap.laneId;
+  }
+
   getCurrentLaneId(): LaneId {
-    return this.bitMap.laneId || this.getDefaultLaneId();
+    return this.getCurrentLaneIdIfExist() || this.getDefaultLaneId();
   }
 
   getDefaultLaneId() {
@@ -165,7 +171,6 @@ export default class Consumer {
 
   setCurrentLane(laneId: LaneId, exported = true) {
     this.bitMap.setCurrentLane(laneId, exported);
-    this.scope.setCurrentLaneId(laneId);
   }
 
   async cleanTmpFolder() {
@@ -597,7 +602,7 @@ export default class Consumer {
       scope,
     });
     await consumer.setBitMap();
-    scope.setCurrentLaneId(consumer.bitMap.laneId);
+    scope.currentLaneIdFunc = consumer.getCurrentLaneIdIfExist.bind(consumer);
     logger.commandHistory.fileBasePath = scope.getPath();
     return consumer;
   }
@@ -699,10 +704,14 @@ export default class Consumer {
     await this.bitMap.write();
   }
 
+  getBitmapHistoryDir() {
+    return path.join(this.scope.path, BITMAP_HISTORY_DIR_NAME);
+  }
+
   private async backupBitMap() {
     if (!this.bitMap.hasChanged) return;
     try {
-      const baseDir = path.join(this.scope.path, 'bitmap-history');
+      const baseDir = this.getBitmapHistoryDir();
       await fs.ensureDir(baseDir);
       const backupPath = path.join(baseDir, `.bitmap-${this.currentDateAndTimeToFileName()}`);
       await fs.copyFile(this.bitMap.mapPath, backupPath);

@@ -1,4 +1,4 @@
-import React, { ComponentType, HTMLAttributes } from 'react';
+import React, { ComponentType, HTMLAttributes, useState } from 'react';
 import { FileIconMatch, getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
 import { NavPlugin, CollapsibleMenuNav } from '@teambit/component';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
@@ -18,7 +18,7 @@ export type CodeCompareNavigationProps = {
 };
 
 export function CodeCompareNavigation({
-  files,
+  files: filesFromProps,
   selectedFile,
   fileIconMatchers,
   onTabClicked,
@@ -26,6 +26,13 @@ export function CodeCompareNavigation({
   widgets,
   Menu,
 }: CodeCompareNavigationProps) {
+  const [open, setOpen] = useState<boolean | undefined>();
+  const selectedFileIndex = filesFromProps.findIndex((file) => file === selectedFile);
+  const moveSelectedFile = selectedFileIndex > 2;
+  const files = moveSelectedFile
+    ? [selectedFile, ...filesFromProps.filter((file) => file !== selectedFile)]
+    : filesFromProps;
+
   return (
     <CodeCompareNav
       files={files}
@@ -38,6 +45,7 @@ export function CodeCompareNavigation({
       <Dropdown
         className={styles.codeCompareWidgets}
         dropClass={styles.codeCompareMenu}
+        open={open}
         placeholder={
           <div className={styles.codeCompareWidgets}>
             <div className={styles.settings}>
@@ -48,6 +56,11 @@ export function CodeCompareNavigation({
         clickPlaceholderToggles={true}
         position={'left-start'}
         clickToggles={false}
+        clickOutside={true}
+        onPlaceholderToggle={() => setOpen((o) => !o)}
+        onClickOutside={() => {
+          setOpen(false);
+        }}
       >
         {Menu}
       </Dropdown>
