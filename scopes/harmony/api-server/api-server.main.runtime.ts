@@ -3,6 +3,7 @@ import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import ComponentCompareAspect, { ComponentCompareMain } from '@teambit/component-compare';
 import ComponentLogAspect, { ComponentLogMain } from '@teambit/component-log';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
@@ -18,7 +19,6 @@ import { ServerCmd } from './server.cmd';
 import { IDERoute } from './ide.route';
 import { APIForIDE } from './api-for-ide';
 import { SSEEventsRoute, sendEventsToClients } from './sse-events.route';
-import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 
 export class ApiServerMain {
   constructor(
