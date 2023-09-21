@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { H6 } from '@teambit/documenter.ui.heading';
-import { CodeEditor } from '@teambit/code.ui.code-editor';
+import { CodeEditor, useCodeEditor } from '@teambit/code.ui.code-editor';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
 import classnames from 'classnames';
@@ -44,6 +44,7 @@ export function APINodeDetails({
   const routerLocation = useLocation();
   const query = useQuery();
   const navigate = useNavigate();
+  const Editor = useCodeEditor();
 
   const signatureEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
   const signatureMonacoRef = useRef<Monaco>();
@@ -255,6 +256,7 @@ export function APINodeDetails({
             ref={signatureContainerRef}
           >
             <CodeEditor
+              Editor={Editor}
               options={defaultCodeEditorOptions}
               fileContent={signature}
               filePath={`${currentQueryParams}-${filePath}`}
@@ -291,6 +293,7 @@ export function APINodeDetails({
             <H6 className={styles.apiNodeDetailsExampleTitle}>Example</H6>
             <div className={classnames(styles.codeEditorContainer)} ref={exampleContainerRef}>
               <CodeEditor
+                Editor={Editor}
                 options={defaultCodeEditorOptions}
                 fileContent={extractCodeBlock(example.comment)?.code || example.comment}
                 filePath={`example-${example?.location.line}:${example?.location.filePath}`}

@@ -11,6 +11,7 @@ import {
   CodeCompareNavigation,
   useCodeCompare,
   EditorViewMode,
+  useCodeCompareEditor,
 } from '@teambit/code.ui.code-compare';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
@@ -55,6 +56,7 @@ export function CodeCompareView({
       fileName,
     });
   const componentCompareContext = useComponentCompare();
+  const DiffEditor = useCodeCompareEditor();
 
   const getDefaultView: () => EditorViewMode = () => {
     if (!baseId) return 'inline';
@@ -258,6 +260,7 @@ export function CodeCompareView({
     () =>
       loading || files.length === 0 ? null : (
         <CodeCompareEditor
+          DiffEditor={DiffEditor}
           language={language}
           modifiedPath={modifiedPath}
           originalPath={originalPath}
@@ -284,6 +287,7 @@ export function CodeCompareView({
       language,
       compareId?.toString(),
       baseId?.toString(),
+      DiffEditor,
     ]
   );
 
