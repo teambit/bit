@@ -67,16 +67,18 @@ export class IpcEventsMain {
     const logger = loggerMain.createLogger(IpcEventsAspect.id);
     const ipcEventsMain = new IpcEventsMain(scope, gotEventSlot, logger);
 
-    // in case commands like "bit export" are running from the cli, long-running processes should clear their cache.
-    // otherwise, objects like "ModelComponent" are out-of-date and could have the wrong head and the "state"/"local" data.
-    scope.registerOnPostObjectsPersist(async () => {
-      await ipcEventsMain.publishIpcEvent('onPostObjectsPersist');
-    });
-    ipcEventsMain.registerGotEventSlot(async (eventName) => {
-      if (eventName === 'onPostObjectsPersist') {
-        scope.legacyScope.objects.clearObjectsFromCache();
-      }
-    });
+    if (scope) {
+      // in case commands like "bit export" are running from the cli, long-running processes should clear their cache.
+      // otherwise, objects like "ModelComponent" are out-of-date and could have the wrong head and the "state"/"local" data.
+      scope.registerOnPostObjectsPersist(async () => {
+        await ipcEventsMain.publishIpcEvent('onPostObjectsPersist');
+      });
+      ipcEventsMain.registerGotEventSlot(async (eventName) => {
+        if (eventName === 'onPostObjectsPersist') {
+          scope.legacyScope.objects.clearObjectsFromCache();
+        }
+      });
+    }
 
     return ipcEventsMain;
   }
