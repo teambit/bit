@@ -55,6 +55,7 @@ export class LaneSwitcher {
       ids,
       allowAddingComponentsFromScope: true,
       versionPerId: await this.workspace.resolveMultipleComponentIds(idsToSwitch),
+      lane: this.laneToSwitchTo,
     };
 
     const results = await this.Lanes.checkout.checkout(checkoutProps);
@@ -99,9 +100,7 @@ export class LaneSwitcher {
   private async populatePropsAccordingToRemoteLane(remoteLaneId: LaneId): Promise<BitId[]> {
     this.laneIdToSwitchTo = remoteLaneId;
     this.logger.debug(`populatePropsAccordingToRemoteLane, remoteLaneId: ${remoteLaneId.toString()}`);
-    if (this.consumer.getCurrentLaneId().isEqual(remoteLaneId)) {
-      throw new BitError(`already checked out to "${remoteLaneId.toString()}"`);
-    }
+    this.throwForSwitchingToCurrentLane();
     const remoteLane = await this.Lanes.fetchLaneWithItsComponents(remoteLaneId);
     this.switchProps.laneName = remoteLaneId.name;
     this.switchProps.localTrackedLane = this.consumer.scope.lanes.getAliasByLaneId(remoteLaneId) || undefined;
@@ -112,19 +111,25 @@ export class LaneSwitcher {
   }
 
   private async populatePropsAccordingToDefaultLane() {
-    if (this.consumer.isOnMain()) {
-      throw new BitError(`already checked out to "${this.switchProps.laneName}"`);
-    }
     this.laneIdToSwitchTo = LaneId.from(DEFAULT_LANE, this.consumer.scope.name);
+    this.throwForSwitchingToCurrentLane();
   }
 
   private populatePropsAccordingToLocalLane(localLane: Lane): BitId[] {
-    if (this.consumer.getCurrentLaneId().name === this.switchProps.laneName) {
-      throw new BitError(`already checked out to "${this.switchProps.laneName}"`);
-    }
     this.laneIdToSwitchTo = localLane.toLaneId();
     this.laneToSwitchTo = localLane;
+    this.throwForSwitchingToCurrentLane();
     return localLane.components.map((c) => c.id.changeVersion(c.head.toString()));
+  }
+
+  private throwForSwitchingToCurrentLane() {
+    if (this.consumer.getCurrentLaneId().isEqual(this.laneIdToSwitchTo)) {
+      const laneIdStr = this.laneIdToSwitchTo.isDefault()
+        ? this.laneIdToSwitchTo.name
+        : this.laneIdToSwitchTo.toString();
+      throw new BitError(`already checked out to "${laneIdStr}".
+to be up to date with the remote lane, please run "bit checkout head""`);
+    }
   }
 
   private async saveLanesData() {

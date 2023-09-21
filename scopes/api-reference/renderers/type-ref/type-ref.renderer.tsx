@@ -1,5 +1,5 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { copySchemaNode } from '@teambit/api-reference.utils.copy-schema-node';
@@ -64,9 +64,10 @@ function TypeRefComponent(props: APINodeRenderProps) {
 
       if (typeArgRenderer) {
         return (
-          <React.Fragment key={`type-arg-container-${typeArg.__schema}-${typeArg.toString()}-${index}`}>
+          <React.Fragment key={`type-arg-renderer-container-${typeArg.__schema}-${typeArg.toString()}-${index}`}>
             <typeArgRenderer.Component
               {...props}
+              className={styles.typeArgNode}
               key={`type-arg-${typeArg.__schema}-${typeArg.toString()}-${index}`}
               apiNode={{ ...props.apiNode, api: typeArg, renderer: typeArgRenderer }}
               depth={(props.depth ?? 0) + 1}
@@ -78,7 +79,7 @@ function TypeRefComponent(props: APINodeRenderProps) {
       }
 
       return (
-        <React.Fragment key={typeArg.toString()}>
+        <React.Fragment key={`type-arg-container-${typeArg.__schema}-${typeArg.toString()}-${index}`}>
           {typeArg.toString()}
           {(typeArgs?.length ?? 0) > 1 && index !== (typeArgs?.length ?? 0) - 1 ? ', ' : null}
         </React.Fragment>
@@ -93,8 +94,11 @@ function TypeRefComponent(props: APINodeRenderProps) {
           name={typeRefNode.name}
           external={!!exportedTypeUrlFromAnotherComp}
           url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp}
+          exported={typeRefNode.isExported()}
+          internal={typeRefNode.isInternalReference()}
+          packageName={typeRefNode.packageName}
         >
-          <div key={`typeArgsContainer-${typeRefNode.name}`} className={classnames(styles.node)}>
+          <div key={`typeArgsContainer-${typeRefNode.name}`} className={styles.typeArgs}>
             {'<'}
             {args.map((arg) => arg)}
             {'>'}
@@ -110,31 +114,70 @@ function TypeRefComponent(props: APINodeRenderProps) {
       name={typeRefNode.name}
       external={!!exportedTypeUrlFromAnotherComp}
       url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp}
+      exported={typeRefNode.isExported()}
+      internal={typeRefNode.isInternalReference()}
+      packageName={typeRefNode.packageName}
     />
   );
 }
+
+const LinkContext = React.createContext(false);
 
 function TypeRefName({
   name,
   url,
   external,
   children,
+  internal,
+  exported,
+  packageName,
 }: {
   name: string;
   url?: string;
   external?: boolean;
   children?: React.ReactChild;
+  internal?: boolean;
+  exported?: boolean;
+  packageName?: string;
 }) {
-  if (url) {
+  const className = classnames(nodeStyles.node, {
+    [styles.internalType]: internal,
+    [styles.exportedType]: exported,
+    [styles.package]: !!packageName,
+  });
+
+  // Check if current component is nested within a Link.
+  const withinLink = React.useContext(LinkContext);
+
+  if (url && !withinLink) {
     return (
-      <Link href={url} external={external} className={classnames(styles.node, styles.nodeLink)}>
-        {name}
-        {children}
-      </Link>
+      <LinkContext.Provider value={true}>
+        <Link
+          style={
+            {
+              '--tooltip-text': packageName ? `"${packageName}"` : '',
+            } as React.CSSProperties
+          }
+          href={url}
+          external={external}
+          className={classnames(className, styles.nodeLink)}
+        >
+          {name}
+          {children}
+        </Link>
+      </LinkContext.Provider>
     );
   }
+
   return (
-    <div className={classnames(styles.node)}>
+    <div
+      style={
+        {
+          '--tooltip-text': packageName ? `"${packageName}"` : '',
+        } as React.CSSProperties
+      }
+      className={className}
+    >
       {name}
       {children}
     </div>
@@ -148,7 +191,7 @@ function getExportedTypeUrlFromAnotherComp({
   componentId: ComponentID;
   selectedAPI: string;
 }) {
-  const componentUrl = ComponentUrl.toUrl(componentId);
+  const componentUrl = ComponentUrl.toUrl(componentId, { useLocationOrigin: true });
   const [componentIdUrl, versionQuery] = componentUrl.split('?');
 
   const exportedTypeUrl = `${componentIdUrl}/~api-reference?selectedAPI=${encodeURIComponent(

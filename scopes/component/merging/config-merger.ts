@@ -80,7 +80,7 @@ export class ConfigMerger {
     private otherLabel: string,
     private logger: Logger
   ) {
-    this.otherLaneIdsStr = otherLane?.components.map((c) => c.id.toStringWithoutVersion()) || [];
+    this.otherLaneIdsStr = otherLane?.toBitIds().map((id) => id.toString()) || [];
   }
 
   merge(): ConfigMergeResult {
@@ -190,7 +190,7 @@ export class ConfigMerger {
     if (this.currentEnv.id === this.otherEnv.id && this.currentEnv.version === this.otherEnv.version) {
       return null;
     }
-    if (this.isIdInWorkspace(this.currentEnv.id)) {
+    if (this.isIdInWorkspaceOrOtherLane(this.currentEnv.id, this.otherEnv.version)) {
       // the env currently used is part of the workspace, that's what the user needs. don't try to resolve anything.
       return null;
     }
@@ -320,7 +320,7 @@ export class ConfigMerger {
     const handleConfigMerge = () => {
       const addVariantPolicyEntryToPolicy = (dep: VariantPolicyEntry) => {
         const compIdStr = getCompIdStrByPkgNameFromData(dep.dependencyId);
-        if (compIdStr && this.isIdInWorkspace(compIdStr)) {
+        if (compIdStr && this.isIdInWorkspaceOrOtherLane(compIdStr, dep.value.version)) {
           // no need to add if the id exists in the workspace (regardless the version)
           return;
         }
@@ -399,7 +399,7 @@ export class ConfigMerger {
           return;
         }
         const compIdStr = getCompIdStrByPkgNameFromData(dep.dependencyId);
-        if (compIdStr && this.isIdInWorkspace(compIdStr)) {
+        if (compIdStr && this.isIdInWorkspaceOrOtherLane(compIdStr, otherVer)) {
           // no need to add if the id exists in the workspace (regardless the version)
           return;
         }
@@ -426,7 +426,7 @@ export class ConfigMerger {
 
     const addSerializedDepToPolicy = (dep: SerializedDependencyWithPolicy) => {
       const depType = lifecycleToDepType[dep.lifecycle];
-      if (dep.__type === 'component' && this.isIdInWorkspace(dep.id)) {
+      if (dep.__type === 'component' && this.isIdInWorkspaceOrOtherLane(dep.id, dep.version)) {
         return;
       }
       if (hasConfigForDep(depType, dep.id)) {
@@ -497,7 +497,7 @@ export class ConfigMerger {
         return;
       }
       const currentId = currentDep.id;
-      if (currentDep.__type === 'component' && this.isIdInWorkspace(currentId)) {
+      if (currentDep.__type === 'component' && this.isIdInWorkspaceOrOtherLane(currentId, otherDep.version)) {
         // dependencies that exist in the workspace, should be ignored. they'll be resolved later to the version in the ws.
         return;
       }
@@ -531,8 +531,8 @@ export class ConfigMerger {
     return { id: params.id, mergedConfig: config, conflict };
   }
 
-  private isIdInWorkspace(id: string): boolean {
-    return Boolean(this.getIdFromWorkspace(id)) || this.otherLaneIdsStr.includes(id);
+  private isIdInWorkspaceOrOtherLane(id: string, versionOnOtherLane?: string): boolean {
+    return Boolean(this.getIdFromWorkspace(id)) || this.otherLaneIdsStr.includes(`${id}@${versionOnOtherLane}`);
   }
 
   private getIdFromWorkspace(id: string): ComponentID | undefined {

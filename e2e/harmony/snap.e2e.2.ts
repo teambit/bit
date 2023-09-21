@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { HASH_SIZE, AUTO_SNAPPED_MSG } from '../../src/constants';
+import { HASH_SIZE, AUTO_SNAPPED_MSG, FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
 import ComponentsPendingMerge from '../../src/consumer/component-ops/exceptions/components-pending-merge';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -266,7 +266,7 @@ describe('bit snap command', function () {
             mergeOutput = helper.command.merge('bar/foo --auto-merge-resolve ours');
           });
           it('should succeed and indicate that the files were not changed', () => {
-            expect(mergeOutput).to.have.string('unchanged');
+            expect(mergeOutput).to.not.have.string(FILE_CHANGES_CHECKOUT_MSG);
           });
           it('should indicate that a component was snapped', () => {
             expect(mergeOutput).to.have.string('merge-snapped components');
@@ -298,7 +298,7 @@ describe('bit snap command', function () {
             mergeOutput = helper.command.merge('bar/foo --auto-merge-resolve ours --no-snap');
           });
           it('should succeed and indicate that the files were not changed', () => {
-            expect(mergeOutput).to.have.string('unchanged');
+            expect(mergeOutput).to.not.have.string(FILE_CHANGES_CHECKOUT_MSG);
           });
           it('should not show a message about merge-snapped components', () => {
             expect(mergeOutput).to.not.have.string('merge-snapped components');
@@ -412,8 +412,9 @@ describe('bit snap command', function () {
           expect(status.mergePendingComponents).to.have.lengthOf(0);
         });
         it('should block checking out the component', () => {
-          const output = helper.command.checkoutVersion(firstSnap, 'bar/foo', '--auto-merge-resolve manual');
-          expect(output).to.have.string('is in during-merge state');
+          expect(() => helper.command.checkoutVersion(firstSnap, 'bar/foo', '--auto-merge-resolve manual')).to.throw(
+            'is in during-merge state'
+          );
         });
         describe('tagging or snapping the component', () => {
           beforeEach(() => {
@@ -743,8 +744,11 @@ describe('bit snap command', function () {
       helper.command.softRemoveComponent('comp1');
       output = helper.command.snapAllComponentsWithoutBuild('--unmodified');
     });
-    it('should indicate that the component was snapped successfully', () => {
-      expect(output).to.have.string('changed components');
+    it('should indicate that the component was removed successfully', () => {
+      expect(output).to.have.string('removed components');
+    });
+    it('should not show the component as changed (because the new snap isnt relevant for a deleted component', () => {
+      expect(output).to.not.have.string('changed components');
     });
   });
 });

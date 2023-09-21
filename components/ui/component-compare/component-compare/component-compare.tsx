@@ -1,7 +1,14 @@
 import React, { useContext, useMemo, HTMLAttributes } from 'react';
 import classnames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { CollapsibleMenuNav, ComponentContext, ComponentID, NavPlugin, useComponent } from '@teambit/component';
+import {
+  CollapsibleMenuNav,
+  ComponentContext,
+  ComponentDescriptorContext,
+  ComponentID,
+  NavPlugin,
+  useComponent,
+} from '@teambit/component';
 import { ComponentCompareContext } from '@teambit/component.ui.component-compare.context';
 import { useComponentCompareQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare';
 import {
@@ -52,10 +59,15 @@ export function ComponentCompare(props: ComponentCompareProps) {
     baseContext,
     compareContext,
     isFullScreen,
+    hidden = false,
+    compareIdOverride,
+    baseIdOverride,
     ...rest
   } = props;
+
   const baseVersion = useCompareQueryParam('baseVersion');
   const component = useContext(ComponentContext);
+  const componentDescriptor = useContext(ComponentDescriptorContext);
   const location = useLocation();
   const isWorkspace = host === 'teambit.workspace/workspace';
 
@@ -63,8 +75,8 @@ export function ComponentCompare(props: ComponentCompareProps) {
     component: compareComponent,
     loading: loadingCompare,
     componentDescriptor: compareComponentDescriptor,
-  } = useComponent(host, _compareId?.toString() || '', {
-    skip: !_compareId,
+  } = useComponent(host, compareIdOverride?.toString() || _compareId?.toString(), {
+    skip: hidden || (!_compareId && !compareIdOverride),
     customUseComponent,
     logFilters: {
       log: {
@@ -79,7 +91,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   );
   const isNew = useMemo(() => allVersionInfo.length === 0, [allVersionInfo]);
   const compareVersion =
-    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.id.version;
+    isWorkspace && !isNew && !location?.search.includes('version') && !_compareId ? 'workspace' : component.id.version;
   const compareIsLocalChanges = compareVersion === 'workspace';
 
   const lastVersionInfo = useMemo(() => {
@@ -101,9 +113,9 @@ export function ComponentCompare(props: ComponentCompareProps) {
     component: base,
     loading: loadingBase,
     componentDescriptor: baseComponentDescriptor,
-  } = useComponent(host, baseId?.toString(), {
+  } = useComponent(host, baseIdOverride?.toString() || baseId?.toString(), {
     customUseComponent,
-    skip: !baseId,
+    skip: hidden || (!baseId && !baseIdOverride),
     logFilters: {
       log: {
         limit: 3,
@@ -122,7 +134,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   }, [compare?.id.toString()]);
 
   const skipComponentCompareQuery =
-    compareIsLocalChanges || base?.id.version?.toString() === compare?.id.version?.toString();
+    hidden || compareIsLocalChanges || base?.id.version?.toString() === compare?.id.version?.toString();
 
   const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
     base?.id.toString(),
@@ -165,7 +177,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   const componentCompareModel = {
     compare: compare && {
       model: compare,
-      descriptor: compareComponentDescriptor,
+      descriptor: compareComponentDescriptor || componentDescriptor,
       hasLocalChanges: compareIsLocalChanges,
     },
     base: base && {
@@ -182,6 +194,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
     fileCompareDataByName,
     testCompareDataByName,
     isFullScreen,
+    hidden,
   };
 
   const changes =
@@ -191,15 +204,47 @@ export function ComponentCompare(props: ComponentCompareProps) {
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
       <div className={classnames(styles.componentCompareContainer, className)} {...rest}>
-        {loading && <Loader className={classnames(styles.loader)} />}
-        {!loading && <RenderCompareScreen key={compCompareId} {...props} changes={changes} />}
+        <RenderCompareScreen
+          key={compCompareId}
+          {...props}
+          componentId={
+            compare?.id?.toStringWithoutVersion() ||
+            baseId.toStringWithoutVersion() ||
+            component?.id?.toStringWithoutVersion()
+          }
+          baseVersion={baseId.version}
+          compareVersion={_compareId?.version || component.id.version}
+          compareHasLocalChanges={compareIsLocalChanges}
+          changes={changes}
+          loading={loading}
+          Loader={Loader}
+        />
       </div>
     </ComponentCompareContext.Provider>
   );
 }
 
-function RenderCompareScreen(props: ComponentCompareProps) {
-  const { routes, state } = props;
+function RenderCompareScreen(
+  props: ComponentCompareProps & {
+    baseVersion?: string;
+    compareVersion?: string;
+    compareHasLocalChanges?: boolean;
+    componentId: string;
+    loading?: boolean;
+  }
+) {
+  const {
+    routes,
+    state,
+    loading,
+    Loader = CompareLoader,
+    baseVersion,
+    compareVersion,
+    compareHasLocalChanges,
+    componentId,
+    hidden,
+  } = props;
+
   const showVersionPicker = state?.versionPicker?.element !== null;
 
   return (
@@ -207,17 +252,27 @@ function RenderCompareScreen(props: ComponentCompareProps) {
       {showVersionPicker && (
         <div className={styles.top}>
           {state?.versionPicker?.element || (
-            <ComponentCompareVersionPicker host={props.host} customUseComponent={props.customUseComponent} />
+            <ComponentCompareVersionPicker
+              componentId={componentId}
+              baseVersion={baseVersion}
+              compareVersion={compareVersion}
+              compareHasLocalChanges={compareHasLocalChanges}
+              host={props.host}
+              customUseComponent={props.customUseComponent}
+            />
           )}
         </div>
       )}
-      <div className={styles.bottom}>
-        <CompareMenuNav {...props} />
-        {(extractLazyLoadedData(routes) || []).length > 0 && (
-          <SlotRouter routes={extractLazyLoadedData(routes) || []} />
-        )}
-        {state?.tabs?.element}
-      </div>
+      {loading && !hidden && <Loader className={classnames(styles.loader)} />}
+      {!loading && (
+        <div className={classnames(styles.bottom, hidden && styles.hidden)}>
+          <CompareMenuNav {...props} />
+          {(extractLazyLoadedData(routes) || []).length > 0 && (
+            <SlotRouter routes={extractLazyLoadedData(routes) || []} />
+          )}
+          {state?.tabs?.element}
+        </div>
+      )}
     </>
   );
 }

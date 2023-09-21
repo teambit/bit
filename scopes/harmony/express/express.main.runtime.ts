@@ -94,11 +94,13 @@ export class ExpressMain {
     });
     if (!options?.disableBodyParser) this.bodyParser(app);
 
-    this.middlewareSlot
-      .toArray()
-      .flatMap(([, middlewares]) =>
-        middlewares.flatMap((middlewareManifest) => app.use(middlewareManifest.middleware))
-      );
+    const middlewaresSlot = this.middlewareSlot.values().flat();
+    middlewaresSlot.forEach(({ route, middleware }) => {
+      if (!route) app.use(middleware);
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      if (route) app.use(route, middleware);
+    });
+
     sortedRoutes.forEach((routeInfo) => {
       const { method, path, middlewares, disableNamespace } = routeInfo;
       // TODO: @guy make sure to support single middleware here.

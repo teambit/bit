@@ -121,7 +121,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     }, 0);
 
     if (testCount === 0 && !options.ui) {
-      this.logger.consoleWarning(`no tests found for environment ${chalk.cyan(context.id)}\n`);
+      this.logger.consoleWarning(`no tests found for components using environment ${chalk.cyan(context.id)}\n`);
       return new Tests([]);
     }
 

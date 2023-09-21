@@ -39,7 +39,7 @@ export function UseLaneMenu({
       </div>
       <LaneImportContent host={host} currentLaneId={viewedLaneId} switchedOutToCurrentLane={switchedOutToCurrentLane} />
       <div className={styles.moreInfo}>
-        <Link external href={'https://bit.dev/docs/lanes/lanes-overview'} className={linkStyles}>
+        <Link external href={'https://bit.dev/reference/lanes/lanes-overview'} className={linkStyles}>
           <Icon of="information-sign" />
           <div className={styles.drawerTitle}>Learn more about Lanes</div>
         </Link>

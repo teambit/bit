@@ -52,7 +52,7 @@ export class CliCmd implements Command {
   group = 'general';
   options = [] as CommandOptions;
 
-  constructor(private cliMain: CLIMain, private docsDomain: string) {}
+  constructor(private cliMain: CLIMain) {}
 
   async report(): Promise<string> {
     legacyLogger.isDaemon = true;
@@ -63,7 +63,7 @@ export class CliCmd implements Command {
       completer: (line, cb) => completer(line, cb, this.cliMain),
     });
 
-    const cliParser = new CLIParser(this.cliMain.commands, this.cliMain.groups, this.docsDomain);
+    const cliParser = new CLIParser(this.cliMain.commands, this.cliMain.groups);
 
     rl.prompt();
 

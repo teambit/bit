@@ -53,14 +53,14 @@ export class SignMain {
    */
   async sign(
     ids: ComponentID[],
-    isMultiple?: boolean,
+    originalScope?: boolean,
     push?: boolean,
     laneIdStr?: string,
     rebuild?: boolean
   ): Promise<SignResult | null> {
     this.throwIfOnWorkspace();
     let lane: Lane | undefined;
-    if (isMultiple) {
+    if (!originalScope) {
       const longProcessLogger = this.logger.createLongProcessLogger('import objects');
       if (laneIdStr) {
         const laneId = LaneId.parse(laneIdStr);
@@ -70,7 +70,7 @@ export class SignMain {
         this.scope.legacyScope.setCurrentLaneId(laneId);
         this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
       }
-      await this.scope.import(ids, { lane, preferDependencyGraph: true });
+      await this.scope.import(ids, { lane, reason: 'which are the seeders for the sign process' });
       longProcessLogger.end('success');
     }
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids, rebuild);
@@ -101,11 +101,11 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     if (push) {
-      if (isMultiple) {
-        await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus, lane);
-      } else {
+      if (originalScope) {
         await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
         await this.clearScopesCaches(legacyComponents);
+      } else {
+        await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus, lane);
       }
     }
     await this.triggerOnPostSign(components);

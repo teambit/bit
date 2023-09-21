@@ -62,6 +62,9 @@ export default class FsHelper {
   expectDirToExist(filePathRelativeToLocalScope: string): void {
     expect(path.join(this.scopes.localPath, filePathRelativeToLocalScope)).to.be.a.directory();
   }
+  expectFileToExist(filePathRelativeToLocalScope: string): void {
+    expect(path.join(this.scopes.localPath, filePathRelativeToLocalScope)).to.be.a.file();
+  }
   expectPathNotToExist(filePathRelativeToLocalScope: string): void {
     expect(path.join(this.scopes.localPath, filePathRelativeToLocalScope)).to.not.be.a.path();
   }

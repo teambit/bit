@@ -8,7 +8,7 @@ import { docsFile } from './files/docs';
 export const MDXComponent: ComponentTemplate = {
   name: 'mdx',
   description: 'MDX-file compiled by Bit to a reuseable component',
-
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     const { name, namePascalCase: Name } = context;
     const indexFile = {

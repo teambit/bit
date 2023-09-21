@@ -213,7 +213,7 @@ export function CompositionContent({
       <EmptyBox
         title="There are no compositions for this component."
         linkText="Learn how to create compositions"
-        link={`https://bit.dev/docs/dev-services-overview/compositions/compositions-overview`}
+        link={`https://bit.dev/reference/dev-services-overview/compositions/compositions-overview`}
       />
     );
   }

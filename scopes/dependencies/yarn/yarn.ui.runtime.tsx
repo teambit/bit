@@ -37,7 +37,7 @@ export class YarnUI {
       ),
       Component: !options?.hide ? (
         <Install
-          config={`npm config set '${registry}:registry' https://node.bit.cloud`}
+          config={`npm config set '${registry}:registry' https://node-registry.bit.cloud`}
           componentName={componentId.name}
           packageManager="yarn"
           copyString={`yarn add ${packageName}${packageVersion}`}

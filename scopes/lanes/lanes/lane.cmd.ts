@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import yn from 'yn';
 import { ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
-import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { BitError } from '@teambit/bit-error';
@@ -254,18 +254,24 @@ it is useful e.g. when having multiple lanes with the same name, but with differ
 }
 
 export class LaneChangeScopeCmd implements Command {
-  name = 'change-scope <lane-name> <remote-scope-name>';
+  name = 'change-scope <remote-scope-name>';
   description = `changes the remote scope of a lane`;
   extendedDescription = 'NOTE: available only before the lane is exported to the remote';
   alias = '';
-  options = [] as CommandOptions;
+  options = [
+    [
+      'l',
+      'lane-name <lane-name>',
+      'the name of the lane to change its remote scope. if not specified, the current lane is used',
+    ],
+  ] as CommandOptions;
   loader = true;
   migration = true;
 
   constructor(private lanes: LanesMain) {}
 
-  async report([localName, remoteScope]: [string, string]): Promise<string> {
-    const { remoteScopeBefore } = await this.lanes.changeScope(localName, remoteScope);
+  async report([remoteScope]: [string], { laneName }: { laneName?: string }): Promise<string> {
+    const { remoteScopeBefore, localName } = await this.lanes.changeScope(remoteScope, laneName);
     return `the remote-scope of ${chalk.bold(localName)} has been changed from ${chalk.bold(
       remoteScopeBefore
     )} to ${chalk.bold(remoteScope)}`;
@@ -273,16 +279,18 @@ export class LaneChangeScopeCmd implements Command {
 }
 
 export class LaneRenameCmd implements Command {
-  name = 'rename <current-name> <new-name>';
+  name = 'rename <new-name>';
   description = `EXPERIMENTAL. change the lane-name locally and on the remote (if exported)`;
   alias = '';
-  options = [] as CommandOptions;
+  options = [
+    ['l', 'lane-name <lane-name>', 'the name of the lane to rename. if not specified, the current lane is used'],
+  ] as CommandOptions;
   loader = true;
   migration = true;
   constructor(private lanes: LanesMain) {}
 
-  async report([currentName, newName]: [string, string]): Promise<string> {
-    const { exported, exportErr } = await this.lanes.rename(currentName, newName);
+  async report([newName]: [string], { laneName }: { laneName?: string }): Promise<string> {
+    const { exported, exportErr, currentName } = await this.lanes.rename(newName, laneName);
     const exportedStr = exported
       ? `and have been exported successfully to the remote`
       : `however failed exporting the renamed lane to the remote, due to an error: ${exportErr?.message || 'unknown'}`;
@@ -344,12 +352,7 @@ export class LaneRemoveCompCmd implements Command {
       description: COMPONENT_PATTERN_HELP,
     },
   ];
-  description = `remove components when on a lane`;
-  extendedDescription = `in case the components are part of the lane and the lane is exported, it marks the components as
-removed from the lane, and then after snap+export, the remote-lane gets updated as well.
-upon lane-merge, these removed components are skipped and any changes for removed components won't be merged to main.
-
-in case the components are not yet part of the lane or the lane is new, it simply removes the components from the workspace`;
+  description = `DEPRECATED. remove components when on a lane`;
   group = 'collaborate';
   alias = 'rc';
   options = [
@@ -369,27 +372,8 @@ in case the components are not yet part of the lane or the lane is new, it simpl
 
   constructor(private workspace: Workspace, private lanes: LanesMain) {}
 
-  async report([componentsPattern]: [string], removeCompsOpts: RemoveCompsOpts): Promise<string> {
-    if (!this.workspace) throw new OutsideWorkspaceError();
-    if (this.workspace.isOnMain()) {
-      throw new Error(`error: you're checked out to main, please use "bit remove" instead`);
-    }
-    const { removedFromWs, markedRemoved } = await this.lanes.removeComps(componentsPattern, removeCompsOpts);
-    const getMarkedRemovedStr = () => {
-      if (!markedRemoved.length) return '';
-      return `${chalk.green('successfully marked the following components as removed:')}
-${markedRemoved.join('\n')}
-
-${chalk.bold('to update the remote, please snap and then export. to revert, please use "bit recover"')}
-`;
-    };
-    const getRemovedFromWsStr = () => {
-      if (!removedFromWs.length) return '';
-      return `\n${chalk.green('successfully removed the following components from the workspace:')}
-(either: these components were not part of the lane, so there was no need to mark them as removed or --workspace-only was used)
-${removedFromWs.join('\n')}`;
-    };
-    return getMarkedRemovedStr() + getRemovedFromWsStr();
+  async report(): Promise<string> {
+    throw new BitError(`bit lane remove-comp has been removed. please use "bit remove" or "bit delete" instead`);
   }
 }
 
@@ -435,7 +419,7 @@ export class LaneCmd implements Command {
   group = 'collaborate';
   remoteOp = true;
   skipWorkspace = true;
-  helpUrl = 'docs/components/lanes';
+  helpUrl = 'reference/components/lanes';
   commands: Command[] = [];
 
   constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain) {}

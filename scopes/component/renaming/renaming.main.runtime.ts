@@ -83,7 +83,7 @@ make sure this argument is the name only, without the scope-name. to change the 
 
     // only write if it is not tagged, since we writeAndAddNewComp for tagged components
     if (!isTagged && !options.preserve) {
-      await this.refactoring.refactorVariableAndClasses(targetComp, sourceId, targetId);
+      await this.refactoring.refactorVariableAndClasses(targetComp, sourceId, targetId, options);
       this.refactoring.refactorFilenames(targetComp, sourceId, targetId);
       await this.componentWriter.writeMany({
         components: [targetComp.state._consumer],
@@ -158,7 +158,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     await Promise.all(
       envs.map(async (env) => {
         const componentIds = compsUsingEnv[env.id.toString()];
-        if (!componentIds.length) return;
+        if (!componentIds?.length) return;
         await this.workspace.setEnvToComponents(env.id.changeScope(newScope), componentIds);
       })
     );
@@ -218,7 +218,11 @@ make sure this argument is the name only, without the scope-name. to change the 
    * keep in mind that this is working for new components only, for tagged/exported it's impossible. See the errors
    * thrown in such cases in this method.
    */
-  async renameOwner(oldOwner: string, newOwner: string, options: { refactor?: boolean }): Promise<RenameScopeResult> {
+  async renameOwner(
+    oldOwner: string,
+    newOwner: string,
+    options: { refactor?: boolean; ast?: boolean }
+  ): Promise<RenameScopeResult> {
     const allComponents = await this.workspace.list();
     const isScopeUsesOldOwner = (scope: string) => scope.startsWith(`${oldOwner}.`);
     const componentsUsingOldScope = allComponents.filter((comp) => isScopeUsesOldOwner(comp.id.scope));
@@ -268,10 +272,11 @@ make sure this argument is the name only, without the scope-name. to change the 
           }),
         };
       });
-      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace, [
-        importTransformer,
-        exportTransformer,
-      ]);
+      const { changedComponents } = await this.refactoring.replaceMultipleStrings(
+        allComponents,
+        packagesToReplace,
+        options.ast ? [importTransformer, exportTransformer] : undefined
+      );
       await this.renameOwnerOfAspectIdsInWorkspaceConfig(
         componentsUsingOldScope.map((c) => c.id),
         oldOwner,

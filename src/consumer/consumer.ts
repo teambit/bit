@@ -60,6 +60,8 @@ type ConsumerProps = {
   existingGitHooks: string[] | undefined;
 };
 
+const BITMAP_HISTORY_DIR_NAME = 'bitmap-history';
+
 /**
  * @todo: change the class name to Workspace
  */
@@ -304,7 +306,10 @@ export default class Consumer {
       if (throwIfNotExist) return this.scope.getModelComponent(id);
       const modelComponent = await this.scope.getModelComponentIfExist(id);
       if (modelComponent) return modelComponent;
-      await scopeComponentsImporter.importMany({ ids: new BitIds(id), preferDependencyGraph: true });
+      await scopeComponentsImporter.importMany({
+        ids: new BitIds(id),
+        reason: `because this component (${id.toString()}) was missing from the local scope`,
+      });
       return this.scope.getModelComponent(id);
     };
     const modelComponent = await getModelComponent();
@@ -696,10 +701,14 @@ export default class Consumer {
     await this.bitMap.write();
   }
 
+  getBitmapHistoryDir() {
+    return path.join(this.scope.path, BITMAP_HISTORY_DIR_NAME);
+  }
+
   private async backupBitMap() {
     if (!this.bitMap.hasChanged) return;
     try {
-      const baseDir = path.join(this.scope.path, 'bitmap-history');
+      const baseDir = this.getBitmapHistoryDir();
       await fs.ensureDir(baseDir);
       const backupPath = path.join(baseDir, `.bitmap-${this.currentDateAndTimeToFileName()}`);
       await fs.copyFile(this.bitMap.mapPath, backupPath);

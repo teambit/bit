@@ -734,7 +734,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
    */
   private async importAndGetAspects(componentIds: ComponentID[]): Promise<Component[]> {
     try {
-      return await this.workspace.importAndGetMany(componentIds);
+      return await this.workspace.importAndGetMany(componentIds, 'to load aspects from the workspace');
     } catch (err: any) {
       if (err instanceof ComponentNotFound) {
         const config = this.harmony.get<ConfigMain>('teambit.harmony/config');

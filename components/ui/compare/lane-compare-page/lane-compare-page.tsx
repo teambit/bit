@@ -18,11 +18,15 @@ export function LaneComparePage({
   useLanes = defaultUseLanes,
   ...rest
 }: LaneComparePageProps) {
-  const { lanesModel, loading, fetchMoreLanes, hasMore, offset, limit } = useLanes();
+  const { lanesModel, loading, fetchMoreLanes, hasMore, offset, limit } = useLanes(undefined, undefined, {
+    offset: 0,
+    limit: 10,
+  });
   const [base, setBase] = useState<LaneModel | undefined>();
   const defaultLane = lanesModel?.getDefaultLane();
   const compare = lanesModel?.viewedLane;
   const nonMainLanes = lanesModel?.getNonMainLanes() || [];
+
   useEffect(() => {
     if (!base && !compare?.id.isDefault() && defaultLane) {
       setBase(defaultLane);
@@ -36,7 +40,7 @@ export function LaneComparePage({
 
   const lanes: Array<LaneModel> = useMemo(() => {
     return nonMainLanes.filter((l) => l.toString() !== compare?.id.toString());
-  }, [base?.id.toString(), compare?.id.toString(), lanesModel?.lanes.length]);
+  }, [base?.id.toString(), compare?.id.toString(), nonMainLanes.length]);
 
   if (!lanesModel) return null;
   if (!lanesModel.viewedLane) return null;

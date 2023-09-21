@@ -32,20 +32,21 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   const query = useQuery();
   const location = useLocation() || { pathname: '/' };
 
-  const { base, compare, state: compareState, hooks: compareHooks } = componentCompareContext || {};
+  const { base, compare, state: compareState, hooks: compareHooks, hidden } = componentCompareContext || {};
+
   const state = compareState?.code;
   const hook = compareHooks?.code;
 
   const [isSidebarOpen, setSidebarOpenness] = useState(false);
 
-  const { fileTree: baseFileTree = [], mainFile } = useCode(base?.model.id);
-  const { fileTree: compareFileTree = [] } = useCode(compare?.model.id);
-  const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
+  const { fileTree: baseFileTree = [], mainFile } = useCode(hidden ? undefined : base?.model.id);
+  const { fileTree: compareFileTree = [] } = useCode(hidden ? undefined : compare?.model.id);
 
+  const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
   const anyFileHasDiffStatus = useRef<boolean>(false);
 
   const fileTree = useMemo(() => {
-    const allFiles = uniq<string>(baseFileTree.concat(compareFileTree));
+    const allFiles = uniq(baseFileTree.concat(compareFileTree));
     anyFileHasDiffStatus.current = false;
     // sort by diff status
     return !fileCompareDataByName
@@ -64,18 +65,15 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
           if (bStatus?.toLowerCase() === 'new') return 1;
           return 0;
         });
-  }, [
-    fileCompareDataByName,
-    baseFileTree.length,
-    compareFileTree.length,
-    base?.model.id.toString(),
-    compare?.model.id.toString(),
-  ]);
+  }, [fileCompareDataByName?.size, baseFileTree.length, compareFileTree.length, hidden]);
 
   const selectedFileFromParams = useCompareQueryParam('file');
 
-  const selectedFile =
-    state?.id || selectedFileFromParams || (anyFileHasDiffStatus.current ? fileTree[0] : mainFile || DEFAULT_FILE);
+  const selectedFile = React.useMemo(
+    () =>
+      state?.id || selectedFileFromParams || (anyFileHasDiffStatus.current ? fileTree[0] : mainFile || DEFAULT_FILE),
+    [state?.id, selectedFileFromParams, fileTree, mainFile]
+  );
 
   const controlledHref = useUpdatedUrlFromQuery({});
   const getHref = (node) => {
@@ -103,13 +101,19 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
       <SplitPane
         layout={sidebarOpenness}
         size={200}
-        className={classNames(styles.componentCompareCodeContainer, className)}
+        className={classNames(
+          styles.componentCompareCodeContainer,
+          className,
+          componentCompareContext?.hidden && styles.hidden
+        )}
       >
         <Pane className={classNames(styles.left, !isSidebarOpen && styles.collapsed)}>
-          <div className={styles.codeCompareTreeCollapse} onClick={() => setSidebarOpenness((value) => !value)}>
-            <img src={sidebarIconUrl} />
-          </div>
-          {isSidebarOpen && (
+          {
+            <div className={styles.codeCompareTreeCollapse} onClick={() => setSidebarOpenness((value) => !value)}>
+              <img src={sidebarIconUrl} />
+            </div>
+          }
+          {
             <CodeCompareTree
               className={styles.codeCompareTree}
               fileIconSlot={fileIconSlot}
@@ -119,18 +123,21 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
               widgets={[Widget]}
               getHref={getHref}
               onTreeNodeSelected={hook?.onClick}
+              open={isSidebarOpen}
             />
-          )}
+          }
         </Pane>
         <HoverSplitter className={styles.splitter}></HoverSplitter>
         <Pane className={classNames(styles.right, styles.dark, !isSidebarOpen && styles.collapsed)}>
-          <CodeView
-            widgets={[Widget]}
-            fileName={selectedFile}
-            files={fileTree}
-            getHref={getHref}
-            onTabClicked={hook?.onClick}
-          />
+          {
+            <CodeView
+              widgets={[Widget]}
+              fileName={selectedFile}
+              files={fileTree}
+              getHref={getHref}
+              onTabClicked={hook?.onClick}
+            />
+          }
         </Pane>
       </SplitPane>
     </ThemeSwitcher>

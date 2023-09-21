@@ -56,9 +56,11 @@ export class FlattenedDependenciesGetter {
     const scopeComponentsImporter = this.scope.scopeImporter;
     this.versionDependencies = await scopeComponentsImporter.importMany({
       ids: BitIds.fromArray(bitIds),
+      preferDependencyGraph: false,
       cache: true,
       throwForDependencyNotFound: true,
       lane: this.lane,
+      reason: 'for fetching all flattened dependencies',
     });
   }
 

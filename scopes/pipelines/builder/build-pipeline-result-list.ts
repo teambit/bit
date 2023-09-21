@@ -3,7 +3,7 @@ import { isEmpty, compact } from 'lodash';
 import type { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { Artifact, ArtifactList } from './artifact';
 import { TaskResults } from './build-pipe';
-import { Serializable, TaskMetadata } from './types';
+import { TaskMetadata } from './types';
 
 export type PipelineReport = {
   taskId: string; // task aspect-id
@@ -17,7 +17,7 @@ export type PipelineReport = {
 
 export type AspectData = {
   aspectId: string;
-  data: Serializable;
+  data: TaskMetadata;
 };
 
 /**
@@ -83,7 +83,7 @@ export class BuildPipelineResultList {
     return this.artifactListsMap.getValueByComponentId(componentId)?.toObject();
   }
 
-  private mergeDataIfPossible(currentData: Serializable, existingData: Serializable | undefined, taskId: string) {
+  private mergeDataIfPossible(currentData: TaskMetadata, existingData: TaskMetadata | undefined, taskId: string) {
     if (!existingData || isEmpty(existingData)) return currentData;
     // both exist
     if (typeof currentData !== 'object') {

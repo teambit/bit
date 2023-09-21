@@ -99,6 +99,10 @@ export function LaneSelector(props: LaneSelectorProps) {
   const [loadingState, setLoading] = useState<boolean>(loading ?? false);
 
   useEffect(() => {
+    if (hasMore !== hasMoreState) setHasMore(!!hasMore);
+  }, [hasMore]);
+
+  useEffect(() => {
     if (loading !== loadingState) setLoading(!!loading);
   }, [loading]);
 

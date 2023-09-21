@@ -2,9 +2,14 @@ import chalk from 'chalk';
 import { BitId } from '@teambit/legacy-bit-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
+import { GlobalConfigMain } from '@teambit/global-config';
 import { Command, CommandOptions } from '@teambit/cli';
-import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
-import { NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG, COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import {
+  NOTHING_TO_SNAP_MSG,
+  AUTO_SNAPPED_MSG,
+  COMPONENT_PATTERN_HELP,
+  CFG_FORCE_LOCAL_BUILD,
+} from '@teambit/legacy/dist/constants';
 import { Logger } from '@teambit/logger';
 import { SnappingMain, SnapResults } from './snapping.main.runtime';
 import { outputIdsIfExists } from './tag-cmd';
@@ -21,7 +26,7 @@ export class SnapCmd implements Command {
       description: `${COMPONENT_PATTERN_HELP}. By default, only new and modified components are snapped (add --unmodified to snap all components in the workspace).`,
     },
   ];
-  helpUrl = 'docs/components/snaps';
+  helpUrl = 'reference/components/snaps';
   alias = '';
   options = [
     ['m', 'message <message>', 'snap message describing the latest changes - will appear in component history log'],
@@ -68,7 +73,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   loader = true;
   migration = true;
 
-  constructor(private snapping: SnappingMain, private logger: Logger) {}
+  constructor(private snapping: SnappingMain, private logger: Logger, private globalConfig: GlobalConfigMain) {}
 
   async report(
     [pattern]: string[],
@@ -100,7 +105,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       failFast?: boolean;
     } & BasicTagSnapParams
   ) {
-    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
+    build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
     const disableTagAndSnapPipelines = disableSnapPipeline;
     if (all) {
       this.logger.consoleWarning(
@@ -141,9 +146,11 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
     const { snappedComponents, autoSnappedResults, warnings, newComponents, laneName, removedComponents }: SnapResults =
       results;
-    const changedComponents = snappedComponents.filter(
-      (component) => !newComponents.searchWithoutVersion(component.id)
-    );
+    const changedComponents = snappedComponents.filter((component) => {
+      return (
+        !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id)
+      );
+    });
     const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
     const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
 

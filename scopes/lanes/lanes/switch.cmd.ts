@@ -77,7 +77,7 @@ ${COMPONENT_PATTERN_HELP}`,
       const body = failedComponents
         .map((failedComponent) => {
           const color = failedComponent.unchangedLegitimately ? 'white' : 'red';
-          return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.failureMessage)}`;
+          return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.unchangedMessage)}`;
         })
         .join('\n');
       return `${title}\n${body}\n\n`;
@@ -85,17 +85,8 @@ ${COMPONENT_PATTERN_HELP}`,
     const getSuccessfulOutput = () => {
       const laneSwitched = chalk.green(`\nsuccessfully set "${chalk.bold(lane)}" as the active lane`);
       if (!components || !components.length) return `No components have been changed.${laneSwitched}`;
-      if (components.length === 1) {
-        const component = components[0];
-        const componentName = component.id.toStringWithoutVersion();
-        const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(
-          component.id.version as string
-        )}\n`;
-        return `${title} ${applyVersionReport(components, false)}${laneSwitched}`;
-      }
-      const title = `successfully switched the following components to the head of lane ${lane}\n\n`;
-      const componentsStr = applyVersionReport(components, true, false);
-      return title + componentsStr + laneSwitched;
+      const title = `successfully switched ${components.length} components to the head of lane ${lane}\n`;
+      return chalk.bold(title) + applyVersionReport(components, true, false) + laneSwitched;
     };
     const failedOutput = getFailureOutput();
     const successOutput = getSuccessfulOutput();

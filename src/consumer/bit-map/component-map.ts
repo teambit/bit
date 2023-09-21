@@ -400,6 +400,9 @@ export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore
     cwd: consumerPath,
     dot: true,
     onlyFiles: true,
+    // must ignore node_modules at this stage, although we check for gitignore later on.
+    // otherwise, it hurts performance dramatically for components that have node_modules in the comp-dir.
+    ignore: [`${dir}/node_modules/`],
   });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
   const filteredMatches: string[] = gitIgnore.filter(matches);

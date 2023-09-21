@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+import React, { useMemo, useState } from 'react';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { CompositionContent, CompositionContentProps, EmptyStateSlot } from '@teambit/compositions';
 import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
@@ -6,11 +6,12 @@ import {
   useCompareQueryParam,
   useUpdatedUrlFromQuery,
 } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
+import { uniqBy } from 'lodash';
 import { CompareSplitLayoutPreset } from '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import queryString from 'query-string';
-import React, { useMemo, useState } from 'react';
 import { CompositionDropdown } from './composition-dropdown';
+import { CompositionCompareContext } from './composition-compare.context';
 
 import styles from './composition-compare.module.scss';
 
@@ -20,11 +21,12 @@ export type CompositionCompareProps = {
     Right?: React.ReactNode;
     Left?: React.ReactNode;
   };
+  previewViewProps?: CompositionContentProps;
   PreviewView?: React.ComponentType<CompositionContentProps>;
 };
 
 export function CompositionCompare(props: CompositionCompareProps) {
-  const { emptyState, PreviewView = CompositionContent, Widgets } = props;
+  const { emptyState, PreviewView = CompositionContent, Widgets, previewViewProps = {} } = props;
 
   const componentCompareContext = useComponentCompare();
 
@@ -62,31 +64,24 @@ export function CompositionCompare(props: CompositionCompareProps) {
       })) ||
     (compareCompositions && compareCompositions[0]);
 
-  const baseCompositionDropdownSource =
-    baseCompositions?.map((c) => {
-      const href = !baseState?.controlled
-        ? useUpdatedUrlFromQuery({
-            compositionBaseFile: c.identifier,
-            compositionCompareFile: selectedCompareComp?.identifier,
-          })
-        : useUpdatedUrlFromQuery({});
-      const onClick = baseState?.controlled ? baseHooks?.onClick : undefined;
-
-      return { id: c.identifier, label: c.displayName, href, onClick };
-    }) || [];
-
-  const compareCompositionDropdownSource =
-    compareCompositions?.map((c) => {
+  const compositionsDropdownSource = uniqBy(baseCompositions?.concat(compareCompositions || []), 'identifier')?.map(
+    (c) => {
       const href = !compareState?.controlled
         ? useUpdatedUrlFromQuery({
             compositionBaseFile: selectedBaseComp?.identifier,
             compositionCompareFile: c.identifier,
           })
         : useUpdatedUrlFromQuery({});
-      const onClick = compareState?.controlled ? compareHooks?.onClick : undefined;
 
+      const onClick = compareState?.controlled
+        ? (_, __) => {
+            compareHooks?.onClick?.(_, __);
+            baseHooks?.onClick?.(_, __);
+          }
+        : undefined;
       return { id: c.identifier, label: c.displayName, href, onClick };
-    }) || [];
+    }
+  );
 
   const [baseCompositionParams, setBaseCompositionParams] = useState<Record<string, any>>({});
   const baseCompQueryParams = useMemo(() => queryString.stringify(baseCompositionParams), [baseCompositionParams]);
@@ -96,11 +91,6 @@ export function CompositionCompare(props: CompositionCompareProps) {
     () => queryString.stringify(compareCompositionParams),
     [compareCompositionParams]
   );
-
-  const selectedBaseDropdown = selectedBaseComp && {
-    id: selectedBaseComp.identifier,
-    label: selectedBaseComp.displayName,
-  };
 
   const selectedCompareDropdown = selectedCompareComp && {
     id: selectedCompareComp.identifier,
@@ -112,44 +102,69 @@ export function CompositionCompare(props: CompositionCompareProps) {
       return null;
     }
     const baseCompModel = base.model;
-
+    const compositionProps = {
+      forceHeight: undefined,
+      innerBottomPadding: 50,
+      ...previewViewProps,
+      emptyState,
+      component: baseCompModel,
+      queryParams: baseCompQueryParams,
+      selected: selectedCompareComp,
+    };
     return (
       <div className={styles.subView}>
-        <CompositionContextProvider queryParams={baseCompositionParams} setQueryParams={setBaseCompositionParams}>
-          <PreviewView
-            emptyState={emptyState}
-            component={baseCompModel}
-            selected={selectedBaseComp}
-            queryParams={baseCompQueryParams}
-            forceHeight={undefined}
-            innerBottomPadding={50}
-          />
-        </CompositionContextProvider>
+        <CompositionCompareContext.Provider value={{ compositionProps, isBase: true }}>
+          <CompositionContextProvider queryParams={baseCompositionParams} setQueryParams={setBaseCompositionParams}>
+            <PreviewView
+              forceHeight={undefined}
+              innerBottomPadding={50}
+              {...previewViewProps}
+              emptyState={emptyState}
+              component={baseCompModel}
+              selected={selectedCompareComp}
+              queryParams={baseCompQueryParams}
+            />
+          </CompositionContextProvider>
+        </CompositionCompareContext.Provider>
       </div>
     );
-  }, [base, selectedBaseComp]);
+  }, [base, selectedCompareComp?.identifier]);
 
   const CompareLayout = useMemo(() => {
     if (compare === undefined) {
       return null;
     }
     const compareCompModel = compare.model;
-
+    const compositionProps = {
+      forceHeight: undefined,
+      innerBottomPadding: 50,
+      ...previewViewProps,
+      emptyState,
+      component: compareCompModel,
+      queryParams: compareCompQueryParams,
+      selected: selectedCompareComp,
+    };
     return (
       <div className={styles.subView}>
-        <CompositionContextProvider queryParams={compareCompositionParams} setQueryParams={setCompareCompositionParams}>
-          <PreviewView
-            emptyState={emptyState}
-            component={compareCompModel}
-            selected={selectedCompareComp}
-            queryParams={compareCompQueryParams}
-            forceHeight={undefined}
-            innerBottomPadding={50}
-          />
-        </CompositionContextProvider>
+        <CompositionCompareContext.Provider value={{ compositionProps, isCompare: true }}>
+          <CompositionContextProvider
+            queryParams={compareCompositionParams}
+            setQueryParams={setCompareCompositionParams}
+          >
+            <PreviewView
+              forceHeight={undefined}
+              innerBottomPadding={50}
+              {...previewViewProps}
+              emptyState={emptyState}
+              component={compareCompModel}
+              queryParams={compareCompQueryParams}
+              selected={selectedCompareComp}
+            />
+          </CompositionContextProvider>
+        </CompositionCompareContext.Provider>
       </div>
     );
-  }, [compare, selectedCompareComp]);
+  }, [compare, selectedCompareComp?.identifier]);
 
   const CompositionToolbar = () => {
     if (!base && !compare) {
@@ -158,33 +173,25 @@ export function CompositionCompare(props: CompositionCompareProps) {
 
     return (
       <div className={styles.toolbar}>
-        {base && (
-          <div className={styles.left}>
-            <div className={styles.dropdown}>
-              {baseCompositionDropdownSource.length > 0 && (
-                <CompositionDropdown dropdownItems={baseCompositionDropdownSource} selected={selectedBaseDropdown} />
-              )}
-            </div>
-            <div className={styles.widgets}>{Widgets?.Left}</div>
-          </div>
-        )}
-        <div className={styles.right}>
+        <div className={styles.left}>
           <div className={styles.dropdown}>
-            {compareCompositionDropdownSource.length > 0 && (
-              <CompositionDropdown
-                dropdownItems={compareCompositionDropdownSource}
-                selected={selectedCompareDropdown}
-              />
+            {compositionsDropdownSource.length > 0 && (
+              <CompositionDropdown dropdownItems={compositionsDropdownSource} selected={selectedCompareDropdown} />
             )}
           </div>
+          <div className={styles.widgets}>{Widgets?.Left}</div>
+        </div>
+        <div className={styles.right}>
           <div className={styles.widgets}>{Widgets?.Right}</div>
         </div>
       </div>
     );
   };
 
+  const key = `${componentCompareContext?.base?.model.id.toString()}-${componentCompareContext?.compare?.model.id.toString()}-composition-compare`;
+
   return (
-    <>
+    <React.Fragment key={key}>
       {componentCompareContext?.loading && (
         <div className={styles.loader}>
           <RoundLoader />
@@ -192,6 +199,6 @@ export function CompositionCompare(props: CompositionCompareProps) {
       )}
       <CompositionToolbar />
       <CompareSplitLayoutPreset base={BaseLayout} compare={CompareLayout} />
-    </>
+    </React.Fragment>
   );
 }

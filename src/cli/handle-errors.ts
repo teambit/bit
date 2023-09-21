@@ -7,8 +7,7 @@ import loader from './loader';
 export async function handleErrorAndExit(err: Error, commandName: string, shouldSerialize = false): Promise<void> {
   try {
     loader.off();
-    logger.error(`got an error from command ${commandName}: ${err}`);
-    logger.error(err.stack || '<no error stack was found>');
+    logger.error(`got an error from command ${commandName}: ${err}`, err);
     const { message, error } = defaultHandleError(err);
     if (shouldSerialize) serializeErrAndExit(error, commandName);
     else await logErrAndExit(message, commandName);

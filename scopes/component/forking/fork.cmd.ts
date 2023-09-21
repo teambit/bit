@@ -13,12 +13,13 @@ export type ForkOptions = {
   noLink?: boolean;
   env?: string;
   config?: ComponentConfig;
+  ast?: boolean;
 };
 
 export class ForkCmd implements Command {
   name = 'fork <source-component-id> [target-component-name]';
   description = 'create a new component forked from an existing one (copies source files and configs)';
-  helpUrl = 'docs/getting-started/collaborate/importing-components/#fork-a-component';
+  helpUrl = 'docs/getting-started/collaborate/importing-components#fork-a-component';
   arguments = [
     { name: 'source-component-id', description: 'the component id of the source component' },
     {
@@ -48,6 +49,7 @@ export class ForkCmd implements Command {
     ],
     ['', 'preserve', 'avoid refactoring file and variable/class names according to the new component name'],
     ['', 'no-link', 'avoid saving a reference to the original component'],
+    ['', 'ast', 'EXPERIMENTAL. use ast to transform files instead of regex'],
   ] as CommandOptions;
 
   example: [

@@ -4,7 +4,7 @@
  * and the schemaObjToClass can match and instantiate the Schema Class correctly
  */
 export { ModuleSchema } from './module';
-export { FunctionLikeSchema, Modifier } from './function-like';
+export { FunctionLikeSchema } from './function-like';
 export { TypeRefSchema } from './type-ref';
 export { VariableLikeSchema } from './variable-like';
 export { ClassSchema } from './class';

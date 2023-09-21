@@ -2,6 +2,7 @@ import { CLIMain } from '@teambit/cli';
 import prettyTime from 'pretty-time';
 import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
+import { camelCase } from 'lodash';
 
 /**
  * example usage:
@@ -27,18 +28,35 @@ export class CLIRoute implements Route {
       try {
         const command = this.cli.getCommand(req.params.cmd);
         if (!command) throw new Error(`command "${req.params.cmd}" was not found`);
-        if (!command.json) throw new Error(`command "${req.params.cmd}" does not have a json method`);
         const body = req.body;
-        const { args, options } = body;
+        const { args, options, format } = body;
+        if (format && format !== 'json' && format !== 'report') throw new Error(`format "${format}" is not supported`);
+        const outputMethod: 'json' | 'report' = format || 'json';
+        if (!command[outputMethod])
+          throw new Error(`command "${req.params.cmd}" does not have a ${outputMethod} method`);
         const optsToString = Object.keys(options || {})
           .map((key) => `--${key}`)
           .join(' ');
-        this.logger.console(`started a new command: ${req.params.cmd} ${(args || []).join(' ')} ${optsToString}`);
+        this.logger.console(
+          `started a new ${outputMethod} command: ${req.params.cmd} ${(args || []).join(' ')} ${optsToString}`
+        );
+        const optionsAsCamelCase = Object.keys(options || {}).reduce((acc, key) => {
+          const camelCaseKey = camelCase(key);
+          acc[camelCaseKey] = options[key];
+          return acc;
+        }, {});
         const startTask = process.hrtime();
-        const result = await command?.json(args || [], options || {});
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const result = await command[outputMethod]!(args || [], optionsAsCamelCase);
         const duration = prettyTime(process.hrtime(startTask));
         this.logger.consoleSuccess(`command "${req.params.cmd}" had been completed in ${duration}`);
-        res.json(result);
+        if (outputMethod === 'json') {
+          res.json(result);
+        } else {
+          const data = typeof result === 'string' ? result : result.data;
+          const exitCode = typeof result === 'string' ? 0 : result.code;
+          res.json({ data, exitCode });
+        }
       } catch (err: any) {
         this.logger.error(`command "${req.params.cmd}" had failed`, err);
         this.logger.consoleFailure(`command "${req.params.cmd}" had failed. ${err.message}`);

@@ -20,7 +20,7 @@ import {
 import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { isDir, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
-import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import ComponentMap, {
   ComponentMapFile,
   Config,
@@ -849,6 +849,17 @@ export default class BitMap {
         });
       });
     }
+  }
+
+  updateComponentPaths(id: BitId, files: PathLinuxRelative[], removedFiles: PathLinuxRelative[]) {
+    removedFiles.forEach((removedFile) => {
+      delete this.paths[removedFile];
+      delete this.pathsLowerCase[removedFile.toLowerCase()];
+    });
+    files.forEach((file) => {
+      this.paths[file] = id;
+      this.pathsLowerCase[file.toLowerCase()] = id;
+    });
   }
 
   getAllTrackDirs() {

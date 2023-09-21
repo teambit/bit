@@ -19,7 +19,7 @@ export class ExportCmd implements Command {
     most scenarios so that all changes are exported simultaneously)
   ${WILDCARD_HELP('export')}`;
   alias = 'e';
-  helpUrl = 'docs/components/exporting-components';
+  helpUrl = 'reference/components/exporting-components';
   options = [
     ['e', 'eject', 'remove component from the workspace and install it instead as a regular npm package'],
     [

@@ -23,7 +23,7 @@ export const ComponentCardWithExternalLink = () => {
       <ComponentCard
         id="teambit/explorer/ui/gallery/component-card"
         preview={<div>external link example</div>}
-        href="https://bit.dev/teambit/explorer/ui/gallery/component-card"
+        href="https://bit.cloud/teambit/explorer/ui/gallery/component-card"
       />
     </div>
   );

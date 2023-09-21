@@ -23,6 +23,7 @@ import { removeComponents } from './remove-components';
 import { RemoveAspect } from './remove.aspect';
 import { RemoveFragment } from './remove.fragment';
 import { RecoverCmd, RecoverOptions } from './recover-cmd';
+import { DeleteCmd } from './delete-cmd';
 
 const BEFORE_REMOVE = 'removing components';
 
@@ -113,23 +114,26 @@ export class RemoveMain {
     return componentIds;
   }
 
-  async markRemoveOnMain(componentsPattern: string): Promise<ComponentID[]> {
+  async deleteComps(componentsPattern: string, opts: { updateMain?: boolean } = {}): Promise<ComponentID[]> {
     if (!this.workspace) throw new ConsumerNotFound();
-    if (!this.workspace.isOnMain()) {
-      throw new Error(`markRemoveOnMain expects to get called when on main`);
-    }
     const componentIds = await this.workspace.idsByPattern(componentsPattern);
-
     const newComps = componentIds.filter((id) => !id.hasVersion());
     if (newComps.length) {
       throw new BitError(
-        `unable to mark-remove the following new component(s), please remove them without --delete\n${newComps
+        `no need to delete the following new component(s), please remove them by "bit remove"\n${newComps
           .map((id) => id.toString())
           .join('\n')}`
       );
     }
+    const currentLane = await this.workspace.getCurrentLaneObject();
+    const { updateMain } = opts;
+    if (!updateMain && currentLane?.isNew) {
+      throw new Error(
+        'no need to delete components from an un-exported lane, you can remove them by running "bit remove"'
+      );
+    }
 
-    return this.markRemoveComps(componentIds);
+    return this.markRemoveComps(componentIds, updateMain);
   }
 
   /**
@@ -345,7 +349,11 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     const removeMain = new RemoveMain(workspace, logger, importerMain, depResolver);
     issues.registerAddComponentsIssues(removeMain.addRemovedDependenciesIssues.bind(removeMain));
     componentAspect.registerShowFragments([new RemoveFragment(removeMain)]);
-    cli.register(new RemoveCmd(removeMain, workspace), new RecoverCmd(removeMain));
+    cli.register(
+      new RemoveCmd(removeMain, workspace),
+      new DeleteCmd(removeMain, workspace),
+      new RecoverCmd(removeMain)
+    );
     return removeMain;
   }
 }

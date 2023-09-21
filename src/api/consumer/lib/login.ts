@@ -1,12 +1,10 @@
-import loginToBitSrc from '../../../consumer/login/login';
+import loginToCloud from '../../../consumer/login/login';
 
 export default (async function loginAction(
   port: string,
   suppressBrowserLaunch: boolean,
-  npmrcPath: string,
-  skipRegistryConfig: boolean,
   machineName: string | null | undefined,
-  hubDomainLogin?: string
+  cloudDomain?: string
 ): Promise<{ isAlreadyLoggedIn?: boolean; username?: string; npmrcPath?: string }> {
-  return loginToBitSrc(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName, hubDomainLogin);
+  return loginToCloud(port, suppressBrowserLaunch, machineName, cloudDomain);
 });

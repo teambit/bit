@@ -119,7 +119,10 @@ export class ArtifactFiles {
         logger.debug(
           `getVinylsAndImportIfMissing, trying to get artifacts for ${id.toString()} from unmerged-lane-id: ${unmergedEntry.laneId.toString()}`
         );
-        await scopeComponentsImporter.importManyObjects({ [unmergedEntry.laneId.scope]: allHashes });
+        await scopeComponentsImporter.importManyObjects(
+          { [unmergedEntry.laneId.scope]: allHashes },
+          `to get artifacts for ${id.toString()} from unmerged-lane: ${unmergedEntry.laneId.toString()}`
+        );
       } catch (err: any) {
         logger.debug(
           `getVinylsAndImportIfMissing, unable to get artifacts for ${id.toString()} from ${unmergedEntry.laneId.toString()}`
@@ -130,7 +133,10 @@ export class ArtifactFiles {
     const isIdOnLane = await scope.isIdOnLane(id, lane);
     const scopeName = isIdOnLane ? (lane?.scope as string) : (id.scope as string);
     try {
-      await scopeComponentsImporter.importManyObjects({ [scopeName]: allHashes });
+      await scopeComponentsImporter.importManyObjects(
+        { [scopeName]: allHashes },
+        `to get artifacts for ${id.toString()} from ${scopeName}`
+      );
     } catch (err) {
       if (!unmergedEntry || errorFromUnmergedLaneScope) {
         logger.error('failed fetching the following hashes', { id, isIdOnLane, scopeName, allHashes });
@@ -192,7 +198,10 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
     })
   );
   try {
-    await scopeComponentsImporter.importManyObjects(groupedHashes);
+    await scopeComponentsImporter.importManyObjects(
+      groupedHashes,
+      `to get dists artifacts for ${components.length} components`
+    );
   } catch (err) {
     logger.error('failed fetching the following hashes', { groupedHashes, debugHashesOrigin });
     throw err;
@@ -227,7 +236,10 @@ export async function importAllArtifacts(scope: Scope, components: Component[], 
     })
   );
   try {
-    await scopeComponentsImporter.importManyObjects(groupedHashes);
+    await scopeComponentsImporter.importManyObjects(
+      groupedHashes,
+      `to get all artifacts for ${components.length} components`
+    );
   } catch (err) {
     logger.error('failed fetching the following hashes', { groupedHashes, debugHashesOrigin });
     throw err;

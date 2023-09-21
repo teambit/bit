@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { H6 } from '@teambit/documenter.ui.heading';
-import Editor from '@monaco-editor/react';
+import { CodeEditor } from '@teambit/code.ui.code-editor';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
 import classnames from 'classnames';
@@ -10,6 +10,8 @@ import { APIRefQueryParams } from '@teambit/api-reference.hooks.use-api-ref-url'
 import { useNavigate } from 'react-router-dom';
 import { APINode } from '@teambit/api-reference.models.api-reference-model';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
+import { OnMount, Monaco } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 import styles from './api-node-details.module.scss';
 
@@ -42,34 +44,41 @@ export function APINodeDetails({
   const routerLocation = useLocation();
   const query = useQuery();
   const navigate = useNavigate();
-  const editorRef = useRef<any>();
-  const monacoRef = useRef<any>();
+
+  const signatureEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
+  const signatureMonacoRef = useRef<Monaco>();
+
+  const exampleEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
+  const exampleMonacoRef = useRef<Monaco>();
+
   const routeToAPICmdId = useRef<string | null>(null);
   const apiUrlToRoute = useRef<string | null>(null);
+
   const hoverProviderDispose = useRef<any>();
+
   const rootRef = useRef() as React.MutableRefObject<HTMLDivElement>;
   const apiRef = useRef<HTMLDivElement | null>(null);
-  const currentQueryParams = query.toString();
-  const [containerSize, setContainerSize] = useState<{ width?: number; height?: number }>({
+
+  const signatureContainerRef = useRef<HTMLDivElement | null>(null);
+  const exampleContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // const [signatureHeight, setSignatureHeight] = useState<string | undefined>();
+  // const [exampleHeight, setExampleHeight] = useState<string | undefined>();
+
+  const [containerSize] = useState<{ width?: number; height?: number }>({
     width: undefined,
     height: undefined,
   });
+
+  const currentQueryParams = query.toString();
+  // const signatureHeightStyle = (!!signatureHeight && `calc(${signatureHeight} + 16px)`) || '250px';
+  // const exampleHeightStyle = (!!exampleHeight && `calc(${exampleHeight} + 16px)`) || '250px';
+
   const indexHidden = (containerSize.width ?? 0) < INDEX_THRESHOLD_WIDTH;
 
   const example = (doc?.tags || []).find((tag) => tag.tagName === 'example');
   const comment = doc?.comment;
   const signature = displaySignature || defaultSignature;
-  /**
-   * @HACK
-   * Make Monaco responsive
-   * default line height: 18px;
-   * totalHeight: (no of lines * default line height)
-   */
-  const exampleHeight = (example?.comment?.split('\n').length || 0) * 18;
-  const defaultSignatureHeight = 36 + ((signature?.split('\n').length || 0) - 1) * 18;
-
-  const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
-  const [isMounted, setIsMounted] = useState(false);
 
   const getAPINodeUrl = useCallback((queryParams: APIRefQueryParams) => {
     const queryObj = Object.fromEntries(query.entries());
@@ -80,7 +89,10 @@ export function APINodeDetails({
 
   const hoverProvider = useCallback((model, position) => {
     const word = model.getWordAtPosition(position);
-    const wordApiNode: APINode | undefined = word ? apiRefModel?.apiByName?.get(word.word as string) : undefined;
+    const wordApiNode: APINode | undefined = word
+      ? apiRefModel?.apiByName?.get(word.word) ||
+        apiRefModel?.apiByName?.get(apiRefModel.generateInternalAPIKey(filePath, word.word))
+      : undefined;
     const wordApiUrl = wordApiNode ? getAPINodeUrl({ selectedAPI: wordApiNode.api.name }) : null;
     apiUrlToRoute.current = wordApiUrl;
     if (!wordApiUrl || wordApiNode?.api.name === name) return undefined;
@@ -95,57 +107,134 @@ export function APINodeDetails({
     };
   }, []);
 
-  useEffect(() => {
-    if (isMounted && signature) {
-      monacoRef.current.languages.typescript.typescriptDefaults.setCompilerOptions({
+  const getDisplayedLineCount = (editorInstance, containerWidth, monacoRef) => {
+    if (!monacoRef.current) return 0;
+
+    const model = editorInstance.getModel();
+
+    if (!model) {
+      return 0;
+    }
+
+    const lineCount = model.getLineCount();
+
+    let displayedLines = 0;
+
+    const lineWidth = editorInstance.getOption(monacoRef.current.editor.EditorOption.wordWrapColumn);
+    const fontWidthApproximation = 8;
+
+    for (let lineNumber = 1; lineNumber <= lineCount; lineNumber += 1) {
+      const line = model.getLineContent(lineNumber);
+      const length = line.length || 1;
+      const lineFitsContainer = length * fontWidthApproximation <= containerWidth;
+      const wrappedLineCount = (lineFitsContainer ? 1 : Math.ceil(length / lineWidth)) || 1;
+      displayedLines += wrappedLineCount;
+    }
+
+    return displayedLines;
+  };
+
+  const updateEditorHeight =
+    (
+      editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | undefined>,
+      monacoRef: React.MutableRefObject<Monaco | undefined>
+    ) =>
+    () => {
+      if (!monacoRef.current) return undefined;
+
+      const editor = editorRef.current;
+
+      if (!editor) {
+        return undefined;
+      }
+
+      const lineHeight = editor.getOption(monacoRef.current.editor.EditorOption.lineHeight);
+
+      const paddingTop = editor.getOption(monacoRef.current.editor.EditorOption.padding)?.top || 0;
+      const paddingBottom = editor.getOption(monacoRef.current.editor.EditorOption.padding)?.bottom || 0;
+      const glyphMargin = editor.getOption(monacoRef.current.editor.EditorOption.glyphMargin);
+      const lineNumbers = editor.getOption(monacoRef.current.editor.EditorOption.lineNumbers);
+
+      const glyphMarginHeight = glyphMargin ? lineHeight : 0;
+      const lineNumbersHeight = lineNumbers.renderType !== 0 ? lineHeight : 0;
+
+      const containerWidth = editor.getLayoutInfo().contentWidth;
+      const displayedLines = getDisplayedLineCount(editor, containerWidth, monacoRef);
+
+      const contentHeight =
+        displayedLines * lineHeight + paddingTop + paddingBottom + glyphMarginHeight + lineNumbersHeight;
+
+      const domNode = editor.getDomNode()?.parentElement;
+
+      if (!domNode) {
+        return undefined;
+      }
+
+      const newHeight = `${contentHeight}px`;
+      if (domNode.style.height === newHeight) {
+        return undefined;
+      }
+      domNode.style.height = newHeight;
+      editorRef.current?.layout();
+      // setHeight(() => newHeight);
+      return undefined;
+    };
+
+  // const updateEditorHeight = _.throttle<typeof _updateEditorHeight>(_updateEditorHeight, 300) as _.DebouncedFunc<any>;
+
+  const handleEditorDidMount: (
+    monacoRef: React.MutableRefObject<Monaco | undefined>,
+    editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | undefined>,
+    containerRef: React.MutableRefObject<HTMLDivElement | null>,
+    setHeight?: React.Dispatch<React.SetStateAction<string | undefined>>,
+    onMount?: (monaco: Monaco, editor: monaco.editor.IStandaloneCodeEditor) => void,
+    onUnMount?: () => void
+  ) => OnMount = React.useCallback(
+    (monacoRef, editorRef, containerRef, setHeight, onMount, unMount) => (editor, _monaco) => {
+      /**
+       * disable syntax check
+       * ts cant validate all types because imported files aren't available to the editor
+       */
+      monacoRef.current = _monaco;
+      editorRef.current = editor;
+
+      monacoRef.current.languages?.typescript?.typescriptDefaults?.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSyntaxValidation: true,
+      });
+
+      monacoRef.current?.languages.typescript.typescriptDefaults.setCompilerOptions({
         jsx: monacoRef.current.languages.typescript.JsxEmit.Preserve,
         target: monacoRef.current.languages.typescript.ScriptTarget.ES2020,
         esModuleInterop: true,
       });
-      ``;
-      monacoRef.current.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-        noSemanticValidation: true,
-        noSyntaxValidation: true,
-      });
-      const container = editorRef.current.getDomNode();
-      editorRef.current.onDidContentSizeChange(({ contentHeight }) => {
-        if (container && isMounted && signature) {
-          const updatedHeight = Math.min(200, contentHeight + 18);
-          setSignatureHeight(updatedHeight);
-        }
-      });
-      routeToAPICmdId.current = editorRef.current.addCommand(0, () => {
-        apiUrlToRoute.current && navigate(apiUrlToRoute.current);
-      });
-      if (!hoverProviderDispose.current) {
-        hoverProviderDispose.current = monacoRef.current.languages.registerHoverProvider('typescript', {
-          provideHover: hoverProvider,
-        });
-      }
-    }
-  }, [isMounted]);
 
-  const handleSize = useCallback(() => {
-    setContainerSize({
-      width: rootRef.current.offsetWidth,
-      height: rootRef.current.offsetHeight,
-    });
-  }, []);
+      monaco.editor.defineTheme('bit', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [],
+        colors: {
+          'scrollbar.shadow': '#222222',
+          'diffEditor.insertedTextBackground': '#1C4D2D',
+          'diffEditor.removedTextBackground': '#761E24',
+          'editor.selectionBackground': '#5A5A5A',
+          'editor.overviewRulerBorder': '#6a57fd',
+          'editor.lineHighlightBorder': '#6a57fd',
+        },
+      });
 
-  useEffect(() => {
-    if (window) window.addEventListener('resize', handleSize);
-    // Call handler right away so state gets updated with initial container size
-    handleSize();
-    return () => {
-      hoverProviderDispose.current?.dispose();
-      if (window) window.removeEventListener('resize', handleSize);
-      setIsMounted(false);
-    };
-  }, []);
+      monaco.editor.setTheme('bit');
 
-  useEffect(() => {
-    handleSize();
-  }, [rootRef?.current?.offsetHeight, rootRef?.current?.offsetWidth]);
+      onMount?.(monacoRef.current, editorRef.current);
+
+      updateEditorHeight(editorRef, monacoRef)();
+
+      editor.onDidDispose(() => {
+        unMount?.();
+      });
+    },
+    []
+  );
 
   return (
     /**
@@ -162,40 +251,55 @@ export function APINodeDetails({
         {comment && <div className={styles.apiNodeDetailsComment}>{comment}</div>}
         {signature && (
           <div
-            key={`${signature}-${currentQueryParams}-api-signature-editor`}
             className={classnames(styles.apiNodeDetailsSignatureContainer, styles.codeEditorContainer)}
+            ref={signatureContainerRef}
           >
-            <Editor
+            <CodeEditor
               options={defaultCodeEditorOptions}
-              value={signature}
-              height={signatureHeight}
-              path={`${currentQueryParams}-${filePath}`}
+              fileContent={signature}
+              filePath={`${currentQueryParams}-${filePath}`}
               className={styles.editor}
-              beforeMount={(monaco) => {
-                monacoRef.current = monaco;
+              beforeMount={(_monaco) => {
+                signatureMonacoRef.current = _monaco;
               }}
-              onMount={(editor) => {
-                editorRef.current = editor;
-                const signatureContent = editorRef.current.getValue();
-                const updatedSignatureHeight = 36 + ((signatureContent?.split('\n').length || 0) - 1) * 18;
-                setIsMounted(true);
-                setSignatureHeight(updatedSignatureHeight);
-              }}
-              theme={'vs-dark'}
+              onMount={handleEditorDidMount(
+                signatureMonacoRef,
+                signatureEditorRef,
+                signatureContainerRef,
+                undefined,
+                (_monaco, _editor) => {
+                  routeToAPICmdId.current =
+                    _editor.addCommand(0, () => {
+                      apiUrlToRoute.current && navigate(apiUrlToRoute.current);
+                    }) ?? null;
+
+                  if (!hoverProviderDispose.current) {
+                    hoverProviderDispose.current = _monaco.languages.registerHoverProvider('typescript', {
+                      provideHover: hoverProvider,
+                    });
+                  }
+                },
+                () => {
+                  hoverProviderDispose.current?.dispose();
+                }
+              )}
             />
           </div>
         )}
         {example && example.comment && (
           <div className={styles.apiNodeDetailsExample}>
             <H6 className={styles.apiNodeDetailsExampleTitle}>Example</H6>
-            <div className={styles.codeEditorContainer}>
-              <Editor
+            <div className={classnames(styles.codeEditorContainer)} ref={exampleContainerRef}>
+              <CodeEditor
                 options={defaultCodeEditorOptions}
-                value={example.comment}
-                path={`${example?.location.line}:${example?.location.filePath}`}
-                height={exampleHeight}
-                theme={'vs-dark'}
+                fileContent={extractCodeBlock(example.comment)?.code || example.comment}
+                filePath={`example-${example?.location.line}:${example?.location.filePath}`}
+                language={extractCodeBlock(example.comment)?.lang || undefined}
                 className={styles.editor}
+                beforeMount={(_monaco) => {
+                  exampleMonacoRef.current = _monaco;
+                }}
+                onMount={handleEditorDidMount(exampleMonacoRef, exampleEditorRef, exampleContainerRef)}
               />
             </div>
           </div>
@@ -207,4 +311,24 @@ export function APINodeDetails({
       )}
     </div>
   );
+}
+
+/**
+ * Extracts the code block and its language specifier enclosed between triple backticks (```) from a given text string.
+ *
+ * @param text - The text string from which to extract the code block.
+ *
+ * @returns An object containing the extracted code and language specifier, or null if no match is found.
+ */
+function extractCodeBlock(text: string): { lang: string; code: string } | null {
+  // The (?<lang>[\w+-]*) captures the optional language specifier (like 'typescript', 'javascript', etc.)
+  // The (?<code>[\s\S]*?) captures the actual code block
+  const regex = /```(?<lang>[\w+-]*)\n(?<code>[\s\S]*?)```/;
+  const match = text.match(regex);
+
+  if (match && match.groups) {
+    const { lang, code } = match.groups;
+    return { lang, code };
+  }
+  return null;
 }

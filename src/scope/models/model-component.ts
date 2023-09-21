@@ -515,6 +515,7 @@ export default class Component extends BitObject {
           includeVersionHistory: true,
           collectParents: true,
           lane: lane || undefined,
+          reason: 'to collect logs (including parents)',
         });
         versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
       } catch (err) {
@@ -1103,6 +1104,11 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return versionHistory;
   }
 
+  /**
+   * careful! the `versions` passed here can belong to other components, not necessarily to this one.
+   * that's why it checks whether the version-hash exists in the VersionHistory, and if it's not,
+   * it won't update it.
+   */
   async updateRebasedVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory | undefined> {
     const versionHistory = await this.getVersionHistory(repo);
     const hasUpdated = versions.some((version) => {
@@ -1113,6 +1119,12 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     });
 
     return hasUpdated ? versionHistory : undefined;
+  }
+
+  async updateVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory> {
+    const versionHistory = await this.getVersionHistory(repo);
+    versionHistory.addFromVersionsObjects(versions);
+    return versionHistory;
   }
 
   async populateVersionHistoryIfMissingGracefully(

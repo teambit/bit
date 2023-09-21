@@ -8,7 +8,7 @@ import {
   ResolvedPackageVersion,
   Registries,
   Registry,
-  BIT_DEV_REGISTRY,
+  BIT_CLOUD_REGISTRY,
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
@@ -95,6 +95,8 @@ export class PnpmPackageManager implements PackageManager {
         reportOptions: {
           appendOnly: installOptions.optimizeReportForNonTerminal,
           throttleProgress: installOptions.throttleProgress,
+          hideProgressPrefix: installOptions.hideProgressPrefix,
+          hideLifecycleOutput: installOptions.hideLifecycleOutput,
         },
       },
       this.logger
@@ -202,7 +204,7 @@ export class PnpmPackageManager implements PackageManager {
 
     // Add bit registry server if not exist
     if (!scopesRegistries.bit) {
-      scopesRegistries.bit = new Registry(BIT_DEV_REGISTRY, true);
+      scopesRegistries.bit = new Registry(BIT_CLOUD_REGISTRY, true);
     }
 
     return new Registries(defaultRegistry, scopesRegistries);
