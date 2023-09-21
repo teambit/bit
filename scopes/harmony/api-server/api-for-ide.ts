@@ -193,8 +193,16 @@ export class APIForIDE {
     await this.workspace.clearCache();
   }
 
-  async install() {
-    return this.installer.install(undefined, { optimizeReportForNonTerminal: true });
+  async install(options = {}) {
+    const opts = {
+      optimizeReportForNonTerminal: true,
+      dedupe: true,
+      updateExisting: false,
+      import: false,
+      ...options,
+    };
+
+    return this.installer.install(undefined, opts);
   }
 
   async export() {
