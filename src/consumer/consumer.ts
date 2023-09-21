@@ -599,7 +599,7 @@ export default class Consumer {
       scope,
     });
     await consumer.setBitMap();
-    scope.setCurrentLaneId(consumer.bitMap.laneId);
+    scope.setCurrentLaneId(consumer.bitMap.laneId || consumer.getDefaultLaneId());
     logger.commandHistory.fileBasePath = scope.getPath();
     return consumer;
   }
