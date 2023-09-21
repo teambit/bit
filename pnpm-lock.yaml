@@ -2068,6 +2068,9 @@ importers:
 
   components/ui/compare/lane-compare:
     dependencies:
+      '@teambit/base-react.navigation.link':
+        specifier: 2.0.27
+        version: 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -2092,9 +2095,6 @@ importers:
       react-dom:
         specifier: ^16.8.0 || ^17.0.0
         version: 17.0.2(react@17.0.2)
-      react-router-dom:
-        specifier: ^6.0.0
-        version: 6.3.0(react-dom@17.0.2)(react@17.0.2)
     devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
@@ -4393,7 +4393,7 @@ importers:
         version: file:scopes/lanes/diff
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: file:components/ui/compare/lane-compare(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2)
@@ -6312,7 +6312,7 @@ importers:
         version: file:scopes/lanes/diff
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: file:components/ui/compare/lane-compare(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2)
@@ -8231,7 +8231,7 @@ importers:
         version: file:scopes/lanes/diff
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: file:components/ui/compare/lane-compare(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2)
@@ -10150,7 +10150,7 @@ importers:
         version: file:scopes/lanes/diff
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: file:components/ui/compare/lane-compare(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2)
@@ -12069,7 +12069,7 @@ importers:
         version: file:scopes/lanes/diff
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: file:components/ui/compare/lane-compare(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2)
@@ -13988,7 +13988,7 @@ importers:
         version: file:scopes/lanes/diff
       '@teambit/lanes.ui.compare.lane-compare':
         specifier: workspace:*
-        version: file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+        version: file:components/ui/compare/lane-compare(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/lanes.ui.compare.lane-compare-drawer':
         specifier: workspace:*
         version: file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2)
@@ -15758,6 +15758,9 @@ importers:
 
   scopes/api-reference/renderers/inference-type:
     dependencies:
+      '@teambit/design.ui.tooltip':
+        specifier: 0.0.361
+        version: 0.0.361(react-dom@17.0.2)(react@17.0.2)
       classnames:
         specifier: 2.2.6
         version: 2.2.6
@@ -36948,14 +36951,14 @@ packages:
     dev: true
 
   /@teambit/base-react.navigation.link@2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-ZCQxvK+jLOilJMnAnOZAAf9ya+w=, tarball: https://node-registry.bit.cloud/@teambit/base-react.navigation.link/-/@teambit-base-react.navigation.link-2.0.27.tgz}
+    resolution: {integrity: sha1-ZCQxvK+jLOilJMnAnOZAAf9ya+w=}
     peerDependencies:
       '@testing-library/react': ^12.0.0
       '@types/react': ^17.0.0
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.routing.compare-url': registry.npmjs.org/@teambit/base-ui.routing.compare-url@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.routing.compare-url': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@testing-library/react': 12.1.5(react-dom@17.0.2)(react@17.0.2)
       '@types/react': 17.0.8
       classnames: 2.3.1
@@ -39779,13 +39782,13 @@ packages:
     dev: false
 
   /@teambit/design.ui.tooltip@0.0.361(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-OA4fKc63w/KyZwVIpb4/8Gkt0tA=, tarball: https://node-registry.bit.cloud/@teambit/design.ui.tooltip/-/@teambit-design.ui.tooltip-0.0.361.tgz}
+    resolution: {integrity: sha1-OA4fKc63w/KyZwVIpb4/8Gkt0tA=}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.theme.dark-theme': registry.npmjs.org/@teambit/base-ui.theme.dark-theme@1.0.2(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.theme.dark-theme': 1.0.2(react-dom@17.0.2)(react@17.0.2)
       '@tippyjs/react': 4.2.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -63190,15 +63193,15 @@ packages:
       use-optionally-controlled-state: 1.2.0(react-dom@17.0.2)(react@17.0.2)
     dev: false
 
-  file:components/ui/compare/lane-compare(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+  file:components/ui/compare/lane-compare(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2):
     resolution: {directory: components/ui/compare/lane-compare, type: directory}
     id: file:components/ui/compare/lane-compare
     name: '@teambit/lanes.ui.compare.lane-compare'
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
-      react-router-dom: ^6.0.0
     dependencies:
+      '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/component-id': 0.0.427
       '@teambit/design.elements.icon': 1.0.5(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.heading': 4.1.1(react-dom@17.0.2)(react@17.0.2)
@@ -63207,7 +63210,9 @@ packages:
       lodash: 4.17.21
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-      react-router-dom: 6.3.0(react-dom@17.0.2)(react@17.0.2)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@types/react'
     dev: false
 
   file:components/ui/compare/lane-compare-drawer(react-dom@17.0.2)(react@17.0.2):
@@ -64025,6 +64030,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
+      '@teambit/design.ui.tooltip': 0.0.361(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -70030,21 +70036,6 @@ packages:
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  registry.npmjs.org/@teambit/base-ui.routing.compare-url@1.0.0(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-57vlN0+yBZFGsX5JLo237OQ3Bu8eeJ+vEVbeQuioJsuvS0zEhI8EyobYssEfyaCMsbpDpbpL6HkfSvuQB0Vtmw==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.compare-url/-/base-ui.routing.compare-url-1.0.0.tgz}
-    id: registry.npmjs.org/@teambit/base-ui.routing.compare-url/1.0.0
-    name: '@teambit/base-ui.routing.compare-url'
-    version: 1.0.0
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-      url-parse: 1.5.1
-    dev: false
-
   registry.npmjs.org/@teambit/base-ui.routing.link@1.0.0(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-kJkoNmZqsrXWFyDBM8DXH5IKa7GumBvm9l7mcs8kjawFmBtP+LnunV/KJozwQtuNTjmizMYwq8+6IWAV365RLA==, registry: https://node-registry.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.routing.link/-/base-ui.routing.link-1.0.0.tgz}
     id: registry.npmjs.org/@teambit/base-ui.routing.link/1.0.0
@@ -70084,7 +70075,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
-      '@teambit/base-ui.routing.compare-url': registry.npmjs.org/@teambit/base-ui.routing.compare-url@1.0.0(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/base-ui.routing.compare-url': 1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.routing.native-link': registry.npmjs.org/@teambit/base-ui.routing.native-link@1.0.0(react-dom@17.0.2)(react@17.0.2)
       '@teambit/base-ui.utils.is-browser': registry.npmjs.org/@teambit/base-ui.utils.is-browser@1.0.0(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
