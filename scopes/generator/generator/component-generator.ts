@@ -36,7 +36,7 @@ export class ComponentGenerator {
   constructor(
     private workspace: Workspace,
     private componentIds: ComponentID[],
-    private options: CreateOptions,
+    private options: Partial<CreateOptions>,
     private template: ComponentTemplate,
     private envs: EnvsMain,
     private newComponentHelper: NewComponentHelperMain,

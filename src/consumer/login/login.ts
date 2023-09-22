@@ -6,17 +6,9 @@ import url from 'url';
 import { v4 } from 'uuid';
 
 import { getSync, setSync } from '../../api/consumer/lib/global-config';
-import {
-  CFG_REGISTRY_URL_KEY,
-  CFG_USER_TOKEN_KEY,
-  getLoginUrl,
-  DEFAULT_REGISTRY_URL,
-  CFG_CLOUD_DOMAIN_KEY,
-  PREVIOUSLY_DEFAULT_REGISTRY_URL,
-} from '../../constants';
+import { CFG_USER_TOKEN_KEY, getLoginUrl, CFG_CLOUD_DOMAIN_KEY } from '../../constants';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
-import { npmLogin } from '../../registry';
 import { LoginFailed } from '../exceptions';
 
 const ERROR_RESPONSE = 500;
@@ -26,8 +18,6 @@ const REDIRECT = 302;
 export default function loginToCloud(
   port: string,
   suppressBrowserLaunch: boolean,
-  npmrcPath: string,
-  skipRegistryConfig: boolean,
   machineName: string | null | undefined,
   cloudDomain?: string
 ): Promise<{
@@ -35,7 +25,6 @@ export default function loginToCloud(
   username?: string;
   npmrcPath?: string;
 }> {
-  let actualNpmrcPath = npmrcPath;
   return new Promise((resolve, reject) => {
     const clientGeneratedId = v4();
     if (getSync(CFG_USER_TOKEN_KEY)) {
@@ -57,7 +46,6 @@ export default function loginToCloud(
       try {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const { clientId, redirectUri, username, token } = url.parse(request.url, true).query || {};
-        let writeToNpmrcError = false;
         if (clientGeneratedId !== clientId) {
           logger.errorAndAddBreadCrumb(
             'login.loginToCloud',
@@ -71,23 +59,6 @@ export default function loginToCloud(
         if (cloudDomain) {
           setSync(CFG_CLOUD_DOMAIN_KEY, cloudDomain);
         }
-        const configuredRegistry = getSync(CFG_REGISTRY_URL_KEY);
-        if (!skipRegistryConfig) {
-          try {
-            if (!configuredRegistry) {
-              // some packages might have links in package-lock.json to the previous registry
-              // this makes sure to have also the auth-token of the previous registry.
-              // (the @bit:registry part points only to the current registry).
-              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-              actualNpmrcPath = npmLogin(token, npmrcPath, PREVIOUSLY_DEFAULT_REGISTRY_URL);
-            }
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            actualNpmrcPath = npmLogin(token, npmrcPath, configuredRegistry || DEFAULT_REGISTRY_URL);
-          } catch (e: any) {
-            actualNpmrcPath = e.path;
-            writeToNpmrcError = true;
-          }
-        }
 
         response.writeHead(REDIRECT, {
           Location: redirectUri,
@@ -95,9 +66,6 @@ export default function loginToCloud(
         closeConnection();
         resolve({
           username,
-          npmrcPath: actualNpmrcPath,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          writeToNpmrcError,
         });
       } catch (err: any) {
         logger.error(`err on login: ${err}`);

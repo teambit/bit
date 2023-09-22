@@ -43,6 +43,7 @@ import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-compon
 import { ComponentID } from '@teambit/component-id';
 import { isHash, isTag } from '@teambit/component-version';
 import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
+import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import {
   ArtifactFiles,
   ArtifactSource,
@@ -1122,6 +1123,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     ExportAspect,
     BuilderAspect,
     ImporterAspect,
+    GlobalConfigAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1135,6 +1137,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     exporter,
     builder,
     importer,
+    globalConfig,
   ]: [
     Workspace,
     CLIMain,
@@ -1145,7 +1148,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     ScopeMain,
     ExportMain,
     BuilderMain,
-    ImporterMain
+    ImporterMain,
+    GlobalConfigMain
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(
@@ -1159,8 +1163,8 @@ another option, in case this dependency is not in main yet is to remove all refe
       builder,
       importer
     );
-    const snapCmd = new SnapCmd(snapping, logger);
-    const tagCmd = new TagCmd(snapping, logger);
+    const snapCmd = new SnapCmd(snapping, logger, globalConfig);
+    const tagCmd = new TagCmd(snapping, logger, globalConfig);
     const tagFromScopeCmd = new TagFromScopeCmd(snapping, logger);
     const snapFromScopeCmd = new SnapFromScopeCmd(snapping, logger);
     const resetCmd = new ResetCmd(snapping);

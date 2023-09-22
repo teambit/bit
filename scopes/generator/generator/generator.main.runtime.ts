@@ -263,7 +263,9 @@ export class GeneratorMain {
     if (workspaceTemplate) {
       return { workspaceTemplate, aspect };
     }
-    throw new BitError(`template "${name}" was not found, please use --aspect flag to load from an env i.e --aspect teambit.react/react-env\n Learn more about component templates here: https://bit.dev/reference/generator/create-generator`);
+    throw new BitError(
+      `template "${name}" was not found, please use --aspect flag to load from an env i.e --aspect teambit.react/react-env\n Learn more about component templates here: https://bit.dev/reference/generator/create-generator`
+    );
   }
 
   async searchRegisteredWorkspaceTemplate(
@@ -290,7 +292,7 @@ export class GeneratorMain {
   async generateComponentTemplate(
     componentNames: string[],
     templateName: string,
-    options: CreateOptions
+    options: Partial<CreateOptions>
   ): Promise<GenerateResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     await this.loadAspects();

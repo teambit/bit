@@ -461,7 +461,7 @@ export class Http implements Network {
     });
 
     data.scope.components.forEach((comp) => {
-      comp.id = BitId.parse(comp.id);
+      comp.id = new BitId(comp.id);
       comp.deprecated = comp.deprecation.isDeprecate;
     });
 

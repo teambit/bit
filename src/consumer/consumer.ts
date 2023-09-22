@@ -79,7 +79,7 @@ export default class Consumer {
   componentLoader: ComponentLoader;
   componentStatusLoader: ComponentStatusLoader;
   packageJson: any;
-  public onCacheClear: Array<() => void> = [];
+  public onCacheClear: Array<() => void | Promise<void>> = [];
   constructor({
     projectPath,
     config,
@@ -136,8 +136,12 @@ export default class Consumer {
     return path.join(this.getPath(), BIT_WORKSPACE_TMP_DIRNAME);
   }
 
+  getCurrentLaneIdIfExist() {
+    return this.bitMap.laneId;
+  }
+
   getCurrentLaneId(): LaneId {
-    return this.bitMap.laneId || this.getDefaultLaneId();
+    return this.getCurrentLaneIdIfExist() || this.getDefaultLaneId();
   }
 
   getDefaultLaneId() {
@@ -165,7 +169,6 @@ export default class Consumer {
 
   setCurrentLane(laneId: LaneId, exported = true) {
     this.bitMap.setCurrentLane(laneId, exported);
-    this.scope.setCurrentLaneId(laneId);
   }
 
   async cleanTmpFolder() {
@@ -562,7 +565,7 @@ export default class Consumer {
       scope,
     });
     await consumer.setBitMap();
-    scope.setCurrentLaneId(consumer.bitMap.laneId);
+    scope.currentLaneIdFunc = consumer.getCurrentLaneIdIfExist.bind(consumer);
     logger.commandHistory.fileBasePath = scope.getPath();
     return consumer;
   }
