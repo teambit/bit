@@ -629,15 +629,18 @@ export class ScopeMain implements ComponentFactory {
   async list(
     filter?: { offset: number; limit: number; namespaces?: string[] },
     includeCache = false,
-    includeFromLanes = false
+    includeFromLanes = false,
+    includeDeleted = false
   ): Promise<Component[]> {
     const patternsWithScope =
       (filter?.namespaces && filter?.namespaces.map((pattern) => `**/${pattern || '**'}`)) || undefined;
     const componentsIds = await this.listIds(includeCache, includeFromLanes, patternsWithScope);
 
-    return this.getMany(
+    const comps = await this.getMany(
       filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
     );
+
+    return includeDeleted ? comps : comps.filter((comp) => !comp.isDeleted());
   }
 
   /**
