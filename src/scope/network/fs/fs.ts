@@ -5,11 +5,11 @@ import { PushOptions } from '../../../api/scope/lib/put';
 import { BitId } from '../../../bit-id';
 import ComponentsList, { ListScopeResult } from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component/consumer-component';
-import ComponentObjects from '../../component-objects';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLog } from '../../models/model-component';
 import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
+import RemovedObjects from '../../removed-components';
 import Scope, { ScopeDescriptor } from '../../scope';
 import loadScope from '../../scope-loader';
 import { FsScopeNotLoaded } from '../exceptions';
@@ -44,14 +44,14 @@ export default class Fs implements Network {
     return action(this.scopePath, name, options);
   }
 
-  deleteMany(
+  async deleteMany(
     ids: string[],
     force: boolean,
     context: Record<string, any>,
-    idsAreLanes?: boolean
-  ): Promise<ComponentObjects[]> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return remove({ path: this.scopePath, ids, force, lanes: idsAreLanes });
+    idsAreLanes = false
+  ): Promise<RemovedObjects> {
+    const result = await remove({ path: this.scopePath, ids, force, lanes: idsAreLanes });
+    return RemovedObjects.fromObjects(result);
   }
 
   async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectItemsStream> {
