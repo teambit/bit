@@ -28,6 +28,7 @@
   padding-right: 8px;
 }
 .codeEditorContainer {
+  transition: min-height 0.4s ease-in-out;
   > section {
     overflow: hidden;
     border-radius: 8px;

@@ -1,9 +1,11 @@
-@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .componentCompareVersionPicker {
   display: flex;
   flex-direction: row;
   padding: 8px 0px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .componentCompareVersionMenu {
@@ -12,6 +14,11 @@
 }
 .showMenuOverNav {
   z-index: $topBar-zIndex;
+}
+
+.dropdownContainer {
+  display: flex;
+  align-items: center;
 }
 
 .componentCompareVersionPlaceholder {

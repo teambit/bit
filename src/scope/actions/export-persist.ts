@@ -24,7 +24,7 @@ export class ExportPersist implements Action<Options, string[]> {
     if (ExportPersist.onPutHook) {
       const lanes = (await objectList.toBitObjects()).getLanes();
       ExportPersist.onPutHook(componentsIds, lanes, authData).catch((err) => {
-        logger.error('fatal: onPutHook encountered an error (this error does not stop the process)', err);
+        logger.error(`fatal: ExportPersist.onPutHook encountered an error (this error does not stop the process)`, err);
         // let the process continue. we don't want to stop it when onPutHook failed.
       });
     }

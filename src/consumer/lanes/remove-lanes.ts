@@ -27,7 +27,6 @@ export default async function removeLanes(
 }
 
 async function removeRemoteLanes(consumer: Consumer | undefined, lanes: LaneId[], force: boolean) {
-  const groupedLanesByScope = groupArray(lanes, 'scope');
   const remotes = consumer ? await getScopeRemotes(consumer.scope) : await Remotes.getGlobalRemotes();
   const shouldGoToCentralHub = remotes.shouldGoToCentralHub(lanes.map((lane) => lane.scope));
   if (shouldGoToCentralHub) {
@@ -39,9 +38,10 @@ async function removeRemoteLanes(consumer: Consumer | undefined, lanes: LaneId[]
   }
   const context = {};
   enrichContextFromGlobal(context);
+  const groupedLanesByScope = groupArray(lanes, 'scope');
   const removeP = Object.keys(groupedLanesByScope).map(async (key) => {
     const resolvedRemote = await remotes.resolve(key, consumer?.scope);
-    const idsStr = groupedLanesByScope[key].map((id) => id.name);
+    const idsStr = groupedLanesByScope[key].map((id) => id.toString());
     return resolvedRemote.deleteMany(idsStr, force, context, true);
   });
 

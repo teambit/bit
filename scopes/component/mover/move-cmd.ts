@@ -1,25 +1,25 @@
 import chalk from 'chalk';
 import { Command } from '@teambit/cli';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { PathChangeResult } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import { MoverMain } from './mover.main.runtime';
 
 export class MoveCmd implements Command {
   name = 'move <current-component-dir> <new-component-dir>';
-  description = 'move a component to a different filesystem path';
-  helpUrl = 'docs/workspace/moving-components';
+  description =
+    "move a component to a different filesystem path (note: this does NOT affect the component's name or scope, just its location in the workspace)";
+  helpUrl = 'reference/workspace/moving-components';
   arguments = [
     {
       name: 'current-component-dir',
-      description: 'the current relative path (in the workspace) to the component directory',
+      description: "the component's current directory (relative to the workspace root)",
     },
     {
       name: 'new-component-dir',
-      description: 'the new relative path (in the workspace) to the component directory',
+      description: "the new directory (relative to the workspace root) to create and move the component's files to",
     },
   ];
   group = 'development';
-  extendedDescription = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/workspace/moving-components`;
+  extendedDescription = `move files or directories of component(s)\n`;
   alias = 'mv';
   loader = true;
   options = [];

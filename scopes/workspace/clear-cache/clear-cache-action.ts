@@ -3,9 +3,9 @@ import { ScopeMain } from '@teambit/scope';
 export class ClearCacheAction {
   name = ClearCacheAction.name;
   constructor(private scope: ScopeMain) {}
-  execute() {
+  async execute() {
     if (!this.scope) return false;
-    this.scope.clearCache();
+    await this.scope.clearCache();
     return true;
   }
 }

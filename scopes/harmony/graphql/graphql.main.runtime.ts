@@ -1,4 +1,4 @@
-import { mergeSchemas } from 'graphql-tools';
+import { mergeSchemas } from '@graphql-tools/schema';
 import { GraphQLModule } from '@graphql-modules/core';
 import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';

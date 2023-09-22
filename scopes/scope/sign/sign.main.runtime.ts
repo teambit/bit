@@ -53,14 +53,14 @@ export class SignMain {
    */
   async sign(
     ids: ComponentID[],
-    isMultiple?: boolean,
+    originalScope?: boolean,
     push?: boolean,
     laneIdStr?: string,
     rebuild?: boolean
   ): Promise<SignResult | null> {
     this.throwIfOnWorkspace();
     let lane: Lane | undefined;
-    if (isMultiple) {
+    if (!originalScope) {
       const longProcessLogger = this.logger.createLongProcessLogger('import objects');
       if (laneIdStr) {
         const laneId = LaneId.parse(laneIdStr);
@@ -70,9 +70,8 @@ export class SignMain {
         this.scope.legacyScope.setCurrentLaneId(laneId);
         this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
       }
-      await this.scope.import(ids, { lane, preferDependencyGraph: true });
-      longProcessLogger.end();
-      this.logger.consoleSuccess();
+      await this.scope.import(ids, { lane, reason: 'which are the seeders for the sign process' });
+      longProcessLogger.end('success');
     }
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids, rebuild);
     if (ids.length && componentsToSkip.length) {
@@ -86,7 +85,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
 
     // using `loadMany` instead of `getMany` to make sure component aspects are loaded.
     this.logger.setStatusLine(`loading ${componentsToSign.length} components and their aspects...`);
-    const components = await this.scope.loadMany(componentsToSign, lane);
+    const components = await this.scope.loadMany(componentsToSign, lane, { loadApps: false, loadEnvs: false });
     this.logger.clearStatusLine();
     // it's enough to check the first component whether it's a snap or tag, because it can't be a mix of both
     const shouldRunSnapPipeline = isSnap(components[0].id.version);
@@ -102,11 +101,11 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     if (push) {
-      if (isMultiple) {
-        await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus, lane);
-      } else {
+      if (originalScope) {
         await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
         await this.clearScopesCaches(legacyComponents);
+      } else {
+        await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus, lane);
       }
     }
     await this.triggerOnPostSign(components);
@@ -201,7 +200,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     }
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
     await http.pushToCentralHub(objectList, {
-      persist: true,
+      origin: 'sign',
       sign: true,
       signComponents: signComponents.map((id) => id.toString()),
       idsHashMaps,

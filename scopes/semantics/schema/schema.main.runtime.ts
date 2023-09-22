@@ -5,7 +5,13 @@ import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
-import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
+import {
+  APISchema,
+  Export,
+  Schemas,
+  SchemaNodeConstructor,
+  SchemaRegistry,
+} from '@teambit/semantics.entities.semantic-schema';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Formatter } from '@teambit/formatter';
@@ -54,6 +60,10 @@ export class SchemaMain {
     return this.parserSlot.get(this.config.defaultParser) as Parser;
   }
 
+  registerSchemaClass(schema: SchemaNodeConstructor) {
+    SchemaRegistry.register(schema);
+  }
+
   /**
    * parse a module into a component schema.
    */
@@ -87,6 +97,7 @@ export class SchemaMain {
    * @param shouldDisposeResourcesOnceDone for long-running processes, such as bit-start/bit-watch, this is not
    * relevant. for calling the API only to get a schema for one component, this is needed to ensure the ts-server is
    * not kept alive. otherwise, the process will never end.
+   *
    */
   async getSchema(
     component: Component,
@@ -109,7 +120,7 @@ export class SchemaMain {
       }
       const schemaExtractor: SchemaExtractor = env.getSchemaExtractor(undefined, tsserverPath, contextPath);
 
-      const result = await schemaExtractor.extract(component, formatter);
+      const result = await schemaExtractor.extract(component, { formatter, tsserverPath, contextPath });
       if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();
 
       return result;
@@ -196,10 +207,10 @@ export class SchemaMain {
     graphql.register(schemaSchema(schema));
     envs.registerService(new SchemaService());
 
-    // workspace.onComponentLoad(async (component) => {
-    //   const apiSchema = await schema.getSchema(component);
-    //   return {};
-    // });
+    // register all default schema classes
+    Object.values(Schemas).forEach((Schema) => {
+      schema.registerSchemaClass(Schema);
+    });
 
     return schema;
   }

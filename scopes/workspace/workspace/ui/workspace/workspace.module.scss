@@ -1,7 +1,11 @@
-@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .emptyContainer {
   height: 100vh;
+}
+
+.corner {
+  width: 300px;
 }
 
 .workspaceWrapper {
@@ -37,4 +41,8 @@
   position: relative;
 
   height: 100%;
+
+  &.closed {
+    overflow: hidden;
+  }
 }

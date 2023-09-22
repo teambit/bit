@@ -1,12 +1,11 @@
 import { MainRuntime } from '@teambit/cli';
 import { Options as PrettierModuleOptions } from 'prettier';
-import FormatterAspect, { Formatter, FormatterMain, FormatterOptions } from '@teambit/formatter';
+import { Formatter, FormatterMain, FormatterOptions } from '@teambit/formatter';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
-import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { PrettierAspect } from './prettier.aspect';
 import { PrettierFormatter } from './prettier.formatter';
-import { PrettierConfigWriter } from './prettier-config-writer';
 
 export type PrettierOptions = {
   /**
@@ -45,15 +44,10 @@ export class PrettierMain {
 
   static runtime = MainRuntime;
 
-  static dependencies = [LoggerAspect, FormatterAspect, WorkspaceConfigFilesAspect];
+  static dependencies = [LoggerAspect];
 
-  static async provider([loggerExt, formatter, workspaceConfigFiles]: [
-    LoggerMain,
-    FormatterMain,
-    WorkspaceConfigFilesMain
-  ]): Promise<PrettierMain> {
+  static async provider([loggerExt]: [LoggerMain, FormatterMain, WorkspaceConfigFilesMain]): Promise<PrettierMain> {
     const logger = loggerExt.createLogger(PrettierAspect.id);
-    workspaceConfigFiles.registerConfigWriter(new PrettierConfigWriter(formatter));
     return new PrettierMain(logger);
   }
 }

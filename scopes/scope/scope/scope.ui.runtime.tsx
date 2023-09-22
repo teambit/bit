@@ -137,8 +137,8 @@ export class ScopeUI {
         userUseScopeQuery={options.useScope}
         badgeSlot={this.scopeBadgeSlot}
         overviewLineSlot={this.overviewSlot}
-        context={this.getContext()}
-        onSidebarTogglerChange={this.setSidebarToggle}
+        context={this.getContext(options.getComponentUrl)}
+        onSidebarTogglerChange={options.onSidebarToggle || this.setSidebarToggle}
         cornerSlot={this.cornerSlot}
         paneClassName={options.paneClassName}
         PaneWrapper={options.PaneWrapper}
@@ -242,11 +242,11 @@ export class ScopeUI {
     return this;
   }
 
-  private getContext() {
+  private getContext(componentUrlFn?: ComponentUrlResolver) {
     const contexts = this.contextSlot.values();
     // eslint-disable-next-line react/prop-types
     const ComponentUrlFuncProvider: ScopeContextType = ({ children }) => (
-      <ComponentUrlProvider value={this.componentUrlFunc}>{children}</ComponentUrlProvider>
+      <ComponentUrlProvider value={componentUrlFn || this.componentUrlFunc}>{children}</ComponentUrlProvider>
     );
 
     return flatten(contexts).concat(ComponentUrlFuncProvider);

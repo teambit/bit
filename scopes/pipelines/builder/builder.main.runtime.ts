@@ -7,7 +7,8 @@ import { Component, ComponentMap, IComponent, ComponentAspect, ComponentMain, Co
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import AspectAspect from '@teambit/aspect';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
@@ -27,7 +28,7 @@ import { TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
 import { BuildPipelineResultList, AspectData, PipelineReport } from './build-pipeline-result-list';
-import { Serializable } from './types';
+import { TaskMetadata } from './types';
 import { ArtifactsCmd } from './artifact/artifacts.cmd';
 import { buildTaskTemplate } from './templates/build-task';
 import { BuilderRoute } from './builder.route';
@@ -38,8 +39,7 @@ export type OnTagOpts = {
   disableTagAndSnapPipelines?: boolean;
   throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
   forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
-  skipBuildPipeline?: boolean; // helpful for tagging from scope where we want to use the build-artifacts of previous snap.
-  combineBuildDataFromParent?: boolean; // helpful for tagging from scope where we want to save the build-data of parent snap.
+  populateArtifactsFrom?: ComponentID[]; // helpful for tagging from scope where we want to use the build-artifacts of previous snap.
   isSnap?: boolean;
 };
 export const FILE_PATH_PARAM_DELIM = '~';
@@ -71,9 +71,11 @@ export class BuilderMain {
     private isolator: IsolatorMain,
     private aspectLoader: AspectLoaderMain,
     private componentAspect: ComponentMain,
+    private globalConfig: GlobalConfigMain,
     private buildTaskSlot: TaskSlot,
     private tagTaskSlot: TaskSlot,
-    private snapTaskSlot: TaskSlot
+    private snapTaskSlot: TaskSlot,
+    private logger: Logger
   ) {}
 
   private async storeArtifacts(tasksResults: TaskResults[]) {
@@ -113,15 +115,15 @@ export class BuilderMain {
   ): Promise<OnTagResults> {
     const pipeResults: TaskResultsList[] = [];
     const allTasksResults: TaskResults[] = [];
-    const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap, skipBuildPipeline } = options;
-    if (options.skipBuildPipeline) isolateOptions.populateArtifactsFromParent = true;
+    const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap, populateArtifactsFrom } = options;
+    if (populateArtifactsFrom) isolateOptions.populateArtifactsFrom = populateArtifactsFrom;
     const buildEnvsExecutionResults = await this.build(
       components,
       { emptyRootDir: true, ...isolateOptions },
       {
         ...builderOptions,
         // even when build is skipped (in case of tag-from-scope), the pre-build/post-build and teambit.harmony/aspect tasks are needed
-        tasks: skipBuildPipeline ? [AspectAspect.id] : undefined,
+        tasks: populateArtifactsFrom ? [AspectAspect.id] : undefined,
       }
     );
     if (throwOnError && !forceDeploy) buildEnvsExecutionResults.throwErrorsIfExist();
@@ -143,7 +145,7 @@ export class BuilderMain {
     }
     await this.storeArtifacts(allTasksResults);
     const builderDataMap = this.pipelineResultsToBuilderData(components, allTasksResults);
-    if (options.combineBuildDataFromParent) await this.combineBuildDataFromParent(builderDataMap);
+    if (populateArtifactsFrom) await this.combineBuildDataFrom(builderDataMap, populateArtifactsFrom);
     this.validateBuilderDataMap(builderDataMap);
 
     return { builderDataMap, pipeResults };
@@ -165,19 +167,24 @@ export class BuilderMain {
     });
   }
 
-  private async combineBuildDataFromParent(builderDataMap: ComponentMap<RawBuilderData>) {
+  private async combineBuildDataFrom(
+    builderDataMap: ComponentMap<RawBuilderData>,
+    populateArtifactsFrom: ComponentID[]
+  ) {
     const promises = builderDataMap.map(async (builderData, component) => {
+      const populateFrom = populateArtifactsFrom.find((id) => id.isEqual(component.id, { ignoreVersion: true }));
       const idStr = component.id.toString();
-      const parents = component.head?.parents;
-      if (!parents || parents.length !== 1) {
-        throw new Error(`expect parents of ${idStr} to be 1, got ${parents?.length || 'none'}`);
+      if (!populateFrom) {
+        throw new Error(`combineBuildDataFromParent: unable to find where to populate the artifacts from for ${idStr}`);
       }
-      const parent = parents[0];
-      const parentComp = await this.componentAspect.getHost().get(component.id.changeVersion(parent.toString()));
-      if (!parentComp) throw new Error(`unable to load parent component of ${idStr}. hash: ${parent}`);
-      const parentBuilderData = this.getBuilderData(parentComp);
-      if (!parentBuilderData) throw new Error(`parent of ${idStr} was not built yet. unable to continue`);
-      parentBuilderData.artifacts.forEach((artifact) => {
+      const populateFromComp = await this.componentAspect.getHost().get(populateFrom);
+      if (!populateFromComp)
+        throw new Error(
+          `combineBuildDataFromParent, unable to load parent component of ${idStr}. hash: ${populateFrom.version}`
+        );
+      const populateFromBuilderData = this.getBuilderData(populateFromComp);
+      if (!populateFromBuilderData) throw new Error(`parent of ${idStr} was not built yet. unable to continue`);
+      populateFromBuilderData.artifacts.forEach((artifact) => {
         const artifactObj = artifact.toObject();
         if (!builderData.artifacts) builderData.artifacts = [];
         if (
@@ -187,11 +194,11 @@ export class BuilderMain {
         }
         builderData.artifacts.push(artifactObj);
       });
-      parentBuilderData.aspectsData.forEach((aspectData) => {
+      populateFromBuilderData.aspectsData.forEach((aspectData) => {
         if (builderData.aspectsData.find((a) => a.aspectId === aspectData.aspectId)) return;
         builderData.aspectsData.push(aspectData);
       });
-      parentBuilderData.pipeline.forEach((pipeline) => {
+      populateFromBuilderData.pipeline.forEach((pipeline) => {
         if (builderData.pipeline.find((p) => p.taskId === pipeline.taskId && p.taskName === pipeline.taskName)) return;
         builderData.pipeline.push(pipeline);
       });
@@ -247,7 +254,12 @@ export class BuilderMain {
     return artifacts;
   }
 
-  getDataByAspect(component: IComponent, aspectName: string): Serializable | undefined {
+  /**
+   * this is the aspect's data that was generated as "metadata" of the task component-result during the build process
+   * and saved by the builder aspect in the "aspectsData" property.
+   * (not to be confused with the data saved in the aspect itself, which is saved in the "data" property of the aspect).
+   */
+  getDataByAspect(component: IComponent, aspectName: string): TaskMetadata | undefined {
     const aspectsData = this.getBuilderData(component)?.aspectsData;
     const data = aspectsData?.find((aspectData) => aspectData.aspectId === aspectName);
     return data?.data;
@@ -285,13 +297,25 @@ export class BuilderMain {
     builderOptions?: BuilderServiceOptions
   ): Promise<TaskResultsList> {
     const ids = components.map((c) => c.id);
-    const network = await this.isolator.isolateComponents(ids, isolateOptions || {}, this.scope.legacyScope);
+    const capsulesBaseDir = this.buildService.getComponentsCapsulesBaseDir();
+    const baseIsolateOpts = {
+      baseDir: capsulesBaseDir,
+      useHash: !capsulesBaseDir,
+    };
+    const mergedIsolateOpts = {
+      ...baseIsolateOpts,
+      ...isolateOptions,
+    };
+
+    const network = await this.isolator.isolateComponents(ids, mergedIsolateOpts, this.scope.legacyScope);
     const envs = await this.envs.createEnvironment(network.graphCapsules.getAllComponents());
     const builderServiceOptions = {
       seedersOnly: isolateOptions?.seedersOnly,
       originalSeeders: ids,
+      capsulesBaseDir,
       ...(builderOptions || {}),
     };
+    this.logger.consoleTitle(`Total ${components.length} components to build`);
     const buildResult = await envs.runOnce(this.buildService, builderServiceOptions);
     return buildResult;
   }
@@ -372,10 +396,11 @@ export class BuilderMain {
     GeneratorAspect,
     ComponentAspect,
     UIAspect,
+    GlobalConfigAspect,
   ];
 
   static async provider(
-    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator, component, ui]: [
+    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator, component, ui, globalConfig]: [
       CLIMain,
       EnvsMain,
       Workspace,
@@ -386,7 +411,8 @@ export class BuilderMain {
       GraphqlMain,
       GeneratorMain,
       ComponentMain,
-      UiMain
+      UiMain,
+      GlobalConfigMain
     ],
     config,
     [buildTaskSlot, tagTaskSlot, snapTaskSlot]: [TaskSlot, TaskSlot, TaskSlot]
@@ -400,10 +426,20 @@ export class BuilderMain {
       'getBuildPipe',
       'build',
       artifactFactory,
-      scope
+      scope,
+      globalConfig
     );
     envs.registerService(buildService);
-    const tagService = new BuilderService(isolator, logger, tagTaskSlot, 'getTagPipe', 'tag', artifactFactory, scope);
+    const tagService = new BuilderService(
+      isolator,
+      logger,
+      tagTaskSlot,
+      'getTagPipe',
+      'tag',
+      artifactFactory,
+      scope,
+      globalConfig
+    );
     const snapService = new BuilderService(
       isolator,
       logger,
@@ -411,7 +447,8 @@ export class BuilderMain {
       'getSnapPipe',
       'snap',
       artifactFactory,
-      scope
+      scope,
+      globalConfig
     );
     const builder = new BuilderMain(
       envs,
@@ -423,9 +460,11 @@ export class BuilderMain {
       isolator,
       aspectLoader,
       component,
+      globalConfig,
       buildTaskSlot,
       tagTaskSlot,
-      snapTaskSlot
+      snapTaskSlot,
+      logger
     );
     builder.registerBuildTasks([new BundleUiTask(ui, logger)]);
     component.registerRoute([new BuilderRoute(builder, scope, logger)]);

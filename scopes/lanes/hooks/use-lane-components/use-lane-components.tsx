@@ -1,14 +1,13 @@
-import { useDataQuery, DataQueryResult } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
-import { LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { ComponentModel, componentOverviewFields } from '@teambit/component';
 import { LaneId } from '@teambit/lane-id';
 
 const GET_LANE_COMPONENTS = gql`
-  query LaneComponent($ids: [String!], $extensionId: String) {
+  query LaneComponent($ids: [String!], $extensionId: String, $skipList: Boolean!) {
     lanes {
       id
-      list(ids: $ids) {
+      list(ids: $ids) @skip(if: $skipList) {
         id {
           name
           scope
@@ -21,6 +20,16 @@ const GET_LANE_COMPONENTS = gql`
           ...componentOverviewFields
         }
       }
+      default {
+        id {
+          name
+          scope
+        }
+        hash
+        components {
+          ...componentOverviewFields
+        }
+      }
     }
     getHost(id: $extensionId) {
       id
@@ -29,25 +38,26 @@ const GET_LANE_COMPONENTS = gql`
   ${componentOverviewFields}
 `;
 
-export function useLaneComponents(laneId?: LaneId): {
+export type UseLaneComponentsResult = {
   components?: Array<ComponentModel>;
-} & Omit<DataQueryResult<LanesQuery, { ids: (string | undefined)[] }>, 'data'> {
-  /**
-   * query from context if exists
-   */
+  loading?: boolean;
+};
 
-  const { data, ...rest } = useDataQuery(GET_LANE_COMPONENTS, {
-    variables: { ids: [laneId?.toString()] },
+export function useLaneComponents(laneId?: LaneId): UseLaneComponentsResult {
+  const { data, loading } = useDataQuery(GET_LANE_COMPONENTS, {
+    variables: { ids: [laneId?.toString()], skipList: laneId?.isDefault() },
     skip: !laneId,
   });
 
-  const components = data?.lanes.list[0].components.map((component) => {
+  const rawComps = data?.lanes.list && data?.lanes.list.length > 0 ? data?.lanes.list[0] : data?.lanes.default;
+
+  const components = rawComps?.components?.map((component) => {
     const componentModel = ComponentModel.from({ ...component, host: data.getHost.id });
     return componentModel;
   });
 
   return {
-    ...rest,
+    loading,
     components,
   };
 }

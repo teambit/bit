@@ -540,12 +540,6 @@ export class DependencyLinker {
       // eslint-disable-next-line global-require, import/no-dynamic-require
       const module = require(aspectDir);
       const aspectPath = path.resolve(path.join(module.path, '..', '..'));
-      // in this case we want the symlinks to be relative links
-      // Using the fs module to make sure it is relative to the target
-      if (fs.existsSync(target)) {
-        this.logger.debug(`linkCoreAspect: aspectPath ${aspectPath} skip linking`);
-        return undefined;
-      }
       this.logger.debug(`linkCoreAspect: linking aspectPath ${aspectPath} to ${target}`);
       return { aspectId: id, linkDetail: { packageName, from: aspectPath, to: target } };
     } catch (err: any) {

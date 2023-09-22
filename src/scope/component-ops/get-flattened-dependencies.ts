@@ -1,5 +1,4 @@
 import graphlib, { Graph as GraphLib } from 'graphlib';
-import { flatten } from 'lodash';
 import mapSeries from 'p-map-series';
 import R from 'ramda';
 import { Scope } from '..';
@@ -11,12 +10,13 @@ import logger from '../../logger/logger';
 import { buildComponentsGraphCombined } from '../graph/components-graph';
 import Graph from '../graph/graph';
 import VersionDependencies from '../version-dependencies';
+import { Lane } from '../models';
 
 export class FlattenedDependenciesGetter {
   private dependenciesGraph: Graph;
   private versionDependencies: VersionDependencies[];
   private cache: { [idStr: string]: BitIds } = {};
-  constructor(private scope: Scope, private components: Component[]) {}
+  constructor(private scope: Scope, private components: Component[], private lane?: Lane) {}
 
   /**
    * to get the flattened dependencies of a component, we iterate over the direct dependencies and
@@ -56,8 +56,11 @@ export class FlattenedDependenciesGetter {
     const scopeComponentsImporter = this.scope.scopeImporter;
     this.versionDependencies = await scopeComponentsImporter.importMany({
       ids: BitIds.fromArray(bitIds),
+      preferDependencyGraph: false,
       cache: true,
       throwForDependencyNotFound: true,
+      lane: this.lane,
+      reason: 'for fetching all flattened dependencies',
     });
   }
 
@@ -65,8 +68,12 @@ export class FlattenedDependenciesGetter {
     const dependencies = this.getFlattenedFromCurrentComponents(bitId);
     dependencies.forEach((dep) => throwWhenDepNotIncluded(bitId, dep));
     const dependenciesDeps = await mapSeries(dependencies, (dep) => this.getFlattenedFromVersion(dep, bitId));
-    const dependenciesDepsFlattened = flatten(dependenciesDeps);
-    dependencies.push(...dependenciesDepsFlattened);
+    const dependenciesDepsFlattened = dependenciesDeps.flat();
+    // this dependenciesDepsFlattened can be huge, don't use spread operator (...) here. otherwise, it throws
+    // `Maximum call stack size exceeded`. it's important to first make them uniq
+    // (from a real example, before uniq: 133,068. after uniq: 2,126)
+    const dependenciesDepsUniq = BitIds.uniqFromArray(dependenciesDepsFlattened);
+    dependencies.push(...dependenciesDepsUniq);
     return BitIds.uniqFromArray(dependencies);
   }
 

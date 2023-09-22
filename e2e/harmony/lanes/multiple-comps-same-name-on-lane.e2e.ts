@@ -7,11 +7,13 @@ describe('lane with multiple components with the same name but different scope-n
   this.timeout(0);
   let helper: Helper;
   let anotherRemote: string;
+  let anotherRemotePath: string;
   before(() => {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
     anotherRemote = scopeName;
+    anotherRemotePath = scopePath;
 
     helper.fixtures.populateComponents(2);
     helper.command.createLane('lane-a');
@@ -49,6 +51,7 @@ describe('lane with multiple components with the same name but different scope-n
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.addRemoteScope(anotherRemotePath);
     });
     it('should fail due to duplication of the same name in the same workspace', () => {
       expect(() => helper.command.importLane('lane-a')).to.throw('duplicate');

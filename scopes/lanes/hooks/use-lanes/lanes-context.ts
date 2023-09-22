@@ -1,11 +1,17 @@
 import { LaneId } from '@teambit/lane-id';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { createContext, useContext } from 'react';
+import { FetchMoreLanes, UseLanesOptions } from './use-lanes';
 
 export type LanesContextModel = {
   lanesModel?: LanesModel;
-  updateLanesModel?: (updatedLanes?: LanesModel) => void;
   updateViewedLane?: (viewedLaneId?: LaneId) => void;
+  fetchMoreLanes?: FetchMoreLanes;
+  hasMore?: boolean;
+  loading?: boolean;
+  options?: UseLanesOptions;
+  offset?: number;
+  limit?: number;
 };
 
 export const LanesContext: React.Context<LanesContextModel | undefined> = createContext<LanesContextModel | undefined>(

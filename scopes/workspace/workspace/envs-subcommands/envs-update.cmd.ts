@@ -1,5 +1,6 @@
 import { Command } from '@teambit/cli';
 import chalk from 'chalk';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Workspace } from '../workspace';
 
 export class EnvsUpdateCmd implements Command {
@@ -9,22 +10,21 @@ export class EnvsUpdateCmd implements Command {
     {
       name: 'env-id',
       description:
-        'the environment id (defaults to all envs). optionally, add a version (id@version), otherwise, it finds the latest version on the remote.',
+        'the environment id (defaults to all envs). optionally, add a version (id@version), if no version is supplied will use the latest version on the remote.',
     },
     {
       name: 'pattern',
-      description:
-        'the components to update (defaults to all components). use component name, component id, or component pattern. use component pattern to select multiple components. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button". wrap the pattern with quotes',
+      description: `the components to update (defaults to all components). ${COMPONENT_PATTERN_HELP}`,
     },
   ];
   examples = [
     {
       cmd: 'envs update',
-      description: 'update all envs in the workspace to their latest version',
+      description: 'update all envs for all components in the workspace, to their latest version',
     },
     {
       cmd: "envs update scope.org/env '**/ui/**'",
-      description: 'update "ui" components that use scope.org/env to use its latest version',
+      description: 'update components in the "ui" namespace that use scope.org/env to use its latest version',
     },
     {
       cmd: 'envs update scope.org/env@2.0.0',
@@ -44,7 +44,7 @@ export class EnvsUpdateCmd implements Command {
           return `${chalk.bold(envId)}:\n${updated[envId].map((compId) => compId.toString()).join('\n')}`;
         })
         .join('\n\n');
-      const title = chalk.green(`the following component(s) have been successfully updated:\n`);
+      const title = chalk.green(`the following component(s) env has been successfully updated:\n`);
       return title + body;
     }
     if (alreadyUpToDate.length) {
@@ -52,6 +52,6 @@ export class EnvsUpdateCmd implements Command {
         `all ${alreadyUpToDate.length} component(s) that use this env are already up to date. nothing to update`
       );
     }
-    return chalk.yellow(`unable to find any component that use ${chalk.bold(aspectId)}`);
+    return chalk.yellow(`unable to find any components using env ${chalk.bold(aspectId)}`);
   }
 }

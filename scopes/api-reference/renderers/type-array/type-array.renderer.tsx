@@ -1,5 +1,5 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { TypeArraySchema } from '@teambit/semantics.entities.semantic-schema';
 import styles from './type-array.renderer.module.scss';
 
@@ -21,20 +21,20 @@ function TypeArrayComponent(props: APINodeRenderProps) {
 
   if (typeRenderer) {
     return (
-      <div key={`${api.__schema}-${api.name}`} className={styles.node}>
+      <div key={`${api.__schema}-${api.name}`} className={nodeStyles.node}>
         <typeRenderer.Component
           {...props}
           apiNode={{ ...props.apiNode, api: typeArray.type, renderer: typeRenderer }}
           depth={(props.depth ?? 0) + 1}
           metadata={{ [typeArray.type.__schema]: { columnView: true } }}
         />
-        {'[]'}
+        <span className={styles.code}>{'[]'}</span>
       </div>
     );
   }
 
   return (
-    <div key={`${api.__schema}-${api.name}`} className={styles.node}>
+    <div key={`${api.__schema}-${api.name}`} className={nodeStyles.node}>
       {typeArray.toString()}
     </div>
   );

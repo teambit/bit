@@ -1,12 +1,10 @@
-import { Transform } from 'class-transformer';
 import chalk from 'chalk';
-import { Location, SchemaNode } from '../schema-node';
-import { schemaObjToInstance } from '../class-transformers';
+import { SchemaLocation, SchemaNode } from '../schema-node';
+import { SchemaRegistry } from '../schema-registry';
 
 export class GetAccessorSchema extends SchemaNode {
-  @Transform(schemaObjToInstance)
   readonly type: SchemaNode;
-  constructor(readonly location: Location, readonly name: string, type: SchemaNode, readonly signature: string) {
+  constructor(readonly location: SchemaLocation, readonly name: string, type: SchemaNode, readonly signature: string) {
     super();
     this.type = type;
   }
@@ -14,7 +12,28 @@ export class GetAccessorSchema extends SchemaNode {
     return this.signature;
   }
 
+  getNodes() {
+    return [this.type];
+  }
+
   toString() {
     return `get ${chalk.bold(this.name)}(): ${this.type.toString()}`;
+  }
+
+  toObject() {
+    return {
+      ...super.toObject(),
+      name: this.name,
+      type: this.type.toObject(),
+      signature: this.signature,
+    };
+  }
+
+  static fromObject(obj: Record<string, any>): GetAccessorSchema {
+    const location = obj.location;
+    const name = obj.name;
+    const type = SchemaRegistry.fromObject(obj.type);
+    const signature = obj.signature;
+    return new GetAccessorSchema(location, name, type, signature);
   }
 }

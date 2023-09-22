@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component';
 import { makeOutdatedPkgChoices } from './pick-outdated-pkgs';
 
 describe('makeOutdatedPkgChoices', () => {
@@ -42,7 +43,7 @@ describe('makeOutdatedPkgChoices', () => {
         currentRange: '1.0.0',
         latestRange: '2.0.0',
         source: 'component',
-        componentId: 'comp1',
+        componentId: ComponentID.fromString('scope/comp1'),
         targetField: 'dependencies',
       },
       {
@@ -64,7 +65,7 @@ describe('makeOutdatedPkgChoices', () => {
         currentRange: '1.0.0',
         latestRange: '2.0.0',
         source: 'component-model',
-        componentId: 'comp1',
+        componentId: ComponentID.fromString('scope/comp1'),
         targetField: 'devDependencies',
       },
       {
@@ -72,7 +73,7 @@ describe('makeOutdatedPkgChoices', () => {
         currentRange: '1.1.0',
         latestRange: '2.0.0',
         source: 'component-model',
-        componentId: 'comp2',
+        componentId: ComponentID.fromString('scope/comp2'),
         targetField: 'dependencies',
       },
     ]);
@@ -86,7 +87,7 @@ describe('makeOutdatedPkgChoices', () => {
         currentRange: '<=10.0.0',
         latestRange: '2.0.0',
         source: 'component-model',
-        componentId: 'comp1',
+        componentId: ComponentID.fromString('scope/comp1'),
         targetField: 'dependencies',
       },
       {
@@ -94,7 +95,7 @@ describe('makeOutdatedPkgChoices', () => {
         currentRange: '1.1.0',
         latestRange: '2.0.0',
         source: 'component-model',
-        componentId: 'comp2',
+        componentId: ComponentID.fromString('scope/comp2'),
         targetField: 'dependencies',
       },
     ]);
@@ -108,7 +109,7 @@ describe('makeOutdatedPkgChoices', () => {
         currentRange: '^1.2.3',
         latestRange: '2.0.0',
         source: 'component-model',
-        componentId: 'comp1',
+        componentId: ComponentID.fromString('scope/comp1'),
         targetField: 'dependencies',
       },
       {
@@ -116,7 +117,7 @@ describe('makeOutdatedPkgChoices', () => {
         currentRange: '^1.2.3',
         latestRange: '2.0.0',
         source: 'component-model',
-        componentId: 'comp2',
+        componentId: ComponentID.fromString('scope/comp2'),
         targetField: 'dependencies',
       },
     ]);

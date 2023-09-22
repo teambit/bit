@@ -1,3 +1,4 @@
+/* eslint-disable spaced-comment */
 // import fs from 'fs';
 import chai, { expect } from 'chai';
 import path from 'path';

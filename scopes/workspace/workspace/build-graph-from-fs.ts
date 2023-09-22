@@ -118,10 +118,12 @@ export class GraphFromFsBuilder {
     const scopeComponentsImporter = this.consumer.scope.scopeImporter;
     await scopeComponentsImporter.importMany({
       ids: BitIds.uniqFromArray(allDepsWithScope),
+      preferDependencyGraph: false,
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,
       lane: this.currentLane || undefined,
+      reason: 'for building a graph from the workspace',
     });
     allDepsNotImported.map((id) => this.importedIds.push(id.toString()));
   }

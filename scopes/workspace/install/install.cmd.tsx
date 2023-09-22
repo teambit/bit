@@ -1,4 +1,3 @@
-import { BitError } from '@teambit/bit-error';
 import { Command, CommandOptions } from '@teambit/cli';
 import { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
@@ -7,7 +6,6 @@ import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { InstallMain, WorkspaceInstallOptions } from './install.main.runtime';
 
 type InstallCmdOptions = {
-  variants: string;
   type: WorkspaceDependencyLifecycleType;
   skipDedupe: boolean;
   skipImport: boolean;
@@ -19,6 +17,7 @@ type InstallCmdOptions = {
   addMissingPeers: boolean;
   noOptional: boolean;
   recurringInstall: boolean;
+  lockfileOnly: boolean;
 };
 
 type FormatOutputArgs = {
@@ -36,31 +35,31 @@ export default class InstallCmd implements Command {
   description = 'installs workspace dependencies';
   extendedDescription =
     'when no package is specified, all workspace dependencies are installed and all workspace components are imported.';
-  helpUrl = 'docs/dependencies/dependency-installation';
+  helpUrl = 'reference/dependencies/dependency-installation';
   arguments = [{ name: 'packages...', description: 'a list of packages to install (separated by spaces)' }];
   alias = 'in';
   group = 'development';
   options = [
-    ['v', 'variants <variants>', 'add packages to specific variants'],
     ['t', 'type [lifecycleType]', '"runtime" (default) or "peer" (dev is not a valid option)'],
-    ['u', 'update', 'update all dependencies'],
+    ['u', 'update', 'update all dependencies to latest version according to their semver range'],
     [
       '',
-      'update-existing [updateExisting]',
+      'update-existing',
       'DEPRECATED (not needed anymore, it is the default now). update existing dependencies version and types',
     ],
     ['', 'save-prefix [savePrefix]', 'set the prefix to use when adding dependency to workspace.jsonc'],
-    ['', 'skip-dedupe [skipDedupe]', 'do not dedupe dependencies on installation'],
-    ['', 'skip-import [skipImport]', 'do not import bit objects post installation'],
-    ['', 'skip-compile [skipCompile]', 'do not compile components'],
-    ['', 'add-missing-deps [addMissingDeps]', 'install all missing dependencies'],
-    ['', 'add-missing-peers [addMissingPeers]', 'install all missing peer dependencies'],
+    ['', 'skip-dedupe', 'do not dedupe dependencies on installation'],
+    ['', 'skip-import', 'do not import bit objects post installation'],
+    ['', 'skip-compile', 'do not compile components'],
+    ['', 'add-missing-deps', 'install all missing dependencies'],
+    ['', 'add-missing-peers', 'install all missing peer dependencies'],
     [
       '',
       recurringInstallFlagName,
       'automatically run install again if there are non loaded old envs in your workspace',
     ],
     ['', 'no-optional [noOptional]', 'do not install optional dependencies (works with pnpm only)'],
+    ['', 'lockfile-only', 'dependencies are not written to node_modules. Only the lockfile is updated'],
   ] as CommandOptions;
 
   constructor(
@@ -79,17 +78,13 @@ export default class InstallCmd implements Command {
   async report([packages = []]: [string[]], options: InstallCmdOptions) {
     const startTime = Date.now();
     if (!this.workspace) throw new OutsideWorkspaceError();
-    if (packages.length && options.addMissingDeps) {
-      throw new BitError('You can not use --add-missing-deps with a list of packages');
-    }
     if (options.updateExisting) {
       this.logger.consoleWarning(
-        `--update-existing is deprecated, please omit it. "bit install" will update existing dependency by default`
+        `--update-existing is deprecated, please omit it. "bit install" will update existing dependencies by default`
       );
     }
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const installOpts: WorkspaceInstallOptions = {
-      variants: options.variants,
       lifecycleType: options.addMissingPeers ? 'peer' : options.type,
       dedupe: !options.skipDedupe,
       import: !options.skipImport,
@@ -101,6 +96,7 @@ export default class InstallCmd implements Command {
       includeOptionalDeps: !options.noOptional,
       updateAll: options.update,
       recurringInstall: options.recurringInstall,
+      lockfileOnly: options.lockfileOnly,
     };
     const components = await this.install.install(packages, installOpts);
     const endTime = Date.now();
@@ -138,22 +134,16 @@ function formatOutput({
 }
 
 export function getAnotherInstallRequiredOutput(recurringInstall = false, oldNonLoadedEnvs: string[] = []): string {
-  // oldNonLoadedEnvs = ['my-org.my-scope/envs/my-react-env']
   if (!oldNonLoadedEnvs.length) return '';
   const oldNonLoadedEnvsStr = oldNonLoadedEnvs.join(', ');
-  const firstPart = `The following environments are not loaded: ${chalk.cyan(
-    oldNonLoadedEnvsStr
-  )} and doesn't contain env.jsonc file`;
-  const docsLink = `Read more about how to fix this issue in:`;
-  const installAgain = `Please run "bit install" again to make sure all dependencies installed correctly`;
+  const firstPart = `Bit was not able to install all dependencies. Please run "${chalk.cyan('bit install')}" again `;
   const flag = chalk.cyan(`--${recurringInstallFlagName}`);
-  const suggestRecurringInstall = `You can add the ${flag} flag to automatically run "bit install" again. but it is recommended to fix this issue`;
-  let msg = `${firstPart}\n${installAgain}\n${suggestRecurringInstall}\n${docsLink}`;
+  const suggestRecurringInstall = recurringInstall ? '' : `(or use the "${flag}" option next time).`;
+  const envsStr = `The following environments need to add support for "dependency policy" to fix the warning: ${chalk.cyan(
+    oldNonLoadedEnvsStr
+  )}`;
+  const docsLink = `Read more about how to fix this issue in: https://bit.dev/blog/using-a-static-dependency-policy-in-a-legacy-env-lihfbt9b`;
 
-  if (recurringInstall) {
-    const autoInstallAgain =
-      'bit run install again for you to make sure all dependencies installed correctly, but it is recommended to fix this issue';
-    msg = `${firstPart}\n${autoInstallAgain}\n${docsLink}`;
-  }
+  const msg = `${firstPart}${suggestRecurringInstall}\n${envsStr}\n${docsLink}`;
   return chalk.yellow(msg);
 }

@@ -10,7 +10,7 @@ export type TemplatesOptions = {
 
 export class TemplatesCmd implements Command {
   name = 'templates';
-  description = 'list templates for "bit create" and "bit new"';
+  description = 'list available templates for "bit create" and "bit new"';
   extendedDescription =
     'list components templates when inside bit-workspace (for bit-create), otherwise, list workspace templates (for bit-new)';
   alias = '';

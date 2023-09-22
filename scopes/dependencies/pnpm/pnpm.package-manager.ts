@@ -8,7 +8,7 @@ import {
   ResolvedPackageVersion,
   Registries,
   Registry,
-  BIT_DEV_REGISTRY,
+  BIT_CLOUD_REGISTRY,
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
@@ -20,6 +20,7 @@ import { ProjectManifest } from '@pnpm/types';
 import { join } from 'path';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
+import type { RebuildFn } from './lynx';
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
@@ -30,7 +31,7 @@ export class PnpmPackageManager implements PackageManager {
   async install(
     { rootDir, manifests }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
-  ): Promise<{ dependenciesChanged: boolean; rebuild: () => Promise<void>; storeDir: string }> {
+  ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string }> {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
@@ -53,9 +54,9 @@ export class PnpmPackageManager implements PackageManager {
     if (installOptions.nmSelfReferences) {
       Object.values(manifests).forEach((manifest) => {
         if (manifest.name) {
-          manifest.dependencies = {
+          manifest.devDependencies = {
             [manifest.name]: 'link:.',
-            ...manifest.dependencies,
+            ...manifest.devDependencies,
           };
         }
       });
@@ -91,6 +92,12 @@ export class PnpmPackageManager implements PackageManager {
         pnpmHomeDir: config.pnpmHomeDir,
         updateAll: installOptions.updateAll,
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
+        reportOptions: {
+          appendOnly: installOptions.optimizeReportForNonTerminal,
+          throttleProgress: installOptions.throttleProgress,
+          hideProgressPrefix: installOptions.hideProgressPrefix,
+          hideLifecycleOutput: installOptions.hideLifecycleOutput,
+        },
       },
       this.logger
     );
@@ -197,7 +204,7 @@ export class PnpmPackageManager implements PackageManager {
 
     // Add bit registry server if not exist
     if (!scopesRegistries.bit) {
-      scopesRegistries.bit = new Registry(BIT_DEV_REGISTRY, true);
+      scopesRegistries.bit = new Registry(BIT_CLOUD_REGISTRY, true);
     }
 
     return new Registries(defaultRegistry, scopesRegistries);

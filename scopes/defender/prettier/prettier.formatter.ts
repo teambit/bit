@@ -10,10 +10,9 @@ import PrettierLib, { Options as PrettierModuleOptions } from 'prettier';
 import mapSeries from 'p-map-series';
 import { Logger } from '@teambit/logger';
 import { ExecutionContext } from '@teambit/envs';
-import { PrettierFormatterInterface } from './prettier-formatter-interface';
 // import { PrettierOptions } from './prettier.main.runtime';
 
-export class PrettierFormatter implements Formatter, PrettierFormatterInterface {
+export class PrettierFormatter implements Formatter {
   constructor(
     private logger: Logger,
 
@@ -32,16 +31,28 @@ export class PrettierFormatter implements Formatter, PrettierFormatterInterface 
     return JSON.stringify(this.options, null, 2);
   }
 
-  generateIdeConfig() {
-    return { prettierConfig: this.options };
-  }
-
   async format(context: FormatterContext): Promise<FormatResults> {
     return this.run(context);
   }
 
-  async formatSnippet(snippet: string): Promise<string> {
-    return this.prettierModule.format(snippet, this.options);
+  async formatSnippet(snippet: string, filePath?: string): Promise<string> {
+    let parser;
+
+    if (filePath) {
+      const ext = filePath.split('.').pop();
+      const supportInfo = this.prettierModule.getSupportInfo();
+      const language = supportInfo.languages.find((lang) => lang.extensions && lang.extensions.includes(`.${ext}`));
+
+      if (language) {
+        parser = language.parsers[0];
+      }
+    }
+
+    parser = parser || 'babel';
+
+    const optsWithFilePath = Object.assign({}, this.options, { filepath: filePath, parser });
+
+    return this.prettierModule.format(snippet, optsWithFilePath);
   }
 
   async check(context: FormatterContext): Promise<FormatResults> {

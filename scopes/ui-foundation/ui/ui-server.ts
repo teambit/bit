@@ -5,6 +5,7 @@ import { Logger } from '@teambit/logger';
 import express, { Express } from 'express';
 import fallback from 'express-history-api-fallback';
 import { Port } from '@teambit/toolbox.network.get-port';
+import { stripTrailingChar } from '@teambit/legacy/dist/utils';
 import { Server } from 'http';
 import httpProxy from 'http-proxy';
 import { join } from 'path';
@@ -158,7 +159,9 @@ export class UIServer {
 
     // TODO - should use https://github.com/chimurai/http-proxy-middleware
     server.on('upgrade', function (req, socket, head) {
-      const entry = proxyEntries.find((proxy) => proxy.context.some((item) => item === req.url));
+      const entry = proxyEntries.find((proxy) =>
+        proxy.context.some((item) => item === stripTrailingChar(req.url, '/'))
+      );
       if (!entry) return;
       proxServer.ws(req, socket, head, {
         target: entry.target,
@@ -168,7 +171,8 @@ export class UIServer {
     proxyEntries.forEach((entry) => {
       entry.context.forEach((route) => {
         app.use(`${route}/*`, (req, res) => {
-          proxServer.web(req, res, { ...entry, target: `${entry.target}/${req.originalUrl}` });
+          req.url = req.originalUrl;
+          proxServer.web(req, res, entry);
         });
       });
     });

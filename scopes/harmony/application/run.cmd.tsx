@@ -16,8 +16,8 @@ type RunOptions = {
 
 export class RunCmd implements Command {
   name = 'run <app-name>';
-  description = "run an app (independent of bit's dev server)";
-  helpUrl = 'docs/apps/apps-overview';
+  description = "locally run an app component (independent of bit's dev server)";
+  helpUrl = 'reference/apps/apps-overview/';
   arguments = [
     {
       name: 'app-name',
@@ -29,8 +29,8 @@ export class RunCmd implements Command {
   group = 'apps';
   options = [
     ['d', 'dev', 'start the application in dev mode.'],
-    ['p', 'port [port-number]', 'port of the app'],
-    ['v', 'verbose', 'showing verbose output for inspection and prints stack trace'],
+    ['p', 'port [port-number]', 'port to run the app on'],
+    ['v', 'verbose', 'show verbose output for inspection and print stack trace'],
     ['', 'skip-watch', 'avoid running the watch process that compiles components in the background'],
     ['', 'ssr', 'run app in server side rendering mode.'],
   ] as CommandOptions;

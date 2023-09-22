@@ -183,7 +183,7 @@ export class TesterMain {
   }
 
   getComponentDevPatterns(component: Component) {
-    const env = this.envs.calculateEnv(component).env;
+    const env = this.envs.calculateEnv(component, { skipWarnings: !!this.workspace.inInstallContext }).env;
     const componentPatterns: string[] = env.getTestsDevPatterns
       ? env.getTestsDevPatterns(component)
       : this.getPatterns();

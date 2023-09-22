@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import path from 'path';
 import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { MainRuntime } from '@teambit/cli';
@@ -11,7 +12,11 @@ import { Harmony } from '@teambit/harmony';
 import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { PkgAspect } from '@teambit/pkg';
+import { RenamingAspect } from '@teambit/renaming';
+import { EnvsAspect } from '@teambit/envs';
 import { NewComponentHelperAspect } from './new-component-helper.aspect';
+
+const aspectsConfigToIgnore: string[] = [PkgAspect.id, RenamingAspect.id];
 
 export class NewComponentHelperMain {
   constructor(private workspace: Workspace, private harmony: Harmony, private tracker: TrackerMain) {}
@@ -35,20 +40,41 @@ export class NewComponentHelperMain {
    * if not provided, generate the path based on the component-id.
    * the component will be written to that path.
    */
-  getNewComponentPath(componentId: ComponentID, pathFromUser?: string): PathLinuxRelative {
-    if (pathFromUser) return pathFromUser;
+  getNewComponentPath(componentId: ComponentID, pathFromUser?: string, componentsToCreate?: number): PathLinuxRelative {
+    if (pathFromUser) {
+      const fullPath = path.join(this.workspace.path, pathFromUser);
+      const componentPath = componentId.fullName;
+      const dirExists = fs.pathExistsSync(fullPath);
+      if (componentsToCreate && componentsToCreate === 1) {
+        return dirExists ? path.join(pathFromUser, componentPath) : pathFromUser;
+      }
+      if (componentsToCreate && componentsToCreate > 1) {
+        return path.join(pathFromUser, componentPath);
+      }
+      return pathFromUser;
+    }
+
     return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.workspace.defaultDirectory);
   }
-
   async writeAndAddNewComp(
     comp: Component,
     targetId: ComponentID,
-    options?: { path?: string; scope?: string },
+    options?: { path?: string; scope?: string; env?: string },
     config?: { [aspectName: string]: any }
   ) {
     const targetPath = this.getNewComponentPath(targetId, options?.path);
     await this.throwForExistingPath(targetPath);
     await this.workspace.write(comp, targetPath);
+    if (options?.env && config) {
+      const oldEnv = config[EnvsAspect.id]?.env;
+      if (oldEnv) {
+        const envKey = Object.keys(config).find((key) => key.startsWith(oldEnv));
+        if (envKey) {
+          delete config[envKey];
+        }
+      }
+      await this.tracker.addEnvToConfig(options.env, config);
+    }
     try {
       await this.tracker.track({
         rootDir: targetPath,
@@ -63,7 +89,7 @@ export class NewComponentHelperMain {
     }
 
     await this.workspace.bitMap.write();
-    this.workspace.clearCache();
+    await this.workspace.clearCache();
     // this takes care of compiling the component as well
     await this.workspace.triggerOnComponentAdd(targetId);
   }
@@ -91,9 +117,9 @@ export class NewComponentHelperMain {
     comp.state.aspects.entries.forEach((entry) => {
       if (!entry.config) return;
       const aspectId = entry.id.toString();
-      // don't copy the pkg aspect, it's not relevant for the new component
-      // (it might contains values that are bounded to the other component name / id)
-      if (aspectId === PkgAspect.id) {
+      // don't copy config of aspects that are not relevant for the new component
+      // (e.g. pkg aspect config might contain values that are bounded to the other component name / id)
+      if (aspectsConfigToIgnore.includes(aspectId)) {
         return;
       }
       fromExisting[aspectId] = entry.config;

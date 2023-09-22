@@ -8,12 +8,21 @@ import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/con
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import EnvsAspect from '@teambit/envs';
+import { getPathStatIfExist } from '@teambit/legacy/dist/utils/fs/last-modified';
+
+export type MergeOptions = {
+  mergeStrategy?: 'theirs' | 'ours' | 'manual';
+};
 /**
  * consider extracting to a new component.
  * (pro: making Workspace aspect smaller. con: it's an implementation details of the workspace)
  */
 export class BitMap {
   constructor(private legacyBitMap: LegacyBitMap, private consumer: Consumer) {}
+
+  mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: MergeOptions = {}): string {
+    return LegacyBitMap.mergeContent(bitmapContent, otherBitmapContent, opts);
+  }
 
   /**
    * adds component config to the .bitmap file.
@@ -111,12 +120,21 @@ export class BitMap {
 
   /**
    * get the data saved in the .bitmap file for this component-id.
+   * throws if not found
+   * @see getBitmapEntryIfExist
    */
   getBitmapEntry(
     id: ComponentID,
     { ignoreVersion, ignoreScopeAndVersion }: GetBitMapComponentOptions = {}
   ): ComponentMap {
     return this.legacyBitMap.getComponent(id._legacy, { ignoreVersion, ignoreScopeAndVersion });
+  }
+
+  getBitmapEntryIfExist(
+    id: ComponentID,
+    { ignoreVersion, ignoreScopeAndVersion }: GetBitMapComponentOptions = {}
+  ): ComponentMap | undefined {
+    return this.legacyBitMap.getComponentIfExist(id._legacy, { ignoreVersion, ignoreScopeAndVersion });
   }
 
   getAspectIdFromConfig(
@@ -207,8 +225,8 @@ export class BitMap {
   makeComponentsAvailableOnMain(ids: ComponentID[]) {
     ids.forEach((id) => {
       const componentMap = this.getBitmapEntry(id);
+      componentMap.isAvailableOnCurrentLane = true;
       delete componentMap.onLanesOnly;
-      delete componentMap.isAvailableOnCurrentLane;
     });
     this.legacyBitMap.markAsChanged();
   }
@@ -227,5 +245,17 @@ export class BitMap {
   restoreFromSnapshot(componentMaps: ComponentMap[]) {
     this.legacyBitMap.components = componentMaps;
     this.legacyBitMap._invalidateCache();
+  }
+
+  /**
+   * .bitmap file could be changed by other sources (e.g. manually or by "git pull") not only by bit.
+   * this method returns the timestamp when the .bitmap has changed through bit. (e.g. as part of snap/tag/export/merge
+   * process)
+   */
+  async getLastModifiedBitmapThroughBit(): Promise<number | undefined> {
+    const bitmapHistoryDir = this.consumer.getBitmapHistoryDir();
+    const stat = await getPathStatIfExist(bitmapHistoryDir);
+    if (!stat) return undefined;
+    return stat.mtimeMs;
   }
 }

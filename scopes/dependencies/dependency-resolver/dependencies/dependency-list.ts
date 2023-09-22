@@ -1,4 +1,5 @@
 import { uniqBy, property } from 'lodash';
+import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 import { Dependency, DependencyLifecycleType, SerializedDependency, SemverVersion, PackageName } from './dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './constants';
 import { ComponentDependency } from './component-dependency';
@@ -50,9 +51,14 @@ export class DependencyList {
   }
 
   findByPkgNameOrCompId(id: string, version?: string): Dependency | undefined {
-    const found = this.dependencies.find((dep) => dep.id === id || dep.getPackageName?.() === id);
+    const found = this.dependencies.find(
+      (dep) => dep.id === id || dep.getPackageName?.() === id || dep.id.startsWith(`${id}@`)
+    );
     if (!found) return undefined;
     if (version) {
+      // because the version for snaps is stored in deps as the hash without the prefix of "0.0.0-""
+      if (version.startsWith(SNAP_VERSION_PREFIX) && found.version === version.replace(SNAP_VERSION_PREFIX, ''))
+        return found;
       return found.version === version ? found : undefined;
     }
     return found;

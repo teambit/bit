@@ -40,7 +40,7 @@ export type ComponentMapData = {
   trackDir?: PathLinux;
   wrapDir?: PathLinux;
   exported?: boolean;
-  onLanesOnly: boolean;
+  onLanesOnly?: boolean;
   isAvailableOnCurrentLane?: boolean;
   nextVersion?: NextVersion;
   config?: Config;
@@ -64,8 +64,15 @@ export default class ComponentMap {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   markBitMapChangedCb: Function;
   exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
-  onLanesOnly? = false; // whether a component is available only on lanes and not on main
   isAvailableOnCurrentLane? = true; // if a component was created on another lane, it might not be available on the current lane
+  /**
+   * @deprecated here for forward compatibility.
+   * used to determine whether a component is available only on lanes and not on main
+   * schema 15 used this prop, and if it was false/undefined, it assumed the component is available regardless of `isAvailableOnCurrentLane`.
+   * schema 16 is not using this prop anymore.
+   * this is still here for projects that loaded .bitmap with schema 16 and then downgraded bit to a version with schema 15.
+   */
+  onLanesOnly? = false;
   nextVersion?: NextVersion; // for soft-tag (harmony only), this data is used in the CI to persist
   recentlyTracked?: boolean; // eventually the timestamp is saved in the filesystem cache so it won't be re-tracked if not changed
   scope?: string | null; // empty string if new/staged. (undefined if legacy).
@@ -332,6 +339,11 @@ export default class ComponentMap {
     if (!removeAspectConf) return false;
     return removeAspectConf !== '-' && removeAspectConf.removed;
   }
+  isRecovered() {
+    const removeAspectConf = this.config?.[Extensions.remove];
+    if (!removeAspectConf) return false;
+    return removeAspectConf !== '-' && removeAspectConf.removed === false;
+  }
 
   sort() {
     this.files = R.sortBy(R.prop('relativePath'), this.files);
@@ -388,6 +400,9 @@ export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore
     cwd: consumerPath,
     dot: true,
     onlyFiles: true,
+    // must ignore node_modules at this stage, although we check for gitignore later on.
+    // otherwise, it hurts performance dramatically for components that have node_modules in the comp-dir.
+    ignore: [`${dir}/node_modules/`],
   });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
   const filteredMatches: string[] = gitIgnore.filter(matches);

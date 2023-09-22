@@ -28,6 +28,7 @@ import {
 import * as pnpm from '@pnpm/core';
 import { createClient, ClientOptions } from '@pnpm/client';
 import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
+import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
 import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
@@ -36,6 +37,7 @@ import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
 const installsRunning: Record<string, Promise<any>> = {};
+const cafsLocker = new Map<string, number>();
 
 type RegistriesMap = {
   default: string;
@@ -58,6 +60,7 @@ async function createStoreController(
   const opts: CreateStoreControllerOptions = {
     dir: options.rootDir,
     cacheDir: options.cacheDir,
+    cafsLocker,
     storeDir: options.storeDir,
     rawConfig: authConfig,
     verifyStoreIntegrity: true,
@@ -158,6 +161,16 @@ export async function getPeerDependencyIssues(
   });
 }
 
+export type RebuildFn = (opts: { pending?: boolean; skipIfHasSideEffectsCache?: boolean }) => Promise<void>;
+
+export interface ReportOptions {
+  appendOnly?: boolean;
+  throttleProgress?: number;
+  hideAddedPkgsProgress?: boolean;
+  hideProgressPrefix?: boolean;
+  hideLifecycleOutput?: boolean;
+}
+
 export async function install(
   rootDir: string,
   manifestsByPaths: Record<string, ProjectManifest>,
@@ -173,6 +186,7 @@ export async function install(
     rootComponents?: boolean;
     rootComponentsForCapsules?: boolean;
     includeOptionalDeps?: boolean;
+    reportOptions?: ReportOptions;
     hidePackageManagerOutput?: boolean;
   } & Pick<
     InstallOptions,
@@ -188,7 +202,7 @@ export async function install(
     Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
-): Promise<{ dependenciesChanged: boolean; rebuild: () => Promise<void>; storeDir: string }> {
+): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string }> {
   let externalDependencies: Set<string> | undefined;
   const readPackage: ReadPackageHook[] = [];
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
@@ -263,28 +277,20 @@ export async function install(
       ...options?.peerDependencyRules,
     },
     depth: options.updateAll ? Infinity : 0,
+    disableRelinkLocalDirDeps: true,
   };
 
-  let stopReporting;
+  let stopReporting: Function | undefined;
   if (!options.hidePackageManagerOutput) {
-    stopReporting = initDefaultReporter({
-      context: {
-        argv: [],
-      },
-      reportingOptions: {
-        appendOnly: false,
-        throttleProgress: 200,
-      },
-      streamParser,
-      // Linked in core aspects are excluded from the output to reduce noise.
-      // Other @teambit/ dependencies will be shown.
-      // Only those that are symlinked from outside the workspace will be hidden.
-      filterPkgsDiff: (diff) => !diff.name.startsWith('@teambit/') || !diff.from,
+    stopReporting = initReporter({
+      ...options.reportOptions,
+      hideAddedPkgsProgress: options.lockfileOnly,
     });
   }
   let dependenciesChanged = false;
   try {
     await installsRunning[rootDir];
+    await restartWorkerPool();
     installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
     const { stats } = await installsRunning[rootDir];
     dependenciesChanged = stats.added + stats.removed + stats.linkedToRoot > 0;
@@ -295,9 +301,8 @@ export async function install(
     }
     throw pnpmErrorToBitError(err);
   } finally {
-    if (stopReporting) {
-      stopReporting();
-    }
+    stopReporting?.();
+    await finishWorkers();
   }
   if (options.rootComponents) {
     const modulesState = await readModulesManifest(path.join(rootDir, 'node_modules'));
@@ -311,16 +316,46 @@ export async function install(
   }
   return {
     dependenciesChanged,
-    rebuild: () =>
-      rebuild.handler(
-        {
-          ...opts,
-          cacheDir,
-        } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-        []
-      ),
+    rebuild: async (rebuildOpts) => {
+      const _opts = {
+        ...opts,
+        ...rebuildOpts,
+        cacheDir,
+      } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      if (!_opts.hidePackageManagerOutput) {
+        stopReporting = initReporter({
+          appendOnly: true,
+          hideLifecycleOutput: true,
+        });
+      }
+      try {
+        await rebuild.handler(_opts, []);
+      } finally {
+        stopReporting?.();
+      }
+    },
     storeDir: storeController.dir,
   };
+}
+
+function initReporter(opts?: ReportOptions) {
+  return initDefaultReporter({
+    context: {
+      argv: [],
+    },
+    reportingOptions: {
+      appendOnly: opts?.appendOnly ?? false,
+      throttleProgress: opts?.throttleProgress ?? 200,
+      hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
+      hideProgressPrefix: opts?.hideProgressPrefix,
+      hideLifecycleOutput: opts?.hideLifecycleOutput,
+    },
+    streamParser,
+    // Linked in core aspects are excluded from the output to reduce noise.
+    // Other @teambit/ dependencies will be shown.
+    // Only those that are symlinked from outside the workspace will be hidden.
+    filterPkgsDiff: (diff) => !diff.name.startsWith('@teambit/') || !diff.from,
+  });
 }
 
 /*

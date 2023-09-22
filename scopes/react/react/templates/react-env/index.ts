@@ -13,6 +13,7 @@ import { jestConfigFile } from './files/jest.config';
 export const reactEnvTemplate: ComponentTemplate = {
   name: 'react-env',
   description: 'customize the base React env with your configs and tools',
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     return [
       {

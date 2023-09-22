@@ -1,8 +1,10 @@
 import { EnvDefinition } from '@teambit/envs';
-import { ComponentMap } from '@teambit/component';
+import { ComponentMap, ComponentID } from '@teambit/component';
 import { Logger, LongProcessLogger } from '@teambit/logger';
 import mapSeries from 'p-map-series';
 import prettyTime from 'pretty-time';
+import { capitalize } from '@teambit/toolbox.string.capitalize';
+import chalk from 'chalk';
 import { ArtifactFactory, ArtifactList, FsArtifact } from './artifact';
 import { BuildContext, BuildTask, BuildTaskHelper, BuiltTaskResult } from './build-task';
 import { ComponentResult } from './types';
@@ -45,6 +47,8 @@ export type TaskResults = {
 
 type PipeOptions = {
   exitOnFirstFailedTask?: boolean; // by default it skips only when a dependent failed.
+  showEnvNameInOutput?: boolean;
+  showEnvVersionInOutput?: boolean; // in case it shows the env-name, whether should show also the version
 };
 
 export class BuildPipe {
@@ -98,17 +102,19 @@ export class BuildPipe {
 
   private async executePreBuild() {
     this.logger.setStatusLine('executing pre-build for all tasks');
+    const longProcessLogger = this.logger.createLongProcessLogger('running pre-build for all tasks');
     await mapSeries(this.tasksQueue, async ({ task, env }) => {
       if (!task.preBuild) return;
       await task.preBuild(this.getBuildContext(env.id));
     });
-    this.logger.consoleSuccess();
+    longProcessLogger.end();
   }
 
   private async executeTask(task: BuildTask, env: EnvDefinition): Promise<void> {
     const taskId = BuildTaskHelper.serializeId(task);
-    const taskName = `${taskId}${task.description ? ` (${task.description})` : ''}`;
-    this.longProcessLogger.logProgress(`env "${env.id}", task "${taskName}"`);
+    const envName = this.options?.showEnvNameInOutput ? `(${this.getPrettyEnvName(env.id)}) ` : '';
+    const taskLogPrefix = `${envName}[${this.getPrettyAspectName(task.aspectId)}: ${task.name}]`;
+    this.longProcessLogger.logProgress(`${taskLogPrefix}${task.description ? ` ${task.description}` : ''}`, false);
     this.updateFailedDependencyTask(task);
     if (this.shouldSkipTask(taskId, env.id)) {
       return;
@@ -127,12 +133,17 @@ export class BuildPipe {
     const endTime = Date.now();
     const compsWithErrors = buildTaskResult.componentsResults.filter((c) => c.errors?.length);
     let artifacts: ComponentMap<ArtifactList<FsArtifact>> | undefined;
+    const duration = prettyTime(process.hrtime(startTask));
     if (compsWithErrors.length) {
       this.logger.consoleFailure(`env: ${env.id}, task "${taskId}" has failed`);
+      this.logger.consoleFailure(
+        chalk.red(`${this.longProcessLogger.getProgress()} env: ${env.id}, task "${taskId}" has failed in ${duration}`)
+      );
       this.failedTasks.push(task);
     } else {
-      const duration = prettyTime(process.hrtime(startTask));
-      this.logger.consoleSuccess(`env "${env.id}", task "${taskName}" has completed successfully in ${duration}`);
+      this.logger.consoleSuccess(
+        chalk.green(`${this.longProcessLogger.getProgress()} ${taskLogPrefix} Completed successfully in ${duration}`)
+      );
       const defs = buildTaskResult.artifacts || [];
       artifacts = this.artifactFactory.generate(buildContext, defs, task);
     }
@@ -149,13 +160,26 @@ export class BuildPipe {
     this.taskResults.push(taskResults);
   }
 
+  private getPrettyAspectName(aspectId: string): string {
+    const resolvedId = ComponentID.fromString(aspectId);
+    const tokens = resolvedId.name.split('-').map((token) => capitalize(token));
+    return tokens.join(' ');
+  }
+
+  private getPrettyEnvName(envId: string) {
+    const resolvedId = ComponentID.fromString(envId);
+    const ver = this.options?.showEnvVersionInOutput ? `@${resolvedId.version}` : '';
+    return `${resolvedId.fullName}${ver}`;
+  }
+
   private async executePostBuild(tasksResults: TaskResultsList) {
+    const longProcessLogger = this.logger.createLongProcessLogger('running post-build for all tasks');
     this.logger.setStatusLine('executing post-build for all tasks');
     await mapSeries(this.tasksQueue, async ({ task, env }) => {
       if (!task.postBuild) return;
       await task.postBuild(this.getBuildContext(env.id), tasksResults);
     });
-    this.logger.consoleSuccess();
+    longProcessLogger.end();
   }
 
   private updateFailedDependencyTask(task: BuildTask) {

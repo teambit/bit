@@ -86,15 +86,14 @@ export default class ComponentsList {
   async listModifiedComponents(load = false, loadOpts?: ComponentLoadOptions): Promise<Array<BitId | Component>> {
     if (!this._modifiedComponents) {
       const fileSystemComponents = await this.getComponentsFromFS(loadOpts);
-      const unmergedComponents = this.listDuringMergeStateComponents();
+      // const unmergedComponents = this.listDuringMergeStateComponents();
       const componentStatuses = await this.consumer.getManyComponentsStatuses(fileSystemComponents.map((f) => f.id));
-      this._modifiedComponents = fileSystemComponents
-        .filter((component) => {
-          const status = componentStatuses.find((s) => s.id.isEqual(component.id));
-          if (!status) throw new Error(`listModifiedComponents unable to find status for ${component.id.toString()}`);
-          return status.status.modified;
-        })
-        .filter((component: Component) => !unmergedComponents.hasWithoutScopeAndVersion(component.id));
+      this._modifiedComponents = fileSystemComponents.filter((component) => {
+        const status = componentStatuses.find((s) => s.id.isEqual(component.id));
+        if (!status) throw new Error(`listModifiedComponents unable to find status for ${component.id.toString()}`);
+        return status.status.modified;
+      });
+      // .filter((component: Component) => !unmergedComponents.hasWithoutScopeAndVersion(component.id));
     }
     if (load) return this._modifiedComponents;
     return this._modifiedComponents.map((component) => component.id);
@@ -185,6 +184,7 @@ export default class ComponentsList {
         cache: false,
         includeVersionHistory: true,
         ignoreMissingHead: true,
+        reason: 'main components of the current lane to check for updates',
       }
     );
     const results = await Promise.all(
@@ -304,7 +304,7 @@ export default class ComponentsList {
     const removedComponents = await this.listLocallySoftRemoved();
     const duringMergeIds = this.listDuringMergeStateComponents();
 
-    return BitIds.fromArray([
+    return BitIds.uniqFromArray([
       ...(newComponents as BitId[]),
       ...(modifiedComponents as BitId[]),
       ...removedComponents,
@@ -507,7 +507,7 @@ export default class ComponentsList {
     const currentLane = await this.consumer.getCurrentLaneObject();
     const isIdOnCurrentLane = (componentMap: ComponentMap): boolean => {
       if (componentMap.isRemoved()) return false;
-      if (!componentMap.onLanesOnly) return true; // component is on main, always show it
+      if (componentMap.isAvailableOnCurrentLane) return true;
       if (!currentLane) return false; // if !currentLane the user is on main, don't show it.
       return Boolean(currentLane.getComponent(componentMap.id));
     };

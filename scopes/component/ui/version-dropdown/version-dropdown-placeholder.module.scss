@@ -12,6 +12,7 @@
   flex-wrap: nowrap;
   gap: 8px;
   padding: 8px;
+  line-height: 1.2em;
 
   &:hover {
     background-color: var(--bit-bg-heavy);
@@ -32,6 +33,7 @@
 
 .commitMessage {
   flex-grow: 1;
+  max-width: 200px;
 }
 
 .versionUserAvatar {

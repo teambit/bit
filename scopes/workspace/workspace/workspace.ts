@@ -6,6 +6,7 @@ import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
+import { generateNodeModulesPattern, PatternTarget } from '@teambit/dependencies.modules.packages-excluder';
 import {
   AspectEntry,
   ComponentMain,
@@ -52,6 +53,7 @@ import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { CompilationInitiator } from '@teambit/compiler';
+import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -76,6 +78,8 @@ import { ComponentStatus } from './workspace-component/component-status';
 import {
   OnAspectsResolve,
   OnAspectsResolveSlot,
+  OnBitmapChange,
+  OnBitmapChangeSlot,
   OnComponentAddSlot,
   OnComponentChangeSlot,
   OnComponentLoadSlot,
@@ -86,6 +90,7 @@ import {
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
+import type { MergeOptions as BitmapMergeOptions } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
 import { GraphIdsFromFsBuilder } from './build-graph-ids-from-fs';
 import { AspectsMerger } from './aspects-merger';
@@ -97,6 +102,7 @@ import {
 } from './workspace-aspects-loader';
 import { MergeConflictFile } from './merge-conflict-file';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
+import { CompFiles } from './workspace-component/comp-files';
 
 export type EjectConfResult = {
   configPath: string;
@@ -138,7 +144,7 @@ export class Workspace implements ComponentFactory {
   componentLoader: WorkspaceComponentLoader;
   bitMap: BitMap;
   /**
-   * Indicate that we are now running installaion process
+   * Indicate that we are now running installation process
    * This is important to know to ignore missing modules across different places
    */
   inInstallContext = false;
@@ -146,6 +152,12 @@ export class Workspace implements ComponentFactory {
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
   private componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized;
+  /**
+   * Components paths are calculated from the component package names of the workspace
+   * They are used in webpack configuration to only track changes from these paths inside `node_modules`
+   */
+  private componentPathsRegExps: RegExp[] = [];
+  localAspects: string[] = [];
   constructor(
     /**
      * private pubsub.
@@ -208,7 +220,9 @@ export class Workspace implements ComponentFactory {
 
     private onRootAspectAddedSlot: OnRootAspectAddedSlot,
 
-    private graphql: GraphqlMain
+    private graphql: GraphqlMain,
+
+    private onBitmapChangeSlot: OnBitmapChangeSlot
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
 
@@ -227,6 +241,22 @@ export class Workspace implements ComponentFactory {
       }
     );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
+
+    this.registerOnComponentAdd(async () => {
+      await this.setComponentPathsRegExps();
+      return {
+        results: this.componentPathsRegExps,
+        toString: () => this.componentPathsRegExps.join(),
+      };
+    });
+
+    this.registerOnComponentRemove(async () => {
+      await this.setComponentPathsRegExps();
+      return {
+        results: this.componentPathsRegExps,
+        toString: () => this.componentPathsRegExps.join(),
+      };
+    });
   }
 
   private validateConfig() {
@@ -273,6 +303,11 @@ export class Workspace implements ComponentFactory {
 
   registerOnComponentRemove(onComponentRemoveFunc: OnComponentRemove) {
     this.onComponentRemoveSlot.register(onComponentRemoveFunc);
+    return this;
+  }
+
+  registerOnBitmapChange(OnBitmapChangeFunc: OnBitmapChange) {
+    this.onBitmapChangeSlot.register(OnBitmapChangeFunc);
     return this;
   }
 
@@ -336,6 +371,12 @@ export class Workspace implements ComponentFactory {
     return this.getMany(idsToGet, loadOpts);
   }
 
+  async listWithInvalid(loadOpts?: ComponentLoadOptions) {
+    const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
+    const ids = await this.resolveMultipleComponentIds(legacyIds);
+    return this.componentLoader.getMany(ids, loadOpts, false);
+  }
+
   /**
    * list all invalid components.
    * (see the invalid criteria in ConsumerComponent.isComponentInvalidByErrorType())
@@ -376,7 +417,7 @@ export class Workspace implements ComponentFactory {
    */
   async filterIds(ids: ComponentID[]): Promise<ComponentID[]> {
     const workspaceIds = await this.listIds();
-    return ids.filter((id) => workspaceIds.find((wsId) => wsId.isEqual(id)));
+    return ids.filter((id) => workspaceIds.find((wsId) => wsId.isEqual(id, { ignoreVersion: !id.hasVersion() })));
   }
 
   /**
@@ -509,8 +550,15 @@ export class Workspace implements ComponentFactory {
     );
     const getCompIdByIdStr = (idStr: string): ComponentID => {
       const compId = flattenedBitIdCompIdMap[idStr];
-      if (!compId)
-        throw new Error(`id ${idStr} exists in flattenedEdges but not in flattened of ${component.id.toString()}`);
+      if (!compId) {
+        const suggestWrongSnap = isHash(component.id.version)
+          ? `\nplease check that .bitmap has the correct versions of ${component.id.toStringWithoutVersion()}.
+it's possible that the version ${component.id.version} belong to ${idStr.split('@')[0]}`
+          : '';
+        throw new Error(
+          `id ${idStr} exists in flattenedEdges but not in flattened of ${component.id.toString()}.${suggestWrongSnap}`
+        );
+      }
       return compId;
     };
     const nodes = Object.values(flattenedBitIdCompIdMap);
@@ -564,6 +612,28 @@ export class Workspace implements ComponentFactory {
     } catch (err) {
       return undefined;
     }
+  }
+
+  async getFilesModification(id: ComponentID): Promise<CompFiles> {
+    const bitMapEntry = this.bitMap.getBitmapEntry(id, { ignoreVersion: true });
+    const compDir = bitMapEntry.getComponentDir();
+    const compDirAbs = path.join(this.path, compDir);
+    const sourceFilesVinyls = bitMapEntry.files.map((file) => {
+      const filePath = path.join(compDirAbs, file.relativePath);
+      return SourceFile.load(filePath, compDirAbs, this.path, {});
+    });
+    const repo = this.scope.legacyScope.objects;
+    const getHeadFiles = async () => {
+      const modelComp = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
+      if (!modelComp) return [];
+      const head = modelComp.getHeadRegardlessOfLane();
+      if (!head) return [];
+
+      const verObj = await modelComp.loadVersion(head.toString(), repo);
+      return verObj.files;
+    };
+
+    return new CompFiles(id, repo, sourceFilesVinyls, compDir, await getHeadFiles());
   }
 
   /**
@@ -623,15 +693,21 @@ export class Workspace implements ComponentFactory {
     return workspaceAspectsLoader.getConfiguredUserAspectsPackages(options);
   }
 
-  clearCache(options: ClearCacheOptions = {}) {
+  async clearCache(options: ClearCacheOptions = {}) {
     this.aspectLoader.resetFailedLoadAspects();
     if (!options.skipClearFailedToLoadEnvs) this.envs.resetFailedToLoadEnvs();
     this.logger.debug('clearing the workspace and scope caches');
     delete this._cachedListIds;
     this.componentLoader.clearCache();
-    this.scope.clearCache();
+    await this.scope.clearCache();
     this.componentList = new ComponentsList(this.consumer);
     this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized.clear();
+  }
+
+  clearAllComponentsCache() {
+    this.componentLoader.clearCache();
+    this.consumer.componentLoader.clearComponentsCache();
+    this.componentList = new ComponentsList(this.consumer);
   }
 
   clearComponentCache(id: ComponentID) {
@@ -640,10 +716,14 @@ export class Workspace implements ComponentFactory {
     this.componentList = new ComponentsList(this.consumer);
   }
 
+  async warmCache() {
+    await this.list();
+  }
+
   async triggerOnComponentChange(
     id: ComponentID,
-    files: string[],
-    removedFiles: string[],
+    files: PathOsBasedAbsolute[],
+    removedFiles: PathOsBasedAbsolute[],
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
@@ -651,7 +731,7 @@ export class Workspace implements ComponentFactory {
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component, files, removedFiles, initiator);
-      results.push({ extensionId: extension, results: onChangeResult });
+      if (onChangeResult) results.push({ extensionId: extension, results: onChangeResult });
     });
 
     // TODO: find way to standardize event names.
@@ -685,6 +765,13 @@ export class Workspace implements ComponentFactory {
     return results;
   }
 
+  async triggerOnBitmapChange(): Promise<void> {
+    const onBitmapChangeEntries = this.onBitmapChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
+    await mapSeries(onBitmapChangeEntries, async ([, onBitmapChangeFunc]) => {
+      await onBitmapChangeFunc();
+    });
+  }
+
   getState(id: ComponentID, hash: string) {
     return this.scope.getState(id, hash);
   }
@@ -703,6 +790,10 @@ export class Workspace implements ComponentFactory {
 
   isOnMain(): boolean {
     return this.consumer.isOnMain();
+  }
+
+  isOnLane(): boolean {
+    return this.consumer.isOnLane();
   }
 
   /**
@@ -868,7 +959,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
-    return this.componentLoader.getMany(ids, loadOpts);
+    const { components } = await this.componentLoader.getMany(ids, loadOpts);
+    return components;
   }
 
   getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
@@ -898,6 +990,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return componentId.changeVersion(id.version);
   }
 
+  mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: BitmapMergeOptions = {}): string {
+    return this.bitMap.mergeBitmaps(bitmapContent, otherBitmapContent, opts);
+  }
+
   /**
    * This will make sure to fetch the objects prior to load them
    * do not use it if you are not sure you need it.
@@ -905,14 +1001,15 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * currently it used only for get many of aspects
    * @param ids
    */
-  async importAndGetMany(ids: Array<ComponentID>): Promise<Component[]> {
+  async importAndGetMany(ids: Array<ComponentID>, reason?: string): Promise<Component[]> {
     if (!ids.length) return [];
     await this.importCurrentLaneIfMissing();
     await this.scope.import(ids, {
       reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion(),
       preferDependencyGraph: true,
+      reason,
     });
-    return this.componentLoader.getMany(ids);
+    return this.getMany(ids);
   }
 
   async importCurrentLaneIfMissing() {
@@ -933,9 +1030,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       cache: false,
       lane,
       includeVersionHistory: true,
+      reason: 'latest of the current lane',
     });
 
-    await scopeComponentsImporter.importMany({ ids, lane });
+    await scopeComponentsImporter.importMany({ ids, lane, reason: 'for making sure the current lane has all ' });
   }
 
   async use(aspectIdStr: string): Promise<string> {
@@ -1168,12 +1266,17 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     id: ComponentID,
     aspectId: string,
     config: Record<string, any> = {},
-    shouldMergeWithExisting = false,
-    /**
-     * relevant only when writing to .bitmap.
-     * eject config of the given aspect-id, so then it won't override previous config. (see "adding prod dep, tagging then adding devDep" e2e-test)
-     */
-    shouldMergeWithPrevious = false
+    {
+      shouldMergeWithExisting,
+      shouldMergeWithPrevious,
+    }: {
+      shouldMergeWithExisting?: boolean;
+      /**
+       * relevant only when writing to .bitmap.
+       * eject config of the given aspect-id, so then it won't override previous config. (see "adding prod dep, tagging then adding devDep" e2e-test)
+       */
+      shouldMergeWithPrevious?: boolean;
+    } = { shouldMergeWithExisting: false, shouldMergeWithPrevious: false }
   ) {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {
@@ -1354,6 +1457,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.envs,
       this.dependencyResolver,
       this.logger,
+      this.globalConfig,
       this.harmony,
       this.onAspectsResolveSlot,
       this.onRootAspectAddedSlot,
@@ -1361,6 +1465,16 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       resolveEnvsFromRoots
     );
     return workspaceAspectsLoader;
+  }
+
+  getCapsulePath() {
+    const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
+    return workspaceAspectsLoader.getCapsulePath();
+  }
+
+  shouldUseHashForCapsules() {
+    const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
+    return workspaceAspectsLoader.shouldUseHashForCapsules();
   }
 
   /**
@@ -1372,7 +1486,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   async _reloadConsumer() {
     this.consumer = await loadConsumer(this.path, true);
-    this.clearCache();
+    this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
+    await this.clearCache();
   }
 
   getComponentPackagePath(component: Component) {
@@ -1605,7 +1720,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (found && found.extensionId?.version) {
       return found.extensionId.toString();
     }
-    const comps = await this.importAndGetMany([envId]);
+    const comps = await this.importAndGetMany([envId], `to get the env ${envId.toString()}`);
     return comps[0].id.toString();
   }
 
@@ -1624,8 +1739,15 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
           unchanged.push(id);
           return;
         }
+        // the env that gets saved in the .bitmap file config root can be with or without version.
+        // e.g. when a custom env is in .bitmap, it's saved without version, but when asking the component for the
+        // env by `this.getAspectIdFromConfig`, it returns the env with version.
+        // to make sure we remove the env from the .bitmap, we need to remove both with and without version.
         const currentEnvWithPotentialVersion = await this.getAspectIdFromConfig(id, currentEnv, true);
-        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv);
+        await this.removeSpecificComponentConfig(id, currentEnv);
+        if (currentEnvWithPotentialVersion && currentEnvWithPotentialVersion.includes('@')) {
+          await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion);
+        }
         await this.removeSpecificComponentConfig(id, EnvsAspect.id);
         changed.push(id);
       })
@@ -1705,6 +1827,20 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     );
     await this.bitMap.write();
     return { updated, alreadyUpToDate };
+  }
+
+  getComponentPathsRegExps() {
+    return this.componentPathsRegExps;
+  }
+
+  async setComponentPathsRegExps() {
+    const workspaceComponents = await this.list();
+    const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
+    const pathsExcluding = generateNodeModulesPattern({
+      packages: workspacePackageNames,
+      target: PatternTarget.WEBPACK,
+    });
+    this.componentPathsRegExps = [...pathsExcluding.map((stringPattern) => new RegExp(stringPattern))];
   }
 }
 

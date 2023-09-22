@@ -8,7 +8,7 @@ import { indexFile } from './files/index-file';
 export const reactHook: ComponentTemplate = {
   name: 'react-hook',
   description: 'a react hook component',
-
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     return [indexFile(context), componentFile(context), compositionFile(context), docsFile(context), testFile(context)];
   },

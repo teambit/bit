@@ -5,7 +5,7 @@ export default class MergeConflict extends BitError {
   versions: string[];
 
   constructor(id: string, versions: string[]) {
-    super(`error: merge conflict occurred while importing the component ${id}. conflict version(s): ${versions.join(
+    super(`error: versions conflict occurred while importing the component ${id}. conflict version(s): ${versions.join(
       ', '
     )}
 to resolve it and merge your local and remote changes, please do the following:

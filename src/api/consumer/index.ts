@@ -1,4 +1,3 @@
-import diff from './lib//diff';
 import dependencyStatus from './lib/dependency_status';
 import getComponentLogs from './lib/get-component-logs';
 import getConsumerComponent from './lib/get-consumer-component';
@@ -24,7 +23,6 @@ export {
   remoteList,
   remoteRm,
   dependencyStatus,
-  diff,
   migrate,
   login,
   show,

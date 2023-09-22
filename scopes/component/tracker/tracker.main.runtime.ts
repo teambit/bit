@@ -63,7 +63,13 @@ export class TrackerMain {
 
   async addEnvToConfig(env: string, config: { [aspectName: string]: any }) {
     const userEnvId = await this.workspace.resolveComponentId(env);
-    const userEnvIdWithPotentialVersion = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(userEnvId);
+    let userEnvIdWithPotentialVersion: string;
+    try {
+      userEnvIdWithPotentialVersion = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(userEnvId);
+    } catch (err) {
+      // the env needs to be without version
+      userEnvIdWithPotentialVersion = userEnvId.toStringWithoutVersion();
+    }
     config[userEnvIdWithPotentialVersion] = {};
     config[EnvsAspect.id] = config[EnvsAspect.id] || {};
     config[EnvsAspect.id].env = userEnvId.toStringWithoutVersion();

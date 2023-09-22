@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { pickBy } from 'lodash';
+import { cloneDeep, pickBy } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
@@ -239,7 +239,7 @@ export default class Lane extends BitObject {
     return new Lane({
       ...this,
       hash: this._hash,
-      components: [...this.components],
+      components: cloneDeep(this.components),
     });
   }
 }

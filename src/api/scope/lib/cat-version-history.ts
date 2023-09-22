@@ -18,5 +18,5 @@ async function getVersionHistory(id: string): Promise<VersionHistory> {
   const scope: Scope = await loadScope();
   const bitId: BitId = await scope.getParsedId(id);
   const component = await scope.getModelComponent(bitId);
-  return component.GetVersionHistory(scope.objects);
+  return component.getVersionHistory(scope.objects);
 }

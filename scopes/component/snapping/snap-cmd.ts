@@ -2,45 +2,51 @@ import chalk from 'chalk';
 import { BitId } from '@teambit/legacy-bit-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
+import { GlobalConfigMain } from '@teambit/global-config';
 import { Command, CommandOptions } from '@teambit/cli';
-import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
-import { NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG, COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
-import { BitError } from '@teambit/bit-error';
+import {
+  NOTHING_TO_SNAP_MSG,
+  AUTO_SNAPPED_MSG,
+  COMPONENT_PATTERN_HELP,
+  CFG_FORCE_LOCAL_BUILD,
+} from '@teambit/legacy/dist/constants';
 import { Logger } from '@teambit/logger';
 import { SnappingMain, SnapResults } from './snapping.main.runtime';
 import { outputIdsIfExists } from './tag-cmd';
+import { BasicTagSnapParams } from './tag-model-component';
 
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
-  description = 'EXPERIMENTAL. create an immutable and exportable component snapshot (no release version)';
+  description = 'create an immutable and exportable component snapshot (non-release version)';
   extendedDescription: string;
   group = 'development';
   arguments = [
     {
       name: 'component-pattern',
-      description: `${COMPONENT_PATTERN_HELP}. By default, all new and modified components are snapped.`,
+      description: `${COMPONENT_PATTERN_HELP}. By default, only new and modified components are snapped (add --unmodified to snap all components in the workspace).`,
     },
   ];
-  helpUrl = 'docs/components/snaps';
+  helpUrl = 'reference/components/snaps';
   alias = '';
   options = [
-    ['m', 'message <message>', 'log message describing the latest changes'],
-    ['', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
-    ['', 'unmerged', 'EXPERIMENTAL. complete a merge process by snapping the unmerged components'],
-    [
-      'b',
-      'build',
-      'EXPERIMENTAL. not needed for now. run the build pipeline in case the feature-flag build-on-ci is enabled',
-    ],
+    ['m', 'message <message>', 'snap message describing the latest changes - will appear in component history log'],
+    ['u', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
+    ['', 'unmerged', 'complete a merge process by snapping the unmerged components'],
+    ['b', 'build', 'locally run the build pipeline (i.e. not via rippleCI) and complete the snap'],
     [
       '',
       'editor [editor]',
-      'EXPERIMENTAL. open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
+      'open an editor to write a snap message per component. optionally specify the editor-name (defaults to vim).',
     ],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
-    ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
-    ['', 'force-deploy', 'run the deploy pipeline although the build failed'],
+    [
+      '',
+      'disable-snap-pipeline',
+      'skip the snap pipeline. this will for instance skip packing and publishing component version for install, and app deployment',
+    ],
+    ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
+    ['', 'ignore-build-errors', 'proceed to snap pipeline even when build pipeline fails'],
     [
       'i',
       'ignore-issues [issues]',
@@ -48,11 +54,11 @@ export class SnapCmd implements Command {
 [${Object.keys(IssuesClasses).join(', ')}]
 to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
     ],
-    ['a', 'all', 'DEPRECATED (not needed anymore, it is the default now). snap all new and modified components'],
+    ['a', 'all', 'DEPRECATED (not needed anymore, now the default). snap all new and modified components'],
     [
       '',
       'fail-fast',
-      'stop pipeline execution on the first failed task (by default a task is skipped only when its dependent failed)',
+      'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
     [
       'f',
@@ -63,7 +69,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   loader = true;
   migration = true;
 
-  constructor(private snapping: SnappingMain, private logger: Logger) {}
+  constructor(private snapping: SnappingMain, private logger: Logger, private globalConfig: GlobalConfigMain) {}
 
   async report(
     [pattern]: string[],
@@ -79,45 +85,43 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       skipAutoSnap = false,
       disableSnapPipeline = false,
       forceDeploy = false,
+      ignoreBuildErrors = false,
       unmodified = false,
       failFast = false,
     }: {
-      message?: string;
       all?: boolean;
       force?: boolean;
       unmerged?: boolean;
       editor?: string;
       ignoreIssues?: string;
-      build?: boolean;
-      skipTests?: boolean;
       skipAutoSnap?: boolean;
       disableSnapPipeline?: boolean;
       forceDeploy?: boolean;
       unmodified?: boolean;
       failFast?: boolean;
-    }
+    } & BasicTagSnapParams
   ) {
-    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
+    build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
     const disableTagAndSnapPipelines = disableSnapPipeline;
-    if (disableTagAndSnapPipelines && forceDeploy) {
-      throw new BitError('you can use either force-deploy or disable-snap-pipeline, but not both');
-    }
-
     if (all) {
       this.logger.consoleWarning(
-        `--all is deprecated, please omit it. "bit snap" by default will snap all new and modified components`
+        `--all is deprecated, please omit it. By default all new and modified components are snapped, to snap all components add --unmodified`
       );
     }
     if (force) {
       this.logger.consoleWarning(
-        `--force is deprecated, use either --skip-tests or --unmodified depending on the use case`
+        `--force is deprecated, use either --skip-tests or --ignore-build-errors depending on the use case`
       );
       if (pattern) unmodified = true;
     }
     if (!message && !editor) {
       this.logger.consoleWarning(
-        `--message will be mandatory in the next few releases. make sure to add a message with your snap`
+        `--message will be mandatory in the next few releases. make sure to add a message with your snap, will be displayed in the version history`
       );
+    }
+    if (forceDeploy) {
+      this.logger.consoleWarning(`--force-deploy is deprecated, use --ignore-build-errors instead`);
+      ignoreBuildErrors = true;
     }
 
     const results = await this.snapping.snap({
@@ -130,7 +134,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       skipTests,
       skipAutoSnap,
       disableTagAndSnapPipelines,
-      forceDeploy,
+      ignoreBuildErrors,
       unmodified,
       exitOnFirstFailedTask: failFast,
     });
@@ -138,15 +142,17 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
     const { snappedComponents, autoSnappedResults, warnings, newComponents, laneName, removedComponents }: SnapResults =
       results;
-    const changedComponents = snappedComponents.filter(
-      (component) => !newComponents.searchWithoutVersion(component.id)
-    );
+    const changedComponents = snappedComponents.filter((component) => {
+      return (
+        !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id)
+      );
+    });
     const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
     const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
     const snapExplanation = `\n(use "bit export" to push these components to a remote")
-(use "bit reset" to unstage versions)\n`;
+(use "bit reset" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)\n`;
 
     const compInBold = (id: BitId) => {
       const version = id.hasVersion() ? `@${id.version}` : '';

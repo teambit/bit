@@ -1,7 +1,14 @@
 import React, { useContext, useMemo, HTMLAttributes } from 'react';
 import classnames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { CollapsibleMenuNav, ComponentContext, ComponentID, NavPlugin, useComponent } from '@teambit/component';
+import {
+  CollapsibleMenuNav,
+  ComponentContext,
+  ComponentDescriptorContext,
+  ComponentID,
+  NavPlugin,
+  useComponent,
+} from '@teambit/component';
 import { ComponentCompareContext } from '@teambit/component.ui.component-compare.context';
 import { useComponentCompareQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare';
 import {
@@ -52,10 +59,15 @@ export function ComponentCompare(props: ComponentCompareProps) {
     baseContext,
     compareContext,
     isFullScreen,
+    hidden = false,
+    compareIdOverride,
+    baseIdOverride,
     ...rest
   } = props;
+
   const baseVersion = useCompareQueryParam('baseVersion');
   const component = useContext(ComponentContext);
+  const componentDescriptor = useContext(ComponentDescriptorContext);
   const location = useLocation();
   const isWorkspace = host === 'teambit.workspace/workspace';
 
@@ -63,8 +75,8 @@ export function ComponentCompare(props: ComponentCompareProps) {
     component: compareComponent,
     loading: loadingCompare,
     componentDescriptor: compareComponentDescriptor,
-  } = useComponent(host, _compareId?.toString() || '', {
-    skip: !_compareId,
+  } = useComponent(host, compareIdOverride?.toString() || _compareId?.toString(), {
+    skip: hidden || (!_compareId && !compareIdOverride),
     customUseComponent,
     logFilters: {
       log: {
@@ -79,7 +91,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   );
   const isNew = useMemo(() => allVersionInfo.length === 0, [allVersionInfo]);
   const compareVersion =
-    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.id.version;
+    isWorkspace && !isNew && !location?.search.includes('version') && !_compareId ? 'workspace' : component.id.version;
   const compareIsLocalChanges = compareVersion === 'workspace';
 
   const lastVersionInfo = useMemo(() => {
@@ -101,9 +113,9 @@ export function ComponentCompare(props: ComponentCompareProps) {
     component: base,
     loading: loadingBase,
     componentDescriptor: baseComponentDescriptor,
-  } = useComponent(host, baseId?.toString(), {
+  } = useComponent(host, baseIdOverride?.toString() || baseId?.toString(), {
     customUseComponent,
-    skip: !baseId,
+    skip: hidden || (!baseId && !baseIdOverride),
     logFilters: {
       log: {
         limit: 3,
@@ -122,7 +134,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   }, [compare?.id.toString()]);
 
   const skipComponentCompareQuery =
-    compareIsLocalChanges || base?.id.version?.toString() === compare?.id.version?.toString();
+    hidden || compareIsLocalChanges || base?.id.version?.toString() === compare?.id.version?.toString();
 
   const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
     base?.id.toString(),
@@ -152,10 +164,20 @@ export function ComponentCompare(props: ComponentCompareProps) {
     return _fieldCompareDataByName;
   }, [compCompareLoading, loading, compCompareId]);
 
+  const testCompareDataByName = useMemo(() => {
+    if (loading || compCompareLoading) return undefined;
+    if (!compCompareLoading && !componentCompareData) return null;
+    const _testCompareDataByName = new Map<string, FileCompareResult>();
+    (componentCompareData?.tests || []).forEach((testCompareData) => {
+      _testCompareDataByName.set(testCompareData.fileName, testCompareData);
+    });
+    return _testCompareDataByName;
+  }, [compCompareLoading, loading, compCompareId]);
+
   const componentCompareModel = {
     compare: compare && {
       model: compare,
-      descriptor: compareComponentDescriptor,
+      descriptor: compareComponentDescriptor || componentDescriptor,
       hasLocalChanges: compareIsLocalChanges,
     },
     base: base && {
@@ -170,24 +192,59 @@ export function ComponentCompare(props: ComponentCompareProps) {
     compareContext,
     fieldCompareDataByName,
     fileCompareDataByName,
+    testCompareDataByName,
     isFullScreen,
+    hidden,
   };
 
   const changes =
-    changesFromProps || deriveChangeType(baseId, compare?.id, fileCompareDataByName, fieldCompareDataByName);
+    changesFromProps ||
+    deriveChangeType(baseId, compare?.id, fileCompareDataByName, fieldCompareDataByName, testCompareDataByName);
 
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
       <div className={classnames(styles.componentCompareContainer, className)} {...rest}>
-        {loading && <Loader className={classnames(styles.loader)} />}
-        {!loading && <RenderCompareScreen key={compCompareId} {...props} changes={changes} />}
+        <RenderCompareScreen
+          key={compCompareId}
+          {...props}
+          componentId={
+            compare?.id?.toStringWithoutVersion() ||
+            baseId.toStringWithoutVersion() ||
+            component?.id?.toStringWithoutVersion()
+          }
+          baseVersion={baseId.version}
+          compareVersion={_compareId?.version || component.id.version}
+          compareHasLocalChanges={compareIsLocalChanges}
+          changes={changes}
+          loading={loading}
+          Loader={Loader}
+        />
       </div>
     </ComponentCompareContext.Provider>
   );
 }
 
-function RenderCompareScreen(props: ComponentCompareProps) {
-  const { routes, state } = props;
+function RenderCompareScreen(
+  props: ComponentCompareProps & {
+    baseVersion?: string;
+    compareVersion?: string;
+    compareHasLocalChanges?: boolean;
+    componentId: string;
+    loading?: boolean;
+  }
+) {
+  const {
+    routes,
+    state,
+    loading,
+    Loader = CompareLoader,
+    baseVersion,
+    compareVersion,
+    compareHasLocalChanges,
+    componentId,
+    hidden,
+  } = props;
+
   const showVersionPicker = state?.versionPicker?.element !== null;
 
   return (
@@ -195,17 +252,27 @@ function RenderCompareScreen(props: ComponentCompareProps) {
       {showVersionPicker && (
         <div className={styles.top}>
           {state?.versionPicker?.element || (
-            <ComponentCompareVersionPicker host={props.host} customUseComponent={props.customUseComponent} />
+            <ComponentCompareVersionPicker
+              componentId={componentId}
+              baseVersion={baseVersion}
+              compareVersion={compareVersion}
+              compareHasLocalChanges={compareHasLocalChanges}
+              host={props.host}
+              customUseComponent={props.customUseComponent}
+            />
           )}
         </div>
       )}
-      <div className={styles.bottom}>
-        <CompareMenuNav {...props} />
-        {(extractLazyLoadedData(routes) || []).length > 0 && (
-          <SlotRouter routes={extractLazyLoadedData(routes) || []} />
-        )}
-        {state?.tabs?.element}
-      </div>
+      {loading && !hidden && <Loader className={classnames(styles.loader)} />}
+      {!loading && (
+        <div className={classnames(styles.bottom, hidden && styles.hidden)}>
+          <CompareMenuNav {...props} />
+          {(extractLazyLoadedData(routes) || []).length > 0 && (
+            <SlotRouter routes={extractLazyLoadedData(routes) || []} />
+          )}
+          {state?.tabs?.element}
+        </div>
+      )}
     </>
   );
 }
@@ -244,16 +311,16 @@ function CompareMenuNav({ tabs, state, hooks, changes: changed }: ComponentCompa
           },
         ];
       }),
-    [_tabs.length, activeTab, changed?.length]
+    [_tabs.length, activeTab, changed, changed?.length]
   );
 
   const sortedTabs = useMemo(
     () => extractedTabs.filter(([, tab]) => !tab.widget),
-    [extractedTabs.length, activeTab, changed?.length]
+    [extractedTabs.length, activeTab, changed?.length, changed]
   );
   const sortedWidgets = useMemo(
     () => extractedTabs.filter(([, tab]) => tab.widget),
-    [extractedTabs.length, activeTab, changed?.length]
+    [extractedTabs.length, activeTab, changed?.length, changed]
   );
 
   return (
@@ -292,7 +359,8 @@ function deriveChangeType(
   baseId?: ComponentID,
   compareId?: ComponentID,
   fileCompareDataByName?: Map<string, FileCompareResult> | null,
-  fieldCompareDataByName?: Map<string, FieldCompareResult> | null
+  fieldCompareDataByName?: Map<string, FieldCompareResult> | null,
+  testCompareDataByName?: Map<string, FileCompareResult> | null
 ): ChangeType[] | undefined | null {
   if (!baseId && !compareId) return null;
   if (!baseId?.version) return [ChangeType.NEW];
@@ -300,9 +368,11 @@ function deriveChangeType(
   if (fileCompareDataByName === null || fieldCompareDataByName === null) return null;
   if (fileCompareDataByName === undefined || fieldCompareDataByName === undefined) return undefined;
 
+  const fileCompareData = [...fileCompareDataByName.values()];
+
   if (
     fieldCompareDataByName.size === 0 &&
-    (fileCompareDataByName.size === 0 || [...fileCompareDataByName.values()].every((f) => f.status === 'UNCHANGED'))
+    (fileCompareDataByName.size === 0 || fileCompareData.every((f) => f.status === 'UNCHANGED'))
   ) {
     return [ChangeType.NONE];
   }
@@ -310,7 +380,11 @@ function deriveChangeType(
   const changed: ChangeType[] = [];
   const DEPS_FIELD = ['dependencies', 'devDependencies', 'extensionDependencies'];
 
-  if (fileCompareDataByName.size > 0 && [...fileCompareDataByName.values()].some((f) => f.status !== 'UNCHANGED')) {
+  if (testCompareDataByName?.size) {
+    changed.push(ChangeType.TESTS);
+  }
+
+  if (fileCompareDataByName.size > 0 && fileCompareData.some((f) => f.status !== 'UNCHANGED')) {
     changed.push(ChangeType.SOURCE_CODE);
   }
 

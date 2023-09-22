@@ -17,7 +17,7 @@ export function ComponentSize({ legacyComponentModel, ...rest }: ComponentSizePr
   return (
     <Tooltip
       className={styles.componentSizeTooltip}
-      placement="bottom"
+      placement="top"
       content={
         <div className={styles.componentSizeTooltipContent}>
           Component bundle with dependencies, minified and gzipped

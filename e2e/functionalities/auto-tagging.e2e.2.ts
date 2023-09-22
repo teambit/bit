@@ -24,7 +24,7 @@ describe('auto tagging functionality', function () {
 
       helper.fs.appendFile('comp3/index.js');
       const statusOutput = helper.command.runCmd('bit status');
-      expect(statusOutput).to.have.string('components pending to be tagged automatically');
+      expect(statusOutput).to.have.string('components pending auto-tag');
       beforeSecondTag = helper.scopeHelper.cloneLocalScope();
       tagOutput = helper.command.tagWithoutBuild('comp3');
     });

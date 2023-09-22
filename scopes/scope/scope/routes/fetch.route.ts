@@ -2,8 +2,8 @@ import { Route, Verb, Request, Response } from '@teambit/express';
 import { fetch } from '@teambit/legacy/dist/api/scope';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { Logger } from '@teambit/logger';
-import { promisify } from 'util';
-import { pipeline } from 'stream';
+// @ts-ignore
+import { pipeline } from 'stream/promises';
 import { ScopeMain } from '../scope.main.runtime';
 
 export class FetchRoute implements Route {
@@ -25,9 +25,8 @@ export class FetchRoute implements Route {
 
       const readable = await fetch(this.scope.path, req.body.ids, req.body.fetchOptions);
       const pack = ObjectList.fromObjectStreamToTar(readable, this.scope.name);
-      const pipelinePromise = promisify(pipeline);
       try {
-        await pipelinePromise(pack, res);
+        await pipeline(pack, res);
         this.logger.info('fetch.router, the response has been sent successfully to the client', req.headers);
       } catch (err: any) {
         if (req.aborted) {

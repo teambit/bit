@@ -34,7 +34,7 @@ Architectural pains that stem from monolithic development no longer exist; Scala
 
 Bit comes with native support and best-practice dev environments for most web technologies such as TS, React, React Native, Angular, Vue and Node, and can be easily extended to support just about anything.
 
-It provides features such as [Workspace](https://bit.dev/docs/workspace/workspace-overview), [Components](https://bit.dev/docs/components/component-overview), [Dev Environments](https://bit.dev/docs/envs/envs-overview/), [Scopes](https://bit.dev/docs/scope/scope-overview), and [Dependencies](https://bit.dev/docs/dependencies/dependencies-overview) (which allow the composition of components and collaboration between developers).
+It provides features such as [Workspace](https://bit.dev/reference/workspace/workspace-overview), [Components](https://bit.dev/reference/components/component-overview), [Dev Environments](https://bit.dev/reference/envs/envs-overview/), [Scopes](https://bit.dev/reference/scope/scope-overview), and [Dependencies](https://bit.dev/reference/dependencies/dependencies-overview) (which allow the composition of components and collaboration between developers).
 
 Bit is developed with Bit and you can find all its components on [Bit Cloud Here](https://bit.cloud/teambit/~scopes).
 
@@ -46,7 +46,7 @@ Want to learn more? Try the [Thinking in Components](https://bit.dev/docs/thinki
 
 ## Bit and Bit Cloud
 
-To use components in multiple projects and to collaborate with other developers you can host components in a [Remote Scope](https://bit.dev/docs/scope/running-a-scope-server). You can set up and host a remote Scope on any server!
+To use components in multiple projects and to collaborate with other developers you can host components in a [Remote Scope](https://bit.dev/reference/scope/running-a-scope-server). You can set up and host a remote Scope on any server!
 
 [Bit Cloud](https://bit.cloud) is a platform where you can host components and enjoy advanced features for team management, discovery, consumption, integration, and collaboration. Bit’s cloud platform is home to over 200,000 developers and OSS communities, and hundreds of organizations, from early-stage startups to the world’s largest enterprises.
 

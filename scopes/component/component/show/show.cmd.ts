@@ -15,13 +15,13 @@ export class ShowCmd implements Command {
   group = 'info';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
   options = [
-    ['j', 'json', 'return the component data in a json format'],
+    ['j', 'json', 'return the component data in json format'],
     ['l', 'legacy', 'use the legacy bit show.'],
-    ['r', 'remote', 'show a remote component'],
+    ['r', 'remote', 'show data for a remote component'],
     [
       'c',
       'compare',
-      'compare current file system component to the latest tagged component [default=latest]. only works in legacy.',
+      'legacy-only. compare current file system component to its latest tagged version [default=latest]',
     ],
   ] as CommandOptions;
 

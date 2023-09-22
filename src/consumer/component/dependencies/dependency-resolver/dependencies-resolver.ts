@@ -723,17 +723,26 @@ either, use the ignore file syntax or change the require statement to have a mod
           depDebug.versionResolvedFrom = 'BitMap';
           return fromBitmap;
         }
-        const fromMergeConfig = getFromMergeConfig();
-        if (fromMergeConfig) {
-          depDebug.versionResolvedFrom = 'MergeConfig';
-          return fromMergeConfig;
-        }
+
         // Happens when the dep is not in the node_modules
         if (!version) return getExistingIdFromModel();
 
         // In case it's resolved from the node_modules, and it's also in the ws policy or variants,
         // use the resolved version from the node_modules / package folder
-        if (this.isPkgInWorkspacePolicies(compDep.name) || this.isPkgInVariants(compDep.name)) {
+        if (this.isPkgInWorkspacePolicies(compDep.name)) {
+          return componentId;
+        }
+
+        // merge config here is only auto-detected ones. their priority is less then the ws policy
+        // otherwise, imagine you merge a lane, you don't like the dependency you got from the other lane, you run
+        // bit-install to change it, but it won't do anything.
+        const fromMergeConfig = getFromMergeConfig();
+        if (fromMergeConfig) {
+          depDebug.versionResolvedFrom = 'MergeConfig';
+          return fromMergeConfig;
+        }
+
+        if (this.isPkgInVariants(compDep.name)) {
           return componentId;
         }
 

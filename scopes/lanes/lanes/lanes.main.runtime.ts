@@ -27,7 +27,9 @@ import { ComponentCompareMain, ComponentCompareAspect } from '@teambit/component
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
+import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import { MergingMain, MergingAspect } from '@teambit/merging';
+import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
@@ -45,6 +47,7 @@ import {
   LaneRenameCmd,
   LaneAddReadmeCmd,
   LaneRemoveReadmeCmd,
+  LaneRemoveCompCmd,
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
@@ -70,6 +73,7 @@ export type LaneResults = {
 export type CreateLaneOptions = {
   scope?: string; // default to the defaultScope in workspace.jsonc
   alias?: string; // default to the remote name
+  forkLaneNewScope?: boolean;
 };
 
 export type SwitchLaneOptions = {
@@ -107,6 +111,8 @@ export type LaneDiffStatus = {
   componentsStatus: LaneComponentDiffStatus[];
 };
 
+export type MarkRemoveOnLaneResult = { removedFromWs: ComponentID[]; markedRemoved: ComponentID[] };
+
 type CreateLaneResult = {
   laneId: LaneId;
   hash: string;
@@ -123,7 +129,9 @@ export class LanesMain {
     readonly importer: ImporterMain,
     private exporter: ExportMain,
     private componentCompare: ComponentCompareMain,
-    readonly componentWriter: ComponentWriterMain
+    readonly componentWriter: ComponentWriterMain,
+    private remove: RemoveMain,
+    readonly checkout: CheckoutMain
   ) {}
 
   async getLanes({
@@ -245,7 +253,10 @@ export class LanesMain {
     this.workspace?.consumer.setCurrentLane(laneId, exported);
   }
 
-  async createLane(name: string, { scope, alias }: CreateLaneOptions = {}): Promise<CreateLaneResult> {
+  async createLane(
+    name: string,
+    { scope, alias, forkLaneNewScope }: CreateLaneOptions = {}
+  ): Promise<CreateLaneResult> {
     if (!this.workspace) {
       const newLane = await createLaneInScope(name, this.scope);
       return {
@@ -256,8 +267,16 @@ export class LanesMain {
     if (alias) {
       throwForInvalidLaneName(alias);
     }
-    scope = scope || this.workspace.defaultScope;
-    const laneObj = await createLane(this.workspace.consumer, name, scope);
+    const currentLaneId = this.workspace.getCurrentLaneId();
+    const currentLaneScope = currentLaneId.isDefault() ? undefined : currentLaneId.scope;
+    if (!forkLaneNewScope && !currentLaneId.isDefault() && scope && currentLaneScope !== scope) {
+      throw new BitError(`you're about to create a lane forked from ${currentLaneId.toString()} and assign it to a different scope "${scope}".
+if the lane components have a large history, it would be best to stick with the same scope as the current lane.
+to do that, re-run the command without the "--scope" flag. it will create the lane and set the scope to "${currentLaneScope}"
+if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-new-scope" flag.`);
+    }
+    scope = scope || (currentLaneId.isDefault() ? this.workspace.defaultScope : currentLaneId.scope);
+    const laneObj = await createLane(this.workspace, name, scope);
     const laneId = LaneId.from(name, scope);
     this.setCurrentLane(laneId, alias, false);
     const trackLaneData = {
@@ -337,14 +356,21 @@ export class LanesMain {
     return { laneId };
   }
 
-  async changeScope(laneName: string, remoteScope: string): Promise<{ remoteScopeBefore: string }> {
+  async changeScope(remoteScope: string, laneName?: string): Promise<{ remoteScopeBefore: string; localName: string }> {
     if (!this.workspace) {
       throw new BitError(`unable to change-scope of a lane outside of Bit workspace`);
     }
-    const laneNameWithoutScope = laneName.includes(LANE_REMOTE_DELIMITER)
-      ? laneName.split(LANE_REMOTE_DELIMITER)[1]
-      : laneName;
-    const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(laneName);
+    let laneId: LaneId;
+    let laneNameWithoutScope: string;
+    if (laneName) {
+      laneNameWithoutScope = laneName.includes(LANE_REMOTE_DELIMITER)
+        ? laneName.split(LANE_REMOTE_DELIMITER)[1]
+        : laneName;
+      laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(laneName);
+    } else {
+      laneId = this.workspace.getCurrentLaneId();
+      laneNameWithoutScope = laneId.name;
+    }
     const lane = await this.loadLane(laneId);
     if (!lane) {
       throw new BitError(`unable to find a local lane "${laneName}"`);
@@ -369,17 +395,21 @@ please create a new lane instead, which will include all components of this lane
     this.workspace.consumer.bitMap.setCurrentLane(newLaneId, false);
     await this.workspace.consumer.onDestroy();
 
-    return { remoteScopeBefore };
+    return { remoteScopeBefore, localName: laneNameWithoutScope };
   }
 
   /**
    * change a lane-name and if possible, export the lane to the remote
    */
-  async rename(currentName: string, newName: string): Promise<{ exported: boolean; exportErr?: Error }> {
+  async rename(
+    newName: string,
+    laneName?: string
+  ): Promise<{ exported: boolean; exportErr?: Error; currentName: string }> {
     if (!this.workspace) {
       throw new BitError(`unable to rename a lane outside of Bit workspace`);
     }
     throwForInvalidLaneName(newName);
+    const currentName = laneName || this.workspace.getCurrentLaneId().name;
     const existingAliasWithNewName = this.scope.legacyScope.lanes.getRemoteTrackedDataByLocalLane(newName);
     if (existingAliasWithNewName) {
       const remoteIdStr = `${existingAliasWithNewName.remoteLane}/${existingAliasWithNewName.remoteScope}`;
@@ -433,7 +463,7 @@ please create a new lane instead, which will include all components of this lane
 
     await this.workspace.consumer.onDestroy();
 
-    return { exported, exportErr };
+    return { exported, exportErr, currentName };
   }
 
   async exportLane(lane: Lane) {
@@ -977,6 +1007,8 @@ please create a new lane instead, which will include all components of this lane
     ExpressAspect,
     ComponentCompareAspect,
     ComponentWriterAspect,
+    RemoveAspect,
+    CheckoutAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -992,6 +1024,8 @@ please create a new lane instead, which will include all components of this lane
     express,
     componentCompare,
     componentWriter,
+    remove,
+    checkout,
   ]: [
     CLIMain,
     ScopeMain,
@@ -1004,7 +1038,9 @@ please create a new lane instead, which will include all components of this lane
     ExportMain,
     ExpressMain,
     ComponentCompareMain,
-    ComponentWriterMain
+    ComponentWriterMain,
+    RemoveMain,
+    CheckoutMain
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(
@@ -1016,7 +1052,9 @@ please create a new lane instead, which will include all components of this lane
       importer,
       exporter,
       componentCompare,
-      componentWriter
+      componentWriter,
+      remove,
+      checkout
     );
     const switchCmd = new SwitchCmd(lanesMain);
     const laneCmd = new LaneCmd(lanesMain, workspace, scope);
@@ -1033,6 +1071,7 @@ please create a new lane instead, which will include all components of this lane
       new LaneAddReadmeCmd(lanesMain),
       new LaneRemoveReadmeCmd(lanesMain),
       new LaneImportCmd(switchCmd),
+      new LaneRemoveCompCmd(workspace, lanesMain),
     ];
     cli.register(laneCmd, switchCmd);
     cli.registerOnStart(async () => {

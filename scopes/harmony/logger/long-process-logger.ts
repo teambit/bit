@@ -1,6 +1,8 @@
 import prettyTime from 'pretty-time';
 import type { Logger } from './logger';
 
+export type ConsoleOnStart = 'normal' | 'title';
+
 /**
  * use it for a long running process. upon creation it logs the `processDescription`.
  * if the process involves iteration over a list of items, such as running tag on a list of
@@ -11,39 +13,51 @@ import type { Logger } from './logger';
  * see README for more data.
  */
 export class LongProcessLogger {
+  private currentItem = 0;
+  private startTime = process.hrtime();
   constructor(
     private logPublisher: Logger,
     private extensionName: string,
     private processDescription: string,
     private totalItems?: number,
-    private currentItem = 0,
-    private startTime = process.hrtime()
+    shouldConsole?: ConsoleOnStart
   ) {
-    this.start();
+    this.start(shouldConsole);
   }
 
-  logProgress(itemName = '') {
+  logProgress(itemName = '', showProcessDescription = true) {
     this.currentItem += 1;
-    const message = `${this.processDescription} (${this.currentItem}/${this.totalItems}). ${itemName}`;
+    const processDesc = showProcessDescription ? `${this.processDescription} ` : '';
+    const message = `${processDesc}${this.getProgress()} ${itemName}`;
     this.logPublisher.debug(message);
-    this.logPublisher.setStatusLine(`${this.extensionName}, ${message}`);
+    this.logPublisher.setStatusLine(message, true);
   }
 
-  end(alternateDescriptionPrefix?: string) {
-    const description = alternateDescriptionPrefix || this.processDescription;
+  end(shouldConsole?: 'success' | 'error') {
+    if (process.env.CI && !shouldConsole) shouldConsole = 'success';
+    const description = this.processDescription;
     const duration = process.hrtime(this.startTime);
-    const message = `${description} (completed in ${prettyTime(duration)})`;
-    this.logAndConsole(message);
+    const completedOrFailedStr = !shouldConsole || shouldConsole === 'success' ? 'Completed' : 'Failed';
+    const message = `${description}. ${completedOrFailedStr} in ${prettyTime(duration)}`;
+    this.logPublisher.info(message);
+    if (shouldConsole) {
+      if (shouldConsole === 'success') this.logPublisher.consoleSuccess(message);
+      else this.logPublisher.consoleFailure(message);
+    } else this.logPublisher.setStatusLine(message);
   }
 
-  private start() {
+  getProgress() {
+    return `(${this.currentItem}/${this.totalItems})`;
+  }
+
+  private start(shouldConsole?: ConsoleOnStart) {
+    if (process.env.CI && !shouldConsole) shouldConsole = 'normal';
     const totalItemsStr = this.totalItems ? `(total: ${this.totalItems})` : '';
     const message = `${this.processDescription} ${totalItemsStr}`;
-    this.logAndConsole(message);
-  }
-
-  private logAndConsole(message: string) {
     this.logPublisher.info(message);
-    this.logPublisher.setStatusLine(`${this.extensionName}, ${message}`);
+    if (shouldConsole) {
+      if (shouldConsole === 'title') this.logPublisher.consoleTitle(message);
+      else this.logPublisher.console(message);
+    } else this.logPublisher.setStatusLine(message);
   }
 }

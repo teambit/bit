@@ -14,8 +14,8 @@ const presets = [
       targets: {
         node: 16,
       },
-      useBuiltIns: 'usage',
-      corejs: 3,
+      // useBuiltIns: 'usage',
+      // corejs: 3,
     },
   ],
 ];

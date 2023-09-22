@@ -13,7 +13,8 @@ describe('bit checkout command', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('component with a non-exist package dependency which triggers the package-manager to fail', () => {
+  // TODO: @davidfirst @guysaar temporary disabled until we fix it on the registry
+  describe.skip('component with a non-exist package dependency which triggers the package-manager to fail', () => {
     let afterExport: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -29,7 +30,7 @@ describe('bit checkout command', function () {
         const output = helper.command.checkoutVersion('0.0.1', 'comp1');
         expect(output).to.have.string('Installation Error');
         // this is the actual error coming from the package-manager
-        // the full error is: `GET https://node.bit.cloud/bit-non-exist-pkg: Not Found - 404`
+        // the full error is: `GET https://node-registry.bit.cloud/bit-non-exist-pkg: Not Found - 404`
         expect(output).to.have.string('404');
       });
     });

@@ -40,7 +40,7 @@ export async function changeCodeFromRelativeToModulePaths(
 }
 
 async function reloadComponents(consumer: Consumer, bitIds: BitId[]) {
-  consumer.clearCache();
+  await consumer.clearCache();
   if (!bitIds.length) return;
   const components = await loadComponents(consumer, bitIds);
   const componentsWithRelativeIssues = components.filter(

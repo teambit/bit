@@ -90,6 +90,28 @@ describe('bit deprecate and undeprecate commands', function () {
             expect(comp2.deprecated).to.equal(true);
           });
         });
+        describe('importing all scope', () => {
+          let output: string;
+          before(() => {
+            helper.scopeHelper.reInitLocalScope();
+            helper.scopeHelper.addRemoteScope();
+            output = helper.command.importComponent('* -x');
+          });
+          it('should not include deprecated by default', () => {
+            expect(output).to.have.string('2 components');
+          });
+        });
+        describe('importing all scope with --include-deprecated flag', () => {
+          let output: string;
+          before(() => {
+            helper.scopeHelper.reInitLocalScope();
+            helper.scopeHelper.addRemoteScope();
+            output = helper.command.importComponent('* -x --include-deprecated');
+          });
+          it('should include deprecated', () => {
+            expect(output).to.have.string('3 components');
+          });
+        });
       });
     });
   });

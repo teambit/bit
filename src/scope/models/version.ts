@@ -49,6 +49,7 @@ export type DepEdge = { source: BitId; target: BitId; type: DepEdgeType };
 
 type ExternalHead = { head: Ref; laneId: LaneId };
 type SquashData = { previousParents: Ref[]; laneId: LaneId };
+type VersionOrigin = { id: { scope: string; name: string }; lane?: { scope: string; name: string; hash: string } };
 
 export type VersionProps = {
   mainFile: PathLinux;
@@ -80,6 +81,7 @@ export type VersionProps = {
   componentId?: BitId;
   bitVersion?: string;
   modified?: Log[];
+  origin?: VersionOrigin;
 };
 
 /**
@@ -126,6 +128,7 @@ export default class Version extends BitObject {
   componentId?: BitId; // can help debugging errors when validating Version object
   bitVersion?: string;
   modified: Log[] = []; // currently mutation could happen as a result of either "squash" or "sign".
+  origin?: VersionOrigin; // for debugging purposes
 
   constructor(props: VersionProps) {
     super();
@@ -155,6 +158,7 @@ export default class Version extends BitObject {
     this.componentId = props.componentId;
     this.bitVersion = props.bitVersion;
     this.modified = props.modified || [];
+    this.origin = props.origin;
     this.validateVersion();
   }
 
@@ -432,6 +436,7 @@ export default class Version extends BitObject {
           : undefined,
         bitVersion: this.bitVersion,
         modified: this.modified,
+        origin: this.origin,
       },
       (val) => !!val
     );
@@ -480,6 +485,7 @@ export default class Version extends BitObject {
       unrelated,
       bitVersion,
       modified,
+      origin,
     } = contentParsed;
 
     const _getDependencies = (deps = []): Dependency[] => {
@@ -590,6 +596,7 @@ export default class Version extends BitObject {
       buildStatus,
       bitVersion,
       modified,
+      origin,
     });
   }
 
@@ -692,9 +699,22 @@ export default class Version extends BitObject {
     this.parents.push(ref);
   }
 
-  setSquashed(squashData: SquashData, log: Log) {
+  setSquashed(squashData: SquashData, log: Log, replaceMessage?: string) {
     this.squashed = squashData;
     this.addModifiedLog(log);
+    if (replaceMessage) {
+      this.addModifiedLog({
+        username: undefined,
+        email: undefined,
+        date: Date.now().toString(),
+        message: `squashing: replacing the original log.message, which was: "${this.log.message || '<empty>'}"`,
+      });
+      this.log.message = replaceMessage;
+    }
+  }
+
+  setUnrelated(externalHead: ExternalHead) {
+    this.unrelated = externalHead;
   }
 
   addModifiedLog(log: Log) {
@@ -716,6 +736,9 @@ export default class Version extends BitObject {
 
   isRemoved(): boolean {
     return Boolean(this.extensions.findCoreExtension(Extensions.remove)?.config?.removed);
+  }
+  shouldRemoveFromMain(): boolean {
+    return Boolean(this.extensions.findCoreExtension(Extensions.remove)?.config?.removeOnMain);
   }
 
   /**

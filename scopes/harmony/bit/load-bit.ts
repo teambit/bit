@@ -11,9 +11,6 @@ import { nativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 // Enable v8 compile cache, keep this before other imports
 nativeCompileCache?.install();
 
-// needed for class-transformer package
-import 'reflect-metadata';
-
 import './hook-require';
 
 import {
@@ -44,10 +41,9 @@ import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { propogateUntil as propagateUntil } from '@teambit/legacy/dist/utils';
+import { findScopePath } from '@teambit/legacy/dist/utils';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
-import loader from '@teambit/legacy/dist/cli/loader';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
 import { manifestsMap } from './manifests';
@@ -62,7 +58,7 @@ async function loadLegacyConfig(config: any) {
 
 async function getConfig(cwd = process.cwd()) {
   const consumerInfo = await getConsumerInfo(cwd);
-  const scopePath = propagateUntil(cwd);
+  const scopePath = findScopePath(cwd);
   const globalConfigOpts = {
     name: '.bitrc.jsonc',
   };
@@ -202,10 +198,15 @@ function shouldLoadInSafeMode() {
     'logout',
     'config',
     'remote',
+    'mini-status',
   ];
   const hasSafeModeFlag = process.argv.includes('--safe-mode');
   const isSafeModeCommand = safeModeCommands.includes(currentCommand);
   return isSafeModeCommand || hasSafeModeFlag;
+}
+
+function shouldRunAsDaemon() {
+  return process.env.BIT_DAEMON === 'true';
 }
 
 export async function loadBit(path = process.cwd()) {
@@ -224,11 +225,13 @@ export async function loadBit(path = process.cwd()) {
   if (!loadCLIOnly) {
     aspectsToLoad.push(BitAspect);
   }
+  if (shouldRunAsDaemon()) {
+    logger.isDaemon = true;
+  }
   const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
 
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
   if (loadCLIOnly) return harmony;
-  loader.start('loading aspects...');
   const aspectLoader = harmony.get<AspectLoaderMain>('teambit.harmony/aspect-loader');
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
   aspectLoader.setMainAspect(getMainAspect());

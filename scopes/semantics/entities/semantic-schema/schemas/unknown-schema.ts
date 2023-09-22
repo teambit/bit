@@ -1,4 +1,4 @@
-import { Location, SchemaNode } from '../schema-node';
+import { SchemaLocation, SchemaNode } from '../schema-node';
 
 /**
  * needed for better backward and forward compatibility.
@@ -6,11 +6,25 @@ import { Location, SchemaNode } from '../schema-node';
  * wrapped in this class.
  */
 export class UnknownSchema extends SchemaNode {
-  constructor(readonly location: Location, readonly name: string, readonly schemaObj: Record<string, any>) {
+  constructor(readonly location: SchemaLocation, readonly name: string, readonly schemaObj: Record<string, any>) {
     super();
   }
 
   toString() {
     return `<<unknown schema ${this.name}>>`;
+  }
+
+  toObject() {
+    return {
+      ...super.toObject(),
+      schemaObj: this.schemaObj,
+    };
+  }
+
+  static fromObject(obj: Record<string, any>): UnknownSchema {
+    const location = obj.location;
+    const name = obj.name;
+    const schemaObj = obj.schemaObj;
+    return new UnknownSchema(location, name, schemaObj);
   }
 }

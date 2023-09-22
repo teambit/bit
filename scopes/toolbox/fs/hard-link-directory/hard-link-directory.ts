@@ -75,9 +75,19 @@ async function linkFile(srcFile: string, destFile: string) {
   } catch (err: any) {
     if (err.code === 'ENOENT') {
       await fs.mkdir(path.dirname(destFile), { recursive: true });
-      await fs.link(srcFile, destFile);
+      await linkFileIfNotExists(srcFile, destFile);
       return;
     }
+    if (err.code !== 'EEXIST') {
+      throw err;
+    }
+  }
+}
+
+async function linkFileIfNotExists(srcFile: string, destFile: string) {
+  try {
+    await fs.link(srcFile, destFile);
+  } catch (err: any) {
     if (err.code !== 'EEXIST') {
       throw err;
     }

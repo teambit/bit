@@ -30,7 +30,7 @@ describe('handling binary files in Bit', function () {
         helper.scopeHelper.getClonedLocalScope(afterFirstTag);
         helper.fixtures.copyFixtureFile('png/png-fixture3.png', 'comp1/icon.png');
         helper.command.import();
-        checkoutOutput = helper.command.checkoutHead('--all --manual');
+        checkoutOutput = helper.command.checkoutHead('--all --auto-merge-resolve manual');
       });
       it('should checkout with no errors and leave the file as is indicating there was a conflict', () => {
         expect(checkoutOutput).to.include(FileStatusWithoutChalk.binaryConflict);

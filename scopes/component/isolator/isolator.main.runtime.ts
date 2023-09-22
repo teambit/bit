@@ -1,5 +1,6 @@
+import rimraf from 'rimraf';
 import { v4 } from 'uuid';
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, pick } from 'lodash';
@@ -9,6 +10,7 @@ import type { ComponentMain, ComponentFactory } from '@teambit/component';
 import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import { GraphAspect, GraphMain } from '@teambit/graph';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import {
   DependencyResolverAspect,
   DependencyResolverMain,
@@ -20,12 +22,17 @@ import {
   ComponentDependency,
   KEY_NAME_BY_LIFECYCLE_TYPE,
   PackageManagerInstallOptions,
+  NodeLinker,
 } from '@teambit/dependency-resolver';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { Logger, LoggerAspect, LoggerMain, LongProcessLogger } from '@teambit/logger';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
-import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy/dist/constants';
+import {
+  DEPENDENCIES_FIELDS,
+  PACKAGE_JSON,
+  CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR,
+} from '@teambit/legacy/dist/constants';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import {
@@ -47,6 +54,8 @@ import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
+import pMap from 'p-map';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
@@ -54,16 +63,19 @@ import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-d
 import { Network } from './network';
 
 export type ListResults = {
-  workspace: string;
   capsules: string[];
 };
+
+export type CapsuleTransferFn = (sourceDir: string, targetDir: string) => void;
+
+export type CapsuleTransferSlot = SlotRegistry<CapsuleTransferFn>;
 
 /**
  * Context for the isolation process
  */
 export type IsolationContext = {
   /**
-   * Whether the isolation done for aspets (as opposed to regular components)
+   * Whether the isolation done for aspects (as opposed to regular components)
    */
   aspects?: boolean;
 
@@ -135,6 +147,12 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   useDatedDirs?: boolean;
 
   /**
+   * If set, along with useDatedDirs, then we will use the same hash dir for all capsules created with the same
+   * datedDirId
+   */
+  datedDirId?: string;
+
+  /**
    * installation options
    */
   installOptions?: IsolateComponentsInstallOptions;
@@ -171,12 +189,22 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * relevant for tagging from scope, where we tag an existing snap without any code-changes.
    * the idea is to have all build artifacts from the previous snap and run deploy pipeline on top of it.
    */
-  populateArtifactsFromParent?: boolean;
+  populateArtifactsFrom?: ComponentID[];
 
   /**
    * Force specific host to get the component from.
    */
   host?: ComponentFactory;
+
+  /**
+   * Use specific package manager for the isolation process (override the package manager from the dep resolver config)
+   */
+  packageManager?: string;
+
+  /**
+   * Use specific node linker for the isolation process (override the package manager from the dep resolver config)
+   */
+  nodeLinker?: NodeLinker;
 
   /**
    * Dir where to read the package manager config from
@@ -188,7 +216,7 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   context?: IsolationContext;
 };
 
-type GetCapsuleDirOpts = Pick<IsolateComponentsOptions, 'useHash' | 'rootBaseDir' | 'useDatedDirs'> & {
+type GetCapsuleDirOpts = Pick<IsolateComponentsOptions, 'datedDirId' | 'useHash' | 'rootBaseDir' | 'useDatedDirs'> & {
   baseDir: string;
 };
 
@@ -206,6 +234,11 @@ const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
   copyPeerToRuntimeOnRoot: true,
 };
 
+/**
+ * File name to indicate that the capsule is ready (all packages are installed and links are created)
+ */
+export const CAPSULE_READY_FILE = '.bit-capsule-ready';
+
 export class IsolatorMain {
   static runtime = MainRuntime;
   static dependencies = [
@@ -215,26 +248,36 @@ export class IsolatorMain {
     GraphAspect,
     GlobalConfigAspect,
     AspectLoaderAspect,
+    CLIAspect,
   ];
+  static slots = [Slot.withType<CapsuleTransferFn>()];
   static defaultConfig = {};
   _componentsPackagesVersionCache: { [idStr: string]: string } = {}; // cache packages versions of components
+  _datedHashForName = new Map<string, string>(); // cache dated hash for a specific name
 
-  static async provider([dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader]: [
-    DependencyResolverMain,
-    LoggerMain,
-    ComponentMain,
-    GraphMain,
-    GlobalConfigMain,
-    AspectLoaderMain
-  ]): Promise<IsolatorMain> {
+  static async provider(
+    [dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader, cli]: [
+      DependencyResolverMain,
+      LoggerMain,
+      ComponentMain,
+      GraphMain,
+      GlobalConfigMain,
+      AspectLoaderMain,
+      CLIMain
+    ],
+    _config,
+    [capsuleTransferSlot]: [CapsuleTransferSlot]
+  ): Promise<IsolatorMain> {
     const logger = loggerExtension.createLogger(IsolatorAspect.id);
     const isolator = new IsolatorMain(
       dependencyResolver,
       logger,
       componentAspect,
       graphMain,
+      cli,
       globalConfig,
-      aspectLoader
+      aspectLoader,
+      capsuleTransferSlot
     );
     return isolator;
   }
@@ -243,8 +286,10 @@ export class IsolatorMain {
     private logger: Logger,
     private componentAspect: ComponentMain,
     private graph: GraphMain,
+    private cli: CLIMain,
     private globalConfig: GlobalConfigMain,
-    private aspectLoader: AspectLoaderMain
+    private aspectLoader: AspectLoaderMain,
+    private capsuleTransferSlot: CapsuleTransferSlot
   ) {}
 
   // TODO: the legacy scope used for the component writer, which then decide if it need to write the artifacts and dists
@@ -282,7 +327,8 @@ export class IsolatorMain {
     this.logger.debug(
       `creating network with base dir: ${opts.baseDir}, rootBaseDir: ${opts.rootBaseDir}. final capsule-dir: ${capsuleDir}. capsuleList: ${capsuleList.length}`
     );
-    if (shouldUseDatedDirs) {
+    const cacheCapsules = process.env.CACHE_CAPSULES;
+    if (shouldUseDatedDirs && cacheCapsules) {
       const targetCapsuleDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: false, baseDir: opts.baseDir || '' });
       this.registerMoveCapsuleOnProcessExit(capsuleDir, targetCapsuleDir);
       // TODO: ideally this should be inside the on process exit hook
@@ -318,20 +364,66 @@ export class IsolatorMain {
 
   private registerMoveCapsuleOnProcessExit(datedCapsuleDir: string, targetCapsuleDir: string): void {
     this.logger.info(`registering process.on(exit) to move capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
-    process.on('exit', () => {
+    this.cli.registerOnBeforeExit(async () => {
       this.logger.info(`start moving capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
       const allDirs = fs
         .readdirSync(datedCapsuleDir, { withFileTypes: true })
         .filter((dir) => dir.isDirectory() && dir.name !== 'node_modules');
-      allDirs.forEach((dir) => {
-        const targetDir = path.join(targetCapsuleDir, dir.name);
-        if (!fs.pathExistsSync(path.join(targetCapsuleDir, dir.name))) {
-          const sourceDir = path.join(datedCapsuleDir, dir.name);
-          this.logger.info(`moving specific capsule from ${sourceDir} to ${targetDir}`);
-          fs.moveSync(sourceDir, targetDir);
+      const promises = allDirs.map(async (dir) => {
+        const sourceDir = path.join(datedCapsuleDir, dir.name);
+        const sourceCapsuleReadyFile = this.getCapsuleReadyFilePath(sourceDir);
+        if (!fs.pathExistsSync(sourceCapsuleReadyFile)) {
+          // Capsule is not ready, don't copy it to the cache
+          this.logger.console(`skipping moving capsule to cache as it is not ready ${sourceDir}`);
+          return;
         }
+        const targetDir = path.join(targetCapsuleDir, dir.name);
+        if (fs.pathExistsSync(path.join(targetCapsuleDir, dir.name))) {
+          const targetCapsuleReadyFile = this.getCapsuleReadyFilePath(targetDir);
+          if (fs.pathExistsSync(targetCapsuleReadyFile)) {
+            // Capsule is already in the cache, no need to move it
+            this.logger.console(`skipping moving capsule to cache as it is already exist at ${targetDir}`);
+            return;
+          }
+          this.logger.console(`cleaning target capsule location as it's not ready at: ${targetDir}`);
+          rimraf.sync(targetDir);
+        }
+        this.logger.console(`moving specific capsule from ${sourceDir} to ${targetDir}`);
+        // We delete the ready file path first, as the move might take a long time, so we don't want to move
+        // the ready file indicator before the capsule is ready in the new location
+        this.removeCapsuleReadyFileSync(sourceDir);
+        await this.moveWithTempName(sourceDir, targetDir);
+        // Mark the capsule as ready in the new location
+        this.writeCapsuleReadyFileSync(targetDir);
       });
+      await Promise.all(promises);
     });
+  }
+
+  /**
+   * The function moves a directory from a source location to a target location using a temporary directory.
+   * This is using temp dir because sometime the source dir and target dir might be in different FS
+   * (for example different mounts) which means the move might take a long time
+   * during the time of moving, another process will see that the capsule is not ready and will try to remove then
+   * move it again, which lead to the first process throwing an error
+   * @param sourceDir - The source directory from where the files or directories will be moved.
+   * @param targetDir - The target directory where the source directory will be moved to.
+   */
+  private async moveWithTempName(sourceDir, targetDir): Promise<void> {
+    const tempDir = `${targetDir}-${v4()}`;
+    this.logger.console(`moving capsule from ${sourceDir} to a temp dir ${tempDir}`);
+    const mvFunc = this.getCapsuleTransferFn() || fs.move;
+    await mvFunc(sourceDir, tempDir);
+    const exists = await fs.pathExists(targetDir);
+    // This might exist if in the time when we move to the temp dir, another process created the target dir already
+    if (exists) {
+      this.logger.console(`skip moving capsule from temp dir to real dir as it's already exist: ${targetDir}`);
+      // Clean leftovers
+      await rimraf(tempDir);
+      return;
+    }
+    this.logger.console(`moving capsule from a temp dir ${tempDir} to the target dir ${targetDir}`);
+    await mvFunc(tempDir, targetDir);
   }
 
   /**
@@ -349,7 +441,9 @@ export class IsolatorMain {
       linkingContext: { inCapsule: true },
     });
     const { linkedRootDeps } = await linker.calculateLinkedDeps(capsulesDir, ComponentMap.create([]), linkingOptions);
-    return createLinks(capsulesDir, linkedRootDeps);
+    // This links are in the global cache which used by many process
+    // we don't want to delete and re-create the links if they already exist and valid
+    return createLinks(capsulesDir, linkedRootDeps, { skipIfSymlinkValid: true });
   }
 
   private shouldUseDatedDirs(componentsToIsolate: Component[], opts: IsolateComponentsOptions): boolean {
@@ -364,11 +458,22 @@ export class IsolatorMain {
     if (!opts.installOptions?.useNesting) return false;
     // Getting the real capsule dir to check if all capsules exists
     const realCapsulesDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: false, baseDir: opts.baseDir || '' });
+    // validate all capsules in the real location exists and valid
     const allCapsulesExists = componentsToIsolate.every((component) => {
       const capsuleDir = path.join(realCapsulesDir, Capsule.getCapsuleDirName(component));
-      return fs.existsSync(capsuleDir);
+      const readyFilePath = this.getCapsuleReadyFilePath(capsuleDir);
+      return fs.existsSync(capsuleDir) && fs.existsSync(readyFilePath);
     });
-    return !allCapsulesExists;
+    if (allCapsulesExists) {
+      this.logger.console(
+        `All required capsules already exists and valid in the real (cached) location: ${realCapsulesDir}`
+      );
+      return false;
+    }
+    this.logger.console(
+      `Missing required capsules in the real (cached) location: ${realCapsulesDir}, using dated (temp) dir`
+    );
+    return true;
   }
 
   /**
@@ -403,7 +508,7 @@ export class IsolatorMain {
     let longProcessLogger;
     if (opts.context?.aspects) {
       // const wsPath = opts.host?.path || 'unknown';
-      const wsPath = opts.context.workspaceName || opts.host?.path || 'unknown';
+      const wsPath = opts.context.workspaceName || opts.host?.path || opts.name || 'unknown';
       longProcessLogger = this.logger.createLongProcessLogger(
         `ensuring ${chalk.cyan(components.length.toString())} capsule(s) for all envs and aspects for ${chalk.bold(
           wsPath
@@ -448,10 +553,12 @@ export class IsolatorMain {
     if (installOptions.installPackages) {
       const cachePackagesOnCapsulesRoot = opts.cachePackagesOnCapsulesRoot ?? false;
       const linkingOptions = opts.linkingOptions ?? {};
-      let installLongProcessLogger;
+      let installLongProcessLogger: LongProcessLogger | undefined;
       // Only show the log message in case we are going to install something
       if (capsuleList && capsuleList.length && !opts.context?.aspects) {
-        installLongProcessLogger = this.logger.createLongProcessLogger('install packages in capsules');
+        installLongProcessLogger = this.logger.createLongProcessLogger(
+          `install packages in ${capsuleList.length} capsules`
+        );
       }
       if (installOptions.useNesting) {
         await Promise.all(
@@ -466,6 +573,8 @@ export class IsolatorMain {
             await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
               cachePackagesOnCapsulesRoot,
               linkedDependencies,
+              packageManager: opts.packageManager,
+              nodeLinker: opts.nodeLinker,
             });
           })
         );
@@ -479,11 +588,11 @@ export class IsolatorMain {
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
           cachePackagesOnCapsulesRoot,
           linkedDependencies,
+          packageManager: opts.packageManager,
         });
       }
       if (installLongProcessLogger) {
-        installLongProcessLogger.end();
-        this.logger.consoleSuccess('installed packages in capsules');
+        installLongProcessLogger.end('success');
       }
     }
 
@@ -498,6 +607,7 @@ export class IsolatorMain {
         );
       capsuleWithPackageData.capsule.fs.writeFileSync(PACKAGE_JSON, JSON.stringify(currentPackageJson, null, 2));
     });
+    await this.markCapsulesAsReady(capsuleList);
     // Only show this message if at least one new capsule created
     if (longProcessLogger && capsuleList.length) {
       longProcessLogger.end();
@@ -509,6 +619,37 @@ export class IsolatorMain {
     return allCapsuleList;
   }
 
+  private async markCapsulesAsReady(capsuleList: CapsuleList): Promise<void> {
+    await Promise.all(
+      capsuleList.map(async (capsule) => {
+        return this.markCapsuleAsReady(capsule);
+      })
+    );
+  }
+
+  private async markCapsuleAsReady(capsule: Capsule): Promise<void> {
+    const readyFilePath = this.getCapsuleReadyFilePath(capsule.path);
+    return fs.writeFile(readyFilePath, '');
+  }
+
+  private removeCapsuleReadyFileSync(capsulePath: string): void {
+    const readyFilePath = this.getCapsuleReadyFilePath(capsulePath);
+    const exist = fs.pathExistsSync(readyFilePath);
+    if (!exist) return;
+    fs.removeSync(readyFilePath);
+  }
+
+  private writeCapsuleReadyFileSync(capsulePath: string): void {
+    const readyFilePath = this.getCapsuleReadyFilePath(capsulePath);
+    const exist = fs.pathExistsSync(readyFilePath);
+    if (exist) return;
+    fs.writeFileSync(readyFilePath, '');
+  }
+
+  private getCapsuleReadyFilePath(capsulePath: string): string {
+    return path.join(capsulePath, CAPSULE_READY_FILE);
+  }
+
   private async installInCapsules(
     capsulesDir: string,
     capsuleList: CapsuleList,
@@ -516,12 +657,16 @@ export class IsolatorMain {
     opts: {
       cachePackagesOnCapsulesRoot?: boolean;
       linkedDependencies?: Record<string, Record<string, string>>;
+      packageManager?: string;
+      nodeLinker?: NodeLinker;
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({
       rootDir: capsulesDir,
       cacheRootDirectory: opts.cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
       installingContext: { inCapsule: true },
+      packageManager: opts.packageManager,
+      nodeLinker: opts.nodeLinker,
     });
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace
@@ -533,6 +678,7 @@ export class IsolatorMain {
       resolveVersionsFromDependenciesOnly: true,
       linkedDependencies: opts.linkedDependencies,
       forceTeambitHarmonyLink: !this.dependencyResolver.hasHarmonyInRootPolicy(),
+      excludeExtensionsDependencies: true,
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
@@ -649,7 +795,7 @@ export class IsolatorMain {
         const capsule = capsuleList.getCapsule(component.id);
         if (!capsule) return;
         const scope =
-          (await CapsuleList.capsuleUsePreviouslySavedDists(component)) || opts?.populateArtifactsFromParent
+          (await CapsuleList.capsuleUsePreviouslySavedDists(component)) || opts?.populateArtifactsFrom
             ? legacyScope
             : undefined;
         const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(component, allIds, scope, opts);
@@ -672,21 +818,28 @@ export class IsolatorMain {
     return ComponentMap.create(tuples);
   }
 
-  async list(workspacePath: string): Promise<ListResults> {
+  async list(rootDir: string): Promise<ListResults> {
     try {
-      const workspaceCapsuleFolder = this.getCapsulesRootDir({ baseDir: workspacePath });
-      const capsules = await fs.readdir(workspaceCapsuleFolder);
-      const capsuleFullPaths = capsules.map((c) => path.join(workspaceCapsuleFolder, c));
+      const capsules = await fs.readdir(rootDir);
+      const withoutNodeModules = capsules.filter((c) => c !== 'node_modules');
+      const capsuleFullPaths = withoutNodeModules.map((c) => path.join(rootDir, c));
       return {
-        workspace: workspacePath,
         capsules: capsuleFullPaths,
       };
     } catch (e: any) {
       if (e.code === 'ENOENT') {
-        return { workspace: workspacePath, capsules: [] };
+        return { capsules: [] };
       }
       throw e;
     }
+  }
+
+  registerCapsuleTransferFn(fn: CapsuleTransferFn) {
+    this.capsuleTransferSlot.register(fn);
+  }
+
+  private getCapsuleTransferFn(): CapsuleTransferFn {
+    return this.capsuleTransferSlot.values()[0];
   }
 
   /** @deprecated use the new function signature with an object parameter instead */
@@ -696,27 +849,43 @@ export class IsolatorMain {
     getCapsuleDirOpts: GetCapsuleDirOpts | string,
     rootBaseDir?: string,
     useHash = true,
-    useDatedDirs = false
+    useDatedDirs = false,
+    datedDirId?: string
   ): PathOsBasedAbsolute {
     if (typeof getCapsuleDirOpts === 'string') {
-      getCapsuleDirOpts = { baseDir: getCapsuleDirOpts, rootBaseDir, useHash, useDatedDirs };
+      getCapsuleDirOpts = { baseDir: getCapsuleDirOpts, rootBaseDir, useHash, useDatedDirs, datedDirId };
     }
-    const capsulesRootBaseDir = getCapsuleDirOpts.rootBaseDir || this.getRootDirOfAllCapsules();
-    if (getCapsuleDirOpts.useDatedDirs) {
+    const getCapsuleDirOptsWithDefaults = {
+      useHash: true,
+      useDatedDirs: false,
+      ...getCapsuleDirOpts,
+    };
+    const capsulesRootBaseDir = getCapsuleDirOptsWithDefaults.rootBaseDir || this.getRootDirOfAllCapsules();
+    if (getCapsuleDirOptsWithDefaults.useDatedDirs) {
       const date = new Date();
       const dateDir = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-      const datedBaseDir = 'dated-capsules';
-      const hashDir = v4();
+      const defaultDatedBaseDir = 'dated-capsules';
+      const datedBaseDir = this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || defaultDatedBaseDir;
+      let hashDir;
+      const finalDatedDirId = getCapsuleDirOpts.datedDirId;
+      if (finalDatedDirId && this._datedHashForName.has(finalDatedDirId)) {
+        hashDir = this._datedHashForName.get(finalDatedDirId);
+      } else {
+        hashDir = v4();
+        if (finalDatedDirId) {
+          this._datedHashForName.set(finalDatedDirId, hashDir);
+        }
+      }
       return path.join(capsulesRootBaseDir, datedBaseDir, dateDir, hashDir);
     }
-    const dir = getCapsuleDirOpts.useHash ? hash(getCapsuleDirOpts.baseDir) : getCapsuleDirOpts.baseDir;
+    const dir = getCapsuleDirOptsWithDefaults.useHash
+      ? hash(getCapsuleDirOptsWithDefaults.baseDir)
+      : getCapsuleDirOptsWithDefaults.baseDir;
     return path.join(capsulesRootBaseDir, dir);
   }
 
-  async deleteCapsules(capsuleBaseDir: string | null): Promise<string> {
-    const dirToDelete = capsuleBaseDir
-      ? this.getCapsulesRootDir({ baseDir: capsuleBaseDir })
-      : this.getRootDirOfAllCapsules();
+  async deleteCapsules(rootDir?: string): Promise<string> {
+    const dirToDelete = rootDir || this.getRootDirOfAllCapsules();
     await fs.remove(dirToDelete);
     return dirToDelete;
   }
@@ -727,10 +896,12 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions
   ): Promise<Capsule[]> {
     this.logger.debug(`createCapsulesFromComponents: ${components.length} components`);
-    const capsules: Capsule[] = await Promise.all(
-      components.map((component: Component) => {
+    const capsules: Capsule[] = await pMap(
+      components,
+      (component: Component) => {
         return Capsule.createFromComponent(component, baseDir, opts);
-      })
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
     return capsules;
   }
@@ -852,7 +1023,7 @@ export class IsolatorMain {
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
     dataToPersist.addFile(packageJson.toVinylFile());
-    const artifacts = await this.getArtifacts(component, legacyScope, opts?.populateArtifactsFromParent);
+    const artifacts = await this.getArtifacts(component, legacyScope, opts?.populateArtifactsFrom);
     dataToPersist.addManyFiles(artifacts);
     return dataToPersist;
   }
@@ -906,25 +1077,28 @@ export class IsolatorMain {
   private async getArtifacts(
     component: Component,
     legacyScope?: Scope,
-    fetchParentArtifacts = false
+    populateArtifactsFrom?: ComponentID[]
   ): Promise<AbstractVinyl[]> {
     const legacyComp: ConsumerComponent = component.state._consumer;
     if (!legacyScope) {
-      if (fetchParentArtifacts) throw new Error(`unable to fetch from parent, the legacyScope was not provided`);
+      if (populateArtifactsFrom) throw new Error(`unable to fetch from parent, the legacyScope was not provided`);
       // when capsules are written via the workspace, do not write artifacts, they get created by
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return [];
     }
-    if (legacyComp.buildStatus !== 'succeed' && !fetchParentArtifacts) {
+    if (legacyComp.buildStatus !== 'succeed' && !populateArtifactsFrom) {
       // this is important for "bit sign" when on lane to not go to the original scope
       return [];
     }
     const artifactFilesToFetch = async () => {
-      if (fetchParentArtifacts) {
-        const parent = component.head?.parents[0];
-        if (!parent)
-          throw new Error(`unable to fetch artifacts from parent. parent is missing for ${component.id.toString()}`);
-        const compParent = await legacyScope.getConsumerComponent(legacyComp.id.changeVersion(parent.toString()));
+      if (populateArtifactsFrom) {
+        const found = populateArtifactsFrom.find((id) => id.isEqual(component.id, { ignoreVersion: true }));
+        if (!found) {
+          throw new Error(
+            `getArtifacts: unable to find where to populate the artifacts from for ${component.id.toString()}`
+          );
+        }
+        const compParent = await legacyScope.getConsumerComponent(found._legacy);
         return getArtifactFilesExcludeExtension(compParent.extensions, 'teambit.pkg/pkg');
       }
       const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];

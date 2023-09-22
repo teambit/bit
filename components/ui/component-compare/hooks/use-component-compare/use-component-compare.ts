@@ -3,7 +3,13 @@ import { gql } from '@apollo/client';
 import { ComponentCompareQueryResponse } from '@teambit/component.ui.component-compare.models.component-compare-model';
 
 export const QUERY_COMPONENT_COMPARE = gql`
-  query ComponentCompare($baseId: String!, $compareId: String!, $fileName: String, $aspectName: String) {
+  query ComponentCompare(
+    $baseId: String!
+    $compareId: String!
+    $fileName: String
+    $aspectName: String
+    $testFileName: String
+  ) {
     getHost {
       id
       compareComponent(baseId: $baseId, compareId: $compareId) {
@@ -18,6 +24,13 @@ export const QUERY_COMPONENT_COMPARE = gql`
         aspects(aspectName: $aspectName) {
           fieldName
           diffOutput
+        }
+        tests(fileName: $testFileName) {
+          status
+          fileName
+          diffOutput
+          baseContent
+          compareContent
         }
       }
     }

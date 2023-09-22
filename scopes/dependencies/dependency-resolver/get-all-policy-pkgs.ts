@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import { ManifestDependenciesKeysNames } from './manifest';
 import { VariantPolicyConfigObject, WorkspacePolicy } from './policy';
 import { DependencyLifecycleType } from './dependencies/dependency';
@@ -8,7 +9,9 @@ type CurrentPkg = {
   currentRange: string;
   source: 'variants' | 'component' | 'rootPolicy' | 'component-model';
   variantPattern?: string | null;
-  componentId?: string;
+  componentId?: ComponentID;
+  isAuto?: boolean;
+
   targetField: ManifestDependenciesKeysNames;
 };
 
@@ -19,8 +22,9 @@ export type OutdatedPkg = CurrentPkg & {
 export type ComponentModelVersion = {
   name: string;
   version: string;
-  componentId: string;
+  componentId: ComponentID;
   lifecycleType: DependencyLifecycleType;
+  isAuto: boolean;
 };
 
 /**
@@ -29,12 +33,12 @@ export type ComponentModelVersion = {
 export function getAllPolicyPkgs({
   rootPolicy,
   variantPoliciesByPatterns,
-  componentPoliciesById,
+  componentPolicies,
   componentModelVersions,
 }: {
   rootPolicy: WorkspacePolicy;
   variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
-  componentPoliciesById: Record<string, VariantPolicyConfigObject>;
+  componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
   componentModelVersions: ComponentModelVersion[];
 }): CurrentPkg[] {
   const pkgsFromPolicies = getPkgsFromRootPolicy(rootPolicy);
@@ -42,13 +46,14 @@ export function getAllPolicyPkgs({
   return [
     ...pkgsFromPolicies,
     ...getPkgsFromVariants(variantPoliciesByPatterns),
-    ...getPkgsFromComponents(componentPoliciesById),
+    ...getPkgsFromComponents(componentPolicies),
     ...componentModelVersions
       .filter(({ name }) => !pkgsNamesFromPolicies.has(name))
       .map((componentDep) => ({
         name: componentDep.name,
         currentRange: componentDep.version,
         source: 'component-model' as const,
+        isAuto: componentDep.isAuto,
         componentId: componentDep.componentId,
         targetField: KEY_NAME_BY_LIFECYCLE_TYPE[componentDep.lifecycleType] as ManifestDependenciesKeysNames,
       })),
@@ -74,9 +79,11 @@ function getPkgsFromVariants(variantPoliciesByPatterns: Record<string, VariantPo
     .flat();
 }
 
-function getPkgsFromComponents(componentPoliciesById: Record<string, VariantPolicyConfigObject>): CurrentPkg[] {
-  return Object.entries(componentPoliciesById)
-    .map(([componentId, policy]) => {
+function getPkgsFromComponents(
+  componentPolicies: Array<{ componentId: ComponentID; policy: VariantPolicyConfigObject }>
+): CurrentPkg[] {
+  return componentPolicies
+    .map(({ componentId, policy }) => {
       return readAllDependenciesFromPolicyObject({ source: 'component', componentId }, policy);
     })
     .flat();

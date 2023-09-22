@@ -59,6 +59,7 @@ export type ImportOptions = {
   allHistory?: boolean;
   fetchDeps?: boolean; // by default, if a component was tagged with > 0.0.900, it has the flattened-deps-graph in the object
   trackOnly?: boolean;
+  includeDeprecated?: boolean;
 };
 type ComponentMergeStatus = {
   component: Component;
@@ -300,6 +301,7 @@ if you need this specific snap, find the lane this snap is belong to, then run "
       // in case a user is merging a lane into a new workspace, then, locally main has head, but remotely the head is
       // empty, until it's exported. going to the remote and asking this component will throw an error if ignoreMissingHead is false
       ignoreMissingHead: true,
+      reason: `of their latest on ${lane ? `lane ${lane.id()}` : 'main'}`,
     });
 
     loader.start(`import ${ids.length} components with their dependencies (if missing)`);
@@ -315,6 +317,9 @@ if you need this specific snap, find the lane this snap is belong to, then run "
           // it's possible that .bitmap is not in sync and has local tags that don't exist on the remote. later, we
           // add them to "missingIds" of "importResult" and show them to the user
           throwForSeederNotFound: false,
+          reason: this.options.fetchDeps
+            ? 'for getting all dependencies'
+            : `for getting dependencies of components that don't have dependency-graph`,
         });
 
     return results;
@@ -359,7 +364,7 @@ if you need this specific snap, find the lane this snap is belong to, then run "
     }
 
     await pMapSeries(idsWithWildcard, async (idStr: string) => {
-      const idsFromRemote = await getRemoteBitIdsByWildcards(idStr);
+      const idsFromRemote = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
       const existingOnLanes = idsFromRemote.filter((id) => bitIdsFromLane.hasWithoutVersion(id));
       if (!existingOnLanes.length) {
         throw new BitError(`the id with the the wildcard "${idStr}" has been parsed to multiple component ids.
@@ -378,7 +383,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     await Promise.all(
       this.options.ids.map(async (idStr: string) => {
         if (hasWildcard(idStr)) {
-          const ids = await getRemoteBitIdsByWildcards(idStr);
+          const ids = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
           loader.start(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
           bitIds.push(...ids);
         } else {
@@ -711,7 +716,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       components.map(async (comp) => {
         const existOnRemoteLane = idsFromRemoteLanes.has(comp.id);
         if (!existOnRemoteLane && !this.options.saveInLane) {
-          this.consumer.bitMap.setComponentProp(comp.id, 'onLanesOnly', false);
+          this.consumer.bitMap.setOnLanesOnly(comp.id, false);
           return;
         }
         const modelComponent = await this.scope.getModelComponent(comp.id);

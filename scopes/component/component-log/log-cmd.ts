@@ -7,13 +7,13 @@ import { ComponentLogMain } from './component-log.main.runtime';
 export default class LogCmd implements Command {
   name = 'log <id>';
   description = 'show components(s) version history';
-  helpUrl = 'docs/components/navigating-history';
+  helpUrl = 'reference/components/navigating-history';
   extendedDescription: string;
   group = 'info';
   alias = '';
   options = [
     ['r', 'remote', 'show log of a remote component'],
-    ['', 'parents', 'EXPERIMENTAL. show parents and lanes data'],
+    ['', 'parents', 'show parents and lanes data'],
     ['o', 'one-line', 'show each log entry in one line'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;

@@ -1,4 +1,5 @@
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { compact } from 'lodash';
@@ -97,7 +98,9 @@ export class AspectMain {
     const componentIds = await this.workspace.idsByPattern(pattern);
     await Promise.all(
       componentIds.map(async (componentId) => {
-        await this.workspace.addSpecificComponentConfig(componentId, aspectId, config, options.merge);
+        await this.workspace.addSpecificComponentConfig(componentId, aspectId, config, {
+          shouldMergeWithExisting: options.merge,
+        });
       })
     );
     await this.workspace.bitMap.write();
@@ -211,9 +214,10 @@ export class AspectMain {
     GeneratorAspect,
     WorkspaceAspect,
     CLIAspect,
+    LoggerAspect,
   ];
 
-  static async provider([react, envs, builder, aspectLoader, compiler, babel, generator, workspace, cli]: [
+  static async provider([react, envs, builder, aspectLoader, compiler, babel, generator, workspace, cli, loggerMain]: [
     ReactMain,
     EnvsMain,
     BuilderMain,
@@ -222,8 +226,11 @@ export class AspectMain {
     BabelMain,
     GeneratorMain,
     Workspace,
-    CLIMain
+    CLIMain,
+    LoggerMain
   ]) {
+    const logger = loggerMain.createLogger(AspectAspect.id);
+
     const babelCompiler = babel.createCompiler({
       babelTransformOptions: babelConfig,
       distDir: 'dist',
@@ -252,7 +259,7 @@ export class AspectMain {
 
     const aspectEnv = react.compose(
       [compilerOverride, compilerTasksOverride],
-      new AspectEnv(react.reactEnv, aspectLoader)
+      new AspectEnv(react.reactEnv, aspectLoader, logger)
     );
 
     const coreExporterTask = new CoreExporterTask(aspectEnv, aspectLoader);

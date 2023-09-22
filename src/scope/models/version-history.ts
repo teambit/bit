@@ -1,5 +1,5 @@
 import { Graph, Edge, Node } from '@teambit/graph.cleargraph';
-import { difference } from 'lodash';
+import { compact, difference, uniqBy } from 'lodash';
 import { BitId } from '../../bit-id';
 import getStringifyArgs from '../../utils/string/get-stringify-args';
 import Ref from '../objects/ref';
@@ -18,17 +18,21 @@ type VersionHistoryProps = {
   name: string;
   scope?: string;
   versions: VersionParents[];
+  graphCompleteRefs?: string[];
 };
 
 export default class VersionHistory extends BitObject {
   name: string;
   scope?: string;
   versions: VersionParents[];
+  graphCompleteRefs: string[];
+  hasChanged = false; // whether the version history has changed since the last persist
   constructor(props: VersionHistoryProps) {
     super();
     this.name = props.name;
     this.scope = props.scope;
     this.versions = props.versions;
+    this.graphCompleteRefs = props.graphCompleteRefs || [];
   }
 
   id() {
@@ -49,6 +53,7 @@ export default class VersionHistory extends BitObject {
         unrelated: v.unrelated?.toString(),
         squashed: v.squashed ? v.squashed.map((p) => p.toString()) : undefined,
       })),
+      graphCompleteRefs: this.graphCompleteRefs,
     };
   }
 
@@ -84,6 +89,10 @@ export default class VersionHistory extends BitObject {
     });
   }
 
+  isEmpty() {
+    return !this.versions.length;
+  }
+
   getAllHashesFrom(start: Ref): { found?: string[]; missing?: string[] } {
     const item = this.versions.find((ver) => ver.hash.isEqual(start));
     if (!item) return { missing: [start.toString()] };
@@ -110,6 +119,17 @@ export default class VersionHistory extends BitObject {
     return found?.includes(searchFor.toString());
   }
 
+  isGraphCompleteSince(ref: Ref) {
+    if (this.graphCompleteRefs.includes(ref.toString())) return true;
+    const { missing } = this.getAllHashesFrom(ref);
+    const isComplete = !missing || !missing.length;
+    if (isComplete) {
+      this.graphCompleteRefs.push(ref.toString());
+      this.hasChanged = true;
+    }
+    return isComplete;
+  }
+
   getAllHashesAsString(): string[] {
     return this.versions.map((v) => v.hash.toString());
   }
@@ -125,11 +145,23 @@ export default class VersionHistory extends BitObject {
 
   getGraph() {
     const graph = new Graph<Ref, string>();
-    const nodes = this.versions.map((v) => new Node(v.hash.toString(), v.hash));
+    const allHashes = uniqBy(
+      this.versions
+        .map((v) => {
+          return compact([v.hash, ...v.parents, ...(v.squashed || []), v.unrelated]);
+        })
+        .flat(),
+      'hash'
+    );
+    const nodes = allHashes.map((v) => new Node(v.toString(), v));
     const edges = this.versions
       .map((v) => {
         const verEdges = v.parents.map((p) => new Edge(v.hash.toString(), p.toString(), 'parent'));
         if (v.unrelated) verEdges.push(new Edge(v.hash.toString(), v.unrelated.toString(), 'unrelated'));
+        if (v.squashed) {
+          const squashed = v.squashed.filter((s) => !v.parents.find((p) => p.isEqual(s)));
+          squashed.map((p) => verEdges.push(new Edge(v.hash.toString(), p.toString(), 'squashed')));
+        }
         return verEdges;
       })
       .flat();
@@ -161,6 +193,7 @@ export default class VersionHistory extends BitObject {
         unrelated: ver.unrelated ? Ref.from(ver.unrelated) : undefined,
         squashed: ver.squashed ? ver.squashed.map((p) => Ref.from(p)) : undefined,
       })),
+      graphCompleteRefs: parsed.graphCompleteRefs,
     };
     return new VersionHistory(props);
   }

@@ -1,3 +1,4 @@
+import objectHash from 'object-hash';
 import json from 'comment-json';
 import fs from 'fs-extra';
 import * as path from 'path';
@@ -19,7 +20,7 @@ import {
 import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { isDir, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
-import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import ComponentMap, {
   ComponentMapFile,
   Config,
@@ -30,7 +31,6 @@ import ComponentMap, {
 import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 import GeneralError from '../../error/general-error';
-import { Lane } from '../../scope/models';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
@@ -39,8 +39,12 @@ export type GetBitMapComponentOptions = {
   ignoreScopeAndVersion?: boolean;
 };
 
+export type MergeOptions = {
+  mergeStrategy?: 'theirs' | 'ours' | 'manual';
+};
+
 export const LANE_KEY = '_bit_lane';
-export const CURRENT_BITMAP_SCHEMA = '15.0.0';
+export const CURRENT_BITMAP_SCHEMA = '16.0.0';
 export const SCHEMA_FIELD = '$schema-version';
 
 export default class BitMap {
@@ -51,6 +55,7 @@ export default class BitMap {
   markAsChangedBinded: Function;
   _cacheIdsAll: BitIds | undefined;
   _cacheIdsLane: BitIds | undefined;
+  _cacheIdsLaneIncludeRemoved: BitIds | undefined;
   _cacheIdsAllStr: { [idStr: string]: BitId } | undefined;
   _cacheIdsAllStrWithoutScope: { [idStr: string]: BitId } | undefined;
   _cacheIdsAllStrWithoutVersion: { [idStr: string]: BitId } | undefined;
@@ -119,9 +124,9 @@ export default class BitMap {
     });
   }
 
-  setComponentProp(id: BitId, propName: keyof ComponentMap, val: any) {
+  setOnLanesOnly(id: BitId, value: boolean) {
     const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
-    (componentMap as any)[propName] = val;
+    componentMap.onLanesOnly = value;
     this.markAsChanged();
     return componentMap;
   }
@@ -138,6 +143,33 @@ export default class BitMap {
     return componentMap;
   }
 
+  static mergeContent(rawContent: string, otherRawContent: string, opts: MergeOptions = {}): string {
+    const parsed = json.parse(rawContent, undefined, true);
+    const parsedOther = json.parse(otherRawContent, undefined, true);
+    const merged = {};
+    if (opts.mergeStrategy === 'ours') {
+      Object.assign(merged, parsedOther, parsed);
+    } else if (opts.mergeStrategy === 'theirs') {
+      Object.assign(merged, parsed, parsedOther);
+    } else {
+      Object.assign(merged, parsedOther, parsed);
+      const merged2 = Object.assign({}, parsed, parsedOther);
+      // The easiest way to check for conflicts is to compare the hash of the merged object
+      // once when other is first and once when ours is first
+      if (objectHash(merged) !== objectHash(merged2)) {
+        throw new BitError(
+          'conflict merging Bitmap, you need to resolve the conflict manually or choose "ours" or "theirs" strategy'
+        );
+      }
+    }
+    const sorted = sortObject(merged);
+    // Delete and re-add it to make sure it will be at the end
+    delete sorted[SCHEMA_FIELD];
+    sorted[SCHEMA_FIELD] = parsed[SCHEMA_FIELD];
+    const result = `${AUTO_GENERATED_MSG}${BITMAP_PREFIX_MESSAGE}${JSON.stringify(sorted, null, 4)}`;
+    return result;
+  }
+
   static async load(consumer: Consumer): Promise<BitMap> {
     const dirPath: PathOsBasedAbsolute = consumer.getPath();
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
@@ -145,12 +177,27 @@ export default class BitMap {
     if (!mapFileContent || !currentLocation) {
       return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA);
     }
+    const bitMap = BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath);
+    await bitMap.loadFiles();
+
+    return bitMap;
+  }
+
+  /**
+   * helpful for external tools to get an object representation of the .bitmap file quickly.
+   * keep in mind that ComponentMap are not complete because they don't have the filepaths inside each component, only the rootDir.
+   */
+  static loadFromContentWithoutLoadingFiles(
+    bitMapFileContent: Buffer,
+    bitMapFilePath: PathOsBasedAbsolute,
+    workspacePath: PathOsBasedAbsolute
+  ) {
     let componentsJson;
     try {
-      componentsJson = json.parse(mapFileContent.toString('utf8'), undefined, true);
+      componentsJson = json.parse(bitMapFileContent.toString('utf8'), undefined, true);
     } catch (e: any) {
-      logger.error(`invalid bitmap at ${currentLocation}`, e);
-      throw new InvalidBitMap(currentLocation, e.message);
+      logger.error(`invalid bitmap at ${bitMapFilePath}`, e);
+      throw new InvalidBitMap(bitMapFilePath, e.message);
     }
     const schema = componentsJson[SCHEMA_FIELD] || componentsJson.version;
     let isLaneExported = false;
@@ -161,10 +208,9 @@ export default class BitMap {
     }
     BitMap.removeNonComponentFields(componentsJson);
 
-    const bitMap = new BitMap(dirPath, currentLocation, schema, laneId, isLaneExported);
+    const bitMap = new BitMap(workspacePath, bitMapFilePath, schema, laneId, isLaneExported);
     bitMap.loadComponents(componentsJson);
 
-    await bitMap.loadFiles();
     return bitMap;
   }
 
@@ -252,7 +298,7 @@ export default class BitMap {
 
   resetLaneComponentsToNew() {
     this.components = this.components.map((component) => {
-      if (!component.onLanesOnly) return component;
+      if (component.isAvailableOnCurrentLane) return component;
       return new ComponentMap({
         id: component.id.changeVersion(undefined).changeScope(undefined),
         mainFile: component.mainFile,
@@ -387,9 +433,7 @@ export default class BitMap {
 
   getAllIdsAvailableOnLane(): BitIds {
     if (!this._cacheIdsLane) {
-      const components = this.components
-        .filter((c) => !c.isRemoved())
-        .filter((c) => c.isAvailableOnCurrentLane || !c.onLanesOnly);
+      const components = this.components.filter((c) => !c.isRemoved()).filter((c) => c.isAvailableOnCurrentLane);
       const componentIds = BitIds.fromArray(components.map((c) => c.id));
       this._cacheIdsLane = componentIds;
       Object.freeze(this._cacheIdsLane);
@@ -397,10 +441,18 @@ export default class BitMap {
     return this._cacheIdsLane;
   }
 
+  getAllIdsAvailableOnLaneIncludeRemoved(): BitIds {
+    if (!this._cacheIdsLaneIncludeRemoved) {
+      const idsFromBitMap = this.getAllIdsAvailableOnLane();
+      const removedIds = this.getRemoved();
+      this._cacheIdsLaneIncludeRemoved = BitIds.fromArray([...idsFromBitMap, ...removedIds]);
+      Object.freeze(this._cacheIdsLaneIncludeRemoved);
+    }
+    return this._cacheIdsLaneIncludeRemoved;
+  }
+
   getRemoved(): BitIds {
-    const components = this.components
-      .filter((c) => c.isRemoved())
-      .filter((c) => c.isAvailableOnCurrentLane || !c.onLanesOnly);
+    const components = this.components.filter((c) => c.isRemoved()).filter((c) => c.isAvailableOnCurrentLane);
     return BitIds.fromArray(components.map((c) => c.id));
   }
 
@@ -498,20 +550,6 @@ export default class BitMap {
 
   getAllBitIds(): BitIds {
     return this.getAllIdsAvailableOnLane();
-  }
-
-  /**
-   * warning! don't use this function. the versions you'll get are not necessarily belong to main.
-   * instead, use `consumer.getIdsOfDefaultLane()`
-   */
-  getAuthoredAndImportedBitIdsOfDefaultLane(): BitIds {
-    const all = this.getAllBitIds();
-    const filteredWithDefaultVersion = all.map((id) => {
-      const componentMap = this.getComponent(id);
-      if (componentMap.onLanesOnly) return null;
-      return componentMap.id;
-    });
-    return BitIds.fromArray(compact(filteredWithDefaultVersion));
   }
 
   /**
@@ -636,8 +674,9 @@ export default class BitMap {
       if (componentMap) {
         logger.info(`bit.map: updating an exiting component ${componentMap.id.toString()}`);
         componentMap.files = files;
-        if (!this.laneId && componentMap.onLanesOnly) {
+        if (!this.laneId) {
           // happens when merging from another lane to main and main is empty
+          componentMap.isAvailableOnCurrentLane = true;
           componentMap.onLanesOnly = false;
         }
         componentMap.id = componentId;
@@ -648,7 +687,6 @@ export default class BitMap {
       // @ts-ignore not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
       const newComponentMap = new ComponentMap({
         files,
-        onLanesOnly: Boolean(this.laneId) && componentId.hasVersion(),
       });
       newComponentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.setComponent(componentId, newComponentMap);
@@ -686,20 +724,11 @@ export default class BitMap {
     return componentMap;
   }
 
-  syncWithLanes(lane?: Lane) {
-    if (!lane) {
-      this.laneId = undefined;
-      this.isLaneExported = false;
-      this.components.forEach((componentMap) => {
-        componentMap.isAvailableOnCurrentLane = !componentMap.onLanesOnly;
-      });
-    } else {
-      this.laneId = lane.toLaneId();
-      const laneIds = lane.toBitIds();
-      this.components.forEach((componentMap) => {
-        componentMap.isAvailableOnCurrentLane = laneIds.hasWithoutVersion(componentMap.id) || !componentMap.onLanesOnly;
-      });
-    }
+  syncWithIds(ids: BitIds, laneBitIds: BitIds) {
+    this.components.forEach((componentMap) => {
+      componentMap.isAvailableOnCurrentLane = ids.hasWithoutVersion(componentMap.id);
+      componentMap.onLanesOnly = laneBitIds.hasWithoutVersion(componentMap.id);
+    });
     this._invalidateCache();
     this.markAsChanged();
   }
@@ -715,6 +744,7 @@ export default class BitMap {
     this.pathsLowerCase = {};
     this._cacheIdsAll = undefined;
     this._cacheIdsLane = undefined;
+    this._cacheIdsLaneIncludeRemoved = undefined;
     this.allTrackDirs = undefined;
     this._cacheIdsAllStr = undefined;
     this._cacheIdsAllStrWithoutScope = undefined;
@@ -769,10 +799,12 @@ export default class BitMap {
     const componentMap = this.getComponent(oldId);
     if (this.laneId && !updateScopeOnly && !newId.hasVersion()) {
       // component was un-snapped and is back to "new".
+      componentMap.isAvailableOnCurrentLane = true;
       componentMap.onLanesOnly = false;
     }
     if (revertToMain) {
       // happens during "bit remove" when on a lane
+      componentMap.isAvailableOnCurrentLane = true;
       componentMap.onLanesOnly = false;
     }
     if (updateScopeOnly) {
@@ -817,6 +849,17 @@ export default class BitMap {
         });
       });
     }
+  }
+
+  updateComponentPaths(id: BitId, files: PathLinuxRelative[], removedFiles: PathLinuxRelative[]) {
+    removedFiles.forEach((removedFile) => {
+      delete this.paths[removedFile];
+      delete this.pathsLowerCase[removedFile.toLowerCase()];
+    });
+    files.forEach((file) => {
+      this.paths[file] = id;
+      this.pathsLowerCase[file.toLowerCase()] = id;
+    });
   }
 
   getAllTrackDirs() {

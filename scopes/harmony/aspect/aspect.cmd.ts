@@ -3,6 +3,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { CLITable } from '@teambit/cli-table';
 import chalk from 'chalk';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { AspectMain } from './aspect.main.runtime';
 
 export class ListAspectCmd implements Command {
@@ -11,11 +12,10 @@ export class ListAspectCmd implements Command {
   arguments = [
     {
       name: 'pattern',
-      description:
-        'component name, component id, or component pattern. use component pattern to select multiple components. \nuse comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"\nwrap the pattern with quotes',
+      description: COMPONENT_PATTERN_HELP,
     },
   ];
-  options = [['d', 'debug', 'show the origins were the aspects were taken from']] as CommandOptions;
+  options = [['d', 'debug', 'show the origins where the aspects were taken from']] as CommandOptions;
   group = 'development';
 
   constructor(private aspect: AspectMain) {}
@@ -47,8 +47,7 @@ export class SetAspectCmd implements Command {
   arguments = [
     {
       name: 'pattern',
-      description:
-        'the components to extend. use component name, component id, or component pattern. use component pattern to select multiple components. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button". wrap the pattern with quotes',
+      description: `the components to extend. ${COMPONENT_PATTERN_HELP}`,
     },
     {
       name: 'aspect-id',
@@ -60,7 +59,7 @@ export class SetAspectCmd implements Command {
     },
   ];
   options = [
-    ['m', 'merge', 'merge with an existing config if exits. (by default, it replaces the config)'],
+    ['m', 'merge', 'merge with an existing config if exits. (by default, it replaces overlapping existing configs)'],
   ] as CommandOptions;
   group = 'development';
 
@@ -69,34 +68,35 @@ export class SetAspectCmd implements Command {
   async report([pattern, aspectId, config]: [string, string, string], options: SetAspectOptions) {
     const configParsed = config ? JSON.parse(config) : {};
     const results = await this.aspect.setAspectsToComponents(pattern, aspectId, configParsed, options);
-    if (!results.length) return chalk.yellow(`unable to find any matching for ${chalk.bold(pattern)} pattern`);
+    if (!results.length)
+      return chalk.yellow(`unable to find any matching components for ${chalk.bold(pattern)} pattern`);
     return chalk.green(`the following component(s) have been successfully updated:\n${results.join('\n')}`);
   }
 }
 
 export class UpdateAspectCmd implements Command {
   name = 'update <aspect-id> [pattern]';
-  description = 'update a version of an aspect';
+  description = 'update a version of an aspect for all or specified components';
   arguments = [
     {
       name: 'aspect-id',
       description:
-        "the aspect's component id. optionally, add a version (id@version), otherwise, it finds the latest version on the remote",
+        "the aspect's component id. optionally, add a version (id@version), otherwise will use the latest version from the remote",
     },
     {
       name: 'pattern',
-      description:
-        'the components to update (defaults to all components). use component name, component id, or component pattern. use component pattern to select multiple components. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button". wrap the pattern with quotes',
+      description: `the components to update (defaults to all components). ${COMPONENT_PATTERN_HELP}`,
     },
   ];
   examples = [
     {
-      cmd: "update scope.org/aspect '**/ui/**'",
-      description: 'update "ui" components that use scope.org/aspect to use its latest version',
+      cmd: "bit aspect update scope.org/aspect '**/ui/**'",
+      description: 'update all components with the "ui" namespace that use scope.org/aspect, to use its latest version',
     },
     {
       cmd: 'bit aspect update scope.org/aspect@2.0.0',
-      description: 'update all components that use scope.org/aspect to version 2.0.0 (of this aspect).',
+      description:
+        'update version of scope.org/aspect to version 2.0.0 for all components configured with that aspect.',
     },
   ];
   options = [];
@@ -114,7 +114,7 @@ export class UpdateAspectCmd implements Command {
         `all ${alreadyUpToDate.length} component(s) that use this aspect are already up to date. nothing to update`
       );
     }
-    return chalk.yellow(`unable to find any component that use ${chalk.bold(aspectId)}`);
+    return chalk.yellow(`unable to find any components in this workspace that use ${chalk.bold(aspectId)}`);
   }
 }
 
@@ -124,8 +124,7 @@ export class UnsetAspectCmd implements Command {
   arguments = [
     {
       name: 'pattern',
-      description:
-        'the components to target. use component name, component id, or component pattern. use component pattern to select multiple components. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button". wrap the pattern with quotes',
+      description: `the components to target. ${COMPONENT_PATTERN_HELP}`,
     },
     {
       name: 'aspect-id',
@@ -139,22 +138,23 @@ export class UnsetAspectCmd implements Command {
 
   async report([pattern, aspectId]: [string, string]) {
     const results = await this.aspect.unsetAspectsFromComponents(pattern, aspectId);
-    if (!results.length) return chalk.yellow(`unable to find any matching for ${chalk.bold(pattern)} pattern`);
+    if (!results.length)
+      return chalk.yellow(`unable to find any matching components for ${chalk.bold(pattern)} pattern`);
     return chalk.green(`the following component(s) have been successfully updated:\n${results.join('\n')}`);
   }
 }
 
 export class GetAspectCmd implements Command {
   name = 'get <component-name>';
-  description = 'list the aspects set on a component, as well as their config and data';
+  description = 'list the aspects set on a component, as well as their configs and data';
   arguments = [
     {
       name: 'component-name',
-      description: 'the component name or component id',
+      description: 'the component name or component id to fetch aspects for',
     },
   ];
   options = [
-    ['d', 'debug', 'show the origins were the aspects were taken from'],
+    ['d', 'debug', 'show the origins where the aspects were taken from'],
     ['j', 'json', 'format as json'],
   ] as CommandOptions;
   group = 'development';
@@ -191,7 +191,7 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
       const afterMergeTitle = chalk.green.bold('After merging the origins above');
       const afterMergeOutput = `${afterMergeTitle}\n${extensionsDetailsToString(mergedExtensions)}`;
 
-      const afterFinalMergeTitle = chalk.green.bold('Final - After merging the origin above and the loaded data');
+      const afterFinalMergeTitle = chalk.green.bold('Final - After merging the origins above and the loaded data');
       const afterFinalMergeOutput = `${afterFinalMergeTitle}\n${extensionsDetailsToString(aspects.toLegacy())}`;
 
       return `${beforeMergeOutput}\n\n${afterMergeOutput}\n\n\n${afterFinalMergeOutput}`;
@@ -242,7 +242,7 @@ ${chalk.bold('data:')}   ${JSON.stringify(data, undefined, 2)}
 export class AspectCmd implements Command {
   name = 'aspect <sub-command>';
   alias = '';
-  description = 'EXPERIMENTAL. manage aspects';
+  description = 'manage aspects';
   options = [];
   group = 'development';
   commands: Command[] = [];

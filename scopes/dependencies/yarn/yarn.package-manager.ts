@@ -432,6 +432,7 @@ export class YarnPackageManager implements PackageManager {
       installStatePath: `${rootDirPath}/.yarn/install-state.gz`,
       pnpUnpluggedFolder: `${rootDirPath}/.yarn/unplugged`,
       cacheFolder,
+      pnpDataPath: `${rootDirPath}/.pnp.meta.json`,
       npmScopes: scopedRegistries,
       virtualFolder: `${rootDirPath}/.yarn/__virtual__`,
       npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
@@ -527,7 +528,7 @@ export class YarnPackageManager implements PackageManager {
       report,
     };
     // const candidates = await resolver.getCandidates(descriptor, new Map(), resolveOptions);
-    const candidates = await resolver.getCandidates(descriptor, {}, resolveOptions);
+    const candidates = await resolver.getCandidates(descriptor, new Map(), resolveOptions);
     const parsedRange = structUtils.parseRange(candidates[0].reference);
     const version = parsedRange.selector;
     return {

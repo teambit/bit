@@ -1,6 +1,5 @@
-import { Transform } from 'class-transformer';
-import { Location, SchemaNode } from '../schema-node';
-import { schemaObjToInstance } from '../class-transformers';
+import { SchemaLocation, SchemaNode } from '../schema-node';
+import { SchemaRegistry } from '../schema-registry';
 
 /**
  * e.g. `function f(str: any): str is string {}`
@@ -16,10 +15,9 @@ import { schemaObjToInstance } from '../class-transformers';
  *
  */
 export class TypePredicateSchema extends SchemaNode {
-  @Transform(schemaObjToInstance)
   readonly type?: SchemaNode;
   constructor(
-    readonly location: Location,
+    readonly location: SchemaLocation,
     readonly name: string,
     type?: SchemaNode,
     readonly hasAssertsModifier = false
@@ -32,5 +30,22 @@ export class TypePredicateSchema extends SchemaNode {
     const assertsKeyword = this.hasAssertsModifier ? 'asserts ' : '';
     const typeStr = this.type ? ` is ${this.type.toString()}` : '';
     return assertsKeyword + this.name + typeStr;
+  }
+
+  toObject() {
+    return {
+      ...super.toObject(),
+      name: this.name,
+      type: this.type?.toObject(),
+      hasAssertsModifier: this.hasAssertsModifier,
+    };
+  }
+
+  static fromObject(obj: Record<string, any>): TypePredicateSchema {
+    const location = obj.location;
+    const name = obj.name;
+    const type = obj.type ? SchemaRegistry.fromObject(obj.type) : undefined;
+    const hasAssertsModifier = obj.hasAssertsModifier;
+    return new TypePredicateSchema(location, name, type, hasAssertsModifier);
   }
 }

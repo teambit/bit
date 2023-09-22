@@ -13,6 +13,7 @@ import { jestConfigFile } from './files/jest.config';
 export const nodeEnvTemplate: ComponentTemplate = {
   name: 'node-env',
   description: 'customize the base Node env with your configs and tools',
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     return [
       {

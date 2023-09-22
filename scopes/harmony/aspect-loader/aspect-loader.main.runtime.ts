@@ -1,4 +1,5 @@
-import { join } from 'path';
+import { join, resolve } from 'path';
+import { readdirSync, existsSync } from 'fs-extra';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { BitId } from '@teambit/legacy-bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
@@ -486,6 +487,10 @@ export class AspectLoaderMain {
 
   getPlugins(component: Component, componentPath: string): Plugins {
     const defs = this.getPluginDefs();
+    return this.getPluginsFromDefs(component, componentPath, defs);
+  }
+
+  getPluginsFromDefs(component: Component, componentPath: string, defs: PluginDefinition[]): Plugins {
     return Plugins.from(
       component,
       defs,
@@ -547,7 +552,8 @@ export class AspectLoaderMain {
     const ids = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
     const hasVersions = ids.every((id) => id.hasVersion());
     const useCache = hasVersions; // if all components has versions, try to use the cached aspects
-    const components = await scope.import(ids, { useCache, throwIfNotExist: true, preferDependencyGraph: true });
+    await scope.import(ids, { useCache, reason: 'to load aspects from global scope' });
+    const components = await scope.getMany(ids, true);
 
     // don't use `await scope.loadAspectsFromCapsules(components, true);`
     // it won't work for globalScope because `this !== scope.aspectLoader` (this instance
@@ -751,6 +757,55 @@ export class AspectLoaderMain {
       });
     });
     return graph;
+  }
+
+  public async loadAspectFromPath(localAspects: string[]) {
+    const dirPaths = this.parseLocalAspect(localAspects);
+    const manifests = dirPaths.map((dirPath) => {
+      const scopeRuntime = this.findRuntime(dirPath, 'scope');
+      if (scopeRuntime) {
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        const module = require(join(dirPath, 'dist', scopeRuntime));
+        return module.default || module;
+      }
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      const module = require(dirPath);
+      return module.default || module;
+    });
+
+    await this.loadExtensionsByManifests(manifests, undefined, { throwOnError: true });
+  }
+
+  private parseLocalAspect(localAspects: string[]) {
+    const dirPaths = localAspects.map((localAspect) => resolve(localAspect.replace('file://', '')));
+    const nonExistsDirPaths = dirPaths.filter((path) => !existsSync(path));
+    nonExistsDirPaths.forEach((path) => this.logger.warn(`no such file or directory: ${path}`));
+    const existsDirPaths = dirPaths.filter((path) => existsSync(path));
+    return existsDirPaths;
+  }
+
+  private findRuntime(dirPath: string, runtime: string) {
+    const files = readdirSync(join(dirPath, 'dist'));
+    return files.find((path) => path.includes(`${runtime}.runtime.js`));
+  }
+
+  public async resolveLocalAspects(ids: string[], runtime?: string): Promise<AspectDefinition[]> {
+    const dirs = this.parseLocalAspect(ids);
+
+    return dirs.map((dir) => {
+      const srcRuntimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
+      const srcAspectFilePath = runtime ? this.findAspectFile(dir) : undefined;
+      const aspectFilePath = srcAspectFilePath ? join(dir, 'dist', srcAspectFilePath) : null;
+      const runtimeManifest = srcRuntimeManifest ? join(dir, 'dist', srcRuntimeManifest) : null;
+      const aspectId = aspectFilePath ? this.getAspectIdFromAspectFile(aspectFilePath) : undefined;
+
+      return new AspectDefinition(dir, aspectFilePath, runtimeManifest, undefined, aspectId, true);
+    });
+  }
+
+  private findAspectFile(dirPath: string) {
+    const files = readdirSync(join(dirPath, 'dist'));
+    return files.find((path) => path.includes(`.aspect.js`));
   }
 
   static runtime = MainRuntime;

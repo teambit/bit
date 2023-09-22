@@ -1,10 +1,9 @@
-import { Transform } from 'class-transformer';
 import chalk from 'chalk';
-import { Location, SchemaNode } from '../schema-node';
-import { schemaObjArrayToInstances, schemaObjToInstance } from '../class-transformers';
+import { SchemaLocation, SchemaNode } from '../schema-node';
 import { ParameterSchema } from './parameter';
 import { DocSchema } from './docs';
 import { TagName } from './docs/tag';
+import { SchemaRegistry } from '../schema-registry';
 
 export type Modifier =
   | 'static'
@@ -21,21 +20,17 @@ export type Modifier =
  * function-like can be a function, method, arrow-function, variable-function, etc.
  */
 export class FunctionLikeSchema extends SchemaNode {
-  @Transform(schemaObjToInstance)
   readonly returnType: SchemaNode;
-
-  @Transform(schemaObjArrayToInstances)
   readonly params: ParameterSchema[];
-
-  @Transform(schemaObjToInstance)
   readonly doc?: DocSchema;
+  readonly signature?: string | undefined;
 
   constructor(
-    readonly location: Location,
+    readonly location: SchemaLocation,
     readonly name: string,
     params: ParameterSchema[],
     returnType: SchemaNode,
-    readonly signature: string,
+    signature: string,
     readonly modifiers: Modifier[] = [],
     doc?: DocSchema,
     readonly typeParams?: string[] // generics e.g. <T>myFunction
@@ -44,6 +39,11 @@ export class FunctionLikeSchema extends SchemaNode {
     this.params = params;
     this.returnType = returnType;
     this.doc = doc;
+    this.signature = signature || FunctionLikeSchema.createSignature(this.name, this.params, this.returnType);
+  }
+
+  getNodes() {
+    return [...this.params, this.returnType];
   }
 
   toString() {
@@ -60,6 +60,47 @@ export class FunctionLikeSchema extends SchemaNode {
 
   isPrivate(): boolean {
     return Boolean(this.modifiers.find((m) => m === 'private') || this.doc?.hasTag(TagName.private));
+  }
+
+  generateSignature(): string {
+    return FunctionLikeSchema.createSignature(this.name, this.params, this.returnType);
+  }
+
+  static createSignature(name: string, params: ParameterSchema[], returnType: SchemaNode): string {
+    const paramsStr = params
+      .map((param) => {
+        let type = param.type.toString();
+        if (param.isSpread) type = `...${type}`;
+        return `${param.name}${param.isOptional ? '?' : ''}: ${type}`;
+      })
+      .join(', ');
+    return `${name}(${paramsStr}): ${returnType.toString()}`;
+  }
+
+  toObject() {
+    return {
+      ...super.toObject(),
+      name: this.name,
+      params: this.params.map((param) => param.toObject()),
+      returnType: this.returnType.toObject(),
+      signature: this.signature,
+      modifiers: this.modifiers,
+      doc: this.doc?.toObject(),
+      typeParams: this.typeParams,
+    };
+  }
+
+  static fromObject(obj: Record<string, any>) {
+    return new FunctionLikeSchema(
+      obj.location,
+      obj.name,
+      obj.params.map((param: Record<string, any>) => ParameterSchema.fromObject(param)),
+      SchemaRegistry.fromObject(obj.returnType),
+      obj.signature,
+      obj.modifiers,
+      obj.doc ? DocSchema.fromObject(obj.doc) : undefined,
+      obj.typeParams
+    );
   }
 
   private modifiersToString() {

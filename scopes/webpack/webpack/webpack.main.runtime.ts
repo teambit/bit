@@ -95,6 +95,7 @@ export class WebpackMain {
       context.id,
       context.rootPath,
       context.publicPath,
+      this.workspace.getComponentPathsRegExps(),
       context.title
     ) as any;
     const wdsPath = webpackDevServerModulePath || require.resolve('webpack-dev-server');
@@ -197,9 +198,19 @@ export class WebpackMain {
     devServerID: string,
     publicRoot: string,
     publicPath: string,
+    componentPathsRegExps: RegExp[],
     title?: string
   ) {
-    return devServerConfigFactory(devServerID, rootPath, entry, publicRoot, publicPath, this.pubsub, title);
+    return devServerConfigFactory(
+      devServerID,
+      rootPath,
+      entry,
+      publicRoot,
+      publicPath,
+      componentPathsRegExps,
+      this.pubsub,
+      title
+    );
   }
 
   static slots = [];

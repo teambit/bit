@@ -9,5 +9,6 @@ export {
   TranspileFileOutput,
   TranspileFileParams,
   TranspileComponentParams,
+  TranspileFileOutputOneFile,
 } from './types';
 export * from './events';

@@ -178,7 +178,7 @@ export const getCloudDomain = (): string => {
   return resolvedCloudDomain;
 };
 
-export const BASE_COMMUNITY_DOMAIN = 'bit.dev';
+export const BASE_COMMUNITY_DOMAIN = 'https://bit.dev';
 
 export const PREVIOUSLY_BASE_WEB_DOMAIN = 'bitsrc.io';
 
@@ -193,13 +193,24 @@ export const getSymphonyUrl = (): string => {
   return resolvedSymphonyUrl;
 };
 
+export const CFG_CLOUD_DOMAIN_LOGIN_KEY = 'cloud_domain_login';
+
+export const CFG_WATCH_USE_POLLING = 'watch_use_polling';
+export const CFG_WATCH_USE_FS_EVENTS = 'watch_use_fsevents';
+
+export const CFG_FORCE_LOCAL_BUILD = 'force_local_build';
+
+export const getLoginUrl = (domain?: string): string => {
+  const finalDomain = domain || getSync(CFG_CLOUD_DOMAIN_LOGIN_KEY) || getCloudDomain();
+  const url = `https://${finalDomain}/bit-login`;
+  return url;
+};
+
 export const SYMPHONY_GRAPHQL = `https://${getSymphonyUrl()}/graphql`;
 
-export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/docs`;
+export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/`;
 
 export const BASE_LEGACY_DOCS_DOMAIN = `legacy-docs.${BASE_COMMUNITY_DOMAIN}/docs`;
-
-export const DEFAULT_HUB_LOGIN = `https://${getCloudDomain()}/bit-login`;
 
 export const DEFAULT_ANALYTICS_DOMAIN = `https://analytics.${getCloudDomain()}/`;
 
@@ -215,6 +226,7 @@ export const CENTRAL_BIT_HUB_URL = `https://${getSymphonyUrl()}/exporter`;
 
 // export const CENTRAL_BIT_HUB_URL_IMPORTER = `http://localhost:5001/importer/api/fetch`;
 export const CENTRAL_BIT_HUB_URL_IMPORTER = `https://${getSymphonyUrl()}/importer/api/fetch`;
+export const CENTRAL_BIT_HUB_URL_IMPORTER_V2 = `https://api.v2.bit.cloud/importer/api/fetch`;
 
 export const CENTRAL_BIT_HUB_NAME = getCloudDomain();
 
@@ -260,9 +272,9 @@ export const AUTO_GENERATED_MSG = `/* THIS IS A ${AUTO_GENERATED_STAMP} FILE. DO
 export const BITMAP_PREFIX_MESSAGE = `/**
  * The Bitmap file is an auto generated file used by Bit to track all your Bit components. It maps the component to a folder in your file system.
  * This file should be committed to VCS(version control).
- * Components are listed using their component ID (https://${BASE_DOCS_DOMAIN}/components/component-id).
+ * Components are listed using their component ID (${BASE_DOCS_DOMAIN}reference/components/component-id).
  * If you want to delete components you can use the "bit remove <component-id>" command.
- * See the docs (https://${BASE_DOCS_DOMAIN}/components/removing-components) for more information, or use "bit remove --help".
+ * See the docs (${BASE_DOCS_DOMAIN}reference/components/removing-components) for more information, or use "bit remove --help".
  */\n\n`;
 
 export const BIT_DESCRIPTION =
@@ -288,8 +300,6 @@ export const CFG_REGISTRY_URL_KEY = 'registry';
 export const CFG_SSH_KEY_FILE_KEY = 'ssh_key_file';
 
 export const CFG_HUB_DOMAIN_KEY = 'hub_domain';
-
-export const CFG_HUB_LOGIN_KEY = 'hub_domain_login';
 
 export const CFG_ANALYTICS_DOMAIN_KEY = 'analytics_domain';
 
@@ -339,6 +349,16 @@ export const CFG_FEATURE_TOGGLE = 'features';
 export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
 export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
+
+export const CFG_ISOLATED_SCOPE_CAPSULES = 'isolated_scope_capsules';
+
+/**
+ * Name of the directory where the capsules for building components are stored
+ * This is used for the components capsules for bit build / tag / snap / sign
+ * This directory is relative to the capsules root directory
+ */
+export const CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR = 'capsules_build_components_base_dir';
+
 /**
  * Name of the directory where the capsules for aspects for regular scope are stored
  * This directory is relative to the capsules root directory
@@ -349,6 +369,12 @@ export const CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR = 'capsules_scopes_aspects_bas
  * This directory is relative to the capsules root directory
  */
 export const CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR = 'capsules_global_scope_aspects_base_dir';
+
+/**
+ * Name of the directory where the dated (temp) capsules for aspects for regular scope are stored
+ * This directory is relative to the capsules root directory
+ */
+export const CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR = 'capsules_scopes_aspects_dated_dir';
 
 export const CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS = 'default_resolve_envs_from_roots';
 
@@ -534,8 +560,8 @@ export const WILDCARD_HELP = (command: string) =>
 
 export const PATTERN_HELP = (command: string) =>
   `you can use a \`<pattern>\` for multiple component ids, such as \`bit ${command} "org.scope/utils/**"\`.
-use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
-always wrap the pattern with quotes to avoid collision with shell commands.
+use comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'
+always wrap the pattern with single quotes to avoid collision with shell commands.
 use \`bit pattern --help\` to understand patterns better and \`bit pattern <pattern>\` to validate the pattern.
 `;
 
@@ -586,3 +612,5 @@ export enum BuildStatus {
 }
 
 export const SOURCE_DIR_SYMLINK_TO_NM = '_src'; // symlink from node_modules to the workspace sources files
+
+export const FILE_CHANGES_CHECKOUT_MSG = 'components with file changes';

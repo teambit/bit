@@ -9,6 +9,7 @@ jest.mock('@teambit/legacy/dist/scope/network/http', () => ({
 }));
 
 /* eslint-disable import/first */
+import { ComponentID } from '@teambit/component';
 import path from 'path';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
@@ -190,181 +191,303 @@ XXXX
 });
 
 describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
-  const packageManagerSlot = {
-    // @ts-ignore
-    get: () => ({
-      resolveRemoteVersion: (spec: string) => {
-        if (spec === 'cannot-resolve@latest') throw new Error('Cannot resolve latest');
-        return {
-          version: {
-            'root-runtime-dep1@latest': '2.0.0',
-            'root-peer-dep1@latest': '2.0.0',
-            'variant1-runtime-dep1@latest': '2.0.0',
-            'variant1-runtime-dep3@latest': '2.0.0',
-            'variant1-dev-dep1@latest': '2.0.0',
-            'variant1-dev-dep3@latest': '2.0.0',
-            'variant1-peer-dep1@latest': '2.0.0',
-            'variant1-peer-dep3@latest': '2.0.0',
-            'component1-runtime-dep1@latest': '2.0.0',
-            'component1-runtime-dep3@latest': '2.0.0',
-            'component1-dev-dep1@latest': '2.0.0',
-            'component1-dev-dep3@latest': '2.0.0',
-            'component1-peer-dep1@latest': '2.0.0',
-            'component1-peer-dep3@latest': '2.0.0',
-            'pkg-with-old-latest@latest': '0.0.0',
-          }[spec],
-        };
-      },
-      getNetworkConfig: () => ({}),
-    }),
-  };
-  const depResolver = new DependencyResolverMain(
-    {
-      policy: {
-        dependencies: {
-          'root-runtime-dep1': '1.0.0',
-          'root-runtime-dep2': '1.0.0',
-        },
-        peerDependencies: {
-          'root-peer-dep1': '1.0.0',
-          'root-peer-dep2': '1.0.0',
-        },
-      },
-    } as any,
-    {} as any,
-    {} as any,
-    {} as any,
-    {
+  function createDependencyResolverMain(
+    resolveRemoteVersion: (spec: string) => { version: string | undefined },
+    policy: any
+  ) {
+    const packageManagerSlot = {
       // @ts-ignore
-      debug: jest.fn(),
-      // @ts-ignore
-      setStatusLine: jest.fn(),
-      // @ts-ignore
-      consoleSuccess: jest.fn(),
-    } as any,
-    {} as any,
-    {} as any,
-    {
-      getSync: () => false,
-    } as any,
-    {} as any,
-    packageManagerSlot as any,
-    {} as any,
-    {} as any,
-    {} as any
-  );
-  it('should return outdated dependencies', async () => {
-    const outdatedPkgs = await depResolver.getOutdatedPkgsFromPolicies({
-      rootDir: '',
-      variantPoliciesByPatterns: {
-        '{variant1/*}': {
-          dependencies: {
-            'variant1-runtime-dep1': '1.0.0',
-            'variant1-runtime-dep2': '1.0.0',
-            'variant1-runtime-dep3': '-',
-          },
-          devDependencies: {
-            'variant1-dev-dep1': '1.0.0',
-            'variant1-dev-dep2': '1.0.0',
-            'variant1-dev-dep3': '-',
-          },
-          peerDependencies: {
-            'variant1-peer-dep1': '1.0.0',
-            'variant1-peer-dep2': '1.0.0',
-            'variant1-peer-dep3': '-',
+      get: () => ({
+        resolveRemoteVersion,
+        getNetworkConfig: () => ({}),
+      }),
+    };
+    return new DependencyResolverMain(
+      { policy } as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {
+        // @ts-ignore
+        debug: jest.fn(),
+        // @ts-ignore
+        setStatusLine: jest.fn(),
+        // @ts-ignore
+        consoleSuccess: jest.fn(),
+      } as any,
+      {} as any,
+      {} as any,
+      {
+        getSync: () => false,
+      } as any,
+      {} as any,
+      packageManagerSlot as any,
+      {} as any,
+      {} as any,
+      {} as any
+    );
+  }
+  describe('without options', () => {
+    function resolveRemoteVersion(spec: string): { version: string | undefined } {
+      if (spec === 'cannot-resolve@latest') throw new Error('Cannot resolve latest');
+      return {
+        version: {
+          'root-runtime-dep1@latest': '2.0.0',
+          'root-peer-dep1@latest': '2.0.0',
+          'variant1-runtime-dep1@latest': '2.0.0',
+          'variant1-runtime-dep3@latest': '2.0.0',
+          'variant1-dev-dep1@latest': '2.0.0',
+          'variant1-dev-dep3@latest': '2.0.0',
+          'variant1-peer-dep1@latest': '2.0.0',
+          'variant1-peer-dep3@latest': '2.0.0',
+          'component1-runtime-dep1@latest': '2.0.0',
+          'component1-runtime-dep3@latest': '2.0.0',
+          'component1-dev-dep1@latest': '2.0.0',
+          'component1-dev-dep3@latest': '2.0.0',
+          'component1-peer-dep1@latest': '2.0.0',
+          'component1-peer-dep3@latest': '2.0.0',
+          'pkg-with-old-latest@latest': '0.0.0',
+        }[spec],
+      };
+    }
+    const policy = {
+      dependencies: {
+        'root-runtime-dep1': '1.0.0',
+        'root-runtime-dep2': '1.0.0',
+      },
+      peerDependencies: {
+        'root-peer-dep1': '1.0.0',
+        'root-peer-dep2': '1.0.0',
+      },
+    };
+    const depResolver = createDependencyResolverMain(resolveRemoteVersion, policy);
+    it('should return outdated dependencies', async () => {
+      const outdatedPkgs = await depResolver.getOutdatedPkgsFromPolicies({
+        rootDir: '',
+        variantPoliciesByPatterns: {
+          '{variant1/*}': {
+            dependencies: {
+              'variant1-runtime-dep1': '1.0.0',
+              'variant1-runtime-dep2': '1.0.0',
+              'variant1-runtime-dep3': '-',
+            },
+            devDependencies: {
+              'variant1-dev-dep1': '1.0.0',
+              'variant1-dev-dep2': '1.0.0',
+              'variant1-dev-dep3': '-',
+            },
+            peerDependencies: {
+              'variant1-peer-dep1': '1.0.0',
+              'variant1-peer-dep2': '1.0.0',
+              'variant1-peer-dep3': '-',
+            },
           },
         },
-      },
-      componentPoliciesById: {
-        component1: {
-          dependencies: {
-            'pkg-with-old-latest': '1.0.0',
-            'cannot-resolve': '1.0.0',
-            'component1-runtime-dep1': '1.0.0',
-            'component1-runtime-dep2': '1.0.0',
-            'component1-runtime-dep3': '-',
+        componentPolicies: [
+          {
+            componentId: ComponentID.fromString('scope/component1'),
+            policy: {
+              dependencies: {
+                'pkg-with-old-latest': '1.0.0',
+                'cannot-resolve': '1.0.0',
+                'component1-runtime-dep1': '1.0.0',
+                'component1-runtime-dep2': '1.0.0',
+                'component1-runtime-dep3': '-',
+              },
+              devDependencies: {
+                'component1-dev-dep1': '1.0.0',
+                'component1-dev-dep2': '1.0.0',
+                'component1-dev-dep3': '-',
+              },
+              peerDependencies: {
+                'component1-peer-dep1': '1.0.0',
+                'component1-peer-dep2': '1.0.0',
+                'component1-peer-dep3': '-',
+              },
+            },
           },
-          devDependencies: {
-            'component1-dev-dep1': '1.0.0',
-            'component1-dev-dep2': '1.0.0',
-            'component1-dev-dep3': '-',
-          },
-          peerDependencies: {
-            'component1-peer-dep1': '1.0.0',
-            'component1-peer-dep2': '1.0.0',
-            'component1-peer-dep3': '-',
-          },
+        ],
+        components: [],
+      });
+      // @ts-ignore
+      expect(outdatedPkgs).toStrictEqual([
+        {
+          currentRange: '1.0.0',
+          latestRange: '2.0.0',
+          name: 'root-runtime-dep1',
+          source: 'rootPolicy',
+          variantPattern: null,
+          targetField: 'dependencies',
         },
-      },
-      components: [],
+        {
+          currentRange: '1.0.0',
+          latestRange: '2.0.0',
+          name: 'root-peer-dep1',
+          source: 'rootPolicy',
+          variantPattern: null,
+          targetField: 'peerDependencies',
+        },
+        {
+          currentRange: '1.0.0',
+          latestRange: '2.0.0',
+          name: 'variant1-runtime-dep1',
+          source: 'variants',
+          variantPattern: '{variant1/*}',
+          targetField: 'dependencies',
+        },
+        {
+          currentRange: '1.0.0',
+          latestRange: '2.0.0',
+          name: 'variant1-dev-dep1',
+          source: 'variants',
+          variantPattern: '{variant1/*}',
+          targetField: 'devDependencies',
+        },
+        {
+          currentRange: '1.0.0',
+          latestRange: '2.0.0',
+          name: 'variant1-peer-dep1',
+          source: 'variants',
+          variantPattern: '{variant1/*}',
+          targetField: 'peerDependencies',
+        },
+        {
+          currentRange: '1.0.0',
+          latestRange: '2.0.0',
+          name: 'component1-runtime-dep1',
+          source: 'component',
+          componentId: ComponentID.fromString('scope/component1'),
+          targetField: 'dependencies',
+        },
+        {
+          currentRange: '1.0.0',
+          latestRange: '2.0.0',
+          name: 'component1-dev-dep1',
+          source: 'component',
+          componentId: ComponentID.fromString('scope/component1'),
+          targetField: 'devDependencies',
+        },
+        {
+          currentRange: '1.0.0',
+          latestRange: '2.0.0',
+          name: 'component1-peer-dep1',
+          source: 'component',
+          componentId: ComponentID.fromString('scope/component1'),
+          targetField: 'peerDependencies',
+        },
+      ]);
     });
-    // @ts-ignore
-    expect(outdatedPkgs).toStrictEqual([
-      {
-        currentRange: '1.0.0',
-        latestRange: '2.0.0',
-        name: 'root-runtime-dep1',
-        source: 'rootPolicy',
-        variantPattern: null,
-        targetField: 'dependencies',
+  });
+  describe('forced version bump', () => {
+    function resolveRemoteVersion(spec: string): { version: string | undefined } {
+      return {
+        version: {
+          'dep1@>=0.0.1 <0.1.0': '0.0.2',
+          'dep1@>=0.0.1 <1.0.0': '0.0.2',
+          'dep1@latest': '0.0.2',
+
+          'dep2@>=0.1.0 <0.2.0': '0.1.0',
+          'dep2@>=0.1.0 <1.0.0': '0.2.0',
+          'dep2@latest': '0.2.0',
+
+          'dep3@>=1.0.0 <1.1.0': '1.0.0',
+          'dep3@>=1.0.0 <2.0.0': '1.0.0',
+          'dep3@latest': '2.0.0',
+        }[spec],
+      };
+    }
+    const policy = {
+      dependencies: {
+        dep1: '0.0.1',
+        dep2: '^0.1.0',
+        dep3: '^1.0.0',
       },
-      {
-        currentRange: '1.0.0',
-        latestRange: '2.0.0',
-        name: 'root-peer-dep1',
-        source: 'rootPolicy',
-        variantPattern: null,
-        targetField: 'peerDependencies',
-      },
-      {
-        currentRange: '1.0.0',
-        latestRange: '2.0.0',
-        name: 'variant1-runtime-dep1',
-        source: 'variants',
-        variantPattern: '{variant1/*}',
-        targetField: 'dependencies',
-      },
-      {
-        currentRange: '1.0.0',
-        latestRange: '2.0.0',
-        name: 'variant1-dev-dep1',
-        source: 'variants',
-        variantPattern: '{variant1/*}',
-        targetField: 'devDependencies',
-      },
-      {
-        currentRange: '1.0.0',
-        latestRange: '2.0.0',
-        name: 'variant1-peer-dep1',
-        source: 'variants',
-        variantPattern: '{variant1/*}',
-        targetField: 'peerDependencies',
-      },
-      {
-        currentRange: '1.0.0',
-        latestRange: '2.0.0',
-        name: 'component1-runtime-dep1',
-        source: 'component',
-        componentId: 'component1',
-        targetField: 'dependencies',
-      },
-      {
-        currentRange: '1.0.0',
-        latestRange: '2.0.0',
-        name: 'component1-dev-dep1',
-        source: 'component',
-        componentId: 'component1',
-        targetField: 'devDependencies',
-      },
-      {
-        currentRange: '1.0.0',
-        latestRange: '2.0.0',
-        name: 'component1-peer-dep1',
-        source: 'component',
-        componentId: 'component1',
-        targetField: 'peerDependencies',
-      },
-    ]);
+    };
+    const depResolver = createDependencyResolverMain(resolveRemoteVersion, policy);
+    it('should return outdated dependencies when forcedVersionBump is set to patch', async () => {
+      const outdatedPkgs = await depResolver.getOutdatedPkgsFromPolicies({
+        rootDir: '',
+        variantPoliciesByPatterns: {},
+        componentPolicies: [],
+        components: [],
+        forceVersionBump: 'patch',
+      });
+      // @ts-ignore
+      expect(outdatedPkgs).toStrictEqual([
+        {
+          currentRange: '0.0.1',
+          latestRange: '0.0.2',
+          name: 'dep1',
+          source: 'rootPolicy',
+          variantPattern: null,
+          targetField: 'dependencies',
+        },
+      ]);
+    });
+    it('should return outdated dependencies when forcedVersionBump is set to minor', async () => {
+      const outdatedPkgs = await depResolver.getOutdatedPkgsFromPolicies({
+        rootDir: '',
+        variantPoliciesByPatterns: {},
+        componentPolicies: [],
+        components: [],
+        forceVersionBump: 'minor',
+      });
+      // @ts-ignore
+      expect(outdatedPkgs).toStrictEqual([
+        {
+          currentRange: '0.0.1',
+          latestRange: '0.0.2',
+          name: 'dep1',
+          source: 'rootPolicy',
+          variantPattern: null,
+          targetField: 'dependencies',
+        },
+        {
+          currentRange: '^0.1.0',
+          latestRange: '^0.2.0',
+          name: 'dep2',
+          source: 'rootPolicy',
+          variantPattern: null,
+          targetField: 'dependencies',
+        },
+      ]);
+    });
+    it('should return outdated dependencies when forcedVersionBump is set to major', async () => {
+      const outdatedPkgs = await depResolver.getOutdatedPkgsFromPolicies({
+        rootDir: '',
+        variantPoliciesByPatterns: {},
+        componentPolicies: [],
+        components: [],
+        forceVersionBump: 'major',
+      });
+      // @ts-ignore
+      expect(outdatedPkgs).toStrictEqual([
+        {
+          currentRange: '0.0.1',
+          latestRange: '0.0.2',
+          name: 'dep1',
+          source: 'rootPolicy',
+          variantPattern: null,
+          targetField: 'dependencies',
+        },
+        {
+          currentRange: '^0.1.0',
+          latestRange: '^0.2.0',
+          name: 'dep2',
+          source: 'rootPolicy',
+          variantPattern: null,
+          targetField: 'dependencies',
+        },
+        {
+          currentRange: '^1.0.0',
+          latestRange: '^2.0.0',
+          name: 'dep3',
+          source: 'rootPolicy',
+          variantPattern: null,
+          targetField: 'dependencies',
+        },
+      ]);
+    });
   });
 });
 

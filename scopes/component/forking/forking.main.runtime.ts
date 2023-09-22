@@ -1,23 +1,25 @@
+import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { ComponentDependency, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { BitId } from '@teambit/legacy-bit-id';
-import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { uniqBy } from 'lodash';
+import { importTransformer, exportTransformer } from '@teambit/typescript';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { ComponentIdObj } from '@teambit/component-id';
+import { ComponentDependency, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ComponentConfig } from '@teambit/generator';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
-import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
-import pMapSeries from 'p-map-series';
-import PkgAspect, { PkgMain } from '@teambit/pkg';
-import { BitError } from '@teambit/bit-error';
+import { InstallAspect, InstallMain } from '@teambit/install';
+import { BitId } from '@teambit/legacy-bit-id';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
-import { InstallMain, InstallAspect } from '@teambit/install';
+import PkgAspect, { PkgMain } from '@teambit/pkg';
+import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { uniqBy } from 'lodash';
+import pMapSeries from 'p-map-series';
 import { ForkCmd, ForkOptions } from './fork.cmd';
 import { ForkingAspect } from './forking.aspect';
 import { ForkingFragment } from './forking.fragment';
 import { forkingSchema } from './forking.graphql';
-import { ScopeForkCmd } from './scope-fork.cmd';
+import { ScopeForkCmd, ScopeForkOptions } from './scope-fork.cmd';
 
 export type ForkInfo = {
   forkedFrom: ComponentID;
@@ -31,14 +33,17 @@ type MultipleForkInfo = {
 
 type MultipleComponentsToFork = Array<{
   sourceId: string;
-  targetId?: string; // if not specify, it'll be the same as the source
-  path?: string; // if not specify, use the default component path
+  targetId?: string; // if not specified, it'll be the same as the source
+  path?: string; // if not specified, use the default component path
+  env?: string; // if not specified, use the default env
+  config?: ComponentConfig; // if specified, adds to/overrides the existing config
 }>;
 
 type MultipleForkOptions = {
   refactor?: boolean;
   scope?: string; // different scope-name than the original components
   install?: boolean; // whether to run "bit install" once done.
+  ast?: boolean; // whether to use AST to transform files instead of regex
 };
 
 export class ForkingMain {
@@ -85,16 +90,36 @@ export class ForkingMain {
   }
 
   async forkMultipleFromRemote(componentsToFork: MultipleComponentsToFork, options: MultipleForkOptions = {}) {
+    const componentsToForkSorted = this.sortComponentsToFork(componentsToFork);
     const { scope } = options;
-    const results = await pMapSeries(componentsToFork, async ({ sourceId, targetId, path }) => {
+    const results = await pMapSeries(componentsToForkSorted, async ({ sourceId, targetId, path, env, config }) => {
       const sourceCompId = await this.workspace.resolveComponentId(sourceId);
       const sourceIdWithScope = sourceCompId._legacy.scope
         ? sourceCompId
         : ComponentID.fromLegacy(BitId.parse(sourceId, true));
-      const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, { scope, path });
+      const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, {
+        scope,
+        path,
+        env,
+        config,
+      });
       return { targetCompId, sourceId, component };
     });
     await this.refactorMultipleAndInstall(results, options);
+  }
+
+  /**
+   * sort the components to fork so that components without "env" prop will be forked first.
+   * this way, if some components are envs, their "env" prop is empty and will be forked first, then components that
+   * depends on them.
+   * otherwise, forking the components first result in errors when loading them as their envs are missing at that point
+   */
+  private sortComponentsToFork(componentsToFork: MultipleComponentsToFork) {
+    return componentsToFork.sort((a, b) => {
+      if (a.env && b.env) return 0;
+      if (a.env) return 1;
+      return -1;
+    });
   }
 
   private async refactorMultipleAndInstall(results: MultipleForkInfo[], options: MultipleForkOptions = {}) {
@@ -114,7 +139,11 @@ export class ForkingMain {
       .flat();
     const allComponents = await this.workspace.list();
     if (options.refactor) {
-      const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, stringsToReplace);
+      const { changedComponents } = await this.refactoring.replaceMultipleStrings(
+        allComponents,
+        stringsToReplace,
+        options.ast ? [importTransformer, exportTransformer] : undefined
+      );
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
     }
     const forkedComponents = results.map((result) => result.component);
@@ -131,7 +160,7 @@ export class ForkingMain {
   /**
    * fork all components of the given scope
    */
-  async forkScope(originalScope: string, newScope: string): Promise<ComponentID[]> {
+  async forkScope(originalScope: string, newScope: string, options?: ScopeForkOptions): Promise<ComponentID[]> {
     const idsFromOriginalScope = await this.workspace.scope.listRemoteScope(originalScope);
     if (!idsFromOriginalScope.length) {
       throw new Error(`unable to find components to fork from ${originalScope}`);
@@ -154,7 +183,7 @@ export class ForkingMain {
       await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, { scope: newScope }, config);
       multipleForkInfo.push({ targetCompId, sourceId: component.id.toStringWithoutVersion(), component });
     });
-    await this.refactorMultipleAndInstall(multipleForkInfo, { refactor: true, install: true });
+    await this.refactorMultipleAndInstall(multipleForkInfo, { refactor: true, install: true, ast: options?.ast });
     return multipleForkInfo.map((info) => info.targetCompId);
   }
 
@@ -197,7 +226,8 @@ the reason is that the refactor changes the components using ${sourceId.toString
           oldStr: sourceId.toStringWithoutVersion(),
           newStr: targetCompId.toStringWithoutVersion(),
         },
-      ]
+      ],
+      options?.ast ? [importTransformer, exportTransformer] : undefined
     );
     if (!options?.preserve) {
       await this.refactoring.refactorVariableAndClasses(component, sourceId, targetCompId);
@@ -248,6 +278,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
   }
 
   private async getConfig(comp: Component, options?: ForkOptions) {
+    const config = options?.config || {};
     const fromExisting = options?.skipConfig
       ? {}
       : await this.newComponentHelper.getConfigFromExistingToNewComponent(comp);
@@ -255,6 +286,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
     return {
       ...fromExisting,
       ...linkToOriginal,
+      ...config,
     };
   }
 

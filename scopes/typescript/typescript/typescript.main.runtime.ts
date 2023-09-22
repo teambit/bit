@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Compiler, CompilerAspect, CompilerMain } from '@teambit/compiler';
+import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaExtractor, SchemaMain } from '@teambit/schema';
 import { PackageJsonProps } from '@teambit/pkg';
@@ -12,9 +12,8 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
-import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import WatcherAspect, { WatcherMain, WatchOptions } from '@teambit/watcher';
-import type { Component } from '@teambit/component';
+import type { Component, ComponentID } from '@teambit/component';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
@@ -23,7 +22,7 @@ import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
 import { TypescriptCompiler } from './typescript.compiler';
 import { TypeScriptParser } from './typescript.parser';
-import { SchemaTransformer } from './schema-transformer';
+import { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
 import { SchemaTransformerPlugin } from './schema-transformer.plugin';
 import {
   ExportDeclarationTransformer,
@@ -63,16 +62,17 @@ import {
   NamedTupleTransformer,
   ConstructorTransformer,
   ExpressionStatementTransformer,
+  ModuleDeclarationTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
 import WriteTsconfigCmd from './cmds/write-tsconfig.cmd';
-import { TypescriptConfigWriter } from './ts-config-writer';
 import { RemoveTypesTask } from './remove-types-task';
 
 export type TsMode = 'build' | 'dev';
 
 export type SchemaTransformerSlot = SlotRegistry<SchemaTransformer[]>;
+export type APITransformerSlot = SlotRegistry<SchemaNodeTransformer[]>;
 
 export type TsConfigTransformContext = {
   // mode: TsMode;
@@ -95,6 +95,7 @@ export class TypescriptMain {
   constructor(
     private logger: Logger,
     readonly schemaTransformerSlot: SchemaTransformerSlot,
+    readonly apiTransformerSlot: APITransformerSlot,
     readonly workspace: Workspace,
     readonly scope: ScopeMain,
     readonly depResolver: DependencyResolverMain,
@@ -123,6 +124,16 @@ export class TypescriptMain {
    */
   getTsserverClient(): TsserverClient | undefined {
     return this.tsServer;
+  }
+
+  registerSchemaTransformer(transformers: SchemaTransformer[]) {
+    this.schemaTransformerSlot.register(transformers);
+    return this;
+  }
+
+  registerApiTransformer(transformers: SchemaNodeTransformer[]) {
+    this.apiTransformerSlot.register(transformers);
+    return this;
   }
 
   /**
@@ -213,6 +224,7 @@ export class TypescriptMain {
     return new TypeScriptExtractor(
       tsconfig,
       this.schemaTransformerSlot,
+      this.apiTransformerSlot,
       this,
       tsserverPath || this.workspace?.path || '',
       contextPath || this.workspace?.path || '',
@@ -284,13 +296,13 @@ export class TypescriptMain {
     return { writeResults, cleanResults };
   }
 
-  private async onPreWatch(components: Component[], watchOpts: WatchOptions) {
+  private async onPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
     const workspace = this.workspace;
     if (!workspace || !watchOpts.spawnTSServer) {
       return;
     }
     const { verbose, checkTypes } = watchOpts;
-    const files = checkTypes ? this.getSupportedFilesForTsserver(components) : [];
+    const files = checkTypes ? this.getSupportedFilesForTsserver(await workspace.getMany(componentIds)) : [];
     const printTypeErrors = Boolean(checkTypes);
     await this.initTsserverClientFromWorkspace({ verbose, checkTypes, printTypeErrors }, files);
   }
@@ -317,28 +329,13 @@ export class TypescriptMain {
     DependencyResolverAspect,
     EnvsAspect,
     WatcherAspect,
-    WorkspaceConfigFilesAspect,
-    CompilerAspect,
     ScopeAspect,
     BuilderAspect,
   ];
-  static slots = [Slot.withType<SchemaTransformer[]>()];
+  static slots = [Slot.withType<SchemaTransformer[]>(), Slot.withType<SchemaNodeTransformer[]>()];
 
   static async provider(
-    [
-      schema,
-      loggerExt,
-      aspectLoader,
-      workspace,
-      cli,
-      depResolver,
-      envs,
-      watcher,
-      workspaceConfigFiles,
-      compiler,
-      scope,
-      builder,
-    ]: [
+    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs, watcher, scope, builder]: [
       SchemaMain,
       LoggerMain,
       AspectLoaderMain,
@@ -347,23 +344,21 @@ export class TypescriptMain {
       DependencyResolverMain,
       EnvsMain,
       WatcherMain,
-      WorkspaceConfigFilesMain,
-      CompilerMain,
       ScopeMain,
       BuilderMain
     ],
     config,
-    [schemaTransformerSlot]: [SchemaTransformerSlot]
+    [schemaTransformerSlot, apiTransformerSlot]: [SchemaTransformerSlot, APITransformerSlot]
   ) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
-    workspaceConfigFiles.registerConfigWriter(new TypescriptConfigWriter(compiler, logger));
 
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
     const tsconfigWriter = new TsconfigWriter(workspace, logger);
     const tsMain = new TypescriptMain(
       logger,
       schemaTransformerSlot,
+      apiTransformerSlot,
       workspace,
       scope,
       depResolver,
@@ -371,7 +366,7 @@ export class TypescriptMain {
       tsconfigWriter,
       aspectLoader
     );
-    schemaTransformerSlot.register([
+    tsMain.registerSchemaTransformer([
       new ExportDeclarationTransformer(),
       new ExportAssignmentTransformer(),
       new FunctionLikeTransformer(),
@@ -409,6 +404,7 @@ export class TypescriptMain {
       new ConstructorTransformer(),
       new ImportDeclarationTransformer(),
       new ExpressionStatementTransformer(),
+      new ModuleDeclarationTransformer(),
     ]);
 
     if (workspace) {

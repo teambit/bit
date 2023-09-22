@@ -1,8 +1,8 @@
 import { BitId } from '@teambit/legacy-bit-id';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
-import { pipeline } from 'stream';
-import { promisify } from 'util';
-import pMap from 'p-map';
+import { omit, uniq } from 'lodash';
+// @ts-ignore
+import { pipeline } from 'stream/promises';
 import { Scope } from '..';
 import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
 import loader from '../../cli/loader';
@@ -20,6 +20,7 @@ import { concurrentFetchLimit } from '../../utils/concurrency';
 import { ScopeNotFoundOrDenied } from '../../remotes/exceptions/scope-not-found-or-denied';
 import { Lane } from '../models';
 import { ComponentsPerRemote, MultipleComponentMerger } from '../component-ops/multiple-component-merger';
+import { pMapPool } from '../../utils/promise-with-concurrent';
 
 /**
  * due to the use of streams, this is memory efficient and can handle easily GBs of objects.
@@ -40,10 +41,11 @@ export class ObjectFetcher {
     private remotes: Remotes,
     private fetchOptions: Partial<FETCH_OPTIONS>,
     private ids: BitId[],
-    private lanes: Lane[] = [],
+    private lane?: Lane,
     private context = {},
     private throwOnUnavailableScope = true,
-    private groupedHashes?: { [scopeName: string]: string[] }
+    private groupedHashes?: { [scopeName: string]: string[] },
+    private reason?: string // console the reason why the import is needed
   ) {}
 
   public async fetchFromRemoteAndWrite(): Promise<string[]> {
@@ -51,20 +53,25 @@ export class ObjectFetcher {
       type: 'component',
       withoutDependencies: true, // backward compatibility. not needed for remotes > 0.0.900
       includeArtifacts: false,
-      allowExternal: Boolean(this.lanes.length),
+      allowExternal: Boolean(this.lane),
       ...this.fetchOptions,
     };
     const idsGrouped =
-      this.groupedHashes || (this.lanes.length ? groupByLanes(this.ids, this.lanes) : groupByScopeName(this.ids));
+      this.groupedHashes || (this.lane ? groupByLanes(this.ids, [this.lane]) : groupByScopeName(this.ids));
     const scopes = Object.keys(idsGrouped);
     logger.debug(
-      `[-] Running fetch on ${scopes.length} remote(s), to get ${this.ids.length} id(s), lanes: ${this.lanes.length}, with the following options`,
+      `[-] Running fetch on ${scopes.length} remote(s), to get ${this.ids.length} id(s), lane: ${
+        this.lane?.name || 'n/a'
+      }, reason: ${this.reason}, with the following options`,
       this.fetchOptions
     );
+    const reasonStr = this.reason ? ` ${this.reason}` : '';
+    const basicImportMessage = `importing ${this.getIdsMsg()}${reasonStr}`;
+    loader.start(basicImportMessage);
     const objectsQueue = new WriteObjectsQueue();
     const componentsPerRemote: ComponentsPerRemote = {};
-    this.showProgress(objectsQueue);
-    await pMap(
+    this.showProgress(objectsQueue, basicImportMessage);
+    await pMapPool(
       scopes,
       async (scopeName) => {
         const readableStream = await this.fetchFromSingleRemote(scopeName, idsGrouped[scopeName]);
@@ -87,12 +94,11 @@ ${failedScopesErr.join('\n')}`);
     logger.debug(`[-] fetchFromRemoteAndWrite, completed writing ${objectsQueue.added} objects`);
     const multipleComponentsMerger = new MultipleComponentMerger(componentsPerRemote, this.scope.sources);
     const totalComponents = multipleComponentsMerger.totalComponents();
-    const compStr = totalComponents ? ` Processing ${totalComponents} components` : '';
-    loader.start(`${objectsQueue.added} objects were written successfully.${compStr}`);
+    const imported = totalComponents ? `${totalComponents} components` : `${objectsQueue.added} objects`;
+    loader.start(`successfully imported ${imported}${reasonStr}`);
     if (totalComponents) {
       await this.mergeAndPersistComponents(multipleComponentsMerger);
       logger.debug(`[-] fetchFromRemoteAndWrite, completed writing ${totalComponents} components`);
-      loader.start(`${totalComponents} component-objects were written successfully.`);
     }
 
     return objectsQueue.addedHashes;
@@ -140,7 +146,7 @@ the remote scope "${scopeName}" was not found`);
       throw err;
     }
     try {
-      return await remote.fetch(ids, this.fetchOptions as FETCH_OPTIONS, this.context);
+      return await remote.fetch(ids, this.getFetchOptionsPerRemote(scopeName), this.context);
     } catch (err: any) {
       if (err instanceof ScopeNotFound && !shouldThrowOnUnavailableScope) {
         logger.error(`failed accessing the scope "${scopeName}". continuing without this scope.`);
@@ -154,6 +160,17 @@ the remote scope "${scopeName}" was not found`);
     }
   }
 
+  /**
+   * remove the "laneId" property from the fetchOptions if the scopeName is not the lane's scope of if the lane is new.
+   * otherwise, the importer will throw LaneNotFound error.
+   */
+  private getFetchOptionsPerRemote(scopeName: string): FETCH_OPTIONS {
+    const fetchOptions = this.fetchOptions as FETCH_OPTIONS;
+    if (!this.lane) return fetchOptions;
+    if (scopeName === this.lane.scope && !this.lane.isNew) return fetchOptions;
+    return omit(fetchOptions, ['laneId']);
+  }
+
   private async writeFromSingleRemote(
     objectsStream: ObjectItemsStream,
     scopeName: string,
@@ -161,7 +178,6 @@ the remote scope "${scopeName}" was not found`);
     componentsPerRemote: ComponentsPerRemote
   ) {
     const writable = new ObjectsWritable(this.repo, scopeName, objectsQueue, componentsPerRemote);
-    const pipelinePromise = promisify(pipeline);
     // add an error listener for the ObjectList to differentiate between errors coming from the
     // remote and errors happening inside the Writable.
     let readableError: Error | undefined;
@@ -170,7 +186,7 @@ the remote scope "${scopeName}" was not found`);
       readableError = err;
     });
     try {
-      await pipelinePromise(objectsStream, writable);
+      await pipeline(objectsStream, writable);
     } catch (err: any) {
       if (readableError) {
         if (!readableError.message) {
@@ -183,7 +199,20 @@ the remote scope "${scopeName}" was not found`);
     }
   }
 
-  private showProgress(objectsQueue: WriteObjectsQueue) {
+  private getIdsMsg() {
+    if (this.groupedHashes) {
+      const total = Object.keys(this.groupedHashes).reduce((acc, key) => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return acc + this.groupedHashes![key].length;
+      }, 0);
+      return `${total} objects`;
+    }
+    const uniqIds = uniq(this.ids.map((id) => id.toStringWithoutVersion()));
+    if (uniqIds.length === this.ids.length) return `${this.ids.length} components`;
+    return `${uniqIds.length} components, ${this.ids.length} versions`;
+  }
+
+  private showProgress(objectsQueue: WriteObjectsQueue, importMessage: string) {
     if (process.env.CI) {
       return; // don't show progress on CI.
     }
@@ -191,7 +220,7 @@ the remote scope "${scopeName}" was not found`);
     objectsQueue.getQueue().on('add', () => {
       objectsAdded += 1;
       if (objectsAdded % 100 === 0) {
-        loader.start(`Downloaded ${objectsAdded} objects`);
+        loader.start(`${importMessage}. downloaded ${objectsAdded} objects.`);
       }
     });
   }

@@ -28,7 +28,7 @@ import Consumer from '../consumer/consumer';
 import GeneralError from '../error/general-error';
 import logger from '../logger/logger';
 import getMigrationVersions, { MigrationResult } from '../migration/migration-helper';
-import { pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
+import { pathHasAll, findScopePath, readDirSyncIgnoreDsStore } from '../utils';
 import { PathOsBasedAbsolute } from '../utils/path';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
@@ -113,11 +113,18 @@ export default class Scope {
   _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
   lanes: Lanes;
   /**
+   * important! never use this function directly, even inside this class. Only use getCurrentLaneId().
+   *
    * normally, the data about the current-lane is saved in .bitmap. the reason for having this prop here is that we
    * need this data when loading model-component, which gets called in multiple places where the consumer is not passed.
    * another instance this is needed is for bit-sign, this way when loading aspects and fetching dists, it'll go to lane-scope.
    */
-  currentLaneId?: LaneId;
+  private currentLaneId?: LaneId;
+  /**
+   * when the consumer is available, this function is set with the consumer.getCurrentLaneIdIfExist, so then we guarantee
+   * that it's always in sync with the consumer.
+   */
+  currentLaneIdFunc?: () => LaneId | undefined;
   stagedSnaps: StagedSnaps;
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
@@ -136,6 +143,11 @@ export default class Scope {
 
   public async refreshScopeIndex(force = false) {
     await this.objects.reloadScopeIndexIfNeed(force);
+  }
+
+  getCurrentLaneId(): LaneId | undefined {
+    if (this.currentLaneIdFunc) return this.currentLaneIdFunc();
+    return this.currentLaneId;
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
@@ -163,7 +175,7 @@ export default class Scope {
   setCurrentLaneId(laneId?: LaneId) {
     if (!laneId) return;
     if (laneId.isDefault()) this.currentLaneId = undefined;
-    this.currentLaneId = laneId;
+    else this.currentLaneId = laneId;
   }
 
   getPath() {
@@ -464,7 +476,8 @@ once done, to continue working, please run "bit cc"`
   }
 
   async getCurrentLaneObject(): Promise<Lane | null> {
-    return this.currentLaneId ? this.loadLane(this.currentLaneId) : null;
+    const currentLaneId = this.getCurrentLaneId();
+    return currentLaneId ? this.loadLane(currentLaneId) : null;
   }
 
   /**
@@ -786,18 +799,10 @@ once done, to continue working, please run "bit cc"`
   }
 
   static async load(absPath: string, useCache = true): Promise<Scope> {
-    let scopePath = propogateUntil(absPath);
-    let isBare = true;
+    let scopePath = findScopePath(absPath);
     if (!scopePath) throw new ScopeNotFound(absPath);
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
-      isBare = false;
-    }
-    if (
-      scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR)) ||
-      scopePath.endsWith(pathLib.join(BIT_HIDDEN_DIR))
-    ) {
-      isBare = false;
     }
     if (useCache && Scope.scopeCache[scopePath]) {
       logger.debug(`scope.load, found scope at ${scopePath} from cache`);
@@ -812,6 +817,8 @@ once done, to continue working, please run "bit cc"`
       scopeJson = Scope.ensureScopeJson(scopePath);
     }
     const objects = await Repository.load({ scopePath, scopeJson });
+    const isBare =
+      !scopePath.endsWith(pathLib.join(BIT_HIDDEN_DIR)) && !scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR));
     const scope = new Scope({ path: scopePath, scopeJson, objects, isBare });
     Scope.scopeCache[scopePath] = scope;
     return scope;

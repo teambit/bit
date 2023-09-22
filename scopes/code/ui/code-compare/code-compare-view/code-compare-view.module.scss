@@ -1,4 +1,4 @@
-@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .componentCompareCodeViewContainer {
   width: 100%;
@@ -6,10 +6,6 @@
   flex-direction: column;
   background: var(--on-surface-neutral-low-color, #282828) !important;
   transition: min-height 0.4s ease-in-out;
-
-  &.loading {
-    padding: 0px 24px;
-  }
 }
 
 .componentCompareCodeDiffEditorContainer {
