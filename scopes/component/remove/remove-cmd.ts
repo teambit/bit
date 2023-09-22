@@ -3,8 +3,8 @@ import yesno from 'yesno';
 import { Command, CommandOptions } from '@teambit/cli';
 import { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
-import RemovedLocalObjects from '@teambit/legacy/dist/scope/removed-local-objects';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import RemovedLocalObjects from './removed-local-objects';
 import { RemoveMain } from './remove.main.runtime';
 import { removeTemplate } from './remove-template';
 
