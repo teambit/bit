@@ -28,9 +28,12 @@ export type ComponentCompareProps = {
   routes?: MaybeLazyLoaded<RouteProps[]>;
   host: string;
   baseId?: ComponentID;
+  baseIdOverride?: ComponentID;
+  compareIdOverride?: ComponentID;
   compareId?: ComponentID;
   customUseComponent?: UseComponentType;
   changes?: ChangeType[] | null;
   Loader?: ComponentType;
   isFullScreen?: boolean;
+  hidden?: boolean;
 } & HTMLAttributes<HTMLDivElement>;

@@ -71,6 +71,7 @@ export interface FileConstructor {
 
 let File: FileConstructor;
 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 interface File {
   /**
    * Gets and sets the contents of the file. If set to a `Stream`, it is wrapped in

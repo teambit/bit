@@ -7,6 +7,7 @@ import DependencyGraph from '../graph/scope-graph';
 import { LaneData } from '../lanes/lanes';
 import { ComponentLog } from '../models/model-component';
 import { ObjectItemsStream, ObjectList } from '../objects/object-list';
+import RemovedObjects from '../removed-components';
 import { ScopeDescriptor } from '../scope';
 import { SSHConnectionStrategyName } from './ssh/ssh';
 
@@ -15,7 +16,12 @@ export interface Network {
   // connect(host: string): Promise<any>;
   close(): void;
   describeScope(): Promise<ScopeDescriptor>;
-  deleteMany(ids: string[], force: boolean, context: Record<string, any>, idsAreLanes: boolean);
+  deleteMany(
+    ids: string[],
+    force: boolean,
+    context: Record<string, any>,
+    idsAreLanes: boolean
+  ): Promise<RemovedObjects>;
   fetch(ids: string[], fetchOptions: FETCH_OPTIONS, context?: Record<string, any>): Promise<ObjectItemsStream>;
   pushMany(objectList: ObjectList, pushOptions: PushOptions, context?: Record<string, any>): Promise<string[]>;
   action<Options extends Record<string, any>, Result>(name: string, options: Options): Promise<Result>;

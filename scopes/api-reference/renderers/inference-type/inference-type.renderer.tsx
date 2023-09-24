@@ -5,6 +5,8 @@ import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 import tsxSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
 import defaultTheme from 'react-syntax-highlighter/dist/esm/styles/prism/vsc-dark-plus';
 import classNames from 'classnames';
+import { Tooltip } from '@teambit/design.ui.tooltip';
+
 import styles from './inference-type.module.scss';
 
 SyntaxHighlighter.registerLanguage('tsx', tsxSyntax);
@@ -24,8 +26,9 @@ function InferenceTypeComponent(props: APINodeRenderProps) {
   } = props;
 
   const inferenceTypeNode = api as InferenceTypeSchema;
+  const isSpread = inferenceTypeNode.isSpread;
   const typeToRender = (inferenceTypeNode.type || inferenceTypeNode.name) ?? '';
-  // ugly - but we need to make an educated guess if this is an object or not to decide if we should highlight it or not
+
   const maybeObject = typeToRender.includes('{');
   const disableHighlight = metadata?.[inferenceTypeNode.__schema]?.disableHighlight || !maybeObject;
 
@@ -39,24 +42,48 @@ function InferenceTypeComponent(props: APINodeRenderProps) {
   return (
     <div
       key={`inference-${inferenceTypeNode.name}`}
-      className={classNames(nodeStyles.node, className, styles.inferenceWrapper)}
+      className={classNames(nodeStyles.node, className, styles.inferenceWrapper, isSpread && styles.isSpread)}
     >
-      {!disableHighlight && (
-        <SyntaxHighlighter
-          language={lang}
-          style={defaultTheme}
-          customStyle={{
-            borderRadius: '8px',
-            marginTop: '4px',
-            padding: '8px',
-            fontFamily: 'roboto mono',
-            fontSize: 12,
-          }}
+      {isSpread && (
+        <Tooltip
+          placement={'bottom-end'}
+          content={
+            <SyntaxHighlighter
+              language={lang}
+              style={defaultTheme}
+              customStyle={{
+                borderRadius: '8px',
+                margin: '0',
+                padding: '0',
+                fontFamily: 'roboto mono',
+                fontSize: 11,
+              }}
+            >
+              {typeToRender}
+            </SyntaxHighlighter>
+          }
         >
-          {typeToRender}
-        </SyntaxHighlighter>
+          {`...rest`}
+        </Tooltip>
       )}
-      {disableHighlight && (inferenceTypeNode.type || inferenceTypeNode.name)}
+      {!isSpread &&
+        (!disableHighlight ? (
+          <SyntaxHighlighter
+            language={lang}
+            style={defaultTheme}
+            customStyle={{
+              borderRadius: '8px',
+              marginTop: '4px',
+              padding: '8px',
+              fontFamily: 'roboto mono',
+              fontSize: 12,
+            }}
+          >
+            {typeToRender}
+          </SyntaxHighlighter>
+        ) : (
+          inferenceTypeNode.type || inferenceTypeNode.name
+        ))}
     </div>
   );
 }

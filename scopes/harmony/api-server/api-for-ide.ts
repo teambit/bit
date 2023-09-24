@@ -11,6 +11,9 @@ import { CheckoutMain } from '@teambit/checkout';
 import { ApplyVersionResults } from '@teambit/merging';
 import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
 import { Log } from '@teambit/legacy/dist/scope/models/lane';
+import { ComponentCompareMain } from '@teambit/component-compare';
+import { GeneratorMain } from '@teambit/generator';
+import { RemoveMain } from '@teambit/remove';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -43,7 +46,10 @@ export class APIForIDE {
     private installer: InstallMain,
     private exporter: ExportMain,
     private checkout: CheckoutMain,
-    private componentLog: ComponentLogMain
+    private componentLog: ComponentLogMain,
+    private componentCompare: ComponentCompareMain,
+    private generator: GeneratorMain,
+    private remove: RemoveMain
   ) {}
 
   async listIdsWithPaths() {
@@ -152,6 +158,11 @@ export class APIForIDE {
     return results;
   }
 
+  async getConfigForDiff(id: string) {
+    const results = await this.componentCompare.getConfigForDiff(id);
+    return results;
+  }
+
   async setDefaultScope(scopeName: string) {
     await this.workspace.setDefaultScope(scopeName);
     return scopeName;
@@ -186,8 +197,16 @@ export class APIForIDE {
     await this.workspace.clearCache();
   }
 
-  async install() {
-    return this.installer.install(undefined, { optimizeReportForNonTerminal: true });
+  async install(options = {}) {
+    const opts = {
+      optimizeReportForNonTerminal: true,
+      dedupe: true,
+      updateExisting: false,
+      import: false,
+      ...options,
+    };
+
+    return this.installer.install(undefined, opts);
   }
 
   async export() {
@@ -206,6 +225,28 @@ export class APIForIDE {
       ids: await this.workspace.listIds(),
     });
     return this.adjustCheckoutResultsToIde(results);
+  }
+
+  async getTemplates() {
+    const templates = await this.generator.listTemplates();
+    return templates;
+  }
+
+  async createComponent(templateName: string, idIncludeScope: string) {
+    if (!idIncludeScope.includes('/')) {
+      throw new Error('id should include the scope name');
+    }
+    const [scope, ...nameSplit] = idIncludeScope.split('/');
+    return this.generator.generateComponentTemplate([nameSplit.join('/')], templateName, { scope });
+  }
+
+  async removeComponent(id: string) {
+    const results = await this.remove.remove({
+      componentsPattern: id,
+      force: true,
+    });
+    const serializedResults = results.localResult.serialize();
+    return serializedResults;
   }
 
   async switchLane(name: string) {

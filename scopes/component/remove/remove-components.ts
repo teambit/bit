@@ -9,13 +9,16 @@ import enrichContextFromGlobal from '@teambit/legacy/dist/hooks/utils/enrich-con
 import logger from '@teambit/legacy/dist/logger/logger';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import { Remotes } from '@teambit/legacy/dist/remotes';
-import RemovedLocalObjects from '@teambit/legacy/dist/scope/removed-local-objects';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 import * as packageJsonUtils from '@teambit/legacy/dist/consumer/component/package-json-utils';
 import pMapSeries from 'p-map-series';
+import RemovedLocalObjects from './removed-local-objects';
+
+export type RemoveComponentsResult = { localResult: RemovedLocalObjects; remoteResult: RemovedObjects[] };
 
 /**
  * Remove components local and remote
@@ -42,7 +45,7 @@ export async function removeComponents({
   track: boolean;
   deleteFiles: boolean;
   fromLane: boolean;
-}): Promise<{ localResult: RemovedLocalObjects; remoteResult: Record<string, any>[] }> {
+}): Promise<RemoveComponentsResult> {
   logger.debugAndAddBreadCrumb('removeComponents', `{ids}. force: ${force.toString()}`, { ids: ids.toString() });
   // added this to remove support for remove only one version from a component
   const bitIdsLatest = BitIds.fromArray(
@@ -70,7 +73,11 @@ export async function removeComponents({
  * @param {BitIds} bitIds - list of remote component ids to delete
  * @param {boolean} force - delete component that are used by other components.
  */
-async function removeRemote(consumer: Consumer | null | undefined, bitIds: BitIds, force: boolean) {
+async function removeRemote(
+  consumer: Consumer | null | undefined,
+  bitIds: BitIds,
+  force: boolean
+): Promise<RemovedObjects[]> {
   const groupedBitsByScope = groupArray(bitIds, 'scope');
   const remotes = consumer ? await getScopeRemotes(consumer.scope) : await Remotes.getGlobalRemotes();
   const shouldGoToCentralHub = remotes.shouldGoToCentralHub(Object.keys(groupedBitsByScope));

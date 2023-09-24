@@ -479,7 +479,7 @@
               "line": 6,
               "character": 14
             },
-            "signature": "const BasicButton: () => any",
+            "signature": "function(): any",
             "name": "BasicButton",
             "params": [],
             "returnType": {
@@ -487,7 +487,7 @@
               "location": {
                 "filePath": "button.composition.tsx",
                 "line": 6,
-                "character": 14
+                "character": 28
               },
               "type": "any"
             },
@@ -548,10 +548,12 @@
                     "location": {
                       "filePath": "button.composition.tsx",
                       "line": 14,
-                      "character": 24
+                      "character": 26
                     },
                     "name": "children",
-                    "type": "any"
+                    "type": "any",
+                    "defaultValue": "<BasicButton />",
+                    "isSpread": false
                   }
                 ],
                 "isSpread": false
@@ -577,7 +579,7 @@
               "line": 18,
               "character": 14
             },
-            "signature": "const ButtonWithCustomStyles: () => any",
+            "signature": "function(): any",
             "name": "ButtonWithCustomStyles",
             "params": [],
             "returnType": {
@@ -585,7 +587,7 @@
               "location": {
                 "filePath": "button.composition.tsx",
                 "line": 18,
-                "character": 14
+                "character": 39
               },
               "type": "any"
             },
@@ -598,7 +600,7 @@
               "line": 22,
               "character": 14
             },
-            "signature": "const ButtonWithIcon: () => any",
+            "signature": "function(): any",
             "name": "ButtonWithIcon",
             "params": [],
             "returnType": {
@@ -606,7 +608,7 @@
               "location": {
                 "filePath": "button.composition.tsx",
                 "line": 22,
-                "character": 14
+                "character": 31
               },
               "type": "any"
             },
@@ -619,7 +621,7 @@
               "line": 31,
               "character": 14
             },
-            "signature": "const ButtonAsALink: () => any",
+            "signature": "function(): any",
             "name": "ButtonAsALink",
             "params": [],
             "returnType": {
@@ -627,7 +629,7 @@
               "location": {
                 "filePath": "button.composition.tsx",
                 "line": 31,
-                "character": 14
+                "character": 30
               },
               "type": "any"
             },
@@ -665,7 +667,7 @@
           "line": 30,
           "character": 14
         },
-        "signature": "const Function: () => void",
+        "signature": "function(): void",
         "name": "Function",
         "params": [],
         "returnType": {
@@ -673,7 +675,7 @@
           "location": {
             "filePath": "index.ts",
             "line": 30,
-            "character": 14
+            "character": 25
           },
           "type": "void"
         },
@@ -1051,7 +1053,7 @@
           "line": 69,
           "character": 14
         },
-        "signature": "const getBar: (bar: Bar) => Bar",
+        "signature": "function(bar: Bar): Bar",
         "name": "getBar",
         "params": [
           {
@@ -1081,7 +1083,7 @@
           "location": {
             "filePath": "index.ts",
             "line": 69,
-            "character": 14
+            "character": 23
           },
           "name": "Bar",
           "internalFilePath": "index.ts"
@@ -1095,7 +1097,7 @@
           "line": 71,
           "character": 14
         },
-        "signature": "const tuple: ([a, b, c]: [string, Function, Record<string, any>]) => void",
+        "signature": "function([a, b, c]: [string, Function, Record<string, any>]): void",
         "name": "tuple",
         "params": [
           {
@@ -1153,7 +1155,7 @@
           "location": {
             "filePath": "index.ts",
             "line": 71,
-            "character": 14
+            "character": 22
           },
           "type": "void"
         },
@@ -1488,10 +1490,12 @@
                 "location": {
                   "filePath": "index.ts",
                   "line": 96,
-                  "character": 45
+                  "character": 47
                 },
                 "name": "prop",
-                "type": "number"
+                "type": "number",
+                "defaultValue": "1",
+                "isSpread": false
               }
             ],
             "isSpread": false
