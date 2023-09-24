@@ -248,12 +248,11 @@ export class DependencyLinker {
     if (linkingOpts.linkCoreAspects && !this.isBitRepoWorkspace(rootDir)) {
       const hasLocalInstallation = !linkingOpts.linkTeambitBit;
       if (mainAspectPath) {
-        result.coreAspectsLinks = await this.linkNonExistingCoreAspects(
-          path.join(rootDir, 'node_modules'),
-          componentIdsWithoutVersions,
+        result.coreAspectsLinks = await this.linkNonExistingCoreAspects(componentIdsWithoutVersions, {
+          targetModulesDir: path.join(rootDir, 'node_modules'),
           mainAspectPath,
-          hasLocalInstallation
-        );
+          hasLocalInstallation,
+        });
       } else {
         result.coreAspectsLinks = [];
       }
@@ -486,10 +485,12 @@ export class DependencyLinker {
   }
 
   private async linkNonExistingCoreAspects(
-    dir: string,
     componentIds: string[],
-    mainAspectPath: string,
-    hasLocalInstallation = false
+    opts: {
+      targetModulesDir: string;
+      mainAspectPath: string;
+      hasLocalInstallation?: boolean;
+    }
   ): Promise<CoreAspectLinkResult[]> {
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const filtered = coreAspectsIds.filter((aspectId) => {
@@ -510,16 +511,7 @@ export class DependencyLinker {
 
     this.logger.debug(`linkNonExistingCoreAspects: linking the following core aspects ${filtered.join()}`);
 
-    const results = filtered.map((id) => {
-      return this.linkCoreAspect(
-        dir,
-        id,
-        getCoreAspectName(id),
-        getCoreAspectPackageName(id),
-        mainAspectPath,
-        hasLocalInstallation
-      );
-    });
+    const results = filtered.map((id) => this.linkCoreAspect(id, opts));
     return compact(results);
   }
 
@@ -532,15 +524,21 @@ export class DependencyLinker {
   }
 
   private linkCoreAspect(
-    dir: string,
     id: string,
-    name: string,
-    packageName: string,
-    mainAspectPath: string,
-    hasLocalInstallation = false
+    {
+      targetModulesDir,
+      mainAspectPath,
+      hasLocalInstallation,
+    }: {
+      targetModulesDir: string;
+      mainAspectPath: string;
+      hasLocalInstallation?: boolean;
+    }
   ): CoreAspectLinkResult | undefined {
+    const name = getCoreAspectName(id);
+    const packageName = getCoreAspectPackageName(id);
     let aspectDir = path.join(mainAspectPath, 'dist', name);
-    const target = path.join(dir, packageName);
+    const target = path.join(targetModulesDir, packageName);
     const shouldSymlink = this.removeSymlinkTarget(target, hasLocalInstallation);
     if (!shouldSymlink) return undefined;
     const isAspectDirExist = fs.pathExistsSync(aspectDir);
