@@ -1,5 +1,5 @@
-import { BitIds } from '../bit-id';
-import RemovedObjects from './removed-components';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
+import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 
 export default class RemovedLocalObjects extends RemovedObjects {
   modifiedComponents: BitIds;

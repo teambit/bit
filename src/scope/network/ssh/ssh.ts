@@ -15,7 +15,6 @@ import GeneralError from '../../../error/general-error';
 import logger from '../../../logger/logger';
 import { userpass as promptUserpass } from '../../../prompts';
 import { buildCommandMessage, packCommand, toBase64, unpackCommand } from '../../../utils';
-import ComponentObjects from '../../component-objects';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLog } from '../../models/model-component';
@@ -364,7 +363,7 @@ export default class SSH implements Network {
     force: boolean,
     context?: Record<string, any>,
     idsAreLanes?: boolean
-  ): Promise<ComponentObjects[] | RemovedObjects> {
+  ): Promise<RemovedObjects> {
     return this.exec(
       '_delete',
       {
