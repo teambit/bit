@@ -44,6 +44,11 @@ export class ExportCmd implements Command {
     ],
     [
       '',
+      'head-only',
+      'EXPERIMENTAL. in case previous export failed and locally it shows exported and only one snap/tag was created, try using this flag',
+    ],
+    [
+      '',
       'ignore-missing-artifacts',
       "EXPERIMENTAL. don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote",
     ],
@@ -66,6 +71,7 @@ export class ExportCmd implements Command {
       originDirectly = false,
       ignoreMissingArtifacts = false,
       resume,
+      headOnly,
       forkLaneNewScope = false,
     }: any
   ): Promise<string> {
@@ -77,6 +83,7 @@ export class ExportCmd implements Command {
         allVersions: allVersions || all,
         originDirectly,
         resumeExportId: resume,
+        headOnly,
         ignoreMissingArtifacts,
         forkLaneNewScope,
       });
