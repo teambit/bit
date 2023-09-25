@@ -38,7 +38,7 @@ export function schemaSchema(schema: SchemaMain) {
           };
 
           if (!component) return empty;
-          const api = await schema.getSchema(component);
+          const api = await schema.getSchema(component, undefined, undefined, undefined, undefined, true);
           if (!api) return empty;
 
           return {
