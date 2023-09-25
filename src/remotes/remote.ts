@@ -13,6 +13,7 @@ import { connect } from '../scope/network';
 import { Network } from '../scope/network/network';
 import { DEFAULT_READ_STRATEGIES, SSHConnectionStrategyName } from '../scope/network/ssh/ssh';
 import { ObjectItemsStream, ObjectList } from '../scope/objects/object-list';
+import RemovedObjects from '../scope/removed-components';
 import { cleanBang, isBitUrl } from '../utils';
 import { InvalidRemote } from './exceptions';
 
@@ -112,7 +113,7 @@ export default class Remote {
     force: boolean,
     context: Record<string, any> | null | undefined,
     idsAreLanes = false
-  ): Promise<Record<string, any>> {
+  ): Promise<RemovedObjects> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.connect().then((network) => network.deleteMany(ids, force, context, idsAreLanes));
   }

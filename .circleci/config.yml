@@ -441,8 +441,8 @@ jobs:
   setup_harmony:
     resource_class: large
     <<: *defaults
-    environment:
-      BIT_FEATURES: cloud-importer-v2
+    # environment:
+    #   BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: ./
@@ -500,8 +500,8 @@ jobs:
   bit_build:
     resource_class: xlarge
     <<: *defaults
-    environment:
-      BIT_FEATURES: cloud-importer-v2
+    # environment:
+    #   BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: ./
@@ -532,8 +532,8 @@ jobs:
   bit_tag:
     resource_class: xlarge
     <<: *defaults
-    environment:
-      BIT_FEATURES: cloud-importer-v2
+    # environment:
+    #   BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: ./
@@ -888,8 +888,8 @@ jobs:
 
   bit_export:
     <<: *defaults
-    environment:
-      BIT_FEATURES: cloud-importer-v2
+    # environment:
+    #   BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: ./
@@ -933,7 +933,7 @@ jobs:
     resource_class: medium+
     environment:
       BITSRC_ENV: stg
-      BIT_FEATURES: cloud-importer-v2
+      # BIT_FEATURES: cloud-importer-v2
     parallelism: 25
     steps:
       - attach_workspace:

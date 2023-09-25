@@ -9,7 +9,6 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Doc, DocPropList } from '@teambit/docs.entities.doc';
 import { isFunction } from 'lodash';
@@ -88,11 +87,7 @@ export class DocsMain {
   async getDescription(component: Component): Promise<string> {
     const componentDoc = this.getDoc(component);
     const desc = componentDoc?.description;
-    if (desc) return desc;
-    const consumerComponent: ConsumerComponent = component.state._consumer;
-    const fromJsDocs = consumerComponent.docs?.find((doc) => doc.description);
-
-    return fromJsDocs?.description || '';
+    return desc || '';
   }
 
   async getTemplate(env: Environment): Promise<string | undefined> {
