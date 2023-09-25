@@ -11,6 +11,7 @@ export function schemaSchema(schema: SchemaMain) {
       scalar JSONObject
       extend type ComponentHost {
         getSchema(id: String!): JSONObject
+        getTaggedSchemaExports(id: String!): JSONObject
       }
     `,
     resolvers: {
@@ -28,6 +29,21 @@ export function schemaSchema(schema: SchemaMain) {
           if (!api) return empty;
 
           return filterUnimplementedSchemaNodes(api);
+        },
+        getTaggedSchemaExports: async (host: ComponentFactory, { id }: { id: string }) => {
+          const componentId = await host.resolveComponentId(id);
+          const component = await host.get(componentId);
+          const empty = {
+            taggedModuleExports: [],
+          };
+
+          if (!component) return empty;
+          const api = await schema.getSchema(component);
+          if (!api) return empty;
+
+          return {
+            taggedModuleExports: api.taggedModuleExports,
+          };
         },
       },
     },

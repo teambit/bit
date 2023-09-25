@@ -603,6 +603,19 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/hooks/use-schema"
     },
+    "hooks/use-tagged-exports": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.api-reference",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/hooks/use-tagged-exports",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "hooks/use-viewed-lane-from-url": {
         "scope": "teambit.lanes",
         "version": "0.0.209",
@@ -746,6 +759,13 @@
         "version": "0.0.441",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/models/scope-model"
+    },
+    "models/tagged-exports-model": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.api-reference",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/models/tagged-exports-model"
     },
     "modules/babel-compiler": {
         "scope": "teambit.compilation",
@@ -1238,6 +1258,19 @@
         "version": "0.0.492",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/strip-trailing-char"
+    },
+    "tagged-exports": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.api-reference",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/tagged-exports",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "tester": {
         "scope": "teambit.defender",
