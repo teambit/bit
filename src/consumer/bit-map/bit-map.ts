@@ -31,6 +31,7 @@ import ComponentMap, {
 import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 import GeneralError from '../../error/general-error';
+import { ALLOW_SAME_NAME, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
@@ -90,6 +91,13 @@ export default class BitMap {
       throw new ShowDoctorError(
         `invalid bitmap id ${id}, a component must have a version when a scope-name is included`
       );
+    }
+    if (!isFeatureEnabled(ALLOW_SAME_NAME)) {
+      // make sure there are no duplications (same name)
+      const similarIds = this.findSimilarIds(bitId, true);
+      if (similarIds.length) {
+        throw new ShowDoctorError(`your id ${id} is duplicated with ${similarIds.toString()}`);
+      }
     }
     componentMap.id = bitId;
     this.components.push(componentMap);
@@ -753,16 +761,36 @@ export default class BitMap {
    */
   updateComponentId(id: BitId, updateScopeOnly = false, revertToMain = false): BitId {
     const newIdString = id.toString();
-    const similarIds = this.findSimilarIds(id, true);
+    const similarIds = this.findSimilarIds(id, updateScopeOnly);
     if (!similarIds.length) {
       logger.debug(`bit-map: no need to update ${newIdString}`);
       return id;
     }
+    let oldId: BitId = similarIds[0];
     if (similarIds.length > 1) {
-      throw new ShowDoctorError(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they
-      are authored or imported. This scenario is not supported`);
+      if (!isFeatureEnabled(ALLOW_SAME_NAME)) {
+        throw new ShowDoctorError(
+          `Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()}. This scenario is not supported`
+        );
+      }
+      if (!updateScopeOnly) {
+        throw new BitError(
+          `Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutVersion()}, it should have only one`
+        );
+      }
+      // it's about updating the scope-name, find the one that has the same scope-name or defaultScope
+      const foundId = similarIds.find((similarId) => {
+        const compMap = this.getComponent(similarId);
+        return compMap.defaultScope || compMap.scope === id.scope;
+      });
+      if (foundId) oldId = foundId;
+      else {
+        logger.debug(
+          `bit-map: no need to update ${newIdString}. the found similar ids are not related: ${similarIds.join(', ')}`
+        );
+        return id;
+      }
     }
-    const oldId: BitId = similarIds[0];
     const oldIdStr = oldId.toString();
     const newId = updateScopeOnly ? oldId.changeScope(id.scope) : id;
     if (newId.isEqual(oldId)) {

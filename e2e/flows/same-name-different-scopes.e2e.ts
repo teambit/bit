@@ -1,12 +1,14 @@
 import { expect } from 'chai';
 
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { ALLOW_SAME_NAME } from '../../src/api/consumer/lib/feature-toggle';
 
 describe('two components with the same name but different scope-name', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures(ALLOW_SAME_NAME);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -36,10 +38,12 @@ describe('two components with the same name but different scope-name', function 
   });
   describe('importing and using both in the same workspace', () => {
     let anotherScopeName: string;
+    let anotherScopePath: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       anotherScopeName = scopeName;
+      anotherScopePath = scopePath;
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -62,6 +66,21 @@ describe('two components with the same name but different scope-name', function 
       const status = helper.command.statusJson();
       expect(status.newComponents).to.have.lengthOf(1);
       expect(status.newComponents[0]).to.equal(`${helper.scopes.remote}/bar/foo`);
+    });
+    describe('having both components as imported', () => {
+      before(() => {
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.scopeHelper.addRemoteScope(anotherScopePath);
+
+        helper.command.import(`${helper.scopes.remote}/bar/foo ${anotherScopeName}/bar/foo -x`);
+      });
+      it('the workspace should be fine and not throw errors', () => {
+        helper.command.expectStatusToBeClean();
+      });
     });
   });
   // @todo: support this case.
