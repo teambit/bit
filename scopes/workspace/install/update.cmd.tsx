@@ -8,12 +8,12 @@ type UpdateCmdOptions = {
   major?: boolean;
   minor?: boolean;
   patch?: boolean;
-  compatible?: boolean;
+  latest?: boolean;
 };
 
 export default class UpdateCmd implements Command {
   name = 'update [package-patterns...]';
-  description = 'update dependencies';
+  description = 'update dependencies. By default, dependencies are updated to the highest semver compatible versions.';
   helpUrl = 'reference/dependencies/configuring-dependencies/#update-dependencies';
   alias = 'up';
   group = 'development';
@@ -33,7 +33,7 @@ export default class UpdateCmd implements Command {
     ['', 'patch', 'update to the latest patch version. Semver rules are ignored'],
     ['', 'minor', 'update to the latest minor version. Semver rules are ignored'],
     ['', 'major', 'update to the latest major version. Semver rules are ignored'],
-    ['', 'compatible', 'update to the highest semver compatibe version'],
+    ['', 'latest', 'update to the latest version. Semver rules are ignored'],
   ] as CommandOptions;
 
   constructor(private install: InstallMain) {}
@@ -46,7 +46,7 @@ export default class UpdateCmd implements Command {
       forceVersionBump = 'minor';
     } else if (options.patch) {
       forceVersionBump = 'patch';
-    } else if (options.compatible) {
+    } else if (!options.latest) {
       forceVersionBump = 'compatible';
     }
     await this.install.updateDependencies({
