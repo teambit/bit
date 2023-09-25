@@ -30,8 +30,8 @@ function ReactComponent(props: APINodeRenderProps) {
     return <div className={nodeStyles.node}>{api.toString()}</div>;
   }
 
-  const paramRenderer = renderers.find((renderer) => renderer.predicate(reactProps));
-  const paramRef = reactProps.type;
+  const paramRenderer = reactProps && renderers.find((renderer) => renderer.predicate(reactProps));
+  const paramRef = reactProps?.type;
   const paramRefRenderer = paramRef && renderers.find((renderer) => renderer.predicate(paramRef));
   const PropsRefComponent =
     paramRef && paramRefRenderer?.Component ? (
@@ -44,23 +44,27 @@ function ReactComponent(props: APINodeRenderProps) {
       />
     ) : null;
 
-  const ParamComponent = paramRenderer?.Component ? (
-    <paramRenderer.Component
-      {...props}
-      key={`props-${reactProps.name}`}
-      depth={(props.depth ?? 0) + 1}
-      apiNode={{ ...props.apiNode, renderer: paramRenderer, api: reactProps }}
-      metadata={{ [reactProps.__schema]: { columnView: true } }}
-    />
-  ) : (
-    <defaultParamRenderer.Component
-      {...props}
-      key={`props-${reactProps.name}`}
-      depth={(props.depth ?? 0) + 1}
-      apiNode={{ ...props.apiNode, renderer: defaultParamRenderer, api: reactProps }}
-      metadata={{ [reactProps.__schema]: { columnView: true } }}
-    />
-  );
+  const ParamComponent =
+    reactProps && paramRenderer?.Component ? (
+      <paramRenderer.Component
+        {...props}
+        key={`props-${reactProps.name}`}
+        depth={(props.depth ?? 0) + 1}
+        apiNode={{ ...props.apiNode, renderer: paramRenderer, api: reactProps }}
+        metadata={{ [reactProps.__schema]: { columnView: true } }}
+      />
+    ) : (
+      (reactProps && (
+        <defaultParamRenderer.Component
+          {...props}
+          key={`props-${reactProps.name}`}
+          depth={(props.depth ?? 0) + 1}
+          apiNode={{ ...props.apiNode, renderer: defaultParamRenderer, api: reactProps }}
+          metadata={{ [reactProps.__schema]: { columnView: true } }}
+        />
+      )) ||
+      null
+    );
 
   const docComment = api.doc?.findTag(TagName.return)?.comment;
 
@@ -80,11 +84,13 @@ function ReactComponent(props: APINodeRenderProps) {
           </div>
         </div>
       )}
-      <div className={classnames(styles.container, styles.topPad)}>
-        <div className={styles.title}>Props</div>
-        <div className={styles.paramRef}>{PropsRefComponent}</div>
-        {ParamComponent}
-      </div>
+      {ParamComponent && (
+        <div className={classnames(styles.container, styles.topPad)}>
+          <div className={styles.title}>Props</div>
+          <div className={styles.paramRef}>{PropsRefComponent}</div>
+          {ParamComponent}
+        </div>
+      )}
       <div className={styles.container}>
         <div className={styles.title}>Returns</div>
         {docComment && <div className={styles.docComment}>{docComment}</div>}

@@ -3,11 +3,11 @@ import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { Section } from '@teambit/documenter.ui.section';
 import { useTaggedExports } from '@teambit/api-reference.hooks.use-tagged-exports';
 
-export type TaggedExportsProp = {
+export type TaggedExportsProps = {
   componentId: string;
 } & React.HtmlHTMLAttributes<HTMLDivElement>;
 
-export function TaggedExports({ componentId, ...rest }: TaggedExportsProp) {
+export function TaggedExports({ componentId, ...rest }: TaggedExportsProps) {
   const { taggedExportsModel } = useTaggedExports(componentId);
   if (!taggedExportsModel) return null;
   // console.log("🚀 ~ file: tagged-exports.tsx:13 ~ TaggedExports ~ taggedExportsModel:", taggedExportsModel)
