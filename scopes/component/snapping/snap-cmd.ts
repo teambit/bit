@@ -30,13 +30,9 @@ export class SnapCmd implements Command {
   alias = '';
   options = [
     ['m', 'message <message>', 'snap message describing the latest changes - will appear in component history log'],
-    ['', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
+    ['u', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
     ['', 'unmerged', 'complete a merge process by snapping the unmerged components'],
-    [
-      'b',
-      'build',
-      'not needed for now. run the build pipeline locally in case the feature-flag build-on-ci is enabled',
-    ],
+    ['b', 'build', 'locally run the build pipeline (i.e. not via rippleCI) and complete the snap'],
     [
       '',
       'editor [editor]',
