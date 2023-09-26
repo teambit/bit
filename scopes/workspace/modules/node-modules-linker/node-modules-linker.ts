@@ -249,7 +249,7 @@ export async function removeLinksFromNodeModules(
 ) {
   const absoluteCompDir = workspace.componentDir(component.id); // os format
   const relativeFilesInsideCompDir = files.map((file) => path.relative(absoluteCompDir, file));
-  const pkgDir = workspace.getComponentPackagePath(component);
+  const pkgDir = await workspace.getComponentPackagePath(component);
   const pathsToRemove = relativeFilesInsideCompDir.map((file) => path.join(pkgDir, file));
   logger.debug(`removeLinksFromNodeModules, deleting the following files:
 ${pathsToRemove.join('\n')}`);
