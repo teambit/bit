@@ -241,13 +241,13 @@ export class Workspace implements ComponentFactory {
     );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
 
-    this.registerOnComponentAdd(async () => {
-      await this.setComponentPathsRegExps();
-      return {
-        results: this.componentPathsRegExps,
-        toString: () => this.componentPathsRegExps.join(),
-      };
-    });
+    // this.registerOnComponentAdd(async () => {
+    //   await this.setComponentPathsRegExps();
+    //   return {
+    //     results: this.componentPathsRegExps,
+    //     toString: () => this.componentPathsRegExps.join(),
+    //   };
+    // });
 
     this.registerOnComponentRemove(async () => {
       await this.setComponentPathsRegExps();
@@ -1493,8 +1493,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     await this.clearCache();
   }
 
-  getComponentPackagePath(component: Component) {
-    const relativePath = this.dependencyResolver.getRuntimeModulePath(component);
+  async getComponentPackagePath(component: Component) {
+    const inInWs = await this.hasId(component.id);
+    const relativePath = this.dependencyResolver.getRuntimeModulePath(component, inInWs);
     return path.join(this.path, relativePath);
   }
 

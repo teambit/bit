@@ -654,13 +654,16 @@ export class DependencyResolverMain {
    * Returns the location where the component is installed with its peer dependencies
    * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
    */
-  getRuntimeModulePath(component: Component) {
+  getRuntimeModulePath(component: Component, isInWorkspace = false) {
     if (!this.hasRootComponents()) {
       const modulePath = this.getModulePath(component);
       return modulePath;
     }
     const pkgName = this.getPackageName(component);
-    const selfRootDir = getRelativeRootComponentDir(component.id.toString());
+    const selfRootDir = getRelativeRootComponentDir(!isInWorkspace 
+      ? component.id.toString()
+      : component.id.toStringWithoutVersion()
+    );
     // In case the component is it's own root we want to load it from it's own root folder
     if (fs.pathExistsSync(selfRootDir)) {
       const innerDir = join(selfRootDir, 'node_modules', pkgName);
