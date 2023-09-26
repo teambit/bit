@@ -660,7 +660,7 @@ export class DependencyResolverMain {
       return modulePath;
     }
     const pkgName = this.getPackageName(component);
-    const selfRootDir = getRelativeRootComponentDir(!isInWorkspace
+    const selfRootDir = getRelativeRootComponentDir(!isInWorkspace 
       ? component.id.toString()
       : component.id.toStringWithoutVersion()
     );

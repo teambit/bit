@@ -76,6 +76,7 @@ type ExportParams = {
   originDirectly?: boolean;
   includeNonStaged?: boolean;
   resumeExportId?: string | undefined;
+  headOnly?: boolean;
   ignoreMissingArtifacts?: boolean;
   forkLaneNewScope?: boolean;
 };
@@ -112,7 +113,13 @@ export class ExportMain {
     return exportResults;
   }
 
-  private async exportComponents({ ids, includeNonStaged, originDirectly, ...params }: ExportParams): Promise<{
+  private async exportComponents({
+    ids,
+    includeNonStaged,
+    headOnly,
+    originDirectly,
+    ...params
+  }: ExportParams): Promise<{
     updatedIds: BitId[];
     nonExistOnBitMap: BitId[];
     removedIds: BitIds;
@@ -125,7 +132,7 @@ export class ExportMain {
     const consumer: Consumer = this.workspace.consumer;
     const { idsToExport, missingScope, idsWithFutureScope, laneObject } = await this.getComponentsToExport(
       ids,
-      includeNonStaged
+      includeNonStaged || headOnly
     );
 
     if (R.isEmpty(idsToExport)) {
@@ -167,6 +174,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const isOnMain = consumer.isOnMain();
     const { exported, updatedLocally, newIdsOnRemote } = await this.exportMany({
       ...params,
+      exportHeadsOnly: headOnly,
       scope: consumer.scope,
       ids: idsToExport,
       laneObject,
