@@ -770,7 +770,8 @@
                 "filePath": "index.ts",
                 "line": 36,
                 "character": 1
-              }
+              },
+              "name": "ClassSomething"
             },
             "modifiers": []
           },
@@ -2011,7 +2012,8 @@
                 "filePath": "index.ts",
                 "line": 36,
                 "character": 1
-              }
+              },
+              "name": "ClassSomething"
             },
             "modifiers": []
           },
