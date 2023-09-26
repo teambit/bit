@@ -209,7 +209,7 @@ export class ComponentWriterMain {
       const existingChildren = existingRootDirs.find((d) => componentWriter.writeToPath.startsWith(`${d}/`));
       if (!existingChildren) return;
       // we increment the existing one, because it is used to replace the base-path of the current component
-      const newPath = this.incrementPathRecursively(componentWriter.writeToPath, allPaths);
+      const newPath = this.incrementPathRecursively(existingChildren, allPaths);
       componentWriter.writeToPath = componentWriter.writeToPath.replace(existingChildren, newPath);
     });
   }
