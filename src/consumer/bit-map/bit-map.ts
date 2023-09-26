@@ -768,14 +768,20 @@ export default class BitMap {
     }
     const similarCompMaps = similarBitIds.map((similarId) => this.getComponent(similarId));
     const similarIds = similarCompMaps
-      .filter((compMap) => compMap.defaultScope || compMap.scope === id.scope)
+      .filter((compMap) => (compMap.defaultScope || compMap.id.scope) === id.scope)
       .map((c) => c.id);
-    const oldId: BitId = similarIds[0];
+    if (!similarIds.length) {
+      logger.debug(
+        `bit-map: no need to update ${newIdString}. the similar ids don't have the same scope: ${similarIds.join(', ')}`
+      );
+      return id;
+    }
     if (similarIds.length > 1) {
       throw new BitError(
         `Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutVersion()}, it should have only one`
       );
     }
+    const oldId: BitId = similarIds[0];
     const oldIdStr = oldId.toString();
     const newId = updateScopeOnly ? oldId.changeScope(id.scope) : id;
     if (newId.isEqual(oldId)) {
