@@ -14,6 +14,6 @@ export class ThisTypeTransformer implements SchemaTransformer {
   }
 
   async transform(node: ThisTypeNode, context: SchemaExtractorContext) {
-    return new ThisTypeSchema(context.getLocation(node));
+    return new ThisTypeSchema(context.getLocation(node), 'this');
   }
 }
