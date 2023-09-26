@@ -20,7 +20,7 @@ import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-di
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
-import MiniStatusCmd, { MiniStatusOpts } from './mini-status-cmd';
+import { MiniStatusCmd, MiniStatusOpts } from './mini-status-cmd';
 
 type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
 

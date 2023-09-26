@@ -1,6 +1,7 @@
 import { ComponentID } from '@teambit/component-id';
 import semver from 'semver';
 import { Logger } from '@teambit/logger';
+import BuilderAspect from '@teambit/builder';
 import { isHash } from '@teambit/component-version';
 import {
   DependencyResolverAspect,
@@ -67,7 +68,7 @@ export class ConfigMerger {
   private currentEnv: EnvData;
   private otherEnv: EnvData;
   private baseEnv?: EnvData;
-  private handledExtIds: string[] = [];
+  private handledExtIds: string[] = [BuilderAspect.id]; // don't try to merge builder, it's possible that at one end it wasn't built yet, so it's empty
   private otherLaneIdsStr: string[];
   constructor(
     private compIdStr: string,
