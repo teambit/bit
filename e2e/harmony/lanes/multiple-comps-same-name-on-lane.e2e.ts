@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import Helper from '../../../src/e2e-helper/e2e-helper';
+import { ALLOW_SAME_NAME } from '../../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -49,9 +50,13 @@ describe('lane with multiple components with the same name but different scope-n
   });
   describe('importing the lane into a new workspace without excluding any component', () => {
     before(() => {
+      helper.command.setFeatures(ALLOW_SAME_NAME);
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.scopeHelper.addRemoteScope(anotherRemotePath);
+    });
+    after(() => {
+      helper.command.resetFeatures();
     });
     it('should not fail due to duplication of the same name in the same workspace', () => {
       expect(() => helper.command.importLane('lane-a')).to.not.throw();

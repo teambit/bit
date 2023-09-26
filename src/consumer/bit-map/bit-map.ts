@@ -761,35 +761,20 @@ export default class BitMap {
    */
   updateComponentId(id: BitId, updateScopeOnly = false, revertToMain = false): BitId {
     const newIdString = id.toString();
-    const similarIds = this.findSimilarIds(id, updateScopeOnly);
-    if (!similarIds.length) {
+    const similarBitIds = this.findSimilarIds(id, true);
+    if (!similarBitIds.length) {
       logger.debug(`bit-map: no need to update ${newIdString}`);
       return id;
     }
-    let oldId: BitId = similarIds[0];
+    const similarCompMaps = similarBitIds.map((similarId) => this.getComponent(similarId));
+    const similarIds = similarCompMaps
+      .filter((compMap) => compMap.defaultScope || compMap.scope === id.scope)
+      .map((c) => c.id);
+    const oldId: BitId = similarIds[0];
     if (similarIds.length > 1) {
-      if (!isFeatureEnabled(ALLOW_SAME_NAME)) {
-        throw new ShowDoctorError(
-          `Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()}. This scenario is not supported`
-        );
-      }
-      if (!updateScopeOnly) {
-        throw new BitError(
-          `Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutVersion()}, it should have only one`
-        );
-      }
-      // it's about updating the scope-name, find the one that has the same scope-name or defaultScope
-      const foundId = similarIds.find((similarId) => {
-        const compMap = this.getComponent(similarId);
-        return compMap.defaultScope || compMap.scope === id.scope;
-      });
-      if (foundId) oldId = foundId;
-      else {
-        logger.debug(
-          `bit-map: no need to update ${newIdString}. the found similar ids are not related: ${similarIds.join(', ')}`
-        );
-        return id;
-      }
+      throw new BitError(
+        `Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutVersion()}, it should have only one`
+      );
     }
     const oldIdStr = oldId.toString();
     const newId = updateScopeOnly ? oldId.changeScope(id.scope) : id;
