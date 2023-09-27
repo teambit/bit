@@ -45,6 +45,7 @@ describe('BitMap', function () {
     });
     it('should sort the components alphabetically', async () => {
       const exampleComponent = { ...addComponentParamsFixture };
+      exampleComponent.defaultScope = '';
       bitMap = await getBitmapInstance();
       exampleComponent.componentId = new BitId({ scope: 'my-scope', name: 'is-string1', version: '0.0.1' });
       bitMap.addComponent(exampleComponent);
