@@ -649,6 +649,9 @@ export default class BitMap {
     if (!componentId.scope && !defaultScope) {
       throw new BitError(`unable to add component ${componentIdStr}, it does not have a scope nor a defaultScope`);
     }
+    if (componentId.scope && defaultScope) {
+      throw new BitError(`unable to add component ${componentIdStr}, it has both a scope and a defaultScope`);
+    }
 
     const getOrCreateComponentMap = (): ComponentMap => {
       const ignoreVersion = true; // legacy can have two components on .bitmap with different versions
@@ -802,7 +805,7 @@ export default class BitMap {
       componentMap.isAvailableOnCurrentLane = true;
       componentMap.onLanesOnly = false;
     }
-    if (updateScopeOnly) {
+    if (newId.scope && componentMap.defaultScope) {
       // in case it had defaultScope, no need for it anymore.
       delete componentMap.defaultScope;
     }

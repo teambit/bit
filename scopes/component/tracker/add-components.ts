@@ -284,12 +284,14 @@ export default class AddComponents {
         return this.bitMap.addFilesToComponent({ componentId, files: component.files });
       }
       const rootDir = getRootDir();
-      const defaultScope =
-        this.defaultScope ||
-        (await this.workspace.componentDefaultScopeFromComponentDirAndName(
-          rootDir,
-          componentId.toStringWithoutScopeAndVersion()
-        ));
+      const getDefaultScope = async () => {
+        if (componentId.scope) return undefined;
+        return (
+          this.defaultScope ||
+          (await this.workspace.componentDefaultScopeFromComponentDirAndName(rootDir, componentId.name))
+        );
+      };
+      const defaultScope = await getDefaultScope();
       const componentMap = this.bitMap.addComponent({
         componentId,
         files: component.files,
