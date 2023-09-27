@@ -50,7 +50,7 @@ import {
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DepLinkerContext, DependencyLinker, LinkingOptions } from './dependency-linker';
-import { ComponentModelVersion, getAllPolicyPkgs, OutdatedPkg } from './get-all-policy-pkgs';
+import { ComponentModelVersion, getAllPolicyPkgs, OutdatedPkg, CurrentPkgSource } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
@@ -654,13 +654,16 @@ export class DependencyResolverMain {
    * Returns the location where the component is installed with its peer dependencies
    * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
    */
-  getRuntimeModulePath(component: Component) {
+  getRuntimeModulePath(component: Component, isInWorkspace = false) {
     if (!this.hasRootComponents()) {
       const modulePath = this.getModulePath(component);
       return modulePath;
     }
     const pkgName = this.getPackageName(component);
-    const selfRootDir = getRelativeRootComponentDir(component.id.toString());
+    const selfRootDir = getRelativeRootComponentDir(!isInWorkspace 
+      ? component.id.toString()
+      : component.id.toStringWithoutVersion()
+    );
     // In case the component is it's own root we want to load it from it's own root folder
     if (fs.pathExistsSync(selfRootDir)) {
       const innerDir = join(selfRootDir, 'node_modules', pkgName);
@@ -1405,7 +1408,7 @@ export class DependencyResolverMain {
     componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
     components: Component[];
     patterns?: string[];
-    forceVersionBump?: 'major' | 'minor' | 'patch';
+    forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible';
   }): Promise<MergedOutdatedPkg[]> {
     const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
     const componentModelVersions: ComponentModelVersion[] = (
@@ -1460,7 +1463,7 @@ export class DependencyResolverMain {
       forceVersionBump,
     }: {
       rootDir: string;
-      forceVersionBump?: 'major' | 'minor' | 'patch';
+      forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible';
     },
     pkgs: Array<
       { name: string; currentRange: string; source: 'variants' | 'component' | 'rootPolicy' | 'component-model' } & T
@@ -1483,7 +1486,9 @@ export class DependencyResolverMain {
     const outdatedPkgs = compact(
       await Promise.all(
         pkgs.map(async (pkg) => {
-          const latestVersion = await tryResolve(`${pkg.name}@${newVersionRange(pkg.currentRange, forceVersionBump)}`);
+          const latestVersion = await tryResolve(
+            `${pkg.name}@${newVersionRange(pkg.currentRange, { pkgSource: pkg.source, forceVersionBump })}`
+          );
           if (!latestVersion) return null;
           const currentVersion = semver.valid(pkg.currentRange.replace(/[\^~]/, ''));
           // If the current version is newer than the latest, then no need to update the dependency
@@ -1690,12 +1695,21 @@ function repeatPrefix(originalSpec: string, newVersion: string): string {
   }
 }
 
-function newVersionRange(currentRange: string, forceVersionBump?: 'major' | 'minor' | 'patch') {
-  if (forceVersionBump == null || forceVersionBump === 'major') return 'latest';
+function newVersionRange(
+  currentRange: string,
+  opts: { pkgSource: CurrentPkgSource; forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible' }
+) {
+  if (opts.forceVersionBump == null || opts.forceVersionBump === 'major') return 'latest';
   const currentVersion = semver.valid(currentRange.replace(/[\^~]/, ''));
+  if (opts.forceVersionBump === 'compatible') {
+    if ((opts.pkgSource === 'component' || opts.pkgSource === 'component-model') && currentVersion === currentRange) {
+      return `^${currentVersion}`;
+    }
+    return currentRange;
+  }
   if (!currentVersion) return null;
   const [major, minor] = currentVersion.split('.');
-  switch (forceVersionBump) {
+  switch (opts.forceVersionBump) {
     case 'patch':
       return `>=${currentVersion} <${major}.${+minor + 1}.0`;
     case 'minor':

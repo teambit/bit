@@ -4,7 +4,6 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
-import RemovedLocalObjects from '@teambit/legacy/dist/scope/removed-local-objects';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { RemoveMain } from './remove.main.runtime';
 import { removeTemplate } from './remove-template';
@@ -74,13 +73,7 @@ this command marks the components as deleted, and after snap/tag and export they
     }
 
     if (hard) {
-      const {
-        localResult,
-        remoteResult = [],
-      }: {
-        localResult: RemovedLocalObjects;
-        remoteResult: RemovedObjects[];
-      } = await this.remove.remove({ componentsPattern, remote: true, force });
+      const { localResult, remoteResult = [] } = await this.remove.remove({ componentsPattern, remote: true, force });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       let localMessage = removeTemplate(localResult, false);
       if (localMessage !== '') localMessage += '\n';

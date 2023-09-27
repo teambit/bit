@@ -2,7 +2,9 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
+import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import ComponentCompareAspect, { ComponentCompareMain } from '@teambit/component-compare';
 import ComponentLogAspect, { ComponentLogMain } from '@teambit/component-log';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
@@ -96,6 +98,8 @@ export class ApiServerMain {
     ComponentLogAspect,
     ImporterAspect,
     ComponentCompareAspect,
+    GeneratorAspect,
+    RemoveAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -112,6 +116,8 @@ export class ApiServerMain {
     componentLog,
     importer,
     componentCompare,
+    generator,
+    remove,
   ]: [
     CLIMain,
     Workspace,
@@ -125,7 +131,9 @@ export class ApiServerMain {
     CheckoutMain,
     ComponentLogMain,
     ImporterMain,
-    ComponentCompareMain
+    ComponentCompareMain,
+    GeneratorMain,
+    RemoveMain
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer, importer);
@@ -140,7 +148,9 @@ export class ApiServerMain {
       exporter,
       checkout,
       componentLog,
-      componentCompare
+      componentCompare,
+      generator,
+      remove
     );
     const vscodeRoute = new IDERoute(logger, apiForIDE);
     const sseEventsRoute = new SSEEventsRoute(logger, cli);

@@ -82,8 +82,8 @@ export class CompilerMain {
    * @param component
    * @returns
    */
-  isDistDirExists(component: Component): boolean {
-    const packageDir = this.workspace.getComponentPackagePath(component);
+  async isDistDirExists(component: Component): Promise<boolean> {
+    const packageDir = await this.workspace.getComponentPackagePath(component);
     const distDir = this.getRelativeDistFolder(component);
     const pathToCheck = path.join(packageDir, distDir);
     return fs.existsSync(pathToCheck);
@@ -97,7 +97,7 @@ export class CompilerMain {
   }
 
   async addMissingDistsIssue(component: Component) {
-    const exist = this.isDistDirExists(component);
+    const exist = await this.isDistDirExists(component);
     if (!exist) {
       component.state.issues.getOrCreate(IssuesClasses.MissingDists).data = true;
     }

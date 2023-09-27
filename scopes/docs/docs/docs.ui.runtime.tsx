@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ComponentType } from 'react';
 import { flatten } from 'lodash';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { Slot } from '@teambit/harmony';
@@ -29,6 +29,16 @@ export class DocsUI {
     return flatten(this.titleBadgeSlot.values());
   }
 
+  private _emptyState?: ComponentType;
+
+  registerEmptyState(emptyState: ComponentType) {
+    return this._emptyState = emptyState;
+  }
+
+  getEmptyState() {
+    return this._emptyState;
+  }
+
   getDocsCompare() {
     return <OverviewCompare titleBadges={this.titleBadgeSlot} overviewOptions={this.overviewOptionsSlot} />;
   }
@@ -49,7 +59,7 @@ export class DocsUI {
     [titleBadgeSlot, overviewOptionsSlot]: [TitleBadgeSlot, OverviewOptionsSlot]
   ) {
     const docs = new DocsUI(titleBadgeSlot, overviewOptionsSlot);
-    const section = new OverviewSection(titleBadgeSlot, overviewOptionsSlot);
+    const section = new OverviewSection(titleBadgeSlot, overviewOptionsSlot, docs);
     const compareSection = new OverviewCompareSection(docs);
 
     component.registerRoute(section.route);

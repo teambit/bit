@@ -198,7 +198,6 @@ function shouldLoadInSafeMode() {
     'logout',
     'config',
     'remote',
-    'mini-status',
   ];
   const hasSafeModeFlag = process.argv.includes('--safe-mode');
   const isSafeModeCommand = safeModeCommands.includes(currentCommand);

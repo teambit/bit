@@ -7,7 +7,7 @@ import { PropertiesTable } from '@teambit/react.ui.docs.properties-table';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview, ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
-import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
+// import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { CompositionGallery } from '@teambit/compositions.panels.composition-gallery';
 // import { ReadmeSkeleton } from './readme-skeleton';
@@ -36,24 +36,27 @@ export type OverviewProps = {
   titleBadges: TitleBadgeSlot;
   overviewOptions: OverviewOptionsSlot;
   previewProps?: Partial<ComponentPreviewProps>;
+  getEmptyState?: () => ComponentType|undefined;
 };
 
-export function Overview({ titleBadges, overviewOptions, previewProps }: OverviewProps) {
+export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyState }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
   const overviewProps = flatten(overviewOptions.values())[0];
   const showHeader = !component.preview?.legacyHeader;
   const [isLoading, setLoading] = useState(true);
+  const EmptyState = getEmptyState && getEmptyState();
 
-  if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
-    return (
-      <StatusMessageCard style={{ margin: 'auto' }} status="PROCESSING" title="component preview pending">
-        this might take some time
-      </StatusMessageCard>
-    );
+  // if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
+  //   return (
+  //     <StatusMessageCard style={{ margin: 'auto' }} status="PROCESSING" title="component preview pending">
+  //       this might take some time
+  //     </StatusMessageCard>
+  //   );
 
-  if (component?.buildStatus === 'failed' && component?.host === 'teambit.scope/scope')
-    return <StatusMessageCard style={{ margin: 'auto' }} status="FAILURE" title="failed to get component preview " />;
+  // if (component?.buildStatus === 'failed' && component?.host === 'teambit.scope/scope')
+  //   return <StatusMessageCard style={{ margin: 'auto' }} status="FAILURE" title="failed to get component preview " />;
+  const buildFailed = component.buildStatus !== 'Succeed' && component?.host === 'teambit.scope/scope';
 
   const isScaling = component.preview?.isScaling;
 
@@ -93,7 +96,7 @@ export function Overview({ titleBadges, overviewOptions, previewProps }: Overvie
       {/* <LinkedHeading size="xs" className={styles.title}>
         <Icon of="text" /> <span>README</span>
       </LinkedHeading> */}
-      <div className={styles.readme}>
+      {!buildFailed && <div className={styles.readme}>
         {/* {isLoading && <ReadmeSkeleton />} */}
         <ComponentPreview
           onLoad={onPreviewLoad}
@@ -111,7 +114,8 @@ export function Overview({ titleBadges, overviewOptions, previewProps }: Overvie
         {component.preview?.skipIncludes && (
           <PropertiesTable className={styles.overviewPropsTable} componentId={component.id.toString()} />
         )}
-      </div>
+      </div>}
+      {(buildFailed && EmptyState) && <EmptyState />}
     </div>
   );
 }
