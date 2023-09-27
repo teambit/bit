@@ -5,8 +5,9 @@ import { transformSignature } from '@teambit/api-reference.utils.schema-node-sig
 import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 import { APINodeRenderProps, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
-import classNames from 'classnames';
 import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';
+import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
+import classNames from 'classnames';
 
 import styles from './function-node-summary.module.scss';
 
@@ -48,6 +49,7 @@ export function FunctionNodeSummary({
     if (langFromFileEnding === 'mdx') return 'md';
     return langFromFileEnding;
   }, [filePath]);
+  const paramTypeHeadings = ['Parameter', 'type', 'default', 'description'];
 
   return (
     <div className={styles.summaryContainer}>
@@ -70,7 +72,7 @@ export function FunctionNodeSummary({
       </div>
       {params.length > 0 && (
         <div className={styles.paramsContainer}>
-          <h3 className={styles.subtitle}>Parameters</h3>
+          <HeadingRow headings={paramTypeHeadings} colNumber={4} />
           {params.map((param) => {
             const paramRenderer = renderers.find((renderer) => renderer.predicate(param));
             if (paramRenderer?.Component) {
@@ -80,7 +82,7 @@ export function FunctionNodeSummary({
                   key={`param-${param.name}`}
                   depth={(apiNodeRendererProps.depth ?? 0) + 1}
                   apiNode={{ ...apiNodeRendererProps.apiNode, renderer: paramRenderer, api: param }}
-                  metadata={{ [param.__schema]: { columnView: true } }}
+                  metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
                 />
               );
             }
@@ -90,7 +92,7 @@ export function FunctionNodeSummary({
                 key={`param-${param.name}`}
                 depth={(apiNodeRendererProps.depth ?? 0) + 1}
                 apiNode={{ ...apiNodeRendererProps.apiNode, renderer: defaultParamRenderer, api: param }}
-                metadata={{ [param.__schema]: { columnView: true } }}
+                metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
               />
             );
           })}

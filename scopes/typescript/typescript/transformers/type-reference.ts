@@ -24,9 +24,12 @@ export class TypeReferenceTransformer implements SchemaTransformer {
   async transform(node: TypeReferenceNode, context: SchemaExtractorContext) {
     const name = node.typeName.getText();
     let type = await context.resolveType(node, name, false);
+    if (!(type instanceof TypeRefSchema)) {
+      type = new TypeRefSchema(context.getLocation(node), name);
+    }
     if (node.typeArguments && type instanceof TypeRefSchema) {
       const args = await pMapSeries(node.typeArguments, (arg) => context.computeSchema(arg));
-      type = type.withTypeArgs(args);
+      type.withTypeArgs(args);
     }
     return type;
   }
