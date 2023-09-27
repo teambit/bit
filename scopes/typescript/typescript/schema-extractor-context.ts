@@ -531,7 +531,7 @@ export class SchemaExtractorContext {
   ): Promise<TypeRefSchema> {
     const sourceFilePath = identifier.sourceFilePath;
 
-    if (!sourceFilePath || isExportedFromMain) {
+    if (!sourceFilePath || (isExportedFromMain && isRelativeImport(sourceFilePath))) {
       return new TypeRefSchema(
         location,
         identifier.id,
