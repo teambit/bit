@@ -8,6 +8,7 @@ import { parameterRenderer as defaultParamRenderer } from '@teambit/api-referenc
 import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
 import classNames from 'classnames';
+import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';
 
 import styles from './function-node-summary.module.scss';
 
