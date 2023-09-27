@@ -347,7 +347,7 @@ export class ApplicationMain {
     const res = await env.run(this.appService);
     const context = res.results[0].data;
     if (!context) throw new AppNotFound(appName);
-    const hostRootDir = this.workspace.getComponentPackagePath(component);
+    const hostRootDir = await this.workspace.getComponentPackagePath(component);
     const appContext = new AppContext(appName, context.dev, component, this.workspace.path, context, hostRootDir, port);
     return appContext;
   }

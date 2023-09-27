@@ -1,4 +1,4 @@
-@import '~@teambit/base-ui.theme.colors/colors.module.scss';
+@import '@teambit/base-ui.theme.colors/colors.module.scss';
 
 .scope {
   position: relative;
@@ -42,7 +42,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     margin-right: 8px;
-    line-height: 16px;
+    line-height: 115%;
   }
 }
 

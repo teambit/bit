@@ -513,7 +513,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const workspaceAspectResolver = async (component: Component): Promise<ResolvedAspect> => {
       const compStringId = component.id._legacy.toString();
       stringIds.push(compStringId);
-      const localPath = this.workspace.getComponentPackagePath(component);
+      const localPath = await this.workspace.getComponentPackagePath(component);
 
       const runtimePath = runtimeName
         ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName)
@@ -583,7 +583,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const installedAspectsResolver = async (component: Component): Promise<ResolvedAspect | undefined> => {
       const compStringId = component.id._legacy.toString();
       // stringIds.push(compStringId);
-      const localPath = this.resolveInstalledAspectRecursively(component, rootIds, graph, opts);
+      const localPath = await this.resolveInstalledAspectRecursively(component, rootIds, graph, opts);
       if (!localPath) return undefined;
 
       const runtimePath = runtimeName
@@ -604,24 +604,24 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     return installedAspectsResolver;
   }
 
-  private resolveInstalledAspectRecursively(
+  private async resolveInstalledAspectRecursively(
     aspectComponent: Component,
     rootIds: string[],
     graph: Graph<Component, string>,
     opts: { throwOnError: boolean } = { throwOnError: false }
-  ): string | null | undefined {
+  ): Promise<string | null | undefined> {
     const aspectStringId = aspectComponent.id._legacy.toString();
     if (this.resolvedInstalledAspects.has(aspectStringId)) {
       const resolvedPath = this.resolvedInstalledAspects.get(aspectStringId);
       return resolvedPath;
     }
     if (rootIds.includes(aspectStringId)) {
-      const localPath = this.workspace.getComponentPackagePath(aspectComponent);
+      const localPath = await this.workspace.getComponentPackagePath(aspectComponent);
       this.resolvedInstalledAspects.set(aspectStringId, localPath);
       return localPath;
     }
     const parent = graph.predecessors(aspectStringId)[0];
-    const parentPath = this.resolveInstalledAspectRecursively(parent.attr, rootIds, graph);
+    const parentPath = await this.resolveInstalledAspectRecursively(parent.attr, rootIds, graph);
     if (!parentPath) {
       this.resolvedInstalledAspects.set(aspectStringId, null);
       return undefined;
@@ -793,7 +793,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   }
 
   private async shouldLoadFromRootComps(component: Component): Promise<boolean> {
-    const rootDir = this.workspace.getComponentPackagePath(component);
+    const rootDir = await this.workspace.getComponentPackagePath(component);
     const rootDirExist = await fs.pathExists(rootDir);
     const aspectFilePath = await this.aspectLoader.getAspectFilePath(component, rootDir);
     const aspectFilePathExist = aspectFilePath ? await fs.pathExists(aspectFilePath) : false;

@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { Scope } from '@teambit/legacy/dist/scope';
@@ -12,6 +12,8 @@ import Component from '@teambit/legacy/dist/consumer/component/consumer-componen
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { isHash } from '@teambit/component-version';
+import { Ref } from '@teambit/legacy/dist/scope/objects';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -98,11 +100,11 @@ export default class ComponentWriter {
     this.throwForImportingLegacyIntoHarmony();
     this.component.dataToPersist = new DataToPersist();
     this._updateFilesBasePaths();
-    this.component.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
+    this.component.componentMap = this.existingComponentMap || (await this.addComponentToBitMap(this.writeToPath));
     this.deleteBitDirContent = false;
     this._updateComponentRootPathAccordingToBitMap();
     if (!this.skipUpdatingBitMap) {
-      this.component.componentMap = this.addComponentToBitMap(this.component.componentMap.rootDir);
+      this.component.componentMap = await this.addComponentToBitMap(this.component.componentMap.rootDir);
     }
     this.writePackageJson = false;
     await this.populateFilesToWriteToComponentDir();
@@ -135,7 +137,7 @@ export default class ComponentWriter {
     }
   }
 
-  addComponentToBitMap(rootDir: string | undefined): ComponentMap {
+  async addComponentToBitMap(rootDir: string | undefined): Promise<ComponentMap> {
     if (rootDir === '.') {
       throw new Error('addComponentToBitMap: rootDir cannot be "."');
     }
@@ -144,11 +146,22 @@ export default class ComponentWriter {
     });
 
     return this.bitMap.addComponent({
-      componentId: this.component.id,
+      componentId: await this.replaceSnapWithTagIfNeeded(),
       files: filesForBitMap,
       mainFile: pathNormalizeToLinux(this.component.mainFile),
       rootDir,
     });
+  }
+
+  private async replaceSnapWithTagIfNeeded(): Promise<BitId> {
+    const version = this.component.id.version;
+    if (!version || !isHash(version)) {
+      return this.component.id;
+    }
+    const compFromModel = await this.scope?.getModelComponentIfExist(this.component.id);
+    const tag = compFromModel?.getTagOfRefIfExists(Ref.from(version));
+    if (tag) return this.component.id.changeVersion(tag);
+    return this.component.id;
   }
 
   _updateComponentRootPathAccordingToBitMap() {

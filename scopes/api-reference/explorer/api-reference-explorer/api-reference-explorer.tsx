@@ -16,7 +16,13 @@ export function APIReferenceExplorer({ apiTree, selectedAPIName, className, getI
   return (
     <div className={classNames(styles.apiReferenceExplorer, className)}>
       <FileTree
-        getHref={(node) => useUpdatedUrlFromQuery({ selectedAPI: node.id.split('/')[1] })}
+        getHref={(node) => {
+          const id = node.id;
+          const isInternal = id.includes('_Internals');
+          const sanitizedId = isInternal ? id.replace('_Internals/', '') : id;
+          const selectedAPI = isInternal ? sanitizedId : sanitizedId.split('/')[1];
+          return useUpdatedUrlFromQuery({ selectedAPI });
+        }}
         files={apiTree}
         selected={selectedAPIName}
         getIcon={getIcon}

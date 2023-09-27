@@ -12,7 +12,7 @@ import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
-import chokidar, { FSWatcher } from 'chokidar';
+import chokidar, { FSWatcher } from '@teambit/chokidar';
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { PathLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { CompilationInitiator } from '@teambit/compiler';
@@ -381,6 +381,8 @@ export class Watcher {
   private async createWatcher() {
     const usePollingConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_POLLING);
     const usePolling = usePollingConf === 'true';
+    // const useFsEventsConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_FS_EVENTS);
+    // const useFsEvents = useFsEventsConf === 'true';
     const ignoreLocalScope = (pathToCheck: string) => {
       if (pathToCheck.startsWith(this.ipcEventsDir)) return false;
       return (
@@ -392,7 +394,14 @@ export class Watcher {
       // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
       // (windows-style backslashes are converted to forward slashes)
       ignored: ['**/node_modules/**', '**/package.json', ignoreLocalScope],
+      /**
+       * default to false, although it causes high CPU usage.
+       * see: https://github.com/paulmillr/chokidar/issues/1196#issuecomment-1711033539
+       * there is a fix for this in master. once a new version of Chokidar is released, we can upgrade it and then
+       * default to true.
+       */
       usePolling,
+      // useFsEvents,
       persistent: true,
     });
     if (this.verbose) {

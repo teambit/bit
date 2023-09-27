@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Changelog Update
+
+We've transitioned to managing our changelog on the GitHub releases page. For the latest updates and changes, please visit [Bit Releases on GitHub](https://github.com/teambit/bit/releases).
+
 ## [[0.1.52] - 2023-05-28](https://github.com/teambit/bit/releases/tag/v0.1.52)
 
 ### New Features

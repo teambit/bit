@@ -1,29 +1,20 @@
 import chalk from 'chalk';
-import { Transform } from 'class-transformer';
-import { Location, SchemaNode } from '../schema-node';
-import { schemaObjArrayToInstances } from '../class-transformers';
+import { SchemaLocation, SchemaNode } from '../schema-node';
+import { SchemaRegistry } from '../schema-registry';
 
 export class ModuleSchema extends SchemaNode {
-  @Transform(schemaObjArrayToInstances)
   exports: SchemaNode[];
-
-  @Transform(schemaObjArrayToInstances)
   internals: SchemaNode[];
-
   namespace?: string;
 
-  constructor(readonly location: Location, exports: SchemaNode[], internals: SchemaNode[]) {
+  constructor(readonly location: SchemaLocation, exports: SchemaNode[], internals: SchemaNode[]) {
     super();
     this.exports = exports;
     this.internals = internals;
   }
 
-  toObject() {
-    return {
-      constructorName: this.constructor.name,
-      namespace: this.namespace,
-      exports: this.exports.map((exp) => exp.toObject()),
-    };
+  getNodes() {
+    return [...this.exports, ...this.internals];
   }
 
   flatExportsRecursively() {
@@ -44,5 +35,24 @@ export class ModuleSchema extends SchemaNode {
       );
     const exportsStr = this.exports.map((m) => `* ${m.toString()}`).join('\n');
     return `${chalk.bold.underline(this.namespace)}\n${exportsStr}`;
+  }
+
+  toObject() {
+    return {
+      ...super.toObject(),
+      exports: this.exports.map((member) => member.toObject()),
+      internals: this.internals.map((member) => member.toObject()),
+      namespace: this.namespace,
+    };
+  }
+
+  static fromObject(obj: Record<string, any>): ModuleSchema {
+    const location = obj.location;
+    const exportNodes = (obj.exports || []).map((member: any) => SchemaRegistry.fromObject(member));
+    const internals = (obj.internals || []).map((member: any) => SchemaRegistry.fromObject(member));
+    const namespace = obj.namespace;
+    const module = new ModuleSchema(location, exportNodes, internals);
+    module.namespace = namespace;
+    return module;
   }
 }

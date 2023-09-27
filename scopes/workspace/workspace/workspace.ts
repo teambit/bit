@@ -246,13 +246,13 @@ export class Workspace implements ComponentFactory {
     );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
 
-    this.registerOnComponentAdd(async () => {
-      await this.setComponentPathsRegExps();
-      return {
-        results: this.componentPathsRegExps,
-        toString: () => this.componentPathsRegExps.join(),
-      };
-    });
+    // this.registerOnComponentAdd(async () => {
+    //   await this.setComponentPathsRegExps();
+    //   return {
+    //     results: this.componentPathsRegExps,
+    //     toString: () => this.componentPathsRegExps.join(),
+    //   };
+    // });
 
     this.registerOnComponentRemove(async () => {
       await this.setComponentPathsRegExps();
@@ -1509,8 +1509,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     await this.clearCache();
   }
 
-  getComponentPackagePath(component: Component) {
-    const relativePath = this.dependencyResolver.getRuntimeModulePath(component);
+  async getComponentPackagePath(component: Component) {
+    const inInWs = await this.hasId(component.id);
+    const relativePath = this.dependencyResolver.getRuntimeModulePath(component, inInWs);
     return path.join(this.path, relativePath);
   }
 
@@ -1758,8 +1759,15 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
           unchanged.push(id);
           return;
         }
+        // the env that gets saved in the .bitmap file config root can be with or without version.
+        // e.g. when a custom env is in .bitmap, it's saved without version, but when asking the component for the
+        // env by `this.getAspectIdFromConfig`, it returns the env with version.
+        // to make sure we remove the env from the .bitmap, we need to remove both with and without version.
         const currentEnvWithPotentialVersion = await this.getAspectIdFromConfig(id, currentEnv, true);
-        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv);
+        await this.removeSpecificComponentConfig(id, currentEnv);
+        if (currentEnvWithPotentialVersion && currentEnvWithPotentialVersion.includes('@')) {
+          await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion);
+        }
         await this.removeSpecificComponentConfig(id, EnvsAspect.id);
         changed.push(id);
       })

@@ -14,6 +14,7 @@ import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
+import { BIT_IGNORE, getBitIgnoreFile } from '../../utils/ignore/ignore';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
@@ -409,8 +410,12 @@ export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore
   // the path is relative to consumer. remove the rootDir.
   const relativePathsLinux = filteredMatches.map((match) => pathNormalizeToLinux(match).replace(`${dir}/`, ''));
   const filteredByIgnoredFromRoot = relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
-  if (!filteredByIgnoredFromRoot.length) throw new IgnoredDirectory(dir);
-  return filteredByIgnoredFromRoot.map((relativePath) => ({
+  const bitIgnore = filteredByIgnoredFromRoot.includes(BIT_IGNORE) ? await getBitIgnoreFile(dir) : '';
+  const filteredByBitIgnore = bitIgnore
+    ? ignore().add(bitIgnore).filter(filteredByIgnoredFromRoot)
+    : filteredByIgnoredFromRoot;
+  if (!filteredByBitIgnore.length) throw new IgnoredDirectory(dir);
+  return filteredByBitIgnore.map((relativePath) => ({
     relativePath,
     test: false,
     name: path.basename(relativePath),

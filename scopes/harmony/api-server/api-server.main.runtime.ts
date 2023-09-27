@@ -2,12 +2,16 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import LanesAspect, { LanesMain } from '@teambit/lanes';
+import RemoveAspect, { RemoveMain } from '@teambit/remove';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
+import ComponentCompareAspect, { ComponentCompareMain } from '@teambit/component-compare';
 import ComponentLogAspect, { ComponentLogMain } from '@teambit/component-log';
 import WatcherAspect, { WatcherMain } from '@teambit/watcher';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import CheckoutAspect, { CheckoutMain } from '@teambit/checkout';
 import InstallAspect, { InstallMain } from '@teambit/install';
+import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { Component } from '@teambit/component';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ApiServerAspect } from './api-server.aspect';
@@ -23,7 +27,8 @@ export class ApiServerMain {
     private logger: Logger,
     private express: ExpressMain,
     private watcher: WatcherMain,
-    private installer: InstallMain
+    private installer: InstallMain,
+    private importer: ImporterMain
   ) {}
 
   async runApiServer(options: { port: number }) {
@@ -48,6 +53,15 @@ export class ApiServerMain {
     );
 
     this.workspace.registerOnBitmapChange(async () => {
+      const lastModifiedTimestamp = await this.workspace.bitMap.getLastModifiedBitmapThroughBit();
+      const secondsPassedSinceLastModified = lastModifiedTimestamp && (Date.now() - lastModifiedTimestamp) / 1000;
+      if (secondsPassedSinceLastModified && secondsPassedSinceLastModified > 1) {
+        // changes by bit were done more than a second ago, so probably this .bitmap change was done by "git pull"
+        this.logger.debug(
+          `running import because we assume the .bitmap file has changed due to "git pull", last time it was modified by bit was ${secondsPassedSinceLastModified} seconds ago`
+        );
+        await this.importer.importCurrentObjects();
+      }
       sendEventsToClients('onBitmapChange', {});
     });
 
@@ -82,6 +96,10 @@ export class ApiServerMain {
     ExportAspect,
     CheckoutAspect,
     ComponentLogAspect,
+    ImporterAspect,
+    ComponentCompareAspect,
+    GeneratorAspect,
+    RemoveAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -96,6 +114,10 @@ export class ApiServerMain {
     exporter,
     checkout,
     componentLog,
+    importer,
+    componentCompare,
+    generator,
+    remove,
   ]: [
     CLIMain,
     Workspace,
@@ -107,14 +129,29 @@ export class ApiServerMain {
     InstallMain,
     ExportMain,
     CheckoutMain,
-    ComponentLogMain
+    ComponentLogMain,
+    ImporterMain,
+    ComponentCompareMain,
+    GeneratorMain,
+    RemoveMain
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
-    const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer);
+    const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer, importer);
     cli.register(new ServerCmd(apiServer));
 
     const cliRoute = new CLIRoute(logger, cli);
-    const apiForIDE = new APIForIDE(workspace, snapping, lanes, installer, exporter, checkout, componentLog);
+    const apiForIDE = new APIForIDE(
+      workspace,
+      snapping,
+      lanes,
+      installer,
+      exporter,
+      checkout,
+      componentLog,
+      componentCompare,
+      generator,
+      remove
+    );
     const vscodeRoute = new IDERoute(logger, apiForIDE);
     const sseEventsRoute = new SSEEventsRoute(logger, cli);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.

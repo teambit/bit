@@ -4,13 +4,15 @@ import {
   FunctionLikeSchema,
   Modifier,
   ParameterSchema,
+  TypeRefSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import ts, { Node, VariableDeclaration as VariableDeclarationNode, ArrowFunction } from 'typescript';
 import pMapSeries from 'p-map-series';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { parseReturnTypeFromQuickInfo, parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
+import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
 import { Identifier } from '../identifier';
+import { ParameterTransformer } from './parameter';
 
 export class VariableDeclaration implements SchemaTransformer {
   predicate(node: Node) {
@@ -33,9 +35,8 @@ export class VariableDeclaration implements SchemaTransformer {
     const doc = await context.jsDocToDocSchema(varDec);
     const modifiers = varDec.modifiers?.map((modifier) => modifier.getText()) || [];
     if (varDec.initializer?.kind === ts.SyntaxKind.ArrowFunction) {
-      const args = (await pMapSeries((varDec.initializer as ArrowFunction).parameters, async (param) =>
-        context.computeSchema(param)
-      )) as ParameterSchema[];
+      const functionLikeInfo = await context.getQuickInfo((varDec.initializer as ArrowFunction).equalsGreaterThanToken);
+      const returnTypeStr = functionLikeInfo ? parseTypeFromQuickInfo(functionLikeInfo) : 'any';
       // example => export const useLanesContext: () => LanesContextModel | undefined = () => {
       if (varDec.type) {
         const funcType = await context.resolveType(varDec, '');
@@ -45,19 +46,62 @@ export class VariableDeclaration implements SchemaTransformer {
             name,
             funcType.params,
             funcType.returnType,
-            displaySig,
+            functionLikeInfo?.body?.displayString || '',
+            modifiers as Modifier[],
+            doc
+          );
+        }
+        // e.g. export const MyComponent: React.FC<T> = ({}) => {}
+        if (funcType instanceof TypeRefSchema) {
+          const paramTypes = funcType.typeArgs;
+          const params = (varDec.initializer as ArrowFunction).parameters;
+          const paramsSchema = await pMapSeries(params, async (param, index) => {
+            const objectBindingNodes = await ParameterTransformer.getObjectBindingNodes(
+              param,
+              paramTypes?.[index] ?? funcType,
+              context
+            );
+            return new ParameterSchema(
+              location,
+              ParameterTransformer.getName(param),
+              paramTypes?.[index] ?? funcType,
+              Boolean(param.questionToken),
+              param.initializer ? param.initializer.getText() : undefined,
+              undefined,
+              objectBindingNodes,
+              Boolean(param.dotDotDotToken)
+            );
+          });
+
+          return new FunctionLikeSchema(
+            location,
+            name,
+            paramsSchema,
+            await context.resolveType(varDec.initializer, returnTypeStr),
+            functionLikeInfo?.body?.displayString || '',
             modifiers as Modifier[],
             doc
           );
         }
       }
-      const typeStr = parseReturnTypeFromQuickInfo(info);
-      const returnType = await context.resolveType(varDec, typeStr);
-      return new FunctionLikeSchema(location, name, args, returnType, displaySig, modifiers as Modifier[], doc);
+      const args = (await pMapSeries((varDec.initializer as ArrowFunction).parameters, async (param) =>
+        context.computeSchema(param)
+      )) as ParameterSchema[];
+      return new FunctionLikeSchema(
+        location,
+        name,
+        args,
+        await context.resolveType(varDec.initializer, returnTypeStr),
+        functionLikeInfo?.body?.displayString || '',
+        modifiers as Modifier[],
+        doc
+      );
     }
     const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(varDec, typeStr);
-    return new VariableLikeSchema(location, name, displaySig, type, false, doc);
+    const defaultValue = varDec.initializer ? varDec.initializer.getText() : undefined;
+
+    return new VariableLikeSchema(location, name, displaySig, type, false, doc, defaultValue);
   }
 }
 

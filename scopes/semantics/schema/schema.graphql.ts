@@ -1,6 +1,7 @@
 import { ComponentFactory } from '@teambit/component';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import gql from 'graphql-tag';
+import { APISchema, UnImplementedSchema } from '@teambit/semantics.entities.semantic-schema';
 
 import { SchemaMain } from './schema.main.runtime';
 
@@ -23,12 +24,35 @@ export function schemaSchema(schema: SchemaMain) {
           };
 
           if (!component) return empty;
-          const docs = await schema.getSchema(component);
-          if (!docs) return empty;
+          const api = await schema.getSchema(component);
+          if (!api) return empty;
 
-          return docs.toObject();
+          return filterUnimplementedSchemaNodes(api);
         },
       },
     },
+  };
+}
+
+function filterUnimplementedSchemaNodes(api: APISchema) {
+  const apiObject = api.toObject();
+  const filteredExports = apiObject.module.exports.filter((exp) => exp.__schema !== UnImplementedSchema.name);
+  const filteredInternals = apiObject.internals.map((internalObject) => {
+    const filteredInternalExports = internalObject.exports.filter((exp) => exp.__schema !== UnImplementedSchema.name);
+    const filteredInternalNodes = internalObject.internals.filter((exp) => exp.__schema !== UnImplementedSchema.name);
+    return {
+      ...internalObject,
+      exports: filteredInternalExports,
+      internals: filteredInternalNodes,
+    };
+  });
+  const filteredTaggedExports = apiObject.taggedModuleExports.filter(
+    (exp) => exp.__schema !== UnImplementedSchema.name
+  );
+  return {
+    ...apiObject,
+    exports: filteredExports,
+    internals: filteredInternals,
+    taggedModuleExports: filteredTaggedExports,
   };
 }

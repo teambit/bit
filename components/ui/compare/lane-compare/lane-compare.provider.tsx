@@ -12,8 +12,8 @@ import {
 } from '@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status';
 import { LaneComponentDiff } from '@teambit/lanes.entities.lane-diff';
 import { ComponentID } from '@teambit/component-id';
-import { LaneFilter, extractCompsToDiff, filterDepKey } from './lane-compare';
 import { LaneCompareContext, LaneCompareContextModel } from './lane-compare.context';
+import { LaneFilter, extractCompsToDiff, filterDepKey } from './lane-compare';
 
 export type LaneCompareGroupBy = 'scope' | 'status';
 
@@ -210,6 +210,7 @@ function _LaneCompareProvider({
     loadingLaneDiff,
     laneDiff,
     filterDepKey(filters),
+    groupBy,
   ]);
 
   const [lastDrawerInteractedWith, setLastDrawerInteractedWith] = React.useState<string | undefined>();

@@ -13,5 +13,6 @@ export {
   ApplyVersionWithComps,
   removeFilesIfNeeded,
   updateFileStatus,
+  throwForFailures,
 } from './checkout-version';
 export { checkoutOutput } from './checkout-cmd';

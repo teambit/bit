@@ -41,7 +41,7 @@ import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import chokidar from 'chokidar';
+import chokidar from '@teambit/chokidar';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
@@ -629,15 +629,18 @@ export class ScopeMain implements ComponentFactory {
   async list(
     filter?: { offset: number; limit: number; namespaces?: string[] },
     includeCache = false,
-    includeFromLanes = false
+    includeFromLanes = false,
+    includeDeleted = false
   ): Promise<Component[]> {
     const patternsWithScope =
       (filter?.namespaces && filter?.namespaces.map((pattern) => `**/${pattern || '**'}`)) || undefined;
     const componentsIds = await this.listIds(includeCache, includeFromLanes, patternsWithScope);
 
-    return this.getMany(
+    const comps = await this.getMany(
       filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
     );
+
+    return includeDeleted ? comps : comps.filter((comp) => !comp.isDeleted());
   }
 
   /**
@@ -759,7 +762,7 @@ export class ScopeMain implements ComponentFactory {
   }
 
   async getStagedConfig() {
-    const currentLaneId = this.legacyScope.currentLaneId;
+    const currentLaneId = this.legacyScope.getCurrentLaneId();
     return StagedConfig.load(this.path, this.logger, currentLaneId);
   }
 

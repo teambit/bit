@@ -1,14 +1,20 @@
-import { Location, SchemaNode } from '../schema-node';
+import { SchemaLocation, SchemaNode } from '../schema-node';
 
 /**
  * e.g. `class A { createA(): this {} }`
  */
 export class ThisTypeSchema extends SchemaNode {
-  constructor(readonly location: Location) {
+  constructor(readonly location: SchemaLocation, readonly name: string) {
     super();
   }
 
   toString() {
-    return 'this';
+    return this.name;
+  }
+
+  static fromObject(obj: Record<string, any>): ThisTypeSchema {
+    const location = obj.location;
+    const name = obj.name;
+    return new ThisTypeSchema(location, name);
   }
 }

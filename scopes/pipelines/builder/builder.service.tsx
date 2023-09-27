@@ -133,7 +133,7 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
         previousTasksResults: [],
         pipeName: this.displayPipeName,
         dev: options.dev,
-        laneId: this.scope.legacyScope.currentLaneId,
+        laneId: this.scope.legacyScope.getCurrentLaneId(),
       });
       envsBuildContext[executionContext.id] = buildContext;
     });

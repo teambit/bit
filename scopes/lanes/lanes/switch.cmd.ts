@@ -77,7 +77,7 @@ ${COMPONENT_PATTERN_HELP}`,
       const body = failedComponents
         .map((failedComponent) => {
           const color = failedComponent.unchangedLegitimately ? 'white' : 'red';
-          return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.failureMessage)}`;
+          return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.unchangedMessage)}`;
         })
         .join('\n');
       return `${title}\n${body}\n\n`;

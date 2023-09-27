@@ -23,9 +23,7 @@ export class WatchCommand implements Command {
   name = 'watch';
   description = 'automatically recompile modified components (on save)';
   extendedDescription = `by default, the watcher doesn't use polling, to keep the CPU idle.
-in some rare cases, this could result in missing file events (files are not watched).
-to fix it, try to stop other watchers on the same machine.
-alternatively, to use polling, run "bit config set watch_use_polling true".`;
+if this doesn't work well for you, run "bit config set watch_use_polling true" to use polling.`;
   helpUrl = 'reference/compiling/compiler-overview';
   alias = '';
   group = 'development';

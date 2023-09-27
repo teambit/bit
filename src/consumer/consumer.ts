@@ -23,7 +23,7 @@ import { Scope } from '../scope';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
-import { pathNormalizeToLinux, sortObject } from '../utils';
+import { generateRandomStr, pathNormalizeToLinux, sortObject } from '../utils';
 import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
 import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
 import {
@@ -60,6 +60,8 @@ type ConsumerProps = {
   existingGitHooks: string[] | undefined;
 };
 
+const BITMAP_HISTORY_DIR_NAME = 'bitmap-history';
+
 /**
  * @todo: change the class name to Workspace
  */
@@ -79,7 +81,7 @@ export default class Consumer {
   componentLoader: ComponentLoader;
   componentStatusLoader: ComponentStatusLoader;
   packageJson: any;
-  public onCacheClear: Array<() => void> = [];
+  public onCacheClear: Array<() => void | Promise<void>> = [];
   constructor({
     projectPath,
     config,
@@ -136,8 +138,12 @@ export default class Consumer {
     return path.join(this.getPath(), BIT_WORKSPACE_TMP_DIRNAME);
   }
 
+  getCurrentLaneIdIfExist() {
+    return this.bitMap.laneId;
+  }
+
   getCurrentLaneId(): LaneId {
-    return this.bitMap.laneId || this.getDefaultLaneId();
+    return this.getCurrentLaneIdIfExist() || this.getDefaultLaneId();
   }
 
   getDefaultLaneId() {
@@ -165,7 +171,6 @@ export default class Consumer {
 
   setCurrentLane(laneId: LaneId, exported = true) {
     this.bitMap.setCurrentLane(laneId, exported);
-    this.scope.setCurrentLaneId(laneId);
   }
 
   async cleanTmpFolder() {
@@ -535,7 +540,10 @@ export default class Consumer {
   ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
     let existingGitHooks;
-    const scope = await Scope.ensure(resolvedScopePath);
+    // avoid using the default scope-name `path.basename(process.cwd())` when generated from the workspace.
+    // otherwise, components with the same scope-name will get ComponentNotFound on import
+    const scopeName = `${path.basename(process.cwd())}-local-${generateRandomStr()}`;
+    const scope = await Scope.ensure(resolvedScopePath, scopeName);
     const config = await WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
     const consumer = new Consumer({
       projectPath,
@@ -597,7 +605,7 @@ export default class Consumer {
       scope,
     });
     await consumer.setBitMap();
-    scope.setCurrentLaneId(consumer.bitMap.laneId);
+    scope.currentLaneIdFunc = consumer.getCurrentLaneIdIfExist.bind(consumer);
     logger.commandHistory.fileBasePath = scope.getPath();
     return consumer;
   }
@@ -699,10 +707,14 @@ export default class Consumer {
     await this.bitMap.write();
   }
 
+  getBitmapHistoryDir() {
+    return path.join(this.scope.path, BITMAP_HISTORY_DIR_NAME);
+  }
+
   private async backupBitMap() {
     if (!this.bitMap.hasChanged) return;
     try {
-      const baseDir = path.join(this.scope.path, 'bitmap-history');
+      const baseDir = this.getBitmapHistoryDir();
       await fs.ensureDir(baseDir);
       const backupPath = path.join(baseDir, `.bitmap-${this.currentDateAndTimeToFileName()}`);
       await fs.copyFile(this.bitMap.mapPath, backupPath);

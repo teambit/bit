@@ -1,21 +1,14 @@
-import { DocSchema, SchemaNode, Location } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, ISchemaNode } from '@teambit/semantics.entities.semantic-schema';
 
-export function copySchemaNode(
-  source: SchemaNode,
-  updatedKeys: {
-    doc?: DocSchema;
-    signature?: string;
-    name?: string;
-    location?: Location;
-    toString?: () => string;
-    toObject?: () => Record<string, any>;
-  }
-): SchemaNode {
+export function copySchemaNode(source: ISchemaNode, update: Partial<ISchemaNode>): SchemaNode {
   return {
     ...source,
-    ...updatedKeys,
-    location: updatedKeys.location || source.location,
-    toString: updatedKeys.toString || source.toString,
-    toObject: updatedKeys.toObject || source.toObject,
+    ...update,
+    location: update.location || source.location,
+    toString: update.toString || source.toString,
+    toObject: update.toObject || source.toObject,
+    getNodes: update.getNodes || source.getNodes,
+    findNode: update.findNode || source.findNode,
+    getAllNodesRecursively: update.getAllNodesRecursively || source.getAllNodesRecursively,
   };
 }

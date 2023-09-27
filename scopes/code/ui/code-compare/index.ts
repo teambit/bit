@@ -12,4 +12,9 @@ export {
 } from './code-compare-editor-settings';
 export { CodeCompareNavigation, CodeCompareNavigationProps } from './code-compare-navigation';
 export { useCodeCompare, useCodeCompareProps, useCodeCompareResult } from './use-code-compare';
-export { CodeCompareEditorProps, CodeCompareEditor } from './code-compare-editor';
+export {
+  CodeCompareEditorProps,
+  CodeCompareEditor,
+  useCodeCompareEditor,
+  CodeCompareEditorProvider,
+} from './code-compare-editor';

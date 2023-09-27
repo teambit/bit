@@ -918,8 +918,12 @@ export class EnvsMain {
     const services: [string, EnvService<any>][] = [];
     allServices.forEach(([id, currentServices]) => {
       currentServices.forEach((service) => {
-        if (this.implements(env, service)) {
-          services.push([id, service]);
+        try {
+          if (this.implements(env, service)) {
+            services.push([id, service]);
+          }
+        } catch (err) {
+          this.logger.warn(`failed loading service ${id} for env ${env.id}`);
         }
       });
     });

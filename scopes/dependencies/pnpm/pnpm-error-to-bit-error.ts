@@ -13,7 +13,9 @@ export class BitErrorWithRichMessage extends BitError {
 }
 
 export function pnpmErrorToBitError(err: PnpmError): BitError {
-  return new BitErrorWithRichMessage(err.message, renderErrorMessage(err));
+  const newErr = new BitErrorWithRichMessage(err.message, renderErrorMessage(err));
+  newErr.cause = err;
+  return newErr;
 }
 
 function renderErrorMessage(err: PnpmError): string {

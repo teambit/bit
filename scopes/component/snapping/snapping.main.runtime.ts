@@ -43,6 +43,7 @@ import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-compon
 import { ComponentID } from '@teambit/component-id';
 import { isHash, isTag } from '@teambit/component-version';
 import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
+import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import {
   ArtifactFiles,
   ArtifactSource,
@@ -182,9 +183,7 @@ export class SnappingMain {
     this.logger.debug(`tagging the following components: ${legacyBitIds.toString()}`);
     const components = await this.loadComponentsForTagOrSnap(legacyBitIds, !soft);
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
-    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
-    await this.throwForComponentIssues(components, ignoreIssues);
-    this.throwForPendingImport(consumerComponents);
+    await this.throwForVariousIssues(components, ignoreIssues);
 
     const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig, removedComponents } =
       await tagModelComponent({
@@ -251,6 +250,10 @@ export class SnappingMain {
         `unable to run this command from a workspace, please create a new bare-scope and run it from there`
       );
     }
+    if (!this.scope) {
+      throw new BitError(`please create a new bare-scope and run it from there`);
+    }
+
     const tagDataPerComp = await Promise.all(
       tagDataPerCompRaw.map(async (tagData) => {
         return {
@@ -491,9 +494,7 @@ if you're willing to lose the history from the head to the specified version, us
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     const components = await this.loadComponentsForTagOrSnap(ids);
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
-    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
-    await this.throwForComponentIssues(components, ignoreIssues);
-    this.throwForPendingImport(consumerComponents);
+    await this.throwForVariousIssues(components, ignoreIssues);
 
     const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await tagModelComponent({
       workspace: this.workspace,
@@ -672,6 +673,15 @@ there are matching among unmodified components thought. consider using --unmodif
       await this.throwForDepsFromAnotherLaneForComp(component, allIds, lane || undefined, true);
     });
   }
+
+  private async throwForVariousIssues(components: Component[], ignoreIssues?: string) {
+    const componentsToCheck = components.filter((c) => !c.isDeleted());
+    const consumerComponents = componentsToCheck.map((c) => c.state._consumer) as ConsumerComponent[];
+    await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
+    await this.throwForComponentIssues(componentsToCheck, ignoreIssues);
+    this.throwForPendingImport(consumerComponents);
+  }
+
   private async throwForDepsFromAnotherLaneForComp(
     component: ConsumerComponent,
     allIds: BitIds,
@@ -937,7 +947,6 @@ another option, in case this dependency is not in main yet is to remove all refe
 
   private throwForPendingImport(components: ConsumerComponent[]) {
     const componentsMissingFromScope = components
-      .filter((c) => !c.isRemoved())
       .filter((c) => !c.componentFromModel && c.id.hasScope())
       .map((c) => c.id.toString());
     if (componentsMissingFromScope.length) {
@@ -1114,6 +1123,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     ExportAspect,
     BuilderAspect,
     ImporterAspect,
+    GlobalConfigAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1127,6 +1137,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     exporter,
     builder,
     importer,
+    globalConfig,
   ]: [
     Workspace,
     CLIMain,
@@ -1137,7 +1148,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     ScopeMain,
     ExportMain,
     BuilderMain,
-    ImporterMain
+    ImporterMain,
+    GlobalConfigMain
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(
@@ -1151,8 +1163,8 @@ another option, in case this dependency is not in main yet is to remove all refe
       builder,
       importer
     );
-    const snapCmd = new SnapCmd(snapping, logger);
-    const tagCmd = new TagCmd(snapping, logger);
+    const snapCmd = new SnapCmd(snapping, logger, globalConfig);
+    const tagCmd = new TagCmd(snapping, logger, globalConfig);
     const tagFromScopeCmd = new TagFromScopeCmd(snapping, logger);
     const snapFromScopeCmd = new SnapFromScopeCmd(snapping, logger);
     const resetCmd = new ResetCmd(snapping);

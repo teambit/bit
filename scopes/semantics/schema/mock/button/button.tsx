@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import React, { ReactNode, useRef } from 'react';
 // @ts-ignore
 // import { useButton } from '@react-aria/button';

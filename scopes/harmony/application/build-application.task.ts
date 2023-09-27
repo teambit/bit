@@ -8,7 +8,7 @@ import {
   ArtifactDefinition,
   CAPSULE_ARTIFACTS_DIR,
 } from '@teambit/builder';
-import { compact } from 'lodash';
+import { compact, omit } from 'lodash';
 import { Capsule } from '@teambit/isolator';
 import { Component } from '@teambit/component';
 
@@ -33,6 +33,12 @@ export type OneComponentResult = {
 export type BuildAppResult = {
   componentResult: ComponentResult;
   artifacts?: ArtifactDefinition[];
+};
+
+export type BuildDeployContexts = {
+  deployContext: { publicDir?: string; ssrPublicDir?: string };
+  name: string;
+  appType: string;
 };
 
 export type Options = {
@@ -93,13 +99,23 @@ export class AppsBuildTask implements BuildTask {
     const defaultArtifacts: ArtifactDefinition[] = this.getDefaultArtifactDef(app.applicationType || app.name);
     const artifacts = defaultArtifacts.concat(deployContext.artifacts || []);
 
+    const getDeployContextFormMetadata = () => {
+      if (deployContext.metadata) {
+        return deployContext.metadata;
+      }
+      return omit(deployContext, 'errors', 'warnings');
+    };
+
     return {
       artifacts,
       componentResult: {
         component: capsule.component,
         errors: deployContext.errors,
         warnings: deployContext.warnings,
+        metadata: { deployContext: getDeployContextFormMetadata(), name: app.name, appType: app.applicationType },
         /**
+         * @deprecated - please use metadata instead
+         *
          * @guysaar223
          * @ram8
          * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
@@ -119,8 +135,7 @@ export class AppsBuildTask implements BuildTask {
         component: appsResults[0].componentResult.component,
         errors: [],
         warnings: [],
-        // @ts-ignore
-        _metadata: {
+        metadata: {
           buildDeployContexts: [],
         },
       },
@@ -133,12 +148,11 @@ export class AppsBuildTask implements BuildTask {
       merged.componentResult.warnings = (merged.componentResult.warnings || []).concat(
         appResult.componentResult.warnings || []
       );
-      // @ts-ignore
-      merged.componentResult._metadata.buildDeployContexts = ( // @ts-ignore
-        merged.componentResult._metadata.buildDeployContexts || []
-      )
-        // @ts-ignore
-        .concat(appResult.componentResult._metadata || []);
+
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      merged.componentResult.metadata!.buildDeployContexts =
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        (merged.componentResult.metadata!.buildDeployContexts || []).concat(appResult.componentResult.metadata || []);
     });
     return merged;
   }
@@ -151,8 +165,7 @@ export class AppsBuildTask implements BuildTask {
     return [
       {
         name: `app-build-${nameSuffix}`,
-        globPatterns: ['**'],
-        rootDir: this.getArtifactDirectory(),
+        globPatterns: [`${this.getArtifactDirectory()}/**`],
       },
     ];
   }

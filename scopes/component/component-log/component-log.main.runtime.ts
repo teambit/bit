@@ -1,10 +1,12 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { BitId } from '@teambit/legacy-bit-id';
+import path from 'path';
 import moment from 'moment';
 import pMap from 'p-map';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { compact } from 'lodash';
 import pMapSeries from 'p-map-series';
+import { Version } from '@teambit/legacy/dist/scope/models';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
 import { getFilesDiff } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import chalk from 'chalk';
@@ -23,6 +25,12 @@ export type FileLog = {
   message: string;
   fileHash: string;
   fileDiff?: string;
+};
+
+export type FileHashDiffFromParent = {
+  filePath: string; // path OS absolute
+  hash?: string; // if undefined, the file was deleted in this snap
+  parentHash?: string; // if undefined, the file was added in this snap
 };
 
 export class ComponentLogMain {
@@ -54,6 +62,46 @@ export class ComponentLogMain {
     return sorted.map((node) => this.stringifyLogInfoOneLine(node.attr));
   }
 
+  async getChangedFilesFromParent(id: string): Promise<FileHashDiffFromParent[]> {
+    const workspace = this.workspace;
+    if (!workspace) throw new OutsideWorkspaceError();
+    const componentId = await workspace.resolveComponentId(id);
+    const modelComp = await workspace.scope.getBitObjectModelComponent(componentId, true);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const versionObj = (await workspace.scope.getBitObjectVersion(modelComp!, componentId.version, true)) as Version;
+    const firstParent = versionObj.parents[0];
+    const parentObj = firstParent
+      ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        ((await workspace.scope.getBitObjectVersion(modelComp!, firstParent.toString(), true)) as Version)
+      : null;
+    const compDir = workspace.componentDir(componentId, { ignoreVersion: true });
+    const results: FileHashDiffFromParent[] = compact(
+      versionObj.files.map((file) => {
+        const parentFile = parentObj?.files.find((f) => f.relativePath === file.relativePath);
+        if (parentFile?.file.isEqual(file.file)) return null;
+        return {
+          filePath: path.join(compDir, file.relativePath),
+          hash: file.file.toString(),
+          parentHash: parentFile?.file.toString(),
+        };
+      })
+    );
+    const filesOnParentOnly = (parentObj?.files || []).filter(
+      (parentFile) => !versionObj.files.find((file) => file.relativePath === parentFile.relativePath)
+    );
+    if (filesOnParentOnly.length) {
+      results.push(
+        ...filesOnParentOnly.map((file) => ({
+          filePath: file.relativePath,
+          hash: undefined,
+          parentHash: file.file.toString(),
+        }))
+      );
+    }
+
+    return results;
+  }
+
   async getFileHistoryHashes(filePath: string): Promise<FileLog[]> {
     const workspace = this.workspace;
     if (!workspace) throw new OutsideWorkspaceError();
@@ -73,8 +121,7 @@ export class ComponentLogMain {
     await pMap(
       logs,
       async (logItem) => {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const versionObj = await workspace.scope.getBitObjectVersion(modelComp!, logItem.hash, true);
+        const versionObj = await workspace.scope.getBitObjectVersion(modelComp, logItem.hash, true);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const fileInComp = versionObj!.files.find((f) => f.relativePath === filePathRelativeInComponent);
         if (!fileInComp) return;

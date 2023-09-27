@@ -5,12 +5,11 @@ import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import RemoveAspect, { RemoveMain } from '@teambit/remove';
-import { ApplyVersionResults } from '@teambit/merging';
+import { ApplyVersionResults, FailedComponents } from '@teambit/merging';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import {
-  FailedComponents,
   getMergeStrategyInteractive,
   MergeStrategy,
   threeWayMerge,
@@ -24,7 +23,7 @@ import { ComponentID } from '@teambit/component-id';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
-import { applyVersion, ComponentStatus, ComponentStatusBase } from './checkout-version';
+import { applyVersion, ComponentStatus, ComponentStatusBase, throwForFailures } from './checkout-version';
 import { RevertCmd } from './revert-cmd';
 
 export type CheckoutProps = {
@@ -50,8 +49,6 @@ export type CheckoutProps = {
 };
 
 export type ComponentStatusBeforeMergeAttempt = ComponentStatusBase & {
-  failureMessage?: string;
-  unchangedLegitimately?: boolean; // failed to checkout but for a legitimate reason, such as, up-to-date
   propsForMerge?: {
     currentlyUsedVersion: string;
     componentModel: ModelComponent;
@@ -122,16 +119,19 @@ export class CheckoutMain {
       }
       if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
     }
+
+    throwForFailures(allComponentsStatus);
+
     const failedComponents: FailedComponents[] = allComponentsStatus
-      .filter((componentStatus) => componentStatus.failureMessage)
+      .filter((componentStatus) => componentStatus.unchangedMessage)
       .filter((componentStatus) => !componentStatus.shouldBeRemoved)
       .map((componentStatus) => ({
         id: componentStatus.id,
-        failureMessage: componentStatus.failureMessage as string,
+        unchangedMessage: componentStatus.unchangedMessage as string,
         unchangedLegitimately: componentStatus.unchangedLegitimately,
       }));
 
-    const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
+    const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.unchangedMessage);
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
     // which can be an issue when some components are also dependencies of others
     const checkoutPropsLegacy = { ...checkoutProps, ids: checkoutProps.ids?.map((id) => id._legacy) };
@@ -336,7 +336,7 @@ export class CheckoutMain {
     const componentModel = await consumer.scope.getModelComponentIfExist(id);
     const componentStatus: ComponentStatusBeforeMergeAttempt = { id };
     const returnFailure = (msg: string, unchangedLegitimately = false) => {
-      componentStatus.failureMessage = msg;
+      componentStatus.unchangedMessage = msg;
       componentStatus.unchangedLegitimately = unchangedLegitimately;
       return componentStatus;
     };
