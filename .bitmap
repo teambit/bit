@@ -1113,6 +1113,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/schema-nodes-index"
     },
+    "renderers/this": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.api-reference",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/this"
+    },
     "renderers/type": {
         "scope": "teambit.api-reference",
         "version": "0.0.27",
@@ -2246,6 +2253,13 @@
         "version": "0.0.13",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/utils/copy-schema-node"
+    },
+    "utils/custom-prism-syntax-highlighter-theme": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.api-reference",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/utils/custom-prism-syntax-highlighter-theme"
     },
     "utils/group-schema-node-by-signature": {
         "scope": "teambit.api-reference",
