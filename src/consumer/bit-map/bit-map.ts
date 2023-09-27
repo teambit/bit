@@ -768,11 +768,13 @@ export default class BitMap {
     }
     const similarCompMaps = similarBitIds.map((similarId) => this.getComponent(similarId));
     const similarIds = similarCompMaps
-      .filter((compMap) => (compMap.defaultScope || compMap.id.scope) === id.scope)
+      .filter((compMap) => (compMap.defaultScope || compMap.id.scope) === id.scope || (!id.scope && !compMap.id.scope))
       .map((c) => c.id);
     if (!similarIds.length) {
       logger.debug(
-        `bit-map: no need to update ${newIdString}. the similar ids don't have the same scope: ${similarIds.join(', ')}`
+        `bit-map: no need to update ${newIdString}. the similar ids don't have the same scope: ${similarBitIds.join(
+          ', '
+        )}`
       );
       return id;
     }
