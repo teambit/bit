@@ -256,7 +256,7 @@ please make sure it's not absolute and doesn't contain invalid characters`,
   [
     NoComponentDir,
     (err) => `"${err.id}" doesn't have a component directory, which is invalid.
-please run "bit status" to get more info.\nLearn more at https://bit.dev/workspace/component-directory`,
+please run "bit status" to get more info.\nLearn more at https:/BASE_DOCS_DOMAIN/reference/workspace/component-directory`,
   ],
   [
     MissingMainFileMultipleComponents,
