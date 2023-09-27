@@ -27,9 +27,8 @@ function TypeRefComponent(props: APINodeRenderProps) {
     renderers,
   } = props;
   const typeRefNode = api as TypeRefSchema;
-
-  if (depth === 0) {
-    return (
+  const TypeRefWrapper = ({ children }: { children: React.ReactNode }) =>
+    depth === 0 ? (
       <APINodeDetails
         {...props}
         apiNode={{
@@ -37,9 +36,12 @@ function TypeRefComponent(props: APINodeRenderProps) {
           api: copySchemaNode(typeRefNode, { signature: typeRefNode.signature || typeRefNode.toString() }),
         }}
         options={{ hideIndex: true }}
-      />
+      >
+        {children}
+      </APINodeDetails>
+    ) : (
+      <>{children}</>
     );
-  }
 
   const exportedTypeFromSameComp = typeRefNode.isFromThisComponent()
     ? apiRefModel.apiByName.get(typeRefNode.name)
@@ -90,36 +92,40 @@ function TypeRefComponent(props: APINodeRenderProps) {
 
   if (args) {
     return (
-      <React.Fragment key={`typeRef-with-args-container-${typeRefNode.name}`}>
-        <TypeRefName
-          key={`typeRef-with-args-${typeRefNode.name}`}
-          name={typeRefNode.name}
-          external={Boolean(exportedTypeUrlFromAnotherComp) || Boolean(packageUrl)}
-          url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp || packageUrl}
-          exported={typeRefNode.isExported()}
-          internal={typeRefNode.isInternalReference()}
-          packageName={typeRefNode.packageName}
-        >
-          <div key={`typeArgsContainer-${typeRefNode.name}`} className={styles.typeArgs}>
-            {'<'}
-            {args.map((arg) => arg)}
-            {'>'}
-          </div>
-        </TypeRefName>
-      </React.Fragment>
+      <TypeRefWrapper>
+        <React.Fragment key={`typeRef-with-args-container-${typeRefNode.name}`}>
+          <TypeRefName
+            key={`typeRef-with-args-${typeRefNode.name}`}
+            name={typeRefNode.name}
+            external={Boolean(exportedTypeUrlFromAnotherComp) || Boolean(packageUrl)}
+            url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp || packageUrl}
+            exported={typeRefNode.isExported()}
+            internal={typeRefNode.isInternalReference()}
+            packageName={typeRefNode.packageName}
+          >
+            <div key={`typeArgsContainer-${typeRefNode.name}`} className={styles.typeArgs}>
+              {'<'}
+              {args.map((arg) => arg)}
+              {'>'}
+            </div>
+          </TypeRefName>
+        </React.Fragment>
+      </TypeRefWrapper>
     );
   }
 
   return (
-    <TypeRefName
-      key={`typeRef-${typeRefNode.name}`}
-      name={typeRefNode.name}
-      external={Boolean(exportedTypeUrlFromAnotherComp) || Boolean(packageUrl)}
-      url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp || packageUrl}
-      exported={typeRefNode.isExported()}
-      internal={typeRefNode.isInternalReference()}
-      packageName={typeRefNode.packageName}
-    />
+    <TypeRefWrapper>
+      <TypeRefName
+        key={`typeRef-${typeRefNode.name}`}
+        name={typeRefNode.name}
+        external={Boolean(exportedTypeUrlFromAnotherComp) || Boolean(packageUrl)}
+        url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp || packageUrl}
+        exported={typeRefNode.isExported()}
+        internal={typeRefNode.isInternalReference()}
+        packageName={typeRefNode.packageName}
+      />
+    </TypeRefWrapper>
   );
 }
 
