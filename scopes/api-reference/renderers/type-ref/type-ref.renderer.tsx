@@ -125,7 +125,7 @@ function TypeRefComponent(props: APINodeRenderProps) {
 
 const LinkContext = React.createContext(false);
 
-function TypeRefName({
+export function TypeRefName({
   name,
   url,
   external,

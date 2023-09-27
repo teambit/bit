@@ -1,12 +1,12 @@
 import React, { HTMLAttributes, useMemo } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import defaultTheme from 'react-syntax-highlighter/dist/esm/styles/prism/vsc-dark-plus';
 import { SchemaNode, SetAccessorSchema } from '@teambit/semantics.entities.semantic-schema';
 import { transformSignature } from '@teambit/api-reference.utils.schema-node-signature-transform';
 import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 import { APINodeRenderProps, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
 import classNames from 'classnames';
+import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';
 
 import styles from './function-node-summary.module.scss';
 
@@ -53,22 +53,21 @@ export function FunctionNodeSummary({
     <div className={styles.summaryContainer}>
       <div className={styles.signatureTitle}>
         {<div className={classNames(styles.functionName, hideName && styles.hide)}>{hideName ? '' : name}</div>}
+        {doc?.comment && <div className={styles.description}>{doc?.comment || ''}</div>}
         {signature && (
           <SyntaxHighlighter
             language={lang}
             style={defaultTheme}
             customStyle={{
               borderRadius: '8px',
-              marginTop: '8px',
-              padding: '8px',
+              marginTop: '4px',
+              padding: '6px',
             }}
           >
             {signature}
           </SyntaxHighlighter>
         )}
       </div>
-      <p className={styles.description}>{doc?.comment || ''}</p>
-
       {params.length > 0 && (
         <div className={styles.paramsContainer}>
           <h3 className={styles.subtitle}>Parameters</h3>

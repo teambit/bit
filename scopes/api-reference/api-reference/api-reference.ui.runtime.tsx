@@ -19,6 +19,7 @@ import { typeLiteralRenderer } from '@teambit/api-reference.renderers.type-liter
 import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
 import { inferenceTypeRenderer } from '@teambit/api-reference.renderers.inference-type';
 import { typeArrayRenderer } from '@teambit/api-reference.renderers.type-array';
+import { thisRenderer } from '@teambit/api-reference.renderers.this';
 import { SchemaNodeConstructor, SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';
 import CodeAspect, { CodeUI } from '@teambit/code';
 
@@ -68,6 +69,7 @@ export class APIReferenceUI {
     typeLiteralRenderer,
     inferenceTypeRenderer,
     typeArrayRenderer,
+    thisRenderer,
   ];
 
   static async provider(
