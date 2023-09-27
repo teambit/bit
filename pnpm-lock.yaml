@@ -22036,9 +22036,6 @@ importers:
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
-      '@teambit/design.ui.surfaces.status-message-card':
-        specifier: 0.0.17
-        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
       '@teambit/docs.entities.doc':
         specifier: 0.0.12
         version: 0.0.12
@@ -56512,6 +56509,7 @@ packages:
 
   /prr@1.0.1:
     resolution: {integrity: sha512-yPw4Sng1gWghHQWj0B3ZggWUm4qVbPwPFcRG8KyxiU7J2OHFSoEHKS+EZ3fv5l1t9CyCiop6l/ZYeWbrgoQejw==}
+    requiresBuild: true
     dev: false
 
   /pseudomap@1.0.2:
