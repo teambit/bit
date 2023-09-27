@@ -5,10 +5,9 @@ import { transformSignature } from '@teambit/api-reference.utils.schema-node-sig
 import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 import { APINodeRenderProps, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
-import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
-import classNames from 'classnames';
 import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';
+import classNames from 'classnames';
 
 import styles from './function-node-summary.module.scss';
 
