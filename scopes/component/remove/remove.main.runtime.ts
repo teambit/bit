@@ -19,7 +19,7 @@ import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { VersionNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { removeComponentsFromNodeModules } from '@teambit/legacy/dist/consumer/component/package-json-utils';
 import { RemoveCmd } from './remove-cmd';
-import { removeComponents } from './remove-components';
+import { RemoveComponentsResult, removeComponents } from './remove-components';
 import { RemoveAspect } from './remove.aspect';
 import { RemoveFragment } from './remove.fragment';
 import { RecoverCmd, RecoverOptions } from './recover-cmd';
@@ -57,7 +57,7 @@ export class RemoveMain {
     track?: boolean;
     deleteFiles?: boolean;
     fromLane?: boolean;
-  }): Promise<any> {
+  }): Promise<RemoveComponentsResult> {
     this.logger.setStatusLine(BEFORE_REMOVE);
     const bitIds = remote
       ? await this.getRemoteBitIdsToRemove(componentsPattern)

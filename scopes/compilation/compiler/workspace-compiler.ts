@@ -212,7 +212,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
         await this.compilerInstance.transpileComponent?.({
           component,
           componentDir: this.componentDir,
-          outputDir: this.workspace.getComponentPackagePath(component),
+          outputDir: await this.workspace.getComponentPackagePath(component),
           initiator,
         });
       } catch (error: any) {

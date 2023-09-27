@@ -58,6 +58,8 @@ function TypeRefComponent(props: APINodeRenderProps) {
       })
     : undefined;
 
+  const packageUrl = typeRefNode.packageName ? `https://www.npmjs.com/package/${typeRefNode.packageName}` : undefined;
+
   const args =
     typeRefNode.typeArgs?.map((typeArg, index, typeArgs) => {
       const typeArgRenderer = renderers.find((renderer) => renderer.predicate(typeArg));
@@ -92,8 +94,8 @@ function TypeRefComponent(props: APINodeRenderProps) {
         <TypeRefName
           key={`typeRef-with-args-${typeRefNode.name}`}
           name={typeRefNode.name}
-          external={!!exportedTypeUrlFromAnotherComp}
-          url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp}
+          external={Boolean(exportedTypeUrlFromAnotherComp) || Boolean(packageUrl)}
+          url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp || packageUrl}
           exported={typeRefNode.isExported()}
           internal={typeRefNode.isInternalReference()}
           packageName={typeRefNode.packageName}
@@ -112,8 +114,8 @@ function TypeRefComponent(props: APINodeRenderProps) {
     <TypeRefName
       key={`typeRef-${typeRefNode.name}`}
       name={typeRefNode.name}
-      external={!!exportedTypeUrlFromAnotherComp}
-      url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp}
+      external={Boolean(exportedTypeUrlFromAnotherComp) || Boolean(packageUrl)}
+      url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp || packageUrl}
       exported={typeRefNode.isExported()}
       internal={typeRefNode.isInternalReference()}
       packageName={typeRefNode.packageName}
@@ -152,16 +154,7 @@ function TypeRefName({
   if (url && !withinLink) {
     return (
       <LinkContext.Provider value={true}>
-        <Link
-          style={
-            {
-              '--tooltip-text': packageName ? `"${packageName}"` : '',
-            } as React.CSSProperties
-          }
-          href={url}
-          external={external}
-          className={classnames(className, styles.nodeLink)}
-        >
+        <Link href={url} external={external} className={classnames(className, styles.nodeLink)}>
           {name}
           {children}
         </Link>
@@ -170,14 +163,7 @@ function TypeRefName({
   }
 
   return (
-    <div
-      style={
-        {
-          '--tooltip-text': packageName ? `"${packageName}"` : '',
-        } as React.CSSProperties
-      }
-      className={className}
-    >
+    <div className={className}>
       {name}
       {children}
     </div>

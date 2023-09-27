@@ -744,8 +744,11 @@ describe('bit snap command', function () {
       helper.command.softRemoveComponent('comp1');
       output = helper.command.snapAllComponentsWithoutBuild('--unmodified');
     });
-    it('should indicate that the component was snapped successfully', () => {
-      expect(output).to.have.string('changed components');
+    it('should indicate that the component was removed successfully', () => {
+      expect(output).to.have.string('removed components');
+    });
+    it('should not show the component as changed (because the new snap isnt relevant for a deleted component', () => {
+      expect(output).to.not.have.string('changed components');
     });
   });
 });

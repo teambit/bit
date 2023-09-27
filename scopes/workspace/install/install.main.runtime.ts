@@ -74,6 +74,7 @@ export type WorkspaceInstallOptions = {
   updateAll?: boolean;
   recurringInstall?: boolean;
   optimizeReportForNonTerminal?: boolean;
+  lockfileOnly?: boolean;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -281,6 +282,7 @@ export class InstallMain {
       rootComponents: hasRootComponents,
       updateAll: options?.updateAll,
       optimizeReportForNonTerminal: options?.optimizeReportForNonTerminal,
+      lockfileOnly: options?.lockfileOnly,
     };
     const prevManifests = new Set<string>();
     // TODO: this make duplicate
@@ -342,9 +344,11 @@ export class InstallMain {
       current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
-    // We clean node_modules only after the last install.
-    // Otherwise, we might load an env from a location that we later remove.
-    await installer.pruneModules(this.workspace.path);
+    if (!options?.lockfileOnly) {
+      // We clean node_modules only after the last install.
+      // Otherwise, we might load an env from a location that we later remove.
+      await installer.pruneModules(this.workspace.path);
+    }
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
@@ -615,7 +619,7 @@ export class InstallMain {
    * @param options.all {Boolean} updates all outdated dependencies without showing a prompt.
    */
   async updateDependencies(options: {
-    forceVersionBump?: 'major' | 'minor' | 'patch';
+    forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible';
     patterns?: string[];
     all: boolean;
   }): Promise<ComponentMap<string> | null> {
@@ -838,7 +842,7 @@ export class InstallMain {
       if (this.visitedAspects.has(aspectIdStr)) return;
 
       this.visitedAspects.add(aspectIdStr);
-      const packagePath = this.workspace.getComponentPackagePath(aspectComponent);
+      const packagePath = await this.workspace.getComponentPackagePath(aspectComponent);
       const exists = await pathExists(packagePath);
       if (!exists) {
         const inWs = await this.workspace.hasId(aspectComponent.id);
