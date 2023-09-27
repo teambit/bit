@@ -6,7 +6,7 @@ type ApplicationTransformationMap = ServiceTransformationMap & {
 };
 export class AppService implements EnvService<any> {
   name = 'application';
-  registerAppType: (appType: ApplicationType<any>) => void;
+  registerAppType: (...appType: Array<ApplicationType<any>>) => void;
 
   async run(context: ExecutionContext) {
     const appContext = Object.assign(context, {
@@ -22,9 +22,7 @@ export class AppService implements EnvService<any> {
     if (!env?.apps) return undefined;
     const appTypesList = env.apps()(context);
     const appTypes = appTypesList.compute();
-    appTypes.forEach((appType) => {
-      this.registerAppType(appType);
-    });
+    this.registerAppType(...appTypes);
     return {
       getAppTypes: () => {
         return appTypes;
