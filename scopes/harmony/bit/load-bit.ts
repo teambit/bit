@@ -290,7 +290,6 @@ function clearGlobalsIfNeeded() {
   delete loadConsumer.cache;
   ComponentLoader.onComponentLoadSubscribers = [];
   ComponentOverrides.componentOverridesLoadingRegistry = {};
-  ComponentConfig.componentConfigLegacyLoadingRegistry = {};
   ComponentConfig.componentConfigLoadingRegistry = {};
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
   // @ts-ignore

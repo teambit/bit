@@ -36,10 +36,6 @@ export default class ComponentConfig extends AbstractConfig {
   static registerOnComponentConfigLoading(extId, func: (id) => any) {
     this.componentConfigLoadingRegistry[extId] = func;
   }
-  static componentConfigLegacyLoadingRegistry: ConfigLegacyLoadRegistry = {};
-  static registerOnComponentConfigLegacyLoading(extId, func: (id, config) => any) {
-    this.componentConfigLegacyLoadingRegistry[extId] = func;
-  }
 
   constructor({ lang, bindingPrefix, extensions, defaultScope, overrides }: ConfigProps) {
     super({
