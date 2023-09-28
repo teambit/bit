@@ -1474,18 +1474,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/mdx-scope-context"
     },
-    "ui/overview-compare": {
-        "scope": "teambit.docs",
-        "version": "1.0.10",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/docs/ui/overview-compare"
-    },
-    "ui/overview-compare-section": {
-        "scope": "teambit.docs",
-        "version": "0.0.100",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/docs/ui/overview-compare-section"
-    },
     "ui/preview-placeholder": {
         "scope": "teambit.preview",
         "version": "0.0.501",
