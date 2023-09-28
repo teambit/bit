@@ -5,7 +5,6 @@ import { defaultDocs } from '@teambit/docs';
 import { RenderingContext } from '@teambit/preview';
 import { PropertiesTable } from '@teambit/react.ui.docs.properties-table';
 import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
-import { TaggedExports } from '@teambit/tagged-exports';
 import { DocsContent } from '@teambit/react.ui.docs.docs-content';
 import { DocsTheme } from './docs-theme';
 import { ExamplesOverview } from './examples-overview';
@@ -18,6 +17,10 @@ export type ReactDocsAppProps = {
   context: RenderingContext;
 };
 
+/**
+ *
+ * @exports
+ */
 export function DocsApp({ componentId, docs = defaultDocs, compositions, context }: ReactDocsAppProps) {
   // Next 2 lines are to support legacy code (ExamplesOverview)
   const { examples = [] } = docs;
@@ -38,7 +41,6 @@ export function DocsApp({ componentId, docs = defaultDocs, compositions, context
           compositionCardClass={styles.compositionCard}
         />
         {(!isSkipInclude || isSkipInclude === 'false') && <PropertiesTable componentId={componentId} />}
-        {isSkipInclude && <TaggedExports componentId={componentId} />}
         <ExamplesOverview examples={Content.examples || examples} />
       </>
     </DocsTheme>
