@@ -139,8 +139,14 @@ export class WorkspaceComponentLoader {
         return this.executeLoadSlot(component);
       })
     );
+    this.warnAboutMisconfiguredEnvs(withAspects);
 
     return { components: withAspects, invalidComponents };
+  }
+
+  private warnAboutMisconfiguredEnvs(components: Component[]) {
+    const allIds = uniq(components.map((component) => this.envs.getEnvId(component)));
+    allIds.forEach((envId) => this.workspace.warnAboutMisconfiguredEnv(envId));
   }
 
   private async getComponentsWithoutLoadExtensions(
@@ -159,11 +165,16 @@ export class WorkspaceComponentLoader {
       loadOpts || {}
     );
 
+    const idsFromScope: ComponentID[] = [];
+
     const idsWithUpdatedVersions = compact(
       await Promise.all(
         ids.map(async (componentId) => {
           const inWs = await this.workspace.hasId(componentId);
-          if (!inWs) return undefined;
+          if (!inWs) {
+            idsFromScope.push(componentId);
+            return undefined;
+          }
           return this.resolveVersion(componentId);
         })
       )
@@ -222,12 +233,14 @@ export class WorkspaceComponentLoader {
         });
       })
     );
+
     errors.forEach((err) => {
       this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
       this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
     });
     const components = compact(await componentsP);
-    return { components, invalidComponents };
+    const scopeComponents = await this.workspace.scope.getMany(idsFromScope);
+    return { components: components.concat(scopeComponents), invalidComponents };
   }
 
   async getInvalid(ids: Array<ComponentID>): Promise<InvalidComponent[]> {
@@ -260,18 +273,22 @@ export class WorkspaceComponentLoader {
     loadOpts?: ComponentLoadOptions,
     getOpts: ComponentGetOneOptions = { resolveIdVersion: true }
   ): Promise<Component> {
+    const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
+      { loadExtensions: true, executeLoadSlot: true },
+      loadOpts || {}
+    );
     const id = getOpts?.resolveIdVersion ? this.resolveVersion(componentId) : componentId;
-    const fromCache = this.getFromCache(componentId, loadOpts);
+    const fromCache = this.getFromCache(componentId, loadOptsWithDefaults);
     if (fromCache && useCache) {
       return fromCache;
     }
-    const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, loadOpts));
+    const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, loadOptsWithDefaults));
     // in case of out-of-sync, the id may changed during the load process
     const updatedId = consumerComponent ? ComponentID.fromLegacy(consumerComponent.id, id.scope) : id;
-    const component = await this.loadOne(updatedId, consumerComponent, loadOpts);
+    const component = await this.loadOne(updatedId, consumerComponent, loadOptsWithDefaults);
     if (storeInCache) {
       this.addMultipleEnvsIssueIfNeeded(component); // it's in storeInCache block, otherwise, it wasn't fully loaded
-      this.saveInCache(component, loadOpts);
+      this.saveInCache(component, loadOptsWithDefaults);
     }
     return component;
   }
@@ -352,6 +369,9 @@ export class WorkspaceComponentLoader {
         componentFromScope.tags,
         this.workspace
       );
+      if (loadOpts?.executeLoadSlot) {
+        return this.executeLoadSlot(workspaceComponent, loadOpts);
+      }
       // const updatedComp = await this.executeLoadSlot(workspaceComponent, loadOpts);
       return workspaceComponent;
     }

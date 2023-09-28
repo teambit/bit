@@ -657,6 +657,12 @@ export class EnvsMain {
     }, []);
   }
 
+  getEnvIdFromEnvsLegacyExtensions(extensions: ExtensionDataList): string | undefined {
+    const envsAspect = extensions.findCoreExtension(EnvsAspect.id);
+    const envIdFromEnvsConfig = envsAspect?.data.id;
+    return envIdFromEnvsConfig;
+  }
+
   /**
    * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .calculateEnvId() instead!)
    */

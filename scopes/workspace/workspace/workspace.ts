@@ -1169,32 +1169,29 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const mergeRes = await this.aspectsMerger.merge(componentId, componentFromScope, excludeOrigins);
     if (optsWithDefaults.loadExtensions) {
       await this.loadComponentsExtensions(mergeRes.extensions, componentId);
-      await this.warnAboutMisconfiguredEnv(componentId, mergeRes.extensions);
+      const envId = await this.envs.getEnvIdFromEnvsLegacyExtensions(mergeRes.extensions);
+      if (envId) {
+        this.warnAboutMisconfiguredEnv(envId);
+      }
     }
     return mergeRes;
   }
 
-  private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {
-    if (!(await this.hasId(componentId))) {
-      // if this is a dependency and not belong to the workspace, don't show the warning
-      return;
-    }
-    const envAspect = extensionDataList.findExtension(EnvsAspect.id);
-    const envFromEnvsAspect = envAspect?.config.env;
-    if (!envFromEnvsAspect) return;
-    if (this.envs.getCoreEnvsIds().includes(envFromEnvsAspect)) return;
-    if (this.warnedAboutMisconfiguredEnvs.includes(envFromEnvsAspect)) return;
+  async warnAboutMisconfiguredEnv(envId: string) {
+    if (!envId) return;
+    if (this.envs.getCoreEnvsIds().includes(envId)) return;
+    if (this.warnedAboutMisconfiguredEnvs.includes(envId)) return;
     let env: Component;
     try {
-      const envId = await this.resolveComponentId(envFromEnvsAspect);
-      env = await this.get(envId);
+      const parsedEnvId = await this.resolveComponentId(envId);
+      env = await this.get(parsedEnvId);
     } catch (err) {
       return; // unable to get the component for some reason. don't sweat it. forget about the warning
     }
     if (!this.envs.isUsingEnvEnv(env)) {
-      this.warnedAboutMisconfiguredEnvs.push(envFromEnvsAspect);
+      this.warnedAboutMisconfiguredEnvs.push(envId);
       this.logger.consoleWarning(
-        `env "${envFromEnvsAspect}" is not of type env. (correct the env's type, or component config with "bit env set ${envFromEnvsAspect} teambit.envs/env")`
+        `env "${envId}" is not of type env. (correct the env's type, or component config with "bit env set ${envId} teambit.envs/env")`
       );
     }
   }
