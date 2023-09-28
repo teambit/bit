@@ -108,6 +108,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
         exitOnFirstFailedTask: failFast,
       }
     );
+    this.logger.console(`build output can be found in path: ${envsExecutionResults.capsuleRootDir}`);
     const duration = prettyTime(process.hrtime(start));
     const succeedOrFailed = envsExecutionResults.hasErrors() ? 'failed' : 'succeeded';
     const msg = `build ${succeedOrFailed}. completed in ${duration}.`;
