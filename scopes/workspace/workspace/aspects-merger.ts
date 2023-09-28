@@ -12,7 +12,6 @@ import { MergeConflictFile } from './merge-conflict-file';
 import { WorkspaceLoadAspectsOptions } from './workspace-aspects-loader';
 
 export class AspectsMerger {
-  private warnedAboutMisconfiguredEnvs: string[] = []; // cache env-ids that have been errored about not having "env" type
   readonly mergeConflictFile: MergeConflictFile;
   private mergeConfigDepsResolverDataCache: { [compIdStr: string]: Record<string, any> } = {};
   constructor(private workspace: Workspace, private harmony: Harmony) {
@@ -145,7 +144,6 @@ export class AspectsMerger {
         origin
       );
       if (envIsCurrentlySet) {
-        await this.warnAboutMisconfiguredEnv(componentId, extensions);
         envWasFoundPreviously = true;
       }
 
@@ -246,31 +244,6 @@ export class AspectsMerger {
 
   private getUnmergedData(componentId: ComponentID): UnmergedComponent | undefined {
     return this.workspace.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
-  }
-
-  private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {
-    if (!(await this.workspace.hasId(componentId))) {
-      // if this is a dependency and not belong to the workspace, don't show the warning
-      return;
-    }
-    const envAspect = extensionDataList.findExtension(EnvsAspect.id);
-    const envFromEnvsAspect = envAspect?.config.env;
-    if (!envFromEnvsAspect) return;
-    if (this.workspace.envs.getCoreEnvsIds().includes(envFromEnvsAspect)) return;
-    if (this.warnedAboutMisconfiguredEnvs.includes(envFromEnvsAspect)) return;
-    let env: Component;
-    try {
-      const envId = await this.workspace.resolveComponentId(envFromEnvsAspect);
-      env = await this.workspace.get(envId);
-    } catch (err) {
-      return; // unable to get the component for some reason. don't sweat it. forget about the warning
-    }
-    if (!this.workspace.envs.isUsingEnvEnv(env)) {
-      this.warnedAboutMisconfiguredEnvs.push(envFromEnvsAspect);
-      this.workspace.logger.consoleWarning(
-        `env "${envFromEnvsAspect}" is not of type env. (correct the env's type, or component config with "bit env set ${envFromEnvsAspect} teambit.envs/env")`
-      );
-    }
   }
 
   private async filterEnvsFromExtensionsIfNeeded(
