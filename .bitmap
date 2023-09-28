@@ -453,12 +453,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/entities/lane-diff"
     },
-    "entities/semantic-schema": {
-        "scope": "teambit.semantics",
-        "version": "0.0.59",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/semantics/entities/semantic-schema"
-    },
     "env": {
         "scope": "teambit.envs",
         "version": "1.0.10",
@@ -579,35 +573,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/hooks/use-api-ref-url"
     },
-    "hooks/use-lane-components": {
-        "scope": "teambit.lanes",
-        "version": "0.0.253",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/hooks/use-lane-components"
-    },
-    "hooks/use-lane-readme": {
-        "scope": "teambit.lanes",
-        "version": "0.0.253",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/hooks/use-lane-readme"
-    },
-    "hooks/use-lanes": {
-        "scope": "teambit.lanes",
-        "version": "0.0.254",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/hooks/use-lanes"
-    },
     "hooks/use-schema": {
         "scope": "teambit.api-reference",
         "version": "0.0.17",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/hooks/use-schema"
-    },
-    "hooks/use-viewed-lane-from-url": {
-        "scope": "teambit.lanes",
-        "version": "0.0.216",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/hooks/use-viewed-lane-from-url"
     },
     "html": {
         "scope": "teambit.html",
