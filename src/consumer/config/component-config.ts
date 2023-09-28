@@ -10,6 +10,9 @@ import PackageJsonFile from '../component/package-json-file';
 import AbstractConfig from './abstract-config';
 import { ComponentOverridesData } from './component-overrides';
 import { ExtensionDataList } from './extension-data';
+import { ComponentLoadOptions } from '../component/component-loader';
+
+export type ComponentConfigLoadOptions = Pick<ComponentLoadOptions, 'loadExtensions' | 'originatedFromHarmony'>;
 
 type ConfigProps = {
   lang?: string;
@@ -33,7 +36,7 @@ export default class ComponentConfig extends AbstractConfig {
   packageJsonFile: PackageJsonFile | null | undefined;
 
   static componentConfigLoadingRegistry: ConfigLoadRegistry = {};
-  static registerOnComponentConfigLoading(extId, func: (id) => any) {
+  static registerOnComponentConfigLoading(extId, func: (id, loadOpts: ComponentConfigLoadOptions) => any) {
     this.componentConfigLoadingRegistry[extId] = func;
   }
 
@@ -81,8 +84,14 @@ export default class ComponentConfig extends AbstractConfig {
     this.lang = this.lang || component.lang;
   }
 
-  static async load({ componentId }: { componentId: BitId }): Promise<ComponentConfig> {
-    const onLoadResults = await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentId);
+  static async load({
+    componentId,
+    loadOpts,
+  }: {
+    componentId: BitId;
+    loadOpts?: ComponentConfigLoadOptions;
+  }): Promise<ComponentConfig> {
+    const onLoadResults = await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentId, loadOpts);
     const wsComponentConfig = onLoadResults[0];
     const defaultScope = wsComponentConfig.defaultScope;
     const bindingPrefix = getBindingPrefixByDefaultScope(defaultScope);
@@ -103,12 +112,16 @@ export default class ComponentConfig extends AbstractConfig {
    * @param {BitId} id
    * @memberof ComponentConfig
    */
-  static async runOnLoadEvent(subscribers: ConfigLoadRegistry, id: BitId): Promise<any[]> {
+  static async runOnLoadEvent(
+    subscribers: ConfigLoadRegistry,
+    id: BitId,
+    loadOpts?: ComponentConfigLoadOptions
+  ): Promise<any[]> {
     logger.debugAndAddBreadCrumb('componentConfigLoad', `running on load even for component ${id.toString()}`);
     try {
       const res = await mapSeries(Object.keys(subscribers), async (extId: string) => {
         const func = subscribers[extId];
-        return func(id);
+        return func(id, loadOpts);
       });
       return res;
     } catch (err: any) {

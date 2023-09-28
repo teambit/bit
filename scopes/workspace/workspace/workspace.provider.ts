@@ -14,6 +14,7 @@ import { UiMain } from '@teambit/ui';
 import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import type { ComponentConfigLoadOptions } from '@teambit/legacy/dist/consumer/config';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import LegacyComponentLoader, { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { BitId } from '@teambit/legacy-bit-id';
@@ -204,13 +205,13 @@ export default async function provideWorkspace(
     return undefined;
   });
 
-  ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id) => {
+  ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id, loadOpts: ComponentConfigLoadOptions) => {
     const componentId = await workspace.resolveComponentId(id);
     // We call here directly workspace.scope.get instead of workspace.get because part of the workspace get is loading consumer component
     // which in turn run this event, which will make an infinite loop
     // This component from scope here are only used for merging the extensions with the workspace components
     const componentFromScope = await workspace.scope.get(componentId);
-    const { extensions } = await workspace.componentExtensions(componentId, componentFromScope);
+    const { extensions } = await workspace.componentExtensions(componentId, componentFromScope, undefined, loadOpts);
     const defaultScope = await workspace.componentDefaultScope(componentId);
 
     const extensionsWithLegacyIdsP = extensions.map(async (extension) => {

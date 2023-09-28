@@ -23,6 +23,7 @@ export type ComponentLoadOptions = {
   loadDocs?: boolean;
   loadCompositions?: boolean;
   originatedFromHarmony?: boolean;
+  loadExtensions?: boolean;
 };
 export type LoadManyResult = {
   components: Component[];
@@ -195,6 +196,7 @@ export default class ComponentLoader {
         componentMap,
         id: updatedId,
         consumer: this.consumer,
+        loadOpts,
       });
     } catch (err: any) {
       return handleError(err);
