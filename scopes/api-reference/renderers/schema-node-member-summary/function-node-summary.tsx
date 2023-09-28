@@ -72,7 +72,7 @@ export function FunctionNodeSummary({
       </div>
       {params.length > 0 && (
         <div className={styles.paramsContainer}>
-          <HeadingRow headings={paramTypeHeadings} colNumber={4} />
+          <HeadingRow className={styles.paramHeading} headings={paramTypeHeadings} colNumber={4} />
           {params.map((param) => {
             const paramRenderer = renderers.find((renderer) => renderer.predicate(param));
             if (paramRenderer?.Component) {
