@@ -9,7 +9,6 @@ import {
   reStructureBuildArtifacts,
 } from '../component/sources/artifact-files';
 
-const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
 type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign;
 type ConfigOnlyEntry = {
   id: string;
@@ -260,24 +259,37 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
    * @returns {ExtensionDataList}
    * @memberof ExtensionDataList
    */
-  static mergeConfigs(list: ExtensionDataList[]): ExtensionDataList {
+  static mergeConfigs(list: ExtensionDataList[], ignoreVersion = true): ExtensionDataList {
     if (list.length === 1) {
       return list[0];
     }
+
+    const mergeReducer = getMergeReducer(ignoreVersion);
 
     const merged = list.reduce(mergeReducer, new ExtensionDataList());
     return ExtensionDataList.fromArray(merged);
   }
 }
 
-function ignoreVersionPredicate(extensionEntry1: ExtensionDataEntry, extensionEntry2: ExtensionDataEntry) {
-  if (extensionEntry1.extensionId && extensionEntry2.extensionId) {
-    return extensionEntry1.extensionId.isEqualWithoutVersion(extensionEntry2.extensionId);
-  }
-  if (extensionEntry1.name && extensionEntry2.name) {
-    return extensionEntry1.name === extensionEntry2.name;
-  }
-  return false;
+function getMergeReducer(ignoreVersion = true) {
+  const predicate = getCompareExtPredicate(ignoreVersion);
+  const mergeReducer = (accumulator, currentValue) => R.unionWith(predicate, accumulator, currentValue);
+  return mergeReducer;
+}
+
+function getCompareExtPredicate(ignoreVersion = true) {
+  return (extensionEntry1: ExtensionDataEntry, extensionEntry2: ExtensionDataEntry) => {
+    if (extensionEntry1.extensionId && extensionEntry2.extensionId) {
+      if (ignoreVersion) {
+        return extensionEntry1.extensionId.isEqualWithoutVersion(extensionEntry2.extensionId);
+      }
+      return extensionEntry1.extensionId.isEqual(extensionEntry2.extensionId);
+    }
+    if (extensionEntry1.name && extensionEntry2.name) {
+      return extensionEntry1.name === extensionEntry2.name;
+    }
+    return false;
+  };
 }
 
 export function configEntryToDataEntry(extensionId: string, config: any): ExtensionDataEntry {

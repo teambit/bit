@@ -130,7 +130,8 @@ export class WorkspaceComponentLoader {
     // console.log("🚀 ~ file: workspace-component-loader.ts:108 ~ WorkspaceComponentLoader ~ allExtensions:", allExtensions)
 
     // Ensure we won't load the same extension many times
-    const mergedExtensions = ExtensionDataList.mergeConfigs(allExtensions);
+    // We don't want to ignore version here, as we do want to load different extensions with same id but different versions here
+    const mergedExtensions = ExtensionDataList.mergeConfigs(allExtensions, false);
     await this.workspace.loadComponentsExtensions(mergedExtensions);
 
     const withAspects = await Promise.all(
