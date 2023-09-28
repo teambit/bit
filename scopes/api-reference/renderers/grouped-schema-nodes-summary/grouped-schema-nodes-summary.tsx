@@ -110,7 +110,7 @@ export function GroupedSchemaNodesSummary({
             {!skipRenderingTable && (
               <div className={styles.table}>
                 <HeadingRow
-                  className={classnames(styles.row)}
+                  className={classnames(styles.row, styles.headingRow)}
                   colNumber={_headings.length as any}
                   headings={_headings}
                 />
