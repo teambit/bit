@@ -183,12 +183,12 @@ function getExportedTypeUrlFromAnotherComp({
   componentId: ComponentID;
   selectedAPI: string;
 }) {
-  const componentUrl = ComponentUrl.toUrl(componentId, { useLocationOrigin: true });
+  const componentUrl = ComponentUrl.toUrl(componentId, { useLocationOrigin: true, includeVersion: true });
   const [componentIdUrl, versionQuery] = componentUrl.split('?');
 
-  const exportedTypeUrl = `${componentIdUrl}/~api-reference?selectedAPI=${encodeURIComponent(
-    selectedAPI
-  )}&${versionQuery}`;
+  const exportedTypeUrl = `${componentIdUrl}/~api-reference?selectedAPI=${encodeURIComponent(selectedAPI)}${
+    versionQuery ? `&${versionQuery}` : ''
+  }`;
 
   return exportedTypeUrl;
 }

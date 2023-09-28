@@ -1,8 +1,8 @@
 .summaryContainer {
-  padding: 0px 16px;
+  padding: 0px 24px;
   margin-bottom: 16px;
   border-radius: 8px;
-  background-color: #f7f7f5;
+  background-color: #f7f7f5a1;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -40,9 +40,13 @@
 .functionName {
   font-size: var(--bit-p-md);
   font-weight: 500;
-  padding: 16px 0px;
+  padding: 16px 0px 8px 0px;
 }
 
 .hide {
   padding: 8px 0px !important;
+}
+
+.paramHeading {
+  padding: 8px 0px 16px 0px;
 }
