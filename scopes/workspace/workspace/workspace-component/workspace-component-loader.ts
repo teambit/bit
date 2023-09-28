@@ -139,14 +139,14 @@ export class WorkspaceComponentLoader {
         return this.executeLoadSlot(component);
       })
     );
-    this.warnAboutMisconfiguredEnvs(withAspects);
+    await this.warnAboutMisconfiguredEnvs(withAspects);
 
     return { components: withAspects, invalidComponents };
   }
 
-  private warnAboutMisconfiguredEnvs(components: Component[]) {
+  private async warnAboutMisconfiguredEnvs(components: Component[]) {
     const allIds = uniq(components.map((component) => this.envs.getEnvId(component)));
-    allIds.forEach((envId) => this.workspace.warnAboutMisconfiguredEnv(envId));
+    return Promise.all(allIds.map((envId) => this.workspace.warnAboutMisconfiguredEnv(envId)));
   }
 
   private async getComponentsWithoutLoadExtensions(

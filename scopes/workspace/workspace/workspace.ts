@@ -1171,7 +1171,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       await this.loadComponentsExtensions(mergeRes.extensions, componentId);
       const envId = await this.envs.getEnvIdFromEnvsLegacyExtensions(mergeRes.extensions);
       if (envId) {
-        this.warnAboutMisconfiguredEnv(envId);
+        await this.warnAboutMisconfiguredEnv(envId);
       }
     }
     return mergeRes;
