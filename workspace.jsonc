@@ -53,6 +53,8 @@
         "@stencil/core": "1.17.4",
         "@stencil/webpack": "0.0.6",
         "@teambit/any-fs": "0.0.5",
+        "@teambit/api-reference.models.api-node-renderer": "^0.0.17",
+        "@teambit/api-reference.models.api-reference-model": "^0.0.17",
         "@teambit/api-reference.renderers.api-node-details": "^0.0.28",
         "@teambit/api-reference.renderers.class": "^0.0.29",
         "@teambit/api-reference.renderers.enum": "^0.0.29",

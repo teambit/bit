@@ -699,18 +699,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/model/composition-type"
     },
-    "models/api-node-renderer": {
-        "scope": "teambit.api-reference",
-        "version": "0.0.17",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/models/api-node-renderer"
-    },
-    "models/api-reference-model": {
-        "scope": "teambit.api-reference",
-        "version": "0.0.17",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/models/api-reference-model"
-    },
     "models/scope-model": {
         "scope": "teambit.scope",
         "version": "0.0.448",
