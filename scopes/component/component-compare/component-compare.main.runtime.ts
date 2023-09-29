@@ -114,12 +114,16 @@ export class ComponentCompareMain {
     return diffResults;
   }
 
-  async getConfigForDiff(id: string): Promise<ConfigDiff> {
+  async getConfigForDiffById(id: string): Promise<ConfigDiff> {
     const workspace = this.workspace;
     if (!workspace) throw new OutsideWorkspaceError();
     const componentId = await workspace.resolveComponentId(id);
-    const component = await workspace.scope.get(componentId);
+    const component = await workspace.scope.get(componentId, false);
     if (!component) throw new Error(`getConfigForDiff: unable to find component ${id} in local scope`);
+    return this.getConfigForDiffByCompObject(component);
+  }
+
+  async getConfigForDiffByCompObject(component: Component) {
     const depData = await this.depResolver.getDependencies(component);
     const serializedToString = (dep: SerializedDependency) => {
       const idWithoutVersion = dep.__type === 'package' ? dep.id : dep.id.split('@')[0];
@@ -131,10 +135,11 @@ export class ComponentCompareMain {
     };
     const serializeAspect = (comp: Component) => {
       const aspects = comp.state.aspects.withoutEntries([BuilderAspect.id, DependencyResolverAspect.id]);
-      return aspects.serialize();
+      // return aspects.serialize();
+      return aspects.toLegacy().sortById().toConfigObject();
     };
     return {
-      version: componentId.version,
+      version: component.id.version,
       dependencies: serializeAndSort(depData),
       aspects: serializeAspect(component),
     };

@@ -265,7 +265,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     };
 
     const results = await this.snapping.tag(params);
-    if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
+    if (!results) return chalk.yellow(persist ? 'no soft-tag found' : NOTHING_TO_TAG_MSG);
     const { taggedComponents, autoTaggedResults, warnings, newComponents, removedComponents }: TagResults = results;
     const changedComponents = taggedComponents.filter((component) => !newComponents.searchWithoutVersion(component.id));
     const addedComponents = taggedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));

@@ -3827,6 +3827,9 @@ importers:
       '@teambit/api-reference.renderers.schema-nodes-index':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.this':
+        specifier: workspace:*
+        version: file:scopes/api-reference/renderers/this
       '@teambit/api-reference.renderers.type':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/type(react-dom@17.0.2)(react@17.0.2)
@@ -3863,6 +3866,9 @@ importers:
       '@teambit/api-reference.utils.copy-schema-node':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/copy-schema-node
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
+        specifier: workspace:*
+        version: file:scopes/api-reference/utils/custom-prism-syntax-highlighter-theme
       '@teambit/api-reference.utils.group-schema-node-by-signature':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/group-schema-node-by-signature
@@ -4959,6 +4965,8 @@ importers:
         injected: true
       '@teambit/api-reference.renderers.schema-nodes-index':
         injected: true
+      '@teambit/api-reference.renderers.this':
+        injected: true
       '@teambit/api-reference.renderers.type':
         injected: true
       '@teambit/api-reference.renderers.type-array':
@@ -4982,6 +4990,8 @@ importers:
       '@teambit/api-reference.utils.code-editor-options':
         injected: true
       '@teambit/api-reference.utils.copy-schema-node':
+        injected: true
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
         injected: true
       '@teambit/api-reference.utils.group-schema-node-by-signature':
         injected: true
@@ -5746,6 +5756,9 @@ importers:
       '@teambit/api-reference.renderers.schema-nodes-index':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.this':
+        specifier: workspace:*
+        version: file:scopes/api-reference/renderers/this
       '@teambit/api-reference.renderers.type':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/type(react-dom@17.0.2)(react@17.0.2)
@@ -5782,6 +5795,9 @@ importers:
       '@teambit/api-reference.utils.copy-schema-node':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/copy-schema-node
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
+        specifier: workspace:*
+        version: file:scopes/api-reference/utils/custom-prism-syntax-highlighter-theme
       '@teambit/api-reference.utils.group-schema-node-by-signature':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/group-schema-node-by-signature
@@ -6878,6 +6894,8 @@ importers:
         injected: true
       '@teambit/api-reference.renderers.schema-nodes-index':
         injected: true
+      '@teambit/api-reference.renderers.this':
+        injected: true
       '@teambit/api-reference.renderers.type':
         injected: true
       '@teambit/api-reference.renderers.type-array':
@@ -6901,6 +6919,8 @@ importers:
       '@teambit/api-reference.utils.code-editor-options':
         injected: true
       '@teambit/api-reference.utils.copy-schema-node':
+        injected: true
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
         injected: true
       '@teambit/api-reference.utils.group-schema-node-by-signature':
         injected: true
@@ -7665,6 +7685,9 @@ importers:
       '@teambit/api-reference.renderers.schema-nodes-index':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.this':
+        specifier: workspace:*
+        version: file:scopes/api-reference/renderers/this
       '@teambit/api-reference.renderers.type':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/type(react-dom@17.0.2)(react@17.0.2)
@@ -7701,6 +7724,9 @@ importers:
       '@teambit/api-reference.utils.copy-schema-node':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/copy-schema-node
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
+        specifier: workspace:*
+        version: file:scopes/api-reference/utils/custom-prism-syntax-highlighter-theme
       '@teambit/api-reference.utils.group-schema-node-by-signature':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/group-schema-node-by-signature
@@ -8797,6 +8823,8 @@ importers:
         injected: true
       '@teambit/api-reference.renderers.schema-nodes-index':
         injected: true
+      '@teambit/api-reference.renderers.this':
+        injected: true
       '@teambit/api-reference.renderers.type':
         injected: true
       '@teambit/api-reference.renderers.type-array':
@@ -8820,6 +8848,8 @@ importers:
       '@teambit/api-reference.utils.code-editor-options':
         injected: true
       '@teambit/api-reference.utils.copy-schema-node':
+        injected: true
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
         injected: true
       '@teambit/api-reference.utils.group-schema-node-by-signature':
         injected: true
@@ -9584,6 +9614,9 @@ importers:
       '@teambit/api-reference.renderers.schema-nodes-index':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.this':
+        specifier: workspace:*
+        version: file:scopes/api-reference/renderers/this
       '@teambit/api-reference.renderers.type':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/type(react-dom@17.0.2)(react@17.0.2)
@@ -9620,6 +9653,9 @@ importers:
       '@teambit/api-reference.utils.copy-schema-node':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/copy-schema-node
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
+        specifier: workspace:*
+        version: file:scopes/api-reference/utils/custom-prism-syntax-highlighter-theme
       '@teambit/api-reference.utils.group-schema-node-by-signature':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/group-schema-node-by-signature
@@ -10716,6 +10752,8 @@ importers:
         injected: true
       '@teambit/api-reference.renderers.schema-nodes-index':
         injected: true
+      '@teambit/api-reference.renderers.this':
+        injected: true
       '@teambit/api-reference.renderers.type':
         injected: true
       '@teambit/api-reference.renderers.type-array':
@@ -10739,6 +10777,8 @@ importers:
       '@teambit/api-reference.utils.code-editor-options':
         injected: true
       '@teambit/api-reference.utils.copy-schema-node':
+        injected: true
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
         injected: true
       '@teambit/api-reference.utils.group-schema-node-by-signature':
         injected: true
@@ -11503,6 +11543,9 @@ importers:
       '@teambit/api-reference.renderers.schema-nodes-index':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.this':
+        specifier: workspace:*
+        version: file:scopes/api-reference/renderers/this
       '@teambit/api-reference.renderers.type':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/type(react-dom@17.0.2)(react@17.0.2)
@@ -11539,6 +11582,9 @@ importers:
       '@teambit/api-reference.utils.copy-schema-node':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/copy-schema-node
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
+        specifier: workspace:*
+        version: file:scopes/api-reference/utils/custom-prism-syntax-highlighter-theme
       '@teambit/api-reference.utils.group-schema-node-by-signature':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/group-schema-node-by-signature
@@ -12635,6 +12681,8 @@ importers:
         injected: true
       '@teambit/api-reference.renderers.schema-nodes-index':
         injected: true
+      '@teambit/api-reference.renderers.this':
+        injected: true
       '@teambit/api-reference.renderers.type':
         injected: true
       '@teambit/api-reference.renderers.type-array':
@@ -12658,6 +12706,8 @@ importers:
       '@teambit/api-reference.utils.code-editor-options':
         injected: true
       '@teambit/api-reference.utils.copy-schema-node':
+        injected: true
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
         injected: true
       '@teambit/api-reference.utils.group-schema-node-by-signature':
         injected: true
@@ -13422,6 +13472,9 @@ importers:
       '@teambit/api-reference.renderers.schema-nodes-index':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.this':
+        specifier: workspace:*
+        version: file:scopes/api-reference/renderers/this
       '@teambit/api-reference.renderers.type':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/type(react-dom@17.0.2)(react@17.0.2)
@@ -13458,6 +13511,9 @@ importers:
       '@teambit/api-reference.utils.copy-schema-node':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/copy-schema-node
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
+        specifier: workspace:*
+        version: file:scopes/api-reference/utils/custom-prism-syntax-highlighter-theme
       '@teambit/api-reference.utils.group-schema-node-by-signature':
         specifier: workspace:*
         version: file:scopes/api-reference/utils/group-schema-node-by-signature
@@ -14554,6 +14610,8 @@ importers:
         injected: true
       '@teambit/api-reference.renderers.schema-nodes-index':
         injected: true
+      '@teambit/api-reference.renderers.this':
+        injected: true
       '@teambit/api-reference.renderers.type':
         injected: true
       '@teambit/api-reference.renderers.type-array':
@@ -14577,6 +14635,8 @@ importers:
       '@teambit/api-reference.utils.code-editor-options':
         injected: true
       '@teambit/api-reference.utils.copy-schema-node':
+        injected: true
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
         injected: true
       '@teambit/api-reference.utils.group-schema-node-by-signature':
         injected: true
@@ -15918,6 +15978,9 @@ importers:
 
   scopes/api-reference/renderers/schema-node-member-summary:
     dependencies:
+      '@teambit/documenter.ui.table-heading-row':
+        specifier: 4.0.11
+        version: 4.0.11(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.table-row':
         specifier: 4.1.13
         version: 4.1.13(react-dom@17.0.2)(react@17.0.2)
@@ -16016,6 +16079,24 @@ importers:
       '@types/testing-library__jest-dom':
         specifier: 5.9.5
         version: 5.9.5
+
+  scopes/api-reference/renderers/this:
+    devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@types/jest':
+        specifier: 26.0.20
+        version: 26.0.20
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+      '@types/react':
+        specifier: 17.0.8
+        version: 17.0.8
 
   scopes/api-reference/renderers/type:
     dependencies:
@@ -16434,6 +16515,21 @@ importers:
         version: 12.20.4
 
   scopes/api-reference/utils/copy-schema-node:
+    devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@types/jest':
+        specifier: 26.0.20
+        version: 26.0.20
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+
+  scopes/api-reference/utils/custom-prism-syntax-highlighter-theme:
     devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
@@ -63104,6 +63200,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
+      '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@17.0.2)(react@17.0.2)
       '@teambit/documenter.ui.table-row': 4.1.13(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -63132,6 +63229,11 @@ packages:
       - '@testing-library/react'
       - '@testing-library/react-hooks'
       - '@types/react'
+    dev: false
+
+  file:scopes/api-reference/renderers/this:
+    resolution: {directory: scopes/api-reference/renderers/this, type: directory}
+    name: '@teambit/api-reference.renderers.this'
     dev: false
 
   file:scopes/api-reference/renderers/type(react-dom@17.0.2)(react@17.0.2):
@@ -63294,6 +63396,11 @@ packages:
   file:scopes/api-reference/utils/copy-schema-node:
     resolution: {directory: scopes/api-reference/utils/copy-schema-node, type: directory}
     name: '@teambit/api-reference.utils.copy-schema-node'
+    dev: false
+
+  file:scopes/api-reference/utils/custom-prism-syntax-highlighter-theme:
+    resolution: {directory: scopes/api-reference/utils/custom-prism-syntax-highlighter-theme, type: directory}
+    name: '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme'
     dev: false
 
   file:scopes/api-reference/utils/group-schema-node-by-signature:

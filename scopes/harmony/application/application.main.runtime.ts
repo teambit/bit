@@ -252,10 +252,13 @@ export class ApplicationMain {
   /**
    * registers a new app and sets a plugin for it.
    */
-  registerAppType<T>(appType: ApplicationType<T>) {
-    const plugin = new AppTypePlugin(this.getAppPattern(appType), appType, this.appSlot);
-    this.aspectLoader.registerPlugins([plugin]);
-    this.appTypeSlot.register([appType]);
+  registerAppType<T>(...appTypes: Array<ApplicationType<T>>) {
+    const plugins = appTypes.map((appType) => {
+      return new AppTypePlugin(this.getAppPattern(appType), appType, this.appSlot);
+    });
+
+    this.aspectLoader.registerPlugins(plugins);
+    this.appTypeSlot.register(appTypes);
     return this;
   }
 

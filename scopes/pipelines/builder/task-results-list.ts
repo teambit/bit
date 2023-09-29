@@ -11,7 +11,9 @@ export class TaskResultsList {
     /**
      * results of all tasks executed in the build pipeline.
      */
-    public tasksResults: TaskResults[]
+    public tasksResults: TaskResults[],
+
+    public capsuleRootDir: string
   ) {}
 
   hasErrors(): boolean {
