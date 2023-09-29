@@ -22,24 +22,35 @@ export type ArtifactDefinition = {
   description?: string;
 
   /**
-   * glob patterns of files to include upon artifact creation. minimatch is used to match the patterns.
-   * e.g. ['*.ts', '!foo.ts'] matches all ts files but ignores foo.ts.
+   * glob patterns of files to include upon artifact creation.
+   * examples:
+   * ['*.ts', '!foo.ts'] - matches all ts files but ignores foo.ts.
+   * ['dist'] - matches all files recursively from dist dir. (similar to 'dist/**').
+   *
+   * the glob array are passed to [globby](https://www.npmjs.com/package/globby), which interprets the patterns
+   * according to [minimatch](https://github.com/isaacs/minimatch#usage).
    */
   globPatterns?: string[];
 
   /**
+   * @deprecated use globPatterns instead.
+   *
    * directories of files to include upon artifact creation. minimatch is used to match the patterns.
    * e.g. ['/tmp'] will include all files from tmp dir
    */
   directories?: string[];
 
   /**
+   * @deprecated use globPatterns instead.
+   *
    * define the root directory for reading the artifacts from the capsule file system.
    * the rootDir must be unique per artifacts, otherwise we risk overriding data between artifacts.
    */
   rootDir?: string;
 
   /**
+   * @deprecated use globPatterns instead.
+   *
    * adds a directory prefix for all artifact files.
    */
   dirPrefix?: string;

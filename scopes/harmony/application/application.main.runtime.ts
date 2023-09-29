@@ -252,10 +252,13 @@ export class ApplicationMain {
   /**
    * registers a new app and sets a plugin for it.
    */
-  registerAppType<T>(appType: ApplicationType<T>) {
-    const plugin = new AppTypePlugin(this.getAppPattern(appType), appType, this.appSlot);
-    this.aspectLoader.registerPlugins([plugin]);
-    this.appTypeSlot.register([appType]);
+  registerAppType<T>(...appTypes: Array<ApplicationType<T>>) {
+    const plugins = appTypes.map((appType) => {
+      return new AppTypePlugin(this.getAppPattern(appType), appType, this.appSlot);
+    });
+
+    this.aspectLoader.registerPlugins(plugins);
+    this.appTypeSlot.register(appTypes);
     return this;
   }
 
@@ -347,7 +350,7 @@ export class ApplicationMain {
     const res = await env.run(this.appService);
     const context = res.results[0].data;
     if (!context) throw new AppNotFound(appName);
-    const hostRootDir = this.workspace.getComponentPackagePath(component);
+    const hostRootDir = await this.workspace.getComponentPackagePath(component);
     const appContext = new AppContext(appName, context.dev, component, this.workspace.path, context, hostRootDir, port);
     return appContext;
   }
