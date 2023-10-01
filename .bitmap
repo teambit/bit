@@ -1030,9 +1030,8 @@
         "rootDir": "scopes/api-reference/renderers/schema-node-member-summary"
     },
     "renderers/this": {
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.api-reference",
+        "scope": "teambit.api-reference",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/this"
     },
@@ -1301,9 +1300,8 @@
         "rootDir": "scopes/ui-foundation/user-agent"
     },
     "utils/custom-prism-syntax-highlighter-theme": {
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.api-reference",
+        "scope": "teambit.api-reference",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/utils/custom-prism-syntax-highlighter-theme"
     },
