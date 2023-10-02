@@ -34,7 +34,7 @@ export class ParameterTransformer implements SchemaTransformer {
       context.getLocation(node),
       ParameterTransformer.getName(node),
       type,
-      Boolean(node.questionToken),
+      Boolean(node.questionToken) || Boolean(node.initializer),
       node.initializer ? node.initializer.getText() : undefined,
       undefined,
       await ParameterTransformer.getObjectBindingNodes(node, type, context),

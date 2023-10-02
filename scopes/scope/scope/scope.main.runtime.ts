@@ -601,8 +601,8 @@ export class ScopeMain implements ComponentFactory {
     });
   }
 
-  async get(id: ComponentID): Promise<Component | undefined> {
-    return this.componentLoader.get(id);
+  async get(id: ComponentID, useCache = true): Promise<Component | undefined> {
+    return this.componentLoader.get(id, undefined, useCache);
   }
 
   async getFromConsumerComponent(consumerComponent: ConsumerComponent): Promise<Component> {

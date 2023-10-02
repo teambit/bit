@@ -441,9 +441,8 @@ export class Workspace implements ComponentFactory {
    * list all modified components in the workspace.
    */
   async modified(): Promise<Component[]> {
-    const ids: any = await this.componentList.listModifiedComponents(false);
-    const componentIds = ids.map(ComponentID.fromLegacy);
-    return this.getMany(componentIds);
+    const legacyComps = (await this.componentList.listModifiedComponents(true)) as ConsumerComponent[];
+    return this.getManyByLegacy(legacyComps);
   }
 
   /**

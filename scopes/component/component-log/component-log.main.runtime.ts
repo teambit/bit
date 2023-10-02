@@ -106,7 +106,10 @@ export class ComponentLogMain {
     const workspace = this.workspace;
     if (!workspace) throw new OutsideWorkspaceError();
     const componentId = await workspace.getComponentIdByPath(filePath);
-    if (!componentId) throw new Error(`unable to find component for file ${filePath}`);
+    if (!componentId) {
+      // filePath could be from the component dir but the file is not part of the bit-component (such as component.json)
+      return [];
+    }
 
     const rootDir = workspace.componentDir(componentId, undefined);
 

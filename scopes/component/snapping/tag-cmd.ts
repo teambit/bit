@@ -240,6 +240,16 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       else if (persist === 'skip-build') build = false;
       else throw new BitError(`unknown value for --persist, use either --persist or --persist=skip-build`);
     }
+    if (!build) {
+      this.logger.consoleWarning(
+        `tagging components on "main" lane when using remote build is not recommended. To avoid SemVer versions of your component with failing builds, please refer to:
+- Snap changes in a different lane and merge to "main" on your remote (learn more on lanes - https://bit.dev/reference/lanes/getting-started-with-lanes)
+- Use \`bit tag --build\` to build your components locally.
+- Use \`snap\` or \`build\` first to validate your build passing, and then version and export safely.
+
+To undo local tag use the "bit reset" command.`
+      );
+    }
 
     const params = {
       ids: patterns,
@@ -265,7 +275,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     };
 
     const results = await this.snapping.tag(params);
-    if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
+    if (!results) return chalk.yellow(persist ? 'no soft-tag found' : NOTHING_TO_TAG_MSG);
     const { taggedComponents, autoTaggedResults, warnings, newComponents, removedComponents }: TagResults = results;
     const changedComponents = taggedComponents.filter((component) => !newComponents.searchWithoutVersion(component.id));
     const addedComponents = taggedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));

@@ -37,7 +37,7 @@ export class LongProcessLogger {
     if (process.env.CI && !shouldConsole) shouldConsole = 'success';
     const description = this.processDescription;
     const duration = process.hrtime(this.startTime);
-    const completedOrFailedStr = !shouldConsole || shouldConsole === 'success' ? 'Completed' : 'Failed';
+    const completedOrFailedStr = !shouldConsole || shouldConsole === 'success' ? 'Succeeded' : 'Failed';
     const message = `${description}. ${completedOrFailedStr} in ${prettyTime(duration)}`;
     this.logPublisher.info(message);
     if (shouldConsole) {
