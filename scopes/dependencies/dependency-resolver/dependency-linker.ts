@@ -45,6 +45,8 @@ export type LinkingOptions = {
    */
   linkToDir?: string;
 
+  includePeers?: boolean;
+
   /**
    * whether link should import objects before linking
    */
@@ -188,6 +190,24 @@ export class DependencyLinker {
       const components = componentDirectoryMap.toArray().map(([component]) => component);
       const linkToDirResults = await this.linkToDir(finalRootDir, options.linkToDir, components);
       result.linkToDirResults = linkToDirResults;
+      if (options.includePeers) {
+        const peers = new Set<string>();
+        componentDirectoryMap.toArray().forEach(([component]) => {
+          for (const peer of Object.keys(component.state._consumer.peerPackageDependencies)) {
+            peers.add(peer);
+          }
+        });
+        for (const peer of Array.from(peers)) {
+          result.linkToDirResults.push({
+            componentId: peer,
+            linksDetail: {
+              packageName: peer,
+              from: path.join(finalRootDir, 'node_modules', peer),
+              to: path.join(options.linkToDir, 'node_modules', peer),
+            },
+          });
+        }
+      }
       return result;
     }
 
