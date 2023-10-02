@@ -47,7 +47,7 @@ export function SideBar({ drawerSlot, items = [], overrideDrawerSlot, ...rest }:
         if (!drawer || !drawer.name) return null;
         // consider passing collapse all as a prop so each drawer collapses itself
         const isOpen = openDrawerList.includes(drawer.id);
-
+        const DrawerRenderComponent = drawer.render;
         return (
           <DrawerUI
             className={classNames(styles.sidebarDrawer, isOpen && styles.open)}
@@ -58,7 +58,7 @@ export function SideBar({ drawerSlot, items = [], overrideDrawerSlot, ...rest }:
             Widgets={drawer.widgets}
             Context={drawer.Context}
           >
-            <drawer.render />
+            <DrawerRenderComponent />
           </DrawerUI>
         );
       })}
