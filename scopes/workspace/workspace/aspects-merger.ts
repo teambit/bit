@@ -4,8 +4,8 @@ import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-com
 import { BitId } from '@teambit/legacy-bit-id';
 import { EnvsAspect } from '@teambit/envs';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { partition, mergeWith, merge } from 'lodash';
+import { ExtensionDataList, ignoreVersionPredicate } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { partition, mergeWith, merge, uniq, uniqWith } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';
 import { MergeConflictFile } from './merge-conflict-file';
@@ -93,7 +93,7 @@ export class AspectsMerger {
       : undefined;
 
     this.removeAutoDepsFromConfig(componentId, configMergeExtensions);
-    const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
+    const scopeExtensions = this.getComponentFromScopeWithoutDuplications(componentFromScope);
     // backward compatibility. previously, it was saved as an array into the model (when there was merge-config)
     this.removeAutoDepsFromConfig(componentId, scopeExtensions, true);
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
@@ -201,6 +201,23 @@ export class AspectsMerger {
       beforeMerge: extensionsToMerge,
       errors,
     };
+  }
+
+  /**
+   * before version 0.0.882 it was possible to save Version object with the same extension twice.
+   */
+  private getComponentFromScopeWithoutDuplications(componentFromScope?: Component) {
+    if (!componentFromScope) return new ExtensionDataList();
+    const scopeExtensions = componentFromScope.config.extensions;
+    const scopeExtIds = scopeExtensions.ids;
+    const scopeExtHasDuplications = scopeExtIds.length !== uniq(scopeExtIds).length;
+    if (!scopeExtHasDuplications) {
+      return scopeExtensions;
+    }
+    // let's remove this duplicated extension blindly without trying to merge. (no need to merge coz it's old data from scope
+    // which will be overridden anyway by the workspace or other config strategies).
+    const arr = uniqWith(scopeExtensions, ignoreVersionPredicate);
+    return ExtensionDataList.fromArray(arr);
   }
 
   /**
