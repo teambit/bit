@@ -16,8 +16,8 @@
         },
         "devDependencies": {
           "@teambit/legacy": "-",
-          "@types/react": "17.0.8",
-          "@types/react-dom": "17.0.21"
+          "@types/react": "^17.0.8",
+          "@types/react-dom": "^17.0.5"
         },
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
