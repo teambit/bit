@@ -8,10 +8,9 @@ export default function isBitIdMatchByWildcards(bitId: BitId, idsWithWildcard: s
   const isNameMatchByWildcard = (name: string): boolean => {
     return regexPatterns.some((regex) => regex.test(name));
   };
-  return (
-    isNameMatchByWildcard(bitId.toStringWithoutVersion()) ||
-    isNameMatchByWildcard(bitId.toStringWithoutScopeAndVersion())
-  );
+  return bitId.hasScope()
+    ? isNameMatchByWildcard(bitId.toStringWithoutVersion())
+    : isNameMatchByWildcard(bitId.toStringWithoutScopeAndVersion());
 }
 
 function getRegex(idWithWildcard) {

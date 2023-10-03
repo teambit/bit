@@ -8,6 +8,7 @@ import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/con
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import EnvsAspect from '@teambit/envs';
+import { BitId } from '@teambit/legacy-bit-id';
 import { getPathStatIfExist } from '@teambit/legacy/dist/utils/fs/last-modified';
 
 export type MergeOptions = {
@@ -36,7 +37,7 @@ export class BitMap {
     shouldMergeConfig = false
   ): boolean {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     const currentConfig = (bitMapEntry.config ||= {})[aspectId];
     if (isEqual(currentConfig, config)) {
       return false; // no changes
@@ -61,13 +62,28 @@ export class BitMap {
     return true; // changes have been made
   }
 
+  updateDefaultScope(oldScope: string, newScope: string) {
+    const changedId: BitId[] = [];
+    this.legacyBitMap.components.forEach((componentMap) => {
+      // only new components (not snapped/tagged) can be changed
+      if (componentMap.defaultScope === oldScope && !componentMap.id.hasVersion()) {
+        componentMap.defaultScope = newScope;
+        changedId.push(componentMap.id);
+      }
+    });
+    if (changedId.length) {
+      this.legacyBitMap.markAsChanged();
+    }
+    return changedId;
+  }
+
   markAsChanged() {
     this.legacyBitMap.markAsChanged();
   }
 
   removeComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist: boolean): boolean {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     const currentConfig = (bitMapEntry.config ||= {})[aspectId];
     if (currentConfig) {
       delete bitMapEntry.config[aspectId];
@@ -84,7 +100,7 @@ export class BitMap {
   }
 
   removeEntireConfig(id: ComponentID): boolean {
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     if (!bitMapEntry.config) return false;
     delete bitMapEntry.config;
     this.legacyBitMap.markAsChanged();
@@ -92,13 +108,13 @@ export class BitMap {
   }
 
   setEntireConfig(id: ComponentID, config: Record<string, any>) {
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     bitMapEntry.config = config;
     this.legacyBitMap.markAsChanged();
   }
 
   removeDefaultScope(id: ComponentID) {
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     if (bitMapEntry.defaultScope) {
       delete bitMapEntry.defaultScope;
       this.legacyBitMap.markAsChanged();
@@ -106,7 +122,7 @@ export class BitMap {
   }
 
   setDefaultScope(id: ComponentID, defaultScope: string) {
-    const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
+    const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
     bitMapEntry.defaultScope = defaultScope;
     this.legacyBitMap.markAsChanged();
   }
@@ -123,18 +139,12 @@ export class BitMap {
    * throws if not found
    * @see getBitmapEntryIfExist
    */
-  getBitmapEntry(
-    id: ComponentID,
-    { ignoreVersion, ignoreScopeAndVersion }: GetBitMapComponentOptions = {}
-  ): ComponentMap {
-    return this.legacyBitMap.getComponent(id._legacy, { ignoreVersion, ignoreScopeAndVersion });
+  getBitmapEntry(id: ComponentID, { ignoreVersion }: GetBitMapComponentOptions = {}): ComponentMap {
+    return this.legacyBitMap.getComponent(id._legacy, { ignoreVersion });
   }
 
-  getBitmapEntryIfExist(
-    id: ComponentID,
-    { ignoreVersion, ignoreScopeAndVersion }: GetBitMapComponentOptions = {}
-  ): ComponentMap | undefined {
-    return this.legacyBitMap.getComponentIfExist(id._legacy, { ignoreVersion, ignoreScopeAndVersion });
+  getBitmapEntryIfExist(id: ComponentID, { ignoreVersion }: GetBitMapComponentOptions = {}): ComponentMap | undefined {
+    return this.legacyBitMap.getComponentIfExist(id._legacy, { ignoreVersion });
   }
 
   getAspectIdFromConfig(

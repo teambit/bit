@@ -11,7 +11,6 @@ import put from './lib/put';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import scopeConfig from './lib/scope-config';
 import initScope from './lib/scope-init';
-import scopeList from './lib/scope-list';
 import scopeShow from './lib/scope-show';
 
 export {
@@ -21,7 +20,6 @@ export {
   describeScope,
   initScope,
   put,
-  scopeList,
   scopeShow,
   graph,
   fetch,

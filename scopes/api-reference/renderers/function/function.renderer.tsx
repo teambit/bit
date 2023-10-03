@@ -4,6 +4,7 @@ import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-re
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import classnames from 'classnames';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
+import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
 
 import styles from './function.renderer.module.scss';
 
@@ -30,22 +31,6 @@ function FunctionComponent(props: APINodeRenderProps) {
   }
 
   const Params = params.map((param) => {
-    // console.log("🚀 ~ file: function.renderer.tsx:79 ~ Params ~ param:", param)
-    // const paramRenderer = renderers.find((renderer) => renderer.predicate(param));
-    // const paramRef = param.type;
-    // console.log("🚀 ~ file: function.renderer.tsx:36 ~ Params ~ paramRef:", paramRef)
-    // const paramRefRenderer = paramRef && renderers.find((renderer) => renderer.predicate(paramRef));
-    // // console.log("🚀 ~ file: function.renderer.tsx:38 ~ Params ~ paramRefRenderer:", paramRefRenderer)
-    // const PropsRefComponent =
-    //   paramRef && paramRefRenderer?.Component ? (
-    //     <paramRefRenderer.Component
-    //       {...props}
-    //       key={`props-ref-${param.name}`}
-    //       depth={(props.depth ?? 0) + 1}
-    //       apiNode={{ ...props.apiNode, renderer: paramRefRenderer, api: paramRef }}
-    //       metadata={{ [paramRef.__schema]: { columnView: true } }}
-    //     />
-    //   ) : null;
     const paramRenderer = renderers.find((renderer) => renderer.predicate(param));
 
     const ParamComponent = paramRenderer?.Component ? (
@@ -54,7 +39,7 @@ function FunctionComponent(props: APINodeRenderProps) {
         key={`props-${param.name}`}
         depth={(props.depth ?? 0) + 1}
         apiNode={{ ...props.apiNode, renderer: paramRenderer, api: param }}
-        metadata={{ [param.__schema]: { columnView: true } }}
+        metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
       />
     ) : (
       <defaultParamRenderer.Component
@@ -62,15 +47,11 @@ function FunctionComponent(props: APINodeRenderProps) {
         key={`props-${param.name}`}
         depth={(props.depth ?? 0) + 1}
         apiNode={{ ...props.apiNode, renderer: defaultParamRenderer, api: param }}
-        metadata={{ [param.__schema]: { columnView: true } }}
+        metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
       />
     );
 
-    return (
-      <div key={`param-${param.name}-${param.__schema}`} className={classnames(styles.container, styles.topPad)}>
-        <div className={styles.paramRef}>{ParamComponent}</div>
-      </div>
-    );
+    return ParamComponent;
   });
 
   const returnDocComment = api.doc?.findTag(TagName.return)?.comment;
@@ -92,10 +73,15 @@ function FunctionComponent(props: APINodeRenderProps) {
         </div>
       )}
       {Params.length > 0 && (
-        <React.Fragment key={`parameter-list`}>
+        <div key={`parameter-list`} className={styles.container}>
           <div className={styles.title}>Parameters</div>
-          <div className={styles.containerList}>{...Params}</div>
-        </React.Fragment>
+          <HeadingRow
+            className={styles.paramHeading}
+            headings={['name', 'type', 'default', 'description']}
+            colNumber={4}
+          />
+          {...Params}
+        </div>
       )}
       <div className={styles.container}>
         <div className={styles.title}>Returns</div>
