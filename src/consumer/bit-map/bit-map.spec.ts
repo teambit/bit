@@ -21,6 +21,7 @@ const addComponentParamsFixture = {
   componentId: new BitId({ name: 'is-string' }),
   files: [{ name: 'is-string.js', relativePath: 'is-string.js', test: false }],
   mainFile: 'is-string.js',
+  defaultScope: 'my-scope',
 };
 
 describe('BitMap', function () {
@@ -44,6 +45,7 @@ describe('BitMap', function () {
     });
     it('should sort the components alphabetically', async () => {
       const exampleComponent = { ...addComponentParamsFixture };
+      exampleComponent.defaultScope = '';
       bitMap = await getBitmapInstance();
       exampleComponent.componentId = new BitId({ scope: 'my-scope', name: 'is-string1', version: '0.0.1' });
       bitMap.addComponent(exampleComponent);
@@ -80,6 +82,7 @@ describe('BitMap', function () {
       const invalidBitMap = {
         'scope/comp1': {
           mainFile: 'index.js',
+          scope: 'scope',
           rootDir: 'comp1',
           exported: true,
         },

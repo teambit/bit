@@ -8,6 +8,7 @@ import {
   CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR,
   CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR,
   CFG_USE_DATED_CAPSULES,
+  CFG_CACHE_LOCK_ONLY_CAPSULES,
 } from '@teambit/legacy/dist/constants';
 import { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
 import { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
@@ -332,6 +333,12 @@ needed-for: ${neededFor || '<unknown>'}`);
     return globalConfig === true || globalConfig === 'true';
   }
 
+  shouldCacheLockFileOnly(): boolean {
+    const globalConfig = this.globalConfig.getSync(CFG_CACHE_LOCK_ONLY_CAPSULES);
+    // @ts-ignore
+    return globalConfig === true || globalConfig === 'true';
+  }
+
   getAspectCapsulePath() {
     const defaultPath = `${this.scope.path}-aspects`;
     if (this.scope.isGlobalScope) {
@@ -456,6 +463,7 @@ needed-for: ${neededFor || '<unknown>'}`);
   getDefaultIsolateOpts() {
     const useHash = this.shouldUseHashForCapsules();
     const useDatedDirs = this.shouldUseDatedCapsules();
+    const cacheLockFileOnly = this.shouldCacheLockFileOnly();
     const nodeLinker = this.getAspectsNodeLinker();
 
     const opts = {
@@ -465,6 +473,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       packageManager: this.getAspectsPackageManager(),
       nodeLinker,
       useDatedDirs,
+      cacheLockFileOnly,
       skipIfExists: true,
       seedersOnly: true,
       includeFromNestedHosts: true,

@@ -34,7 +34,7 @@ export async function listScope({
   async function remoteList(): Promise<ListScopeResult[]> {
     const remote: Remote = await getRemoteByName(scopeName as string, consumer);
     loader.start(BEFORE_REMOTE_LIST);
-    return remote.list(namespacesUsingWildcards, strategiesNames);
+    return remote.list(`${scopeName}/${namespacesUsingWildcards}`, strategiesNames);
   }
 
   async function localList(): Promise<ListScopeResult[]> {
