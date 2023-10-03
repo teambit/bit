@@ -429,7 +429,11 @@ export class WorkspaceComponentLoader {
     if (fromCache && useCache) {
       return fromCache;
     }
-    const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, loadOptsWithDefaults));
+    let consumerComponent;
+    if (await this.workspace.hasId(id)) {
+      consumerComponent = legacyComponent || (await this.getConsumerComponent(id, loadOptsWithDefaults));
+    }
+
     // in case of out-of-sync, the id may changed during the load process
     const updatedId = consumerComponent ? ComponentID.fromLegacy(consumerComponent.id, id.scope) : id;
     const component = await this.loadOne(updatedId, consumerComponent, loadOptsWithDefaults);
