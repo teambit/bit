@@ -16,6 +16,8 @@ import { Logger } from '@teambit/logger';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { readModulesManifest } from '@pnpm/modules-yaml';
+import { buildDependenciesHierarchy, createPackagesSearcher } from '@pnpm/reviewing.dependencies-hierarchy';
+import { renderTree } from '@pnpm/list';
 import { ProjectManifest } from '@pnpm/types';
 import { join } from 'path';
 import { readConfig } from './read-config';
@@ -222,5 +224,38 @@ export class PnpmPackageManager implements PackageManager {
 
   async pruneModules(rootDir: string): Promise<void> {
     return pnpmPruneModules(rootDir);
+  }
+
+  async findUsages(depName: string, opts: { lockfileDir: string }): Promise<string> {
+    const search = createPackagesSearcher([depName]);
+    const results = await Promise.all(
+      Object.entries(
+        await buildDependenciesHierarchy(undefined, {
+          depth: Infinity,
+          include: {
+            dependencies: true,
+            devDependencies: true,
+            optionalDependencies: true,
+          },
+          lockfileDir: opts.lockfileDir,
+          registries: {
+            default: 'https://registry.npmjs.org',
+          },
+          search,
+        })
+      ).map(async ([projectPath, builtDependenciesHierarchy]) => {
+        return {
+          path: projectPath,
+          ...builtDependenciesHierarchy,
+        };
+      })
+    );
+    return renderTree(results, {
+      alwaysPrintRootPackage: false,
+      depth: Infinity,
+      search: true,
+      long: false,
+      showExtraneous: false,
+    });
   }
 }

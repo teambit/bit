@@ -102,6 +102,9 @@ importers:
       '@pnpm/fetch':
         specifier: 7.0.3
         version: 7.0.3(@pnpm/logger@5.0.0)
+      '@pnpm/list':
+        specifier: ^9.1.1
+        version: 9.1.1(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-file':
         specifier: 8.1.2
         version: 8.1.2(@pnpm/logger@5.0.0)
@@ -135,6 +138,9 @@ importers:
       '@pnpm/registry-mock':
         specifier: 3.4.0
         version: 3.4.0
+      '@pnpm/reviewing.dependencies-hierarchy':
+        specifier: ^2.1.0
+        version: 2.1.0(@pnpm/logger@5.0.0)
       '@pnpm/semver-diff':
         specifier: 1.1.0
         version: 1.1.0
@@ -13393,6 +13399,9 @@ importers:
       '@pnpm/error':
         specifier: 5.0.2
         version: 5.0.2
+      '@pnpm/list':
+        specifier: ^9.1.1
+        version: 9.1.1(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-file':
         specifier: 8.1.2
         version: 8.1.2(@pnpm/logger@5.0.0)
@@ -24624,6 +24633,23 @@ packages:
       symlink-dir: 5.2.0
     dev: false
 
+  /@pnpm/list@9.1.1(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-WueFbfnDkGu30UMEm97j8H9bo1F8w7WOurZNxTU811kjDkSNxSuGXRne6E4ndImMJDjz3JMPMCuf9X5JyOOgbA==}
+    engines: {node: '>=16.14'}
+    dependencies:
+      '@pnpm/read-package-json': 8.0.3
+      '@pnpm/read-project-manifest': 5.0.6
+      '@pnpm/reviewing.dependencies-hierarchy': 2.1.0(@pnpm/logger@5.0.0)
+      '@pnpm/types': 9.2.0
+      archy: 1.0.0
+      chalk: 4.1.2
+      cli-columns: 4.0.0
+      p-limit: 3.1.0
+      ramda: /@pnpm/ramda@0.28.1
+    transitivePeerDependencies:
+      - '@pnpm/logger'
+    dev: false
+
   /@pnpm/local-resolver@10.0.7:
     resolution: {integrity: sha512-lNjEc/YoL0N58roxV4OyCXOsY8unyo0xkdYK1YlbCBm3Z/Fuo/HHFlVy5dW+JgGK/AoIeM82iVNQp/2R/2n7GA==}
     engines: {node: '>=16.14'}
@@ -24684,6 +24710,19 @@ packages:
     engines: {node: '>=16.14'}
     dependencies:
       '@pnpm/types': 9.2.0
+    dev: false
+
+  /@pnpm/lockfile-utils@8.0.5:
+    resolution: {integrity: sha512-16t00xebejMsLUN19bdfJR7eUwm/lGMXApxlZfw8xWB+dInt9aAX2Cs9jbXcDrBhGiE8pvdw22yWF+kCm4SXAw==}
+    engines: {node: '>=16.14'}
+    dependencies:
+      '@pnpm/dependency-path': 2.1.3
+      '@pnpm/lockfile-types': 5.1.1
+      '@pnpm/pick-fetcher': 2.0.1
+      '@pnpm/resolver-base': 10.0.2
+      '@pnpm/types': 9.2.0
+      get-npm-tarball-url: 2.0.3
+      ramda: /@pnpm/ramda@0.28.1
     dev: false
 
   /@pnpm/lockfile-utils@8.0.5:
@@ -25058,6 +25097,11 @@ packages:
     engines: {node: '>=16.14'}
     dev: false
 
+  /@pnpm/pick-fetcher@2.0.1:
+    resolution: {integrity: sha512-rW9IqroTLSdrFgCRfxDOyL845e3ju0Lt8HmfljgJLIR8mIoCE6PUR7+JouoSUcauAx28mSMbYbbRYXKlxacdiA==}
+    engines: {node: '>=16.14'}
+    dev: false
+
   /@pnpm/pick-registry-for-package@5.0.2:
     resolution: {integrity: sha512-sHNV+JHl5J+70MYIxvYU1Xlj9516pbJQTDvqXa5flwiOCW2HrVBVE9QRaGXHycmUf7mR4dkEqfOOmWTTkYJmaA==}
     engines: {node: '>=16.14'}
@@ -25375,6 +25419,28 @@ packages:
     engines: {node: '>=16.14'}
     dependencies:
       '@pnpm/types': 9.2.0
+    dev: false
+
+  /@pnpm/reviewing.dependencies-hierarchy@2.1.0(@pnpm/logger@5.0.0):
+    resolution: {integrity: sha512-mlqCDIpmUxeXxZvs0ieexgQU6w+OPbEWfz6htsx0ofUZCf4AqVvYAMFoFpA8S4Jhhog1YPCPcOqOBXp+DteEjw==}
+    engines: {node: '>=16.14'}
+    dependencies:
+      '@pnpm/dependency-path': 2.1.3
+      '@pnpm/lockfile-file': 8.1.2(@pnpm/logger@5.0.0)
+      '@pnpm/lockfile-utils': 8.0.5
+      '@pnpm/matcher': 5.0.0
+      '@pnpm/modules-yaml': 12.1.2
+      '@pnpm/normalize-registries': 5.0.2
+      '@pnpm/npm-package-arg': 1.0.0
+      '@pnpm/read-modules-dir': 6.0.1
+      '@pnpm/read-package-json': 8.0.3
+      '@pnpm/types': 9.2.0
+      normalize-path: 3.0.0
+      realpath-missing: 1.1.0
+      resolve-link-target: 2.0.0
+      semver: 7.5.4
+    transitivePeerDependencies:
+      - '@pnpm/logger'
     dev: false
 
   /@pnpm/run-npm@6.0.0:
@@ -56336,6 +56402,7 @@ packages:
       '@pnpm/default-reporter': 12.4.0(@pnpm/logger@5.0.0)
       '@pnpm/dependency-path': 2.1.3
       '@pnpm/error': 5.0.2
+      '@pnpm/list': 9.1.1(@pnpm/logger@5.0.0)
       '@pnpm/lockfile-file': 8.1.2(@pnpm/logger@5.0.0)
       '@pnpm/logger': 5.0.0
       '@pnpm/modules-yaml': 12.1.2

@@ -31,6 +31,7 @@ import {
   DependenciesUsageCmd,
   RemoveDependenciesFlags,
   SetDependenciesFlags,
+  WhyCmd,
 } from './dependencies-cmd';
 import { DependenciesAspect } from './dependencies.aspect';
 
@@ -312,9 +313,10 @@ export class DependenciesMain {
       new DependenciesResetCmd(depsMain),
       new DependenciesEjectCmd(depsMain),
       new DependenciesBlameCmd(depsMain),
-      new DependenciesUsageCmd(depsMain),
+      new DependenciesUsageCmd(depsMain, depsResolver, workspace),
     ];
-    cli.register(depsCmd);
+    const whyCmd = new WhyCmd(depsMain, depsResolver, workspace);
+    cli.register(depsCmd, whyCmd);
 
     return depsMain;
   }
