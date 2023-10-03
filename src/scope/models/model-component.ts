@@ -627,7 +627,7 @@ export default class Component extends BitObject {
       const versionToAddRef = Ref.from(versionToAdd);
       const parent = previouslyUsedVersion ? this.getRef(previouslyUsedVersion) : null;
       if (!parent) {
-        const existingComponentInLane = lane.getComponentByName(currentBitId);
+        const existingComponentInLane = lane.getComponent(currentBitId);
         const currentHead = (existingComponentInLane && existingComponentInLane.head) || this.getHead();
         if (currentHead) {
           throw new Error(

@@ -324,7 +324,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);
     const objectRepo = this.objects();
     const componentHadHead = component.hasHead();
-    const laneItem = lane?.getComponentByName(component.toBitId());
+    const laneItem = lane?.getComponent(component.toBitId());
 
     let allVersionsObjects: Version[] | undefined;
 
