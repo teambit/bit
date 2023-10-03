@@ -231,6 +231,9 @@ export class WorkspaceComponentLoader {
     throwOnFailure = true,
     longProcessLogger
   ): Promise<GetManyRes> {
+    if (workspaceIds.length > 100) {
+      console.time('getComponentsWithoutLoadExtensions time');
+    }
     const { components, invalidComponents } = await this.getComponentsWithoutLoadExtensions(
       workspaceIds,
       scopeIds,
@@ -238,6 +241,9 @@ export class WorkspaceComponentLoader {
       throwOnFailure,
       longProcessLogger
     );
+    if (workspaceIds.length > 100) {
+      console.timeEnd('getComponentsWithoutLoadExtensions time');
+    }
 
     const allExtensions: ExtensionDataList[] = components.map((component) => {
       return component.state._consumer.extensions;
@@ -247,13 +253,24 @@ export class WorkspaceComponentLoader {
     // Ensure we won't load the same extension many times
     // We don't want to ignore version here, as we do want to load different extensions with same id but different versions here
     const mergedExtensions = ExtensionDataList.mergeConfigs(allExtensions, false);
+    if (workspaceIds.length > 100) {
+      console.time('loadComponentsExtensions time');
+    }
     await this.workspace.loadComponentsExtensions(mergedExtensions);
-
+    if (workspaceIds.length > 100) {
+      console.timeEnd('loadComponentsExtensions time');
+    }
+    if (workspaceIds.length > 100) {
+      console.time('executeLoadSlot time');
+    }
     const withAspects = await Promise.all(
       components.map((component) => {
         return this.executeLoadSlot(component);
       })
     );
+    if (workspaceIds.length > 100) {
+      console.timeEnd('executeLoadSlot time');
+    }
     await this.warnAboutMisconfiguredEnvs(withAspects);
 
     return { components: withAspects, invalidComponents };
