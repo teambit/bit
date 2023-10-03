@@ -69,19 +69,34 @@ export class StatusMain {
       loadDocs: false,
       loadCompositions: false,
     };
+    console.time('listWithInvalid time');
     const { components: allComps, invalidComponents: allInvalidComponents } = await this.workspace.listWithInvalid(
       loadOpts
     );
+    console.timeEnd('listWithInvalid time');
     const consumer = this.workspace.consumer;
     const laneObj = await consumer.getCurrentLaneObject();
     const componentsList = new ComponentsList(consumer);
+    console.time('listNewComponents time');
+
     const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(
       true,
       loadOpts
     )) as ConsumerComponent[];
+    console.timeEnd('listNewComponents time');
+    console.time('listModifiedComponents time');
+
     const modifiedComponents = (await componentsList.listModifiedComponents(true, loadOpts)) as ConsumerComponent[];
+    console.timeEnd('listModifiedComponents time');
+    console.time('listExportPendingComponents time');
+
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
+    console.timeEnd('listExportPendingComponents time');
+    console.time('addRemovedStagedIfNeeded time');
+
     await this.addRemovedStagedIfNeeded(stagedComponents);
+    console.timeEnd('addRemovedStagedIfNeeded time');
+
     const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
       const versions = await stagedComp.getLocalTagsOrHashes(consumer.scope.objects);
       return {
