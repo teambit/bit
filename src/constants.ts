@@ -383,6 +383,8 @@ export const CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS = 'default_resolve_envs_from_ro
  */
 export const CFG_USE_DATED_CAPSULES = 'use_dated_capsules';
 
+export const CFG_CACHE_LOCK_ONLY_CAPSULES = 'cache_lock_only_capsules';
+
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
 export const CFG_PROXY_NO_PROXY = 'proxy.no_proxy';
