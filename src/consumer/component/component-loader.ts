@@ -129,6 +129,12 @@ export default class ComponentLoader {
       '🚀 ~ file: component-loader.ts:121 ~ ComponentLoader ~ ids.forEach ~ idsToProcess:',
       idsToProcess.map((i) => i.toString())
     );
+    if (idsToProcess[0].toString() === 'teambit.community/envs/community-react@2.1.8') {
+      console.trace(
+        '🚀 ~ file: component-loader.ts:121 ~ ComponentLoader ~ ids.forEach ~ idsToProcess:',
+        idsToProcess.map((i) => i.toString())
+      );
+    }
 
     const allComponents: Component[] = [];
     await mapSeries(idsToProcess, async (id: BitId) => {
@@ -154,6 +160,7 @@ export default class ComponentLoader {
     removedComponents: Component[],
     loadOpts?: ComponentLoadOptions
   ) {
+    console.log('🚀 ~ file: component-loader.ts:163 ~ ComponentLoader ~ id:', id.toString());
     let componentMap = this.consumer.bitMap.getComponent(id);
     if (componentMap.isRemoved()) {
       const fromModel = await this.consumer.scope.getConsumerComponentIfExist(id);
@@ -225,7 +232,9 @@ export default class ComponentLoader {
 
     try {
       await loadDependencies();
-      await runOnComponentLoadEvent();
+      if (loadOpts?.loadExtensions) {
+        await runOnComponentLoadEvent();
+      }
     } catch (err: any) {
       return handleError(err);
     }

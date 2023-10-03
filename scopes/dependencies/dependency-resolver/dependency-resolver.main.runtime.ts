@@ -660,9 +660,8 @@ export class DependencyResolverMain {
       return modulePath;
     }
     const pkgName = this.getPackageName(component);
-    const selfRootDir = getRelativeRootComponentDir(!isInWorkspace 
-      ? component.id.toString()
-      : component.id.toStringWithoutVersion()
+    const selfRootDir = getRelativeRootComponentDir(
+      !isInWorkspace ? component.id.toString() : component.id.toStringWithoutVersion()
     );
     // In case the component is it's own root we want to load it from it's own root folder
     if (fs.pathExistsSync(selfRootDir)) {

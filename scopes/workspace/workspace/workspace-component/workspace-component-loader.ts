@@ -34,8 +34,22 @@ type ComponentGetOneOptions = {
   resolveIdVersion?: boolean;
 };
 
+type WorkspaceScopeIdsMap = {
+  scopeIds: Map<string, ComponentID>;
+  workspaceIds: Map<string, ComponentID>;
+};
+
 export class WorkspaceComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
+  /**
+   * Cache components that loaded from scope (especially for get many for perf improvements)
+   */
+  private scopeComponentsCache: InMemoryCache<Component>;
+  /**
+   * Cache extension list for components. used by get many for perf improvements.
+   * And to make sure we load extensions first.
+   */
+  private componentsExtensionsCache: InMemoryCache<{ extensions: ExtensionDataList; errors: Error[] | undefined }>;
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -43,6 +57,8 @@ export class WorkspaceComponentLoader {
     private envs: EnvsMain
   ) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+    this.scopeComponentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+    this.componentsExtensionsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
@@ -72,12 +88,8 @@ export class WorkspaceComponentLoader {
       }
     }, loadOrCached);
 
-    const groupedByIsCoreEnvs = groupBy(loadOrCached.idsToLoad, (id) => {
-      return this.envs.isCoreEnv(id.toStringWithoutVersion());
-    });
-
-    const { components: coreEnvsComponents, invalidComponents: coreEnvsInvalidComponents } = await this.getAndLoadSlot(
-      groupedByIsCoreEnvs.true || [],
+    const { components: loadedComponents, invalidComponents } = await this.getAndLoadSlotOrdered(
+      loadOrCached.idsToLoad || [],
       loadOptsWithDefaults,
       throwOnFailure,
       longProcessLogger
@@ -89,15 +101,7 @@ export class WorkspaceComponentLoader {
     //   );
     // }
 
-    const { components: regularComponents, invalidComponents: regularInvalidComponents } = await this.getAndLoadSlot(
-      groupedByIsCoreEnvs.false || [],
-      loadOptsWithDefaults,
-      throwOnFailure,
-      longProcessLogger
-    );
-
-    const components = [...coreEnvsComponents, ...regularComponents, ...loadOrCached.fromCache];
-    const invalidComponents = [...coreEnvsInvalidComponents, ...regularInvalidComponents];
+    const components = [...loadedComponents, ...loadOrCached.fromCache];
 
     longProcessLogger.end();
     // console.log('\n-----------------------');
@@ -106,7 +110,7 @@ export class WorkspaceComponentLoader {
     return { components, invalidComponents };
   }
 
-  private async getAndLoadSlot(
+  private async getAndLoadSlotOrdered(
     ids: ComponentID[],
     loadOpts: ComponentLoadOptions,
     throwOnFailure = true,
@@ -117,8 +121,119 @@ export class WorkspaceComponentLoader {
       '🚀 ~ file: workspace-component-loader.ts:98 ~ WorkspaceComponentLoader ~ ids:',
       ids.map((i) => i.toString())
     );
+
+    const workspaceScopeIdsMap: WorkspaceScopeIdsMap = await this.groupAndUpdateIds(ids);
+
+    const groupsToHandle = await this.buildLoadGroups(workspaceScopeIdsMap);
+    console.log('🚀 ~ file: workspace-component-loader.ts:128 ~ WorkspaceComponentLoader ~ groupsToHandle:');
+    groupsToHandle.map((group) => {
+      console.log(
+        '🚀 ~ file: workspace-component-loader.ts:128 ~ WorkspaceComponentLoader ~ groupsToHandle ~ ws ids:',
+        group.workspaceIds.map((i) => i.toString())
+      );
+      console.log(
+        '🚀 ~ file: workspace-component-loader.ts:128 ~ WorkspaceComponentLoader ~ groupsToHandle ~ scope ids:',
+        group.scopeIds.map((i) => i.toString())
+      );
+    });
+
+    const groupsRes = await mapSeries(groupsToHandle, async (group) => {
+      const { scopeIds, workspaceIds } = group;
+      return this.getAndLoadSlot(workspaceIds, scopeIds, loadOpts, throwOnFailure, longProcessLogger);
+    });
+    const finalRes = groupsRes.reduce(
+      (acc, curr) => {
+        return {
+          components: [...acc.components, ...curr.components],
+          invalidComponents: [...acc.invalidComponents, ...curr.invalidComponents],
+        };
+      },
+      { components: [], invalidComponents: [] }
+    );
+    return finalRes;
+  }
+
+  private async buildLoadGroups(
+    workspaceScopeIdsMap: WorkspaceScopeIdsMap
+  ): Promise<Array<{ workspaceIds: ComponentID[]; scopeIds: ComponentID[] }>> {
+    const allIds = [...workspaceScopeIdsMap.workspaceIds.values(), ...workspaceScopeIdsMap.scopeIds.values()];
+    const groupedByIsCoreEnvs = groupBy(allIds, (id) => {
+      return this.envs.isCoreEnv(id.toStringWithoutVersion());
+    });
+    await this.populateScopeAndExtensionsCache(groupedByIsCoreEnvs.false || [], workspaceScopeIdsMap);
+    const allExtIds: Map<string, ComponentID> = new Map();
+    groupedByIsCoreEnvs.false.forEach((id) => {
+      const idStr = id.toString();
+      const fromCache = this.componentsExtensionsCache.get(idStr);
+      if (!fromCache || !fromCache.extensions) {
+        return;
+      }
+      fromCache.extensions.forEach((ext) => {
+        if (!allExtIds.has(ext.stringId) && ext.newExtensionId) {
+          allExtIds.set(ext.stringId, ext.newExtensionId);
+        }
+      });
+    });
+    const allExtCompIds = Array.from(allExtIds.values());
+    await this.populateScopeAndExtensionsCache(allExtCompIds || [], workspaceScopeIdsMap);
+
+    const allExtIdsStr = Array.from(allExtIds.keys());
+    const groupedByIsExtOfAnother = groupBy(groupedByIsCoreEnvs.false, (id) => {
+      return allExtIdsStr.includes(id.toString());
+    });
+    const extIdsFromTheList = (groupedByIsExtOfAnother.true || []).map((id) => id.toString());
+    const extsNotFromTheList: ComponentID[] = [];
+    for (const [idStr, id] of allExtIds.entries()) {
+      if (!extIdsFromTheList.includes(idStr)) {
+        extsNotFromTheList.push(id);
+      }
+    }
+
+    await this.groupAndUpdateIds(extsNotFromTheList, workspaceScopeIdsMap);
+
+    const groupsToHandle = [
+      // Always load first core envs
+      groupedByIsCoreEnvs.true || [],
+      extsNotFromTheList || [],
+      groupedByIsExtOfAnother.true || [],
+      groupedByIsExtOfAnother.false || [],
+    ];
+    console.log(
+      '🚀 ~ file: workspace-component-loader.ts:190 ~ WorkspaceComponentLoader ~ extsNotFromTheList:',
+      extsNotFromTheList.map((i) => i.toString())
+    );
+    console.log(
+      '🚀 ~ file: workspace-component-loader.ts:190 ~ WorkspaceComponentLoader ~ groupedByIsExtOfAnother.true:',
+      (groupedByIsExtOfAnother.true || []).map((i) => i.toString())
+    );
+    if (groupedByIsExtOfAnother.false.length === 1) {
+      console.log(
+        '🚀 ~ file: workspace-component-loader.ts:190 ~ WorkspaceComponentLoader ~ groupedByIsExtOfAnother.false:',
+        (groupedByIsExtOfAnother.false || []).map((i) => i.toString())
+      );
+    }
+    const groupsByWsScope = groupsToHandle.map((group) => {
+      const groupedByWsScope = groupBy(group, (id) => {
+        return workspaceScopeIdsMap.workspaceIds.has(id.toString());
+      });
+      return {
+        workspaceIds: groupedByWsScope.true || [],
+        scopeIds: groupedByWsScope.false || [],
+      };
+    });
+    return groupsByWsScope;
+  }
+
+  private async getAndLoadSlot(
+    workspaceIds: ComponentID[],
+    scopeIds: ComponentID[],
+    loadOpts: ComponentLoadOptions,
+    throwOnFailure = true,
+    longProcessLogger
+  ): Promise<GetManyRes> {
     const { components, invalidComponents } = await this.getComponentsWithoutLoadExtensions(
-      ids,
+      workspaceIds,
+      scopeIds,
       loadOpts,
       throwOnFailure,
       longProcessLogger
@@ -144,13 +259,57 @@ export class WorkspaceComponentLoader {
     return { components: withAspects, invalidComponents };
   }
 
+  private async populateScopeAndExtensionsCache(ids: ComponentID[], workspaceScopeIdsMap: WorkspaceScopeIdsMap) {
+    return mapSeries(ids, async (id) => {
+      const idStr = id.toString();
+      let componentFromScope;
+      if (!this.scopeComponentsCache.has(idStr)) {
+        componentFromScope = await this.workspace.scope.get(id);
+        if (componentFromScope) {
+          this.scopeComponentsCache.set(idStr, componentFromScope);
+        }
+      }
+      if (!this.componentsExtensionsCache.has(idStr) && workspaceScopeIdsMap.workspaceIds.has(idStr)) {
+        const { extensions, errors } = await this.workspace.componentExtensions(id, componentFromScope, undefined, {
+          loadExtensions: false,
+        });
+        this.componentsExtensionsCache.set(idStr, { extensions, errors });
+      }
+    });
+  }
+
   private async warnAboutMisconfiguredEnvs(components: Component[]) {
     const allIds = uniq(components.map((component) => this.envs.getEnvId(component)));
     return Promise.all(allIds.map((envId) => this.workspace.warnAboutMisconfiguredEnv(envId)));
   }
 
-  private async getComponentsWithoutLoadExtensions(
+  private async groupAndUpdateIds(
     ids: ComponentID[],
+    existingGroups?: WorkspaceScopeIdsMap
+  ): Promise<WorkspaceScopeIdsMap> {
+    const result: WorkspaceScopeIdsMap = existingGroups || {
+      scopeIds: new Map(),
+      workspaceIds: new Map(),
+    };
+
+    await Promise.all(
+      ids.map(async (componentId) => {
+        const inWs = await this.workspace.hasId(componentId);
+        if (!inWs) {
+          result.scopeIds.set(componentId.toString(), componentId);
+          return undefined;
+        }
+        const resolvedVersions = this.resolveVersion(componentId);
+        result.workspaceIds.set(resolvedVersions.toString(), resolvedVersions);
+        return undefined;
+      })
+    );
+    return result;
+  }
+
+  private async getComponentsWithoutLoadExtensions(
+    workspaceIds: ComponentID[],
+    scopeIds: ComponentID[],
     loadOpts: ComponentLoadOptions,
     throwOnFailure = true,
     longProcessLogger
@@ -165,33 +324,21 @@ export class WorkspaceComponentLoader {
       loadOpts || {}
     );
 
-    const idsFromScope: ComponentID[] = [];
+    const allIds = [...workspaceIds, ...scopeIds];
 
-    const idsWithUpdatedVersions = compact(
-      await Promise.all(
-        ids.map(async (componentId) => {
-          const inWs = await this.workspace.hasId(componentId);
-          if (!inWs) {
-            idsFromScope.push(componentId);
-            return undefined;
-          }
-          return this.resolveVersion(componentId);
-        })
-      )
-    );
     const legacyIdsIndex = {};
 
-    const legacyIds = idsWithUpdatedVersions.map((id) => {
+    const legacyIds = workspaceIds.map((id) => {
       legacyIdsIndex[id._legacy.toString()] = id;
       return id._legacy;
     });
-    if (ids.length > 100) {
+    if (workspaceIds.length > 100) {
       console.time('consumer.loadComponents');
     }
 
     const { components: legacyComponents, invalidComponents: legacyInvalidComponents } =
-      await this.workspace.consumer.loadComponents(BitIds.fromArray(legacyIds), false, loadOpts);
-    if (ids.length > 100) {
+      await this.workspace.consumer.loadComponents(BitIds.fromArray(legacyIds), false, loadOptsWithDefaults);
+    if (workspaceIds.length > 100) {
       console.timeEnd('consumer.loadComponents');
     }
     legacyInvalidComponents.forEach((invalidComponent) => {
@@ -239,7 +386,7 @@ export class WorkspaceComponentLoader {
       this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
     });
     const components = compact(await componentsP);
-    const scopeComponents = await this.workspace.scope.getMany(idsFromScope);
+    const scopeComponents = await this.workspace.scope.getMany(scopeIds);
     return { components: components.concat(scopeComponents), invalidComponents };
   }
 
@@ -335,14 +482,22 @@ export class WorkspaceComponentLoader {
   }
 
   private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent, loadOpts?: ComponentLoadOptions) {
-    const componentFromScope = await this.workspace.scope.get(id);
+    const idStr = id.toString();
+    const componentFromScope = this.scopeComponentsCache.has(idStr)
+      ? this.scopeComponentsCache.get(idStr)
+      : await this.workspace.scope.get(id);
     if (!consumerComponent) {
       if (!componentFromScope) throw new MissingBitMapComponent(id.toString());
       return componentFromScope;
     }
-    const { extensions, errors } = await this.workspace.componentExtensions(id, componentFromScope, undefined, {
-      loadExtensions: loadOpts?.loadExtensions,
-    });
+    const extErrorsFromCache = this.componentsExtensionsCache.has(idStr)
+      ? this.componentsExtensionsCache.get(idStr)
+      : undefined;
+    const { extensions, errors } =
+      extErrorsFromCache ||
+      (await this.workspace.componentExtensions(id, componentFromScope, undefined, {
+        loadExtensions: loadOpts?.loadExtensions,
+      }));
     if (errors?.some((err) => err instanceof MergeConfigConflict)) {
       consumerComponent.issues.getOrCreate(IssuesClasses.MergeConfigHasConflict).data = true;
     }
