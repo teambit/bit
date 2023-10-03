@@ -27,7 +27,7 @@ export class IDERoute implements Route {
         }
         const body = req.body;
         const { args } = body;
-        this.logger.console(`started a new api-IDE call: ${req.params.method}, total: ${args?.length || 0} args`);
+        this.logger.console(`[*] started a new api-IDE call: ${req.params.method}, total: ${args?.length || 0} args`);
         const startTask = process.hrtime();
         const result = await this.apiForIDE[req.params.method](...args);
         const duration = prettyTime(process.hrtime(startTask));
