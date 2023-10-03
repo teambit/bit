@@ -17,7 +17,6 @@ import {
   VERSION_DELIMITER,
   BITMAP_PREFIX_MESSAGE,
 } from '../../constants';
-import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { isDir, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
@@ -88,15 +87,13 @@ export default class BitMap {
   setComponent(bitId: BitId, componentMap: ComponentMap) {
     const id = bitId.toString();
     if (!bitId.hasVersion() && bitId.scope) {
-      throw new ShowDoctorError(
-        `invalid bitmap id ${id}, a component must have a version when a scope-name is included`
-      );
+      throw new BitError(`invalid bitmap id ${id}, a component must have a version when a scope-name is included`);
     }
     if (!isFeatureEnabled(ALLOW_SAME_NAME)) {
       // make sure there are no duplications (same name)
       const similarIds = this.findSimilarIds(bitId, true);
       if (similarIds.length) {
-        throw new ShowDoctorError(`your id ${id} is duplicated with ${similarIds.toString()}`);
+        throw new BitError(`your id ${id} is duplicated with ${similarIds.toString()}`);
       }
     }
     componentMap.id = bitId;
@@ -701,7 +698,7 @@ export default class BitMap {
     const componentIdStr = componentId.toString();
     const componentMap = this.getComponentIfExist(componentId);
     if (!componentMap) {
-      throw new ShowDoctorError(`unable to add files to a non-exist component ${componentIdStr}`);
+      throw new BitError(`unable to add files to a non-exist component ${componentIdStr}`);
     }
     logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
     componentMap.files = files;
@@ -890,7 +887,7 @@ export default class BitMap {
       const errorMsg = isPathDir
         ? `directory ${from} is not a tracked component`
         : `the file ${existingPath} is untracked`;
-      throw new ShowDoctorError(errorMsg);
+      throw new BitError(errorMsg);
     }
 
     this.markAsChanged();
