@@ -137,18 +137,21 @@ export default class ComponentLoader {
     }
 
     const allComponents: Component[] = [];
-    await mapSeries(idsToProcess, async (id: BitId) => {
-      const component = await this.loadOne(id, throwOnFailure, invalidComponents, removedComponents, loadOpts);
-      // console.log("🚀 ~ file: component-loader.ts:131 ~ ComponentLoader ~ awaitmapSeries ~ component:", component?.id.toString())
-      if (component) {
-        // console.log("🚀 ~ file: component-loader.ts:132 ~ ComponentLoader ~ await mapSeries ~ component.id.toString():", component.id.toString())
-        this.componentsCache.set(component.id.toString(), component);
-        logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
-          id: component.id.toString(),
-        });
-        allComponents.push(component);
-      }
-    });
+    // await mapSeries(idsToProcess, async (id: BitId) => {
+    await Promise.all(
+      idsToProcess.map(async (id: BitId) => {
+        const component = await this.loadOne(id, throwOnFailure, invalidComponents, removedComponents, loadOpts);
+        // console.log("🚀 ~ file: component-loader.ts:131 ~ ComponentLoader ~ awaitmapSeries ~ component:", component?.id.toString())
+        if (component) {
+          // console.log("🚀 ~ file: component-loader.ts:132 ~ ComponentLoader ~ await mapSeries ~ component.id.toString():", component.id.toString())
+          this.componentsCache.set(component.id.toString(), component);
+          logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
+            id: component.id.toString(),
+          });
+          allComponents.push(component);
+        }
+      })
+    );
 
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents, removedComponents };
   }
