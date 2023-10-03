@@ -129,12 +129,6 @@ export default class ComponentLoader {
       '🚀 ~ file: component-loader.ts:121 ~ ComponentLoader ~ ids.forEach ~ idsToProcess:',
       idsToProcess.map((i) => i.toString())
     );
-    if (idsToProcess[0].toString() === 'teambit.community/envs/community-react@2.1.8') {
-      console.trace(
-        '🚀 ~ file: component-loader.ts:121 ~ ComponentLoader ~ ids.forEach ~ idsToProcess:',
-        idsToProcess.map((i) => i.toString())
-      );
-    }
 
     const allComponents: Component[] = [];
     // await mapSeries(idsToProcess, async (id: BitId) => {
