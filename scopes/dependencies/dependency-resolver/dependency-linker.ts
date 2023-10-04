@@ -45,6 +45,11 @@ export type LinkingOptions = {
    */
   linkToDir?: string;
 
+  /**
+   * Link peer dependencies of the components to the target project.
+   * Peer dependencies should be singletons, so the project should use the same
+   * version of the peer dependency as the linked in components.
+   */
   includePeers?: boolean;
 
   /**
@@ -191,22 +196,9 @@ export class DependencyLinker {
       const linkToDirResults = await this.linkToDir(finalRootDir, options.linkToDir, components);
       result.linkToDirResults = linkToDirResults;
       if (options.includePeers) {
-        const peers = new Set<string>();
-        componentDirectoryMap.toArray().forEach(([component]) => {
-          for (const peer of Object.keys(component.state._consumer.peerPackageDependencies)) {
-            peers.add(peer);
-          }
-        });
-        for (const peer of Array.from(peers)) {
-          result.linkToDirResults.push({
-            componentId: peer,
-            linksDetail: {
-              packageName: peer,
-              from: path.join(finalRootDir, 'node_modules', peer),
-              to: path.join(options.linkToDir, 'node_modules', peer),
-            },
-          });
-        }
+        result.linkToDirResults.push(
+          ...this._getLinksToPeers(componentDirectoryMap, { finalRootDir, linkToDir: options.linkToDir })
+        );
       }
       return result;
     }
@@ -236,6 +228,33 @@ export class DependencyLinker {
       this.logger.consoleSuccess(outputMessage, startTime);
     }
     return result;
+  }
+
+  _getLinksToPeers(
+    componentDirectoryMap: ComponentMap<string>,
+    options: {
+      finalRootDir: string;
+      linkToDir: string;
+    }
+  ): LinkToDirResult[] {
+    const peers = new Set<string>();
+    componentDirectoryMap.toArray().forEach(([component]) => {
+      for (const peer of Object.keys(component.state._consumer.peerPackageDependencies)) {
+        peers.add(peer);
+      }
+    });
+    const links: LinkToDirResult[] = [];
+    for (const peer of Array.from(peers)) {
+      links.push({
+        componentId: peer,
+        linksDetail: {
+          packageName: peer,
+          from: path.join(options.finalRootDir, 'node_modules', peer),
+          to: path.join(options.linkToDir, 'node_modules', peer),
+        },
+      });
+    }
+    return links;
   }
 
   async linkCoreAspectsAndLegacy(
