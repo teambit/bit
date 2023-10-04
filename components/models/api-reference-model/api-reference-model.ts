@@ -8,9 +8,9 @@ export type SchemaQueryResult = {
   };
 };
 
-export type APINode<T extends SchemaNode = SchemaNode> = {
+export type APINode<T extends SchemaNode = SchemaNode, OptionalRenderer extends boolean = false> = {
   api: T;
-  renderer: APINodeRenderer;
+  renderer: OptionalRenderer extends true ? undefined : APINodeRenderer;
   componentId: ComponentID;
   exported: boolean;
 };
@@ -18,20 +18,44 @@ export type APINode<T extends SchemaNode = SchemaNode> = {
 export class APIReferenceModel {
   apiByType: Map<string, APINode[]>;
   apiByName: Map<string, APINode>;
+
   internalAPIKey(schema: SchemaNode) {
     return this.generateInternalAPIKey(schema.location.filePath, schema.name);
   }
+
   generateInternalAPIKey(filePath: string, name = '') {
     return `${filePath}/${name}`;
   }
+
   apiNodes: APINode[];
+  taggedAPINodes: APINode<SchemaNode, true>[];
   componentId: ComponentID;
 
-  constructor(public _api: APISchema, _renderers: APINodeRenderer[]) {
+  constructor(public _api: APISchema, _renderers: APINodeRenderer[], _overviewRenderers: APINodeRenderer[]) {
     this.componentId = _api.componentId;
     this.apiNodes = this.mapToAPINode(_api, _renderers, this.componentId);
     this.apiByType = this.groupByType(this.apiNodes);
     this.apiByName = this.groupByName(this.apiNodes);
+    this.taggedAPINodes = this.mapTaggedAPINode(_api, _overviewRenderers, this.componentId);
+  }
+
+  mapTaggedAPINode(
+    api: APISchema,
+    renderers: APINodeRenderer[],
+    componentId: ComponentID
+  ): APINode<SchemaNode, true>[] {
+    const { taggedModuleExports } = api;
+    const defaultRenderers = renderers.filter((renderer) => renderer.default);
+    const nonDefaultRenderers = renderers.filter((renderer) => !renderer.default);
+
+    return taggedModuleExports.map((schemaNode) => ({
+      componentId,
+      api: schemaNode,
+      exported: true,
+      renderer:
+        nonDefaultRenderers.find((renderer) => renderer.predicate(schemaNode)) ||
+        defaultRenderers.find((renderer) => renderer.predicate(schemaNode)),
+    })) as APINode<SchemaNode, true>[];
   }
 
   mapToAPINode(api: APISchema, renderers: APINodeRenderer[], componentId: ComponentID): APINode[] {
@@ -65,8 +89,8 @@ export class APIReferenceModel {
       .filter((schemaNode) => schemaNode.renderer) as APINode[];
   }
 
-  getByType(type: string) {
-    return this.apiByType.get(type);
+  getByType(type: string): APINode<SchemaNode>[] {
+    return this.apiByType.get(type) ?? [];
   }
 
   groupByType(apiNodes: APINode[]): Map<string, APINode[]> {
@@ -86,14 +110,19 @@ export class APIReferenceModel {
     }, new Map<string, APINode>());
   }
 
-  static from(result: SchemaQueryResult, renderers: APINodeRenderer[]): APIReferenceModel {
+  static from(
+    result: SchemaQueryResult,
+    renderers: APINodeRenderer[] = [],
+    overviewRenderers: APINodeRenderer[] = []
+  ): APIReferenceModel {
     try {
       const apiSchema = APISchema.fromObject(result.getHost.getSchema);
-      return new APIReferenceModel(apiSchema, renderers);
+      return new APIReferenceModel(apiSchema, renderers, overviewRenderers);
     } catch (e) {
       return new APIReferenceModel(
         APISchema.empty(ComponentID.fromObject((result.getHost.getSchema as any).componentId as ComponentIdObj)),
-        renderers
+        renderers,
+        overviewRenderers
       );
     }
   }

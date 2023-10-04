@@ -2,7 +2,6 @@ import React, { useContext, ComponentType, useState } from 'react';
 import classNames from 'classnames';
 import { flatten } from 'lodash';
 // import { Icon } from '@teambit/design.elements.icon';
-import { PropertiesTable } from '@teambit/react.ui.docs.properties-table';
 // import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
@@ -36,10 +35,11 @@ export type OverviewProps = {
   titleBadges: TitleBadgeSlot;
   overviewOptions: OverviewOptionsSlot;
   previewProps?: Partial<ComponentPreviewProps>;
-  getEmptyState?: () => ComponentType|undefined;
+  getEmptyState?: () => ComponentType | undefined;
+  TaggedAPI?: React.ComponentType<{ componentId: string }>;
 };
 
-export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyState }: OverviewProps) {
+export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyState, TaggedAPI }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
   const overviewProps = flatten(overviewOptions.values())[0];
@@ -96,26 +96,29 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
       {/* <LinkedHeading size="xs" className={styles.title}>
         <Icon of="text" /> <span>README</span>
       </LinkedHeading> */}
-      {!buildFailed && <div className={styles.readme}>
-        {/* {isLoading && <ReadmeSkeleton />} */}
-        <ComponentPreview
-          onLoad={onPreviewLoad}
-          previewName="overview"
-          pubsub={true}
-          queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
-          viewport={null}
-          fullContentHeight
-          disableScroll={true}
-          {...rest}
-          component={component}
-          style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
-        />
-        {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
-        {component.preview?.skipIncludes && (
-          <PropertiesTable className={styles.overviewPropsTable} componentId={component.id.toString()} />
-        )}
-      </div>}
-      {(buildFailed && EmptyState) && <EmptyState />}
+      {!buildFailed && (
+        <div className={styles.readme}>
+          {/* {isLoading && <ReadmeSkeleton />} */}
+          <ComponentPreview
+            onLoad={onPreviewLoad}
+            previewName="overview"
+            pubsub={true}
+            queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
+            viewport={null}
+            fullContentHeight
+            disableScroll={true}
+            {...rest}
+            component={component}
+            style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
+          />
+          {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
+          {component.preview?.skipIncludes && TaggedAPI && (
+            // <PropertiesTable className={styles.overviewPropsTable} componentId={component.id.toString()} />
+            <TaggedAPI componentId={component.id.toString()} />
+          )}
+        </div>
+      )}
+      {buildFailed && EmptyState && <EmptyState />}
     </div>
   );
 }
