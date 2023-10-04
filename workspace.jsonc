@@ -60,7 +60,6 @@
         "@teambit/api-reference.renderers.enum": "^0.0.29",
         "@teambit/api-reference.renderers.inference-type": "^0.0.19",
         "@teambit/api-reference.renderers.interface": "^0.0.29",
-        "@teambit/api-reference.renderers.react": "^0.0.11",
         "@teambit/api-reference.renderers.schema-nodes-index": "^0.0.25",
         "@teambit/api-reference.renderers.type": "^0.0.28",
         "@teambit/api-reference.renderers.type-array": "^0.0.19",
