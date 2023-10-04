@@ -6,11 +6,10 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R, { is, isNil, join, map, toPairs } from 'ramda';
 import semver from 'semver';
-
+import { BitError } from '@teambit/bit-error';
 import { Analytics } from '../analytics/analytics';
 import { BASE_DOCS_DOMAIN, DEFAULT_PACKAGE_MANAGER, IS_WINDOWS } from '../constants';
 import { PackageManagerClients } from '../consumer/config/legacy-workspace-config-interface';
-import ShowDoctorError from '../error/show-doctor-error';
 import logger from '../logger/logger';
 import { PathOsBased } from '../utils/path';
 
@@ -150,7 +149,7 @@ const _installInOneDirectory = ({
     .catch((err) => {
       let stderr = `failed running ${packageManager} install at ${cwd} ${argsString}  \n`;
       stderr += verbose ? err.stderr : stripNonNpmErrors(err.stderr, packageManager);
-      throw new ShowDoctorError(
+      throw new BitError(
         `${stderr}\n\n${chalk.yellow(
           `see troubleshooting at https://${BASE_DOCS_DOMAIN}/dependencies/dependency-installation`
         )}`

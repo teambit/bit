@@ -93,8 +93,8 @@ describe('ComponentList', function () {
       it('should not match non-exist*', () => {
         expectToMatch('non-exist*', []);
       });
-      it('should match bit ids also without the scope name', () => {
-        expectToMatch('fs*', ['utils/fs/read', 'utils/fs/write']);
+      it('should not match bit ids also without the scope name', () => {
+        expectToMatch('fs*', []);
       });
       it('should not match s* as non of the ids starts with "s" (with and without scope names)', () => {
         expectToMatch('s*', []);
@@ -102,8 +102,8 @@ describe('ComponentList', function () {
       it('when no wildcard is specified, it should match an exact id with a scope name', () => {
         expectToMatch('utils/fs/read', ['utils/fs/read']);
       });
-      it('when no wildcard is specified, it should match an exact id without a scope name', () => {
-        expectToMatch('fs/read', ['utils/fs/read']);
+      it('when no wildcard is specified, it should not match an exact id without a scope name', () => {
+        expectToMatch('fs/read', []);
       });
       it('should match multiple different ids when using an array of ids with wildcard', () => {
         expectToMatch(['vuz/*', 'utils/fs/*'], ['vuz/vuz', 'utils/fs/read', 'utils/fs/write']);

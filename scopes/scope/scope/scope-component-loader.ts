@@ -17,9 +17,9 @@ export class ScopeComponentLoader {
     this.importedComponentsCache = createInMemoryCache({ maxAge: 1000 * 60 * 30 }); // 30 min
   }
 
-  async get(id: ComponentID, importIfMissing = true): Promise<Component | undefined> {
+  async get(id: ComponentID, importIfMissing = true, useCache = true): Promise<Component | undefined> {
     const fromCache = this.getFromCache(id);
-    if (fromCache) {
+    if (fromCache && useCache) {
       return fromCache;
     }
     const idStr = id.toString();

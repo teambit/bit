@@ -122,6 +122,27 @@ export default class BitIds extends Array<BitId> {
     return this.map((id) => id.toString()).join(', ');
   }
 
+  removeMultipleVersionsKeepLatest(): BitId[] {
+    const grouped = this.toGroupByIdWithoutVersion();
+    const latestVersions = Object.keys(grouped).map((key) => {
+      const ids = grouped[key];
+      if (ids.length === 1) return ids[0];
+      const latest = getLatestVersionNumber(ids, ids[0].changeVersion(LATEST_BIT_VERSION));
+      return latest;
+    });
+
+    return latestVersions;
+  }
+
+  toGroupByIdWithoutVersion(): { [idStrWithoutVer: string]: BitIds } {
+    return this.reduce((acc, current) => {
+      const idStrWithoutVer = current.toStringWithoutVersion();
+      if (acc[idStrWithoutVer]) acc[idStrWithoutVer].push(current);
+      else acc[idStrWithoutVer] = new BitIds(current);
+      return acc;
+    }, {});
+  }
+
   toGroupByScopeName(idsWithDefaultScope: BitIds): { [scopeName: string]: BitIds } {
     return this.reduce((acc, current) => {
       const getScopeName = () => {

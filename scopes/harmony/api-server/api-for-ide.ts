@@ -14,6 +14,7 @@ import { Log } from '@teambit/legacy/dist/scope/models/lane';
 import { ComponentCompareMain } from '@teambit/component-compare';
 import { GeneratorMain } from '@teambit/generator';
 import { RemoveMain } from '@teambit/remove';
+import { compact } from 'lodash';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -36,6 +37,13 @@ type LaneObj = {
   components: Array<{ id: string; head: string }>;
   isNew: boolean;
   forkedFrom?: string;
+};
+
+type ModifiedByConfig = {
+  id: string;
+  version: string;
+  dependencies?: { workspace: string[]; scope: string[] };
+  aspects?: { workspace: Record<string, any>; scope: Record<string, any> };
 };
 
 export class APIForIDE {
@@ -159,7 +167,7 @@ export class APIForIDE {
   }
 
   async getConfigForDiff(id: string) {
-    const results = await this.componentCompare.getConfigForDiff(id);
+    const results = await this.componentCompare.getConfigForDiffById(id);
     return results;
   }
 
@@ -263,6 +271,28 @@ export class APIForIDE {
       skipped,
       failed,
     };
+  }
+
+  async getModifiedByConfig(): Promise<ModifiedByConfig[]> {
+    const modifiedComps = await this.workspace.modified();
+    const results = await Promise.all(
+      modifiedComps.map(async (comp) => {
+        const wsComp = await this.componentCompare.getConfigForDiffByCompObject(comp);
+        const scopeComp = await this.componentCompare.getConfigForDiffById(comp.id.toString());
+        const hasSameDeps = JSON.stringify(wsComp.dependencies) === JSON.stringify(scopeComp.dependencies);
+        const hasSameAspects = JSON.stringify(wsComp.aspects) === JSON.stringify(scopeComp.aspects);
+        if (hasSameDeps && hasSameAspects) return null;
+        const result: ModifiedByConfig = {
+          id: comp.id.toStringWithoutVersion(),
+          version: comp.id.version,
+        };
+        if (!hasSameDeps) result.dependencies = { workspace: wsComp.dependencies, scope: scopeComp.dependencies || [] };
+        if (!hasSameAspects) result.aspects = { workspace: wsComp.aspects, scope: scopeComp.aspects || {} };
+        return result;
+      })
+    );
+
+    return compact(results);
   }
 
   async getDataToInitSCM(): Promise<DataToInitSCM> {

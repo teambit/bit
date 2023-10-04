@@ -1,9 +1,9 @@
 import chalk from 'chalk';
 import R from 'ramda';
+import { BitError } from '@teambit/bit-error';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
 import GeneralError from '../../error/general-error';
-import ShowDoctorError from '../../error/show-doctor-error';
 import { Scope } from '../../scope';
 import { ModelComponent, Version } from '../../scope/models';
 import diffFiles from '../../utils/diff-files';
@@ -48,7 +48,7 @@ export default async function componentsDiff(
 ): Promise<DiffResults[]> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { components } = await consumer.loadComponents(ids);
-  if (!components) throw new ShowDoctorError('failed loading the components');
+  if (!components) throw new BitError('failed loading the components');
 
   // try to resolve ids scope of by components array
   const idsWithScope = ids.map((id) => {

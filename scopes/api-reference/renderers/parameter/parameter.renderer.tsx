@@ -25,7 +25,7 @@ function ParameterComponent(props: APINodeRenderProps) {
   const skipHeadings = metadata?.[paramNode.__schema]?.skipHeadings;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { name, isOptional, type, defaultValue, objectBindingNodes } = paramNode;
+  const { name, type, objectBindingNodes } = paramNode;
   const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
   const typeRef = type.name
     ? apiRefModel.apiByName.get(type.name) ||
@@ -36,7 +36,7 @@ function ParameterComponent(props: APINodeRenderProps) {
   const ObjectBindingNodeComponent =
     objectBindingNodes && objectBindingNodes.length > 0 ? (
       <React.Fragment key={`${name}-param-object-binding-wrapper`}>
-        {!skipHeadings && <HeadingRow headings={headings} colNumber={4} />}
+        {!skipHeadings && <HeadingRow className={styles.paramHeading} headings={headings} colNumber={4} />}
         {objectBindingNodes.map((_bindingNode) => {
           const typeRefCorrespondingNode = typeRef?.api.findNode((node) => node.name === _bindingNode.name);
           const bindingNode = typeRefCorrespondingNode || _bindingNode;
@@ -62,6 +62,7 @@ function ParameterComponent(props: APINodeRenderProps) {
               customRow={{
                 type: customBindingNodeTypeRow,
               }}
+              className={styles.paramRow}
               row={{
                 name: bindingNode.name || '',
                 description: bindingNode.doc?.comment || '',
@@ -107,7 +108,7 @@ function ParameterComponent(props: APINodeRenderProps) {
 
     return (
       <React.Fragment>
-        {!skipHeadings && <HeadingRow headings={paramTypeHeadings} colNumber={4} />}
+        {!skipHeadings && <HeadingRow className={styles.paramHeading} headings={paramTypeHeadings} colNumber={4} />}
         <TableRow
           key={`${paramNode.name}-param`}
           className={styles.paramRow}
