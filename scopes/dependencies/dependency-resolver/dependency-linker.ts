@@ -197,7 +197,7 @@ export class DependencyLinker {
       result.linkToDirResults = linkToDirResults;
       if (options.includePeers) {
         result.linkToDirResults.push(
-          ...this._getLinksToPeers(componentDirectoryMap, { finalRootDir, linkToDir: options.linkToDir })
+          ...(await this._getLinksToPeers(componentDirectoryMap, { finalRootDir, linkToDir: options.linkToDir }))
         );
       }
       return result;
@@ -230,19 +230,25 @@ export class DependencyLinker {
     return result;
   }
 
-  _getLinksToPeers(
+  async _getLinksToPeers(
     componentDirectoryMap: ComponentMap<string>,
     options: {
       finalRootDir: string;
       linkToDir: string;
     }
-  ): LinkToDirResult[] {
+  ): Promise<LinkToDirResult[]> {
     const peers = new Set<string>();
-    componentDirectoryMap.toArray().forEach(([component]) => {
-      for (const peer of Object.keys(component.state._consumer.peerPackageDependencies)) {
-        peers.add(peer);
-      }
-    });
+    await Promise.all(
+      componentDirectoryMap.toArray().map(async ([component]) => {
+        const depList = await this.dependencyResolver.getDependencies(component);
+        const peerList = depList.byLifecycle('peer');
+        peerList.forEach((dependency) => {
+          if (dependency.getPackageName) {
+            peers.add(dependency.getPackageName());
+          }
+        });
+      })
+    );
     const links: LinkToDirResult[] = [];
     for (const peer of Array.from(peers)) {
       links.push({
