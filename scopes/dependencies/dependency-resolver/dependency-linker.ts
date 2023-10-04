@@ -249,18 +249,16 @@ export class DependencyLinker {
         });
       })
     );
-    const links: LinkToDirResult[] = [];
-    for (const peer of Array.from(peers)) {
-      links.push({
-        componentId: peer,
-        linksDetail: {
-          packageName: peer,
-          from: path.join(options.finalRootDir, 'node_modules', peer),
-          to: path.join(options.linkToDir, 'node_modules', peer),
-        },
-      });
-    }
-    return links;
+    const fromDir = path.join(options.finalRootDir, 'node_modules');
+    const toDir = path.join(options.linkToDir, 'node_modules');
+    return Array.from(peers).map((packageName) => ({
+      componentId: packageName,
+      linksDetail: {
+        packageName,
+        from: path.join(fromDir, packageName),
+        to: path.join(toDir, packageName),
+      },
+    }));
   }
 
   async linkCoreAspectsAndLegacy(
