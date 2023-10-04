@@ -17,10 +17,6 @@ export type ReactDocsAppProps = {
   context: RenderingContext;
 };
 
-/**
- *
- * @exports
- */
 export function DocsApp({ componentId, docs = defaultDocs, compositions, context }: ReactDocsAppProps) {
   // Next 2 lines are to support legacy code (ExamplesOverview)
   const { examples = [] } = docs;
