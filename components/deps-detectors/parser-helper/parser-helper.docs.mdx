@@ -1,0 +1,18 @@
+---
+labels: ['module', 'parser']
+description: 'A group of helper functions for parsing'
+---
+
+API:
+
+```ts
+import {
+  getDependenciesFromMemberExpression,
+  getDependenciesFromCallExpression,
+  getSpecifierValueForImportDeclaration,
+} from '@teambit/node.deps-detection.parser-helper';
+
+getDependenciesFromMemberExpression(node);
+getDependenciesFromCallExpression(node);
+getSpecifierValueForImportDeclaration(specifier);
+```
