@@ -10,14 +10,13 @@ export function schemaSchema(schema: SchemaMain) {
     typeDefs: gql`
       scalar JSONObject
       extend type ComponentHost {
-        getSchema(id: String!): JSONObject
-        getTaggedSchemaExports(id: String!): JSONObject
+        getSchema(id: String!, skipInternals: Boolean): JSONObject
       }
     `,
     resolvers: {
       JSONObject: GraphQLJSONObject,
       ComponentHost: {
-        getSchema: async (host: ComponentFactory, { id }: { id: string }) => {
+        getSchema: async (host: ComponentFactory, { id, skipInternals }: { id: string; skipInternals?: boolean }) => {
           const componentId = await host.resolveComponentId(id);
           const component = await host.get(componentId);
           const empty = {
@@ -25,25 +24,10 @@ export function schemaSchema(schema: SchemaMain) {
           };
 
           if (!component) return empty;
-          const api = await schema.getSchema(component);
+          const api = await schema.getSchema(component, undefined, undefined, undefined, undefined, skipInternals);
           if (!api) return empty;
 
           return filterUnimplementedSchemaNodes(api);
-        },
-        getTaggedSchemaExports: async (host: ComponentFactory, { id }: { id: string }) => {
-          const componentId = await host.resolveComponentId(id);
-          const component = await host.get(componentId);
-          const empty = {
-            taggedModuleExports: [],
-          };
-
-          if (!component) return empty;
-          const api = await schema.getSchema(component, undefined, undefined, undefined, undefined, true);
-          if (!api) return empty;
-
-          return {
-            taggedModuleExports: api.taggedModuleExports,
-          };
         },
       },
     },
