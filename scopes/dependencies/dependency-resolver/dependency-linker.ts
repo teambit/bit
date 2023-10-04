@@ -46,6 +46,13 @@ export type LinkingOptions = {
   linkToDir?: string;
 
   /**
+   * Link peer dependencies of the components to the target project.
+   * Peer dependencies should be singletons, so the project should use the same
+   * version of the peer dependency as the linked in components.
+   */
+  includePeers?: boolean;
+
+  /**
    * whether link should import objects before linking
    */
   fetchObject?: boolean;
@@ -188,6 +195,11 @@ export class DependencyLinker {
       const components = componentDirectoryMap.toArray().map(([component]) => component);
       const linkToDirResults = await this.linkToDir(finalRootDir, options.linkToDir, components);
       result.linkToDirResults = linkToDirResults;
+      if (options.includePeers) {
+        result.linkToDirResults.push(
+          ...(await this._getLinksToPeers(componentDirectoryMap, { finalRootDir, linkToDir: options.linkToDir }))
+        );
+      }
       return result;
     }
 
@@ -216,6 +228,37 @@ export class DependencyLinker {
       this.logger.consoleSuccess(outputMessage, startTime);
     }
     return result;
+  }
+
+  async _getLinksToPeers(
+    componentDirectoryMap: ComponentMap<string>,
+    options: {
+      finalRootDir: string;
+      linkToDir: string;
+    }
+  ): Promise<LinkToDirResult[]> {
+    const peers = new Set<string>();
+    await Promise.all(
+      componentDirectoryMap.toArray().map(async ([component]) => {
+        const depList = await this.dependencyResolver.getDependencies(component);
+        const peerList = depList.byLifecycle('peer');
+        peerList.forEach((dependency) => {
+          if (dependency.getPackageName) {
+            peers.add(dependency.getPackageName());
+          }
+        });
+      })
+    );
+    const fromDir = path.join(options.finalRootDir, 'node_modules');
+    const toDir = path.join(options.linkToDir, 'node_modules');
+    return Array.from(peers).map((packageName) => ({
+      componentId: packageName,
+      linksDetail: {
+        packageName,
+        from: path.join(fromDir, packageName),
+        to: path.join(toDir, packageName),
+      },
+    }));
   }
 
   async linkCoreAspectsAndLegacy(
