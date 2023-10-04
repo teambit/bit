@@ -705,6 +705,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/model/composition-type"
     },
+    "models/api-reference-model": {
+        "scope": "teambit.api-reference",
+        "version": "0.0.17",
+        "mainFile": "index.ts",
+        "rootDir": "components/models/api-reference-model"
+    },
     "models/scope-model": {
         "scope": "teambit.scope",
         "version": "0.0.450",
