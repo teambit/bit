@@ -1,3 +1,42 @@
 .section {
   padding: 20px 40px 10px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.heading {
+  margin-bottom: 0;
+}
+
+.content {
+  display: flex;
+  padding: 24px;
+  border-radius: 8px;
+}
+
+.banner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0effd;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 16px;
+  gap: 8px;
+  > img {
+    background-color: none;
+  }
+}
+
+.highlighted {
+  color: var(--primary-color, #6c5ce7);
+  margin: 0px 4px;
 }

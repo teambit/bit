@@ -17,8 +17,23 @@ export function TaggedExports({ componentId, ...rest }: TaggedExportsProps) {
   // const taggedAPIs = api.apiModel?.taggedAPINodes;
   return (
     <Section {...rest} className={styles.section}>
-      <LinkedHeading>API</LinkedHeading>
-      {showTableOfContents && api.apiModel && <APIReferenceTableOfContents apiModel={api.apiModel} />}
+      <LinkedHeading className={styles.heading} size={'xs'}>
+        <div className={styles.title}>
+          <img style={{ width: 18 }} src="https://static.bit.dev/bit-icons/api-ref.svg" />
+          <span>API</span>
+        </div>
+      </LinkedHeading>
+      <div className={styles.content}>
+        {showTableOfContents && api.apiModel && <APIReferenceTableOfContents apiModel={api.apiModel} />}
+      </div>
+      <div className={styles.banner}>
+        <img style={{ width: 16 }} src="https://static.bit.dev/bit-icons/lightbulb-thinking.svg" />
+        <span>
+          Use the
+          <span className={styles.highlighted}>@exports</span>
+          jsdoc tag to only show relevant APIs with details for your users
+        </span>
+      </div>
       {/* <PropTable rows={properties} /> */}
     </Section>
   );
