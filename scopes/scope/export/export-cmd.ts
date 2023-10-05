@@ -75,7 +75,7 @@ export class ExportCmd implements Command {
       forkLaneNewScope = false,
     }: any
   ): Promise<string> {
-    const { componentsIds, nonExistOnBitMap, removedIds, missingScope, exportedLanes, ejectResults } =
+    const { componentsIds, nonExistOnBitMap, removedIds, missingScope, exportedLanes, ejectResults, rippleJobs } =
       await this.exportMain.export({
         ids,
         eject,
@@ -130,8 +130,21 @@ export class ExportCmd implements Command {
       const output = ejectTemplate(ejectResults);
       return `\n${output}`;
     };
+    const rippleJobsOutput = () => {
+      if (!rippleJobs.length) return '';
+      const title = `\n\nvisit the link below to track the progress of building the components in bit.cloud\n`;
+      const urls = rippleJobs.map((job) => chalk.bold.underline(`https://bit.cloud/ripple-ci/job/${job}`)).join('\n');
+      return title + urls;
+    };
 
-    return nonExistOnBitMapOutput() + missingScopeOutput() + exportOutput() + ejectOutput() + removedOutput();
+    return (
+      nonExistOnBitMapOutput() +
+      missingScopeOutput() +
+      exportOutput() +
+      ejectOutput() +
+      removedOutput() +
+      rippleJobsOutput()
+    );
   }
 
   async json(
