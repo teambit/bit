@@ -15,9 +15,6 @@ export default class CapsuleList extends Array<Capsule> {
   getCapsuleIgnoreVersion(id: ComponentID): Capsule | undefined {
     return this.find((capsule) => capsule.component.id.isEqual(id, { ignoreVersion: true }));
   }
-  getCapsuleIgnoreScopeAndVersion(id: ComponentID): Capsule | undefined {
-    return this.find((capsule) => capsule.component.id._legacy.isEqualWithoutScopeAndVersion(id._legacy));
-  }
   getAllCapsuleDirs(): string[] {
     return this.map((capsule) => capsule.path);
   }

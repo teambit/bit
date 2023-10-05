@@ -54,3 +54,5 @@ export const NO_FS_CACHE_FEATURE = 'no-fs-cache';
 
 export const CLOUD_IMPORTER = 'cloud-importer';
 export const CLOUD_IMPORTER_V2 = 'cloud-importer-v2';
+
+export const ALLOW_SAME_NAME = 'allow-same-name';

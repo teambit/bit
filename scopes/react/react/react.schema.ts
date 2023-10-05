@@ -10,6 +10,7 @@ import {
   TypeRefSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import chalk from 'chalk';
+import { compact } from 'lodash';
 
 /**
  * function-like can be a function, method, arrow-function, variable-function, etc.
@@ -17,7 +18,7 @@ import chalk from 'chalk';
 export class ReactSchema extends SchemaNode {
   readonly returnType: SchemaNode;
 
-  readonly props: ParameterSchema;
+  readonly props?: ParameterSchema;
 
   readonly doc?: DocSchema;
 
@@ -26,8 +27,8 @@ export class ReactSchema extends SchemaNode {
   constructor(
     readonly location: Location,
     readonly name: string,
-    props: ParameterSchema<TypeRefSchema>,
     returnType: TypeRefSchema,
+    props?: ParameterSchema<TypeRefSchema>,
     signature?: string,
     readonly modifiers: Modifier[] = [],
     doc?: DocSchema,
@@ -37,15 +38,15 @@ export class ReactSchema extends SchemaNode {
     this.props = props;
     this.returnType = returnType;
     this.doc = doc;
-    this.signature = signature || FunctionLikeSchema.createSignature(name, [props], returnType);
+    this.signature = signature || FunctionLikeSchema.createSignature(name, compact([props]), returnType);
   }
 
   getNodes() {
-    return [this.props, this.returnType];
+    return compact([this.props, this.returnType]);
   }
 
   toString() {
-    const paramsStr = this.props.toString();
+    const paramsStr = this.props?.toString();
     const typeParamsStr = this.typeParams ? `<${this.typeParams.join(', ')}>` : '';
     return `${this.modifiersToString()}${typeParamsStr}${chalk.bold(
       this.name
@@ -69,7 +70,7 @@ export class ReactSchema extends SchemaNode {
     return {
       ...super.toObject(),
       name: this.name,
-      props: this.props.toObject(),
+      props: this.props?.toObject(),
       returnType: this.returnType.toObject(),
       signature: this.signature,
       modifiers: this.modifiers,
@@ -81,12 +82,12 @@ export class ReactSchema extends SchemaNode {
   static fromObject(obj: Record<string, any>): ReactSchema {
     const location = obj.location;
     const name = obj.name;
-    const props = ParameterSchema.fromObject<TypeRefSchema>(obj.props);
+    const props = obj.props ? ParameterSchema.fromObject<TypeRefSchema>(obj.props) : undefined;
     const returnType = SchemaRegistry.fromObject(obj.returnType);
     const signature = obj.signature;
     const modifiers = obj.modifiers;
     const doc = obj.doc ? DocSchema.fromObject(obj.doc) : undefined;
     const typeParams = obj.typeParams;
-    return new ReactSchema(location, name, props, returnType, signature, modifiers, doc, typeParams);
+    return new ReactSchema(location, name, returnType, props, signature, modifiers, doc, typeParams);
   }
 }

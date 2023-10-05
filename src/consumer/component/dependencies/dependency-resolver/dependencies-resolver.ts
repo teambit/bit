@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
+import { BitError } from '@teambit/bit-error';
 import { uniq, isEmpty, union, cloneDeep } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
@@ -10,7 +11,6 @@ import { BitId, BitIds } from '../../../../bit-id';
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
-import ShowDoctorError from '../../../../error/show-doctor-error';
 import logger from '../../../../logger/logger';
 import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
 import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../../utils/path';
@@ -444,7 +444,7 @@ export default class DependencyResolver {
       .getAllDependencies()
       .find((dep) => dep.id.isEqualWithoutVersion(componentId));
     if (!dependency) {
-      throw new ShowDoctorError( // $FlowFixMe
+      throw new BitError(
         `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${this.componentFromModel.id}`
       );
     }
@@ -453,7 +453,7 @@ export default class DependencyResolver {
       (r) => r.sourceRelativePath === depFile
     );
     if (!relativePath) {
-      throw new ShowDoctorError(
+      throw new BitError(
         `unable to find ${relativePath} path in the dependencies relativePaths of ${this.componentFromModel.id}`
       );
     }

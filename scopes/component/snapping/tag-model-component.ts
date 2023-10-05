@@ -4,6 +4,7 @@ import R from 'ramda';
 import { isEmpty } from 'lodash';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
+import { BitError } from '@teambit/bit-error';
 import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
@@ -20,7 +21,6 @@ import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-m
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
-import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
 import { Component } from '@teambit/component';
 import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import logger from '@teambit/legacy/dist/logger/logger';
@@ -262,7 +262,7 @@ export async function tagModelComponent({
       if (component.componentFromModel) {
         // otherwise it's a new component, so this check is irrelevant
         const modelComponent = await legacyScope.getModelComponentIfExist(component.id);
-        if (!modelComponent) throw new ShowDoctorError(`component ${component.id} was not found in the model`);
+        if (!modelComponent) throw new BitError(`component ${component.id} was not found in the model`);
         if (!modelComponent.listVersions().length) return null; // no versions yet, no issues.
         const latest = modelComponent.getHeadRegardlessOfLaneAsTagOrHash();
         if (latest !== component.version) {
