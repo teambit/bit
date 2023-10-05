@@ -266,7 +266,10 @@ export class SnappingMain {
       })
     );
     const componentIds = tagDataPerComp.map((t) => t.componentId);
-    await this.scope.import(componentIds, { preferDependencyGraph: false, reason: 'of the seeders to tag' });
+    // important! leave the "preferDependencyGraph" with the default - true. no need to bring all dependencies at this
+    // stage. later on, they'll be imported during "snapping._addFlattenedDependenciesToComponents".
+    // otherwise, the dependencies are imported without version-history and fail later when checking their origin.
+    await this.scope.import(componentIds, { reason: 'of the seeders to tag' });
     const deps = compact(tagDataPerComp.map((t) => t.dependencies).flat()).map((dep) => dep.changeVersion(LATEST));
     const additionalComponentIdsToFetch = await Promise.all(
       componentIds.map(async (id) => {
