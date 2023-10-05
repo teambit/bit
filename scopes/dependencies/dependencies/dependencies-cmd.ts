@@ -3,12 +3,10 @@ import { Command, CommandOptions } from '@teambit/cli';
 import Table from 'cli-table';
 import chalk from 'chalk';
 import archy from 'archy';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { generateDependenciesInfoTable } from '@teambit/legacy/dist/cli/templates/component-template';
 import { IdNotFoundInGraph } from '@teambit/legacy/dist/scope/exceptions/id-not-found-in-graph';
 import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
-import { Workspace } from '@teambit/workspace';
 import { DependenciesMain } from './dependencies.main.runtime';
 
 type GetDependenciesFlags = {
@@ -295,16 +293,11 @@ export class DependenciesUsageCmd implements Command {
   alias = '';
   options = [] as CommandOptions;
 
-  constructor(
-    private deps: DependenciesMain,
-    private depsResolver: DependencyResolverMain,
-    private workspace: Workspace
-  ) {}
+  constructor(private deps: DependenciesMain) {}
 
   async report([depName]: [string]) {
-    if (this.depsResolver.getPackageManager()?.findUsages && !isComponentId(depName)) {
-      return this.depsResolver.getPackageManager()!.findUsages!(depName, { lockfileDir: this.workspace.path });
-    }
+    const deepUsageResult = await this.deps.usageDeep(depName);
+    if (deepUsageResult != null) return deepUsageResult;
     const results = await this.deps.usage(depName);
     if (!Object.keys(results).length) {
       return chalk.yellow(`the specified dependency ${depName} is not used by any component`);
@@ -313,10 +306,6 @@ export class DependenciesUsageCmd implements Command {
       .map((compIdStr) => `${chalk.bold(compIdStr)} (using dep in version ${results[compIdStr]})`)
       .join('\n');
   }
-}
-
-function isComponentId(depName: string) {
-  return depName.includes('/') && depName[0] !== '@';
 }
 
 export class WhyCmd extends DependenciesUsageCmd {
