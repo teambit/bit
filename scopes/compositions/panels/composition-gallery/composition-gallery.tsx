@@ -13,6 +13,8 @@ export type CompositionGalleryProps = {
 
 export function CompositionGallery({ component, isLoading }: CompositionGalleryProps) {
   const navigate = useNavigate();
+  const hasCompositions = component.compositions.length > 0;
+  if (!hasCompositions) return null;
   return (
     <div className={styles.compositionGallery}>
       {/* TODO - @oded replace with panelCard */}

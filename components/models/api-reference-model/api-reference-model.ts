@@ -28,7 +28,7 @@ export class APIReferenceModel {
   }
 
   apiNodes: APINode[];
-  taggedAPINodes: APINode<SchemaNode, true>[];
+  taggedAPINodes: APINode<SchemaNode, true>[] = [];
   componentId: ComponentID;
 
   constructor(public _api: APISchema, _renderers: APINodeRenderer[], _overviewRenderers: APINodeRenderer[]) {
