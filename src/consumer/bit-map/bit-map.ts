@@ -6,6 +6,7 @@ import { compact, uniq } from 'lodash';
 import R from 'ramda';
 import { LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
+import { ComponentID } from '@teambit/component';
 import type { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
@@ -96,7 +97,7 @@ export default class BitMap {
         throw new BitError(`your id ${id} is duplicated with ${similarIds.toString()}`);
       }
     }
-    componentMap.id = bitId;
+    componentMap.id = new ComponentID(bitId, componentMap.defaultScope);
     this.components.push(componentMap);
     this.markAsChanged();
   }
@@ -289,7 +290,7 @@ export default class BitMap {
     this.components = this.components.map(
       (component) =>
         new ComponentMap({
-          id: component.id.changeVersion(undefined).changeScope(undefined),
+          id: component.id.changeVersion(undefined).changeScope(component.scope || (component.defaultScope as string)),
           mainFile: component.mainFile,
           rootDir: component.rootDir,
           exported: false,
@@ -303,7 +304,7 @@ export default class BitMap {
     this.components = this.components.map((component) => {
       if (component.isAvailableOnCurrentLane) return component;
       return new ComponentMap({
-        id: component.id.changeVersion(undefined).changeScope(undefined),
+        id: component.id.changeVersion(undefined).changeScope(component.scope || (component.defaultScope as string)),
         mainFile: component.mainFile,
         rootDir: component.rootDir,
         exported: false,
@@ -370,7 +371,7 @@ export default class BitMap {
    * trying to load them.
    */
   getAllBitIdsFromAllLanes(): BitIds {
-    const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map((c) => c.id));
+    const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map((c) => c.id._legacy));
     if (this._cacheIdsAll) return this._cacheIdsAll;
     const components = this.components;
     const componentIds = ids(components);
@@ -422,7 +423,7 @@ export default class BitMap {
   getAllIdsAvailableOnLane(): BitIds {
     if (!this._cacheIdsLane) {
       const components = this.components.filter((c) => !c.isRemoved()).filter((c) => c.isAvailableOnCurrentLane);
-      const componentIds = BitIds.fromArray(components.map((c) => c.id));
+      const componentIds = BitIds.fromArray(components.map((c) => c.id._legacy));
       this._cacheIdsLane = componentIds;
       Object.freeze(this._cacheIdsLane);
     }
@@ -441,7 +442,7 @@ export default class BitMap {
 
   getRemoved(): BitIds {
     const components = this.components.filter((c) => c.isRemoved()).filter((c) => c.isAvailableOnCurrentLane);
-    return BitIds.fromArray(components.map((c) => c.id));
+    return BitIds.fromArray(components.map((c) => c.id._legacy));
   }
 
   isIdAvailableOnCurrentLane(id: BitId): boolean {
@@ -590,13 +591,13 @@ export default class BitMap {
         const matchedName = idHasVersion ? allIdsStr[idWithoutScope] : allIdsStrWithoutVersion[idWithoutScope];
         if (matchedName) return matchedName;
         if (this.updatedIds[idWithoutScope]) {
-          return this.updatedIds[idWithoutScope].id;
+          return this.updatedIds[idWithoutScope].id._legacy;
         }
       }
     }
 
     if (this.updatedIds[id]) {
-      return this.updatedIds[id].id;
+      return this.updatedIds[id].id._legacy;
     }
 
     if (shouldThrow) {
@@ -708,8 +709,8 @@ export default class BitMap {
 
   syncWithIds(ids: BitIds, laneBitIds: BitIds) {
     this.components.forEach((componentMap) => {
-      componentMap.isAvailableOnCurrentLane = ids.hasWithoutVersion(componentMap.id);
-      componentMap.onLanesOnly = laneBitIds.hasWithoutVersion(componentMap.id);
+      componentMap.isAvailableOnCurrentLane = ids.hasWithoutVersion(componentMap.id._legacy);
+      componentMap.onLanesOnly = laneBitIds.hasWithoutVersion(componentMap.id._legacy);
     });
     this._invalidateCache();
     this.markAsChanged();
@@ -918,7 +919,7 @@ export default class BitMap {
       // no need for "exported" property as there are scope and version props
       // if not exist, we still need these properties so we know later to parse them correctly.
       componentMapCloned.name = componentMapCloned.id.name;
-      componentMapCloned.scope = componentMapCloned.id.hasScope() ? componentMapCloned.id.scope : '';
+      componentMapCloned.scope = componentMapCloned.id._legacy.hasScope() ? componentMapCloned.id.scope : '';
       componentMapCloned.version = componentMapCloned.id.hasVersion() ? componentMapCloned.id.version : '';
       if (componentMapCloned.isAvailableOnCurrentLane && !componentMapCloned.onLanesOnly) {
         delete componentMapCloned.isAvailableOnCurrentLane;

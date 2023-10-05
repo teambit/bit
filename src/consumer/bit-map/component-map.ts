@@ -2,6 +2,7 @@ import * as path from 'path';
 import globby from 'globby';
 import ignore from 'ignore';
 import R from 'ramda';
+import { ComponentID } from '@teambit/component-id';
 import { BitId } from '../../bit-id';
 import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '../../constants';
 import ValidationError from '../../error/validation-error';
@@ -33,7 +34,7 @@ export type NextVersion = {
 };
 
 export type ComponentMapData = {
-  id: BitId;
+  id: ComponentID;
   files: ComponentMapFile[];
   defaultScope?: string;
   mainFile: PathLinux;
@@ -50,7 +51,7 @@ export type ComponentMapData = {
 export type PathChange = { from: PathLinux; to: PathLinux };
 
 export default class ComponentMap {
-  id: BitId;
+  id: ComponentID;
   files: ComponentMapFile[];
   defaultScope?: string;
   mainFile: PathLinux;
