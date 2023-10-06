@@ -61,3 +61,38 @@
   font-size: var(--bit-p-xs);
   padding-bottom: 16px;
 }
+
+.reactOverview {
+  display: flex;
+  flex-direction: column;
+  // @todo find token for this
+  background-color: #f7f7f5;
+  width: 100%;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.reactOverviewHeader {
+  display: flex;
+  align-items: center;
+}
+
+.headingLeft {
+  display: flex;
+  gap: 4px;
+  width: 240px;
+  text-overflow: ellipsis;
+}
+
+.icon {
+  > img {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+}

@@ -34,7 +34,7 @@ export class APIReferenceUI {
 
   static dependencies = [ComponentAspect, CodeAspect];
   static runtime = UIRuntime;
-  static slots = [Slot.withType<APINodeRenderer[]>(), Slot.withType<APINodeRenderer[]>()];
+  static slots = [Slot.withType<APINodeRenderer[]>()];
 
   getAPIPage() {
     const EditorProvider = this.code.getCodeEditorProvider();
