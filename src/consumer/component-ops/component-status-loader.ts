@@ -114,4 +114,8 @@ export class ComponentStatusLoader {
     status.modified = await this.consumer.isComponentModified(versionFromModel, componentFromFileSystem);
     return status;
   }
+
+  clearOneComponentCache(id: BitId) {
+    delete this._componentsStatusCache[id.toString()];
+  }
 }
