@@ -172,10 +172,10 @@ export default class Component extends BitObject {
   }
 
   getRef(version: string): Ref | null {
-    if (isHash(version)) {
-      return new Ref(version);
+    if (isTag(version)) {
+      return this.versionsIncludeOrphaned[version];
     }
-    return this.versionsIncludeOrphaned[version];
+    return new Ref(version);
   }
 
   getHeadStr(): string | null {
@@ -236,7 +236,8 @@ export default class Component extends BitObject {
       return false;
     }
     const versionParents = await getAllVersionParents({ repo, modelComponent: this, heads: [head] });
-    return versionParents.map((v) => v.hash).some((hash) => hash.toString() === version);
+    // we use "startsWith" because it can be a short hash
+    return versionParents.map((v) => v.hash).some((hash) => hash.toString().startsWith(version));
   }
 
   hasTag(version: string): boolean {

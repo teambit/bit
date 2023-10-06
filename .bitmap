@@ -744,6 +744,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/lanes"
     },
+    "legacy-bit-id": {
+        "name": "legacy-bit-id",
+        "scope": "teambit.component",
+        "version": "1.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy-bit-id"
+    },
     "legacy-component-log": {
         "name": "legacy-component-log",
         "scope": "teambit.component",
