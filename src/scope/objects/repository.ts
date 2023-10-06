@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { Mutex } from 'async-mutex';
 import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
 import { BitError } from '@teambit/bit-error';
-import { isHash, HASH_SIZE } from '@teambit/component-version';
+import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
 import pMap from 'p-map';
 import { OBJECTS_DIR } from '../../constants';
@@ -225,7 +225,7 @@ export default class Repository {
     const matches = await glob(path.join('*', '*'), { cwd });
     const refs = matches.map((str) => {
       const hash = str.replace(path.sep, '');
-      if (!isHash(hash)) {
+      if (!isSnap(hash)) {
         logger.error(`fatal: the file "${str}" is not a valid bit object path`);
         return null;
       }
@@ -239,7 +239,7 @@ export default class Repository {
     const matches = await glob(`${pathPrefix}*`, { cwd: this.getPath() });
     const refs = matches.map((str) => {
       const hash = str.replace(path.sep, '');
-      if (!isHash(hash)) {
+      if (!isSnap(hash)) {
         logger.error(`fatal: the file "${str}" is not a valid bit object path`);
         return null;
       }

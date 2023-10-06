@@ -1,6 +1,6 @@
 import { v4 } from 'uuid';
 import { cloneDeep, pickBy } from 'lodash';
-import { isHash } from '@teambit/component-version';
+import { isSnap } from '@teambit/component-version';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
@@ -217,7 +217,7 @@ export default class Lane extends BitObject {
       if (bitIds.filterWithoutVersion(component.id).length > 1) {
         throw new ValidationError(`${message}, the following component is duplicated "${component.id.name}"`);
       }
-      if (!isHash(component.head.hash)) {
+      if (!isSnap(component.head.hash)) {
         throw new ValidationError(
           `${message}, lane component ${component.id.toStringWithoutVersion()} head should be a hash, got ${
             component.head.hash

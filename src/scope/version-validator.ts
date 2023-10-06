@@ -19,6 +19,7 @@ import { PathLinux } from '../utils/path';
 import validateType from '../utils/validate-type';
 import VersionInvalid from './exceptions/version-invalid';
 import Version from './models/version';
+import { isSnap } from '@teambit/component-version';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.
@@ -275,6 +276,9 @@ ${duplicationStr}`);
     version.parents.forEach((parent) => {
       if (parent.isEqual(version.hash())) {
         throw new VersionInvalid(`${message}, its parent has the same hash as itself: ${parent.toString()}`);
+      }
+      if (!isSnap(parent.toString())) {
+        throw new VersionInvalid(`${message}, its parent "${parent.toString()}" is not a valid snap (40 chars hex).`);
       }
     });
   }

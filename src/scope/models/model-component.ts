@@ -175,7 +175,10 @@ export default class Component extends BitObject {
     if (isTag(version)) {
       return this.versionsIncludeOrphaned[version];
     }
-    return new Ref(version);
+    if (isHash(version)) {
+      return new Ref(version);
+    }
+    return null;
   }
 
   getHeadStr(): string | null {
