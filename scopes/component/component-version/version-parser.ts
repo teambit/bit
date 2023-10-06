@@ -31,13 +31,10 @@ function returnSnap(hash: string): Version {
 
 /**
  * a snap is a 40 characters hash encoded in HEX. so it can be a-f and 0-9.
- * if it has a dot, it's an invalid hash and a good indication for a semver.
  * also, for convenience, a short-hash can be used, which is a minimum of 3 characters.
  */
 export function isHash(str: string | null | undefined): boolean {
-  return (
-    typeof str === 'string' && !str.includes('.') && str.length >= SHORT_HASH_MINIMUM_SIZE && str.length <= HASH_SIZE
-  );
+  return typeof str === 'string' && isHex(str) && str.length >= SHORT_HASH_MINIMUM_SIZE && str.length <= HASH_SIZE;
 }
 
 /**
@@ -61,4 +58,12 @@ export default function versionParser(versionStr: string | null | undefined): Ve
   if (isHash(versionStr)) return returnSnap(versionStr);
 
   throw new InvalidVersion(versionStr.toString());
+}
+
+/**
+ * check if the string consists of valid hexadecimal characters
+ */
+function isHex(str: string) {
+  const hexRegex = /^[0-9a-fA-F]+$/;
+  return hexRegex.test(str);
 }
