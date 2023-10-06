@@ -2,7 +2,7 @@ import { PJV } from 'package-json-validator';
 import R from 'ramda';
 import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
-
+import { isSnap } from '@teambit/component-version';
 import { BitId, BitIds } from '../bit-id';
 import { DEPENDENCIES_FIELDS } from '../constants';
 import { SchemaName } from '../consumer/component/component-schema';
@@ -19,7 +19,6 @@ import { PathLinux } from '../utils/path';
 import validateType from '../utils/validate-type';
 import VersionInvalid from './exceptions/version-invalid';
 import Version from './models/version';
-import { isSnap } from '@teambit/component-version';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.

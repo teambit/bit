@@ -14,6 +14,8 @@ export type BitIdProps = {
   version?: string | undefined;
 };
 
+type BitIdSerialized = { scope?: string; name: string; version?: string };
+
 export type BitIdStr = string;
 
 export const VERSION_DELIMITER = '@';
@@ -112,11 +114,11 @@ export default class BitId {
     return this.hasSameName(bitId);
   }
 
-  serialize() {
+  serialize(): BitIdSerialized {
     const obj = { scope: this.scope, name: this.name, version: this.version };
     if (!this.hasVersion()) delete obj.version;
     if (!this.hasScope()) delete obj.scope;
-    return obj;
+    return obj as BitIdSerialized;
   }
 
   toFullPath(): string {

@@ -68,7 +68,7 @@ export class ComponentLogMain {
     const componentId = await workspace.resolveComponentId(id);
     const modelComp = await workspace.scope.getBitObjectModelComponent(componentId, true);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const versionObj = (await workspace.scope.getBitObjectVersion(modelComp!, componentId.version, true)) as Version;
+    const versionObj = (await workspace.scope.getBitObjectVersion(modelComp!, componentId.version!, true)) as Version;
     const firstParent = versionObj.parents[0];
     const parentObj = firstParent
       ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
