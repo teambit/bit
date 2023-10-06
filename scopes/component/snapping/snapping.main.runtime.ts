@@ -266,7 +266,10 @@ export class SnappingMain {
       })
     );
     const componentIds = tagDataPerComp.map((t) => t.componentId);
-    await this.scope.import(componentIds, { preferDependencyGraph: false, reason: 'of the seeders to tag' });
+    // important! leave the "preferDependencyGraph" with the default - true. no need to bring all dependencies at this
+    // stage. later on, they'll be imported during "snapping._addFlattenedDependenciesToComponents".
+    // otherwise, the dependencies are imported without version-history and fail later when checking their origin.
+    await this.scope.import(componentIds, { reason: 'of the seeders to tag' });
     const deps = compact(tagDataPerComp.map((t) => t.dependencies).flat()).map((dep) => dep.changeVersion(LATEST));
     const additionalComponentIdsToFetch = await Promise.all(
       componentIds.map(async (id) => {
@@ -537,11 +540,10 @@ if you're willing to lose the history from the head to the specified version, us
       if (unmerged) {
         return componentsList.listDuringMergeStateComponents();
       }
-      const tagPendingComponents = unmodified
-        ? await componentsList.listPotentialTagAllWorkspace()
-        : await componentsList.listTagPendingComponents();
-      if (R.isEmpty(tagPendingComponents)) return null;
-      const tagPendingComponentsIds = await workspace.resolveMultipleComponentIds(tagPendingComponents);
+      const tagPendingComponentsIds = unmodified
+        ? await workspace.listPotentialTagIds()
+        : await workspace.listTagPendingIds();
+      if (!tagPendingComponentsIds.length) return null;
       // when unmodified, we ask for all components, throw if no matching. if not unmodified and no matching, see error
       // below, suggesting to use --unmodified flag.
       const shouldThrowForNoMatching = unmodified;
@@ -559,7 +561,7 @@ if you're willing to lose the history from the head to the specified version, us
       };
       const componentIds = await getCompIds();
       if (!componentIds.length && pattern) {
-        const allTagPending = await componentsList.listPotentialTagAllWorkspace();
+        const allTagPending = await workspace.listPotentialTagIds();
         if (allTagPending.length) {
           throw new BitError(`unable to find matching for "${pattern}" pattern among modified/new components.
 there are matching among unmodified components thought. consider using --unmodified flag if needed`);
@@ -1061,11 +1063,9 @@ another option, in case this dependency is not in main yet is to remove all refe
       return { bitIds: softTaggedComponents, warnings: [] };
     }
 
-    const tagPendingBitIds = includeUnmodified
-      ? await componentsList.listPotentialTagAllWorkspace()
-      : await componentsList.listTagPendingComponents();
-
-    const tagPendingComponentsIds = await this.workspace.resolveMultipleComponentIds(tagPendingBitIds);
+    const tagPendingComponentsIds = includeUnmodified
+      ? await this.workspace.listPotentialTagIds()
+      : await this.workspace.listTagPendingIds();
 
     const snappedComponents = await componentsList.listSnappedComponentsOnMain();
     const snappedComponentsIds = snappedComponents.map((c) => c.toBitId());
@@ -1097,6 +1097,7 @@ another option, in case this dependency is not in main yet is to remove all refe
       return { bitIds: componentsList.listDuringMergeStateComponents(), warnings };
     }
 
+    const tagPendingBitIds = tagPendingComponentsIds.map((id) => id._legacy);
     const tagPendingBitIdsIncludeSnapped = [...tagPendingBitIds, ...snappedComponentsIds];
 
     if (includeUnmodified && exactVersion) {
