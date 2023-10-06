@@ -129,6 +129,11 @@ export default class Consumer {
     await Promise.all(this.onCacheClear.map((func) => func()));
   }
 
+  clearOneComponentCache(id: BitId) {
+    this.componentLoader.clearOneComponentCache(id);
+    this.componentStatusLoader.clearOneComponentCache(id);
+  }
+
   getTmpFolder(fullPath = false): PathOsBased {
     if (!fullPath) {
       return BIT_WORKSPACE_TMP_DIRNAME;
