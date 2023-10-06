@@ -812,6 +812,10 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
     const nonMainFileSplit = depFullPath.split(`node_modules/`);
     const nonMainFileShort = nonMainFileSplit[1] || nonMainFileSplit[0];
+    if (nonMainFileShort.includes('eslintrc')) {
+      // a temporary workaround for envs that doesn't expose eslintrc config in their index file
+      return;
+    }
     (this.issues.getOrCreate(IssuesClasses.ImportNonMainFiles).data[filePath] ||= []).push(nonMainFileShort);
   }
 
