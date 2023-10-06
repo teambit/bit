@@ -34,8 +34,8 @@ function InterfaceOverviewComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api, renderer },
   } = props;
-  const classNode = api as InterfaceSchema;
-  const { members, doc } = classNode;
+  const interfaceNode = api as InterfaceSchema;
+  const { members, doc } = interfaceNode;
 
   const icon = renderer.icon;
   const description =
@@ -44,7 +44,7 @@ function InterfaceOverviewComponent(props: APINodeRenderProps) {
 
   return (
     <SchemaNodesSummary
-      name={classNode.name}
+      name={interfaceNode.name}
       description={description}
       icon={icon}
       nodes={members}

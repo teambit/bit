@@ -32,8 +32,8 @@ function EnumOverviewComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api, renderer },
   } = props;
-  const classNode = api as EnumSchema;
-  const { members, doc } = classNode;
+  const enumNode = api as EnumSchema;
+  const { members, doc } = enumNode;
 
   const icon = renderer.icon;
   const description =
@@ -41,7 +41,7 @@ function EnumOverviewComponent(props: APINodeRenderProps) {
     doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n` ?? ''), '');
   return (
     <SchemaNodesSummary
-      name={classNode.name}
+      name={enumNode.name}
       description={description}
       icon={icon}
       nodes={members}
