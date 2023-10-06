@@ -13,12 +13,13 @@ export default class Login implements LegacyCommand {
   opts = [
     ['d', 'cloud-domain <domain>', 'login cloud domain (default bit.cloud)'],
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
-    ['', 'suppress-browser-launch', 'do not open a browser for authentication'],
+    ['', 'no-browser', 'do not open a browser for authentication'],
     [
       '',
       'machine-name <name>',
       'specify machine-name to pair with the token (useful for CI to avoid accidentally revoking the token)',
     ],
+    ['', 'suppress-browser-launch', 'DEPRECATE. use --no-browser instead'],
   ] as CommandOptions;
   action(
     [], // eslint-disable-line no-empty-pattern
@@ -26,15 +27,20 @@ export default class Login implements LegacyCommand {
       cloudDomain,
       port,
       suppressBrowserLaunch = false,
+      noBrowser = false,
       machineName,
     }: {
       cloudDomain?: string;
       port: string;
       suppressBrowserLaunch?: boolean;
+      noBrowser?: boolean;
       machineName?: string;
     }
   ): Promise<any> {
-    return login(port, suppressBrowserLaunch, machineName, cloudDomain).then((results) => ({
+    if (suppressBrowserLaunch) {
+      noBrowser = true;
+    }
+    return login(port, noBrowser, machineName, cloudDomain).then((results) => ({
       ...results,
     }));
   }

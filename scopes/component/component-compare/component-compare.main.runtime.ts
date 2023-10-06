@@ -147,14 +147,11 @@ export class ComponentCompareMain {
 
   private async parseValues(values: string[]): Promise<{ bitIds: BitId[]; version?: string; toVersion?: string }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
-    const consumer = this.workspace.consumer;
     // option #1: bit diff
     // no arguments
     if (!values.length) {
-      const componentsList = new ComponentsList(consumer);
-      const bitIds = await componentsList.listTagPendingComponents();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return { bitIds };
+      const componentIds = await this.workspace.listTagPendingIds();
+      return { bitIds: componentIds.map((id) => id._legacy) };
     }
     const firstValue = values[0];
     const lastValue = values[values.length - 1];

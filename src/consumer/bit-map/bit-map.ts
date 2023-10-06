@@ -181,7 +181,8 @@ export default class BitMap {
     if (!mapFileContent || !currentLocation) {
       return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA);
     }
-    const bitMap = BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath);
+    const defaultScope = consumer.config.defaultScope;
+    const bitMap = BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath, defaultScope);
     await bitMap.loadFiles();
 
     return bitMap;
@@ -194,7 +195,8 @@ export default class BitMap {
   static loadFromContentWithoutLoadingFiles(
     bitMapFileContent: Buffer,
     bitMapFilePath: PathOsBasedAbsolute,
-    workspacePath: PathOsBasedAbsolute
+    workspacePath: PathOsBasedAbsolute,
+    defaultScope: string
   ) {
     let componentsJson;
     try {
@@ -213,7 +215,7 @@ export default class BitMap {
     BitMap.removeNonComponentFields(componentsJson);
 
     const bitMap = new BitMap(workspacePath, bitMapFilePath, schema, laneId, isLaneExported);
-    bitMap.loadComponents(componentsJson);
+    bitMap.loadComponents(componentsJson, defaultScope);
 
     return bitMap;
   }
@@ -329,7 +331,7 @@ export default class BitMap {
     });
   }
 
-  loadComponents(componentsJson: Record<string, any>) {
+  loadComponents(componentsJson: Record<string, any>, defaultScope: string) {
     this.throwForDuplicateRootDirs(componentsJson);
     Object.keys(componentsJson).forEach((componentId) => {
       const componentFromJson = componentsJson[componentId];
@@ -340,6 +342,11 @@ export default class BitMap {
         );
       }
       componentFromJson.id = bitId;
+      if (!bitId.hasScope() && !componentFromJson.defaultScope) {
+        // needed for backward compatibility. before scheme 17.0.0, the defaultScope wasn't written if it was the same
+        // as consumer.defaultScope
+        componentFromJson.defaultScope = defaultScope;
+      }
       const componentMap = ComponentMap.fromJson(componentFromJson);
       componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.components.push(componentMap);
