@@ -70,7 +70,7 @@ export function useLaneComponentIdFromUrl(): ComponentID | undefined | null {
   if (compIdFromLocation) return compIdFromLocation;
   if (loading) return undefined;
 
-  return (lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl) as ComponentID | undefined) ?? null;
+  return (lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl) as any | undefined) ?? null;
 
   // if (componentVersion && laneFromUrl) {
   //   const componentId = ComponentID.tryFromString(`${idFromLocation}@${componentVersion}`);
