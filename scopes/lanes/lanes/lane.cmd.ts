@@ -280,7 +280,8 @@ export class LaneChangeScopeCmd implements Command {
 
 export class LaneRenameCmd implements Command {
   name = 'rename <new-name>';
-  description = `EXPERIMENTAL. change the lane-name locally and on the remote (if exported)`;
+  description = `EXPERIMENTAL. change the lane-name locally`;
+  extendedDescription = 'the remote will be updated after the next "bit export" command';
   alias = '';
   options = [
     ['l', 'lane-name <lane-name>', 'the name of the lane to rename. if not specified, the current lane is used'],
@@ -290,11 +291,8 @@ export class LaneRenameCmd implements Command {
   constructor(private lanes: LanesMain) {}
 
   async report([newName]: [string], { laneName }: { laneName?: string }): Promise<string> {
-    const { exported, exportErr, currentName } = await this.lanes.rename(newName, laneName);
-    const exportedStr = exported
-      ? `and have been exported successfully to the remote`
-      : `however failed exporting the renamed lane to the remote, due to an error: ${exportErr?.message || 'unknown'}`;
-    return `the lane ${chalk.bold(currentName)}'s name has been changed to ${chalk.bold(newName)}, ${exportedStr}`;
+    const { currentName } = await this.lanes.rename(newName, laneName);
+    return `the lane ${chalk.bold(currentName)}'s name has been changed to ${chalk.bold(newName)}.`;
   }
 }
 

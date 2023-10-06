@@ -200,9 +200,6 @@ importers:
       '@teambit/api-reference.renderers.interface':
         specifier: ^0.0.29
         version: 0.0.29(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      '@teambit/api-reference.renderers.react':
-        specifier: ^0.0.11
-        version: 0.0.11(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.schema-nodes-index':
         specifier: ^0.0.25
         version: 0.0.25(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
@@ -2344,6 +2341,55 @@ importers:
         specifier: 8.3.2
         version: 8.3.2
 
+  components/renderers/react:
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer':
+        specifier: ^0.0.17
+        version: 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details':
+        specifier: ^0.0.28
+        version: 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema':
+        specifier: ^0.0.59
+        version: 0.0.59
+      classnames:
+        specifier: 2.2.6
+        version: 2.2.6
+      core-js:
+        specifier: ^3.0.0
+        version: 3.13.0
+      react:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2
+      react-dom:
+        specifier: ^16.8.0 || ^17.0.0
+        version: 17.0.2(react@17.0.2)
+    devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@types/classnames':
+        specifier: 2.2.11
+        version: 2.2.11
+      '@types/jest':
+        specifier: ^26.0.0
+        version: 26.0.20
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 12.20.4
+        version: 12.20.4
+      '@types/react':
+        specifier: ^17.0.67
+        version: 17.0.67
+      '@types/react-dom':
+        specifier: ^17.0.21
+        version: 17.0.21
+      '@types/testing-library__jest-dom':
+        specifier: 5.9.5
+        version: 5.9.5
+
   node_modules/.bit_roots/teambit.envs_env:
     dependencies:
       '@teambit/api-reference':
@@ -2370,6 +2416,9 @@ importers:
       '@teambit/api-reference.renderers.parameter':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/parameter(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.react':
+        specifier: workspace:*
+        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.schema-node-member-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-node-member-summary(react-dom@17.0.2)(react@17.0.2)
@@ -2789,7 +2838,7 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
@@ -3031,6 +3080,8 @@ importers:
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
         injected: true
       '@teambit/api-reference.renderers.parameter':
+        injected: true
+      '@teambit/api-reference.renderers.react':
         injected: true
       '@teambit/api-reference.renderers.schema-node-member-summary':
         injected: true
@@ -3489,6 +3540,9 @@ importers:
       '@teambit/api-reference.renderers.parameter':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/parameter(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.react':
+        specifier: workspace:*
+        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.schema-node-member-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-node-member-summary(react-dom@17.0.2)(react@17.0.2)
@@ -3908,7 +3962,7 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
@@ -4150,6 +4204,8 @@ importers:
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
         injected: true
       '@teambit/api-reference.renderers.parameter':
+        injected: true
+      '@teambit/api-reference.renderers.react':
         injected: true
       '@teambit/api-reference.renderers.schema-node-member-summary':
         injected: true
@@ -4608,6 +4664,9 @@ importers:
       '@teambit/api-reference.renderers.parameter':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/parameter(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.react':
+        specifier: workspace:*
+        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.schema-node-member-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-node-member-summary(react-dom@17.0.2)(react@17.0.2)
@@ -5027,7 +5086,7 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
@@ -5269,6 +5328,8 @@ importers:
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
         injected: true
       '@teambit/api-reference.renderers.parameter':
+        injected: true
+      '@teambit/api-reference.renderers.react':
         injected: true
       '@teambit/api-reference.renderers.schema-node-member-summary':
         injected: true
@@ -5727,6 +5788,9 @@ importers:
       '@teambit/api-reference.renderers.parameter':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/parameter(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.react':
+        specifier: workspace:*
+        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.schema-node-member-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-node-member-summary(react-dom@17.0.2)(react@17.0.2)
@@ -6146,7 +6210,7 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
@@ -6388,6 +6452,8 @@ importers:
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
         injected: true
       '@teambit/api-reference.renderers.parameter':
+        injected: true
+      '@teambit/api-reference.renderers.react':
         injected: true
       '@teambit/api-reference.renderers.schema-node-member-summary':
         injected: true
@@ -6846,6 +6912,9 @@ importers:
       '@teambit/api-reference.renderers.parameter':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/parameter(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.react':
+        specifier: workspace:*
+        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.schema-node-member-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-node-member-summary(react-dom@17.0.2)(react@17.0.2)
@@ -7265,7 +7334,7 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
@@ -7507,6 +7576,8 @@ importers:
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
         injected: true
       '@teambit/api-reference.renderers.parameter':
+        injected: true
+      '@teambit/api-reference.renderers.react':
         injected: true
       '@teambit/api-reference.renderers.schema-node-member-summary':
         injected: true
@@ -7965,6 +8036,9 @@ importers:
       '@teambit/api-reference.renderers.parameter':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/parameter(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.react':
+        specifier: workspace:*
+        version: file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/api-reference.renderers.schema-node-member-summary':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/schema-node-member-summary(react-dom@17.0.2)(react@17.0.2)
@@ -8384,7 +8458,7 @@ importers:
         version: file:scopes/harmony/pubsub(react-dom@17.0.2)(react@17.0.2)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+        version: file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/react-elements':
         specifier: workspace:*
         version: file:scopes/react/react-elements(@babel/core@7.19.6)(browserslist@4.16.3)(esbuild@0.14.29)(eslint@7.32.0)(react-dom@17.0.2)(react@17.0.2)(sass@1.63.6)(typescript@4.7.4)
@@ -8626,6 +8700,8 @@ importers:
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
         injected: true
       '@teambit/api-reference.renderers.parameter':
+        injected: true
+      '@teambit/api-reference.renderers.react':
         injected: true
       '@teambit/api-reference.renderers.schema-node-member-summary':
         injected: true
@@ -17005,9 +17081,6 @@ importers:
       '@svgr/webpack':
         specifier: 5.5.0
         version: 5.5.0
-      '@teambit/api-reference.renderers.react':
-        specifier: ^0.0.11
-        version: 0.0.11(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/component-id':
         specifier: ^0.0.427
         version: 0.0.427
@@ -17902,6 +17975,9 @@ importers:
       lodash:
         specifier: 4.17.21
         version: 4.17.21
+      open:
+        specifier: 7.4.2
+        version: 7.4.2
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -26074,7 +26150,7 @@ packages:
       '@teambit/api-reference.utils.code-editor-options': 0.0.6
       '@teambit/base-react.navigation.link': 2.0.27(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/code.ui.code-editor': 0.0.8(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.heading': registry.npmjs.org/@teambit/documenter.ui.heading@4.1.1(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.heading': 4.1.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.501(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -26200,28 +26276,6 @@ packages:
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-    dev: false
-
-  /@teambit/api-reference.renderers.react@0.0.11(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
-    resolution: {integrity: sha512-DK0RI2yHRwX4l/u/JArci9Y2sMcIiD632alVGgnnsDzCKPpl0Ky8UTd7rKpwOv9qvzf/XN5K02l+gy7/HNUjiw==}
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/api-reference.renderers.api-node-details': 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
-      '@teambit/api-reference.renderers.parameter': 0.0.23(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/semantics.entities.semantic-schema': 0.0.59
-      classnames: 2.2.6
-      core-js: 3.13.0
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    transitivePeerDependencies:
-      - '@testing-library/react'
-      - '@testing-library/react-hooks'
-      - '@types/react'
-      - react-router-dom
     dev: false
 
   /@teambit/api-reference.renderers.schema-node-member-summary@0.0.25(react-dom@17.0.2)(react@17.0.2):
@@ -26783,6 +26837,17 @@ packages:
       core-js: 3.13.0
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
+
+  /@teambit/base-ui.text.heading@1.0.1(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-P6N4Mx5YUuCnkVXwpG5UK2/5b56aXJCHq2LRiqambZM/lZbLX2qO+CNolRjYztRf2cXea6/ToUdjAn+BPcwXXA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
 
   /@teambit/base-ui.text.heading@1.0.4(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-tPpsdOpL9sYJhfliT8AZfDG0p0A=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/text/heading@1.0.4.tgz}
@@ -30383,6 +30448,19 @@ packages:
       - react-dom
     dev: false
 
+  /@teambit/documenter.ui.heading@4.1.1(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-VmHd/0lSMKfUuGllXbCnqZehQ0pcTgio8q9mcbsPs9S36bZW4w5BS9oywVSo47dzLOOV3S/C1gUIdy6P468miw==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/base-ui.text.heading': 1.0.1(react-dom@17.0.2)(react@17.0.2)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    dev: false
+
   /@teambit/documenter.ui.heading@4.1.4(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha1-jENJgXMvwy825NKKTM8gP90faMc=, tarball: https://node-registry.bit.cloud/@teambit/documenter.ui.heading/-/@teambit-documenter.ui.heading-4.1.4.tgz}
     peerDependencies:
@@ -30397,7 +30475,7 @@ packages:
     dev: false
 
   /@teambit/documenter.ui.heading@4.1.6(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha1-nCoruiI/7n5xcXd4GEMdtuU5nIU=, tarball: https://node-registry.bit.cloud/tarballs/teambit.documenter/ui/heading@4.1.6.tgz}
+    resolution: {integrity: sha1-nCoruiI/7n5xcXd4GEMdtuU5nIU=}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
@@ -32510,7 +32588,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/base-ui.text.muted-text': registry.npmjs.org/@teambit/base-ui.text.muted-text@1.0.1(react-dom@17.0.2)(react@17.0.2)
-      '@teambit/documenter.ui.heading': registry.npmjs.org/@teambit/documenter.ui.heading@4.1.1(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/documenter.ui.heading': 4.1.1(react-dom@17.0.2)(react@17.0.2)
       '@teambit/scope.ui.scope-icon': 0.0.91(@testing-library/react@12.1.5)(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
@@ -54682,6 +54760,28 @@ packages:
     resolution: {integrity: sha512-V50KMwwzqJV0NpZIZFwfOD5/lyny3WlSzRiXgA0G7VUnRlqttta1L6UQIHzd6EuBY/cHGfwTIck7w1yH6Q5zUw==}
     dev: false
 
+  file:components/renderers/react(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
+    resolution: {directory: components/renderers/react, type: directory}
+    id: file:components/renderers/react
+    name: '@teambit/api-reference.renderers.react'
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.17(react-dom@17.0.2)(react@17.0.2)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.28(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
+      '@teambit/semantics.entities.semantic-schema': 0.0.59
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - react-router-dom
+    dev: false
+
   file:scopes/api-reference/api-reference(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2):
     resolution: {directory: scopes/api-reference/api-reference, type: directory}
     id: file:scopes/api-reference/api-reference
@@ -57666,7 +57766,7 @@ packages:
       - utf-8-validate
     dev: false
 
-  file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
+  file:scopes/react/react(@teambit/legacy@node_modules+@teambit+legacy)(@testing-library/react@12.1.5)(@types/express@4.17.13)(@types/react@17.0.67)(@types/webpack@5.28.1)(browserslist@4.16.3)(bufferutil@4.0.3)(debug@4.3.2)(eslint@7.32.0)(graphql@15.8.0)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(react-dom@17.0.2)(react@17.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0):
     resolution: {directory: scopes/react/react, type: directory}
     id: file:scopes/react/react
     name: '@teambit/react'
@@ -57690,7 +57790,6 @@ packages:
       '@prerenderer/renderer-jsdom': 1.1.6(bufferutil@4.0.3)(utf-8-validate@5.0.5)
       '@prerenderer/webpack-plugin': 5.3.6(@types/express@4.17.13)(debug@4.3.2)(html-webpack-plugin@5.3.2)(puppeteer@13.7.0)(webpack@5.84.1)
       '@svgr/webpack': 5.5.0
-      '@teambit/api-reference.renderers.react': 0.0.11(@testing-library/react@12.1.5)(@types/react@17.0.67)(react-dom@17.0.2)(react-router-dom@6.3.0)(react@17.0.2)
       '@teambit/component-id': 0.0.427
       '@teambit/compositions.ui.hooks.use-composition': 0.0.177(react-dom@17.0.2)(react@17.0.2)
       '@teambit/defender.eslint-linter': 1.0.1(@teambit/legacy@node_modules+@teambit+legacy)
@@ -57765,7 +57864,6 @@ packages:
       - '@swc/core'
       - '@teambit/legacy'
       - '@testing-library/react'
-      - '@testing-library/react-hooks'
       - '@types/express'
       - '@types/react'
       - '@types/webpack'
@@ -57784,7 +57882,6 @@ packages:
       - node-notifier
       - node-sass
       - puppeteer
-      - react-router-dom
       - sass-embedded
       - sockjs-client
       - supports-color
@@ -58069,6 +58166,7 @@ packages:
       core-js: 3.13.0
       fs-extra: 10.0.0
       lodash: 4.17.21
+      open: 7.4.2
       p-map-series: 2.1.0
       ramda: 0.27.1
       react: 17.0.2

@@ -282,34 +282,6 @@ export default class ComponentsList {
     return components;
   }
 
-  /**
-   * list all components that can be tagged.
-   */
-  async listPotentialTagAllWorkspace(): Promise<BitId[]> {
-    const removedIds = await this.listLocallySoftRemoved();
-    const allIdsExcludeRemoved = this.idsFromBitMap();
-    return [...removedIds, ...allIdsExcludeRemoved];
-  }
-
-  /**
-   * New and modified components are tag pending
-   *
-   * @return {Promise<string[]>}
-   */
-  async listTagPendingComponents(): Promise<BitIds> {
-    const newComponents = await this.listNewComponents();
-    const modifiedComponents = await this.listModifiedComponents();
-    const removedComponents = await this.listLocallySoftRemoved();
-    const duringMergeIds = this.listDuringMergeStateComponents();
-
-    return BitIds.uniqFromArray([
-      ...(newComponents as BitId[]),
-      ...(modifiedComponents as BitId[]),
-      ...removedComponents,
-      ...duringMergeIds,
-    ]);
-  }
-
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {
     const fromBitMap = this.bitMap.getAllBitIds();
     const modelComponents = await this.getModelComponents();
