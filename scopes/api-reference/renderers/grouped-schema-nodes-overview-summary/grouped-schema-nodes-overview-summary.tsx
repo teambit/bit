@@ -100,8 +100,20 @@ export function SchemaNodesSummary({
     return langFromFileEnding;
   }, [filePath]);
 
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
+
+  React.useLayoutEffect(() => {
+    if (rootRef.current) {
+      setDimensions({
+        width: rootRef.current.offsetWidth,
+        height: rootRef.current.offsetHeight,
+      });
+    }
+  }, []);
+
   return (
-    <div {...rest} className={classnames(styles.groupNodesContainer, className)}>
+    <div ref={rootRef} {...rest} className={classnames(styles.groupNodesContainer, className)}>
       <div className={styles.heading}>
         <div className={styles.headingLeft}>
           {icon && (
@@ -149,7 +161,10 @@ export function SchemaNodesSummary({
                     <div className={styles.memberDetails} key={`${member.__schema}-${member.name}`}>
                       <div className={styles.memberTitle}>{member.name}</div>
                       {memberSignature && (
-                        <div className={styles.signature}>
+                        <div
+                          className={styles.signature}
+                          style={{ width: dimensions.width ? `${dimensions.width - 300}px` : 'calc(100% - 300px)' }}
+                        >
                           <SyntaxHighlighter
                             language={lang}
                             style={defaultTheme}
