@@ -15,7 +15,6 @@ const GET_SCHEMA = gql`
 export function useAPI(
   componentId?: string,
   apiNodeRenderers: APINodeRenderer[] = [],
-  apiOverviewRenderers: APINodeRenderer[] = [],
   options?: {
     skipInternals?: boolean;
   }
@@ -28,9 +27,7 @@ export function useAPI(
     },
   });
 
-  const apiModel = data?.getHost?.getSchema
-    ? APIReferenceModel.from(data, apiNodeRenderers, apiOverviewRenderers)
-    : undefined;
+  const apiModel = data?.getHost?.getSchema ? APIReferenceModel.from(data, apiNodeRenderers) : undefined;
 
   return {
     loading,

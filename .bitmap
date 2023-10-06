@@ -1067,6 +1067,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/overview/api-reference-table-of-contents"
     },
+    "overview/renderers/grouped-schema-nodes-overview-summary": {
+        "name": "overview/renderers/grouped-schema-nodes-overview-summary",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.api-reference",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/grouped-schema-nodes-overview-summary",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "panels": {
         "name": "panels",
         "scope": "teambit.ui-foundation",

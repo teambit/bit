@@ -18,7 +18,7 @@ export function CompositionGallery({ component, isLoading }: CompositionGalleryP
   return (
     <div className={styles.compositionGallery}>
       {/* TODO - @oded replace with panelCard */}
-      <LinkedHeading size="xs" className={styles.title}>
+      <LinkedHeading size="sm" className={styles.title}>
         <Icon of="eye" /> <span>PREVIEW</span>
       </LinkedHeading>
       <div className={styles.carousel}>

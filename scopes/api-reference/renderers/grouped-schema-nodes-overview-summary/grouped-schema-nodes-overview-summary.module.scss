@@ -1,0 +1,79 @@
+.groupNodesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px;
+  // @todo find token for this
+  background-color: #f7f7f5;
+  width: 100%;
+}
+
+.heading {
+  display: flex;
+}
+
+.headingLeft {
+  display: flex;
+  gap: 4px;
+  width: 240px;
+  text-overflow: ellipsis;
+}
+
+.icon {
+  > img {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.headingRight {
+  display: flex;
+}
+
+.description {
+  font-size: 14px;
+  // @todo change this to a token
+}
+
+.memberSummary {
+  display: flex;
+  width: 100%;
+}
+
+.propertiesOverview {
+  display: flex;
+  width: 100%;
+}
+
+.propertiesTitle,
+.memberTitle {
+  width: 240px;
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.methodMembers {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.memberDetails {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.table,
+.signature {
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - 240px);
+}

@@ -78,7 +78,9 @@ export function APINodeDetails({
   const indexHidden = (containerSize.width ?? 0) < INDEX_THRESHOLD_WIDTH;
 
   const example = (doc?.tags || []).find((tag) => tag.tagName === 'example');
-  const comment = doc?.comment;
+  const comment =
+    doc?.comment ??
+    doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n` ?? ''), '');
   const signature = displaySignature || defaultSignature;
 
   const getAPINodeUrl = useCallback((queryParams: APIRefQueryParams) => {

@@ -35,7 +35,7 @@ export function APIReferenceTableOfContents({ apiModel, className }: APIReferenc
   );
 }
 
-function sortGroupedAPINodes(a: [string, APINode<SchemaNode, false>[]], b: [string, APINode<SchemaNode, false>[]]) {
+function sortGroupedAPINodes(a: [string, APINode<SchemaNode>[]], b: [string, APINode<SchemaNode>[]]) {
   const [aType] = a;
   const [bType] = b;
 

@@ -8,9 +8,9 @@ export type SchemaQueryResult = {
   };
 };
 
-export type APINode<T extends SchemaNode = SchemaNode, OptionalRenderer extends boolean = false> = {
+export type APINode<T extends SchemaNode = SchemaNode> = {
   api: T;
-  renderer: OptionalRenderer extends true ? undefined : APINodeRenderer;
+  renderer: APINodeRenderer;
   componentId: ComponentID;
   exported: boolean;
 };
@@ -28,34 +28,32 @@ export class APIReferenceModel {
   }
 
   apiNodes: APINode[];
-  taggedAPINodes: APINode<SchemaNode, true>[] = [];
+  taggedAPINodes: APINode<SchemaNode>[] = [];
   componentId: ComponentID;
 
-  constructor(public _api: APISchema, _renderers: APINodeRenderer[], _overviewRenderers: APINodeRenderer[]) {
+  constructor(public _api: APISchema, _renderers: APINodeRenderer[]) {
     this.componentId = _api.componentId;
     this.apiNodes = this.mapToAPINode(_api, _renderers, this.componentId);
     this.apiByType = this.groupByType(this.apiNodes);
     this.apiByName = this.groupByName(this.apiNodes);
-    this.taggedAPINodes = this.mapTaggedAPINode(_api, _overviewRenderers, this.componentId);
+    this.taggedAPINodes = this.mapTaggedAPINode(_api, _renderers, this.componentId);
   }
 
-  mapTaggedAPINode(
-    api: APISchema,
-    renderers: APINodeRenderer[],
-    componentId: ComponentID
-  ): APINode<SchemaNode, true>[] {
+  mapTaggedAPINode(api: APISchema, renderers: APINodeRenderer[], componentId: ComponentID): APINode<SchemaNode>[] {
     const { taggedModuleExports } = api;
     const defaultRenderers = renderers.filter((renderer) => renderer.default);
     const nonDefaultRenderers = renderers.filter((renderer) => !renderer.default);
 
-    return taggedModuleExports.map((schemaNode) => ({
-      componentId,
-      api: schemaNode,
-      exported: true,
-      renderer:
-        nonDefaultRenderers.find((renderer) => renderer.predicate(schemaNode)) ||
-        defaultRenderers.find((renderer) => renderer.predicate(schemaNode)),
-    })) as APINode<SchemaNode, true>[];
+    return taggedModuleExports
+      .map((schemaNode) => ({
+        componentId,
+        api: schemaNode,
+        exported: true,
+        renderer:
+          nonDefaultRenderers.find((renderer) => renderer.predicate(schemaNode)) ||
+          defaultRenderers.find((renderer) => renderer.predicate(schemaNode)),
+      }))
+      .filter((schemaNode) => schemaNode.renderer) as APINode[];
   }
 
   mapToAPINode(api: APISchema, renderers: APINodeRenderer[], componentId: ComponentID): APINode[] {
@@ -110,19 +108,14 @@ export class APIReferenceModel {
     }, new Map<string, APINode>());
   }
 
-  static from(
-    result: SchemaQueryResult,
-    renderers: APINodeRenderer[] = [],
-    overviewRenderers: APINodeRenderer[] = []
-  ): APIReferenceModel {
+  static from(result: SchemaQueryResult, renderers: APINodeRenderer[] = []): APIReferenceModel {
     try {
       const apiSchema = APISchema.fromObject(result.getHost.getSchema);
-      return new APIReferenceModel(apiSchema, renderers, overviewRenderers);
+      return new APIReferenceModel(apiSchema, renderers);
     } catch (e) {
       return new APIReferenceModel(
         APISchema.empty(ComponentID.fromObject((result.getHost.getSchema as any).componentId as ComponentIdObj)),
-        renderers,
-        overviewRenderers
+        renderers
       );
     }
   }

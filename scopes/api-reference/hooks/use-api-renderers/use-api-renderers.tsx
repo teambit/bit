@@ -3,28 +3,20 @@ import React, { createContext, useContext, ReactNode } from 'react';
 
 export const APIRefRenderersContext = createContext<{
   nodeRenderers: APINodeRenderer[];
-  overviewRenderers: APINodeRenderer[];
 }>({
   nodeRenderers: [],
-  overviewRenderers: [],
 });
 
 export type APIRefRenderersProviderProps = {
   children: ReactNode;
   nodeRenderers: APINodeRenderer[];
-  overviewRenderers: APINodeRenderer[];
 };
 
-export const APIRefRenderersProvider: React.FC<APIRefRenderersProviderProps> = ({
-  children,
-  nodeRenderers,
-  overviewRenderers,
-}) => {
+export const APIRefRenderersProvider: React.FC<APIRefRenderersProviderProps> = ({ children, nodeRenderers }) => {
   return (
     <APIRefRenderersContext.Provider
       value={{
         nodeRenderers,
-        overviewRenderers,
       }}
     >
       {children}
