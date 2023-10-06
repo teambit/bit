@@ -17975,6 +17975,9 @@ importers:
       lodash:
         specifier: 4.17.21
         version: 4.17.21
+      open:
+        specifier: 7.4.2
+        version: 7.4.2
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -58163,6 +58166,7 @@ packages:
       core-js: 3.13.0
       fs-extra: 10.0.0
       lodash: 4.17.21
+      open: 7.4.2
       p-map-series: 2.1.0
       ramda: 0.27.1
       react: 17.0.2
