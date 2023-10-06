@@ -14,7 +14,7 @@ export type TaggedExportsProps = {
 
 export function TaggedExports({ componentId, ...rest }: TaggedExportsProps) {
   const renderers = useAPIRefRenderers();
-  const api = useAPI(componentId, renderers.nodeRenderers, { skipInternals: true });
+  const api = useAPI(componentId, renderers.nodeRenderers);
   const showTableOfContents = api.apiModel?.taggedAPINodes.length === 0;
 
   const taggedAPIs = api.apiModel?.taggedAPINodes;
