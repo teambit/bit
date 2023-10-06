@@ -3,10 +3,12 @@ import { EnumSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { GroupedSchemaNodesSummary } from '@teambit/api-reference.renderers.grouped-schema-nodes-summary';
+import { SchemaNodesSummary } from '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary';
 
 export const enumRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === EnumSchema.name,
   Component: EnumComponent,
+  OverviewComponent: EnumOverviewComponent,
   nodeType: 'Enums',
   icon: { name: 'Enum', url: 'https://static.bit.dev/api-reference/array.svg' },
   default: true,
@@ -23,5 +25,27 @@ function EnumComponent(props: APINodeRenderProps) {
     <APINodeDetails {...props} options={{ hideIndex: true }}>
       <GroupedSchemaNodesSummary nodes={members} apiNodeRendererProps={props} />
     </APINodeDetails>
+  );
+}
+
+function EnumOverviewComponent(props: APINodeRenderProps) {
+  const {
+    apiNode: { api, renderer },
+  } = props;
+  const classNode = api as EnumSchema;
+  const { members, doc } = classNode;
+
+  const icon = renderer.icon;
+  const description =
+    doc?.comment ??
+    doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n` ?? ''), '');
+  return (
+    <SchemaNodesSummary
+      name={classNode.name}
+      description={description}
+      icon={icon}
+      nodes={members}
+      apiNodeRendererProps={props}
+    />
   );
 }
