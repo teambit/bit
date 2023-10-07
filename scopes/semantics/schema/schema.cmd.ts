@@ -20,7 +20,7 @@ export class SchemaCommand implements Command {
     return schemas.map((schema) => schema.toStringPerType()).join('\n\n\n');
   }
 
-  async json([pattern]: [string]) {
+  async json([pattern]: [string]): Promise<Record<string, any>> {
     const schemas = await this.getSchemas([pattern]);
     return schemas.map((schema) => schema.toObject());
   }
