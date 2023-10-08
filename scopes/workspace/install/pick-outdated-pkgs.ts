@@ -98,7 +98,9 @@ function renderContext(outdatedPkg: MergedOutdatedPkg) {
     return `${outdatedPkg.variantPattern} (variant)`;
   }
   if (outdatedPkg.componentId) {
-    return `${outdatedPkg.componentId} (component)`;
+    // console.log(`!!!! ${outdatedPkg.componentId.toString()} (component)`)
+    return `${outdatedPkg.componentId.toString()} (component)`;
+    // return `(component)`;
   }
   return 'Root policies';
 }
