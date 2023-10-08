@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://bit.dev/docs/">Docs</a> |
-  <a href="https://bit.dev/">Community Site</a> |
+  <a href="https://bit.cloud/bitdev">Community</a> |
   <a href="https://bit.cloud/">Bit Cloud</a>
 </p>
 
@@ -99,11 +99,10 @@ By default, components are built using bit.cloud's CI platform, Ripple CI. Howev
 bit export
 ```
 
-Your components are now built, and available to be used as packages.
-
-Bit is entirely built with Bit and you can find all its components on [Bit Cloud Here](https://bit.cloud/teambit/~scopes).
+🎉🎉🎉 Head over to your bit.cloud account to see your components build progress. Once the build process is completed, the components will be available in their remote scopes.
 
 ## Contributors
+Bit is entirely built with Bit and you can find all its components on [Bit Cloud Here](https://bit.cloud/teambit/~scopes).
 
 <a href="../../graphs/contributors"><img src="https://opencollective.com/bit/contributors.svg?width=890&button=false" /></a>
 
