@@ -1093,6 +1093,11 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      - run: choco upgrade nvm -y
+      - run: nvm -v
+      - run: nvm install 18.17.1
+      - run: nvm use 18.17.1
+      - run: node -v
       - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - restore_cache:
