@@ -75,8 +75,7 @@ bit create node buttons/button
 
 ### Use components
 
-Once adding an import statement to one of your components, the dependency is added as a dependency
-for the given component. 
+After creating a new component, starting using it by adding an import statement in one of your workspace components.
 
 ```ts
 import { Button } from '@owner-name/buttons.button';
@@ -103,8 +102,6 @@ bit export
 Your components are now built, and available to be used as packages.
 
 Bit is entirely built with Bit and you can find all its components on [Bit Cloud Here](https://bit.cloud/teambit/~scopes).
-
-## Contributing 🎗️
 
 ## Contributors
 
