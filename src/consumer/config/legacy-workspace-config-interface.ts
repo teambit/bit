@@ -20,7 +20,7 @@ interface DependencyResolverExtensionProps {
 
 export interface ILegacyWorkspaceConfig {
   lang: string;
-  defaultScope?: string;
+  defaultScope: string;
   _useWorkspaces?: boolean;
   dependencyResolver?: DependencyResolverExtensionProps;
   packageManager?: PackageManagerClients;

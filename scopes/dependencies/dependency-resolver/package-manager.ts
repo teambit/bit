@@ -82,6 +82,11 @@ export type PackageManagerInstallOptions = {
   hideProgressPrefix?: boolean;
 
   hideLifecycleOutput?: boolean;
+
+  /**
+   * Do installation using lockfile only. Ignore the component manifests.
+   */
+  ignorePackageManifest?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

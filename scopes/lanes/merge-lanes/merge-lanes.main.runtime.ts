@@ -293,7 +293,7 @@ export class MergeLanesMain {
       await this.workspace.scope.legacyScope.objects.writeObjectsToTheFS([laneFromBackup]);
     }
     const previousBitmapBuffer = await fs.readFile(this.getLastMergedBitmapFilename());
-    const previousBitmap = BitMap.loadFromContentWithoutLoadingFiles(previousBitmapBuffer, '', '');
+    const previousBitmap = BitMap.loadFromContentWithoutLoadingFiles(previousBitmapBuffer, '', '', '');
     const currentRootDirs = this.workspace.consumer.bitMap.getAllTrackDirs();
     const previousRootDirs = previousBitmap.getAllTrackDirs();
     const compDirsToRemove = Object.keys(currentRootDirs).filter((dir) => !previousRootDirs[dir]);
