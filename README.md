@@ -59,7 +59,7 @@ Run the following to create a workspace with a few components included, using th
 bit new hello-world my-hello-world --env teambit.community/starters/hello-world 
 ```
 
-For the quick start, we use two React components and one Node module, though you can create components using any JS-based framework. You can explore our [official environments](https://bit.dev/docs) for [Vue](https://bit.dev/docs/quick-start/hello-world-vue), [Angular](https://bit.dev/docs/quick-start/hello-world-angular), or [learn how to create your own](https://bit.dev/reference/envs/create-env).
+For the quick start, we use two React components and one Node module, though you can create components using any JS-based framework. You can explore our [official starters](https://bit.dev/docs) for [Vue](https://bit.dev/docs/quick-start/hello-world-vue), [Angular](https://bit.dev/docs/quick-start/hello-world-angular), and other supported tools or [learn how to create your own](https://bit.dev/docs/node-env/set-up-your-env).
 
 ### Run the app
 
