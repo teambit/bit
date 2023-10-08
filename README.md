@@ -30,7 +30,7 @@ Bit is similar in sense, but stands as the opposite for the "Monorepo" approach,
 
 People often use Bit to run a Monorepo, a Polyrepo or without using repositories at all.
 
-The core innovation of Bit is the ["Bit Component"](https://bit.dev/#component), a composable container for source code, whereas dependencies are first-class citizens. Components can be used as packages, ESM modules, runtime scripts, and any other artifact a build task can generate.
+The core innovation of Bit is the ["Bit Component"](https://bit.dev/#component), a composable and versioned container for source code, whereas dependencies are first-class citizens. Components can be used as packages, ESM modules, runtime scripts, and any other artifact a build task can generate.
 
 - 📦 **Descriptive module names**. Use components through descriptive package names. No aliases required.
 - 🚀 **Dependency versioning.** Automatic detection and versioning of dependency changes. No more redundant  package.json files.
