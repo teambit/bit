@@ -72,7 +72,7 @@ bit run hello-world-app
 You can get any component to become an app by adding a single file to it.
 
 ### Create components
-Start creating components using the default component generators, or [create your own](https://bit.dev).
+Start creating components using the default component generators, or [create your own](https://bit.dev/docs/node-env/generators).
 
 ```bash
 bit create react buttons/button
@@ -85,10 +85,26 @@ You can view other built-in component templates, by running the `bit templates` 
 After creating a new component, start using it by adding an import statement in one of your workspace components.
 
 ```ts
-import { Button } from '@owner-name/buttons.button';
+import { Button } from '@org/scope-name.buttons.button';
 ```
 
 Once added, Bit will autodetect the dependency between these components. Use `bit show` or the VSCode plugin to view the list of dependencies Bit detected for your components.
+
+### Create a remote scope
+
+You can either use hosted scopes on [Bit Cloud](https://bit.cloud) or by [hosting scopes on your own](https://bit.dev/reference/scope/running-a-scope-server). 
+
+You can use the following command to create a Bit Cloud account and a scope.
+
+```bash
+bit login
+```
+
+Change to your own owner and scope names using this command:
+```bash
+bit scope rename org.scope-name my-org.my-scope-name --refactor 
+```
+
 
 ### Record component and dependency changes
 
