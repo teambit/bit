@@ -92,19 +92,16 @@ Once added, Bit will autodetect the dependency between these components. Use `bi
 
 ### Create a remote scope
 
-You can either use hosted scopes on [Bit Cloud](https://bit.cloud) or by [hosting scopes on your own](https://bit.dev/reference/scope/running-a-scope-server). 
-
-You can use the following command to create a Bit Cloud account and a scope.
+You can either use hosted scopes on [Bit Cloud](https://bit.cloud) or by [hosting scopes on your own](https://bit.dev/reference/scope/running-a-scope-server). Use the following command to create your Bit Cloud account and your first scope.
 
 ```bash
 bit login
 ```
 
-Change to your own owner and scope names using this command:
+Once done, change to your own owner and scope names using this command:
 ```bash
 bit scope rename org.scope-name my-org.my-scope-name --refactor 
 ```
-
 
 ### Record component and dependency changes
 
