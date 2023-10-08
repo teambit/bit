@@ -1108,7 +1108,9 @@ jobs:
           name: 'bvm upgrade'
           command: 'bvm upgrade'
           no_output_timeout: 60m
-      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
+      - run: bvm link --verbose
+      - run: bit -v
+      # - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: 'bit -v'
       - run: bit -v | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
