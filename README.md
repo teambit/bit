@@ -103,6 +103,8 @@ Once done, change to your own owner and scope names using this command:
 bit scope rename org.scope-name my-org.my-scope-name --refactor 
 ```
 
+This command will refactor your components to use the new owner and scope names.
+
 ### Record component and dependency changes
 
 Run `snap` or `tag` to record component changes, and assign a semantic version to them. Bit will version the dependents graph of each modified components.
@@ -124,7 +126,7 @@ be used by components outside of your workspace, and from your other projects.
 bit export
 ```
 
-🎉🎉🎉 Head over to your bit.cloud account to see your components build progress. Once the build process is completed, the components will be available in their remote scopes.
+Head over to your bit.cloud account to see your components build progress. Once the build process is completed, the components will be available in their remote scopes. 🎉🎉🎉
 
 ## Contributors
 Bit is entirely built with Bit and you can find all its components on [Bit Cloud](https://bit.cloud/teambit/~scopes).
