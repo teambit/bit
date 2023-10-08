@@ -31,13 +31,13 @@ People often use Bit to run a Monorepo, sometimes a Polyrepo or without using re
 
 The core innovation of Bit is the ["Bit Component"](https://bit.dev/#component), a composable container for source code, whereas dependencies are first-class citizens. Components can be used as packages, ESM modules, runtime scripts, and any other artifact a build task can generate.
 
-- 📦 **Descriptive module names**. Use components through descriptive package names. No aliases required.
-- 🚀 **Dependency versioning.** Automatic detection and versioning of dependency changes. No more redundant  package.json files.
-- **Reusable development environments.** Your own "create-react-app", create a development environment for your components, automating all configuration files for your components ().
-- 🧑‍💻 **Build pipelines**. Independently build and store packages, bundles, and binaries.
-- ▶️ **Preview and auto-generated docs**. Every component is an asset with auto-generated docs and component previews.
-- 🛫 **Lanes**. Propose and change components to introduce new features, in collaboration with others.
-- **Component generators**. Create new components using pre-built or custom templates for any type of component.
+📦 **Descriptive module names**. Use components through descriptive package names. No aliases required.
+🚀 **Dependency versioning.** Automatic detection and versioning of dependency changes. No more redundant  package.json files.
+🧑‍💻 **Reusable development environments.** Your own "create-react-app", create a development environment for your components, automating all configuration files for your components ().
+🧑‍💻 **Build pipelines**. Independently build and store packages, bundles, and binaries.
+▶️ **Preview and auto-generated docs**. Every component is an asset with auto-generated docs and component previews.
+🛫 **Lanes**. Propose and change components to introduce new features, in collaboration with others.
+🧑‍💻 **Component generators**. Create new components using pre-built or custom templates for any type of component.
 
 
 ## Getting started
