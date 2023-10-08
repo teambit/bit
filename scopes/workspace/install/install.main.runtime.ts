@@ -52,6 +52,7 @@ import UpdateCmd from './update.cmd';
 export type WorkspaceLinkOptions = LinkingOptions & {
   rootPolicy?: WorkspacePolicy;
   linkToBitRoots?: boolean;
+  includePeers?: boolean;
 };
 
 export type WorkspaceLinkResults = {
@@ -768,7 +769,7 @@ export class InstallMain {
 
   async link(options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
     const { linkResults, linkedRootDeps } = await this.calculateLinks(options);
-    await createLinks(options.linkToDir ?? this.workspace.path, linkedRootDeps);
+    await createLinks(options.linkToDir ?? this.workspace.path, linkedRootDeps, { avoidHardLink: true });
     return linkResults;
   }
 

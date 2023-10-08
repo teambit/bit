@@ -401,10 +401,7 @@ please create a new lane instead, which will include all components of this lane
   /**
    * change a lane-name and if possible, export the lane to the remote
    */
-  async rename(
-    newName: string,
-    laneName?: string
-  ): Promise<{ exported: boolean; exportErr?: Error; currentName: string }> {
+  async rename(newName: string, laneName?: string): Promise<{ currentName: string }> {
     if (!this.workspace) {
       throw new BitError(`unable to rename a lane outside of Bit workspace`);
     }
@@ -448,22 +445,9 @@ please create a new lane instead, which will include all components of this lane
       this.setCurrentLane(newLaneId, undefined, isExported);
     }
 
-    // export the lane with only the name-change
-    const clonedLaneToExport = lane.clone();
-    clonedLaneToExport.components = []; // otherwise, it'll export the changes done on the components.
-    let exported = false;
-    let exportErr: Error | undefined;
-    try {
-      await this.exportLane(clonedLaneToExport);
-      exported = true;
-    } catch (err: any) {
-      this.logger.error(`unable to export ${lane.id.toString()}: ${err.message}`);
-      exportErr = err;
-    }
-
     await this.workspace.consumer.onDestroy();
 
-    return { exported, exportErr, currentName };
+    return { currentName };
   }
 
   async exportLane(lane: Lane) {

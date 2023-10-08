@@ -47,7 +47,7 @@ import {
 } from '@teambit/legacy/dist/utils/path';
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import { slice, isEmpty, merge, compact } from 'lodash';
+import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';
 import { MergeConfigFilename, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy/dist/constants';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -129,7 +129,6 @@ export type ExtensionsOrigin =
   | 'ConfigMerge'
   | 'WorkspaceVariants'
   | 'ComponentJsonFile'
-  | 'WorkspaceDefault'
   | 'FinalAfterMerge';
 
 const DEFAULT_VENDOR_DIR = 'vendor';
@@ -442,31 +441,69 @@ export class Workspace implements ComponentFactory {
    * list all modified components in the workspace.
    */
   async modified(): Promise<Component[]> {
-    const legacyComps = (await this.componentList.listModifiedComponents(true)) as ConsumerComponent[];
-    return this.getManyByLegacy(legacyComps);
+    const allComps = await this.list();
+    const modifiedIncludeNulls = await mapSeries(allComps, async (component) => {
+      const modified = await this.isModified(component);
+      return modified ? component : null;
+    });
+    return compact(modifiedIncludeNulls);
   }
 
   /**
    * list all new components in the workspace.
    */
   async newComponents() {
-    const ids: any = await this.componentList.listNewComponents(false);
-    const componentIds = ids.map(ComponentID.fromLegacy);
+    const componentIds = await this.newComponentIds();
     return this.getMany(componentIds);
   }
 
+  async newComponentIds(): Promise<ComponentID[]> {
+    const allIds = await this.listIds();
+    return allIds.filter((id) => !id.hasVersion());
+  }
+
+  async locallyDeletedIds(): Promise<ComponentID[]> {
+    const locallyDeleted = await this.componentList.listLocallySoftRemoved();
+    return this.resolveMultipleComponentIds(locallyDeleted);
+  }
+
+  async duringMergeIds(): Promise<ComponentID[]> {
+    const duringMerge = this.componentList.listDuringMergeStateComponents();
+    return this.resolveMultipleComponentIds(duringMerge);
+  }
+
   /**
-   * get all workspace component-ids, include vendor components.
-   * (exclude nested dependencies in case dependencies are saved as components and not packages)
+   * @deprecated use `listIds()` instead.
+   * get all workspace component-ids
    */
   getAllComponentIds(): Promise<ComponentID[]> {
     const bitIds = this.consumer.bitMap.getAllBitIds();
     return this.resolveMultipleComponentIds(bitIds);
   }
 
+  async listTagPendingIds(): Promise<ComponentID[]> {
+    const newComponents = await this.newComponentIds();
+    const modifiedComponents = (await this.modified()).map((c) => c.id);
+    const removedComponents = await this.locallyDeletedIds();
+    const duringMergeIds = await this.duringMergeIds();
+    const allIds = [...newComponents, ...modifiedComponents, ...removedComponents, ...duringMergeIds];
+    const allIdsUniq = uniqBy(allIds, (id) => id.toString());
+    return allIdsUniq;
+  }
+
+  /**
+   * list all components that can be tagged. (e.g. when tagging/snapping with --unmodified).
+   * which are all components in the workspace, include locally deleted components.
+   */
+  async listPotentialTagIds(): Promise<ComponentID[]> {
+    const deletedIds = await this.locallyDeletedIds();
+    const allIdsWithoutDeleted = await this.listIds();
+    return [...deletedIds, ...allIdsWithoutDeleted];
+  }
+
   async getNewAndModifiedIds(): Promise<ComponentID[]> {
-    const ids = await this.componentList.listTagPendingComponents();
-    return this.resolveMultipleComponentIds(ids);
+    const ids = await this.listTagPendingIds();
+    return ids;
   }
 
   async newAndModified(): Promise<Component[]> {
@@ -502,7 +539,7 @@ export class Workspace implements ComponentFactory {
     const allIds = this.consumer.bitMap.getAllBitIdsFromAllLanes();
     const availableIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
     if (allIds.length === availableIds.length) return [];
-    const unavailableIds = allIds.filter((id) => !availableIds.hasWithoutScopeAndVersion(id));
+    const unavailableIds = allIds.filter((id) => !availableIds.hasWithoutVersion(id));
     if (!unavailableIds.length) return [];
     const removedIds = this.consumer.bitMap.getRemoved();
     const compsWithHead: BitId[] = [];
@@ -711,7 +748,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
 
   clearComponentCache(id: ComponentID) {
     this.componentLoader.clearComponentCache(id);
-    this.consumer.componentLoader.clearOneComponentCache(id._legacy);
+    this.consumer.clearOneComponentCache(id._legacy);
     this.componentList = new ComponentsList(this.consumer);
   }
 
@@ -857,10 +894,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
 
   async getExtensionsFromScopeAndSpecific(id: ComponentID): Promise<ExtensionDataList> {
     const componentFromScope = await this.scope.get(id);
-    const { extensions } = await this.componentExtensions(id, componentFromScope, [
-      'WorkspaceDefault',
-      'WorkspaceVariants',
-    ]);
+    const { extensions } = await this.componentExtensions(id, componentFromScope, ['WorkspaceVariants']);
 
     return extensions;
   }
@@ -1114,7 +1148,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
-    const bitMapId = this.consumer.bitMap.getExistingBitId(name);
+    const bitMapId = this.consumer.bitMap.getExistingBitId(name, false);
     const bitMapEntry = bitMapId ? this.consumer.bitMap.getComponent(bitMapId) : undefined;
     if (bitMapEntry && bitMapEntry.defaultScope) {
       return bitMapEntry.defaultScope;
@@ -1219,12 +1253,20 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async isModified(component: Component): Promise<boolean> {
     const head = component.head;
     if (!head) {
-      return true; // it's a new component
+      return false; // it's a new component
     }
     const consumerComp = component.state._consumer as ConsumerComponent;
     if (typeof consumerComp._isModified === 'boolean') return consumerComp._isModified;
     const componentStatus = await this.consumer.getComponentStatusById(component.id._legacy);
     return componentStatus.modified === true;
+  }
+
+  async isModifiedOrNew(component: Component): Promise<boolean> {
+    const head = component.head;
+    if (!head) {
+      return true; // it's a new component
+    }
+    return this.isModified(component);
   }
 
   /**
@@ -1251,14 +1293,21 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (this.defaultScope === scopeName) {
       throw new Error(`the default-scope is already set as "${scopeName}", nothing to change`);
     }
+    if (!isValidScopeName(scopeName)) {
+      throw new InvalidScopeName(scopeName);
+    }
     const config = this.harmony.get<ConfigMain>('teambit.harmony/config');
     config.workspaceConfig?.setExtension(
       WorkspaceAspect.id,
       { defaultScope: scopeName },
       { mergeIntoExisting: true, ignoreVersion: true }
     );
+    // fix also comps using the old default-scope
+    this.bitMap.updateDefaultScope(this.config.defaultScope, scopeName);
+
     this.config.defaultScope = scopeName;
     await config.workspaceConfig?.write({ dir: path.dirname(config.workspaceConfig.path) });
+    await this.bitMap.write();
   }
 
   async addSpecificComponentConfig(
@@ -1524,10 +1573,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         return bitId.scope;
       }
       const relativeComponentDir = this.componentDirFromLegacyId(bitId, bitMapOptions, { relative: true });
-      const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
-        relativeComponentDir,
-        bitId.toStringWithoutScopeAndVersion()
-      );
+      const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(relativeComponentDir, bitId.name);
       return defaultScope;
     };
 

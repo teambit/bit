@@ -17,7 +17,6 @@ import {
   VERSION_DELIMITER,
   BITMAP_PREFIX_MESSAGE,
 } from '../../constants';
-import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { isDir, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
@@ -31,12 +30,12 @@ import ComponentMap, {
 import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 import GeneralError from '../../error/general-error';
+import { ALLOW_SAME_NAME, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
 export type GetBitMapComponentOptions = {
   ignoreVersion?: boolean;
-  ignoreScopeAndVersion?: boolean;
 };
 
 export type MergeOptions = {
@@ -44,7 +43,11 @@ export type MergeOptions = {
 };
 
 export const LANE_KEY = '_bit_lane';
-export const CURRENT_BITMAP_SCHEMA = '16.0.0';
+/**
+ * schema 16.0.0 - deprecated the "onLanesOnly"
+ * schema 17.0.0 - supports duplicate names with different scopes, in which case the key is scope/name. also added "name" prop.
+ */
+export const CURRENT_BITMAP_SCHEMA = '17.0.0';
 export const SCHEMA_FIELD = '$schema-version';
 
 export default class BitMap {
@@ -84,14 +87,14 @@ export default class BitMap {
   setComponent(bitId: BitId, componentMap: ComponentMap) {
     const id = bitId.toString();
     if (!bitId.hasVersion() && bitId.scope) {
-      throw new ShowDoctorError(
-        `invalid bitmap id ${id}, a component must have a version when a scope-name is included`
-      );
+      throw new BitError(`invalid bitmap id ${id}, a component must have a version when a scope-name is included`);
     }
-    // make sure there are no duplications (same name)
-    const similarIds = this.findSimilarIds(bitId, true);
-    if (similarIds.length) {
-      throw new ShowDoctorError(`your id ${id} is duplicated with ${similarIds.toString()}`);
+    if (!isFeatureEnabled(ALLOW_SAME_NAME)) {
+      // make sure there are no duplications (same name)
+      const similarIds = this.findSimilarIds(bitId, true);
+      if (similarIds.length) {
+        throw new BitError(`your id ${id} is duplicated with ${similarIds.toString()}`);
+      }
     }
     componentMap.id = bitId;
     this.components.push(componentMap);
@@ -125,7 +128,7 @@ export default class BitMap {
   }
 
   setOnLanesOnly(id: BitId, value: boolean) {
-    const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
+    const componentMap = this.getComponent(id, { ignoreVersion: true });
     componentMap.onLanesOnly = value;
     this.markAsChanged();
     return componentMap;
@@ -137,7 +140,7 @@ export default class BitMap {
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   removeComponentProp(id: BitId, propName: keyof ComponentMap) {
-    const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
+    const componentMap = this.getComponent(id, { ignoreVersion: true });
     delete componentMap[propName];
     this.markAsChanged();
     return componentMap;
@@ -177,7 +180,8 @@ export default class BitMap {
     if (!mapFileContent || !currentLocation) {
       return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA);
     }
-    const bitMap = BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath);
+    const defaultScope = consumer.config.defaultScope;
+    const bitMap = BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath, defaultScope);
     await bitMap.loadFiles();
 
     return bitMap;
@@ -190,7 +194,8 @@ export default class BitMap {
   static loadFromContentWithoutLoadingFiles(
     bitMapFileContent: Buffer,
     bitMapFilePath: PathOsBasedAbsolute,
-    workspacePath: PathOsBasedAbsolute
+    workspacePath: PathOsBasedAbsolute,
+    defaultScope: string
   ) {
     let componentsJson;
     try {
@@ -209,7 +214,7 @@ export default class BitMap {
     BitMap.removeNonComponentFields(componentsJson);
 
     const bitMap = new BitMap(workspacePath, bitMapFilePath, schema, laneId, isLaneExported);
-    bitMap.loadComponents(componentsJson);
+    bitMap.loadComponents(componentsJson, defaultScope);
 
     return bitMap;
   }
@@ -325,7 +330,7 @@ export default class BitMap {
     });
   }
 
-  loadComponents(componentsJson: Record<string, any>) {
+  loadComponents(componentsJson: Record<string, any>, defaultScope: string) {
     this.throwForDuplicateRootDirs(componentsJson);
     Object.keys(componentsJson).forEach((componentId) => {
       const componentFromJson = componentsJson[componentId];
@@ -336,6 +341,11 @@ export default class BitMap {
         );
       }
       componentFromJson.id = bitId;
+      if (!bitId.hasScope() && !componentFromJson.defaultScope) {
+        // needed for backward compatibility. before scheme 17.0.0, the defaultScope wasn't written if it was the same
+        // as consumer.defaultScope
+        componentFromJson.defaultScope = defaultScope;
+      }
       const componentMap = ComponentMap.fromJson(componentFromJson);
       componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.components.push(componentMap);
@@ -343,33 +353,18 @@ export default class BitMap {
   }
 
   static getBitIdFromComponentJson(componentId: string, componentFromJson: Record<string, any>): BitId {
-    // on Harmony, to parse the id, the old format used "exported" prop, the current format
-    // uses "scope" and "version" props.
     const newHarmonyFormat = 'scope' in componentFromJson;
-    if (newHarmonyFormat) {
-      const bitId = new BitId({
-        scope: componentFromJson.scope,
-        name: componentId,
-        version: componentFromJson.version,
-      });
-      // it needs to be parsed for 1) validation 2) adding "latest" to the version if needed.
-      return BitId.parse(bitId.toString(), bitId.hasScope());
-    }
-    const idHasScope = (): boolean => {
-      if ('exported' in componentFromJson) {
-        if (typeof componentFromJson.exported !== 'boolean') {
-          throw new BitError(
-            `fatal: .bitmap record of "${componentId}" is invalid, the exported property must be boolean, got "${typeof componentFromJson.exported}" instead.`
-          );
-        }
-        return componentFromJson.exported;
-      }
-      // on Harmony, if there is no "exported" we default to "true" as this is the most commonly
-      // used. so it's better to have as little as possible of these props.
-      componentFromJson.exported = true;
-      return true;
-    };
-    return BitId.parse(componentId, idHasScope());
+    if (!newHarmonyFormat) throw new Error(`.bitmap entry for ${componentId} is missing "scope" property`);
+    // bitmap schema <= 16.0.0 used the key as the name.
+    // bitmap schema > 16.0.0 uses the "name" property because they key might be scope/name to support multiple-names same-scope
+    const name = componentFromJson.name || componentId;
+    const bitId = new BitId({
+      scope: componentFromJson.scope,
+      name,
+      version: componentFromJson.version,
+    });
+    // it needs to be parsed for 1) validation 2) adding "latest" to the version if needed.
+    return BitId.parse(bitId.toString(), bitId.hasScope());
   }
 
   getAllComponents(): ComponentMap[] {
@@ -466,10 +461,7 @@ export default class BitMap {
    * throw an exception if not found
    * @see also getBitIdIfExist
    */
-  getBitId(
-    bitId: BitId,
-    { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
-  ): BitId {
+  getBitId(bitId: BitId, { ignoreVersion = false }: GetBitMapComponentOptions = {}): BitId {
     if (bitId.constructor.name !== BitId.name) {
       throw new TypeError(`BitMap.getBitId expects bitId to be an instance of BitId, instead, got ${bitId}`);
     }
@@ -479,10 +471,6 @@ export default class BitMap {
     if (ignoreVersion) {
       const matchWithoutVersion = allIds.searchWithoutVersion(bitId);
       if (matchWithoutVersion) return matchWithoutVersion;
-    }
-    if (ignoreScopeAndVersion) {
-      const matchWithoutScopeAndVersion = allIds.searchWithoutScopeAndVersion(bitId);
-      if (matchWithoutScopeAndVersion) return matchWithoutScopeAndVersion;
     }
     if (this.updatedIds[bitId.toString()]) {
       return this.updatedIds[bitId.toString()].id;
@@ -499,14 +487,12 @@ export default class BitMap {
     bitId: BitId,
     {
       ignoreVersion = false,
-      ignoreScopeAndVersion = false,
     }: {
       ignoreVersion?: boolean;
-      ignoreScopeAndVersion?: boolean;
     } = {}
   ): BitId | undefined {
     try {
-      const existingBitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
+      const existingBitId = this.getBitId(bitId, { ignoreVersion });
       return existingBitId;
     } catch (err: any) {
       if (err instanceof MissingBitMapComponent) return undefined;
@@ -519,13 +505,9 @@ export default class BitMap {
    * throw an exception if not found.
    * @see also getComponentIfExist
    */
-  getComponent(
-    bitId: BitId,
-    { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
-  ): ComponentMap {
+  getComponent(bitId: BitId, { ignoreVersion = false }: GetBitMapComponentOptions = {}): ComponentMap {
     const existingBitId: BitId = this.getBitId(bitId, {
       ignoreVersion,
-      ignoreScopeAndVersion,
     });
     return this.components.find((c) => c.id.isEqual(existingBitId)) as ComponentMap;
   }
@@ -537,10 +519,10 @@ export default class BitMap {
    */
   getComponentIfExist(
     bitId: BitId,
-    { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
+    { ignoreVersion = false }: GetBitMapComponentOptions = {}
   ): ComponentMap | undefined {
     try {
-      const componentMap = this.getComponent(bitId, { ignoreVersion, ignoreScopeAndVersion });
+      const componentMap = this.getComponent(bitId, { ignoreVersion });
       return componentMap;
     } catch (err: any) {
       if (err instanceof MissingBitMapComponent) return undefined;
@@ -668,6 +650,13 @@ export default class BitMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
 
+    if (!componentId.scope && !defaultScope) {
+      throw new BitError(`unable to add component ${componentIdStr}, it does not have a scope nor a defaultScope`);
+    }
+    if (componentId.scope && defaultScope) {
+      throw new BitError(`unable to add component ${componentIdStr}, it has both a scope and a defaultScope`);
+    }
+
     const getOrCreateComponentMap = (): ComponentMap => {
       const ignoreVersion = true; // legacy can have two components on .bitmap with different versions
       const componentMap = this.getComponentIfExist(componentId, { ignoreVersion });
@@ -716,7 +705,7 @@ export default class BitMap {
     const componentIdStr = componentId.toString();
     const componentMap = this.getComponentIfExist(componentId);
     if (!componentMap) {
-      throw new ShowDoctorError(`unable to add files to a non-exist component ${componentIdStr}`);
+      throw new BitError(`unable to add files to a non-exist component ${componentIdStr}`);
     }
     logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
     componentMap.files = files;
@@ -759,7 +748,7 @@ export default class BitMap {
   }
 
   removeComponent(bitId: BitId) {
-    const bitmapComponent = this.getBitIdIfExist(bitId, { ignoreScopeAndVersion: true });
+    const bitmapComponent = this.getBitIdIfExist(bitId, { ignoreVersion: true });
     if (bitmapComponent) this._removeFromComponentsArray(bitmapComponent);
     return bitmapComponent;
   }
@@ -779,14 +768,27 @@ export default class BitMap {
    */
   updateComponentId(id: BitId, updateScopeOnly = false, revertToMain = false): BitId {
     const newIdString = id.toString();
-    const similarIds = this.findSimilarIds(id, true);
-    if (!similarIds.length) {
+    const similarBitIds = this.findSimilarIds(id, true);
+    if (!similarBitIds.length) {
       logger.debug(`bit-map: no need to update ${newIdString}`);
       return id;
     }
+    const similarCompMaps = similarBitIds.map((similarId) => this.getComponent(similarId));
+    const similarIds = similarCompMaps
+      .filter((compMap) => (compMap.defaultScope || compMap.id.scope) === id.scope || (!id.scope && !compMap.id.scope))
+      .map((c) => c.id);
+    if (!similarIds.length) {
+      logger.debug(
+        `bit-map: no need to update ${newIdString}. the similar ids don't have the same scope: ${similarBitIds.join(
+          ', '
+        )}`
+      );
+      return id;
+    }
     if (similarIds.length > 1) {
-      throw new ShowDoctorError(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they
-      are authored or imported. This scenario is not supported`);
+      throw new BitError(
+        `Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutVersion()}, it should have only one`
+      );
     }
     const oldId: BitId = similarIds[0];
     const oldIdStr = oldId.toString();
@@ -807,7 +809,7 @@ export default class BitMap {
       componentMap.isAvailableOnCurrentLane = true;
       componentMap.onLanesOnly = false;
     }
-    if (updateScopeOnly) {
+    if (newId.scope && componentMap.defaultScope) {
       // in case it had defaultScope, no need for it anymore.
       delete componentMap.defaultScope;
     }
@@ -892,7 +894,7 @@ export default class BitMap {
       const errorMsg = isPathDir
         ? `directory ${from} is not a tracked component`
         : `the file ${existingPath} is untracked`;
-      throw new ShowDoctorError(errorMsg);
+      throw new BitError(errorMsg);
     }
 
     this.markAsChanged();
@@ -920,18 +922,27 @@ export default class BitMap {
     const components = {};
     this.components.forEach((componentMap) => {
       const componentMapCloned = componentMap.clone();
-      let idStr = componentMapCloned.id.toString();
       // no need for "exported" property as there are scope and version props
       // if not exist, we still need these properties so we know later to parse them correctly.
+      componentMapCloned.name = componentMapCloned.id.name;
       componentMapCloned.scope = componentMapCloned.id.hasScope() ? componentMapCloned.id.scope : '';
       componentMapCloned.version = componentMapCloned.id.hasVersion() ? componentMapCloned.id.version : '';
       if (componentMapCloned.isAvailableOnCurrentLane && !componentMapCloned.onLanesOnly) {
         delete componentMapCloned.isAvailableOnCurrentLane;
       }
-      idStr = componentMapCloned.id.name;
+      const getKey = (): string => {
+        const name = componentMapCloned.id.name;
+        const similarIds = this.findSimilarIds(componentMapCloned.id, true);
+        if (!similarIds.length) return name;
+        const scope = componentMapCloned.scope || componentMapCloned.defaultScope;
+        if (!scope) throw new Error(`bit-map.toObjects: ${name} has multiple instances but defaultScope is missing`);
+        return `${scope}/${name}`;
+      };
+      const key = getKey();
+
       // @ts-ignore
       delete componentMapCloned?.id;
-      components[idStr] = componentMapCloned.toPlainObject();
+      components[key] = componentMapCloned.toPlainObject();
     });
 
     return sortObject(components);

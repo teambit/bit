@@ -660,8 +660,8 @@ describe('bit lane command', function () {
       helper.fs.outputFile('bar1/foo1.js', 'console.log("v1");');
       helper.fs.outputFile('bar2/foo2.js', 'console.log("v1");');
       helper.command.addComponent('bar1');
-      helper.command.addComponent('bar2');
       helper.bitJsonc.addToVariant('bar2', 'defaultScope', anotherRemote);
+      helper.command.addComponent('bar2');
       helper.command.linkAndRewire();
       helper.command.compile();
       helper.command.tagAllComponents();
@@ -1243,7 +1243,13 @@ describe('bit lane command', function () {
       const lanes = helper.command.listLanesParsed();
       expect(lanes.currentLane).to.equal('new-lane');
     });
-    it('should change the remote lane name as well', () => {
+    it('should not change the remote lane name before export', () => {
+      const remoteLanes = helper.command.listRemoteLanesParsed();
+      expect(remoteLanes.lanes).to.have.lengthOf(1);
+      expect(remoteLanes.lanes[0].name).to.equal('dev');
+    });
+    it('should change the remote lane name after export', () => {
+      helper.command.export();
       const remoteLanes = helper.command.listRemoteLanesParsed();
       expect(remoteLanes.lanes).to.have.lengthOf(1);
       expect(remoteLanes.lanes[0].name).to.equal('new-lane');

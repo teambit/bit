@@ -32,8 +32,6 @@ export class ApiServerMain {
   ) {}
 
   async runApiServer(options: { port: number }) {
-    const port = options.port || 3000;
-    await this.express.listen(port);
     if (!this.workspace) {
       throw new Error(`unable to run bit-server, the current directory ${process.cwd()} is not a workspace`);
     }
@@ -78,9 +76,17 @@ export class ApiServerMain {
         this.logger.error('watcher found an error', err);
       });
 
+    const port = options.port || 3000;
+    const server = await this.express.listen(port);
+
     // never ending promise to not exit the process (is there a better way?)
-    return new Promise(() => {
-      this.logger.consoleSuccess(`Bit Server is listening on port ${port}`);
+    return new Promise((resolve, reject) => {
+      server.on('error', (err) => {
+        reject(err);
+      });
+      server.on('listening', () => {
+        this.logger.consoleSuccess(`Bit Server is listening on port ${port}`);
+      });
     });
   }
 

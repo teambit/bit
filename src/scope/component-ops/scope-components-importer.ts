@@ -10,7 +10,6 @@ import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import ConsumerComponent from '../../consumer/component';
 import GeneralError from '../../error/general-error';
-import ShowDoctorError from '../../error/show-doctor-error';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
@@ -645,7 +644,7 @@ export default class ScopeComponentsImporter {
     if (version) return version;
     if (id.isLocal(this.scope.name)) {
       // it should have been fetched locally, since it wasn't found, this is an error
-      throw new ShowDoctorError(
+      throw new BitError(
         `Version ${versionComp.version} of ${id.toString()} was not found in scope ${this.scope.name}`
       );
     }
@@ -997,7 +996,7 @@ export default class ScopeComponentsImporter {
       const version = await this.getVersionFromComponentDef(component, id);
       if (!version) {
         // should have been fetched before by getExternalMany(). probably doesn't exist on the remote.
-        throw new ShowDoctorError(`Version ${versionComp.version} of ${component.id().toString()} was not found`);
+        throw new BitError(`Version ${versionComp.version} of ${component.id().toString()} was not found`);
       }
       return new VersionDependencies(versionComp, [], version);
     });

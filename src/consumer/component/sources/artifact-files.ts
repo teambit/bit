@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
+import { BitError } from '@teambit/bit-error';
 import { BitId } from '../../../bit-id';
-import ShowDoctorError from '../../../error/show-doctor-error';
 import logger from '../../../logger/logger';
 import { Scope } from '../../../scope';
 import { Lane, Source } from '../../../scope/models';
@@ -10,7 +10,6 @@ import { Ref } from '../../../scope/objects';
 import { pathNormalizeToLinux } from '../../../utils';
 import { ExtensionDataList } from '../../config';
 import Component from '../consumer-component';
-
 import { ArtifactVinyl } from './artifact';
 
 export type ArtifactRef = { relativePath: string; ref: Ref; url?: string };
@@ -146,7 +145,7 @@ export class ArtifactFiles {
     }
     const getOneArtifact = async (artifact: ArtifactRef) => {
       const content = (await artifact.ref.load(scope.objects)) as Source;
-      if (!content) throw new ShowDoctorError(`failed loading file ${artifact.relativePath} from the model`);
+      if (!content) throw new BitError(`failed loading file ${artifact.relativePath} from the model`);
       return new ArtifactVinyl({
         base: '.',
         path: artifact.relativePath,

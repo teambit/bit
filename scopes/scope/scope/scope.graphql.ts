@@ -1,7 +1,6 @@
 import { ComponentID } from '@teambit/component';
 import gql from 'graphql-tag';
 import { latestVersions } from '@teambit/legacy/dist/api/scope';
-import list from '@teambit/legacy/dist/api/scope/lib/scope-list';
 import { ScopeMain } from './scope.main.runtime';
 
 export function scopeSchema(scopeMain: ScopeMain) {
@@ -40,9 +39,6 @@ export function scopeSchema(scopeMain: ScopeMain) {
 
         # get serialized legacy component ids with versions. deprecated. PLEASE DO NOT USE THIS API.
         _legacyLatestVersions(ids: [String]!): [String]
-
-        # get serialized list component of components. deprecated. PLEASE DO NOT USE THIS API.
-        _legacyList(namespaces: String): [LegacyMeta] @deprecated(reason: "Use the component query on Scope")
       }
 
       type Log {
@@ -98,14 +94,6 @@ export function scopeSchema(scopeMain: ScopeMain) {
 
         _legacyLatestVersions: async (scope: ScopeMain, { ids }: { ids: string[] }) => {
           return latestVersions(scope.path, ids);
-        },
-
-        _legacyList: async (scope: ScopeMain, { namespaces }: { namespaces: string }) => {
-          const listData: any = await list(scope.path, namespaces);
-          listData.forEach((data) => {
-            data.id = data.id.toString();
-          });
-          return listData;
         },
 
         getLogs: async (scope: ScopeMain, { id }: { id: string }) => {

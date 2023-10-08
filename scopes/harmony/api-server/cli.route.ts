@@ -38,7 +38,7 @@ export class CLIRoute implements Route {
           .map((key) => `--${key}`)
           .join(' ');
         this.logger.console(
-          `started a new ${outputMethod} command: ${req.params.cmd} ${(args || []).join(' ')} ${optsToString}`
+          `[*] started a new ${outputMethod} command: ${req.params.cmd} ${(args || []).join(' ')} ${optsToString}`
         );
         const optionsAsCamelCase = Object.keys(options || {}).reduce((acc, key) => {
           const camelCaseKey = camelCase(key);

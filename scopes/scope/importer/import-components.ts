@@ -9,13 +9,9 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BEFORE_IMPORT_ACTION } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
-import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
 import logger from '@teambit/legacy/dist/logger/logger';
-import Remotes from '@teambit/legacy/dist/remotes/remotes';
 import { Scope } from '@teambit/legacy/dist/scope';
-import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
 import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
-import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import Component from '@teambit/legacy/dist/consumer/component';
@@ -48,7 +44,7 @@ export type ImportOptions = {
   installNpmPackages: boolean; // default: true
   objectsOnly?: boolean;
   saveDependenciesAsComponents?: boolean;
-  importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages or nested, not as imported
+  importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages, not as imported
   importDependents?: boolean;
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   saveInLane?: boolean; // save the imported component on the current lane (won't be available on main)
@@ -398,9 +394,8 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
   private async getBitIds(): Promise<BitIds> {
     const bitIds: BitId[] = this.options.lanes ? await this.getBitIdsForLanes() : await this.getBitIdsForNonLanes();
     if (this.options.importDependenciesDirectly || this.options.importDependents) {
-      const graphs = await this._getComponentsGraphs(bitIds);
       if (this.options.importDependenciesDirectly) {
-        const dependenciesIds = this._getDependenciesFromGraph(bitIds, graphs);
+        const dependenciesIds = await this.getFlattenedDepsUnique(bitIds);
         bitIds.push(...dependenciesIds);
       }
       if (this.options.importDependents) {
@@ -418,33 +413,17 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     return BitIds.uniqFromArray(bitIds);
   }
 
-  _getDependenciesFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {
-    const dependencies = bitIds.map((bitId) => {
-      const componentGraph = graphs.find((graph) => graph.scopeName === bitId.scope);
-      if (!componentGraph) {
-        throw new Error(`unable to find a graph for ${bitId.toString()}`);
-      }
-      const dependenciesInfo = componentGraph.getDependenciesInfo(bitId);
-      return dependenciesInfo.map((d) => d.id);
-    });
-    return R.flatten(dependencies);
-  }
-
-  _getDependentsFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {
-    const dependents = bitIds.map((bitId) => {
-      const componentGraph = graphs.find((graph) => graph.scopeName === bitId.scope);
-      if (!componentGraph) {
-        throw new Error(`unable to find a graph for ${bitId.toString()}`);
-      }
-      const dependentsInfo = componentGraph.getDependentsInfo(bitId);
-      return dependentsInfo.map((d) => d.id);
-    });
-    return R.flatten(dependents);
-  }
-
-  async _getComponentsGraphs(bitIds: BitId[]): Promise<DependencyGraph[]> {
-    const remotes: Remotes = await getScopeRemotes(this.consumer.scope);
-    return remotes.scopeGraphs(bitIds, this.consumer.scope);
+  private async getFlattenedDepsUnique(bitIds: BitId[]): Promise<BitId[]> {
+    const remoteComps = await this.scope.scopeImporter.getManyRemoteComponents(bitIds);
+    const versions = remoteComps.getVersions();
+    const getFlattened = (): BitIds => {
+      if (versions.length === 1) return versions[0].flattenedDependencies;
+      const flattenedDeps = versions.map((v) => v.flattenedDependencies).flat();
+      return BitIds.uniqFromArray(flattenedDeps);
+    };
+    const flattened = getFlattened();
+    const withLatest = flattened.removeMultipleVersionsKeepLatest();
+    return withLatest;
   }
 
   async importAccordingToBitMap(): Promise<ImportResult> {
@@ -520,7 +499,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
         );
       }
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
-      if (!modelComponent) throw new ShowDoctorError(`imported component ${idStr} was not found in the model`);
+      if (!modelComponent) throw new BitError(`imported component ${idStr} was not found in the model`);
       const afterImportVersions = modelComponent.listVersions();
       const versionDifference: string[] = R.difference(afterImportVersions, beforeImportVersions);
       const getStatus = (): ImportStatus => {
