@@ -111,8 +111,6 @@ Your contribution, no matter how big or small, is much appreciated. Before contr
 
 See [Contributing](CONTRIBUTING.md).
 
-## License 💮
+## License 
 
 [Apache License, Version 2.0](https://github.com/teambit/bit/blob/master/LICENSE)
-
-![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
