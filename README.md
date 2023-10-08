@@ -70,8 +70,10 @@ bit run hello-world-app
 Start creating components using the default component generators, or [create your own](https://bit.dev).
 
 ```bash
-bit create node buttons/button
+bit create REACT buttons/button
 ```
+
+View other built-in component templates, by running the `bit templates` command.
 
 ### Use components
 
