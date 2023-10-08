@@ -43,11 +43,13 @@ The core innovation of Bit is the ["Bit Component"](https://bit.dev/#component),
 ## Getting started
 
 ### Install Bit
-Use the Bit installer to install Bit to be available on your PATH.
+Use the Bit installer to install Bit to be available on your PATH. 
 
 ```bash
 npx @teambit/bvm install
 ```
+
+For better VSCode dev experience, install the [Bit VSCode Plugin](https://marketplace.visualstudio.com/items?itemName=bit.vscode-bit).
 
 ### Create a new workspace
 
@@ -65,6 +67,8 @@ Your workspace maintains a number of components. One of these components is also
 ```bash
 bit run hello-world-app
 ```
+
+You can get any component to become an app by adding a single file to it.
 
 ### Create components
 Start creating components using the default component generators, or [create your own](https://bit.dev).
