@@ -3,6 +3,7 @@
 </p>
 
 <p align="center">
+  <a href="https://bit.dev/">Website</a> |
   <a href="https://bit.dev/docs/">Docs</a> |
   <a href="https://bit.cloud/bitdev">Community</a> |
   <a href="https://bit.cloud/">Bit Cloud</a>
