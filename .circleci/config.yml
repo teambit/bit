@@ -1088,8 +1088,8 @@ jobs:
 
   windows_bvm_install:
     <<: *windows_defaults
-    environment:
-      Path: C:\Users\circleci\.npm-global;C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
+    # environment:
+    #   Path: C:\Users\circleci\.npm-global;C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
     steps:
       - attach_workspace:
           at: .
