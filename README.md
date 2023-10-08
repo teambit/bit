@@ -32,7 +32,7 @@ People often use Bit to run a Monorepo, sometimes a Polyrepo or without using re
 The core innovation of Bit is the ["Bit Component"](https://bit.dev/#component), a composable container for source code, whereas dependencies are first-class citizens. Components can be used as packages, ESM modules, runtime scripts, and any other artifact a build task can generate.
 
 - **Descriptive module names**. Use components through descriptive package names. No aliases required.
-- **Dependency versioning.**. Automatically detect and version dependency changes.
+- **Dependency versioning.** Automatic detection and versioning of dependency changes. No more redundant  package.json files.
 - **Reusable development environments.** Your own "create-react-app", create a development environment for your components, automating all configuration files for your components ().
 - **Build pipelines**. Independent build pipelines for components, designed for performance and speed.
 - **Preview and auto-generated docs**. Every component is an asset with auto-generated docs and component previews.
@@ -56,12 +56,30 @@ Run the following to create a workspace with a few components included, using th
 bit new hello-world my-hello-world --env teambit.community/starters/hello-world 
 ```
 
-For the quick start, we use two React components and one Node module, though you can create components in pretty much every language.
-This will create a new workspace with two react components and a single node component. Bit can be used in diff
+For the quick start, we use two React components and one Node module, though you can create components using any JS-based framework. You can explore our [official environments](https://bit.dev/docs) for [Vue](https://bit.dev/docs/quick-start/hello-world-vue), [Angular](https://bit.dev/docs/quick-start/hello-world-angular), or [learn how to create your own](https://bit.dev/reference/envs/create-env).
 
-### Create a component
+### Run the app
+
+Your workspace maintains a number of components. One of these components is also an [app](https://bit.dev/reference/apps/application-types/). 
+
 ```bash
-bit create node is-string 
+bit run hello-world-app
+```
+
+### Create components
+Start creating components using the default component generators, or [create your own](https://bit.dev).
+
+```bash
+bit create node buttons/button
+```
+
+### Use components
+
+Once adding an import statement to one of your components, the dependency is added as a dependency
+for the given component. 
+
+```ts
+import { Button } from '@owner-name/buttons.button';
 ```
 
 ### Record component and dependency changes
@@ -88,7 +106,11 @@ Bit is entirely built with Bit and you can find all its components on [Bit Cloud
 
 ## Contributing 🎗️
 
-Your contribution, no matter how big or small, is always appreciated. Before contributing, please read the [code of conduct](CODE_OF_CONDUCT.md).
+## Contributors
+
+<a href="../../graphs/contributors"><img src="https://opencollective.com/bit/contributors.svg?width=890&button=false" /></a>
+
+Your contribution, no matter how big or small, is much appreciated. Before contributing, please read the [code of conduct](CODE_OF_CONDUCT.md).
 
 See [Contributing](CONTRIBUTING.md).
 
