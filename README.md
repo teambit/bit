@@ -62,7 +62,7 @@ For the quick start, we use two React components and one Node module, though you
 
 ### Run the app
 
-Your workspace maintains a number of components. One of these components is also an [app](https://bit.dev/reference/apps/application-types/). 
+Your workspace maintains a number of components. One of these components is also an [app](https://bit.dev/reference/apps/application-types/). Run it using:
 
 ```bash
 bit run hello-world-app
@@ -74,22 +74,24 @@ You can get any component to become an app by adding a single file to it.
 Start creating components using the default component generators, or [create your own](https://bit.dev).
 
 ```bash
-bit create REACT buttons/button
+bit create react buttons/button
 ```
 
-View other built-in component templates, by running the `bit templates` command.
+You can view other built-in component templates, by running the `bit templates` command.
 
 ### Use components
 
-After creating a new component, starting using it by adding an import statement in one of your workspace components.
+After creating a new component, start using it by adding an import statement in one of your workspace components.
 
 ```ts
 import { Button } from '@owner-name/buttons.button';
 ```
 
+Once added, Bit will autodetect the dependency between these components. Use `bit show` or the VSCode plugin to view the list dependencies Bit detected for your components.
+
 ### Record component and dependency changes
 
-Run the following to record component changes to your components, and assign a semantic version to them. Bit will version the dependents graph of the changed components.
+Run the following to record component changes to your components, and assign a semantic version to them. Bit will version the dependents graph of the modified components.
 
 ```bash
 bit snap --message 'initial release'
@@ -97,9 +99,12 @@ bit snap --message 'initial release'
 
 Snapped components are ready to be built upon 'export' (see next step). The build artifacts will also be stored in the component's new version ('snap').
 
-By default, components are built using bit.cloud's CI platform, Ripple CI. However, you can run the components' build locally by adding the --build flag, or use your own CI platform. [To learn more see Set up CI](https://bit.dev/).
+By default, components are built using bit.cloud's CI platform, Ripple CI. However, you can run the components' build locally by adding the --build flag, or use your own CI platform. [To learn more see Set up CI](https://bit.dev/reference/git/automating-component-releases).
 
 ### Export components to a remote scope
+
+Export your staged components from your workspace to their remote scopes. This will make them available to 
+be consumed by components outside of your workspace, and from other existing projects.
 
 ```bash
 bit export
