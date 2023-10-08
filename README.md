@@ -29,15 +29,16 @@ Bit is similar in sense, but stands as the opposite for the "Monorepo" approach,
 
 People often use Bit to run a Monorepo, sometimes a Polyrepo or without using repositories at all.
 
-The core innovation of Bit is the "Bit Component", a composable container for source code, whereas dependencies are first-class citizens. Components can be used as packages, ESM modules, runtime scripts, and any other artifact a build task can generate.
+The core innovation of Bit is the ["Bit Component"](https://bit.dev/#component), a composable container for source code, whereas dependencies are first-class citizens. Components can be used as packages, ESM modules, runtime scripts, and any other artifact a build task can generate.
 
-- **Descriptive module names**. Use components via descriptive module names.
-- **Dependency versioning.**. Automatically detects dependency changes, and version them accordingly.
-- **Reusable development environments.** Create your configuration files in a development environment, and 
+- **Descriptive module names**. Use components through descriptive package names. No aliases required.
+- **Dependency versioning.**. Automatically detect and version dependency changes.
+- **Reusable development environments.** Your own "create-react-app", create a development environment for your components, automating all configuration files for your components ().
 - **Build pipelines**. Independent build pipelines for components, designed for performance and speed.
-- **Preview**. Preview your components documentation, preview, and API.
-- **Lanes**. Collaborate and preview component changes.
-- **Component generators**. Create your own component generators and starters for new workspaces.
+- **Preview and auto-generated docs**. Every component is an asset with auto-generated docs and component previews.
+- **Lanes**. Propose and change components to introduce new features, in collaboration with others.
+- **Component generators**. Create new components using pre-built or custom templates for any type of component.
+
 
 ## Getting started
 
@@ -94,4 +95,5 @@ See [Contributing](CONTRIBUTING.md).
 ## License 💮
 
 [Apache License, Version 2.0](https://github.com/teambit/bit/blob/master/LICENSE)
+
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
