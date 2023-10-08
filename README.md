@@ -22,33 +22,68 @@
 <a href="https://github.com/prettier/prettier"><img alt ="Styled with Prettier" src="https://img.shields.io/badge/styled_with-prettier-ff69b4.svg">
 <a href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-1vq1vcxxu-CEVobR1p9BurmW8QnQFh1w" ><img alt="Join Slack" src="https://img.shields.io/badge/Slack-Join%20Bit%20Slack-blueviolet"/></a>
 
-## Build composable software
 
-Bit is a toolchain for **composable software development**. With Bit, you can build anything in components.
+Bit is a toolchain for **composable software**. It makes the development of composable software simple and fast.
 
-It’s built to **end monolithic applications** and unlock a distributed form of development that is far more scalable, collaborative, and consistent.
+Bit is similar in sense, but stands as the opposite for the "Monorepo" approach, which aims to center all code under a central repository. Instead Bit is bringing simplicity for distribution of source code into to independent components, composing each other.
 
-Bit allows you to create components that are independently developed, versioned, and can be composed together via dependencies to build anything. Every component can be used and updated in many different applications.
+People often use Bit to run a Monorepo, sometimes a Polyrepo or without using repositories at all.
 
-Architectural pains that stem from monolithic development no longer exist; Scalable workflows for autonomous teams, collaboration, rapid delivery, shared components, and even micro frontends become a native and effortless way of work.
+The core innovation of Bit is the "Bit Component", a composable container for source code, whereas dependencies are first-class citizens. Components can be used as packages, ESM modules, runtime scripts, and any other artifact a build task can generate.
 
-Bit comes with native support and best-practice dev environments for most web technologies such as TS, React, React Native, Angular, Vue and Node, and can be easily extended to support just about anything.
+- **Descriptive module names**. Use components via descriptive module names.
+- **Dependency versioning.**. Automatically detects dependency changes, and version them accordingly.
+- **Reusable development environments.** Create your configuration files in a development environment, and 
+- **Build pipelines**. Independent build pipelines for components, designed for performance and speed.
+- **Preview**. Preview your components documentation, preview, and API.
+- **Lanes**. Collaborate and preview component changes.
+- **Component generators**. Create your own component generators and starters for new workspaces.
 
-It provides features such as [Workspace](https://bit.dev/reference/workspace/workspace-overview), [Components](https://bit.dev/reference/components/component-overview), [Dev Environments](https://bit.dev/reference/envs/envs-overview/), [Scopes](https://bit.dev/reference/scope/scope-overview), and [Dependencies](https://bit.dev/reference/dependencies/dependencies-overview) (which allow the composition of components and collaboration between developers).
+## Getting started
 
-Bit is developed with Bit and you can find all its components on [Bit Cloud Here](https://bit.cloud/teambit/~scopes).
+### Install Bit
+Use the Bit installer to install Bit to be available on your PATH.
 
-## Getting Started
+```bash
+npx @teambit/bvm install
+```
 
-To get started with Bit head over to the [Community and Documentation site](https://bit.dev) and try the [Quick-Start](https://bit.dev/docs/quick-start/) guide to get up and running in a few minutes, or the longer [Getting Started](https://bit.dev/docs/getting-started/installing-bit/installing-bit) section to try the full tutorial.
+### Create a new workspace
 
-Want to learn more? Try the [Thinking in Components](https://bit.dev/docs/thinking-in-components) section.
+Run the following to create a workspace with a few components included, using the hello-world starter:
+```bash
+bit new hello-world my-hello-world --env teambit.community/starters/hello-world 
+```
 
-## Bit and Bit Cloud
+For the quick start, we use two React components and one Node module, though you can create components in pretty much every language.
+This will create a new workspace with two react components and a single node component. Bit can be used in diff
 
-To use components in multiple projects and to collaborate with other developers you can host components in a [Remote Scope](https://bit.dev/reference/scope/running-a-scope-server). You can set up and host a remote Scope on any server!
+### Create a component
+```bash
+bit create node is-string 
+```
 
-[Bit Cloud](https://bit.cloud) is a platform where you can host components and enjoy advanced features for team management, discovery, consumption, integration, and collaboration. Bit’s cloud platform is home to over 200,000 developers and OSS communities, and hundreds of organizations, from early-stage startups to the world’s largest enterprises.
+### Record component and dependency changes
+
+Run the following to record component changes to your components, and assign a semantic version to them. Bit will version the dependents graph of the changed components.
+
+```bash
+bit snap --message 'initial release'
+```
+
+Snapped components are ready to be built upon 'export' (see next step). The build artifacts will also be stored in the component's new version ('snap').
+
+By default, components are built using bit.cloud's CI platform, Ripple CI. However, you can run the components' build locally by adding the --build flag, or use your own CI platform. [To learn more see Set up CI](https://bit.dev/).
+
+### Export components to a remote scope.
+
+```bash
+bit export
+```
+
+Your components are now built, and available to be used as packages.
+
+Bit is entirely built with Bit and you can find all its components on [Bit Cloud Here](https://bit.cloud/teambit/~scopes).
 
 ## Contributing 🎗️
 
@@ -58,5 +93,5 @@ See [Contributing](CONTRIBUTING.md).
 
 ## License 💮
 
-Apache License, Version 2.0
+[Apache License, Version 2.0](https://github.com/teambit/bit/blob/master/LICENSE)
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)

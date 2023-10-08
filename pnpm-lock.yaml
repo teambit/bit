@@ -3829,7 +3829,7 @@ importers:
         version: file:scopes/api-reference/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.this':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/this
+        version: file:scopes/api-reference/renderers/this(react@17.0.2)
       '@teambit/api-reference.renderers.type':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/type(react-dom@17.0.2)(react@17.0.2)
@@ -5758,7 +5758,7 @@ importers:
         version: file:scopes/api-reference/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.this':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/this
+        version: file:scopes/api-reference/renderers/this(react@17.0.2)
       '@teambit/api-reference.renderers.type':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/type(react-dom@17.0.2)(react@17.0.2)
@@ -7687,7 +7687,7 @@ importers:
         version: file:scopes/api-reference/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.this':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/this
+        version: file:scopes/api-reference/renderers/this(react@17.0.2)
       '@teambit/api-reference.renderers.type':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/type(react-dom@17.0.2)(react@17.0.2)
@@ -9616,7 +9616,7 @@ importers:
         version: file:scopes/api-reference/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.this':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/this
+        version: file:scopes/api-reference/renderers/this(react@17.0.2)
       '@teambit/api-reference.renderers.type':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/type(react-dom@17.0.2)(react@17.0.2)
@@ -11545,7 +11545,7 @@ importers:
         version: file:scopes/api-reference/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.this':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/this
+        version: file:scopes/api-reference/renderers/this(react@17.0.2)
       '@teambit/api-reference.renderers.type':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/type(react-dom@17.0.2)(react@17.0.2)
@@ -13474,7 +13474,7 @@ importers:
         version: file:scopes/api-reference/renderers/schema-nodes-index(@testing-library/react@12.1.5)(@types/react@17.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@teambit/api-reference.renderers.this':
         specifier: workspace:*
-        version: file:scopes/api-reference/renderers/this
+        version: file:scopes/api-reference/renderers/this(react@17.0.2)
       '@teambit/api-reference.renderers.type':
         specifier: workspace:*
         version: file:scopes/api-reference/renderers/type(react-dom@17.0.2)(react@17.0.2)
@@ -15735,6 +15735,9 @@ importers:
 
   scopes/api-reference/renderers/function:
     dependencies:
+      '@teambit/documenter.ui.table-heading-row':
+        specifier: 4.0.11
+        version: 4.0.11(react-dom@17.0.2)(react@17.0.2)
       classnames:
         specifier: 2.2.6
         version: 2.2.6
@@ -16081,6 +16084,10 @@ importers:
         version: 5.9.5
 
   scopes/api-reference/renderers/this:
+    dependencies:
+      react:
+        specifier: 17.0.2
+        version: 17.0.2
     devDependencies:
       '@babel/runtime':
         specifier: 7.20.0
@@ -63113,6 +63120,7 @@ packages:
       react: ^16.8.0 || ^17.0.0
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
+      '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@17.0.2)(react@17.0.2)
       classnames: 2.2.6
       core-js: 3.13.0
       react: 17.0.2
@@ -63231,9 +63239,14 @@ packages:
       - '@types/react'
     dev: false
 
-  file:scopes/api-reference/renderers/this:
+  file:scopes/api-reference/renderers/this(react@17.0.2):
     resolution: {directory: scopes/api-reference/renderers/this, type: directory}
+    id: file:scopes/api-reference/renderers/this
     name: '@teambit/api-reference.renderers.this'
+    peerDependencies:
+      react: 17.0.2
+    dependencies:
+      react: 17.0.2
     dev: false
 
   file:scopes/api-reference/renderers/type(react-dom@17.0.2)(react@17.0.2):
