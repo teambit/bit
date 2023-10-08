@@ -28,7 +28,7 @@ Bit is a toolchain for **composable software**. It makes the composition of appl
 
 Bit is similar in sense, but stands as the opposite for the "Monorepo" approach, which aims to center all code under a central repository. Instead, Bit is bringing simplicity for distribution of source code into  independently versioned components, depending on each other.
 
-People often use Bit to run a Monorepo, sometimes a Polyrepo or without using repositories at all.
+People often use Bit to run a Monorepo, a Polyrepo or without using repositories at all.
 
 The core innovation of Bit is the ["Bit Component"](https://bit.dev/#component), a composable container for source code, whereas dependencies are first-class citizens. Components can be used as packages, ESM modules, runtime scripts, and any other artifact a build task can generate.
 
