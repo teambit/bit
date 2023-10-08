@@ -126,7 +126,7 @@ be used by components outside of your workspace, and from your other projects.
 bit export
 ```
 
-Head over to your bit.cloud account to see your components build progress. Once the build process is completed, the components will be available in their remote scopes. 🎉🎉🎉
+Head over to your bit.cloud account to see your components build progress. Once the build process is completed, the components will be available for use in their remote scopes. 🎉🎉🎉
 
 ## Contributors
 Bit is entirely built with Bit and you can find all its components on [Bit Cloud](https://bit.cloud/teambit/~scopes).
