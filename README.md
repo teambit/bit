@@ -88,11 +88,11 @@ After creating a new component, start using it by adding an import statement in 
 import { Button } from '@owner-name/buttons.button';
 ```
 
-Once added, Bit will autodetect the dependency between these components. Use `bit show` or the VSCode plugin to view the list dependencies Bit detected for your components.
+Once added, Bit will autodetect the dependency between these components. Use `bit show` or the VSCode plugin to view the list of dependencies Bit detected for your components.
 
 ### Record component and dependency changes
 
-Run the following to record component changes to your components, and assign a semantic version to them. Bit will version the dependents graph of the modified components.
+Run `snap` or `tag` to record component changes, and assign a semantic version to them. Bit will version the dependents graph of each modified components.
 
 ```bash
 bit snap --message 'initial release'
