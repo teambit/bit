@@ -24,9 +24,9 @@
 <a href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-1vq1vcxxu-CEVobR1p9BurmW8QnQFh1w" ><img alt="Join Slack" src="https://img.shields.io/badge/Slack-Join%20Bit%20Slack-blueviolet"/></a>
 
 
-Bit is a toolchain for **composable software**. It makes the development of composable software simple and fast.
+Bit is a toolchain for **composable software**. It makes the composition of applications from independently versioned components simple and fast.
 
-Bit is similar in sense, but stands as the opposite for the "Monorepo" approach, which aims to center all code under a central repository. Instead Bit is bringing simplicity for distribution of source code into to independent components, composing each other.
+Bit is similar in sense, but stands as the opposite for the "Monorepo" approach, which aims to center all code under a central repository. Instead, Bit is bringing simplicity for distribution of source code into  independently versioned components, composing each other.
 
 People often use Bit to run a Monorepo, sometimes a Polyrepo or without using repositories at all.
 
