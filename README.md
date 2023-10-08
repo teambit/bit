@@ -33,9 +33,9 @@ The core innovation of Bit is the ["Bit Component"](https://bit.dev/#component),
 
 - 📦 **Descriptive module names**. Use components through descriptive package names. No aliases required.
 - 🚀 **Dependency versioning.** Automatic detection and versioning of dependency changes. No more redundant  package.json files.
-- 🧑‍💻 **Reusable development environments.** Your own "create-react-app", create a development environment for your components, automating all configuration files for your components ().
+- 🚀 **Reusable development environments.** Reusable components including all of your dev config. No more duplication of countless `tsconfig.json`, `eslintrc` or `pretterrc` configs.
 - 🧑‍💻 **Build pipelines**. Independently build and store packages, bundles, and binaries.
-- ▶️ **Preview and auto-generated docs**. Every component is an asset with auto-generated docs and component previews.
+- 👓 **Preview and auto-generated docs**. Every component is an asset with auto-generated docs and component previews.
 - 🛫 **Lanes**. Propose and change components to introduce new features, in collaboration with others.
 - 🧑‍💻 **Component generators**. Create new components using pre-built or custom templates for any type of component.
 
