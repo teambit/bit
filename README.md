@@ -105,7 +105,7 @@ By default, components are built using bit.cloud's CI platform, Ripple CI. Howev
 ### Export components to a remote scope
 
 Export your staged components from your workspace to their remote scopes. This will make them available to 
-be consumed by components outside of your workspace, and from other existing projects.
+be used by components outside of your workspace, and from your other projects.
 
 ```bash
 bit export
