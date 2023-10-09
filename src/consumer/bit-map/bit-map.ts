@@ -6,7 +6,7 @@ import { compact, uniq } from 'lodash';
 import R from 'ramda';
 import { LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
-import { ComponentID } from '@teambit/component';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import type { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
@@ -32,7 +32,6 @@ import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 import GeneralError from '../../error/general-error';
 import { ALLOW_SAME_NAME, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
-import { ComponentIdList } from '../../bit-id/component-id-list';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
