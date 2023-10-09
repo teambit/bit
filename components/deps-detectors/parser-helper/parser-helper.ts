@@ -53,12 +53,9 @@ export function getDependenciesFromCallExpression(node) {
   }
   if (
     node.callee.type === 'MemberExpression' &&
-    node.callee.object &&
-    node.callee.object.name === 'require' &&
-    node.callee.property &&
-    node.callee.property.name === 'resolve' &&
-    node.arguments &&
-    node.arguments.length
+    node.callee.object?.name === 'require' &&
+    node.callee.property?.name === 'resolve' &&
+    node.arguments?.length
   ) {
     return getStringValue(node.arguments[0]);
   }
