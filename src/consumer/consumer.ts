@@ -601,28 +601,6 @@ export default class Consumer {
     this.bitMap.removeComponents(componentsToRemoveFromFs);
   }
 
-  async cleanOrRevertFromBitMapWhenOnLane(ids: BitIds) {
-    logger.debug(`consumer.cleanFromBitMapWhenOnLane, cleaning ${ids.toString()} from`);
-    const unavailableOnMain: BitId[] = [];
-    await Promise.all(
-      ids.map(async (id) => {
-        const modelComp = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
-        let updatedId = id.changeScope(undefined).changeVersion(undefined);
-        if (modelComp && modelComp.hasHead()) {
-          const head = modelComp.getHeadAsTagIfExist();
-          if (head) updatedId = id.changeVersion(head);
-        } else {
-          unavailableOnMain.push(id);
-          return;
-        }
-        this.bitMap.updateComponentId(updatedId, false, true);
-      })
-    );
-    if (unavailableOnMain.length) {
-      await this.cleanFromBitMap(BitIds.fromArray(unavailableOnMain));
-    }
-  }
-
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
     logger.debug(`addRemoteAndLocalVersionsToDependencies for ${component.id.toString()}`);
     Analytics.addBreadCrumb(

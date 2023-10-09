@@ -561,7 +561,7 @@ export class InstallMain {
     if (!envComponent) return undefined;
     const packageName = this.dependencyResolver.getPackageName(envComponent);
     const version = envId.version;
-    const finalVersion = snapToSemver(version);
+    const finalVersion = snapToSemver(version as string);
     return { [packageName]: finalVersion };
   }
 

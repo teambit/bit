@@ -49,14 +49,12 @@ export class RemoveMain {
     remote = false,
     track = false,
     deleteFiles = true,
-    fromLane = false,
   }: {
     componentsPattern: string;
     force?: boolean;
     remote?: boolean;
     track?: boolean;
     deleteFiles?: boolean;
-    fromLane?: boolean;
   }): Promise<RemoveComponentsResult> {
     this.logger.setStatusLine(BEFORE_REMOVE);
     const bitIds = remote
@@ -71,7 +69,6 @@ export class RemoveMain {
       remote,
       track,
       deleteFiles,
-      fromLane,
     });
     if (consumer) await consumer.onDestroy();
     return removeResults;
@@ -89,7 +86,6 @@ export class RemoveMain {
       remote: false,
       track: false,
       deleteFiles: true,
-      fromLane: false,
     });
     await this.workspace.bitMap.write();
 
@@ -242,7 +238,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     if (bitmapEntry && bitmapEntry.isRecovered()) return false;
     const modelComp = await this.workspace.scope.getBitObjectModelComponent(componentId);
     if (!modelComp) return false;
-    const versionObj = await this.workspace.scope.getBitObjectVersion(modelComp, componentId.version);
+    const versionObj = await this.workspace.scope.getBitObjectVersion(modelComp, componentId.version as string);
     if (!versionObj) return false;
     return versionObj.isRemoved();
   }

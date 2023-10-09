@@ -2,7 +2,7 @@ import { PJV } from 'package-json-validator';
 import R from 'ramda';
 import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
-
+import { isSnap } from '@teambit/component-version';
 import { BitId, BitIds } from '../bit-id';
 import { DEPENDENCIES_FIELDS } from '../constants';
 import { SchemaName } from '../consumer/component/component-schema';
@@ -275,6 +275,9 @@ ${duplicationStr}`);
     version.parents.forEach((parent) => {
       if (parent.isEqual(version.hash())) {
         throw new VersionInvalid(`${message}, its parent has the same hash as itself: ${parent.toString()}`);
+      }
+      if (!isSnap(parent.toString())) {
+        throw new VersionInvalid(`${message}, its parent "${parent.toString()}" is not a valid snap (40 chars hex).`);
       }
     });
   }
