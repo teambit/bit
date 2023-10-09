@@ -495,7 +495,7 @@
     "deps-detectors/detective-typescript": {
         "name": "deps-detectors/detective-typescript",
         "scope": "teambit.typescript",
-        "version": "0.0.2",
+        "version": "0.0.3",
         "mainFile": "index.ts",
         "rootDir": "components/deps-detectors/detective-typescript"
     },
