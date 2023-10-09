@@ -277,7 +277,7 @@ export class SnappingMain {
         const modelComp = await this.scope.getBitObjectModelComponent(id);
         if (!modelComp) throw new Error(`unable to find ModelComponent of ${id.toString()}`);
         if (!modelComp.head) return null;
-        if (modelComp.getRef(id.version)?.isEqual(modelComp.head)) return null;
+        if (modelComp.getRef(id.version as string)?.isEqual(modelComp.head)) return null;
         if (!params.ignoreNewestVersion) {
           throw new BitError(`unable to tag "${id.toString()}", this version is older than the head ${modelComp.head.toString()}.
 if you're willing to lose the history from the head to the specified version, use --ignore-newest-version flag`);

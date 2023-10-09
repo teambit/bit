@@ -141,7 +141,7 @@ export class SchemaMain {
        * when tag/snap without build
        * or backwards compatibility
        */
-      return APISchema.empty(component.id);
+      return APISchema.empty(component.id as any);
     }
 
     const schemaJsonStr = schemaArtifact[0].contents.toString('utf-8');
