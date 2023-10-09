@@ -57,8 +57,8 @@ export class ComponentLogMain {
     return logs;
   }
 
-  async getLogsWithParents(id: string) {
-    const logs = await this.getLogs(id, false, true);
+  async getLogsWithParents(id: string, fullHash = false) {
+    const logs = await this.getLogs(id, false, !fullHash);
     const graph = buildSnapGraph(logs);
     const sorted = graph.toposort();
     return sorted.map((node) => this.stringifyLogInfoOneLine(node.attr));
