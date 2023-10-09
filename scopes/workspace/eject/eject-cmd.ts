@@ -1,7 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { Workspace } from '@teambit/workspace';
-import ejectTemplate from '@teambit/legacy/dist/cli/templates/eject-template';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { ejectTemplate } from './eject-template';
 import { EjectMain } from './eject.main.runtime';
 
 export class EjectCmd implements Command {
