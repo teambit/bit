@@ -1093,11 +1093,11 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: $env:path
+      - run: $Env:Path.Split(';')
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
-      - run: $env:path
+      - run: $Env:Path.Split(';')
       - run: New-Item $Profile.CurrentUserAllHosts -Force
-      - run: Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "xyz;$env:PATH"'
+      - run: Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "C:\Users\circleci\AppData\Local\.bvm;$env:PATH"'
       - run: $Env:Path.Split(';')
 
       - run: choco upgrade nvm -y
