@@ -162,7 +162,7 @@ commands: # reusable commands
       - run: 'ssh-add ~/.ssh/id_rsa'
   install_bvm:
     steps:
-      - run: yarn global add @teambit/bvm
+      - run: npm install --global @teambit/bvm
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run: bvm config set RELEASE_TYPE nightly
   set_bit_cloud_registry:
@@ -654,7 +654,7 @@ jobs:
           command: mkdir bit-${BIT_VERSION}
       - run:
           name: install bit
-          command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
+          command: cd bit-${BIT_VERSION} && npm init -y && echo "nodeLinker: node-modules" >> .yarnrc.yml && yarn add @teambit/bit
       - run:
           name: remove leftovers
           command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
@@ -717,7 +717,7 @@ jobs:
       - run: node -v
       - run: rm -rf /usr/local/bin/yarn
       - run: rm -rf /usr/local/bin/yarnpkg
-      - run: npm install --global yarn --force
+      - run: corepack enable && corepack prepare yarn@3.6.4 --activate
       - run: yarn cache clean
       - run: yarn -v
       # - run: mkdir esbuild-darwin-arm64
@@ -739,7 +739,7 @@ jobs:
           command: mkdir bit-${BIT_VERSION}
       - run:
           name: install bit
-          command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
+          command: cd bit-${BIT_VERSION} && npm init -y && echo "nodeLinker: node-modules" >> .yarnrc.yml && yarn add @teambit/bit
       - run:
           name: remove leftovers
           command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
@@ -789,7 +789,7 @@ jobs:
       - run: nvm install 18.17.1
       - run: nvm use 18.17.1
       - run: node -v
-      - run: npm install --global yarn
+      - run: corepack enable && corepack prepare yarn@3.6.4 --activate
       - run: 'yarn -v'
       - set_bit_cloud_registry
       - run:
@@ -813,7 +813,7 @@ jobs:
       - run: 'node -v'
       - run:
           name: install bit
-          command: cd bundle; npm init -y; yarn add @teambit/bit
+          command: cd bundle; npm init -y; corepack enable; corepack prepare yarn@3.6.4 --activate; echo "nodeLinker: node-modules" >> .yarnrc.yml; yarn add @teambit/bit
       - run:
           name: remove leftovers
           command: Remove-Item .\bundle\package.json; Remove-Item .\bundle\yarn.lock
@@ -1253,7 +1253,7 @@ jobs:
       - attach_workspace:
           at: .
       - run: $Env:Path
-      - run: 'npm i -g yarn'
+      - run: corepack enable && corepack prepare yarn@3.6.4 --activate
       - run: 'npm -v'
       # -
       #   run:
