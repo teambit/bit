@@ -1,6 +1,5 @@
 import execa from 'execa';
 import logger from '../../logger/logger';
-import npmClient from '../../npm-client';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
 export default class ValidateYarnExec extends Diagnosis {
@@ -17,7 +16,7 @@ export default class ValidateYarnExec extends Diagnosis {
   }
 
   async _runExamine(): Promise<ExamineBareResult> {
-    const yarnVersion = await npmClient.getYarnVersion();
+    const yarnVersion = await getYarnVersion();
     if (yarnVersion) {
       return {
         valid: true,
