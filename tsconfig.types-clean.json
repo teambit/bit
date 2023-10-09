@@ -37,7 +37,6 @@
       "src/links",
       "src/logger",
       "src/migration",
-      "src/npm-client",
       "src/prompts",
       "src/remotes",
       "src/scope",
