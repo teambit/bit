@@ -4,7 +4,7 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ScopeMain } from '@teambit/scope';
 // import { BitIds } from '@teambit/legacy/dist/bit-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
-import { isHash } from '@teambit/component-version';
+import { isSnap } from '@teambit/component-version';
 import { getBitCloudUser } from '@teambit/snapping';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
@@ -41,7 +41,7 @@ export async function createLane(
         const isRemoved = await workspace.scope.isComponentRemoved(compId);
         if (isRemoved) return null;
         const bitmapHead = workspaceIds.searchWithoutVersion(id);
-        if (bitmapHead && isHash(bitmapHead.version)) {
+        if (bitmapHead && isSnap(bitmapHead.version)) {
           return { id, head: Ref.from(bitmapHead.version as string) };
         }
         return { id, head };

@@ -387,6 +387,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-descriptor"
     },
+    "component-id": {
+        "name": "component-id",
+        "scope": "teambit.component",
+        "version": "1.0.0",
+        "mainFile": "index.ts",
+        "rootDir": "components/component-id"
+    },
     "component-issues": {
         "name": "component-issues",
         "scope": "teambit.component",
@@ -743,6 +750,13 @@
         "version": "1.0.20",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/lanes"
+    },
+    "legacy-bit-id": {
+        "name": "legacy-bit-id",
+        "scope": "teambit.component",
+        "version": "1.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy-bit-id"
     },
     "legacy-component-log": {
         "name": "legacy-component-log",
