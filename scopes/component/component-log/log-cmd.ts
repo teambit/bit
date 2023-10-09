@@ -15,7 +15,7 @@ export default class LogCmd implements Command {
     ['r', 'remote', 'show log of a remote component'],
     ['', 'parents', 'show parents and lanes data'],
     ['o', 'one-line', 'show each log entry in one line'],
-    ['', 'full-hash', 'show full hash of the snap (default to the first 9 characters)'],
+    ['f', 'full-hash', 'show full hash of the snap (default to the first 9 characters for --one-line/--parents flags)'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
   migration = true;
@@ -34,6 +34,7 @@ export default class LogCmd implements Command {
       fullHash = false,
     }: { remote: boolean; parents: boolean; oneLine?: boolean; fullHash?: boolean }
   ) {
+    if (!parents && !oneLine) fullHash = true;
     if (parents) {
       const logs = await this.componentLog.getLogsWithParents(id, fullHash);
       return logs.join('\n');
