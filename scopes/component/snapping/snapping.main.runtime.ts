@@ -601,8 +601,7 @@ there are matching among unmodified components thought. consider using --unmodif
     };
     const softUntag = async () => {
       const componentsList = new ComponentsList(consumer);
-      const softTaggedComponents = componentsList.listSoftTaggedComponents();
-      const softTaggedComponentsIds = await this.workspace.resolveMultipleComponentIds(softTaggedComponents);
+      const softTaggedComponentsIds = componentsList.listSoftTaggedComponents();
       const idsToRemoveSoftTags = componentPattern
         ? this.workspace.scope.filterIdsFromPoolIdsByPattern(componentPattern, softTaggedComponentsIds)
         : softTaggedComponentsIds;
@@ -1060,7 +1059,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     const componentsList = new ComponentsList(this.workspace.consumer);
     if (persist) {
       const softTaggedComponents = componentsList.listSoftTaggedComponents();
-      return { bitIds: softTaggedComponents, warnings: [] };
+      return { bitIds: softTaggedComponents.map((c) => c._legacy), warnings: [] };
     }
 
     const tagPendingComponentsIds = includeUnmodified

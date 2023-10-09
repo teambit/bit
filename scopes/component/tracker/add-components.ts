@@ -39,6 +39,7 @@ import VersionShouldBeRemoved from '@teambit/legacy/dist/consumer/component-ops/
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { Workspace } from '@teambit/workspace';
 import determineMainFile from './determine-main-file';
+import { ComponentID } from '@teambit/component-id';
 
 export type AddResult = { id: BitId; files: ComponentMapFile[] };
 export type Warnings = {
@@ -206,7 +207,7 @@ export default class AddComponents {
     const parsedBitId = component.componentId;
     const componentFromScope = await this._getComponentFromScopeIfExist(parsedBitId);
     const files: ComponentMapFile[] = component.files;
-    const foundComponentFromBitMap = this.bitMap.getComponentIfExist(component.componentId, {
+    const foundComponentFromBitMap = this.bitMap.getComponentIfExistByBitId(component.componentId, {
       ignoreVersion: true,
     });
     const componentFilesP = files.map(async (file: ComponentMapFile) => {
@@ -293,7 +294,7 @@ export default class AddComponents {
       };
       const defaultScope = await getDefaultScope();
       const componentMap = this.bitMap.addComponent({
-        componentId,
+        componentId: new ComponentID(componentId, defaultScope),
         files: component.files,
         defaultScope,
         config: this.config,

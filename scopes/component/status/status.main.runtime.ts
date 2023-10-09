@@ -168,7 +168,7 @@ export class StatusMain {
         mergePendingComponents.map((c) => ({ id: c.id, divergeData: c.diverge }))
       ),
       componentsDuringMergeState: await convertBitIdToComponentIdsAndSort(idsDuringMergeState),
-      softTaggedComponents: await convertBitIdToComponentIdsAndSort(softTaggedComponents),
+      softTaggedComponents: ComponentID.sortIds(softTaggedComponents),
       snappedComponents: await convertBitIdToComponentIdsAndSort(snappedComponents),
       pendingUpdatesFromMain: await convertObjToComponentIdsAndSort(pendingUpdatesFromMain),
       updatesFromForked: await convertObjToComponentIdsAndSort(updatesFromForked),

@@ -47,7 +47,7 @@ export class AspectsMerger {
     const mergeFromScope = true;
     const errors: Error[] = [];
 
-    const bitMapEntry = this.workspace.consumer.bitMap.getComponentIfExist(componentId._legacy);
+    const bitMapEntry = this.workspace.consumer.bitMap.getComponentIfExist(componentId);
     const bitMapExtensions = bitMapEntry?.config;
 
     let configMerge: Record<string, any> | undefined;

@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import fs from 'fs-extra';
 import { v4 } from 'uuid';
 import * as path from 'path';
@@ -150,6 +151,12 @@ export default class Component {
       name: this.name,
       version: this.version,
     });
+  }
+  get componentId(): ComponentID {
+    const bitId = this.id;
+    if (!bitId.scope && !this.defaultScope)
+      throw new Error(`Component ${bitId.toString()} does not have a scope, neither a defaultScope`);
+    return new ComponentID(bitId, this.defaultScope as string);
   }
 
   constructor({

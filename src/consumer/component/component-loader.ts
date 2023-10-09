@@ -1,4 +1,5 @@
 import mapSeries from 'p-map-series';
+import { ComponentID } from '@teambit/component-id';
 import * as path from 'path';
 import { ComponentIssue } from '@teambit/component-issues';
 import { BitId, BitIds } from '../../bit-id';
@@ -108,7 +109,7 @@ export default class ComponentLoader {
       if (id.constructor.name !== BitId.name) {
         throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
       }
-      const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIdsFromCurrentLaneIncludeRemoved, id);
+      const idWithVersion = getLatestVersionNumber(this.consumer.bitmapIdsFromCurrentLaneIncludeRemoved, id);
       const idStr = idWithVersion.toString();
       const fromCache = this.componentsCache.get(idStr);
       if (fromCache) {
@@ -146,7 +147,7 @@ export default class ComponentLoader {
     removedComponents: Component[],
     loadOpts?: ComponentLoadOptions
   ) {
-    let componentMap = this.consumer.bitMap.getComponent(id);
+    let componentMap = this.consumer.bitMap.getComponentByBitId(id);
     if (componentMap.isRemoved()) {
       const fromModel = await this.consumer.scope.getConsumerComponentIfExist(id);
       if (!fromModel) {
@@ -181,7 +182,7 @@ export default class ComponentLoader {
     if (newId) {
       componentMap = this.consumer.bitMap.getComponent(newId);
     }
-    const updatedId = newId || id;
+    const updatedId = newId?._legacy || id;
 
     try {
       component = await Component.loadFromFileSystem({
@@ -194,7 +195,7 @@ export default class ComponentLoader {
     }
     component.loadedFromFileSystem = true;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
-    component.componentMap = this.consumer.bitMap.getComponent(updatedId);
+    component.componentMap = this.consumer.bitMap.getComponentByBitId(updatedId);
     await this._handleOutOfSyncWithDefaultScope(component);
 
     const loadDependencies = async () => {
@@ -233,28 +234,30 @@ export default class ComponentLoader {
     });
   }
 
-  private async _handleOutOfSyncScenarios(componentMap: ComponentMap): Promise<BitId | undefined> {
-    const currentId: BitId = componentMap.id;
-    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(currentId);
-    let newId: BitId | undefined;
+  private async _handleOutOfSyncScenarios(componentMap: ComponentMap): Promise<ComponentID | undefined> {
+    const currentId = componentMap.id;
+    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(currentId._legacy);
+    let newId: ComponentID | undefined;
     if (componentFromModel && !currentId.hasVersion()) {
       // component is in the scope but .bitmap doesn't have version, sync .bitmap with the scope data
       newId = currentId.changeVersion(componentFromModel.version);
       if (componentFromModel.scope) newId = newId.changeScope(componentFromModel.scope);
     }
-    if (componentFromModel && componentFromModel.scope && currentId.hasVersion() && !currentId.hasScope()) {
+    if (componentFromModel && componentFromModel.scope && currentId.hasVersion() && !currentId._legacy.hasScope()) {
       // component is not exported in .bitmap but exported in the scope, sync .bitmap with the scope data
       newId = currentId.changeScope(componentFromModel.scope);
     }
     if (!componentFromModel && currentId.hasVersion()) {
       // the version used in .bitmap doesn't exist in the scope
-      const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId.changeVersion(undefined));
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(
+        currentId.changeVersion(undefined)._legacy
+      );
       if (modelComponent) {
         // the scope has this component but not the version used in .bitmap, sync .bitmap with
         // latest version from the scope
         await this._throwPendingImportIfNeeded(currentId);
         newId = currentId.changeVersion(modelComponent.getHeadRegardlessOfLaneAsTagOrHash());
-      } else if (!currentId.hasScope()) {
+      } else if (!currentId._legacy.hasScope()) {
         // the scope doesn't have this component and .bitmap doesn't have scope, assume it's new
         newId = currentId.changeVersion(undefined);
       }
@@ -268,14 +271,15 @@ export default class ComponentLoader {
 
   private async _handleOutOfSyncWithDefaultScope(component: Component) {
     const { componentFromModel, componentMap } = component;
-    // @ts-ignore componentMap is set here
-    const currentId: BitId = componentMap.id;
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const currentId = componentMap!.id;
     if (!componentFromModel && !currentId.hasVersion()) {
       // for Harmony, we know ahead the defaultScope, so even then .bitmap shows it as new and
       // there is nothing in the scope, we can check if there is a component with the same
       // default-scope in the objects
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(
-        currentId.changeScope(component.defaultScope)
+        currentId._legacy.changeScope(component.defaultScope)
       );
       if (!modelComponent) {
         return;
@@ -293,8 +297,8 @@ it was probably created on another lane and if so, consider removing this compon
         );
         return;
       }
-      const newId = currentId.changeVersion(existingVersion).changeScope(modelComponent.scope);
-      component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
+      const newId = currentId.changeVersion(existingVersion).changeScope(modelComponent.scope as string);
+      component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId._legacy);
 
       component.version = newId.version;
       component.scope = newId.scope;
@@ -303,9 +307,9 @@ it was probably created on another lane and if so, consider removing this compon
     }
   }
 
-  private async _throwPendingImportIfNeeded(currentId: BitId) {
-    if (currentId.hasScope()) {
-      const remoteComponent: ModelComponent | null | undefined = await this._getRemoteComponent(currentId);
+  private async _throwPendingImportIfNeeded(currentId: ComponentID) {
+    if (currentId._legacy.hasScope()) {
+      const remoteComponent: ModelComponent | null | undefined = await this._getRemoteComponent(currentId._legacy);
       // @todo-lanes: make it work with lanes. It needs to go through the objects one by one and check
       // whether one of the hashes exist.
       // @ts-ignore version is set here

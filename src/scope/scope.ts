@@ -679,23 +679,6 @@ once done, to continue working, please run "bit cc"`
       .then(() => this);
   }
 
-  /**
-   * find the components in componentsPool which one of their dependencies include in potentialDependencies
-   */
-  async findDirectDependentComponents(componentsPool: BitIds, potentialDependencies: BitIds): Promise<BitIds> {
-    const componentsVersions = await this.loadLocalComponents(componentsPool);
-    const dependentsP = componentsVersions.map(async (componentVersion: ComponentVersion) => {
-      const component: Version = await componentVersion.getVersion(this.objects);
-      const found = component
-        .getAllDependencies()
-        .find((dependency) => potentialDependencies.searchWithoutVersion(dependency.id));
-      return found ? componentVersion : null;
-    });
-    const dependents = await Promise.all(dependentsP);
-    const dependentsWithoutNull = removeNils(dependents);
-    return BitIds.fromArray(dependentsWithoutNull.map((c) => c.id));
-  }
-
   async loadModelComponentByIdStr(id: string): Promise<ModelComponent> {
     // Remove the version before hashing since hashing with the version number will result a wrong hash
     const idWithoutVersion = BitId.getStringWithoutVersion(id);

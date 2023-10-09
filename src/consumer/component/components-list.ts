@@ -1,5 +1,6 @@
 import { compact } from 'lodash';
 import pFilter from 'p-filter';
+import { ComponentID } from '@teambit/component-id';
 import R from 'ramda';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { BitId, BitIds } from '../../bit-id';
@@ -235,7 +236,7 @@ export default class ComponentsList {
     return BitIds.fromArray(unmergedComponents.map((u) => new BitId(u.id)));
   }
 
-  listSoftTaggedComponents(): BitId[] {
+  listSoftTaggedComponents(): ComponentID[] {
     return this.bitMap.components.filter((c) => c.nextVersion).map((c) => c.id);
   }
 
@@ -313,8 +314,8 @@ export default class ComponentsList {
   async updateIdsFromModelIfTheyOutOfSync(ids: BitIds, loadOpts?: ComponentLoadOptions): Promise<BitIds> {
     const updatedIdsP = ids.map(async (id: BitId) => {
       const componentMap =
-        this.bitMap.getComponentIfExist(id, { ignoreVersion: true }) ||
-        this.bitMap.getComponentIfExist(id.changeScope(undefined), { ignoreVersion: true });
+        this.bitMap.getComponentIfExistByBitId(id, { ignoreVersion: true }) ||
+        this.bitMap.getComponentIfExistByBitId(id.changeScope(undefined), { ignoreVersion: true });
       if (!componentMap || componentMap.id.hasVersion()) return id;
       const areSameScope = id.scope ? id.scope === componentMap.defaultScope : true;
       if (!areSameScope) return id;
@@ -480,10 +481,10 @@ export default class ComponentsList {
       if (componentMap.isRemoved()) return false;
       if (componentMap.isAvailableOnCurrentLane) return true;
       if (!currentLane) return false; // if !currentLane the user is on main, don't show it.
-      return Boolean(currentLane.getComponent(componentMap.id));
+      return Boolean(currentLane.getComponent(componentMap.id._legacy));
     };
     return listAllResults.filter((listResult) => {
-      const componentMap = this.bitMap.getComponentIfExist(listResult.id, { ignoreVersion: true });
+      const componentMap = this.bitMap.getComponentIfExistByBitId(listResult.id, { ignoreVersion: true });
       return componentMap && isIdOnCurrentLane(componentMap);
     });
   }

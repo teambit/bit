@@ -144,7 +144,7 @@ export class BitMap {
   }
 
   getBitmapEntryIfExist(id: ComponentID, { ignoreVersion }: GetBitMapComponentOptions = {}): ComponentMap | undefined {
-    return this.legacyBitMap.getComponentIfExist(id._legacy, { ignoreVersion });
+    return this.legacyBitMap.getComponentIfExist(id, { ignoreVersion });
   }
 
   getAspectIdFromConfig(

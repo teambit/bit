@@ -41,7 +41,7 @@ export default class NodeModuleLinker {
     this.dataToPersist = new DataToPersist();
   }
   async link(): Promise<NodeModulesLinksResult[]> {
-    this.components = this.components.filter((component) => this.bitMap.getComponentIfExist(component.id._legacy));
+    this.components = this.components.filter((component) => this.bitMap.getComponentIfExist(component.id));
     const links = await this.getLinks();
     const linksResults = this.getLinksResults();
     const workspacePath = this.workspace.path;

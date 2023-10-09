@@ -539,7 +539,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       return false;
     }
 
-    const depComponentMap = this.consumer.bitMap.getComponentIfExist(componentId);
+    const depComponentMap = this.consumer.bitMap.getComponentIfExistByBitId(componentId);
     // found a dependency component. Add it to this.allDependencies.dependencies
     const depRootDir = depComponentMap ? depComponentMap.rootDir : undefined;
     const destinationRelativePath =

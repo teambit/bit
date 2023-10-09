@@ -14,7 +14,7 @@ export default async function deleteComponentsFiles(consumer: Consumer, bitIds: 
     const dataToPersist = new DataToPersist();
     bitIds.forEach((id) => {
       const ignoreVersion = id.isLocal() || !id.hasVersion();
-      const componentMap = consumer.bitMap.getComponentIfExist(id, { ignoreVersion });
+      const componentMap = consumer.bitMap.getComponentIfExistByBitId(id, { ignoreVersion });
       if (!componentMap) {
         logger.warn(
           `deleteComponentsFiles was unable to delete ${id.toString()} because the id is missing from bitmap`

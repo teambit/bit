@@ -47,6 +47,7 @@ import { ConsumerNotFound } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
+import { ComponentIdList } from '../bit-id/component-id-list';
 
 type ConsumerProps = {
   projectPath: string;
@@ -116,11 +117,11 @@ export default class Consumer {
     return this.componentLoader.componentFsCache;
   }
 
-  get bitmapIdsFromCurrentLane(): BitIds {
+  get bitmapIdsFromCurrentLane(): ComponentIdList {
     return this.bitMap.getAllIdsAvailableOnLane();
   }
 
-  get bitmapIdsFromCurrentLaneIncludeRemoved(): BitIds {
+  get bitmapIdsFromCurrentLaneIncludeRemoved(): ComponentIdList {
     return this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
   }
 
@@ -645,12 +646,12 @@ export default class Consumer {
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
   }
 
-  async getIdsOfDefaultLane(): Promise<BitIds> {
+  async getIdsOfDefaultLane(): Promise<ComponentIdList> {
     const ids = this.bitMap.getAllBitIds();
-    const bitIds = await Promise.all(
+    const componentIds = await Promise.all(
       ids.map(async (id) => {
         if (!id.hasVersion()) return id;
-        const modelComponent = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
+        const modelComponent = await this.scope.getModelComponentIfExist(id._legacy.changeVersion(undefined));
         if (!modelComponent) {
           throw new Error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing, please run bit-import`);
         }
@@ -661,13 +662,7 @@ export default class Consumer {
         return undefined;
       })
     );
-    return BitIds.fromArray(compact(bitIds));
-  }
-
-  async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {
-    const authoredAndImportedComponents = this.bitMap.getAllIdsAvailableOnLane();
-    const componentsIds = BitIds.fromArray(components.map((c) => c.id));
-    return this.scope.findDirectDependentComponents(authoredAndImportedComponents, componentsIds);
+    return ComponentIdList.fromArray(compact(componentIds));
   }
 
   async writeBitMap() {
