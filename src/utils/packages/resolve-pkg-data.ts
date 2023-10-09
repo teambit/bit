@@ -1,4 +1,5 @@
 import R from 'ramda';
+import { ComponentID } from '@teambit/component-id';
 import path from 'path';
 import readPkgUp from 'read-pkg-up';
 import { BitId } from '../../bit-id';
@@ -15,7 +16,7 @@ export interface ResolvedPackageData {
   name: string; // package name
   concreteVersion?: string; // version from the package.json of the package itself
   versionUsedByDependent?: string; // version from the dependent package.json
-  componentId?: BitId; // component id in case it's a bit component
+  componentId?: ComponentID; // component id in case it's a bit component
 }
 
 /**
@@ -97,11 +98,14 @@ function enrichDataFromDependency(packageData: ResolvedPackageData) {
   packageData.name = packageInfo.name;
   packageData.concreteVersion = packageInfo.version;
   if (packageInfo.componentId) {
+    const scope = packageInfo.componentId.scope as string;
     if (packageInfo.exported === false) {
       // @ts-ignore
       delete packageInfo.componentId.scope;
     }
-    packageData.componentId = new BitId(packageInfo.componentId);
+    const bitId = new BitId(packageInfo.componentId);
+    const componentId = new ComponentID(bitId, scope);
+    packageData.componentId = componentId;
     if (packageData.componentId.hasVersion() && packageInfo.version) {
       // if packageInfo.version is not defined, it's coming from the workspace and the package.json is auto-generated
       // during bit-link. ignore the componentId.version in this case, it's not up do date.

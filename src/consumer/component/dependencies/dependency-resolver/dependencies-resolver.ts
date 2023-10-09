@@ -4,6 +4,7 @@ import R from 'ramda';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
 import { BitError } from '@teambit/bit-error';
+import { ComponentID } from '@teambit/component-id';
 import { uniq, isEmpty, union, cloneDeep } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
@@ -50,7 +51,7 @@ export type DebugDependencies = {
 };
 
 export type DebugComponentsDependency = {
-  id: BitId;
+  id: ComponentID;
   importSource?: string;
   dependencyPackageJsonPath?: string;
   dependentPackageJsonPath?: string;
@@ -96,7 +97,7 @@ type GetEnvDetectors = (extensions: ExtensionDataList) => Promise<DependencyDete
 export default class DependencyResolver {
   component: Component;
   consumer: Consumer;
-  componentId: BitId;
+  componentId: ComponentID;
   componentMap: ComponentMap;
   componentFromModel: Component;
   consumerPath: PathOsBased;
@@ -151,7 +152,7 @@ export default class DependencyResolver {
   constructor(component: Component, consumer: Consumer) {
     this.component = component;
     this.consumer = consumer;
-    this.componentId = component.id;
+    this.componentId = component.componentId;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentMap = this.component.componentMap;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -368,7 +369,7 @@ export default class DependencyResolver {
     }
   }
 
-  traverseTreeForComponentId(depFile: PathLinux): BitId | undefined {
+  traverseTreeForComponentId(depFile: PathLinux): ComponentID | undefined {
     if (!this.tree[depFile] || (!this.tree[depFile].files && !this.tree[depFile].components)) return undefined;
     if (!this.componentMap.rootDir) {
       throw Error('traverseTreeForComponentId should get called only when rootDir is set');
@@ -404,7 +405,7 @@ export default class DependencyResolver {
     return undefined;
   }
 
-  getComponentIdByResolvedPackageData(bit: ResolvedPackageData): BitId {
+  getComponentIdByResolvedPackageData(bit: ResolvedPackageData): ComponentID {
     if (!bit.componentId) {
       throw new Error(`resolved Bit component must have componentId prop in the package.json file`);
     }
@@ -417,7 +418,7 @@ export default class DependencyResolver {
    * it to the "issues", then, later, it shows a warning on bit-status and block tagging.
    */
   getComponentIdByDepFile(depFile: PathLinux): {
-    componentId: BitId | null | undefined;
+    componentId: ComponentID | undefined;
     depFileRelative: PathLinux;
     destination: string | null | undefined;
   } {
@@ -535,11 +536,11 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
     // happens when in the same component one file requires another one. In this case, there is
     // noting to do regarding the dependencies
-    if (componentId.isEqualWithoutVersion(this.componentId)) {
+    if (componentId.isEqual(this.componentId, { ignoreVersion: true })) {
       return false;
     }
 
-    const depComponentMap = this.consumer.bitMap.getComponentIfExistByBitId(componentId);
+    const depComponentMap = this.consumer.bitMap.getComponentIfExist(componentId);
     // found a dependency component. Add it to this.allDependencies.dependencies
     const depRootDir = depComponentMap ? depComponentMap.rootDir : undefined;
     const destinationRelativePath =
@@ -569,14 +570,14 @@ either, use the ignore file syntax or change the require statement to have a mod
       });
       depsPaths.importSpecifiers = importSpecifiers;
     }
-    const currentComponentsDeps: Dependency = { id: componentId, relativePaths: [depsPaths] };
+    const currentComponentsDeps: Dependency = { id: componentId._legacy, relativePaths: [depsPaths] };
     this._pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource, depsPaths);
 
     const allDependencies: Dependency[] = [
       ...this.allDependencies.dependencies,
       ...this.allDependencies.devDependencies,
     ];
-    const existingDependency = this.getExistingDependency(allDependencies, componentId);
+    const existingDependency = this.getExistingDependency(allDependencies, componentId._legacy);
     if (existingDependency) {
       const existingDepRelativePaths = this.getExistingDepRelativePaths(existingDependency, depsPaths);
       if (!existingDepRelativePaths) {
@@ -709,7 +710,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       };
       const getExistingIdFromModel = (): BitId | undefined => {
         if (this.componentFromModel) {
-          const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
+          const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId._legacy);
           if (modelDep) {
             depDebug.versionResolvedFrom = 'Model';
             return modelDep;
@@ -1401,7 +1402,12 @@ either, use the ignore file syntax or change the require statement to have a mod
   _pushToRelativeComponentsIssues(originFile, componentId: BitId) {
     (this.issues.getOrCreate(IssuesClasses.RelativeComponents).data[originFile] ||= []).push(componentId);
   }
-  _pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource: string, relativePath: RelativePath) {
+  _pushToRelativeComponentsAuthoredIssues(
+    originFile,
+    componentId: ComponentID,
+    importSource: string,
+    relativePath: RelativePath
+  ) {
     (this.issues.getOrCreate(IssuesClasses.RelativeComponentsAuthored).data[originFile] ||= []).push({
       importSource,
       componentId,

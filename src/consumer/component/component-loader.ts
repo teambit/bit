@@ -1,8 +1,8 @@
 import mapSeries from 'p-map-series';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import * as path from 'path';
 import { ComponentIssue } from '@teambit/component-issues';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForComponents, InMemoryCache } from '../../cache/in-memory-cache';
 import { BIT_MAP } from '../../constants';
@@ -97,15 +97,19 @@ export default class ComponentLoader {
     this._shouldCheckForClearingDependenciesCache = false;
   }
 
-  async loadMany(ids: BitIds, throwOnFailure = true, loadOpts?: ComponentLoadOptions): Promise<LoadManyResult> {
+  async loadMany(
+    ids: ComponentIdList,
+    throwOnFailure = true,
+    loadOpts?: ComponentLoadOptions
+  ): Promise<LoadManyResult> {
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
       ids: ids.toString(),
     });
     const alreadyLoadedComponents: Component[] = [];
-    const idsToProcess: BitId[] = [];
+    const idsToProcess: ComponentID[] = [];
     const invalidComponents: InvalidComponent[] = [];
     const removedComponents: Component[] = [];
-    ids.forEach((id: BitId) => {
+    ids.forEach((id: ComponentID) => {
       if (id.constructor.name !== BitId.name) {
         throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
       }
@@ -126,7 +130,7 @@ export default class ComponentLoader {
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
 
     const allComponents: Component[] = [];
-    await mapSeries(idsToProcess, async (id: BitId) => {
+    await mapSeries(idsToProcess, async (id: ComponentID) => {
       const component = await this.loadOne(id, throwOnFailure, invalidComponents, removedComponents, loadOpts);
       if (component) {
         this.componentsCache.set(component.id.toString(), component);
@@ -141,13 +145,13 @@ export default class ComponentLoader {
   }
 
   private async loadOne(
-    id: BitId,
+    id: ComponentID,
     throwOnFailure: boolean,
     invalidComponents: InvalidComponent[],
     removedComponents: Component[],
     loadOpts?: ComponentLoadOptions
   ) {
-    let componentMap = this.consumer.bitMap.getComponentByBitId(id);
+    let componentMap = this.consumer.bitMap.getComponent(id);
     if (componentMap.isRemoved()) {
       const fromModel = await this.consumer.scope.getConsumerComponentIfExist(id);
       if (!fromModel) {
@@ -182,7 +186,7 @@ export default class ComponentLoader {
     if (newId) {
       componentMap = this.consumer.bitMap.getComponent(newId);
     }
-    const updatedId = newId?._legacy || id;
+    const updatedId = newId || id;
 
     try {
       component = await Component.loadFromFileSystem({
@@ -195,7 +199,7 @@ export default class ComponentLoader {
     }
     component.loadedFromFileSystem = true;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
-    component.componentMap = this.consumer.bitMap.getComponentByBitId(updatedId);
+    component.componentMap = this.consumer.bitMap.getComponent(updatedId);
     await this._handleOutOfSyncWithDefaultScope(component);
 
     const loadDependencies = async () => {
@@ -236,7 +240,7 @@ export default class ComponentLoader {
 
   private async _handleOutOfSyncScenarios(componentMap: ComponentMap): Promise<ComponentID | undefined> {
     const currentId = componentMap.id;
-    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(currentId._legacy);
+    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(currentId);
     let newId: ComponentID | undefined;
     if (componentFromModel && !currentId.hasVersion()) {
       // component is in the scope but .bitmap doesn't have version, sync .bitmap with the scope data
@@ -298,7 +302,7 @@ it was probably created on another lane and if so, consider removing this compon
         return;
       }
       const newId = currentId.changeVersion(existingVersion).changeScope(modelComponent.scope as string);
-      component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId._legacy);
+      component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
 
       component.version = newId.version;
       component.scope = newId.scope;

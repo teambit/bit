@@ -121,7 +121,7 @@ async function codemodComponent(
  */
 function getNameWithoutInternalPath(consumer: Consumer, relativeEntry: RelativeComponentsAuthoredEntry): string {
   const importSource = relativeEntry.importSource;
-  const componentMap = consumer.bitMap.getComponentIfExistByBitId(relativeEntry.componentId);
+  const componentMap = consumer.bitMap.getComponentIfExist(relativeEntry.componentId);
   if (!componentMap) return importSource;
   const rootDir = componentMap.rootDir;
   if (!rootDir) return importSource;

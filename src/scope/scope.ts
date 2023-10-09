@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import * as pathLib from 'path';
+import { ComponentID } from '@teambit/component-id';
 import R from 'ramda';
 import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
@@ -616,13 +617,10 @@ once done, to continue working, please run "bit cc"`
   /**
    * return undefined if component was not found
    */
-  async getConsumerComponentIfExist(id: BitId): Promise<Component | undefined> {
-    const modelComponent: ModelComponent | undefined = await this.getModelComponentIfExist(id);
+  async getConsumerComponentIfExist(id: ComponentID): Promise<Component | undefined> {
+    const modelComponent: ModelComponent | undefined = await this.getModelComponentIfExist(id._legacy);
     if (!modelComponent) return undefined;
-    // $FlowFixMe version must be set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentVersion = modelComponent.toComponentVersion(id.version);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return componentVersion.toConsumer(this.objects);
   }
 

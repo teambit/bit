@@ -128,8 +128,8 @@ export default class BitMap {
     });
   }
 
-  setOnLanesOnly(id: BitId, value: boolean) {
-    const componentMap = this.getComponentByBitId(id, { ignoreVersion: true });
+  setOnLanesOnly(id: ComponentID, value: boolean) {
+    const componentMap = this.getComponent(id, { ignoreVersion: true });
     componentMap.onLanesOnly = value;
     this.markAsChanged();
     return componentMap;
@@ -137,14 +137,6 @@ export default class BitMap {
 
   isEmpty() {
     return R.isEmpty(this.components);
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  removeComponentProp(id: BitId, propName: keyof ComponentMap) {
-    const componentMap = this.getComponentByBitId(id, { ignoreVersion: true });
-    delete componentMap[propName];
-    this.markAsChanged();
-    return componentMap;
   }
 
   static mergeContent(rawContent: string, otherRawContent: string, opts: MergeOptions = {}): string {
@@ -508,18 +500,6 @@ export default class BitMap {
    * throw an exception if not found.
    * @see also getComponentIfExist
    */
-  getComponentByBitId(bitId: BitId, { ignoreVersion = false }: GetBitMapComponentOptions = {}): ComponentMap {
-    const existingBitId: BitId = this.getBitId(bitId, {
-      ignoreVersion,
-    });
-    return this.components.find((c) => c.id._legacy.isEqual(existingBitId)) as ComponentMap;
-  }
-
-  /**
-   * get componentMap from bitmap by bit-id.
-   * throw an exception if not found.
-   * @see also getComponentIfExist
-   */
   getComponent(componentId: ComponentID, { ignoreVersion = false }: GetBitMapComponentOptions = {}): ComponentMap {
     const existingBitId = this.getComponentId(componentId, {
       ignoreVersion,
@@ -532,30 +512,12 @@ export default class BitMap {
    * don't throw an exception if not found
    * @see also getComponent
    */
-  getComponentIfExistByBitId(
-    bitId: BitId,
-    { ignoreVersion = false }: GetBitMapComponentOptions = {}
-  ): ComponentMap | undefined {
-    try {
-      const componentMap = this.getComponentByBitId(bitId, { ignoreVersion });
-      return componentMap;
-    } catch (err: any) {
-      if (err instanceof MissingBitMapComponent) return undefined;
-      throw err;
-    }
-  }
-
-  /**
-   * get componentMap from bitmap by bit-id
-   * don't throw an exception if not found
-   * @see also getComponent
-   */
   getComponentIfExist(
     componentId: ComponentID,
     { ignoreVersion = false }: GetBitMapComponentOptions = {}
   ): ComponentMap | undefined {
     try {
-      const componentMap = this.getComponentByBitId(componentId._legacy, { ignoreVersion });
+      const componentMap = this.getComponent(componentId, { ignoreVersion });
       return componentMap;
     } catch (err: any) {
       if (err instanceof MissingBitMapComponent) return undefined;
@@ -575,8 +537,8 @@ export default class BitMap {
     const allIds = this.getAllBitIdsFromAllLanes();
     const similarIds = allIds.filter((existingId) => {
       const isSimilar = compareWithoutScope
-        ? existingId.isEqualWithoutScopeAndVersion(id)
-        : existingId.isEqualWithoutVersion(id);
+        ? existingId.name === id.name
+        : existingId.isEqual(id, { ignoreVersion: true });
       return isSimilar && !existingId.isEqual(id);
     });
     return ComponentIdList.fromArray(similarIds);
@@ -734,9 +696,9 @@ export default class BitMap {
     return componentMap;
   }
 
-  addFilesToComponent({ componentId, files }: { componentId: BitId; files: ComponentMapFile[] }): ComponentMap {
+  addFilesToComponent({ componentId, files }: { componentId: ComponentID; files: ComponentMapFile[] }): ComponentMap {
     const componentIdStr = componentId.toString();
-    const componentMap = this.getComponentIfExistByBitId(componentId);
+    const componentMap = this.getComponentIfExist(componentId);
     if (!componentMap) {
       throw new BitError(`unable to add files to a non-exist component ${componentIdStr}`);
     }
@@ -780,17 +742,13 @@ export default class BitMap {
     this.markAsChanged();
   }
 
-  removeComponent(bitId: BitId) {
-    const bitmapComponent = this.getBitIdIfExist(bitId, { ignoreVersion: true });
+  removeComponent(bitId: ComponentID) {
+    const bitmapComponent = this.getComponentIdIfExist(bitId, { ignoreVersion: true });
     if (bitmapComponent) this._removeFromComponentsArray(bitmapComponent);
     return bitmapComponent;
   }
-  removeComponents(ids: BitIds) {
+  removeComponents(ids: ComponentID[]) {
     return ids.map((id) => this.removeComponent(id));
-  }
-
-  isExistWithSameVersion(id: BitId): boolean {
-    return Boolean(id.hasVersion() && this.getComponentIfExistByBitId(id));
   }
 
   /**
@@ -806,7 +764,7 @@ export default class BitMap {
       logger.debug(`bit-map: no need to update ${newIdString}`);
       return id;
     }
-    const similarCompMaps = similarBitIds.map((similarId) => this.getComponentByBitId(similarId));
+    const similarCompMaps = similarBitIds.map((similarId) => this.getComponent(similarId));
     const similarIds = similarCompMaps
       .filter((compMap) => (compMap.defaultScope || compMap.id.scope) === id.scope || (!id.scope && !compMap.id.scope))
       .map((c) => c.id);
@@ -853,8 +811,8 @@ export default class BitMap {
     return newId;
   }
 
-  removeConfig(id: BitId) {
-    const componentMap = this.getComponentByBitId(id);
+  removeConfig(id: ComponentID) {
+    const componentMap = this.getComponent(id);
     delete componentMap.config;
     this.markAsChanged();
   }
@@ -867,7 +825,7 @@ export default class BitMap {
    * @returns {BitId} component id
    * @memberof BitMap
    */
-  getComponentIdByPath(componentPath: PathLinux, caseSensitive = true): ComponentID {
+  getComponentIdByPath(componentPath: PathLinux, caseSensitive = true): ComponentID | undefined {
     this._populateAllPaths();
     return caseSensitive ? this.paths[componentPath] : this.pathsLowerCase[componentPath.toLowerCase()];
   }

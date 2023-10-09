@@ -18,7 +18,6 @@ import GeneralError from '../../error/general-error';
 import docsParser from '../../jsdoc/parser';
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
-import ComponentWithDependencies from '../../scope/component-dependencies';
 import { ScopeListItem } from '../../scope/models/model-component';
 import Version, { DepEdge, Log } from '../../scope/models/version';
 import { pathNormalizeToLinux, sha1 } from '../../utils';
@@ -46,7 +45,7 @@ import { ModelComponent } from '../../scope/models';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
-export type InvalidComponent = { id: BitId; error: Error; component: Component | undefined };
+export type InvalidComponent = { id: ComponentID; error: Error; component: Component | undefined };
 
 export type ComponentProps = {
   name: string;
@@ -417,34 +416,6 @@ export default class Component {
     return invalidComponentErrors.some((errorType) => err instanceof errorType);
   }
 
-  async toComponentWithDependencies(consumer: Consumer): Promise<ComponentWithDependencies> {
-    const getFlatten = (field: string): BitIds => {
-      // when loaded from filesystem, it doesn't have the flatten, fetch them from model.
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return this.loadedFromFileSystem ? this.componentFromModel[field] : this[field];
-    };
-    const getDependenciesComponents = (ids: BitIds): Promise<Component[]> => {
-      return Promise.all(
-        ids.map((dependencyId) => {
-          if (consumer.bitMap.isExistWithSameVersion(dependencyId)) {
-            return consumer.loadComponent(dependencyId);
-          }
-          // when dependencies are imported as npm packages, they are not in bit.map
-          this.dependenciesSavedAsComponents = false;
-          return consumer.loadComponentFromModel(dependencyId);
-        })
-      );
-    };
-
-    const dependencies = await getDependenciesComponents(getFlatten('flattenedDependencies'));
-    return new ComponentWithDependencies({
-      component: this,
-      dependencies,
-      devDependencies: [],
-      extensionDependencies: [],
-    });
-  }
-
   copyAllDependenciesFromModel() {
     const componentFromModel = this.componentFromModel;
     if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
@@ -533,11 +504,11 @@ export default class Component {
     consumer,
   }: {
     componentMap: ComponentMap;
-    id: BitId;
+    id: ComponentID;
     consumer: Consumer;
   }): Promise<Component> {
     const workspaceConfig: ILegacyWorkspaceConfig = consumer.config;
-    const modelComponent = await consumer.scope.getModelComponentIfExist(id);
+    const modelComponent = await consumer.scope.getModelComponentIfExist(id._legacy);
     const componentFromModel = await consumer.loadComponentFromModelIfExist(id);
     if (!componentFromModel && id.scope) {
       const inScopeWithAnyVersion = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));

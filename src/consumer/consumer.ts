@@ -48,6 +48,7 @@ import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
 import { ComponentIdList } from '../bit-id/component-id-list';
+import { ComponentID } from '@teambit/component-id';
 
 type ConsumerProps = {
   projectPath: string;
@@ -268,13 +269,13 @@ export default class Consumer {
     useVersionFromBitmap = false,
     searchWithoutScopeInProvidedId = false
   ): BitId | undefined {
-    const bitId: BitId | undefined = this.bitMap.getExistingBitId(id, false, searchWithoutScopeInProvidedId);
+    const bitId: ComponentID | undefined = this.bitMap.getExistingBitId(id, false, searchWithoutScopeInProvidedId);
     if (!bitId) return undefined;
     if (!useVersionFromBitmap) {
       const version = BitId.getVersionOnlyFromString(id);
-      return bitId.changeVersion(version || LATEST);
+      return bitId._legacy.changeVersion(version || LATEST);
     }
-    return bitId;
+    return bitId._legacy;
   }
 
   /**
@@ -291,9 +292,9 @@ export default class Consumer {
    * return a component only when it's stored locally.
    * don't go to any remote server and don't throw an exception if the component is not there.
    */
-  async loadComponentFromModelIfExist(id: BitId): Promise<Component | undefined> {
+  async loadComponentFromModelIfExist(id: ComponentID): Promise<Component | undefined> {
     if (!id.version) return undefined;
-    return this.loadComponentFromModel(id).catch((err) => {
+    return this.loadComponentFromModel(id._legacy).catch((err) => {
       if (err instanceof ComponentNotFound) return undefined;
       throw err;
     });
@@ -329,12 +330,16 @@ export default class Consumer {
     return consumerComp;
   }
 
-  async loadComponent(id: BitId, loadOpts?: ComponentLoadOptions): Promise<Component> {
-    const { components } = await this.loadComponents(BitIds.fromArray([id]), true, loadOpts);
+  async loadComponent(id: ComponentID, loadOpts?: ComponentLoadOptions): Promise<Component> {
+    const { components } = await this.loadComponents(ComponentIdList([id]), true, loadOpts);
     return components[0];
   }
 
-  async loadComponents(ids: BitIds, throwOnFailure = true, loadOpts?: ComponentLoadOptions): Promise<LoadManyResult> {
+  async loadComponents(
+    ids: ComponentIdList,
+    throwOnFailure = true,
+    loadOpts?: ComponentLoadOptions
+  ): Promise<LoadManyResult> {
     return this.componentLoader.loadMany(ids, throwOnFailure, loadOpts);
   }
 

@@ -10,6 +10,7 @@ import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
+import { ComponentMain } from '@teambit/component';
 
 type GraphOpt = {
   image?: string;
@@ -37,6 +38,8 @@ export class GraphCmd implements Command {
   ] as CommandOptions;
   remoteOp = true;
 
+  constructor(private componentAspect: ComponentMain) {}
+
   async report([id]: [string], { remote, allVersions, layout, image }: GraphOpt): Promise<string> {
     const consumer = await loadConsumerIfExist();
     if (!consumer && !remote) throw new ConsumerNotFound();
@@ -48,16 +51,6 @@ export class GraphCmd implements Command {
     if (layout) config.layout = layout;
     const visualDependencyGraph = await VisualDependencyGraph.loadFromGraphlib(graph, config);
 
-    const getBitId = (): BitId | undefined => {
-      if (!id) return undefined;
-      if (remote) return BitId.parse(id, true); // user used --remote so we know it has a scope
-      return consumer?.getParsedId(id);
-    };
-    const bitId = getBitId();
-
-    if (bitId) {
-      visualDependencyGraph.highlightId(bitId);
-    }
     image = image || path.join(os.tmpdir(), `${generateRandomStr()}.png`);
     const result = await visualDependencyGraph.image(image);
 

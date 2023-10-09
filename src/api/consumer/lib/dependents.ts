@@ -27,7 +27,7 @@ export async function dependents(id: string): Promise<DependentsResults> {
 function throwForNewComponent(id: string, consumer: Consumer) {
   const bitId = consumer.bitMap.getExistingBitId(id, false);
   if (!bitId) return;
-  if (!bitId.hasScope()) {
+  if (!bitId._legacy.hasScope()) {
     throw new GeneralError(`${id} is a new component, there is no data about it in the scope`);
   }
 }

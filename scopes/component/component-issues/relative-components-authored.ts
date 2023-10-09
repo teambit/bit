@@ -1,9 +1,10 @@
+import { ComponentID } from '@teambit/component-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentIssue } from './component-issue';
 
 export type RelativeComponentsAuthoredEntry = {
   importSource: string;
-  componentId: BitId;
+  componentId: ComponentID;
   relativePath: {
     sourceRelativePath: string;
     importSpecifiers?: any[];

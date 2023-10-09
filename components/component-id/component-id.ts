@@ -190,13 +190,13 @@ export class ComponentID {
     if (!a && !b) return true;
     if (!a || !b) return false;
 
-    let result =
+    const result =
       a.scope === b.scope &&
       a.toString({ ignoreVersion: opts.ignoreVersion }) === b.toString({ ignoreVersion: opts.ignoreVersion });
-    if (!opts.ignoreVersion) {
-      result = result && a.version === b.version;
+    if (opts.ignoreVersion) {
+      return result;
     }
-    return result;
+    return result && a.version === b.version;
   }
 
   static isEqualObj(a: ComponentIdObj | undefined, b: ComponentIdObj | undefined, opts: EqualityOption = {}): boolean {

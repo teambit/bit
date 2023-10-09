@@ -33,7 +33,7 @@ export async function removeComponentsFromWorkspacesAndDependencies(
     consumer.config.packageManager === 'yarn' &&
     consumer.config._useWorkspaces
   ) {
-    const dirsToRemove = bitIds.map((id) => consumer.bitMap.getComponentByBitId(id, { ignoreVersion: true }).rootDir);
+    const dirsToRemove = bitIds.map((id) => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
     if (dirsToRemove && dirsToRemove.length) {
       const dirsToRemoveWithoutEmpty = compact(dirsToRemove);
       await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemoveWithoutEmpty);

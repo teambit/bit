@@ -314,8 +314,8 @@ export default class ComponentsList {
   async updateIdsFromModelIfTheyOutOfSync(ids: BitIds, loadOpts?: ComponentLoadOptions): Promise<BitIds> {
     const updatedIdsP = ids.map(async (id: BitId) => {
       const componentMap =
-        this.bitMap.getComponentIfExistByBitId(id, { ignoreVersion: true }) ||
-        this.bitMap.getComponentIfExistByBitId(id.changeScope(undefined), { ignoreVersion: true });
+        this.bitMap.getComponentIfExist(id, { ignoreVersion: true }) ||
+        this.bitMap.getComponentIfExist(id.changeScope(undefined), { ignoreVersion: true });
       if (!componentMap || componentMap.id.hasVersion()) return id;
       const areSameScope = id.scope ? id.scope === componentMap.defaultScope : true;
       if (!areSameScope) return id;
@@ -484,7 +484,7 @@ export default class ComponentsList {
       return Boolean(currentLane.getComponent(componentMap.id._legacy));
     };
     return listAllResults.filter((listResult) => {
-      const componentMap = this.bitMap.getComponentIfExistByBitId(listResult.id, { ignoreVersion: true });
+      const componentMap = this.bitMap.getComponentIfExist(listResult.id, { ignoreVersion: true });
       return componentMap && isIdOnCurrentLane(componentMap);
     });
   }
