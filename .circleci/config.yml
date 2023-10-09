@@ -1093,6 +1093,13 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      - run: $env:path
+      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
+      - run: $env:path
+      - run: New-Item $Profile.CurrentUserAllHosts -Force
+      - run: Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "xyz;$env:PATH"'
+      - run: $Env:Path.Split(';')
+
       - run: choco upgrade nvm -y
       - run: nvm -v
       - run: nvm install 18.17.1
@@ -1492,9 +1499,10 @@ workflows:
     jobs:
       - windows_set_ssh_key
       - windows_checkout_code
-      - windows_bvm_install:
-          requires:
-            - windows_checkout_code
+      - windows_bvm_install
+      # - windows_bvm_install:
+          # requires:
+          #   - windows_checkout_code
       - windows_build_bvm:
           requires:
             - windows_bvm_install
