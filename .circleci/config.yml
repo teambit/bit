@@ -654,7 +654,7 @@ jobs:
           command: mkdir bit-${BIT_VERSION}
       - run:
           name: install bit
-          command: cd bit-${BIT_VERSION} && npm init -y && echo "nodeLinker: node-modules" >> .yarnrc.yml && yarn add @teambit/bit
+          command: 'cd bit-${BIT_VERSION} && npm init -y && echo nodeLinker: node-modules >> .yarnrc.yml && yarn add @teambit/bit'
       - run:
           name: remove leftovers
           command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
@@ -739,7 +739,7 @@ jobs:
           command: mkdir bit-${BIT_VERSION}
       - run:
           name: install bit
-          command: cd bit-${BIT_VERSION} && npm init -y && echo "nodeLinker: node-modules" >> .yarnrc.yml && yarn add @teambit/bit
+          command: 'cd bit-${BIT_VERSION} && npm init -y && echo nodeLinker: node-modules >> .yarnrc.yml && yarn add @teambit/bit'
       - run:
           name: remove leftovers
           command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
@@ -813,7 +813,7 @@ jobs:
       - run: 'node -v'
       - run:
           name: install bit
-          command: cd bundle; npm init -y; corepack enable; corepack prepare yarn@3.6.4 --activate; echo "nodeLinker: node-modules" >> .yarnrc.yml; yarn add @teambit/bit
+          command: 'cd bundle; npm init -y; corepack enable; corepack prepare yarn@3.6.4 --activate; echo nodeLinker: node-modules >> .yarnrc.yml; yarn add @teambit/bit'
       - run:
           name: remove leftovers
           command: Remove-Item .\bundle\package.json; Remove-Item .\bundle\yarn.lock
