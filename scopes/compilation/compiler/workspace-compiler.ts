@@ -385,6 +385,6 @@ export class WorkspaceCompiler {
     if (changed) {
       return this.workspace.getNewAndModifiedIds();
     }
-    return this.workspace.getAllComponentIds();
+    return this.workspace.listIds();
   }
 }

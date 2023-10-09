@@ -91,7 +91,7 @@ export default class EjectComponents {
     this.idsToEject.forEach((componentId) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependents: BitId[] = scopeGraph.getImmediateDependentsPerId(componentId, true);
-      const notEjectedDependents: BitId[] = dependents.filter((d) => !this.idsToEject.hasWithoutScopeAndVersion(d));
+      const notEjectedDependents: BitId[] = dependents.filter((d) => !this.idsToEject.hasWithoutVersion(d));
       notEjectedDependents.forEach((dependentId: BitId) => {
         const foundInNotEjectedData = notEjectedData.find((d) => d.id.isEqual(dependentId));
         if (foundInNotEjectedData) foundInNotEjectedData.dependencies.push(componentId);

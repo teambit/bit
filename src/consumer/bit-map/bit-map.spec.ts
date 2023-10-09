@@ -21,6 +21,7 @@ const addComponentParamsFixture = {
   componentId: new BitId({ name: 'is-string' }),
   files: [{ name: 'is-string.js', relativePath: 'is-string.js', test: false }],
   mainFile: 'is-string.js',
+  defaultScope: 'my-scope',
 };
 
 describe('BitMap', function () {
@@ -44,6 +45,7 @@ describe('BitMap', function () {
     });
     it('should sort the components alphabetically', async () => {
       const exampleComponent = { ...addComponentParamsFixture };
+      exampleComponent.defaultScope = '';
       bitMap = await getBitmapInstance();
       exampleComponent.componentId = new BitId({ scope: 'my-scope', name: 'is-string1', version: '0.0.1' });
       bitMap.addComponent(exampleComponent);
@@ -74,17 +76,18 @@ describe('BitMap', function () {
           rootDir: 'comp1',
         },
       };
-      expect(() => bitMap.loadComponents(invalidBitMap)).to.throw(DuplicateRootDir);
+      expect(() => bitMap.loadComponents(invalidBitMap, 'my-scope')).to.throw(DuplicateRootDir);
     });
     it('should throw when a component has scope but not version', () => {
       const invalidBitMap = {
         'scope/comp1': {
           mainFile: 'index.js',
+          scope: 'scope',
           rootDir: 'comp1',
           exported: true,
         },
       };
-      expect(() => bitMap.loadComponents(invalidBitMap)).to.throw(
+      expect(() => bitMap.loadComponents(invalidBitMap, 'my-scope')).to.throw(
         '.bitmap entry of "scope/comp1" is invalid, it has a scope-name "scope", however, it does not have any version'
       );
     });

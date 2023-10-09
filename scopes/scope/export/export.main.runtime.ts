@@ -91,7 +91,7 @@ export class ExportMain {
 
   async export(params: ExportParams = {}) {
     HooksManagerInstance?.triggerHook(PRE_EXPORT_HOOK, params);
-    const { updatedIds, nonExistOnBitMap, missingScope, exported, removedIds, exportedLanes } =
+    const { updatedIds, nonExistOnBitMap, missingScope, exported, removedIds, exportedLanes, rippleJobs } =
       await this.exportComponents(params);
     let ejectResults;
     if (params.eject) ejectResults = await ejectExportedComponents(updatedIds, this.logger);
@@ -102,6 +102,7 @@ export class ExportMain {
       missingScope,
       ejectResults,
       exportedLanes,
+      rippleJobs,
     };
     HooksManagerInstance?.triggerHook(POST_EXPORT_HOOK, exportResults);
     if (Scope.onPostExport) {
@@ -127,6 +128,7 @@ export class ExportMain {
     exported: BitId[];
     exportedLanes: Lane[];
     newIdsOnRemote: BitId[];
+    rippleJobs: string[];
   }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer: Consumer = this.workspace.consumer;
@@ -144,6 +146,7 @@ export class ExportMain {
         exported: [],
         newIdsOnRemote: [],
         exportedLanes: [],
+        rippleJobs: [],
       };
     }
 
@@ -172,7 +175,7 @@ otherwise, re-run the export with "--fork-lane-new-scope" flag.
 if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
     }
     const isOnMain = consumer.isOnMain();
-    const { exported, updatedLocally, newIdsOnRemote } = await this.exportMany({
+    const { exported, updatedLocally, newIdsOnRemote, rippleJobs } = await this.exportMany({
       ...params,
       exportHeadsOnly: headOnly,
       scope: consumer.scope,
@@ -206,6 +209,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       exported,
       newIdsOnRemote,
       exportedLanes: laneObject ? [laneObject] : [],
+      rippleJobs,
     };
   }
 
@@ -240,7 +244,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     exportHeadsOnly?: boolean;
     filterOutExistingVersions?: boolean;
     exportOrigin?: ExportOrigin;
-  }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
+  }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[]; rippleJobs: string[] }> {
     this.logger.debug(`scope.exportMany, ids: ${ids.toString()}`);
     const scopeRemotes: Remotes = await getScopeRemotes(scope);
     const idsGroupedByScope = ids.toGroupByScopeName(idsWithFutureScope);
@@ -426,7 +430,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       const objectList = this.transformToOneObjectListWithScopeData(manyObjectsPerRemote);
       const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
       const pushResults = await http.pushToCentralHub(objectList, { origin: exportOrigin });
-      const { failedScopes, successIds, errors } = pushResults;
+      const { failedScopes, successIds, errors, metadata } = pushResults;
       if (failedScopes.length) {
         throw new PersistFailed(failedScopes, errors);
       }
@@ -442,6 +446,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           objectPerRemote.exportedIds = idsPerScope.map((id) => id.toString());
         });
       }
+      return { rippleJobs: metadata?.jobs };
     };
 
     const updateLocalObjects = async (
@@ -497,12 +502,13 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       });
     };
 
+    let centralHubResults;
     if (resumeExportId) {
       const remotes = manyObjectsPerRemote.map((o) => o.remote);
       await validateRemotes(remotes, resumeExportId);
       await persistRemotes(manyObjectsPerRemote, resumeExportId);
     } else if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes, originDirectly)) {
-      await pushAllToCentralHub();
+      centralHubResults = await pushAllToCentralHub();
     } else {
       // await pushToRemotes();
       await this.pushToRemotesCarefully(manyObjectsPerRemote, resumeExportId);
@@ -514,6 +520,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       newIdsOnRemote: R.flatten(results.map((r) => r.newIdsOnRemote)),
       exported: BitIds.uniqFromArray(R.flatten(results.map((r) => r.exported))),
       updatedLocally: BitIds.uniqFromArray(R.flatten(results.map((r) => r.updatedLocally))),
+      rippleJobs: centralHubResults?.rippleJobs || [],
     };
   }
 

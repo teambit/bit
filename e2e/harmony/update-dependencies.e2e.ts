@@ -36,7 +36,7 @@ describe('update-dependencies command', function () {
       helper.scopeHelper.addRemoteScope(secondRemote.scopePath);
       helper.fs.outputFile('comp-b/index.js', `require('@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1');`);
       helper.command.addComponent('comp-b');
-      helper.bitJsonc.addToVariant('comp-b', 'defaultScope', secondRemote.scopeName);
+      helper.command.setScope(secondRemote.scopeName, 'comp-b');
       helper.command.tagAllComponents();
       helper.command.export();
       helper.fixtures.populateComponents(1, undefined, ' v2');

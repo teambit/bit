@@ -83,7 +83,7 @@ export default class OverridesDependencies {
     const componentIdStr = componentId.toStringWithoutVersion();
     const shouldIgnore = (ids: BitId[]) => {
       return ids.some((id) => {
-        return componentId.isEqualWithoutVersion(id) || componentId.isEqualWithoutScopeAndVersion(id);
+        return componentId.isEqualWithoutVersion(id);
       });
     };
     const field = fileType.isTestFile ? 'devDependencies' : 'dependencies';
@@ -111,7 +111,7 @@ export default class OverridesDependencies {
         const componentData = this._getComponentIdToAdd(depField, dependency);
         if (componentData?.componentId) {
           const dependencyExist = existingDependencies[depField].find((d) =>
-            d.id.isEqualWithoutScopeAndVersion(componentData.componentId)
+            d.id.isEqualWithoutVersion(componentData.componentId)
           );
           if (!dependencyExist) {
             this._addManuallyAddedDep(depField, componentData.componentId.toString());

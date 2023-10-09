@@ -250,6 +250,7 @@ export class Http implements Network {
     failedScopes: string[];
     exportId: string;
     errors: { [scopeName: string]: string };
+    metadata?: { jobs?: string[] };
   }> {
     const route = 'api/put';
     logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
