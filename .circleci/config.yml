@@ -1136,6 +1136,7 @@ jobs:
       BITSRC_ENV: stg
       SKIP_REGISTRY_TESTS: "true"
       SKIP_BIT_DEV_TESTS: "true"
+      BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: .
