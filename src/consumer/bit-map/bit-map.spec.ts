@@ -76,7 +76,7 @@ describe('BitMap', function () {
           rootDir: 'comp1',
         },
       };
-      expect(() => bitMap.loadComponents(invalidBitMap)).to.throw(DuplicateRootDir);
+      expect(() => bitMap.loadComponents(invalidBitMap, 'my-scope')).to.throw(DuplicateRootDir);
     });
     it('should throw when a component has scope but not version', () => {
       const invalidBitMap = {
@@ -87,7 +87,7 @@ describe('BitMap', function () {
           exported: true,
         },
       };
-      expect(() => bitMap.loadComponents(invalidBitMap)).to.throw(
+      expect(() => bitMap.loadComponents(invalidBitMap, 'my-scope')).to.throw(
         '.bitmap entry of "scope/comp1" is invalid, it has a scope-name "scope", however, it does not have any version'
       );
     });

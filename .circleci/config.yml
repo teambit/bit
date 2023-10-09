@@ -191,6 +191,22 @@ commands: # reusable commands
       - run: cd bit && git remote rm origin
       # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
       - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
+  windows_set_node_version:
+    parameters:
+      version:
+        default: 18.17.1
+        type: string
+    steps:
+      - run: choco upgrade nvm -y
+      - run: nvm -v
+      - run: nvm install 18.17.1
+      - run: nvm use 18.17.1
+      - run: node -v
+  windows_add_bvm_to_path:
+    steps:
+      - run: New-Item $Profile.CurrentUserAllHosts -Force
+      - run: Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "C:\Users\circleci\AppData\Local\.bvm;$env:PATH"'
+      - run: $Env:Path.Split(';')
 
 jobs:
   checkout_code:
@@ -784,11 +800,7 @@ jobs:
       # - run: cinst nodejs --version 16.16.0
       # - run: nodejs.install v12.16.0
       # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
-      - run: choco upgrade nvm -y
-      - run: nvm -v
-      - run: nvm install 18.17.1
-      - run: nvm use 18.17.1
-      - run: node -v
+      - windows_set_node_version
       - run: npm install --global yarn
       - run: 'yarn -v'
       - set_bit_cloud_registry
@@ -1088,11 +1100,13 @@ jobs:
 
   windows_bvm_install:
     <<: *windows_defaults
-    environment:
-      Path: C:\Users\circleci\.npm-global;C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
+    # environment:
+    #   Path: C:\Users\circleci\.npm-global;C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
     steps:
       - attach_workspace:
           at: .
+      - windows_add_bvm_to_path
+      - windows_set_node_version
       - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - restore_cache:
@@ -1103,7 +1117,7 @@ jobs:
           name: 'bvm upgrade'
           command: 'bvm upgrade'
           no_output_timeout: 60m
-      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
+      # - windows_add_bvm_to_path
       - run: 'bit -v'
       - run: bit -v | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
@@ -1122,28 +1136,19 @@ jobs:
       BITSRC_ENV: stg
       SKIP_REGISTRY_TESTS: "true"
       SKIP_BIT_DEV_TESTS: "true"
+      BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: .
       # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
-      - run: choco upgrade nvm -y
-      - run: nvm -v
-      - run: nvm install 18.17.1
-      - run: nvm use 18.17.1
-      - run: node -v
-      - run: npm -v
+      - windows_add_bvm_to_path
+      - windows_set_node_version
       # - run: Get-Content -Path .\version.txt
       # - restore_cache:
       #     key: bvm-folder-v1
       - restore_cache:
           key: v2-bvm-folder-{{ checksum "version.txt" }}
-      # - run: bit -v
-      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: bit -v
-      # - run: 'npm i -g @teambit/bvm'
-      # - run: 'bvm list'
-      # - run: 'bvm link'
-      # - run: bit -v
       - run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
@@ -1185,10 +1190,8 @@ jobs:
       - attach_workspace:
           at: .
       # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
-      - run: nvm install 18.17.1
-      - run: nvm use 18.17.1
-      - run: node -v
-      - run: npm -v
+      - windows_add_bvm_to_path
+      - windows_set_node_version
       # - run: Get-Content -Path .\version.txt
       # - restore_cache:
       #     key: bvm-folder-v1
@@ -1485,12 +1488,14 @@ workflows:
   #   jobs:
   #     - windows_set_ssh_key
   #     - windows_checkout_code
-  #     - windows_bvm_install:
-  #         requires:
-  #           - windows_checkout_code
+  #     - windows_bvm_install
+  #     # - windows_bvm_install:
+  #         # requires:
+  #         #   - windows_checkout_code
   #     - windows_build_bvm:
   #         requires:
   #           - windows_bvm_install
+  #           - windows_checkout_code
   #     - windows_e2e_test_bvm:
   #         requires:
   #           - windows_checkout_code
