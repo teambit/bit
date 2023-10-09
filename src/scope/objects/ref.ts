@@ -10,11 +10,13 @@ export default class Ref {
   }
 
   toString() {
-    return this.hash;
+    // reason for hash.toString() is when working with short hash, it's possible that all characters are numbers
+    // so it's needed to convert it to string
+    return this.hash.toString();
   }
 
-  toShortString() {
-    return this.hash.substring(0, 9);
+  toShortString(numOfChars = 9) {
+    return this.hash.substring(0, numOfChars).toString();
   }
 
   load(repository: Repository, throws = false): Promise<BitObject> {

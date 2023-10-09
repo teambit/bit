@@ -23,8 +23,6 @@ export class RemoveCmd implements Command {
   skipWorkspace = true;
   alias = 'rm';
   options = [
-    // this option is confusing and probably not in use. if needed, move this to "bit lane remove-comp" command.
-    // ['', 'from-lane', 'revert to main if exists on currently checked out lane, otherwise, remove it'],
     ['t', 'track', 'keep tracking component in .bitmap (default = false), helps transform a tagged-component to new'],
     ['', 'keep-files', 'keep component files (just untrack the component)'],
     [
@@ -44,14 +42,12 @@ export class RemoveCmd implements Command {
     [componentsPattern]: [string],
     {
       force = false,
-      fromLane = false,
       track = false,
       silent = false,
       keepFiles = false,
     }: {
       force?: boolean;
       track?: boolean;
-      fromLane?: boolean;
       silent?: boolean;
       keepFiles?: boolean;
     }
@@ -63,7 +59,7 @@ export class RemoveCmd implements Command {
       localResult,
     }: {
       localResult: RemovedLocalObjects;
-    } = await this.remove.remove({ componentsPattern, force, track, deleteFiles: !keepFiles, fromLane });
+    } = await this.remove.remove({ componentsPattern, force, track, deleteFiles: !keepFiles });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const localMessage = removeTemplate(localResult, false);
     // if (localMessage !== '')
