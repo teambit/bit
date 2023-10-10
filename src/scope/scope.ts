@@ -6,7 +6,7 @@ import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
 import { isTag } from '@teambit/component-version';
 import { Analytics } from '../analytics/analytics';
-import { BitId, BitIds } from '../bit-id';
+import { BitId } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
 import loader from '../cli/loader';
 import { BEFORE_MIGRATION } from '../cli/loader/loader-messages';
@@ -431,7 +431,7 @@ once done, to continue working, please run "bit cc"`
     return verHistory.isRefPartOfHistory(component.head, verRef);
   }
 
-  async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
+  async latestVersions(componentIds: ComponentID[], throwOnFailure = true): Promise<ComponentIdList> {
     componentIds = componentIds.map((componentId) => componentId.changeVersion(undefined));
     const components = await this.sources.getMany(componentIds);
     const ids = components.map((component) => {
@@ -445,7 +445,7 @@ once done, to continue working, please run "bit cc"`
       const version = getVersion();
       return component.id.changeVersion(version);
     });
-    return BitIds.fromArray(ids);
+    return ComponentIdList.fromArray(ids);
   }
 
   getObject(hash: string): Promise<BitObject> {
@@ -540,7 +540,7 @@ once done, to continue working, please run "bit cc"`
    * load components from the model and return them as ComponentVersion array.
    * if a component is not available locally, it'll just ignore it without throwing any error.
    */
-  async loadLocalComponents(ids: BitIds): Promise<ComponentVersion[]> {
+  async loadLocalComponents(ids: ComponentIdList): Promise<ComponentVersion[]> {
     const componentsObjects = await this.sources.getMany(ids);
     const components = componentsObjects.map((componentObject) => {
       const component = componentObject.component;
@@ -614,13 +614,16 @@ once done, to continue working, please run "bit cc"`
     return component.loadVersion(id.version as string, this.objects);
   }
 
-  async getComponentsAndVersions(ids: BitIds, defaultToLatestVersion = false): Promise<ComponentsAndVersions[]> {
+  async getComponentsAndVersions(
+    ids: ComponentIdList,
+    defaultToLatestVersion = false
+  ): Promise<ComponentsAndVersions[]> {
     const componentsObjects = await this.sources.getMany(ids);
     const componentsAndVersionsP = componentsObjects.map(async (componentObjects) => {
       if (!componentObjects.component) return null;
       const component: ModelComponent = componentObjects.component;
       const getVersionStr = (): string => {
-        if (componentObjects.id.hasVersion()) return componentObjects.id.getVersion().toString();
+        if (componentObjects.id.hasVersion()) return componentObjects.id._legacy.getVersion().toString();
         if (!defaultToLatestVersion)
           throw new Error(`getComponentsAndVersions expect ${componentObjects.id.toString()} to have a version`);
         return componentObjects.component?.getHeadRegardlessOfLaneAsTagOrHash() as string;

@@ -1,4 +1,4 @@
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { omit, uniq } from 'lodash';
 // @ts-ignore
@@ -40,7 +40,7 @@ export class ObjectFetcher {
     private scope: Scope,
     private remotes: Remotes,
     private fetchOptions: Partial<FETCH_OPTIONS>,
-    private ids: BitId[],
+    private ids: ComponentID[],
     private lane?: Lane,
     private context = {},
     private throwOnUnavailableScope = true,

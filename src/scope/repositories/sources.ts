@@ -2,7 +2,6 @@ import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component-id';
 import { isHash } from '@teambit/component-version';
 import pMap from 'p-map';
-import { BitId } from '../../bit-id';
 import { BuildStatus } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import logger from '../../logger/logger';
@@ -205,7 +204,7 @@ export default class SourceRepository {
     };
   }
 
-  isUnBuiltInCache(bitId: BitId): boolean {
+  isUnBuiltInCache(bitId: ComponentID): boolean {
     return Boolean(this.cacheUnBuiltIds.get(bitId.toString()));
   }
 

@@ -97,6 +97,14 @@ export class ComponentID {
     return this.isEqual(id, { ignoreVersion: true });
   }
 
+  isLocal(scopeName?: string): boolean {
+    return this._legacy.isLocal(scopeName);
+  }
+
+  hasScope(): Boolean {
+    return this._legacy.hasScope();
+  }
+
   /**
    * examples:
    * 1.0.0 => null

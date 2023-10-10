@@ -312,9 +312,9 @@ export default class Version extends BitObject {
     return new Dependencies(dependencies);
   }
 
-  getAllDependenciesIds(): BitIds {
+  getAllDependenciesIds(): ComponentIdList {
     const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
-    return BitIds.fromArray(allDependencies);
+    return ComponentIdList.fromArray(allDependencies);
   }
 
   getDependenciesIdsExcludeExtensions(): BitIds {

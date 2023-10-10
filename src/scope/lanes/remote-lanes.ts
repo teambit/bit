@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import fs from 'fs-extra';
 import path from 'path';
 import pMapSeries from 'p-map-series';
@@ -56,7 +57,7 @@ export default class RemoteLanes {
     });
   }
 
-  async getRef(remoteLaneId: LaneId, bitId: BitId): Promise<Ref | null> {
+  async getRef(remoteLaneId: LaneId, bitId: ComponentID): Promise<Ref | null> {
     if (!remoteLaneId) throw new TypeError('getEntry expects to get remoteLaneId');
     if (!this.remotes[remoteLaneId.scope] || !this.remotes[remoteLaneId.scope][remoteLaneId.name]) {
       await this.loadRemoteLane(remoteLaneId);
