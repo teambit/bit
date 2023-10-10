@@ -1,6 +1,7 @@
 import GraphLib, { Graph } from 'graphlib';
 import pMapSeries from 'p-map-series';
-import { BitId, BitIds } from '../../bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { BitId } from '../../bit-id';
 import { VERSION_DELIMITER } from '../../constants';
 import ComponentsList from '../../consumer/component/components-list';
 import Component from '../../consumer/component/consumer-component';
@@ -13,7 +14,7 @@ import { ModelComponent, Version } from '../models';
 import Scope from '../scope';
 
 export type DependenciesInfo = {
-  id: BitId;
+  id: ComponentID;
   depth: number;
   parent: string;
   dependencyType: string;
@@ -213,7 +214,7 @@ export default class DependencyGraph {
    * (meaning, they're either dependents or dependencies)
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  getSubGraphOfConnectedComponents(id: BitId): Graph {
+  getSubGraphOfConnectedComponents(id: ComponentID): Graph {
     const connectedGraphs = GraphLib.alg.components(this.graph);
     const idWithVersion = this._getIdWithLatestVersion(id);
     const graphWithId = connectedGraphs.find((graph) => graph.includes(idWithVersion.toString()));
@@ -223,7 +224,7 @@ export default class DependencyGraph {
     return this.graph.filterNodes((node) => graphWithId.includes(node));
   }
 
-  getDependenciesInfo(id: BitId): DependenciesInfo[] {
+  getDependenciesInfo(id: ComponentID): DependenciesInfo[] {
     const idWithVersion = this._getIdWithLatestVersion(id);
     const dijkstraResults = GraphLib.alg.dijkstra(this.graph, idWithVersion.toString());
     const dependencies: DependenciesInfo[] = [];
@@ -256,7 +257,7 @@ export default class DependencyGraph {
     return { label, nodes };
   }
 
-  getDependentsInfo(id: BitId): DependenciesInfo[] {
+  getDependentsInfo(id: ComponentID): DependenciesInfo[] {
     const idWithVersion = this._getIdWithLatestVersion(id);
     const edgeFunc = (v) => this.graph.inEdges(v);
     // @ts-ignore (incorrect types in @types/graphlib)
@@ -281,17 +282,17 @@ export default class DependencyGraph {
     return dependents;
   }
 
-  getDependentsForAllVersions(id: BitId): BitIds {
+  getDependentsForAllVersions(id: ComponentID): ComponentIdList {
     const allBitIds = this.graph.nodes().map((idStr) => this.graph.node(idStr));
     const idWithAllVersions = allBitIds.filter((bitId) => bitId.hasSameName(id) && bitId.hasSameScope(id));
     const dependentsIds = idWithAllVersions
       .map((idWithVer) => this.getDependentsInfo(idWithVer))
       .flat()
       .map((depInfo) => depInfo.id);
-    return BitIds.uniqFromArray(dependentsIds);
+    return ComponentIdList.uniqFromArray(dependentsIds);
   }
 
-  _getIdWithLatestVersion(id: BitId): BitId {
+  _getIdWithLatestVersion(id: ComponentID): ComponentID {
     if (id.hasVersion()) {
       return id;
     }
@@ -301,7 +302,7 @@ export default class DependencyGraph {
       throw new IdNotFoundInGraph(id.toString());
     }
     const bitIds = ids.map((idStr) => this.graph.node(idStr));
-    return getLatestVersionNumber(BitIds.fromArray(bitIds), id);
+    return getLatestVersionNumber(ComponentIdList.fromArray(bitIds), id);
   }
 
   getComponent(id: BitId): ModelComponent {

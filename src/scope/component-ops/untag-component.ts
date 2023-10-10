@@ -1,4 +1,5 @@
 import { BitError } from '@teambit/bit-error';
+import { ComponentID } from '@teambit/component-id';
 import { Scope } from '..';
 import { BitId } from '../../bit-id';
 import { Consumer } from '../../consumer';
@@ -8,19 +9,19 @@ import logger from '../../logger/logger';
 import { Lane } from '../models';
 import ModelComponent from '../models/model-component';
 
-export type untagResult = { id: BitId; versions: string[]; component?: ModelComponent };
+export type untagResult = { id: ComponentID; versions: string[]; component?: ModelComponent };
 
 /**
  * If head is false, remove all local versions.
  */
 export async function removeLocalVersion(
   scope: Scope,
-  id: BitId,
+  id: ComponentID,
   lane: Lane | null,
   head?: boolean,
   force = false
 ): Promise<untagResult> {
-  const component: ModelComponent = await scope.getModelComponentIgnoreScope(id);
+  const component: ModelComponent = await scope.getModelComponent(id);
   const idStr = id.toString();
   const localVersions = await component.getLocalHashes(scope.objects);
   if (!localVersions.length) throw new GeneralError(`unable to untag ${idStr}, the component is not staged`);
@@ -103,7 +104,7 @@ export async function removeLocalVersionsForMultipleComponents(
   }
   logger.debug(`found ${componentsToUntag.length} components to untag`);
   return Promise.all(
-    componentsToUntag.map((component) => removeLocalVersion(scope, component.toBitId(), lane, head, force))
+    componentsToUntag.map((component) => removeLocalVersion(scope, component.toComponentId(), lane, head, force))
   );
 }
 

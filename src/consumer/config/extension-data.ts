@@ -1,5 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import R from 'ramda';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { compact, isEmpty, cloneDeep } from 'lodash';
 import { BitId, BitIds } from '../../bit-id';
 import { sortObject } from '../../utils';
@@ -29,7 +30,7 @@ export class ExtensionDataEntry {
     public name?: string,
     public rawConfig: ExtensionConfig = {},
     public data: { [key: string]: any } = {},
-    public newExtensionId: any = undefined
+    public newExtensionId?: ComponentID
   ) {}
 
   get id(): string | BitId {
@@ -124,6 +125,18 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   get extensionsBitIds(): BitIds {
     const bitIds = this.filter((entry) => entry.extensionId).map((entry) => entry.extensionId) as BitId[];
     return BitIds.fromArray(bitIds);
+  }
+
+  /**
+   * returns only new 3rd party extension ids, not core, nor legacy.
+   */
+  get extensionsComponentIds(): ComponentIdList {
+    const bitIds = this.filter((entry) => {
+      if (entry.extensionId && !entry.newExtensionId)
+        throw new Error(`extensionId ${entry.extensionId.toString()} is missing newExtensionId`);
+      return entry.newExtensionId;
+    }).map((entry) => entry.newExtensionId) as ComponentID[];
+    return ComponentIdList.fromArray(bitIds);
   }
 
   toModelObjects() {

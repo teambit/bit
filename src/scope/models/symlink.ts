@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import { BitId } from '../../bit-id';
 import { getStringifyArgs } from '../../utils';
 import BitObject from '../objects/object';
@@ -26,8 +27,8 @@ export default class Symlink extends BitObject {
     return this.name;
   }
 
-  getRealComponentId(): BitId {
-    return new BitId({ scope: this.realScope, name: this.name });
+  getRealComponentId(): ComponentID {
+    return new ComponentID(new BitId({ scope: this.realScope, name: this.name }));
   }
 
   static parse(contents: Buffer): Symlink {

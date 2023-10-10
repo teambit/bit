@@ -205,9 +205,9 @@ export default class AddComponents {
   async addOrUpdateComponentInBitMap(component: AddedComponent): Promise<AddResult | null | undefined> {
     const consumerPath = this.consumer.getPath();
     const parsedBitId = component.componentId;
-    const componentFromScope = await this._getComponentFromScopeIfExist(parsedBitId);
+    const componentFromScope = await this.consumer.scope.getModelComponentIfExist(parsedBitId);
     const files: ComponentMapFile[] = component.files;
-    const foundComponentFromBitMap = this.bitMap.getComponentIfExistByBitId(component.componentId, {
+    const foundComponentFromBitMap = this.bitMap.getComponentIfExist(component.componentId, {
       ignoreVersion: true,
     });
     const componentFilesP = files.map(async (file: ComponentMapFile) => {
@@ -373,14 +373,6 @@ you can add the directory these files are located at and it'll change the root d
         currentFile.relativePath = sameFile.relativePath;
       }
     });
-  }
-
-  async _getComponentFromScopeIfExist(id: BitId): Promise<ModelComponent | null | undefined> {
-    try {
-      return await this.consumer.scope.getModelComponentIgnoreScope(id);
-    } catch (err: any) {
-      return null;
-    }
   }
 
   /**

@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import * as pathLib from 'path';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import R from 'ramda';
 import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
@@ -364,7 +364,7 @@ once done, to continue working, please run "bit cc"`
    * it's needed for importing artifacts to know whether the artifact could be found on the origin scope or on the
    * lane-scope
    */
-  async isIdOnLane(id: BitId, lane?: Lane | null, throwForDivergeDataErr = true): Promise<boolean | null> {
+  async isIdOnLane(id: ComponentID, lane?: Lane | null, throwForDivergeDataErr = true): Promise<boolean | null> {
     if (!lane) return false;
 
     // it's important to remove the version here before passing it to the `getModelComponent` function.
@@ -402,7 +402,7 @@ once done, to continue working, please run "bit cc"`
     return null;
   }
 
-  async isPartOfLaneHistory(id: BitId, lane: Lane) {
+  async isPartOfLaneHistory(id: ComponentID, lane: Lane) {
     if (!id.version) throw new Error(`isIdOnGivenLane expects id with version, got ${id.toString()}`);
     const laneIds = lane.toBitIds();
     if (laneIds.has(id)) return true; // in the lane with the same version
@@ -419,7 +419,7 @@ once done, to continue working, please run "bit cc"`
     return verHistory.isRefPartOfHistory(laneVersionRef, verRef);
   }
 
-  async isPartOfMainHistory(id: BitId) {
+  async isPartOfMainHistory(id: ComponentID) {
     if (!id.version) throw new Error(`isIdOnMain expects id with version, got ${id.toString()}`);
     if (isTag(id.version)) return true; // tags can be on main only
     const component = await this.getModelComponent(id);
@@ -485,7 +485,7 @@ once done, to continue working, please run "bit cc"`
    * Remove components from scope
    * @force Boolean - remove component from scope even if other components use it
    */
-  async removeMany(bitIds: BitIds, force: boolean, consumer?: Consumer): Promise<RemovedObjects> {
+  async removeMany(bitIds: ComponentIdList, force: boolean, consumer?: Consumer): Promise<RemovedObjects> {
     logger.debug(`scope.removeMany ${bitIds.toString()} with force flag: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'removeMany',
@@ -499,7 +499,10 @@ once done, to continue working, please run "bit cc"`
   /**
    * for each one of the given components, find its dependents
    */
-  async getDependentsBitIds(bitIds: BitIds, returnResultsWithVersion = false): Promise<{ [key: string]: BitId[] }> {
+  async getDependentsBitIds(
+    bitIds: ComponentID[],
+    returnResultsWithVersion = false
+  ): Promise<{ [key: string]: BitId[] }> {
     logger.debug(`scope.getDependentsBitIds, bitIds: ${bitIds.toString()}`);
     const idsGraph = await DependencyGraph.buildIdsGraphWithAllVersions(this);
     logger.debug(`scope.getDependentsBitIds, idsGraph the graph was built successfully`);
@@ -508,7 +511,7 @@ once done, to continue working, please run "bit cc"`
       const dependents = dependencyGraph.getDependentsForAllVersions(current);
       if (dependents.length) {
         const dependentsIds = dependents.map((id) => (returnResultsWithVersion ? id : id.changeVersion(undefined)));
-        acc[current.toStringWithoutVersion()] = BitIds.uniqFromArray(dependentsIds);
+        acc[current.toStringWithoutVersion()] = ComponentIdList.uniqFromArray(dependentsIds);
       }
       return acc;
     }, {});
@@ -520,10 +523,10 @@ once done, to continue working, please run "bit cc"`
    * split bit array to found and missing components (incase user misspelled id)
    */
   async filterFoundAndMissingComponents(
-    bitIds: BitIds
-  ): Promise<{ missingComponents: BitIds; foundComponents: BitIds }> {
-    const missingComponents = new BitIds();
-    const foundComponents = new BitIds();
+    bitIds: ComponentID[]
+  ): Promise<{ missingComponents: ComponentIdList; foundComponents: ComponentIdList }> {
+    const missingComponents: ComponentIdList = new ComponentIdList();
+    const foundComponents: ComponentIdList = new ComponentIdList();
     const resultP = bitIds.map(async (id) => {
       const component = await this.getModelComponentIfExist(id);
       if (!component) missingComponents.push(id);
@@ -551,7 +554,7 @@ once done, to continue working, please run "bit cc"`
     return removeNils(components);
   }
 
-  async loadComponentLogs(id: BitId, shortHash = false, startFrom?: string): Promise<ComponentLog[]> {
+  async loadComponentLogs(id: ComponentID, shortHash = false, startFrom?: string): Promise<ComponentLog[]> {
     const componentModel = await this.getModelComponentIfExist(id);
     if (!componentModel) return [];
     const startFromRef = startFrom ? componentModel.getRef(startFrom) ?? undefined : undefined;
@@ -559,7 +562,7 @@ once done, to continue working, please run "bit cc"`
     return logs;
   }
 
-  loadAllVersions(id: BitId): Promise<Component[]> {
+  loadAllVersions(id: ComponentID): Promise<Component[]> {
     return this.getModelComponentIfExist(id).then((componentModel) => {
       if (!componentModel) throw new ComponentNotFound(id.toString());
       return componentModel.collectVersions(this.objects);
@@ -570,7 +573,6 @@ once done, to continue working, please run "bit cc"`
    * get ModelComponent instance per bit-id.
    * it throws an error if the component wasn't found.
    * @see getModelComponentIfExist to not throw an error
-   * @see getModelComponentIgnoreScope to ignore the scope name
    */
   async getModelComponent(id: ComponentID): Promise<ModelComponent> {
     const component = await this.getModelComponentIfExist(id);
@@ -581,27 +583,9 @@ once done, to continue working, please run "bit cc"`
   }
 
   /**
-   * the id can be either with or without a scope-name.
-   * in case the component is saved in the model only with the scope (imported), it loads all
-   * components and search for it.
-   * it throws an error if the component wasn't found.
-   */
-  async getModelComponentIgnoreScope(id: BitId): Promise<ModelComponent> {
-    const component = await this.getModelComponentIfExist(id);
-    if (component) return component;
-    if (!id.scope) {
-      // search for the complete ID
-      const components: ModelComponent[] = await this.list();
-      const foundComponent = components.filter((c) => c.toBitId().isEqualWithoutScopeAndVersion(id));
-      if (foundComponent.length) return foundComponent[0];
-    }
-    throw new ComponentNotFound(id.toString());
-  }
-
-  /**
    * throws if component was not found
    */
-  async getConsumerComponent(id: BitId): Promise<Component> {
+  async getConsumerComponent(id: ComponentID): Promise<Component> {
     const modelComponent: ModelComponent = await this.getModelComponent(id);
     // $FlowFixMe version must be set
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -610,7 +594,7 @@ once done, to continue working, please run "bit cc"`
     return componentVersion.toConsumer(this.objects);
   }
 
-  async getManyConsumerComponents(ids: BitId[]): Promise<Component[]> {
+  async getManyConsumerComponents(ids: ComponentID[]): Promise<Component[]> {
     return Promise.all(ids.map((id) => this.getConsumerComponent(id)));
   }
 
@@ -618,13 +602,13 @@ once done, to continue working, please run "bit cc"`
    * return undefined if component was not found
    */
   async getConsumerComponentIfExist(id: ComponentID): Promise<Component | undefined> {
-    const modelComponent: ModelComponent | undefined = await this.getModelComponentIfExist(id._legacy);
+    const modelComponent: ModelComponent | undefined = await this.getModelComponentIfExist(id);
     if (!modelComponent) return undefined;
     const componentVersion = modelComponent.toComponentVersion(id.version);
     return componentVersion.toConsumer(this.objects);
   }
 
-  async getVersionInstance(id: BitId): Promise<Version> {
+  async getVersionInstance(id: ComponentID): Promise<Version> {
     if (!id.hasVersion()) throw new TypeError(`scope.getVersionInstance - id ${id.toString()} is missing the version`);
     const component: ModelComponent = await this.getModelComponent(id);
     return component.loadVersion(id.version as string, this.objects);
@@ -649,7 +633,7 @@ once done, to continue working, please run "bit cc"`
     return removeNils(componentsAndVersions);
   }
 
-  async isComponentInScope(id: BitId): Promise<boolean> {
+  async isComponentInScope(id: ComponentID): Promise<boolean> {
     const comp = await this.sources.get(id);
     return Boolean(comp);
   }

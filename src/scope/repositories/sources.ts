@@ -1,7 +1,8 @@
 import { BitError } from '@teambit/bit-error';
+import { ComponentID } from '@teambit/component-id';
 import { isHash } from '@teambit/component-version';
 import pMap from 'p-map';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import { BuildStatus } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import logger from '../../logger/logger';
@@ -29,7 +30,6 @@ import { createInMemoryCache } from '../../cache/cache-factory';
 import { pathNormalizeToLinux } from '../../utils';
 import { getDivergeData } from '../component-ops/get-diverge-data';
 import { pMapPool } from '../../utils/promise-with-concurrent';
-import { ComponentID } from '@teambit/component-id';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -42,12 +42,12 @@ export type LaneTree = {
 };
 
 export type ComponentDef = {
-  id: BitId;
+  id: ComponentID;
   component: ModelComponent | null | undefined;
 };
 
 export type ComponentExistence = {
-  id: BitId;
+  id: ComponentID;
   exists: Boolean;
 };
 
@@ -76,7 +76,7 @@ export default class SourceRepository {
     return this.scope.objects;
   }
 
-  async getMany(ids: BitId[] | BitIds, versionShouldBeBuilt = false): Promise<ComponentDef[]> {
+  async getMany(ids: ComponentID[], versionShouldBeBuilt = false): Promise<ComponentDef[]> {
     if (!ids.length) return [];
     const concurrency = concurrentComponentsLimit();
     logger.trace(`sources.getMany, Ids: ${ids.join(', ')}`);
@@ -94,7 +94,7 @@ export default class SourceRepository {
     );
   }
 
-  async existMany(ids: BitId[] | BitIds): Promise<ComponentExistence[]> {
+  async existMany(ids: ComponentID[]): Promise<ComponentExistence[]> {
     if (!ids.length) return [];
     const concurrency = concurrentComponentsLimit();
     logger.trace(`sources.getMany, Ids: ${ids.join(', ')}`);
@@ -150,7 +150,7 @@ export default class SourceRepository {
     };
 
     const isSnap = isHash(bitId.version);
-    const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
+    const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId._legacy.getVersion().versionNum}`;
     if (isSnap) {
       // @ts-ignore
       const snap = await this.objects().load(new Ref(bitId.version));
@@ -181,7 +181,7 @@ export default class SourceRepository {
   /**
    * if the id has a version and the Version object doesn't exist, it returns false.
    */
-  async exists(bitId: BitId): Promise<ComponentExistence> {
+  async exists(bitId: ComponentID): Promise<ComponentExistence> {
     const emptyComponent = ModelComponent.fromBitId(bitId);
     const component: ModelComponent | undefined = await this._findComponent(emptyComponent);
     const isExists = async () => {
@@ -226,7 +226,7 @@ export default class SourceRepository {
   }
 
   async _findComponentBySymlink(symlink: Symlink): Promise<ModelComponent | undefined> {
-    const realComponentId: BitId = symlink.getRealComponentId();
+    const realComponentId = symlink.getRealComponentId();
     const realModelComponent = ModelComponent.fromBitId(realComponentId);
     const foundComponent = await this.objects().load(realModelComponent.hash());
     if (!foundComponent) {
@@ -327,7 +327,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);
     const objectRepo = this.objects();
     const componentHadHead = component.hasHead();
-    const laneItem = lane?.getComponent(component.toBitId());
+    const laneItem = lane?.getComponent(component.toComponentId());
 
     let allVersionsObjects: Version[] | undefined;
 
@@ -369,7 +369,7 @@ probably this component landed here as part of a merge from another lane.
 it's impossible to leave the component in the .bitmap with a scope-name and without any version.
 please either remove the component (bit remove) or remove the lane.`);
         }
-        lane?.removeComponent(component.toBitId());
+        lane?.removeComponent(component.toComponentId());
       }
       component.laneHeadLocal = newHead;
       objectRepo.add(lane);
@@ -602,7 +602,7 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
     const mergeLaneComponent = async (component: LaneComponent) => {
       const modelComponent =
         (await this.get(component.id)) ||
-        componentObjects?.find((c) => c.toBitId().isEqualWithoutVersion(component.id));
+        componentObjects?.find((c) => c.toComponentId().isEqualWithoutVersion(component.id));
       if (!modelComponent) {
         throw new Error(`unable to merge lane ${lane.name}, the component ${component.id.toString()} was not found`);
       }

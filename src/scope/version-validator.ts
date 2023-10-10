@@ -2,8 +2,9 @@ import { PJV } from 'package-json-validator';
 import R from 'ramda';
 import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
+import { ComponentIdList } from '@teambit/component-id';
 import { isSnap } from '@teambit/component-version';
-import { BitId, BitIds } from '../bit-id';
+import { BitId } from '../bit-id';
 import { DEPENDENCIES_FIELDS } from '../constants';
 import { SchemaName } from '../consumer/component/component-schema';
 import { Dependencies } from '../consumer/component/dependencies';
@@ -175,7 +176,7 @@ export default function validateVersionInstance(version: Version): void {
   if (!version.dependencies.isEmpty() && !version.flattenedDependencies.length) {
     throw new VersionInvalid(`${message}, it has dependencies but its flattenedDependencies is empty`);
   }
-  const validateFlattenedDependencies = (dependencies: BitIds) => {
+  const validateFlattenedDependencies = (dependencies: ComponentIdList) => {
     validateType(message, dependencies, 'dependencies', 'array');
     dependencies.forEach((dependency) => {
       if (dependency.constructor.name !== BitId.name) {
@@ -189,7 +190,7 @@ export default function validateVersionInstance(version: Version): void {
     });
     // before 0.0.947, there was a bug that didn't save some extensions in the flattenedDependencies for some unknown reason.
     if (version.bitVersion && gt(version.bitVersion, '0.0.947')) {
-      version.extensions.extensionsBitIds.forEach((extensionId) => {
+      version.extensions.extensionsComponentIds.forEach((extensionId) => {
         if (!dependencies.has(extensionId)) {
           throw new VersionInvalid(
             `${message}, the extension ${extensionId.toString()} is missing from the flattenedDependencies`

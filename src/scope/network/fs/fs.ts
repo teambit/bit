@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import { fetch, put, remove } from '../../../api/scope';
 import { action } from '../../../api/scope/lib/action';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
@@ -74,7 +75,7 @@ export default class Fs implements Network {
     return scopeComponentsImporter.loadComponent(bitId);
   }
 
-  log(bitId: BitId): Promise<ComponentLog[]> {
+  log(bitId: ComponentID): Promise<ComponentLog[]> {
     return this.getScope().loadComponentLogs(bitId);
   }
 
@@ -82,7 +83,7 @@ export default class Fs implements Network {
     return this.getScope().lanes.getLanesData(this.getScope(), name, mergeData);
   }
 
-  async graph(bitId?: BitId): Promise<DependencyGraph> {
+  async graph(bitId?: ComponentID): Promise<DependencyGraph> {
     const scope = this.getScope();
     const dependencyGraph = await DependencyGraph.loadLatest(scope);
     // get as string to mimic the exact steps of using ssh

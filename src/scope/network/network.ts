@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
 import { PushOptions } from '../../api/scope/lib/put';
 import { BitId, BitIds } from '../../bit-id';
@@ -27,8 +28,8 @@ export interface Network {
   action<Options extends Record<string, any>, Result>(name: string, options: Options): Promise<Result>;
   list(namespacesUsingWildcards?: string, strategiesNames?: SSHConnectionStrategyName[]): Promise<ListScopeResult[]>;
   show(bitId: BitId): Promise<Component | null | undefined>;
-  log(id: BitId): Promise<ComponentLog[]>;
+  log(id: ComponentID): Promise<ComponentLog[]>;
   latestVersions(bitIds: BitIds): Promise<string[]>;
-  graph(bitId?: BitId): Promise<DependencyGraph>;
+  graph(bitId?: ComponentID): Promise<DependencyGraph>;
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]>;
 }
