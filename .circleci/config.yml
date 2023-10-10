@@ -1656,35 +1656,35 @@ workflows:
       - checkout_code:
           filters:
             branches:
-              only: fix-circle-yarn3
+              only: yarn-supported-archs
       - get_linux_arm64_packages:
           filters:
             branches:
-              only: fix-circle-yarn3
+              only: yarn-supported-archs
       - bundle_version_linux:
           filters:
             branches:
-              only: fix-circle-yarn3
+              only: yarn-supported-archs
           requires:
             - get_linux_arm64_packages
       - bundle_version_windows:
           filters:
             branches:
-              only: fix-circle-yarn3
+              only: yarn-supported-archs
       - get_darwin_arm64_packages:
           filters:
             branches:
-              only: fix-circle-yarn3
+              only: yarn-supported-archs
       - bundle_version_macos:
           filters:
             branches:
-              only: fix-circle-yarn3
+              only: yarn-supported-archs
           requires:
             - get_darwin_arm64_packages
       - harmony_publish_to_gcloud:
           filters:
             branches:
-              only: fix-circle-yarn3
+              only: yarn-supported-archs
           requires:
             - bundle_version_macos
             - bundle_version_linux
