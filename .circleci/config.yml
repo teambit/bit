@@ -735,7 +735,7 @@ jobs:
       - run: rm -rf /usr/local/bin/yarn
       - run: rm -rf /usr/local/bin/yarnpkg
       - run: corepack enable && corepack prepare yarn@3.6.4 --activate
-      - run: yarn cache clean
+      # - run: yarn cache clean
       - run: yarn -v
       # - run: mkdir esbuild-darwin-arm64
       # - restore_cache:
@@ -802,7 +802,7 @@ jobs:
       # - run: nodejs.install v12.16.0
       # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
       - windows_set_node_version
-      - run: corepack enable && corepack prepare yarn@3.6.4 --activate
+      - run: corepack enable; corepack prepare yarn@3.6.4 --activate
       - run: 'yarn -v'
       - set_bit_cloud_registry
       - run:
