@@ -580,7 +580,7 @@ you can add the directory these files are located at and it'll change the root d
       logger.debugAndAddBreadCrumb('add-components', 'adding one component');
       // when a user enters more than one directory, he would like to keep the directories names
       // so then when a component is imported, it will write the files into the original directories
-      const addedOne = await this.addOneComponent(componentPathsStats[0]);
+      const addedOne = await this.addOneComponent(Object.keys(componentPathsStats)[0]);
       this._removeNamespaceIfNotNeeded([addedOne]);
       if (!R.isEmpty(addedOne.files)) {
         const addedResult = await this.addOrUpdateComponentInBitMap(addedOne);
@@ -665,9 +665,8 @@ you can add the directory these files are located at and it'll change the root d
 
   async _tryAddingMultiple(componentPathsStats: PathsStats): Promise<AddedComponent[]> {
     const addedP = Object.keys(componentPathsStats).map(async (onePath) => {
-      const oneComponentPathStat = { [onePath]: componentPathsStats[onePath] };
       try {
-        const addedComponent = await this.addOneComponent(oneComponentPathStat[0]);
+        const addedComponent = await this.addOneComponent(onePath);
         return addedComponent;
       } catch (err: any) {
         if (!(err instanceof EmptyDirectory)) throw err;
