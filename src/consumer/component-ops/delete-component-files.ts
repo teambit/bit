@@ -1,10 +1,10 @@
-import BitIds from '../../bit-id/bit-ids';
+import { ComponentIdList } from '@teambit/component-id';
 import logger from '../../logger/logger';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import Consumer from '../consumer';
 
-export default async function deleteComponentsFiles(consumer: Consumer, bitIds: BitIds) {
+export default async function deleteComponentsFiles(consumer: Consumer, bitIds: ComponentIdList) {
   logger.debug(`deleteComponentsFiles, ids: ${bitIds.toString()}`);
   const filesToDelete = getFilesToDelete();
   filesToDelete.addBasePath(consumer.getPath());

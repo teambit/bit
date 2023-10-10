@@ -1,6 +1,5 @@
 import { expect } from 'chai';
-
-import BitId from '../../bit-id/bit-id';
+import { ComponentID } from '@teambit/component-id';
 import ConsumerOverrides from './consumer-overrides';
 
 describe('ConsumerOverrides', () => {
@@ -14,7 +13,7 @@ describe('ConsumerOverrides', () => {
           'src/utils/javascript/is-string': { propagate: false, dependencies: { foo: '0.0.5' } },
         };
         const componentsOverrides = new ConsumerOverrides(overridesFixture);
-        const id = new BitId({ name: 'src/utils/javascript/is-string' });
+        const id = ComponentID.fromObject({ scope: 'my-scope', name: 'src/utils/javascript/is-string' });
         const result = componentsOverrides.getOverrideComponentData(id);
         expect(result).to.have.property('dependencies').that.deep.equal({
           foo: '0.0.5',
@@ -28,7 +27,7 @@ describe('ConsumerOverrides', () => {
           'src/utils/javascript/is-string': { propagate: true, env: { compiler: 'bit.envs/compiler/babel@0.0.20' } },
         };
         const componentsOverrides = new ConsumerOverrides(overridesFixture);
-        const id = new BitId({ name: 'src/utils/javascript/is-string' });
+        const id = ComponentID.fromObject({ scope: 'my-scope', name: 'src/utils/javascript/is-string' });
         const result = componentsOverrides.getOverrideComponentData(id);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(result.env).to.have.property('compiler').that.equal('bit.envs/compiler/babel@0.0.20');
@@ -46,7 +45,7 @@ describe('ConsumerOverrides', () => {
           'utils/*': { propagate: true, env: { compiler: 'bit.envs/compiler/somethingelse@0.0.20' } },
         };
         const componentsOverrides = new ConsumerOverrides(overridesFixture);
-        const id = new BitId({ name: 'src/utils/javascript/is-string' });
+        const id = ComponentID.fromObject({ scope: 'my-scope', name: 'src/utils/javascript/is-string' });
         const result = componentsOverrides.getOverrideComponentData(id);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(result.env).to.have.property('compiler').that.equal('bit.envs/compiler/babel@0.0.20');
@@ -62,7 +61,7 @@ describe('ConsumerOverrides', () => {
           'utils/*': { propagate: true, dependencies: { 'something/else': '0.0.1' } },
         };
         const componentsOverrides = new ConsumerOverrides(overridesFixture);
-        const id = new BitId({ name: 'src/utils/javascript/is-string' });
+        const id = ComponentID.fromObject({ scope: 'my-scope', name: 'src/utils/javascript/is-string' });
         const result = componentsOverrides.getOverrideComponentData(id);
         expect(result).to.have.property('dependencies').that.deep.equal({
           foo: '0.0.5',

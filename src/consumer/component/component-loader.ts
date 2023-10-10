@@ -2,7 +2,6 @@ import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import * as path from 'path';
 import { ComponentIssue } from '@teambit/component-issues';
-import { BitId } from '../../bit-id';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForComponents, InMemoryCache } from '../../cache/in-memory-cache';
 import { BIT_MAP } from '../../constants';
@@ -64,7 +63,7 @@ export default class ComponentLoader {
     this._shouldCheckForClearingDependenciesCache = true;
   }
 
-  clearOneComponentCache(id: BitId) {
+  clearOneComponentCache(id: ComponentID) {
     const idStr = id.toString();
     this.componentsCache.delete(idStr);
     this.cacheResolvedDependencies = {};
@@ -110,8 +109,10 @@ export default class ComponentLoader {
     const invalidComponents: InvalidComponent[] = [];
     const removedComponents: Component[] = [];
     ids.forEach((id: ComponentID) => {
-      if (id.constructor.name !== BitId.name) {
-        throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
+      if (id.constructor.name !== ComponentID.name) {
+        throw new TypeError(
+          `consumer.loadComponents expects to get ComponentID instances, instead, got "${typeof id}"`
+        );
       }
       const idWithVersion = getLatestVersionNumber(this.consumer.bitmapIdsFromCurrentLaneIncludeRemoved, id);
       const idStr = idWithVersion.toString();
@@ -253,9 +254,7 @@ export default class ComponentLoader {
     }
     if (!componentFromModel && currentId.hasVersion()) {
       // the version used in .bitmap doesn't exist in the scope
-      const modelComponent = await this.consumer.scope.getModelComponentIfExist(
-        currentId.changeVersion(undefined)._legacy
-      );
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId.changeVersion(undefined));
       if (modelComponent) {
         // the scope has this component but not the version used in .bitmap, sync .bitmap with
         // latest version from the scope
@@ -282,9 +281,7 @@ export default class ComponentLoader {
       // for Harmony, we know ahead the defaultScope, so even then .bitmap shows it as new and
       // there is nothing in the scope, we can check if there is a component with the same
       // default-scope in the objects
-      const modelComponent = await this.consumer.scope.getModelComponentIfExist(
-        currentId._legacy.changeScope(component.defaultScope)
-      );
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId);
       if (!modelComponent) {
         return;
       }
@@ -313,7 +310,7 @@ it was probably created on another lane and if so, consider removing this compon
 
   private async _throwPendingImportIfNeeded(currentId: ComponentID) {
     if (currentId._legacy.hasScope()) {
-      const remoteComponent: ModelComponent | null | undefined = await this._getRemoteComponent(currentId._legacy);
+      const remoteComponent: ModelComponent | null | undefined = await this._getRemoteComponent(currentId);
       // @todo-lanes: make it work with lanes. It needs to go through the objects one by one and check
       // whether one of the hashes exist.
       // @ts-ignore version is set here
@@ -323,7 +320,7 @@ it was probably created on another lane and if so, consider removing this compon
     }
   }
 
-  private async _getRemoteComponent(id: BitId): Promise<ModelComponent | null | undefined> {
+  private async _getRemoteComponent(id: ComponentID): Promise<ModelComponent | null | undefined> {
     const scopeComponentsImporter = this.consumer.scope.scopeImporter;
     const objectList = await scopeComponentsImporter.getRemoteComponent(id);
     if (!objectList) return null;

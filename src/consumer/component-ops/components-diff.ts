@@ -3,7 +3,6 @@ import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { Consumer } from '..';
-import { BitId } from '../../bit-id';
 import GeneralError from '../../error/general-error';
 import { Scope } from '../../scope';
 import { ModelComponent, Version } from '../../scope/models';
@@ -42,7 +41,7 @@ export type DiffOptions = {
 
 export default async function componentsDiff(
   consumer: Consumer,
-  ids: BitId[],
+  ids: ComponentID[],
   version: string | null | undefined,
   toVersion: string | null | undefined,
   diffOpts: DiffOptions
@@ -53,10 +52,10 @@ export default async function componentsDiff(
 
   // try to resolve ids scope of by components array
   const idsWithScope = ids.map((id) => {
-    if (!id.scope && components) {
-      const foundComponent = components.find((o) => o.name === id.name);
-      if (foundComponent) return id.changeScope(foundComponent.scope);
-    }
+    // if (!id.scope && components) {
+    //   const foundComponent = components.find((o) => o.name === id.name);
+    //   if (foundComponent) return id.changeScope(foundComponent.scope);
+    // }
     return id;
   });
 
