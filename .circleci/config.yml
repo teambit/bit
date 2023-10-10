@@ -1360,24 +1360,24 @@ workflows:
       # - server_docker_build:
       #     requires:
       #       - docker_build
-      - docker_build_node_18:
-          requires:
-            - harmony_publish_to_gcloud
-      - docker_non_root_build_node_18:
-          requires:
-            - harmony_publish_to_gcloud
-      - server_docker_build_node_18:
-          requires:
-            - docker_build_node_18
-      - docker_build_node_20:
-          requires:
-            - harmony_publish_to_gcloud
-      - docker_non_root_build_node_20:
-          requires:
-            - harmony_publish_to_gcloud
-      - server_docker_build_node_20:
-          requires:
-            - docker_build_node_20
+      # - docker_build_node_18:
+          # requires:
+            # - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_18:
+          # requires:
+            # - harmony_publish_to_gcloud
+      # - server_docker_build_node_18:
+          # requires:
+            # - docker_build_node_18
+      # - docker_build_node_20:
+          # requires:
+            # - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_20:
+          # requires:
+            # - harmony_publish_to_gcloud
+      # - server_docker_build_node_20:
+          # requires:
+            # - docker_build_node_20
 
   windows-nightly:
     triggers:
