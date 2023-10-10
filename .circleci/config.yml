@@ -655,6 +655,7 @@ jobs:
     steps:
       - attach_workspace:
             at: ./
+      - run: corepack enable && corepack prepare yarn@3.6.4 --activate
       - run: cd esbuild-linux-arm64 && tar -xvf esbuild-0.14.29-linux-arm64.tar.gz
       - set_bit_cloud_registry
       - run:
@@ -732,10 +733,7 @@ jobs:
       - attach_workspace:
             at: ./
       - run: node -v
-      - run: rm -rf /usr/local/bin/yarn
-      - run: rm -rf /usr/local/bin/yarnpkg
       - run: corepack enable && corepack prepare yarn@3.6.4 --activate
-      # - run: yarn cache clean
       - run: yarn -v
       # - run: mkdir esbuild-darwin-arm64
       # - restore_cache:
