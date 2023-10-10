@@ -1,5 +1,5 @@
 import { IssuesList } from '@teambit/component-issues';
-import { BitId } from '../../../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import Dependency from '../dependency';
 import { AllDependencies, AllPackagesDependencies } from './dependencies-resolver';
 import { ManuallyChangedDependencies } from './overrides-dependencies';
@@ -27,10 +27,10 @@ export class DependenciesData {
   static deserialize(data: string): DependenciesData {
     const dataParsed = JSON.parse(data);
     const dependencies = dataParsed.allDependencies.dependencies.map(
-      (dep) => new Dependency(new BitId(dep.id), dep.relativePaths, dep.packageName)
+      (dep) => new Dependency(new ComponentID(dep.id), dep.relativePaths, dep.packageName)
     );
     const devDependencies = dataParsed.allDependencies.devDependencies.map(
-      (dep) => new Dependency(new BitId(dep.id), dep.relativePaths, dep.packageName)
+      (dep) => new Dependency(new ComponentID(dep.id), dep.relativePaths, dep.packageName)
     );
     const issuesList = IssuesList.deserialize(dataParsed.issues);
     const allDependencies = { dependencies, devDependencies };

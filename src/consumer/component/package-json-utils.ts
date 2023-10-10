@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import R from 'ramda';
 import { compact } from 'lodash';
-import { BitId } from '../../bit-id';
+import { ComponentID } from '@teambit/component-id';
 import logger from '../../logger/logger';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
@@ -24,7 +24,7 @@ export async function addComponentsWithVersionToRoot(consumer: Consumer, compone
 export async function removeComponentsFromWorkspacesAndDependencies(
   consumer: Consumer,
   components: Component[],
-  invalidComponents: BitId[] = []
+  invalidComponents: ComponentID[] = []
 ) {
   const bitIds = [...components.map((c) => c.id), ...invalidComponents];
   const rootDir = consumer.getPath();

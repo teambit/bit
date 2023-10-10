@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { ComponentID } from '@teambit/component-id';
 import R from 'ramda';
 import { BitError } from '@teambit/bit-error';
-import { BitId } from '../../../bit-id';
 import logger from '../../../logger/logger';
 import { Scope } from '../../../scope';
 import { Lane, Source } from '../../../scope/models';
@@ -105,7 +105,7 @@ export class ArtifactFiles {
     });
   }
 
-  async getVinylsAndImportIfMissing(id: BitId, scope: Scope): Promise<ArtifactVinyl[]> {
+  async getVinylsAndImportIfMissing(id: ComponentID, scope: Scope): Promise<ArtifactVinyl[]> {
     if (this.isEmpty()) return [];
     if (this.vinyls.length) return this.vinyls;
     const allHashes = this.refs.map((artifact) => artifact.ref.hash);

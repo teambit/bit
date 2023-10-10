@@ -129,7 +129,7 @@ export default class PackageJsonFile {
     const componentIdWithDefaultScope =
       component.id.hasScope() || !addDefaultScopeToCompId
         ? component.id
-        : component.id.changeScope(component.defaultScope);
+        : component.id.changeScope(component.defaultScope as string);
     const packageJsonObject = {
       name,
       version: component.version,
