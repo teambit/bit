@@ -672,34 +672,33 @@ once done, to continue working, please run "bit cc"`
     return this.objects.load(ref);
   }
 
-  async getParsedId(id: BitIdStr): Promise<BitId> {
+  async getParsedId(id: BitIdStr): Promise<ComponentID> {
     if (id.startsWith('@')) {
       throw new UnexpectedPackageName(id);
     }
     const component = await this.loadModelComponentByIdStr(id);
     const idHasScope = Boolean(component && component.scope);
     if (idHasScope) {
-      const bitId: BitId = component.toComponentId();
+      const bitId = component.toComponentId();
       const version = BitId.getVersionOnlyFromString(id);
       return bitId.changeVersion(version || LATEST);
     }
     const [idWithoutVersion] = id.toString().split('@');
     if (idWithoutVersion.includes('.')) {
       // we allow . only on scope names, so if it has . it must be with scope name
-      return BitId.parse(id, true);
+      return ComponentID.fromString(id);
     }
     const idSplit = id.split('/');
     if (idSplit.length === 1) {
       // it doesn't have any slash, so the id doesn't include the scope-name
-      return BitId.parse(id, false);
+      throw new Error(`scope.getParsedId, the component ${id} must include a scope-name`);
     }
     const maybeScope = idSplit[0];
     const isRemoteConfiguredLocally = this.scopeJson.remotes[maybeScope];
     if (isRemoteConfiguredLocally) {
-      return BitId.parse(id, true);
+      return ComponentID.fromString(id);
     }
-    // it's probably new, we assume it doesn't have scope.
-    return BitId.parse(id, false);
+    return ComponentID.fromString(id);
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, clientId: string): Promise<void> {
