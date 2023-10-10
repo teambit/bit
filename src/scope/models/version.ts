@@ -3,7 +3,7 @@ import { pickBy } from 'lodash';
 import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import { BuildStatus, DEFAULT_BINDINGS_PREFIX, DEFAULT_BUNDLE_FILENAME, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/component/component-schema';
@@ -79,7 +79,7 @@ export type VersionProps = {
   unrelated?: ExternalHead;
   extensions?: ExtensionDataList;
   buildStatus?: BuildStatus;
-  componentId?: BitId;
+  componentId?: ComponentID;
   bitVersion?: string;
   modified?: Log[];
   origin?: VersionOrigin;
@@ -126,7 +126,7 @@ export default class Version extends BitObject {
   unrelated?: ExternalHead; // when a component from a lane was created with the same name/scope as main, this ref points to the component of the lane
   extensions: ExtensionDataList;
   buildStatus?: BuildStatus;
-  componentId?: BitId; // can help debugging errors when validating Version object
+  componentId?: ComponentID; // can help debugging errors when validating Version object
   bitVersion?: string;
   modified: Log[] = []; // currently mutation could happen as a result of either "squash" or "sign".
   origin?: VersionOrigin; // for debugging purposes
@@ -279,7 +279,7 @@ export default class Version extends BitObject {
   }
 
   get extensionDependencies() {
-    return new Dependencies(this.extensions.extensionsBitIds.map((id) => new Dependency(id, [])));
+    return new Dependencies(this.extensions.extensionsComponentIds.map((id) => new Dependency(id, [])));
   }
 
   lastModified(): string {
@@ -299,11 +299,15 @@ export default class Version extends BitObject {
     ];
   }
 
-  get depsIdsGroupedByType(): { dependencies: BitIds; devDependencies: BitIds; extensionDependencies: BitIds } {
+  get depsIdsGroupedByType(): {
+    dependencies: ComponentIdList;
+    devDependencies: ComponentIdList;
+    extensionDependencies: ComponentIdList;
+  } {
     return {
       dependencies: this.dependencies.getAllIds(),
       devDependencies: this.devDependencies.getAllIds(),
-      extensionDependencies: this.extensions.extensionsBitIds,
+      extensionDependencies: this.extensions.extensionsComponentIds,
     };
   }
 
@@ -317,8 +321,8 @@ export default class Version extends BitObject {
     return ComponentIdList.fromArray(allDependencies);
   }
 
-  getDependenciesIdsExcludeExtensions(): BitIds {
-    return BitIds.fromArray([...this.dependencies.getAllIds(), ...this.devDependencies.getAllIds()]);
+  getDependenciesIdsExcludeExtensions(): ComponentIdList {
+    return ComponentIdList.fromArray([...this.dependencies.getAllIds(), ...this.devDependencies.getAllIds()]);
   }
 
   updateFlattenedDependency(currentId: ComponentID, newId: ComponentID) {
@@ -512,7 +516,7 @@ export default class Version extends BitObject {
 
       return deps.map((dependency: any) => {
         return {
-          id: BitId.parseBackwardCompatible(dependency.id),
+          id: ComponentID.fromLegacy(BitId.parseBackwardCompatible(dependency.id)),
           relativePaths: Array.isArray(dependency.relativePaths)
             ? dependency.relativePaths.map(getRelativePath)
             : dependency.relativePaths,

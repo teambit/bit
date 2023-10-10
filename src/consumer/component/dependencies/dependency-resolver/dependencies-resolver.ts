@@ -8,7 +8,6 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { uniq, isEmpty, union, cloneDeep } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
-import { BitId } from '../../../../bit-id';
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
@@ -710,7 +709,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       };
       const getExistingIdFromModel = (): ComponentID | undefined => {
         if (this.componentFromModel) {
-          const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId._legacy);
+          const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
           if (modelDep) {
             depDebug.versionResolvedFrom = 'Model';
             return modelDep;
@@ -940,7 +939,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (this.component.id.scope) {
       id = this.component.id;
     } else {
-      id = this.component.id.changeScope(defaultScope);
+      id = this.component.id.changeScope(defaultScope as string);
     }
 
     if (coreAspectIds.includes(id.toStringWithoutVersion())) {

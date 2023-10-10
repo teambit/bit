@@ -5,7 +5,6 @@ import pMapSeries from 'p-map-series';
 import { LaneId } from '@teambit/lane-id';
 import { compact, set } from 'lodash';
 import { Mutex } from 'async-mutex';
-import { BitId } from '../../bit-id';
 import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '../../constants';
 import { glob } from '../../utils';
 import { Lane, ModelComponent } from '../models';
@@ -26,7 +25,7 @@ export default class RemoteLanes {
   constructor(scopePath: string) {
     this.basePath = path.join(scopePath, REMOTE_REFS_DIR);
   }
-  async addEntry(remoteLaneId: LaneId, componentId: BitId, head?: Ref) {
+  async addEntry(remoteLaneId: LaneId, componentId: ComponentID, head?: Ref) {
     if (!remoteLaneId) throw new TypeError('addEntry expects to get remoteLaneId');
     if (!head) return; // do nothing
     const remoteLane = await this.getRemoteLane(remoteLaneId);
@@ -39,7 +38,7 @@ export default class RemoteLanes {
     delete this.remotes[remoteName]?.[laneName];
   }
 
-  private pushToRemoteLane(remoteLane: LaneComponent[], componentId: BitId, head: Ref, remoteLaneId: LaneId) {
+  private pushToRemoteLane(remoteLane: LaneComponent[], componentId: ComponentID, head: Ref, remoteLaneId: LaneId) {
     const existingComponent = remoteLane.find((n) => n.id.isEqualWithoutVersion(componentId));
     if (existingComponent) {
       existingComponent.head = head;
@@ -75,20 +74,20 @@ export default class RemoteLanes {
     return this.remotes[remoteLaneId.scope][remoteLaneId.name];
   }
 
-  async getRefsFromAllLanesOnScope(scopeName: string, bitId: BitId): Promise<Ref[]> {
+  async getRefsFromAllLanesOnScope(scopeName: string, bitId: ComponentID): Promise<Ref[]> {
     const allLaneIdOfScope = await this.getAllRemoteLaneIdsOfScope(scopeName);
     const results = await pMapSeries(allLaneIdOfScope, (laneId) => this.getRef(laneId, bitId));
 
     return compact(results);
   }
 
-  async getRefsFromAllLanes(bitId: BitId): Promise<Ref[]> {
+  async getRefsFromAllLanes(bitId: ComponentID): Promise<Ref[]> {
     const allLaneIds = await this.getAllRemoteLaneIds();
     const results = await pMapSeries(allLaneIds, (laneId) => this.getRef(laneId, bitId));
     return compact(results);
   }
 
-  async getRemoteBitIds(remoteLaneId: LaneId): Promise<BitId[]> {
+  async getRemoteBitIds(remoteLaneId: LaneId): Promise<ComponentID[]> {
     const remoteLane = await this.getRemoteLane(remoteLaneId);
     return remoteLane.map((item) => item.id.changeVersion(item.head.toString()));
   }
@@ -101,7 +100,7 @@ export default class RemoteLanes {
       const remoteFile = await fs.readJson(remoteLanePath);
       if (!this.remotes[remoteName]) this.remotes[remoteName] = {};
       this.remotes[remoteName][laneName] = remoteFile.map(({ id, head }) => ({
-        id: new BitId({ scope: id.scope, name: id.name }),
+        id: ComponentID.fromObject({ scope: id.scope, name: id.name }),
         head: new Ref(head),
       }));
     } catch (err: any) {
