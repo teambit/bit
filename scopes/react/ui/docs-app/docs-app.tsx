@@ -30,12 +30,14 @@ export function DocsApp({ componentId, docs = defaultDocs, compositions, context
     <DocsTheme>
       <>
         <DocsContent docs={docs} className={styles.mdx} />
-        <CompositionsCarousel
-          renderingContext={context}
-          compositions={compositions}
-          className={styles.compositionSection}
-          compositionCardClass={styles.compositionCard}
-        />
+        {(!renderOnlyOverview || renderOnlyOverview === 'false') && (
+          <CompositionsCarousel
+            renderingContext={context}
+            compositions={compositions}
+            className={styles.compositionSection}
+            compositionCardClass={styles.compositionCard}
+          />
+        )}
         {(!renderOnlyOverview || renderOnlyOverview === 'false') && <PropertiesTable componentId={componentId} />}
         <ExamplesOverview examples={Content.examples || examples} />
       </>

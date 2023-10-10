@@ -60,7 +60,7 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
 
   const isScaling = component.preview?.isScaling;
 
-  const iframeQueryParams = `skipIncludes=${component.preview?.onlyOverview || 'false'}`;
+  const iframeQueryParams = `onlyOverview=${component.preview?.onlyOverview || 'false'}`;
 
   const overviewPropsValues = overviewProps && overviewProps();
 
