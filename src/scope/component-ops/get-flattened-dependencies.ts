@@ -39,7 +39,7 @@ export class FlattenedDependenciesGetter {
     // console.log("this.dependenciesGraph", this.dependenciesGraph.toString())
     await this.importExternalDependenciesInBulk();
     await mapSeries(this.components, async (component) => {
-      component.flattenedDependencies = await this.getFlattened(component.id);
+      component.flattenedDependencies = await this.getFlattened(component.componentId);
     });
   }
 

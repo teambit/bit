@@ -6,7 +6,7 @@ import { compact } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
-import { BitId, BitIds } from '../bit-id';
+import { BitId } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
 import loader from '../cli/loader';
 import { BEFORE_MIGRATION } from '../cli/loader/loader-messages';
@@ -280,7 +280,7 @@ export default class Consumer {
   /**
    * throws a ComponentNotFound exception if not found in the model
    */
-  async loadComponentFromModel(id: BitId): Promise<Component> {
+  async loadComponentFromModel(id: ComponentID): Promise<Component> {
     if (!id.version) throw new TypeError('consumer.loadComponentFromModel, version is missing from the id');
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
 
@@ -293,7 +293,7 @@ export default class Consumer {
    */
   async loadComponentFromModelIfExist(id: ComponentID): Promise<Component | undefined> {
     if (!id.version) return undefined;
-    return this.loadComponentFromModel(id._legacy).catch((err) => {
+    return this.loadComponentFromModel(id).catch((err) => {
       if (err instanceof ComponentNotFound) return undefined;
       throw err;
     });
@@ -307,14 +307,14 @@ export default class Consumer {
     return Promise.all(componentsP);
   }
 
-  async loadComponentFromModelImportIfNeeded(id: BitId, throwIfNotExist = true): Promise<Component> {
+  async loadComponentFromModelImportIfNeeded(id: ComponentID, throwIfNotExist = true): Promise<Component> {
     const scopeComponentsImporter = this.scope.scopeImporter;
     const getModelComponent = async (): Promise<ModelComponent> => {
       if (throwIfNotExist) return this.scope.getModelComponent(id);
       const modelComponent = await this.scope.getModelComponentIfExist(id);
       if (modelComponent) return modelComponent;
       await scopeComponentsImporter.importMany({
-        ids: new BitIds(id),
+        ids: new ComponentIdList(id),
         reason: `because this component (${id.toString()}) was missing from the local scope`,
       });
       return this.scope.getModelComponent(id);
@@ -342,7 +342,7 @@ export default class Consumer {
     return this.componentLoader.loadMany(ids, throwOnFailure, loadOpts);
   }
 
-  async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<Component[]> {
+  async listComponentsForAutoTagging(modifiedComponents: ComponentIdList): Promise<Component[]> {
     return getAutoTagPending(this, modifiedComponents);
   }
 
@@ -439,11 +439,11 @@ export default class Consumer {
     return JSON.stringify(version.files) !== JSON.stringify(componentFromModel.files);
   }
 
-  async getManyComponentsStatuses(ids: BitId[]): Promise<ComponentStatusResult[]> {
+  async getManyComponentsStatuses(ids: ComponentID[]): Promise<ComponentStatusResult[]> {
     return this.componentStatusLoader.getManyComponentsStatuses(ids);
   }
 
-  async getComponentStatusById(id: BitId): Promise<ComponentStatus> {
+  async getComponentStatusById(id: ComponentID): Promise<ComponentStatus> {
     return this.componentStatusLoader.getComponentStatusById(id);
   }
 
@@ -633,7 +633,7 @@ export default class Consumer {
     const componentIds = await Promise.all(
       ids.map(async (id) => {
         if (!id.hasVersion()) return id;
-        const modelComponent = await this.scope.getModelComponentIfExist(id._legacy.changeVersion(undefined));
+        const modelComponent = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
         if (!modelComponent) {
           throw new Error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing, please run bit-import`);
         }

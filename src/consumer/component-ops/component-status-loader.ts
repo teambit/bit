@@ -1,7 +1,8 @@
 import mapSeries from 'p-map-series';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { Consumer } from '..';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import { LATEST } from '../../constants';
 import { ModelComponent } from '../../scope/models';
 import { MissingBitMapComponent } from '../bit-map/exceptions';
@@ -19,13 +20,13 @@ export type ComponentStatus = {
   missingFromScope: boolean;
 };
 
-export type ComponentStatusResult = { id: BitId; status: ComponentStatus };
+export type ComponentStatusResult = { id: ComponentID; status: ComponentStatus };
 
 export class ComponentStatusLoader {
   private _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   constructor(private consumer: Consumer) {}
 
-  async getManyComponentsStatuses(ids: BitId[]): Promise<ComponentStatusResult[]> {
+  async getManyComponentsStatuses(ids: ComponentID[]): Promise<ComponentStatusResult[]> {
     const results: ComponentStatusResult[] = [];
     await mapSeries(ids, async (id) => {
       const status = await this.getComponentStatusById(id);
@@ -46,14 +47,14 @@ export class ComponentStatusLoader {
    *
    * The result is cached per ID and can be called several times with no penalties.
    */
-  async getComponentStatusById(id: BitId): Promise<ComponentStatus> {
+  async getComponentStatusById(id: ComponentID): Promise<ComponentStatus> {
     if (!this._componentsStatusCache[id.toString()]) {
       this._componentsStatusCache[id.toString()] = await this.getStatus(id);
     }
     return this._componentsStatusCache[id.toString()];
   }
 
-  private async getStatus(id: BitId) {
+  private async getStatus(id: ComponentID) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const status: ComponentStatus = {};
     const componentFromModel: ModelComponent | undefined = await this.consumer.scope.getModelComponentIfExist(id);
@@ -64,7 +65,7 @@ export class ComponentStatusLoader {
       // also, don't leave the id as is, otherwise, it'll cause issues with import --merge, when
       // imported version is bigger than .bitmap, it won't find it and will consider as deleted
       const { components, removedComponents } = await this.consumer.loadComponents(
-        new BitIds(id.changeVersion(LATEST))
+        new ComponentIdList(id.changeVersion(LATEST))
       );
       if (removedComponents.length) {
         status.deleted = true;
