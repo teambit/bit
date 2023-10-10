@@ -28,7 +28,10 @@ export class TrackerMain {
   async track(trackData: TrackData): Promise<TrackResult> {
     const defaultScope = trackData.defaultScope ? await this.addOwnerToScopeName(trackData.defaultScope) : undefined;
     const addComponent = new AddComponents(
-      { workspace: this.workspace },
+      {
+        workspace: this.workspace,
+        alternateCwd: this.workspace.path,
+      },
       {
         componentPaths: [trackData.rootDir],
         id: trackData.componentName,
