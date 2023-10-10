@@ -22,7 +22,7 @@ export default async function getScopeComponent({
   showDependencies?: boolean;
   loadScopeFromCache?: boolean;
 }): Promise<{ component: Component[] | Component }> {
-  const bitId: BitId = BitId.parse(id, true); // user used --remote so we know it has a scope
+  const bitId: BitId = ComponentID.fromString(id); // user used --remote so we know it has a scope
 
   if (scopePath) {
     // coming from the api

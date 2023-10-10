@@ -66,7 +66,7 @@ export class GraphCmd implements Command {
     if (!consumer && !remote) throw new ConsumerNotFound();
     const getBitId = (): BitId | undefined => {
       if (!id) return undefined;
-      if (remote) return BitId.parse(id, true); // user used --remote so we know it has a scope
+      if (remote) return ComponentID.fromString(id); // user used --remote so we know it has a scope
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return consumer.getParsedId(id);
     };

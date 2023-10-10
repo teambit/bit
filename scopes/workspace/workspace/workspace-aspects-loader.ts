@@ -657,7 +657,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const ids = components.map((component) => component.id);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
-    // const coreAspectsComponentIds = coreAspectsStringIds.map((id) => BitId.parse(id, true));
+    // const coreAspectsComponentIds = coreAspectsStringIds.map((id) => ComponentID.fromString(id));
     // const aspectsIds = components.reduce((acc, curr) => {
     //   const currIds = curr.state.aspects.ids;
     //   acc = acc.concat(currIds);

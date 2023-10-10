@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import { BitId } from '../../../bit-id';
 import { loadConsumerIfExist, Consumer } from '../../../consumer';
 import ConsumerNotFound from '../../../consumer/exceptions/consumer-not-found';
@@ -14,7 +15,7 @@ export async function dependents(id: string): Promise<DependentsResults> {
   const consumer = await loadConsumerIfExist();
   if (!consumer) throw new ConsumerNotFound(); // @todo: supports this on bare-scope.
   throwForNewComponent(id, consumer);
-  const bitId = consumer.getParsedIdIfExist(id) || BitId.parse(id, true);
+  const bitId = consumer.getParsedIdIfExist(id) || ComponentID.fromString(id);
   const scopeGraph = await DependencyGraph.buildGraphFromScope(consumer.scope);
   const scopeDependencyGraph = new DependencyGraph(scopeGraph);
   const scopeDependents = scopeDependencyGraph.getDependentsInfo(bitId);

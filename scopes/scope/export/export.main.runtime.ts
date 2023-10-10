@@ -435,7 +435,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       if (failedScopes.length) {
         throw new PersistFailed(failedScopes, errors);
       }
-      const exportedBitIds = successIds.map((id) => BitId.parse(id, true));
+      const exportedBitIds = successIds.map((id) => ComponentID.fromString(id));
       if (manyObjectsPerRemote.length === 1) {
         // when on a lane, it's always exported to the lane. and the ids can be from different scopes, so having the
         // filter below, will remove these components from the output of bit-export at the end.
@@ -489,7 +489,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
         await scope.objects.persist();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const newIdsOnRemote = exportedIds!.map((id) => BitId.parse(id, true));
+        const newIdsOnRemote = exportedIds!.map((id) => ComponentID.fromString(id));
         // remove version. exported component might have multiple versions exported
         const idsWithRemoteScope: BitId[] = newIdsOnRemote.map((id) => id.changeVersion(undefined));
         const idsWithRemoteScopeUniq = BitIds.uniqFromArray(idsWithRemoteScope);

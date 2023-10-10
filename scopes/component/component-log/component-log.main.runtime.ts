@@ -1,5 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import path from 'path';
 import moment from 'moment';
 import pMap from 'p-map';
@@ -44,7 +44,7 @@ export class ComponentLogMain {
   async getLogs(id: string, isRemote?: boolean, shortHash = false) {
     if (isRemote) {
       const consumer = this.workspace?.consumer;
-      const bitId: BitId = BitId.parse(id, true);
+      const bitId = ComponentID.fromString(id);
       const remote = await getRemoteByName(bitId.scope as string, consumer);
       return remote.log(bitId);
     }

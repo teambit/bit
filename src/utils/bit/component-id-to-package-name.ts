@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import BitId from '../../bit-id/bit-id';
 import { Extensions, NODE_PATH_COMPONENT_SEPARATOR } from '../../constants';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
@@ -17,14 +18,14 @@ export default function componentIdToPackageName({
   extensions,
   isDependency = false,
 }: {
-  id: BitId;
+  id: ComponentID;
   bindingPrefix: string | null | undefined;
   defaultScope?: string | null; // if an id doesn't have a scope, use defaultScope if exists
   withPrefix?: boolean;
   extensions: ExtensionDataList;
   isDependency?: boolean;
 }): string {
-  const fromExtensions = getNameFromExtensions(id, defaultScope, extensions, isDependency);
+  const fromExtensions = getNameFromExtensions(id._legacy, defaultScope, extensions, isDependency);
   if (fromExtensions) return fromExtensions;
   const allSlashes = new RegExp('/', 'g');
   const name = id.name.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
