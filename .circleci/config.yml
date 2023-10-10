@@ -669,7 +669,7 @@ jobs:
           name: create empty folder
           command: mkdir bit-${BIT_VERSION} bit-${BIT_VERSION}-install
       - run:
-          name: install bit
+          name: install bit for Linux x64
           command: >
             cd bit-${BIT_VERSION}-install &&
             npm init -y &&
@@ -682,7 +682,7 @@ jobs:
           name: copy node_modules
           command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
       - run:
-          name: compress bit
+          name: compress bit for Linux x64
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
       - run:
           name: remove leftovers
@@ -691,7 +691,7 @@ jobs:
           name: move to linux folder
           command: mv bit-${BIT_VERSION}.tar.gz linux/bit-${BIT_VERSION}.tar.gz
       - run:
-          name: install bit
+          name: install bit for Linux arm64
           command: >
             cd bit-${BIT_VERSION}-install &&
             yarn config set supportedArchitectures --json '{"os":["linux"],"cpu":["arm64"]}' &&
@@ -703,7 +703,7 @@ jobs:
           name: create linux-arm64
           command: mkdir linux-arm64
       - run:
-          name: compress bit arm64
+          name: compress bit for Linux arm64
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
       - run:
           name: remove leftovers
@@ -712,7 +712,7 @@ jobs:
           name: move to linux-arm64 folder
           command: mv bit-${BIT_VERSION}.tar.gz linux-arm64/bit-${BIT_VERSION}.tar.gz
       - run:
-          name: install bit
+          name: install bit for macOS x64
           command: >
             cd bit-${BIT_VERSION}-install &&
             yarn config set supportedArchitectures --json '{"os":["darwin"],"cpu":["x64"]}' &&
@@ -724,7 +724,7 @@ jobs:
           name: create macos
           command: mkdir macos
       - run:
-          name: compress bit x64 for macOS
+          name: compress bit for macOS x64
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
       - run:
           name: remove leftovers
@@ -733,7 +733,7 @@ jobs:
           name: move to macos folder
           command: mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
       - run:
-          name: install bit
+          name: install bit for macOS arm64
           command: >
             cd bit-${BIT_VERSION}-install &&
             yarn config set supportedArchitectures --json '{"os":["darwin"],"cpu":["arm64"]}' &&
@@ -745,7 +745,7 @@ jobs:
           name: create macos-arm64
           command: mkdir macos-arm64
       - run:
-          name: compress bit arm64 for macOS
+          name: compress bit for macOS arm64
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
       - run:
           name: remove leftovers
@@ -754,7 +754,7 @@ jobs:
           name: move to macos-arm64 folder
           command: mv bit-${BIT_VERSION}.tar.gz macos-arm64/bit-${BIT_VERSION}.tar.gz
       - run:
-          name: install bit
+          name: install bit for Windows x64
           command: >
             cd bit-${BIT_VERSION}-install &&
             yarn config set supportedArchitectures --json '{"os":["win32"],"cpu":["x64"]}' &&
@@ -766,7 +766,7 @@ jobs:
           name: create windows
           command: mkdir windows
       - run:
-          name: compress bit x64 for Windows
+          name: compress bit for Windows x64
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
       - run:
           name: remove leftovers
