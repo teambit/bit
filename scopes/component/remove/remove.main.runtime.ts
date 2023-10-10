@@ -1,8 +1,8 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { BitId } from '@teambit/legacy-bit-id';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { compact } from 'lodash';
@@ -64,7 +64,7 @@ export class RemoveMain {
     const consumer = this.workspace?.consumer;
     const removeResults = await removeComponents({
       consumer,
-      ids: BitIds.fromArray(bitIds),
+      ids: ComponentIdList.fromArray(bitIds),
       force,
       remote,
       track,
@@ -77,11 +77,11 @@ export class RemoveMain {
   /**
    * remove components from the workspace.
    */
-  async removeLocallyByIds(ids: BitId[], { force = false }: { force?: boolean } = {}) {
+  async removeLocallyByIds(ids: ComponentID[], { force = false }: { force?: boolean } = {}) {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const results = await removeComponents({
       consumer: this.workspace.consumer,
-      ids: BitIds.fromArray(ids),
+      ids: ComponentIdList.fromArray(ids),
       force,
       remote: false,
       track: false,
@@ -104,7 +104,7 @@ export class RemoveMain {
     if (shouldUpdateMain) config.removeOnMain = true;
     componentIds.map((compId) => this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, config));
     await this.workspace.bitMap.write();
-    const bitIds = BitIds.fromArray(componentIds.map((id) => id._legacy));
+    const bitIds = ComponentIdList.fromArray(componentIds.map((id) => id));
     await deleteComponentsFiles(this.workspace.consumer, bitIds);
 
     return componentIds;
@@ -210,7 +210,7 @@ export class RemoveMain {
     const currentLane = await this.workspace.getCurrentLaneObject();
     if (!currentLane) return; // user on main
     const laneComps = currentLane.toBitIds();
-    const mainComps = components.filter((comp) => !laneComps.hasWithoutVersion(comp.id._legacy));
+    const mainComps = components.filter((comp) => !laneComps.hasWithoutVersion(comp.id));
     if (mainComps.length) {
       throw new BitError(`the following components belong to main, they cannot be soft-removed when on a lane. consider removing them without --soft.
 ${mainComps.map((c) => c.id.toString()).join('\n')}`);
@@ -307,17 +307,17 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     return compact(staged);
   }
 
-  private async getLocalBitIdsToRemove(componentsPattern: string): Promise<BitId[]> {
+  private async getLocalBitIdsToRemove(componentsPattern: string): Promise<ComponentID[]> {
     if (!this.workspace) throw new ConsumerNotFound();
     const componentIds = await this.workspace.idsByPattern(componentsPattern);
-    return componentIds.map((id) => id._legacy);
+    return componentIds.map((id) => id);
   }
 
-  private async getRemoteBitIdsToRemove(componentsPattern: string): Promise<BitId[]> {
+  private async getRemoteBitIdsToRemove(componentsPattern: string): Promise<ComponentID[]> {
     if (hasWildcard(componentsPattern)) {
       return getRemoteBitIdsByWildcards(componentsPattern);
     }
-    return [BitId.parse(componentsPattern, true)];
+    return [ComponentID.fromString(componentsPattern, true)];
   }
 
   static slots = [];

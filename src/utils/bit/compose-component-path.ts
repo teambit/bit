@@ -1,7 +1,6 @@
 import * as path from 'path';
+import { ComponentID } from '@teambit/component-id';
 import format from 'string-format';
-
-import BitId from '../../bit-id/bit-id';
 import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_DEPENDENCIES_DIR_PATH } from '../../constants';
 import { PathLinuxRelative, PathOsBased } from '../path';
 import { parseScope } from './parse-scope';
@@ -14,7 +13,7 @@ import { parseScope } from './parse-scope';
  * owner - owner name in bit.dev, e.g. 'teambit'.
  */
 export function composeComponentPath(
-  bitId: BitId,
+  bitId: ComponentID,
   componentsDefaultDirectory: string = DEFAULT_COMPONENTS_DIR_PATH
 ): PathLinuxRelative {
   let defaultDir = componentsDefaultDirectory;
@@ -37,8 +36,8 @@ export function composeComponentPath(
 }
 
 export function composeDependencyPath(
-  bitId: BitId,
+  bitId: ComponentID,
   dependenciesDir: string = DEFAULT_DEPENDENCIES_DIR_PATH
 ): PathOsBased {
-  return path.join(dependenciesDir, bitId.toFullPath());
+  return path.join(dependenciesDir, bitId._legacy.toFullPath());
 }

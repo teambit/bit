@@ -76,7 +76,7 @@ export class ArtifactExtractor {
     const scope = this.componentMain.getHost(ScopeAspect.id) as ScopeMain;
     // @todo: optimize this to first import all missing hashes.
     await pMapSeries(artifactListPerId, async ({ id, artifacts }) => {
-      const vinyls = await artifacts.getVinylsAndImportIfMissing(id._legacy, scope.legacyScope);
+      const vinyls = await artifacts.getVinylsAndImportIfMissing(id, scope.legacyScope);
       // make sure the component-dir is just one dir. without this, every slash in the component-id will create a new dir.
       const idAsFilename = filenamify(id.toStringWithoutVersion(), { replacement: '_' });
       const compPath = path.join(outDir, idAsFilename);

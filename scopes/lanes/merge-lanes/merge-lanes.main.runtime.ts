@@ -16,13 +16,13 @@ import MergingAspect, {
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
 import { getBasicLog } from '@teambit/snapping';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
 import pMapSeries from 'p-map-series';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { ComponentID } from '@teambit/component-id';
@@ -184,7 +184,7 @@ export class MergeLanesMain {
     if (existingOnWorkspaceOnly) {
       const workspaceIds = await this.workspace.listIds();
       const compIdsFromPattern = workspaceIds.filter((id) =>
-        allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(id._legacy))
+        allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(id))
       );
       allComponentsStatus = await filterComponentsStatus(
         allComponentsStatus,
@@ -382,7 +382,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
       if (!this.workspace) {
         throw new BitError(`getMainIdsToMerge needs workspace`);
       }
-      const workspaceIds = (await this.workspace.listIds()).map((id) => id._legacy);
+      const workspaceIds = (await this.workspace.listIds()).map((id) => id);
       const mainNotOnLane = workspaceIds.filter(
         (id) => !laneIds.find((laneId) => laneId.isEqualWithoutVersion(id)) && id.hasScope()
       );
@@ -393,7 +393,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
     return compact(
       modelComponents.map((c) => {
         if (!c.head) return null; // probably the component was never merged to main
-        return c.toBitId().changeVersion(c.head.toString());
+        return c.toComponentId().changeVersion(c.head.toString());
       })
     );
   }
@@ -417,11 +417,11 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
     const toLaneId = toLane === DEFAULT_LANE ? this.lanes.getDefaultLaneId() : LaneId.parse(toLane);
     const toLaneObj = toLaneId.isDefault() ? undefined : await this.lanes.importLaneObject(toLaneId);
     const fromLaneBitIds = fromLaneObj.toBitIds();
-    const getIdsToMerge = async (): Promise<BitIds> => {
+    const getIdsToMerge = async (): Promise<ComponentIdList> => {
       if (!options.pattern) return fromLaneBitIds;
       const laneCompIds = await this.scope.resolveMultipleComponentIds(fromLaneBitIds);
       const ids = this.scope.filterIdsFromPoolIdsByPattern(options.pattern, laneCompIds);
-      return BitIds.fromArray(ids.map((id) => id._legacy));
+      return ComponentIdList.fromArray(ids.map((id) => id));
     };
     const idsToMerge = await getIdsToMerge();
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
@@ -447,8 +447,8 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
     // loop through all components, make sure they're all ahead of main (it might not be on main yet).
     // then, change the version object to include an extra parent to point to the main.
     // then, change the component object head to point to this changed version
-    const mergedPreviously: BitId[] = [];
-    const mergedNow: BitId[] = [];
+    const mergedPreviously: ComponentID[] = [];
+    const mergedNow: ComponentID[] = [];
     const shouldSquash = !toLaneObj && !options.noSquash; // only when merging to main we squash.
     const log = await getLogForSquash(fromLaneId);
     const bitObjectsPerComp = await pMapSeries(idsToMerge, async (id) => {
@@ -500,11 +500,11 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
     let exportedIds: string[] = [];
     if (options.push) {
       const ids = compact(bitObjectsPerComp).map((b) => b.id);
-      const bitIds = BitIds.fromArray(ids);
+      const bitIds = ComponentIdList.fromArray(ids);
       const { exported } = await this.exporter.exportMany({
         scope: this.scope.legacyScope,
-        ids: shouldSquash ? bitIds : new BitIds(),
-        idsWithFutureScope: shouldSquash ? bitIds : new BitIds(),
+        ids: shouldSquash ? bitIds : new ComponentIdList(),
+        idsWithFutureScope: shouldSquash ? bitIds : new ComponentIdList(),
         laneObject: toLaneObj,
         allVersions: false,
         // no need to export anything else other than the head. the normal calculation of what to export won't apply here
@@ -597,16 +597,16 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
 async function filterComponentsStatus(
   allComponentsStatus: ComponentMergeStatus[],
   compIdsToKeep: ComponentID[],
-  allBitIds: BitId[],
+  allBitIds: ComponentID[],
   workspace: Workspace,
   includeDeps = false,
   otherLane?: Lane, // lane that gets merged into the current lane. if not provided, it's main that gets merged into the current lane
   shouldSquash?: boolean
 ): Promise<ComponentMergeStatus[]> {
-  const bitIdsFromPattern = BitIds.fromArray(compIdsToKeep.map((c) => c._legacy));
+  const bitIdsFromPattern = ComponentIdList.fromArray(compIdsToKeep.map((c) => c._legacy));
   const bitIdsNotFromPattern = allBitIds.filter((bitId) => !bitIdsFromPattern.hasWithoutVersion(bitId));
   const filteredComponentStatus: ComponentMergeStatus[] = [];
-  const depsToAdd: BitId[] = [];
+  const depsToAdd: ComponentID[] = [];
   const missingDepsFromHead = {};
   const missingDepsFromHistory: string[] = [];
   await pMapSeries(compIdsToKeep, async (compId) => {
@@ -649,7 +649,7 @@ async function filterComponentsStatus(
       if (!depsNotIncludeInPattern.length) {
         return;
       }
-      const depsOnLane: BitId[] = [];
+      const depsOnLane: ComponentID[] = [];
       await Promise.all(
         depsNotIncludeInPattern.map(async (dep) => {
           const isOnLane = await workspace.consumer.scope.isIdOnLane(dep, otherLane);
@@ -683,7 +683,7 @@ async function filterComponentsStatus(
   if (depsToAdd.length) {
     // remove the version, otherwise, the uniq gives duplicate components with different versions.
     const depsWithoutVersion = depsToAdd.map((d) => d.changeVersion(undefined));
-    const depsUniqWithoutVersion = BitIds.uniqFromArray(depsWithoutVersion);
+    const depsUniqWithoutVersion = ComponentIdList.uniqFromArray(depsWithoutVersion);
     depsUniqWithoutVersion.forEach((id) => {
       const fromStatus = allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(id));
       if (!fromStatus) {
@@ -740,7 +740,7 @@ async function squashSnaps(allComponentsStatus: ComponentMergeStatus[], otherLan
 async function squashOneComp(
   currentLaneName: string,
   otherLaneId: LaneId,
-  id: BitId,
+  id: ComponentID,
   divergeData: SnapsDistance,
   log: Log,
   scope: LegacyScope,

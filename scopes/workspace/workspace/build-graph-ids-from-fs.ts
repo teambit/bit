@@ -4,7 +4,7 @@ import { flatten, partition } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID } from '@teambit/component';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import BitIds from '@teambit/legacy/dist/bit-id/bit-ids';
+import ComponentIdList from '@teambit/component-id/bit-ids';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
@@ -80,10 +80,10 @@ export class GraphIdsFromFsBuilder {
     const workspaceIds = await this.workspace.listIds();
     const compOnWorkspaceOnly = components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
     const notImported = compOnWorkspaceOnly.map((c) => c.id).filter((id) => !this.importedIds.includes(id.toString()));
-    const withScope = notImported.map((id) => id._legacy).filter((dep) => dep.hasScope());
+    const withScope = notImported.map((id) => id).filter((dep) => dep.hasScope());
     const scopeComponentsImporter = this.consumer.scope.scopeImporter;
     await scopeComponentsImporter.importMany({
-      ids: BitIds.uniqFromArray(withScope),
+      ids: ComponentIdList.uniqFromArray(withScope),
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,

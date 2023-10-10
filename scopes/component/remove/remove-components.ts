@@ -2,7 +2,7 @@ import groupArray from 'group-array';
 import partition from 'lodash.partition';
 import R from 'ramda';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import BitIds from '@teambit/legacy/dist/bit-id/bit-ids';
+import ComponentIdList from '@teambit/component-id/bit-ids';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import enrichContextFromGlobal from '@teambit/legacy/dist/hooks/utils/enrich-context-from-global';
@@ -38,7 +38,7 @@ export async function removeComponents({
   deleteFiles,
 }: {
   consumer: Consumer | null | undefined; // when remote is false, it's always set
-  ids: BitIds;
+  ids: ComponentIdList;
   force: boolean;
   remote: boolean;
   track: boolean;
@@ -46,7 +46,7 @@ export async function removeComponents({
 }): Promise<RemoveComponentsResult> {
   logger.debugAndAddBreadCrumb('removeComponents', `{ids}. force: ${force.toString()}`, { ids: ids.toString() });
   // added this to remove support for remove only one version from a component
-  const bitIdsLatest = BitIds.fromArray(
+  const bitIdsLatest = ComponentIdList.fromArray(
     ids.map((id) => {
       return id.changeVersion(LATEST_BIT_VERSION);
     })
@@ -68,12 +68,12 @@ export async function removeComponents({
 /**
  * Remove remote component from ssh server
  * this method groups remote components by remote name and deletes remote components together
- * @param {BitIds} bitIds - list of remote component ids to delete
+ * @param {ComponentIdList} bitIds - list of remote component ids to delete
  * @param {boolean} force - delete component that are used by other components.
  */
 async function removeRemote(
   consumer: Consumer | null | undefined,
-  bitIds: BitIds,
+  bitIds: ComponentIdList,
   force: boolean
 ): Promise<RemovedObjects[]> {
   const groupedBitsByScope = groupArray(bitIds, 'scope');
@@ -99,20 +99,20 @@ async function removeRemote(
 
 /**
  * removeLocal - remove local (imported, new staged components) from modules and bitmap according to flags
- * @param {BitIds} bitIds - list of component ids to delete
+ * @param {ComponentIdList} bitIds - list of component ids to delete
  * @param {boolean} force - delete component that are used by other components.
  * @param {boolean} deleteFiles - delete component that are used by other components.
  */
 async function removeLocal(
   consumer: Consumer,
-  bitIds: BitIds,
+  bitIds: ComponentIdList,
   force: boolean,
   track: boolean,
   deleteFiles: boolean
 ): Promise<RemovedLocalObjects> {
   // local remove in case user wants to delete tagged components
-  const modifiedComponents = new BitIds();
-  const nonModifiedComponents = new BitIds();
+  const modifiedComponents = new ComponentIdList();
+  const nonModifiedComponents = new ComponentIdList();
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (R.isEmpty(bitIds)) return new RemovedLocalObjects();
   if (!force) {
@@ -133,9 +133,13 @@ async function removeLocal(
   }
   const idsToRemove = force ? bitIds : nonModifiedComponents;
   const componentsList = new ComponentsList(consumer);
-  const newComponents = (await componentsList.listNewComponents(false)) as BitIds;
-  const idsToRemoveFromScope = BitIds.fromArray(idsToRemove.filter((id) => !newComponents.hasWithoutVersion(id)));
-  const idsToCleanFromWorkspace = BitIds.fromArray(idsToRemove.filter((id) => newComponents.hasWithoutVersion(id)));
+  const newComponents = (await componentsList.listNewComponents(false)) as ComponentIdList;
+  const idsToRemoveFromScope = ComponentIdList.fromArray(
+    idsToRemove.filter((id) => !newComponents.hasWithoutVersion(id))
+  );
+  const idsToCleanFromWorkspace = ComponentIdList.fromArray(
+    idsToRemove.filter((id) => newComponents.hasWithoutVersion(id))
+  );
   const { components: componentsToRemove, invalidComponents } = await consumer.loadComponents(idsToRemove, false);
   const { removedComponentIds, missingComponents, dependentBits, removedFromLane } = await consumer.scope.removeMany(
     idsToRemoveFromScope,
@@ -158,7 +162,7 @@ async function removeLocal(
     }
   }
   return new RemovedLocalObjects(
-    BitIds.uniqFromArray([...idsToCleanFromWorkspace, ...removedComponentIds]),
+    ComponentIdList.uniqFromArray([...idsToCleanFromWorkspace, ...removedComponentIds]),
     missingComponents,
     modifiedComponents,
     dependentBits,

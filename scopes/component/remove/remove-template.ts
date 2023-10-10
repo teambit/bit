@@ -1,7 +1,7 @@
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import chalk from 'chalk';
 import R from 'ramda';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList } from '@teambit/component-id';
 
 export function removeTemplate(
   { dependentBits, modifiedComponents = [], removedComponentIds, missingComponents, removedFromLane },
@@ -13,7 +13,7 @@ export function removeTemplate(
       chalk.red('missing components:') +
       chalk(
         ` ${missingComponents.map((id) => {
-          if (!(id instanceof BitId)) id = new BitId(id); // when the id was received from a remote it's not an instance of BitId
+          if (!(id instanceof ComponentID)) id = new ComponentID(id); // when the id was received from a remote it's not an instance of BitId
           return id.version === 'latest' ? id.toStringWithoutVersion() : id.toString();
         })}\n`
       )
@@ -21,7 +21,7 @@ export function removeTemplate(
   };
   const paintRemoved = () => {
     if (R.isEmpty(removedComponentIds) && R.isEmpty(removedFromLane)) return '';
-    const compToStr = (comps: BitIds) =>
+    const compToStr = (comps: ComponentIdList) =>
       chalk(` ${comps.map((id) => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}\n`);
     const getMsg = (isLane = false) => {
       const removedFrom = isLane ? 'lane' : 'scope';
@@ -52,7 +52,7 @@ export function removeTemplate(
 
   const paintModifiedComponents = () => {
     if (R.isEmpty(modifiedComponents)) return '';
-    const modifiedStr = modifiedComponents.map((id: BitId) =>
+    const modifiedStr = modifiedComponents.map((id: ComponentID) =>
       id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()
     );
     return `${

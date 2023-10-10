@@ -11,7 +11,7 @@ import {
   isMatchPattern,
   sortMatchesBySpecificity,
 } from '@teambit/workspace.modules.match-pattern';
-import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
+import { InvalidScopeName, isValidScopeName } from '@teambit/component-id';
 import { VariantsAspect } from './variants.aspect';
 
 export type Patterns = { [pattern: string]: Record<string, any> };

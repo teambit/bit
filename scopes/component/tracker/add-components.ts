@@ -7,8 +7,8 @@ import * as path from 'path';
 import R from 'ramda';
 import format from 'string-format';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
-import { BitId } from '@teambit/legacy/dist/bit-id';
-import { BitIdStr } from '@teambit/legacy/dist/bit-id/bit-id';
+import { ComponentID } from '@teambit/component-id';
+import { BitIdStr } from '@teambit/component-id/bit-id';
 import { PACKAGE_JSON, VERSION_DELIMITER } from '@teambit/legacy/dist/constants';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
@@ -41,11 +41,11 @@ import { Workspace } from '@teambit/workspace';
 import determineMainFile from './determine-main-file';
 import { ComponentID } from '@teambit/component-id';
 
-export type AddResult = { id: BitId; files: ComponentMapFile[] };
+export type AddResult = { id: ComponentID; files: ComponentMapFile[] };
 export type Warnings = {
   alreadyUsed: Record<string, any>;
   emptyDirectory: string[];
-  existInScope: BitId[];
+  existInScope: ComponentID[];
 };
 export type AddActionResults = { addedComponents: AddResult[]; warnings: Warnings };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
@@ -53,7 +53,7 @@ export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: te
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type PathsStats = { [PathOsBased]: { isDir: boolean } };
 export type AddedComponent = {
-  componentId: BitId;
+  componentId: ComponentID;
   files: ComponentMapFile[];
   mainFile?: PathOsBased | null | undefined;
   trackDir?: PathOsBased; // set only when one directory is added by author
@@ -379,7 +379,7 @@ you can add the directory these files are located at and it'll change the root d
    * if the id is already saved in bitmap file, it might have more data (such as scope, version)
    * use that id instead.
    */
-  _getIdAccordingToExistingComponent(currentId: BitIdStr): BitId {
+  _getIdAccordingToExistingComponent(currentId: BitIdStr): ComponentID {
     const existingComponentId = this.bitMap.getExistingBitId(currentId, false);
     if (currentId.includes(VERSION_DELIMITER)) {
       if (
@@ -388,17 +388,17 @@ you can add the directory these files are located at and it'll change the root d
         // user shouldn't add files to a an existing component with different version
         // $FlowFixMe this function gets called only when this.id is set
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        existingComponentId.version !== BitId.getVersionOnlyFromString(this.id)
+        existingComponentId.version !== ComponentID.getVersionOnlyFromString(this.id)
       ) {
         // $FlowFixMe this.id is defined here
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         throw new VersionShouldBeRemoved(this.id);
       }
     }
-    return existingComponentId || BitId.parse(currentId, false);
+    return existingComponentId || ComponentID.fromString(currentId, false);
   }
 
-  _getIdAccordingToTrackDir(dir: PathOsBased): BitId | null | undefined {
+  _getIdAccordingToTrackDir(dir: PathOsBased): ComponentID | null | undefined {
     const dirNormalizedToLinux = pathNormalizeToLinux(dir);
     const trackDirs = this.bitMap.getAllTrackDirs();
     if (!trackDirs) return null;
@@ -472,7 +472,7 @@ you can add the directory these files are located at and it'll change the root d
    * in case bitmap has already the same id, the complete id is taken from bitmap (see _getIdAccordingToExistingComponent)
    */
   async addOneComponent(componentPathsStats: PathsStats): Promise<AddedComponent> {
-    let finalBitId: BitId; // final id to use for bitmap file
+    let finalBitId: ComponentID; // final id to use for bitmap file
     let idFromPath;
     if (this.id) {
       finalBitId = this._getIdAccordingToExistingComponent(this.id);
@@ -511,9 +511,12 @@ you can add the directory these files are located at and it'll change the root d
           } else {
             const nameSpaceOrDir = this.namespace || splitPath[splitPath.length - 2];
             if (!this.namespace) {
-              idFromPath = { namespace: BitId.getValidIdChunk(nameSpaceOrDir), name: BitId.getValidIdChunk(lastDir) };
+              idFromPath = {
+                namespace: ComponentID.getValidIdChunk(nameSpaceOrDir),
+                name: ComponentID.getValidIdChunk(lastDir),
+              };
             }
-            finalBitId = BitId.getValidBitId(nameSpaceOrDir, lastDir);
+            finalBitId = ComponentID.getValidBitId(nameSpaceOrDir, lastDir);
           }
         }
 
@@ -547,11 +550,11 @@ you can add the directory these files are located at and it'll change the root d
         const nameSpaceOrLastDir = this.namespace || R.last(dirName.split(path.sep));
         if (!this.namespace) {
           idFromPath = {
-            namespace: BitId.getValidIdChunk(nameSpaceOrLastDir),
-            name: BitId.getValidIdChunk(pathParsed.name),
+            namespace: ComponentID.getValidIdChunk(nameSpaceOrLastDir),
+            name: ComponentID.getValidIdChunk(pathParsed.name),
           };
         }
-        finalBitId = BitId.getValidBitId(nameSpaceOrLastDir, pathParsed.name);
+        finalBitId = ComponentID.getValidBitId(nameSpaceOrLastDir, pathParsed.name);
       }
 
       const files = [
@@ -642,7 +645,7 @@ you can add the directory these files are located at and it'll change the root d
     return { addedComponents: this.addedComponents, warnings: this.warnings };
   }
 
-  async linkComponents(ids: BitId[]) {
+  async linkComponents(ids: ComponentID[]) {
     if (this.trackDirFeature) {
       // if trackDirFeature is set, it happens during the component-load and because we load the
       // components in the next line, it gets into an infinite loop.
@@ -705,7 +708,7 @@ you can add the directory these files are located at and it'll change the root d
       const componentsWithSameName = addedComponents // $FlowFixMe
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         .filter((a) => a.idFromPath && a.idFromPath.name === addedComponent.idFromPath.name);
-      const bitIdFromNameOnly = new BitId({ name: addedComponent.idFromPath.name });
+      const bitIdFromNameOnly = new ComponentID({ name: addedComponent.idFromPath.name });
       const existingComponentWithSameName = allIds.searchWithoutScopeAndVersion(bitIdFromNameOnly);
       if (componentsWithSameName.length === 1 && !existingComponentWithSameName) {
         addedComponent.componentId = bitIdFromNameOnly;

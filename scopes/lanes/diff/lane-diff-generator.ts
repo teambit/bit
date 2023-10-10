@@ -1,7 +1,7 @@
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import {
   diffBetweenVersionsObjects,
@@ -9,19 +9,19 @@ import {
   DiffOptions,
 } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import { DEFAULT_LANE } from '@teambit/lane-id';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 
 type LaneData = {
   name: string;
   components: Array<{
-    id: BitId;
+    id: ComponentID;
     head: Ref;
   }>;
   remote: string | null;
 };
 
-type Failure = { id: BitId; msg: string };
+type Failure = { id: ComponentID; msg: string };
 
 export type LaneDiffResults = {
   newCompsFrom: string[];
@@ -34,10 +34,10 @@ export type LaneDiffResults = {
 };
 
 export class LaneDiffGenerator {
-  private newCompsFrom: BitId[] = [];
-  private newCompsTo: BitId[] = [];
+  private newCompsFrom: ComponentID[] = [];
+  private newCompsTo: ComponentID[] = [];
   private compsWithDiff: DiffResults[] = [];
-  private compsWithNoChanges: BitId[] = [];
+  private compsWithNoChanges: ComponentID[] = [];
   private fromLaneData: LaneData;
   private toLaneData: LaneData;
   private failures: Failure[] = [];
@@ -84,11 +84,11 @@ export class LaneDiffGenerator {
       this.fromLaneData = await this.mapToLaneData(fromLane);
     }
 
-    let idsToCheckDiff: BitIds | undefined;
+    let idsToCheckDiff: ComponentIdList | undefined;
     if (pattern) {
       const allIds = this.toLaneData.components.map((c) => c.id);
       const compIds = await (this.workspace || this.scope).resolveMultipleComponentIds(allIds);
-      idsToCheckDiff = BitIds.fromArray(
+      idsToCheckDiff = ComponentIdList.fromArray(
         this.scope.filterIdsFromPoolIdsByPattern(pattern, compIds).map((c) => c._legacy)
       );
     }
@@ -97,14 +97,18 @@ export class LaneDiffGenerator {
       throw new BitError(`lane "${toLaneName}" is empty, nothing to show`);
     }
 
-    const idsOfTo = BitIds.fromArray(this.toLaneData.components.map((c) => c.id.changeVersion(c.head?.toString())));
+    const idsOfTo = ComponentIdList.fromArray(
+      this.toLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
+    );
     await this.scope.legacyScope.scopeImporter.importWithoutDeps(idsOfTo, {
       cache: true,
       lane: toLane || undefined,
       ignoreMissingHead: true,
       reason: `for the "to" diff - ${toLane ? toLane.name : DEFAULT_LANE}`,
     });
-    const idsOfFrom = BitIds.fromArray(this.fromLaneData.components.map((c) => c.id.changeVersion(c.head?.toString())));
+    const idsOfFrom = ComponentIdList.fromArray(
+      this.fromLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
+    );
     await this.scope.legacyScope.scopeImporter.importWithoutDeps(idsOfFrom, {
       cache: true,
       lane: fromLane || undefined,
@@ -132,7 +136,7 @@ export class LaneDiffGenerator {
     };
   }
 
-  private async componentDiff(id: BitId, toLaneHead: Ref | null, diffOptions: DiffOptions) {
+  private async componentDiff(id: ComponentID, toLaneHead: Ref | null, diffOptions: DiffOptions) {
     const modelComponent = await this.scope.legacyScope.getModelComponent(id);
     const fromLaneHead =
       this.fromLaneData.components.find((c) => c.id.isEqualWithoutVersion(id))?.head || modelComponent.head;
@@ -197,7 +201,7 @@ export class LaneDiffGenerator {
     return { fromLaneName, toLaneName };
   }
 
-  private async getDefaultLaneData(ids: BitId[]): Promise<LaneData> {
+  private async getDefaultLaneData(ids: ComponentID[]): Promise<LaneData> {
     const laneData: LaneData = {
       name: DEFAULT_LANE,
       remote: null,

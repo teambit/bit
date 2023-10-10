@@ -466,25 +466,25 @@ export default class Consumer {
     if (componentsToTag.length) this.bitMap.markAsChanged();
   }
 
-  composeRelativeComponentPath(bitId: BitId): PathLinuxRelative {
+  composeRelativeComponentPath(bitId: ComponentID): PathLinuxRelative {
     const { componentsDefaultDirectory } = this.dirStructure;
 
     return composeComponentPath(bitId, componentsDefaultDirectory);
   }
 
-  composeComponentPath(bitId: BitId): PathOsBasedAbsolute {
+  composeComponentPath(bitId: ComponentID): PathOsBasedAbsolute {
     const addToPath = [this.getPath(), this.composeRelativeComponentPath(bitId)];
     logger.debug(`component dir path: ${addToPath.join('/')}`);
     Analytics.addBreadCrumb('composeComponentPath', `component dir path: ${Analytics.hashData(addToPath.join('/'))}`);
     return path.join(...addToPath);
   }
 
-  composeRelativeDependencyPath(bitId: BitId): PathOsBased {
+  composeRelativeDependencyPath(bitId: ComponentID): PathOsBased {
     const dependenciesDir = this.dirStructure.dependenciesDirStructure;
     return composeDependencyPath(bitId, dependenciesDir);
   }
 
-  composeDependencyPath(bitId: BitId): PathOsBased {
+  composeDependencyPath(bitId: ComponentID): PathOsBased {
     const relativeDependencyPath = this.composeRelativeDependencyPath(bitId);
     return path.join(this.getPath(), relativeDependencyPath);
   }
@@ -598,7 +598,6 @@ export default class Consumer {
 
   /**
    * clean up removed components from bitmap
-   * @param {BitIds} componentsToRemoveFromFs - delete component that are used by other components.
    */
   async cleanFromBitMap(componentsToRemoveFromFs: ComponentID[]) {
     logger.debug(`consumer.cleanFromBitMap, cleaning ${componentsToRemoveFromFs.length} comps from .bitmap`);

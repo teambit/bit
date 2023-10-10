@@ -13,7 +13,7 @@ import {
 import SnappingAspect, { SnapResults, SnappingMain, TagResults } from '@teambit/snapping';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import mapSeries from 'p-map-series';
-import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { LaneId } from '@teambit/lane-id';
@@ -75,25 +75,25 @@ export type ComponentMergeStatusBeforeMergeAttempt = ComponentStatusBase & {
   resolvedUnrelated?: ResolveUnrelatedData;
   mergeProps?: {
     otherLaneHead: Ref;
-    currentId: BitId;
+    currentId: ComponentID;
     modelComponent: ModelComponent;
   };
 };
 
-export type FailedComponents = { id: BitId; unchangedMessage: string; unchangedLegitimately?: boolean };
+export type FailedComponents = { id: ComponentID; unchangedMessage: string; unchangedLegitimately?: boolean };
 
 export type ApplyVersionResults = {
   components?: ApplyVersionResult[];
   version?: string;
   failedComponents?: FailedComponents[];
-  removedComponents?: BitId[];
+  removedComponents?: ComponentID[];
   addedComponents?: ComponentID[]; // relevant when restoreMissingComponents is true (e.g. bit lane merge-abort)
   resolvedComponents?: ConsumerComponent[]; // relevant for bit merge --resolve
   abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
   mergeSnapResults?: {
     snappedComponents: ConsumerComponent[];
     autoSnappedResults: AutoTagResult[];
-    removedComponents?: BitIds;
+    removedComponents?: ComponentIdList;
   } | null;
   mergeSnapError?: Error;
   leftUnresolvedConflicts?: boolean;
@@ -157,7 +157,7 @@ export class MergingMain {
    */
   async mergeComponentsFromRemote(
     consumer: Consumer,
-    bitIds: BitId[],
+    bitIds: ComponentID[],
     mergeStrategy: MergeStrategy,
     noSnap: boolean,
     snapMessage: string,
@@ -273,7 +273,7 @@ export class MergingMain {
     await consumer.writeBitMap();
 
     if (componentIdsToRemove.length) {
-      const compBitIdsToRemove = BitIds.fromArray(componentIdsToRemove);
+      const compBitIdsToRemove = ComponentIdList.fromArray(componentIdsToRemove);
       await deleteComponentsFiles(consumer, compBitIdsToRemove);
       await consumer.cleanFromBitMap(compBitIdsToRemove);
     }
@@ -509,7 +509,7 @@ export class MergingMain {
    * 2. "bit lane merge", when merging from one lane to another.
    */
   async getMergeStatus(
-    bitIds: BitId[], // the id.version is the version we want to merge to the current component
+    bitIds: ComponentID[], // the id.version is the version we want to merge to the current component
     currentLane: Lane | null, // currently checked out lane. if on main, then it's null.
     otherLane?: Lane | null, // the lane we want to merged to our lane. (null if it's "main").
     options?: { resolveUnrelated?: MergeStrategy; ignoreConfigChanges?: boolean }
@@ -537,7 +537,7 @@ export class MergingMain {
     configMergeResult,
   }: {
     currentComponent: ConsumerComponent | null | undefined;
-    id: BitId;
+    id: ComponentID;
     mergeResults: MergeResultsThreeWay | null | undefined;
     mergeStrategy: MergeStrategy;
     remoteHead: Ref;
@@ -664,7 +664,7 @@ export class MergingMain {
     const ids = await this.getIdsForUnmerged(values);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { snappedComponents } = await this.snapping.snap({
-      legacyBitIds: BitIds.fromArray(ids.map((id) => id._legacy)),
+      legacyBitIds: ComponentIdList.fromArray(ids.map((id) => id)),
       build,
       message: snapMessage,
     });
@@ -672,7 +672,7 @@ export class MergingMain {
   }
 
   private async getAllComponentsStatus(
-    bitIds: BitId[],
+    bitIds: ComponentID[],
     laneId: LaneId,
     localLaneObject: Lane | null
   ): Promise<ComponentMergeStatus[]> {
@@ -700,7 +700,7 @@ export class MergingMain {
     const unmergedComponents = consumer.scope.objects.unmergedComponents.getComponents();
     this.logger.debug(`merge-snaps, snapResolvedComponents, total ${unmergedComponents.length.toString()} components`);
     if (!unmergedComponents.length) return null;
-    const ids = BitIds.fromArray(unmergedComponents.map((r) => new BitId(r.id)));
+    const ids = ComponentIdList.fromArray(unmergedComponents.map((r) => new ComponentID(r.id)));
     return this.snapping.snap({
       legacyBitIds: ids,
       build,
@@ -708,7 +708,11 @@ export class MergingMain {
     });
   }
 
-  private async tagAllLaneComponent(idsToTag: BitId[], tagMessage: string, build: boolean): Promise<TagResults | null> {
+  private async tagAllLaneComponent(
+    idsToTag: ComponentID[],
+    tagMessage: string,
+    build: boolean
+  ): Promise<TagResults | null> {
     const ids = idsToTag.map((id) => {
       return id.toStringWithoutVersion();
     });
@@ -734,10 +738,10 @@ export class MergingMain {
     }
     const unresolvedComponents = this.workspace.consumer.scope.objects.unmergedComponents.getComponents();
     if (!unresolvedComponents.length) throw new GeneralError(`all components are resolved already, nothing to do`);
-    return unresolvedComponents.map((u) => ComponentID.fromLegacy(new BitId(u.id)));
+    return unresolvedComponents.map((u) => ComponentID.fromLegacy(new ComponentID(u.id)));
   }
 
-  private async getComponentsToMerge(consumer: Consumer, ids: string[]): Promise<BitId[]> {
+  private async getComponentsToMerge(consumer: Consumer, ids: string[]): Promise<ComponentID[]> {
     const componentsList = new ComponentsList(consumer);
     if (!ids.length) {
       const mergePending = await componentsList.listMergePendingComponents();

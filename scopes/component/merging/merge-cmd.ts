@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { ComponentID } from '@teambit/component-id';
 import { compact } from 'lodash';
 import {
@@ -337,7 +337,7 @@ export function compilationErrorOutput(compilationError?: Error) {
   return `\n\n${title}\n${subTitle}\n${body}`;
 }
 
-export function getRemovedOutput(removedComponents?: BitId[]) {
+export function getRemovedOutput(removedComponents?: ComponentID[]) {
   if (!removedComponents?.length) return '';
   const title = `the following ${removedComponents.length} component(s) have been removed`;
   const body = removedComponents.join('\n');

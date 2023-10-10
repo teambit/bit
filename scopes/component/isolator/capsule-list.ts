@@ -1,7 +1,7 @@
 import type { Component, ComponentID } from '@teambit/component';
 import { Dependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Edge, Graph, Node } from '@teambit/graph.cleargraph';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { normalize } from 'path';
 import { Capsule } from './capsule';
 
@@ -9,8 +9,8 @@ export default class CapsuleList extends Array<Capsule> {
   getCapsule(id: ComponentID): Capsule | undefined {
     return this.find((capsule) => capsule.component.id.isEqual(id));
   }
-  getCapsuleByLegacyId(id: BitId): Capsule | undefined {
-    return this.find((capsule) => capsule.component.id._legacy.isEqual(id));
+  getCapsuleByLegacyId(id: ComponentID): Capsule | undefined {
+    return this.find((capsule) => capsule.component.id.isEqual(id));
   }
   getCapsuleIgnoreVersion(id: ComponentID): Capsule | undefined {
     return this.find((capsule) => capsule.component.id.isEqual(id, { ignoreVersion: true }));

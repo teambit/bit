@@ -8,7 +8,7 @@ import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/con
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import EnvsAspect from '@teambit/envs';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { getPathStatIfExist } from '@teambit/legacy/dist/utils/fs/last-modified';
 
 export type MergeOptions = {
@@ -63,7 +63,7 @@ export class BitMap {
   }
 
   updateDefaultScope(oldScope: string, newScope: string) {
-    const changedId: BitId[] = [];
+    const changedId: ComponentID[] = [];
     this.legacyBitMap.components.forEach((componentMap) => {
       // only new components (not snapped/tagged) can be changed
       if (componentMap.defaultScope === oldScope && !componentMap.id.hasVersion()) {
@@ -140,7 +140,7 @@ export class BitMap {
    * @see getBitmapEntryIfExist
    */
   getBitmapEntry(id: ComponentID, { ignoreVersion }: GetBitMapComponentOptions = {}): ComponentMap {
-    return this.legacyBitMap.getComponent(id._legacy, { ignoreVersion });
+    return this.legacyBitMap.getComponent(id, { ignoreVersion });
   }
 
   getBitmapEntryIfExist(id: ComponentID, { ignoreVersion }: GetBitMapComponentOptions = {}): ComponentMap | undefined {
@@ -221,7 +221,7 @@ export class BitMap {
   }
 
   removeComponent(id: ComponentID) {
-    this.legacyBitMap.removeComponent(id._legacy);
+    this.legacyBitMap.removeComponent(id);
   }
 
   /**

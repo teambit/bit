@@ -109,6 +109,10 @@ export class ComponentID {
     return this.toObject();
   }
 
+  static isValidVersion(version: string): boolean {
+    return BitId.isValidVersion(version);
+  }
+
   /**
    * examples:
    * 1.0.0 => null

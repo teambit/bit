@@ -452,7 +452,7 @@ export default class BitMap {
   /**
    * get existing bitmap bit-id by bit-id.
    * throw an exception if not found
-   * @see also getBitIdIfExist
+   * @see also getComponentIdIfExist
    */
   getComponentId(componentId: ComponentID, { ignoreVersion = false }: GetBitMapComponentOptions = {}): ComponentID {
     if (componentId.constructor.name !== ComponentID.name) {

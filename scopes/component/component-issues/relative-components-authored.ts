@@ -1,5 +1,4 @@
 import { ComponentID } from '@teambit/component-id';
-import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentIssue } from './component-issue';
 
 export type RelativeComponentsAuthoredEntry = {
@@ -23,7 +22,7 @@ export class RelativeComponentsAuthored extends ComponentIssue {
     Object.keys(data).forEach((fileName) => {
       data[fileName] = data[fileName].map((record) => ({
         importSource: record.importSource,
-        componentId: new BitId(record.componentId),
+        componentId: new ComponentID(record.componentId),
         relativePath: record.relativePath,
       }));
     });

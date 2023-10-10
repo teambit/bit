@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { BitError } from '@teambit/bit-error';
-import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
+import { InvalidScopeName, isValidScopeName } from '@teambit/component-id';
 import { MainRuntime } from '@teambit/cli';
 import { composeComponentPath } from '@teambit/legacy/dist/utils/bit/compose-component-path';
 import { Component } from '@teambit/component';
@@ -54,7 +54,7 @@ export class NewComponentHelperMain {
       return pathFromUser;
     }
 
-    return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.workspace.defaultDirectory);
+    return composeComponentPath(componentId.changeScope(componentId.scope), this.workspace.defaultDirectory);
   }
   async writeAndAddNewComp(
     comp: Component,

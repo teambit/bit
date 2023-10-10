@@ -1,5 +1,5 @@
 import type { ComponentID } from '@teambit/component-id';
-import type { BitIdProps } from '@teambit/legacy-bit-id';
+import type { BitIdProps } from '@teambit/component-id';
 
 import { SerializedDependency, DependencyLifecycleType, DependencyManifest } from '../dependency';
 import { BaseDependency } from '../base-dependency';
@@ -59,7 +59,7 @@ export class ComponentDependency extends BaseDependency {
   // eslint-disable-next-line @typescript-eslint/no-shadow
   serialize<SerializedComponentDependency>(): SerializedComponentDependency {
     const serialized = Object.assign({}, super.serialize(), {
-      componentId: this.componentId._legacy.serialize(),
+      componentId: this.componentId.serialize(),
       isExtension: this.isExtension,
       packageName: this.packageName,
     }) as unknown as SerializedComponentDependency;

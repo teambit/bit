@@ -3,7 +3,7 @@ import { Component, ComponentID } from '@teambit/component';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { BitError } from '@teambit/bit-error';
 import { Scope } from '@teambit/legacy/dist/scope';
@@ -104,11 +104,11 @@ export class Publisher {
    */
   private async getIdsToPublish(componentIds: ComponentID[]): Promise<string[]> {
     await this.throwForNonStagedOrTaggedComponents(componentIds);
-    const ids = BitIds.fromArray(componentIds.map((compId) => compId._legacy));
+    const ids = ComponentIdList.fromArray(componentIds.map((compId) => compId._legacy));
     const components = await this.scope.getComponentsAndVersions(ids, true);
     return components
       .filter((c) => this.shouldPublish(c.version.extensions))
-      .map((c) => c.component.toBitId().changeVersion(c.versionStr).toString());
+      .map((c) => c.component.toComponentId().changeVersion(c.versionStr).toString());
   }
 
   // TODO: consider using isPublishedToExternalRegistry from pkg.main.runtime (need to send it a component not extensions)
@@ -126,7 +126,7 @@ export class Publisher {
   }
 
   private async throwForNonStagedOrTaggedComponents(componentIds: ComponentID[]) {
-    const idsWithoutScope = componentIds.filter((id) => !id._legacy.hasScope());
+    const idsWithoutScope = componentIds.filter((id) => !id.hasScope());
     if (!idsWithoutScope.length) return;
     if (!this.options.allowStaged && !this.options.dryRun) {
       throw new BitError(
@@ -138,7 +138,7 @@ export class Publisher {
     const missingFromScope: ComponentID[] = [];
     await Promise.all(
       idsWithoutScope.map(async (id) => {
-        const inScope = await this.scope.isComponentInScope(id._legacy);
+        const inScope = await this.scope.isComponentInScope(id);
         if (!inScope) {
           missingFromScope.push(id);
         }

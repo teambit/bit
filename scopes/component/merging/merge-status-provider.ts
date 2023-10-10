@@ -1,7 +1,7 @@
 import { Workspace } from '@teambit/workspace';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import mapSeries from 'p-map-series';
-import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
@@ -28,7 +28,7 @@ export class MergeStatusProvider {
   ) {}
 
   async getStatus(
-    bitIds: BitId[] // the id.version is the version we want to merge to the current component
+    bitIds: ComponentID[] // the id.version is the version we want to merge to the current component
   ): Promise<ComponentMergeStatus[]> {
     if (!this.currentLane && this.otherLane) {
       await this.importer.importObjectsFromMainIfExist(this.otherLane.toBitIds().toVersionLatest());
@@ -54,7 +54,7 @@ export class MergeStatusProvider {
     const reason = shouldImportHistoryOfOtherLane
       ? `for filling the gap between the common-snap and the head of ${this.otherLane?.id() || 'main'}`
       : `for getting the common-snap between ${this.currentLane?.id() || 'main'} and ${this.otherLane?.id() || 'main'}`;
-    await this.workspace.consumer.scope.scopeImporter.importWithoutDeps(BitIds.fromArray(toImport), {
+    await this.workspace.consumer.scope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(toImport), {
       lane: this.otherLane,
       cache: true,
       includeVersionHistory: false,
@@ -135,7 +135,11 @@ other:   ${otherLaneHead.toString()}`);
     return { currentComponent, id, mergeResults, divergeData, configMergeResult };
   }
 
-  private returnUnmerged(id: BitId, msg: string, unmergedLegitimately = false): ComponentMergeStatusBeforeMergeAttempt {
+  private returnUnmerged(
+    id: ComponentID,
+    msg: string,
+    unmergedLegitimately = false
+  ): ComponentMergeStatusBeforeMergeAttempt {
     const componentStatus: ComponentMergeStatusBeforeMergeAttempt = { id };
     componentStatus.unchangedMessage = msg;
     componentStatus.unchangedLegitimately = unmergedLegitimately;
@@ -143,7 +147,7 @@ other:   ${otherLaneHead.toString()}`);
   }
 
   private async getComponentStatusBeforeMergeAttempt(
-    id: BitId // the id.version is the version we want to merge to the current component
+    id: ComponentID // the id.version is the version we want to merge to the current component
   ): Promise<ComponentMergeStatusBeforeMergeAttempt> {
     const consumer = this.workspace.consumer;
     const componentStatus: ComponentMergeStatusBeforeMergeAttempt = { id };
@@ -164,7 +168,7 @@ other:   ${otherLaneHead.toString()}`);
     const repo = consumer.scope.objects;
     const version = id.version as string;
     const otherLaneHead = modelComponent.getRef(version);
-    const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
+    const existingBitMapId = consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true });
     const componentOnOther: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
     const idOnCurrentLane = this.currentLane?.getComponent(id);
 
@@ -308,7 +312,7 @@ other:   ${otherLaneHead.toString()}`);
 
   private async handleNoCommonSnap(
     modelComponent: ModelComponent,
-    id: BitId,
+    id: ComponentID,
     otherLaneHead: Ref,
     currentComponent: ConsumerComponent,
     componentOnOther?: Version,

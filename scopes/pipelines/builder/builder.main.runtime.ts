@@ -210,7 +210,7 @@ export class BuilderMain {
   // TODO: merge with getArtifactsVinylByExtensionAndName by getting aspect name and name as object with optional props
   async getArtifactsVinylByAspect(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
     const artifacts = this.getArtifactsByAspect(component, aspectName);
-    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id, this.scope.legacyScope);
     return vinyls;
   }
 
@@ -220,7 +220,7 @@ export class BuilderMain {
     name: string
   ): Promise<ArtifactVinyl[]> {
     const artifacts = this.getArtifactsByAspectAndName(component, aspectName, name);
-    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id, this.scope.legacyScope);
     return vinyls;
   }
 
@@ -230,7 +230,7 @@ export class BuilderMain {
     name: string
   ): Promise<ArtifactVinyl[]> {
     const artifacts = this.getArtifactsbyAspectAndTaskName(component, aspectName, name);
-    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id, this.scope.legacyScope);
     return vinyls;
   }
 

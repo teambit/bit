@@ -3,7 +3,7 @@ import os from 'os';
 import * as path from 'path';
 import GraphLib from 'graphlib';
 import { Command, CommandOptions } from '@teambit/cli';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { generateRandomStr } from '@teambit/legacy/dist/utils';
 import VisualDependencyGraph from '@teambit/legacy/dist/scope/graph/vizgraph';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
@@ -64,7 +64,7 @@ export class GraphCmd implements Command {
     allVersions?: boolean
   ): Promise<GraphLib.Graph> {
     if (!consumer && !remote) throw new ConsumerNotFound();
-    const getBitId = (): BitId | undefined => {
+    const getBitId = (): ComponentID | undefined => {
       if (!id) return undefined;
       if (remote) return ComponentID.fromString(id); // user used --remote so we know it has a scope
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

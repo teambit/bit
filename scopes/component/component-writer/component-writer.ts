@@ -1,4 +1,4 @@
-import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { PathLinuxRelative, pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
@@ -11,7 +11,6 @@ import { isHash } from '@teambit/component-version';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
-import { ComponentID } from '@teambit/component-id';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -23,7 +22,7 @@ export type ComponentWriterProps = {
   workspace: Workspace;
   scope?: Scope | undefined;
   bitMap: BitMap;
-  ignoreBitDependencies?: boolean | BitIds;
+  ignoreBitDependencies?: boolean | ComponentIdList;
   deleteBitDirContent?: boolean;
   existingComponentMap?: ComponentMap;
   skipUpdatingBitMap?: boolean;
@@ -40,7 +39,7 @@ export default class ComponentWriter {
   workspace: Workspace;
   scope?: Scope | undefined;
   bitMap: BitMap;
-  ignoreBitDependencies: boolean | BitIds;
+  ignoreBitDependencies: boolean | ComponentIdList;
   deleteBitDirContent: boolean | undefined;
   existingComponentMap: ComponentMap | undefined;
   skipUpdatingBitMap?: boolean;
@@ -149,9 +148,9 @@ export default class ComponentWriter {
     const defaultScope = bitId.hasScope()
       ? undefined
       : await this.workspace.componentDefaultScopeFromComponentDirAndName(rootDir, bitId.name);
-    const componentId = new ComponentID(bitId, defaultScope);
+
     return this.bitMap.addComponent({
-      componentId,
+      componentId: bitId,
       files: filesForBitMap,
       defaultScope,
       mainFile: pathNormalizeToLinux(this.component.mainFile),
@@ -159,7 +158,7 @@ export default class ComponentWriter {
     });
   }
 
-  private async replaceSnapWithTagIfNeeded(): Promise<BitId> {
+  private async replaceSnapWithTagIfNeeded(): Promise<ComponentID> {
     const version = this.component.id.version;
     if (!version || !isHash(version)) {
       return this.component.id;

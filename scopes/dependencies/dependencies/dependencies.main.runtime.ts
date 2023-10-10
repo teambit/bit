@@ -6,7 +6,7 @@ import {
   DependencyResolverMain,
   KEY_NAME_BY_LIFECYCLE_TYPE,
 } from '@teambit/dependency-resolver';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { cloneDeep, compact, set } from 'lodash';
 import pMapSeries from 'p-map-series';
@@ -42,7 +42,7 @@ export type DependenciesResultsDebug = DebugDependencies &
 export type DependenciesResults = {
   scopeGraph: DependencyGraph;
   workspaceGraph: DependencyGraph;
-  id: BitId;
+  id: ComponentID;
 };
 
 export type BlameResult = {
