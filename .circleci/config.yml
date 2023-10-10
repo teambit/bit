@@ -655,7 +655,6 @@ jobs:
     steps:
       - attach_workspace:
             at: ./
-      - run: cd esbuild-linux-arm64 && tar -xvf esbuild-0.14.29-linux-arm64.tar.gz
       - set_bit_cloud_registry
       - run:
           name: print bit version
@@ -671,7 +670,14 @@ jobs:
           command: mkdir bit-${BIT_VERSION}
       - run:
           name: install bit
-          command: cd bit-${BIT_VERSION} && npm init -y && yarn set version 3.6.4 && yarn config set nodeLinker node-modules && yarn config set npmRegistryServer https://node-registry.bit.cloud && yarn add @teambit/bit
+          command: >
+            cd bit-${BIT_VERSION} &&
+            npm init -y &&
+            yarn set version 3.6.4 &&
+            yarn config set nodeLinker node-modules &&
+            yarn config set npmRegistryServer https://node-registry.bit.cloud &&
+            yarn config set supportedArchitectures --json '{"os":["linux"],"cpu":["arm64"]}' &&
+            yarn add @teambit/bit
       - run:
           name: remove leftovers
           command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
@@ -684,10 +690,6 @@ jobs:
       - run:
           name: create linux-arm64
           command: mkdir linux-arm64
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-linux-arm64
-      - run: cp -r esbuild-linux-arm64/node_modules/* bit-${BIT_VERSION}/node_modules
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/nan
       - run:
           name: compress bit arm64
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
@@ -737,7 +739,6 @@ jobs:
       # - run: mkdir esbuild-darwin-arm64
       # - restore_cache:
       #     key: esbuild-0.14.29-darwin-arm64-v1
-      - run: cd esbuild-darwin-arm64 && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
       - set_bit_cloud_registry
       - run:
           name: print bit version
@@ -753,7 +754,13 @@ jobs:
           command: mkdir bit-${BIT_VERSION}
       - run:
           name: install bit
-          command: cd bit-${BIT_VERSION} && npm init -y && yarn config set nodeLinker node-modules && yarn config set npmRegistryServer https://node-registry.bit.cloud && yarn add @teambit/bit
+          command: >
+            cd bit-${BIT_VERSION} &&
+            npm init -y &&
+            yarn config set nodeLinker node-modules &&
+            yarn config set npmRegistryServer https://node-registry.bit.cloud &&
+            yarn config set supportedArchitectures --json '{"os":["darwin"],"cpu":["arm64"]}' &&
+            yarn add @teambit/bit
       - run:
           name: remove leftovers
           command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
@@ -766,10 +773,6 @@ jobs:
       - run:
           name: create macos-arm64
           command: mkdir macos-arm64
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-darwin-arm64
-      - run: cp -r esbuild-darwin-arm64/node_modules/* bit-${BIT_VERSION}/node_modules
-      - run: rm -rf bit-${BIT_VERSION}/node_modules/nan
       - run:
           name: compress bit arm64
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
@@ -823,7 +826,15 @@ jobs:
       - run: 'node -v'
       - run:
           name: install bit
-          command: cd bundle; npm init -y; corepack enable; corepack prepare yarn@3.6.4 --activate; yarn config set nodeLinker node-modules; yarn config set npmRegistryServer https://node-registry.bit.cloud; yarn add @teambit/bit
+          command: >
+            cd bundle;
+            npm init -y;
+            corepack enable;
+            corepack prepare yarn@3.6.4 --activate;
+            yarn config set nodeLinker node-modules;
+            yarn config set npmRegistryServer https://node-registry.bit.cloud;
+            yarn config set supportedArchitectures --json '{"os":["win32"],"cpu":["x64"]}';
+            yarn add @teambit/bit
       - run:
           name: remove leftovers
           command: Remove-Item .\bundle\package.json; Remove-Item .\bundle\yarn.lock
@@ -1395,7 +1406,6 @@ workflows:
           requires:
             - bit_tag
             - bit_export
-            - get_linux_arm64_packages
             - sleep_5_minutes
       - bundle_version_windows:
           <<: *master_only_filter
@@ -1408,7 +1418,6 @@ workflows:
           requires:
             - bit_export
             - bit_tag
-            - get_darwin_arm64_packages
             - sleep_5_minutes
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
