@@ -1,4 +1,3 @@
-import { ComponentID } from '@teambit/component';
 import { LinkDetail } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { ComponentID } from '@teambit/component-id';
@@ -46,12 +45,12 @@ async function symlinkComponent(
   capsuleList: CapsuleList,
   logger: Logger
 ): Promise<[string, Record<string, string>]> {
-  const componentCapsule = capsuleList.getCapsuleIgnoreVersion(new ComponentID(component.id));
+  const componentCapsule = capsuleList.getCapsuleIgnoreVersion(component.id);
   if (!componentCapsule) throw new Error(`unable to find the capsule for ${component.id.toString()}`);
   const allDeps = component.getAllDependenciesIds();
   const linkResults = allDeps.reduce((acc, depId: ComponentID) => {
     // TODO: this is dangerous - we might have 2 capsules for the same component with different version, then we might link to the wrong place
-    const devCapsule = capsuleList.getCapsuleIgnoreVersion(new ComponentID(depId));
+    const devCapsule = capsuleList.getCapsuleIgnoreVersion(depId);
     if (!devCapsule) {
       // happens when a dependency is not in the workspace. (it gets installed via the package manager)
       logger.debug(

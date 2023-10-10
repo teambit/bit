@@ -729,8 +729,8 @@ export default class Component extends BitObject {
     return new ComponentID(this.toBitIdWithHead());
   }
 
-  toBitIdWithLatestVersionAllowNull(): BitId {
-    const id = this.toBitIdWithLatestVersion();
+  toBitIdWithLatestVersionAllowNull(): ComponentID {
+    const id = this.toComponentIdWithLatestVersion();
     return id.version === VERSION_ZERO ? id.changeVersion(undefined) : id;
   }
 

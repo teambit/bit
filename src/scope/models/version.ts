@@ -46,7 +46,7 @@ export type Log = {
 };
 
 export type DepEdgeType = 'prod' | 'dev' | 'ext';
-export type DepEdge = { source: BitId; target: BitId; type: DepEdgeType };
+export type DepEdge = { source: ComponentID; target: ComponentID; type: DepEdgeType };
 
 type ExternalHead = { head: Ref; laneId: LaneId };
 type SquashData = { previousParents: Ref[]; laneId: LaneId };
@@ -382,8 +382,8 @@ export default class Version extends BitObject {
   }
   static depEdgeFromObject(depEdgeObj: Record<string, any>): DepEdge {
     return {
-      source: new BitId(depEdgeObj.source),
-      target: new BitId(depEdgeObj.target),
+      source: ComponentID.fromObject(depEdgeObj.source),
+      target: ComponentID.fromObject(depEdgeObj.target),
       type: depEdgeObj.type,
     };
   }
@@ -548,7 +548,7 @@ export default class Version extends BitObject {
       if (exts.length) {
         const newExts = exts.map((extension: any) => {
           if (extension.extensionId) {
-            const extensionId = new BitId(extension.extensionId);
+            const extensionId = new ComponentID(new BitId(extension.extensionId));
             const entry = new ExtensionDataEntry(undefined, extensionId, undefined, extension.config, extension.data);
             return entry;
           }

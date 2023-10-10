@@ -40,7 +40,6 @@ import { LaneId } from '@teambit/lane-id';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
-import { ComponentID } from '@teambit/component-id';
 import { isHash, isTag } from '@teambit/component-version';
 import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
@@ -298,14 +297,13 @@ if you're willing to lose the history from the head to the specified version, us
           : [];
       })
     );
-    const bitIds = componentIds.map((c) => c._legacy);
     const components = await this.scope.getMany(componentIds);
     await Promise.all(
       components.map(async (comp) => {
         const tagData = tagDataPerComp.find((t) => t.componentId.isEqual(comp.id, { ignoreVersion: true }));
         if (!tagData) throw new Error(`unable to find ${comp.id.toString()} in tagDataPerComp`);
         if (!tagData.dependencies.length) return;
-        await this.updateDependenciesVersionsOfComponent(comp, tagData.dependencies, bitIds);
+        await this.updateDependenciesVersionsOfComponent(comp, tagData.dependencies, componentIds);
       })
     );
 
@@ -381,7 +379,6 @@ if you're willing to lose the history from the head to the specified version, us
       })
     );
     const componentIds = snapDataPerComp.map((t) => t.componentId);
-    const bitIds = componentIds.map((c) => c._legacy);
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
 
     let lane: Lane | undefined;
@@ -409,7 +406,7 @@ if you're willing to lose the history from the head to the specified version, us
         if (!snapData) throw new Error(`unable to find ${comp.id.toString()} in snapDataPerComp`);
         if (snapData.aspects) await this.scope.addAspectsFromConfigObject(comp, snapData.aspects);
         if (snapData.dependencies.length) {
-          await this.updateDependenciesVersionsOfComponent(comp, snapData.dependencies, bitIds);
+          await this.updateDependenciesVersionsOfComponent(comp, snapData.dependencies, componentIds);
         }
       })
     );
@@ -570,7 +567,7 @@ there are matching among unmodified components thought. consider using --unmodif
       if (!componentIds.length) {
         return null;
       }
-      return ComponentIdList.fromArray(componentIds.map((c) => c._legacy));
+      return ComponentIdList.fromArray(componentIds);
     }
   }
 
@@ -868,7 +865,8 @@ another option, in case this dependency is not in main yet is to remove all refe
   }> {
     const objectRepo = this.objectsRepo;
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
-    const component = await this.scope.legacyScope.sources.findOrAddComponent(source);
+    // @todo: fix the ts error here with "source"
+    const component = await this.scope.legacyScope.sources.findOrAddComponent(source as any);
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     const { version, files, flattenedEdges } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
@@ -894,7 +892,8 @@ another option, in case this dependency is not in main yet is to remove all refe
 
   async _getObjectsToEnrichComp(consumerComponent: ConsumerComponent, modifiedLog?: Log): Promise<BitObject[]> {
     const component =
-      consumerComponent.modelComponent || (await this.scope.legacyScope.sources.findOrAddComponent(consumerComponent));
+      consumerComponent.modelComponent || // @todo: fix the ts error here with "source"
+      (await this.scope.legacyScope.sources.findOrAddComponent(consumerComponent as any));
     const version = await component.loadVersion(consumerComponent.id.version as string, this.objectsRepo, true, true);
     if (modifiedLog) version.addModifiedLog(modifiedLog);
     const artifactFiles = getArtifactsFiles(consumerComponent.extensions);
@@ -1002,8 +1001,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     dependencies: ComponentID[],
     currentBitIds: ComponentID[]
   ) {
-    const depsBitIds = dependencies.map((d) => d._legacy);
-    const updatedIds = ComponentIdList.fromArray([...currentBitIds, ...depsBitIds]);
+    const updatedIds = ComponentIdList.fromArray([...currentBitIds, ...dependencies]);
     const componentIdStr = component.id.toString();
     const legacyComponent: ConsumerComponent = component.state._consumer;
     const deps = [...legacyComponent.dependencies.get(), ...legacyComponent.devDependencies.get()];
@@ -1024,13 +1022,13 @@ another option, in case this dependency is not in main yet is to remove all refe
       }
     });
     legacyComponent.extensions.forEach((ext) => {
-      if (!ext.extensionId) return;
-      const updatedBitId = updatedIds.searchWithoutVersion(ext.extensionId);
+      if (!ext.newExtensionId) return;
+      const updatedBitId = updatedIds.searchWithoutVersion(ext.newExtensionId);
       if (updatedBitId) {
         this.logger.debug(
-          `updating "${componentIdStr}", extension ${ext.extensionId.toString()} to version ${updatedBitId.version}}`
+          `updating "${componentIdStr}", extension ${ext.newExtensionId.toString()} to version ${updatedBitId.version}}`
         );
-        ext.extensionId = updatedBitId;
+        ext.extensionId = updatedBitId._legacy;
       }
     });
 
@@ -1061,7 +1059,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     const componentsList = new ComponentsList(this.workspace.consumer);
     if (persist) {
       const softTaggedComponents = componentsList.listSoftTaggedComponents();
-      return { bitIds: softTaggedComponents.map((c) => c._legacy), warnings: [] };
+      return { bitIds: softTaggedComponents, warnings: [] };
     }
 
     const tagPendingComponentsIds = includeUnmodified
@@ -1087,7 +1085,7 @@ another option, in case this dependency is not in main yet is to remove all refe
         return componentId.changeVersion(version);
       });
 
-      return { bitIds: compact(componentIds.flat()).map((bitId) => bitId._legacy), warnings };
+      return { bitIds: compact(componentIds.flat()), warnings };
     }
 
     if (snapped) {

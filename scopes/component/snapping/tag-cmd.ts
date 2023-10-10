@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { ComponentIdList } from '@teambit/component-id';
+import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Command, CommandOptions } from '@teambit/cli';
 import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
@@ -9,7 +9,6 @@ import {
   CFG_FORCE_LOCAL_BUILD,
 } from '@teambit/legacy/dist/constants';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { ComponentID } from '@teambit/component-id';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';

@@ -6,7 +6,6 @@ import {
   DependencyResolverMain,
   KEY_NAME_BY_LIFECYCLE_TYPE,
 } from '@teambit/dependency-resolver';
-import { ComponentID } from '@teambit/component-id';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { cloneDeep, compact, set } from 'lodash';
 import pMapSeries from 'p-map-series';
@@ -183,7 +182,6 @@ export class DependenciesMain {
     // @todo: supports this on bare-scope.
     if (!this.workspace) throw new OutsideWorkspaceError();
     const compId = await this.workspace.resolveComponentId(id);
-    const bitId = compId._legacy;
     const consumer = this.workspace.consumer;
     const scopeGraph = await DependencyGraph.buildGraphFromScope(consumer.scope);
     const scopeDependencyGraph = new DependencyGraph(scopeGraph);
@@ -191,7 +189,7 @@ export class DependenciesMain {
     const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(consumer, true);
     const workspaceDependencyGraph = new DependencyGraph(workspaceGraph);
 
-    return { scopeGraph: scopeDependencyGraph, workspaceGraph: workspaceDependencyGraph, id: bitId };
+    return { scopeGraph: scopeDependencyGraph, workspaceGraph: workspaceDependencyGraph, id: compId };
   }
 
   async debugDependencies(id: string): Promise<DependenciesResultsDebug> {

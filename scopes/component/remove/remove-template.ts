@@ -1,7 +1,6 @@
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import chalk from 'chalk';
 import R from 'ramda';
-import { ComponentIdList } from '@teambit/component-id';
 
 export function removeTemplate(
   { dependentBits, modifiedComponents = [], removedComponentIds, missingComponents, removedFromLane },

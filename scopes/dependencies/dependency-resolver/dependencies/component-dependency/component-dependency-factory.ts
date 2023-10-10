@@ -88,7 +88,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       isExtension: false,
       packageName,
       componentId: legacyDep.id.serialize(),
-      version: legacyDep.id.getVersion().toString(),
+      version: legacyDep.id._legacy.getVersion().toString(),
       __type: TYPE,
       lifecycle,
     };
@@ -113,7 +113,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       isExtension: true,
       packageName,
       componentId: extension.extensionId.serialize(),
-      version: extension.extensionId.getVersion().toString(),
+      version: extension.extensionId._legacy.getVersion().toString(),
       __type: TYPE,
       lifecycle,
     };

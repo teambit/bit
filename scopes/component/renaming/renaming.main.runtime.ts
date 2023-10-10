@@ -17,7 +17,7 @@ import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/co
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { importTransformer, exportTransformer } from '@teambit/typescript';
 import { InstallMain, InstallAspect } from '@teambit/install';
-import { isValidIdChunk, InvalidName } from '@teambit/component-id';
+import { isValidIdChunk, InvalidName } from '@teambit/legacy-bit-id';
 import { RenameCmd, RenameOptions } from './rename.cmd';
 import { RenamingAspect } from './renaming.aspect';
 import { RenamingFragment } from './renaming.fragment';
@@ -189,7 +189,7 @@ make sure this argument is the name only, without the scope-name. to change the 
       refactoredIds.push(...changedComponents.map((c) => c.id));
     }
 
-    const newIds = componentsUsingOldScope.map((comp) => new ComponentID(comp.id, newScope));
+    const newIds = componentsUsingOldScope.map((comp) => new ComponentID(comp.id._legacy, newScope));
     await this.relinkAndCompile(componentsUsingOldScope, newIds);
 
     return { scopeRenamedComponentIds: componentsUsingOldScope.map((comp) => comp.id), refactoredIds };
@@ -250,11 +250,11 @@ make sure this argument is the name only, without the scope-name. to change the 
     const newIds = componentsUsingOldScope.map((comp) => {
       if (newWorkspaceDefaultScope && comp.id.scope === oldWorkspaceDefaultScope) {
         this.workspace.bitMap.removeDefaultScope(comp.id);
-        return new ComponentID(comp.id, newWorkspaceDefaultScope);
+        return new ComponentID(comp.id._legacy, newWorkspaceDefaultScope);
       }
       const newCompScope = this.renameOwnerInScopeName(comp.id.scope, oldOwner, newOwner);
       this.workspace.bitMap.setDefaultScope(comp.id, newCompScope);
-      return new ComponentID(comp.id, newCompScope);
+      return new ComponentID(comp.id._legacy, newCompScope);
     });
     await this.workspace.bitMap.write();
     const refactoredIds: ComponentID[] = [];

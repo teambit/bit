@@ -33,7 +33,7 @@ import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 import GeneralError from '../../error/general-error';
 import { ALLOW_SAME_NAME, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 
-export type PathChangeResult = { id: BitId; changes: PathChange[] };
+export type PathChangeResult = { id: ComponentID; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
 export type GetBitMapComponentOptions = {
   ignoreVersion?: boolean;
@@ -64,7 +64,7 @@ export default class BitMap {
   _cacheIdsAllStrWithoutScope: { [idStr: string]: ComponentID } | undefined;
   _cacheIdsAllStrWithoutVersion: { [idStr: string]: ComponentID } | undefined;
   _cacheIdsAllStrWithoutScopeAndVersion: { [idStr: string]: ComponentID } | undefined;
-  allTrackDirs: { [trackDir: string]: BitId } | null | undefined;
+  allTrackDirs: { [trackDir: string]: ComponentID } | null | undefined;
   private updatedIds: { [oldIdStr: string]: ComponentMap } = {}; // needed for out-of-sync where the id is changed during the process
   constructor(
     public projectRoot: string,

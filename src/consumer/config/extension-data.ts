@@ -2,7 +2,7 @@
 import R from 'ramda';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { compact, isEmpty, cloneDeep } from 'lodash';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import { sortObject } from '../../utils';
 import {
   convertBuildArtifactsFromModelObject,
@@ -26,14 +26,14 @@ export const INTERNAL_CONFIG_FIELDS = ['__specific'];
 export class ExtensionDataEntry {
   constructor(
     public legacyId?: string,
-    public extensionId?: BitId,
+    public extensionId?: ComponentID,
     public name?: string,
     public rawConfig: ExtensionConfig = {},
     public data: { [key: string]: any } = {},
     public newExtensionId?: ComponentID
   ) {}
 
-  get id(): string | BitId {
+  get id(): string | ComponentID {
     if (this.extensionId) return this.extensionId;
     if (this.name) return this.name;
     if (this.legacyId) return this.legacyId;
@@ -122,9 +122,9 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   /**
    * returns only new 3rd party extension ids, not core, nor legacy.
    */
-  get extensionsBitIds(): BitIds {
-    const bitIds = this.filter((entry) => entry.extensionId).map((entry) => entry.extensionId) as BitId[];
-    return BitIds.fromArray(bitIds);
+  get extensionsBitIds(): ComponentIdList {
+    const bitIds = this.filter((entry) => entry.extensionId).map((entry) => entry.extensionId) as ComponentID[];
+    return ComponentIdList.fromArray(bitIds);
   }
 
   /**
@@ -291,7 +291,7 @@ export function ignoreVersionPredicate(extensionEntry1: ExtensionDataEntry, exte
 export function configEntryToDataEntry(extensionId: string, config: any): ExtensionDataEntry {
   const isCore = ExtensionDataList.coreExtensionsNames.has(extensionId);
   if (!isCore) {
-    const parsedId = BitId.parse(extensionId, true);
+    const parsedId = ComponentID.fromString(extensionId);
     return new ExtensionDataEntry(undefined, parsedId, undefined, config, undefined);
   }
   return new ExtensionDataEntry(undefined, undefined, extensionId, config, undefined);

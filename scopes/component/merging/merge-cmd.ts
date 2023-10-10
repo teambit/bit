@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
-import { ComponentID } from '@teambit/component-id';
 import { compact } from 'lodash';
 import {
   WILDCARD_HELP,

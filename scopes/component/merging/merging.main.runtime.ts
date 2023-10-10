@@ -42,7 +42,6 @@ import {
   removeFilesIfNeeded,
   updateFileStatus,
 } from '@teambit/checkout';
-import { ComponentID } from '@teambit/component-id';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
 import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
@@ -700,7 +699,7 @@ export class MergingMain {
     const unmergedComponents = consumer.scope.objects.unmergedComponents.getComponents();
     this.logger.debug(`merge-snaps, snapResolvedComponents, total ${unmergedComponents.length.toString()} components`);
     if (!unmergedComponents.length) return null;
-    const ids = ComponentIdList.fromArray(unmergedComponents.map((r) => new ComponentID(r.id)));
+    const ids = ComponentIdList.fromArray(unmergedComponents.map((r) => ComponentID.fromObject(r.id)));
     return this.snapping.snap({
       legacyBitIds: ids,
       build,
@@ -738,7 +737,7 @@ export class MergingMain {
     }
     const unresolvedComponents = this.workspace.consumer.scope.objects.unmergedComponents.getComponents();
     if (!unresolvedComponents.length) throw new GeneralError(`all components are resolved already, nothing to do`);
-    return unresolvedComponents.map((u) => ComponentID.fromLegacy(new ComponentID(u.id)));
+    return unresolvedComponents.map((u) => ComponentID.fromObject(u.id));
   }
 
   private async getComponentsToMerge(consumer: Consumer, ids: string[]): Promise<ComponentID[]> {

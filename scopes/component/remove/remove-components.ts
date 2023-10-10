@@ -2,7 +2,7 @@ import groupArray from 'group-array';
 import partition from 'lodash.partition';
 import R from 'ramda';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import ComponentIdList from '@teambit/component-id/bit-ids';
+import { ComponentIdList } from '@teambit/component-id';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import enrichContextFromGlobal from '@teambit/legacy/dist/hooks/utils/enrich-context-from-global';

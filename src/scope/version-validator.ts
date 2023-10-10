@@ -2,7 +2,7 @@ import { PJV } from 'package-json-validator';
 import R from 'ramda';
 import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
-import { ComponentIdList } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { isSnap } from '@teambit/component-version';
 import { BitId } from '../bit-id';
 import { DEPENDENCIES_FIELDS } from '../constants';
@@ -28,7 +28,7 @@ export default function validateVersionInstance(version: Version): void {
   const message = `unable to save Version object${
     version.componentId ? ` of "${version.componentId.toString()}"` : ` hash ${version.hash().toString()}`
   }`;
-  const validateBitId = (bitId: BitId, field: string, validateVersion = true, validateScope = true) => {
+  const validateComponentId = (bitId: ComponentID, field: string, validateVersion = true, validateScope = true) => {
     if (validateVersion && !bitId.hasVersion()) {
       throw new VersionInvalid(`${message}, the ${field} ${bitId.toString()} does not have a version`);
     }
@@ -78,7 +78,7 @@ export default function validateVersionInstance(version: Version): void {
 
   const _validateExtension = (extension: ExtensionDataEntry) => {
     if (extension.extensionId) {
-      validateBitId(extension.extensionId, `extensions.${extension.extensionId.toString()}`, true, false);
+      validateComponentId(extension.extensionId, `extensions.${extension.extensionId.toString()}`, true, false);
     }
     // Make sure we don't insert the remove sign ("-") by mistake to the models
     if (extension.config) {

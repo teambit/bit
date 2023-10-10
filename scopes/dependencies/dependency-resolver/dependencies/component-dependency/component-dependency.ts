@@ -1,5 +1,5 @@
 import type { ComponentID } from '@teambit/component-id';
-import type { BitIdProps } from '@teambit/component-id';
+import type { BitIdProps } from '@teambit/legacy-bit-id';
 
 import { SerializedDependency, DependencyLifecycleType, DependencyManifest } from '../dependency';
 import { BaseDependency } from '../base-dependency';

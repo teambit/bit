@@ -1,4 +1,4 @@
-import type { Component, ComponentID } from '@teambit/component';
+import type { Component } from '@teambit/component';
 import { Dependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Edge, Graph, Node } from '@teambit/graph.cleargraph';
 import { ComponentID } from '@teambit/component-id';

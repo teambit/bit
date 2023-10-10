@@ -1,14 +1,12 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { ComponentID } from '@teambit/component-id';
-import { ComponentIdList } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { compact } from 'lodash';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/lib/list-scope';
-import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -176,7 +174,7 @@ export class RemoveMain {
     }
     const compId = await this.workspace.scope.resolveComponentId(compIdStr);
     const currentLane = await this.workspace.getCurrentLaneObject();
-    const idOnLane = currentLane?.getComponent(compId._legacy);
+    const idOnLane = currentLane?.getComponent(compId);
     const compIdWithPossibleVer = idOnLane ? compId.changeVersion(idOnLane.head.toString()) : compId;
     let compFromScope: Component | undefined;
     try {
@@ -284,9 +282,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     if (!currentLane) return [];
     const laneIds = currentLane.toBitIds();
     const workspaceIds = await this.workspace.listIds();
-    const laneIdsNotInWorkspace = laneIds.filter(
-      (id) => !workspaceIds.find((wId) => wId._legacy.isEqualWithoutVersion(id))
-    );
+    const laneIdsNotInWorkspace = laneIds.filter((id) => !workspaceIds.find((wId) => wId.isEqualWithoutVersion(id)));
     if (!laneIdsNotInWorkspace.length) return [];
     const laneCompIdsNotInWorkspace = await this.workspace.scope.resolveMultipleComponentIds(laneIdsNotInWorkspace);
     const comps = await this.workspace.scope.getMany(laneCompIdsNotInWorkspace);
@@ -317,7 +313,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     if (hasWildcard(componentsPattern)) {
       return getRemoteBitIdsByWildcards(componentsPattern);
     }
-    return [ComponentID.fromString(componentsPattern, true)];
+    return [ComponentID.fromString(componentsPattern)];
   }
 
   static slots = [];

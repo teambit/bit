@@ -93,7 +93,7 @@ export type ComponentsAndVersions = {
 };
 
 export type LegacyOnTagResult = {
-  id: BitId;
+  id: ComponentID;
   builderData: ExtensionDataEntry;
 };
 

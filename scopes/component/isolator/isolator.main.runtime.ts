@@ -5,7 +5,7 @@ import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, pick } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
-import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
+import { Component, ComponentMap, ComponentAspect } from '@teambit/component';
 import type { ComponentMain, ComponentFactory } from '@teambit/component';
 import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
@@ -1142,7 +1142,7 @@ export class IsolatorMain {
     };
     const bitDependencies = getBitDependencies(legacyComp.dependencies.getAllIds());
     const bitDevDependencies = getBitDependencies(legacyComp.devDependencies.getAllIds());
-    const bitExtensionDependencies = getBitDependencies(legacyComp.extensions.extensionsBitIds);
+    const bitExtensionDependencies = getBitDependencies(legacyComp.extensions.extensionsComponentIds);
     const packageJson = PackageJsonFile.createFromComponent(bitDir, legacyComp, true);
     const main = pathNormalizeToLinux(legacyComp.mainFile);
     packageJson.addOrUpdateProperty('main', main);
@@ -1189,7 +1189,7 @@ export class IsolatorMain {
             `getArtifacts: unable to find where to populate the artifacts from for ${component.id.toString()}`
           );
         }
-        const compParent = await legacyScope.getConsumerComponent(found._legacy);
+        const compParent = await legacyScope.getConsumerComponent(found);
         return getArtifactFilesExcludeExtension(compParent.extensions, 'teambit.pkg/pkg');
       }
       const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];

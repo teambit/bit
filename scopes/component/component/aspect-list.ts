@@ -13,7 +13,7 @@ export class AspectList {
   constructor(readonly entries: AspectEntry[]) {}
 
   addEntry(aspectId: ComponentID, data: SerializableMap = {}) {
-    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data);
+    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId, undefined, {}, data);
     const entry = new AspectEntry(aspectId, extensionDataEntry);
     this.entries.push(entry);
     return entry;
@@ -127,6 +127,6 @@ export class AspectList {
 
 function getAspectId(entry: ExtensionDataEntry, scope?: string) {
   if (!entry.extensionId && entry.name) return ComponentID.fromString(entry.name);
-  if (entry.extensionId) return ComponentID.fromLegacy(entry.extensionId, scope);
+  if (entry.extensionId) return ComponentID.fromLegacy(entry.extensionId._legacy, scope);
   throw new Error('aspect cannot be loaded without setting an ID');
 }
