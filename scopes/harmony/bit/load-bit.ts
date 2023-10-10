@@ -27,7 +27,7 @@ import { Harmony, RuntimeDefinition, Extension } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
 import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
 
-import { ComponentID, VERSION_DELIMITER } from '@teambit/component-id';
+import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { ConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
@@ -40,7 +40,7 @@ import { satisfies } from 'semver';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
-import { ComponentIdList } from '@teambit/component-id';
+import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { findScopePath } from '@teambit/legacy/dist/utils';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
@@ -107,7 +107,9 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
     // Do nothing here, invalid bitmaps will be handled later
     // eslint-disable-next-line no-empty
   } catch (e: any) {}
-  const allBitmapIds = Object.keys(parsedBitMap).map((id) => BitMap.getBitIdFromComponentJson(id, parsedBitMap[id]));
+  const allBitmapIds = Object.keys(parsedBitMap).map((id) =>
+    BitMap.getComponentIdFromComponentJson(id, parsedBitMap[id], rawConfig.defaultScope)
+  );
   const bitMapBitIds = ComponentIdList.fromArray(allBitmapIds);
   const result = Object.entries(rawConfig).reduce((acc, [aspectId, aspectConfig]) => {
     let newAspectEntry = aspectId;
@@ -128,7 +130,7 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
 function getVersionFromBitMapIds(allBitmapIds: ComponentIdList, aspectId: string): string | undefined {
   let aspectBitId: ComponentID;
   try {
-    aspectBitId = ComponentID.fromString(aspectId, true);
+    aspectBitId = ComponentID.fromString(aspectId);
   } catch (err: any) {
     throw new Error(
       `unable to parse the component-id "${aspectId}" from the workspace.jsonc file, make sure this is a component id`

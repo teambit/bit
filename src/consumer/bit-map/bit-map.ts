@@ -327,22 +327,31 @@ export default class BitMap {
     this.throwForDuplicateRootDirs(componentsJson);
     Object.keys(componentsJson).forEach((componentId) => {
       const componentFromJson = componentsJson[componentId];
-      const bitId = BitMap.getBitIdFromComponentJson(componentId, componentFromJson);
-      if (bitId.hasScope() && !bitId.hasVersion()) {
-        throw new BitError(
-          `.bitmap entry of "${componentId}" is invalid, it has a scope-name "${bitId.scope}", however, it does not have any version`
-        );
-      }
-      if (!bitId.hasScope() && !componentFromJson.defaultScope) {
-        // needed for backward compatibility. before scheme 17.0.0, the defaultScope wasn't written if it was the same
-        // as consumer.defaultScope
-        componentFromJson.defaultScope = defaultScope;
-      }
-      componentFromJson.id = new ComponentID(componentFromJson.id, componentFromJson.defaultScope);
+      const compId = BitMap.getComponentIdFromComponentJson(componentId, componentFromJson, defaultScope);
+      componentFromJson.id = compId;
       const componentMap = ComponentMap.fromJson(componentFromJson);
       componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.components.push(componentMap);
     });
+  }
+
+  static getComponentIdFromComponentJson(
+    componentId: string,
+    componentFromJson: Record<string, any>,
+    defaultScope: string
+  ): ComponentID {
+    const bitId = BitMap.getBitIdFromComponentJson(componentId, componentFromJson);
+    if (bitId.hasScope() && !bitId.hasVersion()) {
+      throw new BitError(
+        `.bitmap entry of "${componentId}" is invalid, it has a scope-name "${bitId.scope}", however, it does not have any version`
+      );
+    }
+    if (!bitId.hasScope() && !componentFromJson.defaultScope) {
+      // needed for backward compatibility. before scheme 17.0.0, the defaultScope wasn't written if it was the same
+      // as consumer.defaultScope
+      componentFromJson.defaultScope = defaultScope;
+    }
+    return new ComponentID(componentFromJson.id, componentFromJson.defaultScope);
   }
 
   static getBitIdFromComponentJson(componentId: string, componentFromJson: Record<string, any>): BitId {
@@ -708,10 +717,10 @@ export default class BitMap {
     return componentMap;
   }
 
-  syncWithIds(ids: BitIds, laneBitIds: BitIds) {
+  syncWithIds(ids: ComponentIdList, laneBitIds: ComponentIdList) {
     this.components.forEach((componentMap) => {
-      componentMap.isAvailableOnCurrentLane = ids.hasWithoutVersion(componentMap.id._legacy);
-      componentMap.onLanesOnly = laneBitIds.hasWithoutVersion(componentMap.id._legacy);
+      componentMap.isAvailableOnCurrentLane = ids.hasWithoutVersion(componentMap.id);
+      componentMap.onLanesOnly = laneBitIds.hasWithoutVersion(componentMap.id);
     });
     this._invalidateCache();
     this.markAsChanged();

@@ -824,7 +824,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
   private async getRemovedStagedBitIds(): Promise<ComponentIdList> {
     const removedStaged = await this.remove.getRemovedStaged();
-    return ComponentIdList.fromArray(removedStaged.map((r) => r._legacy).map((id) => id.changeVersion(undefined)));
+    return ComponentIdList.fromArray(removedStaged.map((id) => id.changeVersion(undefined)));
   }
 
   static runtime = MainRuntime;

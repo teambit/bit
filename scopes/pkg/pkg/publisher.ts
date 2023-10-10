@@ -104,7 +104,7 @@ export class Publisher {
    */
   private async getIdsToPublish(componentIds: ComponentID[]): Promise<string[]> {
     await this.throwForNonStagedOrTaggedComponents(componentIds);
-    const ids = ComponentIdList.fromArray(componentIds.map((compId) => compId._legacy));
+    const ids = ComponentIdList.fromArray(componentIds);
     const components = await this.scope.getComponentsAndVersions(ids, true);
     return components
       .filter((c) => this.shouldPublish(c.version.extensions))

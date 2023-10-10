@@ -4,7 +4,7 @@ import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/work
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { ComponentID, InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/component-id';
+import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import pMapSeries from 'p-map-series';
 import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -14,7 +14,7 @@ import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/sc
 import { importAllArtifacts } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import InstallAspect, { InstallMain } from '@teambit/install';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { ComponentIdList } from '@teambit/component-id';
+import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import GraphAspect, { GraphMain } from '@teambit/graph';

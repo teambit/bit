@@ -16,16 +16,14 @@ import MergingAspect, {
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
 import { getBasicLog } from '@teambit/snapping';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
 import pMapSeries from 'p-map-series';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { ComponentIdList } from '@teambit/component-id';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
-import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -603,14 +601,14 @@ async function filterComponentsStatus(
   otherLane?: Lane, // lane that gets merged into the current lane. if not provided, it's main that gets merged into the current lane
   shouldSquash?: boolean
 ): Promise<ComponentMergeStatus[]> {
-  const bitIdsFromPattern = ComponentIdList.fromArray(compIdsToKeep.map((c) => c._legacy));
+  const bitIdsFromPattern = ComponentIdList.fromArray(compIdsToKeep);
   const bitIdsNotFromPattern = allBitIds.filter((bitId) => !bitIdsFromPattern.hasWithoutVersion(bitId));
   const filteredComponentStatus: ComponentMergeStatus[] = [];
   const depsToAdd: ComponentID[] = [];
   const missingDepsFromHead = {};
   const missingDepsFromHistory: string[] = [];
   await pMapSeries(compIdsToKeep, async (compId) => {
-    const fromStatus = allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(compId._legacy));
+    const fromStatus = allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(compId));
     if (!fromStatus) {
       throw new Error(`filterComponentsStatus: unable to find ${compId.toString()} in component-status`);
     }
@@ -630,10 +628,10 @@ async function filterComponentsStatus(
     if (!targetVersions.length) {
       return;
     }
-    const modelComponent = await workspace.consumer.scope.getModelComponent(compId._legacy);
+    const modelComponent = await workspace.consumer.scope.getModelComponent(compId);
     if (shouldSquash) {
       // no need to check all versions, we merge only the head
-      const headOnTarget = otherLane ? otherLane.getComponent(compId._legacy)?.head : modelComponent.head;
+      const headOnTarget = otherLane ? otherLane.getComponent(compId)?.head : modelComponent.head;
       if (!headOnTarget) {
         throw new Error(`filterComponentsStatus: unable to find head for ${compId.toString()}`);
       }
@@ -664,7 +662,7 @@ async function filterComponentsStatus(
       if (includeDeps) {
         depsToAdd.push(...depsOnLane);
       } else {
-        const headOnTarget = otherLane ? otherLane.getComponent(compId._legacy)?.head : modelComponent.head;
+        const headOnTarget = otherLane ? otherLane.getComponent(compId)?.head : modelComponent.head;
         const depsOnLaneStr = depsOnLane.map((dep) => dep.toStringWithoutVersion());
         if (headOnTarget?.isEqual(remoteVersion)) {
           depsOnLaneStr.forEach((dep) => {

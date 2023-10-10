@@ -8,7 +8,7 @@ import { MainRuntime } from '@teambit/cli';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
 import type { LoggerMain } from '@teambit/logger';
-import { ComponentID, Component, FilterAspectsOptions } from '@teambit/component';
+import { Component, FilterAspectsOptions } from '@teambit/component';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { replaceFileExtToJs } from '@teambit/compilation.modules.babel-compiler';
@@ -549,7 +549,7 @@ export class AspectLoaderMain {
     const aspectLoader = globalScopeHarmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
     // @todo: Gilad make this work
     // const ids = await scope.resolveMultipleComponentIds(aspectIds);
-    const ids = aspectIds.map((id) => ComponentID.fromLegacy(ComponentID.fromString(id, true)));
+    const ids = aspectIds.map((id) => ComponentID.fromString(id));
     const hasVersions = ids.every((id) => id.hasVersion());
     const useCache = hasVersions; // if all components has versions, try to use the cached aspects
     await scope.import(ids, { useCache, reason: 'to load aspects from global scope' });

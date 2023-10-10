@@ -9,15 +9,7 @@ import { RawBuilderData, BuilderAspect } from '@teambit/builder';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import type { ComponentMain, ComponentMap, ResolveAspectsOptions } from '@teambit/component';
-import {
-  Component,
-  ComponentAspect,
-  ComponentFactory,
-  ComponentID,
-  Snap,
-  State,
-  AspectEntry,
-} from '@teambit/component';
+import { Component, ComponentAspect, ComponentFactory, Snap, State, AspectEntry } from '@teambit/component';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -26,8 +18,7 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
-import { ComponentID } from '@teambit/component-id';
-import { ComponentIdList, ComponentIdList as ComponentsIds } from '@teambit/component-id';
+import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { ModelComponent, Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { Repository } from '@teambit/legacy/dist/scope/objects';
 import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
@@ -53,6 +44,7 @@ import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
+import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { compact, slice, difference } from 'lodash';
@@ -362,10 +354,8 @@ export class ScopeMain implements ComponentFactory {
   /**
    * Will fetch a list of components into the current scope.
    * This will only fetch the object and won't write the files to the actual FS
-   *
-   * @param {ComponentsIds} ids list of ids to fetch
    */
-  fetch(ids: ComponentsIds) {} // eslint-disable-line @typescript-eslint/no-unused-vars
+  fetch(ids: ComponentIdList) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
   /**
    * This function will get a component and sealed it's current state into the scope
@@ -506,15 +496,14 @@ export class ScopeMain implements ComponentFactory {
 
     const addEdges = (compId: ComponentID, dependencies: ConsumerComponent['dependencies'], label: DepEdgeType) => {
       dependencies.get().forEach((dep) => {
-        const depId = this.resolveComponentIdFromBitId(dep.id);
+        const depId = dep.id;
         graph.setNode(new Node(depId.toString(), depId));
         graph.setEdge(new Edge(compId.toString(), depId.toString(), label));
       });
     };
     const componentsAndVersions = await this.legacyScope.getComponentsAndVersions(allFlattenedUniq);
     componentsAndVersions.forEach(({ component, version, versionStr }) => {
-      const compBitId = component.toComponentId().changeVersion(versionStr);
-      const compId = this.resolveComponentIdFromBitId(compBitId);
+      const compId = component.toComponentId().changeVersion(versionStr);
       graph.setNode(new Node(compId.toString(), compId));
       addEdges(compId, version.dependencies, 'prod');
       addEdges(compId, version.devDependencies, 'dev');
@@ -534,10 +523,10 @@ export class ScopeMain implements ComponentFactory {
     }
     const edges = flattenedEdges.map((edge) => ({
       ...edge,
-      source: this.resolveComponentIdFromBitId(edge.source),
-      target: this.resolveComponentIdFromBitId(edge.target),
+      source: edge.source,
+      target: edge.target,
     }));
-    const nodes = consumerComponent.flattenedDependencies.map((depId) => this.resolveComponentIdFromBitId(depId));
+    const nodes = consumerComponent.flattenedDependencies;
 
     const graph = new Graph<ComponentID, DepEdgeType>();
     nodes.forEach((node) => graph.setNode(new Node(node.toString(), node)));
@@ -581,17 +570,11 @@ export class ScopeMain implements ComponentFactory {
       reason?: string;
     } = {}
   ): Promise<void> {
-    const legacyIds = ids.map((id) => {
-      const legacyId = id;
-      if (legacyId.scope === this.name) return legacyId.changeScope(null);
-      return legacyId;
-    });
-
-    const withoutOwnScopeAndLocals = legacyIds.filter((id) => {
-      return id.scope !== this.name && id.hasScope();
+    const withoutOwnScopeAndLocals = ids.filter((id) => {
+      return id.scope !== this.name && id._legacy.hasScope();
     });
     await this.legacyScope.scopeImporter.importMany({
-      ids: ComponentsIds.fromArray(withoutOwnScopeAndLocals),
+      ids: ComponentIdList.fromArray(withoutOwnScopeAndLocals),
       cache: useCache,
       throwForDependencyNotFound: false,
       reFetchUnBuiltVersion,
@@ -782,8 +765,8 @@ export class ScopeMain implements ComponentFactory {
    * resolve a component ID.
    * @param id component ID.
    */
-  async resolveComponentId(id: string | ComponentID | ComponentID): Promise<ComponentID> {
-    if (id instanceof ComponentID) return this.resolveComponentIdFromBitId(id);
+  async resolveComponentId(id: string | BitId | ComponentID): Promise<ComponentID> {
+    if (id instanceof BitId) return this.resolveComponentIdFromBitId(id);
     const idStr = id.toString();
     const component = await this.legacyScope.loadModelComponentByIdStr(idStr);
     const getIdToCheck = () => {
@@ -796,10 +779,10 @@ export class ScopeMain implements ComponentFactory {
     };
     const IdToCheck = getIdToCheck();
     const legacyId = await this.legacyScope.getParsedId(IdToCheck);
-    return this.resolveComponentIdFromBitId(legacyId);
+    return legacyId;
   }
 
-  private resolveComponentIdFromBitId(id: ComponentID) {
+  private resolveComponentIdFromBitId(id: BitId) {
     return id.hasScope() ? ComponentID.fromLegacy(id) : ComponentID.fromLegacy(id, this.name);
   }
 
@@ -872,9 +855,11 @@ export class ScopeMain implements ComponentFactory {
     return resumeExport(this.legacyScope, exportId, remotes);
   }
 
+  /**
+   * @deprecated use `this.resolveComponentId` instead.
+   */
   async resolveId(id: string): Promise<ComponentID> {
-    const legacyId = await this.legacyScope.getParsedId(id);
-    return ComponentID.fromLegacy(legacyId);
+    return this.resolveComponentId(id);
   }
 
   // TODO: add new API for this
@@ -889,7 +874,7 @@ export class ScopeMain implements ComponentFactory {
     const remotes = await this._legacyRemotes();
     const remote = await remotes.resolve(scopeName, this.legacyScope);
     const results = await remote.list();
-    return results.map(({ id }) => ComponentID.fromLegacy(id));
+    return results.map(({ id }) => id);
   }
 
   async getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined> {

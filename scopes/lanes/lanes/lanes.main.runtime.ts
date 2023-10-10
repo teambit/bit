@@ -851,7 +851,6 @@ please create a new lane instead, which will include all components of this lane
     }
     const readmeComponentId = await this.workspace.resolveComponentId(readmeComponentIdStr);
 
-    const readmeComponentBitId = readmeComponentId._legacy;
     const scope: LegacyScope = this.workspace.scope.legacyScope;
     const laneId: LaneId = laneName
       ? await scope.lanes.parseLaneIdFromString(laneName)
@@ -863,7 +862,7 @@ please create a new lane instead, which will include all components of this lane
       return { result: false, message: `cannot find lane ${laneName}` };
     }
 
-    lane.setReadmeComponent(readmeComponentBitId);
+    lane.setReadmeComponent(readmeComponentId);
     await scope.lanes.saveLane(lane);
 
     const existingLaneConfig =

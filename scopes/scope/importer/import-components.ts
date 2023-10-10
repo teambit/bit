@@ -12,7 +12,7 @@ import GeneralError from '@teambit/legacy/dist/error/general-error';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { getLatestVersionNumber, pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import Component from '@teambit/legacy/dist/consumer/component';
 import { applyModifiedVersion } from '@teambit/checkout';
@@ -32,6 +32,7 @@ import VersionDependencies, {
 import { GraphMain } from '@teambit/graph';
 import { Workspace } from '@teambit/workspace';
 import { ComponentWriterMain, ComponentWriterResults, ManyComponentsWriterParams } from '@teambit/component-writer';
+import { LATEST_VERSION } from '@teambit/component-version';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -383,7 +384,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
           loader.start(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
           bitIds.push(...ids);
         } else {
-          bitIds.push(ComponentID.fromString(idStr, true)); // we don't support importing without a scope name
+          bitIds.push(ComponentID.fromString(idStr)); // we don't support importing without a scope name
         }
       })
     );
@@ -424,8 +425,20 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       return ComponentIdList.uniqFromArray(flattenedDeps);
     };
     const flattened = getFlattened();
-    const withLatest = flattened.removeMultipleVersionsKeepLatest();
+    const withLatest = this.removeMultipleVersionsKeepLatest(flattened);
     return withLatest;
+  }
+
+  private removeMultipleVersionsKeepLatest(flattened: ComponentIdList): ComponentID[] {
+    const grouped = flattened.toGroupByIdWithoutVersion();
+    const latestVersions = Object.keys(grouped).map((key) => {
+      const ids = grouped[key];
+      if (ids.length === 1) return ids[0];
+      const latest = getLatestVersionNumber(ids, ids[0].changeVersion(LATEST_VERSION));
+      return latest;
+    });
+
+    return latestVersions;
   }
 
   async importAccordingToBitMap(): Promise<ImportResult> {
@@ -575,7 +588,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     const mergeStatus: ComponentMergeStatus = { component, mergeResults: null };
     if (!componentStatus.modified) return mergeStatus;
     const componentModel = await this.consumer.scope.getModelComponent(component.id);
-    const existingBitMapBitId = this.consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
+    const existingBitMapBitId = this.consumer.bitMap.getComponentId(component.id, { ignoreVersion: true });
     const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
     const currentlyUsedVersion = existingBitMapBitId.version;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -140,7 +140,7 @@ export default class Scope {
     this.stagedSnaps = StagedSnaps.load(this.path);
   }
 
-  static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
+  static onPostExport: (ids: ComponentID[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
 
   public async refreshScopeIndex(force = false) {
     await this.objects.reloadScopeIndexIfNeed(force);
@@ -293,7 +293,7 @@ export default class Scope {
     );
   }
 
-  async hasId(id: BitId, opts: HasIdOpts) {
+  async hasId(id: ComponentID, opts: HasIdOpts) {
     const filter = (comp: ComponentItem) => {
       const symlinkCond = opts.includeSymlink ? true : !comp.isSymlink;
       const idMatch = comp.id.scope === id.scope && comp.id.name === id.name;
@@ -302,7 +302,7 @@ export default class Scope {
     const modelComponentList = await this.objects.listObjectsFromIndex(IndexType.components, filter);
     if (!modelComponentList || !modelComponentList.length) return false;
     if (!opts.includeVersion || !id.version) return true;
-    if (id.getVersion().latest) return true;
+    if (id._legacy.getVersion().latest) return true;
     const modelComponent = modelComponentList[0] as ModelComponent;
     return modelComponent.hasVersion(id.version, this.objects);
   }
@@ -645,7 +645,7 @@ once done, to continue working, please run "bit cc"`
    * Creates a symlink object with the local-scope which links to the real-object of the remote-scope
    * This way, local components that have dependencies to the exported component won't break.
    */
-  createSymlink(id: BitId, remote: string) {
+  createSymlink(id: ComponentID, remote: string) {
     const symlink = new Symlink({
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       scope: id.scope,
