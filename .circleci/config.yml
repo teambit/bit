@@ -667,32 +667,38 @@ jobs:
           command: mkdir linux
       - run:
           name: create empty folder
-          command: mkdir bit-${BIT_VERSION}
+          command: mkdir bit-${BIT_VERSION} bit-${BIT_VERSION}-install
       - run:
           name: install bit
           command: >
-            cd bit-${BIT_VERSION} &&
+            cd bit-${BIT_VERSION}-install &&
             npm init -y &&
             yarn set version 3.6.4 &&
             yarn config set nodeLinker node-modules &&
             yarn config set npmRegistryServer https://node-registry.bit.cloud &&
             yarn config set supportedArchitectures --json '{"os":["linux"],"cpu":["x64"]}' &&
             yarn add @teambit/bit@1.2.0
-      # - run:
-          # name: remove leftovers
-          # command: cd bit-${BIT_VERSION} && mv package.json && rm yarn.lock
+      - run:
+          name: copy node_modules
+          command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
       - run:
           name: compress bit
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: remove leftovers
+          command: rm -rf bit-${BIT_VERSION}/node_modules
       - run:
           name: move to linux folder
           command: mv bit-${BIT_VERSION}.tar.gz linux/bit-${BIT_VERSION}.tar.gz
       - run:
           name: install bit
           command: >
-            cd bit-${BIT_VERSION} &&
+            cd bit-${BIT_VERSION}-install &&
             yarn config set supportedArchitectures --json '{"os":["linux"],"cpu":["arm64"]}' &&
             yarn
+      - run:
+          name: copy node_modules
+          command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
       - run:
           name: create linux-arm64
           command: mkdir linux-arm64
@@ -700,14 +706,20 @@ jobs:
           name: compress bit arm64
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
       - run:
+          name: remove leftovers
+          command: rm -rf bit-${BIT_VERSION}/node_modules
+      - run:
           name: move to linux-arm64 folder
           command: mv bit-${BIT_VERSION}.tar.gz linux-arm64/bit-${BIT_VERSION}.tar.gz
       - run:
           name: install bit
           command: >
-            cd bit-${BIT_VERSION} &&
+            cd bit-${BIT_VERSION}-install &&
             yarn config set supportedArchitectures --json '{"os":["darwin"],"cpu":["x64"]}' &&
             yarn
+      - run:
+          name: copy node_modules
+          command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
       - run:
           name: create macos
           command: mkdir macos
@@ -715,14 +727,20 @@ jobs:
           name: compress bit x64 for macOS
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
       - run:
+          name: remove leftovers
+          command: rm -rf bit-${BIT_VERSION}/node_modules
+      - run:
           name: move to macos folder
           command: mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
       - run:
           name: install bit
           command: >
-            cd bit-${BIT_VERSION} &&
+            cd bit-${BIT_VERSION}-install &&
             yarn config set supportedArchitectures --json '{"os":["darwin"],"cpu":["arm64"]}' &&
             yarn
+      - run:
+          name: copy node_modules
+          command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
       - run:
           name: create macos-arm64
           command: mkdir macos-arm64
@@ -730,20 +748,29 @@ jobs:
           name: compress bit arm64 for macOS
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
       - run:
+          name: remove leftovers
+          command: rm -rf bit-${BIT_VERSION}/node_modules
+      - run:
           name: move to macos-arm64 folder
           command: mv bit-${BIT_VERSION}.tar.gz macos-arm64/bit-${BIT_VERSION}.tar.gz
       - run:
           name: install bit
           command: >
-            cd bit-${BIT_VERSION} &&
+            cd bit-${BIT_VERSION}-install &&
             yarn config set supportedArchitectures --json '{"os":["win32"],"cpu":["x64"]}' &&
             yarn
+      - run:
+          name: copy node_modules
+          command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
       - run:
           name: create windows
           command: mkdir windows
       - run:
           name: compress bit x64 for Windows
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: remove leftovers
+          command: rm -rf bit-${BIT_VERSION}/node_modules
       - run:
           name: move to windows folder
           command: mv bit-${BIT_VERSION}.tar.gz windows/bit-${BIT_VERSION}.tar.gz
