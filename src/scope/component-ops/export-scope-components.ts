@@ -231,7 +231,7 @@ async function throwForMissingLocalDependencies(
 ) {
   const compsWithHeads = lanes.length
     ? lanes.map((lane) => lane.toBitIds()).flat()
-    : components.map((c) => c.toBitIdWithHead());
+    : components.map((c) => c.toComponentIdWithHead());
 
   await Promise.all(
     versions.map(async (version) => {
@@ -242,7 +242,7 @@ async function throwForMissingLocalDependencies(
         return;
       }
       const getOriginCompWithVer = () => {
-        const compObj = components.find((c) => c.toBitId().isEqualWithoutVersion(originComp));
+        const compObj = components.find((c) => c.toComponentId().isEqualWithoutVersion(originComp));
         if (!compObj) return originComp;
         const tag = compObj.getTagOfRefIfExists(Ref.from(originComp.version as string));
         if (tag) return originComp.changeVersion(tag);
@@ -254,7 +254,7 @@ async function throwForMissingLocalDependencies(
           if (depId.scope !== scope.name) return;
           const existingModelComponent =
             (await scope.getModelComponentIfExist(depId)) ||
-            components.find((c) => c.toBitId().isEqualWithoutVersion(depId));
+            components.find((c) => c.toComponentId().isEqualWithoutVersion(depId));
           if (!existingModelComponent) {
             scope.objects.clearObjectsFromCache(); // just in case this error is caught. we don't want to persist anything by mistake.
             throw new ComponentNotFound(depId.toString(), getOriginCompWithVer().toString());

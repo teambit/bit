@@ -1,4 +1,4 @@
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import fs from 'fs-extra';
 import { v4 } from 'uuid';
 import * as path from 'path';
@@ -57,7 +57,7 @@ export type ComponentProps = {
   bitJson?: ComponentConfig;
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
-  flattenedDependencies?: BitIds;
+  flattenedDependencies?: ComponentIdList;
   flattenedEdges?: DepEdge[];
   packageDependencies?: Record<string, string>;
   devPackageDependencies?: Record<string, string>;
@@ -107,7 +107,7 @@ export default class Component {
   dependencies: Dependencies;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
-  flattenedDependencies: BitIds;
+  flattenedDependencies: ComponentIdList;
   flattenedEdges: DepEdge[];
   packageDependencies: Record<string, string>;
   devPackageDependencies: Record<string, string>;
@@ -200,7 +200,7 @@ export default class Component {
     this.bitJson = bitJson;
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
-    this.flattenedDependencies = flattenedDependencies || new BitIds();
+    this.flattenedDependencies = flattenedDependencies || new ComponentIdList();
     this.flattenedEdges = flattenedEdges || [];
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
@@ -344,7 +344,7 @@ export default class Component {
     return Boolean(allDependencies.length);
   }
 
-  getAllFlattenedDependencies(): BitId[] {
+  getAllFlattenedDependencies(): ComponentID[] {
     return [...this.flattenedDependencies];
   }
 
@@ -508,7 +508,7 @@ export default class Component {
     consumer: Consumer;
   }): Promise<Component> {
     const workspaceConfig: ILegacyWorkspaceConfig = consumer.config;
-    const modelComponent = await consumer.scope.getModelComponentIfExist(id._legacy);
+    const modelComponent = await consumer.scope.getModelComponentIfExist(id);
     const componentFromModel = await consumer.loadComponentFromModelIfExist(id);
     if (!componentFromModel && id.scope) {
       const inScopeWithAnyVersion = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
@@ -591,7 +591,7 @@ export default class Component {
 async function getLoadedFiles(
   consumer: Consumer,
   componentMap: ComponentMap,
-  id: BitId,
+  id: ComponentID,
   bitDir: string
 ): Promise<SourceFile[]> {
   if (componentMap.noFilesError) {

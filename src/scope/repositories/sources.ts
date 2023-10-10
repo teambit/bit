@@ -29,6 +29,7 @@ import { createInMemoryCache } from '../../cache/cache-factory';
 import { pathNormalizeToLinux } from '../../utils';
 import { getDivergeData } from '../component-ops/get-diverge-data';
 import { pMapPool } from '../../utils/promise-with-concurrent';
+import { ComponentID } from '@teambit/component-id';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -110,7 +111,7 @@ export default class SourceRepository {
    * version of this Version object, so we return undefined, to signal the importer that it needs
    * to be fetched from the remote again.
    */
-  async get(bitId: BitId, versionShouldBeBuilt = false): Promise<ModelComponent | undefined> {
+  async get(bitId: ComponentID, versionShouldBeBuilt = false): Promise<ModelComponent | undefined> {
     const emptyComponent = ModelComponent.fromBitId(bitId);
     const component: ModelComponent | undefined = await this._findComponent(emptyComponent);
     if (!component) return undefined;
@@ -122,7 +123,11 @@ export default class SourceRepository {
     if (!bitId.hasVersion()) return component;
 
     const returnComponent = async (version: Version): Promise<ModelComponent | undefined> => {
-      if (bitId.isLocal(this.scope.name) || version.buildStatus === BuildStatus.Succeed || !versionShouldBeBuilt) {
+      if (
+        bitId._legacy.isLocal(this.scope.name) ||
+        version.buildStatus === BuildStatus.Succeed ||
+        !versionShouldBeBuilt
+      ) {
         return component;
       }
       const hash = component.getRef(bitId.version as string);
@@ -235,7 +240,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     return foundComponent;
   }
 
-  getObjects(id: BitId): Promise<ComponentObjects> {
+  getObjects(id: ComponentID): Promise<ComponentObjects> {
     return this.get(id).then((component) => {
       if (!component) throw new ComponentNotFound(id.toString());
       return component.collectObjects(this.objects());
@@ -427,7 +432,7 @@ please either remove the component (bit remove) or remove the lane.`);
   /**
    * get hashes needed for removing a component from a local scope.
    */
-  async getRefsForComponentRemoval(bitId: BitId, includeVersions = true): Promise<Ref[]> {
+  async getRefsForComponentRemoval(bitId: ComponentID, includeVersions = true): Promise<Ref[]> {
     logger.debug(`sources.removeComponentById: ${bitId.toString()}, includeVersions: ${includeVersions}`);
     const component = await this.get(bitId);
     if (!component) return [];

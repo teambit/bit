@@ -1,9 +1,10 @@
 import { v4 } from 'uuid';
 import { cloneDeep, pickBy } from 'lodash';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { isSnap } from '@teambit/component-version';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, PREVIOUS_DEFAULT_LANE } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
@@ -26,8 +27,8 @@ export type LaneProps = {
   forkedFrom?: LaneId;
 };
 
-export type LaneComponent = { id: BitId; head: Ref };
-export type LaneReadmeComponent = { id: BitId; head: Ref | null };
+export type LaneComponent = { id: ComponentID; head: Ref };
+export type LaneReadmeComponent = { id: ComponentID; head: Ref | null };
 export default class Lane extends BitObject {
   name: string;
   scope: string;
@@ -141,16 +142,16 @@ export default class Lane extends BitObject {
       this.components.push(component);
     }
   }
-  removeComponent(id: BitId): boolean {
+  removeComponent(id: ComponentID): boolean {
     const existsComponent = this.getComponent(id);
     if (!existsComponent) return false;
     this.components = this.components.filter((c) => !c.id.isEqualWithoutVersion(id));
     return true;
   }
-  getComponent(id: BitId): LaneComponent | undefined {
+  getComponent(id: ComponentID): LaneComponent | undefined {
     return this.components.find((c) => c.id.isEqualWithoutVersion(id));
   }
-  getComponentHead(bitId: BitId): Ref | null {
+  getComponentHead(bitId: ComponentID): Ref | null {
     const found = this.components.find((c) => c.id.isEqual(bitId));
     if (found) return found.head;
     return null;
@@ -160,7 +161,7 @@ export default class Lane extends BitObject {
     // clone the objects to not change the original data.
     this.components = laneComponents.map((c) => ({ id: c.id.clone(), head: c.head.clone() }));
   }
-  setReadmeComponent(id?: BitId) {
+  setReadmeComponent(id?: ComponentID) {
     if (!id) {
       this.readmeComponent = undefined;
       return;
@@ -177,9 +178,9 @@ export default class Lane extends BitObject {
     const { unmerged } = await this.getMergedAndUnmergedIds(scope);
     return unmerged.length === 0;
   }
-  async getMergedAndUnmergedIds(scope: Scope): Promise<{ merged: BitId[]; unmerged: BitId[] }> {
-    const merged: BitId[] = [];
-    const unmerged: BitId[] = [];
+  async getMergedAndUnmergedIds(scope: Scope): Promise<{ merged: ComponentID[]; unmerged: ComponentID[] }> {
+    const merged: ComponentID[] = [];
+    const unmerged: ComponentID[] = [];
     await Promise.all(
       this.components.map(async (component) => {
         const modelComponent = await scope.getModelComponentIfExist(component.id);
@@ -195,13 +196,13 @@ export default class Lane extends BitObject {
     );
     return { merged, unmerged };
   }
-  toBitIds(): BitIds {
-    return BitIds.fromArray(this.components.map((c) => c.id.changeVersion(c.head.toString())));
+  toBitIds(): ComponentIdList {
+    return ComponentIdList.fromArray(this.components.map((c) => c.id.changeVersion(c.head.toString())));
   }
   toLaneId() {
     return new LaneId({ scope: this.scope, name: this.name });
   }
-  collectObjectsById(repo: Repository): Promise<Array<{ id: BitId; objects: BitObject[] }>> {
+  collectObjectsById(repo: Repository): Promise<Array<{ id: ComponentID; objects: BitObject[] }>> {
     return Promise.all(
       this.components.map(async (component) => {
         const headVersion = (await component.head.load(repo)) as Version;

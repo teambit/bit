@@ -472,7 +472,7 @@ once done, to continue working, please run "bit cc"`
     };
   }
 
-  async getModelComponentIfExist(id: BitId): Promise<ModelComponent | undefined> {
+  async getModelComponentIfExist(id: ComponentID): Promise<ModelComponent | undefined> {
     return this.sources.get(id);
   }
 
@@ -572,7 +572,7 @@ once done, to continue working, please run "bit cc"`
    * @see getModelComponentIfExist to not throw an error
    * @see getModelComponentIgnoreScope to ignore the scope name
    */
-  async getModelComponent(id: BitId): Promise<ModelComponent> {
+  async getModelComponent(id: ComponentID): Promise<ModelComponent> {
     const component = await this.getModelComponentIfExist(id);
     if (component) {
       return component;

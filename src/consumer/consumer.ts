@@ -3,6 +3,7 @@ import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
 import { compact } from 'lodash';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
@@ -47,8 +48,6 @@ import { ConsumerNotFound } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
-import { ComponentIdList } from '../bit-id/component-id-list';
-import { ComponentID } from '@teambit/component-id';
 
 type ConsumerProps = {
   projectPath: string;
@@ -251,12 +250,12 @@ export default class Consumer {
     return path.relative(this.getPath(), absolutePath);
   }
 
-  getParsedId(id: BitIdStr, useVersionFromBitmap = false, searchWithoutScopeInProvidedId = false): BitId {
+  getParsedId(id: BitIdStr, useVersionFromBitmap = false, searchWithoutScopeInProvidedId = false): ComponentID {
     if (id.startsWith('@')) {
       throw new UnexpectedPackageName(id);
     }
-    // @ts-ignore (we know it will never be undefined since it pass throw=true)
-    const bitId: BitId = this.bitMap.getExistingBitId(id, true, searchWithoutScopeInProvidedId);
+
+    const bitId = this.bitMap.getExistingBitId(id, true, searchWithoutScopeInProvidedId) as ComponentID;
     if (!useVersionFromBitmap) {
       const version = BitId.getVersionOnlyFromString(id);
       return bitId.changeVersion(version || LATEST);
@@ -300,7 +299,7 @@ export default class Consumer {
     });
   }
 
-  async loadAllVersionsOfComponentFromModel(id: BitId): Promise<Component[]> {
+  async loadAllVersionsOfComponentFromModel(id: ComponentID): Promise<Component[]> {
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
     const componentsP = modelComponent.listVersions().map(async (versionNum) => {
       return modelComponent.toConsumerComponent(versionNum, this.scope.name, this.scope.objects);
@@ -331,7 +330,7 @@ export default class Consumer {
   }
 
   async loadComponent(id: ComponentID, loadOpts?: ComponentLoadOptions): Promise<Component> {
-    const { components } = await this.loadComponents(ComponentIdList([id]), true, loadOpts);
+    const { components } = await this.loadComponents(ComponentIdList.fromArray([id]), true, loadOpts);
     return components[0];
   }
 
@@ -601,8 +600,8 @@ export default class Consumer {
    * clean up removed components from bitmap
    * @param {BitIds} componentsToRemoveFromFs - delete component that are used by other components.
    */
-  async cleanFromBitMap(componentsToRemoveFromFs: BitIds) {
-    logger.debug(`consumer.cleanFromBitMap, cleaning ${componentsToRemoveFromFs.toString()} from .bitmap`);
+  async cleanFromBitMap(componentsToRemoveFromFs: ComponentID[]) {
+    logger.debug(`consumer.cleanFromBitMap, cleaning ${componentsToRemoveFromFs.length} comps from .bitmap`);
     this.bitMap.removeComponents(componentsToRemoveFromFs);
   }
 

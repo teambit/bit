@@ -1,6 +1,7 @@
 import R from 'ramda';
 import { pickBy } from 'lodash';
 import { isSnap } from '@teambit/component-version';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
 import { BitId, BitIds } from '../../bit-id';
 import { BuildStatus, DEFAULT_BINDINGS_PREFIX, DEFAULT_BUNDLE_FILENAME, Extensions } from '../../constants';
@@ -58,7 +59,7 @@ export type VersionProps = {
   docs?: Doclet[];
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
-  flattenedDependencies?: BitIds;
+  flattenedDependencies?: ComponentIdList;
   _flattenedEdges?: DepEdge[];
   flattenedEdges?: DepEdge[];
   flattenedEdgesRef?: Ref;
@@ -94,7 +95,7 @@ export default class Version extends BitObject {
   docs: Doclet[] | undefined;
   dependencies: Dependencies;
   devDependencies: Dependencies;
-  flattenedDependencies: BitIds;
+  flattenedDependencies: ComponentIdList;
   flattenedEdgesRef?: Ref; // ref to a BitObject Source file, which is a JSON object containing the flattened edge
   _flattenedEdges?: DepEdge[]; // caching for the flattenedEdges
   /**
@@ -138,7 +139,7 @@ export default class Version extends BitObject {
     this.dependencies = new Dependencies(props.dependencies);
     this.devDependencies = new Dependencies(props.devDependencies);
     this.docs = props.docs;
-    this.flattenedDependencies = props.flattenedDependencies || new BitIds();
+    this.flattenedDependencies = props.flattenedDependencies || new ComponentIdList();
     this.flattenedEdges = props.flattenedEdges || [];
     this.flattenedEdgesRef = props.flattenedEdgesRef;
     this.packageDependencies = props.packageDependencies || {};
@@ -286,8 +287,8 @@ export default class Version extends BitObject {
     return this.modified[this.modified.length - 1].date;
   }
 
-  getAllFlattenedDependencies(): BitIds {
-    return BitIds.fromArray([...this.flattenedDependencies]);
+  getAllFlattenedDependencies(): ComponentIdList {
+    return ComponentIdList.fromArray([...this.flattenedDependencies]);
   }
 
   getAllDependencies(): Dependency[] {
@@ -320,13 +321,13 @@ export default class Version extends BitObject {
     return BitIds.fromArray([...this.dependencies.getAllIds(), ...this.devDependencies.getAllIds()]);
   }
 
-  updateFlattenedDependency(currentId: BitId, newId: BitId) {
-    const getUpdated = (flattenedDependencies: BitIds): BitIds => {
+  updateFlattenedDependency(currentId: ComponentID, newId: ComponentID) {
+    const getUpdated = (flattenedDependencies: ComponentIdList): ComponentIdList => {
       const updatedIds = flattenedDependencies.map((depId) => {
         if (depId.isEqual(currentId)) return newId;
         return depId;
       });
-      return BitIds.fromArray(updatedIds);
+      return ComponentIdList.fromArray(updatedIds);
     };
     this.flattenedDependencies = getUpdated(this.flattenedDependencies);
   }
@@ -414,7 +415,7 @@ export default class Version extends BitObject {
         docs: this.docs,
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
-        flattenedDependencies: this.flattenedDependencies.map((dep) => dep.serialize()),
+        flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toObject()),
         flattenedEdges: this.flattenedEdgesRef ? undefined : this.flattenedEdges.map((f) => Version.depEdgeToObject(f)),
         flattenedEdgesRef: this.flattenedEdgesRef?.toString(),
         extensions: this.extensions.toModelObjects(),
@@ -519,8 +520,8 @@ export default class Version extends BitObject {
       });
     };
 
-    const _getFlattenedDependencies = (deps = []): BitId[] => {
-      return deps.map((dep) => BitId.parseBackwardCompatible(dep));
+    const _getFlattenedDependencies = (deps = []): ComponentID[] => {
+      return deps.map((dep) => ComponentID.fromLegacy(BitId.parseBackwardCompatible(dep)));
     };
 
     const _groupFlattenedDependencies = () => {
@@ -528,7 +529,7 @@ export default class Version extends BitObject {
       // flattenedDevDependencies. since then, these both were grouped to one flattenedDependencies
       const flattenedDeps = _getFlattenedDependencies(flattenedDependencies);
       const flattenedDevDeps = _getFlattenedDependencies(flattenedDevDependencies);
-      return BitIds.fromArray([...flattenedDeps, ...flattenedDevDeps]);
+      return ComponentIdList.fromArray([...flattenedDeps, ...flattenedDevDeps]);
     };
 
     const parseFile = (file) => {

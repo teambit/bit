@@ -160,4 +160,8 @@ ${found.map((id) => id.toString()).join('\n')}`);
   toVersionLatest(): ComponentIdList {
     return ComponentIdList.uniqFromArray(this.map((id) => id.changeVersion(LATEST_VERSION)));
   }
+
+  clone(): ComponentIdList {
+    return ComponentIdList.fromArray(this.map((id) => id.clone()));
+  }
 }

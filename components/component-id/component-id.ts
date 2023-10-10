@@ -93,6 +93,10 @@ export class ComponentID {
     return ComponentID.isEqual(this, id, opts);
   }
 
+  isEqualWithoutVersion(id: ComponentID): boolean {
+    return this.isEqual(id, { ignoreVersion: true });
+  }
+
   /**
    * examples:
    * 1.0.0 => null
@@ -138,6 +142,10 @@ export class ComponentID {
 
     // TODO - TS does not realize object.scope now has a value
     return object as ComponentIdObj;
+  }
+
+  clone() {
+    return ComponentID.fromLegacy(this._legacy.clone(), this._scope);
   }
 
   /**
