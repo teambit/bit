@@ -38,8 +38,8 @@ export default class ComponentVersion {
     return new ComponentID(this.toId());
   }
 
-  get id(): BitId {
-    return this.toId();
+  get id(): ComponentID {
+    return this.toComponentId();
   }
 
   toConsumer(repo: Repository): Promise<ConsumerComponent> {

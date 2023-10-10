@@ -147,6 +147,10 @@ export class ComponentIdList extends Array<ComponentID> {
     return ComponentIdList.fromArray(uniq);
   }
 
+  static deserialize(idsStr: string[] = []): ComponentIdList {
+    return ComponentIdList.fromArray(idsStr.map((id) => ComponentID.fromString(id)));
+  }
+
   throwForDuplicationIgnoreVersion() {
     this.forEach((componentId) => {
       const found = this.filterWithoutVersion(componentId);
