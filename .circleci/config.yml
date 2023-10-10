@@ -655,8 +655,6 @@ jobs:
     steps:
       - attach_workspace:
             at: ./
-      - run: yarn set version 3.6.4
-      - run: yarn -v
       - run: cd esbuild-linux-arm64 && tar -xvf esbuild-0.14.29-linux-arm64.tar.gz
       - set_bit_cloud_registry
       - run:
@@ -673,7 +671,7 @@ jobs:
           command: mkdir bit-${BIT_VERSION}
       - run:
           name: install bit
-          command: cd bit-${BIT_VERSION} && npm init -y && yarn config set nodeLinker node-modules && yarn config set npmRegistryServer https://node-registry.bit.cloud && yarn add @teambit/bit
+          command: cd bit-${BIT_VERSION} && npm init -y && yarn set version 3.6.4 && yarn config set nodeLinker node-modules && yarn config set npmRegistryServer https://node-registry.bit.cloud && yarn add @teambit/bit
       - run:
           name: remove leftovers
           command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
