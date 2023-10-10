@@ -1,6 +1,6 @@
 import R from 'ramda';
-
-import { BitId, BitIds } from '../../../bit-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { BitId } from '../../../bit-id';
 import { BitIdStr } from '../../../bit-id/bit-id';
 import ValidationError from '../../../error/validation-error';
 import Scope from '../../../scope/scope';
@@ -80,7 +80,7 @@ export default class Dependencies {
     });
   }
 
-  getById(id: BitId): Dependency | null | undefined {
+  getById(id: ComponentID): Dependency | null | undefined {
     return this.dependencies.find((dep) => dep.id.isEqual(id));
   }
 
@@ -96,8 +96,8 @@ export default class Dependencies {
     );
   }
 
-  getAllIds(): BitIds {
-    return BitIds.fromArray(this.dependencies.map((dependency) => dependency.id));
+  getAllIds(): ComponentIdList {
+    return ComponentIdList.fromArray(this.dependencies.map((dependency) => dependency.id));
   }
 
   getIdsMap(): Record<string, BitId> {
@@ -130,7 +130,7 @@ export default class Dependencies {
     });
   }
 
-  validate(bitId?: BitId): void {
+  validate(bitId?: ComponentID): void {
     const compIdStr = bitId ? ` of ${bitId.toString()}` : '';
     let message = `failed validating the dependencies${compIdStr}.`;
     validateType(message, this.dependencies, 'dependencies', 'array');

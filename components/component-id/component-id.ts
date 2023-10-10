@@ -105,6 +105,10 @@ export class ComponentID {
     return this._legacy.hasScope();
   }
 
+  serialize(): ComponentIdObj {
+    return this.toObject();
+  }
+
   /**
    * examples:
    * 1.0.0 => null

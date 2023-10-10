@@ -5,7 +5,6 @@ import * as path from 'path';
 import R from 'ramda';
 import { IssuesList } from '@teambit/component-issues';
 import BitId from '../../bit-id/bit-id';
-import BitIds from '../../bit-id/bit-ids';
 import {
   getCloudDomain,
   BIT_WORKSPACE_TMP_DIRNAME,
@@ -329,16 +328,20 @@ export default class Component {
     return [...this.dependencies.dependencies, ...this.devDependencies.dependencies];
   }
 
-  getAllDependenciesIds(): BitIds {
+  getAllDependenciesIds(): ComponentIdList {
     const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
-    return BitIds.fromArray(allDependencies);
+    return ComponentIdList.fromArray(allDependencies);
   }
 
-  get depsIdsGroupedByType(): { dependencies: BitIds; devDependencies: BitIds; extensionDependencies: BitIds } {
+  get depsIdsGroupedByType(): {
+    dependencies: ComponentIdList;
+    devDependencies: ComponentIdList;
+    extensionDependencies: ComponentIdList;
+  } {
     return {
       dependencies: this.dependencies.getAllIds(),
       devDependencies: this.devDependencies.getAllIds(),
-      extensionDependencies: this.extensions.extensionsBitIds,
+      extensionDependencies: this.extensions.extensionsComponentIds,
     };
   }
 

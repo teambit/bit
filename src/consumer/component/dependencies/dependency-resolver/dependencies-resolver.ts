@@ -4,11 +4,11 @@ import R from 'ramda';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
 import { BitError } from '@teambit/bit-error';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { uniq, isEmpty, union, cloneDeep } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
-import { BitId, BitIds } from '../../../../bit-id';
+import { BitId } from '../../../../bit-id';
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
@@ -74,17 +74,17 @@ export type EnvPolicyForComponent = {
 };
 
 type HarmonyEnvPeersPolicyForEnvItselfGetter = (
-  componentId: BitId,
+  componentId: ComponentID,
   files: SourceFile[]
 ) => Promise<{ [name: string]: string } | undefined>;
 
 type OnComponentAutoDetectOverrides = (
   configuredExtensions: ExtensionDataList,
-  componentId: BitId,
+  componentId: ComponentID,
   files: SourceFile[]
 ) => Promise<DependenciesOverridesData>;
 
-type OnComponentAutoDetectConfigMerge = (componentId: BitId) => DependenciesOverridesData | undefined;
+type OnComponentAutoDetectConfigMerge = (componentId: ComponentID) => DependenciesOverridesData | undefined;
 
 const DepsKeysToAllPackagesDepsKeys = {
   dependencies: 'packageDependencies',
@@ -440,7 +440,7 @@ export default class DependencyResolver {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getDependencyPathsFromModel(componentId: BitId, depFile: PathLinux, rootDir: PathLinux) {
+  getDependencyPathsFromModel(componentId: ComponentID, depFile: PathLinux, rootDir: PathLinux) {
     const dependency = this.componentFromModel
       .getAllDependencies()
       .find((dep) => dep.id.isEqualWithoutVersion(componentId));
@@ -570,14 +570,14 @@ either, use the ignore file syntax or change the require statement to have a mod
       });
       depsPaths.importSpecifiers = importSpecifiers;
     }
-    const currentComponentsDeps: Dependency = { id: componentId._legacy, relativePaths: [depsPaths] };
+    const currentComponentsDeps: Dependency = { id: componentId, relativePaths: [depsPaths] };
     this._pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource, depsPaths);
 
     const allDependencies: Dependency[] = [
       ...this.allDependencies.dependencies,
       ...this.allDependencies.devDependencies,
     ];
-    const existingDependency = this.getExistingDependency(allDependencies, componentId._legacy);
+    const existingDependency = this.getExistingDependency(allDependencies, componentId);
     if (existingDependency) {
       const existingDepRelativePaths = this.getExistingDepRelativePaths(existingDependency, depsPaths);
       if (!existingDepRelativePaths) {
@@ -694,7 +694,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
         return;
       }
-      const getExistingIdFromBitmap = (): BitId | undefined => {
+      const getExistingIdFromBitmap = (): ComponentID | undefined => {
         const existingIds = this.consumer.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId);
         return existingIds.length === 1 ? existingIds[0] : undefined;
       };
@@ -708,7 +708,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         });
         return foundVersion ? componentId.changeVersion(foundVersion) : undefined;
       };
-      const getExistingIdFromModel = (): BitId | undefined => {
+      const getExistingIdFromModel = (): ComponentID | undefined => {
         if (this.componentFromModel) {
           const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId._legacy);
           if (modelDep) {
@@ -718,7 +718,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         }
         return undefined;
       };
-      const getExistingId = (): BitId | undefined => {
+      const getExistingId = (): ComponentID | undefined => {
         const fromBitmap = getExistingIdFromBitmap();
         if (fromBitmap) {
           depDebug.versionResolvedFrom = 'BitMap';
@@ -935,7 +935,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     const coreAspectIds = Object.values(coreAspects);
     const defaultScope = this.component.defaultScope;
 
-    let id: undefined | BitId;
+    let id: undefined | ComponentID;
 
     if (this.component.id.scope) {
       id = this.component.id;
@@ -1054,13 +1054,13 @@ either, use the ignore file syntax or change the require statement to have a mod
     );
     // remove dev dependencies that are also regular dependencies
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const componentDepsIds = new BitIds(...this.allDependencies.dependencies.map((c) => c.id));
+    const componentDepsIds = new ComponentIdList(...this.allDependencies.dependencies.map((c) => c.id));
     this.allDependencies.devDependencies = this.allDependencies.devDependencies.filter(
       (d) => !componentDepsIds.has(d.id)
     );
   }
 
-  getExistingDependency(dependencies: Dependency[], id: BitId): Dependency | null | undefined {
+  getExistingDependency(dependencies: Dependency[], id: ComponentID): Dependency | null | undefined {
     return dependencies.find((d) => d.id.isEqualWithoutVersion(id));
   }
 
@@ -1399,7 +1399,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       untrackIssue.data[originFile] = { nested, untrackedFiles: [newUntrackedFile] };
     }
   }
-  _pushToRelativeComponentsIssues(originFile, componentId: BitId) {
+  _pushToRelativeComponentsIssues(originFile, componentId: ComponentID) {
     (this.issues.getOrCreate(IssuesClasses.RelativeComponents).data[originFile] ||= []).push(componentId);
   }
   _pushToRelativeComponentsAuthoredIssues(
@@ -1422,7 +1422,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       ...uniq(missingPackages)
     );
   }
-  _pushToMissingComponentsIssues(originFile: PathLinuxRelative, componentId: BitId) {
+  _pushToMissingComponentsIssues(originFile: PathLinuxRelative, componentId: ComponentID) {
     (this.issues.getOrCreate(IssuesClasses.MissingComponents).data[originFile] ||= []).push(componentId);
   }
 }
