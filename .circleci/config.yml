@@ -629,25 +629,7 @@ jobs:
     steps:
       - run: sleep 300;
 
-  get_linux_arm64_packages:
-    <<: *defaults
-    resource_class: small
-    steps:
-      - run: mkdir esbuild-linux-arm64
-      # in order to bring new version of esbuild, you need to install it on linux arm64 machine, tar it, and upload to the bucket
-      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
-      - run: cd esbuild-linux-arm64 && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-linux-arm64.tar.gz
-
-      # - save_cache:
-      #     key: esbuild-0.14.29-linux-arm64-v1
-      #     paths:
-      #       - esbuild-linux-arm64/esbuild-0.14.29-linux-arm64.tar.gz
-      - persist_to_workspace:
-          root: .
-          paths:
-            - esbuild-linux-arm64
-
-  bundle_version_linux:
+  bundle_version:
     <<: *defaults
     environment:
       # do not download chromium when installing puppeteer
@@ -793,24 +775,6 @@ jobs:
           path: macos-arm64
       - store_artifacts:
           path: windows
-
-  get_darwin_arm64_packages:
-    <<: *defaults
-    resource_class: small
-    steps:
-      - run: mkdir esbuild-darwin-arm64
-      # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
-      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
-      - run: cd esbuild-darwin-arm64 && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
-
-      # - save_cache:
-      #     key: esbuild-0.14.29-darwin-arm64-v1
-      #     paths:
-      #       - esbuild-darwin-arm64/esbuild-0.14.29-darwin-arm64.tar.gz
-      - persist_to_workspace:
-          root: .
-          paths:
-            - esbuild-darwin-arm64
 
   harmony_publish_to_gcloud:
     docker:
@@ -1341,8 +1305,6 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_npm_registries
-      - get_darwin_arm64_packages
-      - get_linux_arm64_packages
       - setup_harmony:
           requires:
             - set_npm_registries
@@ -1356,7 +1318,7 @@ workflows:
           requires:
             - bit_tag
             - bit_export
-      - bundle_version_linux:
+      - bundle_version:
           <<: *master_only_filter
           requires:
             - bit_tag
@@ -1365,7 +1327,7 @@ workflows:
       # - harmony_publish_to_gcloud:
           # <<: *master_only_filter
           # requires:
-            # - bundle_version_linux
+            # - bundle_version
             # - bundle_version_windows
             # - bundle_version_macos
             # - checkout_code # This is needed to generate index.json
@@ -1462,14 +1424,6 @@ workflows:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
-      - get_linux_arm64_packages:
-          <<: *master_only_filter
-          requires:
-            - harmony_deploy_approval_job
-      - get_darwin_arm64_packages:
-          <<: *master_only_filter
-          requires:
-            - harmony_deploy_approval_job
       - set_ssh_key:
           <<: *master_only_filter
           requires:
@@ -1495,19 +1449,18 @@ workflows:
             - harmony_deploy_approval_job
             - bit_tag
             - bit_export
-      - bundle_version_linux:
+      - bundle_version:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
             - bit_tag
             - bit_export
-            - get_linux_arm64_packages
             - sleep_5_minutes
       # - harmony_publish_to_gcloud:
           # <<: *master_only_filter
           # requires:
             # - harmony_deploy_approval_job
-            # - bundle_version_linux
+            # - bundle_version
             # - bundle_version_windows
             # - bundle_version_macos
             # - checkout_code # This is needed to generate index.json
@@ -1585,17 +1538,7 @@ workflows:
           filters:
             branches:
               only: yarn-supported-archs
-      - get_linux_arm64_packages:
-          filters:
-            branches:
-              only: yarn-supported-archs
-      - bundle_version_linux:
-          filters:
-            branches:
-              only: yarn-supported-archs
-          requires:
-            - get_linux_arm64_packages
-      - get_darwin_arm64_packages:
+      - bundle_version:
           filters:
             branches:
               only: yarn-supported-archs
@@ -1605,7 +1548,7 @@ workflows:
               # only: yarn-supported-archs@1.2.0
           # requires:
             # - bundle_version_macos
-            # - bundle_version_linux
+            # - bundle_version
             # - bundle_version_windows
             # - checkout_code # This is needed to generate index.json
       # - docker_build:
