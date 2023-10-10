@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { Mutex } from 'async-mutex';
 import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
 import { BitError } from '@teambit/bit-error';
-import { isHash } from '@teambit/component-version';
+import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
 import pMap from 'p-map';
 import { OBJECTS_DIR } from '../../constants';
@@ -156,6 +156,9 @@ export default class Repository {
       const inMemoryObjects = this.objects[ref.hash.toString()];
       if (inMemoryObjects) return inMemoryObjects;
     }
+    if (ref.hash.length < HASH_SIZE) {
+      ref = await this.getFullRefFromShortHash(ref);
+    }
     const cached = this.getCache(ref);
     if (cached) {
       return cached;
@@ -217,11 +220,26 @@ export default class Repository {
 
     return objects;
   }
+
   async listRefs(cwd = this.getPath()): Promise<Array<Ref>> {
     const matches = await glob(path.join('*', '*'), { cwd });
     const refs = matches.map((str) => {
       const hash = str.replace(path.sep, '');
-      if (!isHash(hash)) {
+      if (!isSnap(hash)) {
+        logger.error(`fatal: the file "${str}" is not a valid bit object path`);
+        return null;
+      }
+      return new Ref(hash);
+    });
+    return compact(refs);
+  }
+
+  async listRefsStartWith(shortHash: Ref): Promise<Array<Ref>> {
+    const pathPrefix = this.hashPath(shortHash);
+    const matches = await glob(`${pathPrefix}*`, { cwd: this.getPath() });
+    const refs = matches.map((str) => {
+      const hash = str.replace(path.sep, '');
+      if (!isSnap(hash)) {
         logger.error(`fatal: the file "${str}" is not a valid bit object path`);
         return null;
       }
@@ -301,12 +319,28 @@ export default class Repository {
   }
 
   async loadRaw(ref: Ref): Promise<Buffer> {
+    if (ref.hash.length < HASH_SIZE) {
+      ref = await this.getFullRefFromShortHash(ref);
+    }
     const raw = await fs.readFile(this.objectPath(ref));
     // Run hook to transform content pre reading
     const transformedContent = this.onRead(raw);
     // uncomment to debug the transformed objects by onRead
     // console.log('transformedContent loadRaw', ref.toString(), BitObject.parseSync(transformedContent).getType());
     return transformedContent;
+  }
+
+  async getFullRefFromShortHash(ref: Ref): Promise<Ref> {
+    const refs = await this.listRefsStartWith(ref);
+    if (refs.length > 1) {
+      throw new Error(
+        `found ${refs.length} objects with the same short hash ${ref.toString()}, please use longer hash`
+      );
+    }
+    if (refs.length === 0) {
+      throw new Error(`failed finding an object with the short hash ${ref.toString()}`);
+    }
+    return refs[0];
   }
 
   async loadManyRaw(refs: Ref[]): Promise<ObjectItem[]> {

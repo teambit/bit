@@ -16,7 +16,8 @@ import {
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import mapSeries from 'p-map-series';
-import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { Version, ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { ComponentID } from '@teambit/component-id';
