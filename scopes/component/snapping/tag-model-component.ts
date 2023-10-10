@@ -38,6 +38,7 @@ import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
+import { EnvsMain } from '@teambit/envs';
 import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
@@ -179,6 +180,7 @@ export async function tagModelComponent({
   scope,
   snapping,
   builder,
+  envs,
   consumerComponents,
   ids,
   tagDataPerComp,
@@ -207,6 +209,7 @@ export async function tagModelComponent({
   scope: ScopeMain;
   snapping: SnappingMain;
   builder: BuilderMain;
+  envs: EnvsMain;
   consumerComponents: ConsumerComponent[];
   ids: BitIds;
   tagDataPerComp?: TagDataPerComp[];
@@ -247,7 +250,7 @@ export async function tagModelComponent({
   const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
   const autoTagIds = BitIds.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
   const allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
-
+  // check if all components to tag includes the env of the component being tagged
   const messagesFromEditorFetcher = new MessagePerComponentFetcher(idsToTag, autoTagIds);
   const getMessagePerId = async () => {
     if (editor) return messagesFromEditorFetcher.getMessagesFromEditor(legacyScope.tmp, editor);
@@ -330,7 +333,30 @@ export async function tagModelComponent({
   }
 
   const publishedPackages: string[] = [];
-  let harmonyComps: Component[] = [];
+  const harmonyComps: Component[] = await (workspace || scope).getManyByLegacy(
+    allComponentsToTag.filter((c) => !c.isRemoved())
+  );
+
+  const harmonyCompIdsWithEnvId = await Promise.all(
+    harmonyComps.map(async (comp) => {
+      const envComp = await envs.getEnvComponent(comp);
+      return [comp.id.toString(), envComp.id.toString()] as [string, string];
+    })
+  );
+
+  const harmonyCompIdsWithEnvIdMap = new Map(harmonyCompIdsWithEnvId);
+  const harmonyCompsWithoutEnvsTagged = harmonyComps.filter((comp) => {
+    const envId = harmonyCompIdsWithEnvIdMap.get(comp.id.toString());
+    const hasEnvComp = envId ? harmonyCompIdsWithEnvIdMap.has(envId) : undefined;
+    return !hasEnvComp;
+  });
+
+  for (const comp of harmonyCompsWithoutEnvsTagged) {
+    const previewData = comp.state.aspects.get('teambit.preview/preview')?.data;
+    // if the env is not tagged with the component remove it from the preview data of the component
+    delete previewData?.onlyOverview;
+  }
+
   if (build) {
     const onTagOpts: OnTagOpts = {
       disableTagAndSnapPipelines,
@@ -346,7 +372,7 @@ export async function tagModelComponent({
     const componentsToBuild = allComponentsToTag.filter((c) => !c.isRemoved());
     if (componentsToBuild.length) {
       await scope.reloadAspectsWithNewVersion(componentsToBuild);
-      harmonyComps = await (workspace || scope).getManyByLegacy(componentsToBuild);
+      // harmonyComps = await (workspace || scope).getManyByLegacy(componentsToBuild);
       const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions, builderOptions);
       const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
 
