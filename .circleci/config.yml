@@ -659,7 +659,7 @@ jobs:
             yarn config set nodeLinker node-modules &&
             yarn config set npmRegistryServer https://node-registry.bit.cloud &&
             yarn config set supportedArchitectures --json '{"os":["linux"],"cpu":["x64"]}' &&
-            yarn add @teambit/bit@1.2.0
+            yarn add @teambit/bit
       - run:
           name: copy node_modules
           command: cp -r bit-${BIT_VERSION}-install/node_modules bit-${BIT_VERSION}/node_modules
