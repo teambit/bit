@@ -677,7 +677,7 @@ jobs:
             yarn config set nodeLinker node-modules &&
             yarn config set npmRegistryServer https://node-registry.bit.cloud &&
             yarn config set supportedArchitectures --json '{"os":["linux"],"cpu":["arm64"]}' &&
-            yarn add @teambit/bit
+            yarn add @teambit/bit@1.2.0
       - run:
           name: remove leftovers
           command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
@@ -760,7 +760,7 @@ jobs:
             yarn config set nodeLinker node-modules &&
             yarn config set npmRegistryServer https://node-registry.bit.cloud &&
             yarn config set supportedArchitectures --json '{"os":["darwin"],"cpu":["arm64"]}' &&
-            yarn add @teambit/bit
+            yarn add @teambit/bit@1.2.0
       - run:
           name: remove leftovers
           command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
@@ -834,7 +834,7 @@ jobs:
             yarn config set nodeLinker node-modules;
             yarn config set npmRegistryServer https://node-registry.bit.cloud;
             yarn config set supportedArchitectures --json '{"os":["win32"],"cpu":["x64"]}';
-            yarn add @teambit/bit
+            yarn add @teambit/bit@1.2.0
       - run:
           name: remove leftovers
           command: Remove-Item .\bundle\package.json; Remove-Item .\bundle\yarn.lock
