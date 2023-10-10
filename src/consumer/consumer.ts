@@ -267,14 +267,14 @@ export default class Consumer {
     id: BitIdStr,
     useVersionFromBitmap = false,
     searchWithoutScopeInProvidedId = false
-  ): BitId | undefined {
+  ): ComponentID | undefined {
     const bitId: ComponentID | undefined = this.bitMap.getExistingBitId(id, false, searchWithoutScopeInProvidedId);
     if (!bitId) return undefined;
     if (!useVersionFromBitmap) {
       const version = BitId.getVersionOnlyFromString(id);
-      return bitId._legacy.changeVersion(version || LATEST);
+      return bitId.changeVersion(version || LATEST);
     }
-    return bitId._legacy;
+    return bitId;
   }
 
   /**

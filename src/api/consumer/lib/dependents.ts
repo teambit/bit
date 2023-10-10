@@ -1,5 +1,4 @@
 import { ComponentID } from '@teambit/component-id';
-import { BitId } from '../../../bit-id';
 import { loadConsumerIfExist, Consumer } from '../../../consumer';
 import ConsumerNotFound from '../../../consumer/exceptions/consumer-not-found';
 import GeneralError from '../../../error/general-error';
@@ -8,7 +7,7 @@ import DependencyGraph, { DependenciesInfo } from '../../../scope/graph/scope-gr
 export type DependentsResults = {
   scopeDependents: DependenciesInfo[];
   workspaceDependents: DependenciesInfo[];
-  id: BitId;
+  id: ComponentID;
 };
 
 export async function dependents(id: string): Promise<DependentsResults> {

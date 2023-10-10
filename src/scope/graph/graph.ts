@@ -1,6 +1,6 @@
 import graphlib, { Graph as GraphLib } from 'graphlib';
 import R from 'ramda';
-
+import { ComponentID } from '@teambit/component-id';
 import { BitId } from '../../bit-id';
 import Component from '../../consumer/component';
 import { loadScope } from '../index';
@@ -53,7 +53,7 @@ export default class Graph extends GraphLib {
   /**
    * helps finding the versions of bit-ids using the components stored in the graph
    */
-  public getBitIdsIncludeVersionsFromGraph(ids: BitId[], graph: Graph): BitId[] {
+  public getBitIdsIncludeVersionsFromGraph(ids: ComponentID[], graph: Graph): ComponentID[] {
     const components: Component[] = graph.nodes().map((n) => graph.node(n));
     return ids.map((id) => {
       const component =
