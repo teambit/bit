@@ -1328,8 +1328,6 @@ workflows:
           <<: *master_only_filter
           requires:
             - bundle_version
-            - bundle_version_windows
-            - bundle_version_macos
             - checkout_code # This is needed to generate index.json
       - bit_export:
           <<: *master_only_filter
@@ -1461,8 +1459,6 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bundle_version
-            - bundle_version_windows
-            - bundle_version_macos
             - checkout_code # This is needed to generate index.json
       - bit_export:
           <<: *master_only_filter
@@ -1542,34 +1538,16 @@ workflows:
   #         filters:
   #           branches:
   #             only: fix-circle-yarn3
-  #     - bundle_version_linux:
+  #     - bundle_version:
   #         filters:
   #           branches:
   #             only: fix-circle-yarn3
-  #         requires:
-  #           - get_linux_arm64_packages
-  #     - bundle_version_windows:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-yarn3
-  #     - get_darwin_arm64_packages:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-yarn3
-  #     - bundle_version_macos:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-yarn3
-  #         requires:
-  #           - get_darwin_arm64_packages
   #     - harmony_publish_to_gcloud:
   #         filters:
   #           branches:
   #             only: fix-circle-yarn3
   #         requires:
-  #           - bundle_version_macos
-  #           - bundle_version_linux
-  #           - bundle_version_windows
+  #           - bundle_version
   #           - checkout_code # This is needed to generate index.json
   #     # - docker_build:
   #     #     requires:
