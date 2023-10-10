@@ -3,7 +3,6 @@ import { fetch, put, remove } from '../../../api/scope';
 import { action } from '../../../api/scope/lib/action';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 import { PushOptions } from '../../../api/scope/lib/put';
-import { BitId } from '../../../bit-id';
 import ComponentsList, { ListScopeResult } from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component/consumer-component';
 import DependencyGraph from '../../graph/scope-graph';
@@ -60,7 +59,7 @@ export default class Fs implements Network {
     return objectsReadable;
   }
 
-  latestVersions(componentIds: BitId[]): Promise<string[]> {
+  latestVersions(componentIds: ComponentID[]): Promise<string[]> {
     return this.getScope()
       .latestVersions(componentIds)
       .then((componentsIds) => componentsIds.map((componentId) => componentId.toString()));
@@ -70,7 +69,7 @@ export default class Fs implements Network {
     return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards);
   }
 
-  show(bitId: BitId): Promise<Component> {
+  show(bitId: ComponentID): Promise<Component> {
     const scopeComponentsImporter = this.getScope().scopeImporter;
     return scopeComponentsImporter.loadComponent(bitId);
   }

@@ -1,7 +1,6 @@
 import GraphLib, { Graph } from 'graphlib';
 import pMapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BitId } from '../../bit-id';
 import { VERSION_DELIMITER } from '../../constants';
 import ComponentsList from '../../consumer/component/components-list';
 import Component from '../../consumer/component/consumer-component';
@@ -49,11 +48,11 @@ export default class DependencyGraph {
 
   static loadFromString(str: object): DependencyGraph {
     const graph = GraphLib.json.read(str);
-    // when getting a graph from a remote scope, the class BitId is gone and only the object is received
+    // when getting a graph from a remote scope, the class ComponentID is gone and only the object is received
     graph.nodes().forEach((node) => {
       const id = graph.node(node);
-      if (!(id instanceof BitId)) {
-        graph.setNode(node, new BitId(id));
+      if (!(id instanceof ComponentID)) {
+        graph.setNode(node, new ComponentID(id));
       }
     });
     return new DependencyGraph(graph);
@@ -168,7 +167,7 @@ export default class DependencyGraph {
   /**
    * ignore nested dependencies. build the graph from only imported and authored components
    * according to currently used versions (.bitmap versions).
-   * returns a graph that each node is a BitId object.
+   * returns a graph that each node is a ComponentID object.
    */
   static async buildGraphFromCurrentlyUsedComponents(consumer: Consumer): Promise<Graph> {
     const componentsList = new ComponentsList(consumer);
@@ -181,9 +180,9 @@ export default class DependencyGraph {
     return graph;
   }
 
-  static _addDependenciesToGraph(id: BitId, graph: Graph, component: Version | Component, reverse = false): void {
+  static _addDependenciesToGraph(id: ComponentID, graph: Graph, component: Version | Component, reverse = false): void {
     const idStr = id.toString();
-    // save the full BitId of a string id to be able to retrieve it later with no confusion
+    // save the full ComponentID of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
     Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
       depIds.forEach((dependencyId) => {
@@ -199,7 +198,7 @@ export default class DependencyGraph {
   }
 
   static buildFromNodesAndEdges(
-    nodes: Array<{ idStr: string; bitId: BitId }>,
+    nodes: Array<{ idStr: string; bitId: ComponentID }>,
     edges: Array<{ src: string; target: string; depType: string }>
   ): Graph {
     const graph = new Graph();
@@ -305,18 +304,18 @@ export default class DependencyGraph {
     return getLatestVersionNumber(ComponentIdList.fromArray(bitIds), id);
   }
 
-  getComponent(id: BitId): ModelComponent {
+  getComponent(id: ComponentID): ModelComponent {
     return this.graph.node(id.toStringWithoutVersion());
   }
 
-  getImmediateDependentsPerId(id: BitId, returnNodeValue = false): Array<string | Component | BitId> {
+  getImmediateDependentsPerId(id: ComponentID, returnNodeValue = false): Array<string | Component | ComponentID> {
     const nodeEdges = this.graph.inEdges(id.toString());
     if (!nodeEdges) return [];
     const idsStr = nodeEdges.map((node) => node.v);
     return returnNodeValue ? idsStr.map((idStr) => this.graph.node(idStr)) : idsStr;
   }
 
-  getImmediateDependenciesPerId(id: BitId): string[] {
+  getImmediateDependenciesPerId(id: ComponentID): string[] {
     const nodeEdges = this.graph.outEdges(id.toString());
     if (!nodeEdges) return [];
     return nodeEdges.map((node) => node.v);

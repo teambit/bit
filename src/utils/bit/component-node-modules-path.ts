@@ -1,6 +1,5 @@
 import * as path from 'path';
-
-import BitId from '../../bit-id/bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import GeneralError from '../../error/general-error';
 import { PathOsBasedRelative } from '../path';
@@ -15,7 +14,7 @@ export default function getNodeModulesPathOfComponent({
   isDependency = false,
 }: {
   bindingPrefix?: string;
-  id: BitId;
+  id: ComponentID;
   allowNonScope?: boolean;
   defaultScope?: string | null; // if an id doesn't have a scope, use defaultScope if exists. applies only when allowNonScope is true
   extensions: ExtensionDataList;
