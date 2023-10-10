@@ -1575,25 +1575,25 @@ workflows:
             - bit_tag
             - get_darwin_arm64_packages
             - sleep_5_minutes
-      - harmony_publish_to_gcloud:
-          <<: *master_only_filter
-          requires:
-            - harmony_deploy_approval_job
-            - bundle_version_linux
-            - bundle_version_windows
-            - bundle_version_macos
-            - checkout_code # This is needed to generate index.json
-      - bit_export:
-          <<: *master_only_filter
-          requires:
-            - bit_tag
-            - harmony_deploy_approval_job
-      - symphony_docker_build:
-          requires:
-            - harmony_deploy_approval_job
-            - bit_tag
-            - bit_export
-            - sleep_5_minutes
+      # - harmony_publish_to_gcloud:
+          # <<: *master_only_filter
+          # requires:
+            # - harmony_deploy_approval_job
+            # - bundle_version_linux
+            # - bundle_version_windows
+            # - bundle_version_macos
+            # - checkout_code # This is needed to generate index.json
+      # - bit_export:
+          # <<: *master_only_filter
+          # requires:
+            # - bit_tag
+            # - harmony_deploy_approval_job
+      # - symphony_docker_build:
+          # requires:
+            # - harmony_deploy_approval_job
+            # - bit_tag
+            # - bit_export
+            # - sleep_5_minutes
       # - docker_build:
       #     requires:
       #       - harmony_deploy_approval_job
@@ -1606,30 +1606,30 @@ workflows:
       #     requires:
       #       - harmony_deploy_approval_job
       #       - docker_build
-      - docker_build_node_18:
-          requires:
-            - harmony_deploy_approval_job
-            - harmony_publish_to_gcloud
-      - docker_non_root_build_node_18:
-          requires:
-            - harmony_deploy_approval_job
-            - harmony_publish_to_gcloud
-      - server_docker_build_node_18:
-          requires:
-            - harmony_deploy_approval_job
-            - docker_build_node_18
-      - docker_build_node_20:
-          requires:
-            - harmony_deploy_approval_job
-            - harmony_publish_to_gcloud
-      - docker_non_root_build_node_20:
-          requires:
-            - harmony_deploy_approval_job
-            - harmony_publish_to_gcloud
-      - server_docker_build_node_20:
-          requires:
-            - harmony_deploy_approval_job
-            - docker_build_node_20
+      # - docker_build_node_18:
+          # requires:
+            # - harmony_deploy_approval_job
+            # - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_18:
+          # requires:
+            # - harmony_deploy_approval_job
+            # - harmony_publish_to_gcloud
+      # - server_docker_build_node_18:
+          # requires:
+            # - harmony_deploy_approval_job
+            # - docker_build_node_18
+      # - docker_build_node_20:
+          # requires:
+            # - harmony_deploy_approval_job
+            # - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_20:
+          # requires:
+            # - harmony_deploy_approval_job
+            # - harmony_publish_to_gcloud
+      # - server_docker_build_node_20:
+          # requires:
+            # - harmony_deploy_approval_job
+            # - docker_build_node_20
   # uncomment to debug symphony_docker_build
   # symphony_docker_build_workflow:
   #   jobs:
